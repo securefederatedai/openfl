@@ -1,0 +1,2 @@
+nibabel
+tensorflow<2.4

@@ -1,0 +1,14 @@
+Click>=7.0
+PyYAML>=5.1
+numpy
+pandas
+protobuf
+grpcio==1.30.0
+grpcio-tools==1.30.0
+rich
+tqdm
+scikit-learn
+jupyter
+ipykernel
+flatten_json
+cryptography
