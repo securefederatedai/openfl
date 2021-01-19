@@ -42,7 +42,7 @@ setup(
         'protobuf',
         'grpcio==1.30.0',
         'grpcio-tools==1.30.0',
-        'rich',
+        'rich==9.1.0',
         'tqdm',
         'scikit-learn',
         'docker',

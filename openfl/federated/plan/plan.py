@@ -3,7 +3,7 @@
 
 """Plan module."""
 
-from hashlib import sha256
+from hashlib import sha384
 from logging import getLogger
 from os.path import splitext
 from importlib import import_module
@@ -198,7 +198,7 @@ class Plan(object):
     @property
     def hash(self):
         """Generate hash for this instance."""
-        self.hash_ = sha256(dump(self.config).encode('utf-8'))
+        self.hash_ = sha384(dump(self.config).encode('utf-8'))
         Plan.logger.info(f'FL-Plan hash is [blue]{self.hash_.hexdigest()}[/]',
                          extra={'markup': True})
 

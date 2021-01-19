@@ -20,7 +20,7 @@ def generate_root_cert(days_to_expiration=365):
     # Generate private key
     root_private_key = rsa.generate_private_key(
         public_exponent=65537,
-        key_size=2048,
+        key_size=3072,
         backend=default_backend()
     )
 
@@ -60,7 +60,7 @@ def generate_signing_csr():
     # Generate private key
     signing_private_key = rsa.generate_private_key(
         public_exponent=65537,
-        key_size=2048,
+        key_size=3072,
         backend=default_backend()
     )
 

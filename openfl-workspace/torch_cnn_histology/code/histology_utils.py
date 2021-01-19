@@ -9,7 +9,7 @@ from torchvision.datasets import ImageFolder
 from torchvision.transforms import ToTensor
 from torch.utils.data import random_split
 from urllib.request import urlretrieve
-from hashlib import sha256
+from hashlib import sha384
 from os import path, makedirs
 from zipfile import ZipFile
 from tqdm import tqdm
@@ -26,7 +26,8 @@ class HistologyDataset(ImageFolder):
           "texture_2016_image_tiles_5000.zip?download=1"
     FILENAME = "Kather_texture_2016_image_tiles_5000.zip"
     FOLDER_NAME = "Kather_texture_2016_image_tiles_5000"
-    ZIP_SHA256 = '936d0b95ae0f04f1f7b18a2b7e8c55776c3e887d102f645bcee752d1a6626a32'
+    ZIP_SHA384 = '7d86abe1d04e68b77c055820c2a4c582a1d25d2983e38ab724e'\
+        'ac75affce8b7cb2cbf5ba68848dcfd9d84005d87d6790'
     DEFAULT_PATH = path.join(path.expanduser('~'), '.openfl', 'data')
 
     def __init__(self, root: str = DEFAULT_PATH, **kwargs) -> None:
@@ -36,8 +37,8 @@ class HistologyDataset(ImageFolder):
         if not path.exists(filepath):
             self.pbar = tqdm(total=None)
             urlretrieve(HistologyDataset.URL, filepath, self.report_hook)  # nosec
-            assert sha256(open(filepath, 'rb').read(  # nosec
-                path.getsize(filepath))).hexdigest() == HistologyDataset.ZIP_SHA256
+            assert sha384(open(filepath, 'rb').read(  # nosec
+                path.getsize(filepath))).hexdigest() == HistologyDataset.ZIP_SHA384
             with ZipFile(filepath, 'r') as f:
                 f.extractall(root)
 

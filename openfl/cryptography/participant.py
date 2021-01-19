@@ -15,7 +15,7 @@ def generate_csr(common_name, server=False):
     # Generate private key
     private_key = rsa.generate_private_key(
         public_exponent=65537,
-        key_size=2048,
+        key_size=3072,
         backend=default_backend()
     )
 
