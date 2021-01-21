@@ -41,7 +41,7 @@ This will load the |productName| package and import wrappers that adapt your exi
      fx.init('keras_cnn_mnist',col_names=collaborator_list)
 
 
-One last point about :code:`fx.init()`. For Keras models, we recommend starting with the :code:`keras_cnn_mnist` template (by running :code:`fx.init('keras_cnn_mnist')`, and for pytorch models `torch_cnn_mnist` (by running :code:`fx.init(`torch_cnn_mnist`)`)
+One last point about :code:`fx.init()`. For Keras models, we recommend starting with the :code:`keras_cnn_mnist` template (by running :code:`fx.init("keras_cnn_mnist")`, and for pytorch models `torch_cnn_mnist` (by running :code:`fx.init("torch_cnn_mnist")`)
 
 At this point you may be wondering what goes into a FL.Plan, and how you can customize it. To see what is part of the FL.Plan that was created with the :code:`fx.init` command, run :code:`fx.get_plan()`:
 
