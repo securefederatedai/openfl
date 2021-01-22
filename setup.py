@@ -51,6 +51,7 @@ setup(
         'flatten_json',
         'cryptography',
     ],
+    python_requires='>=3.6, <3.9',
     entry_points={
         'console_scripts': ['fx=openfl.interface.cli:entry']
     }
