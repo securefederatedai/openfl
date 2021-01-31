@@ -30,4 +30,4 @@ assigner :
   defaults : plan/defaults/assigner.yaml
 
 tasks :
-  defaults : plan/defaults/tasks_fast_estimator.yaml
+  defaults : plan/defaults/tasks_keras.yaml
