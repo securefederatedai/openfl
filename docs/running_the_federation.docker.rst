@@ -18,7 +18,7 @@ Pull |productName| image and run it:
 
 .. code-block:: console
 
-   $ docker run -it openfl
+   $ docker run -it --network host openfl
    
 Now one is free to experiment with OpenFL in the container, for instance run the :ref:`one-node Hello Federation script <running_the_federation.baremetal>`
 
