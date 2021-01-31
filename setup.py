@@ -7,7 +7,7 @@ from setuptools import setup
 
 setup(
     name='openfl',
-    version='0.5',
+    version='1.0',
     author='Intel Corporation',
     description='Federated Learning for the Edge',
     packages=[

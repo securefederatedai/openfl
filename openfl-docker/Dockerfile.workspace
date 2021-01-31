@@ -1,49 +1,25 @@
-# Copyright (C) 2020-2021 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
-
-# docker build --build-arg HTTPS_PROXY=$HTTPS_PROXY --build-arg HTTP_PROXY=$HTTP_PROXY -t openfl .
-
 ARG BASE_IMAGE=openfl:latest
-FROM $BASE_IMAGE
+FROM ${BASE_IMAGE}
 
-LABEL maintainer "Walter riviera <walter.riviera@intel.com>"
+# Create unprivileged user to limit changes to mounted volumes
+ENV username=user
+ARG USER_ID=10001
+ARG GROUP_ID=1001
+RUN addgroup --gid $GROUP_ID $username
+RUN adduser --disabled-password --gecos '' --uid $USER_ID --gid $GROUP_ID $username
 
-ARG http_proxy
-ARG HTTP_PROXY
-ARG HTTPS_PROXY
-ARG https_proxy
-ARG socks_proxy
-ARG ftp_proxy
-ARG no_proxy
+WORKDIR /home/user
+# Allow user to work in home dir
+RUN chmod -R a+rw .
+# Allow pip to work with existing packages (?)
+RUN chmod -R a+rwx /usr/local
+USER user
 
-ENV http_proxy=$http_proxy
-ENV https_proxy=$https_proxy
-ENV HTTP_PROXY=$HTTP_PROXY
-ENV HTTPS_PROXY=$HTTPS_PROXY
-ENV socks_proxy=$socks_proxy
-ENV ftp_proxy=$ftp_proxy
-ENV no_proxy=$no_proxy
+ARG WORKSPACE_NAME
+COPY ${WORKSPACE_NAME}.zip .
 
-
-# Run this docker as User
-ENV USERNAME=docker_user
-ENV GROUP_ID=1000
-ENV USER_ID=1000
-
-########## WORKSPACE files ###############################################################
-#
-USER root
-COPY cert /home/workspace/cert
-COPY code /home/workspace/code
-COPY logs /home/workspace/logs
-COPY plan /home/workspace/plan
-COPY plan /home/workspace/save
-COPY requirements.txt /home/workspace/requirements.txt
-RUN mkdir /home/workspace/data
-RUN pip3 install -r /home/workspace/requirements.txt
-
-RUN chown -R ${USERNAME}:${USERNAME} /home/workspace
-
-USER $USERNAME
-
-CMD ["tail", "-f", "/dev/null"]
+RUN fx workspace import --archive ${WORKSPACE_NAME}.zip
+# Unifying the workspace folder name
+RUN mv ${WORKSPACE_NAME} workspace
+WORKDIR /home/user/workspace
+RUN pip install -r requirements.txt

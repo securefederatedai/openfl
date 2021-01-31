@@ -11,8 +11,7 @@ from sys import executable
 from warnings import warn
 from shutil import copyfile, ignore_patterns
 
-from openfl.interface.cli_helper import copytree, print_tree, check_varenv
-from openfl.interface.cli_helper import get_fx_path, replace_line_in_file
+from openfl.interface.cli_helper import copytree, print_tree
 from openfl.interface.cli_helper import WORKSPACE, PKI_DIR
 from openfl.interface.cli_helper import SITEPACKS, OPENFL_USERDIR
 
@@ -94,8 +93,7 @@ def create(prefix, template):
 
 
 @workspace.command(name='export')
-@pass_context
-def export_(context):
+def export_():
     """Export federated learning workspace."""
     from shutil import make_archive, copytree, copy2, ignore_patterns
     from tempfile import mkdtemp
@@ -336,143 +334,74 @@ def _get_dir_hash(path):
 
 
 @workspace.command(name='dockerize')
-@option('--save',
+@option('-b', '--base_image', required=False,
+        help='The tag for openfl base image',
+        default='openfl')
+@option('--save/--no-save',
         required=False,
         help='Save the Docker image into the workspace',
-        is_flag=True)
-def dockerize_(save):
-    """Pack OpenFL and the workspace as a Docker image."""
+        default=True)
+@pass_context
+def dockerize_(context, base_image, save):
+    """
+    Pack the workspace as a Docker image.
+
+    This command is the alternative to `workspace export`.
+    It should be called after plan initialization from the workspace dir.
+
+    User is expected to be in docker group.
+    If your machine is behind a proxy, make sure you set it up in ~/.docker/config.json.
+    """
     import os
+    import sys
     import docker
-    import openfl
-    from shutil import copy
-    from shutil import rmtree
-    from os.path import basename
+
+    # Specify the Dockerfile.workspace loaction
+    openfl_docker_dir = os.path.join(SITEPACKS, 'openfl-docker')
+    # dockerfile_workspace = os.path.join(openfl_docker_dir, 'Dockerfile.workspace')
+    dockerfile_workspace = 'Dockerfile.workspace'
+    # Apparently, docker's python package does not support
+    # scenarios when the dockerfile is placed outside the build context
+    copyfile(os.path.join(openfl_docker_dir, dockerfile_workspace), dockerfile_workspace)
 
     WORKSPACE_PATH = os.getcwd()
-    WORKSPACE_PARENT = Path(WORKSPACE_PATH).parent
+    WORKSPACE_NAME = os.path.basename(WORKSPACE_PATH)
 
-    # ~TMP dir
-    dirname = ".docker_tmp"
-    (SITEPACKS / dirname).mkdir(parents=True, exist_ok=True)
+    # Exporting the workspace
+    context.invoke(export_)
+    WORKSPACE_ARCHIVE = WORKSPACE_NAME + '.zip'
 
-    DOCKER_TMP = os.path.join(SITEPACKS, dirname)
-
-    # Move relevant files into the tmp dir
-    # OpenFL BIN files
-    # paths definition
-    openfl_libs = str(SITEPACKS)
-    openfl_bin = get_fx_path(openfl_libs)
-    copy(openfl_bin, DOCKER_TMP)
-
-    fx_file = os.path.join(DOCKER_TMP, 'fx')
-    replace_line_in_file('#!/usr/local/bin/python3\n', 0, fx_file)
-
-    # Create fl_docker_requirements.txt file
-    docker_requirements = "requirements-docker.txt"
-    docker_dir = 'openfl-docker'
-    copy(os.path.join(SITEPACKS, docker_dir, docker_requirements), DOCKER_TMP)
-
-    # Workspace content
-    # copytree(WORKSPACE_PATH,os.path.join(DOCKER_TMP,"workspace"),
-    # dirs_exist_ok = True)
-
-    # Docker BUILD COMMAND
-    # Define "build_args". These are the equivalent of the "--build-arg"
-    # passed to "docker build"
-    build_args = {'DOCKER_TMP': dirname, 'openfl_version': openfl.__version__}
-    # Add here custom build_args for the build command
-    # i.e: build_args["CUSTOM_BUILD_ARG"] = custom_build_arg_var
-
-    # Retrieve args from env vars
-    check_varenv('http_proxy', build_args)
-    check_varenv('HTTP_PROXY', build_args)
-    check_varenv('HTTPS_PROXY', build_args)
-    check_varenv('https_proxy', build_args)
-    check_varenv('socks_proxy', build_args)
-    check_varenv('ftp_proxy', build_args)
-    check_varenv('no_proxy', build_args)
-
-    # Compose "build cmd"
-    workspace_name = basename(WORKSPACE_PATH)
-    openfl_img_base = 'openfl'
-    openfl_img_name = f'{openfl_img_base}/docker_{workspace_name}'
-
-    # Clone Dockerfile within SITEPACKS
-    docker_dir = "openfl-docker"
-    base_df = "Dockerfile.base"
-    workspace_df = "Dockerfile.workspace"
-
-    # Copy base dockerfile
-    src = os.path.join(SITEPACKS, docker_dir, base_df)
-    dst = os.path.join(SITEPACKS, base_df)
-    copy(src, dst)
-
-    # Copy workspace dockerfile to directory above workspace
-    src = os.path.join(SITEPACKS, docker_dir, workspace_df)
-    dst = os.path.join(WORKSPACE_PATH, workspace_df)
-    copy(src, dst)
+    build_args = {'WORKSPACE_NAME': WORKSPACE_NAME,
+                  'BASE_IMAGE': base_image}
 
     client = docker.from_env(timeout=3600)
-
-    # Build the image
     try:
+        # Should we remove an old image tar before building?
+        # Check if the base image is present
+        # assert f'{base_image}:latest' in str(client.images.list())
+        echo('Building the Docker image')
+        client.images.build(
+            path=str(WORKSPACE_PATH),
+            tag=WORKSPACE_NAME,
+            buildargs=build_args,
+            dockerfile=dockerfile_workspace)
 
-        os.chdir(SITEPACKS)
-        if f'{openfl_img_base}:latest' in str(client.images.list()):
-            if confirm(f'Base image {openfl_img_base} found.'
-                       f' Would you like to rebuild?'):
-                echo(f'Building docker image {openfl_img_base}. '
-                     f'This may take 5-10 minutes')
-                client.images.build(
-                    path=str(SITEPACKS),
-                    tag=openfl_img_base,
-                    buildargs=build_args,
-                    dockerfile=base_df
-                )
-        else:
-            echo(f'Building docker image {openfl_img_base}.'
-                 f' This may take 5-10 minutes')
-            client.images.build(
-                path=str(SITEPACKS),
-                tag=openfl_img_base,
-                buildargs=build_args,
-                dockerfile=base_df
-            )
+    except Exception as e:
+        echo('Faild to build the image\n' + str(e) + '\n')
+        sys.exit(1)
+    else:
+        echo('The workspace image has been built successfully!')
+    finally:
+        os.remove(WORKSPACE_ARCHIVE)
+        os.remove(dockerfile_workspace)
 
-        echo(f'Building docker image {openfl_img_name}.'
-             f' This will likely take 5-10 minutes')
-        os.chdir(WORKSPACE_PARENT)
-        client.images.build(path=str(WORKSPACE_PATH),
-                            tag=openfl_img_name,
-                            buildargs=build_args,
-                            dockerfile=workspace_df)
-
-    except Exception:
-        rmtree(DOCKER_TMP)
-        os.remove(os.path.join(SITEPACKS, base_df))
-        os.remove(os.path.join(WORKSPACE_PATH, workspace_df))
-        raise Exception("Error found while building the image. Aborting!")
-        exit()
-
-    echo(f'Docker image {openfl_img_name} successfully built')
-
-    # Clean environment
-    rmtree(DOCKER_TMP)
-    os.remove(os.path.join(SITEPACKS, base_df))
-    os.remove(os.path.join(WORKSPACE_PATH, workspace_df))
-
-    # Produce .tar file containing the freshly built image
+    # Saving the image to a tarball
     if save:
-        archive_fn = f'docker_{workspace_name}.tar'
-
-        os.chdir(WORKSPACE_PATH)
-        echo('Saving Docker image...')
-        image = client.images.get(f'{openfl_img_name}')
+        WORKSPACE_IMAGE_TAR = WORKSPACE_NAME + '_image.tar'
+        echo('Saving the Docker image...')
+        image = client.images.get(f'{WORKSPACE_NAME}')
         resp = image.save()
-        f = open(archive_fn, 'wb')
-        for chunk in resp:
-            f.write(chunk)
-        f.close()
-
-        echo(f'{openfl_img_name} saved to {WORKSPACE_PATH}/{archive_fn}')
+        with open(WORKSPACE_IMAGE_TAR, 'wb') as f:
+            for chunk in resp:
+                f.write(chunk)
+        echo(f'{WORKSPACE_NAME} image saved to {WORKSPACE_PATH}/{WORKSPACE_IMAGE_TAR}')

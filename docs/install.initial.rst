@@ -30,7 +30,7 @@ On every node in the federation you will need to install the |productName| packa
 
    .. parsed-literal::
 
-      $ pip install |productWheel|
+      $ pip install \ |productWheel|\
 
 5. At this point |productName| should be available within the virtual environment. To test, run the :code:`fx` command. This command is only available within this virtual environment.
 

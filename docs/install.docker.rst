@@ -24,10 +24,9 @@ Docker Installation
 Design Philosophy
 ~~~~~~~~~~~~~~~~~
 
-The Docker version of |productName| was designed to be simple and embrace the Docker philosophy.
-By building and running the Dockerfile, one will be able to have an isolated environment that is fully equipped
-with all the right dependencies and prerequisites. Once the execution is over, the container can be destroyed and
-the results of the computation will be available on a directory on local host.
+The Docker version of |productName| is designed to provide an isolated environment that is fully equipped
+with all the necessary prerequisites to run a federation. Once the execution is over, 
+the container can be destroyed and the results of the computation will be available on a directory on local host.
 
 
 Design Assumptions
@@ -37,11 +36,9 @@ The current design is based on three assumptions:
 
   * Docker containers are the essential components to have a working environment that is able to initiate and run a federation. Orchestration and pipeline automation is not currently supported and would need to be handled manually.
 
-  * Each machine hosting the aggregator or a collaborator container is expected to have a local workspace directory which can be mapped onto the hosted container. These directories are *not* expected to be shared among hosts.
-
   * `PKI exchange <https://en.wikipedia.org/wiki/Public_key_infrastructure>`_ required to validate and welcome new collaborators to the federation will need to be handled outside the containers through a bash script (not provided) or performed manually by:
 
-     * Coping files manually (:code:`scp` or some other secure file transfer) from one host to another
+     * Copying files manually (:code:`scp` or some other secure file transfer) from one host to another
      * Creating a shared file system across the federation hosts. *This option might not be ideal for hosts not connected to the same internal network*
 
 .. figure:: images/docker_design.png
@@ -54,28 +51,17 @@ The current design is based on three assumptions:
 Build the docker image
 ======================
 
-Requirements
-~~~~~~~~~~~~
+To use the latest official |productName| release, simply run:
 
-In order to successfully build the image, the Dockerfile is expecting to access the following dependencies:
-
-* Find the :code:`openfl` directory in the same location where we are going to execute the :code:`docker build` command.
-* Find the :code:`docker_agg.sh` file
-* Find the :code:`docker_col.sh` file
-
-Command
-~~~~~~~
-
-If you have the |productName| repo available localy, run the following command from the base directory to build the docker image:
 .. code-block:: console
 
-   $ export HOST_USER=`whoami`
-   $ docker build --build-arg USERNAME=`whoami` --build-arg USER_ID=`id -u $HOST_USER` --build-arg GROUP_ID=`id -g $HOST_USER` -t openfl/docker -f openfl-docker/Dockerfile .
+   $ docker pull openfl
+   
+Or if you would prefer to build an image from a specific commit or branch, run the following commands:
 
-If you have installed |productName| from a pip wheel or pypi, you can easily add your local workspace to a docker image with the following commands:
 .. code-block:: console
 
-   $ fx workspace create --prefix ~/WORKSPACE_PATH --template keras_cnn_mnist
-   $ cd WORKSPACE_PATH
-   $ fx workspace dockerize
+   $ git clone https://github.com/intel/openfl.git
+   $ cd openfl
+   $ ./scripts/build_base_docker_image.sh
 
