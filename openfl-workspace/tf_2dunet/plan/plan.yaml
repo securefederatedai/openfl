@@ -1,0 +1,40 @@
+# Copyright (C) 2020 Intel Corporation
+# Licensed subject to the terms of the separately executed evaluation license agreement between Intel Corporation and you.
+
+aggregator :
+  defaults : plan/defaults/aggregator.yaml
+  template : openfl.component.Aggregator
+  settings :
+    init_state_path : save/tf_2dunet_brats_init.pbuf
+    last_state_path : save/tf_2dunet_brats_latest.pbuf
+    best_state_path : save/tf_2dunet_brats_best.pbuf
+    rounds_to_train : 10
+
+collaborator :
+  defaults : plan/defaults/collaborator.yaml
+  template : openfl.component.Collaborator
+  settings :
+    delta_updates    : true
+    opt_treatment    : RESET
+
+data_loader :
+  defaults : plan/defaults/data_loader.yaml
+  template : code.tfbrats_inmemory.TensorFlowBratsInMemory
+  settings :
+    batch_size: 64
+    percent_train: 0.8
+    collaborator_count : 2
+    data_group_name    : brats
+
+task_runner :
+  defaults : plan/defaults/task_runner.yaml
+  template : code.tf_2dunet.TensorFlow2DUNet
+
+network :
+  defaults : plan/defaults/network.yaml
+
+assigner :
+  defaults : plan/defaults/assigner.yaml
+
+tasks :
+  defaults : plan/defaults/tasks_tensorflow.yaml

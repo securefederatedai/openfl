@@ -1,0 +1,18 @@
+# Copyright (C) 2020-2021 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+# If your machine is behind a proxy, make sure you set it up in ~/.docker/config.json
+
+ARG BASE_IMAGE=python:3.6.12-slim-stretch
+FROM ${BASE_IMAGE}
+
+RUN apt-get update && apt-get install -y --no-install-recommends openssh-server \
+        && apt-get clean \
+        && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /openfl
+COPY . .
+
+RUN pip install --upgrade pip && pip install --no-cache-dir  .
+
+CMD [ "/bin/bash" ]

@@ -1,0 +1,101 @@
+digraph arch {
+    rankdir = LR;
+    // concentrate = true;
+    compound = true;
+    // newrank = true;
+    label = "High-Level Trusted Federated Learning Architecture and Data Flow"
+    node [ shape = box ];
+    
+    subgraph cluster_Governor {
+        label = < <B>FL Governor / Admin</B> >;
+        // fontsize = 24;
+        node [ shape = box ];
+
+        gov_net_server [ label = "Server Socket (REP)" ];
+        gov_root_cert [ label = "Root Cert" ];
+        gov_flplans [ label = "Signed FL Plans" ];
+    }
+    
+    subgraph cluster_CollaboratorFrontend {
+        label = < <B>Collaborator Frontend UI</B> >;
+        // fontsize = 24;
+        node [ shape = box ];
+
+        ui_model_library [ label = "Model Library" ];
+        ui_local_data [ label = "Local Data" ];
+        ui_flplan_approval [ label = "FLPlan Approval Interface " ];
+    }
+
+    subgraph cluster_Aggregator {
+        label = < <B>Aggregator</B> >;
+        // fontsize = 24;
+        node [ shape = box ];
+
+        agg_flplans [ label = "FL Plans" ];
+        agg_net_server [ label = "Server Socket (REP)" ];
+        agg_net_client [ label = "Client Socket (REQ)" ];
+        agg_cert [ label = "Signed Cert" ];
+
+        subgraph cluster_PerFLPlan {
+            label = < <B>Per FL Plan</B> >;
+            // fontsize = 18;
+            // color = blue;
+            style = "dotted";
+
+            subgraph cluster_AggFLPlanExecutor {            
+                label = < Agg FL Plan Executor >;
+                // fontsize = 18;
+                // color = blue;
+                style = "solid";
+                job_sel [ label = "Job Selector" ];
+                agg_col_results [ label = "Collaborator Results" ];
+                agg_results [ label = "Aggregated Results" ];
+            }
+        }
+    }
+
+    subgraph cluster_Collaborator {
+        label = < <B>Collaborator</B> >;
+        // fontsize = 24;
+        node [ shape = box ];
+        
+        subgraph cluster_ColPerFLPlan {
+            label = < <B>Per FL Plan</B> >;
+            // fontsize = 18;
+            // color = blue;
+            style = "dotted";
+            
+            subgraph cluster_ColFLPlanExecutor {         
+                label = < Col FL Plan Executor >;
+                style = "solid";
+                // fontsize = 18;
+                // color = blue;
+                col_model [ label = "Model / Job Handler" ];
+            }
+        }
+        col_flplans [ label = "FL Plans" ];
+        col_net_client [ label = "Client Socket (REQ)" ];
+        col_cert [ label = "Signed Cert" ];
+        // col_local_data [ label = "Local Data" ];
+    }
+    
+    // {rank = same; cluster_ColFLPlanExecutor; cluster_AggFLPlanExecutor}
+    ui_local_data -> col_model
+    ui_model_library -> col_model
+    ui_flplan_approval -> col_model [ltail=ui_flplan_approval, lhead=cluster_ColFLPlanExecutor dir=both];
+    gov_flplans -> agg_flplans [ label = "Signed FL Plans" style = "dotted" ];
+    gov_flplans -> col_flplans [ label = "Signed FL Plans" style = "dotted" ];
+    agg_cert -> gov_root_cert [ label = "Cert Signing Requests" style = "dotted" ];
+    col_cert -> gov_root_cert [ label = "Cert Signing Requests" style = "dotted" ];
+    job_sel -> col_model [ label = "Jobs (e.g. train, validate)" style = "dotted" ];
+    col_model -> agg_col_results [ label = "Job results (e.g. model updates, val scores, losses)" style = "dotted" ];
+    agg_col_results -> agg_results [ label = "Aggregation Functions" ];
+
+    agg_results -> col_model [ label = "Shared model updates" ];
+
+    edge  [dir="both" ]
+    gov_net_server -> col_net_client [ label = "Secure Channel" ];
+    agg_net_server -> col_net_client [ label = "Secure Channel" ];
+    gov_net_server -> agg_net_client [ label = "Secure Channel" ];
+    
+}

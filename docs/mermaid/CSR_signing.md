@@ -1,0 +1,20 @@
+```mermaid
+sequenceDiagram
+Title: Collaborator Certificate Signing Flow 
+  participant A as Alice
+  participant AC as Alice's Collaborator Node
+  participant B as Bob
+  participant BG as Bob's Certificate Signing System
+  A->>AC: Alice runs<br>`fx collaborator generate-cert-request`<br>to create .key and .csr file<br>
+  AC->>A: PKI script outputs a hash to the screen
+  A->>B: Alice sends the .csr to Bob
+  B->>BG: Bob moves the .csr<br/> to the signing system with<br>`fx collaborator certify --request-pkg`
+  B-->>A: Bob Calls Alice to confirm PKI
+  Note over A,B: This is the **root of trust** : Bob called Alice to verify the hash 
+  A-->>B: Alice reads the hash to Bob
+  Note over A,B: This ensures Bob is signing the same .csr Alice generated
+  B->>BG: Bob runs script to sign .csr,<br/> confirming the hash as input,<br/> creating the .crt file
+  B->>A: Bob sends the .crt file back to Alice
+  A->>AC: Alice copies the signed certificate (.crt)<br/>to her collaborator node.<br/>She now has a signed certificate.
+  
+```
