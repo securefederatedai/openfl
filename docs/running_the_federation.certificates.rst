@@ -20,7 +20,10 @@ so these configuration steps just need to be done once on that machine.
 .. _install_certs:
 
 .. mermaid:: mermaid/CSR_signing.md
-
+    :alt: Certificate generationa and signing.
+    :align: center
+    :caption: Certificate generation and signing
+    
 .. _install_certs_agg:
 
 On the Aggregator Node
