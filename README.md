@@ -36,14 +36,14 @@ By contributing to the project, you agree to the license and copyright terms the
 and release your contribution under these terms.
 
 ## Resources:
-* Docs: 
-* Wiki: 
-* Issue tracking: 
+* Docs: https://openfl.readthedocs.io/en/latest/index.html
+* Wiki: https://github.com/intel/openfl/wiki
+* Issue tracking: https://github.com/intel/openfl/issue
 
 ## Support
 Please report questions, issues and suggestions using:
 
-* [GitHub* Issues]()
+* [GitHub* Issues](https://github.com/intel/openfl/issues)
 
 ### Relation to OpenFederatedLearning and the Federated Tumor Segmentation (FeTS) Initiative
 
