@@ -37,8 +37,7 @@ and release your contribution under these terms.
 
 ## Resources:
 * Docs: https://openfl.readthedocs.io/en/latest/index.html
-* Wiki: https://github.com/intel/openfl/wiki
-* Issue tracking: https://github.com/intel/openfl/issue
+* Issue tracking: https://github.com/intel/openfl/issues
 
 ## Support
 Please report questions, issues and suggestions using:
