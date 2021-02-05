@@ -1,5 +1,5 @@
 
-# Welcome to Intel&reg; OpenFL
+# Welcome to Intel&reg; Open Federated Learning
 
 [Federated learning](https://en.wikipedia.org/wiki/Federated_learning) is a distributed machine learning approach that
 enables organizations to collaborate on machine learning projects
@@ -17,7 +17,7 @@ to meet the model. Therefore, the minimum data movement needed
 across the federation is solely the model parameters and their updates.
 
 
-OpenFL is a Python 3 project developed by Intel Labs and 
+Open Fdeerated Learning (OpenFL) is a Python 3 project developed by Intel Labs and 
 Intel Internet of Things Group. 
 
 ![Federated Learning](docs/images/diagram_fl.png)
