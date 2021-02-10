@@ -4,7 +4,7 @@
 
 Please report security issues or vulnerabilities to the [Intel® Security Center].
 
-For more information on how Intel® works to resolve security issues, see
+For more information on how Intel® works to resolve security issues, see:
 [Vulnerability Handling Guidelines].
 
 [Intel® Security Center]:https://www.intel.com/security
