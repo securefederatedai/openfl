@@ -3,7 +3,7 @@
 
 # If your machine is behind a proxy, make sure you set it up in ~/.docker/config.json
 
-ARG BASE_IMAGE=python:3.6.12-slim-stretch
+ARG BASE_IMAGE=python:3.8
 FROM ${BASE_IMAGE}
 
 RUN apt-get update && apt-get install -y --no-install-recommends openssh-server \
