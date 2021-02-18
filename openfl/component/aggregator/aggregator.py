@@ -95,7 +95,7 @@ class Aggregator:
         # these enable getting all tensors for a task
         # {TaskResultKey: list of TensorKeys}
         self.collaborator_tasks_results = {}
-        #{TaskResultKey: data_size}
+        # {TaskResultKey: data_size}
         self.collaborator_task_weight = {}
 
     def _load_initial_tensors(self):
