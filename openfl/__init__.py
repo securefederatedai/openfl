@@ -3,3 +3,4 @@
 """openfl base package."""
 # flake8: noqa
 from .__version__ import __version__
+from federated.task.core_task_runner import CoreTaskRunner

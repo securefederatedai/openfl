@@ -1,11 +1,140 @@
 from logging import getLogger
+import functools
+import numpy as np
+
+from openfl.utilities import TensorKey, split_tensor_dict_for_holdouts
 
 
 class CoreTaskRunner(object):
     """Federated Learning Task Runner Class."""
 
-    def __init__(self, data_loader, tensor_dict_split_fn_kwargs={}, **kwargs):
+    def register_fl_task(self, training_method, task_type='train', task_name='train'):
+        """
+        allowed types: 'train', 'validate'
+
+        Collaborator interface:
+        Task recieves the following: col_name, round_num, input_tensor_dict, use_tqdm=False, **kwargs
+        Task is expected to return global_tensor_dict, local_tensor_dict 
+
+        User method interface:
+        Training Method recieves the following: model, train_loader, device, optimizer
+        Validation Method recieves the following: model, val_loader, device
+
+        User Methods return: dict{name: metric}
+        """
+        
+        @functools.wraps(training_method)
+        def wrapper_decorator(*args, **kwargs):
+            col_name, round_num, input_tensor_dict, *args = args
+            
+
+            device = kwargs.getdefault('device', 'cpu') # collaborator should know the correct device
+            if task_type=='train':
+                self.rebuild_model(input_tensor_dict, validation=False, device=device)
+                loader = self.data_loader.get_train_loader()
+                args_method = [self.model, loader, device, self.optimizer,]
+            elif task_type=='validation':
+                self.rebuild_model(input_tensor_dict, validation=True, device=device)
+                loader = self.data_loader.get_valid_loader()
+                args_method = [self.model, loader, device,]
+            else:
+                pass
+
+            # Here is the training metod call
+            metric_dict = training_method(*args_method)
+            # Do something after
+            
+            origin = col_name
+            if task_type=='train':
+                # Output metric tensors (scalar)
+                tags = ('trained',)
+
+                # output model tensors (Doesn't include TensorKey)
+                output_model_dict = self.get_tensor_dict(with_opt_vars=True)
+                global_model_dict, local_model_dict = split_tensor_dict_for_holdouts(
+                    self.logger, output_model_dict,
+                    **self.tensor_dict_split_fn_kwargs
+                )
+
+                # Create global tensorkeys
+                global_tensorkey_model_dict = {
+                    TensorKey(tensor_name, origin, round_num, False, tags):
+                        nparray for tensor_name, nparray in global_model_dict.items()}
+                # Create tensorkeys that should stay local
+                local_tensorkey_model_dict = {
+                    TensorKey(tensor_name, origin, round_num, False, tags):
+                        nparray for tensor_name, nparray in local_model_dict.items()}
+                # The train/validate aggregated function of the next
+                # round will look for the updated model parameters.
+                # This ensures they will be resolved locally
+                next_local_tensorkey_model_dict = {TensorKey(
+                    tensor_name, origin, round_num + 1, False, ('model',)): nparray
+                    for tensor_name, nparray in local_model_dict.items()}
+
+                global_tensor_dict = global_tensorkey_model_dict
+                local_tensor_dict = {**local_tensorkey_model_dict, **next_local_tensorkey_model_dict}
+
+                # Update the required tensors if they need to be
+                # pulled from the aggregator
+                # TODO this logic can break if different collaborators
+                #  have different roles between rounds.
+                # For example, if a collaborator only performs validation
+                # in the first round but training
+                # in the second, it has no way of knowing the optimizer
+                # state tensor names to request from the aggregator
+                # because these are only created after training occurs.
+                # A work around could involve doing a single epoch of training
+                # on random data to get the optimizer names,
+                # and then throwing away the model.
+                if self.opt_treatment == 'CONTINUE_GLOBAL':
+                    self.initialize_tensorkeys_for_functions(with_opt_vars=True)
+
+                # This will signal that the optimizer values are now present,
+                # and can be loaded when the model is rebuilt
+                self.train_round_completed = True
+
+            elif task_type=='validation':
+                suffix = 'validate'
+                if kwargs['apply'] == 'local':
+                    suffix += '_local'
+                else:
+                    suffix += '_agg'
+                tags = ('metric', suffix)
+
+                global_tensor_dict, local_tensor_dict = {}, {}
+            else:
+                pass
+
+            metric_dict = {
+                    TensorKey(metric, origin, round_num, True, tags):
+                        np.array(value) for metric, value in metric_dict.items()
+                }
+            global_tensor_dict = {**global_tensor_dict, **metric_dict}
+
+            return global_tensor_dict, local_tensor_dict
+
+        # We do not even have to decorate the function 
+        self.TASK_REGISTRY[task_name] = wrapper_decorator
+        # return wrapper_decorator
+
+
+    def __init__(self, model_provider, **kwargs):
+        """
+        model_provider should have a method provide_model
+        """
         self.set_logger()
+        self.TASK_REGISTRY = dict()
+        self.model_provider = model_provider
+        self.model = self.model_provider.provide_model()
+        self.optimizer = self.model_provider.provide_optimizer()
+        self.kwargs = kwargs
+
+    def set_data_loader(self, data_loader):
+        self.data_loader = data_loader
+        
+    def set_optimizer_treatment(self, opt_treatment):
+        """Change the treatment of current instance optimizer."""
+        self.opt_treatment = opt_treatment
 
     def set_logger(self):
         """Set up the log object."""
@@ -17,7 +146,7 @@ class CoreTaskRunner(object):
         """Change the treatment of current instance optimizer."""
         self.opt_treatment = opt_treatment
         
-    def rebuild_model(self, round_num, input_tensor_dict, validation=False):
+    def rebuild_model(self, input_tensor_dict, validation=False, device='cpu'):
         """
         Parse tensor names and update weights of model. Handles the optimizer treatment.
 
@@ -26,12 +155,12 @@ class CoreTaskRunner(object):
         """
         if self.opt_treatment == 'RESET':
             self.reset_opt_vars()
-            self.set_tensor_dict(input_tensor_dict, with_opt_vars=False)
+            self.set_tensor_dict(input_tensor_dict, with_opt_vars=False, device=device)
         elif (self.training_round_completed
               and self.opt_treatment == 'CONTINUE_GLOBAL' and not validation):
-            self.set_tensor_dict(input_tensor_dict, with_opt_vars=True)
+            self.set_tensor_dict(input_tensor_dict, with_opt_vars=True, device=device)
         else:
-            self.set_tensor_dict(input_tensor_dict, with_opt_vars=False)
+            self.set_tensor_dict(input_tensor_dict, with_opt_vars=False, device=device)
 
 
     def get_required_tensorkeys_for_function(self, func_name, **kwargs):
@@ -128,6 +257,41 @@ class CoreTaskRunner(object):
             ) for tensor_name in validation_local_model_dict]
 
 
+    def reset_opt_vars(self):
+        """
+        Reset optimizer variables.
+
+        Resets the optimizer variables
+
+        """
+        self.optimizer = self.model_provider.provide_optimizer()
+
+
+
+        
+    def get_train_data_size(self):
+        """
+        Get the number of training examples.
+
+        It will be used for weighted averaging in aggregation.
+
+        Returns:
+            int: The number of training examples.
+        """
+        return self.data_loader.get_train_data_size()
+
+    def get_valid_data_size(self):
+        """
+        Get the number of examples.
+
+        It will be used for weighted averaging in aggregation.
+
+        Returns:
+            int: The number of validation examples.
+        """
+        return self.data_loader.get_valid_data_size()
+
+
 #####################################################################################################
     
     def get_tensor_dict(self, with_opt_vars=False):
@@ -143,7 +307,7 @@ class CoreTaskRunner(object):
         """
         pass
 
-    def set_tensor_dict(self, tensor_dict, with_opt_vars=False):
+    def set_tensor_dict(self, tensor_dict, with_opt_vars=False, device='cpu'):
         """Set the tensor dictionary.
 
         Args:
@@ -159,11 +323,195 @@ class CoreTaskRunner(object):
         # FIXME: do both and sanity check each time?
         pass
 
-    def reset_opt_vars(self):
-        """
-        Reset optimizer variables.
 
-        Resets the optimizer variables
 
-        """
-        pass
+from copy import deepcopy
+import numpy as np
+class FrameworkAdapterPlugin:
+    def __init__(self) -> None:
+
+        import torch as pt
+        import torch.nn as nn
+        
+
+
+    def get_tensor_dict(self, model, optimizer=None, with_opt_vars=False):
+        state = to_cpu_numpy(model.state_dict())
+
+        if with_opt_vars:
+            opt_state = _get_optimizer_state(optimizer)
+            state = {**state, **opt_state}
+
+        return state
+
+    def set_tensor_dict(self, model, tensor_dict, optimizer=None, with_opt_vars=False, device='cpu'):
+        new_state = {}
+        # Grabbing keys from model's state_dict helps to confirm we have
+        # everything
+        for k in self.state_dict():
+            new_state[k] = pt.from_numpy(tensor_dict.pop(k)).to(device)
+
+        # set model state
+        model.load_state_dict(new_state)
+
+        if with_opt_vars:
+            # see if there is state to restore first
+            if tensor_dict.pop('__opt_state_needed') == 'true':
+                _set_optimizer_state(self.get_optimizer(), device, tensor_dict)
+
+            # sanity check that we did not record any state that was not used
+            assert len(tensor_dict) == 0
+
+
+#------------------------------------------------------------    
+
+def _set_optimizer_state(optimizer, device, derived_opt_state_dict):
+    """Set the optimizer state.
+
+    Args:
+        optimizer:
+        device:
+        derived_opt_state_dict:
+
+    """
+    temp_state_dict = expand_derived_opt_state_dict(
+        derived_opt_state_dict, device)
+
+    # FIXME: Figure out whether or not this breaks learning rate
+    #  scheduling and the like.
+    # Setting default values.
+    # All optimizer.defaults are considered as not changing over course of
+    # training.
+    for group in temp_state_dict['param_groups']:
+        for k, v in optimizer.defaults.items():
+            group[k] = v
+
+    optimizer.load_state_dict(temp_state_dict)
+
+def _get_optimizer_state(optimizer):
+    """Return the optimizer state.
+
+    Args:
+        optimizer
+    """
+    opt_state_dict = deepcopy(optimizer.state_dict())
+
+    # Optimizer state might not have some parts representing frozen parameters
+    # So we do not synchronize them
+    param_keys_with_state = set(opt_state_dict['state'].keys())
+    for group in opt_state_dict['param_groups']:
+        local_param_set = set(group['params'])
+        params_to_sync = local_param_set & param_keys_with_state
+        group['params'] = sorted(list(params_to_sync))
+
+    derived_opt_state_dict = _derive_opt_state_dict(opt_state_dict)
+
+    return derived_opt_state_dict
+
+
+def _derive_opt_state_dict(opt_state_dict):
+    """Separate optimizer tensors from the tensor dictionary.
+
+    Flattens the optimizer state dict so as to have key, value pairs with
+    values as numpy arrays.
+    The keys have sufficient info to restore opt_state_dict using
+    expand_derived_opt_state_dict.
+
+    Args:
+        opt_state_dict: The optimizer state dictionary
+
+    """
+    derived_opt_state_dict = {}
+
+    # Determine if state is needed for this optimizer.
+    if len(opt_state_dict['state']) == 0:
+        derived_opt_state_dict['__opt_state_needed'] = 'false'
+        return derived_opt_state_dict
+
+    derived_opt_state_dict['__opt_state_needed'] = 'true'
+
+    # Using one example state key, we collect keys for the corresponding
+    # dictionary value.
+    example_state_key = opt_state_dict['param_groups'][0]['params'][0]
+    example_state_subkeys = set(
+        opt_state_dict['state'][example_state_key].keys()
+    )
+
+    # We assume that the state collected for all params in all param groups is
+    # the same.
+    # We also assume that whether or not the associated values to these state
+    # subkeys is a tensor depends only on the subkey.
+    # Using assert statements to break the routine if these assumptions are
+    # incorrect.
+    for state_key in opt_state_dict['state'].keys():
+        assert example_state_subkeys == set(opt_state_dict['state'][state_key].keys())
+        for state_subkey in example_state_subkeys:
+            assert (isinstance(
+                opt_state_dict['state'][example_state_key][state_subkey],
+                pt.Tensor)
+                == isinstance(
+                    opt_state_dict['state'][state_key][state_subkey],
+                    pt.Tensor))
+
+    state_subkeys = list(opt_state_dict['state'][example_state_key].keys())
+
+    # Tags will record whether the value associated to the subkey is a
+    # tensor or not.
+    state_subkey_tags = []
+    for state_subkey in state_subkeys:
+        if isinstance(
+                opt_state_dict['state'][example_state_key][state_subkey],
+                pt.Tensor
+        ):
+            state_subkey_tags.append('istensor')
+        else:
+            state_subkey_tags.append('')
+    state_subkeys_and_tags = list(zip(state_subkeys, state_subkey_tags))
+
+    # Forming the flattened dict, using a concatenation of group index,
+    # subindex, tag, and subkey inserted into the flattened dict key -
+    # needed for reconstruction.
+    nb_params_per_group = []
+    for group_idx, group in enumerate(opt_state_dict['param_groups']):
+        for idx, param_id in enumerate(group['params']):
+            for subkey, tag in state_subkeys_and_tags:
+                if tag == 'istensor':
+                    new_v = opt_state_dict['state'][param_id][
+                        subkey].cpu().numpy()
+                else:
+                    new_v = np.array(
+                        [opt_state_dict['state'][param_id][subkey]]
+                    )
+                derived_opt_state_dict[
+                    '__opt_state_{}_{}_{}_{}'.format(
+                        group_idx, idx, tag, subkey)
+                ] = new_v
+        nb_params_per_group.append(idx + 1)
+    # group lengths are also helpful for reconstructing
+    # original opt_state_dict structure
+    derived_opt_state_dict['__opt_group_lengths'] = np.array(
+        nb_params_per_group
+    )
+
+    return derived_opt_state_dict
+
+
+
+def to_cpu_numpy(state):
+    """Send data to CPU as Numpy array.
+
+    Args:
+        state
+
+    """
+    # deep copy so as to decouple from active model
+    state = deepcopy(state)
+
+    for k, v in state.items():
+        # When restoring, we currently assume all values are tensors.
+        if not pt.is_tensor(v):
+            raise ValueError('We do not currently support non-tensors '
+                             'coming from model.state_dict()')
+        # get as a numpy array, making sure is on cpu
+        state[k] = v.cpu().numpy()
+    return state

@@ -194,7 +194,7 @@ class Collaborator:
         )
 
         # now we have whatever the model needs to do the task
-        func = getattr(self.task_runner, func_name)
+        func = self.task_runner.TASK_REGISTRY[func_name]
         global_output_tensor_dict, local_output_tensor_dict = func(
             col_name=self.collaborator_name,
             round_num=round_number,
