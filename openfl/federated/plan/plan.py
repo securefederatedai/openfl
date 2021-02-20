@@ -298,6 +298,8 @@ class Plan(object):
         # We are importing a CoreTaskRunner instance!!!
         instance_name = splitext(defaults[TEMPLATE])[1].strip('.')
         module_path = splitext(defaults[TEMPLATE])[0]
+    
+        print('\n\n', module_path, '\n\n')
 
         module = import_module(module_path)
         ctr_instance = getattr(module, instance_name)
