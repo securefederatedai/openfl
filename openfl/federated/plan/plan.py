@@ -295,13 +295,19 @@ class Plan(object):
                                        SETTINGS: {}
                                    })
 
-        defaults[SETTINGS]['data_loader'] = self.get_data_loader(
+        # We are importing a CoreTaskRunner instance!!!
+        instance_name = splitext(defaults[TEMPLATE])[1].strip('.')
+        module_path = splitext(defaults[TEMPLATE])[0]
+
+        module = import_module(module_path)
+        ctr_instance = getattr(module, instance_name)
+
+        data_loader = self.get_data_loader(
             collaborator_name
         )
 
-        if self.runner_ is None:
-            self.runner_ = Plan.Build(**defaults)
-
+        ctr_instance.set_data_loader(data_loader)
+        self.runner_ = ctr_instance
         return self.runner_
 
     def get_collaborator(self, collaborator_name,
