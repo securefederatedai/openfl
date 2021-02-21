@@ -44,6 +44,7 @@ class Model(nn.Module):
         x = F.max_pool2d(x, 2)
         x = F.relu(self.conv3(x))
         x = F.adaptive_avg_pool2d(x, output_size=1)
+        x = torch.flatten(x,start_dim=1)
         x = self.fc(x)
         return F.log_softmax(x, dim=1)
 
@@ -86,7 +87,7 @@ def train_epoch(model, train_loader, device, optimizer, loss_fn=cross_entropy):
     return {'train_loss': np.mean(losses),}
 
 
-@CTR.register_fl_task(task_type='validate', task_name='validation')
+@CTR.register_fl_task(task_type='validate', task_name='validate')
 def validation(model, val_loader, device):
     model.eval()
     model.to(device)
