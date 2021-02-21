@@ -24,26 +24,25 @@ class CoreTaskRunner(object):
         """
         def decorator_with_args(training_method):
             @functools.wraps(training_method)
-            def wrapper_decorator(*args, **kwargs):
-                col_name, round_num, input_tensor_dict, *args = args
-                
+            def wrapper_decorator(col_name, round_num, input_tensor_dict, **kwargs):
 
-                device = kwargs.getdefault('device', 'cpu') # collaborator should know the correct device
+                device = kwargs.get('device', 'cpu') # collaborator should know the correct device
                 if task_type=='train':
                     self.rebuild_model(input_tensor_dict, validation=False, device=device)
                     loader = self.data_loader.get_train_loader()
                     args_method = [self.model, loader, device, self.optimizer,]
-                elif task_type=='validation':
+                # elif task_type=='validation':
+                else:
                     self.rebuild_model(input_tensor_dict, validation=True, device=device)
                     loader = self.data_loader.get_valid_loader()
                     args_method = [self.model, loader, device,]
-                else:
-                    pass
+
 
                 # Here is the training metod call
                 metric_dict = training_method(*args_method)
                 # Do something after
                 
+                global_tensor_dict, local_tensor_dict = {}, {}
                 origin = col_name
                 if task_type=='train':
                     # Output metric tensors (scalar)
@@ -101,9 +100,8 @@ class CoreTaskRunner(object):
                         suffix += '_agg'
                     tags = ('metric', suffix)
 
-                    global_tensor_dict, local_tensor_dict = {}, {}
                 else:
-                    pass
+                    tags = ('unknown')
 
                 metric_dict = {
                         TensorKey(metric, origin, round_num, True, tags):
@@ -136,6 +134,16 @@ class CoreTaskRunner(object):
         # I do not know what is this
         self.tensor_dict_split_fn_kwargs = dict()
         self.required_tensorkeys_for_function = {}
+        self.initialize_tensorkeys_for_functions()
+
+        # Complete hell below
+        self.training_round_completed = False
+        # overwrite attribute to account for one optimizer param (in every
+        # child model that does not overwrite get and set tensordict) that is
+        # not a numpy array
+        self.tensor_dict_split_fn_kwargs.update({
+            'holdout_tensor_names': ['__opt_state_needed']
+        })
 
     def set_data_loader(self, data_loader):
         self.data_loader = data_loader
