@@ -26,7 +26,7 @@ across the federation is solely the model parameters and their updates.
 Open Federated Learning (OpenFL) is a Python 3 project developed by Intel Labs and 
 Intel Internet of Things Group. 
 
-![Federated Learning](docs/images/diagram_fl.png)
+![Federated Learning](https://github.com/intel/openfl/blob/master/docs/images/diagram_fl.png)
 
 ## Requirements
 
@@ -34,7 +34,7 @@ Intel Internet of Things Group.
 - Python 3.6+ with a Python virtual environment (e.g. [conda](https://docs.conda.io/en/latest/))
 - TensorFlow 2+ or PyTorch 1.6+ (depending on your training requirements). OpenFL is designed to easily support other frameworks as well.
 
-![fx commandline interface](docs/images/fx_help.png)
+![fx commandline interface](https://github.com/intel/openfl/blob/master/docs/images/fx_help.png)
 
 ## License
 This project is licensed under [Apache License Version 2.0](LICENSE).
