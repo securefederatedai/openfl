@@ -10,6 +10,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends openssh-server 
         && apt-get clean \
         && rm -rf /var/lib/apt/lists/*
 
+RUN echo 'deb-src http://deb.debian.org/debian buster main' | tee -a /etc/apt/sources.list
+RUN echo 'deb-src http://security.debian.org/debian-security buster/updates main' | tee -a /etc/apt/sources.list
+RUN echo 'deb-src http://deb.debian.org/debian buster-updates main' | tee -a /etc/apt/sources.list
+RUN apt-get update
+RUN apt-get source keyutils ucf procps
+
 WORKDIR /openfl
 COPY . .
 
