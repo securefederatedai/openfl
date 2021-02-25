@@ -3,18 +3,18 @@
 
 # If your machine is behind a proxy, make sure you set it up in ~/.docker/config.json
 
-ARG BASE_IMAGE=python:3.6.12-slim-stretch
+ARG BASE_IMAGE=python:3.8
 FROM ${BASE_IMAGE}
-
-RUN apt-get update && apt-get install -y --no-install-recommends openssh-server \
-        && apt-get clean \
-        && rm -rf /var/lib/apt/lists/*
 
 RUN echo 'deb-src http://deb.debian.org/debian buster main' | tee -a /etc/apt/sources.list
 RUN echo 'deb-src http://security.debian.org/debian-security buster/updates main' | tee -a /etc/apt/sources.list
 RUN echo 'deb-src http://deb.debian.org/debian buster-updates main' | tee -a /etc/apt/sources.list
 RUN apt-get update
 RUN apt-get source keyutils ucf procps
+
+RUN apt-get install -y --no-install-recommends openssh-server \
+        && apt-get clean \
+        && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /openfl
 COPY . .
