@@ -11,7 +11,7 @@ BASE_IMAGE_TAG=${5:-'openfl'}
 
 # If an aggregator container will run on another machine
 # a relevant FQDN should be provided
-FQDN=$(hostname --all-fqdns | awk '{print $1}')
+FQDN=${6:-$(hostname --all-fqdns | awk '{print $1}')}
 
 # Build base image
 bash ./scripts/build_base_docker_image.sh ${BASE_IMAGE_TAG}
