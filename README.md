@@ -1,6 +1,12 @@
 
 # Welcome to Intel&reg; Open Federated Learning
 
+[![Jenkins](https://img.shields.io/jenkins/build?jobUrl=http%3A%2F%2F213.221.44.203%2Fjob%2FFederated-Learning%2Fjob%2Fnightly%2F)](http://213.221.44.203/job/Federated-Learning/job/nightly/)
+[![Documentation Status](https://readthedocs.org/projects/openfl/badge/?version=latest)](https://openfl.readthedocs.io/en/latest/?badge=latest)
+[![PyPI version](https://img.shields.io/pypi/v/openfl)](https://pypi.org/project/openfl/)
+[<img src="https://img.shields.io/badge/slack-@openfl-blue.svg?logo=slack">](https://join.slack.com/t/openfl/shared_invite/zt-lo1djtw4-DWAQE_wgfp1N_o2RUMqq9Q) 
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+
 [Federated learning](https://en.wikipedia.org/wiki/Federated_learning) is a distributed machine learning approach that
 enables organizations to collaborate on machine learning projects
 without sharing sensitive data, such as, patient records, financial data,

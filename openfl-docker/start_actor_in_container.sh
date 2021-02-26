@@ -10,8 +10,5 @@ then
 elif [ $CONTAINER_TYPE = 'aggregator' ]
 then
     tar -xf /certs.tar
-    fx aggregator certify --fqdn ${FQDN} --silent
     fx --log-level debug aggregator start
 fi
-
-fg %1
