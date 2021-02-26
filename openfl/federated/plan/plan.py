@@ -299,16 +299,18 @@ class Plan(object):
         instance_name = splitext(defaults[TEMPLATE])[1].strip('.')
         module_path = splitext(defaults[TEMPLATE])[0]
     
-        print('\n\n', module_path, '\n\n')
-
         module = import_module(module_path)
         ctr_instance = getattr(module, instance_name)
 
         data_loader = self.get_data_loader(
             collaborator_name
         )
-
         ctr_instance.set_data_loader(data_loader)
+
+        # from openfl.plugins.frameworks_adapters.pytorch_adapter import FrameworkAdapterPlugin
+        from openfl.plugins.frameworks_adapters.keras_adapter import FrameworkAdapterPlugin
+        ctr_instance.set_framework_adapter(FrameworkAdapterPlugin)
+
         self.runner_ = ctr_instance
         return self.runner_
 
