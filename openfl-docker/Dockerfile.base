@@ -6,6 +6,7 @@
 ARG BASE_IMAGE=python:3.8
 FROM ${BASE_IMAGE}
 
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN echo 'deb-src http://deb.debian.org/debian buster main' | tee -a /etc/apt/sources.list
 RUN echo 'deb-src http://security.debian.org/debian-security buster/updates main' | tee -a /etc/apt/sources.list
 RUN echo 'deb-src http://deb.debian.org/debian buster-updates main' | tee -a /etc/apt/sources.list
