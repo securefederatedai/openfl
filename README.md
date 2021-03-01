@@ -1,6 +1,7 @@
 
 # Welcome to Intel&reg; Open Federated Learning
 
+[![PyPI - Python Version](https://img.shields.io/badge/python-3.6%20%7C%203.7%20%7C%203.8-blue)](https://pypi.org/project/openfl/)
 [![Jenkins](https://img.shields.io/jenkins/build?jobUrl=http%3A%2F%2F213.221.44.203%2Fjob%2FFederated-Learning%2Fjob%2Fnightly%2F)](http://213.221.44.203/job/Federated-Learning/job/nightly/)
 [![Documentation Status](https://readthedocs.org/projects/openfl/badge/?version=latest)](https://openfl.readthedocs.io/en/latest/?badge=latest)
 [![PyPI version](https://img.shields.io/pypi/v/openfl)](https://pypi.org/project/openfl/)
@@ -26,7 +27,7 @@ across the federation is solely the model parameters and their updates.
 Open Federated Learning (OpenFL) is a Python 3 project developed by Intel Labs and 
 Intel Internet of Things Group. 
 
-![Federated Learning](docs/images/diagram_fl.png)
+![Federated Learning](https://raw.githubusercontent.com/intel/openfl/master/docs/images/diagram_fl.png)
 
 ## Requirements
 
@@ -34,7 +35,7 @@ Intel Internet of Things Group.
 - Python 3.6+ with a Python virtual environment (e.g. [conda](https://docs.conda.io/en/latest/))
 - TensorFlow 2+ or PyTorch 1.6+ (depending on your training requirements). OpenFL is designed to easily support other frameworks as well.
 
-![fx commandline interface](docs/images/fx_help.png)
+![fx commandline interface](https://raw.githubusercontent.com/intel/openfl/master/docs/images/fx_help.png)
 
 ## License
 This project is licensed under [Apache License Version 2.0](LICENSE).
