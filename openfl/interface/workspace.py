@@ -400,7 +400,7 @@ def dockerize_(context, base_image, save):
         WORKSPACE_IMAGE_TAR = WORKSPACE_NAME + '_image.tar'
         echo('Saving the Docker image...')
         image = client.images.get(f'{WORKSPACE_NAME}')
-        resp = image.save()
+        resp = image.save(named=True)
         with open(WORKSPACE_IMAGE_TAR, 'wb') as f:
             for chunk in resp:
                 f.write(chunk)

@@ -55,7 +55,7 @@ setup(
         'jupyter',
         'ipykernel',
         'flatten_json',
-        'cryptography',
+        'cryptography==3.4.6',
     ],
     python_requires='>=3.6, <3.9',
     project_urls={
