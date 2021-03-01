@@ -1,5 +1,7 @@
 #!/bin/bash
 set -e
 
-docker build -t openfl \
+TAG=${1:-'openfl'}
+
+docker build -t ${TAG} \
         -f openfl-docker/Dockerfile.base .
