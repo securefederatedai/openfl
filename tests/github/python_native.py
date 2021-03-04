@@ -8,6 +8,12 @@ import json
 
 import openfl.native as fx
 
+# Remove this after upgrade to torchvision==0.9. See https://github.com/pytorch/vision/issues/3497
+from six.moves import urllib
+opener = urllib.request.build_opener()
+opener.addheaders = [('User-agent', 'Mozilla/5.0')]
+urllib.request.install_opener(opener)
+
 
 def one_hot(labels, classes):
     """One-hot encode `labels` using `classes` classes."""
