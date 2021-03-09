@@ -205,20 +205,21 @@ class CollaboratorGRPCClient:
 
     def validate_response(self, reply, collaborator_name):
         """Validate the aggregator response."""
+        header = reply['header']
         # check that the message was intended to go to this collaborator
-        check_equal(reply.header.receiver, collaborator_name, self.logger)
-        check_equal(reply.header.sender, self.aggregator_uuid, self.logger)
+        check_equal(header['receiver'], collaborator_name, self.logger)
+        check_equal(header['sender'], self.aggregator_uuid, self.logger)
 
         # check that federation id matches
         check_equal(
-            reply.header.federation_uuid,
+            header['federation_uuid'],
             self.federation_uuid,
             self.logger
         )
 
         # check that there is aggrement on the single_col_cert_common_name
         check_equal(
-            reply.header.single_col_cert_common_name,
+            header['single_col_cert_common_name'],
             self.single_col_cert_common_name or '',
             self.logger
         )
@@ -264,9 +265,10 @@ class CollaboratorGRPCClient:
         self._set_header(collaborator_name)
         request = TasksRequest(header=self.header)
         response = self.stub.GetTasks(request)
+        response = utils.parse(response)
         self.validate_response(response, collaborator_name)
 
-        return response.tasks, response.round_number, response.sleep_time, response.quit
+        return (response[key] for key in ['tasks', 'round_number', 'sleep_time', 'quit'])
 
     @_atomic_connection
     def get_aggregated_tensor(self, collaborator_name, tensor_name, round_number,
@@ -282,10 +284,11 @@ class CollaboratorGRPCClient:
             require_lossless=require_lossless
         )
         response = self.stub.GetAggregatedTensor(request)
+        response = utils.parse(response)
         # also do other validation, like on the round_number
         self.validate_response(response, collaborator_name)
 
-        return response.tensor
+        return response['tensor']
 
     @_atomic_connection
     def send_local_task_results(self, collaborator_name, round_number,
@@ -304,6 +307,7 @@ class CollaboratorGRPCClient:
         stream = []
         stream += utils.proto_to_datastream(request, self.logger)
         response = self.stub.SendLocalTaskResults(iter(stream))
+        response = utils.parse(response)
 
         # also do other validation, like on the round_number
         self.validate_response(response, collaborator_name)

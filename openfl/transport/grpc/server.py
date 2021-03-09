@@ -80,7 +80,7 @@ class AggregatorGRPCServer(AggregatorServicer):
         if not self.disable_tls:
             common_name = context.auth_context()[
                 'x509_common_name'][0].decode('utf-8')
-            collaborator_common_name = request.header.sender
+            collaborator_common_name = request['header']['sender']
             if not self.aggregator.valid_collaborator_cn_and_id(
                     common_name, collaborator_common_name):
                 raise ValueError(
@@ -107,22 +107,22 @@ class AggregatorGRPCServer(AggregatorServicer):
         Validate request header matches expected values.
 
         Args:
-            request : protobuf
+            request : dict
                 Request sent from a collaborator that requires validation
         """
         # TODO improve this check. the sender name could be spoofed
-        check_is_in(request.header.sender, self.aggregator.authorized_cols, self.logger)
+        check_is_in(request['header']['sender'], self.aggregator.authorized_cols, self.logger)
 
         # check that the message is for me
-        check_equal(request.header.receiver, self.aggregator.uuid, self.logger)
+        check_equal(request['header']['receiver'], self.aggregator.uuid, self.logger)
 
         # check that the message is for my federation
         check_equal(
-            request.header.federation_uuid, self.aggregator.federation_uuid, self.logger)
+            request['header']['federation_uuid'], self.aggregator.federation_uuid, self.logger)
 
         # check that we agree on the single cert common name
         check_equal(
-            request.header.single_col_cert_common_name,
+            request['header']['single_col_cert_common_name'],
             self.aggregator.single_col_cert_common_name,
             self.logger
         )
@@ -136,11 +136,12 @@ class AggregatorGRPCServer(AggregatorServicer):
             context: The gRPC context
 
         """
+        request = utils.parse(request)
         self.validate_collaborator(request, context)
         self.check_request(request)
-        collaborator_name = request.header.sender
-        tasks, round_number, sleep_time, time_to_quit = self.aggregator.get_tasks(
-            request.header.sender)
+        collaborator_name = request['header']['sender']
+        tasks, round_number, sleep_time, time_to_quit = \
+            self.aggregator.get_tasks(collaborator_name)
 
         return TasksResponse(
             header=self.get_header(collaborator_name),
@@ -159,14 +160,15 @@ class AggregatorGRPCServer(AggregatorServicer):
             context: The gRPC context
 
         """
+        request = utils.parse(request)
         self.validate_collaborator(request, context)
         self.check_request(request)
-        collaborator_name = request.header.sender
-        tensor_name = request.tensor_name
-        require_lossless = request.require_lossless
-        round_number = request.round_number
-        report = request.report
-        tags = request.tags
+        collaborator_name = request['header']['sender']
+        tensor_name = request['tensor_name']
+        require_lossless = request['require_lossless']
+        round_number = request['round_number']
+        report = request['report']
+        tags = request['tags']
 
         named_tensor = self.aggregator.get_aggregated_tensor(
             collaborator_name, tensor_name, round_number, report, tags, require_lossless)
@@ -186,16 +188,17 @@ class AggregatorGRPCServer(AggregatorServicer):
         """
         proto = TaskResults()
         proto = utils.datastream_to_proto(proto, request)
+        proto = utils.parse(proto)
 
         self.validate_collaborator(proto, context)
         # all messages get sanity checked
         self.check_request(proto)
 
-        collaborator_name = proto.header.sender
-        task_name = proto.task_name
-        round_number = proto.round_number
-        data_size = proto.data_size
-        named_tensors = proto.tensors
+        collaborator_name = proto['header']['sender']
+        task_name = proto['task_name']
+        round_number = proto['round_number']
+        data_size = proto['data_size']
+        named_tensors = proto['tensors']
 
         self.aggregator.send_local_task_results(
             collaborator_name, round_number, task_name, data_size, named_tensors)

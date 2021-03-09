@@ -1,8 +1,12 @@
 # Copyright (C) 2020-2021 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
+from .federation_pb2 import (
+    TaskResults, ModelProto, NamedTensor, MetadataProto, DataStream, TensorResponse
+)
 from openfl.utilities import TensorKey
-from openfl.protocols import ModelProto, NamedTensor, MetadataProto, DataStream
+from google.protobuf.json_format import MessageToDict
+import base64
 
 
 def model_proto_to_bytes_and_metadata(model_proto):
@@ -224,3 +228,21 @@ def proto_to_datastream(proto, logger, max_buffer_size=(2 * 1024 * 1024)):
         chunk = npbytes[i: i + buffer_size]
         reply = DataStream(npbytes=chunk, size=len(chunk))
         yield reply
+
+
+def parse(data):
+    dataobj = MessageToDict(data,
+                            preserving_proto_field_name=True,
+                            including_default_value_fields=True)
+
+    if isinstance(data, TensorResponse):
+        if 'tensor' in dataobj:
+            tensor = dataobj['tensor']
+            if 'data_bytes' in tensor:
+                tensor['data_bytes'] = base64.b64decode(tensor['data_bytes'].encode())
+    elif isinstance(data, TaskResults):
+        if 'tensors' in dataobj:
+            for tensor in dataobj['tensors']:
+                tensor['data_bytes'] = base64.b64decode(tensor['data_bytes'].encode())
+
+    return dataobj

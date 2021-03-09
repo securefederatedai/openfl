@@ -429,19 +429,16 @@ class Collaborator:
         """Convert named tensor to a numpy array."""
         # do the stuff we do now for decompression and frombuffer and stuff
         # This should probably be moved back to protoutils
-        raw_bytes = named_tensor.data_bytes
-        metadata = [{'int_to_float': proto.int_to_float,
-                     'int_list': proto.int_list,
-                     'bool_list': proto.bool_list
-                     } for proto in named_tensor.transformer_metadata]
+        raw_bytes = named_tensor['data_bytes']
+        metadata = named_tensor['transformer_metadata']
         # The tensor has already been transfered to collaborator, so
         # the newly constructed tensor should have the collaborator origin
         tensor_key = TensorKey(
-            named_tensor.name,
+            named_tensor['name'],
             self.collaborator_name,
-            named_tensor.round_number,
-            named_tensor.report,
-            tuple(named_tensor.tags)
+            named_tensor['round_number'],
+            named_tensor['report'],
+            tuple(named_tensor['tags'])
         )
         tensor_name, origin, round_number, report, tags = tensor_key
         if 'compressed' in tags:
