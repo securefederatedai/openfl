@@ -293,14 +293,9 @@ def run_experiment(collaborator_dict, override_config={}):
         for col in plan.authorized_cols:
 
             collaborator = collaborators[col]
-            model.set_data_loader(collaborator_dict[col].data_loader)
-
-            if round_num != 0:
-                model.rebuild_model(round_num, model_states[col])
 
             collaborator.run_simulation()
-
-            model_states[col] = model.get_tensor_dict(with_opt_vars=True)
+            model_states[col] = collaborator.task_runner.get_tensor_dict(with_opt_vars=True)
 
     # Set the weights for the final model
     model.rebuild_model(
