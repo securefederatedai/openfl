@@ -263,7 +263,7 @@ def run_experiment(collaborator_dict, override_config={}):
     rounds_to_train = plan.config['aggregator']['settings']['rounds_to_train']
     tensor_dict, holdout_params = split_tensor_dict_for_holdouts(
         logger,
-        plan.runner_.get_tensor_dict(False)
+        model.get_tensor_dict(False)
     )
 
     model_snap = utils.construct_model_proto(tensor_dict=tensor_dict,
@@ -285,7 +285,7 @@ def run_experiment(collaborator_dict, override_config={}):
     # Create the collaborators
     collaborators = {
         collaborator: create_collaborator(
-            plan, collaborator, model, aggregator
+            plan, collaborator, collaborator_dict[collaborator], aggregator
         ) for collaborator in plan.authorized_cols
     }
 
