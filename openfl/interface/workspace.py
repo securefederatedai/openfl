@@ -33,6 +33,8 @@ def create_dirs(prefix):
     (prefix / 'plan').mkdir(parents=True, exist_ok=True)  # federated learning plans
     (prefix / 'save').mkdir(parents=True, exist_ok=True)  # model weight saves / initialization
     (prefix / 'code').mkdir(parents=True, exist_ok=True)  # model code
+    # TODO: added model directory for now
+    (prefix / 'model').mkdir(parents=True, exist_ok=True)  # saved checkpoints
 
     src = WORKSPACE / 'workspace/plan/defaults'  # from default workspace
     dst = prefix / 'plan/defaults'  # to created workspace
@@ -97,7 +99,7 @@ def export_():
     """Export federated learning workspace."""
     from shutil import make_archive, copytree, copy2, ignore_patterns
     from tempfile import mkdtemp
-    from os import getcwd, makedirs
+    from os import getcwd, makedirs, path
     from os.path import basename, join
     from plan import FreezePlan
 
@@ -153,6 +155,9 @@ def export_():
     makedirs(f'{tmpDir}/data', exist_ok=True)
     copytree('./code', f'{tmpDir}/code', ignore=ignore)  # code
     copytree('./plan', f'{tmpDir}/plan', ignore=ignore)  # plan
+    # copying model dir for importing the saved model for loading checkpoint
+    if path.exists('./model'):
+        copytree('./model', f'{tmpDir}/model', ignore=ignore)  # model
     copy2(export_requirements_filename, f'{tmpDir}/requirements.txt')  # requirements
 
     try:

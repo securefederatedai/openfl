@@ -224,9 +224,10 @@ class KerasTaskRunner(TaskRunner):
         """Save model."""
         self.model.save(filepath)
 
-    def load_native(self, filepath):
+    def load_native(self, filepath, **kwargs):
         """Load model."""
         self.model = tf.keras.models.load_model(filepath)
+        return self.model
 
     @staticmethod
     def _get_weights_names(obj):

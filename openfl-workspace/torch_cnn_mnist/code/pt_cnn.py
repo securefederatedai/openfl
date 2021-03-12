@@ -3,6 +3,7 @@
 
 """You may copy this file as the starting point of your own model."""
 import numpy as np
+import os
 import tqdm
 import torch
 import torch.nn as nn
@@ -42,10 +43,23 @@ class PyTorchCNN(PyTorchTaskRunner):
         super().__init__(device=device, **kwargs)
 
         self.num_classes = self.data_loader.num_classes
-        self.init_network(device=self.device, **kwargs)
-        self._init_optimizer()
-        self.loss_fn = cross_entropy
-        self.initialize_tensorkeys_for_functions()
+
+        path = 'model/saved_model.pth'
+        if os.path.exists(path):
+            # Load the previously trained model
+            self.load_native(filepath=path)
+            if kwargs['loss']:
+                self.loss_fn = kwargs['loss']
+            else:
+                self.loss_fn = cross_entropy
+            self.initialize_tensorkeys_for_functions(with_opt_vars=True)
+            self.logger.info('Loading the previously saved model : model/saved_model.pth')
+        else:
+            # Build the model
+            self.init_network(device=self.device, **kwargs)
+            self._init_optimizer()
+            self.loss_fn = cross_entropy
+            self.initialize_tensorkeys_for_functions()
 
     def _init_optimizer(self):
         """Initialize the optimizer."""

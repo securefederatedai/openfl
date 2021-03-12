@@ -408,7 +408,7 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
             None
         """
         pickle_dict = pt.load(filepath)
-        self.load_state_dict(pickle_dict[model_state_dict_key])
+        self.load_state_dict(pickle_dict[model_state_dict_key], strict=False)
         self.optimizer.load_state_dict(pickle_dict[optimizer_state_dict_key])
 
     def save_native(self, filepath, model_state_dict_key='model_state_dict',

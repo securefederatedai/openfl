@@ -4,7 +4,7 @@
 """You may copy this file as the starting point of your own model."""
 
 import tensorflow.keras as ke
-
+import os.path
 from tensorflow.keras import Sequential
 from tensorflow.keras.layers import Conv2D, Flatten, Dense
 
@@ -22,8 +22,14 @@ class KerasCNN(KerasTaskRunner):
             **kwargs: Additional parameters to pass to the function
         """
         super().__init__(**kwargs)
-
-        self.model = self.build_model(self.feature_shape, self.data_loader.num_classes, **kwargs)
+        path = 'model/saved_model'
+        if os.path.isdir(path):
+            # Load the previously trained model
+            self.model = self.load_native(filepath=path)
+            self.logger.info('Loading the previously saved model : model/saved_model')
+        else:
+            # Build the model
+            self.model = self.build_model(self.feature_shape, self.data_loader.num_classes, **kwargs)
 
         self.initialize_tensorkeys_for_functions()
 

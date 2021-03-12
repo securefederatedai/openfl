@@ -28,6 +28,8 @@ data_loader :
 task_runner :
   defaults : plan/defaults/task_runner.yaml
   template : code.pt_cnn.PyTorchCNN
+  settings :
+    loss :
 
 network :
   defaults : plan/defaults/network.yaml
