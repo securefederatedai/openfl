@@ -26,6 +26,7 @@ if __name__ == '__main__':
     from openfl.federated import FederatedModel, FederatedDataSet
 
     # TODO: Remove after update to torchvision==0.9.1
+    # See https://github.com/pytorch/vision/issues/3549
     datasets.MNIST.resources = [
         ('https://ossci-datasets.s3.amazonaws.com/mnist/train-images-idx3-ubyte.gz',
             'f68b3c2dcbeaaa9fbdd348bbdeb94873'),
