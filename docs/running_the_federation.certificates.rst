@@ -159,5 +159,5 @@ Before you run the federation make sure you have activated a Python virtual envi
 
     .. code-block:: console
         
-       $ fx collaborator certify --import /PATH/TO/col_COL.LABEL_to_agg_cert_request.zip
+       $ fx collaborator certify --import /PATH/TO/agg_to_col_COL.LABEL_signed_cert.zip
 
