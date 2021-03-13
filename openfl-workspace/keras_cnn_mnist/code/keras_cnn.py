@@ -29,7 +29,8 @@ class KerasCNN(KerasTaskRunner):
             self.logger.info('Loading the previously saved model : model/saved_model')
         else:
             # Build the model
-            self.model = self.build_model(self.feature_shape, self.data_loader.num_classes, **kwargs)
+            self.model = self.build_model(
+                self.feature_shape, self.data_loader.num_classes, **kwargs)
 
         self.initialize_tensorkeys_for_functions()
 
