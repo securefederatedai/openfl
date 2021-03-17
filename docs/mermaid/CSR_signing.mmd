@@ -1,4 +1,3 @@
-```mermaid
 sequenceDiagram
 Title: Collaborator Certificate Signing Flow 
   participant A as Alice
@@ -16,5 +15,3 @@ Title: Collaborator Certificate Signing Flow
   B->>BG: Bob runs script to sign .csr,<br/> confirming the hash as input,<br/> creating the .crt file
   B->>A: Bob sends the .crt file back to Alice
   A->>AC: Alice copies the signed certificate (.crt)<br/>to her collaborator node.<br/>She now has a signed certificate.
-  
-```
