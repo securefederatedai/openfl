@@ -19,10 +19,12 @@ so these configuration steps just need to be done once on that machine.
 
 .. _install_certs:
 
-.. mermaid:: mermaid/CSR_signing.md
-    :alt: Certificate generationa and signing.
-    :align: center
+.. kroki:: mermaid/CSR_signing.mmd
     :caption: Certificate generation and signing
+    :align: center
+    :type: mermaid
+
+
     
 .. _install_certs_agg:
 
@@ -79,9 +81,9 @@ Before you run the federation make sure you have activated a Python virtual envi
     +===========================+==================================================+
     | Certificate chain         | WORKSPACE.PATH/cert/cert_chain.crt               |
     +---------------------------+--------------------------------------------------+
-    | Aggregator certificate    | WORKSPACE.PATH/cert/server/agg_AFQDN.crt    |
+    | Aggregator certificate    | WORKSPACE.PATH/cert/server/agg_AFQDN.crt         |
     +---------------------------+--------------------------------------------------+
-    | Aggregator key            | WORKSPACE.PATH/cert/server/agg_AFQDN.key    |
+    | Aggregator key            | WORKSPACE.PATH/cert/server/agg_AFQDN.key         |
     +---------------------------+--------------------------------------------------+
     
     where **AFQDN** is the fully-qualified domain name of the aggregator node.
