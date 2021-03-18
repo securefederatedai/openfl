@@ -7,7 +7,7 @@ import pytest
 from unittest import mock
 
 from openfl.component.collaborator import Collaborator
-from openfl.protocols import NamedTensor
+from openfl.protocols import NamedTensor, utils
 from openfl.utilities.types import TensorKey
 
 
@@ -37,18 +37,18 @@ def named_tensor():
     metadata.int_list.extend([1, 8])
     metadata.bool_list.append(True)
 
-    return tensor
+    return utils.parse(tensor)
 
 
 @pytest.fixture
 def tensor_key(collaborator_mock, named_tensor):
     """Initialize the tensor_key mock."""
     tensor_key = TensorKey(
-        named_tensor.name,
+        named_tensor['name'],
         collaborator_mock.collaborator_name,
-        named_tensor.round_number,
-        named_tensor.report,
-        tuple(named_tensor.tags)
+        named_tensor['round_number'],
+        named_tensor['report'],
+        tuple(named_tensor['tags'])
     )
     return tensor_key
 
@@ -56,14 +56,14 @@ def tensor_key(collaborator_mock, named_tensor):
 @pytest.fixture
 def tensor_key_trained(collaborator_mock, named_tensor):
     """Initialize the tensor_key_trained mock."""
-    named_tensor.tags.append('trained')
-    named_tensor.tags.remove('model')
+    named_tensor['tags'].append('trained')
+    named_tensor['tags'].remove('model')
     tensor_key = TensorKey(
-        named_tensor.name,
+        named_tensor['name'],
         collaborator_mock.collaborator_name,
-        named_tensor.round_number,
-        named_tensor.report,
-        tuple(named_tensor.tags)
+        named_tensor['round_number'],
+        named_tensor['report'],
+        tuple(named_tensor['tags'])
     )
     return tensor_key
 
@@ -124,13 +124,13 @@ def test_named_tensor_to_nparray_without_tags(collaborator_mock, named_tensor):
     """Test that named_tensor_to_nparray works correctly for tensor without tags."""
     nparray = collaborator_mock.named_tensor_to_nparray(named_tensor)
 
-    assert named_tensor.data_bytes == nparray
+    assert named_tensor['data_bytes'] == nparray
 
 
 @pytest.mark.parametrize('tag', ['compressed', 'lossy_compressed'])
 def test_named_tensor_to_nparray_compressed_tag(collaborator_mock, named_tensor, tag):
     """Test that named_tensor_to_nparray works correctly for tensor with tags."""
-    named_tensor.tags.append(tag)
+    named_tensor['tags'].append(tag)
     nparray = collaborator_mock.named_tensor_to_nparray(named_tensor)
 
     assert isinstance(nparray, numpy.ndarray)
@@ -138,16 +138,16 @@ def test_named_tensor_to_nparray_compressed_tag(collaborator_mock, named_tensor,
 
 def test_nparray_to_named_tensor(collaborator_mock, tensor_key, named_tensor):
     """Test that nparray_to_named_tensor works correctly."""
-    named_tensor.tags.append('compressed')
+    named_tensor['tags'].append('compressed')
     nparray = collaborator_mock.named_tensor_to_nparray(named_tensor)
     tensor = collaborator_mock.nparray_to_named_tensor(tensor_key, nparray)
-    assert tensor.data_bytes == named_tensor.data_bytes
+    assert tensor.data_bytes == named_tensor['data_bytes']
     assert tensor.lossless is True
 
 
 def test_nparray_to_named_tensor_trained(collaborator_mock, tensor_key_trained, named_tensor):
     """Test that nparray_to_named_tensor works correctly for trained tensor."""
-    named_tensor.tags.append('compressed')
+    named_tensor['tags'].append('compressed')
     collaborator_mock.delta_updates = True
     nparray = collaborator_mock.named_tensor_to_nparray(named_tensor)
     collaborator_mock.tensor_db.get_tensor_from_cache = mock.Mock(
@@ -168,7 +168,7 @@ def test_get_aggregated_tensor_from_aggregator(collaborator_mock, tensor_key,
     collaborator_mock.client.get_aggregated_tensor.assert_called_with(
         collaborator_mock.collaborator_name, tensor_key.tensor_name, tensor_key.round_number,
         tensor_key.report, tensor_key.tags, require_lossless)
-    assert nparray == named_tensor.data_bytes
+    assert nparray == named_tensor['data_bytes']
 
 
 def test_get_data_for_tensorkey_from_db(collaborator_mock, tensor_key):
