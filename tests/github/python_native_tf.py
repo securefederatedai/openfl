@@ -81,6 +81,7 @@ def build_model(input_shape,
 
     for v in opt_vars:
         v.initializer.run(session=sess)
+    ke.backend.clear_session()
 
     return model
 
