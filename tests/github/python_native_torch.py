@@ -8,12 +8,6 @@ import json
 
 import openfl.native as fx
 
-# Remove this after upgrade to torchvision==0.9. See https://github.com/pytorch/vision/issues/3497
-from six.moves import urllib
-opener = urllib.request.build_opener()
-opener.addheaders = [('User-agent', 'Mozilla/5.0')]
-urllib.request.install_opener(opener)
-
 
 def one_hot(labels, classes):
     """One-hot encode `labels` using `classes` classes."""
@@ -27,10 +21,22 @@ if __name__ == '__main__':
     import torch.nn as nn
     import torch.nn.functional as F
     import torch.optim as optim
-    import torchvision
-    import torchvision.transforms as transforms
+    from torchvision import datasets, transforms
 
     from openfl.federated import FederatedModel, FederatedDataSet
+
+    # TODO: Remove after update to torchvision==0.9.1
+    # See https://github.com/pytorch/vision/issues/3549
+    datasets.MNIST.resources = [
+        ('https://ossci-datasets.s3.amazonaws.com/mnist/train-images-idx3-ubyte.gz',
+            'f68b3c2dcbeaaa9fbdd348bbdeb94873'),
+        ('https://ossci-datasets.s3.amazonaws.com/mnist/train-labels-idx1-ubyte.gz',
+            'd53e105ee54ea40749a09fcbcd1e9432'),
+        ('https://ossci-datasets.s3.amazonaws.com/mnist/t10k-images-idx3-ubyte.gz',
+            '9fb629c4189551a2d022fa330f9573f3'),
+        ('https://ossci-datasets.s3.amazonaws.com/mnist/t10k-labels-idx1-ubyte.gz',
+            'ec29112dd5afa0611ce80d1b7f02629c')
+    ]
 
     def cross_entropy(output, target):
         """Binary cross-entropy metric."""
@@ -62,15 +68,15 @@ if __name__ == '__main__':
     transform = transforms.Compose([transforms.ToTensor(),
                                     transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
 
-    trainset = torchvision.datasets.MNIST(root='./data', train=True,
-                                          download=True, transform=transform)
+    trainset = datasets.MNIST(root='./data', train=True,
+                              download=True, transform=transform)
 
     train_images, train_labels = trainset.train_data, np.array(trainset.train_labels)
     train_images = torch.from_numpy(np.expand_dims(train_images, axis=1)).float()
     train_labels = one_hot(train_labels, 10)
 
-    validset = torchvision.datasets.MNIST(root='./data', train=False,
-                                          download=True, transform=transform)
+    validset = datasets.MNIST(root='./data', train=False,
+                              download=True, transform=transform)
 
     valid_images, valid_labels = validset.test_data, np.array(validset.test_labels)
     valid_images = torch.from_numpy(np.expand_dims(valid_images, axis=1)).float()
