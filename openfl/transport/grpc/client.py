@@ -265,7 +265,7 @@ class CollaboratorGRPCClient:
         self._set_header(collaborator_name)
         request = TasksRequest(header=self.header)
         response = self.stub.GetTasks(request)
-        response = utils.parse(response)
+        response = utils.message_to_dict(response)
         self.validate_response(response, collaborator_name)
 
         return (response[key] for key in ['tasks', 'round_number', 'sleep_time', 'quit'])
@@ -284,7 +284,7 @@ class CollaboratorGRPCClient:
             require_lossless=require_lossless
         )
         response = self.stub.GetAggregatedTensor(request)
-        response = utils.parse(response)
+        response = utils.tensor_response_to_dict(response)
         # also do other validation, like on the round_number
         self.validate_response(response, collaborator_name)
 
@@ -307,7 +307,7 @@ class CollaboratorGRPCClient:
         stream = []
         stream += utils.proto_to_datastream(request, self.logger)
         response = self.stub.SendLocalTaskResults(iter(stream))
-        response = utils.parse(response)
+        response = utils.message_to_dict(response)
 
         # also do other validation, like on the round_number
         self.validate_response(response, collaborator_name)

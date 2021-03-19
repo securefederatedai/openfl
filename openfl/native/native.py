@@ -272,7 +272,7 @@ def run_experiment(collaborator_dict, override_config={}):
 
     logger.info(f'Creating Initial Weights File    🠆 {init_state_path}')
 
-    utils.dump_proto(model_proto=model_snap, fpath=init_state_path)
+    utils.dump_proto(dataobj=model_snap, fpath=init_state_path)
 
     logger.info('Starting Experiment...')
 

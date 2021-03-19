@@ -5,7 +5,7 @@
 from unittest import mock
 import pytest
 
-from openfl.protocols import ModelProto
+from openfl.protocols import ModelProto, utils
 from openfl.component import aggregator
 from openfl.component.assigner import Assigner
 from openfl.utilities import TaskResultKey
@@ -27,7 +27,7 @@ def model():
     metadata.bool_list.append(True)
     tensor.data_bytes = 32 * b'1'
 
-    return model
+    return utils.model_proto_to_dict(model)
 
 
 @pytest.fixture()

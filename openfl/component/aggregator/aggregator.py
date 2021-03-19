@@ -10,7 +10,6 @@ from openfl.pipelines import NoCompressionPipeline, TensorCodec
 from openfl.databases import TensorDB
 
 from openfl.protocols import utils
-from openfl.protocols import ModelProto
 
 
 class Aggregator:
@@ -82,7 +81,7 @@ class Aggregator:
         self.last_tensor_dict: dict = {}
 
         self.best_model_score = None
-        self.model: ModelProto = utils.load_proto(self.init_state_path)
+        self.model = utils.load_proto(self.init_state_path)
 
         self._load_initial_tensors()  # keys are TensorKeys
 

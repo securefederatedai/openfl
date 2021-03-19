@@ -136,7 +136,7 @@ class AggregatorGRPCServer(AggregatorServicer):
             context: The gRPC context
 
         """
-        request = utils.parse(request)
+        request = utils.message_to_dict(request)
         self.validate_collaborator(request, context)
         self.check_request(request)
         collaborator_name = request['header']['sender']
@@ -160,7 +160,7 @@ class AggregatorGRPCServer(AggregatorServicer):
             context: The gRPC context
 
         """
-        request = utils.parse(request)
+        request = utils.message_to_dict(request)
         self.validate_collaborator(request, context)
         self.check_request(request)
         collaborator_name = request['header']['sender']
@@ -188,7 +188,7 @@ class AggregatorGRPCServer(AggregatorServicer):
         """
         proto = TaskResults()
         proto = utils.datastream_to_proto(proto, request)
-        proto = utils.parse(proto)
+        proto = utils.task_results_to_dict(proto)
 
         self.validate_collaborator(proto, context)
         # all messages get sanity checked

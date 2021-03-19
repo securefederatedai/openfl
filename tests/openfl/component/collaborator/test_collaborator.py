@@ -37,7 +37,7 @@ def named_tensor():
     metadata.int_list.extend([1, 8])
     metadata.bool_list.append(True)
 
-    return utils.parse(tensor)
+    return utils.named_tensor_to_dict(tensor)
 
 
 @pytest.fixture
