@@ -180,15 +180,15 @@ class Plan(object):
         self.authorized_cols = []  # authorized collaborator list
         self.cols_data_paths = {}  # collaborator data paths dict
 
-        self.collaborator_ = None  # collaborator object
+        self.collaborators_ = {}  # collaborator objects
         self.aggregator_ = None  # aggregator object
         self.assigner_ = None  # assigner object
 
-        self.loader_ = None  # data loader object
-        self.runner_ = None  # task runner object
+        self.loaders_ = {}  # data loader objects
+        self.runners_ = {}  # task runner objects
 
         self.server_ = None  # gRPC server object
-        self.client_ = None  # gRPC client object
+        self.clients_ = {}  # gRPC client objects
 
         self.pipe_ = None  # compression pipeline object
 
@@ -282,10 +282,10 @@ class Plan(object):
             collaborator_name
         ]
 
-        if self.loader_ is None:
-            self.loader_ = Plan.Build(**defaults)
+        if collaborator_name not in self.loaders_:
+            self.loaders_[collaborator_name] = Plan.Build(**defaults)
 
-        return self.loader_
+        return self.loaders_[collaborator_name]
 
     def get_task_runner(self, collaborator_name):
         """Get task runner."""
@@ -299,10 +299,10 @@ class Plan(object):
             collaborator_name
         )
 
-        if self.runner_ is None:
-            self.runner_ = Plan.Build(**defaults)
+        if collaborator_name not in self.runners_:
+            self.runners_[collaborator_name] = Plan.Build(**defaults)
 
-        return self.runner_
+        return self.runners_[collaborator_name]
 
     def get_collaborator(self, collaborator_name,
                          task_runner=None, client=None):
@@ -329,18 +329,14 @@ class Plan(object):
         if client is not None:
             defaults[SETTINGS]['client'] = client
         else:
-            defaults[SETTINGS]['client'] = self.get_client(
-                collaborator_name,
-                self.aggregator_uuid,
-                self.federation_uuid
-            )
+            defaults[SETTINGS]['client'] = self.get_client(collaborator_name)
 
-        if self.collaborator_ is None:
-            self.collaborator_ = Plan.Build(**defaults)
+        if collaborator_name not in self.collaborators_:
+            self.collaborators_[collaborator_name] = Plan.Build(**defaults)
 
-        return self.collaborator_
+        return self.collaborators_[collaborator_name]
 
-    def get_client(self, collaborator_name, aggregator_uuid, federation_uuid):
+    def get_client(self, collaborator_name):
         """Get gRPC client for the specified collaborator."""
         common_name = collaborator_name
 
@@ -356,13 +352,13 @@ class Plan(object):
         client_args['certificate'] = certificate
         client_args['private_key'] = private_key
 
-        client_args['aggregator_uuid'] = aggregator_uuid
-        client_args['federation_uuid'] = federation_uuid
+        client_args['aggregator_uuid'] = self.aggregator_uuid
+        client_args['federation_uuid'] = self.federation_uuid
 
-        if self.client_ is None:
-            self.client_ = CollaboratorGRPCClient(**client_args)
+        if collaborator_name not in self.clients_:
+            self.clients_[collaborator_name] = CollaboratorGRPCClient(**client_args)
 
-        return self.client_
+        return self.clients_[collaborator_name]
 
     def get_server(self):
         """Get gRPC server of the aggregator instance."""

@@ -81,36 +81,28 @@ class FederatedDataSet(PyTorchDataLoader):
         # collaborator_datasets = []
 
         if shuffle:
-            train_shuffle = np.random.choice(
-                len(self.X_train), len(self.X_train), replace=False
+            train_shuffle, val_shuffle = (
+                np.random.permutation(len(data))
+                for data in (self.X_train, self.X_valid)
             )
-            self.X_train = self.X_train[train_shuffle]
-            self.y_train = self.y_train[train_shuffle]
-            val_shuffle = np.random.choice(
-                len(self.X_valid), len(self.X_valid), replace=False
-            )
-            self.X_valid = self.X_valid[val_shuffle]
-            self.y_valid = self.y_valid[val_shuffle]
+            X_train, y_train = self.X_train[train_shuffle], self.y_train[train_shuffle]
+            X_valid, y_valid = self.X_valid[val_shuffle], self.y_valid[val_shuffle]
 
         # train_idx = 0
         # val_idx = 0
 
         if equally:
-            X_train = np.array_split(self.X_train, num_collaborators)
-            y_train = np.array_split(self.y_train, num_collaborators)
-            X_valid = np.array_split(self.X_valid, num_collaborators)
-            y_valid = np.array_split(self.y_valid, num_collaborators)
+            X_train, y_train, X_valid, y_valid = (
+                np.array_split(data, num_collaborators)
+                for data in (X_train, y_train, X_valid, y_valid)
+            )
         else:
-            train_split = np.sort(np.random.choice(
-                len(self.X_train), num_collaborators - 1, replace=False)
+            train_split, val_split = (
+                np.sort(np.random.choice(len(data), num_collaborators - 1, replace=False))
+                for data in (X_train, X_valid)
             )
-            val_split = np.sort(np.random.choice(
-                len(self.X_val), num_collaborators - 1, replace=False)
-            )
-            X_train = np.split(self.X_train, train_split)
-            y_train = np.split(self.y_train, train_split)
-            X_valid = np.split(self.X_valid, val_split)
-            y_valid = np.split(self.y_valid, val_split)
+            X_train, y_train = (np.split(data, train_split) for data in (X_train, y_train))
+            X_valid, y_valid = (np.split(data, val_split) for data in (X_valid, y_valid))
 
         return [
             FederatedDataSet(

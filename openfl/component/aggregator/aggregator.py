@@ -822,6 +822,9 @@ class Aggregator:
             "SHOULD ONLY BE USED IN DEVELOPMENT SETTINGS!!!! YE HAVE BEEN"
             " WARNED!!!".format(
                 the_dragon))
+    
+    def get_last_tensor_dict(self):
+        return self.last_tensor_dict
 
 
 the_dragon = """

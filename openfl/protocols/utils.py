@@ -62,10 +62,11 @@ def bytes_and_metadata_to_model_proto(bytes_dict, model_id, model_version, is_de
         tensor_protos.append(TensorProto(name=key,
                                          data_bytes=data_bytes,
                                          transformer_metadata=metadata_protos))
-    return ModelProto(header=model_header, tensors=tensor_protos)
+        model_proto = ModelProto(header=model_header, tensors=tensor_protos)
+        return model_proto_to_dict(model_proto)
 
 
-def construct_named_tensor(tensor_key, nparray, transformer_metadata, lossless):
+def construct_named_tensor(tensor_key, nparray, transformer_metadata, lossless, pure=False):
     metadata_protos = []
     for metadata in transformer_metadata:
         if metadata.get('int_to_float') is not None:
@@ -85,9 +86,11 @@ def construct_named_tensor(tensor_key, nparray, transformer_metadata, lossless):
         metadata_protos.append(MetadataProto(int_to_float=int_to_float, int_list=int_list, bool_list=bool_list))
 
     tensor_name, origin, round_number, report, tags = tensor_key
-
-    return NamedTensor(name=tensor_name, round_number=round_number, lossless=lossless, report=report, tags=tags,
+    named_tensor = NamedTensor(name=tensor_name, round_number=round_number, lossless=lossless, report=report, tags=tags,
                        transformer_metadata=metadata_protos, data_bytes=nparray)
+    if pure:
+        return named_tensor
+    return named_tensor_to_dict(named_tensor)
 
 
 def construct_proto(tensor_dict, model_id, model_version, is_delta, compression_pipeline):
@@ -114,7 +117,8 @@ def construct_model_proto(tensor_dict, round_number, tensor_pipe):
     for key, nparray in tensor_dict.items():
         bytes, transformer_metadata = tensor_pipe.forward(data=nparray)
         tensor_key = TensorKey(key, 'agg', round_number, False, ('model',))
-        named_tensors.append(construct_named_tensor(tensor_key, bytes, transformer_metadata, lossless=True))
+        named_tensor = construct_named_tensor(tensor_key, bytes, transformer_metadata, lossless=True, pure=True)
+        named_tensors.append(named_tensor)
 
     return model_proto_to_dict(ModelProto(tensors=named_tensors))
 
@@ -256,6 +260,14 @@ def named_tensor_to_dict(named_tensor: NamedTensor) -> Dict:
 
     return dataobj
 
+
+def dict_to_named_tensor(dict: Dict) -> NamedTensor:
+    named_tensor = {
+        **dict,
+        'data_bytes': base64.b64encode(dict['data_bytes']).decode('utf-8')
+    }
+
+    return ParseDict(named_tensor, NamedTensor())
 
 def message_to_dict(message: Message) -> Dict:
     return MessageToDict(message,

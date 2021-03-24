@@ -5,10 +5,14 @@
 This file defines openfl entrypoints to be used directly through python (not CLI)
 """
 
+from multiprocessing.managers import BaseManager
+from concurrent.futures import ProcessPoolExecutor
+from openfl.interface.cli import setup_logging
 import os
 from logging import getLogger
 from pathlib import Path
-from copy import copy
+import socket
+from typing import Dict
 from flatten_json import flatten_preserve_lists
 import openfl.interface.workspace as workspace
 import openfl.interface.aggregator as aggregator
@@ -127,26 +131,7 @@ def unflatten(config, separator='.'):
     return config
 
 
-def setup_logging():
-    """Initialize logging settings."""
-    # Setup logging
-    from logging import basicConfig
-    from rich.console import Console
-    from rich.logging import RichHandler
-    import pkgutil
-    if True if pkgutil.find_loader('tensorflow') else False:
-        import tensorflow as tf
-        tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
-    console = Console(width=160)
-    basicConfig(
-        level='INFO',
-        format='%(message)s',
-        datefmt='[%X]',
-        handlers=[RichHandler(console=console)]
-    )
-
-
-def init(workspace_template='default', agg_fqdn=None, col_names=['one', 'two']):
+def init(workspace_template='default', agg_fqdn=socket.getfqdn(), col_names=['one', 'two'], log_level='debug'):
     """
     Initialize the openfl package.
 
@@ -192,10 +177,10 @@ def init(workspace_template='default', agg_fqdn=None, col_names=['one', 'two']):
         collaborator.certify(col_name, silent=True)
         data_path += 1
 
-    setup_logging()
+    setup_logging(level=log_level)
 
 
-def create_collaborator(plan, name, model, aggregator):
+def create_collaborator(plan, name, model, client):
     """
     Create the collaborator.
 
@@ -203,9 +188,8 @@ def create_collaborator(plan, name, model, aggregator):
     identical collaborator objects. This function can be removed once
     collaborator generation is fixed in openfl/federated/plan/plan.py
     """
-    plan = copy(plan)
 
-    return plan.get_collaborator(name, task_runner=model, client=aggregator)
+    return plan.get_collaborator(name, task_runner=model, client=client)
 
 
 def run_experiment(collaborator_dict, override_config={}):
@@ -253,10 +237,8 @@ def run_experiment(collaborator_dict, override_config={}):
     plan.authorized_cols = list(collaborator_dict)
     tensor_pipe = plan.get_tensor_pipe()
 
-    # This must be set to the final index of the list (this is the last
-    # tensorflow session to get created)
-    plan.runner_ = list(collaborator_dict.values())[-1]
-    model = plan.runner_
+    plan.runners_ = collaborator_dict
+    model = next(iter(collaborator_dict.values()))
 
     # Initialize model weights
     init_state_path = plan.config['aggregator']['settings']['init_state_path']
@@ -275,29 +257,21 @@ def run_experiment(collaborator_dict, override_config={}):
     utils.dump_proto(dataobj=model_snap, fpath=init_state_path)
 
     logger.info('Starting Experiment...')
-
-    aggregator = plan.get_aggregator()
-
-    model_states = {
-        collaborator: None for collaborator in collaborator_dict.keys()
-    }
+    BaseManager.register('Aggregator', callable=plan.get_aggregator)
+    manager = BaseManager()
+    manager.start()
+    aggregator = manager.Aggregator()
 
     # Create the collaborators
     collaborators = {
         collaborator: create_collaborator(
-            plan, collaborator, collaborator_dict[collaborator], aggregator
+            plan, collaborator, collaborator_dict[collaborator], aggregator,
         ) for collaborator in plan.authorized_cols
     }
-
-    for round_num in range(rounds_to_train):
-        for col in plan.authorized_cols:
-
-            collaborator = collaborators[col]
-
-            collaborator.run_simulation()
-            model_states[col] = collaborator.task_runner.get_tensor_dict(with_opt_vars=True)
-
-    # Set the weights for the final model
-    model.rebuild_model(
-        rounds_to_train - 1, aggregator.last_tensor_dict, validation=True)
+    
+    for _ in range(rounds_to_train):
+        with ProcessPoolExecutor(len(collaborators)) as executor:
+            [executor.submit(col.run_simulation) for col in collaborators.values()]
+    last_tensor_dict = (aggregator.get_last_tensor_dict())
+    model.rebuild_model(rounds_to_train - 1, last_tensor_dict, validation=True)
     return model

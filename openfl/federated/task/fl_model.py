@@ -23,8 +23,7 @@ class FederatedModel(TaskRunner):
             for each collaborator.
         loss_fn : pytorch loss_fun (only required for pytorch)
     """
-
-    def __init__(self, build_model, optimizer=None, loss_fn=None, **kwargs):
+    def __init__(self, build_model, optimizer=None, loss_fn=None, device=None, **kwargs):
         """Initialize.
 
         Args:
@@ -40,6 +39,8 @@ class FederatedModel(TaskRunner):
         if inspect.isclass(build_model):
             self.model = build_model()
             from .runner_pt import PyTorchTaskRunner
+            if device:
+                kwargs.update({'device': device})
             if optimizer is not None:
                 self.optimizer = optimizer(self.model.parameters())
             # build_model.__init__()
@@ -63,6 +64,7 @@ class FederatedModel(TaskRunner):
         self.tensor_dict_split_fn_kwargs = \
             self.runner.tensor_dict_split_fn_kwargs
         self.initialize_tensorkeys_for_functions()
+        self.device = device
 
     def __getattribute__(self, attr):
         """Direct call into self.runner methods if necessary."""
@@ -76,7 +78,7 @@ class FederatedModel(TaskRunner):
             return self.runner.__getattribute__(attr)
         return super(FederatedModel, self).__getattribute__(attr)
 
-    def setup(self, num_collaborators, **kwargs):
+    def setup(self, num_collaborators, shuffle=True, equally=True, **kwargs):
         """
         Create new models for all of the collaborators in the experiment.
 
@@ -91,9 +93,10 @@ class FederatedModel(TaskRunner):
                 self.build_model,
                 optimizer=self.lambda_opt,
                 loss_fn=self.loss_fn,
+                device=self.device,
                 data_loader=data_slice,
                 **kwargs
             )
             for data_slice in self.data_loader.split(
-                num_collaborators, equally=True
+                num_collaborators, shuffle=shuffle, equally=equally
             )]

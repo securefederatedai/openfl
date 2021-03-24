@@ -6,7 +6,7 @@
 import pandas as pd
 import numpy as np
 
-from threading import Lock
+from multiprocessing import Manager
 
 from openfl.utilities import TensorKey
 
@@ -25,7 +25,7 @@ class TensorDB:
         self.tensor_db = pd.DataFrame([], columns=[
             'tensor_name', 'origin', 'round', 'report', 'tags', 'nparray'
         ])
-        self.mutex = Lock()
+        self.mutex = Manager().Lock()
 
     def __repr__(self):
         """Representation of the object."""
@@ -45,9 +45,10 @@ class TensorDB:
             # Getting a negative argument calls off cleaning
             return
         current_round = int(self.tensor_db['round'].max())
-        self.tensor_db = self.tensor_db[
-            self.tensor_db['round'] > current_round - remove_older_than
-        ].reset_index(drop=True)
+        with self.mutex:
+            self.tensor_db = self.tensor_db[
+                self.tensor_db['round'] > current_round - remove_older_than
+            ].reset_index(drop=True)
 
     def cache_tensor(self, tensor_key_dict):
         """Insert tensor into TensorDB (dataframe).
@@ -162,7 +163,7 @@ class TensorDB:
             if len(raw_df) == 0:
                 print('No results for collaborator {}, TensorKey={}'.format(
                     col, TensorKey(
-                        tensor_name, origin, report, fl_round, new_tags
+                        tensor_name, origin, fl_round, report, new_tags
                     )))
                 return None, {}
             else:
