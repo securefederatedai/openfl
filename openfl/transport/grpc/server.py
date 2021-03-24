@@ -172,7 +172,7 @@ class AggregatorGRPCServer(AggregatorServicer):
 
         named_tensor = self.aggregator.get_aggregated_tensor(
             collaborator_name, tensor_name, round_number, report, tags, require_lossless)
-
+        named_tensor = utils.dict_to_named_tensor(named_tensor)
         return TensorResponse(header=self.get_header(collaborator_name),
                               round_number=round_number,
                               tensor=named_tensor)
