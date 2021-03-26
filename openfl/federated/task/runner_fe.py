@@ -65,7 +65,6 @@ class FastEstimatorTaskRunner(TaskRunner):
         elif isinstance(estimator.network, fe.network.TFNetwork):
             impl = KerasTaskRunner
         self.model = self.estimator.network.models[0]
-        kwargs.update({'model': self.model})
         self.optimizer = self.model.optimizer
         self.runner = impl(**kwargs)
         self.runner.model = self.model

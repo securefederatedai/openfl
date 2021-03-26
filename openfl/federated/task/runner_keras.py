@@ -24,7 +24,7 @@ from .runner import TaskRunner
 class KerasTaskRunner(TaskRunner):
     """The base model for Keras models in the federation."""
 
-    def __init__(self, model: ke.Model, **kwargs):
+    def __init__(self, **kwargs):
         """
         Initialize.
 
@@ -33,7 +33,7 @@ class KerasTaskRunner(TaskRunner):
         """
         super().__init__(**kwargs)
 
-        self.model = model
+        self.model = ke.Model()
 
         self.model_tensor_names = []
 
