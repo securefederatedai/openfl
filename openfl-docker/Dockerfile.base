@@ -3,21 +3,46 @@
 
 # If your machine is behind a proxy, make sure you set it up in ~/.docker/config.json
 
-ARG BASE_IMAGE=python:3.8
-FROM ${BASE_IMAGE}
+FROM ubuntu:18.04
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
-RUN echo 'deb-src http://deb.debian.org/debian buster main' | tee -a /etc/apt/sources.list
-RUN echo 'deb-src http://security.debian.org/debian-security buster/updates main' | tee -a /etc/apt/sources.list
-RUN echo 'deb-src http://deb.debian.org/debian buster-updates main' | tee -a /etc/apt/sources.list
+WORKDIR /tmp
 
-RUN apt-get update && apt-get source keyutils ucf procps && apt-get install -y --no-install-recommends openssh-server \
-        && apt-get clean \
-        && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && \
+    dpkg --get-selections | grep -v deinstall | awk '{print $1}' > base_packages.txt  && \
+    rm -rf /var/lib/apt/lists/*
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        openssh-server=\* \
+        python3.8=\* \
+        python3-distutils=\* \
+        curl=\* \
+        ca-certificates=\* && \
+    dpkg --get-selections | grep -v deinstall | awk '{print $1}' > all_packages.txt && \
+    sed -Ei 's/# deb-src /deb-src /' /etc/apt/sources.list && \
+    apt-get update && \
+    grep -v -f base_packages.txt all_packages.txt | while read -r line; do \
+        package=$line; \
+        name=("${package//:/ }"); \
+        grep -l GPL /usr/share/doc/"${name[0]}"/copyright; \
+        exit_status=$?; \
+        if [ $exit_status -eq 0 ]; then \
+            apt-get source -q --download-only "$package";  \
+        fi \
+    done && rm -rf ./*.txt && \
+    curl -L https://files.pythonhosted.org/packages/06/a9/cd1fd8ee13f73a4d4f491ee219deeeae20afefa914dfb4c130cfc9dc397a/certifi-2020.12.5.tar.gz --output certifi-2020.12.5.tar.gz && \
+    curl -L https://files.pythonhosted.org/packages/ee/2d/9cdc2b527e127b4c9db64b86647d567985940ac3698eeabc7ffaccb4ea61/chardet-4.0.0.tar.gz --output chardet-4.0.0.tar.gz && \
+    curl -L https://files.pythonhosted.org/packages/a3/7a/561526861908d366ddc2764933a6090078654b0f2ff20c3c180dd5851554/pyzmq-22.0.3.tar.gz --output pyzmq-22.0.3.tar.gz && \
+    echo "Download source for $(find . | wc -l) third-party packages: $(du -sh)" && \
+    rm -rf /var/lib/apt/lists/*
 
 WORKDIR /openfl
 COPY . .
 
-RUN pip install --upgrade pip && pip install --no-cache-dir  .
+# Install pip
+RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.8 1
+RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py && python get-pip.py && rm -rf get-pip.py
+RUN pip install --no-cache-dir  .
 
 CMD [ "/bin/bash" ]

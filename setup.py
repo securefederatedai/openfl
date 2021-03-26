@@ -56,6 +56,9 @@ setup(
         'ipykernel',
         'flatten_json',
         'cryptography==3.4.6',
+        'cryptography>=3.4.6',
+        'six',  # Remove this after upgrade to torchvision==0.9
+        # See https://github.com/pytorch/vision/issues/3497
         'pytest'
     ],
     python_requires='>=3.6, <3.9',
