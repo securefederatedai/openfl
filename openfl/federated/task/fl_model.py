@@ -50,7 +50,7 @@ class FederatedModel(TaskRunner):
             self.model = self.build_model(
                 self.feature_shape, self.data_loader.num_classes)
             from .runner_keras import KerasTaskRunner
-            self.runner = KerasTaskRunner(**kwargs)
+            self.runner = KerasTaskRunner(self.model, **kwargs)
             self.optimizer = self.model.optimizer
         self.lambda_opt = optimizer
         if hasattr(self.model, 'validate'):

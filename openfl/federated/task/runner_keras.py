@@ -24,7 +24,7 @@ from .runner import TaskRunner
 class KerasTaskRunner(TaskRunner):
     """The base model for Keras models in the federation."""
 
-    def __init__(self, **kwargs):
+    def __init__(self, model: ke.Model, **kwargs):
         """
         Initialize.
 
@@ -33,13 +33,14 @@ class KerasTaskRunner(TaskRunner):
         """
         super().__init__(**kwargs)
 
-        self.model = ke.Model()
+        self.model = model
 
         self.model_tensor_names = []
 
         # this is a map of all of the required tensors for each of the public
         # functions in KerasTaskRunner
         self.required_tensorkeys_for_function = {}
+        ke.backend.clear_session()
 
     def rebuild_model(self, round, input_tensor_dict, validation=False):
         """
