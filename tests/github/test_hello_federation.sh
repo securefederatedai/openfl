@@ -6,7 +6,7 @@ FED_WORKSPACE=${2:-'fed_work12345alpha81671'}   # This can be whatever unique di
 COL1=${3:-'one123dragons'}  # This can be any unique label (lowercase)
 COL2=${4:-'beta34unicorns'} # This can be any unique label (lowercase)
 
-FQDN=$(hostname --all-fqdns | awk '{print $1}')
+FQDN=${5:-$(hostname --all-fqdns | awk '{print $1}')}
 
 COL1_DATA_PATH=1
 COL2_DATA_PATH=2
@@ -36,6 +36,7 @@ while (($#)); do
     (*)         echo "Invalid option: ${1:-}"; exit 1 ;;
     esac
 done
+
 
 
 create_collaborator() {
@@ -103,34 +104,9 @@ fx aggregator certify --fqdn ${FQDN} --silent # Remove '--silent' if you run thi
 COL1_DIRECTORY=${FED_DIRECTORY}/${COL1}
 create_collaborator ${FED_WORKSPACE} ${FED_DIRECTORY} ${COL1} ${COL1_DIRECTORY} ${COL1_DATA_PATH}
 
-# # Run the federation
-cd ${FED_DIRECTORY}
-fx aggregator start & 
-sleep 5 
-cd ${COL1_DIRECTORY}/${FED_WORKSPACE}
-fx collaborator start -n ${COL1} & 
-wait
-
-# # The second run. 
-# Imagine some parameters changed so we want to run
-# the Federation again from the same folder
-
-# do the cleaning
-rm -rf ${COL1_DIRECTORY} && if pgrep fx; then pkill fx; fi
-
-cd ${FED_DIRECTORY}
-# Initialize FL plan
-fx plan initialize -a ${FQDN}
-# Create certificate authority for workspace
-fx workspace certify
-# Export FL workspace
-fx workspace export
-# Create aggregator certificate
-fx aggregator generate-cert-request --fqdn ${FQDN}
-# Sign aggregator certificate
-fx aggregator certify --fqdn ${FQDN} --silent # Remove '--silent' if you run this 
-# Create collaborator #1
-create_collaborator ${FED_WORKSPACE} ${FED_DIRECTORY} ${COL1} ${COL1_DIRECTORY} ${COL1_DATA_PATH}
+# Create collaborator #2
+COL2_DIRECTORY=${FED_DIRECTORY}/${COL2}
+create_collaborator ${FED_WORKSPACE} ${FED_DIRECTORY} ${COL2} ${COL2_DIRECTORY} ${COL2_DATA_PATH}
 
 # # Run the federation
 cd ${FED_DIRECTORY}
@@ -138,6 +114,7 @@ fx aggregator start &
 sleep 5 
 cd ${COL1_DIRECTORY}/${FED_WORKSPACE}
 fx collaborator start -n ${COL1} & 
+cd ${COL2_DIRECTORY}/${FED_WORKSPACE}
+fx collaborator start -n ${COL2}
 wait
-
 rm -rf ${FED_DIRECTORY}

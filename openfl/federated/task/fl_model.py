@@ -36,6 +36,7 @@ class FederatedModel(TaskRunner):
 
         self.build_model = build_model
         self.lambda_opt = None
+        # TODO pass params to model
         if inspect.isclass(build_model):
             self.model = build_model()
             from .runner_pt import PyTorchTaskRunner
@@ -56,6 +57,9 @@ class FederatedModel(TaskRunner):
         self.loss_fn = loss_fn
         if hasattr(self.model, 'forward'):
             self.runner.forward = self.model.forward
+        if hasattr(self.model, 'validate'):
+            self.runner.validate = lambda *args, **kwargs: build_model.validate(
+                self.runner, *args, **kwargs)
         self.runner.model = self.model
         self.runner.optimizer = self.optimizer
         self.runner.loss_fn = self.loss_fn
