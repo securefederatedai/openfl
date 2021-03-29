@@ -25,7 +25,6 @@ if __name__ == '__main__':
 
     from openfl.federated import FederatedModel, FederatedDataSet
 
-
     def cross_entropy(output, target):
         """Binary cross-entropy metric."""
         return F.binary_cross_entropy_with_logits(input=output, target=target)
