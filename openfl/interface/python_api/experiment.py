@@ -1,6 +1,22 @@
 from typing import Union
 import functools
 
+
+class FLExperiment:
+    def __init__(self, federation=None) -> None:
+        self.federation = federation
+
+    def start_experiment(self, model_provider, task_keeper, data_loader):
+        # serializing objects
+        # saving session
+        # packing the workspace
+        # fixing requirements
+        # running tests
+
+        # start an aggregator
+        pass
+
+
 class TaskInterface:
     """
     Task should accept the following entities that exist on collaborator nodes:
@@ -23,6 +39,8 @@ class TaskInterface:
         [model, data_loader, device] - necessarily
         and optimizer - optionally
 
+        All tasks should accept contract entities to be run on collaborator node.
+        Moreover we ask users return dict{'metric':value} in every task
         `
         TI = TaskInterface()
 
@@ -74,7 +92,10 @@ class TaskInterface:
 class ModelInterface:
     '''
     Registers model graph (s) and optimizer (s)
-    to be serialized and sent to collaborator nodes
+        to be serialized and sent to collaborator nodes
+
+    This is the place to determine correct framework adapter
+        as they are needed to fill the model graph with trained tensors
     '''
     def __init__(self, model, optimizer) -> None:
         '''
@@ -93,13 +114,42 @@ class ModelInterface:
     def provide_model(self):
         return self.model
 
-
     def provide_optimizer(self):
         return self.optimizer
 
 
 class DataInterface:
-    def __init__(self) -> None:
-        pass
+    """
+    The class to define dataloaders
+    In the future users will have to adapt `unified data interface hook`
+        in their dataloaders.
+    For now, we can provide `data_path` variable on every collaborator node
+        at initialization time for dataloader customization
+    """
+    def __init__(self, data_path) -> None:
+        self.data_path = data_path
 
-    # def 
+
+    def get_train_loader(self, **kwargs):
+        """
+        Output of this method will be provided to tasks with optimizer in contract
+        """
+        raise NotImplementedError
+
+    def get_valid_loader(self, **kwargs):
+        """
+        Output of this method will be provided to tasks without optimizer in contract
+        """
+        raise NotImplementedError
+
+    def get_train_data_size(self):
+        """
+        Information for aggregation
+        """
+        raise NotImplementedError
+
+    def get_valid_data_size(self):
+        """
+        Information for aggregation
+        """
+        raise NotImplementedError
