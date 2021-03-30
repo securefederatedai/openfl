@@ -19,7 +19,7 @@ jobs:
           PERSONAL_ACCESS_TOKEN : ${{ secrets.PERSONAL_ACCESS_TOKEN }}
         with:
           path-to-signatures: 'signatures/version1/cla.json'
-          path-to-document: 'https://github.com/intel/openfl/blob/cla/github-actions/cla.md' # e.g. a CLA or a DCO document
+          path-to-document: 'https://github.com/intel/openfl/blob/develop/github-actions/cla.md' # e.g. a CLA or a DCO document
           # branch should not be protected
           branch: 'master'
           allowlist: user1,bot*
