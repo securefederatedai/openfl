@@ -67,6 +67,7 @@ model_provider = ModelProvider()
 
 CTR = CoreTaskRunner(model_provider)
 
+
 @CTR.register_fl_task(task_type='train', task_name='train_batches')
 def train_epoch(model, train_loader, device, optimizer, loss_fn=cross_entropy):
     model.train()
