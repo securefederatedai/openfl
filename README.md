@@ -1,6 +1,7 @@
 
 # Welcome to Intel&reg; Open Federated Learning
 
+
 [![PyPI - Python Version](https://img.shields.io/badge/python-3.6%20%7C%203.7%20%7C%203.8-blue)](https://pypi.org/project/openfl/)
 [![Jenkins](https://img.shields.io/jenkins/build?jobUrl=http%3A%2F%2F213.221.44.203%2Fjob%2FFederated-Learning%2Fjob%2Fnightly%2F)](http://213.221.44.203/job/Federated-Learning/job/nightly/)
 [![Documentation Status](https://readthedocs.org/projects/openfl/badge/?version=latest)](https://openfl.readthedocs.io/en/latest/?badge=latest)
