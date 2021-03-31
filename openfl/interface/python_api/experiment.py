@@ -97,7 +97,7 @@ class ModelInterface:
     This is the place to determine correct framework adapter
         as they are needed to fill the model graph with trained tensors
     '''
-    def __init__(self, model, optimizer) -> None:
+    def __init__(self, model, optimizer, framework_plugin) -> None:
         '''
         Arguments:
         model: Union[tuple, graph]
@@ -109,6 +109,7 @@ class ModelInterface:
         '''
         self.model = model
         self.optimizer = optimizer
+        self.framework_plugin = framework_plugin
         
 
     def provide_model(self):
@@ -153,3 +154,7 @@ class DataInterface:
         Information for aggregation
         """
         raise NotImplementedError
+
+# class test(DataInterface, ModelInterface):
+#     def __init__(self, data_path) -> None:
+#         super().__init__(data_path)
