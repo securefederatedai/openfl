@@ -32,12 +32,7 @@ class NLPDataLoader(KerasDataLoader):
 
         self.batch_size = batch_size
 
-<<<<<<< HEAD
         train, valid, details = DLU.load_shard(collaborator_count, self.shard_num, self.data_path, num_samples, split_ratio)
-=======
-        train_indexes = random.sample(range(num_samples), int(num_samples * (1 - split_ratio)))
-        train, valid, details = DLU.load_shard(collaborator_count, self.shard_num, self.data_path, num_samples, train_indexes)
->>>>>>> a041924... pythonized download fn + set split ratio and num_samples to params
 
         self.num_samples = details["num_samples"]
         self.num_encoder_tokens = details["num_encoder_tokens"]
