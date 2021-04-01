@@ -6,11 +6,12 @@ class FLExperiment:
     def __init__(self, federation=None) -> None:
         self.federation = federation
 
-    def start_experiment(self, model_provider, task_keeper, data_loader):
+    def start_experiment(self, model_provider, task_keeper, data_loader, rounds_to_train):
         # serializing objects
         # saving session
-        # packing the workspace
         # fixing requirements
+        # packing the workspace
+
         # running tests
 
         # start an aggregator
@@ -111,7 +112,7 @@ class ModelInterface:
         self.optimizer = optimizer
         self.framework_plugin = framework_plugin
         
-
+        
     def provide_model(self):
         return self.model
 
@@ -127,7 +128,7 @@ class DataInterface:
     For now, we can provide `data_path` variable on every collaborator node
         at initialization time for dataloader customization
     """
-    def __init__(self, data_path) -> None:
+    def set_data_path(self, data_path) -> None:
         self.data_path = data_path
 
 
