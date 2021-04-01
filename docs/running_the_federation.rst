@@ -9,6 +9,10 @@ Running the Federation
 
 First make sure you've installed the software :ref:`using these instructions <install_initial_steps>`
 
+.. figure:: images/openfl_flow.png
+
+    100K foot view of OpenFL workflow
+
 .. toctree::
    :maxdepth: 4
 
