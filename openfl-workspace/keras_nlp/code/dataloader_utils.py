@@ -145,23 +145,17 @@ def import_raw_data_(data_path="", num_samples=0):
     return details, encoder_input_data, decoder_input_data, decoder_target_data
 
 
-<<<<<<< HEAD
+
 def get_datasets_(encoder_input_data, decoder_input_data, decoder_target_data, num_samples, split_ratio):
-=======
-def get_datasets_(encoder_input_data, decoder_input_data, decoder_target_data, num_samples, train_indexes):
->>>>>>> a041924... pythonized download fn + set split ratio and num_samples to params
     """Create train/val.
 
     Returns:
       dict: Results, containing the train-valid split of the dataset (split_ratio = 0.2)
     """
-<<<<<<< HEAD
     import random
     
     random.seed(42)
     train_indexes = random.sample(range(num_samples), int(num_samples * (1 - split_ratio)))
-=======
->>>>>>> a041924... pythonized download fn + set split ratio and num_samples to params
     valid_indexes = np.delete(range(num_samples), train_indexes)
 
     # Dataset creation (2 inputs <encoder,decoder>, 1 output <decoder_target>)
@@ -185,12 +179,7 @@ def get_datasets_(encoder_input_data, decoder_input_data, decoder_target_data, n
 
     return results
 
-
-<<<<<<< HEAD
 def load_shard(collaborator_count, shard_num, data_path, num_samples, split_ratio):
-=======
-def load_shard(collaborator_count, shard_num, data_path, num_samples, train_indexes):
->>>>>>> a041924... pythonized download fn + set split ratio and num_samples to params
     """Load data-shards.
 
     Returns:
@@ -206,12 +195,7 @@ def load_shard(collaborator_count, shard_num, data_path, num_samples, train_inde
         import_raw_data_(data_path, num_samples)
 
     train_val_dataset = get_datasets_(encoder_input_data, decoder_input_data,
-<<<<<<< HEAD
                                       decoder_target_data, num_samples, split_ratio)
-=======
-                                      decoder_target_data, num_samples, train_indexes)
->>>>>>> a041924... pythonized download fn + set split ratio and num_samples to params
-
     # Get the data shards
     shard_num = int(shard_num)
     X_train_encoder = train_val_dataset['encoder_train_input'][shard_num::collaborator_count]
