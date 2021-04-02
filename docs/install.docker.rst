@@ -45,7 +45,7 @@ The current design is based on three assumptions:
    :alt: Docker design
    :scale: 70%
 
-   Docker design
+.. centered:: Docker design
 
 
 Build the docker image
