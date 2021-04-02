@@ -37,4 +37,4 @@ On every node in the federation you will need to install the |productName| packa
    .. figure:: images/fx_help.png
       :scale: 70 %
 
-      fx command
+.. centered:: fx command
