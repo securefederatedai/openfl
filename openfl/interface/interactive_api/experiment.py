@@ -1,21 +1,21 @@
-from typing import Union
+import dill
+from socket import getfqdn
 import functools
-
+from collections import defaultdict
+from openfl.federated import Plan
+from pathlib import Path
+from importlib import resources
 
 class FLExperiment:
     def __init__(self, federation=None) -> None:
         self.federation = federation
 
-    def start_experiment(self, model_provider, task_keeper, data_loader, rounds_to_train):
-        # serializing objects
-        # saving session
-        # fixing requirements
-        # packing the workspace
-
-        # running tests
-
-        # start an aggregator
-        pass
+    def start_experiment(self, model_provider, task_keeper, data_loader, rounds_to_train, agg_fqdn=None):
+        # Load the default plan
+        with resources.path('openfl.interface.interactive_api', 'plan.yaml') as plan_path:
+            plan = Plan.Parse(Path(plan_path), resolve=False)
+        
+        
 
 
 class TaskInterface:
@@ -30,7 +30,7 @@ class TaskInterface:
         # Mapping 'task name' -> arguments
         self.task_contract = dict()
         # Mapping 'task name' -> arguments
-        self.task_settings = dict()
+        self.task_settings = defaultdict(dict)
 
 
     def register_fl_task(self, model, data_loader, device, optimizer=None):
@@ -59,6 +59,7 @@ class TaskInterface:
         def decorator_with_args(training_method):
             # We could pass hooks to the decorator
             # @functools.wraps(training_method)
+            functools.wraps(training_method)
             def wrapper_decorator(**task_keywords):
                 metric_dict = training_method(**task_keywords)
                 return metric_dict
@@ -128,8 +129,8 @@ class DataInterface:
     For now, we can provide `data_path` variable on every collaborator node
         at initialization time for dataloader customization
     """
-    def set_data_path(self, data_path) -> None:
-        self.data_path = data_path
+    def _delayed_init(self, data_path):
+        raise NotImplementedError
 
 
     def get_train_loader(self, **kwargs):
