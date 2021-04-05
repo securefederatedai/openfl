@@ -60,7 +60,7 @@ class KerasTaskRunner(TaskRunner):
         else:
             self.set_tensor_dict(input_tensor_dict, with_opt_vars=False)
 
-    def train(self, col_name, round_num, input_tensor_dict, epochs, metrics, **kwargs):
+    def train(self, col_name, round_num, input_tensor_dict, metrics, **kwargs):
         """
         Perform the training for a specified number of batches.
 
@@ -83,8 +83,7 @@ class KerasTaskRunner(TaskRunner):
         self.rebuild_model(round_num, input_tensor_dict)
 
         results = self.train_iteration(self.data_loader.get_train_loader(),
-                                   epochs=epochs,
-                                   metrics=metrics)
+                                       **kwargs)
 
         # TODO Currently assuming that all metrics are defined at
         #  initialization (build_model).
@@ -164,7 +163,7 @@ class KerasTaskRunner(TaskRunner):
         # return global_tensor_dict, local_tensor_dict
         return global_tensor_dict, local_tensor_dict
 
-    def train_iteration(self, batch_generator, epochs, metrics):
+    def train_iteration(self, batch_generator, metrics=[], **kwargs):
         """Train single epoch.
         Override this function for custom training.
 
@@ -177,8 +176,8 @@ class KerasTaskRunner(TaskRunner):
             metrics: Names of metrics to save.
         """
         history = self.model.fit(batch_generator,
-                                 epochs=epochs,
-                                 verbose=0, )
+                                 verbose=0,
+                                 **kwargs)
         for metric in metrics:
             value = np.mean([history.history[metric]])
             yield Metric(name=metric, value=np.array(value))
