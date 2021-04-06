@@ -5,24 +5,24 @@
 This file defines openfl entrypoints to be used directly through python (not CLI)
 """
 
+
+from concurrent.futures.process import ProcessPoolExecutor
 from multiprocessing.managers import BaseManager
-from concurrent.futures import ProcessPoolExecutor
-from openfl.interface.cli import setup_logging
 import os
 from logging import getLogger
 from pathlib import Path
 import socket
-from typing import Dict
 from flatten_json import flatten_preserve_lists
-import openfl.interface.workspace as workspace
-import openfl.interface.aggregator as aggregator
-import openfl.interface.collaborator as collaborator
+import openfl.interface as fx
+from copy import deepcopy
+from pprint import pprint
 
 from openfl.federated import Plan
 
 from openfl.protocols import utils
 from openfl.utilities import split_tensor_dict_for_holdouts
 
+import multiprocessing as mp
 logger = getLogger(__name__)
 
 WORKSPACE_PREFIX = os.path.join(os.path.expanduser('~'), '.local', 'workspace')
@@ -165,19 +165,19 @@ def init(workspace_template='default', agg_fqdn=socket.getfqdn(), col_names=['on
     Returns:
         None
     """
-    workspace.create(WORKSPACE_PREFIX, workspace_template)
+    fx.workspace.create(WORKSPACE_PREFIX, workspace_template)
     os.chdir(WORKSPACE_PREFIX)
-    workspace.certify()
-    aggregator.generate_cert_request(agg_fqdn)
-    aggregator.certify(agg_fqdn, silent=True)
+    fx.workspace.certify()
+    fx.aggregator.generate_cert_request(agg_fqdn)
+    fx.aggregator.certify(agg_fqdn, silent=True)
     data_path = 1
     for col_name in col_names:
-        collaborator.generate_cert_request(
+        fx.collaborator.generate_cert_request(
             col_name, str(data_path), silent=True, skip_package=True)
-        collaborator.certify(col_name, silent=True)
+        fx.collaborator.certify(col_name, silent=True)
         data_path += 1
 
-    setup_logging(level=log_level)
+    fx.cli.setup_logging(level=log_level)
 
 
 def create_collaborator(plan, name, model, client):
@@ -211,7 +211,7 @@ def run_experiment(collaborator_dict, override_config={}):
             The final model resulting from the federated learning experiment
     """
     from sys import path
-
+    # mp.set_start_method('spawn', force=True)
     file = Path(__file__).resolve()
     root = file.parent.resolve()  # interface root, containing command modules
     work = Path.cwd().resolve()
@@ -238,40 +238,61 @@ def run_experiment(collaborator_dict, override_config={}):
     tensor_pipe = plan.get_tensor_pipe()
 
     plan.runners_ = collaborator_dict
-    model = next(iter(collaborator_dict.values()))
-
-    # Initialize model weights
     init_state_path = plan.config['aggregator']['settings']['init_state_path']
     rounds_to_train = plan.config['aggregator']['settings']['rounds_to_train']
+   
+    logger.info('Starting Experiment...')
+    # aggregator = plan.get_aggregator()
+    # cols = [plan.get_collaborator(col, collaborator_dict[col], aggregator) for col in plan.authorized_cols]
+    # for round in range(rounds_to_train):
+    #     for col in cols:
+    #         col.run_simulation()
+            
+    BaseManager.register('Aggregator', callable=plan.get_aggregator)
+    BaseManager.register('model', callable=lambda: deepcopy(next(iter(collaborator_dict.values()))))
+    manager = BaseManager()
+    manager.start()
+    aggregator = manager.Aggregator()
+    model = manager.model()
+    with ProcessPoolExecutor(1) as executor:
+        executor.submit(dump_model, model, tensor_pipe, init_state_path)
+
+    with ProcessPoolExecutor(len(plan.authorized_cols)) as p:
+        for col in plan.authorized_cols:
+            args = (col, plan.get_collaborator, collaborator_dict[col], aggregator, rounds_to_train)
+            p.submit(run_simulation, *args)
+
+    last_tensor_dict = aggregator.get_last_tensor_dict()
+    with ProcessPoolExecutor(1) as executor:
+        executor.submit(rebuild_model, model, last_tensor_dict, rounds_to_train - 1)
+        return model
+
+
+def run_simulation(col_name, col_factory, task_runner, aggregator, rounds_to_train):
+    col = col_factory(col_name, task_runner, aggregator)
+    raise
+    for _ in rounds_to_train:
+        col.run_simulation()
+
+
+def dump_model(model, tensor_pipe, init_state_path):
+    model.initialize()
+    raise
     tensor_dict, holdout_params = split_tensor_dict_for_holdouts(
         logger,
         model.get_tensor_dict(False)
     )
 
     model_snap = utils.construct_model_proto(tensor_dict=tensor_dict,
-                                             round_number=0,
-                                             tensor_pipe=tensor_pipe)
+                                            round_number=0,
+                                            tensor_pipe=tensor_pipe)
 
     logger.info(f'Creating Initial Weights File    🠆 {init_state_path}')
 
     utils.dump_proto(dataobj=model_snap, fpath=init_state_path)
 
-    logger.info('Starting Experiment...')
-    BaseManager.register('Aggregator', callable=plan.get_aggregator)
-    manager = BaseManager()
-    manager.start()
-    aggregator = manager.Aggregator()
 
-    # Create the collaborators
-    collaborators = {
-        collaborator: create_collaborator(
-            plan, collaborator, collaborator_dict[collaborator], aggregator,
-        ) for collaborator in plan.authorized_cols
-    }
-    
-    for _ in range(rounds_to_train):
-        with ProcessPoolExecutor(len(collaborators)) as executor:
-            [executor.submit(col.run_simulation) for col in collaborators.values()]
-    last_tensor_dict = (aggregator.get_last_tensor_dict())
-    model.rebuild_model(rounds_to_train - 1, last_tensor_dict, validation=True)
-    return model
+def rebuild_model(runner, tensor_dict, round):
+    runner.initialize()
+    raise
+    runner.rebuild_model(round, tensor_dict, validation=True)

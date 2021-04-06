@@ -3,7 +3,6 @@
 
 """Plan module."""
 
-from hashlib import sha384
 from logging import getLogger
 from os.path import splitext
 from importlib import import_module
@@ -171,7 +170,6 @@ class Plan(object):
 
         module = import_module(module_path)
         instance = getattr(module, class_name)(**settings)
-
         return instance
 
     def __init__(self):
@@ -192,17 +190,17 @@ class Plan(object):
 
         self.pipe_ = None  # compression pipeline object
 
-        self.hash_ = None
         self.name_ = None
 
     @property
     def hash(self):
         """Generate hash for this instance."""
-        self.hash_ = sha384(dump(self.config).encode('utf-8'))
-        Plan.logger.info(f'FL-Plan hash is [blue]{self.hash_.hexdigest()}[/]',
+        from hashlib import sha384
+        hash_ = sha384(dump(self.config).encode('utf-8'))
+        Plan.logger.info(f'FL-Plan hash is [blue]{hash_.hexdigest()}[/]',
                          extra={'markup': True})
 
-        return self.hash_.hexdigest()
+        return hash_.hexdigest()
 
     def resolve(self):
         """Resolve the federation settings."""

@@ -12,6 +12,27 @@ port your own models.
 """
 
 from logging import getLogger
+from enum import Enum
+
+
+class OptTreatment(Enum):
+    """Optimizer Methods."""
+
+    RESET = 1
+    """
+    RESET tells each collaborator to reset the optimizer state at the beginning
+    of each round.
+    """
+    CONTINUE_LOCAL = 2
+    """
+    CONTINUE_LOCAL tells each collaborator to continue with the local optimizer
+    state from the previous round.
+    """
+    CONTINUE_GLOBAL = 3
+    """
+    CONTINUE_GLOBAL tells each collaborator to continue with the federally
+    averaged optimizer state from the previous round.
+    """
 
 
 class TaskRunner(object):
@@ -215,3 +236,11 @@ class TaskRunner(object):
             None
         """
         raise NotImplementedError
+
+    def initialize(self, opt_treatment=OptTreatment.RESET.name, **kwargs):
+        # RESET/CONTINUE_LOCAL/CONTINUE_GLOBAL
+        if not hasattr(OptTreatment, opt_treatment):
+            self.logger.error("Unknown opt_treatment: %s." % opt_treatment)
+            raise NotImplementedError(
+                "Unknown opt_treatment: %s." % opt_treatment)
+        self.set_optimizer_treatment(OptTreatment[opt_treatment].name)

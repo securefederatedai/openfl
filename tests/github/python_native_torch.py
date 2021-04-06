@@ -10,18 +10,12 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 from torchvision import datasets, transforms
-
-from openfl.federated import FederatedModel, FederatedDataSet
-
-import openfl.native as fx
-
+import os
+os.environ['CUDA_VISIBLE_DEVICES']='-1'
 
 def one_hot(labels, classes):
     """One-hot encode `labels` using `classes` classes."""
     return np.eye(classes)[labels]
-
-
-fx.init('torch_cnn_mnist')
 
 
 def cross_entropy(output, target):
@@ -58,6 +52,10 @@ class Net(nn.Module):
 
 
 if __name__ == '__main__':
+    import openfl.native as fx
+    from openfl.federated import FederatedModel, FederatedDataSet
+    fx.init('torch_cnn_mnist')
+
     # TODO: Remove after update to torchvision==0.9.1
     # See https://github.com/pytorch/vision/issues/3549
     datasets.MNIST.resources = [
@@ -89,7 +87,7 @@ if __name__ == '__main__':
 
     fl_data = FederatedDataSet(train_images, train_labels, valid_images, valid_labels,
                                batch_size=32, num_classes=classes)
-    fl_model = FederatedModel(build_model=Net, optimizer=get_optimizer,
+    fl_model = FederatedModel(Net, optimizer_lambda=get_optimizer,
                               loss_fn=cross_entropy, data_loader=fl_data, device='cpu')
     collaborator_models = fl_model.setup(num_collaborators=2)
     collaborators = {'one': collaborator_models[0], 'two': collaborator_models[1]}

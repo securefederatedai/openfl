@@ -3,8 +3,6 @@
 
 """You may copy this file as the starting point of your own model."""
 
-import tensorflow as tf
-
 from openfl.federated import KerasTaskRunner
 
 
@@ -46,6 +44,7 @@ class TensorFlowCNN(KerasTaskRunner):
             **kwargs: Additional parameters to pass to the function
 
         """
+        import tensorflow as tf
         print(tf.config.threading.get_intra_op_parallelism_threads())
         print(tf.config.threading.get_inter_op_parallelism_threads())
         # physical_devices = tf.config.list_physical_devices('GPU')

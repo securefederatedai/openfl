@@ -3,14 +3,14 @@
 
 """Data package."""
 
-from warnings import catch_warnings, simplefilter
+# from warnings import catch_warnings, simplefilter
 import pkgutil
 
-with catch_warnings():
-    simplefilter(action='ignore', category=FutureWarning)
-    if pkgutil.find_loader('tensorflow'):
-        # ignore deprecation warnings in command-line interface
-        import tensorflow  # NOQA
+# with catch_warnings():
+#     simplefilter(action='ignore', category=FutureWarning)
+#     if pkgutil.find_loader('tensorflow'):
+#         # ignore deprecation warnings in command-line interface
+#         import tensorflow  # NOQA
 
 from .loader import DataLoader  # NOQA
 

@@ -24,22 +24,29 @@ from .runner import TaskRunner
 class KerasTaskRunner(TaskRunner):
     """The base model for Keras models in the federation."""
 
-    def __init__(self, **kwargs):
+    def __init__(self, model, session=None, **kwargs):
         """
         Initialize.
 
         Args:
             **kwargs: Additional parameters to pass to the function
         """
+        import tensorflow as tf
         super().__init__(**kwargs)
 
-        self.model = ke.Model()
-
+        self.model = model
+        self.session = session or tf.compat.v1.get_default_session()
         self.model_tensor_names = []
 
         # this is a map of all of the required tensors for each of the public
         # functions in KerasTaskRunner
         self.required_tensorkeys_for_function = {}
+
+    def local_session(f):
+        def wrapper(*args, **kwargs):
+            with args[0].session.graph.as_default():
+                return f(*args, **kwargs)
+        return wrapper
 
     def rebuild_model(self, round, input_tensor_dict, validation=False):
         """
@@ -58,6 +65,7 @@ class KerasTaskRunner(TaskRunner):
         else:
             self.set_tensor_dict(input_tensor_dict, with_opt_vars=False)
 
+    @local_session
     def train(self, col_name, round_num, input_tensor_dict, epochs, **kwargs):
         """
         Perform the training for a specified number of batches.
@@ -79,13 +87,11 @@ class KerasTaskRunner(TaskRunner):
 
         # rebuild model with updated weights
         self.rebuild_model(round_num, input_tensor_dict)
-
         history = self.model.fit(self.data_loader.X_train,
-                                 self.data_loader.y_train,
-                                 batch_size=self.data_loader.batch_size,
-                                 epochs=epochs,
-                                 verbose=0, )
-
+                                self.data_loader.y_train,
+                                batch_size=self.data_loader.batch_size,
+                                epochs=epochs,
+                                verbose=0, )
         # TODO Currently assuming that all metrics are defined at
         #  initialization (build_model).
         #  If metrics are added (i.e. not a subset of what was originally
@@ -165,6 +171,7 @@ class KerasTaskRunner(TaskRunner):
         # return global_tensor_dict, local_tensor_dict
         return global_tensor_dict, local_tensor_dict
 
+    @local_session
     def validate(self, col_name, round_num, input_tensor_dict, **kwargs):
         """
         Run the trained model on validation data; report results.
@@ -220,15 +227,18 @@ class KerasTaskRunner(TaskRunner):
 
         return output_tensor_dict, {}
 
+    @local_session
     def save_native(self, filepath):
         """Save model."""
         self.model.save(filepath)
 
+    @local_session
     def load_native(self, filepath):
         """Load model."""
+        import tensorflow as tf
+        
         self.model = tf.keras.models.load_model(filepath)
 
-    @staticmethod
     def _get_weights_names(obj):
         """
         Get the list of weight names.
@@ -246,8 +256,8 @@ class KerasTaskRunner(TaskRunner):
         weight_names = [weight.name for weight in obj.weights]
         return weight_names
 
-    @staticmethod
-    def _get_weights_dict(obj, suffix=''):
+    @local_session
+    def _get_weights_dict(self, obj, suffix=''):
         """
         Get the dictionary of weights.
 
@@ -268,8 +278,8 @@ class KerasTaskRunner(TaskRunner):
             weights_dict[name + suffix] = value
         return weights_dict
 
-    @staticmethod
-    def _set_weights_dict(obj, weights_dict):
+    @local_session
+    def _set_weights_dict(self, obj, weights_dict):
         """Set the object weights with a dictionary.
 
         The obj can be a model or an optimizer.
@@ -344,6 +354,7 @@ class KerasTaskRunner(TaskRunner):
             self._set_weights_dict(self.model, model_weights_dict)
             self._set_weights_dict(self.model.optimizer, opt_weights_dict)
 
+    @local_session
     def reset_opt_vars(self):
         """
         Reset optimizer variables.
@@ -351,6 +362,8 @@ class KerasTaskRunner(TaskRunner):
         Resets the optimizer variables
 
         """
+        import tensorflow as tf
+
         for var in self.model.optimizer.variables():
             var.assign(tf.zeros_like(var))
         self.logger.debug('Optimizer variables reset')

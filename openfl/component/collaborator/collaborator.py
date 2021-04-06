@@ -4,7 +4,7 @@
 """Collaborator module."""
 
 from logging import getLogger
-from enum import Enum
+
 from time import sleep
 
 from openfl.protocols import utils
@@ -12,25 +12,6 @@ from openfl.utilities import TensorKey
 from openfl.pipelines import TensorCodec, NoCompressionPipeline
 from openfl.databases import TensorDB
 
-
-class OptTreatment(Enum):
-    """Optimizer Methods."""
-
-    RESET = 1
-    """
-    RESET tells each collaborator to reset the optimizer state at the beginning
-    of each round.
-    """
-    CONTINUE_LOCAL = 2
-    """
-    CONTINUE_LOCAL tells each collaborator to continue with the local optimizer
-    state from the previous round.
-    """
-    CONTINUE_GLOBAL = 3
-    """
-    CONTINUE_GLOBAL tells each collaborator to continue with the federally
-    averaged optimizer state from the previous round.
-    """
 
 
 class Collaborator:
@@ -58,7 +39,6 @@ class Collaborator:
     Note:
         \* - Plan setting.
     """
-
     def __init__(self,
                  collaborator_name,
                  aggregator_uuid,
@@ -67,7 +47,7 @@ class Collaborator:
                  task_runner,
                  tensor_pipe,
                  task_config,
-                 opt_treatment=OptTreatment.RESET,
+                 opt_treatment=None,
                  delta_updates=False,
                  db_store_rounds=1,
                  **kwargs):
@@ -95,16 +75,7 @@ class Collaborator:
         self.task_config = task_config
 
         self.logger = getLogger(__name__)
-
-        # RESET/CONTINUE_LOCAL/CONTINUE_GLOBAL
-        if hasattr(OptTreatment, opt_treatment):
-            self.opt_treatment = OptTreatment[opt_treatment]
-        else:
-            self.logger.error("Unknown opt_treatment: %s." % opt_treatment)
-            raise NotImplementedError(
-                "Unknown opt_treatment: %s." % opt_treatment)
-
-        self.task_runner.set_optimizer_treatment(self.opt_treatment.name)
+        self.task_runner.initialize(opt_treatment=opt_treatment)
 
     def run(self):
         """Run the collaborator."""

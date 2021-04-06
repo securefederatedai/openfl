@@ -4,7 +4,7 @@
 """TensorFlowTaskRunner module."""
 
 import numpy as np
-import tensorflow.compat.v1 as tf
+
 from tqdm import tqdm
 
 from openfl.utilities import TensorKey, split_tensor_dict_for_holdouts
@@ -22,6 +22,7 @@ class TensorFlowTaskRunner(TaskRunner):
         Args:
             **kwargs: Additional parameters to pass to the function
         """
+        import tensorflow.compat.v1 as tf
         tf.disable_v2_behavior()
 
         super().__init__(**kwargs)
@@ -97,6 +98,7 @@ class TensorFlowTaskRunner(TaskRunner):
         Returns:
             float: loss metric
         """
+        import tensorflow.compat.v1 as tf
         batch_size = self.data_loader.batch_size
 
         if kwargs['batch_size']:
@@ -208,6 +210,7 @@ class TensorFlowTaskRunner(TaskRunner):
         Returns:
             dict: {<metric>: <value>}
         """
+        import tensorflow.compat.v1 as tf
         batch_size = self.data_loader.batch_size
 
         if kwargs['batch_size']:
@@ -321,6 +324,8 @@ class TensorFlowTaskRunner(TaskRunner):
         Returns:
             None
         """
+        import tensorflow.compat.v1 as tf
+        
         self.sess.run(tf.global_variables_initializer())
 
     def _get_weights_names(self, with_opt_vars=True):
@@ -430,6 +435,8 @@ def tf_set_tensor_dict(tensor_dict, session, variables,
         assign_ops, placeholders
 
     """
+    import tensorflow.compat.v1 as tf
+
     if placeholders is None:
         placeholders = {
             v.name: tf.placeholder(v.dtype, shape=v.shape) for v in variables

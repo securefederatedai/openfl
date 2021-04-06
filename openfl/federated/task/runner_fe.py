@@ -3,7 +3,6 @@
 """FastEstimatorTaskRunner module."""
 
 import numpy as np
-import tensorflow as tf
 
 from openfl.utilities import TensorKey, split_tensor_dict_for_holdouts
 
@@ -22,6 +21,7 @@ class FastEstimatorTaskRunner(TaskRunner):
             estimator: object of type fastestimator.estimator
         """
         super().__init__(**kwargs)
+        import tensorflow as tf
         import fastestimator as fe
 
         class ProgressLoader(fe.trace.Trace):

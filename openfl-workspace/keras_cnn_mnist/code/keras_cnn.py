@@ -21,9 +21,8 @@ class KerasCNN(KerasTaskRunner):
         Args:
             **kwargs: Additional parameters to pass to the function
         """
-        super().__init__(**kwargs)
-
-        self.model = self.build_model(self.feature_shape, self.data_loader.num_classes, **kwargs)
+        model = self.build_model(self.feature_shape, self.data_loader.num_classes, **kwargs)
+        super().__init__(model, **kwargs)
 
         self.initialize_tensorkeys_for_functions()
 
@@ -76,10 +75,5 @@ class KerasCNN(KerasTaskRunner):
                       optimizer=ke.optimizers.Adam(),
                       metrics=['accuracy'])
 
-        # initialize the optimizer variables
-        opt_vars = model.optimizer.variables()
-
-        for v in opt_vars:
-            v.initializer.run(session=self.sess)
 
         return model
