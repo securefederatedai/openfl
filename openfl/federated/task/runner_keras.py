@@ -83,24 +83,8 @@ class KerasTaskRunner(TaskRunner):
         self.rebuild_model(round_num, input_tensor_dict)
 
         results = self.train_iteration(self.data_loader.get_train_loader(),
+                                       metrics=metrics,
                                        **kwargs)
-
-        # TODO Currently assuming that all metrics are defined at
-        #  initialization (build_model).
-        #  If metrics are added (i.e. not a subset of what was originally
-        #  defined) then the model must be recompiled.
-        model_metrics_names = self.model.metrics_names
-
-        # TODO if there are new metrics in the flplan that were not included
-        #  in the originally
-        #  compiled model, that behavior is not currently handled.
-        for param in metrics:
-            if param not in model_metrics_names:
-                error = 'KerasTaskRunner does not support specifying new' \
-                        ' metrics. ' \
-                        'Param_metrics = {}, model_metrics_names =' \
-                        ' {}'.format(metrics, model_metrics_names)
-                raise ValueError(error)
 
         # output metric tensors (scalar)
         origin = col_name
@@ -175,12 +159,31 @@ class KerasTaskRunner(TaskRunner):
             epochs: Number of epochs to train.
             metrics: Names of metrics to save.
         """
+        # TODO Currently assuming that all metrics are defined at
+        #  initialization (build_model).
+        #  If metrics are added (i.e. not a subset of what was originally
+        #  defined) then the model must be recompiled.
+        model_metrics_names = self.model.metrics_names
+
+        # TODO if there are new metrics in the flplan that were not included
+        #  in the originally
+        #  compiled model, that behavior is not currently handled.
+        for param in metrics:
+            if param not in model_metrics_names:
+                error = 'KerasTaskRunner does not support specifying new' \
+                        ' metrics. ' \
+                        'Param_metrics = {}, model_metrics_names =' \
+                        ' {}'.format(metrics, model_metrics_names)
+                raise ValueError(error)
+
         history = self.model.fit(batch_generator,
                                  verbose=0,
                                  **kwargs)
+        results = []
         for metric in metrics:
             value = np.mean([history.history[metric]])
-            yield Metric(name=metric, value=np.array(value))
+            results.append(Metric(name=metric, value=np.array(value)))
+        return results
 
     def validate(self, col_name, round_num, input_tensor_dict, **kwargs):
         """
