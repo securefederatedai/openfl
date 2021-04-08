@@ -349,7 +349,7 @@ class Plan(object):
         defaults[SETTINGS]['federation_uuid'] = self.federation_uuid
         if task_runner is not None:
             defaults[SETTINGS]['task_runner'] = task_runner
-        else:
+        else:   
             data_loader = self.initialize_data_loader(data_loader, collaborator_name)
             defaults[SETTINGS]['task_runner'] = self.get_task_runner(
                                 data_loader=data_loader,

@@ -93,9 +93,10 @@ class FLExperiment:
                 for name_prefix, apply_kwarg in zip(['localy_tuned_model_', 'aggregated_model_'],
                                                 ['local', 'global']):
                     # We add two entries for this task: for local and global models
-                    task_keeper.task_settings[name].update({'apply':apply_kwarg})
+                    task_kwargs = deepcopy(task_keeper.task_settings[name])
+                    task_kwargs.update({'apply':apply_kwarg})
                     plan.config['tasks'][name_prefix + name] = {'function':name,
-                                    'kwargs':deepcopy(task_keeper.task_settings[name])}
+                                    'kwargs':task_kwargs}
 
 
         # TaskRunner framework plugin
@@ -121,6 +122,7 @@ class FLExperiment:
                 and ('function' in plan.config['tasks'][entry])]
         self.plan = deepcopy(plan)
         os.makedirs('./plan', exist_ok=True)
+        os.makedirs('./save', exist_ok=True)
         
 
 
