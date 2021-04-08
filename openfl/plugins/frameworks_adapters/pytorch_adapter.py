@@ -171,6 +171,63 @@ def _derive_opt_state_dict(opt_state_dict):
     return derived_opt_state_dict
 
 
+def expand_derived_opt_state_dict(derived_opt_state_dict, device):
+    """Expand the optimizer state dictionary.
+
+    Takes a derived opt_state_dict and creates an opt_state_dict suitable as
+    input for load_state_dict for restoring optimizer state.
+
+    Reconstructing state_subkeys_and_tags using the example key
+    prefix, "__opt_state_0_0_", certain to be present.
+
+    Args:
+        derived_opt_state_dict: Optimizer state dictionary
+
+    Returns:
+        dict: Optimizer state dictionary
+    """
+    state_subkeys_and_tags = []
+    for key in derived_opt_state_dict:
+        if key.startswith('__opt_state_0_0_'):
+            stripped_key = key[16:]
+            if stripped_key.startswith('istensor_'):
+                this_tag = 'istensor'
+                subkey = stripped_key[9:]
+            else:
+                this_tag = ''
+                subkey = stripped_key[1:]
+            state_subkeys_and_tags.append((subkey, this_tag))
+
+    opt_state_dict = {'param_groups': [], 'state': {}}
+    nb_params_per_group = list(
+        derived_opt_state_dict.pop('__opt_group_lengths').astype(np.int)
+    )
+
+    # Construct the expanded dict.
+    for group_idx, nb_params in enumerate(nb_params_per_group):
+        these_group_ids = [
+            '{}_{}'.format(group_idx, idx) for idx in range(nb_params)
+        ]
+        opt_state_dict['param_groups'].append({'params': these_group_ids})
+        for this_id in these_group_ids:
+            opt_state_dict['state'][this_id] = {}
+            for subkey, tag in state_subkeys_and_tags:
+                flat_key = '__opt_state_{}_{}_{}'.format(this_id, tag, subkey)
+                if tag == 'istensor':
+                    new_v = pt.from_numpy(derived_opt_state_dict.pop(flat_key))
+                else:
+                    # Here (for currrently supported optimizers) the subkey
+                    # should be 'step' and the length of array should be one.
+                    assert subkey == 'step'
+                    assert len(derived_opt_state_dict[flat_key]) == 1
+                    new_v = int(derived_opt_state_dict.pop(flat_key))
+                opt_state_dict['state'][this_id][subkey] = new_v
+
+    # sanity check that we did not miss any optimizer state
+    assert len(derived_opt_state_dict) == 0
+
+    return opt_state_dict
+
 
 def to_cpu_numpy(state):
     """Send data to CPU as Numpy array.

@@ -2,7 +2,6 @@
 # SPDX-License-Identifier: Apache-2.0
 
 """Aggregator module."""
-
 from logging import getLogger
 
 from openfl.utilities import TensorKey, TaskResultKey
@@ -85,6 +84,9 @@ class Aggregator:
 
         if kwargs.get('initial_tensor_dict', None) is not None:
             self._load_initial_tensors_from_dict(kwargs['initial_tensor_dict'])
+            self.model = utils.construct_model_proto(tensor_dict=kwargs['initial_tensor_dict'],
+                                             round_number=0,
+                                             tensor_pipe=self.compression_pipeline)
         else:
             self.model: ModelProto = utils.load_proto(self.init_state_path)
             self._load_initial_tensors()  # keys are TensorKeys
