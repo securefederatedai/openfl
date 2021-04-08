@@ -1,1 +1,1 @@
-template: openfl.federated.TaskRunner
+template: openfl.federated.task_runner.CoreTaskRunner

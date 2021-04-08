@@ -8,126 +8,126 @@ from openfl.utilities import TensorKey, split_tensor_dict_for_holdouts
 class CoreTaskRunner(object):
     """Federated Learning Task Runner Class."""
 
-    def register_fl_task(self, task_type='train', task_name='train'):
+    def prepare_tensorkeys_for_agggregation(self, metric_dict, validation_flag, col_name, round_num):
         """
-        allowed types: 'train', 'validate'
-
-        Collaborator interface:
-        Task recieves the following: col_name, round_num, input_tensor_dict, use_tqdm=False, **kwargs
-        Task is expected to return global_tensor_dict, local_tensor_dict 
-
-        User method interface:
-        Training Method recieves the following: model, train_loader, device, optimizer
-        Validation Method recieves the following: model, val_loader, device
-
-        User Methods return: dict{name: metric}
+        Returns (global_tensor_dict, local_tensor_dict)
         """
-        def decorator_with_args(training_method):
-            @functools.wraps(training_method)
-            def wrapper_decorator(col_name, round_num, input_tensor_dict, **kwargs):
+        global_tensor_dict, local_tensor_dict = {}, {}
+        origin = col_name
+        if not validation_flag:
+            # Output metric tensors (scalar)
+            tags = ('trained',)
 
-                device = kwargs.get('device', 'cpu') # collaborator should know the correct device
-                if task_type=='train':
-                    self.rebuild_model(input_tensor_dict, validation=False, device=device)
-                    loader = self.data_loader.get_train_loader()
-                    args_method = [self.model, loader, device, self.optimizer,]
-                # elif task_type=='validation':
+            # output model tensors (Doesn't include TensorKey)
+            output_model_dict = self.get_tensor_dict(with_opt_vars=True)
+            global_model_dict, local_model_dict = split_tensor_dict_for_holdouts(
+                self.logger, output_model_dict,
+                **self.tensor_dict_split_fn_kwargs
+            )
+
+            # Create global tensorkeys
+            global_tensorkey_model_dict = {
+                TensorKey(tensor_name, origin, round_num, False, tags):
+                    nparray for tensor_name, nparray in global_model_dict.items()}
+            # Create tensorkeys that should stay local
+            local_tensorkey_model_dict = {
+                TensorKey(tensor_name, origin, round_num, False, tags):
+                    nparray for tensor_name, nparray in local_model_dict.items()}
+            # The train/validate aggregated function of the next
+            # round will look for the updated model parameters.
+            # This ensures they will be resolved locally
+            next_local_tensorkey_model_dict = {TensorKey(
+                tensor_name, origin, round_num + 1, False, ('model',)): nparray
+                for tensor_name, nparray in local_model_dict.items()}
+
+            global_tensor_dict = global_tensorkey_model_dict
+            local_tensor_dict = {**local_tensorkey_model_dict, **next_local_tensorkey_model_dict}
+
+            # Update the required tensors if they need to be
+            # pulled from the aggregator
+            # TODO this logic can break if different collaborators
+            #  have different roles between rounds.
+            # For example, if a collaborator only performs validation
+            # in the first round but training
+            # in the second, it has no way of knowing the optimizer
+            # state tensor names to request from the aggregator
+            # because these are only created after training occurs.
+            # A work around could involve doing a single epoch of training
+            # on random data to get the optimizer names,
+            # and then throwing away the model.
+            if self.opt_treatment == 'CONTINUE_GLOBAL':
+                self.initialize_tensorkeys_for_functions(with_opt_vars=True)
+
+            # This will signal that the optimizer values are now present,
+            # and can be loaded when the model is rebuilt
+            self.training_round_completed = True
+
+        else:
+            suffix = 'validate' + validation_flag
+            tags = ('metric', suffix)
+
+        metric_dict = {
+                TensorKey(metric, origin, round_num, True, tags):
+                    np.array(value) for metric, value in metric_dict.items()
+            }
+        global_tensor_dict = {**global_tensor_dict, **metric_dict}
+
+        return global_tensor_dict, local_tensor_dict
+
+
+    def adapt_tasks(self):
+        def task_binder(task_name, callable_task):
+            def collaborator_adapted_task(col_name, round_num, input_tensor_dict, **kwargs):
+                print('\n\n',task_name, kwargs, '\n\n')
+                task_contract = self.task_provider.task_contract[task_name]
+                # Validation flag can be [False, '_local', '_agg']
+                validation_flag = True if task_contract['optimizer'] is None else False
+                task_settings = self.task_provider.task_settings[task_name]
+
+                device = kwargs.get('device', 'cpu')
+                self.rebuild_model(input_tensor_dict, validation=validation_flag, device=device)
+                task_kwargs = dict()
+                if validation_flag:  
+                    loader = self.data_loader.get_valid_loader() 
+                    if kwargs['apply'] == 'local':
+                        validation_flag = '_local'
+                    else:
+                        validation_flag = '_agg'
                 else:
-                    self.rebuild_model(input_tensor_dict, validation=True, device=device)
-                    loader = self.data_loader.get_valid_loader()
-                    args_method = [self.model, loader, device,]
+                    loader = self.data_loader.get_train_loader()
+                    # If train task we also pass optimizer
+                    task_kwargs[task_contract['optimizer']] = self.optimizer
 
+                
+                for en_name, entity in zip(['model', 'data_loader', 'device'],
+                                            [self.model, loader, device]):
+                    task_kwargs[task_contract[en_name]] = entity
+
+                # Add task settings to the keyword arguments
+                task_kwargs.update(task_settings)
 
                 # Here is the training metod call
-                metric_dict = training_method(*args_method)
-                # Do something after
                 
-                global_tensor_dict, local_tensor_dict = {}, {}
-                origin = col_name
-                if task_type=='train':
-                    # Output metric tensors (scalar)
-                    tags = ('trained',)
+                metric_dict = callable_task(**task_kwargs)
+                
+                return self.prepare_tensorkeys_for_agggregation(metric_dict, validation_flag, col_name, round_num)
 
-                    # output model tensors (Doesn't include TensorKey)
-                    output_model_dict = self.get_tensor_dict(with_opt_vars=True)
-                    global_model_dict, local_model_dict = split_tensor_dict_for_holdouts(
-                        self.logger, output_model_dict,
-                        **self.tensor_dict_split_fn_kwargs
-                    )
-
-                    # Create global tensorkeys
-                    global_tensorkey_model_dict = {
-                        TensorKey(tensor_name, origin, round_num, False, tags):
-                            nparray for tensor_name, nparray in global_model_dict.items()}
-                    # Create tensorkeys that should stay local
-                    local_tensorkey_model_dict = {
-                        TensorKey(tensor_name, origin, round_num, False, tags):
-                            nparray for tensor_name, nparray in local_model_dict.items()}
-                    # The train/validate aggregated function of the next
-                    # round will look for the updated model parameters.
-                    # This ensures they will be resolved locally
-                    next_local_tensorkey_model_dict = {TensorKey(
-                        tensor_name, origin, round_num + 1, False, ('model',)): nparray
-                        for tensor_name, nparray in local_model_dict.items()}
-
-                    global_tensor_dict = global_tensorkey_model_dict
-                    local_tensor_dict = {**local_tensorkey_model_dict, **next_local_tensorkey_model_dict}
-
-                    # Update the required tensors if they need to be
-                    # pulled from the aggregator
-                    # TODO this logic can break if different collaborators
-                    #  have different roles between rounds.
-                    # For example, if a collaborator only performs validation
-                    # in the first round but training
-                    # in the second, it has no way of knowing the optimizer
-                    # state tensor names to request from the aggregator
-                    # because these are only created after training occurs.
-                    # A work around could involve doing a single epoch of training
-                    # on random data to get the optimizer names,
-                    # and then throwing away the model.
-                    if self.opt_treatment == 'CONTINUE_GLOBAL':
-                        self.initialize_tensorkeys_for_functions(with_opt_vars=True)
-
-                    # This will signal that the optimizer values are now present,
-                    # and can be loaded when the model is rebuilt
-                    self.training_round_completed = True
-
-                elif task_type=='validation':
-                    suffix = 'validate'
-                    if kwargs['apply'] == 'local':
-                        suffix += '_local'
-                    else:
-                        suffix += '_agg'
-                    tags = ('metric', suffix)
-
-                else:
-                    tags = ('unknown')
-
-                metric_dict = {
-                        TensorKey(metric, origin, round_num, True, tags):
-                            np.array(value) for metric, value in metric_dict.items()
-                    }
-                global_tensor_dict = {**global_tensor_dict, **metric_dict}
-
-                return global_tensor_dict, local_tensor_dict
-
-            # We do not even have to decorate the function 
-            self.TASK_REGISTRY[task_name] = wrapper_decorator
-
-        # This line returns the decorator itself
-        return decorator_with_args
+            return collaborator_adapted_task
 
 
-    def __init__(self, model_provider, **kwargs):
+        for task_name, callable_task in self.task_provider.task_registry.items():
+            self.TASK_REGISTRY[task_name] = task_binder(task_name, callable_task)
+                
+
+    def __init__(self, **kwargs):
         """
         model_provider should have a method provide_model
         """
         self.set_logger()
-        self.TASK_REGISTRY = dict()
-        self.model_provider = model_provider
-        self.model = self.model_provider.provide_model()
-        self.optimizer = self.model_provider.provide_optimizer()
+
         self.kwargs = kwargs
+
+        self.TASK_REGISTRY = dict()
 
         # Why is it here
         self.tensor_dict_split_fn_kwargs = dict()
@@ -142,16 +142,25 @@ class CoreTaskRunner(object):
             'holdout_tensor_names': ['__opt_state_needed']
         })
 
-    def set_framework_adapter(self, FrameworkAdapterPlugin):
-        self.framework_adapter = FrameworkAdapterPlugin()
-        self.initialize_tensorkeys_for_functions()
+    def set_task_provider(self, task_provider):
+        if task_provider is None:
+            return
+        self.task_provider = task_provider
+        self.adapt_tasks()
 
     def set_data_loader(self, data_loader):
+        # Is called on a collaborator node
         self.data_loader = data_loader
-        
-    def set_optimizer_treatment(self, opt_treatment):
-        """Change the treatment of current instance optimizer."""
-        self.opt_treatment = opt_treatment
+
+    def set_model_provider(self, model_provider):
+        self.model_provider = model_provider
+        self.model = self.model_provider.provide_model()
+        self.optimizer = self.model_provider.provide_optimizer()
+
+    def set_framework_adapter(self, framework_adapter):
+        self.framework_adapter = framework_adapter
+        self.initialize_tensorkeys_for_functions()
+
 
     def set_logger(self):
         """Set up the log object."""

@@ -4,3 +4,5 @@ __pycache__
 /dist
 .vscode
 .ipynb_checkpoints
+
+/Plugin_experiments/Kvasir_UNET_workspace/data
