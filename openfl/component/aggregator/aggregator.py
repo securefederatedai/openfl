@@ -82,9 +82,12 @@ class Aggregator:
         self.last_tensor_dict: dict = {}
 
         self.best_model_score = None
-        self.model: ModelProto = utils.load_proto(self.init_state_path)
 
-        self._load_initial_tensors()  # keys are TensorKeys
+        if kwargs.get('initial_tensor_dict', None) is not None:
+            self._load_initial_tensors_from_dict(kwargs['initial_tensor_dict'])
+        else:
+            self.model: ModelProto = utils.load_proto(self.init_state_path)
+            self._load_initial_tensors()  # keys are TensorKeys
 
         self.log_dir = f'logs/{self.uuid}_{self.federation_uuid}'
         # TODO use native tensorboard
@@ -124,6 +127,27 @@ class Aggregator:
         self.tensor_db.cache_tensor(tensor_key_dict)
         self.logger.debug('This is the initial tensor_db:'
                           ' {}'.format(self.tensor_db))
+
+
+    def _load_initial_tensors_from_dict(self, tensor_dict):
+        """
+        Load all of the tensors required to begin federated learning.
+
+        Required tensors are: \
+            1. Initial model.
+
+        Returns:
+            None
+        """
+        tensor_key_dict = {
+            TensorKey(k, self.uuid, self.round_number, False, ('model',)):
+                v for k, v in tensor_dict.items()
+        }
+        # all initial model tensors are loaded here
+        self.tensor_db.cache_tensor(tensor_key_dict)
+        self.logger.debug('This is the initial tensor_db:'
+                          ' {}'.format(self.tensor_db))
+
 
     def _save_model(self, round_number, file_path):
         """

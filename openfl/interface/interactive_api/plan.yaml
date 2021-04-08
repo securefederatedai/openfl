@@ -21,7 +21,7 @@ data_loader :
   defaults : plan/defaults/data_loader.yaml
 
 task_runner :
-  defaults : plan/defaults/task_runner.yaml
+  template : openfl.federated.task.task_runner.CoreTaskRunner
 
 network :
   defaults : plan/defaults/network.yaml
@@ -30,4 +30,4 @@ assigner :
   defaults : plan/defaults/assigner.yaml
 
 tasks :
-  defaults : plan/defaults/tasks_fast_estimator.yaml
+  defaults : null
