@@ -51,7 +51,7 @@ def _load_raw_datashards(shard_num, collaborator_count, transform=None):
     train_idx = np.split(train_idx, collaborator_count)[shard_num - 1]
     valid_idx = np.random.permutation(len(val_data))
     valid_idx = np.split(valid_idx, collaborator_count)[shard_num - 1]
-    
+
     # create the shards
     X_train, y_train = zip(*[train_data[i] for i in train_idx])
     X_train, y_train = torch.stack(X_train).float(), torch.tensor(y_train)

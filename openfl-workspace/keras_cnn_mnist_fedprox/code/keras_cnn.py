@@ -138,5 +138,3 @@ class KerasCNN(KerasTaskRunner):
             v.initializer.run(session=self.sess)
 
         return model
-
-

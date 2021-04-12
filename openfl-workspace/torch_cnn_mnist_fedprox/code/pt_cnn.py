@@ -30,7 +30,8 @@ def cross_entropy(output, target):
 
 
 class FedProxOptimizer(Optimizer):
-    def __init__(self, params, lr=required, mu=0.0, momentum=0, dampening=0, weight_decay=0, nesterov=False):
+    def __init__(self, params, lr=required, mu=0.0, momentum=0, dampening=0, weight_decay=0,
+                 nesterov=False):
         if momentum < 0.0:
             raise ValueError("Invalid momentum value: {}".format(momentum))
         if lr is not required and lr < 0.0:
@@ -39,7 +40,8 @@ class FedProxOptimizer(Optimizer):
             raise ValueError("Invalid weight_decay value: {}".format(weight_decay))
         if mu < 0.0:
             raise ValueError("Invalid mu value: {}".format(mu))
-        defaults = dict(lr=lr, weight_decay=weight_decay, mu=mu, momentum=momentum, nesterov=nesterov, dampening=dampening)
+        defaults = dict(lr=lr, weight_decay=weight_decay, mu=mu, momentum=momentum,
+                        nesterov=nesterov, dampening=dampening)
 
         if nesterov and (momentum <= 0 or dampening != 0):
             raise ValueError("Nesterov momentum requires a momentum and zero dampening")
@@ -184,7 +186,7 @@ class PyTorchCNN(PyTorchTaskRunner):
         if print_model:
             print(self)
         self.to(device)
-    
+
     def _init_optimizer(self):
         """Initialize the optimizer."""
         self.optimizer = FedProxOptimizer(self.parameters(), lr=1e-1, mu=0)
@@ -259,7 +261,6 @@ class PyTorchCNN(PyTorchTaskRunner):
 
         # Empty list represents metrics that should only be stored locally
         return output_tensor_dict, {}
-        
 
     def train_epoch(self, batch_generator, **kwargs):
         """Train batches.

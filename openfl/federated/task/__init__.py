@@ -25,4 +25,4 @@ if pkgutil.find_loader('torch'):
 if pkgutil.find_loader('torch') and pkgutil.find_loader('tensorflow'):
     from .runner_fe import FastEstimatorTaskRunner  # NOQA
 
-from .metric import Metric
+from .metric import Metric # NOQA
