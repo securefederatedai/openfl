@@ -14,7 +14,7 @@ from openfl.utilities import TensorKey
 
 
 def cross_entropy(output, target):
-    """Calculate Cross-entropy loss"""
+    """Calculate Cross-entropy loss."""
     return F.cross_entropy(input=output, target=target)
 
 
