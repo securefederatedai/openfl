@@ -8,10 +8,11 @@ import tqdm
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch import optim
+from torch.optim import Optimizer
+from torch.optim.optimizer import required
 
-from openfl.federated import PyTorchTaskRunner
-from openfl.utilities import TensorKey, split_tensor_dict_for_holdouts
+from openfl.federated import PyTorchTaskRunner, Metric
+from openfl.utilities import TensorKey
 
 
 def cross_entropy(output, target):
@@ -28,10 +29,78 @@ def cross_entropy(output, target):
     return F.binary_cross_entropy_with_logits(input=output, target=target)
 
 
+class FedProxOptimizer(Optimizer):
+    def __init__(self, params, lr=required, mu=0.0, momentum=0, dampening=0, weight_decay=0, nesterov=False):
+        if momentum < 0.0:
+            raise ValueError("Invalid momentum value: {}".format(momentum))
+        if lr is not required and lr < 0.0:
+            raise ValueError("Invalid learning rate: {}".format(lr))
+        if weight_decay < 0.0:
+            raise ValueError("Invalid weight_decay value: {}".format(weight_decay))
+        if mu < 0.0:
+            raise ValueError("Invalid mu value: {}".format(mu))
+        defaults = dict(lr=lr, weight_decay=weight_decay, mu=mu, momentum=momentum, nesterov=nesterov, dampening=dampening)
+
+        if nesterov and (momentum <= 0 or dampening != 0):
+            raise ValueError("Nesterov momentum requires a momentum and zero dampening")
+
+        super(FedProxOptimizer, self).__init__(params, defaults)
+
+    def __setstate__(self, state):
+        super(FedProxOptimizer, self).__setstate__(state)
+        for group in self.param_groups:
+            group.setdefault('nesterov', False)
+
+    @torch.no_grad()
+    def step(self, closure=None):
+        """Performs a single optimization step.
+        Arguments:
+            closure (callable, optional): A closure that reevaluates the model
+                and returns the loss.
+        """
+        loss = None
+        if closure is not None:
+            loss = closure()
+
+        for group in self.param_groups:
+            weight_decay = group['weight_decay']
+            momentum = group['momentum']
+            dampening = group['dampening']
+            nesterov = group['nesterov']
+            mu = group['mu']
+            w_old = group['w_old']
+            for p, w_old_p in zip(group['params'], w_old):
+                if p.grad is None:
+                    continue
+                d_p = p.grad
+                if weight_decay != 0:
+                    d_p = d_p.add(p, alpha=weight_decay)
+                if momentum != 0:
+                    param_state = self.state[p]
+                    if 'momentum_buffer' not in param_state:
+                        buf = param_state['momentum_buffer'] = torch.clone(d_p).detach()
+                    else:
+                        buf = param_state['momentum_buffer']
+                        buf.mul_(momentum).add_(d_p, alpha=1 - dampening)
+                    if nesterov:
+                        d_p = d_p.add(buf, alpha=momentum)
+                    else:
+                        d_p = buf
+                if w_old is not None:
+                    d_p.add_(p - w_old_p, alpha=mu)
+                p.add_(d_p, alpha=-group['lr'])
+
+        return loss
+
+    def set_old_weights(self, old_weights):
+        for param_group in self.param_groups:
+            param_group['w_old'] = old_weights
+
+
 class PyTorchCNN(PyTorchTaskRunner):
     """Simple CNN for classification."""
 
-    def __init__(self, device='cpu', mu=0.1, **kwargs):
+    def __init__(self, device='cpu', **kwargs):
         """Initialize.
 
         Args:
@@ -47,7 +116,6 @@ class PyTorchCNN(PyTorchTaskRunner):
         self._init_optimizer()
         self.loss_fn = cross_entropy
         self.initialize_tensorkeys_for_functions()
-        self.mu = mu
 
     def init_network(self,
                      device,
@@ -119,7 +187,7 @@ class PyTorchCNN(PyTorchTaskRunner):
     
     def _init_optimizer(self):
         """Initialize the optimizer."""
-        self.optimizer = optim.Adam(self.parameters(), lr=1e-4)
+        self.optimizer = FedProxOptimizer(self.parameters(), lr=1e-1, mu=0)
 
     def forward(self, x):
         """Forward pass of the model.
@@ -191,9 +259,9 @@ class PyTorchCNN(PyTorchTaskRunner):
 
         # Empty list represents metrics that should only be stored locally
         return output_tensor_dict, {}
+        
 
-    def train_batches(self, col_name, round_num, input_tensor_dict,
-                      num_batches=None, use_tqdm=False, **kwargs):
+    def train_epoch(self, batch_generator, **kwargs):
         """Train batches.
 
         Train the model on the requested number of batches.
@@ -211,84 +279,19 @@ class PyTorchCNN(PyTorchTaskRunner):
             global_output_dict:  Tensors to send back to the aggregator
             local_output_dict:   Tensors to maintain in the local TensorDB
         """
-        self.rebuild_model(round_num, input_tensor_dict)
-        # set to "training" mode
-        self.train()
-
         losses = []
-        snapshot = deepcopy(list(self.parameters()))
-        loader = self.data_loader.get_train_loader(num_batches)
-        if use_tqdm:
-            loader = tqdm.tqdm(loader, desc="train epoch")
-        for data, target in loader:
-            data, target = torch.tensor(data).to(
-                self.device), torch.tensor(target).to(
-                self.device, dtype=torch.float32)
+        self.optimizer.set_old_weights(deepcopy([p for p in self.parameters()]))
+        for data, target in batch_generator:
+            data, target = torch.tensor(data).to(self.device), torch.tensor(
+                target).to(self.device, dtype=torch.float32)
             self.optimizer.zero_grad()
             output = self(data)
             loss = self.loss_fn(output=output, target=target)
-            proximal_term = 0.0
-            for w, w0 in zip(self.parameters(), snapshot):
-                proximal_term += self.mu / 2 * (w - w0).norm(2)
-            loss += proximal_term
             loss.backward()
             self.optimizer.step()
             losses.append(loss.detach().cpu().numpy())
-
-        # Output metric tensors (scalar)
-        origin = col_name
-        tags = ('trained',)
-        output_metric_dict = {
-            TensorKey(
-                self.loss_fn.__name__, origin, round_num, True, ('metric',)
-            ): np.array(np.mean(losses))}
-
-        # output model tensors (Doesn't include TensorKey)
-        output_model_dict = self.get_tensor_dict(with_opt_vars=True)
-        global_model_dict, local_model_dict = split_tensor_dict_for_holdouts(
-            self.logger, output_model_dict,
-            **self.tensor_dict_split_fn_kwargs
-        )
-
-        # Create global tensorkeys
-        global_tensorkey_model_dict = {
-            TensorKey(tensor_name, origin, round_num, False, tags):
-                nparray for tensor_name, nparray in global_model_dict.items()}
-        # Create tensorkeys that should stay local
-        local_tensorkey_model_dict = {
-            TensorKey(tensor_name, origin, round_num, False, tags):
-                nparray for tensor_name, nparray in local_model_dict.items()}
-        # The train/validate aggregated function of the next
-        # round will look for the updated model parameters.
-        # This ensures they will be resolved locally
-        next_local_tensorkey_model_dict = {TensorKey(
-            tensor_name, origin, round_num + 1, False, ('model',)): nparray
-            for tensor_name, nparray in local_model_dict.items()}
-
-        global_tensor_dict = {**output_metric_dict, **global_tensorkey_model_dict}
-        local_tensor_dict = {**local_tensorkey_model_dict, **next_local_tensorkey_model_dict}
-
-        # Update the required tensors if they need to be
-        # pulled from the aggregator
-        # TODO this logic can break if different collaborators
-        #  have different roles between rounds.
-        # For example, if a collaborator only performs validation
-        # in the first round but training
-        # in the second, it has no way of knowing the optimizer
-        # state tensor names to request from the aggregator
-        # because these are only created after training occurs.
-        # A work around could involve doing a single epoch of training
-        # on random data to get the optimizer names,
-        # and then throwing away the model.
-        if self.opt_treatment == 'CONTINUE_GLOBAL':
-            self.initialize_tensorkeys_for_functions(with_opt_vars=True)
-
-        # This will signal that the optimizer values are now present,
-        # and can be loaded when the model is rebuilt
-        self.train_round_completed = True
-
-        # Return global_tensor_dict, local_tensor_dict
-        return global_tensor_dict, local_tensor_dict
+        loss = np.mean(losses)
+        return Metric(name=self.loss_fn.__name__, value=np.array(loss))
 
     def reset_opt_vars(self):
         """Reset optimizer variables.
@@ -296,4 +299,5 @@ class PyTorchCNN(PyTorchTaskRunner):
         Resets the optimizer state variables.
 
         """
-        self._init_optimizer()
+        # self._init_optimizer()
+        pass
