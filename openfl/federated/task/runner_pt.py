@@ -449,7 +449,7 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
         losses = []
         for data, target in batch_generator:
             data, target = pt.tensor(data).to(self.device), pt.tensor(
-                target).to(self.device, dtype=pt.float32)
+                target).to(self.device, dtype=pt.int64)
             self.optimizer.zero_grad()
             output = self(data)
             loss = self.loss_fn(output=output, target=target)
