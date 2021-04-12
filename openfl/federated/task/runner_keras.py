@@ -60,7 +60,7 @@ class KerasTaskRunner(TaskRunner):
         else:
             self.set_tensor_dict(input_tensor_dict, with_opt_vars=False)
 
-    def train(self, col_name, round_num, input_tensor_dict, metrics, **kwargs):
+    def train(self, col_name, round_num, input_tensor_dict, metrics, num_batches=None, **kwargs):
         """
         Perform the training for a specified number of batches.
 
@@ -82,7 +82,7 @@ class KerasTaskRunner(TaskRunner):
         # rebuild model with updated weights
         self.rebuild_model(round_num, input_tensor_dict)
 
-        results = self.train_iteration(self.data_loader.get_train_loader(),
+        results = self.train_iteration(self.data_loader.get_train_loader(num_batches),
                                        metrics=metrics,
                                        **kwargs)
 
