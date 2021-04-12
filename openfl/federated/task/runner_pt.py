@@ -438,7 +438,9 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
         pass
 
     def train_epoch(self, batch_generator: Iterator[Tuple[np.ndarray, np.ndarray]]) -> Metric:
-        """ Train single epoch. Override this function in order to use custom training.
+        """Train single epoch.
+
+        Override this function in order to use custom training.
 
         Args:
             batch_generator: Train dataset batch generator. Yields (samples, targets) tuples of

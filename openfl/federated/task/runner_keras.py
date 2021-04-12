@@ -149,6 +149,7 @@ class KerasTaskRunner(TaskRunner):
 
     def train_iteration(self, batch_generator, metrics=[], **kwargs):
         """Train single epoch.
+
         Override this function for custom training.
 
         Args:

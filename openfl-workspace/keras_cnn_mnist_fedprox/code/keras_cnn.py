@@ -14,9 +14,10 @@ from openfl.federated import KerasTaskRunner
 
 
 class FedProxOptimizer(ke.optimizers.Optimizer):
-    """Custom Optimizer"""
+    """Custom Optimizer."""
+
     def __init__(self, lr=0.01, mu=0.01, name="PGD", **kwargs):
-        """Initialize"""
+        """Initialize."""
         super().__init__(name, **kwargs)
 
         self._set_hyper("lr", lr)
@@ -60,7 +61,7 @@ class FedProxOptimizer(ke.optimizers.Optimizer):
             lambda x, i, v: standard_ops.scatter_add(x, i, v))
 
     def get_config(self):
-        """Returns the config of the optimizer.
+        """Return the config of the optimizer.
 
         An optimizer config is a Python dictionary (serializable)
         containing the configuration of an optimizer.

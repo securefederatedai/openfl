@@ -30,10 +30,11 @@ def cross_entropy(output, target):
 
 
 class FedProxOptimizer(Optimizer):
-    """Custom Optimizer"""
+    """Custom Optimizer."""
+
     def __init__(self, params, lr=required, mu=0.0, momentum=0, dampening=0, weight_decay=0,
                  nesterov=False):
-        """Initialize"""
+        """Initialize."""
         if momentum < 0.0:
             raise ValueError("Invalid momentum value: {}".format(momentum))
         if lr is not required and lr < 0.0:
@@ -51,7 +52,7 @@ class FedProxOptimizer(Optimizer):
         super(FedProxOptimizer, self).__init__(params, defaults)
 
     def __setstate__(self, state):
-        """Set the state"""
+        """Set the state."""
         super(FedProxOptimizer, self).__setstate__(state)
         for group in self.param_groups:
             group.setdefault('nesterov', False)
@@ -99,7 +100,7 @@ class FedProxOptimizer(Optimizer):
         return loss
 
     def set_old_weights(self, old_weights):
-        """Update global model snapshot"""
+        """Update global model snapshot."""
         for param_group in self.param_groups:
             param_group['w_old'] = old_weights
 

@@ -13,19 +13,21 @@ from openfl.federated import PyTorchTaskRunner
 from openfl.utilities import TensorKey
 
 
-def loss_fn(output, target):
+def cross_entropy(output, target):
+    """Calculate Cross-entropy loss"""
     return F.cross_entropy(input=output, target=target)
 
 
 class PyTorchCNN(PyTorchTaskRunner):
     """Simple CNN for classification."""
+
     def __init__(self, **kwargs):
         """Initialize.
 
         Args:
             **kwargs: Additional arguments to pass to the function
         """
-        super().__init__(loss_fn=loss_fn, **kwargs)
+        super().__init__(loss_fn=cross_entropy, **kwargs)
 
         torch.manual_seed(0)
         torch.backends.cudnn.deterministic = True
