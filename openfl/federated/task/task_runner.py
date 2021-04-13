@@ -56,8 +56,8 @@ class CoreTaskRunner(object):
             # A work around could involve doing a single epoch of training
             # on random data to get the optimizer names,
             # and then throwing away the model.
-            if self.opt_treatment == 'CONTINUE_GLOBAL':
-                self.initialize_tensorkeys_for_functions(with_opt_vars=True)
+            # if self.opt_treatment == 'CONTINUE_GLOBAL':
+            #     self.initialize_tensorkeys_for_functions(with_opt_vars=True)
 
             # This will signal that the optimizer values are now present,
             # and can be loaded when the model is rebuilt
@@ -85,8 +85,7 @@ class CoreTaskRunner(object):
                 validation_flag = True if task_contract['optimizer'] is None else False
                 task_settings = self.task_provider.task_settings[task_name]
 
-                cuda_device = 0 if self.data_loader.rank==1 else 2
-                device = kwargs.get('device', f'cuda:{cuda_device}')
+                device = kwargs.get('device', f'cuda:{self.data_loader.rank - 1}')
                 
                 self.rebuild_model(input_tensor_dict, validation=validation_flag, device=device)
                 task_kwargs = dict()
@@ -133,6 +132,7 @@ class CoreTaskRunner(object):
         self.TASK_REGISTRY = dict()
 
         # Why is it here
+        self.opt_treatment = 'RESET'
         self.tensor_dict_split_fn_kwargs = dict()
         self.required_tensorkeys_for_function = {}
 
@@ -162,7 +162,11 @@ class CoreTaskRunner(object):
 
     def set_framework_adapter(self, framework_adapter):
         self.framework_adapter = framework_adapter
-        self.initialize_tensorkeys_for_functions()
+        if self.opt_treatment == 'CONTINUE_GLOBAL':
+            aggregate_optimizer_parameters = True
+        else:
+            aggregate_optimizer_parameters = False
+        self.initialize_tensorkeys_for_functions(with_opt_vars=aggregate_optimizer_parameters)
 
 
     def set_logger(self):
@@ -226,6 +230,27 @@ class CoreTaskRunner(object):
         Returns:
             None
         """
+        # Set model dict for validation tasks
+        output_model_dict = self.get_tensor_dict(with_opt_vars=False)
+        validation_global_model_dict, validation_local_model_dict = \
+                split_tensor_dict_for_holdouts(
+                    self.logger,
+                    output_model_dict,
+                    **self.tensor_dict_split_fn_kwargs
+                )
+        # Now set model dict for training tasks
+        if with_opt_vars:
+            output_model_dict = self.get_tensor_dict(with_opt_vars=True)
+            global_model_dict, local_model_dict = split_tensor_dict_for_holdouts(
+                self.logger, output_model_dict,
+                **self.tensor_dict_split_fn_kwargs
+            )
+        else:
+            global_model_dict = validation_global_model_dict
+            local_model_dict = validation_local_model_dict
+
+        for task_name in 
+
         # TODO there should be a way to programmatically iterate through
         #  all of the methods in the class and declare the tensors.
         # For now this is done manually
