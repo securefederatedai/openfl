@@ -327,6 +327,9 @@ class Plan(object):
         self.runner_.set_task_provider(task_keeper)
 
         framework_adapter = Plan.Build(self.config['task_runner']['required_plugin_components']['framework_adapters'], {})
+
+        # This step initializes tensorkeys 
+        # Which have no sens if task provider is not set up
         self.runner_.set_framework_adapter(framework_adapter)
 
         return self.runner_
