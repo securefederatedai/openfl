@@ -224,7 +224,7 @@ def expand_derived_opt_state_dict(derived_opt_state_dict, device):
                 opt_state_dict['state'][this_id][subkey] = new_v
 
     # sanity check that we did not miss any optimizer state
-    assert len(derived_opt_state_dict) == 0
+    assert len(derived_opt_state_dict) == 0, str(derived_opt_state_dict)
 
     return opt_state_dict
 

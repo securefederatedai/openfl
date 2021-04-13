@@ -56,8 +56,8 @@ class CoreTaskRunner(object):
             # A work around could involve doing a single epoch of training
             # on random data to get the optimizer names,
             # and then throwing away the model.
-            # if self.opt_treatment == 'CONTINUE_GLOBAL':
-            #     self.initialize_tensorkeys_for_functions(with_opt_vars=True)
+            if self.opt_treatment == 'CONTINUE_GLOBAL':
+                self.initialize_tensorkeys_for_functions(with_opt_vars=True)
 
             # This will signal that the optimizer values are now present,
             # and can be loaded when the model is rebuilt
@@ -85,7 +85,8 @@ class CoreTaskRunner(object):
                 validation_flag = True if task_contract['optimizer'] is None else False
                 task_settings = self.task_provider.task_settings[task_name]
 
-                device = kwargs.get('device', f'cuda:{self.data_loader.rank - 1}')
+                # device = kwargs.get('device', f'cuda:{self.data_loader.rank - 1}')
+                device = kwargs.get('device', 'cuda:1')
                 
                 self.rebuild_model(input_tensor_dict, validation=validation_flag, device=device)
                 task_kwargs = dict()
@@ -211,11 +212,26 @@ class CoreTaskRunner(object):
         List
             [TensorKey]
         """
-        if func_name == 'validate':
-            local_model = 'apply=' + str(kwargs['apply'])
-            return self.required_tensorkeys_for_function[func_name][local_model]
-        else:
-            return self.required_tensorkeys_for_function[func_name]
+        # We rely on validation type tasks parameter `apply`
+        # In the interface layer we add those parameters automatically
+        if 'apply' not in kwargs:
+            return [TensorKey(tensor_name, 'GLOBAL', 0, False, ('model',))
+            for tensor_name in self.required_tensorkeys_for_function['global_model_dict']] + \
+                    [TensorKey(tensor_name, 'LOCAL', 0, False, ('model',))
+            for tensor_name in self.required_tensorkeys_for_function['local_model_dict']]
+
+        if kwargs['apply'] == 'local':
+            return [TensorKey(tensor_name, 'LOCAL', 0, False, ('trained',)) \
+            for tensor_name in {
+                **self.required_tensorkeys_for_function['validation_local_model_dict'],
+                **self.required_tensorkeys_for_function['validation_global_model_dict']
+            }]
+
+        elif kwargs['apply'] == 'global':
+            return [TensorKey(tensor_name, 'GLOBAL', 0, False, ('model',)) \
+            for tensor_name in self.required_tensorkeys_for_function['validation_global_model_dict']] + \
+                    [TensorKey(tensor_name, 'LOCAL', 0, False, ('model',)) \
+            for tensor_name in self.required_tensorkeys_for_function['validation_local_model_dict']]
 
 
     def initialize_tensorkeys_for_functions(self, with_opt_vars=False):
@@ -230,6 +246,7 @@ class CoreTaskRunner(object):
         Returns:
             None
         """
+        # TODO: Framework adapters should have separate methods for dealing with optimizer
         # Set model dict for validation tasks
         output_model_dict = self.get_tensor_dict(with_opt_vars=False)
         validation_global_model_dict, validation_local_model_dict = \
@@ -249,66 +266,54 @@ class CoreTaskRunner(object):
             global_model_dict = validation_global_model_dict
             local_model_dict = validation_local_model_dict
 
-        for task_name in 
+        # for task_name in 
 
-        # TODO there should be a way to programmatically iterate through
-        #  all of the methods in the class and declare the tensors.
-        # For now this is done manually
+        self.required_tensorkeys_for_function['global_model_dict'] = global_model_dict
+        self.required_tensorkeys_for_function['local_model_dict'] = local_model_dict
+        self.required_tensorkeys_for_function['validation_global_model_dict'] = validation_global_model_dict
+        self.required_tensorkeys_for_function['validation_local_model_dict'] = validation_local_model_dict
 
-        output_model_dict = self.get_tensor_dict(with_opt_vars=with_opt_vars)
-        global_model_dict, local_model_dict = split_tensor_dict_for_holdouts(
-            self.logger, output_model_dict,
-            **self.tensor_dict_split_fn_kwargs
-        )
-        if not with_opt_vars:
-            validation_global_model_dict = global_model_dict
-            validation_local_model_dict = local_model_dict
-        else:
-            output_model_dict = self.get_tensor_dict(with_opt_vars=False)
-            validation_global_model_dict, validation_local_model_dict = \
-                split_tensor_dict_for_holdouts(
-                    self.logger,
-                    output_model_dict,
-                    **self.tensor_dict_split_fn_kwargs
-                )
 
-        self.required_tensorkeys_for_function['train_batches'] = [
-            TensorKey(tensor_name, 'GLOBAL', 0, False, ('model',))
-            for tensor_name in global_model_dict]
-        self.required_tensorkeys_for_function['train_batches'] += [
-            TensorKey(tensor_name, 'LOCAL', 0, False, ('model',))
-            for tensor_name in local_model_dict]
 
-        self.required_tensorkeys_for_function['train'] = [
-            TensorKey(
-                tensor_name, 'GLOBAL', 0, False, ('model',)
-            ) for tensor_name in global_model_dict
-        ]
-        self.required_tensorkeys_for_function['train'] += [
-            TensorKey(
-                tensor_name, 'LOCAL', 0, False, ('model',)
-            ) for tensor_name in local_model_dict
-        ]
+####################################### 
 
-        # Validation may be performed on local or aggregated (global) model,
-        # so there is an extra lookup dimension for kwargs
-        self.required_tensorkeys_for_function['validate'] = {}
-        # TODO This is not stateless. The optimizer will not be
-        self.required_tensorkeys_for_function['validate']['apply=local'] = \
-            [TensorKey(
-                tensor_name, 'LOCAL', 0, False, ('trained',)
-            ) for tensor_name in {
-                **validation_global_model_dict,
-                **validation_local_model_dict
-            }]
-        self.required_tensorkeys_for_function['validate']['apply=global'] = \
-            [TensorKey(
-                tensor_name, 'GLOBAL', 0, False, ('model',)
-            ) for tensor_name in validation_global_model_dict]
-        self.required_tensorkeys_for_function['validate']['apply=global'] += \
-            [TensorKey(
-                tensor_name, 'LOCAL', 0, False, ('model',)
-            ) for tensor_name in validation_local_model_dict]
+        # self.required_tensorkeys_for_function['train_batches'] = [
+        #     TensorKey(tensor_name, 'GLOBAL', 0, False, ('model',))
+        #     for tensor_name in global_model_dict]
+        # self.required_tensorkeys_for_function['train_batches'] += [
+        #     TensorKey(tensor_name, 'LOCAL', 0, False, ('model',))
+        #     for tensor_name in local_model_dict]
+
+        # self.required_tensorkeys_for_function['train'] = [
+        #     TensorKey(
+        #         tensor_name, 'GLOBAL', 0, False, ('model',)
+        #     ) for tensor_name in global_model_dict
+        # ]
+        # self.required_tensorkeys_for_function['train'] += [
+        #     TensorKey(
+        #         tensor_name, 'LOCAL', 0, False, ('model',)
+        #     ) for tensor_name in local_model_dict
+        # ]
+
+        # # Validation may be performed on local or aggregated (global) model,
+        # # so there is an extra lookup dimension for kwargs
+        # self.required_tensorkeys_for_function['validate'] = {}
+        # # TODO This is not stateless. The optimizer will not be
+        # self.required_tensorkeys_for_function['validate']['apply=local'] = \
+        #     [TensorKey(
+        #         tensor_name, 'LOCAL', 0, False, ('trained',)
+        #     ) for tensor_name in {
+        #         **validation_global_model_dict,
+        #         **validation_local_model_dict
+        #     }]
+        # self.required_tensorkeys_for_function['validate']['apply=global'] = \
+        #     [TensorKey(
+        #         tensor_name, 'GLOBAL', 0, False, ('model',)
+        #     ) for tensor_name in validation_global_model_dict]
+        # self.required_tensorkeys_for_function['validate']['apply=global'] += \
+        #     [TensorKey(
+        #         tensor_name, 'LOCAL', 0, False, ('model',)
+        #     ) for tensor_name in validation_local_model_dict]
 
 
     def reset_opt_vars(self):
