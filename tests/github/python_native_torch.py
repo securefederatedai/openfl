@@ -27,7 +27,7 @@ if __name__ == '__main__':
 
     def cross_entropy(output, target):
         """Binary cross-entropy metric."""
-        return F.binary_cross_entropy_with_logits(input=output, target=target)
+        return F.cross_entropy(input=output, target=target)
 
     class Net(nn.Module):
         """PyTorch Neural Network."""
@@ -50,7 +50,7 @@ if __name__ == '__main__':
             x = F.relu(self.fc1(x))
             x = F.relu(self.fc2(x))
             x = self.fc3(x)
-            return F.log_softmax(x, dim=1)
+            return x
 
     transform = transforms.Compose([transforms.ToTensor(),
                                     transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
@@ -60,7 +60,6 @@ if __name__ == '__main__':
 
     train_images, train_labels = trainset.train_data, np.array(trainset.train_labels)
     train_images = torch.from_numpy(np.expand_dims(train_images, axis=1)).float()
-    train_labels = one_hot(train_labels, 10)
 
     validset = datasets.MNIST(root='./data', train=False,
                               download=True, transform=transform)
