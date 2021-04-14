@@ -3,16 +3,14 @@
 
 """Python native tests."""
 
-import numpy as np
 import json
 
+import numpy as np
+from tensorflow.python.keras.utils.data_utils import get_file
+
 import openfl.native as fx
-
-import tensorflow as tf
-import tensorflow.keras as ke
-
-from tensorflow.keras import Sequential
-from tensorflow.keras.layers import Conv2D, Flatten, Dense
+from openfl.federated import FederatedModel, FederatedDataSet
+from openfl.interface.cli import setup_logging
 
 
 def one_hot(labels, classes):
@@ -48,6 +46,11 @@ def build_model(input_shape,
         tensorflow.python.keras.engine.sequential.Sequential: The model defined in Keras
 
     """
+    import tensorflow as tf
+    import tensorflow.keras as ke
+
+    from tensorflow.keras import Sequential
+    from tensorflow.keras.layers import Conv2D, Flatten, Dense
     config = tf.compat.v1.ConfigProto()
     config.gpu_options.allow_growth = True
     config.intra_op_parallelism_threads = 112
@@ -86,12 +89,11 @@ def build_model(input_shape,
     return model
 
 
-fx.init('keras_cnn_mnist')
+setup_logging()
 
 if __name__ == '__main__':
-    from openfl.federated import FederatedModel, FederatedDataSet
-    from tensorflow.python.keras.utils.data_utils import get_file
 
+    fx.init('keras_cnn_mnist')
     origin_folder = 'https://storage.googleapis.com/tensorflow/tf-keras-datasets/'
     path = get_file('mnist.npz',
                     origin=origin_folder + 'mnist.npz',
@@ -104,6 +106,7 @@ if __name__ == '__main__':
 
         X_valid = f['x_test']
         y_valid = f['y_test']
+
     img_rows, img_cols = 28, 28
     X_train = X_train.reshape(X_train.shape[0], img_rows, img_cols, 1)
     X_valid = X_valid.reshape(X_valid.shape[0], img_rows, img_cols, 1)
@@ -122,7 +125,10 @@ if __name__ == '__main__':
                                batch_size=32, num_classes=classes)
     fl_model = FederatedModel(build_model=build_model, data_loader=fl_data)
     collaborator_models = fl_model.setup(num_collaborators=2)
-    collaborators = {'one': collaborator_models[0], 'two': collaborator_models[1]}
+    collaborators = {
+        'one': collaborator_models[0],
+        'two': collaborator_models[1],
+    }
     print(f'Original training data size: {len(X_train)}')
     print(f'Original validation data size: {len(X_valid)}\n')
 
@@ -139,5 +145,5 @@ if __name__ == '__main__':
             {len(collaborator_models[1].data_loader.X_valid)}\n')
 
     print(json.dumps(fx.get_plan(), indent=4, sort_keys=True))
-    final_fl_model = fx.run_experiment(collaborators, {'aggregator.settings.rounds_to_train': 5})
+    final_fl_model = fx.run_experiment(collaborators, {'aggregator.settings.rounds_to_train': 5}, is_multi=False)
     final_fl_model.save_native('final_pytorch_model.h5')

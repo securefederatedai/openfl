@@ -3,14 +3,15 @@
 """FederatedFastEstimator module."""
 
 import os
-from pathlib import Path
 from logging import getLogger
-from openfl.federated import Plan
-from openfl.protocols import utils
-from openfl.utilities import split_tensor_dict_for_holdouts
+from pathlib import Path
+
 import openfl.native as fx
+from openfl.federated import Plan
 from openfl.federated.data import FastEstimatorDataLoader
 from openfl.federated.task import FastEstimatorTaskRunner
+from openfl.protocols import utils
+from openfl.utilities import split_tensor_dict_for_holdouts
 
 
 class FederatedFastEstimator:
@@ -92,8 +93,8 @@ class FederatedFastEstimator:
                     pipeline_kwargs[k] = v
             pipeline_kwargs.update({
                 'train_data': train_data,
-                'eval_data': eval_data,
-                'test_data': test_data
+                'eval_data':  eval_data,
+                'test_data':  test_data
             })
             pipeline = fe.Pipeline(**pipeline_kwargs)
 

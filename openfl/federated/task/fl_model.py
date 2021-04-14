@@ -4,6 +4,7 @@
 """FederatedModel module."""
 
 import inspect
+
 from .runner import TaskRunner
 
 
@@ -32,39 +33,58 @@ class FederatedModel(TaskRunner):
 
         """
         super().__init__(**kwargs)
-
         self.build_model = build_model
-        self.lambda_opt = None
-        # TODO pass params to model
-        if inspect.isclass(build_model):
-            self.model = build_model()
-            from .runner_pt import PyTorchTaskRunner
-            if device:
-                kwargs.update({'device': device})
-            if optimizer is not None:
-                self.optimizer = optimizer(self.model.parameters())
-            # build_model.__init__()
-            self.runner = PyTorchTaskRunner(**kwargs)
-            if hasattr(self.model, 'forward'):
-                self.runner.forward = self.model.forward
-        else:
-            self.model = self.build_model(
-                self.feature_shape, self.data_loader.num_classes)
-            from .runner_keras import KerasTaskRunner
-            self.runner = KerasTaskRunner(**kwargs)
-            self.optimizer = self.model.optimizer
-        self.lambda_opt = optimizer
-        if hasattr(self.model, 'validate'):
-            self.runner.validate = lambda *args, **kwargs: build_model.validate(
-                self.runner, *args, **kwargs)
-        self.runner.model = self.model
-        self.runner.optimizer = self.optimizer
-        self.loss_fn = loss_fn
-        self.runner.loss_fn = self.loss_fn
-        self.tensor_dict_split_fn_kwargs = \
-            self.runner.tensor_dict_split_fn_kwargs
-        self.initialize_tensorkeys_for_functions()
         self.device = device
+        self.loss_fn = loss_fn
+        self.lambda_opt = optimizer
+        self.__kwargs = kwargs
+        self.__model = None
+        self.__optimizer = None
+        self.__runner = None
+
+    @property
+    def model(self):
+        # TODO pass params to model
+        if not self.__model:
+            if inspect.isclass(self.build_model):
+                self.__model = self.build_model()
+            else:
+                self.__model = self.build_model(self.feature_shape, self.data_loader.num_classes)
+        return self.__model
+
+    @property
+    def optimizer(self):
+        if not self.__optimizer:
+            if inspect.isclass(self.build_model):
+                if self.lambda_opt is not None:
+                    self.__optimizer = self.lambda_opt(self.model.parameters())
+            else:
+                self.__optimizer = self.model.optimizer
+        return self.__optimizer
+
+    @property
+    def runner(self):
+        if not self.__runner:
+            if inspect.isclass(self.build_model):
+                from .runner_pt import PyTorchTaskRunner
+                if self.device:
+                    self.__kwargs.update({'device': self.device})
+                self.__runner = PyTorchTaskRunner(**self.__kwargs)
+                if hasattr(self.model, 'forward'):
+                    self.__runner.forward = self.model.forward
+            else:
+                from .runner_keras import KerasTaskRunner
+                self.__runner = KerasTaskRunner(**self.__kwargs)
+            if hasattr(self.model, 'validate'):
+                self.__runner.validate = lambda *args, **kwargs: self.build_model.validate(
+                    self.__runner, *args, **kwargs)
+            self.__runner.loss_fn = self.loss_fn
+            self.__runner.model = self.model
+            self.__runner.optimizer = self.optimizer
+            self.tensor_dict_split_fn_kwargs = self.__runner.tensor_dict_split_fn_kwargs
+            self.initialize_tensorkeys_for_functions()
+        return self.__runner
+
 
     def __getattribute__(self, attr):
         """Direct call into self.runner methods if necessary."""

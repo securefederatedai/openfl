@@ -3,25 +3,23 @@
 
 """Python native tests."""
 
-import numpy as np
 import json
+
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 from torchvision import datasets, transforms
 
-from openfl.federated import FederatedModel, FederatedDataSet
-
 import openfl.native as fx
+from openfl.federated import FederatedModel, FederatedDataSet
+from openfl.interface.cli import setup_logging
 
 
 def one_hot(labels, classes):
     """One-hot encode `labels` using `classes` classes."""
     return np.eye(classes)[labels]
-
-
-fx.init('torch_cnn_mnist')
 
 
 def cross_entropy(output, target):
@@ -57,18 +55,22 @@ class Net(nn.Module):
         return F.log_softmax(x, dim=1)
 
 
+setup_logging()
+
 if __name__ == '__main__':
+    fx.init('torch_cnn_mnist')
+
     # TODO: Remove after update to torchvision==0.9.1
     # See https://github.com/pytorch/vision/issues/3549
     datasets.MNIST.resources = [
         ('https://ossci-datasets.s3.amazonaws.com/mnist/train-images-idx3-ubyte.gz',
-            'f68b3c2dcbeaaa9fbdd348bbdeb94873'),
+         'f68b3c2dcbeaaa9fbdd348bbdeb94873'),
         ('https://ossci-datasets.s3.amazonaws.com/mnist/train-labels-idx1-ubyte.gz',
-            'd53e105ee54ea40749a09fcbcd1e9432'),
+         'd53e105ee54ea40749a09fcbcd1e9432'),
         ('https://ossci-datasets.s3.amazonaws.com/mnist/t10k-images-idx3-ubyte.gz',
-            '9fb629c4189551a2d022fa330f9573f3'),
+         '9fb629c4189551a2d022fa330f9573f3'),
         ('https://ossci-datasets.s3.amazonaws.com/mnist/t10k-labels-idx1-ubyte.gz',
-            'ec29112dd5afa0611ce80d1b7f02629c')
+         'ec29112dd5afa0611ce80d1b7f02629c')
     ]
 
     classes = 10
@@ -90,9 +92,13 @@ if __name__ == '__main__':
     fl_data = FederatedDataSet(train_images, train_labels, valid_images, valid_labels,
                                batch_size=32, num_classes=classes)
     fl_model = FederatedModel(build_model=Net, optimizer=get_optimizer,
-                              loss_fn=cross_entropy, data_loader=fl_data, device='cpu')
+                              loss_fn=cross_entropy, data_loader=fl_data)
     collaborator_models = fl_model.setup(num_collaborators=2)
-    collaborators = {'one': collaborator_models[0], 'two': collaborator_models[1]}
+    collaborators = {
+        'one': collaborator_models[0],
+        'two': collaborator_models[1],
+    }
+
     print(f'Original training data size: {len(train_images)}')
     print(f'Original validation data size: {len(valid_images)}\n')
 
@@ -108,5 +114,5 @@ if __name__ == '__main__':
     print(f'Collaborator two\'s validation data size: \
             {len(collaborator_models[1].data_loader.X_valid)}\n')
     print(json.dumps(fx.get_plan(), indent=4, sort_keys=True))
-    final_fl_model = fx.run_experiment(collaborators, {'aggregator.settings.rounds_to_train': 5})
+    final_fl_model = fx.run_experiment(collaborators, {'aggregator.settings.rounds_to_train': 5}, is_multi=False)
     final_fl_model.save_native('final_pytorch_model')

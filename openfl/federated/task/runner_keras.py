@@ -15,9 +15,7 @@ with catch_warnings():
 
 import numpy as np
 
-
 from openfl.utilities import TensorKey, split_tensor_dict_for_holdouts
-
 from .runner import TaskRunner
 
 
@@ -477,7 +475,7 @@ class KerasTaskRunner(TaskRunner):
             validation_local_model_dict = local_model_dict
         else:
             output_model_dict = self.get_tensor_dict(with_opt_vars=False)
-            validation_global_model_dict, validation_local_model_dict =\
+            validation_global_model_dict, validation_local_model_dict = \
                 split_tensor_dict_for_holdouts(
                     self.logger,
                     output_model_dict,
@@ -503,7 +501,8 @@ class KerasTaskRunner(TaskRunner):
             [TensorKey(tensor_name, 'LOCAL', 0, False, ('trained',))
              for tensor_name in {
                  **validation_global_model_dict,
-                 **validation_local_model_dict}]
+                 **validation_local_model_dict
+             }]
         self.required_tensorkeys_for_function['validate']['apply=global'] = \
             [TensorKey(tensor_name, 'GLOBAL', 0, False, ('model',))
              for tensor_name in validation_global_model_dict]
