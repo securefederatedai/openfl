@@ -78,21 +78,4 @@ get ```col-key.pem  col.pem```
 cfssl info -remote ca_host:8888
 ```
 get ```ca.pem```
-```mermaid
-sequenceDiagram
-Title: Collaborator Certificate Signing Flow
-  participant A as Aggregator
-  participant CA as CA
-  participant C as Collaborator
-  CA->>CA: 1. Create CA:<br>`cfssl gencert -initca csr_ca.json`
-  CA->>CA: 2. Create auth key:<br>`echo -n $(openssl rand -hex 16 | tr -d '\n') > base.key` to generate auth_key
-  CA->>CA: 3. Up CA server:<br>`cfssl serve -ca-key ca-key.pem -ca ca.pem -config config_ca.json` <br> to up CA server
-  A->>CA: 4. Generate and sign aggregator cert:<br>`cfssl gencert -hostname='host' -config config_server.json csr_server.json`
-  Note over A,CA: Get signed agg.pem 
-  C->>CA: 5. Generate and sign collaborator cert:<br>`cfssl gencert -config config_client.json csr_client.json`
-  Note over C,CA: Get signed col.pem 
-  C->>CA: 6. Request CA cert:<br>`cfssl info -remote ca_host:8888`
-  Note over C,CA: Get ca.pem
-  A->>CA: 7. Request CA cert:<br>`cfssl info -remote ca_host:8888`
-  Note over A,CA: Get ca.pem
-  ```
+![Cfssl workflow](./images/cfssl_flow.png?raw=true "Cfssl workflow")
