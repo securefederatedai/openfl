@@ -22,17 +22,23 @@ class FLExperiment:
 
         self.logger = getLogger(__name__)
 
+    def get_best_model(self):
+        # Next line relies on aggregator inner field where model dicts are stored
+        best_tensor_dict = self.server.aggregator.best_tensor_dict
+        self.task_runner_stub.rebuild_model(best_tensor_dict, validation=True, device='cpu')
+        return self.task_runner_stub.model
+
     def start_experiment(self, model_provider, task_keeper, data_loader, \
             rounds_to_train, \
             delta_updates=False, opt_treatment='RESET'):
 
-        self.prepare_plan(model_provider, task_keeper, data_loader, \
+        self._prepare_plan(model_provider, task_keeper, data_loader, \
             rounds_to_train, \
             delta_updates=delta_updates, opt_treatment=opt_treatment, \
             model_interface_file='model_obj.pkl', tasks_interface_file='tasks_obj.pkl', \
                                             dataloader_interface_file='loader_obj.pkl')
 
-        self.serialize_interface_objects(model_provider, task_keeper, data_loader)
+        self._serialize_interface_objects(model_provider, task_keeper, data_loader)
 
         # PACK the WORKSPACE!
 
@@ -42,22 +48,23 @@ class FLExperiment:
         Plan.Dump(Path('./plan/plan.yaml'), self.plan.config, freeze=False)
         self.plan.resolve()
 
-        initial_tensor_dict = self.get_initial_tensor_dict(model_provider)
-        server = self.plan.interactive_api_get_server(initial_tensor_dict)
+        initial_tensor_dict = self._get_initial_tensor_dict(model_provider)
+        self.server = self.plan.interactive_api_get_server(initial_tensor_dict)
 
-        server.serve()
+        self.server.serve()
+        # return server
 
-    def get_initial_tensor_dict(self, model_provider):
-        task_runner_stub = self.plan.get_task_runner(model_provider=model_provider)
+    def _get_initial_tensor_dict(self, model_provider):
+        self.task_runner_stub = self.plan.get_task_runner(model_provider=model_provider)
         tensor_dict, _ = split_tensor_dict_for_holdouts(
             self.logger,
-            task_runner_stub.get_tensor_dict(False),
-            **task_runner_stub.tensor_dict_split_fn_kwargs
+            self.task_runner_stub.get_tensor_dict(False),
+            **self.task_runner_stub.tensor_dict_split_fn_kwargs
         )
         return tensor_dict
 
 
-    def prepare_plan(self, model_provider, task_keeper, data_loader, \
+    def _prepare_plan(self, model_provider, task_keeper, data_loader, \
             rounds_to_train, \
             delta_updates=False, opt_treatment='RESET', \
             model_interface_file='model_obj.pkl', tasks_interface_file='tasks_obj.pkl', \
@@ -126,7 +133,7 @@ class FLExperiment:
         
 
 
-    def serialize_interface_objects(self, model_provider, task_keeper, data_loader):
+    def _serialize_interface_objects(self, model_provider, task_keeper, data_loader):
         serializer = self.plan.Build(self.plan.config['api_layer']['required_plugin_components']['serializer_plugin'], {})
         for object_, filename in zip([model_provider, task_keeper, data_loader],
                     ['model_interface_file', 'tasks_interface_file', 'dataloader_interface_file']):
