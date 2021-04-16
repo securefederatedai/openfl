@@ -33,7 +33,7 @@ def download_data_():
     if path.isfile(filepath):
         return path.join(data_dir, filename)
     try:
-        response = requests.get(url, headers={"User-Agent":"openfl"})
+        response = requests.get(url, headers={"User-Agent": "openfl"})
         if response.status_code == 200:
             with open(pkgpath, 'wb') as f:
                 f.write(response.content)
@@ -145,15 +145,15 @@ def import_raw_data_(data_path="", num_samples=0):
     return details, encoder_input_data, decoder_input_data, decoder_target_data
 
 
-
-def get_datasets_(encoder_input_data, decoder_input_data, decoder_target_data, num_samples, split_ratio):
+def get_datasets_(encoder_input_data, decoder_input_data,
+                  decoder_target_data, num_samples, split_ratio):
     """Create train/val.
 
     Returns:
       dict: Results, containing the train-valid split of the dataset (split_ratio = 0.2)
     """
     import random
-    
+
     random.seed(42)
     train_indexes = random.sample(range(num_samples), int(num_samples * (1 - split_ratio)))
     valid_indexes = np.delete(range(num_samples), train_indexes)
@@ -178,6 +178,7 @@ def get_datasets_(encoder_input_data, decoder_input_data, decoder_target_data, n
     logger.info(f"[DL]get_datasets: decoder_train_labels= {decoder_train_labels.shape}")
 
     return results
+
 
 def load_shard(collaborator_count, shard_num, data_path, num_samples, split_ratio):
     """Load data-shards.

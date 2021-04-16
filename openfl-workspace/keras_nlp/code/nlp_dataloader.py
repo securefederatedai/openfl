@@ -8,7 +8,6 @@ from logging import getLogger
 
 from openfl.federated import KerasDataLoader
 import code.dataloader_utils as DLU
-import random
 
 logger = getLogger(__name__)
 
@@ -16,7 +15,8 @@ logger = getLogger(__name__)
 class NLPDataLoader(KerasDataLoader):
     """NLP Dataloader template."""
 
-    def __init__(self, collaborator_count, split_ratio, num_samples, data_path, batch_size, **kwargs):
+    def __init__(self, collaborator_count, split_ratio,
+                 num_samples, data_path, batch_size, **kwargs):
         """Instantiate the data object.
 
         Args:
@@ -32,7 +32,8 @@ class NLPDataLoader(KerasDataLoader):
 
         self.batch_size = batch_size
 
-        train, valid, details = DLU.load_shard(collaborator_count, self.shard_num, self.data_path, num_samples, split_ratio)
+        train, valid, details = DLU.load_shard(collaborator_count, self.shard_num,
+                                               self.data_path, num_samples, split_ratio)
 
         self.num_samples = details["num_samples"]
         self.num_encoder_tokens = details["num_encoder_tokens"]
