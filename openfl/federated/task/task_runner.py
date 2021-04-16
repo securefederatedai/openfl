@@ -85,8 +85,8 @@ class CoreTaskRunner(object):
                 validation_flag = True if task_contract['optimizer'] is None else False
                 task_settings = self.task_provider.task_settings[task_name]
 
-                # device = kwargs.get('device', f'cuda:{self.data_loader.rank - 1}')
-                device = kwargs.get('device', 'cuda:1')
+                device = kwargs.get('device', f'cuda:{self.data_loader.rank - 1}')
+                # device = kwargs.get('device', 'cuda:1')
                 
                 self.rebuild_model(input_tensor_dict, validation=validation_flag, device=device)
                 task_kwargs = dict()
