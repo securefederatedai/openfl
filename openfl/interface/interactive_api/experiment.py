@@ -16,7 +16,7 @@ class FLExperiment:
         self.federation = federation
 
         if serializer_plugin is None:
-            self.serializer_plugin = 'openfl.plugins.interface_serializer.dill_serializer.Dill_Serializer'
+            self.serializer_plugin = 'openfl.plugins.interface_serializer.cloudpickle_serializer.Cloudpickle_Serializer'
         else:
             self.serializer_plugin = serializer_plugin
 

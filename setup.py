@@ -13,6 +13,7 @@ setup(
     packages=[
         'openfl',
         'openfl.interface',
+        'openfl.interface.interactive_api',
         'openfl.component',
         'openfl.cryptography',
         'openfl.native',
@@ -29,6 +30,9 @@ setup(
         'openfl.federated.plan',
         'openfl.federated.task',
         'openfl.federated.data',
+        'openfl.plugins',
+        'openfl.plugins.interface_serializer',
+        'openfl.plugins.frameworks_adapters',
         'openfl-workspace',
         'openfl-docker',
         'openfl-tutorials',
