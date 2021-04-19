@@ -41,6 +41,11 @@ class FLExperiment:
         self._serialize_interface_objects(model_provider, task_keeper, data_loader)
 
         # PACK the WORKSPACE!
+        # Prepare requirements file to restore python env
+        self._export_python_env()
+
+        # Compress te workspace to restore it on collaborator
+        self._pack_the_workspace()
 
         # DO CERTIFICATES exchange
 
@@ -53,6 +58,40 @@ class FLExperiment:
 
         self.server.serve()
         # return server
+
+    @staticmethod
+    def _export_python_env():
+        from pip._internal.operations import freeze
+        requirements_generator = freeze.freeze()
+        with open('./requirements.txt', 'w') as f:
+            for package in requirements_generator:
+                if 'openfl' not in package:
+                    f.write(package + '\n')
+
+
+    @staticmethod
+    def _pack_the_workspace():
+        from shutil import make_archive, copytree, ignore_patterns, rmtree
+        from os import getcwd, makedirs
+        from os.path import basename
+
+
+        archiveType = 'zip'
+        archiveName = basename(getcwd())
+        # archiveFileName = archiveName + '.' + archiveType
+
+        tmpDir = 'temp_' + archiveName
+        makedirs(tmpDir)
+
+        ignore = ignore_patterns(
+            '__pycache__', 'data', tmpDir, '*.crt', '*.key', '*.csr', '*.srl', '*.pem', '*.pbuf')
+
+        copytree('./', tmpDir + '/workspace', ignore=ignore) 
+
+        make_archive(archiveName, archiveType, tmpDir + '/workspace')
+
+        rmtree(tmpDir)
+
 
     def _get_initial_tensor_dict(self, model_provider):
         self.task_runner_stub = self.plan.get_task_runner(model_provider=model_provider)
