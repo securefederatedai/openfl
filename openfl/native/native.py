@@ -120,11 +120,11 @@ def run_experiment(collaborator_dict: dict, override_config: dict = None, is_mul
             `fx.get_plan()`
         is_multi: bool
             If False collaborators will work in synchronous way
-            If True each collaborator will be started in separate process
+            If True each collaborator will be started in a separate process
         max_workers: int
             Used only when is_multi == True
             If max_workers > 0, max_worker == min(max_workers, len(collaborator_dict))
-            IF max_workers == 0, max_worker = len(collaborator_dict)
+            If max_workers == 0, max_worker = len(collaborator_dict)
 
     Returns:
         final_federated_model : FederatedModel
