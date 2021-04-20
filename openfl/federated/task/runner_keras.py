@@ -501,8 +501,8 @@ class KerasTaskRunner(TaskRunner):
         self.required_tensorkeys_for_function['validate']['apply=local'] = [
             TensorKey(tensor_name, 'LOCAL', 0, False, ('trained',))
             for tensor_name in {
-                 **validation_global_model_dict,
-                 **validation_local_model_dict
+                **validation_global_model_dict,
+                **validation_local_model_dict
             }
         ]
         self.required_tensorkeys_for_function['validate']['apply=global'] = \
