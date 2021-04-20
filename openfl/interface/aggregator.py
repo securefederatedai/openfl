@@ -58,6 +58,9 @@ def generate_cert_request(fqdn):
     from openfl.cryptography.participant import generate_csr
     from openfl.cryptography.io import write_crt, write_key
 
+    if fqdn is None:
+        fqdn = getfqdn()
+
     common_name = f'{fqdn}'.lower()
     subject_alternative_name = f'DNS:{common_name}'
     file_name = f'agg_{common_name}'
@@ -105,6 +108,9 @@ def certify(fqdn, silent):
     from openfl.cryptography.io import write_crt
 
     from click import confirm
+
+    if fqdn is None:
+        fqdn = getfqdn()
 
     common_name = f'{fqdn}'.lower()
     file_name = f'agg_{common_name}'
