@@ -144,5 +144,6 @@ if __name__ == '__main__':
             {len(collaborator_models[1].data_loader.X_valid)}\n')
 
     print(json.dumps(fx.get_plan(), indent=4, sort_keys=True))
-    final_fl_model = fx.run_experiment(collaborators, {'aggregator.settings.rounds_to_train': 5}, is_multi=False)
+    final_fl_model = fx.run_experiment(collaborators, {'aggregator.settings.rounds_to_train': 5},
+                                       is_multi=False)
     final_fl_model.save_native('final_pytorch_model.h5')

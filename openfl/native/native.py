@@ -130,7 +130,6 @@ def run_experiment(collaborator_dict: dict, override_config: dict = None, is_mul
         final_federated_model : FederatedModel
             The final model resulting from the federated learning experiment
     """
-
     set_start_method('spawn')
 
     file = Path(__file__).resolve()
@@ -165,7 +164,8 @@ def run_experiment(collaborator_dict: dict, override_config: dict = None, is_mul
     if not is_multi:
         last_tensor_dict = _run_sync_experiment(plan, collaborator_dict, rounds_to_train)
     else:
-        last_tensor_dict = _run_multiprocess_experiment(plan, collaborator_dict, rounds_to_train, max_workers)
+        last_tensor_dict = _run_multiprocess_experiment(plan, collaborator_dict, rounds_to_train,
+                                                        max_workers)
 
     model = _set_weights_for_the_final_model(model, rounds_to_train, last_tensor_dict)
 
@@ -180,14 +180,10 @@ def create_collaborator(plan, name, model, client):
     identical collaborator objects. This function can be removed once
     collaborator generation is fixed in openfl/federated/plan/plan.py
     """
-
     return plan.get_collaborator(name, task_runner=model, client=client)
 
 
 def _create_initial_weights_file(model, init_state_path, tensor_pipe):
-    '''
-    Create initial weights file based on given model
-    '''
     tensor_dict, holdout_params = split_tensor_dict_for_holdouts(
         logger,
         model.get_tensor_dict(False),
@@ -206,7 +202,8 @@ def _get_model(collaborator_dict):
     return deepcopy(next(iter(collaborator_dict.values())))
 
 
-def _run_multiprocess_experiment(plan, collaborator_dict: dict, rounds_to_train: int, max_workers: int):
+def _run_multiprocess_experiment(plan, collaborator_dict: dict, rounds_to_train: int,
+                                 max_workers: int):
     if max_workers <= 0:
         max_workers = len(plan.authorized_cols)
     else:

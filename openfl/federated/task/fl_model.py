@@ -24,6 +24,7 @@ class FederatedModel(TaskRunner):
             for each collaborator.
         loss_fn : pytorch loss_fun (only required for pytorch)
     """
+
     def __init__(self, build_model, optimizer=None, loss_fn=None, device=None, **kwargs):
         """Initialize.
 
@@ -44,6 +45,11 @@ class FederatedModel(TaskRunner):
 
     @property
     def model(self):
+        """
+        Model lazy property
+        If self.__model exists, return self.__model
+        If self.__model does not exist, build model based on build_model param
+        """
         # TODO pass params to model
         if not self.__model:
             if inspect.isclass(self.build_model):
@@ -54,6 +60,11 @@ class FederatedModel(TaskRunner):
 
     @property
     def optimizer(self):
+        """
+        Optimizer lazy property
+        If self.__optimizer exists, return self.__optimizer
+        If self.__optimizer does not exist, create optimizer based on build_model param
+        """
         if not self.__optimizer:
             if inspect.isclass(self.build_model):
                 if self.lambda_opt is not None:
@@ -64,6 +75,11 @@ class FederatedModel(TaskRunner):
 
     @property
     def runner(self):
+        """
+        Runner lazy property
+        If self.__runner exists, return self.__runner
+        If self.__runner does not exist, create TaskRunner based on build_model param
+        """
         if not self.__runner:
             if inspect.isclass(self.build_model):
                 from .runner_pt import PyTorchTaskRunner
@@ -84,7 +100,6 @@ class FederatedModel(TaskRunner):
             self.tensor_dict_split_fn_kwargs = self.__runner.tensor_dict_split_fn_kwargs
             self.initialize_tensorkeys_for_functions()
         return self.__runner
-
 
     def __getattribute__(self, attr):
         """Direct call into self.runner methods if necessary."""

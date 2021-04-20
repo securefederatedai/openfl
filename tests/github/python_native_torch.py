@@ -28,6 +28,7 @@ def cross_entropy(output, target):
 
 
 def get_optimizer(x):
+    """Optimizer function"""
     return optim.Adam(x, lr=1e-4)
 
 
@@ -84,8 +85,10 @@ if __name__ == '__main__':
                                          target_transform=lambda labels: one_hot(labels, classes))
                           for train in [True, False])
 
-    (train_images, train_labels), (valid_images, valid_labels) = (zip(*dataset) for dataset in [trainset, validset])
-    train_images, valid_images = (torch.stack(images).numpy() for images in [train_images, valid_images])
+    (train_images, train_labels), (valid_images, valid_labels) = (zip(*dataset) for dataset in
+                                                                  [trainset, validset])
+    train_images, valid_images = (torch.stack(images).numpy() for images in
+                                  [train_images, valid_images])
     train_labels, valid_labels = (np.stack(labels) for labels in [train_labels, valid_labels])
     feature_shape = train_images.shape[1]
 
@@ -114,5 +117,6 @@ if __name__ == '__main__':
     print(f'Collaborator two\'s validation data size: \
             {len(collaborator_models[1].data_loader.X_valid)}\n')
     print(json.dumps(fx.get_plan(), indent=4, sort_keys=True))
-    final_fl_model = fx.run_experiment(collaborators, {'aggregator.settings.rounds_to_train': 5}, is_multi=False)
+    final_fl_model = fx.run_experiment(collaborators, {'aggregator.settings.rounds_to_train': 5},
+                                       is_multi=True)
     final_fl_model.save_native('final_pytorch_model')
