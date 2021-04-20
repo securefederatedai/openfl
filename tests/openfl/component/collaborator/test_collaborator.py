@@ -141,8 +141,8 @@ def test_nparray_to_named_tensor(collaborator_mock, tensor_key, named_tensor):
     named_tensor['tags'].append('compressed')
     nparray = collaborator_mock.named_tensor_to_nparray(named_tensor)
     tensor = collaborator_mock.nparray_to_named_tensor(tensor_key, nparray)
-    assert tensor.data_bytes == named_tensor['data_bytes']
-    assert tensor.lossless is True
+    assert tensor['data_bytes'] == named_tensor['data_bytes']
+    assert tensor['lossless'] is True
 
 
 def test_nparray_to_named_tensor_trained(collaborator_mock, tensor_key_trained, named_tensor):
@@ -153,9 +153,9 @@ def test_nparray_to_named_tensor_trained(collaborator_mock, tensor_key_trained, 
     collaborator_mock.tensor_db.get_tensor_from_cache = mock.Mock(
         return_value=nparray)
     tensor = collaborator_mock.nparray_to_named_tensor(tensor_key_trained, nparray)
-    assert len(tensor.data_bytes) == 32
-    assert tensor.lossless is False
-    assert 'delta' in tensor.tags
+    assert len(tensor['data_bytes']) == 32
+    assert tensor['lossless'] is False
+    assert 'delta' in tensor['tags']
 
 
 @pytest.mark.parametrize('require_lossless', [True, False])
