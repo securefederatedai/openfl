@@ -498,12 +498,13 @@ class KerasTaskRunner(TaskRunner):
         # so there is an extra lookup dimension for kwargs
         self.required_tensorkeys_for_function['validate'] = {}
         # TODO This is not stateless. The optimizer will not be
-        self.required_tensorkeys_for_function['validate']['apply=local'] = \
-            [TensorKey(tensor_name, 'LOCAL', 0, False, ('trained',))
-             for tensor_name in {
+        self.required_tensorkeys_for_function['validate']['apply=local'] = [
+            TensorKey(tensor_name, 'LOCAL', 0, False, ('trained',))
+            for tensor_name in {
                  **validation_global_model_dict,
                  **validation_local_model_dict
-             }]
+            }
+        ]
         self.required_tensorkeys_for_function['validate']['apply=global'] = \
             [TensorKey(tensor_name, 'GLOBAL', 0, False, ('model',))
              for tensor_name in validation_global_model_dict]

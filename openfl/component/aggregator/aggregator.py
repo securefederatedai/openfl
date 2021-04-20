@@ -67,8 +67,7 @@ class Aggregator:
 
         self.tensor_db = TensorDB()
         self.db_store_rounds = db_store_rounds
-        self.compression_pipeline = compression_pipeline \
-                                    or NoCompressionPipeline()
+        self.compression_pipeline = compression_pipeline or NoCompressionPipeline()
         self.tensor_codec = TensorCodec(self.compression_pipeline)
         self.logger = getLogger(__name__)
 
@@ -825,6 +824,7 @@ class Aggregator:
     def get_last_tensor_dict(self):
         """
         Return last_tensor_dict.
+
         Required to get value from multiprocessing.managers AutoProxy
         """
         return self.last_tensor_dict

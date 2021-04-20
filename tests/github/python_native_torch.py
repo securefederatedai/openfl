@@ -28,7 +28,7 @@ def cross_entropy(output, target):
 
 
 def get_optimizer(x):
-    """Optimizer function"""
+    """Optimizer function."""
     return optim.Adam(x, lr=1e-4)
 
 

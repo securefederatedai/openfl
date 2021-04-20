@@ -46,7 +46,8 @@ class FederatedModel(TaskRunner):
     @property
     def model(self):
         """
-        Model lazy property
+        Model lazy property.
+
         If self.__model exists, return self.__model
         If self.__model does not exist, build model based on build_model param
         """
@@ -61,7 +62,8 @@ class FederatedModel(TaskRunner):
     @property
     def optimizer(self):
         """
-        Optimizer lazy property
+        Optimizer lazy property.
+
         If self.__optimizer exists, return self.__optimizer
         If self.__optimizer does not exist, create optimizer based on build_model param
         """
@@ -76,7 +78,8 @@ class FederatedModel(TaskRunner):
     @property
     def runner(self):
         """
-        Runner lazy property
+        Runner lazy property.
+
         If self.__runner exists, return self.__runner
         If self.__runner does not exist, create TaskRunner based on build_model param
         """
