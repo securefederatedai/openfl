@@ -130,7 +130,10 @@ def run_experiment(collaborator_dict: dict, override_config: dict = None, is_mul
         final_federated_model : FederatedModel
             The final model resulting from the federated learning experiment
     """
-    set_start_method('spawn')
+    try:
+        set_start_method('spawn')
+    except RuntimeError:
+        pass
 
     file = Path(__file__).resolve()
     root = file.parent.resolve()  # interface root, containing command modules
