@@ -3,18 +3,22 @@
 ### 1. Create CA (on CA side).
 ```
   cfssl gencert -initca csr_ca.json
-
 ```
 get  ```ca-key.pem  ca.pem```
-### 2. Generate auth key (on CA side).
+### 2. Generate server key pair (on CA side) to establish tls connection between CA and clients (sign it by our CA).
+```
+  cfssl gencert -ca=ca.pem -ca-key=ca-key.pem  -hostname='localhost' csr_server.json
+```
+get  ```server-key.pem  server.pem```
+### 3. Generate auth key (on CA side).
 ```
 echo -n $(openssl rand -hex 16 | tr -d '\n') > base.key
 ```
 get  ```base.key: CFD0F71279D67A0E4B826A2528FE7487```
 
-### 3. Up CA server (on CA side).
+### 4. Up HTTPS CA server (on CA side).
 ```
-  cfssl serve -ca-key ca-key.pem -ca ca.pem -config config_ca.json
+  cfssl serve -ca-key ca-key.pem -ca ca.pem -tls-key server-key.pem -tls-cert server.pem -config config_ca.json
 ```
 Such command uses config_ca.json file:
 ```json
@@ -40,9 +44,16 @@ Such command uses config_ca.json file:
 }
 ```
 ```file:base.key``` - auth key which we have created
-### 4. Generate and sign certificate and private key on agregator (on aggregator side). 
+### 5. Request CA certificate from CA server (on aggregator and collaborator side).
+In untrusted area: manually deliver CA cert from CA to aggregator or collaborator.<br>
+In trusted area use:
 ```
-cfssl gencert -hostname='host' -config config_server.json csr_server.json
+cfssl info -remote ca_host:8888
+```
+get ```ca.pem```
+### 6. Generate and sign certificate and private key on agregator (on aggregator side). 
+```
+cfssl gencert -hostname='host' -tls-remote-ca ca.pem -config config_server.json csr_server.json
 ```
 get ```agg-key.pem  agg.pem```
 
@@ -64,18 +75,18 @@ get ```agg-key.pem  agg.pem```
     }
   },
   "remotes" : {
-    "caserver" : "ca_host:8888"
+    "caserver" : "htpps://ca_host:8888"
   }
 }
 ```
-### 5. Similarly for the collaborator  (on collaborator side).
+### 7. Similarly for the collaborator  (on collaborator side).
 ```
-cfssl gencert -config config_client.json csr_client.json
+cfssl gencert -tls-remote-ca ca.pem -config config_client.json csr_client.json
 ```
 get ```col-key.pem  col.pem```
-### 6. Request CA certificate from CA server (on aggregator and collaborator side).
-```
-cfssl info -remote ca_host:8888
-```
-get ```ca.pem```
+
+### Note: Trusted area.
+If you run this in trusted area, you don`t need to use https server, so run all this commands without ```-tls-key -tls-cert -tls-remote-ca``` keys and skip step 2<br><br>
+
+
 ![Cfssl workflow](./images/cfssl_flow.png?raw=true "Cfssl workflow")
