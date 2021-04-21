@@ -194,12 +194,12 @@ class Collaborator:
         )
 
         # now we have whatever the model needs to do the task
-        try:
+        if hasattr(self.task_runner, 'TASK_REGISTRY'):
             # New interactive python API
             # New `Core` TaskRunner contains registry of tasks
             func = self.task_runner.TASK_REGISTRY[func_name]
             self.logger.info('Using Interactive Python API')
-        except:
+        else:
             # TaskRunner subclassing API
             # Tasks are defined as methods of TaskRunner
             func = getattr(self.task_runner, func_name)
