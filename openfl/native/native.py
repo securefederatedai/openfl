@@ -130,11 +130,6 @@ def run_experiment(collaborator_dict: dict, override_config: dict = None, is_mul
         final_federated_model : FederatedModel
             The final model resulting from the federated learning experiment
     """
-    try:
-        set_start_method('spawn')
-    except RuntimeError:
-        pass
-
     file = Path(__file__).resolve()
     root = file.parent.resolve()  # interface root, containing command modules
     work = Path.cwd().resolve()
@@ -207,6 +202,14 @@ def _get_model(collaborator_dict):
 
 def _run_multiprocess_experiment(plan, collaborator_dict: dict, rounds_to_train: int,
                                  max_workers: int):
+    from concurrent.futures import ProcessPoolExecutor
+    from multiprocessing import set_start_method
+    from multiprocessing.managers import BaseManager
+    try:
+        set_start_method('spawn')
+    except RuntimeError:
+        pass
+
     if max_workers <= 0:
         max_workers = len(plan.authorized_cols)
     else:
