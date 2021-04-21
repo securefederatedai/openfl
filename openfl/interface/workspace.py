@@ -136,7 +136,7 @@ def export_():
     #                  f' Consider installing it manually after workspace'
     #                  f' import.')
     # echo(f'{export_requirements_filename} written.')
-    
+
     from pip._internal.operations import freeze
     requirements_generator = freeze.freeze()
     with open('./requirements.txt', 'w') as f:
@@ -160,7 +160,7 @@ def export_():
     makedirs(f'{tmpDir}/data', exist_ok=True)
     copytree('./code', f'{tmpDir}/code', ignore=ignore)  # code
     copytree('./plan', f'{tmpDir}/plan', ignore=ignore)  # plan
-    copy2(export_requirements_filename, f'{tmpDir}/requirements.txt')  # requirements
+    copy2('./requirements.txt', f'{tmpDir}/requirements.txt')  # requirements
 
     try:
         copy2('.workspace', tmpDir)  # .workspace
