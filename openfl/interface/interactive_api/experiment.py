@@ -94,7 +94,7 @@ class FLExperiment:
 
 
     def _get_initial_tensor_dict(self, model_provider):
-        self.task_runner_stub = self.plan.get_task_runner(model_provider=model_provider)
+        self.task_runner_stub = self.plan.get_core_task_runner(model_provider=model_provider)
         tensor_dict, _ = split_tensor_dict_for_holdouts(
             self.logger,
             self.task_runner_stub.get_tensor_dict(False),
