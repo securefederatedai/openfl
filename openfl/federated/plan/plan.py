@@ -451,18 +451,17 @@ class Plan(object):
         return self.server_
 
     
-    def interactive_api_get_server(self, tensor_dict):
+    def interactive_api_get_server(self, tensor_dict, chain, certificate, private_key):
         """Get gRPC server of the aggregator instance."""
-        common_name = self.config['network'][SETTINGS]['agg_addr'].lower()
 
-        chain = 'cert/cert_chain.crt'
-        certificate = f'cert/server/agg_{common_name}.crt'
-        private_key = f'cert/server/agg_{common_name}.key'
+        # common_name = self.config['network'][SETTINGS]['agg_addr'].lower()
+        # chain = 'cert/cert_chain.crt'
+        # certificate = f'cert/server/agg_{common_name}.crt'
+        # private_key = f'cert/server/agg_{common_name}.key'
 
         server_args = self.config['network'][SETTINGS]
 
         # patch certificates
-
         server_args['ca'] = chain
         server_args['certificate'] = certificate
         server_args['private_key'] = private_key

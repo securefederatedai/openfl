@@ -38,7 +38,10 @@ class FLExperiment:
             model_interface_file='model_obj.pkl', tasks_interface_file='tasks_obj.pkl', \
                                             dataloader_interface_file='loader_obj.pkl')
 
+        # Save serialized python objects to disc
         self._serialize_interface_objects(model_provider, task_keeper, data_loader)
+        # Save the prepared plan
+        Plan.Dump(Path('./plan/plan.yaml'), self.plan.config, freeze=False)
 
         # PACK the WORKSPACE!
         # Prepare requirements file to restore python env
@@ -50,11 +53,12 @@ class FLExperiment:
         # DO CERTIFICATES exchange
 
         # Start the aggregator
-        Plan.Dump(Path('./plan/plan.yaml'), self.plan.config, freeze=False)
         self.plan.resolve()
 
         initial_tensor_dict = self._get_initial_tensor_dict(model_provider)
-        self.server = self.plan.interactive_api_get_server(initial_tensor_dict)
+        self.server = self.plan.interactive_api_get_server(initial_tensor_dict,
+            chain=self.federation.cert_chain, certificate=self.federation.agg_certificate,
+            private_key=self.federation.agg_private_key)
 
         self.server.serve()
         # return server
