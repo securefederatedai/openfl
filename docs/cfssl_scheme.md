@@ -44,14 +44,16 @@ Such command uses config_ca.json file:
 }
 ```
 ```file:base.key``` - auth key which we have created
-### 5. Request CA certificate from CA server (on aggregator and collaborator side).
+### 5, 6. Request CA certificate from CA server (on aggregator and collaborator side).
 In untrusted area: manually deliver CA cert from CA to aggregator or collaborator.<br>
 In trusted area use:
 ```
 cfssl info -remote ca_host:8888
 ```
 get ```ca.pem```
-### 6. Generate and sign certificate and private key on agregator (on aggregator side). 
+### 7.a Generate key pair for aggregator
+### 7.b Sign generated aggregator cert. 
+One command for a and b steps:
 ```
 cfssl gencert -hostname='host' -tls-remote-ca ca.pem -config config_server.json csr_server.json
 ```
@@ -79,7 +81,7 @@ get ```agg-key.pem  agg.pem```
   }
 }
 ```
-### 7. Similarly for the collaborator  (on collaborator side).
+### 8a, 8b. Similarly for the collaborator (on collaborator side).
 ```
 cfssl gencert -tls-remote-ca ca.pem -config config_client.json csr_client.json
 ```
@@ -89,4 +91,4 @@ get ```col-key.pem  col.pem```
 If you run this in trusted area, you don`t need to use https server, so run all this commands without ```-tls-key -tls-cert -tls-remote-ca``` keys and skip step 2<br><br>
 
 
-![Cfssl workflow](./images/cfssl_flow.png?raw=true "Cfssl workflow")
+![Cfssl workflow](./images/cfssl_flow.svg?raw=true "Cfssl workflow")

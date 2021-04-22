@@ -11,8 +11,10 @@ Title: Collaborator Certificate Signing Flow
   Note over C,CA: Get ca.pem
   CA->>A: 6. In untrusted area: manually deliver CA cert.<br>In trusted area use:`cfssl info -remote ca_host:8888`
   Note over A,CA: Get ca.pem
-  A->>CA: 7. Generate and sign aggregator cert (over tls):<br>`cfssl gencert -hostname='host' -tls-remote-ca ca.pem -config config_server.json csr_server.json`
+  A->>A: 7.a. Generate key pair for agregator.
+  A->>CA: 7.b. Sign generated aggregator cert (one command for a and b):<br>`cfssl gencert -hostname='host' -tls-remote-ca ca.pem -config config_server.json csr_server.json`
   Note over A,CA: Get signed agg.pem 
-  C->>CA: 8. Generate and sign collaborator cert (over tls):<br>`cfssl gencert -tls-remote-ca ca.pem -config config_client.json csr_client.json`
+  C->>C: 8.a Generate key pair for collaborator.
+  C->>CA: 8.b Sign generated collaborator cert (one command for a and b):<br>`cfssl gencert -tls-remote-ca ca.pem -config config_client.json csr_client.json`
   Note over C,CA: Get signed col.pem 
   
