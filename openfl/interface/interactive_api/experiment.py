@@ -28,7 +28,7 @@ class FLExperiment:
         self.task_runner_stub.rebuild_model(best_tensor_dict, validation=True, device='cpu')
         return self.task_runner_stub.model
 
-    def start_experiment(self, model_provider, task_keeper, data_loader, \
+    def prepare_workspace_distribution(self, model_provider, task_keeper, data_loader, \
             rounds_to_train, \
             delta_updates=False, opt_treatment='RESET'):
 
@@ -52,6 +52,7 @@ class FLExperiment:
 
         # DO CERTIFICATES exchange
 
+    def start_experiment(self, model_provider):
         # Start the aggregator
         self.plan.resolve()
 
@@ -88,7 +89,7 @@ class FLExperiment:
         makedirs(tmpDir)
 
         ignore = ignore_patterns(
-            '__pycache__', 'data', tmpDir, '*.crt', '*.key', '*.csr', '*.srl', '*.pem', '*.pbuf')
+            '__pycache__', 'data', 'cert', tmpDir, '*.crt', '*.key', '*.csr', '*.srl', '*.pem', '*.pbuf')
 
         copytree('./', tmpDir + '/workspace', ignore=ignore) 
 
