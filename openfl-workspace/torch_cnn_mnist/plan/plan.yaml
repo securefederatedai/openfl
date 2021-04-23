@@ -29,7 +29,8 @@ task_runner :
   defaults : plan/defaults/task_runner.yaml
   template : code.pt_cnn.PyTorchCNN
   settings :
-    loss :
+    # built-in loss functions from torch.nn
+    # loss : L1Loss
 
 network :
   defaults : plan/defaults/network.yaml

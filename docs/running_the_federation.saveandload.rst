@@ -14,7 +14,7 @@ The functionality of saving and loading models are available in these templates:
 
 Saving the model
 ~~~~~~~~~~~~~~~~
-:code:`save_native` is used to save a tersorflow or pytorch model at the end of federation. For a pytorch model, the model state dict and optimizer state dict are stored.
+:code:`save_native` is used to save a Tensorflow or pytorch model at the end of federation. For a pytorch model, the model state dict and optimizer state dict are stored.
 
 .. code-block:: console
 
@@ -35,3 +35,4 @@ Any model that is stored under `model/saved_model` in case of a Tensorflow model
 Therefore, instead of building the model, the saved model is loaded and federation is performed.
 
 For PyTorch models, a loss function can be specified as an argument in `plan.yaml` (under task_runner/settings/loss), otherwise the default metric of binary cross-entropy is taken.
+Acceptable loss functions are: L1Loss, MSELoss, NLLLoss, GaussianNLLLoss, KLDivLoss, SmoothL1Loss, CrossEntropyLoss.

@@ -27,6 +27,27 @@ def cross_entropy(output, target):
     """
     return F.binary_cross_entropy_with_logits(input=output, target=target)
 
+def L1Loss(output, target):
+    return F.l1_loss(input=output, target=target)
+
+def NLLLoss(output, target):
+    return F.nll_loss(input=output, target=target)
+
+def GaussianNLLLoss(output, target):
+    return F.gaussian_nll_loss(input=output, target=target)
+
+def KLDivLoss(output, target):
+    return F.kl_div(input=output, target=target)
+
+def MSELoss(output, target):
+    return F.mse_loss(input=output, target=target)
+
+def SmoothL1Loss(output, target):
+    return F.smooth_l1_loss(input=output, target=target)
+
+def CrossEntropyLoss(output, target):
+    return F.cross_entropy(input=output, target=target)
+
 
 class PyTorchCNN(PyTorchTaskRunner):
     """Simple CNN for classification."""
@@ -48,10 +69,14 @@ class PyTorchCNN(PyTorchTaskRunner):
         if os.path.exists(path):
             # Load the previously trained model
             self.load_native(filepath=path)
-            if kwargs['loss']:
-                self.loss_fn = kwargs['loss']
+            if 'loss' in kwargs:
+                try:
+                    self.loss_fn = eval(kwargs['loss'])
+                except:
+                    raise Exception("Loss function {} does not exist. Choose from: L1Loss, MSELoss, CrossEntropyLoss etc.".format(kwargs['loss']))
             else:
                 self.loss_fn = cross_entropy
+                
             self.initialize_tensorkeys_for_functions(with_opt_vars=True)
             self.logger.info('Loading the previously saved model : model/saved_model.pth')
         else:
@@ -59,6 +84,7 @@ class PyTorchCNN(PyTorchTaskRunner):
             self.init_network(device=self.device, **kwargs)
             self._init_optimizer()
             self.loss_fn = cross_entropy
+            
             self.initialize_tensorkeys_for_functions()
 
     def _init_optimizer(self):
