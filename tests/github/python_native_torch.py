@@ -21,8 +21,7 @@ if __name__ == '__main__':
     import torch.nn as nn
     import torch.nn.functional as F
     import torch.optim as optim
-    import torchvision
-    import torchvision.transforms as transforms
+    from torchvision import datasets, transforms
 
     from openfl.federated import FederatedModel, FederatedDataSet
 
@@ -56,15 +55,15 @@ if __name__ == '__main__':
     transform = transforms.Compose([transforms.ToTensor(),
                                     transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
 
-    trainset = torchvision.datasets.MNIST(root='./data', train=True,
-                                          download=True, transform=transform)
+    trainset = datasets.MNIST(root='./data', train=True,
+                              download=True, transform=transform)
 
     train_images, train_labels = trainset.train_data, np.array(trainset.train_labels)
     train_images = torch.from_numpy(np.expand_dims(train_images, axis=1)).float()
     train_labels = one_hot(train_labels, 10)
 
-    validset = torchvision.datasets.MNIST(root='./data', train=False,
-                                          download=True, transform=transform)
+    validset = datasets.MNIST(root='./data', train=False,
+                              download=True, transform=transform)
 
     valid_images, valid_labels = validset.test_data, np.array(validset.test_labels)
     valid_images = torch.from_numpy(np.expand_dims(valid_images, axis=1)).float()

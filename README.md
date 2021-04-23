@@ -1,6 +1,13 @@
 
 # Welcome to Intel&reg; Open Federated Learning
 
+[![PyPI - Python Version](https://img.shields.io/badge/python-3.6%20%7C%203.7%20%7C%203.8-blue)](https://pypi.org/project/openfl/)
+[![Jenkins](https://img.shields.io/jenkins/build?jobUrl=http%3A%2F%2F213.221.44.203%2Fjob%2FFederated-Learning%2Fjob%2Fnightly%2F)](http://213.221.44.203/job/Federated-Learning/job/nightly/)
+[![Documentation Status](https://readthedocs.org/projects/openfl/badge/?version=latest)](https://openfl.readthedocs.io/en/latest/?badge=latest)
+[![PyPI version](https://img.shields.io/pypi/v/openfl)](https://pypi.org/project/openfl/)
+[<img src="https://img.shields.io/badge/slack-@openfl-blue.svg?logo=slack">](https://join.slack.com/t/openfl/shared_invite/zt-ovzbohvn-T5fApk05~YS_iZhjJ5yaTw) 
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+
 [Federated learning](https://en.wikipedia.org/wiki/Federated_learning) is a distributed machine learning approach that
 enables organizations to collaborate on machine learning projects
 without sharing sensitive data, such as, patient records, financial data,
@@ -20,7 +27,14 @@ across the federation is solely the model parameters and their updates.
 Open Federated Learning (OpenFL) is a Python 3 project developed by Intel Labs and 
 Intel Internet of Things Group. 
 
-![Federated Learning](docs/images/diagram_fl.png)
+![Federated Learning](https://raw.githubusercontent.com/intel/openfl/master/docs/images/diagram_fl.png)
+
+## Getting started
+
+Check out our [online documentation](https://openfl.readthedocs.io/en/latest/index.html) to launch your first federation.  The quickest way to test OpenFL is through our [Jupyter Notebook tutorials](https://openfl.readthedocs.io/en/latest/running_the_federation.notebook.html).
+
+For more questions, please consider joining our [Slack channel](https://openfl.slack.com).
+
 
 ## Requirements
 
@@ -28,7 +42,7 @@ Intel Internet of Things Group.
 - Python 3.6+ with a Python virtual environment (e.g. [conda](https://docs.conda.io/en/latest/))
 - TensorFlow 2+ or PyTorch 1.6+ (depending on your training requirements). OpenFL is designed to easily support other frameworks as well.
 
-![fx commandline interface](docs/images/fx_help.png)
+![fx commandline interface](https://raw.githubusercontent.com/intel/openfl/master/docs/images/fx_help.png)
 
 ## License
 This project is licensed under [Apache License Version 2.0](LICENSE).
@@ -36,13 +50,15 @@ By contributing to the project, you agree to the license and copyright terms the
 and release your contribution under these terms.
 
 ## Resources:
-* Docs: https://openfl.readthedocs.io/en/latest/index.html
+* Docs and Tutorials: https://openfl.readthedocs.io/en/latest/index.html
 * Issue tracking: https://github.com/intel/openfl/issues
+* [Slack channel](https://openfl.slack.com)
 
 ## Support
 Please report questions, issues and suggestions using:
 
 * [GitHub* Issues](https://github.com/intel/openfl/issues)
+* [Slack channel](https://openfl.slack.com)
 
 ### Relation to OpenFederatedLearning and the Federated Tumor Segmentation (FeTS) Initiative
 
