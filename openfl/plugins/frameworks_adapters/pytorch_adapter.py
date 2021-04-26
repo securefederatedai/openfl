@@ -7,6 +7,8 @@ class FrameworkAdapterPlugin:
     def __init__(self) -> None:
         pass
         
+    def serialization_setup(self):
+        pass
 
     @staticmethod
     def get_tensor_dict(model, optimizer=None):

@@ -16,7 +16,7 @@ class FLExperiment:
         self.federation = federation
 
         if serializer_plugin is None:
-            self.serializer_plugin = 'openfl.plugins.interface_serializer.dill_serializer.Dill_Serializer'
+            self.serializer_plugin = 'openfl.plugins.interface_serializer.cloudpickle_serializer.Cloudpickle_Serializer'
         else:
             self.serializer_plugin = serializer_plugin
 
@@ -176,11 +176,15 @@ class FLExperiment:
         os.makedirs('./save', exist_ok=True)
         
 
-
     def _serialize_interface_objects(self, model_provider, task_keeper, data_loader):
         serializer = self.plan.Build(self.plan.config['api_layer']['required_plugin_components']['serializer_plugin'], {})
-        for object_, filename in zip([model_provider, task_keeper, data_loader],
-                    ['model_interface_file', 'tasks_interface_file', 'dataloader_interface_file']):
+        framework_adapter = Plan.Build(model_provider.framework_plugin, {})
+        # Model provider serialization may need preprocessing steps
+        framework_adapter.serialization_setup()
+        serializer.serialize(model_provider, self.plan.config['api_layer']['settings']['model_interface_file'])
+
+        for object_, filename in zip([task_keeper, data_loader],
+                    ['tasks_interface_file', 'dataloader_interface_file']):
             serializer.serialize(object_, self.plan.config['api_layer']['settings'][filename])
 
 
