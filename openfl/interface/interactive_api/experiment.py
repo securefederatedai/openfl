@@ -28,7 +28,7 @@ class FLExperiment:
         self.task_runner_stub.rebuild_model(best_tensor_dict, validation=True, device='cpu')
         return self.task_runner_stub.model
 
-    def start_experiment(self, model_provider, task_keeper, data_loader, \
+    def prepare_workspace_distribution(self, model_provider, task_keeper, data_loader, \
             rounds_to_train, \
             delta_updates=False, opt_treatment='RESET'):
 
@@ -38,7 +38,10 @@ class FLExperiment:
             model_interface_file='model_obj.pkl', tasks_interface_file='tasks_obj.pkl', \
                                             dataloader_interface_file='loader_obj.pkl')
 
+        # Save serialized python objects to disc
         self._serialize_interface_objects(model_provider, task_keeper, data_loader)
+        # Save the prepared plan
+        Plan.Dump(Path('./plan/plan.yaml'), self.plan.config, freeze=False)
 
         # PACK the WORKSPACE!
         # Prepare requirements file to restore python env
@@ -49,12 +52,14 @@ class FLExperiment:
 
         # DO CERTIFICATES exchange
 
+    def start_experiment(self, model_provider):
         # Start the aggregator
-        Plan.Dump(Path('./plan/plan.yaml'), self.plan.config, freeze=False)
         self.plan.resolve()
 
         initial_tensor_dict = self._get_initial_tensor_dict(model_provider)
-        self.server = self.plan.interactive_api_get_server(initial_tensor_dict)
+        self.server = self.plan.interactive_api_get_server(initial_tensor_dict,
+            chain=self.federation.cert_chain, certificate=self.federation.agg_certificate,
+            private_key=self.federation.agg_private_key)
 
         self.server.serve()
         # return server
@@ -84,7 +89,7 @@ class FLExperiment:
         makedirs(tmpDir)
 
         ignore = ignore_patterns(
-            '__pycache__', 'data', tmpDir, '*.crt', '*.key', '*.csr', '*.srl', '*.pem', '*.pbuf')
+            '__pycache__', 'data', 'cert', tmpDir, '*.crt', '*.key', '*.csr', '*.srl', '*.pem', '*.pbuf')
 
         copytree('./', tmpDir + '/workspace', ignore=ignore) 
 
@@ -94,7 +99,7 @@ class FLExperiment:
 
 
     def _get_initial_tensor_dict(self, model_provider):
-        self.task_runner_stub = self.plan.get_task_runner(model_provider=model_provider)
+        self.task_runner_stub = self.plan.get_core_task_runner(model_provider=model_provider)
         tensor_dict, _ = split_tensor_dict_for_holdouts(
             self.logger,
             self.task_runner_stub.get_tensor_dict(False),

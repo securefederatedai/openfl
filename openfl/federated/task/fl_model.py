@@ -40,28 +40,25 @@ class FederatedModel(TaskRunner):
         if inspect.isclass(build_model):
             self.model = build_model()
             from .runner_pt import PyTorchTaskRunner
-            impl = PyTorchTaskRunner
+            if optimizer is not None:
+                self.optimizer = optimizer(self.model.parameters())
             # build_model.__init__()
+            self.runner = PyTorchTaskRunner(**kwargs)
+            if hasattr(self.model, 'forward'):
+                self.runner.forward = self.model.forward
         else:
             self.model = self.build_model(
                 self.feature_shape, self.data_loader.num_classes)
             from .runner_keras import KerasTaskRunner
-            impl = KerasTaskRunner
-
-        if optimizer is not None:
-            self.optimizer = optimizer(self.model.parameters())
-            self.lambda_opt = optimizer
-        else:
+            self.runner = KerasTaskRunner(**kwargs)
             self.optimizer = self.model.optimizer
-        self.runner = impl(**kwargs)
-        self.loss_fn = loss_fn
-        if hasattr(self.model, 'forward'):
-            self.runner.forward = self.model.forward
+        self.lambda_opt = optimizer
         if hasattr(self.model, 'validate'):
             self.runner.validate = lambda *args, **kwargs: build_model.validate(
                 self.runner, *args, **kwargs)
         self.runner.model = self.model
         self.runner.optimizer = self.optimizer
+        self.loss_fn = loss_fn
         self.runner.loss_fn = self.loss_fn
         self.tensor_dict_split_fn_kwargs = \
             self.runner.tensor_dict_split_fn_kwargs
@@ -79,7 +76,7 @@ class FederatedModel(TaskRunner):
             return self.runner.__getattribute__(attr)
         return super(FederatedModel, self).__getattribute__(attr)
 
-    def setup(self, num_collaborators):
+    def setup(self, num_collaborators, **kwargs):
         """
         Create new models for all of the collaborators in the experiment.
 
@@ -94,7 +91,8 @@ class FederatedModel(TaskRunner):
                 self.build_model,
                 optimizer=self.lambda_opt,
                 loss_fn=self.loss_fn,
-                data_loader=data_slice
+                data_loader=data_slice,
+                **kwargs
             )
             for data_slice in self.data_loader.split(
                 num_collaborators, equally=True

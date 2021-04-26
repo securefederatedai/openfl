@@ -181,12 +181,16 @@ def RegisterCollaborator(file_name):
         file_name (str): The name of the collaborator in this federation
 
     """
+    from os.path import isfile
     from yaml import load, dump, FullLoader
 
     col_name = findCertificateName(file_name)
 
     cols_file = 'plan/cols.yaml'
 
+    if not isfile(cols_file):
+        from pathlib import Path
+        Path(cols_file).touch()
     with open(cols_file, 'r') as f:
         doc = load(f, Loader=FullLoader)
 

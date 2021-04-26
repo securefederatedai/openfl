@@ -32,7 +32,7 @@ def create_dirs(prefix):
     (prefix / 'logs').mkdir(parents=True, exist_ok=True)  # training logs
     (prefix / 'plan').mkdir(parents=True, exist_ok=True)  # federated learning plans
     (prefix / 'save').mkdir(parents=True, exist_ok=True)  # model weight saves / initialization
-    (prefix / 'code_').mkdir(parents=True, exist_ok=True)  # model code
+    (prefix / 'code').mkdir(parents=True, exist_ok=True)  # model code
 
     src = WORKSPACE / 'workspace/plan/defaults'  # from default workspace
     dst = prefix / 'plan/defaults'  # to created workspace
@@ -108,34 +108,41 @@ def export_():
     except Exception:
         echo(f'Plan file "{planFile}" not found. No freeze performed.')
 
-    requirements_filename = 'requirements.txt'
-    workspace_reqs = _get_requirements_dict(requirements_filename)
-    prefix = getcwd()
+    # requirements_filename = 'requirements.txt'
+    # workspace_reqs = _get_requirements_dict(requirements_filename)
+    # prefix = getcwd()
 
-    export_requirements_filename = 'requirements.export.txt'
-    with open(export_requirements_filename, "w") as f:
-        check_call([executable, "-m", "pip", "freeze"], shell=False, stdout=f)
-    workspace_hash = _get_dir_hash(prefix)
-    origin_dict = _get_requirements_dict(
-        OPENFL_USERDIR / f'requirements.{workspace_hash}.txt')
-    current_dict = _get_requirements_dict(export_requirements_filename)
-    with open(export_requirements_filename, "w") as f:
-        for package, version in current_dict.items():
-            if (
-                package in workspace_reqs
-                or package not in origin_dict
-                or version != origin_dict[package]
-            ):
-                # we save only the difference between original workspace after
-                # 'fx create workspace' and current one.
-                echo(f'Writing {package}=={version} '
-                     f'to {requirements_filename}...')
-                f.write(f'{package}=={version}\n')
-            elif version is None:  # local dependency
-                warn(f'Could not generate requirements for {package}.'
-                     f' Consider installing it manually after workspace'
-                     f' import.')
-    echo(f'{export_requirements_filename} written.')
+    # export_requirements_filename = 'requirements.export.txt'
+    # with open(export_requirements_filename, "w") as f:
+    #     check_call([executable, "-m", "pip", "freeze"], shell=False, stdout=f)
+    # workspace_hash = _get_dir_hash(prefix)
+    # origin_dict = _get_requirements_dict(
+    #     OPENFL_USERDIR / f'requirements.{workspace_hash}.txt')
+    # current_dict = _get_requirements_dict(export_requirements_filename)
+    # with open(export_requirements_filename, "w") as f:
+    #     for package, version in current_dict.items():
+    #         if (
+    #             package in workspace_reqs
+    #             or package not in origin_dict
+    #             or version != origin_dict[package]
+    #         ):
+    #             # we save only the difference between original workspace after
+    #             # 'fx create workspace' and current one.
+    #             echo(f'Writing {package}=={version} '
+    #                  f'to {requirements_filename}...')
+    #             f.write(f'{package}=={version}\n')
+    #         elif version is None:  # local dependency
+    #             warn(f'Could not generate requirements for {package}.'
+    #                  f' Consider installing it manually after workspace'
+    #                  f' import.')
+    # echo(f'{export_requirements_filename} written.')
+
+    from pip._internal.operations import freeze
+    requirements_generator = freeze.freeze()
+    with open('./requirements.txt', 'w') as f:
+        for package in requirements_generator:
+            if 'openfl' not in package:
+                f.write(package + '\n')
 
     archiveType = 'zip'
     archiveName = basename(getcwd())
@@ -151,9 +158,9 @@ def export_():
     makedirs(f'{tmpDir}/save', exist_ok=True)
     makedirs(f'{tmpDir}/logs', exist_ok=True)
     makedirs(f'{tmpDir}/data', exist_ok=True)
-    copytree('./code_', f'{tmpDir}/code_', ignore=ignore)  # code
+    copytree('./code', f'{tmpDir}/code', ignore=ignore)  # code
     copytree('./plan', f'{tmpDir}/plan', ignore=ignore)  # plan
-    copy2(export_requirements_filename, f'{tmpDir}/requirements.txt')  # requirements
+    copy2('./requirements.txt', f'{tmpDir}/requirements.txt')  # requirements
 
     try:
         copy2('.workspace', tmpDir)  # .workspace
@@ -400,7 +407,7 @@ def dockerize_(context, base_image, save):
         WORKSPACE_IMAGE_TAR = WORKSPACE_NAME + '_image.tar'
         echo('Saving the Docker image...')
         image = client.images.get(f'{WORKSPACE_NAME}')
-        resp = image.save()
+        resp = image.save(named=True)
         with open(WORKSPACE_IMAGE_TAR, 'wb') as f:
             for chunk in resp:
                 f.write(chunk)

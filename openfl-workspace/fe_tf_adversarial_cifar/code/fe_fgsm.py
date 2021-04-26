@@ -3,6 +3,7 @@
 
 """You may copy this file as the starting point of your own model."""
 
+import tensorflow as tf
 from openfl.federated import TaskRunner, FastEstimatorTaskRunner
 
 import fastestimator as fe
@@ -51,7 +52,10 @@ class FastEstimatorFGSM(FastEstimatorTaskRunner):
             model: Union[tf.keras.sequential, nn.module]
 
         """
-        model = fe.build(model_fn=lambda: LeNet(input_shape=(32, 32, 3)),
+        def get_model():
+            tf.keras.backend.clear_session()  # to avoid layer names mismatching
+            return LeNet(input_shape=(32, 32, 3))
+        model = fe.build(model_fn=get_model,
                          optimizer_fn="adam", model_name="adv_model")
         return model
 

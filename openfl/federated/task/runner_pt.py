@@ -21,6 +21,8 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
     def __init__(
             self,
             device=pt.device('cuda' if pt.cuda.is_available() else 'cpu'),
+            loss_fn=None,
+            optimizer=None,
             **kwargs
     ):
         """Initialize.
@@ -37,8 +39,8 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
         # functions in PyTorchTaskRunner
         self.required_tensorkeys_for_function = {}
 
-        self.optimizer = None
-        self.loss_fn = None
+        self.optimizer = optimizer
+        self.loss_fn = loss_fn
         self.training_round_completed = False
 
         # overwrite attribute to account for one optimizer param (in every
