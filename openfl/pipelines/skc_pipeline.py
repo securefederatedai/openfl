@@ -226,7 +226,7 @@ class SKCPipeline(TransformationPipeline):
         self.n_cluster = n_clusters
         transformers = [
             SparsityTransformer(self.p),
-            KmeansTransformer(self.n_cluster),
+            #KmeansTransformer(self.n_cluster),
             GZIPTransformer()
         ]
         super(SKCPipeline, self).__init__(transformers=transformers, **kwargs)
