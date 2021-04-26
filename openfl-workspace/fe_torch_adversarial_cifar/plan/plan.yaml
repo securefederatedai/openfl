@@ -37,3 +37,6 @@ assigner :
 
 tasks :
   defaults : plan/defaults/tasks_fast_estimator.yaml
+
+compression_pipeline :
+  defaults : plan/defaults/compression_pipeline.yaml

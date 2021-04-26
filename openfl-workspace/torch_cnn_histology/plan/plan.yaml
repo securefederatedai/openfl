@@ -36,3 +36,6 @@ tasks:
 
 assigner:
   defaults: plan/defaults/assigner.yaml
+
+compression_pipeline :
+  defaults : plan/defaults/compression_pipeline.yaml
