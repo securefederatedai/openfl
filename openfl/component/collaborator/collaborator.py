@@ -194,7 +194,17 @@ class Collaborator:
         )
 
         # now we have whatever the model needs to do the task
-        func = getattr(self.task_runner, func_name)
+        if hasattr(self.task_runner, 'TASK_REGISTRY'):
+            # New interactive python API
+            # New `Core` TaskRunner contains registry of tasks
+            func = self.task_runner.TASK_REGISTRY[func_name]
+            self.logger.info('Using Interactive Python API')
+        else:
+            # TaskRunner subclassing API
+            # Tasks are defined as methods of TaskRunner
+            func = getattr(self.task_runner, func_name)
+            self.logger.info('Using TaskRunner subclassing API')
+            
         global_output_tensor_dict, local_output_tensor_dict = func(
             col_name=self.collaborator_name,
             round_num=round_number,
