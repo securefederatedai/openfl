@@ -53,6 +53,10 @@ class FLExperiment:
         # DO CERTIFICATES exchange
 
     def start_experiment(self, model_provider):
+        '''
+        This method also requires model_provider to start experiment with another initialization
+        without workspace redistribution.
+        '''
         # Start the aggregator
         self.plan.resolve()
 
