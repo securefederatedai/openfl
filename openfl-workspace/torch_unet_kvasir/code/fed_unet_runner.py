@@ -20,7 +20,7 @@ from .pt_unet_parts import down
 class PyTorchFederatedUnet(PyTorchTaskRunner):
     """Simple Unet for segmentation."""
 
-    def __init__(self, device='cuda', **kwargs):
+    def __init__(self, device='cpu', **kwargs):
         """Initialize.
 
         Args:
