@@ -3,8 +3,6 @@
 
 """Python native tests."""
 
-import json
-
 import numpy as np
 import torch
 import torch.nn as nn
@@ -56,9 +54,32 @@ class Net(nn.Module):
         return F.log_softmax(x, dim=1)
 
 
+def parse_args():
+    import argparse
+    parser = argparse.ArgumentParser(description='Test FX native API with Torch')
+    parser.add_argument('--batch_size', metavar='B', type=int, nargs='?', help='batch_size',
+                        default=32)
+    parser.add_argument('--dataset_multiplier', metavar='M', type=int, nargs='?',
+                        help='dataset_multiplier', default=1)
+    parser.add_argument('--rounds_to_train', metavar='R', type=int, nargs='?',
+                        help='rounds_to_train', default=5)
+    parser.add_argument('--collaborators_amount', metavar='C', type=int, nargs='?',
+                        help='collaborators_amount', default=2)
+    parser.add_argument('--is_multi', const=True, nargs='?',
+                        help='is_multi', default=False)
+    parser.add_argument('--max_workers', metavar='W', type=int, nargs='?',
+                        help='max_workers', default=0)
+    parser.add_argument('--mode', metavar='W', type=str, nargs='?',
+                        help='mode', default='p=c*r')
+    parsed_args = parser.parse_args()
+    print(parsed_args)
+    return parsed_args
+
+
 setup_logging()
 
 if __name__ == '__main__':
+    args = parse_args()
     fx.init('torch_cnn_mnist')
 
     # TODO: Remove after update to torchvision==0.9.1
@@ -91,31 +112,21 @@ if __name__ == '__main__':
                                   [train_images, valid_images])
     train_labels, valid_labels = (np.stack(labels) for labels in [train_labels, valid_labels])
     feature_shape = train_images.shape[1]
+    train_images = np.concatenate([train_images for _ in range(args.dataset_multiplier)])
+    train_labels = np.concatenate([train_labels for _ in range(args.dataset_multiplier)])
 
     fl_data = FederatedDataSet(train_images, train_labels, valid_images, valid_labels,
-                               batch_size=32, num_classes=classes)
+                               batch_size=args.batch_size, num_classes=classes)
     fl_model = FederatedModel(build_model=Net, optimizer=get_optimizer,
                               loss_fn=cross_entropy, data_loader=fl_data)
-    collaborator_models = fl_model.setup(num_collaborators=2)
-    collaborators = {
-        'one': collaborator_models[0],
-        'two': collaborator_models[1],
-    }
+    collaborator_models = fl_model.setup(num_collaborators=args.collaborators_amount)
+    collaborators = {str(i): c for i, c in enumerate(collaborator_models)}
 
     print(f'Original training data size: {len(train_images)}')
     print(f'Original validation data size: {len(valid_images)}\n')
 
-    # Collaborator one's data
-    print(f'Collaborator one\'s training data size: \
-            {len(collaborator_models[0].data_loader.X_train)}')
-    print(f'Collaborator one\'s validation data size: \
-            {len(collaborator_models[0].data_loader.X_valid)}\n')
-
-    # Collaborator two's data
-    print(f'Collaborator two\'s training data size: \
-            {len(collaborator_models[1].data_loader.X_train)}')
-    print(f'Collaborator two\'s validation data size: \
-            {len(collaborator_models[1].data_loader.X_valid)}\n')
-    print(json.dumps(fx.get_plan(), indent=4, sort_keys=True))
-    final_fl_model = fx.run_experiment(collaborators, {'aggregator.settings.rounds_to_train': 5})
+    final_fl_model = fx.run_experiment(collaborators, {
+        'aggregator.settings.rounds_to_train': args.rounds_to_train,
+    }, is_multi=args.is_multi, max_workers=args.max_workers, mode='p=c')
     final_fl_model.save_native('final_pytorch_model')
+    print('FINISH')

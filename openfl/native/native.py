@@ -5,11 +5,8 @@
 This file defines openfl entrypoints to be used directly through python (not CLI)
 """
 import os
-from concurrent.futures import ProcessPoolExecutor
 from copy import deepcopy
 from logging import getLogger
-from multiprocessing import set_start_method
-from multiprocessing.managers import BaseManager
 from pathlib import Path
 from sys import path
 
@@ -105,7 +102,7 @@ def init(workspace_template='default', log_level='debug'):
 
 
 def run_experiment(collaborator_dict: dict, override_config: dict = None, is_multi: bool = False,
-                   max_workers: int = 0):
+                   max_workers: int = 0, mode: str = 'p=c*r'):
     """
     Core function that executes the FL Plan.
 
@@ -125,6 +122,13 @@ def run_experiment(collaborator_dict: dict, override_config: dict = None, is_mul
             Used only when is_multi == True
             If max_workers > 0, max_worker == min(max_workers, len(collaborator_dict))
             If max_workers == 0, max_worker = len(collaborator_dict)
+        mode: str
+            Used only when is_multi == True
+            If mode == 'p=c*r', collaborator will be created for every round and deleted after it
+            If mode == 'p=c', each collaborator will be created one time and and their copy of
+                the model will live in memory all the time.
+            !!!WARNING!!! If mode == 'p=c' and max_workers < len(collaborator_dict), the first
+            round will not be ended.
 
     Returns:
         final_federated_model : FederatedModel
@@ -163,7 +167,7 @@ def run_experiment(collaborator_dict: dict, override_config: dict = None, is_mul
         last_tensor_dict = _run_sync_experiment(plan, collaborator_dict, rounds_to_train)
     else:
         last_tensor_dict = _run_multiprocess_experiment(plan, collaborator_dict, rounds_to_train,
-                                                        max_workers)
+                                                        max_workers, mode)
 
     model = _set_weights_for_the_final_model(model, rounds_to_train, last_tensor_dict)
 
@@ -201,7 +205,7 @@ def _get_model(collaborator_dict):
 
 
 def _run_multiprocess_experiment(plan, collaborator_dict: dict, rounds_to_train: int,
-                                 max_workers: int):
+                                 max_workers: int, mode: str = 'p=c'):
     from concurrent.futures import ProcessPoolExecutor
     from multiprocessing import set_start_method
     from multiprocessing.managers import BaseManager
@@ -209,31 +213,55 @@ def _run_multiprocess_experiment(plan, collaborator_dict: dict, rounds_to_train:
         set_start_method('spawn')
     except RuntimeError:
         pass
-
     if max_workers <= 0:
         max_workers = len(plan.authorized_cols)
     else:
         max_workers = min(max_workers, len(plan.authorized_cols))
-
     BaseManager.register('Aggregator', callable=plan.get_aggregator)
     with BaseManager() as manager:
         aggr = manager.Aggregator()
         with ProcessPoolExecutor(max_workers) as executor:
-            for _ in range(rounds_to_train):
-                list(executor.map(_run_simulation,
-                                  [plan] * len(plan.authorized_cols),
-                                  (c for c in plan.authorized_cols),
-                                  (collaborator_dict[c] for c in plan.authorized_cols),
-                                  [aggr] * len(plan.authorized_cols)))
-
+            if mode == 'p=c':
+                _run_proc_eq_col(executor, plan, collaborator_dict, aggr, rounds_to_train)
+            else:
+                _run_proc_eq_col_x_round(executor, plan, collaborator_dict, aggr, rounds_to_train)
         return aggr.get_last_tensor_dict()
 
 
-def _run_simulation(plan, name, model, aggr):
+def _run_simulation_proc_eq_col(p, name, model, a, r):
     col = create_collaborator(
-        plan, name, model, aggr
+        p, name, model, a
+    )
+    for _ in range(r):
+        col.run_simulation()
+
+
+def _run_proc_eq_col(executor, plan, collaborator_dict, aggr, rounds_to_train):
+    col_num = len(plan.authorized_cols)
+    list(executor.map(_run_simulation_proc_eq_col,
+                      [plan] * col_num,
+                      (c for c in plan.authorized_cols),
+                      (collaborator_dict[c] for c in plan.authorized_cols),
+                      [aggr] * col_num,
+                      [rounds_to_train] * col_num))
+
+
+def _run_simulation_proc_eq_col_x_round(p, name, model, a):
+    col = create_collaborator(
+        p, name, model, a
     )
     col.run_simulation()
+
+
+def _run_proc_eq_col_x_round(executor, plan, collaborator_dict, aggr, rounds_to_train):
+    col_num = len(plan.authorized_cols)
+    for _ in range(rounds_to_train):
+        list(executor.map(_run_simulation_proc_eq_col_x_round,
+                          [plan] * col_num,
+                          (c for c in plan.authorized_cols),
+                          (collaborator_dict[c] for c in plan.authorized_cols),
+                          [aggr] * col_num,
+                          [rounds_to_train] * col_num))
 
 
 def _run_sync_experiment(plan, collaborator_dict, rounds_to_train):
