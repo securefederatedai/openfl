@@ -43,11 +43,30 @@ Interactive API allows defining an experiment from a single entrypoint - a jupyt
 Defining an experiment includes setting up several interface entities and experiment parameters.
 
 ### Federation API
+Federation entity exists to keep information about collaborator related settings, their local data and network setting to enable communication in federation. 
+Each federation is bound to some machine learning problem in a sense that all collaborators dataset shards should have the same format and labeling. Created federation may be used in several subsequent experiments.
 To set up a federation use Federation interactive API.
 `from openfl.interface.interactive_api.federation import Federation`
 1. Federation API class should be initialized with the aggregator node FQDN and encryption settings. One may disable mTLS in trusted environments or provide paths to a certificate chain to CA, aggregator certificate and pricate key to enable mTLS.
-`federation = Federation(central_node_fqdn='nnlicv448.inn.intel.com', disable_tls=True, cert_chain=cert_chain, agg_certificate=agg_certificate, agg_private_key=agg_private_key)`
-2. `register_collaborators` method of created objects should be used 
+`federation = Federation(central_node_fqdn: str, disable_tls: bool, cert_chain: str, agg_certificate: str, agg_private_key: str)`
+2. Federation's `register_collaborators` method should be used to provide information about collaborators participating federation.
+It requres dictionary {collaborator name : local data path}.
+
+### Experiment API
+Experiment entity alows registering training related objects, tasks, and settings.
+To set up an FL experiment one should use Experiment interactive API. 
+`from openfl.interface.interactive_api.experiment import FLExperiment`
+Experiment is being initialized taking federation as a parameter.
+`fl_experiment = FLExperiment(federation=federation,)`
+To start an experiment user must register Dataloader, Federated Learning tasks, and Model with optimizer. For this purpose there are several supplementary interface classes.
+`from openfl.interface.interactive_api.experiment import TaskInterface, DataInterface, ModelInterface`
+
+#### Registering model and optimizer
+First, user instantiate and initilize a model and optimizer in their favorite Deep Learning framework. Please choose framework wisely as interactive API supports only Keras and Pytorch off-the-shelf, as for now.
+Initialized model and optimizer objects then should be provided to initializr the `ModelInterface` along with the path to correct Framework Adapter plugin inside OpenFL package. If desired framework is not supported with existing plugins, one is free to implement the plugin's interface and point to the implementation inside the workspace.
+`from openfl.interface.interactive_api.experiment import ModelInterface`
+`MI = ModelInterface(model=model_unet, optimizer=optimizer_adam, framework_plugin=framework_adapter)`
+
+#### Registering FL tasks
 
 
-Created federation may be used in several subsequent experiments.

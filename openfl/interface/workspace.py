@@ -8,7 +8,6 @@ from click import group, option, pass_context
 from click import echo, confirm
 from subprocess import check_call
 from sys import executable
-from warnings import warn
 from shutil import copyfile, ignore_patterns
 
 from openfl.interface.cli_helper import copytree, print_tree

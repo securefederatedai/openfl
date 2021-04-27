@@ -3,18 +3,20 @@ import torch as pt
 from copy import deepcopy
 import numpy as np
 
+
 class FrameworkAdapterPlugin:
     def __init__(self) -> None:
         pass
-        
-    def serialization_setup(self):
+
+    @staticmethod
+    def serialization_setup():
         pass
 
     @staticmethod
     def get_tensor_dict(model, optimizer=None):
         state = to_cpu_numpy(model.state_dict())
 
-        if not optimizer is None:
+        if optimizer is not None:
             opt_state = _get_optimizer_state(optimizer)
             state = {**state, **opt_state}
 
@@ -31,7 +33,7 @@ class FrameworkAdapterPlugin:
         # set model state
         model.load_state_dict(new_state)
 
-        if not optimizer is None:
+        if optimizer is not None:
             # see if there is state to restore first
             if tensor_dict.pop('__opt_state_needed') == 'true':
                 _set_optimizer_state(optimizer, device, tensor_dict)
@@ -39,8 +41,6 @@ class FrameworkAdapterPlugin:
             # sanity check that we did not record any state that was not used
             assert len(tensor_dict) == 0
 
-
-#------------------------------------------------------------    
 
 def _set_optimizer_state(optimizer, device, derived_opt_state_dict):
     """Set the optimizer state.
@@ -64,6 +64,7 @@ def _set_optimizer_state(optimizer, device, derived_opt_state_dict):
             group[k] = v
 
     optimizer.load_state_dict(temp_state_dict)
+
 
 def _get_optimizer_state(optimizer):
     """Return the optimizer state.

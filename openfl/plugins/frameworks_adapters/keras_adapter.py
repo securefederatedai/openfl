@@ -1,15 +1,14 @@
 class FrameworkAdapterPlugin:
     def __init__(self) -> None:
         pass
-        
-    def serialization_setup(self):
+
+    @staticmethod
+    def serialization_setup():
         # Source: https://github.com/tensorflow/tensorflow/issues/34697
         from tensorflow.keras.models import Model
-        from tensorflow.keras.layers import Dense
         from tensorflow.python.keras.layers import deserialize, serialize
         from tensorflow.python.keras.saving import saving_utils
-        
-        
+
         def unpack(model, training_config, weights):
             restored_model = deserialize(model)
             if training_config is not None:
@@ -20,22 +19,22 @@ class FrameworkAdapterPlugin:
                 )
             restored_model.set_weights(weights)
             return restored_model
-        
+
         # Hotfix function
         def make_keras_picklable():
-        
+
             def __reduce__(self):
                 model_metadata = saving_utils.model_metadata(self)
                 training_config = model_metadata.get("training_config", None)
                 model = serialize(self)
                 weights = self.get_weights()
                 return (unpack, (model, training_config, weights))
-        
+
             cls = Model
             cls.__reduce__ = __reduce__
-        
+
         # Run the function
-        make_keras_picklable() 
+        make_keras_picklable()
 
     @staticmethod
     def get_tensor_dict(model, optimizer=None, suffix=''):
@@ -74,7 +73,6 @@ class FrameworkAdapterPlugin:
                 name: tensor_dict[name] for name in opt_weight_names
             }
             _set_weights_dict(optimizer, opt_weights_dict)
-
 
 
 def _get_weights_dict(obj, suffix=''):

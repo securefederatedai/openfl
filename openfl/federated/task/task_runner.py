@@ -1,15 +1,13 @@
 from logging import getLogger
-import functools
 import numpy as np
-import os
-
 from openfl.utilities import TensorKey, split_tensor_dict_for_holdouts
 
 
 class CoreTaskRunner(object):
     """Federated Learning Task Runner Class."""
 
-    def prepare_tensorkeys_for_agggregation(self, metric_dict, validation_flag, col_name, round_num):
+    def prepare_tensorkeys_for_agggregation(self, metric_dict, validation_flag,
+                                            col_name, round_num):
         """
         Returns (global_tensor_dict, local_tensor_dict)
         """
@@ -68,13 +66,12 @@ class CoreTaskRunner(object):
             tags = ('metric', suffix)
 
         metric_dict = {
-                TensorKey(metric, origin, round_num, True, tags):
-                    np.array(value) for metric, value in metric_dict.items()
+            TensorKey(metric, origin, round_num, True, tags):
+                np.array(value) for metric, value in metric_dict.items()
             }
         global_tensor_dict = {**global_tensor_dict, **metric_dict}
 
         return global_tensor_dict, local_tensor_dict
-
 
     def adapt_tasks(self):
         def task_binder(task_name, callable_task):
@@ -87,11 +84,11 @@ class CoreTaskRunner(object):
 
                 # device = kwargs.get('device', f'cuda:{self.data_loader.rank - 1}')
                 device = kwargs.get('device', 'cpu')
-                
+
                 self.rebuild_model(input_tensor_dict, validation=validation_flag, device=device)
                 task_kwargs = dict()
-                if validation_flag:  
-                    loader = self.data_loader.get_valid_loader() 
+                if validation_flag:
+                    loader = self.data_loader.get_valid_loader()
                     if kwargs['apply'] == 'local':
                         validation_flag = '_local'
                     else:
@@ -101,26 +98,23 @@ class CoreTaskRunner(object):
                     # If train task we also pass optimizer
                     task_kwargs[task_contract['optimizer']] = self.optimizer
 
-                
                 for en_name, entity in zip(['model', 'data_loader', 'device'],
-                                            [self.model, loader, device]):
+                                           [self.model, loader, device]):
                     task_kwargs[task_contract[en_name]] = entity
 
                 # Add task settings to the keyword arguments
                 task_kwargs.update(task_settings)
 
                 # Here is the training metod call
-                
                 metric_dict = callable_task(**task_kwargs)
-                
-                return self.prepare_tensorkeys_for_agggregation(metric_dict, validation_flag, col_name, round_num)
+
+                return self.prepare_tensorkeys_for_agggregation(
+                    metric_dict, validation_flag, col_name, round_num)
 
             return collaborator_adapted_task
 
-
         for task_name, callable_task in self.task_provider.task_registry.items():
             self.TASK_REGISTRY[task_name] = task_binder(task_name, callable_task)
-                
 
     def __init__(self, **kwargs):
         """
@@ -169,7 +163,6 @@ class CoreTaskRunner(object):
             aggregate_optimizer_parameters = False
         self.initialize_tensorkeys_for_functions(with_opt_vars=aggregate_optimizer_parameters)
 
-
     def set_logger(self):
         """Set up the log object."""
         self.logger = getLogger(__name__)
@@ -179,7 +172,7 @@ class CoreTaskRunner(object):
         # and do not change this one during training.
         """Change the treatment of current instance optimizer."""
         self.opt_treatment = opt_treatment
-        
+
     def rebuild_model(self, input_tensor_dict, validation=False, device='cpu'):
         """
         Parse tensor names and update weights of model. Handles the optimizer treatment.
@@ -195,7 +188,6 @@ class CoreTaskRunner(object):
             self.set_tensor_dict(input_tensor_dict, with_opt_vars=True, device=device)
         else:
             self.set_tensor_dict(input_tensor_dict, with_opt_vars=False, device=device)
-
 
     def get_required_tensorkeys_for_function(self, func_name, **kwargs):
         """
@@ -216,23 +208,25 @@ class CoreTaskRunner(object):
         # In the interface layer we add those parameters automatically
         if 'apply' not in kwargs:
             return [TensorKey(tensor_name, 'GLOBAL', 0, False, ('model',))
-            for tensor_name in self.required_tensorkeys_for_function['global_model_dict']] + \
-                    [TensorKey(tensor_name, 'LOCAL', 0, False, ('model',))
-            for tensor_name in self.required_tensorkeys_for_function['local_model_dict']]
+                    for tensor_name in self.required_tensorkeys_for_function[
+                        'global_model_dict']] + \
+                [TensorKey(tensor_name, 'LOCAL', 0, False, ('model',))
+                 for tensor_name in self.required_tensorkeys_for_function['local_model_dict']]
 
         if kwargs['apply'] == 'local':
-            return [TensorKey(tensor_name, 'LOCAL', 0, False, ('trained',)) \
-            for tensor_name in {
+            return [TensorKey(tensor_name, 'LOCAL', 0, False, ('trained',))
+                    for tensor_name in {
                 **self.required_tensorkeys_for_function['validation_local_model_dict'],
                 **self.required_tensorkeys_for_function['validation_global_model_dict']
             }]
 
         elif kwargs['apply'] == 'global':
-            return [TensorKey(tensor_name, 'GLOBAL', 0, False, ('model',)) \
-            for tensor_name in self.required_tensorkeys_for_function['validation_global_model_dict']] + \
-                    [TensorKey(tensor_name, 'LOCAL', 0, False, ('model',)) \
-            for tensor_name in self.required_tensorkeys_for_function['validation_local_model_dict']]
-
+            return [TensorKey(tensor_name, 'GLOBAL', 0, False, ('model',))
+                    for tensor_name in self.required_tensorkeys_for_function[
+                'validation_global_model_dict']] + \
+                [TensorKey(tensor_name, 'LOCAL', 0, False, ('model',))
+                 for tensor_name in self.required_tensorkeys_for_function[
+                 'validation_local_model_dict']]
 
     def initialize_tensorkeys_for_functions(self, with_opt_vars=False):
         """Set the required tensors for all publicly accessible methods that \
@@ -250,11 +244,11 @@ class CoreTaskRunner(object):
         # Set model dict for validation tasks
         output_model_dict = self.get_tensor_dict(with_opt_vars=False)
         validation_global_model_dict, validation_local_model_dict = \
-                split_tensor_dict_for_holdouts(
-                    self.logger,
-                    output_model_dict,
-                    **self.tensor_dict_split_fn_kwargs
-                )
+            split_tensor_dict_for_holdouts(
+                self.logger,
+                output_model_dict,
+                **self.tensor_dict_split_fn_kwargs
+            )
         # Now set model dict for training tasks
         if with_opt_vars:
             output_model_dict = self.get_tensor_dict(with_opt_vars=True)
@@ -266,55 +260,12 @@ class CoreTaskRunner(object):
             global_model_dict = validation_global_model_dict
             local_model_dict = validation_local_model_dict
 
-        # for task_name in 
-
         self.required_tensorkeys_for_function['global_model_dict'] = global_model_dict
         self.required_tensorkeys_for_function['local_model_dict'] = local_model_dict
-        self.required_tensorkeys_for_function['validation_global_model_dict'] = validation_global_model_dict
-        self.required_tensorkeys_for_function['validation_local_model_dict'] = validation_local_model_dict
-
-
-
-####################################### 
-
-        # self.required_tensorkeys_for_function['train_batches'] = [
-        #     TensorKey(tensor_name, 'GLOBAL', 0, False, ('model',))
-        #     for tensor_name in global_model_dict]
-        # self.required_tensorkeys_for_function['train_batches'] += [
-        #     TensorKey(tensor_name, 'LOCAL', 0, False, ('model',))
-        #     for tensor_name in local_model_dict]
-
-        # self.required_tensorkeys_for_function['train'] = [
-        #     TensorKey(
-        #         tensor_name, 'GLOBAL', 0, False, ('model',)
-        #     ) for tensor_name in global_model_dict
-        # ]
-        # self.required_tensorkeys_for_function['train'] += [
-        #     TensorKey(
-        #         tensor_name, 'LOCAL', 0, False, ('model',)
-        #     ) for tensor_name in local_model_dict
-        # ]
-
-        # # Validation may be performed on local or aggregated (global) model,
-        # # so there is an extra lookup dimension for kwargs
-        # self.required_tensorkeys_for_function['validate'] = {}
-        # # TODO This is not stateless. The optimizer will not be
-        # self.required_tensorkeys_for_function['validate']['apply=local'] = \
-        #     [TensorKey(
-        #         tensor_name, 'LOCAL', 0, False, ('trained',)
-        #     ) for tensor_name in {
-        #         **validation_global_model_dict,
-        #         **validation_local_model_dict
-        #     }]
-        # self.required_tensorkeys_for_function['validate']['apply=global'] = \
-        #     [TensorKey(
-        #         tensor_name, 'GLOBAL', 0, False, ('model',)
-        #     ) for tensor_name in validation_global_model_dict]
-        # self.required_tensorkeys_for_function['validate']['apply=global'] += \
-        #     [TensorKey(
-        #         tensor_name, 'LOCAL', 0, False, ('model',)
-        #     ) for tensor_name in validation_local_model_dict]
-
+        self.required_tensorkeys_for_function['validation_global_model_dict'] = \
+            validation_global_model_dict
+        self.required_tensorkeys_for_function['validation_local_model_dict'] = \
+            validation_local_model_dict
 
     def reset_opt_vars(self):
         """
@@ -325,9 +276,6 @@ class CoreTaskRunner(object):
         """
         self.optimizer = self.model_provider.provide_optimizer()
 
-
-
-        
     def get_train_data_size(self):
         """
         Get the number of training examples.
@@ -350,9 +298,6 @@ class CoreTaskRunner(object):
         """
         return self.data_loader.get_valid_data_size()
 
-
-#####################################################################################################
-    
     def get_tensor_dict(self, with_opt_vars=False):
         """Return the tensor dictionary.
 
@@ -389,5 +334,5 @@ class CoreTaskRunner(object):
             args.append(self.optimizer)
 
         kwargs = {'device': device, }
-        
+
         return self.framework_adapter.set_tensor_dict(*args, **kwargs)

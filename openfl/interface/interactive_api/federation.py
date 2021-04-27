@@ -1,8 +1,24 @@
+# Copyright (C) 2020-2021 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+"""Federation API module"""
+
 from socket import getfqdn
 
+
 class Federation:
+    """
+    Federation entity exists to keep information about collaborator related settings,
+    their local data and network setting to enable communication in federation.
+    """
+
     def __init__(self, central_node_fqdn=None, disable_tls=False,
-        cert_chain=None, agg_certificate=None, agg_private_key=None) -> None:
+                 cert_chain=None, agg_certificate=None, agg_private_key=None) -> None:
+        """
+        Federation API class should be initialized with the aggregator node FQDN
+        and encryption settings. One may disable mTLS in trusted environments or
+        provide paths to a certificate chain to CA, aggregator certificate and
+        pricate key to enable mTLS.
+        """
         if central_node_fqdn is None:
             self.fqdn = getfqdn()
         else:
@@ -14,8 +30,12 @@ class Federation:
         self.agg_certificate = agg_certificate
         self.agg_private_key = agg_private_key
 
-
     def register_collaborators(self, col_data_paths: dict) -> None:
+        """
+        This method should be used to provide information about collaborators
+        participating federation.
+        Arguments:
+        col_data_paths: dict(collaborator name : local data path)"""
         self.col_data_paths = col_data_paths
         with open('./data.yaml', 'w') as f:
             for col_name, data_path in self.col_data_paths.items():
