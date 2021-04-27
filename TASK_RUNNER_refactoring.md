@@ -35,5 +35,19 @@ If one decides to keep local test data inside the workspace, `data` folder shoul
 If one decides to keep certificates inside the workspace, `cert` folder should be used as it will not be exported.
 Only relevant source code or resources should be kept inside the worksapce as it will be zipped and distributed to collaborator machines.
 
-## Defining a Federate Learning experiment
+## The python environment
+Create a virtual python environment. Please install only packages required for conducting the experiment as python environment will be replicated on collaborator nodes.
+
+## Defining a Federated Learning experiment
 Interactive API allows defining an experiment from a single entrypoint - a jupyter notebook or a python script.
+Defining an experiment includes setting up several interface entities and experiment parameters.
+
+### Federation API
+To set up a federation use Federation interactive API.
+`from openfl.interface.interactive_api.federation import Federation`
+1. Federation API class should be initialized with the aggregator node FQDN and encryption settings. One may disable mTLS in trusted environments or provide paths to a certificate chain to CA, aggregator certificate and pricate key to enable mTLS.
+`federation = Federation(central_node_fqdn='nnlicv448.inn.intel.com', disable_tls=True, cert_chain=cert_chain, agg_certificate=agg_certificate, agg_private_key=agg_private_key)`
+2. `register_collaborators` method of created objects should be used 
+
+
+Created federation may be used in several subsequent experiments.
