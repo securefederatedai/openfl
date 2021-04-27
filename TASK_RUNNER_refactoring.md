@@ -27,3 +27,13 @@ __init__(self, model_provider, **kwargs) - Currently called from the code, shoul
 
 ## Refactored TaskRunner interface:
 
+
+## The workspace
+To initialize the workspace create an empty folder and a jupyter notebook (or a script) inside it. Root folder of the notebook will be considered the workspace.
+If some objects are imported in the notebook from local modules, source code should be keeped inside the workspace.
+If one decides to keep local test data inside the workspace, `data` folder should be used as it will not be exported.
+If one decides to keep certificates inside the workspace, `cert` folder should be used as it will not be exported.
+Only relevant source code or resources should be kept inside the worksapce as it will be zipped and distributed to collaborator machines.
+
+## Defining a Federate Learning experiment
+Interactive API allows defining an experiment from a single entrypoint - a jupyter notebook or a python script.
