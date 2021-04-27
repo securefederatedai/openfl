@@ -102,10 +102,11 @@ def update_plan(override_config):
     flat_plan_config = get_plan(return_complete=True)
     for k, v in override_config.items():
         if k in flat_plan_config:
-            flat_plan_config[k] = v
             logger.info(f'Updating {k} to {v}... ')
         else:
-            logger.info(f'Key {k} not found in plan. Ignoring... ')
+            # TODO: We probably need to validate the new key somehow
+            logger.warn(f'Did not find {k} in config. Make sure it should exist. Creating...')
+        flat_plan_config[k] = v
     plan_config = unflatten(flat_plan_config, '.')
     Plan.Dump(Path(plan_path), plan_config)
 

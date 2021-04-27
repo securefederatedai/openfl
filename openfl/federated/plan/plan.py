@@ -7,7 +7,7 @@ from logging import getLogger
 from os.path import splitext
 from importlib import import_module
 from pathlib import Path
-from yaml import safe_load, dump, SafeDumper
+import yaml
 from socket import getfqdn
 
 from openfl.transport import AggregatorGRPCServer
@@ -30,7 +30,7 @@ class Plan(object):
     def Load(yaml_path: Path, default={}):
         """Load the plan from YAML file."""
         if yaml_path and yaml_path.exists():
-            return safe_load(yaml_path.read_text())
+            return yaml.load(yaml_path.read_text(), Loader=yaml.Loader)
 
         return default
 
@@ -49,11 +49,11 @@ class Plan(object):
             if frozen_yaml_path.exists():
                 Plan.logger.info(f"{yaml_path.name} is already frozen")
                 return
-            frozen_yaml_path.write_text(dump(config, Dumper=NoAliasDumper))
+            frozen_yaml_path.write_text(yaml.dump(config))
             frozen_yaml_path.chmod(0o400)
             Plan.logger.info(f"{yaml_path.name} frozen successfully")
         else:
-            yaml_path.write_text(dump(config, Dumper=NoAliasDumper))
+            yaml_path.write_text(yaml.dump(config))
 
     @staticmethod
     def Parse(plan_config_path: Path, cols_config_path: Path = None,
@@ -135,7 +135,7 @@ class Plan(object):
                     f'Parsing Federated Learning Plan : [green]SUCCESS[/] : '
                     f'[blue]{plan_config_path}[/].',
                     extra={'markup': True})
-                Plan.logger.info(dump(plan.config))
+                Plan.logger.info(yaml.dump(plan.config))
 
             return plan
 
@@ -204,7 +204,7 @@ class Plan(object):
     @property
     def hash(self):
         """Generate hash for this instance."""
-        self.hash_ = sha384(dump(self.config).encode('utf-8'))
+        self.hash_ = sha384(yaml.dump(self.config).encode('utf-8'))
         Plan.logger.info(f'FL-Plan hash is [blue]{self.hash_.hexdigest()}[/]',
                          extra={'markup': True})
 
