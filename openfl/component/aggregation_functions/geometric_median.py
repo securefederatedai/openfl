@@ -13,8 +13,7 @@ def _geometric_median_objective(median, tensors, weights):
 
 
 def geometric_median(tensors, weights, maxiter=4, eps=1e-5, ftol=1e-6):
-    """Computes geometric median of tensors with weights using Weiszfeld's Algorithm
-    """
+    """Compute geometric median of tensors with weights using Weiszfeld's Algorithm."""
     weights = np.asarray(weights) / sum(weights)
     median = weighted_average(tensors, weights)
     num_oracle_calls = 1
@@ -34,7 +33,7 @@ def geometric_median(tensors, weights, maxiter=4, eps=1e-5, ftol=1e-6):
 
 
 def _l2dist(p1, p2):
-    """L2 distance between p1, p2, each of which is a list of nd-arrays"""
+    """L2 distance between p1, p2, each of which is a list of nd-arrays."""
     if p1.ndim != p2.ndim:
         raise RuntimeError('Tensor shapes should be equal')
     if p1.ndim < 2:
