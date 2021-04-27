@@ -110,6 +110,7 @@ def parse_args():
     print(parsed_args)
     return parsed_args
 
+
 if __name__ == '__main__':
 
     args = parse_args()
@@ -151,8 +152,8 @@ if __name__ == '__main__':
     collaborator_models = fl_model.setup(num_collaborators=args.collaborators_amount)
     collaborators = {str(i): c for i, c in enumerate(collaborator_models)}
 
-    print(f'Original training data size: {len(train_images)}')
-    print(f'Original validation data size: {len(valid_images)}\n')
+    print(f'Original training data size: {len(X_train)}')
+    print(f'Original validation data size: {len(y_train)}\n')
 
     final_fl_model = fx.run_experiment(collaborators, {
         'aggregator.settings.rounds_to_train': args.rounds_to_train,

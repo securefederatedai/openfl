@@ -23,6 +23,17 @@ logger = getLogger(__name__)
 WORKSPACE_PREFIX = os.path.join(os.path.expanduser('~'), '.local', 'workspace')
 
 
+def create_collaborator(plan, name, model, client):
+    """
+    Create the collaborator.
+
+    Using the same plan object to create multiple collaborators leads to
+    identical collaborator objects. This function can be removed once
+    collaborator generation is fixed in openfl/federated/plan/plan.py
+    """
+    return plan.get_collaborator(name, task_runner=model, client=client)
+
+
 def get_plan(return_complete=False):
     """
     Return the flattened dictionary associated with the plan.
@@ -62,7 +73,7 @@ def get_plan(return_complete=False):
     return flattened_config
 
 
-def init(workspace_template='default', log_level='debug'):
+def init(workspace_template: str ='default', log_level: str='debug'):
     """
     Initialize the openfl package.
 
@@ -85,13 +96,8 @@ def init(workspace_template='default', log_level='debug'):
             Other options include are any of the template names [
             keras_cnn_mnist, tf_2dunet, tf_cnn_histology, mtorch_cnn_histology,
             torch_cnn_mnist]
-        agg_fqdn : str
-           The local node's fully qualified domain name (if it can't be
-           resolved automatically)
-        col_names: list[str]
-           The names of the collaborators that will be created. These
-           collaborators will be set up to participate in the experiment, but
-           are not required to
+        log_level: str (default='debug')
+            Passed to setup_logging function to change default log level
 
     Returns:
         None
@@ -172,17 +178,6 @@ def run_experiment(collaborator_dict: dict, override_config: dict = None, is_mul
     model = _set_weights_for_the_final_model(model, rounds_to_train, last_tensor_dict)
 
     return model
-
-
-def create_collaborator(plan, name, model, client):
-    """
-    Create the collaborator.
-
-    Using the same plan object to create multiple collaborators leads to
-    identical collaborator objects. This function can be removed once
-    collaborator generation is fixed in openfl/federated/plan/plan.py
-    """
-    return plan.get_collaborator(name, task_runner=model, client=client)
 
 
 def _create_initial_weights_file(model, init_state_path, tensor_pipe):
