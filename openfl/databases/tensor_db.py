@@ -12,7 +12,21 @@ from openfl.utilities import TensorKey
 
 
 def weighted_average(tensors, weights):
+    """Compute simple weighted average (FedAvg operation)."""
     return np.average(tensors, weights=weights, axis=0)
+
+
+def geometric_mean(tensors, *_):
+    """Compute geometric mean."""
+    from scipy.stats import gmean
+    result = gmean(tensors, axis=0)
+    print(f'gmean({tensors})={result}')
+    return result
+
+
+def median(tensors, *_):
+    """Compute median."""
+    return np.median(tensors, axis=0)
 
 
 class TensorDB:
@@ -23,8 +37,11 @@ class TensorDB:
     for it's easy insertion, retreival and aggregation capabilities. Each
     collaborator and aggregator has its own TensorDB.
     """
+
     aggregation_fns = {
-        'weighted_average': weighted_average
+        'weighted_average': weighted_average,
+        'median': median,
+        'geometric_mean': geometric_mean
     }
 
     def __init__(self):
