@@ -42,13 +42,12 @@ class SparsityTransformer(Transformer):
         n_elements = flatten_data.shape[0]
         k_op = int(np.ceil(n_elements * self.p))
         topk, topk_indices = self._topk_func(flatten_data, k_op)
-        #
         condensed_data = topk
         sparse_data = np.zeros(flatten_data.shape)
         sparse_data[topk_indices] = topk
         nonzero_element_bool_indices = sparse_data != 0.0
         metadata['bool_list'] = list(nonzero_element_bool_indices)
-        return condensed_data, metadata
+        return sparse_data, metadata
 
     def backward(self, data, metadata, **kwargs):
         """Recover data array with the right shape and numerical type.
@@ -63,10 +62,10 @@ class SparsityTransformer(Transformer):
         """
         data = data.astype(np.float32)
         data_shape = metadata['int_list']
-        nonzero_element_bool_indices = list(metadata['bool_list'])
-        recovered_data = np.zeros(data_shape).reshape(-1).astype(np.float32)
-        recovered_data[nonzero_element_bool_indices] = data
-        recovered_data = recovered_data.reshape(data_shape)
+        #nonzero_element_bool_indices = list(metadata['bool_list'])
+        #recovered_data = np.zeros(data_shape).reshape(-1).astype(np.float32)
+        #recovered_data[nonzero_element_bool_indices] = data
+        recovered_data = data.reshape(data_shape)
         return recovered_data
 
     @staticmethod
@@ -226,7 +225,7 @@ class SKCPipeline(TransformationPipeline):
         self.n_cluster = n_clusters
         transformers = [
             SparsityTransformer(self.p),
-            #KmeansTransformer(self.n_cluster),
+            KmeansTransformer(self.n_cluster),
             GZIPTransformer()
         ]
         super(SKCPipeline, self).__init__(transformers=transformers, **kwargs)

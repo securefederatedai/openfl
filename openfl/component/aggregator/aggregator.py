@@ -573,8 +573,8 @@ class Aggregator:
                 raise ValueError('Base model {} not present in'
                                  ' TensorDB'.format(base_model_tensor_key))
             # REMOVE
-            #self.logger.info(f'Applying delta for tensorkey {decompressed_tensor_key}')
-            #self.logger.info(f'Checking math : {decompressed_nparray + base_model_nparray}')
+            self.logger.info(f'Applying delta for tensorkey {decompressed_tensor_key}')
+            self.logger.info(f'Delta tensorkey: {decompressed_nparray}')
             final_tensor_key, final_nparray = self.tensor_codec.apply_delta(
                 decompressed_tensor_key,
                 decompressed_nparray, base_model_nparray
@@ -684,6 +684,8 @@ class Aggregator:
         )
 
         # REMOVE
+        if 'conv2d' in decompressed_delta_tk[0] and not 'Adam' in decompressed_delta_tk[0]:
+            self.logger.info(f'Decompressed delta tensor {decompressed_delta_tk} = {decompressed_delta_nparray}')
         #self.logger.info(f'Caching decompressed delta tensor {decompressed_delta_tk}')
         self.tensor_db.cache_tensor({decompressed_delta_tk: decompressed_delta_nparray})
 

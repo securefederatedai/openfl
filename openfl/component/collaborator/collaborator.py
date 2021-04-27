@@ -412,11 +412,23 @@ class Collaborator:
                         model_nparray
                     )
                 # REMOVE
-                #self.logger.info(f'Generated delta : {delta_tensor_key}')
+                self.logger.info(f'Generated delta : {delta_tensor_key}')
                 #self.logger.info(f'Checking delta calculation : {nparray - model_nparray}')
-                #self.logger.info(f'delta_nparray : {delta_nparray}')
+                self.logger.info(f'delta_nparray : {delta_nparray}')
                 delta_comp_tensor_key, delta_comp_nparray, metadata = \
                     self.tensor_codec.compress(delta_tensor_key, delta_nparray)
+                # REMOVE
+                #dec_tk, decompressed_nparray = self.tensor_codec.decompress(
+                #    delta_comp_tensor_key,
+                #    data=delta_comp_nparray,
+                #    transformer_metadata=metadata,
+                #    require_lossless=False
+                #)
+                #self.logger.info(f'Decompressed delta : {dec_tk}')
+                ##self.logger.info(f'Checking delta calculation : {nparray - model_nparray}')
+                #self.logger.info(f'decompressed delta_nparray : {decompressed_nparray}')
+
+
                 named_tensor = utils.construct_named_tensor(
                     delta_comp_tensor_key,
                     delta_comp_nparray,
