@@ -9,24 +9,7 @@ import numpy as np
 from threading import Lock
 
 from openfl.utilities import TensorKey
-
-
-def weighted_average(tensors, weights):
-    """Compute simple weighted average (FedAvg operation)."""
-    return np.average(tensors, weights=weights, axis=0)
-
-
-def geometric_mean(tensors, *_):
-    """Compute geometric mean."""
-    from scipy.stats import gmean
-    result = gmean(tensors, axis=0)
-    print(f'gmean({tensors})={result}')
-    return result
-
-
-def median(tensors, *_):
-    """Compute median."""
-    return np.median(tensors, axis=0)
+from openfl.component.aggregation_functions import weighted_average, median, geometric_median
 
 
 class TensorDB:
@@ -41,7 +24,7 @@ class TensorDB:
     aggregation_fns = {
         'weighted_average': weighted_average,
         'median': median,
-        'geometric_mean': geometric_mean
+        'geometric_median': geometric_median
     }
 
     def __init__(self):

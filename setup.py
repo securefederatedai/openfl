@@ -44,6 +44,7 @@ setup(
         'openfl-workspace',
         'openfl-docker',
         'openfl-tutorials',
+        'openfl.component.aggregation_functions'
     ],
     include_package_data=True,
     install_requires=[
