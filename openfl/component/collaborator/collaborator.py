@@ -278,7 +278,8 @@ class Collaborator:
                     )
                     self.tensor_db.cache_tensor({new_model_tk: nparray})
                 else:
-                    self.logger.info(f'Count not find previous model layer. Fetching latest layer from aggregator')
+                    self.logger.info(f'Count not find previous model layer.'
+                                     f'Fetching latest layer from aggregator')
                     # The original model tensor should be fetched from client
                     nparray = self.get_aggregated_tensor_from_aggregator(
                         tensor_key,

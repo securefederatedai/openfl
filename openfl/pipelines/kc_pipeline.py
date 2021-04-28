@@ -48,10 +48,6 @@ class KmeansTransformer(Transformer):
         else:
             quant_array = data
 
-        #k_means.fit(data)
-        #quantized_values = k_means.cluster_centers_.squeeze()
-        #indices = k_means.labels_
-        #quant_array = np.choose(indices, quantized_values)
         int_array, int2float_map = self._float_to_int(quant_array)
         metadata['int_to_float'] = int2float_map
 

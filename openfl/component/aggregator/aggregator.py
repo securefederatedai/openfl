@@ -320,9 +320,6 @@ class Aggregator:
         )
         tensor_name, origin, round_number, report, tags = tensor_key
 
-        # send_model_deltas = False
-        #compress_lossless = not self.tensor_codec.compression_pipeline.is_lossy()
-
         if 'aggregated' in tags and 'delta' in tags and round_number != 0:
             # send_model_deltas = True
             agg_tensor_key = TensorKey(
