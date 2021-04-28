@@ -8,6 +8,7 @@ import numpy as np
 from openfl.databases.tensor_db import TensorDB
 from openfl.utilities.types import TensorKey
 from openfl.protocols import NamedTensor
+from openfl.component.aggregation_functions import AggregationFunctionInterface
 
 
 @pytest.fixture
@@ -213,11 +214,13 @@ def test_get_aggregated_tensor_new_aggregation_function(tensor_db):
     """Test that get_aggregated_tensor works correctly with a given agg function."""
     collaborator_weight_dict = {'col1': 0.1, 'col2': 0.9}
 
-    def agg_fn(tensors, *_):
-        return np.sum(tensors, axis=0)
+    class Sum(AggregationFunctionInterface):
+        def __call__(self, tensors: np.ndarray, **kwargs) -> np.ndarray:
+            return np.sum(tensors, axis=0)
+
     tensor_key = TensorKey('tensor_name', 'agg', 0, False, ())
 
     agg_nparray = tensor_db.get_aggregated_tensor(
-        tensor_key, collaborator_weight_dict, agg_fn)
+        tensor_key, collaborator_weight_dict, Sum())
 
     assert np.array_equal(agg_nparray, np.array([2, 4, 6, 8, 10]))
