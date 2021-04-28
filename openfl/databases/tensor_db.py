@@ -9,7 +9,8 @@ import numpy as np
 from threading import Lock
 
 from openfl.utilities import TensorKey
-from openfl.component.aggregation_functions import WeightedAverage, Median, GeometricMedian, AggregationFunctionInterface
+from openfl.component.aggregation_functions import (WeightedAverage, Median, GeometricMedian,
+                                                    AggregationFunctionInterface)
 
 
 class TensorDB:
