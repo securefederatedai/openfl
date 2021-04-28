@@ -9,7 +9,7 @@ import numpy as np
 from threading import Lock
 
 from openfl.utilities import TensorKey
-from openfl.component.aggregation_functions import weighted_average, median, geometric_median
+from openfl.component.aggregation_functions import WeightedAverage, Median, GeometricMedian, AggregationFunctionInterface
 
 
 class TensorDB:
@@ -22,9 +22,9 @@ class TensorDB:
     """
 
     aggregation_fns = {
-        'weighted_average': weighted_average,
-        'median': median,
-        'geometric_median': geometric_median
+        'weighted_average': WeightedAverage(),
+        'median': Median(),
+        'geometric_median': GeometricMedian()
     }
 
     def __init__(self):
@@ -132,8 +132,12 @@ class TensorDB:
             aggregation_function = 'weighted_average'
         if aggregation_function in self.aggregation_fns:
             aggregation_function = self.aggregation_fns[aggregation_function]
-        elif not callable(aggregation_function):
-            raise NotImplementedError(f'Unknown aggregation function {aggregation_function}')
+        elif not isinstance(aggregation_function, AggregationFunctionInterface):
+            raise NotImplementedError(
+                'Aggregation function should either '
+                + f'implement {AggregationFunctionInterface.__name__} interface '
+                + 'or be one of '
+                + f'{list(TensorDB.aggregation_fns.keys())}')
 
         if len(collaborator_weight_dict) != 0:
             assert (np.abs(
@@ -180,9 +184,21 @@ class TensorDB:
             # * collaborator_weight_dict[col]
 
         concat_nparray = np.array(list(agg_tensor_dict.values()))
+        previous_tensor_value = self.tensor_db[
+            (self.tensor_db['tensor_name'] == tensor_name)
+            & (self.tensor_db['origin'] == origin)
+            & (self.tensor_db['round'] == fl_round - 1)
+            & (self.tensor_db['report'] == report)
+            & (self.tensor_db['tags'] == tags)]['nparray']
+        if previous_tensor_value.empty:
+            previous_tensor_value = None
+        else:
+            previous_tensor_value = np.array(previous_tensor_value)
 
         weights = np.array(list(collaborator_weight_dict.values()))
-        agg_nparray = aggregation_function(concat_nparray, weights)
+        agg_nparray = aggregation_function(concat_nparray,
+                                           weights=weights,
+                                           previous_tensor_value=previous_tensor_value)
         self.cache_tensor({tensor_key: agg_nparray})
 
         return np.array(agg_nparray)

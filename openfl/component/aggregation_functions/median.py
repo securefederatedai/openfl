@@ -3,9 +3,15 @@
 
 """Median module."""
 
+from .interface import AggregationFunctionInterface
 import numpy as np
 
 
-def median(tensors, *_):
+def median(tensors):
     """Compute median."""
     return np.median(tensors, axis=0)
+
+
+class Median(AggregationFunctionInterface):
+    def __call__(self, tensors: np.ndarray, **kwargs) -> np.ndarray:
+        return median(tensors)

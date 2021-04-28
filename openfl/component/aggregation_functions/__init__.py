@@ -3,8 +3,9 @@
 
 """Aggregation functions package."""
 
-from .median import median
-from .fedavg import weighted_average
-from .geometric_median import geometric_median
+from .median import Median
+from .weighted_average import WeightedAverage
+from .geometric_median import GeometricMedian
+from .interface import AggregationFunctionInterface
 
-__all__ = ['median', 'weighted_average', 'geometric_median']
+__all__ = ['Median', 'WeightedAverage', 'GeometricMedian', 'AggregationFunctionInterface']

@@ -3,8 +3,9 @@
 
 """Geometric median module."""
 
+from .interface import AggregationFunctionInterface
 import numpy as np
-from .fedavg import weighted_average
+from .weighted_average import weighted_average
 
 
 def _geometric_median_objective(median, tensors, weights):
@@ -39,3 +40,8 @@ def _l2dist(p1, p2):
     if p1.ndim < 2:
         return _l2dist(*[np.expand_dims(x, axis=0) for x in [p1, p2]])
     return np.linalg.norm([np.linalg.norm(x1 - x2) for x1, x2 in zip(p1, p2)])
+
+
+class GeometricMedian(AggregationFunctionInterface):
+    def __call__(self, tensors: np.ndarray, **kwargs) -> np.ndarray:
+        return geometric_median(tensors, kwargs['weights'])
