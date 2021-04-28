@@ -1,9 +1,19 @@
-class FrameworkAdapterPlugin:
+# Copyright (C) 2020-2021 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+"""Keras Framework Adapter plugin."""
+from .framework_adapter_interface import FrameworkAdapterPluginInterface
+
+
+class FrameworkAdapterPlugin(FrameworkAdapterPluginInterface):
+    """Framework adapter plugin class."""
+
     def __init__(self) -> None:
+        """Initialize framework adapter."""
         pass
 
     @staticmethod
     def serialization_setup():
+        """Prepare model for serialization (optional)."""
         # Source: https://github.com/tensorflow/tensorflow/issues/34697
         from tensorflow.keras.models import Model
         from tensorflow.python.keras.layers import deserialize, serialize
@@ -38,6 +48,12 @@ class FrameworkAdapterPlugin:
 
     @staticmethod
     def get_tensor_dict(model, optimizer=None, suffix=''):
+        """
+        Extract tensor dict from a model and an optimizer.
+
+        Returns:
+        dict {weight name: numpy ndarray}
+        """
         model_weights = _get_weights_dict(model, suffix)
 
         if optimizer is not None:

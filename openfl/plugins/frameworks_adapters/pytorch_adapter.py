@@ -1,19 +1,27 @@
+# Copyright (C) 2020-2021 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+"""Pytorch Framework Adapter plugin."""
 import torch as pt
-
 from copy import deepcopy
 import numpy as np
+from .framework_adapter_interface import FrameworkAdapterPluginInterface
 
 
-class FrameworkAdapterPlugin:
+class FrameworkAdapterPlugin(FrameworkAdapterPluginInterface):
+    """Framework adapter plugin class."""
+
     def __init__(self) -> None:
-        pass
-
-    @staticmethod
-    def serialization_setup():
+        """Initialize framework adapter."""
         pass
 
     @staticmethod
     def get_tensor_dict(model, optimizer=None):
+        """
+        Extract tensor dict from a model and an optimizer.
+
+        Returns:
+        dict {weight name: numpy ndarray}
+        """
         state = to_cpu_numpy(model.state_dict())
 
         if optimizer is not None:
@@ -24,6 +32,12 @@ class FrameworkAdapterPlugin:
 
     @staticmethod
     def set_tensor_dict(model, tensor_dict, optimizer=None, device='cpu'):
+        """
+        Set tensor dict from a model and an optimizer.
+
+        Given a dict {weight name: numpy ndarray} sets weights to
+        the model and optimizer objects inplace.
+        """
         new_state = {}
         # Grabbing keys from model's state_dict helps to confirm we have
         # everything

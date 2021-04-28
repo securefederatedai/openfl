@@ -204,7 +204,7 @@ class Collaborator:
             # Tasks are defined as methods of TaskRunner
             func = getattr(self.task_runner, func_name)
             self.logger.info('Using TaskRunner subclassing API')
-            
+
         global_output_tensor_dict, local_output_tensor_dict = func(
             col_name=self.collaborator_name,
             round_num=round_number,

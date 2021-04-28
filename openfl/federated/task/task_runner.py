@@ -1,3 +1,7 @@
+# Copyright (C) 2020-2021 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+"""Interactive API package."""
+
 from logging import getLogger
 import numpy as np
 from openfl.utilities import TensorKey, split_tensor_dict_for_holdouts
@@ -6,9 +10,11 @@ from openfl.utilities import TensorKey, split_tensor_dict_for_holdouts
 class CoreTaskRunner(object):
     """Federated Learning Task Runner Class."""
 
-    def prepare_tensorkeys_for_agggregation(self, metric_dict, validation_flag,
-                                            col_name, round_num):
+    def _prepare_tensorkeys_for_agggregation(self, metric_dict, validation_flag,
+                                             col_name, round_num):
         """
+        Prepare tensorkeys for aggregation.
+
         Returns (global_tensor_dict, local_tensor_dict)
         """
         global_tensor_dict, local_tensor_dict = {}, {}
@@ -68,12 +74,25 @@ class CoreTaskRunner(object):
         metric_dict = {
             TensorKey(metric, origin, round_num, True, tags):
                 np.array(value) for metric, value in metric_dict.items()
-            }
+        }
         global_tensor_dict = {**global_tensor_dict, **metric_dict}
 
         return global_tensor_dict, local_tensor_dict
 
     def adapt_tasks(self):
+        """
+        Prepare tasks for the collaborator.
+
+        Using functions from a task provider (deserialized interface object) and
+        registered task contracts prepares callable tasks to be invoked by the collaborator.
+
+        Preparing includes conditional model rebuilding and filling output dicts
+        with tensors for aggregation and storing in local DB.
+
+        There is an assumption that any training task accepts optimizer as one
+        of the arguments, thus the model should be aggregated after such tasks.
+        """
+
         def task_binder(task_name, callable_task):
             def collaborator_adapted_task(col_name, round_num, input_tensor_dict, **kwargs):
                 # print('\n\n',task_name, kwargs, '\n\n')
@@ -108,7 +127,7 @@ class CoreTaskRunner(object):
                 # Here is the training metod call
                 metric_dict = callable_task(**task_kwargs)
 
-                return self.prepare_tensorkeys_for_agggregation(
+                return self._prepare_tensorkeys_for_agggregation(
                     metric_dict, validation_flag, col_name, round_num)
 
             return collaborator_adapted_task
@@ -118,7 +137,11 @@ class CoreTaskRunner(object):
 
     def __init__(self, **kwargs):
         """
-        model_provider should have a method provide_model
+        Initialize Task Runner.
+
+        This class is a part of the Interactive python API release.
+        It is no longer a user interface entity that should be subclassed
+        but a part of OpenFL kernel.
         """
         self.set_logger()
 
@@ -141,21 +164,35 @@ class CoreTaskRunner(object):
         })
 
     def set_task_provider(self, task_provider):
+        """
+        Set task registry.
+
+        This method recieves Task Interface object as an argument
+        and uses provided callables and information to prepare
+        tasks that may be called by the collaborator component.
+        """
         if task_provider is None:
             return
         self.task_provider = task_provider
         self.adapt_tasks()
 
     def set_data_loader(self, data_loader):
-        # Is called on a collaborator node
+        """Register a data loader initialized with local data path."""
         self.data_loader = data_loader
 
     def set_model_provider(self, model_provider):
+        """Retrieve a model and an optimizer from the interface object."""
         self.model_provider = model_provider
         self.model = self.model_provider.provide_model()
         self.optimizer = self.model_provider.provide_optimizer()
 
     def set_framework_adapter(self, framework_adapter):
+        """
+        Set framework adapter.
+
+        Setting a framework adapter allows first extraction of the weigths
+        of the model with the purpose to make a list of parameters to be aggregated.
+        """
         self.framework_adapter = framework_adapter
         if self.opt_treatment == 'CONTINUE_GLOBAL':
             aggregate_optimizer_parameters = True

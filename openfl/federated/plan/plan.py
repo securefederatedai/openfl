@@ -297,7 +297,6 @@ class Plan(object):
     # Python interactive api
     def initialize_data_loader(self, data_loader, collaborator_name):
         """Get data loader."""
-
         data_path = self.cols_data_paths[
             collaborator_name
         ]
@@ -451,7 +450,6 @@ class Plan(object):
 
     def interactive_api_get_server(self, tensor_dict, chain, certificate, private_key):
         """Get gRPC server of the aggregator instance."""
-
         # common_name = self.config['network'][SETTINGS]['agg_addr'].lower()
         # chain = 'cert/cert_chain.crt'
         # certificate = f'cert/server/agg_{common_name}.crt'
@@ -480,6 +478,6 @@ class Plan(object):
                          'tasks_interface_file', 'dataloader_interface_file']:
             interface_objects.append(
                 serializer.restore_object(self.config['api_layer']['settings'][filename])
-                )
+            )
         model_provider, task_keeper, data_loader = interface_objects
         return model_provider, task_keeper, data_loader

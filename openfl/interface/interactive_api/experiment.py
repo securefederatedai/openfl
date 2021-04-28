@@ -16,10 +16,11 @@ from openfl.utilities import split_tensor_dict_for_holdouts
 
 class FLExperiment:
     """Central class for FL experiment orchestration."""
+
     def __init__(self, federation, serializer_plugin=None) -> None:
         """
-        Initializing experiment inside a federation.
-        
+        Initialize an experiment inside a federation.
+
         Experiment makes sense in a scope of some machine learning problem.
         Information about the data on collaborators is contained on the federation level.
         """
@@ -44,8 +45,7 @@ class FLExperiment:
             self, model_provider, task_keeper, data_loader,
             rounds_to_train,
             delta_updates=False, opt_treatment='RESET'):
-        """Prepares an archive from a user workspace."""
-
+        """Prepare an archive from a user workspace."""
         self._prepare_plan(model_provider, task_keeper, data_loader,
                            rounds_to_train,
                            delta_updates=delta_updates, opt_treatment=opt_treatment,
@@ -68,10 +68,12 @@ class FLExperiment:
         # DO CERTIFICATES exchange
 
     def start_experiment(self, model_provider):
-        '''
-        This method also requires model_provider to start experiment with another initialization
-        without workspace redistribution.
-        '''
+        """
+        Start the aggregator.
+
+        This method requires model_provider to start an experiment with another
+        model initialization without workspace redistribution.
+        """
         # Start the aggregator
         self.plan.resolve()
 
@@ -87,7 +89,7 @@ class FLExperiment:
 
     @staticmethod
     def _export_python_env():
-        """Prepares requirements.txt."""
+        """Prepare requirements.txt."""
         from pip._internal.operations import freeze
         requirements_generator = freeze.freeze()
         with open('./requirements.txt', 'w') as f:
@@ -97,7 +99,7 @@ class FLExperiment:
 
     @staticmethod
     def _pack_the_workspace():
-        """PAcking the archive."""
+        """Packing the archive."""
         from shutil import make_archive, copytree, ignore_patterns, rmtree
         from os import getcwd, makedirs
         from os.path import basename
