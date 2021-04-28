@@ -13,13 +13,12 @@ from socket import getfqdn
 from openfl.transport import AggregatorGRPCServer
 from openfl.transport import CollaboratorGRPCClient
 
+from openfl.interface.cli_helper import WORKSPACE
+
 SETTINGS = 'settings'
 TEMPLATE = 'template'
 DEFAULTS = 'defaults'
 AUTO = 'auto'
-
-
-from openfl.interface.cli_helper import WORKSPACE
 
 
 class Plan(object):
@@ -112,7 +111,6 @@ class Plan(object):
                     defaults.update(plan.config[section])
 
                     plan.config[section] = defaults
-                    
 
             plan.authorized_cols = Plan.Load(cols_config_path).get(
                 'collaborators', []
@@ -324,14 +322,15 @@ class Plan(object):
 
     # Python interactive api
     def get_core_task_runner(self, data_loader=None,
-                                model_provider=None,
-                                task_keeper=None):
+                             model_provider=None,
+                             task_keeper=None):
         """Get task runner."""
-        defaults = self.config.get('task_runner',
-                                   {
-                                       TEMPLATE: 'openfl.federated.task.task_runner.CoreTaskRunner',
-                                       SETTINGS: {}
-                                   })
+        defaults = self.config.get(
+            'task_runner',
+            {
+                TEMPLATE: 'openfl.federated.task.task_runner.CoreTaskRunner',
+                SETTINGS: {}
+            })
 
         # We are importing a CoreTaskRunner instance!!!
         if self.runner_ is None:
@@ -342,9 +341,10 @@ class Plan(object):
         self.runner_.set_model_provider(model_provider)
         self.runner_.set_task_provider(task_keeper)
 
-        framework_adapter = Plan.Build(self.config['task_runner']['required_plugin_components']['framework_adapters'], {})
+        framework_adapter = Plan.Build(
+            self.config['task_runner']['required_plugin_components']['framework_adapters'], {})
 
-        # This step initializes tensorkeys 
+        # This step initializes tensorkeys
         # Which have no sens if task provider is not set up
         self.runner_.set_framework_adapter(framework_adapter)
 
@@ -359,7 +359,7 @@ class Plan(object):
                 TEMPLATE: 'openfl.component.Collaborator',
                 SETTINGS: {}
             }
-        )    
+        )
 
         defaults[SETTINGS]['collaborator_name'] = collaborator_name
         defaults[SETTINGS]['aggregator_uuid'] = self.aggregator_uuid
@@ -367,25 +367,24 @@ class Plan(object):
 
         if task_runner is not None:
             defaults[SETTINGS]['task_runner'] = task_runner
-        else:   
+        else:
             # Here we support new interactive api as well as old task_runner subclassing interface
             # If Task Runner class is placed incide openfl `task-runner` subpackage it is
             # a part of the New API and it is a part of OpenFL kernel.
-            # If Task Runner is placed elsewhere, somewhere in user workspace, than it is 
+            # If Task Runner is placed elsewhere, somewhere in user workspace, than it is
             # a part of the old interface and we follow legacy initialization procedure.
             if 'openfl.federated.task.task_runner' in self.config['task_runner']['template']:
                 # Interactive API
                 model_provider, task_keeper, data_loader = self.deserialize_interface_objects()
                 data_loader = self.initialize_data_loader(data_loader, collaborator_name)
                 defaults[SETTINGS]['task_runner'] = self.get_core_task_runner(
-                                    data_loader=data_loader,
-                                    model_provider=model_provider,
-                                    task_keeper=task_keeper)
+                    data_loader=data_loader,
+                    model_provider=model_provider,
+                    task_keeper=task_keeper)
             else:
                 # TaskRunner subclassing API
                 data_loader = self.get_data_loader(collaborator_name)
                 defaults[SETTINGS]['task_runner'] = self.get_task_runner(data_loader)
-
 
         defaults[SETTINGS]['tensor_pipe'] = self.get_tensor_pipe()
         defaults[SETTINGS]['task_config'] = self.config.get('tasks', {})
@@ -450,7 +449,6 @@ class Plan(object):
 
         return self.server_
 
-    
     def interactive_api_get_server(self, tensor_dict, chain, certificate, private_key):
         """Get gRPC server of the aggregator instance."""
 
@@ -473,12 +471,13 @@ class Plan(object):
 
         return self.server_
 
-
     def deserialize_interface_objects(self):
-        # 
+        """Deserialize objects for TaskRunner."""
         interface_objects = []
-        serializer = Plan.Build(self.config['api_layer']['required_plugin_components']['serializer_plugin'], {})
-        for filename in ['model_interface_file', 'tasks_interface_file', 'dataloader_interface_file']:
+        serializer = Plan.Build(
+            self.config['api_layer']['required_plugin_components']['serializer_plugin'], {})
+        for filename in ['model_interface_file',
+                         'tasks_interface_file', 'dataloader_interface_file']:
             interface_objects.append(
                 serializer.restore_object(self.config['api_layer']['settings'][filename])
                 )

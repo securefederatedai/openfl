@@ -1,4 +1,7 @@
-# We need assigner interface
+# Copyright (C) 2020-2021 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+"""Python low-level API module."""
 import os
 from copy import deepcopy
 from logging import getLogger
@@ -12,7 +15,14 @@ from openfl.utilities import split_tensor_dict_for_holdouts
 
 
 class FLExperiment:
+    """Central class for FL experiment orchestration."""
     def __init__(self, federation, serializer_plugin=None) -> None:
+        """
+        Initializing experiment inside a federation.
+        
+        Experiment makes sense in a scope of some machine learning problem.
+        Information about the data on collaborators is contained on the federation level.
+        """
         self.federation = federation
 
         if serializer_plugin is None:
@@ -24,6 +34,7 @@ class FLExperiment:
         self.logger = getLogger(__name__)
 
     def get_best_model(self):
+        """Retrieve the model with the best score."""
         # Next line relies on aggregator inner field where model dicts are stored
         best_tensor_dict = self.server.aggregator.best_tensor_dict
         self.task_runner_stub.rebuild_model(best_tensor_dict, validation=True, device='cpu')
@@ -33,6 +44,7 @@ class FLExperiment:
             self, model_provider, task_keeper, data_loader,
             rounds_to_train,
             delta_updates=False, opt_treatment='RESET'):
+        """Prepares an archive from a user workspace."""
 
         self._prepare_plan(model_provider, task_keeper, data_loader,
                            rounds_to_train,
@@ -75,6 +87,7 @@ class FLExperiment:
 
     @staticmethod
     def _export_python_env():
+        """Prepares requirements.txt."""
         from pip._internal.operations import freeze
         requirements_generator = freeze.freeze()
         with open('./requirements.txt', 'w') as f:
@@ -84,6 +97,7 @@ class FLExperiment:
 
     @staticmethod
     def _pack_the_workspace():
+        """PAcking the archive."""
         from shutil import make_archive, copytree, ignore_patterns, rmtree
         from os import getcwd, makedirs
         from os.path import basename
@@ -106,6 +120,7 @@ class FLExperiment:
         rmtree(tmpDir)
 
     def _get_initial_tensor_dict(self, model_provider):
+        """Extracts initial weights from the model."""
         self.task_runner_stub = self.plan.get_core_task_runner(model_provider=model_provider)
         tensor_dict, _ = split_tensor_dict_for_holdouts(
             self.logger,
@@ -119,6 +134,7 @@ class FLExperiment:
                       delta_updates=False, opt_treatment='RESET',
                       model_interface_file='model_obj.pkl', tasks_interface_file='tasks_obj.pkl',
                       dataloader_interface_file='loader_obj.pkl'):
+        """Fills plan.yaml file using provided setting."""
         # Load the default plan
         with resources.path('openfl.interface.interactive_api', 'plan.yaml') as plan_path:
             plan = Plan.Parse(Path(plan_path), resolve=False)
@@ -183,6 +199,7 @@ class FLExperiment:
         os.makedirs('./save', exist_ok=True)
 
     def _serialize_interface_objects(self, model_provider, task_keeper, data_loader):
+        """Saves python objects to be restored on collaborators."""
         serializer = self.plan.Build(
             self.plan.config['api_layer']['required_plugin_components']['serializer_plugin'], {})
         framework_adapter = Plan.Build(model_provider.framework_plugin, {})
