@@ -97,7 +97,7 @@ def parse_args():
     parser.add_argument('--dataset_multiplier', metavar='M', type=int, nargs='?',
                         help='dataset_multiplier', default=1)
     parser.add_argument('--rounds_to_train', metavar='R', type=int, nargs='?',
-                        help='rounds_to_train', default=3)
+                        help='rounds_to_train', default=5)
     parser.add_argument('--collaborators_amount', metavar='C', type=int, nargs='?',
                         help='collaborators_amount', default=2)
     parser.add_argument('--is_multi', const=True, nargs='?',
@@ -157,5 +157,5 @@ if __name__ == '__main__':
 
     final_fl_model = fx.run_experiment(collaborators, {
         'aggregator.settings.rounds_to_train': args.rounds_to_train,
-    }, is_multi=args.is_multi, max_workers=args.max_workers, mode='p=c')
+    }, is_multi=args.is_multi, max_workers=args.max_workers, mode=args.mode)
     final_fl_model.save_native('final_pytorch_model.h5')

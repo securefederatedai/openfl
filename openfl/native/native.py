@@ -204,6 +204,7 @@ def _run_multiprocess_experiment(plan, collaborator_dict: dict, rounds_to_train:
     from concurrent.futures import ProcessPoolExecutor
     from multiprocessing import set_start_method
     from multiprocessing.managers import BaseManager
+
     try:
         set_start_method('spawn')
     except RuntimeError:
@@ -255,8 +256,7 @@ def _run_proc_eq_col_x_round(executor, plan, collaborator_dict, aggr, rounds_to_
                           [plan] * col_num,
                           (c for c in plan.authorized_cols),
                           (collaborator_dict[c] for c in plan.authorized_cols),
-                          [aggr] * col_num,
-                          [rounds_to_train] * col_num))
+                          [aggr] * col_num))
 
 
 def _run_sync_experiment(plan, collaborator_dict, rounds_to_train):
@@ -269,10 +269,9 @@ def _run_sync_experiment(plan, collaborator_dict, rounds_to_train):
 
     for round_num in range(rounds_to_train):
         for col in plan.authorized_cols:
-
             collaborator = collaborators[col]
-
             collaborator.run_simulation()
+
     return aggr.get_last_tensor_dict()
 
 

@@ -127,6 +127,6 @@ if __name__ == '__main__':
 
     final_fl_model = fx.run_experiment(collaborators, {
         'aggregator.settings.rounds_to_train': args.rounds_to_train,
-    }, is_multi=args.is_multi, max_workers=args.max_workers, mode='p=c')
+    }, is_multi=args.is_multi, max_workers=args.max_workers, mode=args.mode)
     final_fl_model.save_native('final_pytorch_model')
     print('FINISH')
