@@ -9,7 +9,7 @@ import functools
 from collections import defaultdict
 from openfl.federated import Plan
 from pathlib import Path
-from importlib import resources
+from openfl.interface.cli_helper import WORKSPACE
 
 from openfl.utilities import split_tensor_dict_for_holdouts
 
@@ -56,7 +56,7 @@ class FLExperiment:
         # Save serialized python objects to disc
         self._serialize_interface_objects(model_provider, task_keeper, data_loader)
         # Save the prepared plan
-        Plan.Dump(Path('./plan/plan.yaml'), self.plan.config, freeze=False)
+        Plan.Dump(Path(f'./plan/{self.plan.name}'), self.plan.config, freeze=False)
 
         # PACK the WORKSPACE!
         # Prepare requirements file to restore python env
@@ -137,9 +137,14 @@ class FLExperiment:
                       model_interface_file='model_obj.pkl', tasks_interface_file='tasks_obj.pkl',
                       dataloader_interface_file='loader_obj.pkl'):
         """Fill plan.yaml file using provided setting."""
+        # Create a folder to store plans
+        os.makedirs('./plan', exist_ok=True)
+        os.makedirs('./save', exist_ok=True)
         # Load the default plan
-        with resources.path('openfl.interface.interactive_api', 'plan.yaml') as plan_path:
-            plan = Plan.Parse(Path(plan_path), resolve=False)
+        base_plan_path = WORKSPACE / 'workspace/plan/plans/default/base_plan_interactive_api.yaml'
+        plan = Plan.Parse(base_plan_path, resolve=False)
+        # Change plan name to default one
+        plan.name = 'plan.yaml'
 
         plan.authorized_cols = list(self.federation.col_data_paths.keys())
         # Network part of the plan
@@ -197,8 +202,6 @@ class FLExperiment:
                 if (type(plan.config['tasks'][entry]) is dict)
                 and ('function' in plan.config['tasks'][entry])]
         self.plan = deepcopy(plan)
-        os.makedirs('./plan', exist_ok=True)
-        os.makedirs('./save', exist_ok=True)
 
     def _serialize_interface_objects(self, model_provider, task_keeper, data_loader):
         """Save python objects to be restored on collaborators."""
@@ -286,6 +289,8 @@ class TaskInterface:
         """
         Register tasks settings.
 
+        Warning! We do not actually need to register additional kwargs,
+        we ust serialize them.
         This one is a decorator because we need task name and
         to be consistent with the main registering method
         """
