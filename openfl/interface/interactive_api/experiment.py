@@ -120,7 +120,7 @@ class FLExperiment:
         rmtree(tmpDir)
 
     def _get_initial_tensor_dict(self, model_provider):
-        """Extracts initial weights from the model."""
+        """Extract initial weights from the model."""
         self.task_runner_stub = self.plan.get_core_task_runner(model_provider=model_provider)
         tensor_dict, _ = split_tensor_dict_for_holdouts(
             self.logger,
@@ -134,7 +134,7 @@ class FLExperiment:
                       delta_updates=False, opt_treatment='RESET',
                       model_interface_file='model_obj.pkl', tasks_interface_file='tasks_obj.pkl',
                       dataloader_interface_file='loader_obj.pkl'):
-        """Fills plan.yaml file using provided setting."""
+        """Fill plan.yaml file using provided setting."""
         # Load the default plan
         with resources.path('openfl.interface.interactive_api', 'plan.yaml') as plan_path:
             plan = Plan.Parse(Path(plan_path), resolve=False)
@@ -199,7 +199,7 @@ class FLExperiment:
         os.makedirs('./save', exist_ok=True)
 
     def _serialize_interface_objects(self, model_provider, task_keeper, data_loader):
-        """Saves python objects to be restored on collaborators."""
+        """Save python objects to be restored on collaborators."""
         serializer = self.plan.Build(
             self.plan.config['api_layer']['required_plugin_components']['serializer_plugin'], {})
         framework_adapter = Plan.Build(model_provider.framework_plugin, {})
@@ -216,12 +216,19 @@ class FLExperiment:
 
 class TaskInterface:
     """
+    Task keeper class.
+
     Task should accept the following entities that exist on collaborator nodes:
     1. model - will be rebuilt with relevant weights for every task by `TaskRunner`
     2. data_loader - data loader equipped with `repository adapter` that provides local data
+    3. device - a device to be used on collaborator machines
+    4. optimizer (optional)
+
+    Task returns a dictionary {metric name: metric value for this task}
     """
+
     def __init__(self) -> None:
-        """Initializes task registry."""
+        """Initialize task registry."""
         # Mapping 'task name' -> callable
         self.task_registry = dict()
         # Mapping 'task name' -> arguments
@@ -231,7 +238,7 @@ class TaskInterface:
 
     def register_fl_task(self, model, data_loader, device, optimizer=None):
         """
-        This method is for registering FL tasks.
+        Register FL tasks.
 
         The task contract should be set up by providing variable names:
         [model, data_loader, device] - necessarily
@@ -253,7 +260,6 @@ class TaskInterface:
             ...
         `
         """
-
         # The highest level wrapper for allowing arguments for the decorator
         def decorator_with_args(training_method):
             # We could pass hooks to the decorator
@@ -276,7 +282,8 @@ class TaskInterface:
 
     def add_kwargs(self, **task_kwargs):
         """
-        The method for registering tasks settings.
+        Register tasks settings.
+
         This one is a decorator because we need task name and
         to be consistent with the main registering method
         """
@@ -292,44 +299,54 @@ class TaskInterface:
 
 class ModelInterface:
     """
-    Registers model graph (s) and optimizer (s)
-        to be serialized and sent to collaborator nodes
+    Registers model graph and optimizer.
+
+    To be serialized and sent to collaborator nodes
 
     This is the place to determine correct framework adapter
-        as they are needed to fill the model graph with trained tensors
+        as they are needed to fill the model graph with trained tensors.
+
+    There is no support for several models / optimizers yet.
     """
 
     def __init__(self, model, optimizer, framework_plugin) -> None:
         """
+        Initialize model keeper.
+
+        Tensors in provided graphs will be used for
+        initialization of the global model.
+
         Arguments:
         model: Union[tuple, graph]
         optimizer: Union[tuple, optimizer]
-
-        Caution!
-        Tensors in provided graphs will be used for
-        initialization of the global model.
         """
         self.model = model
         self.optimizer = optimizer
         self.framework_plugin = framework_plugin
 
     def provide_model(self):
+        """Retrieve model."""
         return self.model
 
     def provide_optimizer(self):
+        """Retrieve optimizer."""
         return self.optimizer
 
 
 class DataInterface:
     """
-    The class to define dataloaders
+    The class to define dataloaders.
+
     In the future users will have to adapt `unified data interface hook`
         in their dataloaders.
     For now, we can provide `data_path` variable on every collaborator node
         at initialization time for dataloader customization
     """
+
     def _delayed_init(self, data_path):
         """
+        Describe per-collaborator procedures or sharding.
+
         This method will be called during a collaborator initialization.
         data_path variable will be set according to data.yaml.
         """
