@@ -8,12 +8,14 @@ aggregator :
     init_state_path : save/keras_cnn_mnist_init.pbuf
     best_state_path : save/keras_cnn_mnist_best.pbuf
     last_state_path : save/keras_cnn_mnist_last.pbuf
+    db_store_rounds: 2
     rounds_to_train : 10
 
 collaborator :
   defaults : plan/defaults/collaborator.yaml
   template : openfl.component.Collaborator
   settings :
+    db_store_rounds: 2
     delta_updates    : true
     opt_treatment    : RESET
 
@@ -40,7 +42,6 @@ tasks :
 
 compression_pipeline :
   defaults : plan/defaults/compression_pipeline.yaml
-  template : openfl.pipelines.SKCPipeline
+  template : openfl.pipelines.KCPipeline
   settings :
-    p_sparsity : 0.01 
     n_clusters : 6

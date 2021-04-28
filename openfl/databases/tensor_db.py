@@ -3,7 +3,6 @@
 
 """TensorDB Module."""
 
-from logging import getLogger
 import pandas as pd
 import numpy as np
 
@@ -27,7 +26,6 @@ class TensorDB:
         self.tensor_db = pd.DataFrame([], columns=[
             'tensor_name', 'origin', 'round', 'report', 'tags', 'nparray'
         ])
-        self.logger = getLogger(__name__)
         self.mutex = Lock()
 
     def __repr__(self):
@@ -48,11 +46,9 @@ class TensorDB:
             # Getting a negative argument calls off cleaning
             return
         current_round = int(self.tensor_db['round'].max())
-        self.logger.debug(f'TensorDB Length before cleanup : {len(self.tensor_db)}')
         self.tensor_db = self.tensor_db[
             self.tensor_db['round'] > current_round - remove_older_than
         ].reset_index(drop=True)
-        self.logger.debug(f'TensorDB Length after cleanup : {len(self.tensor_db)}')
 
     def cache_tensor(self, tensor_key_dict):
         """Insert tensor into TensorDB (dataframe).

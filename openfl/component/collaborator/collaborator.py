@@ -11,7 +11,6 @@ from openfl.protocols import utils
 from openfl.utilities import TensorKey
 from openfl.pipelines import TensorCodec, NoCompressionPipeline
 from openfl.databases import TensorDB
-from hashlib import sha384
 
 
 class OptTreatment(Enum):
@@ -257,9 +256,6 @@ class Collaborator:
             tensor_dependencies = self.tensor_codec.find_dependencies(
                 tensor_key, self.delta_updates
             )
-            # REMOVE
-            self.logger.info('tensor_dependencies = {}'.format(
-            tensor_dependencies))
             if len(tensor_dependencies) > 0:
                 # Resolve dependencies
                 # tensor_dependencies[0] corresponds to the prior version
@@ -274,19 +270,12 @@ class Collaborator:
                         self.get_aggregated_tensor_from_aggregator(
                             tensor_dependencies[1]
                         )
-                    self.logger.info(f'Uncompressed delta = {uncompressed_delta}')
                     new_model_tk, nparray = self.tensor_codec.apply_delta(
                         tensor_dependencies[1],
                         uncompressed_delta,
                         prior_model_layer,
                         creates_model=True,
                     )
-                    # REMOVE
-                    #self.logger.info(f'Applied delta {tensor_dependencies[1]} to base {tensor_dependencies[0]}')
-                    self.logger.info(f'Caching tensor {new_model_tk}')
-                    sha384_hash = sha384()
-                    sha384_hash.update(nparray.data.tobytes())
-                    self.logger.info(f'Model layer {new_model_tk} hash : {sha384_hash.hexdigest()}')
                     self.tensor_db.cache_tensor({new_model_tk: nparray})
                 else:
                     self.logger.info(f'Count not find previous model layer. Fetching latest layer from aggregator')
@@ -344,8 +333,6 @@ class Collaborator:
 
         # cache this tensor
         self.tensor_db.cache_tensor({tensor_key: nparray})
-        # self.logger.info('Printing updated TensorDB: {}'.format(
-        # self.tensor_db))
 
         return nparray
 
@@ -411,23 +398,8 @@ class Collaborator:
                         nparray,
                         model_nparray
                     )
-                # REMOVE
-                self.logger.info(f'Generated delta : {delta_tensor_key}')
-                #self.logger.info(f'Checking delta calculation : {nparray - model_nparray}')
-                self.logger.info(f'delta_nparray : {delta_nparray}')
                 delta_comp_tensor_key, delta_comp_nparray, metadata = \
                     self.tensor_codec.compress(delta_tensor_key, delta_nparray)
-                # REMOVE
-                #dec_tk, decompressed_nparray = self.tensor_codec.decompress(
-                #    delta_comp_tensor_key,
-                #    data=delta_comp_nparray,
-                #    transformer_metadata=metadata,
-                #    require_lossless=False
-                #)
-                #self.logger.info(f'Decompressed delta : {dec_tk}')
-                ##self.logger.info(f'Checking delta calculation : {nparray - model_nparray}')
-                #self.logger.info(f'decompressed delta_nparray : {decompressed_nparray}')
-
 
                 named_tensor = utils.construct_named_tensor(
                     delta_comp_tensor_key,
@@ -479,8 +451,6 @@ class Collaborator:
                     require_lossless=True
                 )
         elif 'lossy_compressed' in tags:
-            # REMOVE 
-            #self.logger.info(f'Decompressing lossy {tensor_key}')
             decompressed_tensor_key, decompressed_nparray = \
                 self.tensor_codec.decompress(
                     tensor_key,

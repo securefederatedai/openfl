@@ -11,7 +11,6 @@ from openfl.databases import TensorDB
 
 from openfl.protocols import utils
 from openfl.protocols import ModelProto
-from hashlib import sha384
 
 
 class Aggregator:
@@ -121,8 +120,6 @@ class Aggregator:
             TensorKey(k, self.uuid, self.round_number, False, ('model',)):
                 v for k, v in tensor_dict.items()
         }
-        # REMOVE
-        #self.logger.info(f'Initial weights : {tensor_key_dict.values()}')
         # all initial model tensors are loaded here
         self.tensor_db.cache_tensor(tensor_key_dict)
         self.logger.debug('This is the initial tensor_db:'
@@ -302,7 +299,6 @@ class Aggregator:
             named_tensor : protobuf NamedTensor
                 the tensor requested by the collaborator
         """
-        # REMOVE (or change to debug)
         self.logger.debug(f'Retrieving aggregated tensor {tensor_name},{round_number},{tags} \
                     for collaborator {collaborator_name}')
 
@@ -310,8 +306,6 @@ class Aggregator:
             compress_lossless = True
         else:
             compress_lossless = False
-        # REMOVE
-        #self.logger.info(f'Requesting lossless tensor = {compress_lossless}')
 
         # TODO the TensorDB doesn't support compressed data yet.
         #  The returned tensor will
@@ -380,14 +374,9 @@ class Aggregator:
                 "aggregated model is present")
             delta_tensor_key, delta_nparray = self.tensor_codec.generate_delta(
                 tensor_key, nparray, model_nparray)
-            # REMOVE
-            #self.logger.info(f'Delta tensor key : {delta_tensor_key}')
-            #self.logger.info(f'Checking math : {nparray - model_nparray}')
-            #self.logger.info(f'Delta nparray : {delta_nparray}')
             delta_comp_tensor_key, delta_comp_nparray, metadata = \
                 self.tensor_codec.compress(delta_tensor_key, delta_nparray,
                                            lossless=compress_lossless)
-            #self.logger.info(f'Constructed delta tensorkey = {delta_comp_tensor_key}')
             named_tensor = utils.construct_named_tensor(delta_comp_tensor_key,
                                                         delta_comp_nparray, metadata,
                                                         lossless=compress_lossless)
@@ -572,16 +561,10 @@ class Aggregator:
             if base_model_nparray is None:
                 raise ValueError('Base model {} not present in'
                                  ' TensorDB'.format(base_model_tensor_key))
-            # REMOVE
-            self.logger.info(f'Applying delta for tensorkey {decompressed_tensor_key}')
-            self.logger.info(f'Delta tensorkey: {decompressed_nparray}')
             final_tensor_key, final_nparray = self.tensor_codec.apply_delta(
                 decompressed_tensor_key,
                 decompressed_nparray, base_model_nparray
             )
-            #self.logger.info(f'After applying delta : {final_nparray}')
-            #REMOVE
-            #self.logger.info(f'Final tensorkey = {final_tensor_key}')
         else:
             final_tensor_key = decompressed_tensor_key
             final_nparray = decompressed_nparray
@@ -635,9 +618,6 @@ class Aggregator:
             report,
             ('aggregated',)
         )
-        # REMOVE
-        #self.logger.info(f'Entered prepare train sequence')
-        #self.logger.info(f'Caching aggregated tensor {agg_tag_tk}')
         self.tensor_db.cache_tensor({agg_tag_tk: agg_results})
 
         # Create delta and save it in TensorDB
@@ -648,8 +628,6 @@ class Aggregator:
             report,
             ('model',)
         )
-        # REMOVE
-        #self.logger.info(f'Getting {base_model_tk} from TensorDB')
         base_model_nparray = self.tensor_db.get_tensor_from_cache(base_model_tk)
         if base_model_nparray is not None:
             delta_tk, delta_nparray = self.tensor_codec.generate_delta(
@@ -657,8 +635,6 @@ class Aggregator:
                 agg_results,
                 base_model_nparray
             )
-            #self.logger.info(f'Caching delta tensor {delta_tk}')
-            #self.tensor_db.cache_tensor({delta_tk: delta_nparray})
         else:
             # This condition is possible for base model
             # optimizer states (i.e. Adam/iter:0, SGD, etc.)
@@ -683,10 +659,6 @@ class Aggregator:
             metadata
         )
 
-        # REMOVE
-        if 'conv2d' in decompressed_delta_tk[0] and not 'Adam' in decompressed_delta_tk[0]:
-            self.logger.info(f'Decompressed delta tensor {decompressed_delta_tk} = {decompressed_delta_nparray}')
-        #self.logger.info(f'Caching decompressed delta tensor {decompressed_delta_tk}')
         self.tensor_db.cache_tensor({decompressed_delta_tk: decompressed_delta_nparray})
 
         # Apply delta (unless delta couldn't be created)
@@ -697,8 +669,6 @@ class Aggregator:
                 decompressed_delta_nparray,
                 base_model_nparray
             )
-            # REMOVE
-            #self.logger.info(f'Final model weights : {new_model_nparray}')
         else:
             new_model_tk, new_model_nparray = decompressed_delta_tk, decompressed_delta_nparray
 
@@ -716,15 +686,7 @@ class Aggregator:
         )
 
         # Finally, cache the updated model tensor
-        # REMOVE
-        #self.logger.info(f'Caching model tensor {final_model_tk}')
-        sha384_hash = sha384()
-        sha384_hash.update(new_model_nparray.data.tobytes())
-        self.logger.info(f'Model layer {final_model_tk} hash : {sha384_hash.hexdigest()}')
         self.tensor_db.cache_tensor({final_model_tk: new_model_nparray})
-        # self.logger.debug('TensorDB contents after
-        # training round {}:
-        # {}'.format(self.round_number,self.tensor_db))
 
     def _compute_validation_related_task_metrics(self, task_name):
         """
@@ -798,8 +760,6 @@ class Aggregator:
                         self.best_model_score = agg_results
                         self._save_model(round_number, self.best_state_path)
             if 'trained' in tags:
-                # REMOVE
-                #self.logger.info(f'Calling prepare trained for {tensor_name}, {origin}, {round_number}, {tags}')
                 self._prepare_trained(tensor_name, origin, round_number, report, agg_results)
 
     def _end_of_round_check(self):
