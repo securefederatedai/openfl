@@ -125,8 +125,9 @@ It starts a local aggregator that will wait for collaborators to connect
 
 ### Starting collaborators
 The process of starting collaborators has not changed.
-User must transfer the workspace archive to a remote node and run
+User must transfer the workspace archive to a remote node and type in console:
 `fx workspace import --archive ws.zip`
+Please note that aggregator and all the collaborator nodes should have the same python interpreter version as the machine used for defining the experiment.
 then cd to the workspace and run
 `fx collaborator start -d data.yaml -n one`
 For more details please refer to TaskRunner API section.
