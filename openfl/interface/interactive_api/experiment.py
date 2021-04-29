@@ -350,6 +350,11 @@ class DataInterface:
         at initialization time for dataloader customization
     """
 
+    def __init__(self, UserDatasetClass, **kwargs):
+        """Initialize DataLoader."""
+        self.UserDatasetClass = UserDatasetClass
+        self.kwargs = kwargs
+
     def _delayed_init(self, data_path):
         """
         Describe per-collaborator procedures or sharding.
