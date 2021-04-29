@@ -359,13 +359,13 @@ class Aggregator:
             # Should get the pretrained model to create the delta. If training
             # has happened, Model should already be stored in the TensorDB
             model_tk = TensorKey(tensor_name,
-                          origin,
-                          round_number - 1,
-                          report,
-                          ('model',))
+                                 origin,
+                                 round_number - 1,
+                                 report,
+                                 ('model',))
 
             model_nparray = self.tensor_db.get_tensor_from_cache(model_tk)
-                
+
             assert (model_nparray is not None), (
                 "The original model layer should be present if the latest "
                 "aggregated model is present")

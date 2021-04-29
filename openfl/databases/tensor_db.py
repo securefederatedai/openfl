@@ -11,7 +11,6 @@ from threading import Lock
 from openfl.utilities import TensorKey
 
 
-
 class TensorDB:
     """
     The TensorDB stores a tensor key and the data that it corresponds to.

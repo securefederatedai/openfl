@@ -215,7 +215,7 @@ class TensorCodec:
                 tensor_name, origin, round_number, report, new_tags)
         else:
             new_model_tensor_key = TensorKey(
-              tensor_name, origin, round_number, report, ('model',))
+                tensor_name, origin, round_number, report, ('model',))
 
         return new_model_tensor_key, base_model_nparray + delta
 

@@ -29,7 +29,7 @@ class SparsityTransformer(Transformer):
             data: an numpy array from the model tensor_dict.
 
         Returns:
-            sparse_data: a flattened, sparse representation of the input tensor 
+            sparse_data: a flattened, sparse representation of the input tensor
             metadata: dictionary to store a list of meta information.
         """
         metadata = {'int_list': list(data.shape)}
