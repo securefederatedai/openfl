@@ -69,11 +69,11 @@ def get_plan(return_complete=False):
     """
     getLogger().setLevel('CRITICAL')
 
-    plan_config = setup_plan().config
+    plan = setup_plan(save=False)
 
     getLogger().setLevel('INFO')
 
-    flattened_config = flatten_preserve_lists(plan_config, '.')[0]
+    flattened_config = flatten_preserve_lists(plan.config, '.')[0]
     if not return_complete:
         keys_to_remove = [
             k for k, v in flattened_config.items()
@@ -83,7 +83,7 @@ def get_plan(return_complete=False):
     for k in keys_to_remove:
         del flattened_config[k]
 
-    return flattened_config
+    return plan, flattened_config
 
 
 def update_plan(override_config):
@@ -98,8 +98,7 @@ def update_plan(override_config):
     Returns:
         None
     """
-    plan_path = 'plan/plan.yaml'
-    flat_plan_config = get_plan(return_complete=True)
+    plan, flat_plan_config = get_plan(return_complete=True)
     for k, v in override_config.items():
         if k in flat_plan_config:
             logger.info(f'Updating {k} to {v}... ')
@@ -107,8 +106,8 @@ def update_plan(override_config):
             # TODO: We probably need to validate the new key somehow
             logger.warn(f'Did not find {k} in config. Make sure it should exist. Creating...')
         flat_plan_config[k] = v
-    plan_config = unflatten(flat_plan_config, '.')
-    Plan.Dump(Path(plan_path), plan_config)
+    plan.config = unflatten(flat_plan_config, '.')
+    return plan
 
 
 def unflatten(config, separator='.'):
@@ -237,18 +236,7 @@ def run_experiment(collaborator_dict, override_config={}):
     path.insert(0, str(work))
 
     # Update the plan if necessary
-    if len(override_config) > 0:
-        update_plan(override_config)
-
-    # TODO: Fix this implementation. The full plan parsing is reused here,
-    # but the model and data will be overwritten based on user specifications
-    plan_config = 'plan/plan.yaml'
-    cols_config = 'plan/cols.yaml'
-    data_config = 'plan/data.yaml'
-
-    plan = Plan.Parse(plan_config_path=Path(plan_config),
-                      cols_config_path=Path(cols_config),
-                      data_config_path=Path(data_config))
+    plan = update_plan(override_config)
 
     # Overwrite plan values
     plan.authorized_cols = list(collaborator_dict)

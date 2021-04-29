@@ -7,19 +7,18 @@ from .interface import AggregationFunctionInterface
 import numpy as np
 
 
-def median(tensors):
-    """Compute median."""
-    return np.median(tensors, axis=0)
-
-
 class Median(AggregationFunctionInterface):
     """Median aggregation."""
 
-    def __call__(self, tensors: np.ndarray, **kwargs) -> np.ndarray:
+    def __call__(self, tensors, *_):
         """Aggregate tensors.
 
         Args:
             tensors: array of `np.ndarray`s of tensors to aggregate.
-            **kwargs: additional context passed to the function
+            weights: array of floats representing data partition (sum up to 1)
+            db_iterator: iterator over history of aggregated versions of this tensor
+            tensor_name: name of the tensor
+            fl_round: round number
+            tags: tuple of tags for this tensor
         """
-        return median(tensors)
+        return np.median(tensors, axis=0)

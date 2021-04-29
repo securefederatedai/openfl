@@ -185,21 +185,33 @@ class TensorDB:
             # * collaborator_weight_dict[col]
 
         concat_nparray = np.array(list(agg_tensor_dict.values()))
-        previous_tensor_value = self.tensor_db[
-            (self.tensor_db['tensor_name'] == tensor_name)
-            & (self.tensor_db['origin'] == origin)
-            & (self.tensor_db['round'] == fl_round - 1)
-            & (self.tensor_db['report'] == report)
-            & (self.tensor_db['tags'] == tags)]['nparray']
-        if previous_tensor_value.empty:
-            previous_tensor_value = None
-        else:
-            previous_tensor_value = np.array(previous_tensor_value)
 
         weights = np.array(list(collaborator_weight_dict.values()))
+        db_iterator = self._iterate(tensor_name=tensor_name, tags=('aggregated',))
         agg_nparray = aggregation_function(concat_nparray,
-                                           weights=weights,
-                                           previous_tensor_value=previous_tensor_value)
+                                           weights,
+                                           db_iterator,
+                                           tensor_name,
+                                           fl_round,
+                                           tags)
         self.cache_tensor({tensor_key: agg_nparray})
 
         return np.array(agg_nparray)
+
+    def _iterate(self, tensor_name=None, tags=None, order_by='round', ascending=False):
+        where = True
+        columns = []
+        if tensor_name:
+            where &= (self.tensor_db['tensor_name'] == tensor_name)
+        else:
+            columns += ['tensor_name']
+        if tags:
+            where &= (self.tensor_db['tags'] == tags)
+        else:
+            columns += ['tags']
+        columns += ['round', 'nparray']
+
+        for _, row in self.tensor_db[where][columns]\
+                          .sort_values(by=order_by, ascending=ascending)\
+                          .iterrows():
+            yield row
