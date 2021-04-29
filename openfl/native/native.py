@@ -24,7 +24,7 @@ logger = getLogger(__name__)
 WORKSPACE_PREFIX = os.path.join(os.path.expanduser('~'), '.local', 'workspace')
 
 
-def setup_plan(save=True):
+def setup_plan(log_level='CRITICAL'):
     """
     Dump the plan with all defaults + overrides set.
 
@@ -38,42 +38,19 @@ def setup_plan(save=True):
     plan_config = 'plan/plan.yaml'
     cols_config = 'plan/cols.yaml'
     data_config = 'plan/data.yaml'
+
+    getLogger().setLevel(log_level)
     plan = Plan.Parse(plan_config_path=Path(plan_config),
                       cols_config_path=Path(cols_config),
                       data_config_path=Path(data_config))
-    if save:
-        Plan.Dump(Path(plan_config), plan.config)
+    getLogger().setLevel('INFO')
 
     return plan
 
 
-def get_plan(return_complete=False):
-    """
-    Return the flattened dictionary associated with the plan.
-
-    To read the output in a human readable format, we recommend interpreting it
-     as follows:
-
-    ```
-    print(json.dumps(fx.get_plan(), indent=4, sort_keys=True))
-    ```
-
-    Args:
-        return_complete : bool (default=False)
-            By default will not print the default file locations for each of
-            the templates
-
-    Returns:
-        plan : dict
-            flattened dictionary of the current plan
-    """
-    getLogger().setLevel('CRITICAL')
-
-    plan = setup_plan(save=False)
-
-    getLogger().setLevel('INFO')
-
-    flattened_config = flatten_preserve_lists(plan.config, '.')[0]
+def flatten(config, return_complete=False):
+    """Flatten nested config."""
+    flattened_config = flatten_preserve_lists(config, '.')[0]
     if not return_complete:
         keys_to_remove = [
             k for k, v in flattened_config.items()
@@ -83,7 +60,7 @@ def get_plan(return_complete=False):
     for k in keys_to_remove:
         del flattened_config[k]
 
-    return plan, flattened_config
+    return flattened_config
 
 
 def update_plan(override_config):
@@ -98,7 +75,8 @@ def update_plan(override_config):
     Returns:
         None
     """
-    plan, flat_plan_config = get_plan(return_complete=True)
+    plan = setup_plan()
+    flat_plan_config = flatten(plan.config, return_complete=True)
     for k, v in override_config.items():
         if k in flat_plan_config:
             logger.info(f'Updating {k} to {v}... ')
@@ -290,3 +268,11 @@ def run_experiment(collaborator_dict, override_config={}):
     model.rebuild_model(
         rounds_to_train - 1, aggregator.last_tensor_dict, validation=True)
     return model
+
+
+def get_plan(indent=4, sort_keys=True):
+    """Get string representation of current Plan."""
+    import json
+    plan = setup_plan()
+    flat_plan_config = flatten(plan.config)
+    return json.dumps(flat_plan_config, indent=indent, sort_keys=sort_keys)
