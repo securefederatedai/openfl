@@ -6,7 +6,7 @@ import dill
 from .serializer_interface import Serializer
 
 
-class Dill_Serializer(Serializer):
+class DillSerializer(Serializer):
     """Serializer API plugin."""
 
     def __init__(self) -> None:

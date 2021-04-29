@@ -6,7 +6,7 @@ import cloudpickle
 from .serializer_interface import Serializer
 
 
-class Cloudpickle_Serializer(Serializer):
+class CloudpickleSerializer(Serializer):
     """Serializer API plugin."""
 
     def __init__(self) -> None:

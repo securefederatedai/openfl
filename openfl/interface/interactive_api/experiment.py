@@ -28,7 +28,7 @@ class FLExperiment:
 
         if serializer_plugin is None:
             self.serializer_plugin = \
-                'openfl.plugins.interface_serializer.cloudpickle_serializer.Cloudpickle_Serializer'
+                'openfl.plugins.interface_serializer.cloudpickle_serializer.CloudpickleSerializer'
         else:
             self.serializer_plugin = serializer_plugin
 

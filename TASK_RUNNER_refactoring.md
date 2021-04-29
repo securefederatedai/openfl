@@ -123,7 +123,7 @@ As all previous steps done, the experiment is ready to start
 `FLExperiment.start_experimnent` method requires model_interface object with initialized weights.
 It starts a local aggregator that will wait for collaborators to connect
 
-###
+### Starting collaborators
 The process of starting collaborators has not changed.
 User must transfer the workspace archive to a remote node and run
 `fx workspace import --archive ws.zip`
