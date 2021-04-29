@@ -4,6 +4,7 @@
 """Python low-level API module."""
 import os
 from copy import deepcopy
+import logging
 from logging import getLogger
 import functools
 from collections import defaultdict
@@ -84,6 +85,7 @@ class FLExperiment:
             certificate=self.federation.agg_certificate,
             private_key=self.federation.agg_private_key)
 
+        logging.basicConfig(level=logging.INFO)
         self.server.serve()
         # return server
 
@@ -94,8 +96,10 @@ class FLExperiment:
         requirements_generator = freeze.freeze()
         with open('./requirements.txt', 'w') as f:
             for package in requirements_generator:
-                if 'openfl' not in package:
-                    f.write(package + '\n')
+                if '==' not in package:
+                    # We do not export dependencies without version
+                    continue
+                f.write(package + '\n')
 
     @staticmethod
     def _pack_the_workspace():
@@ -113,7 +117,7 @@ class FLExperiment:
 
         ignore = ignore_patterns(
             '__pycache__', 'data', 'cert', tmpDir, '*.crt', '*.key',
-            '*.csr', '*.srl', '*.pem', '*.pbuf')
+            '*.csr', '*.srl', '*.pem', '*.pbuf', '*zip')
 
         copytree('./', tmpDir + '/workspace', ignore=ignore)
 
