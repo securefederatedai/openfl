@@ -11,10 +11,9 @@ import tqdm
 
 from copy import deepcopy
 
-from openfl.utilities import TensorKey, split_tensor_dict_for_holdouts
+from openfl.utilities import TensorKey, split_tensor_dict_for_holdouts, Metric
 
 from .runner import TaskRunner
-from .metric import Metric
 
 
 class PyTorchTaskRunner(nn.Module, TaskRunner):

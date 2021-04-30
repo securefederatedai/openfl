@@ -11,8 +11,8 @@ import torch.nn.functional as F
 from torch.optim import Optimizer
 from torch.optim.optimizer import required
 
-from openfl.federated import PyTorchTaskRunner, Metric
-from openfl.utilities import TensorKey
+from openfl.federated import PyTorchTaskRunner
+from openfl.utilities import TensorKey, Metric
 
 
 def cross_entropy(output, target):

@@ -5,7 +5,7 @@
 
 import pkgutil
 from .plan import Plan  # NOQA
-from .task import TaskRunner, Metric  # NOQA
+from .task import TaskRunner  # NOQA
 from .data import DataLoader  # NOQA
 
 if pkgutil.find_loader('tensorflow'):
