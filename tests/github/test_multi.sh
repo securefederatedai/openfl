@@ -89,15 +89,15 @@ function save_result() {
 }
 
 
-FrameworkArray=("tf" "torch")
-IsGPUArray=("0" "1")
-ColNumArray=("1" "2" "5" "10")
-IsMultiArray=("0" "1")
+FrameworkArray=("torch")
+IsGPUArray=("1" "0")
+ColNumArray=("10" "5" "2" "1" )
+IsMultiArray=("1" "0")
 ModeArray=("p=c" "p=c*r")
-RoundsToTrain=("5")
-dataset_mult="20"
+RoundsToTrain=("3")
+dataset_mult="15"
 Retry=1
-total=129
+total=46
 c=0
 
 for framework in "${FrameworkArray[@]}"; do
@@ -117,23 +117,29 @@ for framework in "${FrameworkArray[@]}"; do
           ModeArray=("p=c" "p=c*r")
         fi
         for mode in "${ModeArray[@]}"; do
-          if [ "$framework" = "tf" ] || ([ "$framework" = "torch" ] && [ "$is_gpu" = "1" ]);
+          if [ "$is_multi" = "1" ];
           then
-            case "$col_num" in
-              "1" ) WorkerArray=("0");;
-              "2" ) WorkerArray=("0" "1");;
-              "5" ) WorkerArray=("0" "1" "2" "4");;
-              "10" ) WorkerArray=("0" "1" "2" "5" "9");;
-              *)  WorkerArray=("0");;
-            esac
+            if [ "$framework" = "torch" ] && [ "$is_gpu" = "0" ];
+            then
+
+              case "$col_num" in
+                "1" ) WorkerArray=("1");;
+                "2" ) WorkerArray=("1" "2");;
+                "5" ) WorkerArray=("1" "2");;
+                "10" ) WorkerArray=("1" "2");;
+                *)  WorkerArray=("1");;
+              esac
+            else
+              case "$col_num" in
+                "1" ) WorkerArray=("0");;
+                "2" ) WorkerArray=("0" "1");;
+                "5" ) WorkerArray=("0" "1" "2" "4");;
+                "10" ) WorkerArray=("0" "1" "2" "5" "9");;
+                *)  WorkerArray=("0");;
+              esac
+            fi
           else
-            case "$col_num" in
-              "1" ) WorkerArray=("1");;
-              "2" ) WorkerArray=("1" "2");;
-              "5" ) WorkerArray=("1" "2");;
-              "10" ) WorkerArray=("1" "2");;
-              *)  WorkerArray=("1");;
-            esac
+            WorkerArray=("0")
           fi
           for workers in "${WorkerArray[@]}"; do
             for rounds in "${RoundsToTrain[@]}"; do
