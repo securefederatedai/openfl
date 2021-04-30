@@ -41,7 +41,7 @@ To set up a federation, use Federation Interactive API.
     from openfl.interface.interactive_api.federation import Federation
 
 Federation API class should be initialized with the aggregator node FQDN and encryption settings. Someone may disable mTLS in trusted environments or provide paths to the certificate chain of CA, aggregator certificate and private key to enable mTLS.
-    .. code-block:: python
+.. code-block:: python
 
     federation = Federation(central_node_fqdn: str, disable_tls: bool, cert_chain: str, agg_certificate: str, agg_private_key: str)
 
@@ -54,17 +54,17 @@ Experiment API
 *Experiment* entity allows registering training related objects, FL tasks and settings.
 To set up an FL experiment someone should use the Experiment interactive API. 
 
-    .. code-block:: python
+.. code-block:: python
 
     from openfl.interface.interactive_api.experiment import FLExperiment
 
 *Experiment* is being initialized by taking federation as a parameter.
-    .. code-block:: python
+.. code-block:: python
 
     fl_experiment = FLExperiment(federation=federation)
 
 To start an experiment user must register *DataLoader*, *Federated Learning tasks* and *Model* with *Optimizer*. There are several supplementary interface classes for these purposes.
-    .. code-block:: python
+.. code-block:: python
 
     from openfl.interface.interactive_api.experiment import TaskInterface, DataInterface, ModelInterface
 
@@ -74,7 +74,7 @@ Registering model and optimizer
 First, user instantiate and initilize a model and optimizer in their favorite Deep Learning framework. Please, note that for now interactive API supports only *Keras* and *PyTorch* off-the-shelf.
 Initialized model and optimizer objects then should be passed to the :code:`ModelInterface` along with the path to correct Framework Adapter plugin inside OpenFL package. If desired DL framework is not covered by existing plugins, someone can implement the plugin's interface and point :code:`framework_plugin` to the implementation inside the workspace.
 
-    .. code-block:: python
+.. code-block:: python
 
     from openfl.interface.interactive_api.experiment import ModelInterface
     MI = ModelInterface(model=model_unet, optimizer=optimizer_adam, framework_plugin=framework_adapter)
@@ -96,7 +96,7 @@ Moreover FL tasks should return a dictionary object with metrics :code:`{metric 
 :code:`Task Interface` class is designed to register task and accompanying information.
 This class must be instantiated, then it's special methods may be used to register tasks.
 
-    .. code-block:: python
+.. code-block:: python
 
     TI = TaskInterface()
 
@@ -159,14 +159,14 @@ Starting collaborators
 The process of starting collaborators has not changed.
 User must transfer the workspace archive to a remote node and type in console:
 
-    .. code-block:: python
+.. code-block:: python
 
     fx workspace import --archive ws.zip
 
 Please, note that aggregator and all the collaborator nodes should have the same Python interpreter version as the machine used for defining the experiment.
 
 then cd to the workspace and run
-    .. code-block:: python
+.. code-block:: python
 
     fx collaborator start -d data.yaml -n one
 
