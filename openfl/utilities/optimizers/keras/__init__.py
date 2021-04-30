@@ -1,2 +1,4 @@
 """Keras optimizers package."""
-from .fedprox import FedProxOptimizer
+import pkgutil
+if pkgutil.find_loader('keras'):
+    from .fedprox import FedProxOptimizer # NOQA
