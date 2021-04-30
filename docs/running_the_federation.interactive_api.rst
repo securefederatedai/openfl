@@ -127,11 +127,8 @@ Registering Federated DataLoader
 It is initialized with User Dataset class object and all the keyword arguments can be used by dataloaders during training or validation.
 User must subclass :code:`DataInterface` and implements several methods.
 
-* :code:`_delayed_init(self, data_path)` is the most important method. It will be called during collaborator initialization procedure with relevant :code:`data_path` (one that corresponds to the collaborator name that user registered in federation).
-User Dataset class should be instantiated with local :code:`data_path` here. If dataset initalization procedure differs for some of the  collaborators, the initialization logic must be described here. Dataset sharding procedure for test runs should also be described in this method.
-User is free to save objects in class fields for later use.
-* :code:`get_train_loader(self, **kwargs)` will be called before training tasks execution. This method must return anything user expects to recieve in the training task with :code:`data_loader` contract argument.
-:code:`kwargs` dict holds the same information that was provided during :code:`DataInterface` initialization.
+* :code:`_delayed_init(self, data_path)` is the most important method. It will be called during collaborator initialization procedure with relevant :code:`data_path` (one that corresponds to the collaborator name that user registered in federation). User Dataset class should be instantiated with local :code:`data_path` here. If dataset initalization procedure differs for some of the  collaborators, the initialization logic must be described here. Dataset sharding procedure for test runs should also be described in this method. User is free to save objects in class fields for later use.
+* :code:`get_train_loader(self, **kwargs)` will be called before training tasks execution. This method must return anything user expects to recieve in the training task with :code:`data_loader` contract argument. :code:`kwargs` dict holds the same information that was provided during :code:`DataInterface` initialization.
 * :code:`get_valid_loader(self, **kwargs)` - see the point above only with validation data
 * :code:`get_train_data_size(self)` - return number of samples in local train dataset.
 * :code:`get_valid_data_size(self)` - return number of samples in local validation dataset. 
