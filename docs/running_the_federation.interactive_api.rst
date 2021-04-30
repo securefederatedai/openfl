@@ -35,7 +35,8 @@ Federation API
 Each federation is bound to some Machine Learning problem in a sense that all collaborators dataset shards should follow the same annotation format for all samples. Once you created a federation, it may be used in several subsequent experiments.
 
 To set up a federation, use Federation Interactive API.
-    .. code-block:: python
+
+.. code-block:: python
 
     from openfl.interface.interactive_api.federation import Federation
 
