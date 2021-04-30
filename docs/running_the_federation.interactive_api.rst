@@ -15,8 +15,8 @@ Workspace
 ==========
 To initialize the workspace, create an empty folder and a Jupyter notebook (or a Python script) inside it. Root folder of the notebook will be considered as the workspace.
 If some objects are imported in the notebook from local modules, source code should be kept inside the workspace.
-If someone decides to keep local test data inside the workspace, :code:`data` folder should be used as it will not be exported.
-If someone decides to keep certificates inside the workspace, :code:`cert` folder should be used as it will not be exported.
+If one decides to keep local test data inside the workspace, :code:`data` folder should be used as it will not be exported.
+If one decides to keep certificates inside the workspace, :code:`cert` folder should be used as it will not be exported.
 Only relevant source code or resources should be kept inside the workspace, since it will be zipped and transferred to collaborator machines.
 
 Python Environment
@@ -41,6 +41,7 @@ To set up a federation, use Federation Interactive API.
     from openfl.interface.interactive_api.federation import Federation
 
 Federation API class should be initialized with the aggregator node FQDN and encryption settings. Someone may disable mTLS in trusted environments or provide paths to the certificate chain of CA, aggregator certificate and private key to enable mTLS.
+
 .. code-block:: python
 
     federation = Federation(central_node_fqdn: str, disable_tls: bool, cert_chain: str, agg_certificate: str, agg_private_key: str)
@@ -59,11 +60,13 @@ To set up an FL experiment someone should use the Experiment interactive API.
     from openfl.interface.interactive_api.experiment import FLExperiment
 
 *Experiment* is being initialized by taking federation as a parameter.
+
 .. code-block:: python
 
     fl_experiment = FLExperiment(federation=federation)
 
 To start an experiment user must register *DataLoader*, *Federated Learning tasks* and *Model* with *Optimizer*. There are several supplementary interface classes for these purposes.
+
 .. code-block:: python
 
     from openfl.interface.interactive_api.experiment import TaskInterface, DataInterface, ModelInterface
@@ -87,7 +90,7 @@ Interactive API currently allows registering only standalone functions defined i
 We also have requirements on task signature. Task should accept the following objects:
 
 1. model - will be rebuilt with relevant weights for every task by `TaskRunner`
-2. data_loader - data loader that will provide local data
+2. :code:`data_loader` - data loader that will provide local data
 3. device - a device to be used for execution on collaborator machines
 4. optimizer (optional) - model optimizer, only for training tasks
 
@@ -123,6 +126,7 @@ Registering Federated DataLoader
 
 It is initialized with User Dataset class object and all the keyword arguments can be used by dataloaders during training or validation.
 User must subclass :code:`DataInterface` and implements several methods.
+
 * :code:`_delayed_init(self, data_path)` is the most important method. It will be called during collaborator initialization procedure with relevant :code:`data_path` (one that corresponds to the collaborator name that user registered in federation).
 User Dataset class should be instantiated with local :code:`data_path` here. If dataset initalization procedure differs for some of the  collaborators, the initialization logic must be described here. Dataset sharding procedure for test runs should also be described in this method.
 User is free to save objects in class fields for later use.
@@ -139,6 +143,7 @@ Now we may use :code:`Experiment` API to prepare a workspace archive for transfe
 Instances of interface classes :code:`(TaskInterface, DataInterface, ModelInterface)` must be passed to :code:`FLExperiment.prepare_workspace_distribution()` method along with other parameters. 
 
 This method:
+
 * Compiles all provided setings to a Plan object. This is the central place where all actors in federation look up their parameters.
 * Saves plan.yaml to the :code:`plan/` folder inside the workspace.
 * Serializes interface objects on the disk.
@@ -166,6 +171,7 @@ User must transfer the workspace archive to a remote node and type in console:
 Please, note that aggregator and all the collaborator nodes should have the same Python interpreter version as the machine used for defining the experiment.
 
 then cd to the workspace and run
+
 .. code-block:: python
 
     fx collaborator start -d data.yaml -n one
