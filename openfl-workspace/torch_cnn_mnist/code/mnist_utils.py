@@ -59,7 +59,7 @@ def _load_raw_datashards(shard_num, collaborator_count, transform=None):
 
 
 def load_mnist_shard(shard_num, collaborator_count,
-                     categorical=True, channels_last=True, **kwargs):
+                     categorical=False, channels_last=True, **kwargs):
     """
     Load the MNIST dataset.
 

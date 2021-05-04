@@ -82,9 +82,9 @@ On the Aggregator
 
     .. code-block:: console
     
-       $ fx plan initialize -a ${AFQDN}
+       $ fx plan initialize
 
-    where **${AFQDN}** is the actual `fully qualified domain name (FQDN) <https://en.wikipedia.org/wiki/Fully_qualified_domain_name>`_ of the aggregator node. If you omit this parameter, :code:`fx` will automatically use the FQDN of the current node assuming the node has been correctly set with a static address. 
+    This will initialize the plan and autopopulate the `fully qualified domain name (FQDN) <https://en.wikipedia.org/wiki/Fully_qualified_domain_name>`_ of the aggregator node. This FQDN is embedded within the plan so the collaborators know the externally accessible aggregator server address to connect to. If you face connection issues with the autopopulated FQDN in the plan, this value can be overridden with the :code:`-a` flag, for example :code:`fx plan initialize -a aggregator-hostname.internal-domain.com`.
    
    .. note::
     

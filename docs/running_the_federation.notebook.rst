@@ -6,7 +6,7 @@
 Learning to fly: |productName| tutorials
 #######################
 
-New to |productName|? Get familiar with our new Python API using the built-in tutorials. After installing the |productName| package in your virtual environment, simply run :code:`fx tutorial start` from the command line. This will start a Jupyter notebook server and return a URL you can use to access each of our tutorials. We provide several jupyter notebooks for Pytorch and Tensorflow that simulate a federation on a local machine.  These tutorials provide a convient entrypoint for learning about |productName| :ref:`conventions <definitions_and_conventions>`  like FL Plans, aggregators, collaborators and more. 
+New to |productName|? Get familiar with our native Python API using the built-in tutorials. After installing the |productName| package in your virtual environment, simply run :code:`fx tutorial start` from the command line. This will start a Jupyter notebook server and return a URL you can use to access each of our tutorials. We provide several jupyter notebooks for Pytorch and Tensorflow that simulate a federation on a local machine.  These tutorials provide a convient entrypoint for learning about |productName| :ref:`conventions <definitions_and_conventions>`  like FL Plans, aggregators, collaborators and more. 
 
 
 Starting the tutorials

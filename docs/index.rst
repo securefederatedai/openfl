@@ -28,13 +28,14 @@ can use any deep learning frameworks, such as `Tensorflow <https://www.tensorflo
 |productName| is developed by Intel Labs and Intel Internet of Things Group.
 
 .. toctree::
-   :maxdepth: 4
+   :maxdepth: 2
    :caption: Contents:
 
    manual
    openfl
    models
    data
+   troubleshooting
 
 
 Indices and tables
