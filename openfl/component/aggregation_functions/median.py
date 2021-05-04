@@ -10,7 +10,7 @@ import numpy as np
 class Median(AggregationFunctionInterface):
     """Median aggregation."""
 
-    def __call__(self, tensors, *_):
+    def call(self, tensors, *_):
         """Aggregate tensors.
 
         Args:

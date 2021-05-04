@@ -12,13 +12,13 @@ class AggregationFunctionInterface(ABC):
     """Interface for specifying aggregation function."""
 
     @abstractmethod
-    def __call__(self,
-                 tensors: np.ndarray,
-                 weights: np.ndarray,
-                 db_iterator: Iterator[pd.Series],
-                 tensor_name: str,
-                 fl_round: int,
-                 tags: Tuple[str]) -> np.ndarray:
+    def call(self,
+             tensors: np.ndarray,
+             weights: np.ndarray,
+             db_iterator: Iterator[pd.Series],
+             tensor_name: str,
+             fl_round: int,
+             tags: Tuple[str]) -> np.ndarray:
         """Aggregate tensors.
 
         Args:
@@ -30,3 +30,12 @@ class AggregationFunctionInterface(ABC):
             tags: tuple of tags for this tensor
         """
         raise NotImplementedError
+
+    def __call__(self, tensors,
+                 weights,
+                 db_iterator,
+                 tensor_name,
+                 fl_round,
+                 tags):
+        """Use magic function for ease."""
+        return self.call(tensors, weights, db_iterator, tensor_name, fl_round, tags)

@@ -15,7 +15,7 @@ def weighted_average(tensors, weights):
 class WeightedAverage(AggregationFunctionInterface):
     """Weighted average aggregation."""
 
-    def __call__(self, tensors, weights, *_):
+    def call(self, tensors, weights, *_):
         """Aggregate tensors.
 
         Args:

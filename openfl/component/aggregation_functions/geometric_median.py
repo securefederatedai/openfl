@@ -45,7 +45,7 @@ def _l2dist(p1, p2):
 class GeometricMedian(AggregationFunctionInterface):
     """Geometric median aggregation."""
 
-    def __call__(self, tensors, weights, *_) -> np.ndarray:
+    def call(self, tensors, weights, *_) -> np.ndarray:
         """Aggregate tensors.
 
         Args:
