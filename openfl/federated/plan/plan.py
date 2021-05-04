@@ -7,7 +7,7 @@ from logging import getLogger
 from os.path import splitext
 from importlib import import_module
 from pathlib import Path
-from yaml import safe_load, dump
+from yaml import safe_load, dump, SafeDumper
 from socket import getfqdn
 
 from openfl.transport import AggregatorGRPCServer
