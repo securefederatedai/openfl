@@ -255,6 +255,7 @@ class Plan(object):
         defaults[SETTINGS]['federation_uuid'] = self.federation_uuid
         defaults[SETTINGS]['authorized_cols'] = self.authorized_cols
         defaults[SETTINGS]['assigner'] = self.get_assigner()
+        defaults[SETTINGS]['compression_pipeline'] = self.get_tensor_pipe()
 
         if self.aggregator_ is None:
             self.aggregator_ = Plan.Build(**defaults, initial_tensor_dict=tensor_dict)
@@ -385,7 +386,7 @@ class Plan(object):
                 data_loader = self.get_data_loader(collaborator_name)
                 defaults[SETTINGS]['task_runner'] = self.get_task_runner(data_loader)
 
-        defaults[SETTINGS]['tensor_pipe'] = self.get_tensor_pipe()
+        defaults[SETTINGS]['compression_pipeline'] = self.get_tensor_pipe()
         defaults[SETTINGS]['task_config'] = self.config.get('tasks', {})
         if client is not None:
             defaults[SETTINGS]['client'] = client

@@ -38,10 +38,16 @@ class KmeansTransformer(Transformer):
         # clustering
         k_means = cluster.KMeans(n_clusters=self.n_cluster, n_init=self.n_cluster)
         data = data.reshape((-1, 1))
-        k_means.fit(data)
-        quantized_values = k_means.cluster_centers_.squeeze()
-        indices = k_means.labels_
-        quant_array = np.choose(indices, quantized_values)
+        if data.shape[0] >= self.n_cluster:
+            k_means = cluster.KMeans(
+                n_clusters=self.n_cluster, n_init=self.n_cluster)
+            k_means.fit(data)
+            quantized_values = k_means.cluster_centers_.squeeze()
+            indices = k_means.labels_
+            quant_array = np.choose(indices, quantized_values)
+        else:
+            quant_array = data
+
         int_array, int2float_map = self._float_to_int(quant_array)
         metadata['int_to_float'] = int2float_map
 

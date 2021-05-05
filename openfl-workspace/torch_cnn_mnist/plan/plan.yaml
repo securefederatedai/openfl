@@ -38,3 +38,5 @@ assigner :
 tasks :
   defaults : plan/defaults/tasks_torch.yaml
 
+compression_pipeline :
+  defaults : plan/defaults/compression_pipeline.yaml
