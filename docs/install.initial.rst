@@ -28,9 +28,30 @@ On every node in the federation you will need to install the |productName| packa
 
 4. Install |productName| package:
 
-   .. parsed-literal::
+   **Please Note:** PyPI (pip) package is currently (May 2021) provided ONLY for Linux OS. **For installation on Windows and MacOS, please follow the manual installation from source.** 
 
-      $ pip install \ |productWheel|\
+   A. **Linux** installation: 
+
+      .. parsed-literal::
+
+         $ pip install \ |productWheel|\
+   
+   B. **Windows** (and probably **MacOS**) installation:
+
+      i) Clone |productName| repository:
+
+         .. code-block:: console
+
+           $ git clone https://github.com/intel/openfl.git 
+
+      ii) Inside your python environment, call `pip install`: 
+
+         .. code-block:: console
+
+            $ cd openfl/
+            $ pip install .
+
+
 
 5. At this point |productName| should be available within the virtual environment. To test, run the :code:`fx` command. This command is only available within this virtual environment.
 
