@@ -9,9 +9,9 @@ Creating the Federation
 TL;DR
 ~~~~~
 
-Here's the :download:`"Hello Federation" bash script <../tests/gitlab/test_hello_federation.sh>` used for testing the project pipeline.
+Here's the :download:`"Hello Federation" bash script <../tests/github/test_hello_federation.sh>` used for testing the project pipeline.
 
-.. literalinclude:: ../tests/gitlab/test_hello_federation.sh
+.. literalinclude:: ../tests/github/test_hello_federation.sh
   :language: bash
 
 
