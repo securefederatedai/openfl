@@ -10,7 +10,7 @@ with open('README.md') as f:
 
 setup(
     name='openfl',
-    version='1.0.1',
+    version='1.5',
     author='Intel Corporation',
     description='Federated Learning for the Edge',
     long_description=long_description,
@@ -19,6 +19,7 @@ setup(
     packages=[
         'openfl',
         'openfl.interface',
+        'openfl.interface.interactive_api',
         'openfl.component',
         'openfl.cryptography',
         'openfl.native',
@@ -26,6 +27,8 @@ setup(
         'openfl.component.aggregator',
         'openfl.component.collaborator',
         'openfl.utilities',
+        'openfl.utilities.optimizers.torch',
+        'openfl.utilities.optimizers.keras',
         'openfl.protocols',
         'openfl.pipelines',
         'openfl.databases',
@@ -35,6 +38,9 @@ setup(
         'openfl.federated.plan',
         'openfl.federated.task',
         'openfl.federated.data',
+        'openfl.plugins',
+        'openfl.plugins.interface_serializer',
+        'openfl.plugins.frameworks_adapters',
         'openfl-workspace',
         'openfl-docker',
         'openfl-tutorials',
@@ -56,6 +62,7 @@ setup(
         'ipykernel',
         'flatten_json',
         'cryptography>=3.4.6',
+        'cloudpickle',
     ],
     python_requires='>=3.6, <3.9',
     project_urls={

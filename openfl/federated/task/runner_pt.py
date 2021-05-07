@@ -3,6 +3,7 @@
 
 """PyTorchTaskRunner module."""
 
+from typing import Iterator, Tuple
 import numpy as np
 import torch as pt
 import torch.nn as nn
@@ -10,7 +11,7 @@ import tqdm
 
 from copy import deepcopy
 
-from openfl.utilities import TensorKey, split_tensor_dict_for_holdouts
+from openfl.utilities import TensorKey, split_tensor_dict_for_holdouts, Metric
 
 from .runner import TaskRunner
 
@@ -144,29 +145,17 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
         # set to "training" mode
         self.train()
         self.to(self.device)
-
-        losses = []
-
         loader = self.data_loader.get_train_loader(num_batches)
         if use_tqdm:
             loader = tqdm.tqdm(loader, desc="train epoch")
-        for data, target in loader:
-            data, target = pt.tensor(data).to(self.device), pt.tensor(
-                target).to(self.device, dtype=pt.float32)
-            self.optimizer.zero_grad()
-            output = self(data)
-            loss = self.loss_fn(output=output, target=target)
-            loss.backward()
-            self.optimizer.step()
-            losses.append(loss.detach().cpu().numpy())
-
+        metric = self.train_epoch(loader)
         # Output metric tensors (scalar)
         origin = col_name
         tags = ('trained',)
         output_metric_dict = {
             TensorKey(
-                self.loss_fn.__name__, origin, round_num, True, ('metric',)
-            ): np.array(np.mean(losses))
+                metric.name, origin, round_num, True, ('metric',)
+            ): metric.value
         }
 
         # output model tensors (Doesn't include TensorKey)
@@ -446,6 +435,30 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
 
         """
         pass
+
+    def train_epoch(self, batch_generator: Iterator[Tuple[np.ndarray, np.ndarray]]) -> Metric:
+        """Train single epoch.
+
+        Override this function in order to use custom training.
+
+        Args:
+            batch_generator: Train dataset batch generator. Yields (samples, targets) tuples of
+            size = `self.data_loader.batch_size`.
+        Returns:
+            Metric: An object containing name and np.ndarray value.
+        """
+        losses = []
+        for data, target in batch_generator:
+            data, target = pt.tensor(data).to(self.device), pt.tensor(
+                target).to(self.device, dtype=pt.int64)
+            self.optimizer.zero_grad()
+            output = self(data)
+            loss = self.loss_fn(output=output, target=target)
+            loss.backward()
+            self.optimizer.step()
+            losses.append(loss.detach().cpu().numpy())
+        loss = np.mean(losses)
+        return Metric(name=self.loss_fn.__name__, value=np.array(loss))
 
 
 def _derive_opt_state_dict(opt_state_dict):

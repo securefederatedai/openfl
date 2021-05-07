@@ -65,10 +65,10 @@ class Collaborator:
                  federation_uuid,
                  client,
                  task_runner,
-                 tensor_pipe,
                  task_config,
                  opt_treatment=OptTreatment.RESET,
                  delta_updates=False,
+                 compression_pipeline=None,
                  db_store_rounds=1,
                  **kwargs):
         """Initialize."""
@@ -82,8 +82,8 @@ class Collaborator:
         self.aggregator_uuid = aggregator_uuid
         self.federation_uuid = federation_uuid
 
-        self.tensor_pipe = tensor_pipe or NoCompressionPipeline()
-        self.tensor_codec = TensorCodec(self.tensor_pipe)
+        self.compression_pipeline = compression_pipeline or NoCompressionPipeline()
+        self.tensor_codec = TensorCodec(self.compression_pipeline)
         self.tensor_db = TensorDB()
         self.db_store_rounds = db_store_rounds
 
@@ -194,7 +194,17 @@ class Collaborator:
         )
 
         # now we have whatever the model needs to do the task
-        func = getattr(self.task_runner, func_name)
+        if hasattr(self.task_runner, 'TASK_REGISTRY'):
+            # New interactive python API
+            # New `Core` TaskRunner contains registry of tasks
+            func = self.task_runner.TASK_REGISTRY[func_name]
+            self.logger.info('Using Interactive Python API')
+        else:
+            # TaskRunner subclassing API
+            # Tasks are defined as methods of TaskRunner
+            func = getattr(self.task_runner, func_name)
+            self.logger.info('Using TaskRunner subclassing API')
+
         global_output_tensor_dict, local_output_tensor_dict = func(
             col_name=self.collaborator_name,
             round_num=round_number,
@@ -256,8 +266,6 @@ class Collaborator:
             tensor_dependencies = self.tensor_codec.find_dependencies(
                 tensor_key, self.delta_updates
             )
-            # self.logger.info('tensor_dependencies = {}'.format(
-            # tensor_dependencies))
             if len(tensor_dependencies) > 0:
                 # Resolve dependencies
                 # tensor_dependencies[0] corresponds to the prior version
@@ -275,18 +283,20 @@ class Collaborator:
                     new_model_tk, nparray = self.tensor_codec.apply_delta(
                         tensor_dependencies[1],
                         uncompressed_delta,
-                        prior_model_layer
+                        prior_model_layer,
+                        creates_model=True,
                     )
-                    self.logger.debug('Applied delta to tensor {}'.format(
-                        tensor_dependencies[0][0])
-                    )
+                    self.tensor_db.cache_tensor({new_model_tk: nparray})
                 else:
+                    self.logger.info('Count not find previous model layer.'
+                                     'Fetching latest layer from aggregator')
                     # The original model tensor should be fetched from client
                     nparray = self.get_aggregated_tensor_from_aggregator(
-                        tensor_key
+                        tensor_key,
+                        require_lossless=True
                     )
             elif 'model' in tags:
-                # Pulling the model for the first time or
+                # Pulling the model for the first time
                 nparray = self.get_aggregated_tensor_from_aggregator(
                     tensor_key,
                     require_lossless=True
@@ -334,8 +344,6 @@ class Collaborator:
 
         # cache this tensor
         self.tensor_db.cache_tensor({tensor_key: nparray})
-        # self.logger.info('Printing updated TensorDB: {}'.format(
-        # self.tensor_db))
 
         return nparray
 
@@ -403,6 +411,7 @@ class Collaborator:
                     )
                 delta_comp_tensor_key, delta_comp_nparray, metadata = \
                     self.tensor_codec.compress(delta_tensor_key, delta_nparray)
+
                 named_tensor = utils.construct_named_tensor(
                     delta_comp_tensor_key,
                     delta_comp_nparray,

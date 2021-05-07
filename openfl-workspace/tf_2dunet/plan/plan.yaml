@@ -38,3 +38,6 @@ assigner :
 
 tasks :
   defaults : plan/defaults/tasks_tensorflow.yaml
+
+compression_pipeline :
+  defaults : plan/defaults/compression_pipeline.yaml

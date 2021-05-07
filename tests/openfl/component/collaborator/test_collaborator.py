@@ -15,7 +15,7 @@ from openfl.utilities.types import TensorKey
 def collaborator_mock():
     """Initialize the collaborator mock."""
     col = Collaborator('col1', 'some_uuid', 'federation_uuid',
-                       mock.Mock(), mock.Mock(), None, mock.Mock(), opt_treatment='RESET')
+                       mock.Mock(), mock.Mock(), mock.Mock(), opt_treatment='RESET')
     col.tensor_db = mock.Mock()
 
     return col

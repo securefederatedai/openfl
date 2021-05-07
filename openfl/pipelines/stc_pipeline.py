@@ -22,13 +22,14 @@ class SparsityTransformer(Transformer):
         self.p = p
 
     def forward(self, data, **kwargs):
-        """Sparsify data and pass over only non-sparsified elements by reducing the array size.
+        """
+        Sparsify data and pass over only non-sparsified elements by reducing the array size.
 
         Args:
-            data: an numpy array from the model tensor_dict
+            data: an numpy array from the model tensor_dict.
 
         Returns:
-            condensed_data: an numpy array being sparsified.
+            sparse_data: a flattened, sparse representation of the input tensor
             metadata: dictionary to store a list of meta information.
         """
         metadata = {'int_list': list(data.shape)}
@@ -38,31 +39,24 @@ class SparsityTransformer(Transformer):
         n_elements = flatten_data.shape[0]
         k_op = int(np.ceil(n_elements * self.p))
         topk, topk_indices = self._topk_func(flatten_data, k_op)
-        #
-        condensed_data = topk
         sparse_data = np.zeros(flatten_data.shape)
         sparse_data[topk_indices] = topk
-        nonzero_element_bool_indices = sparse_data != 0.0
-        metadata['bool_list'] = list(nonzero_element_bool_indices)
-        return condensed_data, metadata
-        # return sparse_data, metadata
+        return sparse_data, metadata
 
     def backward(self, data, metadata, **kwargs):
         """Recover data array with the right shape and numerical type.
 
         Args:
             data: an numpy array with non-zero values.
-            metadata: dictionary to contain information for recovering back to original data array.
+            metadata: dictionary to contain information for recovering back
+             to original data array.
 
         Returns:
             recovered_data: an numpy array with original shape.
         """
         data = data.astype(np.float32)
         data_shape = metadata['int_list']
-        nonzero_element_bool_indices = list(metadata['bool_list'])
-        recovered_data = np.zeros(data_shape).reshape(-1).astype(np.float32)
-        recovered_data[nonzero_element_bool_indices] = data
-        recovered_data = recovered_data.reshape(data_shape)
+        recovered_data = data.reshape(data_shape)
         return recovered_data
 
     @staticmethod
@@ -203,7 +197,7 @@ class GZIPTransformer(Transformer):
 class STCPipeline(TransformationPipeline):
     """A pipeline class to compress data lossly using sparsity and ternerization methods."""
 
-    def __init__(self, p_sparsity=0.01, n_clusters=6, **kwargs):
+    def __init__(self, p_sparsity=0.1, n_clusters=6, **kwargs):
         """Initialize a pipeline of transformers.
 
         Args:
