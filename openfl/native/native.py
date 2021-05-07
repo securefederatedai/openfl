@@ -224,14 +224,6 @@ def _run_multiprocess_experiment(plan, collaborator_dict: dict, rounds_to_train:
         return aggr.get_last_tensor_dict()
 
 
-def _run_simulation_proc_eq_col(p, name, model, a, r):
-    col = create_collaborator(
-        p, name, model, a
-    )
-    for _ in range(r):
-        col.run_simulation()
-
-
 def _run_proc_eq_col(executor, plan, collaborator_dict, aggr, rounds_to_train):
     col_num = len(plan.authorized_cols)
     list(executor.map(_run_simulation_proc_eq_col,
@@ -242,13 +234,6 @@ def _run_proc_eq_col(executor, plan, collaborator_dict, aggr, rounds_to_train):
                       [rounds_to_train] * col_num))
 
 
-def _run_simulation_proc_eq_col_x_round(p, name, model, a):
-    col = create_collaborator(
-        p, name, model, a
-    )
-    col.run_simulation()
-
-
 def _run_proc_eq_col_x_round(executor, plan, collaborator_dict, aggr, rounds_to_train):
     col_num = len(plan.authorized_cols)
     for _ in range(rounds_to_train):
@@ -257,6 +242,21 @@ def _run_proc_eq_col_x_round(executor, plan, collaborator_dict, aggr, rounds_to_
                           (c for c in plan.authorized_cols),
                           (collaborator_dict[c] for c in plan.authorized_cols),
                           [aggr] * col_num))
+
+
+def _run_simulation_proc_eq_col(p, name, model, a, r):
+    col = create_collaborator(
+        p, name, model, a
+    )
+    for _ in range(r):
+        col.run_simulation()
+
+
+def _run_simulation_proc_eq_col_x_round(p, name, model, a):
+    col = create_collaborator(
+        p, name, model, a
+    )
+    col.run_simulation()
 
 
 def _run_sync_experiment(plan, collaborator_dict, rounds_to_train):
@@ -273,12 +273,6 @@ def _run_sync_experiment(plan, collaborator_dict, rounds_to_train):
             collaborator.run_simulation()
 
     return aggr.get_last_tensor_dict()
-
-
-def _set_weights_for_the_final_model(model, rounds_to_train, last_tensor_dict):
-    model.set_optimizer_treatment('CONTINUE_LOCAL')
-    model.rebuild_model(rounds_to_train - 1, last_tensor_dict, validation=True)
-    return model
 
 
 def _setup_plan(save=True):
@@ -302,6 +296,12 @@ def _setup_plan(save=True):
         Plan.Dump(Path(plan_config), plan.config)
 
     return plan
+
+
+def _set_weights_for_the_final_model(model, rounds_to_train, last_tensor_dict):
+    model.set_optimizer_treatment('CONTINUE_LOCAL')
+    model.rebuild_model(rounds_to_train - 1, last_tensor_dict, validation=True)
+    return model
 
 
 def _unflatten(config, separator='.'):
