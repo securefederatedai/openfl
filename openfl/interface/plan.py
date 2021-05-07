@@ -2,17 +2,18 @@
 # SPDX-License-Identifier: Apache-2.0
 """Plan module."""
 
-from socket import getfqdn
 from logging import getLogger
 from pathlib import Path
-from click import Path as ClickPath
-from click import group, option, pass_context
-from click import echo
+from socket import getfqdn
 
-from openfl.protocols import utils
-from openfl.utilities import split_tensor_dict_for_holdouts
+from click import Path as ClickPath
+from click import echo
+from click import group, option, pass_context
+
 from openfl.federated import Plan
 from openfl.interface.cli_helper import get_workspace_parameter
+from openfl.protocols import utils
+from openfl.utilities import split_tensor_dict_for_holdouts
 
 logger = getLogger(__name__)
 
@@ -74,8 +75,7 @@ def initialize(context, plan_config, cols_config, data_config,
     # data_loader = plan.get_data_loader(collaborator_cname)
     # task_runner = plan.get_task_runner(collaborator_cname)
 
-    data_loader = plan.get_data_loader(collaborator_cname)
-    task_runner = plan.get_task_runner(data_loader)
+    task_runner = plan.get_task_runner(collaborator_cname)
     tensor_pipe = plan.get_tensor_pipe()
 
     # I believe there is no need for this line as task_runner has this variable
@@ -105,8 +105,7 @@ def initialize(context, plan_config, cols_config, data_config,
             or aggregator_address):
         plan_origin['network']['settings'] = plan_origin['network'].get(
             'settings', {})
-        plan_origin['network']['settings']['agg_addr'] =\
-            aggregator_address or getfqdn()
+        plan_origin['network']['settings']['agg_addr'] = aggregator_address or getfqdn()
 
         logger.warn(f"Patching Aggregator Addr in Plan"
                     f" 🠆 {plan_origin['network']['settings']['agg_addr']}")

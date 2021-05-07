@@ -288,9 +288,7 @@ class Plan(object):
                                        SETTINGS: {}
                                    })
 
-        defaults[SETTINGS]['data_path'] = self.cols_data_paths[
-            collaborator_name
-        ]
+        defaults[SETTINGS]['data_path'] = self.cols_data_paths[collaborator_name]
 
         if collaborator_name not in self.loaders_:
             self.loaders_[collaborator_name] = Plan.Build(**defaults)
@@ -385,8 +383,7 @@ class Plan(object):
                     task_keeper=task_keeper)
             else:
                 # TaskRunner subclassing API
-                data_loader = self.get_data_loader(collaborator_name)
-                defaults[SETTINGS]['task_runner'] = self.get_task_runner(data_loader)
+                defaults[SETTINGS]['task_runner'] = self.get_task_runner(collaborator_name)
 
         defaults[SETTINGS]['compression_pipeline'] = self.get_tensor_pipe()
         defaults[SETTINGS]['task_config'] = self.config.get('tasks', {})
