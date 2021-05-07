@@ -49,9 +49,10 @@ class GeometricMedian(AggregationFunctionInterface):
         """Aggregate tensors.
 
         Args:
-            tensors: array of `np.ndarray`s of tensors to aggregate.
+            agg_tensor_dict: Dict of (collaborator name, tensor) pairs to aggregate.
             weights: array of floats representing data partition (sum up to 1)
-            db_iterator: iterator over history of aggregated versions of this tensor
+            db_iterator: iterator over history of all tensors.
+                Columns: ['tensor_name', 'round', 'tags', 'nparray']
             tensor_name: name of the tensor
             fl_round: round number
             tags: tuple of tags for this tensor
