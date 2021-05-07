@@ -1,7 +1,7 @@
 # Copyright (C) 2020-2021 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 """Aggregation function interface module."""
-from typing import Iterator, Tuple
+from typing import Iterator, Tuple, Dict
 import numpy as np
 from abc import ABC, abstractmethod
 
@@ -13,7 +13,7 @@ class AggregationFunctionInterface(ABC):
 
     @abstractmethod
     def call(self,
-             tensors: np.ndarray,
+             agg_tensor_dict: Dict[str, np.ndarray],
              weights: np.ndarray,
              db_iterator: Iterator[pd.Series],
              tensor_name: str,
@@ -22,9 +22,10 @@ class AggregationFunctionInterface(ABC):
         """Aggregate tensors.
 
         Args:
-            tensors: array of `np.ndarray`s of tensors to aggregate.
+            agg_tensor_dict: Dict of (collaborator name, tensor) pairs to aggregate.
             weights: array of floats representing data partition (sum up to 1)
-            db_iterator: iterator over history of aggregated versions of this tensor
+            db_iterator: iterator over history of all tensors.
+                Columns: ['tensor_name', 'round', 'tags', 'nparray']
             tensor_name: name of the tensor
             fl_round: round number
             tags: tuple of tags for this tensor

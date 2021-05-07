@@ -10,7 +10,7 @@ import numpy as np
 class Median(AggregationFunctionInterface):
     """Median aggregation."""
 
-    def call(self, tensors, *_):
+    def call(self, agg_tensor_dict, *_):
         """Aggregate tensors.
 
         Args:
@@ -21,4 +21,5 @@ class Median(AggregationFunctionInterface):
             fl_round: round number
             tags: tuple of tags for this tensor
         """
+        tensors = np.array(list(agg_tensor_dict.values()))
         return np.median(tensors, axis=0)
