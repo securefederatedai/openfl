@@ -22,7 +22,7 @@ def one_hot(labels, classes):
 
 def cross_entropy(output, target):
     """Binary cross-entropy metric."""
-    return F.binary_cross_entropy_with_logits(input=output, target=target)
+    return F.cross_entropy(input=output, target=target)
 
 
 def get_optimizer(x):
@@ -51,10 +51,10 @@ class Net(nn.Module):
         x = F.relu(self.fc1(x))
         x = F.relu(self.fc2(x))
         x = self.fc3(x)
-        return F.log_softmax(x, dim=1)
+        return x
 
 
-def parse_args():
+def _parse_args():
     import argparse
     parser = argparse.ArgumentParser(description='Test FX native API with Torch')
     parser.add_argument('--batch_size', metavar='B', type=int, nargs='?', help='batch_size',
@@ -79,32 +79,23 @@ def parse_args():
 setup_logging()
 
 if __name__ == '__main__':
-    args = parse_args()
+    args = _parse_args()
     fx.init('torch_cnn_mnist')
-
-    # TODO: Remove after update to torchvision==0.9.1
-    # See https://github.com/pytorch/vision/issues/3549
-    datasets.MNIST.resources = [
-        ('https://ossci-datasets.s3.amazonaws.com/mnist/train-images-idx3-ubyte.gz',
-         'f68b3c2dcbeaaa9fbdd348bbdeb94873'),
-        ('https://ossci-datasets.s3.amazonaws.com/mnist/train-labels-idx1-ubyte.gz',
-         'd53e105ee54ea40749a09fcbcd1e9432'),
-        ('https://ossci-datasets.s3.amazonaws.com/mnist/t10k-images-idx3-ubyte.gz',
-         '9fb629c4189551a2d022fa330f9573f3'),
-        ('https://ossci-datasets.s3.amazonaws.com/mnist/t10k-labels-idx1-ubyte.gz',
-         'ec29112dd5afa0611ce80d1b7f02629c')
-    ]
 
     classes = 10
     transform = transforms.Compose([transforms.ToTensor(),
                                     transforms.Normalize((0.5), (0.5))])
 
-    trainset, validset = (datasets.MNIST(root='./data',
-                                         train=train,
-                                         download=True,
-                                         transform=transform,
-                                         target_transform=lambda labels: one_hot(labels, classes))
-                          for train in [True, False])
+    trainset = datasets.MNIST(root='./data',
+                              train=True,
+                              download=True,
+                              transform=transform)
+
+    validset = datasets.MNIST(root='./data',
+                              train=False,
+                              download=True,
+                              transform=transform,
+                              target_transform=lambda labels: one_hot(labels, classes))
 
     (train_images, train_labels), (valid_images, valid_labels) = (zip(*dataset) for dataset in
                                                                   [trainset, validset])

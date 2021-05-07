@@ -98,7 +98,7 @@ class FederatedModel(TaskRunner):
                 self.__runner.validate = lambda *args, **kwargs: self.build_model.validate(
                     self.__runner, *args, **kwargs)
             if hasattr(self.model, 'train_epoch'):
-                self.runner.train_epoch = lambda *args, **kwargs: build_model.train_epoch(
+                self.runner.train_epoch = lambda *args, **kwargs: self.build_model.train_epoch(
                     self.runner, *args, **kwargs)
             self.__runner.loss_fn = self.loss_fn
             self.__runner.model = self.model

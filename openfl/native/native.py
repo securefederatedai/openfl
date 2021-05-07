@@ -73,7 +73,7 @@ def get_plan(return_complete=False):
     return flattened_config
 
 
-def init(workspace_template: str ='default', log_level: str='debug'):
+def init(workspace_template: str = 'default', log_level: str = 'debug'):
     """
     Initialize the openfl package.
 

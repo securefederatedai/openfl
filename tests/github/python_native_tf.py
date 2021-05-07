@@ -89,7 +89,7 @@ def build_model(input_shape,
 setup_logging()
 
 
-def parse_args():
+def _parse_args():
     import argparse
     parser = argparse.ArgumentParser(description='Test FX native API with Torch')
     parser.add_argument('--batch_size', metavar='B', type=int, nargs='?', help='batch_size',
@@ -113,7 +113,7 @@ def parse_args():
 
 if __name__ == '__main__':
 
-    args = parse_args()
+    args = _parse_args()
 
     fx.init('keras_cnn_mnist')
     origin_folder = 'https://storage.googleapis.com/tensorflow/tf-keras-datasets/'

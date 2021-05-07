@@ -15,7 +15,6 @@ with catch_warnings():
 
 import numpy as np
 
-
 from openfl.utilities import TensorKey, split_tensor_dict_for_holdouts, Metric
 from .runner import TaskRunner
 
@@ -58,7 +57,8 @@ class KerasTaskRunner(TaskRunner):
         else:
             self.set_tensor_dict(input_tensor_dict, with_opt_vars=False)
 
-    def train(self, col_name, round_num, input_tensor_dict, metrics, epochs, num_batches=None, **kwargs):
+    def train(self, col_name, round_num, input_tensor_dict, metrics, epochs,
+              num_batches=None, **kwargs):
         """
         Perform the training for a specified number of batches.
 

@@ -3,17 +3,17 @@
 
 """Plan module."""
 from hashlib import sha384
+from importlib import import_module
 from logging import getLogger
 from os.path import splitext
-from importlib import import_module
 from pathlib import Path
-from yaml import safe_load, dump, SafeDumper
 from socket import getfqdn
 
-from openfl.transport import AggregatorGRPCServer
-from openfl.transport import CollaboratorGRPCClient
+from yaml import safe_load, dump, SafeDumper
 
 from openfl.interface.cli_helper import WORKSPACE
+from openfl.transport import AggregatorGRPCServer
+from openfl.transport import CollaboratorGRPCClient
 
 SETTINGS = 'settings'
 TEMPLATE = 'template'
@@ -37,7 +37,9 @@ class Plan(object):
     @staticmethod
     def Dump(yaml_path, config, freeze=False):
         """Dump the plan config to YAML file."""
+
         class NoAliasDumper(SafeDumper):
+
             def ignore_aliases(self, data):
                 return True
 
@@ -305,7 +307,7 @@ class Plan(object):
         return data_loader
 
     # legacy api (TaskRunner subclassing)
-    def get_task_runner(self, data_loader):
+    def get_task_runner(self, collaborator_name):
         """Get task runner."""
         defaults = self.config.get('task_runner',
                                    {
@@ -313,7 +315,7 @@ class Plan(object):
                                        SETTINGS: {}
                                    })
 
-        defaults[SETTINGS]['data_loader'] = data_loader
+        defaults[SETTINGS]['data_loader'] = self.get_data_loader(collaborator_name)
 
         if collaborator_name not in self.runners_:
             self.runners_[collaborator_name] = Plan.Build(**defaults)
