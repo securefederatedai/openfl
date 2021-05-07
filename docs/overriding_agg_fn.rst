@@ -31,39 +31,45 @@ Below is an example of custom tensor clipping aggregation function that multipli
 .. code-block:: python
 
     from openfl.component.aggregation_functions import AggregationFunctionInterface
+    import numpy as np
 
-    class ClippedAveraging(AggregationFunctionInterface): # interface implementation
-        def clip(self, tensor):
-            # clip could be any number of clipping functions
-            return tensor * .3
+    class ClippedAveraging(AggregationFunctionInterface):
+        def __init__(self, ratio):
+            self.ratio = ratio
+            
         def call(self,
-                    tensors,
+                    agg_tensor_dict,
                     weights,
                     db_iterator,
-                    _,
+                    tensor_name,
                     fl_round,
-                    *__):
+                    *__) -> np.ndarray:
             """Aggregate tensors.
 
             Args:
-                tensors: array of `np.ndarray`s of tensors to aggregate.
+                agg_tensor_dict: Dict of (collaborator name, tensor) pairs to aggregate.
                 weights: array of floats representing data partition (sum up to 1)
-                db_iterator: iterator over history of aggregated versions of this tensor
+                db_iterator: iterator over history of all tensors.
+                    Columns: ['tensor_name', 'round', 'tags', 'nparray']
                 tensor_name: name of the tensor
                 fl_round: round number
                 tags: tuple of tags for this tensor
             """
             clipped_tensors = []
             previous_tensor_value = None
-            for z in db_iterator: # here we use an iterator to find previous value of this tensor
-                if z['round'] == (fl_round - 1):
-                    previous_tensor_value = z['nparray']
-            for tensor in tensors:
-                _previous_tensor_value = previous_tensor_value if previous_tensor_value is not None else tensor
-                delta = tensor - _previous_tensor_value
-                clipped_tensor = _previous_tensor_value + self.clip(delta) # clip the update 
-                clipped_tensors.append(clipped_tensor)
+            for record in db_iterator:
+                if (
+                    record['round'] == (fl_round - 1)
+                    and record['tensor_name'] == tensor_name
+                    and 'aggregated' in record['tags']
+                ):
+                    previous_tensor_value = record['nparray']
+            for _, tensor in agg_tensor_dict.items():
+                prev_tensor = previous_tensor_value if previous_tensor_value is not None else tensor
+                delta = prev_tensor - tensor
+                new_tensor = prev_tensor + delta * self.ratio
+                clipped_tensors.append(new_tensor)
 
-            return np.average(clipped_tensors, weights=weights, axis=0) # average of clipped updates
+            return np.average(clipped_tensors, weights=weights, axis=0)
 
 Full implementation can be found at ``openfl-tutorials/Federated_Pytorch_MNIST_custom_aggregation_Tutorial.ipynb``
