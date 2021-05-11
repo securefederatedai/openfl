@@ -215,8 +215,8 @@ def test_get_aggregated_tensor_new_aggregation_function(tensor_db):
     collaborator_weight_dict = {'col1': 0.1, 'col2': 0.9}
 
     class Sum(AggregationFunctionInterface):
-        def call(self, agg_tensor_dict, *_):
-            tensors = np.array(list(agg_tensor_dict.values()))
+        def call(self, local_tensors, *_):
+            tensors = [local_tensor.tensor for local_tensor in local_tensors]
             return np.sum(tensors, axis=0)
 
     tensor_key = TensorKey('tensor_name', 'agg', 0, False, ())
