@@ -8,7 +8,7 @@ import numpy as np
 
 from threading import Lock
 
-from openfl.utilities import TensorKey
+from openfl.utilities import TensorKey, LocalTensor
 from openfl.component.aggregation_functions import (WeightedAverage, Median, GeometricMedian,
                                                     AggregationFunctionInterface)
 
@@ -183,11 +183,13 @@ class TensorDB:
                 agg_tensor_dict[col] = raw_df.iloc[0]
             # agg_tensor_dict[col] = agg_tensor_dict[col]
             # * collaborator_weight_dict[col]
+        local_tensors = [LocalTensor(col_name=col_name,
+                                     tensor=agg_tensor_dict[col_name],
+                                     weight=collaborator_weight_dict[col_name])
+                         for col_name in collaborator_names]
 
-        weights = np.array(list(collaborator_weight_dict.values()))
         db_iterator = self._iterate()
-        agg_nparray = aggregation_function(agg_tensor_dict,
-                                           weights,
+        agg_nparray = aggregation_function(local_tensors,
                                            db_iterator,
                                            tensor_name,
                                            fl_round,

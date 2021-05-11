@@ -15,7 +15,7 @@ def weighted_average(tensors, weights):
 class WeightedAverage(AggregationFunctionInterface):
     """Weighted average aggregation."""
 
-    def call(self, agg_tensor_dict, weights, *_):
+    def call(self, local_tensors, *_):
         """Aggregate tensors.
 
         Args:
@@ -27,5 +27,5 @@ class WeightedAverage(AggregationFunctionInterface):
             fl_round: round number
             tags: tuple of tags for this tensor
         """
-        tensors = np.array(list(agg_tensor_dict.values()))
+        tensors, weights = zip(*[(x.tensor, x.weight) for x in local_tensors])
         return weighted_average(tensors, weights)

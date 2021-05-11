@@ -45,7 +45,7 @@ def _l2dist(p1, p2):
 class GeometricMedian(AggregationFunctionInterface):
     """Geometric median aggregation."""
 
-    def call(self, agg_tensor_dict, weights, *_) -> np.ndarray:
+    def call(self, local_tensors, *_) -> np.ndarray:
         """Aggregate tensors.
 
         Args:
@@ -57,5 +57,6 @@ class GeometricMedian(AggregationFunctionInterface):
             fl_round: round number
             tags: tuple of tags for this tensor
         """
-        tensors = np.array(list(agg_tensor_dict.values()))
+        tensors, weights = zip(*[(x.tensor, x.weight) for x in local_tensors])
+        tensors, weights = np.array(tensors), np.array(weights)
         return geometric_median(tensors, weights)

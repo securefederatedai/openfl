@@ -1,7 +1,8 @@
 # Copyright (C) 2020-2021 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 """Aggregation function interface module."""
-from typing import Iterator, Tuple, Dict
+from typing import Iterator, Tuple, List
+from openfl.utilities import LocalTensor
 import numpy as np
 from abc import ABC, abstractmethod
 
@@ -13,7 +14,7 @@ class AggregationFunctionInterface(ABC):
 
     @abstractmethod
     def call(self,
-             agg_tensor_dict: Dict[str, np.ndarray],
+             local_tensors: List[LocalTensor],
              weights: np.ndarray,
              db_iterator: Iterator[pd.Series],
              tensor_name: str,
@@ -22,8 +23,7 @@ class AggregationFunctionInterface(ABC):
         """Aggregate tensors.
 
         Args:
-            agg_tensor_dict: Dict of (collaborator name, tensor) pairs to aggregate.
-            weights: array of floats representing data partition (sum up to 1)
+            local_tensors(list[openfl.utilities.LocalTensor]): List of local tensors to aggregate.
             db_iterator: iterator over history of all tensors.
                 Columns: ['tensor_name', 'round', 'tags', 'nparray']
             tensor_name: name of the tensor
@@ -32,11 +32,10 @@ class AggregationFunctionInterface(ABC):
         """
         raise NotImplementedError
 
-    def __call__(self, tensors,
-                 weights,
+    def __call__(self, local_tensors,
                  db_iterator,
                  tensor_name,
                  fl_round,
                  tags):
         """Use magic function for ease."""
-        return self.call(tensors, weights, db_iterator, tensor_name, fl_round, tags)
+        return self.call(local_tensors, db_iterator, tensor_name, fl_round, tags)
