@@ -38,12 +38,11 @@ Below is an example of custom tensor clipping aggregation function that multipli
             self.ratio = ratio
             
         def call(self,
-                    agg_tensor_dict,
-                    weights,
-                    db_iterator,
-                    tensor_name,
-                    fl_round,
-                    *__) -> np.ndarray:
+                local_tensors,
+                db_iterator,
+                tensor_name,
+                fl_round,
+                *__):
             """Aggregate tensors.
 
             Args:
@@ -64,11 +63,13 @@ Below is an example of custom tensor clipping aggregation function that multipli
                     and 'aggregated' in record['tags']
                 ):
                     previous_tensor_value = record['nparray']
-            for _, tensor in agg_tensor_dict.items():
-                prev_tensor = previous_tensor_value if previous_tensor_value is not None else tensor
-                delta = prev_tensor - tensor
+            weights = []
+            for local_tensor in local_tensors:
+                prev_tensor = previous_tensor_value if previous_tensor_value is not None else local_tensor.tensor
+                delta = local_tensor.tensor - prev_tensor
                 new_tensor = prev_tensor + delta * self.ratio
                 clipped_tensors.append(new_tensor)
+                weights.append(local_tensor.weight)
 
             return np.average(clipped_tensors, weights=weights, axis=0)
 
