@@ -46,8 +46,7 @@ Below is an example of custom tensor clipping aggregation function that multipli
             """Aggregate tensors.
 
             Args:
-                agg_tensor_dict: Dict of (collaborator name, tensor) pairs to aggregate.
-                weights: array of floats representing data partition (sum up to 1)
+                local_tensors(list[openfl.utilities.LocalTensor]): List of local tensors to aggregate.
                 db_iterator: iterator over history of all tensors.
                     Columns: ['tensor_name', 'round', 'tags', 'nparray']
                 tensor_name: name of the tensor
@@ -61,6 +60,7 @@ Below is an example of custom tensor clipping aggregation function that multipli
                     record['round'] == (fl_round - 1)
                     and record['tensor_name'] == tensor_name
                     and 'aggregated' in record['tags']
+                    and 'delta' not in record['tags']
                 ):
                     previous_tensor_value = record['nparray']
             weights = []
