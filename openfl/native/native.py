@@ -42,7 +42,8 @@ def setup_plan(log_level='CRITICAL'):
     getLogger().setLevel(log_level)
     plan = Plan.Parse(plan_config_path=Path(plan_config),
                       cols_config_path=Path(cols_config),
-                      data_config_path=Path(data_config))
+                      data_config_path=Path(data_config),
+                      resolve=False)
     getLogger().setLevel('INFO')
 
     return plan
@@ -85,6 +86,7 @@ def update_plan(override_config):
             logger.warn(f'Did not find {k} in config. Make sure it should exist. Creating...')
         flat_plan_config[k] = v
     plan.config = unflatten(flat_plan_config, '.')
+    plan.resolve()
     return plan
 
 
@@ -215,7 +217,7 @@ def run_experiment(collaborator_dict, override_config={}):
 
     # Update the plan if necessary
     plan = update_plan(override_config)
-
+    print(f'plan={plan.config}')
     # Overwrite plan values
     plan.authorized_cols = list(collaborator_dict)
     tensor_pipe = plan.get_tensor_pipe()
