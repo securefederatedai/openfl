@@ -217,7 +217,6 @@ def run_experiment(collaborator_dict, override_config={}):
 
     # Update the plan if necessary
     plan = update_plan(override_config)
-    print(f'plan={plan.config}')
     # Overwrite plan values
     plan.authorized_cols = list(collaborator_dict)
     tensor_pipe = plan.get_tensor_pipe()
