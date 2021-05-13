@@ -47,7 +47,7 @@ At this point you may be wondering what goes into a FL.Plan, and how you can cus
 
     .. code-block:: python
 
-     print(json.dumps(fx.get_plan(), indent=4, sort_keys=True))
+     print(fx.get_plan())
 
      {
        "aggregator.settings.best_state_path": "save/keras_cnn_mnist_best.pbuf",

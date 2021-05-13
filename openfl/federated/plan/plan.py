@@ -49,11 +49,11 @@ class Plan(object):
             if frozen_yaml_path.exists():
                 Plan.logger.info(f"{yaml_path.name} is already frozen")
                 return
-            frozen_yaml_path.write_text(dump(config, Dumper=NoAliasDumper))
+            frozen_yaml_path.write_text(dump(config))
             frozen_yaml_path.chmod(0o400)
             Plan.logger.info(f"{yaml_path.name} frozen successfully")
         else:
-            yaml_path.write_text(dump(config, Dumper=NoAliasDumper))
+            yaml_path.write_text(dump(config))
 
     @staticmethod
     def Parse(plan_config_path: Path, cols_config_path: Path = None,

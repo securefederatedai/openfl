@@ -4,7 +4,6 @@
 """Python native tests."""
 
 import numpy as np
-import json
 
 import openfl.native as fx
 
@@ -137,6 +136,6 @@ if __name__ == '__main__':
     print(f'Collaborator two\'s validation data size: \
             {len(collaborator_models[1].data_loader.X_valid)}\n')
 
-    print(json.dumps(fx.get_plan(), indent=4, sort_keys=True))
+    print(fx.get_plan())
     final_fl_model = fx.run_experiment(collaborators, {'aggregator.settings.rounds_to_train': 5})
     final_fl_model.save_native('final_pytorch_model.h5')
