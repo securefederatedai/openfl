@@ -9,8 +9,6 @@ import numpy as np
 from threading import Lock
 
 from openfl.utilities import TensorKey, LocalTensor
-from openfl.component.aggregation_functions import (WeightedAverage, Median, GeometricMedian,
-                                                    AggregationFunctionInterface)
 
 
 class TensorDB:
@@ -21,12 +19,6 @@ class TensorDB:
     for it's easy insertion, retreival and aggregation capabilities. Each
     collaborator and aggregator has its own TensorDB.
     """
-
-    aggregation_fns = {
-        'weighted_average': WeightedAverage(),
-        'median': Median(),
-        'geometric_median': GeometricMedian()
-    }
 
     def __init__(self):
         """Initialize."""
@@ -129,17 +121,6 @@ class TensorDB:
             None if not all values are present
 
         """
-        if aggregation_function is None:
-            aggregation_function = 'weighted_average'
-        if aggregation_function in self.aggregation_fns:
-            aggregation_function = self.aggregation_fns[aggregation_function]
-        elif not isinstance(aggregation_function, AggregationFunctionInterface):
-            raise NotImplementedError(
-                'Aggregation function should either '
-                + f'implement {AggregationFunctionInterface.__name__} interface '
-                + 'or be one of '
-                + f'{list(TensorDB.aggregation_fns.keys())}')
-
         if len(collaborator_weight_dict) != 0:
             assert (np.abs(
                 1.0 - sum(collaborator_weight_dict.values())
