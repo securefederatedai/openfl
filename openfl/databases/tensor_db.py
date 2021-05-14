@@ -101,7 +101,7 @@ class TensorDB:
         return np.array(df['nparray'].iloc[0])
 
     def get_aggregated_tensor(self, tensor_key, collaborator_weight_dict,
-                              aggregation_function=None):
+                              aggregation_function):
         """
         Determine whether all of the collaborator tensors are present for a given tensor key.
 
