@@ -7,7 +7,7 @@
 [![PyPI version](https://img.shields.io/pypi/v/openfl)](https://pypi.org/project/openfl/)
 [<img src="https://img.shields.io/badge/slack-@openfl-blue.svg?logo=slack">](https://join.slack.com/t/openfl/shared_invite/zt-lo1djtw4-DWAQE_wgfp1N_o2RUMqq9Q) 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Citation](https://img.shields.io/badge/cite-citation-blue)](https://arxiv.org/abs/2103.01006)
+[![Citation](https://img.shields.io/badge/cite-citation-blue)](https://arxiv.org/abs/2105.06413)
 
 
 [Federated learning](https://en.wikipedia.org/wiki/Federated_learning) is a distributed machine learning approach that
