@@ -156,7 +156,8 @@ def setup_plan(log_level: Union[int, str] = 'CRITICAL'):
     getLogger().setLevel(log_level)
     plan = Plan.Parse(plan_config_path=Path(plan_config),
                       cols_config_path=Path(cols_config),
-                      data_config_path=Path(data_config))
+                      data_config_path=Path(data_config),
+                      resolve=False)
     getLogger().setLevel(current_log_level)
 
     return plan
