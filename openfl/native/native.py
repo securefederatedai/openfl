@@ -147,7 +147,7 @@ def run_experiment(collaborator_dict: dict, override_config: dict = None, is_mul
 
 
 def setup_plan(log_level: Union[int, str] = 'CRITICAL'):
-    """Setup the plan."""
+    """Ge the plan from configs."""
     plan_config = 'plan/plan.yaml'
     cols_config = 'plan/cols.yaml'
     data_config = 'plan/data.yaml'
