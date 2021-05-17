@@ -8,7 +8,9 @@ import numpy as np
 
 from multiprocessing import Manager
 
-from openfl.utilities import TensorKey
+from openfl.utilities import TensorKey, LocalTensor
+from openfl.component.aggregation_functions import (WeightedAverage, Median, GeometricMedian,
+                                                    AggregationFunctionInterface)
 
 
 class TensorDB:
@@ -19,6 +21,12 @@ class TensorDB:
     for it's easy insertion, retreival and aggregation capabilities. Each
     collaborator and aggregator has its own TensorDB.
     """
+
+    aggregation_fns = {
+        'weighted_average': WeightedAverage(),
+        'median': Median(),
+        'geometric_median': GeometricMedian()
+    }
 
     def __init__(self):
         """Initialize."""
@@ -102,7 +110,7 @@ class TensorDB:
         return np.array(df['nparray'].iloc[0])
 
     def get_aggregated_tensor(self, tensor_key, collaborator_weight_dict,
-                              aggregation_functions):
+                              aggregation_function=None):
         """
         Determine whether all of the collaborator tensors are present for a given tensor key.
 
@@ -114,25 +122,31 @@ class TensorDB:
                         compute weighted average of all collaborators
             collaborator_weight_dict: List of collaborator names in federation
                                       and their respective weights
-            aggregation_functions: Call the underlying numpy aggregation
+            aggregation_function: Call the underlying numpy aggregation
                                    function. Default is just the weighted
-                                   average. ONLY THE FIRST FUNCTION will get
-                                   recorded as the aggregated tensor
-
+                                   average.
         Returns:
             weighted_nparray if all collaborator values are present
             None if not all values are present
 
         """
+        if aggregation_function is None:
+            aggregation_function = 'weighted_average'
+        if aggregation_function in self.aggregation_fns:
+            aggregation_function = self.aggregation_fns[aggregation_function]
+        elif not isinstance(aggregation_function, AggregationFunctionInterface):
+            raise NotImplementedError(
+                'Aggregation function should either '
+                + f'implement {AggregationFunctionInterface.__name__} interface '
+                + 'or be one of '
+                + f'{list(TensorDB.aggregation_fns.keys())}')
+
         if len(collaborator_weight_dict) != 0:
             assert (np.abs(
                 1.0 - sum(collaborator_weight_dict.values())
             ) < 0.01), \
                 'Collaborator weights do not sum to 1.0:' \
                 ' {}'.format(collaborator_weight_dict)
-
-        if aggregation_functions is None:
-            aggregation_functions = ['weighted_average']
 
         collaborator_names = collaborator_weight_dict.keys()
         agg_tensor_dict = {}
@@ -165,41 +179,30 @@ class TensorDB:
                     col, TensorKey(
                         tensor_name, origin, fl_round, report, new_tags
                     )))
-                return None, {}
+                return None
             else:
                 agg_tensor_dict[col] = raw_df.iloc[0]
             # agg_tensor_dict[col] = agg_tensor_dict[col]
             # * collaborator_weight_dict[col]
+        local_tensors = [LocalTensor(col_name=col_name,
+                                     tensor=agg_tensor_dict[col_name],
+                                     weight=collaborator_weight_dict[col_name])
+                         for col_name in collaborator_names]
 
-        concat_nparray = np.array(list(agg_tensor_dict.values()))
+        db_iterator = self._iterate()
+        agg_nparray = aggregation_function(local_tensors,
+                                           db_iterator,
+                                           tensor_name,
+                                           fl_round,
+                                           tags)
+        self.cache_tensor({tensor_key: agg_nparray})
 
-        aggregated_tensorkey_is_set = False
-        agg_metadata_dict = {}
+        return np.array(agg_nparray)
 
-        for aggregation_function in aggregation_functions:
-            if aggregation_function == 'weighted_average':
-                agg_nparray = np.average(
-                    concat_nparray,
-                    weights=np.array(list(collaborator_weight_dict.values())),
-                    axis=0
-                )
-            else:
-                agg_func = getattr(np, aggregation_function, None)
-                if callable(agg_func):
-                    agg_nparray = agg_func(concat_nparray, axis=0)
-                else:
-                    raise KeyError(
-                        '{} is not a valid numpy function'.format(
-                            aggregation_function))
+    def _iterate(self, order_by='round', ascending=False):
+        columns = ['round', 'nparray', 'tensor_name', 'tags']
 
-            # TODO This enforces that only the first aggregation function
-            #  will be associated with
-            if not aggregated_tensorkey_is_set:
-                # Cache aggregated tensor in TensorDB
-                self.cache_tensor({tensor_key: agg_nparray})
-                aggregated_tensorkey_is_set = True
-                primary_agg = agg_nparray
-            else:
-                agg_metadata_dict[aggregation_function] = np.array(agg_nparray)
-
-        return np.array(primary_agg), agg_metadata_dict
+        for _, row in self.tensor_db[columns]\
+                          .sort_values(by=order_by, ascending=ascending)\
+                          .iterrows():
+            yield row

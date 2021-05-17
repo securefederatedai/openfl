@@ -7,6 +7,8 @@
 [![PyPI version](https://img.shields.io/pypi/v/openfl)](https://pypi.org/project/openfl/)
 [<img src="https://img.shields.io/badge/slack-@openfl-blue.svg?logo=slack">](https://join.slack.com/t/openfl/shared_invite/zt-ovzbohvn-T5fApk05~YS_iZhjJ5yaTw) 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![Citation](https://img.shields.io/badge/cite-citation-blue)](https://arxiv.org/abs/2105.06413)
+
 
 [Federated learning](https://en.wikipedia.org/wiki/Federated_learning) is a distributed machine learning approach that
 enables organizations to collaborate on machine learning projects
@@ -53,6 +55,19 @@ and release your contribution under these terms.
 * Docs and Tutorials: https://openfl.readthedocs.io/en/latest/index.html
 * Issue tracking: https://github.com/intel/openfl/issues
 * [Slack channel](https://openfl.slack.com)
+
+## Citation
+
+```
+@misc{reina2021openfl,
+      title={OpenFL: An open-source framework for Federated Learning}, 
+      author={G Anthony Reina and Alexey Gruzdev and Patrick Foley and Olga Perepelkina and Mansi Sharma and Igor Davidyuk and Ilya Trushkin and Maksim Radionov and Aleksandr Mokrov and Dmitry Agapov and Jason Martin and Brandon Edwards and Micah J. Sheller and Sarthak Pati and Prakash Narayana Moorthy and Shih-han Wang and Prashant Shah and Spyridon Bakas},
+      year={2021},
+      eprint={2105.06413},
+      archivePrefix={arXiv},
+      primaryClass={cs.LG}
+}
+```
 
 ## Support
 Please report questions, issues and suggestions using:
