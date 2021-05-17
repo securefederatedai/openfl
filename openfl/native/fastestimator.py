@@ -23,7 +23,8 @@ class FederatedFastEstimator:
         self.logger = getLogger(__name__)
         fx.init(**kwargs)
         if len(override_config) > 0:
-            fx.update_plan(override_config)
+            plan = fx.setup_plan()
+            fx.update_plan(plan, override_config)
 
     def fit(self):
         """Run the estimator."""
@@ -93,8 +94,8 @@ class FederatedFastEstimator:
                     pipeline_kwargs[k] = v
             pipeline_kwargs.update({
                 'train_data': train_data,
-                'eval_data': eval_data,
-                'test_data': test_data
+                'eval_data':  eval_data,
+                'test_data':  test_data
             })
             pipeline = fe.Pipeline(**pipeline_kwargs)
 

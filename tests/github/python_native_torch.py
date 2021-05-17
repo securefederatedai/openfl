@@ -115,6 +115,7 @@ if __name__ == '__main__':
 
     print(f'Original training data size: {len(train_images)}')
     print(f'Original validation data size: {len(valid_images)}\n')
+    print(fx.get_plan_str())
 
     final_fl_model = fx.run_experiment(collaborators, {
         'aggregator.settings.rounds_to_train': args.rounds_to_train,
