@@ -11,9 +11,11 @@ from socket import getfqdn
 
 from yaml import safe_load, dump, SafeDumper
 
+from openfl.component.aggregation_functions import AggregationFunctionInterface, WeightedAverage
 from openfl.interface.cli_helper import WORKSPACE
 from openfl.transport import AggregatorGRPCServer
 from openfl.transport import CollaboratorGRPCClient
+
 
 SETTINGS = 'settings'
 TEMPLATE = 'template'
@@ -37,9 +39,7 @@ class Plan(object):
     @staticmethod
     def Dump(yaml_path, config, freeze=False):
         """Dump the plan config to YAML file."""
-
         class NoAliasDumper(SafeDumper):
-
             def ignore_aliases(self, data):
                 return True
 
@@ -238,7 +238,7 @@ class Plan(object):
 
         defaults[SETTINGS]['authorized_cols'] = self.authorized_cols
         defaults[SETTINGS]['rounds_to_train'] = self.rounds_to_train
-        defaults[SETTINGS]['tasks'] = self.config.get('tasks', {})
+        defaults[SETTINGS]['tasks'] = self.get_tasks()
 
         if self.assigner_ is None:
             self.assigner_ = Plan.Build(**defaults)
@@ -263,6 +263,26 @@ class Plan(object):
             self.aggregator_ = Plan.Build(**defaults, initial_tensor_dict=tensor_dict)
 
         return self.aggregator_
+
+    def get_tasks(self):
+        """Get federation tasks."""
+        tasks = self.config.get('tasks', {})
+        tasks.pop(DEFAULTS)
+        tasks.pop(SETTINGS)
+        for task in tasks:
+            aggregation_type = tasks[task].get('aggregation_type')
+            if aggregation_type is None:
+                aggregation_type = WeightedAverage()
+            elif isinstance(aggregation_type, dict):
+                if SETTINGS not in aggregation_type:
+                    aggregation_type[SETTINGS] = {}
+                aggregation_type = Plan.Build(**aggregation_type)
+                if not isinstance(aggregation_type, AggregationFunctionInterface):
+                    raise NotImplementedError(f'''{task} task aggregation type does not implement an interface:
+openfl.component.aggregation_functions.AggregationFunctionInterface
+''')
+            tasks[task]['aggregation_type'] = aggregation_type
+        return tasks
 
     def get_tensor_pipe(self):
         """Get data tensor pipeline."""
