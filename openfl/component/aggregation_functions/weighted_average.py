@@ -5,6 +5,7 @@
 
 from .interface import AggregationFunctionInterface
 import numpy as np
+from openfl.utilities import Singleton
 
 
 def weighted_average(tensors, weights):
@@ -12,17 +13,8 @@ def weighted_average(tensors, weights):
     return np.average(tensors, weights=weights, axis=0)
 
 
-class WeightedAverage(AggregationFunctionInterface):
+class WeightedAverage(AggregationFunctionInterface, Singleton):
     """Weighted average aggregation."""
-
-    _instance = None
-
-    def __new__(cls, *args, **kwargs):
-        """Use the singleton instance if it has already been created."""
-        if not isinstance(cls._instance, cls):
-            cls._instance = object.__new__(cls, *args, **kwargs)
-
-        return cls._instance
 
     def call(self, local_tensors, *_):
         """Aggregate tensors.
