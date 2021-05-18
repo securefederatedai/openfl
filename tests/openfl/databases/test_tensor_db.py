@@ -8,7 +8,7 @@ import numpy as np
 from openfl.databases.tensor_db import TensorDB
 from openfl.utilities.types import TensorKey
 from openfl.protocols import NamedTensor
-from openfl.component.aggregation_functions import AggregationFunctionInterface
+from openfl.component.aggregation_functions import AggregationFunctionInterface, WeightedAverage
 
 
 @pytest.fixture
@@ -121,7 +121,7 @@ def test_get_aggregated_tensor_directly(nparray, tensor_key):
     )
 
     db.cache_tensor({tensor_key: nparray})
-    agg_nparray, agg_metadata_dict = db.get_aggregated_tensor(tensor_key, {}, None)
+    agg_nparray, agg_metadata_dict = db.get_aggregated_tensor(tensor_key, {}, WeightedAverage())
 
     assert np.array_equal(nparray, agg_nparray)
 
@@ -137,7 +137,7 @@ def test_get_aggregated_tensor_only_col(nparray, tensor_key):
 
     collaborator_weight_dict = {'col1': 0.5, 'col2': 0.5}
     agg_nparray = db.get_aggregated_tensor(
-        tensor_key, collaborator_weight_dict, None)
+        tensor_key, collaborator_weight_dict, WeightedAverage())
 
     assert agg_nparray is None
 
@@ -154,7 +154,7 @@ def test_get_aggregated_tensor(nparray, tensor_key):
 
     collaborator_weight_dict = {'col1': 0.5, 'col2': 0.5}
     agg_nparray, agg_metadata_dict = db.get_aggregated_tensor(
-        tensor_key, collaborator_weight_dict, None)
+        tensor_key, collaborator_weight_dict, WeightedAverage())
 
     assert np.array_equal(nparray, agg_nparray)
 
@@ -167,7 +167,7 @@ def test_get_aggregated_tensor_raise_wrong_weights(nparray, tensor_key):
     collaborator_weight_dict = {'col1': 0.5, 'col2': 0.8}
     with pytest.raises(AssertionError):
         db.get_aggregated_tensor(
-            tensor_key, collaborator_weight_dict, None)
+            tensor_key, collaborator_weight_dict, WeightedAverage())
 
 
 @pytest.fixture
@@ -190,7 +190,7 @@ def test_get_aggregated_tensor_weights(tensor_db):
     collaborator_weight_dict = {'col1': 0.1, 'col2': 0.9}
     tensor_key = TensorKey('tensor_name', 'agg', 0, False, ())
     agg_nparray = tensor_db.get_aggregated_tensor(
-        tensor_key, collaborator_weight_dict, None)
+        tensor_key, collaborator_weight_dict, WeightedAverage())
 
     control_nparray = np.average(
         [np.array([0, 1, 2, 3, 4]), np.array([2, 3, 4, 5, 6])],
@@ -205,7 +205,7 @@ def test_get_aggregated_tensor_error_aggregation_function(tensor_db):
     """Test that get_aggregated_tensor raise error if aggregation function is not callable."""
     collaborator_weight_dict = {'col1': 0.1, 'col2': 0.9}
     tensor_key = TensorKey('tensor_name', 'agg', 0, False, ())
-    with pytest.raises(NotImplementedError):
+    with pytest.raises(TypeError):
         tensor_db.get_aggregated_tensor(
             tensor_key, collaborator_weight_dict, 'fake_agg_function')
 

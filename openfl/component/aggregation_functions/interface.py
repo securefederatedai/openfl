@@ -2,14 +2,14 @@
 # SPDX-License-Identifier: Apache-2.0
 """Aggregation function interface module."""
 from typing import Iterator, Tuple, List
-from openfl.utilities import LocalTensor
+from openfl.utilities import LocalTensor, SingletonABCMeta
 import numpy as np
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 
 import pandas as pd
 
 
-class AggregationFunctionInterface(ABC):
+class AggregationFunctionInterface(metaclass=SingletonABCMeta):
     """Interface for specifying aggregation function."""
 
     @abstractmethod
