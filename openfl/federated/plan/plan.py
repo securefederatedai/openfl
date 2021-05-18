@@ -268,9 +268,7 @@ class Plan(object):
         tasks = self.config.get('tasks', {})
         tasks.pop(DEFAULTS)
         tasks.pop(SETTINGS)
-        print(f'tasks={tasks}')
         for task in tasks:
-            print(f'task={task}')
             aggregation_type = tasks[task].get('aggregation_type')
             if aggregation_type is None:
                 aggregation_type = WeightedAverage()
