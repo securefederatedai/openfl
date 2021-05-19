@@ -8,7 +8,6 @@ from click import group, option, pass_context
 from click import echo, confirm
 from subprocess import check_call
 from sys import executable
-from warnings import warn
 from shutil import copyfile, ignore_patterns
 
 from openfl.interface.cli_helper import copytree, print_tree
@@ -108,34 +107,14 @@ def export_():
     except Exception:
         echo(f'Plan file "{planFile}" not found. No freeze performed.')
 
-    requirements_filename = 'requirements.txt'
-    workspace_reqs = _get_requirements_dict(requirements_filename)
-    prefix = getcwd()
-
-    export_requirements_filename = 'requirements.export.txt'
-    with open(export_requirements_filename, "w") as f:
-        check_call([executable, "-m", "pip", "freeze"], shell=False, stdout=f)
-    workspace_hash = _get_dir_hash(prefix)
-    origin_dict = _get_requirements_dict(
-        OPENFL_USERDIR / f'requirements.{workspace_hash}.txt')
-    current_dict = _get_requirements_dict(export_requirements_filename)
-    with open(export_requirements_filename, "w") as f:
-        for package, version in current_dict.items():
-            if (
-                package in workspace_reqs
-                or package not in origin_dict
-                or version != origin_dict[package]
-            ):
-                # we save only the difference between original workspace after
-                # 'fx create workspace' and current one.
-                echo(f'Writing {package}=={version} '
-                     f'to {requirements_filename}...')
-                f.write(f'{package}=={version}\n')
-            elif version is None:  # local dependency
-                warn(f'Could not generate requirements for {package}.'
-                     f' Consider installing it manually after workspace'
-                     f' import.')
-    echo(f'{export_requirements_filename} written.')
+    from pip._internal.operations import freeze
+    requirements_generator = freeze.freeze()
+    with open('./requirements.txt', 'w') as f:
+        for package in requirements_generator:
+            if '==' not in package:
+                # We do not export dependencies without version
+                continue
+            f.write(package + '\n')
 
     archiveType = 'zip'
     archiveName = basename(getcwd())
@@ -153,7 +132,7 @@ def export_():
     makedirs(f'{tmpDir}/data', exist_ok=True)
     copytree('./code', f'{tmpDir}/code', ignore=ignore)  # code
     copytree('./plan', f'{tmpDir}/plan', ignore=ignore)  # plan
-    copy2(export_requirements_filename, f'{tmpDir}/requirements.txt')  # requirements
+    copy2('./requirements.txt', f'{tmpDir}/requirements.txt')  # requirements
 
     try:
         copy2('.workspace', tmpDir)  # .workspace

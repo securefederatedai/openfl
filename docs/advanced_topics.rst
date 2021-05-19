@@ -11,5 +11,7 @@ Advanced Topics
    :maxdepth: 4
 
    multiple_plans
+   compression_settings
+   overriding_agg_fn
 
 

@@ -16,7 +16,7 @@ with catch_warnings():
 import numpy as np
 
 
-from openfl.utilities import TensorKey, split_tensor_dict_for_holdouts
+from openfl.utilities import TensorKey, split_tensor_dict_for_holdouts, Metric
 
 from .runner import TaskRunner
 
@@ -40,6 +40,7 @@ class KerasTaskRunner(TaskRunner):
         # this is a map of all of the required tensors for each of the public
         # functions in KerasTaskRunner
         self.required_tensorkeys_for_function = {}
+        ke.backend.clear_session()
 
     def rebuild_model(self, round, input_tensor_dict, validation=False):
         """
@@ -58,7 +59,7 @@ class KerasTaskRunner(TaskRunner):
         else:
             self.set_tensor_dict(input_tensor_dict, with_opt_vars=False)
 
-    def train(self, col_name, round_num, input_tensor_dict, epochs, **kwargs):
+    def train(self, col_name, round_num, input_tensor_dict, metrics, num_batches=None, **kwargs):
         """
         Perform the training for a specified number of batches.
 
@@ -70,8 +71,8 @@ class KerasTaskRunner(TaskRunner):
         dict
             'TensorKey: nparray'
         """
-        if 'metrics' not in kwargs:
-            raise KeyError('metrics must be included in kwargs')
+        if metrics is None:
+            raise KeyError('metrics must be defined')
         # if 'batch_size' in kwargs:
         #     batch_size = kwargs['batch_size']
         # else:
@@ -80,38 +81,18 @@ class KerasTaskRunner(TaskRunner):
         # rebuild model with updated weights
         self.rebuild_model(round_num, input_tensor_dict)
 
-        history = self.model.fit(self.data_loader.X_train,
-                                 self.data_loader.y_train,
-                                 batch_size=self.data_loader.batch_size,
-                                 epochs=epochs,
-                                 verbose=0, )
-
-        # TODO Currently assuming that all metrics are defined at
-        #  initialization (build_model).
-        #  If metrics are added (i.e. not a subset of what was originally
-        #  defined) then the model must be recompiled.
-        model_metrics_names = self.model.metrics_names
-        param_metrics = kwargs['metrics']
-
-        # TODO if there are new metrics in the flplan that were not included
-        #  in the originally
-        #  compiled model, that behavior is not currently handled.
-        for param in param_metrics:
-            if param not in model_metrics_names:
-                error = 'KerasTaskRunner does not support specifying new' \
-                        ' metrics. ' \
-                        'Param_metrics = {}, model_metrics_names =' \
-                        ' {}'.format(param_metrics, model_metrics_names)
-                raise ValueError(error)
+        results = self.train_iteration(self.data_loader.get_train_loader(num_batches),
+                                       metrics=metrics,
+                                       **kwargs)
 
         # output metric tensors (scalar)
         origin = col_name
         tags = ('trained',)
         output_metric_dict = {
             TensorKey(
-                metric, origin, round_num, True, ('metric',)
-            ): np.array(np.mean([history.history[metric]]))
-            for metric in param_metrics
+                metric_name, origin, round_num, True, ('metric',)
+            ): metric_value
+            for (metric_name, metric_value) in results
         }
 
         # output model tensors (Doesn't include TensorKey)
@@ -164,6 +145,45 @@ class KerasTaskRunner(TaskRunner):
 
         # return global_tensor_dict, local_tensor_dict
         return global_tensor_dict, local_tensor_dict
+
+    def train_iteration(self, batch_generator, metrics=[], **kwargs):
+        """Train single epoch.
+
+        Override this function for custom training.
+
+        Args:
+            batch_generator: Generator of training batches.
+                Each batch is a tuple of N train images and N train labels
+                where N is the batch size of the DataLoader of the current TaskRunner instance.
+
+            epochs: Number of epochs to train.
+            metrics: Names of metrics to save.
+        """
+        # TODO Currently assuming that all metrics are defined at
+        #  initialization (build_model).
+        #  If metrics are added (i.e. not a subset of what was originally
+        #  defined) then the model must be recompiled.
+        model_metrics_names = self.model.metrics_names
+
+        # TODO if there are new metrics in the flplan that were not included
+        #  in the originally
+        #  compiled model, that behavior is not currently handled.
+        for param in metrics:
+            if param not in model_metrics_names:
+                error = 'KerasTaskRunner does not support specifying new' \
+                        ' metrics. ' \
+                        'Param_metrics = {}, model_metrics_names =' \
+                        ' {}'.format(metrics, model_metrics_names)
+                raise ValueError(error)
+
+        history = self.model.fit(batch_generator,
+                                 verbose=0,
+                                 **kwargs)
+        results = []
+        for metric in metrics:
+            value = np.mean([history.history[metric]])
+            results.append(Metric(name=metric, value=np.array(value)))
+        return results
 
     def validate(self, col_name, round_num, input_tensor_dict, **kwargs):
         """

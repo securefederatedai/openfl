@@ -19,7 +19,7 @@ access to the CPU cannot access the enclave without the authorized key.
    :alt: Intel\ :sup:`®` \ Software Guard Extensions
    :scale: 50%
 
-   Intel\ :sup:`®` \ Software Guard Extensions
+.. centered:: Intel\ :sup:`®` \ Software Guard Extensions
 
 
 This allows for developers to deploy their code and data on untrusted
@@ -41,9 +41,9 @@ of SGX-enabled LibOSes have been created by our partners, including
 
 .. figure:: images/graphene.png
   :alt: graphene
-  :scale: 25%
+  :scale: 40%
 
-  Graphene allows unmodified programs to be protected by SGX.
+.. centered:: Graphene allows unmodified programs to be protected by SGX.
 
 With Graphene, the developer simply defines a manifest file
 that describes which code and data is allowed within the enclave.
