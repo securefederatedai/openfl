@@ -1,4 +1,8 @@
-import tensorflow as tf
+# Copyright (C) 2020-2021 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+"""Experiment settings."""
+
 from tensorflow import keras
 from tensorflow.keras import layers
 import numpy as np

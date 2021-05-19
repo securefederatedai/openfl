@@ -1,3 +1,9 @@
+# Copyright (C) 2020-2021 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+"""Tensorflow mnist example in the jupiter notebook style."""
+
+
 # Describe the model and optimizer
 import logging
 
@@ -38,8 +44,7 @@ y_train = y_train[:-10000]
 
 # Describing FL experiment
 
-from openfl.interface.interactive_api.experiment import TaskInterface, DataInterface, \
-    ModelInterface, FLExperiment
+from openfl.interface.interactive_api.experiment import TaskInterface, DataInterface, ModelInterface, FLExperiment  # NOQA
 
 framework_adapter = 'openfl.plugins.frameworks_adapters.keras_adapter.FrameworkAdapterPlugin'
 model_interface = ModelInterface(model=model, optimizer=optimizer,
@@ -48,8 +53,8 @@ model_interface = ModelInterface(model=model, optimizer=optimizer,
 
 # Register dataset
 
-class FedDataset(DataInterface):
-    def __init__(self, x_train, y_train, x_valid, y_valid, **kwargs):
+class FedDataset(DataInterface):  # NOQA
+    def __init__(self, x_train, y_train, x_valid, y_valid, **kwargs):  # NOQA
         self.X_train = X_train
         self.y_train = y_train
         self.X_valid = X_valid
@@ -81,27 +86,19 @@ class FedDataset(DataInterface):
         self._setup_datasets()
 
     def get_train_loader(self, **kwargs):
-        """
-        Output of this method will be provided to tasks with optimizer in contract
-        """
+        """Output of this method will be provided to tasks with optimizer in contract."""
         return self.train_dataset
 
     def get_valid_loader(self, **kwargs):
-        """
-        Output of this method will be provided to tasks without optimizer in contract
-        """
+        """Output of this method will be provided to tasks without optimizer in contract."""
         return self.valid_dataset
 
     def get_train_data_size(self):
-        """
-        Information for aggregation
-        """
+        """Information for aggregation."""
         return len(self.X_train)
 
     def get_valid_data_size(self):
-        """
-        Information for aggregation
-        """
+        """Information for aggregation."""
         return len(self.X_valid)
 
 
@@ -111,14 +108,10 @@ fed_dataset = FedDataset(X_train, y_train, X_valid, y_valid, batch_size=batch_si
 
 TI = TaskInterface()
 
-import time
-
 
 @TI.register_fl_task(model='model', data_loader='train_dataset',
                      device='device', optimizer='optimizer')
-def train(model, train_dataset, optimizer, device, loss_fn=loss_fn, warmup=False):
-    start_time = time.time()
-
+def train(model, train_dataset, optimizer, device, loss_fn=loss_fn, warmup=False):  # NOQA
     # Iterate over the batches of the dataset.
     for step, (x_batch_train, y_batch_train) in enumerate(train_dataset):
         with tf.GradientTape() as tape:
@@ -151,7 +144,7 @@ def train(model, train_dataset, optimizer, device, loss_fn=loss_fn, warmup=False
 
 
 @TI.register_fl_task(model='model', data_loader='val_dataset', device='device')
-def validate(model, val_dataset, device):
+def validate(model, val_dataset, device):  # NOQA
     # Run a validation loop at the end of each epoch.
     for x_batch_val, y_batch_val in val_dataset:
         val_logits = model(x_batch_val, training=False)
@@ -181,11 +174,11 @@ fed_dataset.valid_dataset = None
 # Start a federated learning experiment
 
 # Create a federation
-from openfl.interface.interactive_api.federation import Federation
+from openfl.interface.interactive_api.federation import Federation  # NOQA
 
 # will determine fqdn by itself
 federation = Federation(central_node_fqdn='localhost', disable_tls=True)
-# Datapath corresonds to 'RANK,WORLD_SIZE'
+# Datapath corresponds to 'RANK,WORLD_SIZE'
 col_data_paths = {'one': '1,2',
                   'two': '2,2'}
 federation.register_collaborators(col_data_paths=col_data_paths)
@@ -203,7 +196,7 @@ arch_path = fl_experiment.prepare_workspace_distribution(
 )
 
 
-from tests.github.interactive_api.experiment_runner import run_experiment
+from tests.github.interactive_api.experiment_runner import run_experiment  # NOQA
 
 
 run_experiment(col_data_paths, model_interface, arch_path, fl_experiment)

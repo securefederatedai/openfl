@@ -1,11 +1,20 @@
+# Copyright (C) 2020-2021 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+"""PyTorch Kvasir UNet mnist example in the jupiter notebook style."""
+
+
 import logging
 
 import torch
 import torch.nn as nn
 import torch.optim as optim
 
-from tests.github.interactive_api.layers import soft_dice_loss, soft_dice_coef, double_conv, down, \
-    up
+from tests.github.interactive_api.layers import soft_dice_loss
+from tests.github.interactive_api.layers import soft_dice_coef
+from tests.github.interactive_api.layers import double_conv
+from tests.github.interactive_api.layers import down
+from tests.github.interactive_api.layers import up
 
 logger = logging.getLogger(__name__)
 
@@ -15,7 +24,10 @@ UNet model definition
 
 
 class UNet(nn.Module):
+    """UNet model."""
+
     def __init__(self, n_channels=3, n_classes=1):
+        """Initialize UNet model."""
         super().__init__()
         self.inc = double_conv(n_channels, 64)
         self.down1 = down(64, 128)
@@ -29,6 +41,7 @@ class UNet(nn.Module):
         self.outc = nn.Conv2d(64, n_classes, 1)
 
     def forward(self, x):
+        """Forward pass."""
         x1 = self.inc(x)
         x2 = self.down1(x1)
         x3 = self.down2(x2)
@@ -47,16 +60,16 @@ model_unet = UNet()
 
 optimizer_adam = optim.Adam(model_unet.parameters(), lr=1e-4)
 
-import os
-from hashlib import sha384
-import PIL
-from torch.utils.data import Dataset, DataLoader
-from torchvision import transforms as tsf
-from skimage import io
+import os  # NOQA
+from hashlib import sha384  # NOQA
+import PIL  # NOQA
+from torch.utils.data import Dataset, DataLoader  # NOQA
+from torchvision import transforms as tsf  # NOQA
+from skimage import io  # NOQA
 
 os.makedirs('data', exist_ok=True)
-os.system(
-    "wget -nc 'https://datasets.simula.no/hyper-kvasir/hyper-kvasir-segmented-images.zip' -O ./data/kvasir.zip")
+os.system("wget -nc 'https://datasets.simula.no/hyper-kvasir/hyper-kvasir-segmented-images.zip'"
+          " -O ./data/kvasir.zip")
 ZIP_SHA384 = 'e30d18a772c6520476e55b610a4db457237f151e' \
              '19182849d54b49ae24699881c1e18e0961f77642be900450ef8b22e7'
 assert sha384(open('./data/kvasir.zip', 'rb').read(
@@ -64,22 +77,21 @@ assert sha384(open('./data/kvasir.zip', 'rb').read(
 os.system('unzip -n ./data/kvasir.zip -d ./data')
 
 DATA_PATH = './data/segmented-images/'
-import numpy as np
+import numpy as np  # NOQA
 
 
 def read_data(image_path, mask_path):
-    """
-    Read image and mask from disk.
-    """
+    """Read image and mask from disk."""
     img = io.imread(image_path)
     assert (img.shape[2] == 3)
     mask = io.imread(mask_path)
     return (img, mask[:, :, 0].astype(np.uint8))
 
 
-class KvasirDataset(Dataset):
+class KvasirDataset(Dataset):  # NOQA
     """
     Kvasir dataset contains 1000 images for all collaborators.
+
     Args:
         data_path: path to dataset on disk
         collaborator_count: total number of collaborators
@@ -87,7 +99,7 @@ class KvasirDataset(Dataset):
         is_validation: validation option
     """
 
-    def __init__(self, images_path='./data/segmented-images/images/',
+    def __init__(self, images_path='./data/segmented-images/images/',  # NOQA
                  masks_path='./data/segmented-images/masks/',
                  validation_fraction=1 / 8, is_validation=False):
 
@@ -116,22 +128,22 @@ class KvasirDataset(Dataset):
             tsf.Resize((332, 332), interpolation=PIL.Image.NEAREST),
             tsf.ToTensor()])
 
-    def __getitem__(self, index):
+    def __getitem__(self, index):  # NOQA
         name = self.images_names[index]
         img, mask = read_data(self.images_path + name, self.masks_path + name)
         img = self.img_trans(img).numpy()
         mask = self.mask_trans(mask).numpy()
         return img, mask
 
-    def __len__(self):
+    def __len__(self):  # NOQA
         return len(self.images_names)
 
 
-def function_defined_in_notebook():
+def function_defined_in_notebook():  # NOQA
     print('I will cause problems')
 
 
-def train(unet_model, train_loader, optimizer, device, loss_fn=soft_dice_loss):
+def train(unet_model, train_loader, optimizer, device, loss_fn=soft_dice_loss):  # NOQA
     function_defined_in_notebook()
 
     unet_model.train()
@@ -152,7 +164,7 @@ def train(unet_model, train_loader, optimizer, device, loss_fn=soft_dice_loss):
     return {'train_loss': np.mean(losses), }
 
 
-def validate(unet_model, val_loader, device):
+def validate(unet_model, val_loader, device):  # NOQA
     unet_model.eval()
     unet_model.to(device)
 
@@ -164,7 +176,7 @@ def validate(unet_model, val_loader, device):
             samples = target.shape[0]
             total_samples += samples
             data, target = torch.tensor(data).to(device), \
-                           torch.tensor(target).to(device, dtype=torch.int64)
+                           torch.tensor(target).to(device, dtype=torch.int64)  # NOQA
             output = unet_model(data)
             val = soft_dice_coef(output, target)
             val_score += val.sum().cpu().numpy()
@@ -172,10 +184,9 @@ def validate(unet_model, val_loader, device):
     return {'dice_coef': val_score / total_samples, }
 
 
-from openfl.interface.interactive_api.experiment import TaskInterface, DataInterface, \
-    ModelInterface, FLExperiment
+from openfl.interface.interactive_api.experiment import TaskInterface, DataInterface, ModelInterface, FLExperiment  # NOQA
 
-from copy import deepcopy
+from copy import deepcopy  # NOQA
 
 framework_adapter = 'openfl.plugins.frameworks_adapters.pytorch_adapter.FrameworkAdapterPlugin'
 model_interface = ModelInterface(model=model_unet, optimizer=optimizer_adam,
@@ -185,36 +196,36 @@ model_interface = ModelInterface(model=model_unet, optimizer=optimizer_adam,
 initial_model = deepcopy(model_unet)
 
 
-class UserDataset:
-    def __init__(self, path_to_local_data):
+class UserDataset:  # NOQA
+    def __init__(self, path_to_local_data):  # NOQA
         print(f'User Dataset initialized with {path_to_local_data}')
 
 
-class OpenflMixin:
+class OpenflMixin:  # NOQA
     def _delayed_init(self):
         raise NotImplementedError
 
 
-class FedDataset(OpenflMixin):
-    def __init__(self, UserDataset):
+class FedDataset(OpenflMixin):  # NOQA
+    def __init__(self, UserDataset):  # NOQA
         self.user_dataset_class = UserDataset
         print('We implement all abstract methods from mixin in this class')
 
-    def _delayed_init(self, data_path):
+    def _delayed_init(self, data_path):  # NOQA
         print('This method is called on the collaborator node')
-        dataset_obj = self.user_dataset_class(data_path)
+        dataset_obj = self.user_dataset_class(data_path)  # NOQA
 
 
 fed_dataset = FedDataset(UserDataset)
 fed_dataset._delayed_init('data path on the collaborator node')
 
 
-class FedDataset(DataInterface):
-    def __init__(self, UserDatasetClass, **kwargs):
+class FedDataset(DataInterface):  # NOQA
+    def __init__(self, UserDatasetClass, **kwargs):  # NOQA
         self.UserDatasetClass = UserDatasetClass
         self.kwargs = kwargs
 
-    def _delayed_init(self, data_path='1,1'):
+    def _delayed_init(self, data_path='1,1'):  # NOQA
         # With the next command the local dataset will be loaded on the collaborator node
         # For this example we have the same dataset on the same path, and we will shard it
         # So we use `data_path` information for this purpose.
@@ -235,29 +246,21 @@ class FedDataset(DataInterface):
         self.train_set.images_names = self.train_set.images_names[rank - 1:: world_size]
 
     def get_train_loader(self, **kwargs):
-        """
-        Output of this method will be provided to tasks with optimizer in contract
-        """
+        """Output of this method will be provided to tasks with optimizer in contract."""
         return DataLoader(
             self.train_set, num_workers=8, batch_size=self.kwargs['train_bs'], shuffle=True
         )
 
     def get_valid_loader(self, **kwargs):
-        """
-        Output of this method will be provided to tasks without optimizer in contract
-        """
+        """Output of this method will be provided to tasks without optimizer in contract."""
         return DataLoader(self.valid_set, num_workers=8, batch_size=self.kwargs['valid_bs'])
 
     def get_train_data_size(self):
-        """
-        Information for aggregation
-        """
+        """Information for aggregation."""
         return len(self.train_set)
 
     def get_valid_data_size(self):
-        """
-        Information for aggregation
-        """
+        """Information for aggregation."""
         return len(self.valid_set)
 
 
@@ -265,19 +268,19 @@ fed_dataset = FedDataset(KvasirDataset, train_bs=8, valid_bs=8)
 
 TI = TaskInterface()
 
-import tqdm
+import tqdm  # NOQA
 
 
-def function_defined_in_notebook(some_parameter):
+def function_defined_in_notebook(some_parameter):  # NOQA
     print('I will cause problems')
     print(f'Also I accept a parameter and it is {some_parameter}')
 
 
 # We do not actually need to register additional kwargs, Just serialize them
-@TI.add_kwargs(**{'some_parameter': 42})
+@TI.add_kwargs(**{'some_parameter': 42})  # NOQA
 @TI.register_fl_task(model='unet_model', data_loader='train_loader',
                      device='device', optimizer='optimizer')
-def train(unet_model, train_loader, optimizer, device, loss_fn=soft_dice_loss, some_parameter=None):
+def train(unet_model, train_loader, optimizer, device, loss_fn=soft_dice_loss, some_parameter=None):  # NOQA
     if not torch.cuda.is_available():
         device = 'cpu'
 
@@ -303,8 +306,8 @@ def train(unet_model, train_loader, optimizer, device, loss_fn=soft_dice_loss, s
     return {'train_loss': np.mean(losses), }
 
 
-@TI.register_fl_task(model='unet_model', data_loader='val_loader', device='device')
-def validate(unet_model, val_loader, device):
+@TI.register_fl_task(model='unet_model', data_loader='val_loader', device='device')  # NOQA
+def validate(unet_model, val_loader, device):  # NOQA
     unet_model.eval()
     unet_model.to(device)
 
@@ -318,7 +321,7 @@ def validate(unet_model, val_loader, device):
             samples = target.shape[0]
             total_samples += samples
             data, target = torch.tensor(data).to(device), \
-                           torch.tensor(target).to(device, dtype=torch.int64)
+                           torch.tensor(target).to(device, dtype=torch.int64)  # NOQA
             output = unet_model(data)
             val = soft_dice_coef(output, target)
             val_score += val.sum().cpu().numpy()
@@ -328,11 +331,11 @@ def validate(unet_model, val_loader, device):
     # Create a federation
 
 
-from openfl.interface.interactive_api.federation import Federation
+from openfl.interface.interactive_api.federation import Federation  # NOQA
 
 # 1) Run with TLS disabled (trusted environment)
 # will determine fqdn by itself
-from socket import getfqdn
+from socket import getfqdn  # NOQA
 
 federation = Federation(central_node_fqdn=getfqdn(), disable_tls=True)
 # First number which is a collaborators rank is also passed as a cuda device identifier
@@ -342,13 +345,13 @@ federation.register_collaborators(col_data_paths=col_data_paths)
 
 # --------------------------------------------------------------------------------------------------------------------
 # 2) Run with aggregator-collaborator mTLS
-# If the user wants to enable mTLS their must provide CA root chain, and signed key pair to the federation interface
+# If the user wants to enable mTLS their must provide CA root chain, and signed key pair to the federation interface  # NOQA
 # cert_chain = 'cert/cert_chain.crt'
 # agg_certificate = 'cert/agg_certificate.crt'
 # agg_private_key = 'cert/agg_private.key'
 
 # federation = Federation(central_node_fqdn=getfqdn(), disable_tls=True,
-#                        cert_chain=cert_chain, agg_certificate=agg_certificate, agg_private_key=agg_private_key)
+#                        cert_chain=cert_chain, agg_certificate=agg_certificate, agg_private_key=agg_private_key)  # NOQA
 # col_data_paths = {'one': '1,1',}
 # federation.register_collaborators(col_data_paths=col_data_paths)
 
@@ -357,8 +360,8 @@ fl_experiment = FLExperiment(federation=federation, )
 
 # If I use autoreload I got a pickling error
 
-# # The following command zips the workspace and python requirements to be transfered to collaborator nodes
-# fl_experiment.prepare_workspace_distribution(model_provider=MI, task_keeper=TI, data_loader=fed_dataset, rounds_to_train=7, \
+# # The following command zips the workspace and python requirements to be transfered to collaborator nodes  # NOQA
+# fl_experiment.prepare_workspace_distribution(model_provider=MI, task_keeper=TI, data_loader=fed_dataset, rounds_to_train=7, \  # NOQA
 #                               opt_treatment='CONTINUE_GLOBAL')
 # # # This command starts the aggregator server
 # # fl_experiment.start_experiment(model_provider=MI)
@@ -373,7 +376,7 @@ arch_path = fl_experiment.prepare_workspace_distribution(
     opt_treatment='CONTINUE_GLOBAL'
 )
 
-from tests.github.interactive_api.experiment_runner import run_experiment
+from tests.github.interactive_api.experiment_runner import run_experiment  # NOQA
 
 run_experiment(col_data_paths, model_interface, arch_path, fl_experiment)
 

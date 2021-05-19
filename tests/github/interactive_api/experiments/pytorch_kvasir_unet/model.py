@@ -1,15 +1,19 @@
+# Copyright (C) 2020-2021 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+"""UNet model definition."""
+
 import torch
 import torch.nn as nn
 
 from tests.github.interactive_api.layers import double_conv, down, up
 
-"""
-UNet model definition
-"""
-
 
 class UNet(nn.Module):
+    """UNet model."""
+
     def __init__(self, n_channels=3, n_classes=1):
+        """Initialize UNet model."""
         super().__init__()
         self.inc = double_conv(n_channels, 64)
         self.down1 = down(64, 128)
@@ -23,6 +27,7 @@ class UNet(nn.Module):
         self.outc = nn.Conv2d(64, n_classes, 1)
 
     def forward(self, x):
+        """Forward pass."""
         x1 = self.inc(x)
         x2 = self.down1(x1)
         x3 = self.down2(x2)

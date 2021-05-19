@@ -1,19 +1,23 @@
+# Copyright (C) 2020-2021 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+"""Experiment description."""
+
 import logging
+from copy import deepcopy
 from socket import getfqdn
 
 import torch.optim as optim
 
-
-from tests.github.interactive_api.experiments.pytorch_kvasir_unet.model import UNet
-from tests.github.interactive_api.experiments.pytorch_kvasir_unet.data_loader import load_data
-from tests.github.interactive_api.experiments.pytorch_kvasir_unet.dataset import KvasirDataset, FedDataset
 from openfl.interface.interactive_api.experiment import ModelInterface, FLExperiment
 from openfl.interface.interactive_api.federation import Federation
-from tests.github.interactive_api.experiments.pytorch_kvasir_unet.tasks import validate, task_interface
 from tests.github.interactive_api.experiment_runner import run_experiment
-
-from copy import deepcopy
-
+from tests.github.interactive_api.experiments.pytorch_kvasir_unet.data_loader import load_data
+from tests.github.interactive_api.experiments.pytorch_kvasir_unet.dataset import KvasirDataset
+from tests.github.interactive_api.experiments.pytorch_kvasir_unet.dataset import FedDataset
+from tests.github.interactive_api.experiments.pytorch_kvasir_unet.model import UNet
+from tests.github.interactive_api.experiments.pytorch_kvasir_unet.tasks import task_interface
+from tests.github.interactive_api.experiments.pytorch_kvasir_unet.tasks import validate
 
 logger = logging.getLogger(__name__)
 

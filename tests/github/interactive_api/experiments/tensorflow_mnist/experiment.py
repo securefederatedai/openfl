@@ -1,3 +1,8 @@
+# Copyright (C) 2020-2021 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+"""Experiment description."""
+
 import logging
 
 import tensorflow as tf
@@ -5,9 +10,17 @@ import tensorflow as tf
 from openfl.interface.interactive_api.experiment import ModelInterface, FLExperiment
 from openfl.interface.interactive_api.federation import Federation
 from tests.github.interactive_api.experiment_runner import run_experiment
-from tests.github.interactive_api.experiments.tensorflow_mnist.settings import model, optimizer, X_train, y_train, X_valid, y_valid, batch_size
+from tests.github.interactive_api.experiments.tensorflow_mnist.settings import model
+from tests.github.interactive_api.experiments.tensorflow_mnist.settings import optimizer
+from tests.github.interactive_api.experiments.tensorflow_mnist.settings import X_train
+from tests.github.interactive_api.experiments.tensorflow_mnist.settings import y_train
+from tests.github.interactive_api.experiments.tensorflow_mnist.settings import X_valid
+from tests.github.interactive_api.experiments.tensorflow_mnist.settings import y_valid
+from tests.github.interactive_api.experiments.tensorflow_mnist.settings import batch_size
 from tests.github.interactive_api.experiments.tensorflow_mnist.dataset import FedDataset
-from tests.github.interactive_api.experiments.tensorflow_mnist.tasks import train, validate, task_interface
+from tests.github.interactive_api.experiments.tensorflow_mnist.tasks import train
+from tests.github.interactive_api.experiments.tensorflow_mnist.tasks import validate
+from tests.github.interactive_api.experiments.tensorflow_mnist.tasks import task_interface
 
 logger = logging.getLogger(__name__)
 
@@ -25,7 +38,7 @@ fed_dataset = FedDataset(X_train, y_train, X_valid, y_valid, batch_size=batch_si
 
 train(model, fed_dataset.get_train_loader(), optimizer, 'cpu', warmup=True)
 
-#Make a copy of the model for later comparison
+# Make a copy of the model for later comparison
 initial_model = tf.keras.models.clone_model(model)
 
 

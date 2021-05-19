@@ -1,15 +1,20 @@
-import tqdm
-import torch
+# Copyright (C) 2020-2021 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+"""Register tasks."""
+
 import numpy as np
+import torch
+import tqdm
 
 from openfl.interface.interactive_api.experiment import TaskInterface
 from tests.github.interactive_api.layers import soft_dice_loss, soft_dice_coef
-
 
 task_interface = TaskInterface()
 
 
 def function_defined_in_notebook(some_parameter):
+    """Define function in notebook or user code."""
     print('I will cause problems')
     print(f'Also I accept a parameter and it is {some_parameter}')
 
@@ -18,7 +23,9 @@ def function_defined_in_notebook(some_parameter):
 @task_interface.add_kwargs(**{'some_parameter': 42})
 @task_interface.register_fl_task(model='unet_model', data_loader='train_loader',
                                  device='device', optimizer='optimizer')
-def train(unet_model, train_loader, optimizer, device, loss_fn=soft_dice_loss, some_parameter=None):
+def train(unet_model, train_loader, optimizer, device,
+          loss_fn=soft_dice_loss, some_parameter=None):
+    """Train."""
     if not torch.cuda.is_available():
         device = 'cpu'
 
@@ -46,6 +53,7 @@ def train(unet_model, train_loader, optimizer, device, loss_fn=soft_dice_loss, s
 
 @task_interface.register_fl_task(model='unet_model', data_loader='val_loader', device='device')
 def validate(unet_model, val_loader, device):
+    """Validate."""
     unet_model.eval()
     unet_model.to(device)
 
@@ -58,10 +66,10 @@ def validate(unet_model, val_loader, device):
         for data, target in val_loader:
             samples = target.shape[0]
             total_samples += samples
-            data, target = torch.tensor(data).to(device), \
-                           torch.tensor(target).to(device, dtype=torch.int64)
+            data, target = torch.tensor(data).to(device), torch.tensor(target).to(
+                device, dtype=torch.int64)
             output = unet_model(data)
             val = soft_dice_coef(output, target)
             val_score += val.sum().cpu().numpy()
 
-    return {'dice_coef': val_score / total_samples, }
+    return {'dice_coef': val_score / total_samples}
