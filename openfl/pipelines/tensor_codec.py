@@ -179,7 +179,7 @@ class TensorCodec:
         return delta_tensor_key, nparray - base_model_nparray
 
     @staticmethod
-    def apply_delta(tensor_key, delta, base_model_nparray):
+    def apply_delta(tensor_key, delta, base_model_nparray, creates_model=False):
         """
         Add delta to the nparray.
 
@@ -191,6 +191,8 @@ class TensorCodec:
                                     old model
             base_model_nparray:     The nparray that corresponds to the prior
                                     weights
+            creates_model:          If flag is set, the tensorkey returned
+                                    will correspond to the aggregator model
 
         Returns:
             new_model_tensor_key:   Latest model layer tensorkey
@@ -205,7 +207,7 @@ class TensorCodec:
         # assert('model' in tensor_key[3]), 'The tensorkey should be provided
         # from the base model'
         # Aggregator UUID has the prefix 'aggregator'
-        if 'aggregator' in origin:
+        if 'aggregator' in origin and not creates_model:
             tags = list(tags)
             tags.remove('delta')
             new_tags = tuple(tags)

@@ -6,7 +6,7 @@
 Learning to fly: |productName| tutorials
 #######################
 
-New to |productName|? Get familiar with our new Python API using the built-in tutorials. After installing the |productName| package in your virtual environment, simply run :code:`fx tutorial start` from the command line. This will start a Jupyter notebook server and return a URL you can use to access each of our tutorials. We provide several jupyter notebooks for Pytorch and Tensorflow that simulate a federation on a local machine.  These tutorials provide a convient entrypoint for learning about |productName| :ref:`conventions <definitions_and_conventions>`  like FL Plans, aggregators, collaborators and more. 
+New to |productName|? Get familiar with our native Python API using the built-in tutorials. After installing the |productName| package in your virtual environment, simply run :code:`fx tutorial start` from the command line. This will start a Jupyter notebook server and return a URL you can use to access each of our tutorials. We provide several jupyter notebooks for Pytorch and Tensorflow that simulate a federation on a local machine.  These tutorials provide a convient entrypoint for learning about |productName| :ref:`conventions <definitions_and_conventions>`  like FL Plans, aggregators, collaborators and more. 
 
 
 Starting the tutorials
@@ -47,7 +47,7 @@ At this point you may be wondering what goes into a FL.Plan, and how you can cus
 
     .. code-block:: python
 
-     print(json.dumps(fx.get_plan(), indent=4, sort_keys=True))
+     print(fx.get_plan())
 
      {
        "aggregator.settings.best_state_path": "save/keras_cnn_mnist_best.pbuf",

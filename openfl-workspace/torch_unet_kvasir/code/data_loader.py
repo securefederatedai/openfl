@@ -4,7 +4,6 @@
 """You may copy this file as the starting point of your own model."""
 
 from tqdm import tqdm
-import urllib.request
 import zipfile
 from hashlib import sha384
 from os import path
@@ -16,6 +15,7 @@ import numpy as np
 from skimage import io
 from torchvision import transforms as tsf
 from torch.utils.data import Dataset, DataLoader
+from torchvision.datasets.utils import download_url
 
 
 def read_data(image_path, mask_path):
@@ -85,32 +85,17 @@ class KvasirDataset(Dataset):
         return len(self.images_names)
 
 
-def my_hook(t):
-    """Reporthook for urlretrieve."""
-    last_b = [0]
-
-    def inner(b=1, bsize=1, tsize=None):
-        if tsize is not None:
-            t.total = tsize
-        t.update((b - last_b[0]) * bsize)
-        last_b[0] = b
-    return inner
-
-
 def load_kvasir_dataset():
     """Load and unzip kvasir dataset."""
     ZIP_SHA384 = 'e30d18a772c6520476e55b610a4db457237f151e'\
         '19182849d54b49ae24699881c1e18e0961f77642be900450ef8b22e7'
     data_url = "https://datasets.simula.no/hyper-kvasir/hyper-kvasir-segmented-images.zip"
-    filepath = './kvasir.zip'
-    with tqdm(unit='B', unit_scale=True, leave=True, miniters=1,
-              desc='Downloading kvasir dataset: ') as t:
-        urllib.request.urlretrieve(data_url, filename=filepath,
-                                   reporthook=my_hook(t), data=None)
-    assert sha384(open(filepath, 'rb').read(
-        path.getsize(filepath))).hexdigest() == ZIP_SHA384
+    filename = 'kvasir.zip'
+    download_url(data_url, '.', filename=filename)
+    assert sha384(open(filename, 'rb').read(
+        path.getsize(filename))).hexdigest() == ZIP_SHA384
 
-    with zipfile.ZipFile(filepath, "r") as zip_ref:
+    with zipfile.ZipFile(filename, "r") as zip_ref:
         for member in tqdm(iterable=zip_ref.infolist(), desc='Unzipping dataset'):
             zip_ref.extract(member, "./data")
 

@@ -29,7 +29,7 @@ def pretty(o):
 
 def tree(path):
     """Print current directory file tree."""
-    echo(f'+ {path}')
+    #echo(f'+ {path}')
 
     for path in sorted(path.rglob('*')):
 
@@ -37,9 +37,11 @@ def tree(path):
         space = '    ' * depth
 
         if path.is_file():
-            echo(f'{space}f {path.name}')
+            #echo(f'{space}f {path.name}')
+            pass
         else:
-            echo(f'{space}d {path.name}')
+            #echo(f'{space}d {path.name}')
+            pass
 
 
 def print_tree(dir_path: Path, level: int = -1,
@@ -51,7 +53,7 @@ def print_tree(dir_path: Path, level: int = -1,
     tee = '├── '
     last = '└── '
 
-    echo('\nNew workspace directory structure:')
+    #echo('\nNew workspace directory structure:')
 
     dir_path = Path(dir_path)  # accept string coerceable to Path
     files = 0
@@ -77,13 +79,15 @@ def print_tree(dir_path: Path, level: int = -1,
                 yield prefix + pointer + path.name
                 files += 1
 
-    echo(dir_path.name)
+    #echo(dir_path.name)
     iterator = inner(dir_path, level=level)
     for line in islice(iterator, length_limit):
-        echo(line)
+        #echo(line)
+        pass
     if next(iterator, None):
-        echo(f'... length_limit, {length_limit}, reached, counted:')
-    echo(f'\n{directories} directories' + (f', {files} files' if files else ''))
+        #echo(f'... length_limit, {length_limit}, reached, counted:')
+        pass
+    #echo(f'\n{directories} directories' + (f', {files} files' if files else ''))
 
 
 def copytree(src, dst, symlinks=False, ignore=None,

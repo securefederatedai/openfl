@@ -55,3 +55,6 @@ tasks :
       apply   : local
       metrics :
       - dice_coef
+
+compression_pipeline :
+  defaults : plan/defaults/compression_pipeline.yaml

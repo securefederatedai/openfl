@@ -32,10 +32,9 @@ class SparsityTransformer(Transformer):
             data: an numpy array from the model tensor_dict.
 
         Returns:
-            condensed_data: an numpy array being sparsified.
+            sparse_data: a flattened, sparse representation of the input tensor
             metadata: dictionary to store a list of meta information.
         """
-        self.p = 1
         metadata = {'int_list': list(data.shape)}
         # sparsification
         data = data.astype(np.float32)
@@ -43,13 +42,9 @@ class SparsityTransformer(Transformer):
         n_elements = flatten_data.shape[0]
         k_op = int(np.ceil(n_elements * self.p))
         topk, topk_indices = self._topk_func(flatten_data, k_op)
-        #
-        condensed_data = topk
         sparse_data = np.zeros(flatten_data.shape)
         sparse_data[topk_indices] = topk
-        nonzero_element_bool_indices = sparse_data != 0.0
-        metadata['bool_list'] = list(nonzero_element_bool_indices)
-        return condensed_data, metadata
+        return sparse_data, metadata
 
     def backward(self, data, metadata, **kwargs):
         """Recover data array with the right shape and numerical type.
@@ -64,10 +59,7 @@ class SparsityTransformer(Transformer):
         """
         data = data.astype(np.float32)
         data_shape = metadata['int_list']
-        nonzero_element_bool_indices = list(metadata['bool_list'])
-        recovered_data = np.zeros(data_shape).reshape(-1).astype(np.float32)
-        recovered_data[nonzero_element_bool_indices] = data
-        recovered_data = recovered_data.reshape(data_shape)
+        recovered_data = data.reshape(data_shape)
         return recovered_data
 
     @staticmethod
@@ -115,12 +107,15 @@ class KmeansTransformer(Transformer):
         """
         # clustering
         data = data.reshape((-1, 1))
-        k_means = cluster.KMeans(
-            n_clusters=self.n_cluster, n_init=self.n_cluster)
-        k_means.fit(data)
-        quantized_values = k_means.cluster_centers_.squeeze()
-        indices = k_means.labels_
-        quant_array = np.choose(indices, quantized_values)
+        if data.shape[0] >= self.n_cluster:
+            k_means = cluster.KMeans(
+                n_clusters=self.n_cluster, n_init=self.n_cluster)
+            k_means.fit(data)
+            quantized_values = k_means.cluster_centers_.squeeze()
+            indices = k_means.labels_
+            quant_array = np.choose(indices, quantized_values)
+        else:
+            quant_array = data
         int_array, int2float_map = self._float_to_int(quant_array)
         metadata = {'int_to_float': int2float_map}
         int_array = int_array.reshape(-1)
@@ -209,11 +204,11 @@ class GZIPTransformer(Transformer):
 class SKCPipeline(TransformationPipeline):
     """A pipeline class to compress data lossly using sparsity and k-means methods."""
 
-    def __init__(self, p_sparsity=0.01, n_clusters=6, **kwargs):
+    def __init__(self, p_sparsity=0.1, n_clusters=6, **kwargs):
         """Initialize a pipeline of transformers.
 
         Args:
-            p_sparsity (float): Sparsity factor (Default=0.01)
+            p_sparsity (float): Sparsity factor (Default=0.1)
             n_cluster (int): Number of K-Means clusters (Default=6)
 
         Returns:

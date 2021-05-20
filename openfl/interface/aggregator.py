@@ -58,20 +58,23 @@ def generate_cert_request(fqdn):
     from openfl.cryptography.participant import generate_csr
     from openfl.cryptography.io import write_crt, write_key
 
+    if fqdn is None:
+        fqdn = getfqdn()
+
     common_name = f'{fqdn}'.lower()
     subject_alternative_name = f'DNS:{common_name}'
     file_name = f'agg_{common_name}'
 
-    echo(f'Creating AGGREGATOR certificate key pair with following settings: '
-         f'CN={style(common_name, fg="red")},'
-         f' SAN={style(subject_alternative_name, fg="red")}')
+    #echo(f'Creating AGGREGATOR certificate key pair with following settings: '
+    #     f'CN={style(common_name, fg="red")},'
+    #     f' SAN={style(subject_alternative_name, fg="red")}')
 
     server_private_key, server_csr = generate_csr(common_name, server=True)
 
     (PKI_DIR / 'server').mkdir(parents=True, exist_ok=True)
 
-    echo('  Writing AGGREGATOR certificate key pair to: ' + style(
-        f'{PKI_DIR}/server', fg='green'))
+    #echo('  Writing AGGREGATOR certificate key pair to: ' + style(
+    #    f'{PKI_DIR}/server', fg='green'))
 
     # Write aggregator csr and key to disk
     write_crt(server_csr, PKI_DIR / 'server' / f'{file_name}.csr')
@@ -106,6 +109,9 @@ def certify(fqdn, silent):
 
     from click import confirm
 
+    if fqdn is None:
+        fqdn = getfqdn()
+
     common_name = f'{fqdn}'.lower()
     file_name = f'agg_{common_name}'
     cert_name = f'server/{file_name}'
@@ -114,36 +120,39 @@ def certify(fqdn, silent):
 
     # Load CSR
     if not Path(PKI_DIR / f'{cert_name}.csr').exists():
-        echo(style('Aggregator certificate signing request not found.', fg='red')
-             + ' Please run `fx aggregator generate-cert-request`'
-             ' to generate the certificate request.')
+        #echo(style('Aggregator certificate signing request not found.', fg='red')
+        #     + ' Please run `fx aggregator generate-cert-request`'
+        #     ' to generate the certificate request.')
+        pass
 
     csr, csr_hash = read_csr(PKI_DIR / f'{cert_name}.csr')
 
     # Load private signing key
     if not Path(PKI_DIR / signing_key_path).exists():
-        echo(style('Signing key not found.', fg='red')
-             + ' Please run `fx workspace certify`'
-             ' to initialize the local certificate authority.')
+        #echo(style('Signing key not found.', fg='red')
+        #     + ' Please run `fx workspace certify`'
+        #     ' to initialize the local certificate authority.')
+        pass
 
     signing_key = read_key(PKI_DIR / signing_key_path)
 
     # Load signing cert
     if not Path(PKI_DIR / signing_crt_path).exists():
-        echo(style('Signing certificate not found.', fg='red')
-             + ' Please run `fx workspace certify`'
-             ' to initialize the local certificate authority.')
+        #echo(style('Signing certificate not found.', fg='red')
+        #     + ' Please run `fx workspace certify`'
+        #     ' to initialize the local certificate authority.')
+        pass
 
     signing_crt = read_crt(PKI_DIR / signing_crt_path)
 
-    echo('The CSR Hash for file '
-         + style(f'{cert_name}.csr', fg='green')
-         + ' = '
-         + style(f'{csr_hash}', fg='red'))
+    #echo('The CSR Hash for file '
+    #     + style(f'{cert_name}.csr', fg='green')
+    #     + ' = '
+    #     + style(f'{csr_hash}', fg='red'))
 
     if silent:
 
-        echo(' Signing AGGREGATOR certificate')
+        #echo(' Signing AGGREGATOR certificate')
         signed_agg_cert = sign_certificate(csr, signing_key, signing_crt.subject)
         write_crt(signed_agg_cert, PKI_DIR / f'{cert_name}.crt')
 
@@ -151,11 +160,12 @@ def certify(fqdn, silent):
 
         if confirm("Do you want to sign this certificate?"):
 
-            echo(' Signing AGGREGATOR certificate')
+            #echo(' Signing AGGREGATOR certificate')
             signed_agg_cert = sign_certificate(csr, signing_key, signing_crt.subject)
             write_crt(signed_agg_cert, PKI_DIR / f'{cert_name}.crt')
 
         else:
-            echo(style('Not signing certificate.', fg='red')
-                 + ' Please check with this AGGREGATOR to get the correct'
-                   ' certificate for this federation.')
+            #echo(style('Not signing certificate.', fg='red')
+            #     + ' Please check with this AGGREGATOR to get the correct'
+            #       ' certificate for this federation.')
+            pass

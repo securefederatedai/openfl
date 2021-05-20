@@ -4,3 +4,4 @@ __pycache__
 /dist
 .vscode
 .ipynb_checkpoints
+venv/*

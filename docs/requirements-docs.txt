@@ -3,4 +3,4 @@
 sphinx-rtd-theme
 sphinx-prompt 
 sphinx_substitution_extensions 
-sphinxcontrib-mermaid
+sphinxcontrib-kroki

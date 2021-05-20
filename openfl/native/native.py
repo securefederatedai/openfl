@@ -24,7 +24,7 @@ logger = getLogger(__name__)
 WORKSPACE_PREFIX = os.path.join(os.path.expanduser('~'), '.local', 'workspace')
 
 
-def setup_plan(save=True):
+def setup_plan(log_level='CRITICAL'):
     """
     Dump the plan with all defaults + overrides set.
 
@@ -38,42 +38,20 @@ def setup_plan(save=True):
     plan_config = 'plan/plan.yaml'
     cols_config = 'plan/cols.yaml'
     data_config = 'plan/data.yaml'
+
+    getLogger().setLevel(log_level)
     plan = Plan.Parse(plan_config_path=Path(plan_config),
                       cols_config_path=Path(cols_config),
-                      data_config_path=Path(data_config))
-    if save:
-        Plan.Dump(Path(plan_config), plan.config)
+                      data_config_path=Path(data_config),
+                      resolve=False)
+    getLogger().setLevel('INFO')
 
     return plan
 
 
-def get_plan(return_complete=False):
-    """
-    Return the flattened dictionary associated with the plan.
-
-    To read the output in a human readable format, we recommend interpreting it
-     as follows:
-
-    ```
-    print(json.dumps(fx.get_plan(), indent=4, sort_keys=True))
-    ```
-
-    Args:
-        return_complete : bool (default=False)
-            By default will not print the default file locations for each of
-            the templates
-
-    Returns:
-        plan : dict
-            flattened dictionary of the current plan
-    """
-    getLogger().setLevel('CRITICAL')
-
-    plan_config = setup_plan().config
-
-    getLogger().setLevel('INFO')
-
-    flattened_config = flatten_preserve_lists(plan_config, '.')[0]
+def flatten(config, return_complete=False):
+    """Flatten nested config."""
+    flattened_config = flatten_preserve_lists(config, '.')[0]
     if not return_complete:
         keys_to_remove = [
             k for k, v in flattened_config.items()
@@ -98,16 +76,18 @@ def update_plan(override_config):
     Returns:
         None
     """
-    plan_path = 'plan/plan.yaml'
-    flat_plan_config = get_plan(return_complete=True)
+    plan = setup_plan()
+    flat_plan_config = flatten(plan.config, return_complete=True)
     for k, v in override_config.items():
         if k in flat_plan_config:
-            flat_plan_config[k] = v
             logger.info(f'Updating {k} to {v}... ')
         else:
-            logger.info(f'Key {k} not found in plan. Ignoring... ')
-    plan_config = unflatten(flat_plan_config, '.')
-    Plan.Dump(Path(plan_path), plan_config)
+            # TODO: We probably need to validate the new key somehow
+            logger.debug(f'Did not find {k} in config. Make sure it should exist. Creating...')
+        flat_plan_config[k] = v
+    plan.config = unflatten(flat_plan_config, '.')
+    plan.resolve()
+    return plan
 
 
 def unflatten(config, separator='.'):
@@ -236,19 +216,7 @@ def run_experiment(collaborator_dict, override_config={}):
     path.insert(0, str(work))
 
     # Update the plan if necessary
-    if len(override_config) > 0:
-        update_plan(override_config)
-
-    # TODO: Fix this implementation. The full plan parsing is reused here,
-    # but the model and data will be overwritten based on user specifications
-    plan_config = 'plan/plan.yaml'
-    cols_config = 'plan/cols.yaml'
-    data_config = 'plan/data.yaml'
-
-    plan = Plan.Parse(plan_config_path=Path(plan_config),
-                      cols_config_path=Path(cols_config),
-                      data_config_path=Path(data_config))
-
+    plan = update_plan(override_config)
     # Overwrite plan values
     plan.authorized_cols = list(collaborator_dict)
     tensor_pipe = plan.get_tensor_pipe()
@@ -263,7 +231,7 @@ def run_experiment(collaborator_dict, override_config={}):
     rounds_to_train = plan.config['aggregator']['settings']['rounds_to_train']
     tensor_dict, holdout_params = split_tensor_dict_for_holdouts(
         logger,
-        plan.runner_.get_tensor_dict(False)
+        model.get_tensor_dict(False)
     )
 
     model_snap = utils.construct_model_proto(tensor_dict=tensor_dict,
@@ -278,14 +246,10 @@ def run_experiment(collaborator_dict, override_config={}):
 
     aggregator = plan.get_aggregator()
 
-    model_states = {
-        collaborator: None for collaborator in collaborator_dict.keys()
-    }
-
     # Create the collaborators
     collaborators = {
         collaborator: create_collaborator(
-            plan, collaborator, model, aggregator
+            plan, collaborator, collaborator_dict[collaborator], aggregator
         ) for collaborator in plan.authorized_cols
     }
 
@@ -293,16 +257,18 @@ def run_experiment(collaborator_dict, override_config={}):
         for col in plan.authorized_cols:
 
             collaborator = collaborators[col]
-            model.set_data_loader(collaborator_dict[col].data_loader)
-
-            if round_num != 0:
-                model.rebuild_model(round_num, model_states[col])
 
             collaborator.run_simulation()
-
-            model_states[col] = model.get_tensor_dict(with_opt_vars=True)
 
     # Set the weights for the final model
     model.rebuild_model(
         rounds_to_train - 1, aggregator.last_tensor_dict, validation=True)
     return model
+
+
+def get_plan(indent=4, sort_keys=True):
+    """Get string representation of current Plan."""
+    import json
+    plan = setup_plan()
+    flat_plan_config = flatten(plan.config)
+    return json.dumps(flat_plan_config, indent=indent, sort_keys=sort_keys)

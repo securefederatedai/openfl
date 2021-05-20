@@ -8,6 +8,7 @@ aggregator :
     init_state_path  : save/tf_cnn_histology_init.pbuf
     last_state_path  : save/tf_cnn_histology_latest.pbuf
     best_state_path  : save/tf_cnn_histology_best.pbuf
+    db_store_rounds: 2
     rounds_to_train : 10
 
 collaborator :
@@ -15,6 +16,7 @@ collaborator :
   template : openfl.component.Collaborator
   settings :
     delta_updates    : true
+    db_store_rounds: 2
     opt_treatment    : RESET
 
 data_loader :
