@@ -111,11 +111,13 @@ class Aggregator:
         tensor_dict, round_number = utils.deconstruct_model_proto(
             self.model, compression_pipeline=self.compression_pipeline)
 
-        if round_number > self.round_number:
-            self.logger.info(
-                'Starting training from round {} of previously saved'
-                ' model'.format(round_number))
-            self.round_number = round_number
+        # FIXME: disabled for fets challenge
+        # can re-enable once we find why round number isn't being set
+        # if round_number > self.round_number:
+        #     self.logger.info(
+        #         'Starting training from round {} of previously saved'
+        #         ' model'.format(round_number))
+        #     self.round_number = round_number
         tensor_key_dict = {
             TensorKey(k, self.uuid, self.round_number, False, ('model',)):
                 v for k, v in tensor_dict.items()
