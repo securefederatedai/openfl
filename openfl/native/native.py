@@ -5,6 +5,7 @@
 This file defines openfl entrypoints to be used directly through python (not CLI)
 """
 
+import logging
 import os
 from logging import getLogger
 from pathlib import Path
@@ -13,13 +14,14 @@ from flatten_json import flatten_preserve_lists
 import openfl.interface.workspace as workspace
 import openfl.interface.aggregator as aggregator
 import openfl.interface.collaborator as collaborator
+from openfl.utilities import addLoggingLevel
 
 from openfl.federated import Plan
 
 from openfl.protocols import utils
 from openfl.utilities import split_tensor_dict_for_holdouts
 
-logger = getLogger(__name__)
+#logger = getLogger(__name__)
 
 WORKSPACE_PREFIX = os.path.join(os.path.expanduser('~'), '.local', 'workspace')
 
@@ -38,13 +40,14 @@ def setup_plan(log_level='CRITICAL'):
     plan_config = 'plan/plan.yaml'
     cols_config = 'plan/cols.yaml'
     data_config = 'plan/data.yaml'
-
+    
+    curent_level = logging.root.level
     getLogger().setLevel(log_level)
     plan = Plan.Parse(plan_config_path=Path(plan_config),
                       cols_config_path=Path(cols_config),
                       data_config_path=Path(data_config),
                       resolve=False)
-    getLogger().setLevel('INFO')
+    getLogger().setLevel(curent_level)
 
     return plan
 
@@ -80,10 +83,10 @@ def update_plan(override_config):
     flat_plan_config = flatten(plan.config, return_complete=True)
     for k, v in override_config.items():
         if k in flat_plan_config:
-            logger.info(f'Updating {k} to {v}... ')
+            logging.info(f'Updating {k} to {v}... ')
         else:
             # TODO: We probably need to validate the new key somehow
-            logger.warn(f'Did not find {k} in config. Make sure it should exist. Creating...')
+            logging.warn(f'Did not find {k} in config. Make sure it should exist. Creating...')
         flat_plan_config[k] = v
     plan.config = unflatten(flat_plan_config, '.')
     plan.resolve()
@@ -107,7 +110,7 @@ def unflatten(config, separator='.'):
     return config
 
 
-def setup_logging():
+def setup_logging(level='INFO', log_file=None):
     """Initialize logging settings."""
     # Setup logging
     from logging import basicConfig
@@ -118,15 +121,22 @@ def setup_logging():
         import tensorflow as tf
         tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
     console = Console(width=160)
-    basicConfig(
-        level='INFO',
-        format='%(message)s',
-        datefmt='[%X]',
-        handlers=[RichHandler(console=console)]
-    )
+    METRIC = 25
+    addLoggingLevel('METRIC', METRIC, methodName=None)
+    handlers = []
+    if log_file:
+        fh = logging.FileHandler(log_file)
+        formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s %(filename)s:%(lineno)d')
+        fh.setFormatter(formatter)
+        handlers.append(fh)
+
+    console = Console(width=160)
+    handlers.append(RichHandler(console=console))
+    basicConfig(level=level, format='%(message)s',
+                datefmt='[%X]', handlers=handlers)
 
 
-def init(workspace_template='default', agg_fqdn=None, col_names=['one', 'two']):
+def init(workspace_template='default',log_level='INFO', log_file=None, agg_fqdn=None, col_names=['one', 'two']):
     """
     Initialize the openfl package.
 
@@ -172,7 +182,7 @@ def init(workspace_template='default', agg_fqdn=None, col_names=['one', 'two']):
         collaborator.certify(col_name, silent=True)
         data_path += 1
 
-    setup_logging()
+    setup_logging(level=log_level, log_file=log_file)
 
 
 def create_collaborator(plan, name, model, aggregator):
@@ -230,7 +240,7 @@ def run_experiment(collaborator_dict, override_config={}):
     init_state_path = plan.config['aggregator']['settings']['init_state_path']
     rounds_to_train = plan.config['aggregator']['settings']['rounds_to_train']
     tensor_dict, holdout_params = split_tensor_dict_for_holdouts(
-        logger,
+        None,
         model.get_tensor_dict(False)
     )
 
@@ -238,11 +248,11 @@ def run_experiment(collaborator_dict, override_config={}):
                                              round_number=0,
                                              tensor_pipe=tensor_pipe)
 
-    logger.info(f'Creating Initial Weights File    🠆 {init_state_path}')
+    logging.info(f'!!Creating Initial Weights File    🠆 {init_state_path}')
 
     utils.dump_proto(model_proto=model_snap, fpath=init_state_path)
 
-    logger.info('Starting Experiment...')
+    logging.info('Starting Experiment...')
 
     aggregator = plan.get_aggregator()
 

@@ -6,6 +6,8 @@
 from logging import getLogger
 from enum import Enum
 from time import sleep
+from datetime import datetime
+#from torch.utils.tensorboard import SummaryWriter
 
 from openfl.protocols import utils
 from openfl.utilities import TensorKey
@@ -95,6 +97,12 @@ class Collaborator:
         self.task_config = task_config
 
         self.logger = getLogger(__name__)
+        # self.log_file = str(collaborator_name) +'__'+ str(datetime.now())+'.metric'
+        # with open(self.log_file,'a') as f:
+        #     f.write('')
+
+        # self.tb_writer = SummaryWriter(comment='col',flush_secs = 10)
+
 
         # RESET/CONTINUE_LOCAL/CONTINUE_GLOBAL
         if hasattr(OptTreatment, opt_treatment):
@@ -370,10 +378,19 @@ class Collaborator:
             tensor_name, origin, fl_round, report, tags = tensor
 
             if report:
-                self.logger.info(
-                    f'Sending metric for task {task_name},'
+                self.logger.metric(
+                    f'Collaborator {self.collaborator_name} is sending metric for task {task_name},'
                     f' round number {round_number}:'
                     f' {tensor_name}\t{tensor_dict[tensor]}')
+
+                # with open(self.log_file,'a') as f:
+                #     f.write(
+                #     f'Collaborator {self.collaborator_name} {task_name}'
+                #     f' round_number {round_number}'
+                #     f' {tensor_name}\t{tensor_dict[tensor]}\n')
+                # self.tb_writer.add_scalar('{}/{}'.format(self.collaborator_name, task_name),
+                # tensor_dict[tensor] , round_number)
+
 
         self.client.send_local_task_results(
             self.collaborator_name, round_number, task_name, data_size, named_tensors)

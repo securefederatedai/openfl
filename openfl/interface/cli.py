@@ -7,23 +7,26 @@ from click import Group, command, argument, group, clear
 from click import echo, option, pass_context, style
 from sys import argv
 from pathlib import Path
+import os
 
+from openfl.utilities import addLoggingLevel
 
-def setup_logging(level='info'):
+def setup_logging(level='info', log_file=None):
     """Initialize logging settings."""
+    import logging
     from logging import basicConfig, NOTSET, DEBUG, INFO
     from logging import WARNING, ERROR, CRITICAL
     from rich.console import Console
     from rich.logging import RichHandler
     import os
 
-    console = Console(width=160)
-
+    METRIC = 25
     levels = \
         {
             'notset': NOTSET,
             'debug': DEBUG,
             'info': INFO,
+            'metric': METRIC,
             'warning': WARNING,
             'error': ERROR,
             'critical': CRITICAL
@@ -32,11 +35,20 @@ def setup_logging(level='info'):
     if level.lower() in ['debug', 'error']:
         os.environ['GRPC_VERBOSITY'] = level.upper()
 
+    addLoggingLevel('METRIC', METRIC, methodName=None)
     level = levels.get(level.lower(), levels['notset'])
+    handlers = []
+    if log_file:
+        fh = logging.FileHandler(log_file)
+        formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s %(filename)s:%(lineno)d')
+        fh.setFormatter(formatter)
+        handlers.append(fh)
 
+    console = Console(width=160)
+    handlers.append(RichHandler(console=console))
     basicConfig(level=level, format='%(message)s',
-                datefmt='[%X]', handlers=[RichHandler(console=console)])
-
+                datefmt='[%X]', handlers=handlers)
+    
 
 def disable_warnings():
     """Disables CUDA warnings."""
@@ -118,7 +130,9 @@ def cli(context, log_level):
     context.obj['script'] = argv[0]
     context.obj['arguments'] = argv[1:]
 
-    setup_logging(log_level)
+    log_file = os.getenv('LOG_FILE')
+    print(log_file)
+    setup_logging(log_level, log_file)
 
 
 @cli.resultcallback()
@@ -163,7 +177,6 @@ def entry():
     file = Path(__file__).resolve()
     root = file.parent.resolve()  # interface root, containing command modules
     work = Path.cwd().resolve()
-
     path.append(str(root))
     path.insert(0, str(work))
 
