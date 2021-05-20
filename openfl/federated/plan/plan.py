@@ -48,11 +48,11 @@ class Plan(object):
             frozen_yaml_path = Path(
                 f"{yaml_path.parent}/{yaml_path.stem}_{plan.hash[:8]}.yaml")
             if frozen_yaml_path.exists():
-                Plan.logger.info(f"{yaml_path.name} is already frozen")
+                Plan.logger.debug(f"{yaml_path.name} is already frozen")
                 return
             frozen_yaml_path.write_text(dump(config))
             frozen_yaml_path.chmod(0o400)
-            Plan.logger.info(f"{yaml_path.name} frozen successfully")
+            Plan.logger.debug(f"{yaml_path.name} frozen successfully")
         else:
             yaml_path.write_text(dump(config))
 
@@ -96,7 +96,7 @@ class Plan(object):
                     plan.files.append(defaults)
 
                     if resolve:
-                        Plan.logger.info(
+                        Plan.logger.debug(
                             f'Loading DEFAULTS for section [red]{section}[/] '
                             f'from file [red]{defaults}[/].',
                             extra={'markup': True})
@@ -132,11 +132,11 @@ class Plan(object):
             if resolve:
                 plan.resolve()
 
-                Plan.logger.info(
+                Plan.logger.debug(
                     f'Parsing Federated Learning Plan : [green]SUCCESS[/] : '
                     f'[blue]{plan_config_path}[/].',
                     extra={'markup': True})
-                Plan.logger.info(dump(plan.config))
+                Plan.logger.debug(dump(plan.config))
 
             return plan
 
@@ -166,12 +166,12 @@ class Plan(object):
         class_name = splitext(template)[1].strip('.')
         module_path = splitext(template)[0]
 
-        Plan.logger.info(f'Building [red]🡆[/] Object [red]{class_name}[/] '
+        Plan.logger.debug(f'Building [red]🡆[/] Object [red]{class_name}[/] '
                          f'from [red]{module_path}[/] Module.',
                          extra={'markup': True})
-        Plan.logger.info(f'Settings [red]🡆[/] {settings}',
+        Plan.logger.debug(f'Settings [red]🡆[/] {settings}',
                          extra={'markup': True})
-        Plan.logger.info(f'Override [red]🡆[/] {override}',
+        Plan.logger.debug(f'Override [red]🡆[/] {override}',
                          extra={'markup': True})
 
         settings.update(**override)
@@ -206,7 +206,7 @@ class Plan(object):
     def hash(self):
         """Generate hash for this instance."""
         self.hash_ = sha384(dump(self.config).encode('utf-8'))
-        Plan.logger.info(f'FL-Plan hash is [blue]{self.hash_.hexdigest()}[/]',
+        Plan.logger.debug(f'FL-Plan hash is [blue]{self.hash_.hexdigest()}[/]',
                          extra={'markup': True})
 
         return self.hash_.hexdigest()

@@ -24,7 +24,7 @@ def workspace(context):
 
 def create_dirs(prefix):
     """Create workspace directories."""
-    echo('Creating Workspace Directories')
+    #echo('Creating Workspace Directories')
 
     (prefix / 'cert').mkdir(parents=True, exist_ok=True)  # certifications
     (prefix / 'data').mkdir(parents=True, exist_ok=True)  # training data
@@ -42,7 +42,7 @@ def create_dirs(prefix):
 
 def create_temp(prefix, template):
     """Create workspace templates."""
-    echo('Creating Workspace Templates')
+    #echo('Creating Workspace Templates')
 
     copytree(src=WORKSPACE / template, dst=prefix, dirs_exist_ok=True,
              ignore=ignore_patterns('__pycache__'))  # from template workspace
@@ -81,9 +81,10 @@ def create(prefix, template):
         check_call([
             executable, "-m", "pip", "install", "-r",
             f"{prefix}/requirements.txt"], shell=False)
-        echo(f"Successfully installed packages from {prefix}/requirements.txt.")
+        #echo(f"Successfully installed packages from {prefix}/requirements.txt.")
     else:
-        echo("No additional requirements for workspace defined. Skipping...")
+        #echo("No additional requirements for workspace defined. Skipping...")
+        pass
     prefix_hash = _get_dir_hash(str(prefix.absolute()))
     with open(OPENFL_USERDIR / f'requirements.{prefix_hash}.txt', 'w') as f:
         check_call([executable, '-m', 'pip', 'freeze'], shell=False, stdout=f)
@@ -105,7 +106,8 @@ def export_():
     try:
         FreezePlan(planFile)
     except Exception:
-        echo(f'Plan file "{planFile}" not found. No freeze performed.')
+        #echo(f'Plan file "{planFile}" not found. No freeze performed.')
+        pass
 
     from pip._internal.operations import freeze
     requirements_generator = freeze.freeze()
@@ -137,18 +139,18 @@ def export_():
     try:
         copy2('.workspace', tmpDir)  # .workspace
     except FileNotFoundError:
-        echo('\'.workspace\' file not found.')
+        #echo('\'.workspace\' file not found.')
         if confirm('Create a default \'.workspace\' file?'):
             copy2(WORKSPACE / 'workspace' / '.workspace', tmpDir)
         else:
-            echo('To proceed, you must have a \'.workspace\' '
-                 'file in the current directory.')
+            #echo('To proceed, you must have a \'.workspace\' '
+            #     'file in the current directory.')
             raise
 
     # Create Zip archive of directory
     make_archive(archiveName, archiveType, tmpDir)
 
-    echo(f'Workspace exported to archive: {archiveFileName}')
+    #echo(f'Workspace exported to archive: {archiveFileName}')
 
 
 @workspace.command(name='import')
@@ -172,10 +174,11 @@ def import_(archive):
             executable, "-m", "pip", "install", "-r", "requirements.txt"],
             shell=False)
     else:
-        echo("No " + requirements_filename + " file found.")
+        #echo("No " + requirements_filename + " file found.")
+        pass
 
-    echo(f'Workspace {archive} has been imported.')
-    echo('You may need to copy your PKI certificates to join the federation.')
+    #echo(f'Workspace {archive} has been imported.')
+    #echo('You may need to copy your PKI certificates to join the federation.')
 
 
 @workspace.command(name='certify')
@@ -189,16 +192,16 @@ def certify():
     from openfl.cryptography.ca import generate_root_cert, generate_signing_csr, sign_certificate
     from cryptography.hazmat.primitives import serialization
 
-    echo('Setting Up Certificate Authority...\n')
+    #echo('Setting Up Certificate Authority...\n')
 
-    echo('1.  Create Root CA')
-    echo('1.1 Create Directories')
+    #echo('1.  Create Root CA')
+    #echo('1.1 Create Directories')
 
     (PKI_DIR / 'ca/root-ca/private').mkdir(
         parents=True, exist_ok=True, mode=0o700)
     (PKI_DIR / 'ca/root-ca/db').mkdir(parents=True, exist_ok=True)
 
-    echo('1.2 Create Database')
+    #echo('1.2 Create Database')
 
     with open(PKI_DIR / 'ca/root-ca/db/root-ca.db', 'w') as f:
         pass  # write empty file
@@ -210,7 +213,7 @@ def certify():
     with open(PKI_DIR / 'ca/root-ca/db/root-ca.crl.srl', 'w') as f:
         f.write('01')  # write file with '01'
 
-    echo('1.3 Create CA Request and Certificate')
+    #echo('1.3 Create CA Request and Certificate')
 
     root_crt_path = 'ca/root-ca.crt'
     root_key_path = 'ca/root-ca/private/root-ca.key'
@@ -230,14 +233,14 @@ def certify():
             encryption_algorithm=serialization.NoEncryption()
         ))
 
-    echo('2.  Create Signing Certificate')
-    echo('2.1 Create Directories')
+    #echo('2.  Create Signing Certificate')
+    #echo('2.1 Create Directories')
 
     (PKI_DIR / 'ca/signing-ca/private').mkdir(
         parents=True, exist_ok=True, mode=0o700)
     (PKI_DIR / 'ca/signing-ca/db').mkdir(parents=True, exist_ok=True)
 
-    echo('2.2 Create Database')
+    #echo('2.2 Create Database')
 
     with open(PKI_DIR / 'ca/signing-ca/db/signing-ca.db', 'w') as f:
         pass  # write empty file
@@ -249,7 +252,7 @@ def certify():
     with open(PKI_DIR / 'ca/signing-ca/db/signing-ca.crl.srl', 'w') as f:
         f.write('01')  # write file with '01'
 
-    echo('2.3 Create Signing Certificate CSR')
+    #echo('2.3 Create Signing Certificate CSR')
 
     signing_csr_path = 'ca/signing-ca.csr'
     signing_crt_path = 'ca/signing-ca.crt'
@@ -270,7 +273,7 @@ def certify():
             encryption_algorithm=serialization.NoEncryption()
         ))
 
-    echo('2.4 Sign Signing Certificate CSR')
+    #echo('2.4 Sign Signing Certificate CSR')
 
     signing_cert = sign_certificate(signing_csr, root_private_key, root_cert.subject, ca=True)
 
@@ -279,7 +282,7 @@ def certify():
             encoding=serialization.Encoding.PEM,
         ))
 
-    echo('3   Create Certificate Chain')
+    #echo('3   Create Certificate Chain')
 
     # create certificate chain file by combining root-ca and signing-ca
     with open(PKI_DIR / 'cert_chain.crt', 'w') as d:
@@ -288,7 +291,7 @@ def certify():
         with open(PKI_DIR / 'ca/signing-ca.crt') as s:
             d.write(s.read())
 
-    echo('\nDone.')
+    #echo('\nDone.')
 
 
 def _get_requirements_dict(txtfile):

@@ -83,7 +83,7 @@ def update_plan(override_config):
             logger.info(f'Updating {k} to {v}... ')
         else:
             # TODO: We probably need to validate the new key somehow
-            logger.warn(f'Did not find {k} in config. Make sure it should exist. Creating...')
+            logger.debug(f'Did not find {k} in config. Make sure it should exist. Creating...')
         flat_plan_config[k] = v
     plan.config = unflatten(flat_plan_config, '.')
     plan.resolve()

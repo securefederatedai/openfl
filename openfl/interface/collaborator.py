@@ -41,7 +41,7 @@ def start_(context, plan, collaborator_name, data_config, secure):
 
     # TODO: Need to restructure data loader config file loader
 
-    echo(f'Data = {plan.cols_data_paths}')
+    #echo(f'Data = {plan.cols_data_paths}')
     logger.info('🧿 Starting a Collaborator Service.')
 
     plan.get_collaborator(collaborator_name).run()
@@ -119,16 +119,16 @@ def generate_cert_request(collaborator_name, data_path, silent, skip_package):
     subject_alternative_name = f'DNS:{common_name}'
     file_name = f'col_{common_name}'
 
-    echo(f'Creating COLLABORATOR certificate key pair with following settings: '
-         f'CN={style(common_name, fg="red")},'
-         f' SAN={style(subject_alternative_name, fg="red")}')
+    #echo(f'Creating COLLABORATOR certificate key pair with following settings: '
+    #     f'CN={style(common_name, fg="red")},'
+    #     f' SAN={style(subject_alternative_name, fg="red")}')
 
     client_private_key, client_csr = generate_csr(common_name, server=False)
 
     (PKI_DIR / 'client').mkdir(parents=True, exist_ok=True)
 
-    echo('  Moving COLLABORATOR certificate to: ' + style(
-        f'{PKI_DIR}/{file_name}', fg='green'))
+    #echo('  Moving COLLABORATOR certificate to: ' + style(
+    #    f'{PKI_DIR}/{file_name}', fg='green'))
 
     # Write collaborator csr and key to disk
     write_crt(client_csr, PKI_DIR / 'client' / f'{file_name}.csr')
@@ -159,10 +159,10 @@ def generate_cert_request(collaborator_name, data_path, silent, skip_package):
         # Create Zip archive of directory
         make_archive(archiveName, archiveType, tmpDir)
 
-        echo(f'Archive {archiveFileName} with certificate signing'
-             f' request created')
-        echo('This file should be sent to the certificate authority'
-             ' (typically hosted by the aggregator) for signing')
+        #echo(f'Archive {archiveFileName} with certificate signing'
+        #     f' request created')
+        #echo('This file should be sent to the certificate authority'
+        #     ' (typically hosted by the aggregator) for signing')
 
     # TODO: There should be some association with the plan made here as well
     RegisterDataPath(common_name, data_path=data_path, silent=silent)
@@ -203,10 +203,11 @@ def RegisterCollaborator(file_name):
 
     if col_name in doc['collaborators']:
 
-        echo('\nCollaborator '
-             + style(f'{col_name}', fg='green')
-             + ' is already in the '
-             + style(f'{cols_file}', fg='green'))
+        #echo('\nCollaborator '
+        #     + style(f'{col_name}', fg='green')
+        #     + ' is already in the '
+        #     + style(f'{cols_file}', fg='green'))
+        pass
 
     else:
 
@@ -214,10 +215,10 @@ def RegisterCollaborator(file_name):
         with open(cols_file, 'w') as f:
             dump(doc, f)
 
-        echo('\nRegistering '
-             + style(f'{col_name}', fg='green')
-             + ' in '
-             + style(f'{cols_file}', fg='green'))
+        #echo('\nRegistering '
+        #     + style(f'{col_name}', fg='green')
+        #     + ' in '
+        #     + style(f'{cols_file}', fg='green'))
 
 
 @collaborator.command(name='certify')
@@ -260,11 +261,11 @@ def certify(collaborator_name, silent, request_pkg=False, import_=False):
             csr = glob(f'{PKI_DIR}/client/*.csr')[0]
         else:
             if collaborator_name is None:
-                echo('collaborator_name can only be omitted if signing\n'
-                     'a zipped request package.\n'
-                     '\n'
-                     'Example: fx collaborator certify --request-pkg '
-                     'col_one_to_agg_cert_request.zip')
+                #echo('collaborator_name can only be omitted if signing\n'
+                #     'a zipped request package.\n'
+                #     '\n'
+                #     'Example: fx collaborator certify --request-pkg '
+                #     'col_one_to_agg_cert_request.zip')
                 return
             csr = glob(f'{PKI_DIR}/client/col_{common_name}.csr')[0]
             copy(csr, PKI_DIR)
@@ -275,36 +276,39 @@ def certify(collaborator_name, silent, request_pkg=False, import_=False):
 
         # Load CSR
         if not Path(f'{cert_name}.csr').exists():
-            echo(style('Collaborator certificate signing request not found.', fg='red')
-                 + ' Please run `fx collaborator generate-cert-request`'
-                 ' to generate the certificate request.')
+            #echo(style('Collaborator certificate signing request not found.', fg='red')
+            #     + ' Please run `fx collaborator generate-cert-request`'
+            #     ' to generate the certificate request.')
+            pass
 
         csr, csr_hash = read_csr(f'{cert_name}.csr')
 
         # Load private signing key
         if not Path(PKI_DIR / signing_key_path).exists():
-            echo(style('Signing key not found.', fg='red')
-                 + ' Please run `fx workspace certify`'
-                 ' to initialize the local certificate authority.')
+            #echo(style('Signing key not found.', fg='red')
+            #     + ' Please run `fx workspace certify`'
+            #     ' to initialize the local certificate authority.')
+            pass
 
         signing_key = read_key(PKI_DIR / signing_key_path)
 
         # Load signing cert
         if not Path(PKI_DIR / signing_crt_path).exists():
-            echo(style('Signing certificate not found.', fg='red')
-                 + ' Please run `fx workspace certify`'
-                 ' to initialize the local certificate authority.')
+            #echo(style('Signing certificate not found.', fg='red')
+            #     + ' Please run `fx workspace certify`'
+            #     ' to initialize the local certificate authority.')
+            pass
 
         signing_crt = read_crt(PKI_DIR / signing_crt_path)
 
-        echo('The CSR Hash for file '
-             + style(f'{file_name}.csr', fg='green')
-             + ' = '
-             + style(f'{csr_hash}', fg='red'))
+        #echo('The CSR Hash for file '
+        #     + style(f'{file_name}.csr', fg='green')
+        #     + ' = '
+        #     + style(f'{csr_hash}', fg='red'))
 
         if silent:
 
-            echo(' Signing COLLABORATOR certificate')
+            #echo(' Signing COLLABORATOR certificate')
             signed_col_cert = sign_certificate(csr, signing_key, signing_crt.subject)
             write_crt(signed_col_cert, f'{cert_name}.crt')
             RegisterCollaborator(PKI_DIR / 'client' / f'{file_name}.crt')
@@ -313,15 +317,15 @@ def certify(collaborator_name, silent, request_pkg=False, import_=False):
 
             if confirm("Do you want to sign this certificate?"):
 
-                echo(' Signing COLLABORATOR certificate')
+                #echo(' Signing COLLABORATOR certificate')
                 signed_col_cert = sign_certificate(csr, signing_key, signing_crt.subject)
                 write_crt(signed_col_cert, f'{cert_name}.crt')
                 RegisterCollaborator(PKI_DIR / 'client' / f'{file_name}.crt')
 
             else:
-                echo(style('Not signing certificate.', fg='red')
-                     + ' Please check with this collaborator to get the'
-                       ' correct certificate for this federation.')
+                #echo(style('Not signing certificate.', fg='red')
+                #     + ' Please check with this collaborator to get the'
+                #       ' correct certificate for this federation.')
                 return
 
         if len(common_name) == 0:
@@ -356,7 +360,7 @@ def certify(collaborator_name, silent, request_pkg=False, import_=False):
         cert_difference = list(set(updated_crts) - set(previous_crts))
         if len(cert_difference) == 0:
             crt = basename(cert_difference[0])
-            echo(f"Certificate {crt} installed to PKI directory")
+            #echo(f"Certificate {crt} installed to PKI directory")
         else:
             crt = basename(updated_crts[0])
-            echo("Certificate updated in the PKI directory")
+            #echo("Certificate updated in the PKI directory")
