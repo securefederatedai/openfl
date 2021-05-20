@@ -4,41 +4,10 @@ set -e
 TEMPLATE=${1:-'keras_cnn_mnist'}  # ['torch_cnn_mnist', 'keras_cnn_mnist']
 FED_WORKSPACE=${2:-'fed_work12345alpha81671'}   # This can be whatever unique directory name you want
 COL_NUM=${3:-'2'}
-#COL1=${3:-'one123dragons'}  # This can be any unique label (lowercase)
-#COL2=${4:-'beta34unicorns'} # This can be any unique label (lowercase)
 
 FQDN=${4:-$(hostname --all-fqdns | awk '{print $1}')}
-#
-#COL1_DATA_PATH=1
-#COL2_DATA_PATH=2
 
-#help() {
-#    echo "Usage: test_hello_federation.sh TEMPLATE FED_WORKSPACE COL1 COL2 [OPTIONS]"
-#    echo
-#    echo "Options:"
-#    echo "--rounds-to-train     rounds to train"
-##    echo "--col1-data-path      data path for collaborator 1"
-##    echo "--col2-data-path      data path for collaborator 2"
-#    echo "-h, --help            display this help and exit"
-#}
-
-# Getting additional options
-#ADD_OPTS=$(getopt -o "h" -l "rounds-to-train:,col1-data-path:,
-#col2-data-path:,help" -n test_hello_federation.sh -- "$@")
-#eval set -- "$ADD_OPTS"
-#while (($#)); do
-#    case "${1:-}" in
-#    (--rounds-to-train) ROUNDS_TO_TRAIN="$2" ; shift 2 ;;
-#    (--col1-data-path) COL1_DATA_PATH="$2" ; shift 2 ;;
-#    (--col2-data-path) COL2_DATA_PATH="$2" ; shift 2 ;;
-#    (-h|--help) help ; exit 0 ;;
-#
-#    (--)        shift ; break ;;
-#    (*)         echo "Invalid option: ${1:-}"; exit 1 ;;
-#    esac
-#done
-
-generate_col_names_array() {
+function generate_col_names_array() {
   declare -a RESULT_ARRAY=()
   for (( i=1; i <=COL_NUM; i++ )); do
     RESULT_ARRAY+=("unicorn$i")
@@ -144,18 +113,6 @@ COL_DIRS=( $(create_col_dirs) )
 COL_DIRS=( $(create_col_dirs) )
 
 echo "${COL_DIRS[@]}"
-
-#for col_name in COL_NAMES; do
-#  COL_DIRS+=("$(create_many_collaborators ${FED_WORKSPACE} ${FED_DIRECTORY} ${COL1} ${COL1_DATA_PATH})")
-#done
-#
-## Create collaborator #1
-#COL1_DIRECTORY=${FED_DIRECTORY}/${COL1}
-#create_collaborator ${FED_WORKSPACE} ${FED_DIRECTORY} ${COL1} ${COL1_DIRECTORY} ${COL1_DATA_PATH}
-#
-## Create collaborator #2
-#COL2_DIRECTORY=${FED_DIRECTORY}/${COL2}
-#create_collaborator ${FED_WORKSPACE} ${FED_DIRECTORY} ${COL2} ${COL2_DIRECTORY} ${COL2_DATA_PATH}
 
 # # Run the federation
 cd "${FED_DIRECTORY}"

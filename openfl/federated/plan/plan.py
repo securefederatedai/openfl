@@ -16,13 +16,13 @@ from openfl.interface.cli_helper import WORKSPACE
 from openfl.transport import AggregatorGRPCServer
 from openfl.transport import CollaboratorGRPCClient
 
-
 SETTINGS = 'settings'
 TEMPLATE = 'template'
 DEFAULTS = 'defaults'
 AUTO = 'auto'
 
 
+# TODO: think which staticmethods could be moved to utils or to separate functions
 class Plan(object):
     """Federated Learning plan."""
 

@@ -1,4 +1,4 @@
-#!/bin/bash
+set -e
 
 output='./result1.md'
 touch $output

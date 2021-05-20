@@ -6,7 +6,7 @@
 import pandas as pd
 import numpy as np
 
-from multiprocessing import Manager
+from threading import Lock
 
 from openfl.utilities import TensorKey, LocalTensor
 from openfl.component.aggregation_functions import WeightedAverage
@@ -26,7 +26,7 @@ class TensorDB:
         self.tensor_db = pd.DataFrame([], columns=[
             'tensor_name', 'origin', 'round', 'report', 'tags', 'nparray'
         ])
-        self.mutex = Manager().Lock()
+        self.mutex = Lock()
 
     def __repr__(self):
         """Representation of the object."""

@@ -6,6 +6,8 @@
 import inspect
 
 from .runner import TaskRunner
+from .runner_pt import PyTorchTaskRunner
+from .runner_keras import KerasTaskRunner
 
 
 class FederatedModel(TaskRunner):
@@ -38,7 +40,7 @@ class FederatedModel(TaskRunner):
         self.device = device
         self.loss_fn = loss_fn
         self.lambda_opt = optimizer
-        self.__kwargs = kwargs
+        self._kwargs = kwargs
         self.__model = None
         self.__optimizer = None
         self.__runner = None
@@ -85,15 +87,13 @@ class FederatedModel(TaskRunner):
         """
         if not self.__runner:
             if inspect.isclass(self.build_model):
-                from .runner_pt import PyTorchTaskRunner
                 if self.device:
-                    self.__kwargs.update({'device': self.device})
-                self.__runner = PyTorchTaskRunner(**self.__kwargs)
+                    self._kwargs.update({'device': self.device})
+                self.__runner = PyTorchTaskRunner(**self._kwargs)
                 if hasattr(self.model, 'forward'):
                     self.__runner.forward = self.model.forward
             else:
-                from .runner_keras import KerasTaskRunner
-                self.__runner = KerasTaskRunner(**self.__kwargs)
+                self.__runner = KerasTaskRunner(**self._kwargs)
             if hasattr(self.model, 'validate'):
                 self.__runner.validate = lambda *args, **kwargs: self.build_model.validate(
                     self.__runner, *args, **kwargs)

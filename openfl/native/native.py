@@ -4,6 +4,7 @@
 
 This file defines openfl entrypoints to be used directly through python (not CLI)
 """
+import json
 import os
 from copy import deepcopy
 from logging import getLogger
@@ -24,6 +25,7 @@ logger = getLogger(__name__)
 WORKSPACE_PREFIX = os.path.join(os.path.expanduser('~'), '.local', 'workspace')
 
 
+# TODO: looks like it should be part of the Plan class
 def create_collaborator(plan, name, model, client):
     """
     Create the collaborator.
@@ -35,9 +37,9 @@ def create_collaborator(plan, name, model, client):
     return plan.get_collaborator(name, task_runner=model, client=client)
 
 
+# TODO: looks like it should be part of the Plan class __str__
 def get_plan_str(indent=4, sort_keys=True):
     """Get string representation of current Plan."""
-    import json
     plan = setup_plan()
     flat_plan_config = _flatten(plan.config)
     return json.dumps(flat_plan_config, indent=indent, sort_keys=sort_keys)
