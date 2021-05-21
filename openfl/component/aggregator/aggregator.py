@@ -42,7 +42,7 @@ class Aggregator:
                  assigner,
 
                  rounds_to_train=256,
-                 tensor_board=False,
+                 tensorboard=False,
                  single_col_cert_common_name=None,
                  compression_pipeline=None,
                  db_store_rounds=1,
@@ -105,7 +105,7 @@ class Aggregator:
         self.collaborator_tasks_results = {}
         # {TaskResultKey: data_size}
         self.collaborator_task_weight = {}
-        self.tb_writer = SummaryWriter(self.log_dir, flush_secs=10) if tensor_board else None
+        self.tb_writer = SummaryWriter(self.log_dir, flush_secs=10) if tensorboard else None
 
     def _load_initial_tensors(self):
         """
