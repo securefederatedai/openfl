@@ -8,7 +8,8 @@ import logging
 
 def addLoggingLevel(levelName, levelNum, methodName=None):
     """
-    Adds a new logging level to the logging module.
+    Add a new logging level to the logging module.
+
     Args:
         levelName: name of log level.
         levelNum: log level value.
