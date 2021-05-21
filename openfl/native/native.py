@@ -21,8 +21,6 @@ from openfl.federated import Plan
 from openfl.protocols import utils
 from openfl.utilities import split_tensor_dict_for_holdouts
 
-#logger = getLogger(__name__)
-
 WORKSPACE_PREFIX = os.path.join(os.path.expanduser('~'), '.local', 'workspace')
 
 
@@ -40,7 +38,7 @@ def setup_plan(log_level='CRITICAL'):
     plan_config = 'plan/plan.yaml'
     cols_config = 'plan/cols.yaml'
     data_config = 'plan/data.yaml'
-    
+
     curent_level = logging.root.level
     getLogger().setLevel(log_level)
     plan = Plan.Parse(plan_config_path=Path(plan_config),
@@ -122,11 +120,12 @@ def setup_logging(level='INFO', log_file=None):
         tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
     console = Console(width=160)
     METRIC = 25
-    addLoggingLevel('METRIC', METRIC, methodName=None)
+    addLoggingLevel('METRIC', METRIC)
     handlers = []
     if log_file:
         fh = logging.FileHandler(log_file)
-        formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s %(filename)s:%(lineno)d')
+        formatter = logging.Formatter(
+            '%(asctime)s %(levelname)s %(message)s %(filename)s:%(lineno)d')
         fh.setFormatter(formatter)
         handlers.append(fh)
 
@@ -136,7 +135,8 @@ def setup_logging(level='INFO', log_file=None):
                 datefmt='[%X]', handlers=handlers)
 
 
-def init(workspace_template='default',log_level='INFO', log_file=None, agg_fqdn=None, col_names=['one', 'two']):
+def init(workspace_template='default', log_level='INFO',
+         log_file=None, agg_fqdn=None, col_names=['one', 'two']):
     """
     Initialize the openfl package.
 

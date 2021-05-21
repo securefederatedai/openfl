@@ -64,6 +64,7 @@ setup(
         'flatten_json',
         'cryptography>=3.4.6',
         'cloudpickle',
+	'tensorboardX',
     ],
     python_requires='>=3.6, <3.9',
     project_urls={

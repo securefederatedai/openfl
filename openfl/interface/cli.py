@@ -11,6 +11,7 @@ import os
 
 from openfl.utilities import addLoggingLevel
 
+
 def setup_logging(level='info', log_file=None):
     """Initialize logging settings."""
     import logging
@@ -35,12 +36,13 @@ def setup_logging(level='info', log_file=None):
     if level.lower() in ['debug', 'error']:
         os.environ['GRPC_VERBOSITY'] = level.upper()
 
-    addLoggingLevel('METRIC', METRIC, methodName=None)
+    addLoggingLevel('METRIC', METRIC)
     level = levels.get(level.lower(), levels['notset'])
     handlers = []
     if log_file:
         fh = logging.FileHandler(log_file)
-        formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s %(filename)s:%(lineno)d')
+        formatter = logging.Formatter(
+            '%(asctime)s %(levelname)s %(message)s %(filename)s:%(lineno)d')
         fh.setFormatter(formatter)
         handlers.append(fh)
 
@@ -48,7 +50,7 @@ def setup_logging(level='info', log_file=None):
     handlers.append(RichHandler(console=console))
     basicConfig(level=level, format='%(message)s',
                 datefmt='[%X]', handlers=handlers)
-    
+
 
 def disable_warnings():
     """Disables CUDA warnings."""
@@ -131,7 +133,6 @@ def cli(context, log_level):
     context.obj['arguments'] = argv[1:]
 
     log_file = os.getenv('LOG_FILE')
-    print(log_file)
     setup_logging(log_level, log_file)
 
 

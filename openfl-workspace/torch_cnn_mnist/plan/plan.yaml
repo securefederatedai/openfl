@@ -9,7 +9,7 @@ aggregator :
     best_state_path : save/torch_cnn_mnist_best.pbuf
     last_state_path : save/torch_cnn_mnist_last.pbuf
     rounds_to_train : 10
-    tensor_board : true
+    tensor_board    : true
 
 collaborator :
   defaults : plan/defaults/collaborator.yaml

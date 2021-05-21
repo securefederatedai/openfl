@@ -105,7 +105,7 @@ class Aggregator:
         self.collaborator_tasks_results = {}
         # {TaskResultKey: data_size}
         self.collaborator_task_weight = {}
-        self.tb_writer = SummaryWriter(flush_secs = 10) if tensor_board else None
+        self.tb_writer = SummaryWriter(self.log_dir, flush_secs=10) if tensor_board else None
 
     def _load_initial_tensors(self):
         """
@@ -495,10 +495,9 @@ class Aggregator:
                 named_tensor, collaborator_name
             )
             if self.tb_writer and 'metric' in tensor_key.tags:
-#                print( tensor_key)
-                #print(tensor_key.tags)
-                # _, task, colloborator = tensor_key.tags
-                self.tb_writer.add_scalar("{}/{}".format(tensor_key.tags[-1], task_name), nparray, round_number)
+                self.tb_writer.add_scalar(
+                    "{}/{}/{}".format(tensor_key.tags[-1], task_name, tensor_key.tensor_name),
+                    nparray, round_number)
             task_results.append(tensor_key)
             # By giving task_key it's own weight, we can support different
             # training/validation weights
@@ -507,7 +506,6 @@ class Aggregator:
             self.collaborator_task_weight[task_key] = data_size
 
         self.collaborator_tasks_results[task_key] = task_results
-        #print('collaborator send',task_name, task_key, task_results )
 
         self._end_of_task_check(task_name)
 
@@ -726,7 +724,6 @@ class Aggregator:
             task_name : str
                 The task name to compute
         """
-        # self.logger.metric('{} task metrics... round number {}'.format(task_name, self.round_number))
         # By default, print out all of the metrics that the validation
         # task sent
         # This handles getting the subset of collaborators that may be
@@ -770,15 +767,19 @@ class Aggregator:
                         'Skipping reporting for this round'.format(
                             agg_tensor_name, self.round_number))
                 if agg_function:
-                    self.logger.metric('Aggregator, round {0} {1} {2} {3}:\t{4:.4f}'.format(round_number,
-                        task_name,agg_function, agg_tensor_name, agg_results)
-                    )
+                    self.logger.metric('Round {0}, aggregator: {1} {2} {3}:\t{4:.4f}'.format(
+                        round_number, task_name, agg_function, agg_tensor_name, agg_results))
                     if self.tb_writer:
-                        self.tb_writer.add_scalar("Aggregator/{}".format(task_name), agg_results, round_number)
+                        self.tb_writer.add_scalar(
+                            "Aggregator/{}/{}".format(task_name, agg_tensor_name),
+                            agg_results, round_number)
                 else:
-                    self.logger.metric('Aggregator, round {0} {1} {2}:\t{3:.4f}'.format(round_number, task_name, agg_tensor_name, agg_results))
+                    self.logger.metric('Round {0}, aggregator: {1} {2}:\t{3:.4f}'.format(
+                        round_number, task_name, agg_tensor_name, agg_results))
                     if self.tb_writer:
-                        self.tb_writer.add_scalar("Aggregator/{}".format(task_name), agg_results, round_number)
+                        self.tb_writer.add_scalar(
+                            "Aggregator/{}/{}".format(task_name, agg_tensor_name),
+                            agg_results, round_number)
                 # TODO Add all of the logic for saving the model based
                 #  on best accuracy, lowest loss, etc.
                 if 'validate_agg' in tags:
@@ -786,7 +787,8 @@ class Aggregator:
                     # potentially save it
                     if self.best_model_score is None or self.best_model_score < agg_results:
                         self.logger.metric(
-                            'Saved the best model with score {:f}'.format(agg_results))
+                            'Round {}: saved the best model with score {:f}'.format(
+                                round_number, agg_results))
                         self.best_model_score = agg_results
                         self._save_model(round_number, self.best_state_path)
             if 'trained' in tags:
