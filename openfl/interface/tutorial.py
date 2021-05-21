@@ -25,7 +25,9 @@ def tutorial(context):
 @pass_context
 @option('-ip', '--ip', required=False,
         help='IP address the notebook that should start')
-def start(context, ip):
+@option('-port', '--port', required=False,
+        help='The port the notebook server will listen on')
+def start(context, ip, port):
     """Start the Jupyter notebook from the tutorials directory."""
     if 'VIRTUAL_ENV' in environ:
         venv = environ['VIRTUAL_ENV'].split('/')[-1]
@@ -38,5 +40,7 @@ def start(context, ip):
 
     if ip is not None:
         jupyter_command += ['--ip', f'{ip}']
+    if port is not None:
+        jupyter_command += ['--port', f'{port}']
 
     check_call(jupyter_command)
