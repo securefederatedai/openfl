@@ -21,6 +21,8 @@ from openfl.federated import Plan
 from openfl.protocols import utils
 from openfl.utilities import split_tensor_dict_for_holdouts
 
+logger = getLogger(__name__)
+
 WORKSPACE_PREFIX = os.path.join(os.path.expanduser('~'), '.local', 'workspace')
 
 
@@ -81,10 +83,10 @@ def update_plan(override_config):
     flat_plan_config = flatten(plan.config, return_complete=True)
     for k, v in override_config.items():
         if k in flat_plan_config:
-            logging.info(f'Updating {k} to {v}... ')
+            logger.info(f'Updating {k} to {v}... ')
         else:
             # TODO: We probably need to validate the new key somehow
-            logging.warn(f'Did not find {k} in config. Make sure it should exist. Creating...')
+            logger.warn(f'Did not find {k} in config. Make sure it should exist. Creating...')
         flat_plan_config[k] = v
     plan.config = unflatten(flat_plan_config, '.')
     plan.resolve()
@@ -240,7 +242,7 @@ def run_experiment(collaborator_dict, override_config={}):
     init_state_path = plan.config['aggregator']['settings']['init_state_path']
     rounds_to_train = plan.config['aggregator']['settings']['rounds_to_train']
     tensor_dict, holdout_params = split_tensor_dict_for_holdouts(
-        None,
+        logger,
         model.get_tensor_dict(False)
     )
 
@@ -248,11 +250,11 @@ def run_experiment(collaborator_dict, override_config={}):
                                              round_number=0,
                                              tensor_pipe=tensor_pipe)
 
-    logging.info(f'!!Creating Initial Weights File    🠆 {init_state_path}')
+    logger.info(f'Creating Initial Weights File    🠆 {init_state_path}')
 
     utils.dump_proto(model_proto=model_snap, fpath=init_state_path)
 
-    logging.info('Starting Experiment...')
+    logger.info('Starting Experiment...')
 
     aggregator = plan.get_aggregator()
 
