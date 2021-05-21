@@ -22,22 +22,18 @@ def setup_logging(level='info', log_file=None):
     import os
 
     METRIC = 25
-    levels = \
-        {
-            'notset': NOTSET,
-            'debug': DEBUG,
-            'info': INFO,
-            'metric': METRIC,
-            'warning': WARNING,
-            'error': ERROR,
-            'critical': CRITICAL
-        }
-
-    if level.lower() in ['debug', 'error']:
-        os.environ['GRPC_VERBOSITY'] = level.upper()
-
     addLoggingLevel('METRIC', METRIC)
-    level = levels.get(level.lower(), levels['notset'])
+
+    levels = ['NOTSET', 'DEBUG', 'INFO', 'METRIC', 'WARNING', 'ERROR', 'CRITICAL']
+    level = level.upper()
+
+    if level in ['DEBUG', 'ERROR']:
+        os.environ['GRPC_VERBOSITY'] = level
+
+    if level not in levels:
+        logging.getLogger(__name__).warning(f'Unknown level {level}, set to INFO')
+        level = 'INFO'
+
     handlers = []
     if log_file:
         fh = logging.FileHandler(log_file)
