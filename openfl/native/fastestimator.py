@@ -24,7 +24,9 @@ class FederatedFastEstimator:
         fx.init(**kwargs)
         if len(override_config) > 0:
             plan = fx.setup_plan()
-            fx.update_plan(plan, override_config)
+            plan = fx.update_plan(plan, override_config)
+            plan_config_path = (Path(fx.WORKSPACE_PREFIX) / 'plan' / 'plan.yaml')
+            plan.Dump(plan_config_path, plan.config)
 
     def fit(self):
         """Run the estimator."""

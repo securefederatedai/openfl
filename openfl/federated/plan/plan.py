@@ -9,7 +9,7 @@ from os.path import splitext
 from pathlib import Path
 from socket import getfqdn
 
-from yaml import safe_load, dump, SafeDumper
+from yaml import safe_load, dump
 
 from openfl.component.aggregation_functions import AggregationFunctionInterface, WeightedAverage
 from openfl.interface.cli_helper import WORKSPACE
@@ -39,10 +39,6 @@ class Plan(object):
     @staticmethod
     def Dump(yaml_path, config, freeze=False):
         """Dump the plan config to YAML file."""
-        class NoAliasDumper(SafeDumper):
-            def ignore_aliases(self, data):
-                return True
-
         if freeze:
             plan = Plan()
             plan.config = config
