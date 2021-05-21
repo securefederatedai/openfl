@@ -116,7 +116,7 @@ class Collaborator:
                 sleep(sleep_time)  # some sleep function
             else:
                 self.logger.info(
-                    'Received the following tasks: {}'.format(tasks))
+                    '{} received the following tasks: {}'.format(self.collaborator_name, tasks))
                 for task in tasks:
                     self.do_task(task, round_number)
 
@@ -142,7 +142,7 @@ class Collaborator:
                 sleep(sleep_time)  # some sleep function
             else:
                 self.logger.info(
-                    'Received the following tasks: {}'.format(tasks))
+                    '{} received the following tasks: {}'.format(self.collaborator_name, tasks))
                 for task in tasks:
                     self.do_task(task, round_number)
                 self.logger.info(
@@ -153,7 +153,7 @@ class Collaborator:
     def get_tasks(self):
         """Get tasks from the aggregator."""
         # logging wait time to analyze training process
-        self.logger.info('Waiting for tasks...')
+        self.logger.debug('Waiting for tasks...')
         tasks, round_number, sleep_time, time_to_quit = self.client.get_tasks(
             self.collaborator_name)
 
@@ -203,7 +203,7 @@ class Collaborator:
             # TaskRunner subclassing API
             # Tasks are defined as methods of TaskRunner
             func = getattr(self.task_runner, func_name)
-            self.logger.info('Using TaskRunner subclassing API')
+            self.logger.debug('Using TaskRunner subclassing API')
 
         global_output_tensor_dict, local_output_tensor_dict = func(
             col_name=self.collaborator_name,
@@ -371,7 +371,7 @@ class Collaborator:
 
             if report:
                 self.logger.info(
-                    f'Sending metric for task {task_name},'
+                    f'{self.collaborator_name} sending metric for task {task_name},'
                     f' round number {round_number}:'
                     f' {tensor_name}\t{tensor_dict[tensor]}')
 

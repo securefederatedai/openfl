@@ -300,7 +300,7 @@ class Aggregator:
 
             return tasks, self.round_number, sleep_time, time_to_quit
 
-        self.logger.info('Sending tasks to collaborator {} for round '
+        self.logger.debug('Sending tasks to collaborator {} for round '
                          '{}'.format(collaborator_name, self.round_number))
         sleep_time = 0
 
@@ -454,7 +454,7 @@ class Aggregator:
         Returns:
              None
         """
-        self.logger.info(
+        self.logger.debug(
             'Collaborator {} is sending task results for {}, round {}'.format(
                 collaborator_name, task_name, round_number))
 
