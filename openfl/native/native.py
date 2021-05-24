@@ -124,12 +124,8 @@ def setup_logging(level='INFO', log_file=None):
     METRIC = 25
     addLoggingLevel('METRIC', METRIC)
 
-    levels = ['NOTSET', 'DEBUG', 'INFO', 'METRIC', 'WARNING', 'ERROR', 'CRITICAL']
-    level = level.upper()
-
-    if level not in levels:
-        logger.warning(f'Unknown level {level}, set to INFO')
-        level = 'INFO'
+    if isinstance(level, str):
+        level = level.upper()
 
     handlers = []
     if log_file:

@@ -15,8 +15,7 @@ from openfl.utilities import addLoggingLevel
 def setup_logging(level='info', log_file=None):
     """Initialize logging settings."""
     import logging
-    from logging import basicConfig, NOTSET, DEBUG, INFO
-    from logging import WARNING, ERROR, CRITICAL
+    from logging import basicConfig
     from rich.console import Console
     from rich.logging import RichHandler
     import os
@@ -24,15 +23,11 @@ def setup_logging(level='info', log_file=None):
     METRIC = 25
     addLoggingLevel('METRIC', METRIC)
 
-    levels = ['NOTSET', 'DEBUG', 'INFO', 'METRIC', 'WARNING', 'ERROR', 'CRITICAL']
-    level = level.upper()
+    if isinstance(level, str):
+        level = level.upper()
 
     if level in ['DEBUG', 'ERROR']:
         os.environ['GRPC_VERBOSITY'] = level
-
-    if level not in levels:
-        logging.getLogger(__name__).warning(f'Unknown level {level}, set to INFO')
-        level = 'INFO'
 
     handlers = []
     if log_file:
