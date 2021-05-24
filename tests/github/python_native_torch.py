@@ -4,11 +4,6 @@
 """Python native tests."""
 
 import numpy as np
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
-import torch.optim as optim
-from torchvision import datasets, transforms
 
 import openfl.native as fx
 from openfl.federated import FederatedModel, FederatedDataSet
@@ -18,40 +13,6 @@ from openfl.interface.cli import setup_logging
 def one_hot(labels, classes):
     """One-hot encode `labels` using `classes` classes."""
     return np.eye(classes)[labels]
-
-
-def cross_entropy(output, target):
-    """Binary cross-entropy metric."""
-    return F.cross_entropy(input=output, target=target)
-
-
-def get_optimizer(x):
-    """Optimizer function."""
-    return optim.Adam(x, lr=1e-4)
-
-
-class Net(nn.Module):
-    """PyTorch Neural Network."""
-
-    def __init__(self):
-        """Initialize."""
-        super(Net, self).__init__()
-        self.conv1 = nn.Conv2d(1, 16, 3)
-        self.pool = nn.MaxPool2d(2, 2)
-        self.conv2 = nn.Conv2d(16, 32, 3)
-        self.fc1 = nn.Linear(32 * 5 * 5, 32)
-        self.fc2 = nn.Linear(32, 84)
-        self.fc3 = nn.Linear(84, 10)
-
-    def forward(self, x):
-        """Forward pass of the network."""
-        x = self.pool(F.relu(self.conv1(x)))
-        x = self.pool(F.relu(self.conv2(x)))
-        x = x.view(x.size(0), -1)
-        x = F.relu(self.fc1(x))
-        x = F.relu(self.fc2(x))
-        x = self.fc3(x)
-        return x
 
 
 def _parse_args():
@@ -81,6 +42,47 @@ setup_logging()
 if __name__ == '__main__':
     args = _parse_args()
     fx.init('torch_cnn_mnist')
+
+    import torch
+    import torch.nn as nn
+    import torch.nn.functional as F
+    import torch.optim as optim
+    from torchvision import datasets, transforms
+
+
+    class Net(nn.Module):
+        """PyTorch Neural Network."""
+
+        def __init__(self):
+            """Initialize."""
+            super(Net, self).__init__()
+            self.conv1 = nn.Conv2d(1, 16, 3)
+            self.pool = nn.MaxPool2d(2, 2)
+            self.conv2 = nn.Conv2d(16, 32, 3)
+            self.fc1 = nn.Linear(32 * 5 * 5, 32)
+            self.fc2 = nn.Linear(32, 84)
+            self.fc3 = nn.Linear(84, 10)
+
+        def forward(self, x):
+            """Forward pass of the network."""
+            x = self.pool(F.relu(self.conv1(x)))
+            x = self.pool(F.relu(self.conv2(x)))
+            x = x.view(x.size(0), -1)
+            x = F.relu(self.fc1(x))
+            x = F.relu(self.fc2(x))
+            x = self.fc3(x)
+            return x
+
+
+    def cross_entropy(output, target):
+        """Binary cross-entropy metric."""
+        return F.cross_entropy(input=output, target=target)
+
+
+    def get_optimizer(x):
+        """Optimizer function."""
+        return optim.Adam(x, lr=1e-4)
+
 
     classes = 10
     transform = transforms.Compose([transforms.ToTensor(),
