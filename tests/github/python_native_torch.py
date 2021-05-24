@@ -49,7 +49,6 @@ if __name__ == '__main__':
     import torch.optim as optim
     from torchvision import datasets, transforms
 
-
     class Net(nn.Module):
         """PyTorch Neural Network."""
 
@@ -73,16 +72,13 @@ if __name__ == '__main__':
             x = self.fc3(x)
             return x
 
-
     def cross_entropy(output, target):
         """Binary cross-entropy metric."""
         return F.cross_entropy(input=output, target=target)
 
-
     def get_optimizer(x):
         """Optimizer function."""
         return optim.Adam(x, lr=1e-4)
-
 
     classes = 10
     transform = transforms.Compose([transforms.ToTensor(),
