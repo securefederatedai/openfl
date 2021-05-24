@@ -105,7 +105,17 @@ class Aggregator:
         self.collaborator_tasks_results = {}
         # {TaskResultKey: data_size}
         self.collaborator_task_weight = {}
-        self.tb_writer = SummaryWriter(self.log_dir, flush_secs=10) if tensorboard else None
+
+        self.tb_writer = None
+        if callable(tensorboard):
+            self.log_metric = tensorboard
+        elif tensorboard == True:
+            self.tb_writer = SummaryWriter(self.log_dir, flush_secs=10)
+
+    def log_metric(self, node_name, task_name, metric_name, metric, round_number):
+        if self.tb_writer:
+            self.tb_writer.add_scalar("{}/{}/{}".format(node_name, task_name, metric_name),
+                metric, round_number)
 
     def _load_initial_tensors(self):
         """
@@ -494,10 +504,8 @@ class Aggregator:
             tensor_key, nparray = self._process_named_tensor(
                 named_tensor, collaborator_name
             )
-            if self.tb_writer and 'metric' in tensor_key.tags:
-                self.tb_writer.add_scalar(
-                    "{}/{}/{}".format(tensor_key.tags[-1], task_name, tensor_key.tensor_name),
-                    nparray, round_number)
+            if 'metric' in tensor_key.tags:
+                self.log_metric.__call__(tensor_key.tags[-1], task_name, tensor_key.tensor_name, nparray, round_number)
             task_results.append(tensor_key)
             # By giving task_key it's own weight, we can support different
             # training/validation weights
@@ -769,17 +777,10 @@ class Aggregator:
                 if agg_function:
                     self.logger.metric('Round {0}, aggregator: {1} {2} {3}:\t{4:.4f}'.format(
                         round_number, task_name, agg_function, agg_tensor_name, agg_results))
-                    if self.tb_writer:
-                        self.tb_writer.add_scalar(
-                            "Aggregator/{}/{}".format(task_name, agg_tensor_name),
-                            agg_results, round_number)
                 else:
                     self.logger.metric('Round {0}, aggregator: {1} {2}:\t{3:.4f}'.format(
                         round_number, task_name, agg_tensor_name, agg_results))
-                    if self.tb_writer:
-                        self.tb_writer.add_scalar(
-                            "Aggregator/{}/{}".format(task_name, agg_tensor_name),
-                            agg_results, round_number)
+                self.log_metric('Aggregator', task_name, tensor_key.tensor_name, agg_results, round_number)
                 # TODO Add all of the logic for saving the model based
                 #  on best accuracy, lowest loss, etc.
                 if 'validate_agg' in tags:
