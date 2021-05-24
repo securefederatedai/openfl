@@ -10,6 +10,7 @@ from openfl.databases import TensorDB
 
 from openfl.protocols import utils
 from openfl.protocols import ModelProto
+from openfl.component.aggregation_functions import WeightedAverage
 
 
 class Aggregator:
@@ -765,7 +766,7 @@ class Aggregator:
                             agg_tensor_name, self.round_number))
                 if agg_function:
                     self.logger.info('{0} {1}:\t{2:.4f}'.format(
-                        agg_function, agg_tensor_name, agg_results)
+                        WeightedAverage, agg_tensor_name, agg_results)
                     )
                 else:
                     self.logger.info('{0}:\t{1:.4f}'.format(agg_tensor_name, agg_results))
