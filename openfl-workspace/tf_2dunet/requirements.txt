@@ -1,2 +1,2 @@
 nibabel
-tensorflow==2.3.1
+tensorflow==2.5.0
