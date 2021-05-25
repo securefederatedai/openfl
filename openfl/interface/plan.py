@@ -11,7 +11,6 @@ from click import echo
 
 from openfl.protocols import utils
 from openfl.utilities import split_tensor_dict_for_holdouts
-from openfl.federated import Plan
 from openfl.interface.cli_helper import get_workspace_parameter
 
 logger = getLogger(__name__)
@@ -47,6 +46,7 @@ def initialize(context, plan_config, cols_config, data_config,
     Create a protocol buffer file of the initial model weights for
      the federation.
     """
+    from openfl.federated import Plan
     plan = Plan.Parse(plan_config_path=Path(plan_config),
                       cols_config_path=Path(cols_config),
                       data_config_path=Path(data_config))
@@ -124,6 +124,7 @@ def initialize(context, plan_config, cols_config, data_config,
 
 def FreezePlan(plan_config):
     """Dump the plan to YAML file."""
+    from openfl.federated import Plan
     plan = Plan()
     plan.config = Plan.Parse(Path(plan_config), resolve=False).config
 
