@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 """CLI module."""
 
-from click import Group, command, argument, group, clear
+from click import Group, command, argument, group
 from click import echo, option, pass_context, style
 from sys import argv
 from pathlib import Path
@@ -159,6 +159,7 @@ def error_handler(error):
 
 
 def show_header():
+    """Show header."""
     banner = 'Intel OpenFL - Secure Federated Learning at the Edge™'
     echo(style(f'{banner:<80}', bold=True, bg='bright_blue'))
     echo()
