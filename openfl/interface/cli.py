@@ -69,7 +69,11 @@ class CLI(Group):
         ]
 
         formatter.write(style('BASH COMPLETE ACTIVATION\n\n', bold=True, fg='bright_black'))
-        formatter.write('https://github.com/intel/openfl/blob/develop/COMPLETE_ACTIVATION.md\n\n')
+        formatter.write(
+            '1. Run in terminal\n'
+            '   _FX_COMPLETE=source_bash fx >> ~/.bashrc\n'
+            '2. Open new terminal\n\n'
+        )
 
         formatter.write(style('CORRECT USAGE\n\n', bold=True, fg='bright_black'))
         formatter.write(' '.join(uses) + '\n')
