@@ -9,7 +9,7 @@ from click import echo, style
 from click import Path as ClickPath
 
 from openfl.interface.cli_helper import PKI_DIR
-from openfl.federated import Plan
+
 
 logger = getLogger(__name__)
 
@@ -36,6 +36,7 @@ def collaborator(context):
         help='Enable Intel SGX Enclave', is_flag=True, default=False)
 def start_(context, plan, collaborator_name, data_config, secure):
     """Start a collaborator service."""
+    from openfl.federated import Plan
     plan = Plan.Parse(plan_config_path=Path(plan),
                       data_config_path=Path(data_config))
 

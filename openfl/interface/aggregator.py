@@ -9,9 +9,8 @@ from click import Path as ClickPath
 from click import group, option, pass_context
 from click import echo, style
 
-from openfl.federated import Plan
-from openfl.interface.cli_helper import PKI_DIR
 
+from openfl.interface.cli_helper import PKI_DIR
 
 logger = getLogger(__name__)
 
@@ -36,6 +35,8 @@ def aggregator(context):
         help='Enable Intel SGX Enclave', is_flag=True, default=False)
 def start_(context, plan, authorized_cols, secure):
     """Start the aggregator service."""
+    from openfl.federated import Plan
+
     plan = Plan.Parse(plan_config_path=Path(plan),
                       cols_config_path=Path(authorized_cols))
 
