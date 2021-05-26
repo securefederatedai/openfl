@@ -6,12 +6,13 @@
 import numpy as np
 
 import openfl.native as fx
+fx.init('keras_cnn_mnist')
 
-import tensorflow as tf
-import tensorflow.keras as ke
+import tensorflow as tf # NOQA
+import tensorflow.keras as ke # NOQA
 
-from tensorflow.keras import Sequential
-from tensorflow.keras.layers import Conv2D, Flatten, Dense
+from tensorflow.keras import Sequential # NOQA
+from tensorflow.keras.layers import Conv2D, Flatten, Dense # NOQA
 
 
 def one_hot(labels, classes):
@@ -83,8 +84,6 @@ def build_model(input_shape,
 
     return model
 
-
-fx.init('keras_cnn_mnist')
 
 if __name__ == '__main__':
     from openfl.federated import FederatedModel, FederatedDataSet
