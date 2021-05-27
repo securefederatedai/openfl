@@ -21,7 +21,7 @@ collaborator :
 
 data_loader :
   defaults : plan/defaults/data_loader.yaml
-  template : code.tfhistology_inmemory.TensorFlowHistologyInMemory
+  template : src.tfhistology_inmemory.TensorFlowHistologyInMemory
   settings :
     batch_size: 64
     percent_train: 0.8
@@ -30,7 +30,7 @@ data_loader :
 
 task_runner :
   defaults : plan/defaults/task_runner.yaml
-  template : code.tf_cnn.TensorFlowCNN
+  template : src.tf_cnn.TensorFlowCNN
 
 network :
   defaults : plan/defaults/network.yaml

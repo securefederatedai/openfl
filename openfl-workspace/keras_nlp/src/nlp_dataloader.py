@@ -7,7 +7,7 @@ import numpy as np
 from logging import getLogger
 
 from openfl.federated import KerasDataLoader
-import code.dataloader_utils as DLU
+import src.dataloader_utils as DLU
 
 logger = getLogger(__name__)
 
