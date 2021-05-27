@@ -8,8 +8,6 @@ import numpy as np
 import openfl.native as fx
 
 
-
-
 def one_hot(labels, classes):
     """
     One Hot encode a vector.
