@@ -13,5 +13,6 @@ Advanced Topics
    multiple_plans
    compression_settings
    overriding_agg_fn
+   log_metric_callback
 
 
