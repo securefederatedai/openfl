@@ -3,7 +3,6 @@
 
 """Aggregator module."""
 from logging import getLogger
-from tensorboardX import SummaryWriter
 
 from openfl.utilities import TensorKey, TaskResultKey
 from openfl.pipelines import NoCompressionPipeline, TensorCodec
@@ -42,7 +41,7 @@ class Aggregator:
                  assigner,
 
                  rounds_to_train=256,
-                 tensorboard=False,
+                 log_metric_callback=None,
                  single_col_cert_common_name=None,
                  compression_pipeline=None,
                  db_store_rounds=1,
@@ -105,17 +104,9 @@ class Aggregator:
         self.collaborator_tasks_results = {}
         # {TaskResultKey: data_size}
         self.collaborator_task_weight = {}
-
-        self.tb_writer = None
-        if callable(tensorboard):
-            self.log_metric = tensorboard
-        elif tensorboard == True:
-            self.tb_writer = SummaryWriter(self.log_dir, flush_secs=10)
-
-    def log_metric(self, node_name, task_name, metric_name, metric, round_number):
-        if self.tb_writer:
-            self.tb_writer.add_scalar("{}/{}/{}".format(node_name, task_name, metric_name),
-                metric, round_number)
+        self.log_metric = lambda *args: None
+        if log_metric_callback:
+            self.log_metric = log_metric_callback
 
     def _load_initial_tensors(self):
         """
@@ -505,7 +496,8 @@ class Aggregator:
                 named_tensor, collaborator_name
             )
             if 'metric' in tensor_key.tags:
-                self.log_metric.__call__(tensor_key.tags[-1], task_name, tensor_key.tensor_name, nparray, round_number)
+                self.log_metric(tensor_key.tags[-1], task_name,
+                                tensor_key.tensor_name, nparray, round_number)
             task_results.append(tensor_key)
             # By giving task_key it's own weight, we can support different
             # training/validation weights
@@ -780,7 +772,8 @@ class Aggregator:
                 else:
                     self.logger.metric('Round {0}, aggregator: {1} {2}:\t{3:.4f}'.format(
                         round_number, task_name, agg_tensor_name, agg_results))
-                self.log_metric('Aggregator', task_name, tensor_key.tensor_name, agg_results, round_number)
+                self.log_metric('Aggregator', task_name, tensor_key.tensor_name,
+                                agg_results, round_number)
                 # TODO Add all of the logic for saving the model based
                 #  on best accuracy, lowest loss, etc.
                 if 'validate_agg' in tags:

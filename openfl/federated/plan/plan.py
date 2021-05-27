@@ -181,6 +181,27 @@ class Plan(object):
 
         return instance
 
+    @staticmethod
+    def Import(template):
+        """
+        Import an instance of a openfl Component or Federated DataLoader/TaskRunner.
+
+        Args:
+            template: Fully qualified object path
+
+        Returns:
+            A Python object
+        """
+        class_name = splitext(template)[1].strip('.')
+        module_path = splitext(template)[0]
+        Plan.logger.info(f'Importing [red]🡆[/] Object [red]{class_name}[/] '
+                         f'from [red]{module_path}[/] Module.',
+                         extra={'markup': True})
+        module = import_module(module_path)
+        instance = getattr(module, class_name)
+
+        return instance
+
     def __init__(self):
         """Initialize."""
         self.config = {}  # dictionary containing patched plan definition
@@ -257,7 +278,16 @@ class Plan(object):
         defaults[SETTINGS]['authorized_cols'] = self.authorized_cols
         defaults[SETTINGS]['assigner'] = self.get_assigner()
         defaults[SETTINGS]['compression_pipeline'] = self.get_tensor_pipe()
+        log_metric_callback = defaults[SETTINGS].get('log_metric_callback')
 
+        if log_metric_callback:
+            if isinstance(log_metric_callback, dict):
+                log_metric_callback = Plan.Import(**log_metric_callback)
+            elif not callable(log_metric_callback):
+                raise TypeError(f'log_metric_callback should be callable object '
+                                f'or be import from code part, get {log_metric_callback}')
+
+        defaults[SETTINGS]['log_metric_callback'] = log_metric_callback
         if self.aggregator_ is None:
             self.aggregator_ = Plan.Build(**defaults, initial_tensor_dict=tensor_dict)
 
