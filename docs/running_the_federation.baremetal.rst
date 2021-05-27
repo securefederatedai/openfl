@@ -63,7 +63,7 @@ On the Aggregator
     .. note::
     
     You can use your own models by overwriting the Python scripts in 
-    :code:`code` subdirectory in the workspace.
+    :code:`src` subdirectory in the workspace.
 
 5.  Change to the workspace directory.
 

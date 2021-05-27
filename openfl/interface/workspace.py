@@ -31,7 +31,7 @@ def create_dirs(prefix):
     (prefix / 'logs').mkdir(parents=True, exist_ok=True)  # training logs
     (prefix / 'plan').mkdir(parents=True, exist_ok=True)  # federated learning plans
     (prefix / 'save').mkdir(parents=True, exist_ok=True)  # model weight saves / initialization
-    (prefix / 'code').mkdir(parents=True, exist_ok=True)  # model code
+    (prefix / 'src').mkdir(parents=True, exist_ok=True)  # model code
 
     src = WORKSPACE / 'workspace/plan/defaults'  # from default workspace
     dst = prefix / 'plan/defaults'  # to created workspace
@@ -130,7 +130,7 @@ def export_():
     makedirs(f'{tmpDir}/save', exist_ok=True)
     makedirs(f'{tmpDir}/logs', exist_ok=True)
     makedirs(f'{tmpDir}/data', exist_ok=True)
-    copytree('./code', f'{tmpDir}/code', ignore=ignore)  # code
+    copytree('./src', f'{tmpDir}/src', ignore=ignore)  # code
     copytree('./plan', f'{tmpDir}/plan', ignore=ignore)  # plan
     copy2('./requirements.txt', f'{tmpDir}/requirements.txt')  # requirements
 
