@@ -59,7 +59,8 @@ class KerasTaskRunner(TaskRunner):
         else:
             self.set_tensor_dict(input_tensor_dict, with_opt_vars=False)
 
-    def train(self, col_name, round_num, input_tensor_dict, metrics, epochs=1, batch_size=1, **kwargs):
+    def train(self, col_name, round_num, input_tensor_dict,
+              metrics, epochs=1, batch_size=1, **kwargs):
         """
         Perform the training for a specified number of batches.
 
@@ -83,8 +84,8 @@ class KerasTaskRunner(TaskRunner):
         for epoch in range(epochs):
             self.logger.info(f"Run {epoch} epoch of {round_num} round")
             results = self.train_iteration(self.data_loader.get_train_loader(batch_size),
-                                        metrics=metrics,
-                                        **kwargs)
+                                           metrics=metrics,
+                                           **kwargs)
 
         # output metric tensors (scalar)
         origin = col_name

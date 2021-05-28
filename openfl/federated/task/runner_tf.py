@@ -116,7 +116,7 @@ class TensorFlowTaskRunner(TaskRunner):
                 gen = tqdm.tqdm(gen, desc="training epoch")
 
             for (X, y) in gen:
-                    losses.append(self.train_batch(X, y))
+                losses.append(self.train_batch(X, y))
 
         # Output metric tensors (scalar)
         origin = col_name
