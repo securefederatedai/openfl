@@ -10,7 +10,7 @@ with open('README.md') as f:
 
 setup(
     name='openfl',
-    version='1.5',
+    version='1.1',
     author='Intel Corporation',
     description='Federated Learning for the Edge',
     long_description=long_description,
@@ -53,8 +53,8 @@ setup(
         'numpy',
         'pandas',
         'protobuf',
-        'grpcio==1.30.0',
-        'grpcio-tools==1.30.0',
+        'grpcio==1.34.0',
+        'grpcio-tools==1.34.0',
         'rich==9.1.0',
         'tqdm',
         'scikit-learn',

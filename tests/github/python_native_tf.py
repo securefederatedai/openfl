@@ -44,11 +44,11 @@ def build_model(input_shape,
         tensorflow.python.keras.engine.sequential.Sequential: The model defined in Keras
 
     """
-    import tensorflow as tf
-    import tensorflow.keras as ke
+    import tensorflow as tf # NOQA
+    import tensorflow.keras as ke # NOQA
+    from tensorflow.keras import Sequential # NOQA
+    from tensorflow.keras.layers import Conv2D, Flatten, Dense # NOQA
 
-    from tensorflow.keras import Sequential
-    from tensorflow.keras.layers import Conv2D, Flatten, Dense
     config = tf.compat.v1.ConfigProto()
     config.gpu_options.allow_growth = True
     config.intra_op_parallelism_threads = 112
