@@ -1,0 +1,67 @@
+// Copyright (C) 2020 Intel Corporation
+// Licensed subject to the terms of the separately executed evaluation license agreement between Intel Corporation and you.
+syntax = "proto3";
+
+message NodeInfo {
+    string name = 1;
+    string adress = 2;
+    bool cuda_available = 3;
+    uint32 memory_size = 4;
+}
+
+message ShardInfo {
+    NodeInfo node_info = 1;
+    string shard_description = 2;
+    uint64 n_samples = 3;
+    // We just pass numpy shapes
+    uint32 sample_shape = 4;
+    uint32 target_shape = 5;
+}
+
+message ShardAcknowledgement {
+    bool accepted = 1;
+}
+
+message  Response{
+    bool accepted = 1;
+}
+
+message ExperimentData {
+    uint32 size = 1; // size, in bytes, of the data sent in npbytes
+	bytes npbytes = 2; //actual data
+}
+
+message ExperimentInfo {
+    string name = 1;
+    repeated string collaborator_names = 2;
+    ExperimentData experiment_data = 3;
+}
+
+message GetRegisterdShardsRequest {}
+
+message GetRegisterdShardsResponse {
+    repeated ShardInfo shard_info= 1;
+}
+
+message WaitExperimentRequest {
+    string collaborator_name = 1;
+}
+
+message WaitExperimentResponse {
+    string experiment_name = 1;
+}
+
+message GetExperimentDataRequest {
+    string experiment_name = 1;
+    string collaborator_name = 2;
+}
+
+service FederationDirector {
+    rpc AcknowledgeShard (ShardInfo) returns (ShardAcknowledgement) {}
+    // Shard owner could also provide some public data for tests
+    rpc WaitExperiment (stream WaitExperimentRequest) returns (stream WaitExperimentResponse) {}
+    rpc GetExperimentData (GetExperimentDataRequest) returns (stream ExperimentData) {}
+
+    rpc SetNewExperiment (stream ExperimentInfo) returns (Response) {}
+    rpc GetRegisterdShards (GetRegisterdShardsRequest) returns (GetRegisterdShardsResponse) {}
+}

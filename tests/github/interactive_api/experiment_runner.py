@@ -5,7 +5,7 @@ import shutil
 import subprocess
 
 root = logging.getLogger()
-root.setLevel(logging.DEBUG)
+root.setLevel(logging.INFO)
 handler = logging.StreamHandler(sys.stdout)
 formatter = logging.Formatter(
     "[%(asctime)s][%(name)s][%(levelname)s] - %(message)s"
