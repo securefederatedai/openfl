@@ -69,8 +69,8 @@ class CoreTaskRunner(object):
 
         else:
             suffix = 'validate' + validation_flag
-            tags = ('metric', suffix)
-
+            tags = (suffix,)
+        tags = ('metric', *tags)
         metric_dict = {
             TensorKey(metric, origin, round_num, True, tags):
                 np.array(value) for metric, value in metric_dict.items()
