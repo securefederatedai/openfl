@@ -105,7 +105,7 @@ class FLExperiment:
         console = Console(width=160)
         handlers.append(RichHandler(console=console))
         logging.basicConfig(level=log_level, format='%(message)s',
-                    datefmt='[%X]', handlers=handlers)
+                            datefmt='[%X]', handlers=handlers)
         self.server.serve()
         # return server
 
