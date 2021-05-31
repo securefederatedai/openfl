@@ -498,6 +498,7 @@ class Aggregator:
             if 'metric' in tensor_key.tags:
                 self.log_metric(tensor_key.tags[-1], task_name,
                                 tensor_key.tensor_name, nparray, round_number)
+                self.logger.metric(f'Round {round_number}, collaborator {tensor_key.tags[-1]} {task_name} result {tensor_key.tensor_name}:\t{nparray}')
             task_results.append(tensor_key)
             # By giving task_key it's own weight, we can support different
             # training/validation weights
