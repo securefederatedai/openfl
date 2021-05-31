@@ -74,8 +74,8 @@ def initialize(context, plan_config, cols_config, data_config,
     # data_loader = plan.get_data_loader(collaborator_cname)
     # task_runner = plan.get_task_runner(collaborator_cname)
 
-    # data_loader = plan.get_data_loader(collaborator_cname)
-    task_runner = plan.get_task_runner(collaborator_cname)
+    data_loader = plan.get_data_loader(collaborator_cname)
+    task_runner = plan.get_task_runner(data_loader)
     tensor_pipe = plan.get_tensor_pipe()
 
     # I believe there is no need for this line as task_runner has this variable

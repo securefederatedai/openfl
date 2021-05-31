@@ -92,6 +92,11 @@ def load_from_NIfTI(parent_dir,
     path = os.path.join(parent_dir)
     subdirs = os.listdir(path)
     subdirs.sort()
+    if not subdirs:
+        raise SystemError(f'''{parent_dir} does not contain subdirectories.
+Please make sure you have BraTS dataset downloaded
+and located in data directory for this collaborator.
+        ''')
     subdir_paths = [os.path.join(path, subdir) for subdir in subdirs]
 
     imgs_all = []

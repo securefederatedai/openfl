@@ -4,15 +4,8 @@
 """Python native tests."""
 
 import numpy as np
-import json
 
 import openfl.native as fx
-
-import tensorflow as tf
-import tensorflow.keras as ke
-
-from tensorflow.keras import Sequential
-from tensorflow.keras.layers import Conv2D, Flatten, Dense
 
 
 def one_hot(labels, classes):
@@ -48,6 +41,11 @@ def build_model(input_shape,
         tensorflow.python.keras.engine.sequential.Sequential: The model defined in Keras
 
     """
+    import tensorflow as tf # NOQA
+    import tensorflow.keras as ke # NOQA
+
+    from tensorflow.keras import Sequential # NOQA
+    from tensorflow.keras.layers import Conv2D, Flatten, Dense # NOQA
     config = tf.compat.v1.ConfigProto()
     config.gpu_options.allow_growth = True
     config.intra_op_parallelism_threads = 112
@@ -85,9 +83,8 @@ def build_model(input_shape,
     return model
 
 
-fx.init('keras_cnn_mnist')
-
 if __name__ == '__main__':
+    fx.init('keras_cnn_mnist')
     from openfl.federated import FederatedModel, FederatedDataSet
     from tensorflow.python.keras.utils.data_utils import get_file
 
@@ -137,6 +134,6 @@ if __name__ == '__main__':
     print(f'Collaborator two\'s validation data size: \
             {len(collaborator_models[1].data_loader.X_valid)}\n')
 
-    print(json.dumps(fx.get_plan(), indent=4, sort_keys=True))
+    print(fx.get_plan())
     final_fl_model = fx.run_experiment(collaborators, {'aggregator.settings.rounds_to_train': 5})
     final_fl_model.save_native('final_pytorch_model.h5')
