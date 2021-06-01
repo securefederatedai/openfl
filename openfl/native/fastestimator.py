@@ -16,12 +16,12 @@ from openfl.federated.task import FastEstimatorTaskRunner
 class FederatedFastEstimator:
     """A wrapper for fastestimator.estimator that allows running in federated mode."""
 
-    def __init__(self, estimator, override_config={}, **kwargs):
+    def __init__(self, estimator, override_config: dict = None, **kwargs):
         """Initialize."""
         self.estimator = estimator
         self.logger = getLogger(__name__)
         fx.init(**kwargs)
-        if len(override_config) > 0:
+        if override_config:
             fx.update_plan(override_config)
 
     def fit(self):

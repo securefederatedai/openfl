@@ -21,7 +21,7 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
 
     def __init__(
             self,
-            device=pt.device('cuda' if pt.cuda.is_available() else 'cpu'),
+            device: str = None,
             loss_fn=None,
             optimizer=None,
             **kwargs
@@ -34,8 +34,11 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
         """
         super().__init__()
         TaskRunner.__init__(self, **kwargs)
+        if device:
+            self.device = device
+        else:
+            self.device = pt.device('cuda' if pt.cuda.is_available() else 'cpu')
 
-        self.device = device
         # This is a map of all the required tensors for each of the public
         # functions in PyTorchTaskRunner
         self.required_tensorkeys_for_function = {}

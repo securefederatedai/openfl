@@ -149,7 +149,7 @@ def define_model(input_tensor,
                  activation_function='relu',
                  seed=0xFEEDFACE,
                  depth=5,
-                 dropout_at=[2, 3],
+                 dropout_at=None,
                  initial_filters=32,
                  batch_norm=True,
                  **kwargs):
@@ -173,6 +173,8 @@ def define_model(input_tensor,
         **kwargs: Additional parameters to pass to the function
 
     """
+    if dropout_at is None:
+        dropout_at = [2, 3]
     # Set keras learning phase to train
     tf.keras.backend.set_learning_phase(True)
 

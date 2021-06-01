@@ -28,11 +28,12 @@ class Plan(object):
     logger = getLogger(__name__)
 
     @staticmethod
-    def Load(yaml_path: Path, default={}):
+    def Load(yaml_path: Path, default: dict = None):
         """Load the plan from YAML file."""
+        if default is None:
+            default = {}
         if yaml_path and yaml_path.exists():
             return safe_load(yaml_path.read_text())
-
         return default
 
     @staticmethod

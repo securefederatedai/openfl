@@ -17,7 +17,7 @@ from logging import getLogger
 class TaskRunner(object):
     """Federated Learning Task Runner Class."""
 
-    def __init__(self, data_loader, tensor_dict_split_fn_kwargs={}, **kwargs):
+    def __init__(self, data_loader, tensor_dict_split_fn_kwargs: dict = None, **kwargs):
         """
         Intialize.
 
@@ -41,8 +41,8 @@ class TaskRunner(object):
         # passing to and from protobuf (and as a result for aggregation) - for
         # such params in current examples, aggregation does not make sense
         # anyway, but if this changes support should be added.
-        if type(tensor_dict_split_fn_kwargs) is not dict:
-            tensor_dict_split_fn_kwargs = dict()
+        if tensor_dict_split_fn_kwargs is None:
+            tensor_dict_split_fn_kwargs = {}
         self.tensor_dict_split_fn_kwargs = tensor_dict_split_fn_kwargs
         self.set_logger()
 

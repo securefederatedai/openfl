@@ -126,7 +126,7 @@ def setup_logging():
     )
 
 
-def init(workspace_template='default', agg_fqdn=None, col_names=['one', 'two']):
+def init(workspace_template: str = 'default', agg_fqdn: str = None, col_names=None):
     """
     Initialize the openfl package.
 
@@ -160,6 +160,8 @@ def init(workspace_template='default', agg_fqdn=None, col_names=['one', 'two']):
     Returns:
         None
     """
+    if col_names is None:
+        col_names = ['one', 'two']
     workspace.create(WORKSPACE_PREFIX, workspace_template)
     os.chdir(WORKSPACE_PREFIX)
     workspace.certify()
@@ -188,7 +190,7 @@ def create_collaborator(plan, name, model, aggregator):
     return plan.get_collaborator(name, task_runner=model, client=aggregator)
 
 
-def run_experiment(collaborator_dict, override_config={}):
+def run_experiment(collaborator_dict: dict, override_config: dict = None):
     """
     Core function that executes the FL Plan.
 
@@ -207,6 +209,9 @@ def run_experiment(collaborator_dict, override_config={}):
             The final model resulting from the federated learning experiment
     """
     from sys import path
+
+    if override_config is None:
+        override_config = {}
 
     file = Path(__file__).resolve()
     root = file.parent.resolve()  # interface root, containing command modules
@@ -253,11 +258,9 @@ def run_experiment(collaborator_dict, override_config={}):
         ) for collaborator in plan.authorized_cols
     }
 
-    for round_num in range(rounds_to_train):
+    for _ in range(rounds_to_train):
         for col in plan.authorized_cols:
-
             collaborator = collaborators[col]
-
             collaborator.run_simulation()
 
     # Set the weights for the final model

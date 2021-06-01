@@ -106,8 +106,7 @@ def copytree(src, dst, symlinks=False, ignore=None,
 
         os.makedirs(dst, exist_ok=dirs_exist_ok)
         errors = []
-        use_srcentry = copy_function is shutil.copy2 or \
-            copy_function is shutil.copy
+        use_srcentry = copy_function is shutil.copy2 or copy_function is shutil.copy
 
         for srcentry in entries:
             if srcentry.name in ignored_names:
@@ -174,8 +173,10 @@ def get_workspace_parameter(name):
         return doc[name]
 
 
-def check_varenv(env="", args={}):
+def check_varenv(env: str = "", args: dict = None):
     """Update "args" (dictionary) with <env: env_value> if env has a defined value in the host."""
+    if args is None:
+        args = {}
     env_val = environ.get(env)
     if env and (env_val is not None):
         args[env] = env_val

@@ -146,7 +146,7 @@ class KerasTaskRunner(TaskRunner):
         # return global_tensor_dict, local_tensor_dict
         return global_tensor_dict, local_tensor_dict
 
-    def train_iteration(self, batch_generator, metrics=[], **kwargs):
+    def train_iteration(self, batch_generator, metrics: list = None, **kwargs):
         """Train single epoch.
 
         Override this function for custom training.
@@ -159,6 +159,8 @@ class KerasTaskRunner(TaskRunner):
             epochs: Number of epochs to train.
             metrics: Names of metrics to save.
         """
+        if metrics is None:
+            metrics = []
         # TODO Currently assuming that all metrics are defined at
         #  initialization (build_model).
         #  If metrics are added (i.e. not a subset of what was originally
