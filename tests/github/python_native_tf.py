@@ -44,10 +44,10 @@ def build_model(input_shape,
         tensorflow.python.keras.engine.sequential.Sequential: The model defined in Keras
 
     """
-    import tensorflow as tf # NOQA
-    import tensorflow.keras as ke # NOQA
-    from tensorflow.keras import Sequential # NOQA
-    from tensorflow.keras.layers import Conv2D, Flatten, Dense # NOQA
+    import tensorflow as tf  # NOQA
+    import tensorflow.keras as ke  # NOQA
+    from tensorflow.keras import Sequential  # NOQA
+    from tensorflow.keras.layers import Conv2D, Flatten, Dense  # NOQA
 
     config = tf.compat.v1.ConfigProto()
     config.gpu_options.allow_growth = True
@@ -159,4 +159,4 @@ if __name__ == '__main__':
     final_fl_model = fx.run_experiment(collaborators, {
         'aggregator.settings.rounds_to_train': args.rounds_to_train,
     }, is_multi=args.is_multi, max_workers=args.max_workers, mode=args.mode)
-    final_fl_model.save_native('final_pytorch_model.h5')
+    final_fl_model.save_native('final_keras_model.h5')
