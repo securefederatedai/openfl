@@ -19,16 +19,12 @@ def setup_logging(level='info', log_file=None):
     from logging import basicConfig
     from rich.console import Console
     from rich.logging import RichHandler
-    import os
 
     METRIC = 25
     add_log_level('METRIC', METRIC)
 
     if isinstance(level, str):
         level = level.upper()
-
-    if level in ['DEBUG', 'ERROR']:
-        os.environ['GRPC_VERBOSITY'] = level
 
     handlers = []
     if log_file:
