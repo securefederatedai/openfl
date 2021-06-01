@@ -6,30 +6,30 @@ import numpy as np
 import logging
 
 
-def addLoggingLevel(levelName, levelNum, methodName=None):
+def add_log_level(level_name, level_num, method_name=None):
     """
     Add a new logging level to the logging module.
 
     Args:
-        levelName: name of log level.
-        levelNum: log level value.
-        methodName: log method wich will use new log level (default = levelName.lower())
+        level_name: name of log level.
+        level_num: log level value.
+        method_name: log method wich will use new log level (default = level_name.lower())
 
     """
-    if not methodName:
-        methodName = levelName.lower()
+    if not method_name:
+        method_name = level_name.lower()
 
-    def logForLevel(self, message, *args, **kwargs):
-        if self.isEnabledFor(levelNum):
-            self._log(levelNum, message, args, **kwargs)
+    def log_for_level(self, message, *args, **kwargs):
+        if self.isEnabledFor(level_num):
+            self._log(level_num, message, args, **kwargs)
 
-    def logToRoot(message, *args, **kwargs):
-        logging.log(levelNum, message, *args, **kwargs)
+    def log_to_root(message, *args, **kwargs):
+        logging.log(level_num, message, *args, **kwargs)
 
-    logging.addLevelName(levelNum, levelName)
-    setattr(logging, levelName, levelNum)
-    setattr(logging.getLoggerClass(), methodName, logForLevel)
-    setattr(logging, methodName, logToRoot)
+    logging.addLevelName(level_num, level_name)
+    setattr(logging, level_name, level_num)
+    setattr(logging.getLoggerClass(), method_name, log_for_level)
+    setattr(logging, method_name, log_to_root)
 
 
 def split_tensor_dict_into_floats_and_non_floats(tensor_dict):

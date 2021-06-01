@@ -14,12 +14,12 @@ from flatten_json import flatten_preserve_lists
 import openfl.interface.workspace as workspace
 import openfl.interface.aggregator as aggregator
 import openfl.interface.collaborator as collaborator
-from openfl.utilities import addLoggingLevel
 
 from openfl.federated import Plan
 
 from openfl.protocols import utils
 from openfl.utilities import split_tensor_dict_for_holdouts
+from openfl.utilities import add_log_level
 
 logger = getLogger(__name__)
 
@@ -41,13 +41,13 @@ def setup_plan(log_level='CRITICAL'):
     cols_config = 'plan/cols.yaml'
     data_config = 'plan/data.yaml'
 
-    curent_level = logging.root.level
+    current_level = logging.root.level
     getLogger().setLevel(log_level)
     plan = Plan.Parse(plan_config_path=Path(plan_config),
                       cols_config_path=Path(cols_config),
                       data_config_path=Path(data_config),
                       resolve=False)
-    getLogger().setLevel(curent_level)
+    getLogger().setLevel(current_level)
 
     return plan
 
@@ -122,7 +122,7 @@ def setup_logging(level='INFO', log_file=None):
         tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
     console = Console(width=160)
     METRIC = 25
-    addLoggingLevel('METRIC', METRIC)
+    add_log_level('METRIC', METRIC)
 
     if isinstance(level, str):
         level = level.upper()

@@ -13,9 +13,8 @@ from collections import defaultdict
 from openfl.federated import Plan
 from pathlib import Path
 from openfl.interface.cli_helper import WORKSPACE
-from openfl.utilities import addLoggingLevel
-
 from openfl.utilities import split_tensor_dict_for_holdouts
+from openfl.utilities import add_log_level
 
 
 class FLExperiment:
@@ -89,7 +88,7 @@ class FLExperiment:
             private_key=self.federation.agg_private_key)
 
         METRIC = 25
-        addLoggingLevel('METRIC', METRIC)
+        add_log_level('METRIC', METRIC)
 
         if isinstance(log_level, str):
             log_level = log_level.upper()

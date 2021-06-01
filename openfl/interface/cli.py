@@ -3,13 +3,14 @@
 # SPDX-License-Identifier: Apache-2.0
 """CLI module."""
 
-from click import Group, command, argument, group, clear
-from click import echo, option, pass_context, style
+import os
 from sys import argv
 from pathlib import Path
-import os
 
-from openfl.utilities import addLoggingLevel
+from click import Group, command, argument, group, clear
+from click import echo, option, pass_context, style
+
+from openfl.utilities import add_log_level
 
 
 def setup_logging(level='info', log_file=None):
@@ -21,7 +22,7 @@ def setup_logging(level='info', log_file=None):
     import os
 
     METRIC = 25
-    addLoggingLevel('METRIC', METRIC)
+    add_log_level('METRIC', METRIC)
 
     if isinstance(level, str):
         level = level.upper()
