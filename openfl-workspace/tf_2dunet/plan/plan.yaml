@@ -9,6 +9,7 @@ aggregator :
     last_state_path : save/tf_2dunet_brats_latest.pbuf
     best_state_path : save/tf_2dunet_brats_best.pbuf
     rounds_to_train : 10
+    db_store_rounds: 2
 
 collaborator :
   defaults : plan/defaults/collaborator.yaml
