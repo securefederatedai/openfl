@@ -88,8 +88,8 @@ def import_raw_data_(data_path="", num_samples=0):
             if char not in target_characters:
                 target_characters.add(char)
 
-    input_characters = sorted(list(input_characters))
-    target_characters = sorted(list(target_characters))
+    input_characters = sorted(input_characters)
+    target_characters = sorted(target_characters)
     num_encoder_tokens = len(input_characters)
     num_decoder_tokens = len(target_characters)
     max_encoder_seq_length = max([len(txt) for txt in input_texts])
@@ -101,8 +101,8 @@ def import_raw_data_(data_path="", num_samples=0):
                "max_encoder_seq_length": max_encoder_seq_length,
                "max_decoder_seq_length": max_decoder_seq_length}
 
-    input_token_index = dict([(char, i) for i, char in enumerate(input_characters)])
-    target_token_index = dict([(char, i) for i, char in enumerate(target_characters)])
+    input_token_index = {char: i for i, char in enumerate(input_characters)}
+    target_token_index = {char: i for i, char in enumerate(target_characters)}
 
     encoder_input_data = np.zeros(
         (len(input_texts), max_encoder_seq_length, num_encoder_tokens), dtype="float32")

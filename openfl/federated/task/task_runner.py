@@ -105,7 +105,7 @@ class CoreTaskRunner(object):
                 device = kwargs.get('device', 'cpu')
 
                 self.rebuild_model(input_tensor_dict, validation=validation_flag, device=device)
-                task_kwargs = dict()
+                task_kwargs = {}
                 if validation_flag:
                     loader = self.data_loader.get_valid_loader()
                     if kwargs['apply'] == 'local':
@@ -147,11 +147,11 @@ class CoreTaskRunner(object):
 
         self.kwargs = kwargs
 
-        self.TASK_REGISTRY = dict()
+        self.TASK_REGISTRY = {}
 
         # Why is it here
         self.opt_treatment = 'RESET'
-        self.tensor_dict_split_fn_kwargs = dict()
+        self.tensor_dict_split_fn_kwargs = {}
         self.required_tensorkeys_for_function = {}
 
         # Complete hell below

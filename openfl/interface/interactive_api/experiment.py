@@ -186,14 +186,14 @@ class FLExperiment:
         # TaskRunner framework plugin
         # ['required_plugin_components'] should be already in the default plan with all the fields
         # filled with the default values
-        plan.config['task_runner']['required_plugin_components'] = dict()
+        plan.config['task_runner']['required_plugin_components'] = {}
         plan.config['task_runner']['required_plugin_components']['framework_adapters'] = \
             model_provider.framework_plugin
 
         # API layer
-        plan.config['api_layer'] = dict()
-        plan.config['api_layer']['required_plugin_components'] = dict()
-        plan.config['api_layer']['settings'] = dict()
+        plan.config['api_layer'] = {}
+        plan.config['api_layer']['required_plugin_components'] = {}
+        plan.config['api_layer']['settings'] = {}
         plan.config['api_layer']['required_plugin_components']['serializer_plugin'] = \
             self.serializer_plugin
         plan.config['api_layer']['settings'] = {
@@ -239,9 +239,9 @@ class TaskInterface:
     def __init__(self) -> None:
         """Initialize task registry."""
         # Mapping 'task name' -> callable
-        self.task_registry = dict()
+        self.task_registry = {}
         # Mapping 'task name' -> arguments
-        self.task_contract = dict()
+        self.task_contract = {}
         # Mapping 'task name' -> arguments
         self.task_settings = defaultdict(dict)
 

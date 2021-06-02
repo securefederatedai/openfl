@@ -749,7 +749,7 @@ class Aggregator:
                 'Tensor {} in task {} has not been processed' \
                 ' correctly'.format(tensor_key, task_name)
             # Strip the collaborator label, and lookup aggregated tensor
-            new_tags = tuple(list(tags[:-1]))
+            new_tags = tuple(tags[:-1])
             agg_tensor_key = TensorKey(tensor_name, origin, round_number, report, new_tags)
             agg_tensor_name, agg_origin, agg_round_number, agg_report, agg_tags = agg_tensor_key
             agg_results = self.tensor_db.get_aggregated_tensor(

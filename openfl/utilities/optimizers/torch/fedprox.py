@@ -28,13 +28,14 @@ class FedProxOptimizer(Optimizer):
             raise ValueError("Invalid weight_decay value: {}".format(weight_decay))
         if mu < 0.0:
             raise ValueError("Invalid mu value: {}".format(mu))
-        defaults = dict(
-            lr=lr,
-            weight_decay=weight_decay,
-            mu=mu,
-            momentum=momentum,
-            nesterov=nesterov,
-            dampening=dampening)
+        defaults = {
+            'dampening': dampening,
+            'lr': lr,
+            'momentum': momentum,
+            'mu': mu,
+            'nesterov': nesterov,
+            'weight_decay': weight_decay,
+        }
 
         if nesterov and (momentum <= 0 or dampening != 0):
             raise ValueError("Nesterov momentum requires a momentum and zero dampening")

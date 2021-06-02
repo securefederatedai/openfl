@@ -188,9 +188,13 @@ def define_model(input_tensor,
     elif activation_function == 'leakyrelu':
         activation = tf.nn.leaky_relu
 
-    params = dict(kernel_size=(3, 3), activation=activation,
-                  padding='same', data_format=data_format,
-                  kernel_initializer=tf.keras.initializers.he_uniform(seed=seed))
+    params = {
+        'activation': activation,
+        'data_format': data_format,
+        'kernel_initializer': tf.keras.initializers.he_uniform(seed=seed),
+        'kernel_size': (3, 3),
+        'padding': 'same',
+    }
 
     convb_layers = {}
 

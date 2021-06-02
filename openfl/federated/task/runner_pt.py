@@ -623,7 +623,7 @@ def _get_optimizer_state(optimizer):
     for group in opt_state_dict['param_groups']:
         local_param_set = set(group['params'])
         params_to_sync = local_param_set & param_keys_with_state
-        group['params'] = sorted(list(params_to_sync))
+        group['params'] = sorted(params_to_sync)
 
     derived_opt_state_dict = _derive_opt_state_dict(opt_state_dict)
 
