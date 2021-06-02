@@ -205,7 +205,7 @@ def certify():
     from openfl.cryptography.ca import generate_root_cert, generate_signing_csr, sign_certificate
     from cryptography.hazmat.primitives import serialization
 
-    from openfl.interface.cli_helper import WORKSPACE, PKI_DIR
+    from openfl.interface.cli_helper import PKI_DIR
 
     echo('Setting Up Certificate Authority...\n')
 

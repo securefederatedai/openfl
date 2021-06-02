@@ -57,8 +57,6 @@ class CLI(Group):
 
     def format_help(self, ctx, formatter):
         """Dislpay user-friendly help."""
-        from pathlib import Path
-
         show_header()
         uses = [
             f'{ctx.command_path}',
