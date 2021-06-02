@@ -2,16 +2,11 @@
 # SPDX-License-Identifier: Apache-2.0
 """Plan module."""
 
-from socket import getfqdn
 from logging import getLogger
-from pathlib import Path
+
 from click import Path as ClickPath
 from click import group, option, pass_context
 from click import echo
-
-from openfl.protocols import utils
-from openfl.utilities import split_tensor_dict_for_holdouts
-from openfl.interface.cli_helper import get_workspace_parameter
 
 logger = getLogger(__name__)
 
@@ -46,7 +41,13 @@ def initialize(context, plan_config, cols_config, data_config,
     Create a protocol buffer file of the initial model weights for
      the federation.
     """
+    from pathlib import Path
+    from socket import getfqdn
+
     from openfl.federated import Plan
+    from openfl.protocols import utils
+    from openfl.utilities import split_tensor_dict_for_holdouts
+
     plan = Plan.Parse(plan_config_path=Path(plan_config),
                       cols_config_path=Path(cols_config),
                       data_config_path=Path(data_config))
@@ -124,7 +125,10 @@ def initialize(context, plan_config, cols_config, data_config,
 
 def FreezePlan(plan_config):
     """Dump the plan to YAML file."""
+    from pathlib import Path
+
     from openfl.federated import Plan
+
     plan = Plan()
     plan.config = Plan.Parse(Path(plan_config), resolve=False).config
 
@@ -242,5 +246,7 @@ def remove_(context, name):
 @plan.command(name='print')
 def print_():
     """Print the current plan."""
+    from openfl.interface.cli_helper import get_workspace_parameter
+
     current_plan_name = get_workspace_parameter("current_plan_name")
     echo(f'The current plan is: {current_plan_name}')

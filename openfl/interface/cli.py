@@ -5,8 +5,6 @@
 
 from click import Group, command, argument, group
 from click import echo, option, pass_context, style
-from sys import argv
-from pathlib import Path
 
 
 def setup_logging(level='info'):
@@ -59,6 +57,8 @@ class CLI(Group):
 
     def format_help(self, ctx, formatter):
         """Dislpay user-friendly help."""
+        from pathlib import Path
+
         show_header()
         uses = [
             f'{ctx.command_path}',
@@ -70,9 +70,9 @@ class CLI(Group):
 
         formatter.write(style('BASH COMPLETE ACTIVATION\n\n', bold=True, fg='bright_black'))
         formatter.write(
-            '1. Run in terminal\n'
-            '   _FX_COMPLETE=source_bash fx >> ~/.bashrc\n'
-            '2. Open new terminal\n\n'
+            'Run in terminal:\n'
+            '   _FX_COMPLETE=bash_source fx >> ~/.fx-autocomplete.sh\n'
+            '   source ~/.fx-autocomplete.sh\n\n'
         )
 
         formatter.write(style('CORRECT USAGE\n\n', bold=True, fg='bright_black'))
@@ -118,8 +118,9 @@ class CLI(Group):
 @pass_context
 def cli(context, log_level):
     """Command-line Interface."""
-    context.ensure_object(dict)
+    from sys import argv
 
+    context.ensure_object(dict)
     context.obj['log_level'] = log_level
     context.obj['fail'] = False
     context.obj['script'] = argv[0]
@@ -172,6 +173,7 @@ def show_header():
 def entry():
     """Entry point of the Command-Line Interface."""
     from importlib import import_module
+    from pathlib import Path
     from sys import path
 
     file = Path(__file__).resolve()
