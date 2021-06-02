@@ -3,25 +3,17 @@
 
 """Tools for running an experiment on a local machine in multi-processing mode."""
 
-import os
 import logging
-import sys
+import os
 import shutil
 import subprocess
 import typing
 
 from openfl.interface.interactive_api.experiment import FLExperiment
 from openfl.interface.interactive_api.experiment import ModelInterface
+from openfl.utilities.logs import setup_loggers
 
-root = logging.getLogger()
-root.setLevel(logging.DEBUG)
-handler = logging.StreamHandler(sys.stdout)
-formatter = logging.Formatter(
-    "[%(asctime)s][%(name)s][%(levelname)s] - %(message)s"
-)
-handler.setFormatter(formatter)
-root.addHandler(handler)
-
+setup_loggers(logging.INFO)
 logger = logging.getLogger(__name__)
 
 
@@ -78,7 +70,7 @@ def run_experiment(
     for col_name in col_data_paths:
         logger.info(f'Starting the collaborator: {col_name}')
         p = subprocess.Popen(
-            f"fx collaborator start -n {col_name} -p plan/plan.yaml -d data.yaml".split(' '),
+            f'x collaborator start -n {col_name} -p plan/plan.yaml -d data.yaml'.split(' '),
             cwd=os.path.join(os.getcwd(), col_name)
         )
         processes.append(p)
