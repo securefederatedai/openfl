@@ -52,7 +52,7 @@ PRODUCT_VERSION = "Intel"
 if PRODUCT_VERSION == "Intel":
 
     project = 'OpenFL'
-    copyright = '{}, Intel'.format(datetime.now().year)
+    copyright = '{}, Intel'.format(datetime.now().year) # NOQA
     author = 'Intel Corporation'
     version = "{}.{}".format(datetime.now().year, datetime.now().month)
     release = version

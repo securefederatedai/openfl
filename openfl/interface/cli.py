@@ -94,16 +94,16 @@ class CLI(Group):
             '\nAVAILABLE COMMANDS\n', bold=True, fg='bright_black'))
 
         for name, cmd, level in cmds:
-            help = cmd.get_short_help_str()
+            help_str = cmd.get_short_help_str()
             if level == 0:
                 formatter.write(
                     f'\n{style(name, fg="blue", bold=True):<30}'
-                    f' {style(help, bold=True)}' + '\n')
+                    f' {style(help_str, bold=True)}' + '\n')
                 formatter.write('─' * 80 + '\n')
             if level == 1:
                 formatter.write(
                     f'  {style("⮞", fg="green")}'
-                    f' {style(name, fg="cyan"):<21} {help}' + '\n')
+                    f' {style(name, fg="cyan"):<21} {help_str}' + '\n')
 
 
 @group(cls=CLI)
@@ -131,10 +131,10 @@ def end(context, result, **kwargs):
         echo('\n ✔️ OK')
 
 
-@command()
+@command(name='help')
 @pass_context
 @argument('subcommand', required=False)
-def help(context, subcommand):
+def help_(context, subcommand):
     """Display help."""
     pass
 

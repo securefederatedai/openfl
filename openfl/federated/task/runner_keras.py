@@ -42,7 +42,7 @@ class KerasTaskRunner(TaskRunner):
         self.required_tensorkeys_for_function = {}
         ke.backend.clear_session()
 
-    def rebuild_model(self, round, input_tensor_dict, validation=False):
+    def rebuild_model(self, round_num, input_tensor_dict, validation=False):
         """
         Parse tensor names and update weights of model. Handles the optimizer treatment.
 
@@ -53,7 +53,7 @@ class KerasTaskRunner(TaskRunner):
         if self.opt_treatment == 'RESET':
             self.reset_opt_vars()
             self.set_tensor_dict(input_tensor_dict, with_opt_vars=False)
-        elif (round > 0 and self.opt_treatment == 'CONTINUE_GLOBAL'
+        elif (round_num > 0 and self.opt_treatment == 'CONTINUE_GLOBAL'
               and not validation):
             self.set_tensor_dict(input_tensor_dict, with_opt_vars=True)
         else:

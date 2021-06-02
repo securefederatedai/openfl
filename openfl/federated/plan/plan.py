@@ -39,7 +39,9 @@ class Plan(object):
     @staticmethod
     def Dump(yaml_path, config, freeze=False):
         """Dump the plan config to YAML file."""
+
         class NoAliasDumper(SafeDumper):
+
             def ignore_aliases(self, data):
                 return True
 
@@ -204,7 +206,7 @@ class Plan(object):
         self.name_ = None
 
     @property
-    def hash(self):
+    def hash(self): # NOQA
         """Generate hash for this instance."""
         self.hash_ = sha384(dump(self.config).encode('utf-8'))
         Plan.logger.info(f'FL-Plan hash is [blue]{self.hash_.hexdigest()}[/]',

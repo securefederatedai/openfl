@@ -25,10 +25,10 @@ def parse_segments(seg, msk_modes):
 
     """
     msks_parsed = []
-    for slice in range(seg.shape[-1]):
+    for slice_ in range(seg.shape[-1]):
         # which mask values indicicate which label mode
         mode_to_key_value = {"necrotic": 1, "edema": 2, "GD": 4}
-        curr = seg[:, :, slice]
+        curr = seg[:, :, slice_]
         this_msk_parts = []
         for mode in msk_modes:
             this_msk_parts.append(
