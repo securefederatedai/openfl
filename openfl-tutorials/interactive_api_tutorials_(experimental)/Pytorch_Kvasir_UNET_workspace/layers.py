@@ -74,7 +74,7 @@ class up(nn.Module):
         self.out_ch = out_ch
         if bilinear:
             self.up = nn.Upsample(
-                scale_factor=2, mode="bilinear", align_corners=True)
+                scale_factor=2, mode='bilinear', align_corners=True)
         else:
             self.up = nn.ConvTranspose2d(
                 in_ch, in_ch // 2, 2, stride=2

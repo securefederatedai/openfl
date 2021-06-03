@@ -27,7 +27,7 @@ class TensorCodec:
     def set_lossless_pipeline(self, lossless_pipeline):
         """Set lossless pipeline."""
         assert lossless_pipeline.is_lossy() is False, (
-            "The provided pipeline is not lossless")
+            'The provided pipeline is not lossless')
         self.lossless_pipeline = lossless_pipeline
 
     def compress(self, tensor_key, data, require_lossless=False, **kwargs):
@@ -108,10 +108,10 @@ class TensorCodec:
         assert (len(transformer_metadata) > 0), (
             'metadata must be included for decompression')
         assert (('compressed' in tags) or ('lossy_compressed' in tags)), (
-            "Cannot decompress an uncompressed tensor")
+            'Cannot decompress an uncompressed tensor')
         if require_lossless:
             assert ('compressed' in tags), (
-                "Cannot losslessly decompress lossy tensor")
+                'Cannot losslessly decompress lossy tensor')
 
         if require_lossless or 'compressed' in tags:
             decompressed_nparray = self.lossless_pipeline.backward(
@@ -135,7 +135,7 @@ class TensorCodec:
                 tensor_name, origin, round_number, report, tuple(new_tags))
         else:
             raise NotImplementedError(
-                "Decompression is only supported on compressed data")
+                'Decompression is only supported on compressed data')
 
         return decompressed_tensor_key, decompressed_nparray
 

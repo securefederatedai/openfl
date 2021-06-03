@@ -94,7 +94,7 @@ def findCertificateName(file_name):
 
 @aggregator.command(name='certify')
 @option('-n', '--fqdn',
-        help='The fully qualified domain name of aggregator node [{getfqdn()}]',
+        help=f'The fully qualified domain name of aggregator node [{getfqdn()}]',
         default=getfqdn())
 @option('-s', '--silent', help='Do not prompt', is_flag=True)
 def _certify(fqdn, silent):
@@ -155,7 +155,7 @@ def certify(fqdn, silent):
 
     else:
 
-        if confirm("Do you want to sign this certificate?"):
+        if confirm('Do you want to sign this certificate?'):
 
             echo(' Signing AGGREGATOR certificate')
             signed_agg_cert = sign_certificate(csr, signing_key, signing_crt.subject)

@@ -114,7 +114,7 @@ class TensorFlowTaskRunner(TaskRunner):
             # get iterator for batch draws (shuffling happens here)
             gen = self.data_loader.get_train_loader(batch_size)
             if use_tqdm:
-                gen = tqdm.tqdm(gen, desc="training epoch")
+                gen = tqdm.tqdm(gen, desc='training epoch')
 
             for (X, y) in gen:
                 if batch_num >= num_batches:
@@ -221,7 +221,7 @@ class TensorFlowTaskRunner(TaskRunner):
 
         gen = self.data_loader.get_valid_loader(batch_size)
         if use_tqdm:
-            gen = tqdm.tqdm(gen, desc="validating")
+            gen = tqdm.tqdm(gen, desc='validating')
 
         for X, y in gen:
             weight = X.shape[0] / self.data_loader.get_valid_data_size()

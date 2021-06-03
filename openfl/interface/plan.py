@@ -108,7 +108,7 @@ def initialize(context, plan_config, cols_config, data_config,
         plan_origin['network']['settings']['agg_addr'] =\
             aggregator_address or getfqdn()
 
-        logger.warn(f"Patching Aggregator Addr in Plan"
+        logger.warn(f'Patching Aggregator Addr in Plan'
                     f" 🠆 {plan_origin['network']['settings']['agg_addr']}")
 
         Plan.Dump(Path(plan_config), plan_origin)
@@ -118,7 +118,7 @@ def initialize(context, plan_config, cols_config, data_config,
     # Record that plan with this hash has been initialized
     if 'plans' not in context.obj:
         context.obj['plans'] = []
-    context.obj['plans'].append(f"{Path(plan_config).stem}_{plan.hash[:8]}")
+    context.obj['plans'].append(f'{Path(plan_config).stem}_{plan.hash[:8]}')
     logger.info(f"{context.obj['plans']}")
 
 
@@ -241,5 +241,5 @@ def remove_(context, name):
 @plan.command(name='print')
 def print_():
     """Print the current plan."""
-    current_plan_name = get_workspace_parameter("current_plan_name")
+    current_plan_name = get_workspace_parameter('current_plan_name')
     echo(f'The current plan is: {current_plan_name}')

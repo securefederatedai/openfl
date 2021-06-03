@@ -56,7 +56,7 @@ class FastEstimatorFGSM(FastEstimatorTaskRunner):
             tf.keras.backend.clear_session()  # to avoid layer names mismatching
             return LeNet(input_shape=(32, 32, 3))
         model = fe.build(model_fn=get_model,
-                         optimizer_fn="adam", model_name="adv_model")
+                         optimizer_fn='adam', model_name='adv_model')
         return model
 
     def build_network(self):
@@ -72,14 +72,14 @@ class FastEstimatorFGSM(FastEstimatorTaskRunner):
         epsilon = 0.04
 
         network = fe.Network(ops=[
-            Watch(inputs="x"),
-            ModelOp(model=self.model, inputs="x", outputs="y_pred"),
-            CrossEntropy(inputs=("y_pred", "y"), outputs="base_ce"),
-            FGSM(data="x", loss="base_ce", outputs="x_adverse", epsilon=epsilon),
-            ModelOp(model=self.model, inputs="x_adverse", outputs="y_pred_adv"),
-            CrossEntropy(inputs=("y_pred_adv", "y"), outputs="adv_ce"),
-            Average(inputs=("base_ce", "adv_ce"), outputs="avg_ce"),
-            UpdateOp(model=self.model, loss_name="avg_ce")
+            Watch(inputs='x'),
+            ModelOp(model=self.model, inputs='x', outputs='y_pred'),
+            CrossEntropy(inputs=('y_pred', 'y'), outputs='base_ce'),
+            FGSM(data='x', loss='base_ce', outputs='x_adverse', epsilon=epsilon),
+            ModelOp(model=self.model, inputs='x_adverse', outputs='y_pred_adv'),
+            CrossEntropy(inputs=('y_pred_adv', 'y'), outputs='adv_ce'),
+            Average(inputs=('base_ce', 'adv_ce'), outputs='avg_ce'),
+            UpdateOp(model=self.model, loss_name='avg_ce')
         ])
 
         return network
@@ -100,8 +100,8 @@ class FastEstimatorFGSM(FastEstimatorTaskRunner):
         max_eval_steps_per_epoch = None
 
         traces = [
-            Accuracy(true_key="y", pred_key="y_pred", output_name="clean_accuracy"),
-            Accuracy(true_key="y", pred_key="y_pred_adv", output_name="adversarial_accuracy"),
+            Accuracy(true_key='y', pred_key='y_pred', output_name='clean_accuracy'),
+            Accuracy(true_key='y', pred_key='y_pred_adv', output_name='adversarial_accuracy'),
         ]
         estimator = fe.Estimator(pipeline=self.data_loader.pipeline,
                                  network=self.network,
@@ -109,7 +109,7 @@ class FastEstimatorFGSM(FastEstimatorTaskRunner):
                                  traces=traces,
                                  max_train_steps_per_epoch=max_train_steps_per_epoch,
                                  max_eval_steps_per_epoch=max_eval_steps_per_epoch,
-                                 monitor_names=["base_ce", "adv_ce"],
+                                 monitor_names=['base_ce', 'adv_ce'],
                                  log_steps=1000)
 
         return estimator

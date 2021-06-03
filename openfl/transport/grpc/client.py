@@ -153,7 +153,7 @@ class CollaboratorGRPCClient:
 
         """
         self.logger.warn(
-            "gRPC is running on insecure channel with TLS disabled.")
+            'gRPC is running on insecure channel with TLS disabled.')
 
         return grpc.insecure_channel(uri, options=self.channel_options)
 

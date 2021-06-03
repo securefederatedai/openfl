@@ -31,59 +31,59 @@ sys.path.insert(0, os.path.abspath('../'))
 # import sphinxcontrib.napoleon
 
 extensions = [
-    "sphinx_rtd_theme",
+    'sphinx_rtd_theme',
     'sphinx.ext.autosectionlabel',
-    "sphinx.ext.napoleon",
-    "sphinx-prompt",
+    'sphinx.ext.napoleon',
+    'sphinx-prompt',
     'sphinx_substitution_extensions',
-    "sphinx.ext.ifconfig",
-    "sphinxcontrib.kroki"
+    'sphinx.ext.ifconfig',
+    'sphinxcontrib.kroki'
 ]
 
 # -- Project information -----------------------------------------------------
 
 # This will replace the |variables| within the rST documents automatically
 
-PRODUCT_VERSION = "Intel"
+PRODUCT_VERSION = 'Intel'
 # PRODUCT_VERSION = "OFL"
 
 # tags.add(PRODUCT_VERSION)
 
-if PRODUCT_VERSION == "Intel":
+if PRODUCT_VERSION == 'Intel':
 
     project = 'OpenFL'
     copyright = '{}, Intel'.format(datetime.now().year) # NOQA
     author = 'Intel Corporation'
-    version = "{}.{}".format(datetime.now().year, datetime.now().month)
+    version = '{}.{}'.format(datetime.now().year, datetime.now().month)
     release = version
     master_doc = 'index'
 
     # Global variables for rST
-    rst_prolog = """
+    rst_prolog = '''
     .. |productName| replace:: OpenFL
     .. |productZip| replace:: openfl.zip
     .. |productDir| replace:: openfl
     .. |productWheel| replace:: openfl
 
-    """
+    '''
 
 else:
 
     project = 'Open Federated Learning'
     author = 'FeTS'
     master_doc = 'index'
-    version = "{}.{}".format(datetime.now().year, datetime.now().month)
+    version = '{}.{}'.format(datetime.now().year, datetime.now().month)
     release = version
 
     # Global variables for rST
-    rst_prolog = """
+    rst_prolog = '''
     .. |productName| replace:: Open Federated Learning
     .. |productZip| replace:: OpenFederatedLearning.zip
     .. |productDir| replace:: OpenFederatedLearning
     .. |productWheel| replace:: openfl
 
     .. _Makefile: https://github.com/IntelLabs/OpenFederatedLearning/blob/master/Makefile
-    """
+    '''
 
 napoleon_google_docstring = True
 
@@ -93,7 +93,7 @@ templates_path = ['_templates']
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store', "tutorials/*", "graveyard/*"]
+exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store', 'tutorials/*', 'graveyard/*']
 
 # -- Options for HTML output -------------------------------------------------
 

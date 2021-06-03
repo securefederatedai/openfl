@@ -75,15 +75,15 @@ def create(prefix, template):
     create_dirs(prefix)
     create_temp(prefix, template)
 
-    requirements_filename = "requirements.txt"
+    requirements_filename = 'requirements.txt'
 
     if isfile(f'{str(prefix)}/{requirements_filename}'):
         check_call([
-            executable, "-m", "pip", "install", "-r",
-            f"{prefix}/requirements.txt"], shell=False)
-        echo(f"Successfully installed packages from {prefix}/requirements.txt.")
+            executable, '-m', 'pip', 'install', '-r',
+            f'{prefix}/requirements.txt'], shell=False)
+        echo(f'Successfully installed packages from {prefix}/requirements.txt.')
     else:
-        echo("No additional requirements for workspace defined. Skipping...")
+        echo('No additional requirements for workspace defined. Skipping...')
     prefix_hash = _get_dir_hash(str(prefix.absolute()))
     with open(OPENFL_USERDIR / f'requirements.{prefix_hash}.txt', 'w') as f:
         check_call([executable, '-m', 'pip', 'freeze'], shell=False, stdout=f)
@@ -165,14 +165,14 @@ def import_(archive):
     unpack_archive(archive, extract_dir=dirPath)
     chdir(dirPath)
 
-    requirements_filename = "requirements.txt"
+    requirements_filename = 'requirements.txt'
 
     if isfile(requirements_filename):
         check_call([
-            executable, "-m", "pip", "install", "-r", "requirements.txt"],
+            executable, '-m', 'pip', 'install', '-r', 'requirements.txt'],
             shell=False)
     else:
-        echo("No " + requirements_filename + " file found.")
+        echo('No ' + requirements_filename + ' file found.')
 
     echo(f'Workspace {archive} has been imported.')
     echo('You may need to copy your PKI certificates to join the federation.')
@@ -223,7 +223,7 @@ def certify():
             encoding=serialization.Encoding.PEM,
         ))
 
-    with open(PKI_DIR / root_key_path, "wb") as f:
+    with open(PKI_DIR / root_key_path, 'wb') as f:
         f.write(root_private_key.private_bytes(
             encoding=serialization.Encoding.PEM,
             format=serialization.PrivateFormat.TraditionalOpenSSL,
@@ -263,7 +263,7 @@ def certify():
             encoding=serialization.Encoding.PEM,
         ))
 
-    with open(PKI_DIR / signing_key_path, "wb") as f:
+    with open(PKI_DIR / signing_key_path, 'wb') as f:
         f.write(signing_private_key.private_bytes(
             encoding=serialization.Encoding.PEM,
             format=serialization.PrivateFormat.TraditionalOpenSSL,

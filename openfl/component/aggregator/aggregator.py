@@ -356,8 +356,8 @@ class Aggregator:
         nparray = self.tensor_db.get_tensor_from_cache(agg_tensor_key)
 
         if nparray is None:
-            raise ValueError("Aggregator does not have an aggregated tensor"
-                             " for {}".format(tensor_key))
+            raise ValueError('Aggregator does not have an aggregated tensor'
+                             ' for {}'.format(tensor_key))
 
         # quite a bit happens in here, including compression, delta handling,
         # etc...
@@ -392,8 +392,8 @@ class Aggregator:
             model_nparray = self.tensor_db.get_tensor_from_cache(model_tk)
 
             assert (model_nparray is not None), (
-                "The original model layer should be present if the latest "
-                "aggregated model is present")
+                'The original model layer should be present if the latest '
+                'aggregated model is present')
             delta_tensor_key, delta_nparray = self.tensor_codec.generate_delta(
                 tensor_key, nparray, model_nparray)
             delta_comp_tensor_key, delta_comp_nparray, metadata = \
@@ -467,8 +467,8 @@ class Aggregator:
                 collaborator_name, task_name, round_number
         ):
             raise ValueError(
-                "Aggregator already has task results from collaborator {}"
-                " for task {}".format(collaborator_name, task_key)
+                'Aggregator already has task results from collaborator {}'
+                ' for task {}'.format(collaborator_name, task_key)
             )
 
         # initialize the list of tensors that go with this task
@@ -844,14 +844,14 @@ class Aggregator:
     def _log_big_warning(self):
         """Warn user about single collaborator cert mode."""
         self.logger.warning(
-            "\n{}\nYOU ARE RUNNING IN SINGLE COLLABORATOR CERT MODE! THIS IS"
-            " NOT PROPER PKI AND "
-            "SHOULD ONLY BE USED IN DEVELOPMENT SETTINGS!!!! YE HAVE BEEN"
-            " WARNED!!!".format(
+            '\n{}\nYOU ARE RUNNING IN SINGLE COLLABORATOR CERT MODE! THIS IS'
+            ' NOT PROPER PKI AND '
+            'SHOULD ONLY BE USED IN DEVELOPMENT SETTINGS!!!! YE HAVE BEEN'
+            ' WARNED!!!'.format(
                 the_dragon))
 
 
-the_dragon = """
+the_dragon = '''
 
  ,@@.@@+@@##@,@@@@.`@@#@+  *@@@@ #@##@  `@@#@# @@@@@   @@    @@@@` #@@@ :@@ `@#`@@@#.@
   @@ #@ ,@ +. @@.@* #@ :`   @+*@ .@`+.   @@ *@::@`@@   @@#  @@  #`;@`.@@ @@@`@`#@* +:@`
@@ -921,4 +921,4 @@ the_dragon = """
                                     `*      @#            +.
                                   @@@
                                  #`@
-                                  ,                                                        """
+                                  ,                                                        '''

@@ -173,7 +173,7 @@ def get_workspace_parameter(name):
         return doc[name]
 
 
-def check_varenv(env: str = "", args: dict = None):
+def check_varenv(env: str = '', args: dict = None):
     """Update "args" (dictionary) with <env: env_value> if env has a defined value in the host."""
     if args is None:
         args = {}
@@ -184,23 +184,23 @@ def check_varenv(env: str = "", args: dict = None):
     return args
 
 
-def get_fx_path(curr_path=""):
+def get_fx_path(curr_path=''):
     """Return the absolute path to fx binary."""
     import re
     import os
 
-    match = re.search("lib", curr_path)
+    match = re.search('lib', curr_path)
     idx = match.end()
     path_prefix = curr_path[0:idx]
-    bin_path = re.sub("lib", "bin", path_prefix)
-    fx_path = os.path.join(bin_path, "fx")
+    bin_path = re.sub('lib', 'bin', path_prefix)
+    fx_path = os.path.join(bin_path, 'fx')
 
     return fx_path
 
 
 def remove_line_from_file(pkg, filename):
     """Remove line that contains `pkg` from the `filename` file."""
-    with open(filename, "r+") as f:
+    with open(filename, 'r+') as f:
         d = f.readlines()
         f.seek(0)
         for i in d:
@@ -211,7 +211,7 @@ def remove_line_from_file(pkg, filename):
 
 def replace_line_in_file(line, line_num_to_replace, filename):
     """Replace line at `line_num_to_replace` with `line`."""
-    with open(filename, "r+") as f:
+    with open(filename, 'r+') as f:
         d = f.readlines()
         f.seek(0)
         for idx, i in enumerate(d):

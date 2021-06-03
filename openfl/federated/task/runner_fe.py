@@ -26,7 +26,7 @@ class FastEstimatorTaskRunner(TaskRunner):
 
         class ProgressLoader(fe.trace.Trace):
             def __init__(self, get_progress) -> None:
-                super().__init__(mode="train")
+                super().__init__(mode='train')
                 self.get_progress = get_progress
 
             def on_begin(self, data) -> None:
@@ -87,7 +87,7 @@ class FastEstimatorTaskRunner(TaskRunner):
 
         # Estimators need to be given an experiment name to produce an output
         # summary
-        summary = self.estimator.fit("experiment", warmup=False)
+        summary = self.estimator.fit('experiment', warmup=False)
         self.epoch_idx = self.estimator.system.epoch_idx
         self.global_step = self.estimator.system.global_step
         self.estimator.system.total_epochs += self.total_epochs

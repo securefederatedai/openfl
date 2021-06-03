@@ -42,13 +42,13 @@ def train_val_split(features, labels, percent_train, shuffle):
 
         """
         if idx < 0 or idx > len(lst):
-            raise ValueError("split was out of expected range.")
+            raise ValueError('split was out of expected range.')
         return lst[:idx], lst[idx:]
 
     nb_features = len(features)
     nb_labels = len(labels)
     if nb_features != nb_labels:
-        raise RuntimeError("Number of features and labels do not match.")
+        raise RuntimeError('Number of features and labels do not match.')
     if shuffle:
         new_order = np.random.permutation(np.arange(nb_features))
         features = features[new_order]

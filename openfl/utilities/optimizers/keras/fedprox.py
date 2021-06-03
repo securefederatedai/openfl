@@ -15,24 +15,24 @@ class FedProxOptimizer(keras.optimizers.Optimizer):
         """Initialize."""
         super().__init__(name=name, **kwargs)
 
-        self._set_hyper("learning_rate", learning_rate)
-        self._set_hyper("mu", mu)
+        self._set_hyper('learning_rate', learning_rate)
+        self._set_hyper('mu', mu)
 
         self._lr_t = None
         self._mu_t = None
 
     def _prepare(self, var_list):
-        self._lr_t = tf.convert_to_tensor(self._get_hyper('learning_rate'), name="lr")
-        self._mu_t = tf.convert_to_tensor(self._get_hyper('mu'), name="mu")
+        self._lr_t = tf.convert_to_tensor(self._get_hyper('learning_rate'), name='lr')
+        self._mu_t = tf.convert_to_tensor(self._get_hyper('mu'), name='mu')
 
     def _create_slots(self, var_list):
         for v in var_list:
-            self.add_slot(v, "vstar")
+            self.add_slot(v, 'vstar')
 
     def _resource_apply_dense(self, grad, var):
         lr_t = tf.cast(self._lr_t, var.dtype.base_dtype)
         mu_t = tf.cast(self._mu_t, var.dtype.base_dtype)
-        vstar = self.get_slot(var, "vstar")
+        vstar = self.get_slot(var, 'vstar')
 
         var_update = var.assign_sub(lr_t * (grad + mu_t * (var - vstar)))
 
@@ -41,7 +41,7 @@ class FedProxOptimizer(keras.optimizers.Optimizer):
     def _apply_sparse_shared(self, grad, var, indices, scatter_add):
         lr_t = tf.cast(self._lr_t, var.dtype.base_dtype)
         mu_t = tf.cast(self._mu_t, var.dtype.base_dtype)
-        vstar = self.get_slot(var, "vstar")
+        vstar = self.get_slot(var, 'vstar')
         v_diff = vstar.assign(mu_t * (var - vstar), use_locking=self._use_locking)
 
         with tf.control_dependencies([v_diff]):
@@ -69,6 +69,6 @@ class FedProxOptimizer(keras.optimizers.Optimizer):
         base_config = super(FedProxOptimizer, self).get_config()
         return {
             **base_config,
-            "lr": self._serialize_hyperparameter("learning_rate"),
-            "mu": self._serialize_hyperparameter("mu")
+            'lr': self._serialize_hyperparameter('learning_rate'),
+            'mu': self._serialize_hyperparameter('mu')
         }

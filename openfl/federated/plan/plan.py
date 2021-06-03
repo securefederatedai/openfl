@@ -49,13 +49,13 @@ class Plan(object):
             plan = Plan()
             plan.config = config
             frozen_yaml_path = Path(
-                f"{yaml_path.parent}/{yaml_path.stem}_{plan.hash[:8]}.yaml")
+                f'{yaml_path.parent}/{yaml_path.stem}_{plan.hash[:8]}.yaml')
             if frozen_yaml_path.exists():
-                Plan.logger.info(f"{yaml_path.name} is already frozen")
+                Plan.logger.info(f'{yaml_path.name} is already frozen')
                 return
             frozen_yaml_path.write_text(dump(config))
             frozen_yaml_path.chmod(0o400)
-            Plan.logger.info(f"{yaml_path.name} frozen successfully")
+            Plan.logger.info(f'{yaml_path.name} frozen successfully')
         else:
             yaml_path.write_text(dump(config))
 
@@ -124,7 +124,7 @@ class Plan(object):
             #  value as the plan hash
             plan.cols_data_paths = {}
             if data_config_path is not None:
-                data_config = open(data_config_path, "r")
+                data_config = open(data_config_path, 'r')
                 for line in data_config:
                     line = line.rstrip()
                     if len(line) > 0:

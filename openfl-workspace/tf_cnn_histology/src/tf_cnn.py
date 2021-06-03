@@ -61,29 +61,29 @@ class TensorFlowCNN(KerasTaskRunner):
 
         inputs = tf.keras.layers.Input(shape=input_shape)
         conv = tf.keras.layers.Conv2D(
-            filters=16, kernel_size=(3, 3), padding="same", activation="relu")(inputs)
+            filters=16, kernel_size=(3, 3), padding='same', activation='relu')(inputs)
         conv = tf.keras.layers.Conv2D(
-            filters=32, kernel_size=(3, 3), padding="same", activation="relu")(conv)
+            filters=32, kernel_size=(3, 3), padding='same', activation='relu')(conv)
         maxpool = tf.keras.layers.MaxPooling2D(pool_size=(2, 2))(conv)
 
         conv = tf.keras.layers.Conv2D(
-            filters=64, kernel_size=(3, 3), padding="same", activation="relu")(maxpool)
+            filters=64, kernel_size=(3, 3), padding='same', activation='relu')(maxpool)
         conv = tf.keras.layers.Conv2D(
-            filters=128, kernel_size=(3, 3), padding="same", activation="relu")(conv)
+            filters=128, kernel_size=(3, 3), padding='same', activation='relu')(conv)
         concat = tf.keras.layers.concatenate([maxpool, conv])
         maxpool = tf.keras.layers.MaxPooling2D(pool_size=(2, 2))(concat)
 
         conv = tf.keras.layers.Conv2D(
-            filters=256, kernel_size=(3, 3), padding="same", activation="relu")(maxpool)
+            filters=256, kernel_size=(3, 3), padding='same', activation='relu')(maxpool)
         conv = tf.keras.layers.Conv2D(
-            filters=512, kernel_size=(3, 3), padding="same", activation="relu")(conv)
+            filters=512, kernel_size=(3, 3), padding='same', activation='relu')(conv)
         concat = tf.keras.layers.concatenate([maxpool, conv])
         maxpool = tf.keras.layers.MaxPooling2D(pool_size=(2, 2))(concat)
 
         conv = tf.keras.layers.Conv2D(
-            filters=256, kernel_size=(3, 3), padding="same", activation="relu")(maxpool)
+            filters=256, kernel_size=(3, 3), padding='same', activation='relu')(maxpool)
         conv = tf.keras.layers.Conv2D(
-            filters=512, kernel_size=(3, 3), padding="same", activation="relu")(conv)
+            filters=512, kernel_size=(3, 3), padding='same', activation='relu')(conv)
         concat = tf.keras.layers.concatenate([maxpool, conv])
         maxpool = tf.keras.layers.MaxPooling2D(pool_size=(2, 2))(concat)
 
@@ -104,10 +104,10 @@ class TensorFlowCNN(KerasTaskRunner):
         )
 
         self.tvars = model.layers
-        print(f"layer names: {[var.name for var in self.tvars]}")
+        print(f'layer names: {[var.name for var in self.tvars]}')
 
         self.opt_vars = self.optimizer.variables()
-        print(f"optimizer vars: {self.opt_vars}")
+        print(f'optimizer vars: {self.opt_vars}')
 
         # Two opt_vars for one tvar: gradient and square sum for RMSprop.
         self.fl_vars = self.tvars + self.opt_vars

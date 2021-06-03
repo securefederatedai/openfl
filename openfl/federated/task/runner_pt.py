@@ -95,7 +95,7 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
 
         loader = self.data_loader.get_valid_loader()
         if use_tqdm:
-            loader = tqdm.tqdm(loader, desc="validate")
+            loader = tqdm.tqdm(loader, desc='validate')
 
         with pt.no_grad():
             for data, target in loader:
@@ -150,7 +150,7 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
         self.to(self.device)
         loader = self.data_loader.get_train_loader(num_batches)
         if use_tqdm:
-            loader = tqdm.tqdm(loader, desc="train epoch")
+            loader = tqdm.tqdm(loader, desc='train epoch')
         metric = self.train_epoch(loader)
         # Output metric tensors (scalar)
         origin = col_name

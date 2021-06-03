@@ -44,17 +44,17 @@ class FastEstimatorCifarInMemory(FastEstimatorDataLoader):
             test_data=test_data,
             batch_size=batch_size,
             ops=[
-                Normalize(inputs="x", outputs="x",
+                Normalize(inputs='x', outputs='x',
                           mean=(0.4914, 0.4822, 0.4465),
                           std=(0.2471, 0.2435, 0.2616)),
-                ChannelTranspose(inputs="x", outputs="x")
+                ChannelTranspose(inputs='x', outputs='x')
             ]), **kwargs)
 
-        print(f"train_data = {train_data}")
-        print(f"eval_data = {eval_data}")
-        print(f"test_data = {test_data}")
+        print(f'train_data = {train_data}')
+        print(f'eval_data = {eval_data}')
+        print(f'test_data = {test_data}')
 
-        print(f"batch_size = {batch_size}")
+        print(f'batch_size = {batch_size}')
 
     def split_data(self, train, eva, test, rank, collaborator_count):
         """Split data into N parts, where N is the collaborator count."""

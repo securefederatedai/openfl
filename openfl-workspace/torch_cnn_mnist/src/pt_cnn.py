@@ -78,7 +78,7 @@ class PyTorchCNN(PyTorchTaskRunner):
             **kwargs: Additional arguments to pass to the function
 
         """
-        """
+        '''
         FIXME: We are tracking only side lengths (rather than
         length and width) as we are assuming square
         shapes for feature and kernels.
@@ -92,7 +92,7 @@ class PyTorchCNN(PyTorchTaskRunner):
         for this model: 28x28 and 32x32 when used with the default values
         above)
 
-        """
+        '''
         self.pool_sqrkernel_size = pool_sqrkernel_size
         channel = self.data_loader.get_feature_shape()[0]  # (channel, dim1, dim2)
         self.conv1 = nn.Conv2d(channel, conv1_channels_out, conv_sqrkernel_size, 1)
@@ -158,7 +158,7 @@ class PyTorchCNN(PyTorchTaskRunner):
 
         loader = self.data_loader.get_valid_loader()
         if use_tqdm:
-            loader = tqdm.tqdm(loader, desc="validate")
+            loader = tqdm.tqdm(loader, desc='validate')
 
         with torch.no_grad():
             for data, target in loader:

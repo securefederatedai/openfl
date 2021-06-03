@@ -311,7 +311,7 @@ def certify(collaborator_name, silent, request_pkg=False, import_=False):
 
         else:
 
-            if confirm("Do you want to sign this certificate?"):
+            if confirm('Do you want to sign this certificate?'):
 
                 echo(' Signing COLLABORATOR certificate')
                 signed_col_cert = sign_certificate(csr, signing_key, signing_crt.subject)
@@ -356,7 +356,7 @@ def certify(collaborator_name, silent, request_pkg=False, import_=False):
         cert_difference = list(set(updated_crts) - set(previous_crts))
         if len(cert_difference) == 0:
             crt = basename(cert_difference[0])
-            echo(f"Certificate {crt} installed to PKI directory")
+            echo(f'Certificate {crt} installed to PKI directory')
         else:
             crt = basename(updated_crts[0])
-            echo("Certificate updated in the PKI directory")
+            echo('Certificate updated in the PKI directory')

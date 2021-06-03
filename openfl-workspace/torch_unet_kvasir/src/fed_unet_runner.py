@@ -110,7 +110,7 @@ class PyTorchFederatedUnet(PyTorchTaskRunner):
 
         loader = self.data_loader.get_valid_loader()
         if use_tqdm:
-            loader = tqdm.tqdm(loader, desc="validate")
+            loader = tqdm.tqdm(loader, desc='validate')
 
         with torch.no_grad():
             for data, target in loader:
