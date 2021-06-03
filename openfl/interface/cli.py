@@ -69,7 +69,9 @@ class CLI(Group):
         formatter.write(style('BASH COMPLETE ACTIVATION\n\n', bold=True, fg='bright_black'))
         formatter.write(
             'Run in terminal:\n'
-            '   _FX_COMPLETE=bash_source fx >> ~/.fx-autocomplete.sh\n'
+            '   _FX_COMPLETE=bash_source fx > ~/.fx-autocomplete.sh\n'
+            '   source ~/.fx-autocomplete.sh\n'
+            'If ~/.fx-autocomplete.sh has already exist:\n'
             '   source ~/.fx-autocomplete.sh\n\n'
         )
 
