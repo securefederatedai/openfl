@@ -3,6 +3,14 @@
 """Federation API module."""
 
 from socket import getfqdn
+from .shard_descriptor import DummyShardDescriptor
+
+
+class DirectorClient:
+
+    def data_shape_rpc(self):
+        sample_shape, target_shape = (300,300,3), (6,)
+        return sample_shape, target_shape
 
 
 class Federation:
@@ -13,37 +21,40 @@ class Federation:
     their local data and network setting to enable communication in federation.
     """
 
-    def __init__(self, central_node_fqdn=None, disable_tls=False,
-                 cert_chain=None, agg_certificate=None, agg_private_key=None) -> None:
+    def __init__(self, director_node_fqdn=None, disable_tls=False,
+                 cert_chain=None, API_cert=None, API_private_key=None) -> None:
         """
         Initialize federation.
 
-        Federation API class should be initialized with the aggregator node FQDN
+        Federation API class should be initialized with the Director node FQDN
         and encryption settings. One may disable mTLS in trusted environments or
-        provide paths to a certificate chain to CA, aggregator certificate and
+        provide paths to a certificate chain to CA, API certificate and
         pricate key to enable mTLS.
         """
-        if central_node_fqdn is None:
-            self.fqdn = getfqdn()
+        if director_node_fqdn is None:
+            self.director_node_fqdn = getfqdn()
         else:
-            self.fqdn = central_node_fqdn
+            self.director_node_fqdn = director_node_fqdn
 
         self.disable_tls = disable_tls
 
         self.cert_chain = cert_chain
-        self.agg_certificate = agg_certificate
-        self.agg_private_key = agg_private_key
+        self.API_cert = API_cert
+        self.API_private_key = API_private_key
 
-    def register_collaborators(self, col_data_paths: dict) -> None:
-        """
-        Provide data to be stored in data.yaml.
+        # Create Director client
+        self.dir_client = DirectorClient()
 
-        This method should be used to provide information about collaborators
-        participating federation.
-        Arguments:
-        col_data_paths: dict(collaborator name : local data path)
+        self.sample_shape, self.target_shape = self._request_data_shape()
+
+    def get_dummy_shard_descriptor(self, size):
+        return DummyShardDescriptor(self.sample_shape, self.target_shape, size)
+
+    def _request_data_shape(self):
         """
-        self.col_data_paths = col_data_paths
-        with open('./data.yaml', 'w') as f:
-            for col_name, data_path in self.col_data_paths.items():
-                f.write(f'{col_name},{data_path}\n')
+        Request sample and target shapes from Director.
+
+        This is an internal method for finding out dataset properties in a Federation.
+        """
+        sample_shape, target_shape = self.dir_client.data_shape_rpc()
+        return sample_shape, target_shape

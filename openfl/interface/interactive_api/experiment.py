@@ -354,19 +354,18 @@ class DataInterface:
         at initialization time for dataloader customization
     """
 
-    def __init__(self, UserDatasetClass, **kwargs):
+    def __init__(self, **kwargs):
         """Initialize DataLoader."""
-        self.UserDatasetClass = UserDatasetClass
         self.kwargs = kwargs
 
-    def _delayed_init(self, data_path):
+    def _set_shard_descriptor(self, shard_descriptor):
         """
         Describe per-collaborator procedures or sharding.
 
         This method will be called during a collaborator initialization.
-        data_path variable will be set according to data.yaml.
+        Local shard_descriptor  will be set by Envoy.
         """
-        raise NotImplementedError
+        self.shard_descriptor = shard_descriptor
 
     def get_train_loader(self, **kwargs):
         """Output of this method will be provided to tasks with optimizer in contract."""
