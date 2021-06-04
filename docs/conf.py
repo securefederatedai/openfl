@@ -52,9 +52,9 @@ PRODUCT_VERSION = 'Intel'
 if PRODUCT_VERSION == 'Intel':
 
     project = 'OpenFL'
-    copyright = '{}, Intel'.format(datetime.now().year) # NOQA
+    copyright = f'{datetime.now().year}, Intel' # NOQA
     author = 'Intel Corporation'
-    version = '{}.{}'.format(datetime.now().year, datetime.now().month)
+    version = f'{datetime.now().year}.{datetime.now().month}'
     release = version
     master_doc = 'index'
 
@@ -72,7 +72,7 @@ else:
     project = 'Open Federated Learning'
     author = 'FeTS'
     master_doc = 'index'
-    version = '{}.{}'.format(datetime.now().year, datetime.now().month)
+    version = f'{datetime.now().year}.{datetime.now().month}'
     release = version
 
     # Global variables for rST

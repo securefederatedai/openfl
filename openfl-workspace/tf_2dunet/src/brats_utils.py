@@ -109,8 +109,7 @@ and located in data directory for this collaborator.
                        **kwargs)
         # the needed files where not present if a tuple of None is returned
         if these_imgs is None:
-            logger.debug('Brain subdirectory: {} did not contain the'
-                         ' needed files.'.format(brain_path))
+            logger.debug(f'Brain subdirectory: {brain_path} did not contain the needed files.')
         else:
             imgs_all.append(these_imgs)
             msks_all.append(these_msks)

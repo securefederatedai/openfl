@@ -164,9 +164,9 @@ class TensorCodec:
         tensor_name, origin, round_number, report, tags = tensor_key
         if not np.isscalar(nparray):
             assert nparray.shape == base_model_nparray.shape, (
-                'Shape of updated layer ({}) is not equal to base '
-                'layer shape of ({})'.format(
-                    nparray.shape, base_model_nparray.shape))
+                f'Shape of updated layer ({nparray.shape}) is not equal to base '
+                f'layer shape of ({base_model_nparray.shape})'
+            )
         assert 'model' not in tags, (
             'The tensorkey should be provided '
             'from the layer with new weights, not the base model')
@@ -202,8 +202,9 @@ class TensorCodec:
         tensor_name, origin, round_number, report, tags = tensor_key
         if not np.isscalar(base_model_nparray):
             assert (delta.shape == base_model_nparray.shape), (
-                'Shape of delta ({}) is not equal to shape of model'
-                ' layer ({})'.format(delta.shape, base_model_nparray.shape))
+                f'Shape of delta ({delta.shape}) is not equal to shape of model'
+                f' layer ({base_model_nparray.shape})'
+            )
         # assert('model' in tensor_key[3]), 'The tensorkey should be provided
         # from the base model'
         # Aggregator UUID has the prefix 'aggregator'

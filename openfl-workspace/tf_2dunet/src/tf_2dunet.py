@@ -201,18 +201,18 @@ def define_model(input_tensor,
     net = inputs
     filters = initial_filters
     for i in range(depth):
-        name = 'conv{}a'.format(i + 1)
+        name = f'conv{i + 1}a'
         net = tf.keras.layers.Conv2D(name=name, filters=filters, **params)(net)
         if i in dropout_at:
             net = tf.keras.layers.Dropout(dropout)(net)
-        name = 'conv{}b'.format(i + 1)
+        name = f'conv{i + 1}b'
         net = tf.keras.layers.Conv2D(name=name, filters=filters, **params)(net)
         if batch_norm:
             net = tf.keras.layers.BatchNormalization()(net)
         convb_layers[name] = net
         # only pool if not last level
         if i != depth - 1:
-            name = 'pool{}'.format(i + 1)
+            name = f'pool{i + 1}'
             net = tf.keras.layers.MaxPooling2D(name=name, pool_size=(2, 2))(net)
             filters *= 2
 
@@ -221,20 +221,20 @@ def define_model(input_tensor,
     for i in range(depth - 1):
         if use_upsampling:
             up = tf.keras.layers.UpSampling2D(
-                name='up{}'.format(depth + i + 1), size=(2, 2))(net)
+                name=f'up{depth + i + 1}', size=(2, 2))(net)
         else:
             up = tf.keras.layers.Conv2DTranspose(
                 name='transConv6', filters=filters, data_format=data_format,
                 kernel_size=(2, 2), strides=(2, 2), padding='same')(net)
         net = tf.keras.layers.concatenate(
-            [up, convb_layers['conv{}b'.format(depth - i - 1)]],
+            [up, convb_layers[f'conv{depth - i - 1}b']],
             axis=concat_axis
         )
         net = tf.keras.layers.Conv2D(
-            name='conv{}a'.format(depth + i + 1),
+            name=f'conv{depth + i + 1}a',
             filters=filters, **params)(net)
         net = tf.keras.layers.Conv2D(
-            name='conv{}b'.format(depth + i + 1),
+            name=f'conv{depth + i + 1}b',
             filters=filters, **params)(net)
         filters //= 2
 

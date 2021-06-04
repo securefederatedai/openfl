@@ -80,8 +80,8 @@ def resize_data(dataset, new_size=128, rotate=3):
     """
     # Determine whether dataset and new_size are compatible with existing logic
     if (dataset.shape[1] - new_size) % 2 != 0 and (dataset.shape[2] - new_size) % 2 != 0:
-        raise ValueError('dataset shape: {} and new_size: {} are not compatible with '
-                         'existing logic'.format(dataset.shape, new_size))
+        raise ValueError(f'dataset shape: {dataset.shape} and new_size: {new_size} '
+                         f'are not compatible with existing logic')
 
     start_index = int((dataset.shape[1] - new_size) / 2)
     end_index = dataset.shape[1] - start_index
@@ -201,7 +201,7 @@ def nii_reader(brain_path, task, channels_last=True,
 
     # validate that task is an allowed key
     if task not in task_to_img_modes.keys():
-        raise ValueError('{} is not a valid task'.format(task))
+        raise ValueError(f'{task} is not a valid task')
 
     # validate that the tasks used in task_to_img_modes and
     # task_to_msk_modes are the same
@@ -244,7 +244,7 @@ def nii_reader(brain_path, task, channels_last=True,
     elif normalization is None:
         imgs = np.stack(imgs_per_mode, axis=-1)
     else:
-        raise ValueError('{} is not a supported normalization.'.format(normalization))
+        raise ValueError(f'{normalization} is not a supported normalization.')
 
     # get mask (labels)
     for file in need_files_oneof:
@@ -273,7 +273,7 @@ def nii_reader(brain_path, task, channels_last=True,
             [img_mode_to_channel[mode] for mode in task_to_img_modes[task]]
         )
     else:
-        raise ValueError('{} is not a supported normalization.'.format(normalization))
+        raise ValueError(f'{normalization} is not a supported normalization.')
 
     img = imgs
     msk = msks

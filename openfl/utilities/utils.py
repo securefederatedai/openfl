@@ -82,8 +82,8 @@ def split_tensor_dict_for_holdouts(logger, tensor_dict,
             try:
                 holdout_tensors[tensor_name] = tensors_to_send.pop(tensor_name)
             except KeyError:
-                logger.warn('tried to remove tensor: {} not present in the'
-                            ' tensor dict'.format(tensor_name))
+                logger.warn(f'tried to remove tensor: {tensor_name} not present '
+                            f'in the tensor dict')
                 continue
 
     # filter holdout_types from tensors_to_send and add to holdout_tensors

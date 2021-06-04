@@ -172,11 +172,10 @@ class KerasTaskRunner(TaskRunner):
         #  compiled model, that behavior is not currently handled.
         for param in metrics:
             if param not in model_metrics_names:
-                error = 'KerasTaskRunner does not support specifying new' \
-                        ' metrics. ' \
-                        'Param_metrics = {}, model_metrics_names =' \
-                        ' {}'.format(metrics, model_metrics_names)
-                raise ValueError(error)
+                raise ValueError(
+                    f'KerasTaskRunner does not support specifying new metrics. '
+                    f'Param_metrics = {metrics}, model_metrics_names = {model_metrics_names}'
+                )
 
         history = self.model.fit(batch_generator,
                                  verbose=0,
@@ -222,11 +221,10 @@ class KerasTaskRunner(TaskRunner):
         #  handled.
         for param in param_metrics:
             if param not in model_metrics_names:
-                error = 'KerasTaskRunner does not support specifying new' \
-                        ' metrics. ' \
-                        'Param_metrics = {}, model_metrics_names' \
-                        ' = {}'.format(param_metrics, model_metrics_names)
-                raise ValueError(error)
+                raise ValueError(
+                    f'KerasTaskRunner does not support specifying new metrics. '
+                    f'Param_metrics = {param_metrics}, model_metrics_names = {model_metrics_names}'
+                )
 
         origin = col_name
         suffix = 'validate'
@@ -451,8 +449,7 @@ class KerasTaskRunner(TaskRunner):
         model_layer_names = self._get_weights_names(self.model)
         opt_names = self._get_weights_names(self.model.optimizer)
         tensor_names = model_layer_names + opt_names
-        self.logger.debug(
-            'Updating model tensor names: {}'.format(tensor_names))
+        self.logger.debug(f'Updating model tensor names: {tensor_names}')
         self.required_tensorkeys_for_function['train'] = [
             TensorKey(
                 tensor_name, 'GLOBAL', 0, ('model',)

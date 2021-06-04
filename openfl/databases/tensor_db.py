@@ -31,10 +31,8 @@ class TensorDB:
     def __repr__(self):
         """Representation of the object."""
         with pd.option_context('display.max_rows', None):
-            return 'TensorDB contents:\n{}'.format(
-                self.tensor_db[
-                    ['tensor_name', 'origin', 'round', 'report', 'tags']
-                ])
+            content = self.tensor_db[['tensor_name', 'origin', 'round', 'report', 'tags']]
+            return f'TensorDB contents:\n{content}'
 
     def __str__(self):
         """Printable string representation."""
@@ -126,8 +124,7 @@ class TensorDB:
             assert (np.abs(
                 1.0 - sum(collaborator_weight_dict.values())
             ) < 0.01), \
-                'Collaborator weights do not sum to 1.0:' \
-                ' {}'.format(collaborator_weight_dict)
+                f'Collaborator weights do not sum to 1.0: {collaborator_weight_dict}'
 
         collaborator_names = collaborator_weight_dict.keys()
         agg_tensor_dict = {}
@@ -156,10 +153,8 @@ class TensorDB:
                 & (self.tensor_db['tags'] == new_tags)]['nparray']
             # print(raw_df)
             if len(raw_df) == 0:
-                print('No results for collaborator {}, TensorKey={}'.format(
-                    col, TensorKey(
-                        tensor_name, origin, report, fl_round, new_tags
-                    )))
+                tk = TensorKey(tensor_name, origin, report, fl_round, new_tags)
+                print(f'No results for collaborator {col}, TensorKey={tk}')
                 return None
             else:
                 agg_tensor_dict[col] = raw_df.iloc[0]

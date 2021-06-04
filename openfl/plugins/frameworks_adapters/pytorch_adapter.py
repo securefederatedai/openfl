@@ -174,10 +174,7 @@ def _derive_opt_state_dict(opt_state_dict):
                     new_v = np.array(
                         [opt_state_dict['state'][param_id][subkey]]
                     )
-                derived_opt_state_dict[
-                    '__opt_state_{}_{}_{}_{}'.format(
-                        group_idx, idx, tag, subkey)
-                ] = new_v
+                derived_opt_state_dict[f'__opt_state_{group_idx}_{idx}_{tag}_{subkey}'] = new_v
         nb_params_per_group.append(idx + 1)
     # group lengths are also helpful for reconstructing
     # original opt_state_dict structure
@@ -223,13 +220,13 @@ def expand_derived_opt_state_dict(derived_opt_state_dict, device):
     # Construct the expanded dict.
     for group_idx, nb_params in enumerate(nb_params_per_group):
         these_group_ids = [
-            '{}_{}'.format(group_idx, idx) for idx in range(nb_params)
+            f'{group_idx}_{idx}' for idx in range(nb_params)
         ]
         opt_state_dict['param_groups'].append({'params': these_group_ids})
         for this_id in these_group_ids:
             opt_state_dict['state'][this_id] = {}
             for subkey, tag in state_subkeys_and_tags:
-                flat_key = '__opt_state_{}_{}_{}'.format(this_id, tag, subkey)
+                flat_key = f'__opt_state_{this_id}_{tag}_{subkey}'
                 if tag == 'istensor':
                     new_v = pt.from_numpy(derived_opt_state_dict.pop(flat_key))
                 else:

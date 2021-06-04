@@ -59,8 +59,7 @@ class FederatedDataSet(PyTorchDataLoader):
 
         if num_classes is None:
             num_classes = np.unique(self.y_train).shape[0]
-            print('Inferred {} classes from the provided'
-                  ' labels...'.format(num_classes))
+            print(f'Inferred {num_classes} classes from the provided labels...')
         self.num_classes = num_classes
 
     def split(self, num_collaborators, shuffle=True, equally=False):
