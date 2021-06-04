@@ -373,7 +373,7 @@ openfl.component.aggregation_functions.AggregationFunctionInterface
         return self.runner_
 
     def get_collaborator(self, collaborator_name,
-                         task_runner=None, client=None):
+                         task_runner=None, client=None, shard_descriptor=None):
         """Get collaborator."""
         defaults = self.config.get(
             'collaborator',

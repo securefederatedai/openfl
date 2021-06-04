@@ -31,13 +31,6 @@ class ShardDirectorClient:
         acknowledgement = self.stub.AcknowledgeShard(shard_info)
         return acknowledgement.accepted
 
-    # def is_new_experiment_avalable(self):
-    #     logger.info('Send IsNewExperimentAvalable request')
-    #     response = self.stub.IsNewExperimentAvalable(
-    #         preparations_pb2.NewExperimentAvalableRequest())
-    #     logger.info(f'Response received: {response}')
-    #     return response.is_available
-
     def get_experiment_data(self):
         logger.info('Send WaitExperiment request')
         response_iter = self.stub.WaitExperiment(self._get_experiment_data())
@@ -111,5 +104,5 @@ class DirectorClient:
             return resp
 
     def get_shard_info(self):
-        pass
-
+        resp = self.stub.GetShardsInfo(preparations_pb2.GetShardsInfoRequest())
+        return resp.sample_shape, resp.target_shape

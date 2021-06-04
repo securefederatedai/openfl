@@ -19,7 +19,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   syntax='proto3',
   serialized_options=None,
   create_key=_descriptor._internal_create_key,
-  serialized_pb=b'\n\x12preparations.proto\"U\n\x08NodeInfo\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0e\n\x06\x61\x64ress\x18\x02 \x01(\t\x12\x16\n\x0e\x63uda_available\x18\x03 \x01(\x08\x12\x13\n\x0bmemory_size\x18\x04 \x01(\r\"\x83\x01\n\tShardInfo\x12\x1c\n\tnode_info\x18\x01 \x01(\x0b\x32\t.NodeInfo\x12\x19\n\x11shard_description\x18\x02 \x01(\t\x12\x11\n\tn_samples\x18\x03 \x01(\x04\x12\x14\n\x0csample_shape\x18\x04 \x01(\r\x12\x14\n\x0ctarget_shape\x18\x05 \x01(\r\"(\n\x14ShardAcknowledgement\x12\x10\n\x08\x61\x63\x63\x65pted\x18\x01 \x01(\x08\"\x1c\n\x08Response\x12\x10\n\x08\x61\x63\x63\x65pted\x18\x01 \x01(\x08\"d\n\x0e\x45xperimentInfo\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x1a\n\x12\x63ollaborator_names\x18\x02 \x03(\t\x12(\n\x0f\x65xperiment_data\x18\x03 \x01(\x0b\x32\x0f.ExperimentData\"\x1b\n\x19GetRegisterdShardsRequest\"<\n\x1aGetRegisterdShardsResponse\x12\x1e\n\nshard_info\x18\x01 \x03(\x0b\x32\n.ShardInfo\"2\n\x15WaitExperimentRequest\x12\x19\n\x11\x63ollaborator_name\x18\x01 \x01(\t\"1\n\x16WaitExperimentResponse\x12\x17\n\x0f\x65xperiment_name\x18\x01 \x01(\t\"N\n\x18GetExperimentDataRequest\x12\x17\n\x0f\x65xperiment_name\x18\x01 \x01(\t\x12\x19\n\x11\x63ollaborator_name\x18\x02 \x01(\t\"/\n\x0e\x45xperimentData\x12\x0c\n\x04size\x18\x01 \x01(\r\x12\x0f\n\x07npbytes\x18\x02 \x01(\x0c\x32\xe0\x02\n\x12\x46\x65\x64\x65rationDirector\x12\x37\n\x10\x41\x63knowledgeShard\x12\n.ShardInfo\x1a\x15.ShardAcknowledgement\"\x00\x12\x32\n\x10SetNewExperiment\x12\x0f.ExperimentInfo\x1a\t.Response\"\x00(\x01\x12O\n\x12GetRegisterdShards\x12\x1a.GetRegisterdShardsRequest\x1a\x1b.GetRegisterdShardsResponse\"\x00\x12G\n\x0eWaitExperiment\x12\x16.WaitExperimentRequest\x1a\x17.WaitExperimentResponse\"\x00(\x01\x30\x01\x12\x43\n\x11GetExperimentData\x12\x19.GetExperimentDataRequest\x1a\x0f.ExperimentData\"\x00\x30\x01\x62\x06proto3'
+  serialized_pb=b'\n\x12preparations.proto\"U\n\x08NodeInfo\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0e\n\x06\x61\x64ress\x18\x02 \x01(\t\x12\x16\n\x0e\x63uda_available\x18\x03 \x01(\x08\x12\x13\n\x0bmemory_size\x18\x04 \x01(\r\"\x83\x01\n\tShardInfo\x12\x1c\n\tnode_info\x18\x01 \x01(\x0b\x32\t.NodeInfo\x12\x19\n\x11shard_description\x18\x02 \x01(\t\x12\x11\n\tn_samples\x18\x03 \x01(\x04\x12\x14\n\x0csample_shape\x18\x04 \x03(\t\x12\x14\n\x0ctarget_shape\x18\x05 \x03(\t\"(\n\x14ShardAcknowledgement\x12\x10\n\x08\x61\x63\x63\x65pted\x18\x01 \x01(\x08\"\x1c\n\x08Response\x12\x10\n\x08\x61\x63\x63\x65pted\x18\x01 \x01(\x08\"/\n\x0e\x45xperimentData\x12\x0c\n\x04size\x18\x01 \x01(\r\x12\x0f\n\x07npbytes\x18\x02 \x01(\x0c\"d\n\x0e\x45xperimentInfo\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x1a\n\x12\x63ollaborator_names\x18\x02 \x03(\t\x12(\n\x0f\x65xperiment_data\x18\x03 \x01(\x0b\x32\x0f.ExperimentData\"\x1b\n\x19GetRegisterdShardsRequest\"<\n\x1aGetRegisterdShardsResponse\x12\x1e\n\nshard_info\x18\x01 \x03(\x0b\x32\n.ShardInfo\"2\n\x15WaitExperimentRequest\x12\x19\n\x11\x63ollaborator_name\x18\x01 \x01(\t\"1\n\x16WaitExperimentResponse\x12\x17\n\x0f\x65xperiment_name\x18\x01 \x01(\t\"N\n\x18GetExperimentDataRequest\x12\x17\n\x0f\x65xperiment_name\x18\x01 \x01(\t\x12\x19\n\x11\x63ollaborator_name\x18\x02 \x01(\t\"\x16\n\x14GetShardsInfoRequest2\x96\x03\n\x12\x46\x65\x64\x65rationDirector\x12\x37\n\x10\x41\x63knowledgeShard\x12\n.ShardInfo\x1a\x15.ShardAcknowledgement\"\x00\x12G\n\x0eWaitExperiment\x12\x16.WaitExperimentRequest\x1a\x17.WaitExperimentResponse\"\x00(\x01\x30\x01\x12\x43\n\x11GetExperimentData\x12\x19.GetExperimentDataRequest\x1a\x0f.ExperimentData\"\x00\x30\x01\x12\x32\n\x10SetNewExperiment\x12\x0f.ExperimentInfo\x1a\t.Response\"\x00(\x01\x12O\n\x12GetRegisterdShards\x12\x1a.GetRegisterdShardsRequest\x1a\x1b.GetRegisterdShardsResponse\"\x00\x12\x34\n\rGetShardsInfo\x12\x15.GetShardsInfoRequest\x1a\n.ShardInfo\"\x00\x62\x06proto3'
 )
 
 
@@ -109,15 +109,15 @@ _SHARDINFO = _descriptor.Descriptor(
       serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
     _descriptor.FieldDescriptor(
       name='sample_shape', full_name='ShardInfo.sample_shape', index=3,
-      number=4, type=13, cpp_type=3, label=1,
-      has_default_value=False, default_value=0,
+      number=4, type=9, cpp_type=9, label=3,
+      has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
     _descriptor.FieldDescriptor(
       name='target_shape', full_name='ShardInfo.target_shape', index=4,
-      number=5, type=13, cpp_type=3, label=1,
-      has_default_value=False, default_value=0,
+      number=5, type=9, cpp_type=9, label=3,
+      has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
@@ -202,6 +202,45 @@ _RESPONSE = _descriptor.Descriptor(
 )
 
 
+_EXPERIMENTDATA = _descriptor.Descriptor(
+  name='ExperimentData',
+  full_name='ExperimentData',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  create_key=_descriptor._internal_create_key,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='size', full_name='ExperimentData.size', index=0,
+      number=1, type=13, cpp_type=3, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='npbytes', full_name='ExperimentData.npbytes', index=1,
+      number=2, type=12, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"",
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=315,
+  serialized_end=362,
+)
+
+
 _EXPERIMENTINFO = _descriptor.Descriptor(
   name='ExperimentInfo',
   full_name='ExperimentInfo',
@@ -243,8 +282,8 @@ _EXPERIMENTINFO = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=315,
-  serialized_end=415,
+  serialized_start=364,
+  serialized_end=464,
 )
 
 
@@ -268,8 +307,8 @@ _GETREGISTERDSHARDSREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=417,
-  serialized_end=444,
+  serialized_start=466,
+  serialized_end=493,
 )
 
 
@@ -300,8 +339,8 @@ _GETREGISTERDSHARDSRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=446,
-  serialized_end=506,
+  serialized_start=495,
+  serialized_end=555,
 )
 
 
@@ -332,8 +371,8 @@ _WAITEXPERIMENTREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=508,
-  serialized_end=558,
+  serialized_start=557,
+  serialized_end=607,
 )
 
 
@@ -364,8 +403,8 @@ _WAITEXPERIMENTRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=560,
-  serialized_end=609,
+  serialized_start=609,
+  serialized_end=658,
 )
 
 
@@ -403,33 +442,19 @@ _GETEXPERIMENTDATAREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=611,
-  serialized_end=689,
+  serialized_start=660,
+  serialized_end=738,
 )
 
 
-_EXPERIMENTDATA = _descriptor.Descriptor(
-  name='ExperimentData',
-  full_name='ExperimentData',
+_GETSHARDSINFOREQUEST = _descriptor.Descriptor(
+  name='GetShardsInfoRequest',
+  full_name='GetShardsInfoRequest',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   create_key=_descriptor._internal_create_key,
   fields=[
-    _descriptor.FieldDescriptor(
-      name='size', full_name='ExperimentData.size', index=0,
-      number=1, type=13, cpp_type=3, label=1,
-      has_default_value=False, default_value=0,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='npbytes', full_name='ExperimentData.npbytes', index=1,
-      number=2, type=12, cpp_type=9, label=1,
-      has_default_value=False, default_value=b"",
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
   ],
   extensions=[
   ],
@@ -442,8 +467,8 @@ _EXPERIMENTDATA = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=691,
-  serialized_end=738,
+  serialized_start=740,
+  serialized_end=762,
 )
 
 _SHARDINFO.fields_by_name['node_info'].message_type = _NODEINFO
@@ -453,13 +478,14 @@ DESCRIPTOR.message_types_by_name['NodeInfo'] = _NODEINFO
 DESCRIPTOR.message_types_by_name['ShardInfo'] = _SHARDINFO
 DESCRIPTOR.message_types_by_name['ShardAcknowledgement'] = _SHARDACKNOWLEDGEMENT
 DESCRIPTOR.message_types_by_name['Response'] = _RESPONSE
+DESCRIPTOR.message_types_by_name['ExperimentData'] = _EXPERIMENTDATA
 DESCRIPTOR.message_types_by_name['ExperimentInfo'] = _EXPERIMENTINFO
 DESCRIPTOR.message_types_by_name['GetRegisterdShardsRequest'] = _GETREGISTERDSHARDSREQUEST
 DESCRIPTOR.message_types_by_name['GetRegisterdShardsResponse'] = _GETREGISTERDSHARDSRESPONSE
 DESCRIPTOR.message_types_by_name['WaitExperimentRequest'] = _WAITEXPERIMENTREQUEST
 DESCRIPTOR.message_types_by_name['WaitExperimentResponse'] = _WAITEXPERIMENTRESPONSE
 DESCRIPTOR.message_types_by_name['GetExperimentDataRequest'] = _GETEXPERIMENTDATAREQUEST
-DESCRIPTOR.message_types_by_name['ExperimentData'] = _EXPERIMENTDATA
+DESCRIPTOR.message_types_by_name['GetShardsInfoRequest'] = _GETSHARDSINFOREQUEST
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
 NodeInfo = _reflection.GeneratedProtocolMessageType('NodeInfo', (_message.Message,), {
@@ -489,6 +515,13 @@ Response = _reflection.GeneratedProtocolMessageType('Response', (_message.Messag
   # @@protoc_insertion_point(class_scope:Response)
   })
 _sym_db.RegisterMessage(Response)
+
+ExperimentData = _reflection.GeneratedProtocolMessageType('ExperimentData', (_message.Message,), {
+  'DESCRIPTOR' : _EXPERIMENTDATA,
+  '__module__' : 'preparations_pb2'
+  # @@protoc_insertion_point(class_scope:ExperimentData)
+  })
+_sym_db.RegisterMessage(ExperimentData)
 
 ExperimentInfo = _reflection.GeneratedProtocolMessageType('ExperimentInfo', (_message.Message,), {
   'DESCRIPTOR' : _EXPERIMENTINFO,
@@ -532,12 +565,12 @@ GetExperimentDataRequest = _reflection.GeneratedProtocolMessageType('GetExperime
   })
 _sym_db.RegisterMessage(GetExperimentDataRequest)
 
-ExperimentData = _reflection.GeneratedProtocolMessageType('ExperimentData', (_message.Message,), {
-  'DESCRIPTOR' : _EXPERIMENTDATA,
+GetShardsInfoRequest = _reflection.GeneratedProtocolMessageType('GetShardsInfoRequest', (_message.Message,), {
+  'DESCRIPTOR' : _GETSHARDSINFOREQUEST,
   '__module__' : 'preparations_pb2'
-  # @@protoc_insertion_point(class_scope:ExperimentData)
+  # @@protoc_insertion_point(class_scope:GetShardsInfoRequest)
   })
-_sym_db.RegisterMessage(ExperimentData)
+_sym_db.RegisterMessage(GetShardsInfoRequest)
 
 
 
@@ -548,8 +581,8 @@ _FEDERATIONDIRECTOR = _descriptor.ServiceDescriptor(
   index=0,
   serialized_options=None,
   create_key=_descriptor._internal_create_key,
-  serialized_start=741,
-  serialized_end=1093,
+  serialized_start=765,
+  serialized_end=1171,
   methods=[
   _descriptor.MethodDescriptor(
     name='AcknowledgeShard',
@@ -562,29 +595,9 @@ _FEDERATIONDIRECTOR = _descriptor.ServiceDescriptor(
     create_key=_descriptor._internal_create_key,
   ),
   _descriptor.MethodDescriptor(
-    name='SetNewExperiment',
-    full_name='FederationDirector.SetNewExperiment',
-    index=1,
-    containing_service=None,
-    input_type=_EXPERIMENTINFO,
-    output_type=_RESPONSE,
-    serialized_options=None,
-    create_key=_descriptor._internal_create_key,
-  ),
-  _descriptor.MethodDescriptor(
-    name='GetRegisterdShards',
-    full_name='FederationDirector.GetRegisterdShards',
-    index=2,
-    containing_service=None,
-    input_type=_GETREGISTERDSHARDSREQUEST,
-    output_type=_GETREGISTERDSHARDSRESPONSE,
-    serialized_options=None,
-    create_key=_descriptor._internal_create_key,
-  ),
-  _descriptor.MethodDescriptor(
     name='WaitExperiment',
     full_name='FederationDirector.WaitExperiment',
-    index=3,
+    index=1,
     containing_service=None,
     input_type=_WAITEXPERIMENTREQUEST,
     output_type=_WAITEXPERIMENTRESPONSE,
@@ -594,10 +607,40 @@ _FEDERATIONDIRECTOR = _descriptor.ServiceDescriptor(
   _descriptor.MethodDescriptor(
     name='GetExperimentData',
     full_name='FederationDirector.GetExperimentData',
-    index=4,
+    index=2,
     containing_service=None,
     input_type=_GETEXPERIMENTDATAREQUEST,
     output_type=_EXPERIMENTDATA,
+    serialized_options=None,
+    create_key=_descriptor._internal_create_key,
+  ),
+  _descriptor.MethodDescriptor(
+    name='SetNewExperiment',
+    full_name='FederationDirector.SetNewExperiment',
+    index=3,
+    containing_service=None,
+    input_type=_EXPERIMENTINFO,
+    output_type=_RESPONSE,
+    serialized_options=None,
+    create_key=_descriptor._internal_create_key,
+  ),
+  _descriptor.MethodDescriptor(
+    name='GetRegisterdShards',
+    full_name='FederationDirector.GetRegisterdShards',
+    index=4,
+    containing_service=None,
+    input_type=_GETREGISTERDSHARDSREQUEST,
+    output_type=_GETREGISTERDSHARDSRESPONSE,
+    serialized_options=None,
+    create_key=_descriptor._internal_create_key,
+  ),
+  _descriptor.MethodDescriptor(
+    name='GetShardsInfo',
+    full_name='FederationDirector.GetShardsInfo',
+    index=5,
+    containing_service=None,
+    input_type=_GETSHARDSINFOREQUEST,
+    output_type=_SHARDINFO,
     serialized_options=None,
     create_key=_descriptor._internal_create_key,
   ),

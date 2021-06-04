@@ -2,6 +2,7 @@ import asyncio
 import logging
 
 from click import group, pass_context
+from click import option
 from openfl.services.director import serve
 
 logger = logging.getLogger(__name__)
@@ -16,7 +17,12 @@ def director(context):
 
 @director.command(name='start')
 @pass_context
-def start_(context):
-    """Start the aggregator service."""
+@option('--sample-shape', '-ss', multiple=True,
+        help='Sample shape')
+@option('--target-shape', '-ts', multiple=True,
+        help='Target shape')
+def start_(context, sample_shape, target_shape):
+    """Start the director service."""
     logger.info('🧿 Starting the Director Service.')
-    asyncio.run(serve(sample_shape=1, target_shape=1))
+    logger.info(F'Sample shape: {sample_shape}, target shape: {target_shape}')
+    asyncio.run(serve(sample_shape=list(sample_shape), target_shape=list(target_shape)))

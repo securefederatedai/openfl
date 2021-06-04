@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 class Director(preparations_pb2_grpc.FederationDirectorServicer):
 
-    def __init__(self, sample_shape, target_shape) -> None:
+    def __init__(self, sample_shape: list, target_shape: list) -> None:
         # TODO: add working directory
         super().__init__()
         self.sample_shape, self.target_shape = sample_shape, target_shape
@@ -34,7 +34,7 @@ class Director(preparations_pb2_grpc.FederationDirectorServicer):
             return reply
 
         self.shard_registry.append(shard_info)
-        print('\n\n\nRegistry now looks like this\n\n', self.shard_registry)
+        logger.info('\n\n\nRegistry now looks like this\n\n', self.shard_registry)
         reply.accepted = True
         return reply
 
@@ -87,6 +87,14 @@ class Director(preparations_pb2_grpc.FederationDirectorServicer):
         logger.info(f'Experiment {experiment_name} was prepared')
 
         yield preparations_pb2.WaitExperimentResponse(experiment_name=experiment_name)
+
+    async def GetShardsInfo(self, request, context):
+        logger.info('Request GetShardsInfo has got!')
+        resp = preparations_pb2.ShardInfo(
+            sample_shape=self.sample_shape,
+            target_shape=self.target_shape
+        )
+        return resp
 
     @staticmethod
     def _run_aggregator(plan='plan/plan.yaml',

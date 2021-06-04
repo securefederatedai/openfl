@@ -19,6 +19,16 @@ class FederationDirectorStub(object):
                 request_serializer=preparations__pb2.ShardInfo.SerializeToString,
                 response_deserializer=preparations__pb2.ShardAcknowledgement.FromString,
                 )
+        self.WaitExperiment = channel.stream_stream(
+                '/FederationDirector/WaitExperiment',
+                request_serializer=preparations__pb2.WaitExperimentRequest.SerializeToString,
+                response_deserializer=preparations__pb2.WaitExperimentResponse.FromString,
+                )
+        self.GetExperimentData = channel.unary_stream(
+                '/FederationDirector/GetExperimentData',
+                request_serializer=preparations__pb2.GetExperimentDataRequest.SerializeToString,
+                response_deserializer=preparations__pb2.ExperimentData.FromString,
+                )
         self.SetNewExperiment = channel.stream_unary(
                 '/FederationDirector/SetNewExperiment',
                 request_serializer=preparations__pb2.ExperimentInfo.SerializeToString,
@@ -29,15 +39,10 @@ class FederationDirectorStub(object):
                 request_serializer=preparations__pb2.GetRegisterdShardsRequest.SerializeToString,
                 response_deserializer=preparations__pb2.GetRegisterdShardsResponse.FromString,
                 )
-        self.WaitExperiment = channel.stream_stream(
-                '/FederationDirector/WaitExperiment',
-                request_serializer=preparations__pb2.WaitExperimentRequest.SerializeToString,
-                response_deserializer=preparations__pb2.WaitExperimentResponse.FromString,
-                )
-        self.GetExperimentData = channel.unary_stream(
-                '/FederationDirector/GetExperimentData',
-                request_serializer=preparations__pb2.GetExperimentDataRequest.SerializeToString,
-                response_deserializer=preparations__pb2.ExperimentData.FromString,
+        self.GetShardsInfo = channel.unary_unary(
+                '/FederationDirector/GetShardsInfo',
+                request_serializer=preparations__pb2.GetShardsInfoRequest.SerializeToString,
+                response_deserializer=preparations__pb2.ShardInfo.FromString,
                 )
 
 
@@ -50,9 +55,21 @@ class FederationDirectorServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
-    def SetNewExperiment(self, request_iterator, context):
+    def WaitExperiment(self, request_iterator, context):
         """Shard owner could also provide some public data for tests
         """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def GetExperimentData(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def SetNewExperiment(self, request_iterator, context):
+        """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
@@ -63,13 +80,7 @@ class FederationDirectorServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
-    def WaitExperiment(self, request_iterator, context):
-        """Missing associated documentation comment in .proto file."""
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
-
-    def GetExperimentData(self, request, context):
+    def GetShardsInfo(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -83,6 +94,16 @@ def add_FederationDirectorServicer_to_server(servicer, server):
                     request_deserializer=preparations__pb2.ShardInfo.FromString,
                     response_serializer=preparations__pb2.ShardAcknowledgement.SerializeToString,
             ),
+            'WaitExperiment': grpc.stream_stream_rpc_method_handler(
+                    servicer.WaitExperiment,
+                    request_deserializer=preparations__pb2.WaitExperimentRequest.FromString,
+                    response_serializer=preparations__pb2.WaitExperimentResponse.SerializeToString,
+            ),
+            'GetExperimentData': grpc.unary_stream_rpc_method_handler(
+                    servicer.GetExperimentData,
+                    request_deserializer=preparations__pb2.GetExperimentDataRequest.FromString,
+                    response_serializer=preparations__pb2.ExperimentData.SerializeToString,
+            ),
             'SetNewExperiment': grpc.stream_unary_rpc_method_handler(
                     servicer.SetNewExperiment,
                     request_deserializer=preparations__pb2.ExperimentInfo.FromString,
@@ -93,15 +114,10 @@ def add_FederationDirectorServicer_to_server(servicer, server):
                     request_deserializer=preparations__pb2.GetRegisterdShardsRequest.FromString,
                     response_serializer=preparations__pb2.GetRegisterdShardsResponse.SerializeToString,
             ),
-            'WaitExperiment': grpc.stream_stream_rpc_method_handler(
-                    servicer.WaitExperiment,
-                    request_deserializer=preparations__pb2.WaitExperimentRequest.FromString,
-                    response_serializer=preparations__pb2.WaitExperimentResponse.SerializeToString,
-            ),
-            'GetExperimentData': grpc.unary_stream_rpc_method_handler(
-                    servicer.GetExperimentData,
-                    request_deserializer=preparations__pb2.GetExperimentDataRequest.FromString,
-                    response_serializer=preparations__pb2.ExperimentData.SerializeToString,
+            'GetShardsInfo': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetShardsInfo,
+                    request_deserializer=preparations__pb2.GetShardsInfoRequest.FromString,
+                    response_serializer=preparations__pb2.ShardInfo.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -127,6 +143,40 @@ class FederationDirector(object):
         return grpc.experimental.unary_unary(request, target, '/FederationDirector/AcknowledgeShard',
             preparations__pb2.ShardInfo.SerializeToString,
             preparations__pb2.ShardAcknowledgement.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def WaitExperiment(request_iterator,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.stream_stream(request_iterator, target, '/FederationDirector/WaitExperiment',
+            preparations__pb2.WaitExperimentRequest.SerializeToString,
+            preparations__pb2.WaitExperimentResponse.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def GetExperimentData(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_stream(request, target, '/FederationDirector/GetExperimentData',
+            preparations__pb2.GetExperimentDataRequest.SerializeToString,
+            preparations__pb2.ExperimentData.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -165,7 +215,7 @@ class FederationDirector(object):
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
     @staticmethod
-    def WaitExperiment(request_iterator,
+    def GetShardsInfo(request,
             target,
             options=(),
             channel_credentials=None,
@@ -175,25 +225,8 @@ class FederationDirector(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.stream_stream(request_iterator, target, '/FederationDirector/WaitExperiment',
-            preparations__pb2.WaitExperimentRequest.SerializeToString,
-            preparations__pb2.WaitExperimentResponse.FromString,
-            options, channel_credentials,
-            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
-
-    @staticmethod
-    def GetExperimentData(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_stream(request, target, '/FederationDirector/GetExperimentData',
-            preparations__pb2.GetExperimentDataRequest.SerializeToString,
-            preparations__pb2.ExperimentData.FromString,
+        return grpc.experimental.unary_unary(request, target, '/FederationDirector/GetShardsInfo',
+            preparations__pb2.GetShardsInfoRequest.SerializeToString,
+            preparations__pb2.ShardInfo.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
