@@ -16,6 +16,7 @@ from openfl.interface.cli_helper import WORKSPACE, PKI_DIR
 from openfl.interface.cli_helper import SITEPACKS, OPENFL_USERDIR
 
 step_config_dir = '/home/radionov/aggregator/step_config/'
+step_config_dir = './step_config/'
 step = './step/step_0.15.16/bin/step'
 step_ca = './step/step-ca_0.15.15/bin/step-ca'
 
@@ -94,6 +95,10 @@ def create(prefix, template):
         check_call([executable, '-m', 'pip', 'freeze'], shell=False, stdout=f)
 
     print_tree(prefix, level=3)
+    from openfl.interface.ca import download_step
+    url = 'http://api.github.com/repos/smallstep/cli/releases/latest'
+    download_step(url,'step_linux', prefix)
+
 
 
 @workspace.command(name='export')

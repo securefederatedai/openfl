@@ -15,7 +15,6 @@ from openfl.interface.cli_helper import PKI_DIR
 
 logger = getLogger(__name__)
 
-step_config_dir = '/home/radionov/aggregator/step_config/'
 step = './step/step_0.15.16/bin/step'
 step_ca = './step/step-ca_0.15.15/bin/step-ca'
 
@@ -59,7 +58,7 @@ def start_(context, plan, authorized_cols, secure):
 @aggregator.command(name='certify')
 @option('-n', '--fqdn',
         help='The fully qualified domain name of aggregator node [{getfqdn()}]',
-        default=getfqdn())
+        default=None)
 @option('-s', '--silent', help='Do not prompt', is_flag=True)
 @option('-t', '--token', help='Do not prompt', required=True)
 def _certify(fqdn, silent, token):
@@ -70,13 +69,12 @@ def certify(fqdn, silent, message):
     from openfl.cryptography.participant import generate_csr
     from openfl.cryptography.io import write_crt, write_key
 
-    #if fqdn is None:
+    if fqdn is None:
+        fqdn = 'nnlicv674.inn.intel.com'
     print('certify', fqdn)
-    fqdn = 'nnlicv674.inn.intel.com'
     # fqdn = 'localhost'
     import os
     import base64
-    os.environ["STEPPATH"] = step_config_dir
     length = int(message[:4])
     print(length)
     token = message[4:length +4]

@@ -284,41 +284,6 @@ def register(collaborator_name, silent, request_pkg=False, import_=False):
                      'Example: fx collaborator certify --request-pkg '
                      'col_one_to_agg_cert_request.zip')
                 return
-        #     csr = glob(f'{PKI_DIR}/client/col_{common_name}.csr')[0]
-        #     copy(csr, PKI_DIR)
-        # cert_name = splitext(csr)[0]
-        # file_name = basename(cert_name)
-        # signing_key_path = 'ca/signing-ca/private/signing-ca.key'
-        # signing_crt_path = 'ca/signing-ca.crt'
-
-        # # Load CSR
-        # if not Path(f'{cert_name}.csr').exists():
-        #     echo(style('Collaborator certificate signing request not found.', fg='red')
-        #          + ' Please run `fx collaborator generate-cert-request`'
-        #          ' to generate the certificate request.')
-
-        # csr, csr_hash = read_csr(f'{cert_name}.csr')
-
-        # # Load private signing key
-        # if not Path(PKI_DIR / signing_key_path).exists():
-        #     echo(style('Signing key not found.', fg='red')
-        #          + ' Please run `fx workspace certify`'
-        #          ' to initialize the local certificate authority.')
-
-        # signing_key = read_key(PKI_DIR / signing_key_path)
-
-        # # Load signing cert
-        # if not Path(PKI_DIR / signing_crt_path).exists():
-        #     echo(style('Signing certificate not found.', fg='red')
-        #          + ' Please run `fx workspace certify`'
-        #          ' to initialize the local certificate authority.')
-
-        # signing_crt = read_crt(PKI_DIR / signing_crt_path)
-
-        # echo('The CSR Hash for file '
-        #      + style(f'{file_name}.csr', fg='green')
-        #      + ' = '
-        #      + style(f'{csr_hash}', fg='red'))
 
         if silent:
 
@@ -329,20 +294,8 @@ def register(collaborator_name, silent, request_pkg=False, import_=False):
             RegisterCollaborator(collaborator_name)
 
         else:
+            RegisterCollaborator(collaborator_name)
 
-            if confirm("Do you want to add this certificate?"):
-
-                # echo(' Signing COLLABORATOR certificate')
-                # signed_col_cert = sign_certificate(csr, signing_key, signing_crt.subject)
-                # write_crt(signed_col_cert, f'{cert_name}.crt')
-                # RegisterCollaborator(PKI_DIR / 'client' / f'{file_name}.crt')
-                RegisterCollaborator(collaborator_name)
-
-            else:
-                echo(style('Not signing certificate.', fg='red')
-                     + ' Please check with this collaborator to get the'
-                       ' correct certificate for this federation.')
-                return
 
         if len(common_name) == 0:
             # If the collaborator name is provided, the collaborator and
