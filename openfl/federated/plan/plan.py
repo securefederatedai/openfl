@@ -317,12 +317,9 @@ openfl.component.aggregation_functions.AggregationFunctionInterface
         return self.loader_
 
     # Python interactive api
-    def initialize_data_loader(self, data_loader, collaborator_name):
+    def initialize_data_loader(self, data_loader, shard_descriptor):
         """Get data loader."""
-        data_path = self.cols_data_paths[
-            collaborator_name
-        ]
-        data_loader._delayed_init(data_path=data_path)
+        data_loader.set_shard_descriptor(shard_descriptor)
         return data_loader
 
     # legacy api (TaskRunner subclassing)
@@ -397,7 +394,7 @@ openfl.component.aggregation_functions.AggregationFunctionInterface
             if 'openfl.federated.task.task_runner' in self.config['task_runner']['template']:
                 # Interactive API
                 model_provider, task_keeper, data_loader = self.deserialize_interface_objects()
-                data_loader = self.initialize_data_loader(data_loader, collaborator_name)
+                data_loader = self.initialize_data_loader(data_loader, shard_descriptor)
                 defaults[SETTINGS]['task_runner'] = self.get_core_task_runner(
                     data_loader=data_loader,
                     model_provider=model_provider,
