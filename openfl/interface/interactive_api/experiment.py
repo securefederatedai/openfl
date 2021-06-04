@@ -64,9 +64,11 @@ class FLExperiment:
         self._export_python_env()
 
         # Compress te workspace to restore it on collaborator
-        self._pack_the_workspace()
+        arch_path = self._pack_the_workspace()
 
         # DO CERTIFICATES exchange
+
+        return arch_path
 
     def start_experiment(self, model_provider):
         """
@@ -76,6 +78,7 @@ class FLExperiment:
         model initialization without workspace redistribution.
         """
         # Start the aggregator
+        self.logger.info('Starting experiment!')
         self.plan.resolve()
 
         initial_tensor_dict = self._get_initial_tensor_dict(model_provider)
@@ -112,18 +115,21 @@ class FLExperiment:
         archiveName = basename(getcwd())
         # archiveFileName = archiveName + '.' + archiveType
 
-        tmpDir = 'temp_' + archiveName
+        tmpDir = '/tmp/temp_' + archiveName
         makedirs(tmpDir)
 
         ignore = ignore_patterns(
-            '__pycache__', 'data', 'cert', tmpDir, '*.crt', '*.key',
-            '*.csr', '*.srl', '*.pem', '*.pbuf', '*zip')
+            '__pycache__', 'cert', tmpDir, '*.crt', '*.key',
+            '*.csr', '*.srl', '*.pem', '*.pbuf', '*zip', '.git', '.github',
+            '.dockerignore', '*.egg-info')
 
         copytree('./', tmpDir + '/workspace', ignore=ignore)
 
-        make_archive(archiveName, archiveType, tmpDir + '/workspace')
+        arch_path = make_archive(archiveName, archiveType, tmpDir + '/workspace')
 
         rmtree(tmpDir)
+
+        return arch_path
 
     def _get_initial_tensor_dict(self, model_provider):
         """Extract initial weights from the model."""

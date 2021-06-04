@@ -26,6 +26,8 @@ setup(
         'openfl.component.assigner',
         'openfl.component.aggregator',
         'openfl.component.collaborator',
+        'openfl.component.collaborator_manager',
+        'openfl.component.director',
         'openfl.utilities',
         'openfl.utilities.optimizers.torch',
         'openfl.utilities.optimizers.keras',
