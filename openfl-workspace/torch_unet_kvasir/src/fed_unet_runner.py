@@ -10,11 +10,11 @@ import tqdm
 
 from openfl.federated import PyTorchTaskRunner
 from openfl.utilities import TensorKey
-from .pt_unet_parts import double_conv
-from .pt_unet_parts import down
+from .pt_unet_parts import DoubleConv
+from .pt_unet_parts import Down
 from .pt_unet_parts import soft_dice_coef
 from .pt_unet_parts import soft_dice_loss
-from .pt_unet_parts import up
+from .pt_unet_parts import Up
 
 
 class PyTorchFederatedUnet(PyTorchTaskRunner):
@@ -56,15 +56,15 @@ class PyTorchFederatedUnet(PyTorchTaskRunner):
         """
         self.n_channels = n_channels
         self.n_classes = n_classes
-        self.inc = double_conv(self.n_channels, 64)
-        self.down1 = down(64, 128)
-        self.down2 = down(128, 256)
-        self.down3 = down(256, 512)
-        self.down4 = down(512, 1024)
-        self.up1 = up(1024, 512)
-        self.up2 = up(512, 256)
-        self.up3 = up(256, 128)
-        self.up4 = up(128, 64)
+        self.inc = DoubleConv(self.n_channels, 64)
+        self.down1 = Down(64, 128)
+        self.down2 = Down(128, 256)
+        self.down3 = Down(256, 512)
+        self.down4 = Down(512, 1024)
+        self.up1 = Up(1024, 512)
+        self.up2 = Up(512, 256)
+        self.up3 = Up(256, 128)
+        self.up4 = Up(128, 64)
         self.outc = nn.Conv2d(64, self.n_classes, 1)
         if print_model:
             print(self)

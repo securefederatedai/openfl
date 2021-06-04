@@ -28,7 +28,7 @@ def soft_dice_coef(output, target):
     return score.sum()
 
 
-class double_conv(nn.Module):
+class DoubleConv(nn.Module):
     """Convolutions with BN and activation."""
 
     def __init__(self, in_ch, out_ch):
@@ -39,7 +39,7 @@ class double_conv(nn.Module):
             out_ch: number of output channels
 
         """
-        super(double_conv, self).__init__()
+        super(DoubleConv, self).__init__()
         self.in_ch = in_ch
         self.out_ch = out_ch
         self.conv = nn.Sequential(
@@ -57,7 +57,7 @@ class double_conv(nn.Module):
         return x
 
 
-class down(nn.Module):
+class Down(nn.Module):
     """UNet downscaling. MaxPool with double convolution."""
 
     def __init__(self, in_ch, out_ch):
@@ -68,10 +68,10 @@ class down(nn.Module):
             out_ch: number of output channels
 
         """
-        super(down, self).__init__()
+        super(Down, self).__init__()
         self.mpconv = nn.Sequential(
             nn.MaxPool2d(2),
-            double_conv(in_ch, out_ch))
+            DoubleConv(in_ch, out_ch))
 
     def forward(self, x):
         """Run forward."""
@@ -79,7 +79,7 @@ class down(nn.Module):
         return x
 
 
-class up(nn.Module):
+class Up(nn.Module):
     """UNet upscaling."""
 
     def __init__(self, in_ch, out_ch):
@@ -90,20 +90,20 @@ class up(nn.Module):
             out_ch: number of output channels
 
         """
-        super(up, self).__init__()
+        super(Up, self).__init__()
         self.in_ch = in_ch
         self.out_ch = out_ch
         self.up = nn.ConvTranspose2d(in_ch, in_ch // 2, 2, stride=2)
-        self.conv = double_conv(in_ch, out_ch)
+        self.conv = DoubleConv(in_ch, out_ch)
 
     def forward(self, x1, x2):
         """Run forward."""
         x1 = self.up(x1)
-        diffY = x2.size()[2] - x1.size()[2]
-        diffX = x2.size()[3] - x1.size()[3]
+        diff_y = x2.size()[2] - x1.size()[2]
+        diff_x = x2.size()[3] - x1.size()[3]
 
-        x1 = F.pad(x1, (diffX // 2, diffX - diffX // 2,
-                        diffY // 2, diffY - diffY // 2))
+        x1 = F.pad(x1, (diff_x // 2, diff_x - diff_x // 2,
+                        diff_y // 2, diff_y - diff_y // 2))
 
         x = torch.cat([x2, x1], dim=1)
         x = self.conv(x)

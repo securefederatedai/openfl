@@ -60,7 +60,7 @@ def train_val_split(features, labels, percent_train, shuffle):
     return train_features, train_labels, val_features, val_labels
 
 
-def load_from_NIfTI(parent_dir,
+def load_from_nifti(parent_dir,
                     percent_train,
                     shuffle,
                     channels_last=True,

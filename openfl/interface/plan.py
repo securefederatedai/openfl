@@ -50,7 +50,7 @@ def initialize(context, plan_config, cols_config, data_config,
     Create a protocol buffer file of the initial model weights for
      the federation.
     """
-    plan = Plan.Parse(plan_config_path=Path(plan_config),
+    plan = Plan.parse(plan_config_path=Path(plan_config),
                       cols_config_path=Path(cols_config),
                       data_config_path=Path(data_config))
 
@@ -102,7 +102,7 @@ def initialize(context, plan_config, cols_config, data_config,
 
     utils.dump_proto(model_proto=model_snap, fpath=init_state_path)
 
-    plan_origin = Plan.Parse(Path(plan_config), resolve=False).config
+    plan_origin = Plan.parse(Path(plan_config), resolve=False).config
 
     if (plan_origin['network']['settings']['agg_addr'] == 'auto'
             or aggregator_address):
@@ -114,7 +114,7 @@ def initialize(context, plan_config, cols_config, data_config,
         logger.warn(f'Patching Aggregator Addr in Plan'
                     f" 🠆 {plan_origin['network']['settings']['agg_addr']}")
 
-        Plan.Dump(Path(plan_config), plan_origin)
+        Plan.dump(Path(plan_config), plan_origin)
 
     plan.config = plan_origin
 
@@ -125,10 +125,11 @@ def initialize(context, plan_config, cols_config, data_config,
     logger.info(f"{context.obj['plans']}")
 
 
-def FreezePlan(plan_config):
+# TODO: looks like Plan.method
+def freeze_plan(plan_config):
     """Dump the plan to YAML file."""
     plan = Plan()
-    plan.config = Plan.Parse(Path(plan_config), resolve=False).config
+    plan.config = Plan.parse(Path(plan_config), resolve=False).config
 
     init_state_path = plan.config['aggregator']['settings']['init_state_path']
 
@@ -137,7 +138,7 @@ def FreezePlan(plan_config):
                     " initialize' before proceeding")
         return
 
-    Plan.Dump(Path(plan_config), plan.config, freeze=True)
+    Plan.dump(Path(plan_config), plan.config, freeze=True)
 
 
 @plan.command(name='freeze')
@@ -152,7 +153,7 @@ def freeze(context, plan_config):
     Create a new plan file that embeds its hash in the file name
     (plan.yaml -> plan_{hash}.yaml) and changes the permissions to read only
     """
-    FreezePlan(plan_config)
+    freeze_plan(plan_config)
 
 
 def switch_plan(name):

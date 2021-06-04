@@ -77,6 +77,15 @@ class RetryOnRpcErrorClientInterceptor(
         return self._intercept_call(continuation, client_call_details, request_iterator)
 
 
+def _atomic_connection(func):
+    def wrapper(self, *args, **kwargs):
+        self.reconnect()
+        response = func(self, *args, **kwargs)
+        self.disconnect()
+        return response
+    return wrapper
+
+
 class CollaboratorGRPCClient:
     """Collaboration over gRPC-TLS."""
 
@@ -248,14 +257,6 @@ class CollaboratorGRPCClient:
         self.stub = AggregatorStub(
             grpc.intercept_channel(self.channel, *self.interceptors)
         )
-
-    def _atomic_connection(func):
-        def wrapper(self, *args, **kwargs):
-            self.reconnect()
-            response = func(self, *args, **kwargs)
-            self.disconnect()
-            return response
-        return wrapper
 
     @_atomic_connection
     def get_tasks(self, collaborator_name):

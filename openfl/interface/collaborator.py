@@ -40,7 +40,7 @@ def collaborator(context):
         help='Enable Intel SGX Enclave', is_flag=True, default=False)
 def start_(context, plan, collaborator_name, data_config, secure):
     """Start a collaborator service."""
-    plan = Plan.Parse(plan_config_path=Path(plan),
+    plan = Plan.parse(plan_config_path=Path(plan),
                       data_config_path=Path(data_config))
 
     # TODO: Need to restructure data loader config file loader
@@ -51,7 +51,7 @@ def start_(context, plan, collaborator_name, data_config, secure):
     plan.get_collaborator(collaborator_name).run()
 
 
-def RegisterDataPath(collaborator_name, data_path=None, silent=False):
+def register_data_path(collaborator_name, data_path=None, silent=False):
     """Register dataset path in the plan/data.yaml file.
 
     Args:
@@ -65,15 +65,15 @@ def RegisterDataPath(collaborator_name, data_path=None, silent=False):
     # Ask for the data directory
     default_data_path = f'data/{collaborator_name}'
     if not silent and data_path is None:
-        dirPath = prompt('\nWhere is the data (or what is the rank)'
-                         ' for collaborator '
-                         + style(f'{collaborator_name}', fg='green')
-                         + ' ? ', default=default_data_path)
+        dir_path = prompt('\nWhere is the data (or what is the rank)'
+                          ' for collaborator '
+                          + style(f'{collaborator_name}', fg='green')
+                          + ' ? ', default=default_data_path)
     elif data_path is not None:
-        dirPath = data_path
+        dir_path = data_path
     else:
         # TODO: Need to figure out the default for this.
-        dirPath = default_data_path
+        dir_path = default_data_path
 
     # Read the data.yaml file
     d = {}
@@ -86,7 +86,7 @@ def RegisterDataPath(collaborator_name, data_path=None, silent=False):
                     key, val = line.split(separator, maxsplit=1)
                     d[key] = val.strip()
 
-    d[collaborator_name] = dirPath
+    d[collaborator_name] = dir_path
 
     # Write the data.yaml
     with open(data_yaml, 'w') as f:
@@ -145,40 +145,40 @@ def generate_cert_request(collaborator_name, data_path, silent, skip_package):
         from os import remove
         from glob import glob
 
-        archiveType = 'zip'
-        archiveName = f'col_{common_name}_to_agg_cert_request'
-        archiveFileName = archiveName + '.' + archiveType
+        archive_type = 'zip'
+        archive_name = f'col_{common_name}_to_agg_cert_request'
+        archive_file_name = archive_name + '.' + archive_type
 
         # Collaborator certificate signing request
-        tmpDir = join(mkdtemp(), 'openfl', archiveName)
+        tmp_dir = join(mkdtemp(), 'openfl', archive_name)
 
         ignore = ignore_patterns('__pycache__', '*.key', '*.srl', '*.pem')
         # Copy the current directory into the temporary directory
-        copytree(f'{PKI_DIR}/client', tmpDir, ignore=ignore)
+        copytree(f'{PKI_DIR}/client', tmp_dir, ignore=ignore)
 
-        for f in glob(f'{tmpDir}/*'):
+        for f in glob(f'{tmp_dir}/*'):
             if common_name not in basename(f):
                 remove(f)
 
         # Create Zip archive of directory
-        make_archive(archiveName, archiveType, tmpDir)
+        make_archive(archive_name, archive_type, tmp_dir)
 
-        echo(f'Archive {archiveFileName} with certificate signing'
+        echo(f'Archive {archive_file_name} with certificate signing'
              f' request created')
         echo('This file should be sent to the certificate authority'
              ' (typically hosted by the aggregator) for signing')
 
     # TODO: There should be some association with the plan made here as well
-    RegisterDataPath(common_name, data_path=data_path, silent=silent)
+    register_data_path(common_name, data_path=data_path, silent=silent)
 
 
-def findCertificateName(file_name):
+def find_certificate_name(file_name):
     """Parse the collaborator name."""
     col_name = str(file_name).split('/')[-1].split('.')[0][4:]
     return col_name
 
 
-def RegisterCollaborator(file_name):
+def register_collaborator(file_name):
     """Register the collaborator name in the cols.yaml list.
 
     Args:
@@ -188,7 +188,7 @@ def RegisterCollaborator(file_name):
     from os.path import isfile
     from yaml import load, dump, FullLoader
 
-    col_name = findCertificateName(file_name)
+    col_name = find_certificate_name(file_name)
 
     cols_file = 'plan/cols.yaml'
 
@@ -281,7 +281,7 @@ def certify(collaborator_name, silent, request_pkg=False, import_=False):
         if not Path(f'{cert_name}.csr').exists():
             echo(style('Collaborator certificate signing request not found.', fg='red')
                  + ' Please run `fx collaborator generate-cert-request`'
-                 ' to generate the certificate request.')
+                   ' to generate the certificate request.')
 
         csr, csr_hash = read_csr(f'{cert_name}.csr')
 
@@ -289,7 +289,7 @@ def certify(collaborator_name, silent, request_pkg=False, import_=False):
         if not Path(PKI_DIR / signing_key_path).exists():
             echo(style('Signing key not found.', fg='red')
                  + ' Please run `fx workspace certify`'
-                 ' to initialize the local certificate authority.')
+                   ' to initialize the local certificate authority.')
 
         signing_key = read_key(PKI_DIR / signing_key_path)
 
@@ -297,7 +297,7 @@ def certify(collaborator_name, silent, request_pkg=False, import_=False):
         if not Path(PKI_DIR / signing_crt_path).exists():
             echo(style('Signing certificate not found.', fg='red')
                  + ' Please run `fx workspace certify`'
-                 ' to initialize the local certificate authority.')
+                   ' to initialize the local certificate authority.')
 
         signing_crt = read_crt(PKI_DIR / signing_crt_path)
 
@@ -311,7 +311,7 @@ def certify(collaborator_name, silent, request_pkg=False, import_=False):
             echo(' Signing COLLABORATOR certificate')
             signed_col_cert = sign_certificate(csr, signing_key, signing_crt.subject)
             write_crt(signed_col_cert, f'{cert_name}.crt')
-            RegisterCollaborator(PKI_DIR / 'client' / f'{file_name}.crt')
+            register_collaborator(PKI_DIR / 'client' / f'{file_name}.crt')
 
         else:
 
@@ -320,7 +320,7 @@ def certify(collaborator_name, silent, request_pkg=False, import_=False):
                 echo(' Signing COLLABORATOR certificate')
                 signed_col_cert = sign_certificate(csr, signing_key, signing_crt.subject)
                 write_crt(signed_col_cert, f'{cert_name}.crt')
-                RegisterCollaborator(PKI_DIR / 'client' / f'{file_name}.crt')
+                register_collaborator(PKI_DIR / 'client' / f'{file_name}.crt')
 
             else:
                 echo(style('Not signing certificate.', fg='red')
@@ -336,21 +336,21 @@ def certify(collaborator_name, silent, request_pkg=False, import_=False):
         # Remove unneeded CSR
         remove(f'{cert_name}.csr')
 
-        archiveType = 'zip'
-        archiveName = f'agg_to_{file_name}_signed_cert'
-        # archiveFileName = archiveName + '.' + archiveType
+        archive_type = 'zip'
+        archive_name = f'agg_to_{file_name}_signed_cert'
+        # archiveFileName = archive_name + '.' + archive_type
 
         # Collaborator certificate signing request
-        tmpDir = join(mkdtemp(), 'openfl', archiveName)
+        tmp_dir = join(mkdtemp(), 'openfl', archive_name)
 
-        Path(f'{tmpDir}/client').mkdir(parents=True, exist_ok=True)
+        Path(f'{tmp_dir}/client').mkdir(parents=True, exist_ok=True)
         # Copy the signed cert to the temporary directory
-        copy(f'{PKI_DIR}/client/{file_name}.crt', f'{tmpDir}/client/')
+        copy(f'{PKI_DIR}/client/{file_name}.crt', f'{tmp_dir}/client/')
         # Copy the CA certificate chain to the temporary directory
-        copy(f'{PKI_DIR}/cert_chain.crt', tmpDir)
+        copy(f'{PKI_DIR}/cert_chain.crt', tmp_dir)
 
         # Create Zip archive of directory
-        make_archive(archiveName, archiveType, tmpDir)
+        make_archive(archive_name, archive_type, tmp_dir)
 
     else:
         # Copy the signed certificate and cert chain into PKI_DIR

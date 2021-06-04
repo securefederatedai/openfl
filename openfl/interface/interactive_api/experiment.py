@@ -57,7 +57,7 @@ class FLExperiment:
         # Save serialized python objects to disc
         self._serialize_interface_objects(model_provider, task_keeper, data_loader)
         # Save the prepared plan
-        Plan.Dump(Path(f'./plan/{self.plan.name}'), self.plan.config, freeze=False)
+        Plan.dump(Path(f'./plan/{self.plan.name}'), self.plan.config, freeze=False)
 
         # PACK the WORKSPACE!
         # Prepare requirements file to restore python env
@@ -108,22 +108,22 @@ class FLExperiment:
         from os import getcwd, makedirs
         from os.path import basename
 
-        archiveType = 'zip'
-        archiveName = basename(getcwd())
-        # archiveFileName = archiveName + '.' + archiveType
+        archive_type = 'zip'
+        archive_name = basename(getcwd())
+        # archiveFileName = archive_name + '.' + archive_type
 
-        tmpDir = 'temp_' + archiveName
-        makedirs(tmpDir)
+        tmp_dir = 'temp_' + archive_name
+        makedirs(tmp_dir)
 
         ignore = ignore_patterns(
-            '__pycache__', 'data', 'cert', tmpDir, '*.crt', '*.key',
+            '__pycache__', 'data', 'cert', tmp_dir, '*.crt', '*.key',
             '*.csr', '*.srl', '*.pem', '*.pbuf', '*zip')
 
-        copytree('./', tmpDir + '/workspace', ignore=ignore)
+        copytree('./', tmp_dir + '/workspace', ignore=ignore)
 
-        make_archive(archiveName, archiveType, tmpDir + '/workspace')
+        make_archive(archive_name, archive_type, tmp_dir + '/workspace')
 
-        rmtree(tmpDir)
+        rmtree(tmp_dir)
 
     def _get_initial_tensor_dict(self, model_provider):
         """Extract initial weights from the model."""
@@ -146,7 +146,7 @@ class FLExperiment:
         os.makedirs('./save', exist_ok=True)
         # Load the default plan
         base_plan_path = WORKSPACE / 'workspace/plan/plans/default/base_plan_interactive_api.yaml'
-        plan = Plan.Parse(base_plan_path, resolve=False)
+        plan = Plan.parse(base_plan_path, resolve=False)
         # Change plan name to default one
         plan.name = 'plan.yaml'
 
@@ -209,9 +209,9 @@ class FLExperiment:
 
     def _serialize_interface_objects(self, model_provider, task_keeper, data_loader):
         """Save python objects to be restored on collaborators."""
-        serializer = self.plan.Build(
+        serializer = self.plan.build(
             self.plan.config['api_layer']['required_plugin_components']['serializer_plugin'], {})
-        framework_adapter = Plan.Build(model_provider.framework_plugin, {})
+        framework_adapter = Plan.build(model_provider.framework_plugin, {})
         # Model provider serialization may need preprocessing steps
         framework_adapter.serialization_setup()
         serializer.serialize(
@@ -354,9 +354,9 @@ class DataInterface:
         at initialization time for dataloader customization
     """
 
-    def __init__(self, UserDatasetClass, **kwargs):
+    def __init__(self, user_dataset_class, **kwargs):
         """Initialize DataLoader."""
-        self.UserDatasetClass = UserDatasetClass
+        self.UserDatasetClass = user_dataset_class
         self.kwargs = kwargs
 
     def _delayed_init(self, data_path):

@@ -39,7 +39,7 @@ def aggregator(context):
         help='Enable Intel SGX Enclave', is_flag=True, default=False)
 def start_(context, plan, authorized_cols, secure):
     """Start the aggregator service."""
-    plan = Plan.Parse(plan_config_path=Path(plan),
+    plan = Plan.parse(plan_config_path=Path(plan),
                       cols_config_path=Path(authorized_cols))
 
     logger.info('🧿 Starting the Aggregator Service.')
@@ -84,7 +84,8 @@ def generate_cert_request(fqdn):
     write_key(server_private_key, PKI_DIR / 'server' / f'{file_name}.key')
 
 
-def findCertificateName(file_name):
+# TODO: function not used
+def find_certificate_name(file_name):
     """Search the CRT for the actual aggregator name."""
     # This loop looks for the collaborator name in the key
     with open(file_name, 'r') as f:

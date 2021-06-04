@@ -4,7 +4,7 @@
 """You may copy this file as the starting point of your own model."""
 
 from openfl.federated import TensorFlowDataLoader
-from .brats_utils import load_from_NIfTI
+from .brats_utils import load_from_nifti
 
 
 class TensorFlowBratsInMemory(TensorFlowDataLoader):
@@ -19,14 +19,14 @@ class TensorFlowBratsInMemory(TensorFlowDataLoader):
             percent_train (float): The percentage of the data to use for training (Default=0.8)
             pre_split_shuffle (bool): True= shuffle the dataset before
             performing the train/validate split (Default=True)
-            **kwargs: Additional arguments, passed to super init and load_from_NIfTI
+            **kwargs: Additional arguments, passed to super init and load_from_nifti
 
         Returns:
             Data loader with BraTS data
         """
         super().__init__(batch_size, **kwargs)
 
-        X_train, y_train, X_valid, y_valid = load_from_NIfTI(parent_dir=data_path,
+        X_train, y_train, X_valid, y_valid = load_from_nifti(parent_dir=data_path,
                                                              percent_train=percent_train,
                                                              shuffle=pre_split_shuffle,
                                                              **kwargs)

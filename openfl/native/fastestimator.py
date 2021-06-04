@@ -46,7 +46,7 @@ class FederatedFastEstimator:
         cols_config = (Path(fx.WORKSPACE_PREFIX) / 'plan' / 'cols.yaml')
         data_config = (Path(fx.WORKSPACE_PREFIX) / 'plan' / 'data.yaml')
 
-        plan = Plan.Parse(plan_config_path=plan_config,
+        plan = Plan.parse(plan_config_path=plan_config,
                           cols_config_path=cols_config,
                           data_config_path=data_config)
 

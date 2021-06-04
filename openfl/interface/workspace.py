@@ -107,14 +107,14 @@ def export_():
     from tempfile import mkdtemp
     from os import getcwd, makedirs
     from os.path import basename, join
-    from plan import FreezePlan
+    from plan import freeze_plan
 
     # TODO: Does this need to freeze all plans?
-    planFile = 'plan/plan.yaml'
+    plan_file = 'plan/plan.yaml'
     try:
-        FreezePlan(planFile)
+        freeze_plan(plan_file)
     except Exception:
-        echo(f'Plan file "{planFile}" not found. No freeze performed.')
+        echo(f'Plan file "{plan_file}" not found. No freeze performed.')
 
     from pip._internal.operations import freeze
     requirements_generator = freeze.freeze()
@@ -125,39 +125,39 @@ def export_():
                 continue
             f.write(package + '\n')
 
-    archiveType = 'zip'
-    archiveName = basename(getcwd())
-    archiveFileName = archiveName + '.' + archiveType
+    archive_type = 'zip'
+    archive_name = basename(getcwd())
+    archive_file_name = archive_name + '.' + archive_type
 
     # Aggregator workspace
-    tmpDir = join(mkdtemp(), 'openfl', archiveName)
+    tmp_dir = join(mkdtemp(), 'openfl', archive_name)
 
     ignore = ignore_patterns(
         '__pycache__', '*.crt', '*.key', '*.csr', '*.srl', '*.pem', '*.pbuf')
 
     # We only export the minimum required files to set up a collaborator
-    makedirs(f'{tmpDir}/save', exist_ok=True)
-    makedirs(f'{tmpDir}/logs', exist_ok=True)
-    makedirs(f'{tmpDir}/data', exist_ok=True)
-    copytree('./src', f'{tmpDir}/src', ignore=ignore)  # code
-    copytree('./plan', f'{tmpDir}/plan', ignore=ignore)  # plan
-    copy2('./requirements.txt', f'{tmpDir}/requirements.txt')  # requirements
+    makedirs(f'{tmp_dir}/save', exist_ok=True)
+    makedirs(f'{tmp_dir}/logs', exist_ok=True)
+    makedirs(f'{tmp_dir}/data', exist_ok=True)
+    copytree('./src', f'{tmp_dir}/src', ignore=ignore)  # code
+    copytree('./plan', f'{tmp_dir}/plan', ignore=ignore)  # plan
+    copy2('./requirements.txt', f'{tmp_dir}/requirements.txt')  # requirements
 
     try:
-        copy2('.workspace', tmpDir)  # .workspace
+        copy2('.workspace', tmp_dir)  # .workspace
     except FileNotFoundError:
         echo('\'.workspace\' file not found.')
         if confirm('Create a default \'.workspace\' file?'):
-            copy2(WORKSPACE / 'workspace' / '.workspace', tmpDir)
+            copy2(WORKSPACE / 'workspace' / '.workspace', tmp_dir)
         else:
             echo('To proceed, you must have a \'.workspace\' '
                  'file in the current directory.')
             raise
 
     # Create Zip archive of directory
-    make_archive(archiveName, archiveType, tmpDir)
+    make_archive(archive_name, archive_type, tmp_dir)
 
-    echo(f'Workspace exported to archive: {archiveFileName}')
+    echo(f'Workspace exported to archive: {archive_file_name}')
 
 
 @workspace.command(name='import')
@@ -170,9 +170,9 @@ def import_(archive):
     from os.path import isfile, basename
     from os import chdir
 
-    dirPath = basename(archive).split('.')[0]
-    unpack_archive(archive, extract_dir=dirPath)
-    chdir(dirPath)
+    dir_path = basename(archive).split('.')[0]
+    unpack_archive(archive, extract_dir=dir_path)
+    chdir(dir_path)
 
     requirements_filename = 'requirements.txt'
 
@@ -352,14 +352,14 @@ def dockerize_(context, base_image, save):
     # scenarios when the dockerfile is placed outside the build context
     copyfile(os.path.join(openfl_docker_dir, dockerfile_workspace), dockerfile_workspace)
 
-    WORKSPACE_PATH = os.getcwd()
-    WORKSPACE_NAME = os.path.basename(WORKSPACE_PATH)
+    workspace_path = os.getcwd()
+    workspace_name = os.path.basename(workspace_path)
 
     # Exporting the workspace
     context.invoke(export_)
-    WORKSPACE_ARCHIVE = WORKSPACE_NAME + '.zip'
+    workspace_archive = workspace_name + '.zip'
 
-    build_args = {'WORKSPACE_NAME': WORKSPACE_NAME,
+    build_args = {'WORKSPACE_NAME': workspace_name,
                   'BASE_IMAGE': base_image}
 
     client = docker.from_env(timeout=3600)
@@ -369,8 +369,8 @@ def dockerize_(context, base_image, save):
         # assert f'{base_image}:latest' in str(client.images.list())
         echo('Building the Docker image')
         client.images.build(
-            path=str(WORKSPACE_PATH),
-            tag=WORKSPACE_NAME,
+            path=str(workspace_path),
+            tag=workspace_name,
             buildargs=build_args,
             dockerfile=dockerfile_workspace)
 
@@ -380,16 +380,16 @@ def dockerize_(context, base_image, save):
     else:
         echo('The workspace image has been built successfully!')
     finally:
-        os.remove(WORKSPACE_ARCHIVE)
+        os.remove(workspace_archive)
         os.remove(dockerfile_workspace)
 
     # Saving the image to a tarball
     if save:
-        WORKSPACE_IMAGE_TAR = WORKSPACE_NAME + '_image.tar'
+        workspace_image_tar = workspace_name + '_image.tar'
         echo('Saving the Docker image...')
-        image = client.images.get(f'{WORKSPACE_NAME}')
+        image = client.images.get(f'{workspace_name}')
         resp = image.save(named=True)
-        with open(WORKSPACE_IMAGE_TAR, 'wb') as f:
+        with open(workspace_image_tar, 'wb') as f:
             for chunk in resp:
                 f.write(chunk)
-        echo(f'{WORKSPACE_NAME} image saved to {WORKSPACE_PATH}/{WORKSPACE_IMAGE_TAR}')
+        echo(f'{workspace_name} image saved to {workspace_path}/{workspace_image_tar}')

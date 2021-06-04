@@ -130,7 +130,7 @@ class AggregatorGRPCServer(AggregatorServicer):
             self.logger
         )
 
-    def GetTasks(self, request, context):
+    def GetTasks(self, request, context):  # NOQA:N802
         """
         Request a job from aggregator.
 
@@ -153,7 +153,7 @@ class AggregatorGRPCServer(AggregatorServicer):
             quit=time_to_quit
         )
 
-    def GetAggregatedTensor(self, request, context):
+    def GetAggregatedTensor(self, request, context):  # NOQA:N802
         """
         Request a job from aggregator.
 
@@ -178,7 +178,7 @@ class AggregatorGRPCServer(AggregatorServicer):
                               round_number=round_number,
                               tensor=named_tensor)
 
-    def SendLocalTaskResults(self, request, context):
+    def SendLocalTaskResults(self, request, context):  # NOQA:N802
         """
         Request a model download from aggregator.
 

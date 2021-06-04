@@ -31,7 +31,7 @@ class Plan(object):
     logger = getLogger(__name__)
 
     @staticmethod
-    def Load(yaml_path: Path, default: dict = None):
+    def load(yaml_path: Path, default: dict = None):
         """Load the plan from YAML file."""
         if default is None:
             default = {}
@@ -40,7 +40,7 @@ class Plan(object):
         return default
 
     @staticmethod
-    def Dump(yaml_path, config, freeze=False):
+    def dump(yaml_path, config, freeze=False):
         """Dump the plan config to YAML file."""
 
         class NoAliasDumper(SafeDumper):
@@ -63,7 +63,7 @@ class Plan(object):
             yaml_path.write_text(dump(config))
 
     @staticmethod
-    def Parse(plan_config_path: Path, cols_config_path: Path = None,
+    def parse(plan_config_path: Path, cols_config_path: Path = None,
               data_config_path: Path = None, resolve=True):
         """
         Parse the Federated Learning plan.
@@ -82,7 +82,7 @@ class Plan(object):
         try:
 
             plan = Plan()
-            plan.config = Plan.Load(plan_config_path)  # load plan configuration
+            plan.config = Plan.load(plan_config_path)  # load plan configuration
             plan.name = plan_config_path.name
             plan.files = [plan_config_path]  # collect all the plan files
 
@@ -107,7 +107,7 @@ class Plan(object):
                             f'from file [red]{defaults}[/].',
                             extra={'markup': True})
 
-                    defaults = Plan.Load(Path(defaults))
+                    defaults = Plan.load(Path(defaults))
 
                     if SETTINGS in defaults:
                         # override defaults with section settings
@@ -119,7 +119,7 @@ class Plan(object):
 
                     plan.config[section] = defaults
 
-            plan.authorized_cols = Plan.Load(cols_config_path).get(
+            plan.authorized_cols = Plan.load(cols_config_path).get(
                 'collaborators', []
             )
 
@@ -153,7 +153,7 @@ class Plan(object):
             raise
 
     @staticmethod
-    def Build(template, settings, **override):
+    def build(template, settings, **override):
         """
         Create an instance of a openfl Component or Federated DataLoader/TaskRunner.
 
@@ -246,7 +246,7 @@ class Plan(object):
         defaults[SETTINGS]['tasks'] = self.get_tasks()
 
         if self.assigner_ is None:
-            self.assigner_ = Plan.Build(**defaults)
+            self.assigner_ = Plan.build(**defaults)
 
         return self.assigner_
 
@@ -265,7 +265,7 @@ class Plan(object):
         defaults[SETTINGS]['compression_pipeline'] = self.get_tensor_pipe()
 
         if self.aggregator_ is None:
-            self.aggregator_ = Plan.Build(**defaults, initial_tensor_dict=tensor_dict)
+            self.aggregator_ = Plan.build(**defaults, initial_tensor_dict=tensor_dict)
 
         return self.aggregator_
 
@@ -281,7 +281,7 @@ class Plan(object):
             elif isinstance(aggregation_type, dict):
                 if SETTINGS not in aggregation_type:
                     aggregation_type[SETTINGS] = {}
-                aggregation_type = Plan.Build(**aggregation_type)
+                aggregation_type = Plan.build(**aggregation_type)
                 if not isinstance(aggregation_type, AggregationFunctionInterface):
                     raise NotImplementedError(f'''{task} task aggregation type does not implement an interface:
 openfl.component.aggregation_functions.AggregationFunctionInterface
@@ -300,7 +300,7 @@ openfl.component.aggregation_functions.AggregationFunctionInterface
         )
 
         if self.pipe_ is None:
-            self.pipe_ = Plan.Build(**defaults)
+            self.pipe_ = Plan.build(**defaults)
 
         return self.pipe_
 
@@ -318,7 +318,7 @@ openfl.component.aggregation_functions.AggregationFunctionInterface
         ]
 
         if self.loader_ is None:
-            self.loader_ = Plan.Build(**defaults)
+            self.loader_ = Plan.build(**defaults)
 
         return self.loader_
 
@@ -343,7 +343,7 @@ openfl.component.aggregation_functions.AggregationFunctionInterface
         defaults[SETTINGS]['data_loader'] = data_loader
 
         if self.runner_ is None:
-            self.runner_ = Plan.Build(**defaults)
+            self.runner_ = Plan.build(**defaults)
 
         return self.runner_
 
@@ -361,14 +361,14 @@ openfl.component.aggregation_functions.AggregationFunctionInterface
 
         # We are importing a CoreTaskRunner instance!!!
         if self.runner_ is None:
-            self.runner_ = Plan.Build(**defaults)
+            self.runner_ = Plan.build(**defaults)
 
         self.runner_.set_data_loader(data_loader)
 
         self.runner_.set_model_provider(model_provider)
         self.runner_.set_task_provider(task_keeper)
 
-        framework_adapter = Plan.Build(
+        framework_adapter = Plan.build(
             self.config['task_runner']['required_plugin_components']['framework_adapters'], {})
 
         # This step initializes tensorkeys
@@ -425,7 +425,7 @@ openfl.component.aggregation_functions.AggregationFunctionInterface
             )
 
         if self.collaborator_ is None:
-            self.collaborator_ = Plan.Build(**defaults)
+            self.collaborator_ = Plan.build(**defaults)
 
         return self.collaborator_
 
@@ -500,7 +500,7 @@ openfl.component.aggregation_functions.AggregationFunctionInterface
     def deserialize_interface_objects(self):
         """Deserialize objects for TaskRunner."""
         interface_objects = []
-        serializer = Plan.Build(
+        serializer = Plan.build(
             self.config['api_layer']['required_plugin_components']['serializer_plugin'], {})
         for filename in ['model_interface_file',
                          'tasks_interface_file', 'dataloader_interface_file']:
