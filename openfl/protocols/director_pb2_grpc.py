@@ -2,7 +2,7 @@
 """Client and server classes corresponding to protobuf-defined services."""
 import grpc
 
-from . import preparations_pb2 as preparations__pb2
+from . import director_pb2 as director__pb2
 
 
 class FederationDirectorStub(object):
@@ -16,33 +16,33 @@ class FederationDirectorStub(object):
         """
         self.AcknowledgeShard = channel.unary_unary(
                 '/FederationDirector/AcknowledgeShard',
-                request_serializer=preparations__pb2.ShardInfo.SerializeToString,
-                response_deserializer=preparations__pb2.ShardAcknowledgement.FromString,
+                request_serializer=director__pb2.ShardInfo.SerializeToString,
+                response_deserializer=director__pb2.ShardAcknowledgement.FromString,
                 )
         self.WaitExperiment = channel.stream_stream(
                 '/FederationDirector/WaitExperiment',
-                request_serializer=preparations__pb2.WaitExperimentRequest.SerializeToString,
-                response_deserializer=preparations__pb2.WaitExperimentResponse.FromString,
+                request_serializer=director__pb2.WaitExperimentRequest.SerializeToString,
+                response_deserializer=director__pb2.WaitExperimentResponse.FromString,
                 )
         self.GetExperimentData = channel.unary_stream(
                 '/FederationDirector/GetExperimentData',
-                request_serializer=preparations__pb2.GetExperimentDataRequest.SerializeToString,
-                response_deserializer=preparations__pb2.ExperimentData.FromString,
+                request_serializer=director__pb2.GetExperimentDataRequest.SerializeToString,
+                response_deserializer=director__pb2.ExperimentData.FromString,
                 )
         self.SetNewExperiment = channel.stream_unary(
                 '/FederationDirector/SetNewExperiment',
-                request_serializer=preparations__pb2.ExperimentInfo.SerializeToString,
-                response_deserializer=preparations__pb2.Response.FromString,
+                request_serializer=director__pb2.ExperimentInfo.SerializeToString,
+                response_deserializer=director__pb2.Response.FromString,
                 )
         self.GetRegisterdShards = channel.unary_unary(
                 '/FederationDirector/GetRegisterdShards',
-                request_serializer=preparations__pb2.GetRegisterdShardsRequest.SerializeToString,
-                response_deserializer=preparations__pb2.GetRegisterdShardsResponse.FromString,
+                request_serializer=director__pb2.GetRegisterdShardsRequest.SerializeToString,
+                response_deserializer=director__pb2.GetRegisterdShardsResponse.FromString,
                 )
         self.GetShardsInfo = channel.unary_unary(
                 '/FederationDirector/GetShardsInfo',
-                request_serializer=preparations__pb2.GetShardsInfoRequest.SerializeToString,
-                response_deserializer=preparations__pb2.ShardInfo.FromString,
+                request_serializer=director__pb2.GetShardsInfoRequest.SerializeToString,
+                response_deserializer=director__pb2.ShardInfo.FromString,
                 )
 
 
@@ -91,33 +91,33 @@ def add_FederationDirectorServicer_to_server(servicer, server):
     rpc_method_handlers = {
             'AcknowledgeShard': grpc.unary_unary_rpc_method_handler(
                     servicer.AcknowledgeShard,
-                    request_deserializer=preparations__pb2.ShardInfo.FromString,
-                    response_serializer=preparations__pb2.ShardAcknowledgement.SerializeToString,
+                    request_deserializer=director__pb2.ShardInfo.FromString,
+                    response_serializer=director__pb2.ShardAcknowledgement.SerializeToString,
             ),
             'WaitExperiment': grpc.stream_stream_rpc_method_handler(
                     servicer.WaitExperiment,
-                    request_deserializer=preparations__pb2.WaitExperimentRequest.FromString,
-                    response_serializer=preparations__pb2.WaitExperimentResponse.SerializeToString,
+                    request_deserializer=director__pb2.WaitExperimentRequest.FromString,
+                    response_serializer=director__pb2.WaitExperimentResponse.SerializeToString,
             ),
             'GetExperimentData': grpc.unary_stream_rpc_method_handler(
                     servicer.GetExperimentData,
-                    request_deserializer=preparations__pb2.GetExperimentDataRequest.FromString,
-                    response_serializer=preparations__pb2.ExperimentData.SerializeToString,
+                    request_deserializer=director__pb2.GetExperimentDataRequest.FromString,
+                    response_serializer=director__pb2.ExperimentData.SerializeToString,
             ),
             'SetNewExperiment': grpc.stream_unary_rpc_method_handler(
                     servicer.SetNewExperiment,
-                    request_deserializer=preparations__pb2.ExperimentInfo.FromString,
-                    response_serializer=preparations__pb2.Response.SerializeToString,
+                    request_deserializer=director__pb2.ExperimentInfo.FromString,
+                    response_serializer=director__pb2.Response.SerializeToString,
             ),
             'GetRegisterdShards': grpc.unary_unary_rpc_method_handler(
                     servicer.GetRegisterdShards,
-                    request_deserializer=preparations__pb2.GetRegisterdShardsRequest.FromString,
-                    response_serializer=preparations__pb2.GetRegisterdShardsResponse.SerializeToString,
+                    request_deserializer=director__pb2.GetRegisterdShardsRequest.FromString,
+                    response_serializer=director__pb2.GetRegisterdShardsResponse.SerializeToString,
             ),
             'GetShardsInfo': grpc.unary_unary_rpc_method_handler(
                     servicer.GetShardsInfo,
-                    request_deserializer=preparations__pb2.GetShardsInfoRequest.FromString,
-                    response_serializer=preparations__pb2.ShardInfo.SerializeToString,
+                    request_deserializer=director__pb2.GetShardsInfoRequest.FromString,
+                    response_serializer=director__pb2.ShardInfo.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -141,8 +141,8 @@ class FederationDirector(object):
             timeout=None,
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/FederationDirector/AcknowledgeShard',
-            preparations__pb2.ShardInfo.SerializeToString,
-            preparations__pb2.ShardAcknowledgement.FromString,
+            director__pb2.ShardInfo.SerializeToString,
+            director__pb2.ShardAcknowledgement.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -158,8 +158,8 @@ class FederationDirector(object):
             timeout=None,
             metadata=None):
         return grpc.experimental.stream_stream(request_iterator, target, '/FederationDirector/WaitExperiment',
-            preparations__pb2.WaitExperimentRequest.SerializeToString,
-            preparations__pb2.WaitExperimentResponse.FromString,
+            director__pb2.WaitExperimentRequest.SerializeToString,
+            director__pb2.WaitExperimentResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -175,8 +175,8 @@ class FederationDirector(object):
             timeout=None,
             metadata=None):
         return grpc.experimental.unary_stream(request, target, '/FederationDirector/GetExperimentData',
-            preparations__pb2.GetExperimentDataRequest.SerializeToString,
-            preparations__pb2.ExperimentData.FromString,
+            director__pb2.GetExperimentDataRequest.SerializeToString,
+            director__pb2.ExperimentData.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -192,8 +192,8 @@ class FederationDirector(object):
             timeout=None,
             metadata=None):
         return grpc.experimental.stream_unary(request_iterator, target, '/FederationDirector/SetNewExperiment',
-            preparations__pb2.ExperimentInfo.SerializeToString,
-            preparations__pb2.Response.FromString,
+            director__pb2.ExperimentInfo.SerializeToString,
+            director__pb2.Response.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -209,8 +209,8 @@ class FederationDirector(object):
             timeout=None,
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/FederationDirector/GetRegisterdShards',
-            preparations__pb2.GetRegisterdShardsRequest.SerializeToString,
-            preparations__pb2.GetRegisterdShardsResponse.FromString,
+            director__pb2.GetRegisterdShardsRequest.SerializeToString,
+            director__pb2.GetRegisterdShardsResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -226,7 +226,7 @@ class FederationDirector(object):
             timeout=None,
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/FederationDirector/GetShardsInfo',
-            preparations__pb2.GetShardsInfoRequest.SerializeToString,
-            preparations__pb2.ShardInfo.FromString,
+            director__pb2.GetShardsInfoRequest.SerializeToString,
+            director__pb2.ShardInfo.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

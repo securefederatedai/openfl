@@ -3,7 +3,7 @@ import logging
 
 from click import group, pass_context
 from click import option
-from openfl.services.director import serve
+from openfl.component.director.director import serve
 
 logger = logging.getLogger(__name__)
 

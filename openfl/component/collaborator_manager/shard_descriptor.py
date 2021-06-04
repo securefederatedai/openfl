@@ -1,4 +1,4 @@
-from openfl.services.shard_descriptor_base import ShardDescriptorBase
+from openfl.component.collaborator_manager.shard_descriptor_base import ShardDescriptorBase
 
 
 class ShardDescriptor(ShardDescriptorBase):

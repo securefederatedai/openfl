@@ -1,17 +1,16 @@
 import logging
 from pathlib import Path
 import os
-import sys
 
 from openfl.federated import Plan
 from click import echo
 
-from .director_client import ShardDirectorClient
+from openfl.transport.grpc.director_client import ShardDirectorClient
 
 logger = logging.getLogger(__name__)
 
 
-class CollaboratorService:
+class CollaboratorManager:
 
     def __init__(self, shard_name, director_uri) -> None:
         self.name = shard_name
@@ -21,7 +20,6 @@ class CollaboratorService:
     def run(self):
         while True:
             experiment_name = self.director_client.get_experiment_data()
-            # name = extract_workspace(data)
             self._run_collaborator(experiment_name)
 
     def _run_collaborator(self, experiment_name, plan=f'plan/plan.yaml',

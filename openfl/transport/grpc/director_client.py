@@ -4,8 +4,8 @@ import shutil
 
 import grpc
 
-from openfl.protocols import preparations_pb2
-from openfl.protocols import preparations_pb2_grpc
+from openfl.protocols import director_pb2
+from openfl.protocols import director_pb2_grpc
 
 logger = logging.getLogger(__name__)
 
@@ -14,12 +14,12 @@ class ShardDirectorClient:
     def __init__(self, director_uri, shard_name) -> None:
         self.shard_name = shard_name
         channel = grpc.insecure_channel(director_uri)
-        self.stub = preparations_pb2_grpc.FederationDirectorStub(channel)
+        self.stub = director_pb2_grpc.FederationDirectorStub(channel)
 
     def report_shard_info(self, shard_descriptor) -> bool:
         logger.info('Send report AcknowledgeShard')
         # True considered as successful registration
-        shard_info = preparations_pb2.ShardInfo(
+        shard_info = director_pb2.ShardInfo(
             shard_description=shard_descriptor.dataset_description,
             n_samples=len(shard_descriptor),
             sample_shape=shard_descriptor.sample_shape,
@@ -42,7 +42,7 @@ class ShardDirectorClient:
         if not experiment_name:
             raise Exception('No experiment')
         logger.info(f'Request experiment {experiment_name}')
-        request = preparations_pb2.GetExperimentDataRequest(
+        request = director_pb2.GetExperimentDataRequest(
             experiment_name=experiment_name,
             collaborator_name=self.shard_name
         )
@@ -70,16 +70,16 @@ class ShardDirectorClient:
         shutil.unpack_archive(arch_name, experiment_name)
 
     def _get_experiment_data(self):
-        yield preparations_pb2.WaitExperimentRequest(collaborator_name=self.shard_name)
+        yield director_pb2.WaitExperimentRequest(collaborator_name=self.shard_name)
 
     def _get_node_info(self):
-        return preparations_pb2.NodeInfo(name=self.shard_name)
+        return director_pb2.NodeInfo(name=self.shard_name)
 
 
 class DirectorClient:
     def __init__(self, director_uri) -> None:
         channel = grpc.insecure_channel(director_uri)
-        self.stub = preparations_pb2_grpc.FederationDirectorStub(channel)
+        self.stub = director_pb2_grpc.FederationDirectorStub(channel)
 
     def set_new_experiment(self, name, col_names, arch_path):
         logger.info('SetNewExperiment')
@@ -91,7 +91,7 @@ class DirectorClient:
                     if not chunk:
                         raise StopIteration
                     # TODO: add hash or/and size to check
-                    experiment_info = preparations_pb2.ExperimentInfo(
+                    experiment_info = director_pb2.ExperimentInfo(
                         name=name,
                         collaborator_names=col_names,
                     )
@@ -104,5 +104,5 @@ class DirectorClient:
             return resp
 
     def get_shard_info(self):
-        resp = self.stub.GetShardsInfo(preparations_pb2.GetShardsInfoRequest())
+        resp = self.stub.GetShardsInfo(director_pb2.GetShardsInfoRequest())
         return resp.sample_shape, resp.target_shape
