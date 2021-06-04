@@ -12,9 +12,6 @@ from click import pass_context
 from click import Path as ClickPath
 from click import style
 
-from openfl.federated import Plan
-from openfl.interface.cli_helper import PKI_DIR
-
 logger = getLogger(__name__)
 
 
@@ -40,6 +37,10 @@ def collaborator(context):
         help='Enable Intel SGX Enclave', is_flag=True, default=False)
 def start_(context, plan, collaborator_name, data_config, secure):
     """Start a collaborator service."""
+    from pathlib import Path
+
+    from openfl.federated import Plan
+
     plan = Plan.parse(plan_config_path=Path(plan),
                       data_config_path=Path(data_config))
 
@@ -118,6 +119,7 @@ def generate_cert_request(collaborator_name, data_path, silent, skip_package):
     """
     from openfl.cryptography.participant import generate_csr
     from openfl.cryptography.io import write_crt, write_key
+    from openfl.interface.cli_helper import PKI_DIR
 
     common_name = f'{collaborator_name}'.lower()
     subject_alternative_name = f'DNS:{common_name}'
@@ -244,7 +246,7 @@ def certify_(context, collaborator_name, silent, request_pkg, import_):
 def certify(collaborator_name, silent, request_pkg=False, import_=False):
     """Sign/certify collaborator certificate key pair."""
     from click import confirm
-
+    from pathlib import Path
     from shutil import unpack_archive
     from shutil import make_archive, copy
     from glob import glob
@@ -254,6 +256,7 @@ def certify(collaborator_name, silent, request_pkg=False, import_=False):
     from openfl.cryptography.ca import sign_certificate
     from openfl.cryptography.io import read_key, read_crt, read_csr
     from openfl.cryptography.io import write_crt
+    from openfl.interface.cli_helper import PKI_DIR
 
     common_name = f'{collaborator_name}'.lower()
 

@@ -12,11 +12,6 @@ from click import option
 from click import pass_context
 from click import Path as ClickPath
 
-from openfl.federated import Plan
-from openfl.interface.cli_helper import get_workspace_parameter
-from openfl.protocols import utils
-from openfl.utilities import split_tensor_dict_for_holdouts
-
 logger = getLogger(__name__)
 
 
@@ -50,6 +45,13 @@ def initialize(context, plan_config, cols_config, data_config,
     Create a protocol buffer file of the initial model weights for
      the federation.
     """
+    from pathlib import Path
+    from socket import getfqdn
+
+    from openfl.federated import Plan
+    from openfl.protocols import utils
+    from openfl.utilities import split_tensor_dict_for_holdouts
+
     plan = Plan.parse(plan_config_path=Path(plan_config),
                       cols_config_path=Path(cols_config),
                       data_config_path=Path(data_config))
@@ -128,6 +130,10 @@ def initialize(context, plan_config, cols_config, data_config,
 # TODO: looks like Plan.method
 def freeze_plan(plan_config):
     """Dump the plan to YAML file."""
+    from pathlib import Path
+
+    from openfl.federated import Plan
+
     plan = Plan()
     plan.config = Plan.parse(Path(plan_config), resolve=False).config
 
@@ -245,5 +251,7 @@ def remove_(context, name):
 @plan.command(name='print')
 def print_():
     """Print the current plan."""
+    from openfl.interface.cli_helper import get_workspace_parameter
+
     current_plan_name = get_workspace_parameter('current_plan_name')
     echo(f'The current plan is: {current_plan_name}')

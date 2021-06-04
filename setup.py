@@ -48,7 +48,7 @@ setup(
     ],
     include_package_data=True,
     install_requires=[
-        'Click>=7.0',
+        'Click==8.0.1',
         'PyYAML>=5.4.1',
         'numpy',
         'pandas',
