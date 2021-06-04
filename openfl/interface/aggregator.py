@@ -9,9 +9,6 @@ from click import Path as ClickPath
 from click import group, option, pass_context
 from click import echo, style
 
-
-from openfl.interface.cli_helper import PKI_DIR
-
 logger = getLogger(__name__)
 
 
@@ -60,6 +57,7 @@ def generate_cert_request(fqdn):
     """Create aggregator certificate key pair."""
     from openfl.cryptography.participant import generate_csr
     from openfl.cryptography.io import write_crt, write_key
+    from openfl.interface.cli_helper import PKI_DIR
 
     if fqdn is None:
         fqdn = getfqdn()
@@ -113,6 +111,7 @@ def certify(fqdn, silent):
     from openfl.cryptography.ca import sign_certificate
     from openfl.cryptography.io import read_key, read_crt, read_csr
     from openfl.cryptography.io import write_crt
+    from openfl.interface.cli_helper import PKI_DIR
 
     if fqdn is None:
         fqdn = getfqdn()
