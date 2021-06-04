@@ -57,8 +57,8 @@ class Director(preparations_pb2_grpc.FederationDirectorServicer):
             queue = self.col_exp_queues[col_name]
             await queue.put(request.name)
 
-        # future = self.executor.submit(self._run_aggregator)
-        # self.aggregator_task = future
+        future = self.executor.submit(self._run_aggregator)
+        self.aggregator_task = future
 
         return preparations_pb2.Response(accepted=True)
 

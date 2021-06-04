@@ -16,14 +16,14 @@ class ShardDirectorClient:
         channel = grpc.insecure_channel(director_uri)
         self.stub = preparations_pb2_grpc.FederationDirectorStub(channel)
 
-    def report_shard_info(self, data_path) -> bool:
+    def report_shard_info(self, shard_descriptor) -> bool:
         logger.info('Send report AcknowledgeShard')
         # True considered as successful registration
         shard_info = preparations_pb2.ShardInfo(
-            shard_description=data_path,
-            # n_samples = len(shard_descriptor),
-            sample_shape=1,
-            target_shape=1
+            shard_description=shard_descriptor.dataset_description,
+            n_samples=len(shard_descriptor),
+            sample_shape=shard_descriptor.sample_shape,
+            target_shape=shard_descriptor.target_shape
         )
 
         shard_info.node_info.CopyFrom(self._get_node_info())
@@ -110,4 +110,6 @@ class DirectorClient:
             resp = self.stub.SetNewExperiment(st())
             return resp
 
+    def get_shard_info(self):
+        pass
 
