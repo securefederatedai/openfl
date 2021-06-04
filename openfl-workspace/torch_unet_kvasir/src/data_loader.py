@@ -3,19 +3,21 @@
 
 """You may copy this file as the starting point of your own model."""
 
-from tqdm import tqdm
 import zipfile
 from hashlib import sha384
-from os import path
 from os import listdir
-from openfl.federated import PyTorchDataLoader
+from os import path
 
-import PIL
 import numpy as np
+import PIL
 from skimage import io
+from torch.utils.data import DataLoader
+from torch.utils.data import Dataset
 from torchvision import transforms as tsf
-from torch.utils.data import Dataset, DataLoader
 from torchvision.datasets.utils import download_url
+from tqdm import tqdm
+
+from openfl.federated import PyTorchDataLoader
 
 
 def read_data(image_path, mask_path):

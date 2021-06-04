@@ -2,13 +2,16 @@
 # SPDX-License-Identifier: Apache-2.0
 """Module with auxiliary CLI helper functions."""
 
-from click import echo, style
-from sys import argv
-from pathlib import Path
 from itertools import islice
-from os import environ, stat
+from os import environ
+from os import stat
+from pathlib import Path
+from sys import argv
 
-from yaml import load, FullLoader
+from click import echo
+from click import style
+from yaml import FullLoader
+from yaml import load
 
 FX = argv[0]
 

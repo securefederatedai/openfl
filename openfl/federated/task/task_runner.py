@@ -3,8 +3,11 @@
 """Interactive API package."""
 
 from logging import getLogger
+
 import numpy as np
-from openfl.utilities import TensorKey, split_tensor_dict_for_holdouts
+
+from openfl.utilities import split_tensor_dict_for_holdouts
+from openfl.utilities import TensorKey
 
 
 class CoreTaskRunner(object):

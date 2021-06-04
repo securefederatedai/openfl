@@ -4,6 +4,7 @@
 """FederatedModel module."""
 
 import inspect
+
 from .runner import TaskRunner
 
 

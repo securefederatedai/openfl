@@ -3,21 +3,20 @@
 
 """CollaboratorGRPCClient module."""
 
+import time
+from logging import getLogger
+from typing import Optional
+from typing import Tuple
+
 import grpc
 
-from openfl.protocols import utils
 from openfl.protocols import AggregatorStub
 from openfl.protocols import MessageHeader
+from openfl.protocols import TaskResults
 from openfl.protocols import TasksRequest
 from openfl.protocols import TensorRequest
-from openfl.protocols import TaskResults
+from openfl.protocols import utils
 from openfl.utilities import check_equal
-
-from logging import getLogger
-
-# Interceptor related imports
-import time
-from typing import Optional, Tuple
 
 
 class ConstantBackoff:

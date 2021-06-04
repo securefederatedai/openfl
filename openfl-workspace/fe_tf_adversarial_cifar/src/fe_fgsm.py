@@ -3,16 +3,19 @@
 
 """You may copy this file as the starting point of your own model."""
 
-import tensorflow as tf
-from openfl.federated import TaskRunner, FastEstimatorTaskRunner
-
 import fastestimator as fe
+import tensorflow as tf
 from fastestimator.architecture.tensorflow import LeNet
 from fastestimator.op.tensorop import Average
-from fastestimator.op.tensorop.gradient import Watch, FGSM
+from fastestimator.op.tensorop.gradient import FGSM
+from fastestimator.op.tensorop.gradient import Watch
 from fastestimator.op.tensorop.loss import CrossEntropy
-from fastestimator.op.tensorop.model import ModelOp, UpdateOp
+from fastestimator.op.tensorop.model import ModelOp
+from fastestimator.op.tensorop.model import UpdateOp
 from fastestimator.trace.metric import Accuracy
+
+from openfl.federated import FastEstimatorTaskRunner
+from openfl.federated import TaskRunner
 
 
 class FastEstimatorFGSM(FastEstimatorTaskRunner):

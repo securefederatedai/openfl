@@ -4,7 +4,6 @@
 """You may copy this file as the starting point of your own model."""
 
 from openfl.federated import TensorFlowDataLoader
-
 from .tfds_utils import load_histology_shard
 
 

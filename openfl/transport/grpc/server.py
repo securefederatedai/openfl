@@ -3,21 +3,24 @@
 
 """AggregatorGRPCServer module."""
 
-from grpc import server, ssl_server_credentials
 from concurrent.futures import ThreadPoolExecutor
-from multiprocessing import cpu_count
 from logging import getLogger
+from multiprocessing import cpu_count
 from time import sleep
 
-from openfl.protocols import utils
+from grpc import server
+from grpc import ssl_server_credentials
+
 from openfl.protocols import Acknowledgement
+from openfl.protocols import add_AggregatorServicer_to_server
 from openfl.protocols import AggregatorServicer
 from openfl.protocols import MessageHeader
-from openfl.protocols import TasksResponse
 from openfl.protocols import TaskResults
+from openfl.protocols import TasksResponse
 from openfl.protocols import TensorResponse
-from openfl.protocols import add_AggregatorServicer_to_server
-from openfl.utilities import check_equal, check_is_in
+from openfl.protocols import utils
+from openfl.utilities import check_equal
+from openfl.utilities import check_is_in
 
 
 class AggregatorGRPCServer(AggregatorServicer):

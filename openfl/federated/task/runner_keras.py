@@ -6,19 +6,20 @@ Base classes for developing a ke.Model() Federated Learning model.
 
 You may copy this file as the starting point of your own keras model.
 """
-from warnings import catch_warnings, simplefilter
+from warnings import catch_warnings
+from warnings import simplefilter
+
+import numpy as np
+
+from openfl.utilities import Metric
+from openfl.utilities import split_tensor_dict_for_holdouts
+from openfl.utilities import TensorKey
+from .runner import TaskRunner
 
 with catch_warnings():
     simplefilter(action='ignore')
     import tensorflow as tf
     import tensorflow.keras as ke
-
-import numpy as np
-
-
-from openfl.utilities import TensorKey, split_tensor_dict_for_holdouts, Metric
-
-from .runner import TaskRunner
 
 
 class KerasTaskRunner(TaskRunner):

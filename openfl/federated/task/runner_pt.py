@@ -3,16 +3,18 @@
 
 """PyTorchTaskRunner module."""
 
-from typing import Iterator, Tuple
+from copy import deepcopy
+from typing import Iterator
+from typing import Tuple
+
 import numpy as np
 import torch as pt
 import torch.nn as nn
 import tqdm
 
-from copy import deepcopy
-
-from openfl.utilities import TensorKey, split_tensor_dict_for_holdouts, Metric
-
+from openfl.utilities import Metric
+from openfl.utilities import split_tensor_dict_for_holdouts
+from openfl.utilities import TensorKey
 from .runner import TaskRunner
 
 

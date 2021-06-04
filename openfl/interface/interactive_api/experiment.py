@@ -2,16 +2,16 @@
 # SPDX-License-Identifier: Apache-2.0
 
 """Python low-level API module."""
-import os
-from copy import deepcopy
-import logging
-from logging import getLogger
 import functools
+import logging
+import os
 from collections import defaultdict
-from openfl.federated import Plan
+from copy import deepcopy
+from logging import getLogger
 from pathlib import Path
-from openfl.interface.cli_helper import WORKSPACE
 
+from openfl.federated import Plan
+from openfl.interface.cli_helper import WORKSPACE
 from openfl.utilities import split_tensor_dict_for_holdouts
 
 

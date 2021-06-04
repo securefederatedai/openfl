@@ -3,16 +3,25 @@
 """Workspace module."""
 
 from pathlib import Path
-from click import Choice, Path as ClickPath
-from click import group, option, pass_context
-from click import echo, confirm
+from shutil import copyfile
+from shutil import ignore_patterns
 from subprocess import check_call
 from sys import executable
-from shutil import copyfile, ignore_patterns
 
-from openfl.interface.cli_helper import copytree, print_tree
-from openfl.interface.cli_helper import WORKSPACE, PKI_DIR
-from openfl.interface.cli_helper import SITEPACKS, OPENFL_USERDIR
+from click import Choice
+from click import confirm
+from click import echo
+from click import group
+from click import option
+from click import pass_context
+from click import Path as ClickPath
+
+from openfl.interface.cli_helper import copytree
+from openfl.interface.cli_helper import OPENFL_USERDIR
+from openfl.interface.cli_helper import PKI_DIR
+from openfl.interface.cli_helper import print_tree
+from openfl.interface.cli_helper import SITEPACKS
+from openfl.interface.cli_helper import WORKSPACE
 
 
 @group()

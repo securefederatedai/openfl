@@ -2,13 +2,14 @@
 # SPDX-License-Identifier: Apache-2.0
 """Collaborator tests module."""
 
-import pytest
 import numpy as np
+import pytest
 
+from openfl.component.aggregation_functions import AggregationFunctionInterface
+from openfl.component.aggregation_functions import WeightedAverage
 from openfl.databases.tensor_db import TensorDB
-from openfl.utilities.types import TensorKey
 from openfl.protocols import NamedTensor
-from openfl.component.aggregation_functions import AggregationFunctionInterface, WeightedAverage
+from openfl.utilities.types import TensorKey
 
 
 @pytest.fixture

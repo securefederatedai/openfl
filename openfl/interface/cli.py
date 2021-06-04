@@ -3,10 +3,18 @@
 # SPDX-License-Identifier: Apache-2.0
 """CLI module."""
 
-from click import Group, command, argument, group, clear
-from click import echo, option, pass_context, style
-from sys import argv
 from pathlib import Path
+from sys import argv
+
+from click import argument
+from click import clear
+from click import command
+from click import echo
+from click import Group
+from click import group
+from click import option
+from click import pass_context
+from click import style
 
 
 def setup_logging(level='info'):

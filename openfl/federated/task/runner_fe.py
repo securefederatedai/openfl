@@ -5,8 +5,8 @@
 import numpy as np
 import tensorflow as tf
 
-from openfl.utilities import TensorKey, split_tensor_dict_for_holdouts
-
+from openfl.utilities import split_tensor_dict_for_holdouts
+from openfl.utilities import TensorKey
 from .runner import TaskRunner
 from .runner_keras import KerasTaskRunner
 from .runner_pt import PyTorchTaskRunner

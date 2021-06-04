@@ -3,18 +3,21 @@
 
 """Plan module."""
 from hashlib import sha384
+from importlib import import_module
 from logging import getLogger
 from os.path import splitext
-from importlib import import_module
 from pathlib import Path
-from yaml import safe_load, dump, SafeDumper
 from socket import getfqdn
 
+from yaml import dump
+from yaml import safe_load
+from yaml import SafeDumper
+
+from openfl.component.aggregation_functions import AggregationFunctionInterface
+from openfl.component.aggregation_functions import WeightedAverage
+from openfl.interface.cli_helper import WORKSPACE
 from openfl.transport import AggregatorGRPCServer
 from openfl.transport import CollaboratorGRPCClient
-
-from openfl.interface.cli_helper import WORKSPACE
-from openfl.component.aggregation_functions import AggregationFunctionInterface, WeightedAverage
 
 SETTINGS = 'settings'
 TEMPLATE = 'template'

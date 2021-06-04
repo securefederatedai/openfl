@@ -3,11 +3,11 @@
 
 """You may copy this file as the starting point of your own model."""
 
-from openfl.federated import FastEstimatorDataLoader
-
 import fastestimator as fe
 from fastestimator.dataset.data import cifar10
 from fastestimator.op.numpyop.univariate import Normalize
+
+from openfl.federated import FastEstimatorDataLoader
 
 
 class FastEstimatorCifarInMemory(FastEstimatorDataLoader):

@@ -2,10 +2,11 @@
 # SPDX-License-Identifier: Apache-2.0
 """You may copy this file as the starting point of your own model."""
 
-import os
 import logging
+import os
 
 import numpy as np
+
 from .nii_reader import nii_reader
 
 logger = logging.getLogger(__name__)

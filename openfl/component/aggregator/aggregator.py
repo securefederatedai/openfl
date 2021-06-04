@@ -4,12 +4,13 @@
 """Aggregator module."""
 from logging import getLogger
 
-from openfl.utilities import TensorKey, TaskResultKey
-from openfl.pipelines import NoCompressionPipeline, TensorCodec
 from openfl.databases import TensorDB
-
-from openfl.protocols import utils
+from openfl.pipelines import NoCompressionPipeline
+from openfl.pipelines import TensorCodec
 from openfl.protocols import ModelProto
+from openfl.protocols import utils
+from openfl.utilities import TaskResultKey
+from openfl.utilities import TensorKey
 
 
 class Aggregator:

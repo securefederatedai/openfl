@@ -7,7 +7,6 @@ import tensorflow.compat.v1 as tf
 
 from openfl.federated import TensorFlowTaskRunner
 
-
 tf.disable_v2_behavior()
 
 

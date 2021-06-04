@@ -3,11 +3,12 @@
 Licensed subject to the terms of the separately executed evaluation
 license agreement between Intel Corporation and you.
 """
-import numpy as np
 from logging import getLogger
 
-from openfl.federated import KerasDataLoader
+import numpy as np
 import src.dataloader_utils as DLU
+
+from openfl.federated import KerasDataLoader
 
 logger = getLogger(__name__)
 

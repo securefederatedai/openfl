@@ -4,9 +4,10 @@
 """You may copy this file as the starting point of your own model."""
 
 import os
-import numpy.ma as ma
-import numpy as np
+
 import nibabel as nib
+import numpy as np
+import numpy.ma as ma
 
 
 def parse_segments(seg, msk_modes):

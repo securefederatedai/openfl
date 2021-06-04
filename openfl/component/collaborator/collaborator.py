@@ -3,14 +3,15 @@
 
 """Collaborator module."""
 
-from logging import getLogger
 from enum import Enum
+from logging import getLogger
 from time import sleep
 
+from openfl.databases import TensorDB
+from openfl.pipelines import NoCompressionPipeline
+from openfl.pipelines import TensorCodec
 from openfl.protocols import utils
 from openfl.utilities import TensorKey
-from openfl.pipelines import TensorCodec, NoCompressionPipeline
-from openfl.databases import TensorDB
 
 
 class OptTreatment(Enum):

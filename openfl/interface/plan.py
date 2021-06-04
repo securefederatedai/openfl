@@ -2,17 +2,20 @@
 # SPDX-License-Identifier: Apache-2.0
 """Plan module."""
 
-from socket import getfqdn
 from logging import getLogger
 from pathlib import Path
-from click import Path as ClickPath
-from click import group, option, pass_context
-from click import echo
+from socket import getfqdn
 
-from openfl.protocols import utils
-from openfl.utilities import split_tensor_dict_for_holdouts
+from click import echo
+from click import group
+from click import option
+from click import pass_context
+from click import Path as ClickPath
+
 from openfl.federated import Plan
 from openfl.interface.cli_helper import get_workspace_parameter
+from openfl.protocols import utils
+from openfl.utilities import split_tensor_dict_for_holdouts
 
 logger = getLogger(__name__)
 

@@ -2,12 +2,14 @@
 # SPDX-License-Identifier: Apache-2.0
 """Tutorial module."""
 
-from sys import executable
-from subprocess import check_call
-from os import environ
 from logging import getLogger
+from os import environ
+from subprocess import check_call
+from sys import executable
 
-from click import group, option, pass_context
+from click import group
+from click import option
+from click import pass_context
 
 from openfl.interface.cli_helper import TUTORIALS
 

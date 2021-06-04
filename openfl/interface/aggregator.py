@@ -2,16 +2,19 @@
 # SPDX-License-Identifier: Apache-2.0
 """Aggregator module."""
 
-from socket import getfqdn
 from logging import getLogger
 from pathlib import Path
+from socket import getfqdn
+
+from click import echo
+from click import group
+from click import option
+from click import pass_context
 from click import Path as ClickPath
-from click import group, option, pass_context
-from click import echo, style
+from click import style
 
 from openfl.federated import Plan
 from openfl.interface.cli_helper import PKI_DIR
-
 
 logger = getLogger(__name__)
 

@@ -3,18 +3,20 @@
 
 """You may copy this file as the starting point of your own model."""
 
-import numpy as np
+from collections.abc import Iterable
+from hashlib import sha384
 from logging import getLogger
+from os import makedirs
+from os import path
+from urllib.request import urlretrieve
+from zipfile import ZipFile
+
+import numpy as np
+import torch
+from torch.utils.data import random_split
 from torchvision.datasets import ImageFolder
 from torchvision.transforms import ToTensor
-from torch.utils.data import random_split
-from urllib.request import urlretrieve
-from hashlib import sha384
-from os import path, makedirs
-from zipfile import ZipFile
 from tqdm import tqdm
-import torch
-from collections.abc import Iterable
 
 logger = getLogger(__name__)
 

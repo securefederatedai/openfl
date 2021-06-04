@@ -3,18 +3,18 @@
 
 """You may copy this file as the starting point of your own model."""
 import numpy as np
-import tqdm
 import torch
 import torch.nn as nn
 import torch.optim as optim
+import tqdm
 
 from openfl.federated import PyTorchTaskRunner
 from openfl.utilities import TensorKey
+from .pt_unet_parts import double_conv
+from .pt_unet_parts import down
 from .pt_unet_parts import soft_dice_coef
 from .pt_unet_parts import soft_dice_loss
-from .pt_unet_parts import double_conv
 from .pt_unet_parts import up
-from .pt_unet_parts import down
 
 
 class PyTorchFederatedUnet(PyTorchTaskRunner):

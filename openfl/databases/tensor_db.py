@@ -3,13 +3,14 @@
 
 """TensorDB Module."""
 
-import pandas as pd
-import numpy as np
-
 from threading import Lock
 
-from openfl.utilities import TensorKey, LocalTensor
+import numpy as np
+import pandas as pd
+
 from openfl.component.aggregation_functions import WeightedAverage
+from openfl.utilities import LocalTensor
+from openfl.utilities import TensorKey
 
 
 class TensorDB:

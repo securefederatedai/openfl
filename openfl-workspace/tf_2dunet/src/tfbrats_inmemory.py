@@ -3,8 +3,8 @@
 
 """You may copy this file as the starting point of your own model."""
 
-from .brats_utils import load_from_NIfTI
 from openfl.federated import TensorFlowDataLoader
+from .brats_utils import load_from_NIfTI
 
 
 class TensorFlowBratsInMemory(TensorFlowDataLoader):

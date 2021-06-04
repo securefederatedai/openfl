@@ -1,9 +1,11 @@
 # Copyright (C) 2020-2021 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 """Pytorch Framework Adapter plugin."""
-import torch as pt
 from copy import deepcopy
+
 import numpy as np
+import torch as pt
+
 from .framework_adapter_interface import FrameworkAdapterPluginInterface
 
 

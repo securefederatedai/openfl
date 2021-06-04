@@ -6,16 +6,16 @@ This file defines openfl entrypoints to be used directly through python (not CLI
 """
 
 import os
+from copy import copy
 from logging import getLogger
 from pathlib import Path
-from copy import copy
+
 from flatten_json import flatten_preserve_lists
-import openfl.interface.workspace as workspace
+
 import openfl.interface.aggregator as aggregator
 import openfl.interface.collaborator as collaborator
-
+import openfl.interface.workspace as workspace
 from openfl.federated import Plan
-
 from openfl.protocols import utils
 from openfl.utilities import split_tensor_dict_for_holdouts
 

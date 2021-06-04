@@ -4,13 +4,14 @@
 """KCPipeline module."""
 
 
-import numpy as np
-import gzip as gz
 import copy as co
+import gzip as gz
 
+import numpy as np
 from sklearn import cluster
 
-from .pipeline import TransformationPipeline, Transformer
+from .pipeline import TransformationPipeline
+from .pipeline import Transformer
 
 
 class KmeansTransformer(Transformer):

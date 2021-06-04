@@ -3,12 +3,13 @@
 Licensed subject to the terms of the separately executed evaluation
 license agreement between Intel Corporation and you.
 """
-import numpy as np
-
 from logging import getLogger
-
-from os import path, getcwd, remove
+from os import getcwd
+from os import path
+from os import remove
 from zipfile import ZipFile
+
+import numpy as np
 import requests
 
 logger = getLogger(__name__)
