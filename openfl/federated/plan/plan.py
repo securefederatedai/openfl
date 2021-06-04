@@ -427,9 +427,10 @@ openfl.component.aggregation_functions.AggregationFunctionInterface
         """Get gRPC client for the specified collaborator."""
         common_name = collaborator_name
 
-        chain = 'cert/cert_chain.crt'
-        certificate = f'cert/client/col_{common_name}.crt'
-        private_key = f'cert/client/col_{common_name}.key'
+        #chain = 'cert/cert_chain.crt'
+        chain = './cert/root_ca.crt'
+        certificate = f'col_{common_name}.crt'
+        private_key = f'col_{common_name}.key'
 
         client_args = self.config['network'][SETTINGS]
 
@@ -451,9 +452,11 @@ openfl.component.aggregation_functions.AggregationFunctionInterface
         """Get gRPC server of the aggregator instance."""
         common_name = self.config['network'][SETTINGS]['agg_addr'].lower()
 
-        chain = 'cert/cert_chain.crt'
-        certificate = f'cert/server/agg_{common_name}.crt'
-        private_key = f'cert/server/agg_{common_name}.key'
+        chain = './cert/root_ca.crt'
+        # certificate = f'cert/server/agg_{common_name}.crt'
+        # private_key = f'cert/server/agg_{common_name}.key'
+        certificate = f'agg_{common_name}.crt'
+        private_key = f'agg_{common_name}.key'
 
         server_args = self.config['network'][SETTINGS]
 

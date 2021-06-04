@@ -9,10 +9,15 @@ from click import echo, confirm
 from subprocess import check_call
 from sys import executable
 from shutil import copyfile, ignore_patterns
+import os
 
 from openfl.interface.cli_helper import copytree, print_tree
 from openfl.interface.cli_helper import WORKSPACE, PKI_DIR
 from openfl.interface.cli_helper import SITEPACKS, OPENFL_USERDIR
+
+step_config_dir = '/home/radionov/aggregator/step_config/'
+step = './step/step_0.15.16/bin/step'
+step_ca = './step/step-ca_0.15.15/bin/step-ca'
 
 
 @group()
@@ -132,6 +137,7 @@ def export_():
     makedirs(f'{tmpDir}/data', exist_ok=True)
     copytree('./src', f'{tmpDir}/src', ignore=ignore)  # code
     copytree('./plan', f'{tmpDir}/plan', ignore=ignore)  # plan
+    copytree('./step', f'{tmpDir}/step', ignore=ignore)  # plan
     copy2('./requirements.txt', f'{tmpDir}/requirements.txt')  # requirements
 
     try:
@@ -173,10 +179,81 @@ def import_(archive):
             shell=False)
     else:
         echo("No " + requirements_filename + " file found.")
-
+    os.chmod('step/step_0.15.16/bin/step',0o777)
     echo(f'Workspace {archive} has been imported.')
     echo('You may need to copy your PKI certificates to join the federation.')
 
+#./step ca token localhost --ca-url https://nnlicv674.inn.intel.com:4343 --root step-config/certs/root_ca.crt
+@workspace.command(name='get_token')
+@option('--name',
+        required=True,
+        help='dns naame or collaborator name')
+def get_token_(name):
+    """Create certificate authority for federation."""
+    get_token(name)
+
+
+def get_token(name):
+    """Create certificate authority for federation."""
+    import subprocess
+    os.environ["STEPPATH"] = step_config_dir
+    try:
+        token = subprocess.check_output(f'./{step} ca token {name} --key ./step_config/secrets/priv.json ' +
+              f'--password-file pass --ca-url https://nnlicv674.inn.intel.com:4343 ',shell=True)
+    except subprocess.CalledProcessError as exc:                                                                                                   
+        print("error code", exc.returncode, exc.output)
+        return
+    
+    if token[-1:] == b'\n':
+        token = token[:-1]
+    length = len(token)
+    assert(length < 10000)
+    length = str(10000 + length)[-4:]
+    with open(step_config_dir + '/certs/root_ca.crt',mode='rb') as file:
+        root_ca = file.read()
+    import base64
+
+    message = root_ca 
+    base64_bytes = base64.b64encode(message)
+    base64_message = base64_bytes.decode('ascii')
+    print('Token:')
+    print(length, token.decode('ascii'),base64_message, sep='')
+
+
+
+@workspace.command(name='write_token')
+@option('--name',
+        required=True,
+        help='dns naame or collaborator name')
+def write_token_(name):
+    """Create certificate authority for federation."""
+    write_token(name)
+
+
+def write_token(name):
+    print(name)
+    with open(step_config_dir + '/certs/root_ca.crt2',mode='w') as file:
+        file.write(name)
+
+def download_step(url, grep_name):
+    import requests 
+    import shutil
+    result = requests.get(url)
+    assets = result.json()['assets']
+    urls = []
+    for a in assets:
+        if grep_name in a['name'] and 'amd' in a['name'] :
+            print('1111111',  a['browser_download_url'])
+            urls.append(a['browser_download_url'])
+    print(urls)
+    url = urls[-1]
+    url.replace('https','http')
+    name = url.split('/')[-1]
+    import urllib.request
+    urllib.request.urlretrieve(url, name)
+    print('downloaded')
+    import shutil
+    shutil.unpack_archive(name, './step')
 
 @workspace.command(name='certify')
 def certify_():
@@ -198,95 +275,113 @@ def certify():
         parents=True, exist_ok=True, mode=0o700)
     (PKI_DIR / 'ca/root-ca/db').mkdir(parents=True, exist_ok=True)
 
-    echo('1.2 Create Database')
+    # echo('1.2 Create Database')
 
-    with open(PKI_DIR / 'ca/root-ca/db/root-ca.db', 'w') as f:
-        pass  # write empty file
-    with open(PKI_DIR / 'ca/root-ca/db/root-ca.db.attr', 'w') as f:
-        pass  # write empty file
+    # with open(PKI_DIR / 'ca/root-ca/db/root-ca.db', 'w') as f:
+    #     pass  # write empty file
+    # with open(PKI_DIR / 'ca/root-ca/db/root-ca.db.attr', 'w') as f:
+    #     pass  # write empty file
 
-    with open(PKI_DIR / 'ca/root-ca/db/root-ca.crt.srl', 'w') as f:
-        f.write('01')  # write file with '01'
-    with open(PKI_DIR / 'ca/root-ca/db/root-ca.crl.srl', 'w') as f:
-        f.write('01')  # write file with '01'
-
+    # with open(PKI_DIR / 'ca/root-ca/db/root-ca.crt.srl', 'w') as f:
+    #     f.write('01')  # write file with '01'
+    # with open(PKI_DIR / 'ca/root-ca/db/root-ca.crl.srl', 'w') as f:
+    #     f.write('01')  # write file with '01'
+    import shutil
     echo('1.3 Create CA Request and Certificate')
 
     root_crt_path = 'ca/root-ca.crt'
     root_key_path = 'ca/root-ca/private/root-ca.key'
 
-    root_private_key, root_cert = generate_root_cert()
-
+    #root_private_key, root_cert = generate_root_cert()
+    print('do')
+    url = 'http://api.github.com/repos/smallstep/certificates/releases/latest'
+    download_step(url, 'step-ca_linux')
+    url = 'http://api.github.com/repos/smallstep/cli/releases/latest'
+    download_step(url,'step_linux')
+    echo('1.3 Create CA Config')
+    os.environ["STEPPATH"] = step_config_dir
+    shutil.rmtree(step_config_dir, ignore_errors=True)
+    os.system(f'./{step} ca init --name name --dns nnlicv674.inn.intel.com ' +
+                    f'--address nnlicv674.inn.intel.com:4343  --provisioner prov ' +
+                    f'--password-file pass')
+    echo('1.3 remove prov')
+    os.system(f'./{step} ca provisioner remove prov --all')
+    os.system(f'./{step} crypto jwk create ./step_config/certs/pub.json ' + 
+              f'./step_config/secrets/priv.json --password-file=pass')
+    os.system(f'./{step} ca provisioner add provisioner ./step_config/certs/pub.json')
+    print('after command')
+    echo('Up CA server')
+    os.system(f'{step_ca} --password-file pass $(./{step} path)/config/ca.json  &')
     # Write root CA certificate to disk
-    with open(PKI_DIR / root_crt_path, 'wb') as f:
-        f.write(root_cert.public_bytes(
-            encoding=serialization.Encoding.PEM,
-        ))
+    # with open(PKI_DIR / root_crt_path, 'wb') as f:
+    #     f.write(root_cert.public_bytes(
+    #         encoding=serialization.Encoding.PEM,
+    #     ))
 
-    with open(PKI_DIR / root_key_path, "wb") as f:
-        f.write(root_private_key.private_bytes(
-            encoding=serialization.Encoding.PEM,
-            format=serialization.PrivateFormat.TraditionalOpenSSL,
-            encryption_algorithm=serialization.NoEncryption()
-        ))
+    # with open(PKI_DIR / root_key_path, "wb") as f:
+    #     f.write(root_private_key.private_bytes(
+    #         encoding=serialization.Encoding.PEM,
+    #         format=serialization.PrivateFormat.TraditionalOpenSSL,
+    #         encryption_algorithm=serialization.NoEncryption()
+    #     ))
 
     echo('2.  Create Signing Certificate')
     echo('2.1 Create Directories')
 
-    (PKI_DIR / 'ca/signing-ca/private').mkdir(
-        parents=True, exist_ok=True, mode=0o700)
-    (PKI_DIR / 'ca/signing-ca/db').mkdir(parents=True, exist_ok=True)
+    # (PKI_DIR / 'ca/signing-ca/private').mkdir(
+    #     parents=True, exist_ok=True, mode=0o700)
+    # (PKI_DIR / 'ca/signing-ca/db').mkdir(parents=True, exist_ok=True)
 
     echo('2.2 Create Database')
 
-    with open(PKI_DIR / 'ca/signing-ca/db/signing-ca.db', 'w') as f:
-        pass  # write empty file
-    with open(PKI_DIR / 'ca/signing-ca/db/signing-ca.db.attr', 'w') as f:
-        pass  # write empty file
+    # with open(PKI_DIR / 'ca/signing-ca/db/signing-ca.db', 'w') as f:
+    #     pass  # write empty file
+    # with open(PKI_DIR / 'ca/signing-ca/db/signing-ca.db.attr', 'w') as f:
+    #     pass  # write empty file
 
-    with open(PKI_DIR / 'ca/signing-ca/db/signing-ca.crt.srl', 'w') as f:
-        f.write('01')  # write file with '01'
-    with open(PKI_DIR / 'ca/signing-ca/db/signing-ca.crl.srl', 'w') as f:
-        f.write('01')  # write file with '01'
+    # with open(PKI_DIR / 'ca/signing-ca/db/signing-ca.crt.srl', 'w') as f:
+    #     f.write('01')  # write file with '01'
+    # with open(PKI_DIR / 'ca/signing-ca/db/signing-ca.crl.srl', 'w') as f:
+    #     f.write('01')  # write file with '01'
 
-    echo('2.3 Create Signing Certificate CSR')
+    # echo('2.3 Create Signing Certificate CSR')
 
-    signing_csr_path = 'ca/signing-ca.csr'
-    signing_crt_path = 'ca/signing-ca.crt'
-    signing_key_path = 'ca/signing-ca/private/signing-ca.key'
+    # signing_csr_path = 'ca/signing-ca.csr'
+    # signing_crt_path = 'ca/signing-ca.crt'
+    # signing_key_path = 'ca/signing-ca/private/signing-ca.key'
 
-    signing_private_key, signing_csr = generate_signing_csr()
+    # signing_private_key, signing_csr = generate_signing_csr()
 
-    # Write Signing CA CSR to disk
-    with open(PKI_DIR / signing_csr_path, 'wb') as f:
-        f.write(signing_csr.public_bytes(
-            encoding=serialization.Encoding.PEM,
-        ))
+    # # Write Signing CA CSR to disk
+    # with open(PKI_DIR / signing_csr_path, 'wb') as f:
+    #     f.write(signing_csr.public_bytes(
+    #         encoding=serialization.Encoding.PEM,
+    #     ))
 
-    with open(PKI_DIR / signing_key_path, "wb") as f:
-        f.write(signing_private_key.private_bytes(
-            encoding=serialization.Encoding.PEM,
-            format=serialization.PrivateFormat.TraditionalOpenSSL,
-            encryption_algorithm=serialization.NoEncryption()
-        ))
+    # with open(PKI_DIR / signing_key_path, "wb") as f:
+    #     f.write(signing_private_key.private_bytes(
+    #         encoding=serialization.Encoding.PEM,
+    #         format=serialization.PrivateFormat.TraditionalOpenSSL,
+    #         encryption_algorithm=serialization.NoEncryption()
+    #     ))
 
-    echo('2.4 Sign Signing Certificate CSR')
+    # echo('2.4 Sign Signing Certificate CSR')
 
-    signing_cert = sign_certificate(signing_csr, root_private_key, root_cert.subject, ca=True)
+    # signing_cert = sign_certificate(signing_csr, root_private_key, root_cert.subject, ca=True)
 
-    with open(PKI_DIR / signing_crt_path, 'wb') as f:
-        f.write(signing_cert.public_bytes(
-            encoding=serialization.Encoding.PEM,
-        ))
+    # with open(PKI_DIR / signing_crt_path, 'wb') as f:
+    #     f.write(signing_cert.public_bytes(
+    #         encoding=serialization.Encoding.PEM,
+    #     ))
 
-    echo('3   Create Certificate Chain')
+    # echo('3   Create Certificate Chain')
 
-    # create certificate chain file by combining root-ca and signing-ca
-    with open(PKI_DIR / 'cert_chain.crt', 'w') as d:
-        with open(PKI_DIR / 'ca/root-ca.crt') as s:
-            d.write(s.read())
-        with open(PKI_DIR / 'ca/signing-ca.crt') as s:
-            d.write(s.read())
+    # # create certificate chain file by combining root-ca and signing-ca
+    # with open(PKI_DIR / 'cert_chain.crt', 'w') as d:
+    #     with open(PKI_DIR / 'ca/root-ca.crt') as s:
+    #         d.write(s.read())
+    #     with open(PKI_DIR / 'ca/signing-ca.crt') as s:
+    #         d.write(s.read())
 
     echo('\nDone.')
 

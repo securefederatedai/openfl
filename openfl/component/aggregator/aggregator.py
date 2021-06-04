@@ -205,12 +205,15 @@ class Aggregator:
         # match collaborator_common_name and be in authorized_cols
         # FIXME: '' instead of None is just for protobuf compatibility.
         #  Cleaner solution?
+        print('!',cert_common_name ,'!',self.single_col_cert_common_name,'!',collaborator_common_name ,'!',self.authorized_cols)
         if self.single_col_cert_common_name == '':
+            print(1)
             return (cert_common_name == collaborator_common_name
                     and collaborator_common_name in self.authorized_cols)
         # otherwise, common_name must be in whitelist and
         # collaborator_common_name must be in authorized_cols
         else:
+            print(2)
             return (cert_common_name == self.single_col_cert_common_name
                     and collaborator_common_name in self.authorized_cols)
 
