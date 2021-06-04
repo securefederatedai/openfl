@@ -3,8 +3,6 @@
 """Plan module."""
 
 from logging import getLogger
-from pathlib import Path
-from socket import getfqdn
 
 from click import echo
 from click import group

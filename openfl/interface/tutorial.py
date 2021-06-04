@@ -3,9 +3,6 @@
 """Tutorial module."""
 
 from logging import getLogger
-from os import environ
-from subprocess import check_call
-from sys import executable
 
 from click import group
 from click import option

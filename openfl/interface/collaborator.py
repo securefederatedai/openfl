@@ -3,7 +3,6 @@
 """Collaborator module."""
 
 from logging import getLogger
-from pathlib import Path
 
 from click import echo
 from click import group
