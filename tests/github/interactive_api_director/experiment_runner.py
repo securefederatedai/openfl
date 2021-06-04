@@ -1,6 +1,5 @@
 import os
 import logging
-import sys
 import shutil
 import subprocess
 import typing
@@ -12,11 +11,8 @@ from rich.logging import RichHandler
 
 root = logging.getLogger()
 root.setLevel(logging.INFO)
-# handler = logging.StreamHandler(sys.stdout)
 console = Console(width=160)
 handler = RichHandler(console=console)
-# basicConfig(level=logging.DEBUG, format='%(message)s',
-#             datefmt='[%X]', handlers=[handler])
 formatter = logging.Formatter(
     "[%(asctime)s][%(name)s][%(levelname)s] - %(message)s"
 )
@@ -110,7 +106,7 @@ def run_federation(shards: typing.Dict[str, Shard], director_path: str):
     running_processes.append(p)
     for collaborator_path, shard in shards.items():
         p = subprocess.Popen(
-            f'fx collaborator-service start '
+            f'fx collaborator-manager start '
             f'-n {shard.shard_name} -d {shard.director_uri} -p {shard.data_path}',
             shell=True,
             cwd=os.path.join(collaborator_path)

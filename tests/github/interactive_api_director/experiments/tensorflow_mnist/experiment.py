@@ -7,11 +7,11 @@ import tensorflow as tf
 from openfl.interface.interactive_api.experiment import ModelInterface, FLExperiment
 from openfl.interface.interactive_api.federation import Federation
 # from openfl.services.tests.experiment_runner import run_experiment
-from openfl.services.tests.experiment_runner import run_federation
-from openfl.services.tests.experiment_runner import stop_federation
-from openfl.services.tests.experiment_runner import Shard
-from openfl.services.tests.experiment_runner import create_federation
-from openfl.services.director_client import DirectorClient
+from tests.github.interactive_api_director.experiment_runner import run_federation
+from tests.github.interactive_api_director.experiment_runner import stop_federation
+from tests.github.interactive_api_director.experiment_runner import Shard
+from tests.github.interactive_api_director.experiment_runner import create_federation
+from openfl.transport.grpc.director_client import DirectorClient
 from tests.github.interactive_api.experiments.tensorflow_mnist.settings import model, optimizer, X_train, y_train, X_valid, y_valid, batch_size
 from tests.github.interactive_api.experiments.tensorflow_mnist.dataset import FedDataset
 from tests.github.interactive_api.experiments.tensorflow_mnist.tasks import train, validate, task_interface
@@ -114,7 +114,7 @@ input('Press Enter to run second experiment')
 
 # Second experiment
 
-from openfl.services.tests.experiments.pytorch_kvasir_unet.experiment import (
+from tests.github.interactive_api_director.experiments.pytorch_kvasir_unet.experiment import (
     arch_path, validate, fed_dataset, fl_experiment, model_interface, initial_model)
 
 resp = director_client.set_new_experiment('pytorch_kvasir_unet', col_names, arch_path)

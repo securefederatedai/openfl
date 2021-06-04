@@ -5,14 +5,14 @@ import asyncio
 from pathlib import Path
 from collections import defaultdict
 
-from openfl.protocols import preparations_pb2
-from openfl.protocols import preparations_pb2_grpc
+from openfl.protocols import director_pb2
+from openfl.protocols import director_pb2_grpc
 from openfl.federated import Plan
 
 logger = logging.getLogger(__name__)
 
 
-class Director(preparations_pb2_grpc.FederationDirectorServicer):
+class Director(director_pb2_grpc.FederationDirectorServicer):
 
     def __init__(self, sample_shape: list, target_shape: list) -> None:
         # TODO: add working directory
@@ -27,7 +27,7 @@ class Director(preparations_pb2_grpc.FederationDirectorServicer):
         self.aggregator_task = None  # TODO: add check if exists and wait on terminate
 
     async def AcknowledgeShard(self, shard_info, context):
-        reply = preparations_pb2.ShardAcknowledgement(accepted=False)
+        reply = director_pb2.ShardAcknowledgement(accepted=False)
         # If dataset do not match the data interface of the problem
         if (self.sample_shape != shard_info.sample_shape) or \
                 (self.target_shape != shard_info.target_shape):
@@ -60,7 +60,7 @@ class Director(preparations_pb2_grpc.FederationDirectorServicer):
         future = self.executor.submit(self._run_aggregator)
         self.aggregator_task = future
 
-        return preparations_pb2.Response(accepted=True)
+        return director_pb2.Response(accepted=True)
 
     async def GetExperimentData(self, request, context):
         # experiment_data = preparations_pb2.ExperimentData()
@@ -76,7 +76,7 @@ class Director(preparations_pb2_grpc.FederationDirectorServicer):
         for i in range(0, len(content), max_buffer_size):
             chunk = content[i:i + max_buffer_size]
             logger.info(f'Send {len(chunk)} bytes')
-            yield preparations_pb2.ExperimentData(size=len(chunk), npbytes=chunk)
+            yield director_pb2.ExperimentData(size=len(chunk), npbytes=chunk)
 
     async def WaitExperiment(self, request_iterator, context):
         logger.info('Request WaitExperiment has got!')
@@ -86,11 +86,11 @@ class Director(preparations_pb2_grpc.FederationDirectorServicer):
         experiment_name = await queue.get()
         logger.info(f'Experiment {experiment_name} was prepared')
 
-        yield preparations_pb2.WaitExperimentResponse(experiment_name=experiment_name)
+        yield director_pb2.WaitExperimentResponse(experiment_name=experiment_name)
 
     async def GetShardsInfo(self, request, context):
         logger.info('Request GetShardsInfo has got!')
-        resp = preparations_pb2.ShardInfo(
+        resp = director_pb2.ShardInfo(
             sample_shape=self.sample_shape,
             target_shape=self.target_shape
         )
@@ -112,8 +112,8 @@ class Director(preparations_pb2_grpc.FederationDirectorServicer):
 async def serve(*args, **kwargs):
     logging.basicConfig()
     server = aio.server()
-    preparations_pb2_grpc.add_FederationDirectorServicer_to_server(Director(*args, **kwargs),
-                                                                   server)
+    director_pb2_grpc.add_FederationDirectorServicer_to_server(
+        Director(*args, **kwargs), server)
     listen_addr = '[::]:50051'
     server.add_insecure_port(listen_addr)
     logger.info(f'Starting server on {listen_addr}')

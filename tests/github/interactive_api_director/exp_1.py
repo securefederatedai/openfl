@@ -2,10 +2,10 @@ from time import sleep
 import getpass
 
 
-from openfl.services.tests.experiment_runner import run_federation
-from openfl.services.tests.experiment_runner import stop_federation
-from openfl.services.tests.experiment_runner import Shard
-from openfl.services.tests.experiment_runner import create_federation
+from tests.github.interactive_api_director.experiment_runner import run_federation
+from tests.github.interactive_api_director.experiment_runner import stop_federation
+from tests.github.interactive_api_director.experiment_runner import Shard
+from tests.github.interactive_api_director.experiment_runner import create_federation
 
 
 col_names = ['one', 'two']
