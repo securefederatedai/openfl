@@ -56,6 +56,8 @@ message GetExperimentDataRequest {
     string collaborator_name = 2;
 }
 
+message GetShardsInfoRequest {}
+
 service FederationDirector {
     rpc AcknowledgeShard (ShardInfo) returns (ShardAcknowledgement) {}
     // Shard owner could also provide some public data for tests
@@ -64,4 +66,5 @@ service FederationDirector {
 
     rpc SetNewExperiment (stream ExperimentInfo) returns (Response) {}
     rpc GetRegisterdShards (GetRegisterdShardsRequest) returns (GetRegisterdShardsResponse) {}
+    rpc GetShardsInfo (GetShardsInfoRequest) returns (ShardInfo) {}
 }
