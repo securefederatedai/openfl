@@ -7,12 +7,6 @@ import numpy as np
 
 import openfl.native as fx
 
-import tensorflow as tf
-import tensorflow.keras as ke
-
-from tensorflow.keras import Sequential
-from tensorflow.keras.layers import Conv2D, Flatten, Dense
-
 
 def one_hot(labels, classes):
     """
@@ -47,6 +41,11 @@ def build_model(input_shape,
         tensorflow.python.keras.engine.sequential.Sequential: The model defined in Keras
 
     """
+    import tensorflow as tf # NOQA
+    import tensorflow.keras as ke # NOQA
+
+    from tensorflow.keras import Sequential # NOQA
+    from tensorflow.keras.layers import Conv2D, Flatten, Dense # NOQA
     config = tf.compat.v1.ConfigProto()
     config.gpu_options.allow_growth = True
     config.intra_op_parallelism_threads = 112
@@ -84,9 +83,8 @@ def build_model(input_shape,
     return model
 
 
-fx.init('keras_cnn_mnist')
-
 if __name__ == '__main__':
+    fx.init('keras_cnn_mnist')
     from openfl.federated import FederatedModel, FederatedDataSet
     from tensorflow.python.keras.utils.data_utils import get_file
 
