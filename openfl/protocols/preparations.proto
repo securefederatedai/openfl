@@ -14,8 +14,8 @@ message ShardInfo {
     string shard_description = 2;
     uint64 n_samples = 3;
     // We just pass numpy shapes
-    uint32 sample_shape = 4;
-    uint32 target_shape = 5;
+    repeated string sample_shape = 4;
+    repeated string target_shape = 5;
 }
 
 message ShardAcknowledgement {

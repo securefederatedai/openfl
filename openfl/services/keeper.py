@@ -38,7 +38,7 @@ class CollaboratorService:
         echo(f'Data = {plan.cols_data_paths}')
         logger.info('🧿 Starting a Collaborator Service.')
 
-        col = plan.get_collaborator(self.name)  # pass shard descriptor
+        col = plan.get_collaborator(self.name, shard_descriptor=self.shard_descriptor)
         col.run()
         os.chdir(cwd)
 
