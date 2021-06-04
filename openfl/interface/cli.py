@@ -3,10 +3,8 @@
 # SPDX-License-Identifier: Apache-2.0
 """CLI module."""
 
-from click import Group, command, argument, group, clear
+from click import Group, command, argument, group
 from click import echo, option, pass_context, style
-from sys import argv
-from pathlib import Path
 
 
 def setup_logging(level='info'):
@@ -59,6 +57,7 @@ class CLI(Group):
 
     def format_help(self, ctx, formatter):
         """Dislpay user-friendly help."""
+        show_header()
         uses = [
             f'{ctx.command_path}',
             '[options]',
@@ -67,8 +66,16 @@ class CLI(Group):
             '[args]'
         ]
 
-        formatter.write(style(
-            'CORRECT USAGE\n\n', bold=True, fg='bright_black'))
+        formatter.write(style('BASH COMPLETE ACTIVATION\n\n', bold=True, fg='bright_black'))
+        formatter.write(
+            'Run in terminal:\n'
+            '   _FX_COMPLETE=bash_source fx > ~/.fx-autocomplete.sh\n'
+            '   source ~/.fx-autocomplete.sh\n'
+            'If ~/.fx-autocomplete.sh has already exist:\n'
+            '   source ~/.fx-autocomplete.sh\n\n'
+        )
+
+        formatter.write(style('CORRECT USAGE\n\n', bold=True, fg='bright_black'))
         formatter.write(' '.join(uses) + '\n')
 
         opts = []
@@ -111,8 +118,9 @@ class CLI(Group):
 @pass_context
 def cli(context, log_level):
     """Command-line Interface."""
-    context.ensure_object(dict)
+    from sys import argv
 
+    context.ensure_object(dict)
     context.obj['log_level'] = log_level
     context.obj['fail'] = False
     context.obj['script'] = argv[0]
@@ -155,9 +163,17 @@ def error_handler(error):
     raise error
 
 
+def show_header():
+    """Show header."""
+    banner = 'Intel OpenFL - Secure Federated Learning at the Edge™'
+    echo(style(f'{banner:<80}', bold=True, bg='bright_blue'))
+    echo()
+
+
 def entry():
     """Entry point of the Command-Line Interface."""
     from importlib import import_module
+    from pathlib import Path
     from sys import path
 
     file = Path(__file__).resolve()
@@ -166,11 +182,6 @@ def entry():
 
     path.append(str(root))
     path.insert(0, str(work))
-
-    clear()
-    banner = 'Intel OpenFL - Secure Federated Learning at the Edge™'
-    echo(style(f'{banner:<80}', bold=True, bg='bright_blue'))
-    echo()
 
     # Setup logging immediately to suppress unnecessary warnings on import
     # This will be overridden later with user selected debugging level

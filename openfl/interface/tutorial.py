@@ -2,14 +2,9 @@
 # SPDX-License-Identifier: Apache-2.0
 """Tutorial module."""
 
-from sys import executable
-from subprocess import check_call
-from os import environ
 from logging import getLogger
 
 from click import group, option, pass_context
-
-from openfl.interface.cli_helper import TUTORIALS
 
 logger = getLogger(__name__)
 
@@ -29,6 +24,12 @@ def tutorial(context):
         help='The port the notebook server will listen on')
 def start(context, ip, port):
     """Start the Jupyter notebook from the tutorials directory."""
+    from os import environ
+    from subprocess import check_call
+    from sys import executable
+
+    from openfl.interface.cli_helper import TUTORIALS
+
     if 'VIRTUAL_ENV' in environ:
         venv = environ['VIRTUAL_ENV'].split('/')[-1]
         check_call([

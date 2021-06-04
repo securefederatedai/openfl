@@ -4,14 +4,10 @@
 
 from socket import getfqdn
 from logging import getLogger
-from pathlib import Path
+
 from click import Path as ClickPath
 from click import group, option, pass_context
 from click import echo, style
-
-from openfl.federated import Plan
-from openfl.interface.cli_helper import PKI_DIR
-
 
 logger = getLogger(__name__)
 
@@ -36,6 +32,10 @@ def aggregator(context):
         help='Enable Intel SGX Enclave', is_flag=True, default=False)
 def start_(context, plan, authorized_cols, secure):
     """Start the aggregator service."""
+    from pathlib import Path
+
+    from openfl.federated import Plan
+
     plan = Plan.Parse(plan_config_path=Path(plan),
                       cols_config_path=Path(authorized_cols))
 
@@ -57,6 +57,7 @@ def generate_cert_request(fqdn):
     """Create aggregator certificate key pair."""
     from openfl.cryptography.participant import generate_csr
     from openfl.cryptography.io import write_crt, write_key
+    from openfl.interface.cli_helper import PKI_DIR
 
     if fqdn is None:
         fqdn = getfqdn()
@@ -103,11 +104,14 @@ def _certify(fqdn, silent):
 
 def certify(fqdn, silent):
     """Sign/certify the aggregator certificate key pair."""
+    from pathlib import Path
+
+    from click import confirm
+
     from openfl.cryptography.ca import sign_certificate
     from openfl.cryptography.io import read_key, read_crt, read_csr
     from openfl.cryptography.io import write_crt
-
-    from click import confirm
+    from openfl.interface.cli_helper import PKI_DIR
 
     if fqdn is None:
         fqdn = getfqdn()
