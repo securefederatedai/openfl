@@ -340,7 +340,6 @@ def certify(collaborator_name, silent, request_pkg=False, import_=False):
 
         archive_type = 'zip'
         archive_name = f'agg_to_{file_name}_signed_cert'
-        # archiveFileName = archive_name + '.' + archive_type
 
         # Collaborator certificate signing request
         tmp_dir = join(mkdtemp(), 'openfl', archive_name)

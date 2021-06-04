@@ -164,11 +164,6 @@ class Plan(object):
         Returns:
             A Python object
         """
-        # from sys import path
-
-        # for x in path:
-        #     Plan.logger.info(f'sys.path: {x}')
-
         class_name = splitext(template)[1].strip('.')
         module_path = splitext(template)[0]
 
@@ -478,11 +473,6 @@ openfl.component.aggregation_functions.AggregationFunctionInterface
 
     def interactive_api_get_server(self, tensor_dict, chain, certificate, private_key):
         """Get gRPC server of the aggregator instance."""
-        # common_name = self.config['network'][SETTINGS]['agg_addr'].lower()
-        # chain = 'cert/cert_chain.crt'
-        # certificate = f'cert/server/agg_{common_name}.crt'
-        # private_key = f'cert/server/agg_{common_name}.key'
-
         server_args = self.config['network'][SETTINGS]
 
         # patch certificates

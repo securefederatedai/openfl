@@ -69,7 +69,6 @@ class StaticGroupedAssigner(Assigner):
                 i: [] for i in range(self.rounds)
             }
 
-        # col_list_size = len(self.authorized_cols)
         for group in self.task_groups:
             group_col_list = group['collaborators']
             self.task_group_collaborators[group['name']] = group_col_list

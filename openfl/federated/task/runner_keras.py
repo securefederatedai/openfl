@@ -74,10 +74,6 @@ class KerasTaskRunner(TaskRunner):
         """
         if metrics is None:
             raise KeyError('metrics must be defined')
-        # if 'batch_size' in kwargs:
-        #     batch_size = kwargs['batch_size']
-        # else:
-        #     batch_size = self.data_loader.batch_size
 
         # rebuild model with updated weights
         self.rebuild_model(round_num, input_tensor_dict)
@@ -144,7 +140,6 @@ class KerasTaskRunner(TaskRunner):
         if self.opt_treatment == 'CONTINUE_GLOBAL':
             self.initialize_tensorkeys_for_functions(with_opt_vars=True)
 
-        # return global_tensor_dict, local_tensor_dict
         return global_tensor_dict, local_tensor_dict
 
     def train_iteration(self, batch_generator, metrics: list = None, **kwargs):
@@ -341,7 +336,6 @@ class KerasTaskRunner(TaskRunner):
             with_opt_vars (bool): True = include the optimizer's status.
         """
         if with_opt_vars is False:
-            # self._set_weights_dict(self.model, tensor_dict)
             # It is possible to pass in opt variables from the input tensor dict
             # This will make sure that the correct layers are updated
             model_weight_names = [weight.name for weight in self.model.weights]

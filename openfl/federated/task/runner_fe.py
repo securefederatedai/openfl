@@ -154,7 +154,6 @@ class FastEstimatorTaskRunner(TaskRunner):
         if self.opt_treatment == 'CONTINUE_GLOBAL':
             self.initialize_tensorkeys_for_functions(with_opt_vars=True)
 
-        # return global_tensor_dict, local_tensor_dict
         return global_tensor_dict, local_tensor_dict
 
     def validate(self, col_name, round_num, input_tensor_dict, **kwargs):

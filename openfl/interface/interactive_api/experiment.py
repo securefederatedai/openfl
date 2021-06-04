@@ -87,7 +87,6 @@ class FLExperiment:
 
         logging.basicConfig(level=logging.INFO)
         self.server.serve()
-        # return server
 
     @staticmethod
     def _export_python_env():
@@ -110,7 +109,6 @@ class FLExperiment:
 
         archive_type = 'zip'
         archive_name = basename(getcwd())
-        # archiveFileName = archive_name + '.' + archive_type
 
         tmp_dir = 'temp_' + archive_name
         makedirs(tmp_dir)

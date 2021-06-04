@@ -13,7 +13,12 @@ from .runner import TaskRunner
 
 
 class TensorFlowTaskRunner(TaskRunner):
-    """Base class for TensorFlow models in the Federated Learning solution."""
+    """
+    Base class for TensorFlow models in the Federated Learning solution.
+
+        child classes should have __init__ function signature (self, data, kwargs),
+        and should overwrite at least the following while defining the model
+    """
 
     def __init__(self, **kwargs):
         """
@@ -40,10 +45,6 @@ class TensorFlowTaskRunner(TaskRunner):
 
         # Required tensorkeys for all public functions in TensorFlowTaskRunner
         self.required_tensorkeys_for_function = {}
-
-        # child classes should have __init__ function signature
-        # (self, data, kwargs),
-        # and should overwrite at least the following while defining the model
 
         # tensorflow session
         self.sess = None
@@ -179,7 +180,6 @@ class TensorFlowTaskRunner(TaskRunner):
         if self.opt_treatment == 'CONTINUE_GLOBAL':
             self.initialize_tensorkeys_for_functions(with_opt_vars=True)
 
-        # return global_tensor_dict, local_tensor_dict
         return global_tensor_dict, local_tensor_dict
 
     def train_batch(self, X, y):

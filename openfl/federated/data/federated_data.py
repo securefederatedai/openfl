@@ -77,8 +77,6 @@ class FederatedDataSet(PyTorchDataLoader):
             list[FederatedDataSets]
                 A dataset slice for each collaborator
         """
-        # collaborator_datasets = []
-
         if shuffle:
             train_shuffle = np.random.choice(
                 len(self.X_train), len(self.X_train), replace=False
@@ -90,9 +88,6 @@ class FederatedDataSet(PyTorchDataLoader):
             )
             self.X_valid = self.X_valid[val_shuffle]
             self.y_valid = self.y_valid[val_shuffle]
-
-        # train_idx = 0
-        # val_idx = 0
 
         if equally:
             X_train = np.array_split(self.X_train, num_collaborators)

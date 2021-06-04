@@ -152,15 +152,13 @@ class TensorDB:
                 & (self.tensor_db['round'] == fl_round)
                 & (self.tensor_db['report'] == report)
                 & (self.tensor_db['tags'] == new_tags)]['nparray']
-            # print(raw_df)
             if len(raw_df) == 0:
                 tk = TensorKey(tensor_name, origin, report, fl_round, new_tags)
                 print(f'No results for collaborator {col}, TensorKey={tk}')
                 return None
             else:
                 agg_tensor_dict[col] = raw_df.iloc[0]
-            # agg_tensor_dict[col] = agg_tensor_dict[col]
-            # * collaborator_weight_dict[col]
+
         local_tensors = [LocalTensor(col_name=col_name,
                                      tensor=agg_tensor_dict[col_name],
                                      weight=collaborator_weight_dict[col_name])

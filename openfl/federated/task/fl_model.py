@@ -43,7 +43,6 @@ class FederatedModel(TaskRunner):
             from .runner_pt import PyTorchTaskRunner
             if optimizer is not None:
                 self.optimizer = optimizer(self.model.parameters())
-            # build_model.__init__()
             self.runner = PyTorchTaskRunner(**kwargs)
             if hasattr(self.model, 'forward'):
                 self.runner.forward = self.model.forward

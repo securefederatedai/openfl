@@ -94,16 +94,14 @@ class Aggregator:
             self._load_initial_tensors()  # keys are TensorKeys
 
         self.log_dir = f'logs/{self.uuid}_{self.federation_uuid}'
-        # TODO use native tensorboard
-        # self.tb_writer = tb.SummaryWriter(self.log_dir, flush_secs = 10)
 
         self.collaborator_tensor_results = {}  # {TensorKey: nparray}}
 
         # these enable getting all tensors for a task
-        # {TaskResultKey: list of TensorKeys}
-        self.collaborator_tasks_results = {}
-        # {TaskResultKey: data_size}
-        self.collaborator_task_weight = {}
+
+        self.collaborator_tasks_results = {}  # {TaskResultKey: list of TensorKeys}
+
+        self.collaborator_task_weight = {}  # {TaskResultKey: data_size}
 
     def _load_initial_tensors(self):
         """
@@ -345,7 +343,6 @@ class Aggregator:
         tensor_name, origin, round_number, report, tags = tensor_key
 
         if 'aggregated' in tags and 'delta' in tags and round_number != 0:
-            # send_model_deltas = True
             agg_tensor_key = TensorKey(
                 tensor_name, origin, round_number, report, ('aggregated',)
             )
@@ -455,10 +452,6 @@ class Aggregator:
             f'for {task_name}, round {round_number}'
         )
 
-        # TODO: do we drop these on the floor?
-        # if round_number != self.round_number:
-        #     return Acknowledgement(header=self.get_header(collaborator_name))
-
         task_key = TaskResultKey(task_name, collaborator_name, round_number)
 
         # we mustn't have results already
@@ -472,7 +465,6 @@ class Aggregator:
 
         # initialize the list of tensors that go with this task
         # Setting these incrementally is leading to missing values
-        # self.collaborator_tasks_results[task_key] = []
         task_results = []
 
         # go through the tensors and add them to the tensor dictionary and the

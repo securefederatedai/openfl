@@ -27,8 +27,8 @@ sys.path.insert(0, os.path.abspath('../'))
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-# import sphinx_rtd_theme
-# import sphinxcontrib.napoleon
+# import sphinx_rtd_theme # NOQA:E800
+# import sphinxcontrib.napoleon # NOQA:E800
 
 extensions = [
     'sphinx_rtd_theme',
@@ -45,9 +45,9 @@ extensions = [
 # This will replace the |variables| within the rST documents automatically
 
 PRODUCT_VERSION = 'Intel'
-# PRODUCT_VERSION = "OFL"
+# PRODUCT_VERSION = "OFL" # NOQA:E800
 
-# tags.add(PRODUCT_VERSION)
+# tags.add(PRODUCT_VERSION) # NOQA:E800
 
 if PRODUCT_VERSION == 'Intel':
 

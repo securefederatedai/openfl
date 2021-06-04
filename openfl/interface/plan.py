@@ -68,22 +68,10 @@ def initialize(context, plan_config, cols_config, data_config,
 
     collaborator_cname = list(plan.cols_data_paths)[0]
 
-    # else:
-
-    #     logger.info(f'Using data object of type {type(data)}
-    #     and feature shape {feature_shape}')
-    #     raise NotImplementedError()
-
-    # data_loader = plan.get_data_loader(collaborator_cname)
-    # task_runner = plan.get_task_runner(collaborator_cname)
-
     data_loader = plan.get_data_loader(collaborator_cname)
     task_runner = plan.get_task_runner(data_loader)
     tensor_pipe = plan.get_tensor_pipe()
 
-    # I believe there is no need for this line as task_runner has this variable
-    # initialized with empty dict tensor_dict_split_fn_kwargs =
-    # task_runner.tensor_dict_split_fn_kwargs or {}
     tensor_dict, holdout_params = split_tensor_dict_for_holdouts(
         logger,
         task_runner.get_tensor_dict(False),

@@ -361,7 +361,6 @@ def dockerize_(context, base_image, save):
 
     # Specify the Dockerfile.workspace loaction
     openfl_docker_dir = os.path.join(SITEPACKS, 'openfl-docker')
-    # dockerfile_workspace = os.path.join(openfl_docker_dir, 'Dockerfile.workspace')
     dockerfile_workspace = 'Dockerfile.workspace'
     # Apparently, docker's python package does not support
     # scenarios when the dockerfile is placed outside the build context
@@ -379,9 +378,6 @@ def dockerize_(context, base_image, save):
 
     client = docker.from_env(timeout=3600)
     try:
-        # Should we remove an old image tar before building?
-        # Check if the base image is present
-        # assert f'{base_image}:latest' in str(client.images.list())
         echo('Building the Docker image')
         client.images.build(
             path=str(workspace_path),

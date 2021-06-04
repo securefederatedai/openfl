@@ -48,13 +48,6 @@ class TensorFlowCNN(KerasTaskRunner):
         """
         print(tf.config.threading.get_intra_op_parallelism_threads())
         print(tf.config.threading.get_inter_op_parallelism_threads())
-        # physical_devices = tf.config.list_physical_devices('GPU')
-        # try:
-        #      tf.config.experimental.set_memory_growth(physical_devices[0], True)
-        # except:
-        #      # Invalid device or cannot modify virtual devices once initialized.
-        #        pass
-
         # ## Define Model
         #
         # Convolutional neural network model
