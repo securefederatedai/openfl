@@ -55,7 +55,7 @@ To use the latest official |productName| release, simply run:
 
 .. code-block:: console
 
-   $ docker pull openfl
+   $ docker pull intel/openfl
    
 Or if you would prefer to build an image from a specific commit or branch, run the following commands:
 

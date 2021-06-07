@@ -2,17 +2,10 @@
 # SPDX-License-Identifier: Apache-2.0
 """Workspace module."""
 
-from pathlib import Path
+
 from click import Choice, Path as ClickPath
 from click import group, option, pass_context
 from click import echo, confirm
-from subprocess import check_call
-from sys import executable
-from shutil import copyfile, ignore_patterns
-
-from openfl.interface.cli_helper import copytree, print_tree
-from openfl.interface.cli_helper import WORKSPACE, PKI_DIR
-from openfl.interface.cli_helper import SITEPACKS, OPENFL_USERDIR
 
 
 @group()
@@ -24,6 +17,11 @@ def workspace(context):
 
 def create_dirs(prefix):
     """Create workspace directories."""
+    from shutil import copyfile
+
+    from openfl.interface.cli_helper import copytree
+    from openfl.interface.cli_helper import WORKSPACE
+
     echo('Creating Workspace Directories')
 
     (prefix / 'cert').mkdir(parents=True, exist_ok=True)  # certifications
@@ -42,6 +40,11 @@ def create_dirs(prefix):
 
 def create_temp(prefix, template):
     """Create workspace templates."""
+    from shutil import ignore_patterns
+
+    from openfl.interface.cli_helper import copytree
+    from openfl.interface.cli_helper import WORKSPACE
+
     echo('Creating Workspace Templates')
 
     copytree(src=WORKSPACE / template, dst=prefix, dirs_exist_ok=True,
@@ -50,6 +53,8 @@ def create_temp(prefix, template):
 
 def get_templates():
     """Grab the default templates from the distribution."""
+    from openfl.interface.cli_helper import WORKSPACE
+
     return [d.name for d in WORKSPACE.glob('*') if d.is_dir()
             and d.name not in ['__pycache__', 'workspace']]
 
@@ -66,6 +71,13 @@ def create_(prefix, template):
 def create(prefix, template):
     """Create federated learning workspace."""
     from os.path import isfile
+    from pathlib import Path
+    from subprocess import check_call
+    from sys import executable
+
+    from openfl.interface.cli_helper import print_tree
+    from openfl.interface.cli_helper import OPENFL_USERDIR
+
     if not OPENFL_USERDIR.exists():
         OPENFL_USERDIR.mkdir()
 
@@ -99,6 +111,8 @@ def export_():
     from os import getcwd, makedirs
     from os.path import basename, join
     from plan import FreezePlan
+
+    from openfl.interface.cli_helper import WORKSPACE
 
     # TODO: Does this need to freeze all plans?
     planFile = 'plan/plan.yaml'
@@ -157,9 +171,11 @@ def export_():
         type=ClickPath(exists=True))
 def import_(archive):
     """Import federated learning workspace."""
-    from shutil import unpack_archive
     from os.path import isfile, basename
     from os import chdir
+    from shutil import unpack_archive
+    from subprocess import check_call
+    from sys import executable
 
     dirPath = basename(archive).split('.')[0]
     unpack_archive(archive, extract_dir=dirPath)
@@ -188,6 +204,8 @@ def certify():
     """Create certificate authority for federation."""
     from openfl.cryptography.ca import generate_root_cert, generate_signing_csr, sign_certificate
     from cryptography.hazmat.primitives import serialization
+
+    from openfl.interface.cli_helper import PKI_DIR
 
     echo('Setting Up Certificate Authority...\n')
 
@@ -334,6 +352,9 @@ def dockerize_(context, base_image, save):
     import os
     import sys
     import docker
+    from shutil import copyfile
+
+    from openfl.interface.cli_helper import SITEPACKS
 
     # Specify the Dockerfile.workspace loaction
     openfl_docker_dir = os.path.join(SITEPACKS, 'openfl-docker')
