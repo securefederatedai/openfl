@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 """CLI module."""
 
-from click import Group, command, argument, group, clear
+from click import Group, command, argument, group
 from click import echo, option, pass_context, style
 
 from openfl.utilities import add_log_level
