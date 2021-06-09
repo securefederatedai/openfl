@@ -2,12 +2,15 @@
 # SPDX-License-Identifier: Apache-2.0
 """Aggregator module."""
 
-from socket import getfqdn
 from logging import getLogger
+from socket import getfqdn
 
+from click import echo
+from click import group
+from click import option
+from click import pass_context
 from click import Path as ClickPath
-from click import group, option, pass_context
-from click import echo, style
+from click import style
 
 logger = getLogger(__name__)
 
@@ -36,7 +39,7 @@ def start_(context, plan, authorized_cols, secure):
 
     from openfl.federated import Plan
 
-    plan = Plan.Parse(plan_config_path=Path(plan),
+    plan = Plan.parse(plan_config_path=Path(plan),
                       cols_config_path=Path(authorized_cols))
 
     logger.info('🧿 Starting the Aggregator Service.')
@@ -82,7 +85,8 @@ def generate_cert_request(fqdn):
     write_key(server_private_key, PKI_DIR / 'server' / f'{file_name}.key')
 
 
-def findCertificateName(file_name):
+# TODO: function not used
+def find_certificate_name(file_name):
     """Search the CRT for the actual aggregator name."""
     # This loop looks for the collaborator name in the key
     with open(file_name, 'r') as f:
@@ -95,7 +99,7 @@ def findCertificateName(file_name):
 
 @aggregator.command(name='certify')
 @option('-n', '--fqdn',
-        help='The fully qualified domain name of aggregator node [{getfqdn()}]',
+        help=f'The fully qualified domain name of aggregator node [{getfqdn()}]',
         default=getfqdn())
 @option('-s', '--silent', help='Do not prompt', is_flag=True)
 def _certify(fqdn, silent):
@@ -159,7 +163,7 @@ def certify(fqdn, silent):
 
     else:
 
-        if confirm("Do you want to sign this certificate?"):
+        if confirm('Do you want to sign this certificate?'):
 
             echo(' Signing AGGREGATOR certificate')
             signed_agg_cert = sign_certificate(csr, signing_key, signing_crt.subject)

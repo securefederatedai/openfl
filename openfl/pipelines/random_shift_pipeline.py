@@ -5,8 +5,9 @@
 
 import numpy as np
 
-from .pipeline import TransformationPipeline, Transformer
 from .pipeline import Float32NumpyArrayToBytes
+from .pipeline import TransformationPipeline
+from .pipeline import Transformer
 
 
 class RandomShiftTransformer(Transformer):

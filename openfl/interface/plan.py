@@ -4,9 +4,11 @@
 
 from logging import getLogger
 
-from click import Path as ClickPath
-from click import group, option, pass_context
 from click import echo
+from click import group
+from click import option
+from click import pass_context
+from click import Path as ClickPath
 
 logger = getLogger(__name__)
 
@@ -48,7 +50,7 @@ def initialize(context, plan_config, cols_config, data_config,
     from openfl.protocols import utils
     from openfl.utilities import split_tensor_dict_for_holdouts
 
-    plan = Plan.Parse(plan_config_path=Path(plan_config),
+    plan = Plan.parse(plan_config_path=Path(plan_config),
                       cols_config_path=Path(cols_config),
                       data_config_path=Path(data_config))
 
@@ -66,22 +68,10 @@ def initialize(context, plan_config, cols_config, data_config,
 
     collaborator_cname = list(plan.cols_data_paths)[0]
 
-    # else:
-
-    #     logger.info(f'Using data object of type {type(data)}
-    #     and feature shape {feature_shape}')
-    #     raise NotImplementedError()
-
-    # data_loader = plan.get_data_loader(collaborator_cname)
-    # task_runner = plan.get_task_runner(collaborator_cname)
-
     data_loader = plan.get_data_loader(collaborator_cname)
     task_runner = plan.get_task_runner(data_loader)
     tensor_pipe = plan.get_tensor_pipe()
 
-    # I believe there is no need for this line as task_runner has this variable
-    # initialized with empty dict tensor_dict_split_fn_kwargs =
-    # task_runner.tensor_dict_split_fn_kwargs or {}
     tensor_dict, holdout_params = split_tensor_dict_for_holdouts(
         logger,
         task_runner.get_tensor_dict(False),
@@ -100,7 +90,7 @@ def initialize(context, plan_config, cols_config, data_config,
 
     utils.dump_proto(model_proto=model_snap, fpath=init_state_path)
 
-    plan_origin = Plan.Parse(Path(plan_config), resolve=False).config
+    plan_origin = Plan.parse(Path(plan_config), resolve=False).config
 
     if (plan_origin['network']['settings']['agg_addr'] == 'auto'
             or aggregator_address):
@@ -109,28 +99,29 @@ def initialize(context, plan_config, cols_config, data_config,
         plan_origin['network']['settings']['agg_addr'] =\
             aggregator_address or getfqdn()
 
-        logger.warn(f"Patching Aggregator Addr in Plan"
+        logger.warn(f'Patching Aggregator Addr in Plan'
                     f" 🠆 {plan_origin['network']['settings']['agg_addr']}")
 
-        Plan.Dump(Path(plan_config), plan_origin)
+        Plan.dump(Path(plan_config), plan_origin)
 
     plan.config = plan_origin
 
     # Record that plan with this hash has been initialized
     if 'plans' not in context.obj:
         context.obj['plans'] = []
-    context.obj['plans'].append(f"{Path(plan_config).stem}_{plan.hash[:8]}")
+    context.obj['plans'].append(f'{Path(plan_config).stem}_{plan.hash[:8]}')
     logger.info(f"{context.obj['plans']}")
 
 
-def FreezePlan(plan_config):
+# TODO: looks like Plan.method
+def freeze_plan(plan_config):
     """Dump the plan to YAML file."""
     from pathlib import Path
 
     from openfl.federated import Plan
 
     plan = Plan()
-    plan.config = Plan.Parse(Path(plan_config), resolve=False).config
+    plan.config = Plan.parse(Path(plan_config), resolve=False).config
 
     init_state_path = plan.config['aggregator']['settings']['init_state_path']
 
@@ -139,7 +130,7 @@ def FreezePlan(plan_config):
                     " initialize' before proceeding")
         return
 
-    Plan.Dump(Path(plan_config), plan.config, freeze=True)
+    Plan.dump(Path(plan_config), plan.config, freeze=True)
 
 
 @plan.command(name='freeze')
@@ -154,7 +145,7 @@ def freeze(context, plan_config):
     Create a new plan file that embeds its hash in the file name
     (plan.yaml -> plan_{hash}.yaml) and changes the permissions to read only
     """
-    FreezePlan(plan_config)
+    freeze_plan(plan_config)
 
 
 def switch_plan(name):
@@ -248,5 +239,5 @@ def print_():
     """Print the current plan."""
     from openfl.interface.cli_helper import get_workspace_parameter
 
-    current_plan_name = get_workspace_parameter("current_plan_name")
+    current_plan_name = get_workspace_parameter('current_plan_name')
     echo(f'The current plan is: {current_plan_name}')

@@ -3,18 +3,20 @@
 
 """You may copy this file as the starting point of your own model."""
 
-import numpy as np
+from collections.abc import Iterable
+from hashlib import sha384
 from logging import getLogger
+from os import makedirs
+from os import path
+from urllib.request import urlretrieve
+from zipfile import ZipFile
+
+import numpy as np
+import torch
+from torch.utils.data import random_split
 from torchvision.datasets import ImageFolder
 from torchvision.transforms import ToTensor
-from torch.utils.data import random_split
-from urllib.request import urlretrieve
-from hashlib import sha384
-from os import path, makedirs
-from zipfile import ZipFile
 from tqdm import tqdm
-import torch
-from collections.abc import Iterable
 
 logger = getLogger(__name__)
 
@@ -22,10 +24,10 @@ logger = getLogger(__name__)
 class HistologyDataset(ImageFolder):
     """Colorectal Histology Dataset."""
 
-    URL = "https://zenodo.org/record/53169/files/Kather_" \
-          "texture_2016_image_tiles_5000.zip?download=1"
-    FILENAME = "Kather_texture_2016_image_tiles_5000.zip"
-    FOLDER_NAME = "Kather_texture_2016_image_tiles_5000"
+    URL = 'https://zenodo.org/record/53169/files/Kather_' \
+          'texture_2016_image_tiles_5000.zip?download=1'
+    FILENAME = 'Kather_texture_2016_image_tiles_5000.zip'
+    FOLDER_NAME = 'Kather_texture_2016_image_tiles_5000'
     ZIP_SHA384 = '7d86abe1d04e68b77c055820c2a4c582a1d25d2983e38ab724e'\
         'ac75affce8b7cb2cbf5ba68848dcfd9d84005d87d6790'
     DEFAULT_PATH = path.join(path.expanduser('~'), '.openfl', 'data')

@@ -67,9 +67,9 @@ setup(
     ],
     python_requires='>=3.6, <3.9',
     project_urls={
-        "Bug Tracker": "https://github.com/intel/openfl/issues",
-        "Documentation": "https://openfl.readthedocs.io/en/stable/",
-        "Source Code": "https://github.com/intel/openfl",
+        'Bug Tracker': 'https://github.com/intel/openfl/issues',
+        'Documentation': 'https://openfl.readthedocs.io/en/stable/',
+        'Source Code': 'https://github.com/intel/openfl',
     },
     classifiers=[
         'Environment :: Console',

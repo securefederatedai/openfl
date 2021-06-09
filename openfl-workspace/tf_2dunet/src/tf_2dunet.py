@@ -7,7 +7,6 @@ import tensorflow.compat.v1 as tf
 
 from openfl.federated import TensorFlowTaskRunner
 
-
 tf.disable_v2_behavior()
 
 
@@ -63,7 +62,6 @@ class TensorFlow2DUNet(TensorFlowTaskRunner):
 
         self.tvars = tf.trainable_variables()
 
-        # self.optimizer = tf.train.AdamOptimizer(4e-5, beta1=0.9, beta2=0.999)
         self.optimizer = tf.train.RMSPropOptimizer(1e-5)
 
         self.gvs = self.optimizer.compute_gradients(self.loss, self.tvars)
@@ -149,7 +147,7 @@ def define_model(input_tensor,
                  activation_function='relu',
                  seed=0xFEEDFACE,
                  depth=5,
-                 dropout_at=[2, 3],
+                 dropout_at=None,
                  initial_filters=32,
                  batch_norm=True,
                  **kwargs):
@@ -173,6 +171,8 @@ def define_model(input_tensor,
         **kwargs: Additional parameters to pass to the function
 
     """
+    if dropout_at is None:
+        dropout_at = [2, 3]
     # Set keras learning phase to train
     tf.keras.backend.set_learning_phase(True)
 
@@ -186,27 +186,31 @@ def define_model(input_tensor,
     elif activation_function == 'leakyrelu':
         activation = tf.nn.leaky_relu
 
-    params = dict(kernel_size=(3, 3), activation=activation,
-                  padding='same', data_format=data_format,
-                  kernel_initializer=tf.keras.initializers.he_uniform(seed=seed))
+    params = {
+        'activation': activation,
+        'data_format': data_format,
+        'kernel_initializer': tf.keras.initializers.he_uniform(seed=seed),
+        'kernel_size': (3, 3),
+        'padding': 'same',
+    }
 
     convb_layers = {}
 
     net = inputs
     filters = initial_filters
     for i in range(depth):
-        name = 'conv{}a'.format(i + 1)
+        name = f'conv{i + 1}a'
         net = tf.keras.layers.Conv2D(name=name, filters=filters, **params)(net)
         if i in dropout_at:
             net = tf.keras.layers.Dropout(dropout)(net)
-        name = 'conv{}b'.format(i + 1)
+        name = f'conv{i + 1}b'
         net = tf.keras.layers.Conv2D(name=name, filters=filters, **params)(net)
         if batch_norm:
             net = tf.keras.layers.BatchNormalization()(net)
         convb_layers[name] = net
         # only pool if not last level
         if i != depth - 1:
-            name = 'pool{}'.format(i + 1)
+            name = f'pool{i + 1}'
             net = tf.keras.layers.MaxPooling2D(name=name, pool_size=(2, 2))(net)
             filters *= 2
 
@@ -215,20 +219,20 @@ def define_model(input_tensor,
     for i in range(depth - 1):
         if use_upsampling:
             up = tf.keras.layers.UpSampling2D(
-                name='up{}'.format(depth + i + 1), size=(2, 2))(net)
+                name=f'up{depth + i + 1}', size=(2, 2))(net)
         else:
             up = tf.keras.layers.Conv2DTranspose(
                 name='transConv6', filters=filters, data_format=data_format,
                 kernel_size=(2, 2), strides=(2, 2), padding='same')(net)
         net = tf.keras.layers.concatenate(
-            [up, convb_layers['conv{}b'.format(depth - i - 1)]],
+            [up, convb_layers[f'conv{depth - i - 1}b']],
             axis=concat_axis
         )
         net = tf.keras.layers.Conv2D(
-            name='conv{}a'.format(depth + i + 1),
+            name=f'conv{depth + i + 1}a',
             filters=filters, **params)(net)
         net = tf.keras.layers.Conv2D(
-            name='conv{}b'.format(depth + i + 1),
+            name=f'conv{depth + i + 1}b',
             filters=filters, **params)(net)
         filters //= 2
 

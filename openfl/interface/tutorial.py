@@ -4,7 +4,9 @@
 
 from logging import getLogger
 
-from click import group, option, pass_context
+from click import group
+from click import option
+from click import pass_context
 
 logger = getLogger(__name__)
 

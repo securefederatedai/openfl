@@ -3,6 +3,7 @@
 """Assigner tests module."""
 
 from unittest import mock
+
 import pytest
 
 from openfl.component.assigner import Assigner

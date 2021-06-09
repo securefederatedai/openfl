@@ -3,6 +3,7 @@
 """Dill serializer plugin."""
 
 import dill
+
 from .serializer_interface import Serializer
 
 
@@ -14,10 +15,10 @@ class DillSerializer(Serializer):
         super().__init__()
 
     @staticmethod
-    def serialize(object, filename):
+    def serialize(object_, filename):
         """Serialize an object and save to disk."""
         with open(filename, 'wb') as f:
-            dill.dump(object, f, recurse=True)
+            dill.dump(object_, f, recurse=True)
 
     @staticmethod
     def restore_object(filename):

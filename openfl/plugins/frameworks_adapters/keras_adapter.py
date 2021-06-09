@@ -33,9 +33,9 @@ class FrameworkAdapterPlugin(FrameworkAdapterPluginInterface):
         # Hotfix function
         def make_keras_picklable():
 
-            def __reduce__(self):
+            def __reduce__(self):  # NOQA:N807
                 model_metadata = saving_utils.model_metadata(self)
-                training_config = model_metadata.get("training_config", None)
+                training_config = model_metadata.get('training_config', None)
                 model = serialize(self)
                 weights = self.get_weights()
                 return (unpack, (model, training_config, weights))
