@@ -16,3 +16,20 @@ from .federation_pb2 import TensorResponse
 from .federation_pb2_grpc import add_AggregatorServicer_to_server
 from .federation_pb2_grpc import AggregatorServicer
 from .federation_pb2_grpc import AggregatorStub
+
+__all__ = [
+    'Acknowledgement',
+    'DataStream',
+    'MessageHeader',
+    'MetadataProto',
+    'ModelProto',
+    'NamedTensor',
+    'TaskResults',
+    'TasksRequest',
+    'TasksResponse',
+    'TensorRequest',
+    'TensorResponse',
+    'add_AggregatorServicer_to_server',
+    'AggregatorServicer',
+    'AggregatorStub',
+]
