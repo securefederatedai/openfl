@@ -71,6 +71,7 @@ class ShardDirectorClient:
                     raise Exception('Broken archive')
 
         shutil.unpack_archive(arch_name, experiment_name)
+        os.remove(arch_name)
 
     def _get_experiment_data(self):
         yield director_pb2.WaitExperimentRequest(collaborator_name=self.shard_name)
@@ -116,3 +117,7 @@ class DirectorClient:
     def get_shard_info(self):
         resp = self.stub.GetShardsInfo(director_pb2.GetShardsInfoRequest())
         return resp.sample_shape, resp.target_shape
+
+    def request_shard_registry(self):
+        resp = self.stub.GetRegisterdShards(director_pb2.GetRegisterdShardsRequest())
+        return resp.shard_info

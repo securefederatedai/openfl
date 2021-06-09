@@ -18,7 +18,7 @@ from openfl.utilities import split_tensor_dict_for_holdouts
 class FLExperiment:
     """Central class for FL experiment orchestration."""
 
-    def __init__(self, federation, serializer_plugin=None) -> None:
+    def __init__(self, federation, experiment_name='test', serializer_plugin=None) -> None:
         """
         Initialize an experiment inside a federation.
 
@@ -26,6 +26,7 @@ class FLExperiment:
         Information about the data on collaborators is contained on the federation level.
         """
         self.federation = federation
+        self.experiment_name = experiment_name
 
         if serializer_plugin is None:
             self.serializer_plugin = \
@@ -64,11 +65,9 @@ class FLExperiment:
         self._export_python_env()
 
         # Compress te workspace to restore it on collaborator
-        arch_path = self._pack_the_workspace()
+        self.arch_path = self._pack_the_workspace()
 
         # DO CERTIFICATES exchange
-
-        return arch_path
 
     def start_experiment(self, model_provider):
         """
@@ -84,12 +83,23 @@ class FLExperiment:
         initial_tensor_dict = self._get_initial_tensor_dict(model_provider)
         self.server = self.plan.interactive_api_get_server(
             initial_tensor_dict,
-            chain=self.federation.cert_chain,
-            certificate=self.federation.agg_certificate,
-            private_key=self.federation.agg_private_key)
+            chain=None,
+            certificate=None,
+            private_key=None)
 
         logging.basicConfig(level=logging.INFO)
+
+        # This is not good we ask directors_client directly
+        self.federation.dir_client.set_new_experiment(
+            name=self.experiment_name,
+            col_names=self.plan.authorized_cols,
+            arch_path=self.arch_path)
+
         self.server.serve()
+
+        # Remove the workspace archive
+        os.remove(self.arch_path)
+        del self.arch_path
 
     @staticmethod
     def _export_python_env():
@@ -361,14 +371,20 @@ class DataInterface:
         """Initialize DataLoader."""
         self.kwargs = kwargs
 
-    def set_shard_descriptor(self, shard_descriptor):
+    @property
+    def shard_descriptor(self):
+        return self._shard_descriptor
+
+    @shard_descriptor.setter
+    def shard_descriptor(self, shard_descriptor):
         """
         Describe per-collaborator procedures or sharding.
 
         This method will be called during a collaborator initialization.
         Local shard_descriptor  will be set by Envoy.
         """
-        self.shard_descriptor = shard_descriptor
+        self._shard_descriptor = shard_descriptor
+        raise NotImplementedError
 
     def get_train_loader(self, **kwargs):
         """Output of this method will be provided to tasks with optimizer in contract."""
