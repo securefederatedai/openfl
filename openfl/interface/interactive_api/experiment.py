@@ -153,9 +153,9 @@ class FLExperiment:
         # Change plan name to default one
         plan.name = 'plan.yaml'
 
-        plan.authorized_cols = list(self.federation.col_data_paths.keys())
+        # plan.authorized_cols = list(self.federation.col_data_paths.keys())
         # Network part of the plan
-        plan.config['network']['settings']['agg_addr'] = self.federation.fqdn
+        plan.config['network']['settings']['agg_addr'] = self.federation.director_node_fqdn
         plan.config['network']['settings']['disable_tls'] = self.federation.disable_tls
 
         # Aggregator part of the plan
@@ -361,7 +361,7 @@ class DataInterface:
         """Initialize DataLoader."""
         self.kwargs = kwargs
 
-    def _set_shard_descriptor(self, shard_descriptor):
+    def set_shard_descriptor(self, shard_descriptor):
         """
         Describe per-collaborator procedures or sharding.
 

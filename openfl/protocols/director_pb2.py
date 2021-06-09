@@ -11,6 +11,7 @@ from google.protobuf import symbol_database as _symbol_database
 _sym_db = _symbol_database.Default()
 
 
+import openfl.protocols.federation_pb2 as federation__pb2
 
 
 DESCRIPTOR = _descriptor.FileDescriptor(
@@ -19,8 +20,9 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   syntax='proto3',
   serialized_options=None,
   create_key=_descriptor._internal_create_key,
-  serialized_pb=b'\n\x0e\x64irector.proto\"U\n\x08NodeInfo\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0e\n\x06\x61\x64ress\x18\x02 \x01(\t\x12\x16\n\x0e\x63uda_available\x18\x03 \x01(\x08\x12\x13\n\x0bmemory_size\x18\x04 \x01(\r\"\x83\x01\n\tShardInfo\x12\x1c\n\tnode_info\x18\x01 \x01(\x0b\x32\t.NodeInfo\x12\x19\n\x11shard_description\x18\x02 \x01(\t\x12\x11\n\tn_samples\x18\x03 \x01(\x04\x12\x14\n\x0csample_shape\x18\x04 \x03(\t\x12\x14\n\x0ctarget_shape\x18\x05 \x03(\t\"(\n\x14ShardAcknowledgement\x12\x10\n\x08\x61\x63\x63\x65pted\x18\x01 \x01(\x08\"\x1c\n\x08Response\x12\x10\n\x08\x61\x63\x63\x65pted\x18\x01 \x01(\x08\"/\n\x0e\x45xperimentData\x12\x0c\n\x04size\x18\x01 \x01(\r\x12\x0f\n\x07npbytes\x18\x02 \x01(\x0c\"d\n\x0e\x45xperimentInfo\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x1a\n\x12\x63ollaborator_names\x18\x02 \x03(\t\x12(\n\x0f\x65xperiment_data\x18\x03 \x01(\x0b\x32\x0f.ExperimentData\"\x1b\n\x19GetRegisterdShardsRequest\"<\n\x1aGetRegisterdShardsResponse\x12\x1e\n\nshard_info\x18\x01 \x03(\x0b\x32\n.ShardInfo\"2\n\x15WaitExperimentRequest\x12\x19\n\x11\x63ollaborator_name\x18\x01 \x01(\t\"1\n\x16WaitExperimentResponse\x12\x17\n\x0f\x65xperiment_name\x18\x01 \x01(\t\"N\n\x18GetExperimentDataRequest\x12\x17\n\x0f\x65xperiment_name\x18\x01 \x01(\t\x12\x19\n\x11\x63ollaborator_name\x18\x02 \x01(\t\"\x16\n\x14GetShardsInfoRequest2\x96\x03\n\x12\x46\x65\x64\x65rationDirector\x12\x37\n\x10\x41\x63knowledgeShard\x12\n.ShardInfo\x1a\x15.ShardAcknowledgement\"\x00\x12G\n\x0eWaitExperiment\x12\x16.WaitExperimentRequest\x1a\x17.WaitExperimentResponse\"\x00(\x01\x30\x01\x12\x43\n\x11GetExperimentData\x12\x19.GetExperimentDataRequest\x1a\x0f.ExperimentData\"\x00\x30\x01\x12\x32\n\x10SetNewExperiment\x12\x0f.ExperimentInfo\x1a\t.Response\"\x00(\x01\x12O\n\x12GetRegisterdShards\x12\x1a.GetRegisterdShardsRequest\x1a\x1b.GetRegisterdShardsResponse\"\x00\x12\x34\n\rGetShardsInfo\x12\x15.GetShardsInfoRequest\x1a\n.ShardInfo\"\x00\x62\x06proto3'
-)
+  serialized_pb=b'\n\x0e\x64irector.proto\x1a\x10\x66\x65\x64\x65ration.proto\"U\n\x08NodeInfo\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0e\n\x06\x61\x64ress\x18\x02 \x01(\t\x12\x16\n\x0e\x63uda_available\x18\x03 \x01(\x08\x12\x13\n\x0bmemory_size\x18\x04 \x01(\r\"\x83\x01\n\tShardInfo\x12\x1c\n\tnode_info\x18\x01 \x01(\x0b\x32\t.NodeInfo\x12\x19\n\x11shard_description\x18\x02 \x01(\t\x12\x11\n\tn_samples\x18\x03 \x01(\x04\x12\x14\n\x0csample_shape\x18\x04 \x03(\t\x12\x14\n\x0ctarget_shape\x18\x05 \x03(\t\"(\n\x14ShardAcknowledgement\x12\x10\n\x08\x61\x63\x63\x65pted\x18\x01 \x01(\x08\"\x1c\n\x08Response\x12\x10\n\x08\x61\x63\x63\x65pted\x18\x01 \x01(\x08\"/\n\x0e\x45xperimentData\x12\x0c\n\x04size\x18\x01 \x01(\r\x12\x0f\n\x07npbytes\x18\x02 \x01(\x0c\"\x86\x01\n\x0e\x45xperimentInfo\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x1a\n\x12\x63ollaborator_names\x18\x02 \x03(\t\x12(\n\x0f\x65xperiment_data\x18\x03 \x01(\x0b\x32\x0f.ExperimentData\x12 \n\x0bmodel_proto\x18\x04 \x01(\x0b\x32\x0b.ModelProto\"\x1b\n\x19GetRegisterdShardsRequest\"<\n\x1aGetRegisterdShardsResponse\x12\x1e\n\nshard_info\x18\x01 \x03(\x0b\x32\n.ShardInfo\"2\n\x15WaitExperimentRequest\x12\x19\n\x11\x63ollaborator_name\x18\x01 \x01(\t\"1\n\x16WaitExperimentResponse\x12\x17\n\x0f\x65xperiment_name\x18\x01 \x01(\t\"N\n\x18GetExperimentDataRequest\x12\x17\n\x0f\x65xperiment_name\x18\x01 \x01(\t\x12\x19\n\x11\x63ollaborator_name\x18\x02 \x01(\t\"\x16\n\x14GetShardsInfoRequest2\x96\x03\n\x12\x46\x65\x64\x65rationDirector\x12\x37\n\x10\x41\x63knowledgeShard\x12\n.ShardInfo\x1a\x15.ShardAcknowledgement\"\x00\x12G\n\x0eWaitExperiment\x12\x16.WaitExperimentRequest\x1a\x17.WaitExperimentResponse\"\x00(\x01\x30\x01\x12\x43\n\x11GetExperimentData\x12\x19.GetExperimentDataRequest\x1a\x0f.ExperimentData\"\x00\x30\x01\x12\x32\n\x10SetNewExperiment\x12\x0f.ExperimentInfo\x1a\t.Response\"\x00(\x01\x12O\n\x12GetRegisterdShards\x12\x1a.GetRegisterdShardsRequest\x1a\x1b.GetRegisterdShardsResponse\"\x00\x12\x34\n\rGetShardsInfo\x12\x15.GetShardsInfoRequest\x1a\n.ShardInfo\"\x00\x62\x06proto3'
+  ,
+  dependencies=[federation__pb2.DESCRIPTOR,])
 
 
 
@@ -73,8 +75,8 @@ _NODEINFO = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=18,
-  serialized_end=103,
+  serialized_start=36,
+  serialized_end=121,
 )
 
 
@@ -133,8 +135,8 @@ _SHARDINFO = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=106,
-  serialized_end=237,
+  serialized_start=124,
+  serialized_end=255,
 )
 
 
@@ -165,8 +167,8 @@ _SHARDACKNOWLEDGEMENT = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=239,
-  serialized_end=279,
+  serialized_start=257,
+  serialized_end=297,
 )
 
 
@@ -197,8 +199,8 @@ _RESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=281,
-  serialized_end=309,
+  serialized_start=299,
+  serialized_end=327,
 )
 
 
@@ -236,8 +238,8 @@ _EXPERIMENTDATA = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=311,
-  serialized_end=358,
+  serialized_start=329,
+  serialized_end=376,
 )
 
 
@@ -270,6 +272,13 @@ _EXPERIMENTINFO = _descriptor.Descriptor(
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='model_proto', full_name='ExperimentInfo.model_proto', index=3,
+      number=4, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
   ],
   extensions=[
   ],
@@ -282,8 +291,8 @@ _EXPERIMENTINFO = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=360,
-  serialized_end=460,
+  serialized_start=379,
+  serialized_end=513,
 )
 
 
@@ -307,8 +316,8 @@ _GETREGISTERDSHARDSREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=462,
-  serialized_end=489,
+  serialized_start=515,
+  serialized_end=542,
 )
 
 
@@ -339,8 +348,8 @@ _GETREGISTERDSHARDSRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=491,
-  serialized_end=551,
+  serialized_start=544,
+  serialized_end=604,
 )
 
 
@@ -371,8 +380,8 @@ _WAITEXPERIMENTREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=553,
-  serialized_end=603,
+  serialized_start=606,
+  serialized_end=656,
 )
 
 
@@ -403,8 +412,8 @@ _WAITEXPERIMENTRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=605,
-  serialized_end=654,
+  serialized_start=658,
+  serialized_end=707,
 )
 
 
@@ -442,8 +451,8 @@ _GETEXPERIMENTDATAREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=656,
-  serialized_end=734,
+  serialized_start=709,
+  serialized_end=787,
 )
 
 
@@ -467,12 +476,13 @@ _GETSHARDSINFOREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=736,
-  serialized_end=758,
+  serialized_start=789,
+  serialized_end=811,
 )
 
 _SHARDINFO.fields_by_name['node_info'].message_type = _NODEINFO
 _EXPERIMENTINFO.fields_by_name['experiment_data'].message_type = _EXPERIMENTDATA
+_EXPERIMENTINFO.fields_by_name['model_proto'].message_type = federation__pb2._MODELPROTO
 _GETREGISTERDSHARDSRESPONSE.fields_by_name['shard_info'].message_type = _SHARDINFO
 DESCRIPTOR.message_types_by_name['NodeInfo'] = _NODEINFO
 DESCRIPTOR.message_types_by_name['ShardInfo'] = _SHARDINFO
@@ -581,8 +591,8 @@ _FEDERATIONDIRECTOR = _descriptor.ServiceDescriptor(
   index=0,
   serialized_options=None,
   create_key=_descriptor._internal_create_key,
-  serialized_start=761,
-  serialized_end=1167,
+  serialized_start=814,
+  serialized_end=1220,
   methods=[
   _descriptor.MethodDescriptor(
     name='AcknowledgeShard',
