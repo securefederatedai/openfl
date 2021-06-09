@@ -71,13 +71,13 @@ fed_dataset.valid_dataset = None
 
 # Create a federation
 # will determine fqdn by itself
-federation = Federation(central_node_fqdn='localhost', disable_tls=True)
+federation = Federation(director_node_fqdn='localhost', disable_tls=True)
 # Datapath corresonds to 'RANK,WORLD_SIZE'
 col_data_paths = {
     'one': '1,2',
     'two': '2,2'
 }
-federation.register_collaborators(col_data_paths=col_data_paths)
+# federation.register_collaborators(col_data_paths=col_data_paths)
 
 # create an experimnet in federation
 fl_experiment = FLExperiment(federation=federation)
@@ -95,20 +95,23 @@ arch_path = fl_experiment.prepare_workspace_distribution(
 sleep(2)
 
 director_client = DirectorClient(director_uri)
-resp = director_client.set_new_experiment(experiment_name, col_names, arch_path)
+resp = director_client.set_new_experiment(experiment_name, col_names, arch_path,
+                                          model_interface, fl_experiment)
 logger.info(f'Response from director: {resp}')
 
-fl_experiment.start_experiment(model_interface)
+# fl_experiment.start_experiment(model_interface)
 
-best_model = fl_experiment.get_best_model()
-fed_dataset._delayed_init()
+# best_model = fl_experiment.get_best_model()
+# fed_dataset._delayed_init()
+#
+# logger.info('Validating initial model')
+# validate(initial_model, fed_dataset.get_valid_loader(), 'cpu')
+#
+# logger.info('Validating trained model')
+# validate(best_model, fed_dataset.get_valid_loader(), 'cpu')
 
-logger.info('Validating initial model')
-validate(initial_model, fed_dataset.get_valid_loader(), 'cpu')
-
-logger.info('Validating trained model')
-validate(best_model, fed_dataset.get_valid_loader(), 'cpu')
-
+while True:
+    sleep(1)
 
 input('Press Enter to run second experiment')
 

@@ -27,8 +27,7 @@ class CollaboratorManager:
         cwd = os.getcwd()
         os.chdir(f'{cwd}/{experiment_name}')  # TODO: probably it should be another way
         plan = Plan.Parse(
-            plan_config_path=Path(plan),
-            data_config_path=Path(data_config)
+            plan_config_path=Path(plan)
         )
 
         # TODO: Need to restructure data loader config file loader

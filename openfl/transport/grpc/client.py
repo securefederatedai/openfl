@@ -19,6 +19,8 @@ from logging import getLogger
 import time
 from typing import Optional, Tuple
 
+logger = getLogger(__name__)
+
 
 class ConstantBackoff:
     """Constant Backoff policy."""
@@ -57,6 +59,7 @@ class RetryOnRpcErrorClientInterceptor(
             if isinstance(response, grpc.RpcError):
 
                 # If status code is not in retryable status codes
+                logger.info(f'Response code: {response.code()}')
                 if (
                     self.status_for_retry
                     and response.code() not in self.status_for_retry
