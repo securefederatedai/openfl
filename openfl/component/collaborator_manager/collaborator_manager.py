@@ -32,7 +32,7 @@ class CollaboratorManager:
         sys.path.append(os.getcwd())
 
         plan = Plan.Parse(
-            plan_config_path=Path(plan),
+            plan_config_path=Path(plan)
         )
 
         # TODO: Need to restructure data loader config file loader

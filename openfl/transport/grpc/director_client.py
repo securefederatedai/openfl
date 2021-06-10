@@ -6,6 +6,8 @@ import grpc
 
 from openfl.protocols import director_pb2
 from openfl.protocols import director_pb2_grpc
+from openfl.pipelines import NoCompressionPipeline
+from openfl.protocols.utils import construct_model_proto
 
 logger = logging.getLogger(__name__)
 
@@ -59,6 +61,7 @@ class ShardDirectorClient:
         os.makedirs(experiment_name)
 
         arch_name = f'{experiment_name}/{experiment_name}' + '.zip'
+        logger.info(f'arch_name: {arch_name}')
         with open(arch_name, 'wb') as content_file:
             for response in response_iter:
                 logger.info(f'Size: {response.size}')
@@ -82,8 +85,14 @@ class DirectorClient:
         channel = grpc.insecure_channel(director_uri)
         self.stub = director_pb2_grpc.FederationDirectorStub(channel)
 
-    def set_new_experiment(self, name, col_names, arch_path):
+    def set_new_experiment(self, name, col_names, arch_path,
+                           model_interface=None, fl_experiment=None):
         logger.info('SetNewExperiment')
+        model_proto = None
+        if model_interface:
+            initial_tensor_dict = fl_experiment._get_initial_tensor_dict(model_interface)
+            model_proto = construct_model_proto(initial_tensor_dict, 0, NoCompressionPipeline())
+
         with open(arch_path, 'rb') as arch:
             def st():
                 max_buffer_size = (2 * 1024 * 1024)
@@ -95,6 +104,7 @@ class DirectorClient:
                     experiment_info = director_pb2.ExperimentInfo(
                         name=name,
                         collaborator_names=col_names,
+                        model_proto=model_proto
                     )
                     experiment_info.experiment_data.size = len(chunk)
                     experiment_info.experiment_data.npbytes = chunk

@@ -3,11 +3,15 @@ import logging
 from grpc import aio
 import asyncio
 from pathlib import Path
+import os
+import shutil
 from collections import defaultdict
 
 from openfl.protocols import director_pb2
 from openfl.protocols import director_pb2_grpc
 from openfl.federated import Plan
+from openfl.pipelines import NoCompressionPipeline
+from openfl.protocols.utils import deconstruct_model_proto
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +27,7 @@ class Director(director_pb2_grpc.FederationDirectorServicer):
         self.col_exp_queues = defaultdict(asyncio.Queue)
         self.experiment_data = {}
         self.experiments_queue = asyncio.Queue()
-        self.executor = ProcessPoolExecutor(max_workers=1)
+        self.executor = ProcessPoolExecutor(max_workers=2)
         self.aggregator_task = None  # TODO: add check if exists and wait on terminate
 
     async def AcknowledgeShard(self, shard_info, context):
@@ -34,6 +38,7 @@ class Director(director_pb2_grpc.FederationDirectorServicer):
             return reply
 
         self.shard_registry.append(shard_info)
+
         print(self.shard_registry)
         # logger.info('\n\n\nRegistry now looks like this\n\n', self.shard_registry)
         reply.accepted = True
@@ -52,14 +57,21 @@ class Director(director_pb2_grpc.FederationDirectorServicer):
         logger.info(f'New experiment {request.name} for collaborators {request.collaborator_names}')
         # TODO: save to file
         self.experiment_data[request.name] = npbytes
+        tensor_dict = None
+        if request.model_proto:
+            tensor_dict, _ = deconstruct_model_proto(request.model_proto, NoCompressionPipeline())
 
         # TODO: add a logic with many experiments
         for col_name in request.collaborator_names:
             queue = self.col_exp_queues[col_name]
             await queue.put(request.name)
-
-        future = self.executor.submit(self._run_aggregator)
-        self.aggregator_task = future
+        self.create_workspace(request.name, npbytes)
+        self._run_aggregator(tensor_dict, request.name)
+        # loop = asyncio.get_event_loop()
+        # fut = loop.run_in_executor(self.executor, self._run_aggregator, tensor_dict, request.name)
+        # await fut
+        # future = self.executor.submit(self._run_aggregator, tensor_dict, request.name)
+        # self.aggregator_task = future
 
         return director_pb2.Response(accepted=True)
 
@@ -106,16 +118,38 @@ class Director(director_pb2_grpc.FederationDirectorServicer):
         return resp
 
     @staticmethod
-    def _run_aggregator(plan='plan/plan.yaml',
-                        authorized_cols='plan/cols.yaml'):  # TODO: path params, change naming
-        plan = Plan.Parse(
-            plan_config_path=Path(plan),
-            cols_config_path=Path(authorized_cols)
-        )
+    def create_workspace(experiment_name, npbytes):
+        if os.path.exists(experiment_name):
+            shutil.rmtree(experiment_name)
+        os.makedirs(experiment_name)
+
+        arch_name = f'{experiment_name}/{experiment_name}' + '.zip'
+        logger.info(f'arch_name: {arch_name}')
+        with open(arch_name, 'wb') as content_file:
+            content_file.write(npbytes)
+
+        shutil.unpack_archive(arch_name, experiment_name)
+
+    def _run_aggregator(
+            self,
+            initial_tensor_dict,
+            experiment_name,
+            plan='plan/plan.yaml',
+    ):  # TODO: path params, change naming
+        cwd = os.getcwd()
+        os.chdir(f'{cwd}/{experiment_name}')
+        plan = Plan.Parse(plan_config_path=Path(plan))
+        plan.authorized_cols = list(self.col_exp_queues.keys())
 
         logger.info('🧿 Starting the Aggregator Service.')
+        server = plan.interactive_api_get_server(
+            initial_tensor_dict,
+            chain='',
+            certificate='',
+            private_key='')
 
-        plan.get_server().serve(disable_tls=True, disable_client_auth=True)
+        logger.error(server.serve())
+        server.wait_for_termination()
 
 
 async def serve(*args, **kwargs):

@@ -213,8 +213,8 @@ class AggregatorGRPCServer(AggregatorServicer):
 
             self.logger.warn(
                 'gRPC is running on insecure channel with TLS disabled.')
-
-            self.server.add_insecure_port(self.uri)
+            port = self.server.add_insecure_port(self.uri)
+            self.logger.info(f'Insecure port: {port}')
 
         else:
 
@@ -238,7 +238,7 @@ class AggregatorGRPCServer(AggregatorServicer):
 
         self.logger.info('Starting Aggregator gRPC Server')
 
-        self.server.start()
+        return self.server.start()
 
         try:
             while not self.aggregator.all_quit_jobs_sent():
