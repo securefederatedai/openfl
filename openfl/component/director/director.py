@@ -38,6 +38,8 @@ class Director(director_pb2_grpc.FederationDirectorServicer):
             return reply
 
         self.shard_registry.append(shard_info)
+
+        print(self.shard_registry)
         # logger.info('\n\n\nRegistry now looks like this\n\n', self.shard_registry)
         reply.accepted = True
         return reply
@@ -89,6 +91,7 @@ class Director(director_pb2_grpc.FederationDirectorServicer):
             logger.info(f'Send {len(chunk)} bytes')
             yield director_pb2.ExperimentData(size=len(chunk), npbytes=chunk)
 
+    # Await prob
     async def WaitExperiment(self, request_iterator, context):
         logger.info('Request WaitExperiment has got!')
         async for msg in request_iterator:
@@ -104,6 +107,13 @@ class Director(director_pb2_grpc.FederationDirectorServicer):
         resp = director_pb2.ShardInfo(
             sample_shape=self.sample_shape,
             target_shape=self.target_shape
+        )
+        return resp
+
+    async def GetRegisterdShards(self, request, context):
+        logger.info('Request GetRegisterdShards has got!')
+        resp = director_pb2.GetRegisterdShardsResponse(
+            shard_info=self.shard_registry
         )
         return resp
 

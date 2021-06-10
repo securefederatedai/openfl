@@ -319,7 +319,7 @@ openfl.component.aggregation_functions.AggregationFunctionInterface
     # Python interactive api
     def initialize_data_loader(self, data_loader, shard_descriptor):
         """Get data loader."""
-        data_loader.set_shard_descriptor(shard_descriptor)
+        data_loader.shard_descriptor = shard_descriptor
         return data_loader
 
     # legacy api (TaskRunner subclassing)
@@ -496,6 +496,9 @@ openfl.component.aggregation_functions.AggregationFunctionInterface
         interface_objects = []
         serializer = Plan.Build(
             self.config['api_layer']['required_plugin_components']['serializer_plugin'], {})
+        # import os
+        # print("\n\n CWD \n\n", os.getcwd())
+        # from .layers import soft_dice_coef
         for filename in ['model_interface_file',
                          'tasks_interface_file', 'dataloader_interface_file']:
             interface_objects.append(

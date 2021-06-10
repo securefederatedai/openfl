@@ -4,13 +4,7 @@
 
 from socket import getfqdn
 from .shard_descriptor import DummyShardDescriptor
-
-
-class DirectorClient:
-
-    def data_shape_rpc(self):
-        sample_shape, target_shape = (300,300,3), (6,)
-        return sample_shape, target_shape
+from openfl.transport.grpc.director_client import DirectorClient
 
 
 class Federation:
@@ -30,6 +24,10 @@ class Federation:
         and encryption settings. One may disable mTLS in trusted environments or
         provide paths to a certificate chain to CA, API certificate and
         pricate key to enable mTLS.
+
+        Args:
+        - director_node_fqdn: Address and port a director's service is running on.
+            User passes here an address with a port.
         """
         if director_node_fqdn is None:
             self.director_node_fqdn = getfqdn()
@@ -43,12 +41,15 @@ class Federation:
         self.API_private_key = API_private_key
 
         # Create Director client
-        self.dir_client = DirectorClient()
+        self.dir_client = DirectorClient(director_node_fqdn)
 
         self.sample_shape, self.target_shape = self._request_data_shape()
 
     def get_dummy_shard_descriptor(self, size):
         return DummyShardDescriptor(self.sample_shape, self.target_shape, size)
+
+    def get_shard_registry(self):
+        return self.dir_client.request_shard_registry()
 
     def _request_data_shape(self):
         """
@@ -56,5 +57,5 @@ class Federation:
 
         This is an internal method for finding out dataset properties in a Federation.
         """
-        sample_shape, target_shape = self.dir_client.data_shape_rpc()
+        sample_shape, target_shape = self.dir_client.get_shard_info()
         return sample_shape, target_shape
