@@ -2,17 +2,13 @@
 # SPDX-License-Identifier: Apache-2.0
 """Workspace module."""
 
-from pathlib import Path
-from click import Choice, Path as ClickPath
-from click import group, option, pass_context
-from click import echo, confirm
-from subprocess import check_call
-from sys import executable
-from shutil import copyfile, ignore_patterns
-
-from openfl.interface.cli_helper import copytree, print_tree
-from openfl.interface.cli_helper import WORKSPACE, PKI_DIR
-from openfl.interface.cli_helper import SITEPACKS, OPENFL_USERDIR
+from click import Choice
+from click import confirm
+from click import echo
+from click import group
+from click import option
+from click import pass_context
+from click import Path as ClickPath
 
 
 @group()
@@ -24,6 +20,11 @@ def workspace(context):
 
 def create_dirs(prefix):
     """Create workspace directories."""
+    from shutil import copyfile
+
+    from openfl.interface.cli_helper import copytree
+    from openfl.interface.cli_helper import WORKSPACE
+
     echo('Creating Workspace Directories')
 
     (prefix / 'cert').mkdir(parents=True, exist_ok=True)  # certifications
@@ -42,6 +43,11 @@ def create_dirs(prefix):
 
 def create_temp(prefix, template):
     """Create workspace templates."""
+    from shutil import ignore_patterns
+
+    from openfl.interface.cli_helper import copytree
+    from openfl.interface.cli_helper import WORKSPACE
+
     echo('Creating Workspace Templates')
 
     copytree(src=WORKSPACE / template, dst=prefix, dirs_exist_ok=True,
@@ -50,6 +56,8 @@ def create_temp(prefix, template):
 
 def get_templates():
     """Grab the default templates from the distribution."""
+    from openfl.interface.cli_helper import WORKSPACE
+
     return [d.name for d in WORKSPACE.glob('*') if d.is_dir()
             and d.name not in ['__pycache__', 'workspace']]
 
@@ -66,6 +74,13 @@ def create_(prefix, template):
 def create(prefix, template):
     """Create federated learning workspace."""
     from os.path import isfile
+    from pathlib import Path
+    from subprocess import check_call
+    from sys import executable
+
+    from openfl.interface.cli_helper import print_tree
+    from openfl.interface.cli_helper import OPENFL_USERDIR
+
     if not OPENFL_USERDIR.exists():
         OPENFL_USERDIR.mkdir()
 
@@ -75,15 +90,15 @@ def create(prefix, template):
     create_dirs(prefix)
     create_temp(prefix, template)
 
-    requirements_filename = "requirements.txt"
+    requirements_filename = 'requirements.txt'
 
     if isfile(f'{str(prefix)}/{requirements_filename}'):
         check_call([
-            executable, "-m", "pip", "install", "-r",
-            f"{prefix}/requirements.txt"], shell=False)
-        echo(f"Successfully installed packages from {prefix}/requirements.txt.")
+            executable, '-m', 'pip', 'install', '-r',
+            f'{prefix}/requirements.txt'], shell=False)
+        echo(f'Successfully installed packages from {prefix}/requirements.txt.')
     else:
-        echo("No additional requirements for workspace defined. Skipping...")
+        echo('No additional requirements for workspace defined. Skipping...')
     prefix_hash = _get_dir_hash(str(prefix.absolute()))
     with open(OPENFL_USERDIR / f'requirements.{prefix_hash}.txt', 'w') as f:
         check_call([executable, '-m', 'pip', 'freeze'], shell=False, stdout=f)
@@ -94,18 +109,20 @@ def create(prefix, template):
 @workspace.command(name='export')
 def export_():
     """Export federated learning workspace."""
-    from shutil import make_archive, copytree, copy2, ignore_patterns
-    from tempfile import mkdtemp
     from os import getcwd, makedirs
     from os.path import basename, join
-    from plan import FreezePlan
+    from shutil import make_archive, copytree, copy2, ignore_patterns
+    from tempfile import mkdtemp
+
+    from plan import freeze_plan
+    from openfl.interface.cli_helper import WORKSPACE
 
     # TODO: Does this need to freeze all plans?
-    planFile = 'plan/plan.yaml'
+    plan_file = 'plan/plan.yaml'
     try:
-        FreezePlan(planFile)
+        freeze_plan(plan_file)
     except Exception:
-        echo(f'Plan file "{planFile}" not found. No freeze performed.')
+        echo(f'Plan file "{plan_file}" not found. No freeze performed.')
 
     from pip._internal.operations import freeze
     requirements_generator = freeze.freeze()
@@ -116,39 +133,39 @@ def export_():
                 continue
             f.write(package + '\n')
 
-    archiveType = 'zip'
-    archiveName = basename(getcwd())
-    archiveFileName = archiveName + '.' + archiveType
+    archive_type = 'zip'
+    archive_name = basename(getcwd())
+    archive_file_name = archive_name + '.' + archive_type
 
     # Aggregator workspace
-    tmpDir = join(mkdtemp(), 'openfl', archiveName)
+    tmp_dir = join(mkdtemp(), 'openfl', archive_name)
 
     ignore = ignore_patterns(
         '__pycache__', '*.crt', '*.key', '*.csr', '*.srl', '*.pem', '*.pbuf')
 
     # We only export the minimum required files to set up a collaborator
-    makedirs(f'{tmpDir}/save', exist_ok=True)
-    makedirs(f'{tmpDir}/logs', exist_ok=True)
-    makedirs(f'{tmpDir}/data', exist_ok=True)
-    copytree('./src', f'{tmpDir}/src', ignore=ignore)  # code
-    copytree('./plan', f'{tmpDir}/plan', ignore=ignore)  # plan
-    copy2('./requirements.txt', f'{tmpDir}/requirements.txt')  # requirements
+    makedirs(f'{tmp_dir}/save', exist_ok=True)
+    makedirs(f'{tmp_dir}/logs', exist_ok=True)
+    makedirs(f'{tmp_dir}/data', exist_ok=True)
+    copytree('./src', f'{tmp_dir}/src', ignore=ignore)  # code
+    copytree('./plan', f'{tmp_dir}/plan', ignore=ignore)  # plan
+    copy2('./requirements.txt', f'{tmp_dir}/requirements.txt')  # requirements
 
     try:
-        copy2('.workspace', tmpDir)  # .workspace
+        copy2('.workspace', tmp_dir)  # .workspace
     except FileNotFoundError:
         echo('\'.workspace\' file not found.')
         if confirm('Create a default \'.workspace\' file?'):
-            copy2(WORKSPACE / 'workspace' / '.workspace', tmpDir)
+            copy2(WORKSPACE / 'workspace' / '.workspace', tmp_dir)
         else:
             echo('To proceed, you must have a \'.workspace\' '
                  'file in the current directory.')
             raise
 
     # Create Zip archive of directory
-    make_archive(archiveName, archiveType, tmpDir)
+    make_archive(archive_name, archive_type, tmp_dir)
 
-    echo(f'Workspace exported to archive: {archiveFileName}')
+    echo(f'Workspace exported to archive: {archive_file_name}')
 
 
 @workspace.command(name='import')
@@ -157,22 +174,24 @@ def export_():
         type=ClickPath(exists=True))
 def import_(archive):
     """Import federated learning workspace."""
-    from shutil import unpack_archive
-    from os.path import isfile, basename
     from os import chdir
+    from os.path import isfile, basename
+    from shutil import unpack_archive
+    from subprocess import check_call
+    from sys import executable
 
-    dirPath = basename(archive).split('.')[0]
-    unpack_archive(archive, extract_dir=dirPath)
-    chdir(dirPath)
+    dir_path = basename(archive).split('.')[0]
+    unpack_archive(archive, extract_dir=dir_path)
+    chdir(dir_path)
 
-    requirements_filename = "requirements.txt"
+    requirements_filename = 'requirements.txt'
 
     if isfile(requirements_filename):
         check_call([
-            executable, "-m", "pip", "install", "-r", "requirements.txt"],
+            executable, '-m', 'pip', 'install', '-r', 'requirements.txt'],
             shell=False)
     else:
-        echo("No " + requirements_filename + " file found.")
+        echo('No ' + requirements_filename + ' file found.')
 
     echo(f'Workspace {archive} has been imported.')
     echo('You may need to copy your PKI certificates to join the federation.')
@@ -186,8 +205,10 @@ def certify_():
 
 def certify():
     """Create certificate authority for federation."""
-    from openfl.cryptography.ca import generate_root_cert, generate_signing_csr, sign_certificate
     from cryptography.hazmat.primitives import serialization
+
+    from openfl.cryptography.ca import generate_root_cert, generate_signing_csr, sign_certificate
+    from openfl.interface.cli_helper import PKI_DIR
 
     echo('Setting Up Certificate Authority...\n')
 
@@ -223,7 +244,7 @@ def certify():
             encoding=serialization.Encoding.PEM,
         ))
 
-    with open(PKI_DIR / root_key_path, "wb") as f:
+    with open(PKI_DIR / root_key_path, 'wb') as f:
         f.write(root_private_key.private_bytes(
             encoding=serialization.Encoding.PEM,
             format=serialization.PrivateFormat.TraditionalOpenSSL,
@@ -263,7 +284,7 @@ def certify():
             encoding=serialization.Encoding.PEM,
         ))
 
-    with open(PKI_DIR / signing_key_path, "wb") as f:
+    with open(PKI_DIR / signing_key_path, 'wb') as f:
         f.write(signing_private_key.private_bytes(
             encoding=serialization.Encoding.PEM,
             format=serialization.PrivateFormat.TraditionalOpenSSL,
@@ -331,37 +352,36 @@ def dockerize_(context, base_image, save):
     User is expected to be in docker group.
     If your machine is behind a proxy, make sure you set it up in ~/.docker/config.json.
     """
+    import docker
     import os
     import sys
-    import docker
+    from shutil import copyfile
+
+    from openfl.interface.cli_helper import SITEPACKS
 
     # Specify the Dockerfile.workspace loaction
     openfl_docker_dir = os.path.join(SITEPACKS, 'openfl-docker')
-    # dockerfile_workspace = os.path.join(openfl_docker_dir, 'Dockerfile.workspace')
     dockerfile_workspace = 'Dockerfile.workspace'
     # Apparently, docker's python package does not support
     # scenarios when the dockerfile is placed outside the build context
     copyfile(os.path.join(openfl_docker_dir, dockerfile_workspace), dockerfile_workspace)
 
-    WORKSPACE_PATH = os.getcwd()
-    WORKSPACE_NAME = os.path.basename(WORKSPACE_PATH)
+    workspace_path = os.getcwd()
+    workspace_name = os.path.basename(workspace_path)
 
     # Exporting the workspace
     context.invoke(export_)
-    WORKSPACE_ARCHIVE = WORKSPACE_NAME + '.zip'
+    workspace_archive = workspace_name + '.zip'
 
-    build_args = {'WORKSPACE_NAME': WORKSPACE_NAME,
+    build_args = {'WORKSPACE_NAME': workspace_name,
                   'BASE_IMAGE': base_image}
 
     client = docker.from_env(timeout=3600)
     try:
-        # Should we remove an old image tar before building?
-        # Check if the base image is present
-        # assert f'{base_image}:latest' in str(client.images.list())
         echo('Building the Docker image')
         client.images.build(
-            path=str(WORKSPACE_PATH),
-            tag=WORKSPACE_NAME,
+            path=str(workspace_path),
+            tag=workspace_name,
             buildargs=build_args,
             dockerfile=dockerfile_workspace)
 
@@ -371,16 +391,16 @@ def dockerize_(context, base_image, save):
     else:
         echo('The workspace image has been built successfully!')
     finally:
-        os.remove(WORKSPACE_ARCHIVE)
+        os.remove(workspace_archive)
         os.remove(dockerfile_workspace)
 
     # Saving the image to a tarball
     if save:
-        WORKSPACE_IMAGE_TAR = WORKSPACE_NAME + '_image.tar'
+        workspace_image_tar = workspace_name + '_image.tar'
         echo('Saving the Docker image...')
-        image = client.images.get(f'{WORKSPACE_NAME}')
+        image = client.images.get(f'{workspace_name}')
         resp = image.save(named=True)
-        with open(WORKSPACE_IMAGE_TAR, 'wb') as f:
+        with open(workspace_image_tar, 'wb') as f:
             for chunk in resp:
                 f.write(chunk)
-        echo(f'{WORKSPACE_NAME} image saved to {WORKSPACE_PATH}/{WORKSPACE_IMAGE_TAR}')
+        echo(f'{workspace_name} image saved to {workspace_path}/{workspace_image_tar}')

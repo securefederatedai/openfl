@@ -17,7 +17,7 @@ from logging import getLogger
 class TaskRunner(object):
     """Federated Learning Task Runner Class."""
 
-    def __init__(self, data_loader, tensor_dict_split_fn_kwargs={}, **kwargs):
+    def __init__(self, data_loader, tensor_dict_split_fn_kwargs: dict = None, **kwargs):
         """
         Intialize.
 
@@ -28,21 +28,20 @@ class TaskRunner(object):
         """
         self.data_loader = data_loader
         self.feature_shape = self.data_loader.get_feature_shape()
-
+        # TODO: Should this comment a path of the doc string?
         # key word arguments for determining which parameters to hold out from
         # aggregation.
         # If set to none, an empty dict will be passed, currently resulting in
         # the defaults:
-        # holdout_types=['non_float'] # all param np.arrays of this type will
         # be held out
-        # holdout_tensor_names=[]     # params with these names will be held out
+        # holdout_tensor_names=[]     # params with these names will be held out  # NOQA:E800
         # TODO: params are restored from protobufs as float32 numpy arrays, so
         # non-floats arrays and non-arrays are not currently supported for
         # passing to and from protobuf (and as a result for aggregation) - for
         # such params in current examples, aggregation does not make sense
         # anyway, but if this changes support should be added.
-        if type(tensor_dict_split_fn_kwargs) is not dict:
-            tensor_dict_split_fn_kwargs = dict()
+        if tensor_dict_split_fn_kwargs is None:
+            tensor_dict_split_fn_kwargs = {}
         self.tensor_dict_split_fn_kwargs = tensor_dict_split_fn_kwargs
         self.set_logger()
 

@@ -4,14 +4,15 @@
 
 
 from unittest import mock
-import pytest
-import numpy as np
 
-from openfl.pipelines import TensorCodec
+import numpy as np
+import pytest
+
 from openfl.pipelines import NoCompressionPipeline
 from openfl.pipelines import SKCPipeline
-from openfl.utilities.types import TensorKey
+from openfl.pipelines import TensorCodec
 from openfl.protocols import NamedTensor
+from openfl.utilities.types import TensorKey
 
 
 @pytest.fixture

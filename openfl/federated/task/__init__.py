@@ -3,8 +3,9 @@
 
 """Task package."""
 
-from warnings import catch_warnings, simplefilter
 import pkgutil
+from warnings import catch_warnings
+from warnings import simplefilter
 
 with catch_warnings():
     simplefilter(action='ignore', category=FutureWarning)

@@ -3,8 +3,9 @@
 
 """Federated averaging module."""
 
-from .interface import AggregationFunctionInterface
 import numpy as np
+
+from .interface import AggregationFunctionInterface
 
 
 def weighted_average(tensors, weights):

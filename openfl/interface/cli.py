@@ -3,10 +3,14 @@
 # SPDX-License-Identifier: Apache-2.0
 """CLI module."""
 
-from click import Group, command, argument, group, clear
-from click import echo, option, pass_context, style
-from sys import argv
-from pathlib import Path
+from click import argument
+from click import command
+from click import echo
+from click import Group
+from click import group
+from click import option
+from click import pass_context
+from click import style
 
 
 def setup_logging(level='info'):
@@ -59,6 +63,7 @@ class CLI(Group):
 
     def format_help(self, ctx, formatter):
         """Dislpay user-friendly help."""
+        show_header()
         uses = [
             f'{ctx.command_path}',
             '[options]',
@@ -67,8 +72,16 @@ class CLI(Group):
             '[args]'
         ]
 
-        formatter.write(style(
-            'CORRECT USAGE\n\n', bold=True, fg='bright_black'))
+        formatter.write(style('BASH COMPLETE ACTIVATION\n\n', bold=True, fg='bright_black'))
+        formatter.write(
+            'Run in terminal:\n'
+            '   _FX_COMPLETE=bash_source fx > ~/.fx-autocomplete.sh\n'
+            '   source ~/.fx-autocomplete.sh\n'
+            'If ~/.fx-autocomplete.sh has already exist:\n'
+            '   source ~/.fx-autocomplete.sh\n\n'
+        )
+
+        formatter.write(style('CORRECT USAGE\n\n', bold=True, fg='bright_black'))
         formatter.write(' '.join(uses) + '\n')
 
         opts = []
@@ -94,16 +107,16 @@ class CLI(Group):
             '\nAVAILABLE COMMANDS\n', bold=True, fg='bright_black'))
 
         for name, cmd, level in cmds:
-            help = cmd.get_short_help_str()
+            help_str = cmd.get_short_help_str()
             if level == 0:
                 formatter.write(
                     f'\n{style(name, fg="blue", bold=True):<30}'
-                    f' {style(help, bold=True)}' + '\n')
+                    f' {style(help_str, bold=True)}' + '\n')
                 formatter.write('─' * 80 + '\n')
             if level == 1:
                 formatter.write(
                     f'  {style("⮞", fg="green")}'
-                    f' {style(name, fg="cyan"):<21} {help}' + '\n')
+                    f' {style(name, fg="cyan"):<21} {help_str}' + '\n')
 
 
 @group(cls=CLI)
@@ -111,8 +124,9 @@ class CLI(Group):
 @pass_context
 def cli(context, log_level):
     """Command-line Interface."""
-    context.ensure_object(dict)
+    from sys import argv
 
+    context.ensure_object(dict)
     context.obj['log_level'] = log_level
     context.obj['fail'] = False
     context.obj['script'] = argv[0]
@@ -131,10 +145,10 @@ def end(context, result, **kwargs):
         echo('\n ✔️ OK')
 
 
-@command()
+@command(name='help')
 @pass_context
 @argument('subcommand', required=False)
-def help(context, subcommand):
+def help_(context, subcommand):
     """Display help."""
     pass
 
@@ -155,9 +169,17 @@ def error_handler(error):
     raise error
 
 
+def show_header():
+    """Show header."""
+    banner = 'Intel OpenFL - Secure Federated Learning at the Edge™'
+    echo(style(f'{banner:<80}', bold=True, bg='bright_blue'))
+    echo()
+
+
 def entry():
     """Entry point of the Command-Line Interface."""
     from importlib import import_module
+    from pathlib import Path
     from sys import path
 
     file = Path(__file__).resolve()
@@ -166,11 +188,6 @@ def entry():
 
     path.append(str(root))
     path.insert(0, str(work))
-
-    clear()
-    banner = 'Intel OpenFL - Secure Federated Learning at the Edge™'
-    echo(style(f'{banner:<80}', bold=True, bg='bright_blue'))
-    echo()
 
     # Setup logging immediately to suppress unnecessary warnings on import
     # This will be overridden later with user selected debugging level

@@ -6,19 +6,20 @@ Base classes for developing a ke.Model() Federated Learning model.
 
 You may copy this file as the starting point of your own keras model.
 """
-from warnings import catch_warnings, simplefilter
+from warnings import catch_warnings
+from warnings import simplefilter
+
+import numpy as np
+
+from openfl.utilities import Metric
+from openfl.utilities import split_tensor_dict_for_holdouts
+from openfl.utilities import TensorKey
+from .runner import TaskRunner
 
 with catch_warnings():
     simplefilter(action='ignore')
     import tensorflow as tf
     import tensorflow.keras as ke
-
-import numpy as np
-
-
-from openfl.utilities import TensorKey, split_tensor_dict_for_holdouts, Metric
-
-from .runner import TaskRunner
 
 
 class KerasTaskRunner(TaskRunner):
@@ -42,7 +43,7 @@ class KerasTaskRunner(TaskRunner):
         self.required_tensorkeys_for_function = {}
         ke.backend.clear_session()
 
-    def rebuild_model(self, round, input_tensor_dict, validation=False):
+    def rebuild_model(self, round_num, input_tensor_dict, validation=False):
         """
         Parse tensor names and update weights of model. Handles the optimizer treatment.
 
@@ -53,7 +54,7 @@ class KerasTaskRunner(TaskRunner):
         if self.opt_treatment == 'RESET':
             self.reset_opt_vars()
             self.set_tensor_dict(input_tensor_dict, with_opt_vars=False)
-        elif (round > 0 and self.opt_treatment == 'CONTINUE_GLOBAL'
+        elif (round_num > 0 and self.opt_treatment == 'CONTINUE_GLOBAL'
               and not validation):
             self.set_tensor_dict(input_tensor_dict, with_opt_vars=True)
         else:
@@ -74,15 +75,11 @@ class KerasTaskRunner(TaskRunner):
         """
         if metrics is None:
             raise KeyError('metrics must be defined')
-        # if 'batch_size' in kwargs:
-        #     batch_size = kwargs['batch_size']
-        # else:
-        #     batch_size = self.data_loader.batch_size
 
         # rebuild model with updated weights
         self.rebuild_model(round_num, input_tensor_dict)
         for epoch in range(epochs):
-            self.logger.info(f"Run {epoch} epoch of {round_num} round")
+            self.logger.info(f'Run {epoch} epoch of {round_num} round')
             results = self.train_iteration(self.data_loader.get_train_loader(batch_size),
                                            metrics=metrics,
                                            **kwargs)
@@ -145,10 +142,9 @@ class KerasTaskRunner(TaskRunner):
         if self.opt_treatment == 'CONTINUE_GLOBAL':
             self.initialize_tensorkeys_for_functions(with_opt_vars=True)
 
-        # return global_tensor_dict, local_tensor_dict
         return global_tensor_dict, local_tensor_dict
 
-    def train_iteration(self, batch_generator, metrics=[], **kwargs):
+    def train_iteration(self, batch_generator, metrics: list = None, **kwargs):
         """Train single epoch.
 
         Override this function for custom training.
@@ -161,6 +157,8 @@ class KerasTaskRunner(TaskRunner):
             epochs: Number of epochs to train.
             metrics: Names of metrics to save.
         """
+        if metrics is None:
+            metrics = []
         # TODO Currently assuming that all metrics are defined at
         #  initialization (build_model).
         #  If metrics are added (i.e. not a subset of what was originally
@@ -172,11 +170,10 @@ class KerasTaskRunner(TaskRunner):
         #  compiled model, that behavior is not currently handled.
         for param in metrics:
             if param not in model_metrics_names:
-                error = 'KerasTaskRunner does not support specifying new' \
-                        ' metrics. ' \
-                        'Param_metrics = {}, model_metrics_names =' \
-                        ' {}'.format(metrics, model_metrics_names)
-                raise ValueError(error)
+                raise ValueError(
+                    f'KerasTaskRunner does not support specifying new metrics. '
+                    f'Param_metrics = {metrics}, model_metrics_names = {model_metrics_names}'
+                )
 
         history = self.model.fit(batch_generator,
                                  verbose=0,
@@ -222,11 +219,10 @@ class KerasTaskRunner(TaskRunner):
         #  handled.
         for param in param_metrics:
             if param not in model_metrics_names:
-                error = 'KerasTaskRunner does not support specifying new' \
-                        ' metrics. ' \
-                        'Param_metrics = {}, model_metrics_names' \
-                        ' = {}'.format(param_metrics, model_metrics_names)
-                raise ValueError(error)
+                raise ValueError(
+                    f'KerasTaskRunner does not support specifying new metrics. '
+                    f'Param_metrics = {param_metrics}, model_metrics_names = {model_metrics_names}'
+                )
 
         origin = col_name
         suffix = 'validate'
@@ -342,7 +338,6 @@ class KerasTaskRunner(TaskRunner):
             with_opt_vars (bool): True = include the optimizer's status.
         """
         if with_opt_vars is False:
-            # self._set_weights_dict(self.model, tensor_dict)
             # It is possible to pass in opt variables from the input tensor dict
             # This will make sure that the correct layers are updated
             model_weight_names = [weight.name for weight in self.model.weights]
@@ -451,8 +446,7 @@ class KerasTaskRunner(TaskRunner):
         model_layer_names = self._get_weights_names(self.model)
         opt_names = self._get_weights_names(self.model.optimizer)
         tensor_names = model_layer_names + opt_names
-        self.logger.debug(
-            'Updating model tensor names: {}'.format(tensor_names))
+        self.logger.debug(f'Updating model tensor names: {tensor_names}')
         self.required_tensorkeys_for_function['train'] = [
             TensorKey(
                 tensor_name, 'GLOBAL', 0, ('model',)

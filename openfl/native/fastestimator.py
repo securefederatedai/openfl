@@ -3,25 +3,26 @@
 """FederatedFastEstimator module."""
 
 import os
-from pathlib import Path
 from logging import getLogger
-from openfl.federated import Plan
-from openfl.protocols import utils
-from openfl.utilities import split_tensor_dict_for_holdouts
+from pathlib import Path
+
 import openfl.native as fx
+from openfl.federated import Plan
 from openfl.federated.data import FastEstimatorDataLoader
 from openfl.federated.task import FastEstimatorTaskRunner
+from openfl.protocols import utils
+from openfl.utilities import split_tensor_dict_for_holdouts
 
 
 class FederatedFastEstimator:
     """A wrapper for fastestimator.estimator that allows running in federated mode."""
 
-    def __init__(self, estimator, override_config={}, **kwargs):
+    def __init__(self, estimator, override_config: dict = None, **kwargs):
         """Initialize."""
         self.estimator = estimator
         self.logger = getLogger(__name__)
         fx.init(**kwargs)
-        if len(override_config) > 0:
+        if override_config:
             fx.update_plan(override_config)
 
     def fit(self):
@@ -45,7 +46,7 @@ class FederatedFastEstimator:
         cols_config = (Path(fx.WORKSPACE_PREFIX) / 'plan' / 'cols.yaml')
         data_config = (Path(fx.WORKSPACE_PREFIX) / 'plan' / 'data.yaml')
 
-        plan = Plan.Parse(plan_config_path=plan_config,
+        plan = Plan.parse(plan_config_path=plan_config,
                           cols_config_path=cols_config,
                           data_config_path=data_config)
 

@@ -41,7 +41,7 @@ For more questions, please consider joining our [Slack channel](https://openfl.s
 ## Requirements
 
 - OS: Tested on Ubuntu Linux 16.04 and 18.04.
-- Python 3.6+ with a Python virtual environment (e.g. [conda](https://docs.conda.io/en/latest/))
+- Python 3.6+ with a Python virtual environment (e.g. [conda](https://docs.conda.io/en/latest/), recommended version: 4.9 and above)
 - TensorFlow 2+ or PyTorch 1.6+ (depending on your training requirements). OpenFL is designed to easily support other frameworks as well.
 
 ![fx commandline interface](https://raw.githubusercontent.com/intel/openfl/master/docs/images/fx_help.png)

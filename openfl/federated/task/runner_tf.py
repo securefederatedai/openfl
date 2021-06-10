@@ -7,13 +7,18 @@ import numpy as np
 import tensorflow.compat.v1 as tf
 from tqdm import tqdm
 
-from openfl.utilities import TensorKey, split_tensor_dict_for_holdouts
-
+from openfl.utilities import split_tensor_dict_for_holdouts
+from openfl.utilities import TensorKey
 from .runner import TaskRunner
 
 
 class TensorFlowTaskRunner(TaskRunner):
-    """Base class for TensorFlow models in the Federated Learning solution."""
+    """
+    Base class for TensorFlow models in the Federated Learning solution.
+
+        child classes should have __init__ function signature (self, data, kwargs),
+        and should overwrite at least the following while defining the model
+    """
 
     def __init__(self, **kwargs):
         """
@@ -41,10 +46,6 @@ class TensorFlowTaskRunner(TaskRunner):
         # Required tensorkeys for all public functions in TensorFlowTaskRunner
         self.required_tensorkeys_for_function = {}
 
-        # child classes should have __init__ function signature
-        # (self, data, kwargs),
-        # and should overwrite at least the following while defining the model
-
         # tensorflow session
         self.sess = None
         # input featrures to the model
@@ -66,7 +67,7 @@ class TensorFlowTaskRunner(TaskRunner):
         # self.tvars + self.opt_vars
         self.fl_vars = None
 
-    def rebuild_model(self, round, input_tensor_dict, validation=False):
+    def rebuild_model(self, round_num, input_tensor_dict, validation=False):
         """
         Parse tensor names and update weights of model. Handles the optimizer treatment.
 
@@ -76,7 +77,7 @@ class TensorFlowTaskRunner(TaskRunner):
         if self.opt_treatment == 'RESET':
             self.reset_opt_vars()
             self.set_tensor_dict(input_tensor_dict, with_opt_vars=False)
-        elif (round > 0 and self.opt_treatment == 'CONTINUE_GLOBAL'
+        elif (round_num > 0 and self.opt_treatment == 'CONTINUE_GLOBAL'
               and not validation):
             self.set_tensor_dict(input_tensor_dict, with_opt_vars=True)
         else:
@@ -109,11 +110,11 @@ class TensorFlowTaskRunner(TaskRunner):
         losses = []
 
         for epoch in range(epochs):
-            self.logger.info(f"Run {epoch} epoch of {round_num} round")
+            self.logger.info(f'Run {epoch} epoch of {round_num} round')
             # get iterator for batch draws (shuffling happens here)
             gen = self.data_loader.get_train_loader(batch_size)
             if use_tqdm:
-                gen = tqdm.tqdm(gen, desc="training epoch")
+                gen = tqdm.tqdm(gen, desc='training epoch')
 
             for (X, y) in gen:
                 losses.append(self.train_batch(X, y))
@@ -174,7 +175,6 @@ class TensorFlowTaskRunner(TaskRunner):
         if self.opt_treatment == 'CONTINUE_GLOBAL':
             self.initialize_tensorkeys_for_functions(with_opt_vars=True)
 
-        # return global_tensor_dict, local_tensor_dict
         return global_tensor_dict, local_tensor_dict
 
     def train_batch(self, X, y):
@@ -216,7 +216,7 @@ class TensorFlowTaskRunner(TaskRunner):
 
         gen = self.data_loader.get_valid_loader(batch_size)
         if use_tqdm:
-            gen = tqdm.tqdm(gen, desc="validating")
+            gen = tqdm.tqdm(gen, desc='validating')
 
         for X, y in gen:
             weight = X.shape[0] / self.data_loader.get_valid_data_size()

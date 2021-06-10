@@ -6,7 +6,6 @@ import pytest
 
 from openfl.component.assigner import StaticGroupedAssigner
 
-
 ROUNDS_TO_TRAIN = 10
 
 

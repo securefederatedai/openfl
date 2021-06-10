@@ -3,16 +3,18 @@
 
 """PyTorchTaskRunner module."""
 
-from typing import Iterator, Tuple
+from copy import deepcopy
+from typing import Iterator
+from typing import Tuple
+
 import numpy as np
 import torch as pt
 import torch.nn as nn
 import tqdm
 
-from copy import deepcopy
-
-from openfl.utilities import TensorKey, split_tensor_dict_for_holdouts, Metric
-
+from openfl.utilities import Metric
+from openfl.utilities import split_tensor_dict_for_holdouts
+from openfl.utilities import TensorKey
 from .runner import TaskRunner
 
 
@@ -21,7 +23,7 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
 
     def __init__(
             self,
-            device=pt.device('cuda' if pt.cuda.is_available() else 'cpu'),
+            device: str = None,
             loss_fn=None,
             optimizer=None,
             **kwargs
@@ -34,8 +36,11 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
         """
         super().__init__()
         TaskRunner.__init__(self, **kwargs)
+        if device:
+            self.device = device
+        else:
+            self.device = pt.device('cuda' if pt.cuda.is_available() else 'cpu')
 
-        self.device = device
         # This is a map of all the required tensors for each of the public
         # functions in PyTorchTaskRunner
         self.required_tensorkeys_for_function = {}
@@ -92,7 +97,7 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
 
         loader = self.data_loader.get_valid_loader()
         if use_tqdm:
-            loader = tqdm.tqdm(loader, desc="validate")
+            loader = tqdm.tqdm(loader, desc='validate')
 
         with pt.no_grad():
             for data, target in loader:
@@ -146,10 +151,10 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
         self.train()
         self.to(self.device)
         for epoch in range(epochs):
-            self.logger.info(f"Run {epoch} epoch of {round_num} round")
+            self.logger.info(f'Run {epoch} epoch of {round_num} round')
             loader = self.data_loader.get_train_loader(num_batches)
             if use_tqdm:
-                loader = tqdm.tqdm(loader, desc="train epoch")
+                loader = tqdm.tqdm(loader, desc='train epoch')
             metric = self.train_epoch(loader)
         # Output metric tensors (scalar)
         origin = col_name
@@ -536,10 +541,7 @@ def _derive_opt_state_dict(opt_state_dict):
                     new_v = np.array(
                         [opt_state_dict['state'][param_id][subkey]]
                     )
-                derived_opt_state_dict[
-                    '__opt_state_{}_{}_{}_{}'.format(
-                        group_idx, idx, tag, subkey)
-                ] = new_v
+                derived_opt_state_dict[f'__opt_state_{group_idx}_{idx}_{tag}_{subkey}'] = new_v
         nb_params_per_group.append(idx + 1)
     # group lengths are also helpful for reconstructing
     # original opt_state_dict structure
@@ -584,14 +586,12 @@ def expand_derived_opt_state_dict(derived_opt_state_dict, device):
 
     # Construct the expanded dict.
     for group_idx, nb_params in enumerate(nb_params_per_group):
-        these_group_ids = [
-            '{}_{}'.format(group_idx, idx) for idx in range(nb_params)
-        ]
+        these_group_ids = [f'{group_idx}_{idx}' for idx in range(nb_params)]
         opt_state_dict['param_groups'].append({'params': these_group_ids})
         for this_id in these_group_ids:
             opt_state_dict['state'][this_id] = {}
             for subkey, tag in state_subkeys_and_tags:
-                flat_key = '__opt_state_{}_{}_{}'.format(this_id, tag, subkey)
+                flat_key = f'__opt_state_{this_id}_{tag}_{subkey}'
                 if tag == 'istensor':
                     new_v = pt.from_numpy(derived_opt_state_dict.pop(flat_key))
                 else:
@@ -622,7 +622,7 @@ def _get_optimizer_state(optimizer):
     for group in opt_state_dict['param_groups']:
         local_param_set = set(group['params'])
         params_to_sync = local_param_set & param_keys_with_state
-        group['params'] = sorted(list(params_to_sync))
+        group['params'] = sorted(params_to_sync)
 
     derived_opt_state_dict = _derive_opt_state_dict(opt_state_dict)
 
