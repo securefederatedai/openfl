@@ -2,13 +2,16 @@
 # SPDX-License-Identifier: Apache-2.0
 """Module with auxiliary CLI helper functions."""
 
-from click import echo, style
-from sys import argv
-from pathlib import Path
 from itertools import islice
-from os import environ, stat
+from os import environ
+from os import stat
+from pathlib import Path
+from sys import argv
 
-from yaml import load, FullLoader
+from click import echo
+from click import style
+from yaml import FullLoader
+from yaml import load
 
 FX = argv[0]
 
@@ -106,8 +109,7 @@ def copytree(src, dst, symlinks=False, ignore=None,
 
         os.makedirs(dst, exist_ok=dirs_exist_ok)
         errors = []
-        use_srcentry = copy_function is shutil.copy2 or \
-            copy_function is shutil.copy
+        use_srcentry = copy_function is shutil.copy2 or copy_function is shutil.copy
 
         for srcentry in entries:
             if srcentry.name in ignored_names:
@@ -174,8 +176,10 @@ def get_workspace_parameter(name):
         return doc[name]
 
 
-def check_varenv(env="", args={}):
+def check_varenv(env: str = '', args: dict = None):
     """Update "args" (dictionary) with <env: env_value> if env has a defined value in the host."""
+    if args is None:
+        args = {}
     env_val = environ.get(env)
     if env and (env_val is not None):
         args[env] = env_val
@@ -183,23 +187,23 @@ def check_varenv(env="", args={}):
     return args
 
 
-def get_fx_path(curr_path=""):
+def get_fx_path(curr_path=''):
     """Return the absolute path to fx binary."""
     import re
     import os
 
-    match = re.search("lib", curr_path)
+    match = re.search('lib', curr_path)
     idx = match.end()
     path_prefix = curr_path[0:idx]
-    bin_path = re.sub("lib", "bin", path_prefix)
-    fx_path = os.path.join(bin_path, "fx")
+    bin_path = re.sub('lib', 'bin', path_prefix)
+    fx_path = os.path.join(bin_path, 'fx')
 
     return fx_path
 
 
 def remove_line_from_file(pkg, filename):
     """Remove line that contains `pkg` from the `filename` file."""
-    with open(filename, "r+") as f:
+    with open(filename, 'r+') as f:
         d = f.readlines()
         f.seek(0)
         for i in d:
@@ -210,7 +214,7 @@ def remove_line_from_file(pkg, filename):
 
 def replace_line_in_file(line, line_num_to_replace, filename):
     """Replace line at `line_num_to_replace` with `line`."""
-    with open(filename, "r+") as f:
+    with open(filename, 'r+') as f:
         d = f.readlines()
         f.seek(0)
         for idx, i in enumerate(d):

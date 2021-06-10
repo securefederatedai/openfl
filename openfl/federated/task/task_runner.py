@@ -3,8 +3,11 @@
 """Interactive API package."""
 
 from logging import getLogger
+
 import numpy as np
-from openfl.utilities import TensorKey, split_tensor_dict_for_holdouts
+
+from openfl.utilities import split_tensor_dict_for_holdouts
+from openfl.utilities import TensorKey
 
 
 class CoreTaskRunner(object):
@@ -95,17 +98,15 @@ class CoreTaskRunner(object):
 
         def task_binder(task_name, callable_task):
             def collaborator_adapted_task(col_name, round_num, input_tensor_dict, **kwargs):
-                # print('\n\n',task_name, kwargs, '\n\n')
                 task_contract = self.task_provider.task_contract[task_name]
                 # Validation flag can be [False, '_local', '_agg']
                 validation_flag = True if task_contract['optimizer'] is None else False
                 task_settings = self.task_provider.task_settings[task_name]
 
-                # device = kwargs.get('device', f'cuda:{self.data_loader.rank - 1}')
                 device = kwargs.get('device', 'cpu')
 
                 self.rebuild_model(input_tensor_dict, validation=validation_flag, device=device)
-                task_kwargs = dict()
+                task_kwargs = {}
                 if validation_flag:
                     loader = self.data_loader.get_valid_loader()
                     if kwargs['apply'] == 'local':
@@ -147,11 +148,11 @@ class CoreTaskRunner(object):
 
         self.kwargs = kwargs
 
-        self.TASK_REGISTRY = dict()
+        self.TASK_REGISTRY = {}
 
         # Why is it here
         self.opt_treatment = 'RESET'
-        self.tensor_dict_split_fn_kwargs = dict()
+        self.tensor_dict_split_fn_kwargs = {}
         self.required_tensorkeys_for_function = {}
 
         # Complete hell below

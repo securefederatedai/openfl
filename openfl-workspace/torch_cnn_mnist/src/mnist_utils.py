@@ -3,12 +3,11 @@
 
 """You may copy this file as the starting point of your own model."""
 
-import numpy as np
-
 from logging import getLogger
-from torchvision import datasets, transforms
-from torch.utils.tensorboard import SummaryWriter
 
+import numpy as np
+from torchvision import datasets
+from torchvision import transforms
 
 logger = getLogger(__name__)
 

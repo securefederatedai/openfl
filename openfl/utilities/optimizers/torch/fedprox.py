@@ -21,23 +21,24 @@ class FedProxOptimizer(Optimizer):
                  nesterov=False):
         """Initialize."""
         if momentum < 0.0:
-            raise ValueError("Invalid momentum value: {}".format(momentum))
+            raise ValueError(f'Invalid momentum value: {momentum}')
         if lr is not required and lr < 0.0:
-            raise ValueError("Invalid learning rate: {}".format(lr))
+            raise ValueError(f'Invalid learning rate: {lr}')
         if weight_decay < 0.0:
-            raise ValueError("Invalid weight_decay value: {}".format(weight_decay))
+            raise ValueError(f'Invalid weight_decay value: {weight_decay}')
         if mu < 0.0:
-            raise ValueError("Invalid mu value: {}".format(mu))
-        defaults = dict(
-            lr=lr,
-            weight_decay=weight_decay,
-            mu=mu,
-            momentum=momentum,
-            nesterov=nesterov,
-            dampening=dampening)
+            raise ValueError(f'Invalid mu value: {mu}')
+        defaults = {
+            'dampening': dampening,
+            'lr': lr,
+            'momentum': momentum,
+            'mu': mu,
+            'nesterov': nesterov,
+            'weight_decay': weight_decay,
+        }
 
         if nesterov and (momentum <= 0 or dampening != 0):
-            raise ValueError("Nesterov momentum requires a momentum and zero dampening")
+            raise ValueError('Nesterov momentum requires a momentum and zero dampening')
 
         super(FedProxOptimizer, self).__init__(params, defaults)
 

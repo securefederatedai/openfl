@@ -3,11 +3,12 @@
 """Aggregator tests module."""
 
 from unittest import mock
+
 import pytest
 
-from openfl.protocols import ModelProto
 from openfl.component import aggregator
 from openfl.component.assigner import Assigner
+from openfl.protocols import ModelProto
 from openfl.utilities import TaskResultKey
 
 

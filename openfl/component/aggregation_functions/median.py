@@ -3,8 +3,9 @@
 
 """Median module."""
 
-from .interface import AggregationFunctionInterface
 import numpy as np
+
+from .interface import AggregationFunctionInterface
 
 
 class Median(AggregationFunctionInterface):

@@ -1,12 +1,16 @@
 # Copyright (C) 2020-2021 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 """Aggregation function interface module."""
-from typing import Iterator, Tuple, List
-from openfl.utilities import LocalTensor, SingletonABCMeta
-import numpy as np
 from abc import abstractmethod
+from typing import Iterator
+from typing import List
+from typing import Tuple
 
+import numpy as np
 import pandas as pd
+
+from openfl.utilities import LocalTensor
+from openfl.utilities import SingletonABCMeta
 
 
 class AggregationFunctionInterface(metaclass=SingletonABCMeta):

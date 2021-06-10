@@ -5,8 +5,8 @@
 import numpy as np
 import tensorflow as tf
 
-from openfl.utilities import TensorKey, split_tensor_dict_for_holdouts
-
+from openfl.utilities import split_tensor_dict_for_holdouts
+from openfl.utilities import TensorKey
 from .runner import TaskRunner
 from .runner_keras import KerasTaskRunner
 from .runner_pt import PyTorchTaskRunner
@@ -26,7 +26,7 @@ class FastEstimatorTaskRunner(TaskRunner):
 
         class ProgressLoader(fe.trace.Trace):
             def __init__(self, get_progress) -> None:
-                super().__init__(mode="train")
+                super().__init__(mode='train')
                 self.get_progress = get_progress
 
             def on_begin(self, data) -> None:
@@ -87,7 +87,7 @@ class FastEstimatorTaskRunner(TaskRunner):
 
         # Estimators need to be given an experiment name to produce an output
         # summary
-        summary = self.estimator.fit("experiment", warmup=False)
+        summary = self.estimator.fit('experiment', warmup=False)
         self.epoch_idx = self.estimator.system.epoch_idx
         self.global_step = self.estimator.system.global_step
         self.estimator.system.total_epochs += self.total_epochs
@@ -154,7 +154,6 @@ class FastEstimatorTaskRunner(TaskRunner):
         if self.opt_treatment == 'CONTINUE_GLOBAL':
             self.initialize_tensorkeys_for_functions(with_opt_vars=True)
 
-        # return global_tensor_dict, local_tensor_dict
         return global_tensor_dict, local_tensor_dict
 
     def validate(self, col_name, round_num, input_tensor_dict, **kwargs):

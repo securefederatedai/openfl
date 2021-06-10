@@ -3,6 +3,7 @@
 """Cloudpickle serializer plugin."""
 
 import cloudpickle
+
 from .serializer_interface import Serializer
 
 

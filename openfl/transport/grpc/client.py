@@ -3,21 +3,20 @@
 
 """CollaboratorGRPCClient module."""
 
+import time
+from logging import getLogger
+from typing import Optional
+from typing import Tuple
+
 import grpc
 
-from openfl.protocols import utils
 from openfl.protocols import AggregatorStub
 from openfl.protocols import MessageHeader
+from openfl.protocols import TaskResults
 from openfl.protocols import TasksRequest
 from openfl.protocols import TensorRequest
-from openfl.protocols import TaskResults
+from openfl.protocols import utils
 from openfl.utilities import check_equal
-
-from logging import getLogger
-
-# Interceptor related imports
-import time
-from typing import Optional, Tuple
 
 
 class ConstantBackoff:
@@ -76,6 +75,15 @@ class RetryOnRpcErrorClientInterceptor(
     ):
         """Wrap intercept call for stream->unary RPC."""
         return self._intercept_call(continuation, client_call_details, request_iterator)
+
+
+def _atomic_connection(func):
+    def wrapper(self, *args, **kwargs):
+        self.reconnect()
+        response = func(self, *args, **kwargs)
+        self.disconnect()
+        return response
+    return wrapper
 
 
 class CollaboratorGRPCClient:
@@ -153,7 +161,7 @@ class CollaboratorGRPCClient:
 
         """
         self.logger.warn(
-            "gRPC is running on insecure channel with TLS disabled.")
+            'gRPC is running on insecure channel with TLS disabled.')
 
         return grpc.insecure_channel(uri, options=self.channel_options)
 
@@ -249,14 +257,6 @@ class CollaboratorGRPCClient:
         self.stub = AggregatorStub(
             grpc.intercept_channel(self.channel, *self.interceptors)
         )
-
-    def _atomic_connection(func):
-        def wrapper(self, *args, **kwargs):
-            self.reconnect()
-            response = func(self, *args, **kwargs)
-            self.disconnect()
-            return response
-        return wrapper
 
     @_atomic_connection
     def get_tasks(self, collaborator_name):

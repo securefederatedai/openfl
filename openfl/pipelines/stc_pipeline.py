@@ -3,10 +3,12 @@
 
 """STCPipelinemodule."""
 
-import numpy as np
 import gzip as gz
 
-from .pipeline import TransformationPipeline, Transformer
+import numpy as np
+
+from .pipeline import TransformationPipeline
+from .pipeline import Transformer
 
 
 class SparsityTransformer(Transformer):
