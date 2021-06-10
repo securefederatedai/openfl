@@ -2,8 +2,9 @@
 # SPDX-License-Identifier: Apache-2.0
 """Utilities module."""
 
-import numpy as np
 import logging
+
+import numpy as np
 
 
 def add_log_level(level_name, level_num, method_name=None):

@@ -18,8 +18,8 @@ import openfl.interface.collaborator as collaborator
 import openfl.interface.workspace as workspace
 from openfl.federated import Plan
 from openfl.protocols import utils
-from openfl.utilities import split_tensor_dict_for_holdouts
 from openfl.utilities import add_log_level
+from openfl.utilities import split_tensor_dict_for_holdouts
 
 logger = getLogger(__name__)
 
@@ -121,8 +121,8 @@ def setup_logging(level='INFO', log_file=None):
         import tensorflow as tf
         tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
     console = Console(width=160)
-    METRIC = 25
-    add_log_level('METRIC', METRIC)
+    metric = 25
+    add_log_level('METRIC', metric)
 
     if isinstance(level, str):
         level = level.upper()

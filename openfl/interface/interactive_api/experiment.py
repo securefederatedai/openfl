@@ -89,8 +89,8 @@ class FLExperiment:
             certificate=self.federation.agg_certificate,
             private_key=self.federation.agg_private_key)
 
-        METRIC = 25
-        add_log_level('METRIC', METRIC)
+        metric = 25
+        add_log_level('METRIC', metric)
 
         if isinstance(log_level, str):
             log_level = log_level.upper()

@@ -22,8 +22,8 @@ def setup_logging(level='info', log_file=None):
     from rich.console import Console
     from rich.logging import RichHandler
 
-    METRIC = 25
-    add_log_level('METRIC', METRIC)
+    metric = 25
+    add_log_level('METRIC', metric)
 
     if isinstance(level, str):
         level = level.upper()

@@ -183,7 +183,7 @@ class Plan(object):
         return instance
 
     @staticmethod
-    def Import(template):
+    def import_(template):
         """
         Import an instance of a openfl Component or Federated DataLoader/TaskRunner.
 
@@ -283,7 +283,7 @@ class Plan(object):
 
         if log_metric_callback:
             if isinstance(log_metric_callback, dict):
-                log_metric_callback = Plan.Import(**log_metric_callback)
+                log_metric_callback = Plan.import_(**log_metric_callback)
             elif not callable(log_metric_callback):
                 raise TypeError(f'log_metric_callback should be callable object '
                                 f'or be import from code part, get {log_metric_callback}')
