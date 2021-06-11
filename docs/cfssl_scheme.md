@@ -2,6 +2,13 @@
 
 ### 1. Create CA (on CA side).
 ```
+  step ca init --password-file pass_file
+
+    os.system(f'./{step} ca provisioner remove prov --all')
+    os.system(f'./{step} crypto jwk create {step_config_dir}/certs/pub.json '
+              + f'{step_config_dir}/secrets/priv.json --password-file={pki_dir}/pass_file')
+    os.system(f'./{step} ca provisioner add provisioner {step_config_dir}/certs/pub.json')
+    echo('Up CA server')
   cfssl gencert -initca csr_ca.json
 ```
 get  ```ca-key.pem  ca.pem```
