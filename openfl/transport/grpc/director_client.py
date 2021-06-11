@@ -56,6 +56,9 @@ class ShardDirectorClient:
 
     @staticmethod
     def create_workspace(experiment_name, response_iter):
+        import subprocess
+        from sys import executable
+
         if os.path.exists(experiment_name):
             shutil.rmtree(experiment_name)
         os.makedirs(experiment_name)
@@ -73,6 +76,15 @@ class ShardDirectorClient:
         shutil.unpack_archive(arch_name, experiment_name)
         os.remove(arch_name)
 
+        requirements_filename = f"{experiment_name}/requirements.txt"
+
+        if os.path.isfile(requirements_filename):
+            subprocess.check_call([
+                executable, "-m", "pip", "install", "-r", "requirements.txt"],
+                shell=False)
+        else:
+            logger.error("No " + requirements_filename + " file found.")
+
     def _get_experiment_data(self):
         yield director_pb2.WaitExperimentRequest(collaborator_name=self.shard_name)
 
@@ -82,19 +94,20 @@ class ShardDirectorClient:
 
 class DirectorClient:
     def __init__(self, director_uri) -> None:
-        channel = grpc.insecure_channel(director_uri)
+        options = [('grpc.max_message_length', 500 * 1024 * 1024),
+                   ('grpc.max_receive_message_length', 500 * 1024 * 1024)]
+        channel = grpc.insecure_channel(director_uri, options=options)
         self.stub = director_pb2_grpc.FederationDirectorStub(channel)
 
     def set_new_experiment(self, name, col_names, arch_path,
-                           model_interface=None, fl_experiment=None):
+                           initial_tensor_dict=None):
         logger.info('SetNewExperiment')
         model_proto = None
-        if model_interface:
-            initial_tensor_dict = fl_experiment._get_initial_tensor_dict(model_interface)
+        if initial_tensor_dict:
             model_proto = construct_model_proto(initial_tensor_dict, 0, NoCompressionPipeline())
 
-        with open(arch_path, 'rb') as arch:
-            def st():
+        def st():
+            with open(arch_path, 'rb') as arch:
                 max_buffer_size = (2 * 1024 * 1024)
                 chunk = arch.read(max_buffer_size)
                 while chunk != b"":
@@ -111,8 +124,8 @@ class DirectorClient:
                     yield experiment_info
                     chunk = arch.read(max_buffer_size)
 
-            resp = self.stub.SetNewExperiment(st())
-            return resp
+        resp = self.stub.SetNewExperiment(st())
+        return resp
 
     def get_shard_info(self):
         resp = self.stub.GetShardsInfo(director_pb2.GetShardsInfoRequest())

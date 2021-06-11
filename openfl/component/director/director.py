@@ -119,6 +119,9 @@ class Director(director_pb2_grpc.FederationDirectorServicer):
 
     @staticmethod
     def create_workspace(experiment_name, npbytes):
+        import subprocess
+        from sys import executable
+
         if os.path.exists(experiment_name):
             shutil.rmtree(experiment_name)
         os.makedirs(experiment_name)
@@ -129,6 +132,16 @@ class Director(director_pb2_grpc.FederationDirectorServicer):
             content_file.write(npbytes)
 
         shutil.unpack_archive(arch_name, experiment_name)
+        os.remove(arch_name)
+
+        requirements_filename = f"{experiment_name}/requirements.txt"
+
+        if os.path.isfile(requirements_filename):
+            subprocess.check_call([
+                executable, "-m", "pip", "install", "-r", "requirements.txt"],
+                shell=False)
+        else:
+            logger.error("No " + requirements_filename + " file found.")
 
     def _run_aggregator(
             self,
@@ -149,12 +162,14 @@ class Director(director_pb2_grpc.FederationDirectorServicer):
             private_key='')
 
         logger.error(server.serve())
-        server.wait_for_termination()
+        # server.wait_for_termination()
 
 
 async def serve(*args, **kwargs):
     logging.basicConfig()
-    server = aio.server()
+    options = [('grpc.max_message_length', 500 * 1024 * 1024),
+                   ('grpc.max_receive_message_length', 500 * 1024 * 1024)]
+    server = aio.server(options=options)
     director_pb2_grpc.add_FederationDirectorServicer_to_server(
         Director(*args, **kwargs), server)
     listen_addr = '[::]:50051'

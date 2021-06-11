@@ -81,22 +81,13 @@ class FLExperiment:
         self.plan.resolve()
 
         initial_tensor_dict = self._get_initial_tensor_dict(model_provider)
-        self.server = self.plan.interactive_api_get_server(
-            initial_tensor_dict,
-            chain=None,
-            certificate=None,
-            private_key=None)
 
-        logging.basicConfig(level=logging.INFO)
-
-        # This is not good we ask directors_client directly 
+        # This is not good we ask directors_client directly
         self.federation.dir_client.set_new_experiment(
             name=self.experiment_name,
             col_names=self.plan.authorized_cols,
-            arch_path=self.arch_path)
-
-        self.server.serve()
-        # return server
+            arch_path=self.arch_path,
+            initial_tensor_dict=initial_tensor_dict)
 
         # Remove the workspace archive
         os.remove(self.arch_path)
