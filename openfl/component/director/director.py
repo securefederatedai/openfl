@@ -138,7 +138,7 @@ class Director(director_pb2_grpc.FederationDirectorServicer):
 
         if os.path.isfile(requirements_filename):
             subprocess.check_call([
-                executable, "-m", "pip", "install", "-r", "requirements.txt"],
+                executable, "-m", "pip", "install", "-r", requirements_filename],
                 shell=False)
         else:
             logger.error("No " + requirements_filename + " file found.")
