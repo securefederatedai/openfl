@@ -61,6 +61,9 @@ class PyTorchCNN(PyTorchTaskRunner):
         self.resnet.conv1 = nn.Conv2d(1, 64, kernel_size=7, stride=2, padding=3,
                                       bias=False)
 
+    def forward(self, x):
+        return self.resnet.forward(x)
+
     def validate(self, col_name, round_num, input_tensor_dict, use_tqdm=False, **kwargs):
         """Validate.
 
