@@ -10,8 +10,12 @@ from copy import deepcopy
 from logging import getLogger
 from pathlib import Path
 
+from rich.console import Console
+from rich.logging import RichHandler
+
 from openfl.federated import Plan
 from openfl.interface.cli_helper import WORKSPACE
+from openfl.utilities import add_log_level
 from openfl.utilities import split_tensor_dict_for_holdouts
 
 
@@ -69,7 +73,7 @@ class FLExperiment:
 
         # DO CERTIFICATES exchange
 
-    def start_experiment(self, model_provider):
+    def start_experiment(self, model_provider, log_level='INFO', log_file=None):
         """
         Start the aggregator.
 
@@ -87,13 +91,31 @@ class FLExperiment:
             certificate=None,
             private_key=None)
 
-        logging.basicConfig(level=logging.INFO)
+        metric = 25
+        add_log_level('METRIC', metric)
+
+        if isinstance(log_level, str):
+            log_level = log_level.upper()
+
+        handlers = []
+        if log_file:
+            fh = logging.FileHandler(log_file)
+            formatter = logging.Formatter(
+                '%(asctime)s %(levelname)s %(message)s %(filename)s:%(lineno)d')
+            fh.setFormatter(formatter)
+            handlers.append(fh)
+
+        console = Console(width=160)
+        handlers.append(RichHandler(console=console))
+        logging.basicConfig(level=log_level, format='%(message)s',
+                            datefmt='[%X]', handlers=handlers)
 
         # This is not good we ask directors_client directly
         self.federation.dir_client.set_new_experiment(
             name=self.experiment_name,
             col_names=self.plan.authorized_cols,
             arch_path=self.arch_path)
+
 
         self.server.serve()
 

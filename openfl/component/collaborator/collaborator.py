@@ -363,9 +363,9 @@ class Collaborator:
             tensor_name, origin, fl_round, report, tags = tensor
 
             if report:
-                self.logger.info(
-                    f'Sending metric for task {task_name},'
-                    f' round number {round_number}:'
+                self.logger.metric(
+                    f'Round {round_number}, collaborator {self.collaborator_name} '
+                    f'is sending metric for task {task_name}:'
                     f' {tensor_name}\t{tensor_dict[tensor]}')
 
         self.client.send_local_task_results(

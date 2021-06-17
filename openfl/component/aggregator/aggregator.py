@@ -42,6 +42,7 @@ class Aggregator:
                  assigner,
 
                  rounds_to_train=256,
+                 log_metric_callback=None,
                  single_col_cert_common_name=None,
                  compression_pipeline=None,
                  db_store_rounds=1,
@@ -102,6 +103,10 @@ class Aggregator:
         self.collaborator_tasks_results = {}  # {TaskResultKey: list of TensorKeys}
 
         self.collaborator_task_weight = {}  # {TaskResultKey: data_size}
+
+        self.log_metric = lambda *args: None
+        if log_metric_callback:
+            self.log_metric = log_metric_callback
 
     def _load_initial_tensors(self):
         """
@@ -482,7 +487,11 @@ class Aggregator:
             tensor_key, nparray = self._process_named_tensor(
                 named_tensor, collaborator_name
             )
-
+            if 'metric' in tensor_key.tags:
+                self.log_metric(tensor_key.tags[-1], task_name,
+                                tensor_key.tensor_name, nparray, round_number)
+                self.logger.metric(f'Round {round_number}, collaborator {tensor_key.tags[-1]} '
+                                   f'{task_name} result {tensor_key.tensor_name}:\t{nparray}')
             task_results.append(tensor_key)
             # By giving task_key it's own weight, we can support different
             # training/validation weights
@@ -708,7 +717,6 @@ class Aggregator:
             task_name : str
                 The task name to compute
         """
-        self.logger.info(f'{task_name} task metrics...')
         # By default, print out all of the metrics that the validation
         # task sent
         # This handles getting the subset of collaborators that may be
@@ -748,19 +756,23 @@ class Aggregator:
                 if agg_results is None:
                     self.logger.warning(
                         f'Aggregated metric {agg_tensor_name} could not be collected '
-                        f'for round {self.round_number}. Skipping reporting for this round'
-                    )
+                        f'for round {self.round_number}. Skipping reporting for this round')
                 if agg_function:
-                    self.logger.info(f'{agg_function} {agg_tensor_name}:\t{agg_results:.4f}')
+                    self.logger.metric(f'Round {round_number}, aggregator: {task_name} '
+                                       f'{agg_function} {agg_tensor_name}:\t{agg_results:.4f}')
                 else:
-                    self.logger.info(f'{agg_tensor_name}:\t{agg_results:.4f}')
+                    self.logger.metric(f'Round {round_number}, aggregator: {task_name} '
+                                       f'{agg_tensor_name}:\t{agg_results:.4f}')
+                self.log_metric('Aggregator', task_name, tensor_key.tensor_name,
+                                agg_results, round_number)
                 # TODO Add all of the logic for saving the model based
                 #  on best accuracy, lowest loss, etc.
                 if 'validate_agg' in tags:
                     # Compare the accuracy of the model, and
                     # potentially save it
                     if self.best_model_score is None or self.best_model_score < agg_results:
-                        self.logger.info(f'Saved the best model with score {agg_results:f}')
+                        self.logger.metric(f'Round {round_number}: saved the best '
+                                           f'model with score {agg_results:f}')
                         self.best_model_score = agg_results
                         self._save_model(round_number, self.best_state_path)
             if 'trained' in tags:
@@ -904,5 +916,5 @@ the_dragon = '''
                                      #      #*#@##,      .++:.,#
                                     `*      @#            +.
                                   @@@
-                                 #`@
+                                 # `@
                                   ,                                                        '''
