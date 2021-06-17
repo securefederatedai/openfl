@@ -3,11 +3,11 @@
 
 """You may copy this file as the starting point of your own model."""
 
-from openfl.federated import FastEstimatorDataLoader
-
 import fastestimator as fe
 from fastestimator.dataset.data import cifar10
 from fastestimator.op.numpyop.univariate import Normalize
+
+from openfl.federated import FastEstimatorDataLoader
 
 
 class FastEstimatorCifarInMemory(FastEstimatorDataLoader):
@@ -42,11 +42,11 @@ class FastEstimatorCifarInMemory(FastEstimatorDataLoader):
             collaborator_count
         )
 
-        print(f"train_data = {train_data}")
-        print(f"eval_data = {eval_data}")
-        print(f"test_data = {test_data}")
+        print(f'train_data = {train_data}')
+        print(f'eval_data = {eval_data}')
+        print(f'test_data = {test_data}')
 
-        print(f"batch_size = {batch_size}")
+        print(f'batch_size = {batch_size}')
 
         super().__init__(fe.Pipeline(
             train_data=train_data,
@@ -54,7 +54,7 @@ class FastEstimatorCifarInMemory(FastEstimatorDataLoader):
             test_data=test_data,
             batch_size=batch_size,
             ops=[
-                Normalize(inputs="x", outputs="x",
+                Normalize(inputs='x', outputs='x',
                           mean=(0.4914, 0.4822, 0.4465),
                           std=(0.2471, 0.2435, 0.2616))
             ]), **kwargs)

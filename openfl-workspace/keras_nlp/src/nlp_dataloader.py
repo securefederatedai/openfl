@@ -3,11 +3,12 @@
 Licensed subject to the terms of the separately executed evaluation
 license agreement between Intel Corporation and you.
 """
-import numpy as np
 from logging import getLogger
 
+import numpy as np
+import src.dataloader_utils as dlu
+
 from openfl.federated import KerasDataLoader
-import src.dataloader_utils as DLU
 
 logger = getLogger(__name__)
 
@@ -28,18 +29,18 @@ class NLPDataLoader(KerasDataLoader):
            none
         """
         self.shard_num = data_path
-        self.data_path = DLU.download_data_()
+        self.data_path = dlu.download_data_()
 
         self.batch_size = batch_size
 
-        train, valid, details = DLU.load_shard(collaborator_count, self.shard_num,
+        train, valid, details = dlu.load_shard(collaborator_count, self.shard_num,
                                                self.data_path, num_samples, split_ratio)
 
-        self.num_samples = details["num_samples"]
-        self.num_encoder_tokens = details["num_encoder_tokens"]
-        self.num_decoder_tokens = details["num_decoder_tokens"]
-        self.max_encoder_seq_length = details["max_encoder_seq_length"]
-        self.max_decoder_seq_length = details["max_decoder_seq_length"]
+        self.num_samples = details['num_samples']
+        self.num_encoder_tokens = details['num_encoder_tokens']
+        self.num_decoder_tokens = details['num_decoder_tokens']
+        self.max_encoder_seq_length = details['max_encoder_seq_length']
+        self.max_decoder_seq_length = details['max_decoder_seq_length']
 
         self.X_train = [train[0], train[1]]
         self.y_train = train[2]
@@ -89,6 +90,7 @@ class NLPDataLoader(KerasDataLoader):
         """
         return self.X_valid[0].shape[0]
 
+    # TODO: first param sould be self. it should be added or renamed
     def _batch_generator(X1, X2, y, idxs, batch_size, num_batches):
         """
         Generate batch of data.
@@ -124,4 +126,7 @@ class NLPDataLoader(KerasDataLoader):
         # compute the number of batches
         num_batches = int(np.ceil(X1.shape[0] / batch_size))
         # build the generator and return it
+        # TODO: due to _batch_generator(X1, ...) has first param X1, all params here will be moved,
+        #       X1 -> X2, X2 -> y, y -> idxs, idxs -> batch_size, batch_size -> num_batches,
+        #       and num_batches -> should be unexpected in this function
         return self._batch_generator(X1, X2, y, idxs, batch_size, num_batches)

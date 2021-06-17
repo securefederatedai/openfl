@@ -3,10 +3,10 @@
 
 """You may copy this file as the starting point of your own model."""
 
+from logging import getLogger
+
 import numpy as np
 import tensorflow_datasets as tfds
-
-from logging import getLogger
 
 logger = getLogger(__name__)
 

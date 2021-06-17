@@ -4,9 +4,10 @@
 """You may copy this file as the starting point of your own model."""
 
 import tensorflow.keras as ke
-
 from tensorflow.keras import Sequential
-from tensorflow.keras.layers import Conv2D, Flatten, Dense
+from tensorflow.keras.layers import Conv2D
+from tensorflow.keras.layers import Dense
+from tensorflow.keras.layers import Flatten
 
 from openfl.federated import KerasTaskRunner
 

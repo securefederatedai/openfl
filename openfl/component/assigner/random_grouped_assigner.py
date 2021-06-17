@@ -47,9 +47,11 @@ class RandomGroupedAssigner(Assigner):
             'Task group percentages must sum to 100%')
 
         # Start by finding all of the tasks in all specified groups
-        self.all_tasks_in_groups = list(
-            set([task for group in self.task_groups for task in group['tasks']])
-        )
+        self.all_tasks_in_groups = list({
+            task
+            for group in self.task_groups
+            for task in group['tasks']
+        })
 
         # Initialize the map of collaborators for a given task on a given round
         for task in self.all_tasks_in_groups:

@@ -2,10 +2,11 @@
 # SPDX-License-Identifier: Apache-2.0
 """You may copy this file as the starting point of your own model."""
 
-import os
 import logging
+import os
 
 import numpy as np
+
 from .nii_reader import nii_reader
 
 logger = logging.getLogger(__name__)
@@ -30,36 +31,36 @@ def train_val_split(features, labels, percent_train, shuffle):
         val_labels: The ground truth labels for the validation dataset
     """
 
-    def split(list, idx):
+    def split(lst, idx):
         """Split a Python list into 2 lists.
 
         Args:
-            list: The Python list to split
+            lst: The Python list to split
             idx: The index where to split the list into 2 parts
 
         Returns:
             Two lists
 
         """
-        if idx < 0 or idx > len(list):
-            raise ValueError("split was out of expected range.")
-        return list[:idx], list[idx:]
+        if idx < 0 or idx > len(lst):
+            raise ValueError('split was out of expected range.')
+        return lst[:idx], lst[idx:]
 
     nb_features = len(features)
     nb_labels = len(labels)
     if nb_features != nb_labels:
-        raise RuntimeError("Number of features and labels do not match.")
+        raise RuntimeError('Number of features and labels do not match.')
     if shuffle:
         new_order = np.random.permutation(np.arange(nb_features))
         features = features[new_order]
         labels = labels[new_order]
     split_idx = int(percent_train * nb_features)
-    train_features, val_features = split(list=features, idx=split_idx)
-    train_labels, val_labels = split(list=labels, idx=split_idx)
+    train_features, val_features = split(lst=features, idx=split_idx)
+    train_labels, val_labels = split(lst=labels, idx=split_idx)
     return train_features, train_labels, val_features, val_labels
 
 
-def load_from_NIfTI(parent_dir,
+def load_from_nifti(parent_dir,
                     percent_train,
                     shuffle,
                     channels_last=True,
@@ -109,8 +110,7 @@ and located in data directory for this collaborator.
                        **kwargs)
         # the needed files where not present if a tuple of None is returned
         if these_imgs is None:
-            logger.debug('Brain subdirectory: {} did not contain the'
-                         ' needed files.'.format(brain_path))
+            logger.debug(f'Brain subdirectory: {brain_path} did not contain the needed files.')
         else:
             imgs_all.append(these_imgs)
             msks_all.append(these_msks)

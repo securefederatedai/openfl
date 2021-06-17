@@ -2,9 +2,10 @@
 # SPDX-License-Identifier: Apache-2.0
 """Collaborator tests module."""
 
+from unittest import mock
+
 import numpy
 import pytest
-from unittest import mock
 
 from openfl.component.collaborator import Collaborator
 from openfl.protocols import NamedTensor

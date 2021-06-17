@@ -11,7 +11,7 @@ class Serializer:
         pass
 
     @staticmethod
-    def serialize(object, filename):
+    def serialize(object_, filename):
         """Serialize an object and save to disk."""
         raise NotImplementedError
 

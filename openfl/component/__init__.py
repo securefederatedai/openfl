@@ -3,8 +3,10 @@
 
 """openfl.component package."""
 
-from .assigner import Assigner, RandomGroupedAssigner, StaticGroupedAssigner
 from .aggregator import Aggregator
+from .assigner import Assigner
+from .assigner import RandomGroupedAssigner
+from .assigner import StaticGroupedAssigner
 from .collaborator import Collaborator
 
 __all__ = [

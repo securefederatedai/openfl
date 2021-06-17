@@ -2,12 +2,12 @@
 # SPDX-License-Identifier: Apache-2.0
 """Pipeline tests module."""
 
-import pytest
 import numpy as np
+import pytest
 
 from openfl.pipelines.pipeline import Float32NumpyArrayToBytes
-from openfl.pipelines.pipeline import Transformer
 from openfl.pipelines.pipeline import TransformationPipeline
+from openfl.pipelines.pipeline import Transformer
 from openfl.protocols import NamedTensor
 
 

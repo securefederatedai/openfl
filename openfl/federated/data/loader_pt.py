@@ -3,10 +3,11 @@
 
 """PyTorchDataLoader module."""
 
+from math import ceil
+
 import numpy as np
 
 from .loader import DataLoader
-from math import ceil
 
 
 class PyTorchDataLoader(DataLoader):

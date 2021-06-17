@@ -48,7 +48,7 @@ setup(
     ],
     include_package_data=True,
     install_requires=[
-        'Click>=7.0',
+        'Click==8.0.1',
         'PyYAML>=5.4.1',
         'numpy',
         'pandas',
@@ -67,9 +67,9 @@ setup(
     ],
     python_requires='>=3.6, <3.9',
     project_urls={
-        "Bug Tracker": "https://github.com/intel/openfl/issues",
-        "Documentation": "https://openfl.readthedocs.io/en/stable/",
-        "Source Code": "https://github.com/intel/openfl",
+        'Bug Tracker': 'https://github.com/intel/openfl/issues',
+        'Documentation': 'https://openfl.readthedocs.io/en/stable/',
+        'Source Code': 'https://github.com/intel/openfl',
     },
     classifiers=[
         'Environment :: Console',
