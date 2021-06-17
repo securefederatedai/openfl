@@ -21,7 +21,10 @@ class CollaboratorManager:
     def run(self):
         while True:
             experiment_name = self.director_client.get_experiment_data()
-            self._run_collaborator(experiment_name)
+            try:
+                self._run_collaborator(experiment_name)
+            except Exception as exc:
+                logger.error(f'Experiment running was failed: {exc}')
 
     def _run_collaborator(self, experiment_name,
                           plan='plan/plan.yaml',):  # TODO: path params, change naming
@@ -44,16 +47,7 @@ class CollaboratorManager:
         col.run()
         os.chdir(cwd)
 
-    # def load_shard_descriptor(self, data_path):
-    #     from shard_descriptor import ShardDescriptor
-    #     self.shard_descriptor = ShardDescriptor(data_path)
-
-    def start(self, data_path=None):
-        # try:
-        #     self.load_shard_descriptor(data_path)
-        # except ModuleNotFoundError:
-        #     logger.error(f'You should add shard_descriptor.py file to {os.getcwd()}')
-        #     exit()
+    def start(self):
         try:
             acknowledgement = self.director_client.report_shard_info(self.shard_descriptor)
         except Exception as exc:

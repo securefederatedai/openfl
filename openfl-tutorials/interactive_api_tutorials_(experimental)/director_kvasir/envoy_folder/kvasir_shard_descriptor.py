@@ -14,7 +14,7 @@ class KvasirShardDescriptor(ShardDescriptor):
         super().__init__()
 
         self.data_folder = Path.cwd() / data_folder
-        self.download_data(self.data_folder)
+        # self.download_data(self.data_folder)
 
         # Settings for resizing data
         self.enforce_image_hw = tuple(int(size) for size in enforce_image_hw.split(',')) if \

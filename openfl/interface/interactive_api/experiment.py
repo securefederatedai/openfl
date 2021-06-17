@@ -357,7 +357,7 @@ class ModelInterface:
         return self.optimizer
 
 
-class DataInterface:
+class   DataInterface:
     """
     The class to define dataloaders.
 

@@ -14,11 +14,11 @@ class ShardDescriptor(ShardDescriptorBase):
         return None
 
     @property
-    def sample_shape(self) -> int:
+    def sample_shape(self) -> list:
         return []
 
     @property
-    def target_shape(self) -> int:
+    def target_shape(self) -> list:
         return []
 
     @property

@@ -31,14 +31,16 @@ class Director(director_pb2_grpc.FederationDirectorServicer):
         self.aggregator_task = None  # TODO: add check if exists and wait on terminate
 
     async def AcknowledgeShard(self, shard_info, context):
+        logger.info(f'AcknowledgeShard request has got: {shard_info}')
         reply = director_pb2.ShardAcknowledgement(accepted=False)
         # If dataset do not match the data interface of the problem
         if (self.sample_shape != shard_info.sample_shape) or \
                 (self.target_shape != shard_info.target_shape):
+            logger.info('Request was not accepted')
             return reply
-
+        logger.info('Request was accepted')
         self.shard_registry.append(shard_info)
-        # logger.info('\n\n\nRegistry now looks like this\n\n', self.shard_registry)
+
         reply.accepted = True
         return reply
 
@@ -146,13 +148,15 @@ class Director(director_pb2_grpc.FederationDirectorServicer):
             certificate='',
             private_key='')
 
-        logger.error(server.serve())
-        server.wait_for_termination()
+        server.serve()
+        # server.wait_for_termination()
 
 
 async def serve(*args, **kwargs):
     logging.basicConfig()
-    server = aio.server()
+    channel_opt = [('grpc.max_send_message_length', 512 * 1024 * 1024),
+                   ('grpc.max_receive_message_length', 512 * 1024 * 1024)]
+    server = aio.server(options=channel_opt)
     director_pb2_grpc.add_FederationDirectorServicer_to_server(
         Director(*args, **kwargs), server)
     listen_addr = '[::]:50051'

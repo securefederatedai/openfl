@@ -15,7 +15,9 @@ logger = logging.getLogger(__name__)
 class ShardDirectorClient:
     def __init__(self, director_uri, shard_name) -> None:
         self.shard_name = shard_name
-        channel = grpc.insecure_channel(director_uri)
+        options = [('grpc.max_message_length', 100 * 1024 * 1024)]
+        channel = grpc.insecure_channel(director_uri, options=options)
+
         self.stub = director_pb2_grpc.FederationDirectorStub(channel)
 
     def report_shard_info(self, shard_descriptor) -> bool:
@@ -82,7 +84,9 @@ class ShardDirectorClient:
 
 class DirectorClient:
     def __init__(self, director_uri) -> None:
-        channel = grpc.insecure_channel(director_uri)
+        channel_opt = [('grpc.max_send_message_length', 512 * 1024 * 1024),
+                       ('grpc.max_receive_message_length', 512 * 1024 * 1024)]
+        channel = grpc.insecure_channel(director_uri, options=channel_opt)
         self.stub = director_pb2_grpc.FederationDirectorStub(channel)
 
     def set_new_experiment(self, name, col_names, arch_path,

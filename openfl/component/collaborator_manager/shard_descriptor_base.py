@@ -8,12 +8,12 @@ class ShardDescriptorBase:
         raise NotImplementedError
 
     @property
-    def sample_shape(self) -> int:
+    def sample_shape(self) -> list:
         # int( sum( [str(dim) for dim in sample.shape] ) )
         raise NotImplementedError
 
     @property
-    def target_shape(self) -> int:
+    def target_shape(self) -> list:
         raise NotImplementedError
 
     @property
