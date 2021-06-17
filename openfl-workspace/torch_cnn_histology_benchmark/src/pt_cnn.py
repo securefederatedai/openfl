@@ -172,11 +172,21 @@ class PyTorchCNN(PyTorchTaskRunner):
             Metric: An object containing name and np.ndarray value.
         """
         start = time.time()
-        results = super().train_epoch(batch_generator=batch_generator)
+        losses = []
+        for data, target in batch_generator:
+            data, target = pt.tensor(data).to(self.device), pt.tensor(
+                target).to(self.device)
+            self.optimizer.zero_grad()
+            output = self(data)
+            loss = self.loss_fn(output=output, target=target)
+            loss.backward()
+            self.optimizer.step()
+            losses.append(loss.detach().cpu().numpy())
         end = time.time()
-        with open('times_torch_cnn_mnist.csv', 'w+') as f:
+        with open('times_torch_cnn_histology.csv', 'a+') as f:
             f.write(f'{end-start}\n')
-        return results
+        loss = np.mean(losses)
+        return Metric(name=self.loss_fn.__name__, value=np.array(loss))
 
     def reset_opt_vars(self):
         """Reset optimizer variables.
