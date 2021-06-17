@@ -22,7 +22,7 @@ from openfl.utilities import split_tensor_dict_for_holdouts
 class FLExperiment:
     """Central class for FL experiment orchestration."""
 
-    def __init__(self, federation, serializer_plugin=None) -> None:
+    def __init__(self, federation, experiment_name='test', serializer_plugin=None) -> None:
         """
         Initialize an experiment inside a federation.
 
@@ -30,6 +30,7 @@ class FLExperiment:
         Information about the data on collaborators is contained on the federation level.
         """
         self.federation = federation
+        self.experiment_name = experiment_name
 
         if serializer_plugin is None:
             self.serializer_plugin = \
@@ -68,7 +69,7 @@ class FLExperiment:
         self._export_python_env()
 
         # Compress te workspace to restore it on collaborator
-        self._pack_the_workspace()
+        self.arch_path = self._pack_the_workspace()
 
         # DO CERTIFICATES exchange
 
@@ -80,14 +81,15 @@ class FLExperiment:
         model initialization without workspace redistribution.
         """
         # Start the aggregator
+        self.logger.info('Starting experiment!')
         self.plan.resolve()
 
         initial_tensor_dict = self._get_initial_tensor_dict(model_provider)
         self.server = self.plan.interactive_api_get_server(
             initial_tensor_dict,
-            chain=self.federation.cert_chain,
-            certificate=self.federation.agg_certificate,
-            private_key=self.federation.agg_private_key)
+            chain=None,
+            certificate=None,
+            private_key=None)
 
         metric = 25
         add_log_level('METRIC', metric)
@@ -107,7 +109,19 @@ class FLExperiment:
         handlers.append(RichHandler(console=console))
         logging.basicConfig(level=log_level, format='%(message)s',
                             datefmt='[%X]', handlers=handlers)
+
+        # This is not good we ask directors_client directly
+        self.federation.dir_client.set_new_experiment(
+            name=self.experiment_name,
+            col_names=self.plan.authorized_cols,
+            arch_path=self.arch_path)
+
+
         self.server.serve()
+
+        # Remove the workspace archive
+        os.remove(self.arch_path)
+        del self.arch_path
 
     @staticmethod
     def _export_python_env():
@@ -140,9 +154,11 @@ class FLExperiment:
 
         copytree('./', tmp_dir + '/workspace', ignore=ignore)
 
-        make_archive(archive_name, archive_type, tmp_dir + '/workspace')
+        arch_path = make_archive(archive_name, archive_type, tmp_dir + '/workspace')
 
         rmtree(tmp_dir)
+
+        return arch_path
 
     def _get_initial_tensor_dict(self, model_provider):
         """Extract initial weights from the model."""
@@ -169,9 +185,9 @@ class FLExperiment:
         # Change plan name to default one
         plan.name = 'plan.yaml'
 
-        plan.authorized_cols = list(self.federation.col_data_paths.keys())
+        # plan.authorized_cols = list(self.federation.col_data_paths.keys())
         # Network part of the plan
-        plan.config['network']['settings']['agg_addr'] = self.federation.fqdn
+        plan.config['network']['settings']['agg_addr'] = self.federation.director_node_fqdn
         plan.config['network']['settings']['disable_tls'] = self.federation.disable_tls
 
         # Aggregator part of the plan
@@ -363,7 +379,7 @@ class ModelInterface:
         return self.optimizer
 
 
-class DataInterface:
+class   DataInterface:
     """
     The class to define dataloaders.
 
@@ -373,18 +389,23 @@ class DataInterface:
         at initialization time for dataloader customization
     """
 
-    def __init__(self, user_dataset_class, **kwargs):
+    def __init__(self, **kwargs):
         """Initialize DataLoader."""
-        self.UserDatasetClass = user_dataset_class
         self.kwargs = kwargs
 
-    def _delayed_init(self, data_path):
+    @property
+    def shard_descriptor(self):
+        return self._shard_descriptor
+
+    @shard_descriptor.setter
+    def shard_descriptor(self, shard_descriptor):
         """
         Describe per-collaborator procedures or sharding.
 
         This method will be called during a collaborator initialization.
-        data_path variable will be set according to data.yaml.
+        Local shard_descriptor  will be set by Envoy.
         """
+        self._shard_descriptor = shard_descriptor
         raise NotImplementedError
 
     def get_train_loader(self, **kwargs):

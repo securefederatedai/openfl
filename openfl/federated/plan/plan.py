@@ -348,12 +348,9 @@ openfl.component.aggregation_functions.AggregationFunctionInterface
         return self.loader_
 
     # Python interactive api
-    def initialize_data_loader(self, data_loader, collaborator_name):
+    def initialize_data_loader(self, data_loader, shard_descriptor):
         """Get data loader."""
-        data_path = self.cols_data_paths[
-            collaborator_name
-        ]
-        data_loader._delayed_init(data_path=data_path)
+        data_loader.shard_descriptor = shard_descriptor
         return data_loader
 
     # legacy api (TaskRunner subclassing)
@@ -403,7 +400,7 @@ openfl.component.aggregation_functions.AggregationFunctionInterface
         return self.runner_
 
     def get_collaborator(self, collaborator_name,
-                         task_runner=None, client=None):
+                         task_runner=None, client=None, shard_descriptor=None):
         """Get collaborator."""
         defaults = self.config.get(
             'collaborator',
@@ -428,7 +425,7 @@ openfl.component.aggregation_functions.AggregationFunctionInterface
             if 'openfl.federated.task.task_runner' in self.config['task_runner']['template']:
                 # Interactive API
                 model_provider, task_keeper, data_loader = self.deserialize_interface_objects()
-                data_loader = self.initialize_data_loader(data_loader, collaborator_name)
+                data_loader = self.initialize_data_loader(data_loader, shard_descriptor)
                 defaults[SETTINGS]['task_runner'] = self.get_core_task_runner(
                     data_loader=data_loader,
                     model_provider=model_provider,
@@ -478,7 +475,7 @@ openfl.component.aggregation_functions.AggregationFunctionInterface
 
         return self.client_
 
-    def get_server(self):
+    def get_server(self, **kwargs):
         """Get gRPC server of the aggregator instance."""
         common_name = self.config['network'][SETTINGS]['agg_addr'].lower()
 
@@ -493,6 +490,9 @@ openfl.component.aggregation_functions.AggregationFunctionInterface
         server_args['ca'] = chain
         server_args['certificate'] = certificate
         server_args['private_key'] = private_key
+
+        for arg, value in kwargs.items():
+            server_args[arg] = value
 
         server_args['aggregator'] = self.get_aggregator()
 
@@ -522,6 +522,9 @@ openfl.component.aggregation_functions.AggregationFunctionInterface
         interface_objects = []
         serializer = Plan.build(
             self.config['api_layer']['required_plugin_components']['serializer_plugin'], {})
+        # import os
+        # print("\n\n CWD \n\n", os.getcwd())
+        # from .layers import soft_dice_coef
         for filename in ['model_interface_file',
                          'tasks_interface_file', 'dataloader_interface_file']:
             interface_objects.append(
