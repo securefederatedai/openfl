@@ -190,6 +190,7 @@ async def serve(*args, **kwargs):
     director = Director(*args, **kwargs)
     director_pb2_grpc.add_FederationDirectorServicer_to_server(director, server)
     director.run_tensorboard()
+    # Add pass addr from director.yaml
     listen_addr = '[::]:50051'
     server.add_insecure_port(listen_addr)
     logger.info(f'Starting server on {listen_addr}')
