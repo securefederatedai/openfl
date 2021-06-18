@@ -159,13 +159,14 @@ class Director(director_pb2_grpc.FederationDirectorServicer):
         plan.authorized_cols = list(self.col_exp_queues.keys())
 
         logger.info('🧿 Starting the Aggregator Service.')
-        server = plan.interactive_api_get_server(
+        grpc_server = plan.interactive_api_get_server(
             initial_tensor_dict,
             chain='',
             certificate='',
             private_key='')
 
-        server.serve()
+        server = grpc_server.get_server()
+        server.start()
 
     def run_tensorboard(self):
         """Run the tensorboard."""

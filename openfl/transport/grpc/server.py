@@ -205,8 +205,8 @@ class AggregatorGRPCServer(AggregatorServicer):
         # turn data stream into local model update
         return Acknowledgement(header=self.get_header(collaborator_name))
 
-    def serve(self):
-        """Start an aggregator gRPC service."""
+    def get_server(self):
+        """Returns gRPC server."""
         self.server = server(ThreadPoolExecutor(max_workers=cpu_count()),
                              options=self.channel_options)
 
@@ -239,8 +239,13 @@ class AggregatorGRPCServer(AggregatorServicer):
 
             self.server.add_secure_port(self.uri, self.server_credentials)
 
-        self.logger.info('Starting Aggregator gRPC Server')
+        return self.server
 
+    def serve(self):
+        """Start an aggregator gRPC service."""
+        self.get_server()
+
+        self.logger.info('Starting Aggregator gRPC Server')
         self.server.start()
 
         try:
