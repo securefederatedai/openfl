@@ -39,7 +39,6 @@ class ShardDirectorClient:
         logger.info('Send WaitExperiment request')
         response_iter = self.stub.WaitExperiment(self._get_experiment_data())
         logger.info(f'WaitExperiment response has received')
-        # TODO: seperate into two resuests (get status and get file)
         experiment_name = None
         for response in response_iter:
             experiment_name = response.experiment_name
@@ -90,11 +89,10 @@ class DirectorClient:
         self.stub = director_pb2_grpc.FederationDirectorStub(channel)
 
     def set_new_experiment(self, name, col_names, arch_path,
-                           model_interface=None, fl_experiment=None):
+                           initial_tensor_dict=None):
         logger.info('SetNewExperiment')
         model_proto = None
-        if model_interface:
-            initial_tensor_dict = fl_experiment._get_initial_tensor_dict(model_interface)
+        if initial_tensor_dict:
             model_proto = construct_model_proto(initial_tensor_dict, 0, NoCompressionPipeline())
 
         with open(arch_path, 'rb') as arch:

@@ -1,18 +1,18 @@
 import logging
+import shutil
+import sys
 from importlib import import_module
 from os import path
-import sys
 from pathlib import Path
-import shutil
 
 import click
-from click import group, option, pass_context
 from click import Path as ClickPath
+from click import group, option, pass_context
 from yaml import safe_load
 
-from openfl.interface.cli_helper import WORKSPACE
-from openfl.interface.cli_helper import SITEPACKS
 from openfl.component.collaborator_manager.collaborator_manager import CollaboratorManager
+from openfl.interface.cli_helper import SITEPACKS
+from openfl.interface.cli_helper import WORKSPACE
 
 logger = logging.getLogger(__name__)
 
@@ -73,4 +73,3 @@ def shard_descriptor_from_config(shard_config_path: str):
     instance = getattr(module, class_name)(**params)
 
     return instance
-

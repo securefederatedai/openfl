@@ -1,11 +1,12 @@
 import logging
-from pathlib import Path
 import os
 import sys
+import time
+from pathlib import Path
 
-from openfl.federated import Plan
 from click import echo
 
+from openfl.federated import Plan
 from openfl.transport.grpc.director_client import ShardDirectorClient
 
 logger = logging.getLogger(__name__)
@@ -20,7 +21,11 @@ class CollaboratorManager:
 
     def run(self):
         while True:
-            experiment_name = self.director_client.get_experiment_data()
+            try:
+                experiment_name = self.director_client.get_experiment_data()
+            except Exception as exc:
+                time.sleep(1)
+                logger.error(f'Error: {exc}')
             try:
                 self._run_collaborator(experiment_name)
             except Exception as exc:
@@ -34,7 +39,7 @@ class CollaboratorManager:
         # This is needed for python module finder
         sys.path.append(os.getcwd())
 
-        plan = Plan.Parse(
+        plan = Plan.parse(
             plan_config_path=Path(plan)
         )
 

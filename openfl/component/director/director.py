@@ -1,16 +1,19 @@
-from concurrent.futures import ProcessPoolExecutor
-import logging
-from grpc import aio
 import asyncio
-from pathlib import Path
+import logging
 import os
+import socket
 import shutil
+import threading
 from collections import defaultdict
+from concurrent.futures import ProcessPoolExecutor
+from pathlib import Path
 
-from openfl.protocols import director_pb2
-from openfl.protocols import director_pb2_grpc
+from grpc import aio
+
 from openfl.federated import Plan
 from openfl.pipelines import NoCompressionPipeline
+from openfl.protocols import director_pb2
+from openfl.protocols import director_pb2_grpc
 from openfl.protocols.utils import deconstruct_model_proto
 
 logger = logging.getLogger(__name__)
@@ -29,6 +32,10 @@ class Director(director_pb2_grpc.FederationDirectorServicer):
         self.experiments_queue = asyncio.Queue()
         self.executor = ProcessPoolExecutor(max_workers=2)
         self.aggregator_task = None  # TODO: add check if exists and wait on terminate
+        self.fqdn = socket.getfqdn()
+        self.director_port = None
+        self.tensorboard_port = 6006
+        self.tensorboard_thread = None
 
     async def AcknowledgeShard(self, shard_info, context):
         logger.info(f'AcknowledgeShard request has got: {shard_info}')
@@ -54,26 +61,24 @@ class Director(director_pb2_grpc.FederationDirectorServicer):
             else:
                 raise Exception('Bad request')
 
-        logger.info(f'New experiment {request.name} for collaborators {request.collaborator_names}')
         # TODO: save to file
         self.experiment_data[request.name] = npbytes
         tensor_dict = None
         if request.model_proto:
             tensor_dict, _ = deconstruct_model_proto(request.model_proto, NoCompressionPipeline())
 
-        # TODO: add a logic with many experiments
+        self.create_workspace(request.name, npbytes)
+        self._run_aggregator(tensor_dict, request.name)
+
+        logger.info(f'New experiment {request.name} for collaborators {request.collaborator_names}')
         for col_name in request.collaborator_names:
             queue = self.col_exp_queues[col_name]
             await queue.put(request.name)
-        self.create_workspace(request.name, npbytes)
-        self._run_aggregator(tensor_dict, request.name)
-        # loop = asyncio.get_event_loop()
-        # fut = loop.run_in_executor(self.executor, self._run_aggregator, tensor_dict, request.name)
-        # await fut
-        # future = self.executor.submit(self._run_aggregator, tensor_dict, request.name)
-        # self.aggregator_task = future
-
-        return director_pb2.Response(accepted=True)
+        logger.info('Send response')
+        return director_pb2.SetNewExperimentResponse(
+            accepted=True,
+            tensorboard_address=f'http://{self.fqdn}:{self.tensorboard_port}'
+        )
 
     async def GetExperimentData(self, request, context):
         # experiment_data = preparations_pb2.ExperimentData()
@@ -91,7 +96,6 @@ class Director(director_pb2_grpc.FederationDirectorServicer):
             logger.info(f'Send {len(chunk)} bytes')
             yield director_pb2.ExperimentData(size=len(chunk), npbytes=chunk)
 
-    # Await prob
     async def WaitExperiment(self, request_iterator, context):
         logger.info('Request WaitExperiment has got!')
         async for msg in request_iterator:
@@ -138,7 +142,7 @@ class Director(director_pb2_grpc.FederationDirectorServicer):
     ):  # TODO: path params, change naming
         cwd = os.getcwd()
         os.chdir(f'{cwd}/{experiment_name}')
-        plan = Plan.Parse(plan_config_path=Path(plan))
+        plan = Plan.parse(plan_config_path=Path(plan))
         plan.authorized_cols = list(self.col_exp_queues.keys())
 
         logger.info('🧿 Starting the Aggregator Service.')
@@ -151,21 +155,29 @@ class Director(director_pb2_grpc.FederationDirectorServicer):
         server.serve()
         # server.wait_for_termination()
 
+    def run_tensorboard(self):
+        log_path = os.getcwd()
+        self.tensorboard_thread = threading.Thread(
+              target=lambda: os.system(
+                  f'tensorboard --logdir={log_path} --host={"0.0.0.0"} '
+                  f'--port={self.tensorboard_port}'
+              ),
+        )
+        try:
+            self.tensorboard_thread.start()
+        except Exception as exc:
+            logger.error(f'Failed to run tensorboard: {exc}')
+
 
 async def serve(*args, **kwargs):
-    logging.basicConfig()
     channel_opt = [('grpc.max_send_message_length', 512 * 1024 * 1024),
                    ('grpc.max_receive_message_length', 512 * 1024 * 1024)]
     server = aio.server(options=channel_opt)
-    director_pb2_grpc.add_FederationDirectorServicer_to_server(
-        Director(*args, **kwargs), server)
+    director = Director(*args, **kwargs)
+    director_pb2_grpc.add_FederationDirectorServicer_to_server(director, server)
+    director.run_tensorboard()
     listen_addr = '[::]:50051'
     server.add_insecure_port(listen_addr)
     logger.info(f'Starting server on {listen_addr}')
     await server.start()
     await server.wait_for_termination()
-
-
-if __name__ == '__main__':
-    logging.basicConfig(level=logging.INFO)
-    asyncio.run(serve())

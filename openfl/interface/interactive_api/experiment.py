@@ -73,6 +73,28 @@ class FLExperiment:
 
         # DO CERTIFICATES exchange
 
+    def start(self, *, model_provider, task_keeper, data_loader,
+              rounds_to_train, collaborators, delta_updates=False, opt_treatment='RESET'):
+        self.prepare_workspace_distribution(
+            model_provider, task_keeper, data_loader, rounds_to_train,
+            delta_updates=delta_updates, opt_treatment=opt_treatment
+        )
+        self.logger.info('Starting experiment!')
+        self.plan.resolve()
+        initial_tensor_dict = self._get_initial_tensor_dict(model_provider)
+        response = self.federation.dir_client.set_new_experiment(
+            name=self.experiment_name,
+            col_names=collaborators,
+            arch_path=self.arch_path,
+            initial_tensor_dict=initial_tensor_dict
+        )
+
+        # Remove the workspace archive
+        os.remove(self.arch_path)
+        del self.arch_path
+
+        return response.accepted, response.tensorboard_address
+
     def start_experiment(self, model_provider, log_level='INFO', log_file=None):
         """
         Start the aggregator.
@@ -85,11 +107,6 @@ class FLExperiment:
         self.plan.resolve()
 
         initial_tensor_dict = self._get_initial_tensor_dict(model_provider)
-        self.server = self.plan.interactive_api_get_server(
-            initial_tensor_dict,
-            chain=None,
-            certificate=None,
-            private_key=None)
 
         metric = 25
         add_log_level('METRIC', metric)
@@ -115,9 +132,6 @@ class FLExperiment:
             name=self.experiment_name,
             col_names=self.plan.authorized_cols,
             arch_path=self.arch_path)
-
-
-        self.server.serve()
 
         # Remove the workspace archive
         os.remove(self.arch_path)
@@ -187,7 +201,7 @@ class FLExperiment:
 
         # plan.authorized_cols = list(self.federation.col_data_paths.keys())
         # Network part of the plan
-        plan.config['network']['settings']['agg_addr'] = self.federation.director_node_fqdn
+        plan.config['network']['settings']['agg_addr'] = 'localhost'
         plan.config['network']['settings']['disable_tls'] = self.federation.disable_tls
 
         # Aggregator part of the plan

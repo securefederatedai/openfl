@@ -1,16 +1,17 @@
 import asyncio
 import logging
-import sys
 import shutil
+import sys
+from pathlib import Path
 
 import click
+from click import Path as ClickPath
 from click import group, pass_context
 from click import option
-from click import Path as ClickPath
-from openfl.interface.cli_helper import WORKSPACE
-from pathlib import Path
-from openfl.component.director.director import serve
 from yaml import safe_load
+
+from openfl.component.director.director import serve
+from openfl.interface.cli_helper import WORKSPACE
 
 logger = logging.getLogger(__name__)
 

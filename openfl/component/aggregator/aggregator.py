@@ -11,6 +11,7 @@ from openfl.protocols import ModelProto
 from openfl.protocols import utils
 from openfl.utilities import TaskResultKey
 from openfl.utilities import TensorKey
+from openfl.utilities.logs import write_metric
 
 
 class Aggregator:
@@ -104,9 +105,7 @@ class Aggregator:
 
         self.collaborator_task_weight = {}  # {TaskResultKey: data_size}
 
-        self.log_metric = lambda *args: None
-        if log_metric_callback:
-            self.log_metric = log_metric_callback
+        self.log_metric = write_metric
 
     def _load_initial_tensors(self):
         """

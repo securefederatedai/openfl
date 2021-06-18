@@ -32,7 +32,7 @@ class FederationDirectorStub(object):
         self.SetNewExperiment = channel.stream_unary(
                 '/FederationDirector/SetNewExperiment',
                 request_serializer=director__pb2.ExperimentInfo.SerializeToString,
-                response_deserializer=director__pb2.Response.FromString,
+                response_deserializer=director__pb2.SetNewExperimentResponse.FromString,
                 )
         self.GetRegisterdShards = channel.unary_unary(
                 '/FederationDirector/GetRegisterdShards',
@@ -107,7 +107,7 @@ def add_FederationDirectorServicer_to_server(servicer, server):
             'SetNewExperiment': grpc.stream_unary_rpc_method_handler(
                     servicer.SetNewExperiment,
                     request_deserializer=director__pb2.ExperimentInfo.FromString,
-                    response_serializer=director__pb2.Response.SerializeToString,
+                    response_serializer=director__pb2.SetNewExperimentResponse.SerializeToString,
             ),
             'GetRegisterdShards': grpc.unary_unary_rpc_method_handler(
                     servicer.GetRegisterdShards,
@@ -193,7 +193,7 @@ class FederationDirector(object):
             metadata=None):
         return grpc.experimental.stream_unary(request_iterator, target, '/FederationDirector/SetNewExperiment',
             director__pb2.ExperimentInfo.SerializeToString,
-            director__pb2.Response.FromString,
+            director__pb2.SetNewExperimentResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
