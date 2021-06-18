@@ -241,7 +241,7 @@ class AggregatorGRPCServer(AggregatorServicer):
 
         self.logger.info('Starting Aggregator gRPC Server')
 
-        return self.server.start()
+        self.server.start()
 
         try:
             while not self.aggregator.all_quit_jobs_sent():
