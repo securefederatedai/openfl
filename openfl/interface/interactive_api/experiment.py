@@ -17,6 +17,7 @@ from openfl.federated import Plan
 from openfl.interface.cli_helper import WORKSPACE
 from openfl.utilities import add_log_level
 from openfl.utilities import split_tensor_dict_for_holdouts
+from openfl.utilities.logs import setup_loggers
 
 
 class FLExperiment:
@@ -39,6 +40,7 @@ class FLExperiment:
             self.serializer_plugin = serializer_plugin
 
         self.logger = getLogger(__name__)
+        setup_loggers()
 
     def get_best_model(self):
         """Retrieve the model with the best score."""
