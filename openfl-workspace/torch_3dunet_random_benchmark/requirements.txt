@@ -2,3 +2,4 @@ torch >= 1.2.0
 torchvision >= 0.9.1
 git+https://github.com/wolny/pytorch-3dunet.git
 h5py
+matplotlib

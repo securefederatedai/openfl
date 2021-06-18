@@ -8,10 +8,14 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 import tqdm
+from typing import Iterator
+from typing import Tuple
 
 from openfl.federated import PyTorchTaskRunner
 from openfl.utilities import TensorKey
 from pytorch3dunet.unet3d.model import UNet3D
+
+from openfl.utilities import Metric
 
 
 def soft_dice_loss(output, target):
@@ -117,6 +121,25 @@ class PyTorchCNN(PyTorchTaskRunner):
 
         # Empty list represents metrics that should only be stored locally
         return output_tensor_dict, {}
+
+    def train_epoch(self, batch_generator: Iterator[Tuple[np.ndarray, np.ndarray]]) -> Metric:
+        """Train single epoch.
+
+        Override this function in order to use custom training.
+
+        Args:
+            batch_generator: Train dataset batch generator. Yields (samples, targets) tuples of
+            size = `self.data_loader.batch_size`.
+        Returns:
+            Metric: An object containing name and np.ndarray value.
+        """
+        import time
+        start = time.time()
+        results = super().train_epoch(batch_generator=batch_generator)
+        end = time.time()
+        with open('times_torch_cnn_3dunet.csv', 'a+') as f:
+            f.write(f'{end-start}\n')
+        return results
 
     def reset_opt_vars(self):
         """Reset optimizer variables.
