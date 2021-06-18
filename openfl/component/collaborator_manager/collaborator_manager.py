@@ -1,3 +1,8 @@
+# Copyright (C) 2020-2021 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+"""Collaborator manager module."""
+
 import logging
 import os
 import sys
@@ -13,13 +18,16 @@ logger = logging.getLogger(__name__)
 
 
 class CollaboratorManager:
+    """Collaborator manager class."""
 
     def __init__(self, shard_name, director_uri, shard_descriptor) -> None:
+        """Initialize a collaborator manager object."""
         self.name = shard_name
         self.director_client = ShardDirectorClient(director_uri, shard_name=shard_name)
         self.shard_descriptor = shard_descriptor
 
     def run(self):
+        """Run of the collaborator manager working cycle."""
         while True:
             try:
                 experiment_name = self.director_client.get_experiment_data()
@@ -33,6 +41,7 @@ class CollaboratorManager:
 
     def _run_collaborator(self, experiment_name,
                           plan='plan/plan.yaml',):  # TODO: path params, change naming
+        """Run the collaborator for the experiment running."""
         cwd = os.getcwd()
         os.chdir(f'{cwd}/{experiment_name}')  # TODO: probably it should be another way
 
@@ -53,6 +62,7 @@ class CollaboratorManager:
         os.chdir(cwd)
 
     def start(self):
+        """Start the collaborator manager."""
         try:
             acknowledgement = self.director_client.report_shard_info(self.shard_descriptor)
         except Exception as exc:
@@ -65,5 +75,5 @@ class CollaboratorManager:
                 self.run()
             else:
                 # Shut down
-                logger.error("Report shard info was not accepted")
+                logger.error('Report shard info was not accepted')
                 exit()

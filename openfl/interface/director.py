@@ -1,3 +1,7 @@
+# Copyright (C) 2020-2021 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+"""Director CLI."""
+
 import asyncio
 import logging
 import shutil
@@ -5,9 +9,10 @@ import sys
 from pathlib import Path
 
 import click
-from click import Path as ClickPath
-from click import group, pass_context
+from click import group
 from click import option
+from click import pass_context
+from click import Path as ClickPath
 from yaml import safe_load
 
 from openfl.component.director.director import serve

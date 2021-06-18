@@ -1,3 +1,7 @@
+# Copyright (C) 2020-2021 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+"""Collaborator manager CLI."""
+
 import logging
 import shutil
 import sys
@@ -6,8 +10,10 @@ from os import path
 from pathlib import Path
 
 import click
+from click import group
+from click import option
+from click import pass_context
 from click import Path as ClickPath
-from click import group, option, pass_context
 from yaml import safe_load
 
 from openfl.component.collaborator_manager.collaborator_manager import CollaboratorManager
@@ -63,6 +69,7 @@ def create(collaborator_manager_path):
 
 
 def shard_descriptor_from_config(shard_config_path: str):
+    """Build a shard descriptor from config."""
     with open(shard_config_path) as stream:
         shard_config = safe_load(stream)
     class_name = path.splitext(shard_config['template'])[1].strip('.')

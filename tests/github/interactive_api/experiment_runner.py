@@ -1,18 +1,11 @@
-import os
 import logging
-import sys
+import os
 import shutil
 import subprocess
 
-root = logging.getLogger()
-root.setLevel(logging.INFO)
-handler = logging.StreamHandler(sys.stdout)
-formatter = logging.Formatter(
-    "[%(asctime)s][%(name)s][%(levelname)s] - %(message)s"
-)
-handler.setFormatter(formatter)
-root.addHandler(handler)
+from openfl.utilities.logs import setup_loggers
 
+setup_loggers(logging.INFO)
 logger = logging.getLogger(__name__)
 
 
@@ -41,7 +34,7 @@ def run_experiment(col_data_paths, model_interface, arch_path, fl_experiment):
     for col_name in col_data_paths:
         logger.info(f'Starting collaborator: {col_name}')
         p = subprocess.Popen(
-            f"fx collaborator start -n {col_name} -p plan/plan.yaml -d data.yaml".split(' '),
+            f'fx collaborator start -n {col_name} -p plan/plan.yaml -d data.yaml'.split(' '),
             cwd=os.path.join(os.getcwd(), col_name)
         )
         processes.append(p)

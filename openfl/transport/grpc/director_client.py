@@ -1,19 +1,27 @@
+# Copyright (C) 2020-2021 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+"""Director clients module."""
+
 import logging
 import os
 import shutil
 
 import grpc
 
+from openfl.pipelines import NoCompressionPipeline
 from openfl.protocols import director_pb2
 from openfl.protocols import director_pb2_grpc
-from openfl.pipelines import NoCompressionPipeline
 from openfl.protocols.utils import construct_model_proto
 
 logger = logging.getLogger(__name__)
 
 
 class ShardDirectorClient:
+    """The internal director client class."""
+
     def __init__(self, director_uri, shard_name) -> None:
+        """Initialize a shard director client object."""
         self.shard_name = shard_name
         options = [('grpc.max_message_length', 100 * 1024 * 1024)]
         channel = grpc.insecure_channel(director_uri, options=options)
@@ -21,6 +29,7 @@ class ShardDirectorClient:
         self.stub = director_pb2_grpc.FederationDirectorStub(channel)
 
     def report_shard_info(self, shard_descriptor) -> bool:
+        """Report shard info to the director."""
         logger.info('Send report AcknowledgeShard')
         # True considered as successful registration
         shard_info = director_pb2.ShardInfo(
@@ -36,9 +45,10 @@ class ShardDirectorClient:
         return acknowledgement.accepted
 
     def get_experiment_data(self):
+        """Get an experiment data from the director."""
         logger.info('Send WaitExperiment request')
         response_iter = self.stub.WaitExperiment(self._get_experiment_data())
-        logger.info(f'WaitExperiment response has received')
+        logger.info('WaitExperiment response has received')
         experiment_name = None
         for response in response_iter:
             experiment_name = response.experiment_name
@@ -57,6 +67,7 @@ class ShardDirectorClient:
 
     @staticmethod
     def create_workspace(experiment_name, response_iter):
+        """Create a collaborator workspace for the experiment."""
         if os.path.exists(experiment_name):
             shutil.rmtree(experiment_name)
         os.makedirs(experiment_name)
@@ -75,14 +86,19 @@ class ShardDirectorClient:
         os.remove(arch_name)
 
     def _get_experiment_data(self):
+        """Generate the experiment data request."""
         yield director_pb2.WaitExperimentRequest(collaborator_name=self.shard_name)
 
     def _get_node_info(self):
+        """Generate a node info message."""
         return director_pb2.NodeInfo(name=self.shard_name)
 
 
 class DirectorClient:
+    """Director client class for users."""
+
     def __init__(self, director_uri) -> None:
+        """Initialize director client object."""
         channel_opt = [('grpc.max_send_message_length', 512 * 1024 * 1024),
                        ('grpc.max_receive_message_length', 512 * 1024 * 1024)]
         channel = grpc.insecure_channel(director_uri, options=channel_opt)
@@ -90,6 +106,7 @@ class DirectorClient:
 
     def set_new_experiment(self, name, col_names, arch_path,
                            initial_tensor_dict=None):
+        """Send the new experiment to director to launch."""
         logger.info('SetNewExperiment')
         model_proto = None
         if initial_tensor_dict:
@@ -99,7 +116,7 @@ class DirectorClient:
             def st():
                 max_buffer_size = (2 * 1024 * 1024)
                 chunk = arch.read(max_buffer_size)
-                while chunk != b"":
+                while chunk != b'':
                     if not chunk:
                         raise StopIteration
                     # TODO: add hash or/and size to check
@@ -117,9 +134,11 @@ class DirectorClient:
             return resp
 
     def get_shard_info(self):
+        """Request the shard info to the director."""
         resp = self.stub.GetShardsInfo(director_pb2.GetShardsInfoRequest())
         return resp.sample_shape, resp.target_shape
 
     def request_shard_registry(self):
+        """Request a shard registry."""
         resp = self.stub.GetRegisterdShards(director_pb2.GetRegisterdShardsRequest())
         return resp.shard_info

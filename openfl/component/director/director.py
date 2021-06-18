@@ -1,8 +1,13 @@
+# Copyright (C) 2020-2021 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+"""Director module."""
+
 import asyncio
 import logging
 import os
-import socket
 import shutil
+import socket
 import threading
 from collections import defaultdict
 from concurrent.futures import ProcessPoolExecutor
@@ -20,8 +25,10 @@ logger = logging.getLogger(__name__)
 
 
 class Director(director_pb2_grpc.FederationDirectorServicer):
+    """Director class."""
 
     def __init__(self, sample_shape: list, target_shape: list) -> None:
+        """Initialize a director object."""
         # TODO: add working directory
         super().__init__()
         self.sample_shape, self.target_shape = sample_shape, target_shape
@@ -37,7 +44,8 @@ class Director(director_pb2_grpc.FederationDirectorServicer):
         self.tensorboard_port = 6006
         self.tensorboard_thread = None
 
-    async def AcknowledgeShard(self, shard_info, context):
+    async def AcknowledgeShard(self, shard_info, context):  # NOQA:N802
+        """Receive acknowledge shard info."""
         logger.info(f'AcknowledgeShard request has got: {shard_info}')
         reply = director_pb2.ShardAcknowledgement(accepted=False)
         # If dataset do not match the data interface of the problem
@@ -51,10 +59,11 @@ class Director(director_pb2_grpc.FederationDirectorServicer):
         reply.accepted = True
         return reply
 
-    async def SetNewExperiment(self, stream, context):
+    async def SetNewExperiment(self, stream, context):  # NOQA:N802
+        """Request to set new experiment."""
         logger.info(f'SetNewExperiment request has got {stream}')
         # TODO: add streaming reader
-        npbytes = b""
+        npbytes = b''
         async for request in stream:
             if request.experiment_data.size == len(request.experiment_data.npbytes):
                 npbytes += request.experiment_data.npbytes
@@ -70,7 +79,8 @@ class Director(director_pb2_grpc.FederationDirectorServicer):
         self.create_workspace(request.name, npbytes)
         self._run_aggregator(tensor_dict, request.name)
 
-        logger.info(f'New experiment {request.name} for collaborators {request.collaborator_names}')
+        logger.info(f'New experiment {request.name} for '
+                    f'collaborators {request.collaborator_names}')
         for col_name in request.collaborator_names:
             queue = self.col_exp_queues[col_name]
             await queue.put(request.name)
@@ -80,13 +90,11 @@ class Director(director_pb2_grpc.FederationDirectorServicer):
             tensorboard_address=f'http://{self.fqdn}:{self.tensorboard_port}'
         )
 
-    async def GetExperimentData(self, request, context):
-        # experiment_data = preparations_pb2.ExperimentData()
-        # with open(experiment_name + '.zip', 'rb') as content_file:
-        #     content = content_file.read()
-        #     # TODO: add size filling
-        #     # TODO: add experiment name field
-        #     # TODO: rename npbytes to data
+    async def GetExperimentData(self, request, context):  # NOQA:N802
+        """Receive experiment data."""
+        # TODO: add size filling
+        # TODO: add experiment name field
+        # TODO: rename npbytes to data
         content = self.experiment_data.get(request.experiment_name, b'')
         logger.info(f'Content length: {len(content)}')
         max_buffer_size = (2 * 1024 * 1024)
@@ -96,7 +104,8 @@ class Director(director_pb2_grpc.FederationDirectorServicer):
             logger.info(f'Send {len(chunk)} bytes')
             yield director_pb2.ExperimentData(size=len(chunk), npbytes=chunk)
 
-    async def WaitExperiment(self, request_iterator, context):
+    async def WaitExperiment(self, request_iterator, context):  # NOQA:N802
+        """Request for wait an experiment."""
         logger.info('Request WaitExperiment has got!')
         async for msg in request_iterator:
             logger.info(msg)
@@ -106,7 +115,8 @@ class Director(director_pb2_grpc.FederationDirectorServicer):
 
         yield director_pb2.WaitExperimentResponse(experiment_name=experiment_name)
 
-    async def GetShardsInfo(self, request, context):
+    async def GetShardsInfo(self, request, context):  # NOQA:N802
+        """Request a shard info."""
         logger.info('Request GetShardsInfo has got!')
         resp = director_pb2.ShardInfo(
             sample_shape=self.sample_shape,
@@ -114,7 +124,8 @@ class Director(director_pb2_grpc.FederationDirectorServicer):
         )
         return resp
 
-    async def GetRegisterdShards(self, request, context):
+    async def GetRegisterdShards(self, request, context):  # NOQA:N802
+        """Request registered shards."""
         logger.info('Request GetRegisterdShards has got!')
         resp = director_pb2.GetRegisterdShardsResponse(
             shard_info=self.shard_registry
@@ -123,6 +134,7 @@ class Director(director_pb2_grpc.FederationDirectorServicer):
 
     @staticmethod
     def create_workspace(experiment_name, npbytes):
+        """Create the aggregator workspace."""
         if os.path.exists(experiment_name):
             shutil.rmtree(experiment_name)
         os.makedirs(experiment_name)
@@ -140,6 +152,7 @@ class Director(director_pb2_grpc.FederationDirectorServicer):
             experiment_name,
             plan='plan/plan.yaml',
     ):  # TODO: path params, change naming
+        """Run aggregator."""
         cwd = os.getcwd()
         os.chdir(f'{cwd}/{experiment_name}')
         plan = Plan.parse(plan_config_path=Path(plan))
@@ -153,15 +166,15 @@ class Director(director_pb2_grpc.FederationDirectorServicer):
             private_key='')
 
         server.serve()
-        # server.wait_for_termination()
 
     def run_tensorboard(self):
+        """Run the tensorboard."""
         log_path = os.getcwd()
         self.tensorboard_thread = threading.Thread(
-              target=lambda: os.system(
-                  f'tensorboard --logdir={log_path} --host={"0.0.0.0"} '
-                  f'--port={self.tensorboard_port}'
-              ),
+            target=lambda: os.system(
+                f'tensorboard --logdir={log_path} --host={"0.0.0.0"} '
+                f'--port={self.tensorboard_port}'
+            ),
         )
         try:
             self.tensorboard_thread.start()
@@ -170,6 +183,7 @@ class Director(director_pb2_grpc.FederationDirectorServicer):
 
 
 async def serve(*args, **kwargs):
+    """Launch the director GRPC server."""
     channel_opt = [('grpc.max_send_message_length', 512 * 1024 * 1024),
                    ('grpc.max_receive_message_length', 512 * 1024 * 1024)]
     server = aio.server(options=channel_opt)

@@ -75,6 +75,7 @@ class FLExperiment:
 
     def start(self, *, model_provider, task_keeper, data_loader,
               rounds_to_train, collaborators, delta_updates=False, opt_treatment='RESET'):
+        """Prepare experiment and run."""
         self.prepare_workspace_distribution(
             model_provider, task_keeper, data_loader, rounds_to_train,
             delta_updates=delta_updates, opt_treatment=opt_treatment
@@ -93,7 +94,12 @@ class FLExperiment:
         os.remove(self.arch_path)
         del self.arch_path
 
-        return response.accepted, response.tensorboard_address
+        if response.accepted:
+            self.logger.info('Experiment was accepted and launched.')
+            self.logger.info('You can watch the experiment through tensorboard:')
+            self.logger.info(response.tensorboard_address)
+        else:
+            self.logger.info('Experiment was not accepted or failed.')
 
     def start_experiment(self, model_provider, log_level='INFO', log_file=None):
         """
@@ -131,7 +137,9 @@ class FLExperiment:
         self.federation.dir_client.set_new_experiment(
             name=self.experiment_name,
             col_names=self.plan.authorized_cols,
-            arch_path=self.arch_path)
+            arch_path=self.arch_path,
+            initial_tensor_dict=initial_tensor_dict
+        )
 
         # Remove the workspace archive
         os.remove(self.arch_path)
@@ -199,9 +207,8 @@ class FLExperiment:
         # Change plan name to default one
         plan.name = 'plan.yaml'
 
-        # plan.authorized_cols = list(self.federation.col_data_paths.keys())
         # Network part of the plan
-        plan.config['network']['settings']['agg_addr'] = 'localhost'
+        plan.config['network']['settings']['agg_addr'] = self.federation.director_node_fqdn
         plan.config['network']['settings']['disable_tls'] = self.federation.disable_tls
 
         # Aggregator part of the plan
@@ -393,7 +400,7 @@ class ModelInterface:
         return self.optimizer
 
 
-class   DataInterface:
+class DataInterface:
     """
     The class to define dataloaders.
 
@@ -409,6 +416,7 @@ class   DataInterface:
 
     @property
     def shard_descriptor(self):
+        """Return shard descriptor."""
         return self._shard_descriptor
 
     @shard_descriptor.setter
