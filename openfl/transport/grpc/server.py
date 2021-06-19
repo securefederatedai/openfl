@@ -206,7 +206,7 @@ class AggregatorGRPCServer(AggregatorServicer):
         return Acknowledgement(header=self.get_header(collaborator_name))
 
     def get_server(self):
-        """Returns gRPC server."""
+        """Return gRPC server."""
         self.server = server(ThreadPoolExecutor(max_workers=cpu_count()),
                              options=self.channel_options)
 
