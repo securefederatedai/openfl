@@ -173,8 +173,10 @@ class KerasTaskRunner(TaskRunner):
                     f'Param_metrics = {metrics}, model_metrics_names = {model_metrics_names}'
                 )
 
+        self.logger.info("TONY TNY")
+
         history = self.model.fit(batch_generator,
-                                 verbose=0,
+                                 verbose=1,
                                  **kwargs)
         results = []
         for metric in metrics:
