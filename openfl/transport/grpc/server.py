@@ -3,21 +3,24 @@
 
 """AggregatorGRPCServer module."""
 
-from grpc import server, ssl_server_credentials
 from concurrent.futures import ThreadPoolExecutor
-from multiprocessing import cpu_count
 from logging import getLogger
+from multiprocessing import cpu_count
 from time import sleep
 
-from openfl.protocols import utils
+from grpc import server
+from grpc import ssl_server_credentials
+
 from openfl.protocols import Acknowledgement
+from openfl.protocols import add_AggregatorServicer_to_server
 from openfl.protocols import AggregatorServicer
 from openfl.protocols import MessageHeader
-from openfl.protocols import TasksResponse
 from openfl.protocols import TaskResults
+from openfl.protocols import TasksResponse
 from openfl.protocols import TensorResponse
-from openfl.protocols import add_AggregatorServicer_to_server
-from openfl.utilities import check_equal, check_is_in
+from openfl.protocols import utils
+from openfl.utilities import check_equal
+from openfl.utilities import check_is_in
 
 
 class AggregatorGRPCServer(AggregatorServicer):
@@ -127,7 +130,7 @@ class AggregatorGRPCServer(AggregatorServicer):
             self.logger
         )
 
-    def GetTasks(self, request, context):
+    def GetTasks(self, request, context):  # NOQA:N802
         """
         Request a job from aggregator.
 
@@ -150,7 +153,7 @@ class AggregatorGRPCServer(AggregatorServicer):
             quit=time_to_quit
         )
 
-    def GetAggregatedTensor(self, request, context):
+    def GetAggregatedTensor(self, request, context):  # NOQA:N802
         """
         Request a job from aggregator.
 
@@ -175,7 +178,7 @@ class AggregatorGRPCServer(AggregatorServicer):
                               round_number=round_number,
                               tensor=named_tensor)
 
-    def SendLocalTaskResults(self, request, context):
+    def SendLocalTaskResults(self, request, context):  # NOQA:N802
         """
         Request a model download from aggregator.
 
@@ -202,8 +205,8 @@ class AggregatorGRPCServer(AggregatorServicer):
         # turn data stream into local model update
         return Acknowledgement(header=self.get_header(collaborator_name))
 
-    def serve(self):
-        """Start an aggregator gRPC service."""
+    def get_server(self):
+        """Return gRPC server."""
         self.server = server(ThreadPoolExecutor(max_workers=cpu_count()),
                              options=self.channel_options)
 
@@ -236,9 +239,14 @@ class AggregatorGRPCServer(AggregatorServicer):
 
             self.server.add_secure_port(self.uri, self.server_credentials)
 
-        self.logger.info('Starting Aggregator gRPC Server')
+        return self.server
 
-        return self.server.start()
+    def serve(self):
+        """Start an aggregator gRPC service."""
+        self.get_server()
+
+        self.logger.info('Starting Aggregator gRPC Server')
+        self.server.start()
 
         try:
             while not self.aggregator.all_quit_jobs_sent():

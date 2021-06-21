@@ -4,9 +4,10 @@
 """You may copy this file as the starting point of your own model."""
 
 import os
-import numpy.ma as ma
-import numpy as np
+
 import nibabel as nib
+import numpy as np
+import numpy.ma as ma
 
 
 def parse_segments(seg, msk_modes):
@@ -25,10 +26,10 @@ def parse_segments(seg, msk_modes):
 
     """
     msks_parsed = []
-    for slice in range(seg.shape[-1]):
+    for slice_ in range(seg.shape[-1]):
         # which mask values indicicate which label mode
-        mode_to_key_value = {"necrotic": 1, "edema": 2, "GD": 4}
-        curr = seg[:, :, slice]
+        mode_to_key_value = {'necrotic': 1, 'edema': 2, 'GD': 4}
+        curr = seg[:, :, slice_]
         this_msk_parts = []
         for mode in msk_modes:
             this_msk_parts.append(
@@ -80,8 +81,8 @@ def resize_data(dataset, new_size=128, rotate=3):
     """
     # Determine whether dataset and new_size are compatible with existing logic
     if (dataset.shape[1] - new_size) % 2 != 0 and (dataset.shape[2] - new_size) % 2 != 0:
-        raise ValueError('dataset shape: {} and new_size: {} are not compatible with '
-                         'existing logic'.format(dataset.shape, new_size))
+        raise ValueError(f'dataset shape: {dataset.shape} and new_size: {new_size} '
+                         f'are not compatible with existing logic')
 
     start_index = int((dataset.shape[1] - new_size) / 2)
     end_index = dataset.shape[1] - start_index
@@ -183,23 +184,25 @@ def nii_reader(brain_path, task, channels_last=True,
     """
     files = os.listdir(brain_path)
     # link task to appropriate image and mask channels of interest
-    img_modes = ["t1", "t2", "flair", "t1ce"]
-    msk_modes = ["necrotic", "edema", "GD"]
-    task_to_img_modes = {'whole_tumor': ["flair"],
-                         'enhanced_tumor': ["t1"],
-                         'active_core': ["t2"],
-                         'other': ["t1", "t2", "flair", "t1ce"]}
-    task_to_msk_modes = {
-        'whole_tumor': ["necrotic", "edema", "GD"],
-        'enhanced_tumor': ["GD"],
-        'active_core': ["edema", "GD"],
-        'other': ["necrotic", "edema", "GD"]
+    img_modes = ['t1', 't2', 'flair', 't1ce']
+    msk_modes = ['necrotic', 'edema', 'GD']
+    task_to_img_modes = {
+        'whole_tumor': ['flair'],
+        'enhanced_tumor': ['t1'],
+        'active_core': ['t2'],
+        'other': ['t1', 't2', 'flair', 't1ce'],
     }
-    msk_names = ["seg_binary", "seg_binarized", "SegBinarized", "seg"]
+    task_to_msk_modes = {
+        'whole_tumor': ['necrotic', 'edema', 'GD'],
+        'enhanced_tumor': ['GD'],
+        'active_core': ['edema', 'GD'],
+        'other': ['necrotic', 'edema', 'GD'],
+    }
+    msk_names = ['seg_binary', 'seg_binarized', 'SegBinarized', 'seg']
 
     # validate that task is an allowed key
     if task not in task_to_img_modes.keys():
-        raise ValueError("{} is not a valid task".format(task))
+        raise ValueError(f'{task} is not a valid task')
 
     # validate that the tasks used in task_to_img_modes and
     # task_to_msk_modes are the same
@@ -208,8 +211,8 @@ def nii_reader(brain_path, task, channels_last=True,
                            'and task_to_mask_modes are not the same and should be.')
 
     # check that all appropriate files are present
-    file_root = brain_path.split('/')[-1] + "_"
-    extension = ".nii.gz"
+    file_root = brain_path.split('/')[-1] + '_'
+    extension = '.nii.gz'
 
     # record files needed
     # needed mask files are currntly independent of task
@@ -242,7 +245,7 @@ def nii_reader(brain_path, task, channels_last=True,
     elif normalization is None:
         imgs = np.stack(imgs_per_mode, axis=-1)
     else:
-        raise ValueError('{} is not a supported normalization.'.format(normalization))
+        raise ValueError(f'{normalization} is not a supported normalization.')
 
     # get mask (labels)
     for file in need_files_oneof:
@@ -271,7 +274,7 @@ def nii_reader(brain_path, task, channels_last=True,
             [img_mode_to_channel[mode] for mode in task_to_img_modes[task]]
         )
     else:
-        raise ValueError('{} is not a supported normalization.'.format(normalization))
+        raise ValueError(f'{normalization} is not a supported normalization.')
 
     img = imgs
     msk = msks

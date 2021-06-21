@@ -3,11 +3,11 @@
 
 """You may copy this file as the starting point of your own model."""
 import numpy as np
-import tqdm
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
+import tqdm
 
 from openfl.federated import PyTorchTaskRunner
 from openfl.utilities import TensorKey
@@ -126,7 +126,7 @@ class PyTorchCNN(PyTorchTaskRunner):
 
         loader = self.data_loader.get_valid_loader()
         if use_tqdm:
-            loader = tqdm.tqdm(loader, desc="validate")
+            loader = tqdm.tqdm(loader, desc='validate')
 
         with torch.no_grad():
             for data, target in loader:

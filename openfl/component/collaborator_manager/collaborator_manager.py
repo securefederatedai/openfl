@@ -1,37 +1,54 @@
+# Copyright (C) 2020-2021 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+"""Collaborator manager module."""
+
 import logging
-from pathlib import Path
 import os
 import sys
+import time
+from pathlib import Path
 
-from openfl.federated import Plan
 from click import echo
 
+from openfl.federated import Plan
 from openfl.transport.grpc.director_client import ShardDirectorClient
 
 logger = logging.getLogger(__name__)
 
 
 class CollaboratorManager:
+    """Collaborator manager class."""
 
     def __init__(self, shard_name, director_uri, shard_descriptor) -> None:
+        """Initialize a collaborator manager object."""
         self.name = shard_name
         self.director_client = ShardDirectorClient(director_uri, shard_name=shard_name)
         self.shard_descriptor = shard_descriptor
 
     def run(self):
+        """Run of the collaborator manager working cycle."""
         while True:
-            experiment_name = self.director_client.get_experiment_data()
-            self._run_collaborator(experiment_name)
+            try:
+                experiment_name = self.director_client.get_experiment_data()
+            except Exception as exc:
+                time.sleep(1)
+                logger.error(f'Error: {exc}')
+            try:
+                self._run_collaborator(experiment_name)
+            except Exception as exc:
+                logger.error(f'Experiment running was failed: {exc}')
 
     def _run_collaborator(self, experiment_name,
                           plan='plan/plan.yaml',):  # TODO: path params, change naming
+        """Run the collaborator for the experiment running."""
         cwd = os.getcwd()
         os.chdir(f'{cwd}/{experiment_name}')  # TODO: probably it should be another way
 
         # This is needed for python module finder
         sys.path.append(os.getcwd())
 
-        plan = Plan.Parse(
+        plan = Plan.parse(
             plan_config_path=Path(plan)
         )
 
@@ -44,16 +61,8 @@ class CollaboratorManager:
         col.run()
         os.chdir(cwd)
 
-    # def load_shard_descriptor(self, data_path):
-    #     from shard_descriptor import ShardDescriptor
-    #     self.shard_descriptor = ShardDescriptor(data_path)
-
-    def start(self, data_path=None):
-        # try:
-        #     self.load_shard_descriptor(data_path)
-        # except ModuleNotFoundError:
-        #     logger.error(f'You should add shard_descriptor.py file to {os.getcwd()}')
-        #     exit()
+    def start(self):
+        """Start the collaborator manager."""
         try:
             acknowledgement = self.director_client.report_shard_info(self.shard_descriptor)
         except Exception as exc:
@@ -66,5 +75,5 @@ class CollaboratorManager:
                 self.run()
             else:
                 # Shut down
-                logger.error("Report shard info was not accepted")
+                logger.error('Report shard info was not accepted')
                 exit()

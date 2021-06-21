@@ -2,17 +2,22 @@
 # SPDX-License-Identifier: Apache-2.0
 
 """Python low-level API module."""
-import os
-from copy import deepcopy
-import logging
-from logging import getLogger
 import functools
+import logging
+import os
 from collections import defaultdict
-from openfl.federated import Plan
+from copy import deepcopy
+from logging import getLogger
 from pathlib import Path
-from openfl.interface.cli_helper import WORKSPACE
 
+from rich.console import Console
+from rich.logging import RichHandler
+
+from openfl.federated import Plan
+from openfl.interface.cli_helper import WORKSPACE
+from openfl.utilities import add_log_level
 from openfl.utilities import split_tensor_dict_for_holdouts
+from openfl.utilities.logs import setup_loggers
 
 
 class FLExperiment:
@@ -35,6 +40,7 @@ class FLExperiment:
             self.serializer_plugin = serializer_plugin
 
         self.logger = getLogger(__name__)
+        setup_loggers()
 
     def get_best_model(self):
         """Retrieve the model with the best score."""
@@ -58,7 +64,7 @@ class FLExperiment:
         # Save serialized python objects to disc
         self._serialize_interface_objects(model_provider, task_keeper, data_loader)
         # Save the prepared plan
-        Plan.Dump(Path(f'./plan/{self.plan.name}'), self.plan.config, freeze=False)
+        Plan.dump(Path(f'./plan/{self.plan.name}'), self.plan.config, freeze=False)
 
         # PACK the WORKSPACE!
         # Prepare requirements file to restore python env
@@ -69,7 +75,35 @@ class FLExperiment:
 
         # DO CERTIFICATES exchange
 
-    def start_experiment(self, model_provider):
+    def start(self, *, model_provider, task_keeper, data_loader,
+              rounds_to_train, collaborators, delta_updates=False, opt_treatment='RESET'):
+        """Prepare experiment and run."""
+        self.prepare_workspace_distribution(
+            model_provider, task_keeper, data_loader, rounds_to_train,
+            delta_updates=delta_updates, opt_treatment=opt_treatment
+        )
+        self.logger.info('Starting experiment!')
+        self.plan.resolve()
+        initial_tensor_dict = self._get_initial_tensor_dict(model_provider)
+        response = self.federation.dir_client.set_new_experiment(
+            name=self.experiment_name,
+            col_names=collaborators,
+            arch_path=self.arch_path,
+            initial_tensor_dict=initial_tensor_dict
+        )
+
+        # Remove the workspace archive
+        os.remove(self.arch_path)
+        del self.arch_path
+
+        if response.accepted:
+            self.logger.info('Experiment was accepted and launched.')
+            self.logger.info('You can watch the experiment through tensorboard:')
+            self.logger.info(response.tensorboard_address)
+        else:
+            self.logger.info('Experiment was not accepted or failed.')
+
+    def start_experiment(self, model_provider, log_level='INFO', log_file=None):
         """
         Start the aggregator.
 
@@ -82,12 +116,32 @@ class FLExperiment:
 
         initial_tensor_dict = self._get_initial_tensor_dict(model_provider)
 
+        metric = 25
+        add_log_level('METRIC', metric)
+
+        if isinstance(log_level, str):
+            log_level = log_level.upper()
+
+        handlers = []
+        if log_file:
+            fh = logging.FileHandler(log_file)
+            formatter = logging.Formatter(
+                '%(asctime)s %(levelname)s %(message)s %(filename)s:%(lineno)d')
+            fh.setFormatter(formatter)
+            handlers.append(fh)
+
+        console = Console(width=160)
+        handlers.append(RichHandler(console=console))
+        logging.basicConfig(level=log_level, format='%(message)s',
+                            datefmt='[%X]', handlers=handlers)
+
         # This is not good we ask directors_client directly
         self.federation.dir_client.set_new_experiment(
             name=self.experiment_name,
             col_names=self.plan.authorized_cols,
             arch_path=self.arch_path,
-            initial_tensor_dict=initial_tensor_dict)
+            initial_tensor_dict=initial_tensor_dict
+        )
 
         # Remove the workspace archive
         os.remove(self.arch_path)
@@ -112,23 +166,23 @@ class FLExperiment:
         from os import getcwd, makedirs
         from os.path import basename
 
-        archiveType = 'zip'
-        archiveName = basename(getcwd())
-        # archiveFileName = archiveName + '.' + archiveType
+        archive_type = 'zip'
+        archive_name = basename(getcwd())
 
-        tmpDir = '/tmp/temp_' + archiveName
-        makedirs(tmpDir)
+        tmp_dir = 'temp_' + archive_name
+        makedirs(tmp_dir)
 
         ignore = ignore_patterns(
-            '__pycache__', 'cert', tmpDir, '*.crt', '*.key',
-            '*.csr', '*.srl', '*.pem', '*.pbuf', '*zip', '.git', '.github',
-            '.dockerignore', '*.egg-info')
+            '__pycache__', 'data', 'cert', tmp_dir, '*.crt', '*.key',
+            '*.csr', '*.srl', '*.pem', '*.pbuf', '*zip')
 
-        copytree('./', tmpDir + '/workspace', ignore=ignore)
+        copytree('./', tmp_dir + '/workspace', ignore=ignore)
 
-        arch_path = make_archive(archiveName, archiveType, tmpDir + '/workspace')
+        arch_path = make_archive(archive_name, archive_type, tmp_dir + '/workspace')
 
-        rmtree(tmpDir)
+        rmtree(tmp_dir)
+
+        return arch_path
 
         return arch_path
 
@@ -153,7 +207,7 @@ class FLExperiment:
         os.makedirs('./save', exist_ok=True)
         # Load the default plan
         base_plan_path = WORKSPACE / 'workspace/plan/plans/default/base_plan_interactive_api.yaml'
-        plan = Plan.Parse(base_plan_path, resolve=False)
+        plan = Plan.parse(base_plan_path, resolve=False)
         # Change plan name to default one
         plan.name = 'plan.yaml'
 
@@ -202,14 +256,14 @@ class FLExperiment:
         # TaskRunner framework plugin
         # ['required_plugin_components'] should be already in the default plan with all the fields
         # filled with the default values
-        plan.config['task_runner']['required_plugin_components'] = dict()
+        plan.config['task_runner']['required_plugin_components'] = {}
         plan.config['task_runner']['required_plugin_components']['framework_adapters'] = \
             model_provider.framework_plugin
 
         # API layer
-        plan.config['api_layer'] = dict()
-        plan.config['api_layer']['required_plugin_components'] = dict()
-        plan.config['api_layer']['settings'] = dict()
+        plan.config['api_layer'] = {}
+        plan.config['api_layer']['required_plugin_components'] = {}
+        plan.config['api_layer']['settings'] = {}
         plan.config['api_layer']['required_plugin_components']['serializer_plugin'] = \
             self.serializer_plugin
         plan.config['api_layer']['settings'] = {
@@ -225,9 +279,9 @@ class FLExperiment:
 
     def _serialize_interface_objects(self, model_provider, task_keeper, data_loader):
         """Save python objects to be restored on collaborators."""
-        serializer = self.plan.Build(
+        serializer = self.plan.build(
             self.plan.config['api_layer']['required_plugin_components']['serializer_plugin'], {})
-        framework_adapter = Plan.Build(model_provider.framework_plugin, {})
+        framework_adapter = Plan.build(model_provider.framework_plugin, {})
         # Model provider serialization may need preprocessing steps
         framework_adapter.serialization_setup()
         serializer.serialize(
@@ -255,9 +309,9 @@ class TaskInterface:
     def __init__(self) -> None:
         """Initialize task registry."""
         # Mapping 'task name' -> callable
-        self.task_registry = dict()
+        self.task_registry = {}
         # Mapping 'task name' -> arguments
-        self.task_contract = dict()
+        self.task_contract = {}
         # Mapping 'task name' -> arguments
         self.task_settings = defaultdict(dict)
 
@@ -376,6 +430,7 @@ class DataInterface:
 
     @property
     def shard_descriptor(self):
+        """Return shard descriptor."""
         return self._shard_descriptor
 
     @shard_descriptor.setter

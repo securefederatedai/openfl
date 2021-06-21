@@ -3,9 +3,9 @@
 
 """You may copy this file as the starting point of your own model."""
 
-import numpy as np
-
 from logging import getLogger
+
+import numpy as np
 from tensorflow.python.keras.utils.data_utils import get_file
 
 logger = getLogger(__name__)

@@ -3,8 +3,9 @@
 
 """Geometric median module."""
 
-from .interface import AggregationFunctionInterface
 import numpy as np
+
+from .interface import AggregationFunctionInterface
 from .weighted_average import weighted_average
 
 

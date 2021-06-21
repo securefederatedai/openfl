@@ -6,6 +6,9 @@ from socket import getfqdn
 from .shard_descriptor import DummyShardDescriptor
 from openfl.transport.grpc.director_client import DirectorClient
 
+from openfl.transport.grpc.director_client import DirectorClient
+from .shard_descriptor import DummyShardDescriptor
+
 
 class Federation:
     """
@@ -15,8 +18,8 @@ class Federation:
     their local data and network setting to enable communication in federation.
     """
 
-    def __init__(self, director_node_fqdn=None, disable_tls=False,
-                 cert_chain=None, API_cert=None, API_private_key=None) -> None:
+    def __init__(self, director_node_fqdn=None, director_port=None, disable_tls=False,
+                 cert_chain=None, api_cert=None, api_private_key=None) -> None:
         """
         Initialize federation.
 
@@ -37,18 +40,20 @@ class Federation:
         self.disable_tls = disable_tls
 
         self.cert_chain = cert_chain
-        self.API_cert = API_cert
-        self.API_private_key = API_private_key
+        self.api_cert = api_cert
+        self.api_private_key = api_private_key
 
         # Create Director client
-        self.dir_client = DirectorClient(director_node_fqdn)
+        self.dir_client = DirectorClient(f'{director_node_fqdn}:{director_port}')
 
         self.sample_shape, self.target_shape = self._request_data_shape()
 
     def get_dummy_shard_descriptor(self, size):
+        """Return a dummy shard descriptor."""
         return DummyShardDescriptor(self.sample_shape, self.target_shape, size)
 
     def get_shard_registry(self):
+        """Return a shard registry."""
         return self.dir_client.request_shard_registry()
 
     def _request_data_shape(self):

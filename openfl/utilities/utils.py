@@ -2,7 +2,35 @@
 # SPDX-License-Identifier: Apache-2.0
 """Utilities module."""
 
+import logging
+
 import numpy as np
+
+
+def add_log_level(level_name, level_num, method_name=None):
+    """
+    Add a new logging level to the logging module.
+
+    Args:
+        level_name: name of log level.
+        level_num: log level value.
+        method_name: log method wich will use new log level (default = level_name.lower())
+
+    """
+    if not method_name:
+        method_name = level_name.lower()
+
+    def log_for_level(self, message, *args, **kwargs):
+        if self.isEnabledFor(level_num):
+            self._log(level_num, message, args, **kwargs)
+
+    def log_to_root(message, *args, **kwargs):
+        logging.log(level_num, message, *args, **kwargs)
+
+    logging.addLevelName(level_num, level_name)
+    setattr(logging, level_name, level_num)
+    setattr(logging.getLoggerClass(), method_name, log_for_level)
+    setattr(logging, method_name, log_to_root)
 
 
 def split_tensor_dict_into_floats_and_non_floats(tensor_dict):
@@ -82,8 +110,8 @@ def split_tensor_dict_for_holdouts(logger, tensor_dict,
             try:
                 holdout_tensors[tensor_name] = tensors_to_send.pop(tensor_name)
             except KeyError:
-                logger.warn('tried to remove tensor: {} not present in the'
-                            ' tensor dict'.format(tensor_name))
+                logger.warn(f'tried to remove tensor: {tensor_name} not present '
+                            f'in the tensor dict')
                 continue
 
     # filter holdout_types from tensors_to_send and add to holdout_tensors

@@ -27,7 +27,7 @@ class TensorCodec:
     def set_lossless_pipeline(self, lossless_pipeline):
         """Set lossless pipeline."""
         assert lossless_pipeline.is_lossy() is False, (
-            "The provided pipeline is not lossless")
+            'The provided pipeline is not lossless')
         self.lossless_pipeline = lossless_pipeline
 
     def compress(self, tensor_key, data, require_lossless=False, **kwargs):
@@ -108,10 +108,10 @@ class TensorCodec:
         assert (len(transformer_metadata) > 0), (
             'metadata must be included for decompression')
         assert (('compressed' in tags) or ('lossy_compressed' in tags)), (
-            "Cannot decompress an uncompressed tensor")
+            'Cannot decompress an uncompressed tensor')
         if require_lossless:
             assert ('compressed' in tags), (
-                "Cannot losslessly decompress lossy tensor")
+                'Cannot losslessly decompress lossy tensor')
 
         if require_lossless or 'compressed' in tags:
             decompressed_nparray = self.lossless_pipeline.backward(
@@ -135,7 +135,7 @@ class TensorCodec:
                 tensor_name, origin, round_number, report, tuple(new_tags))
         else:
             raise NotImplementedError(
-                "Decompression is only supported on compressed data")
+                'Decompression is only supported on compressed data')
 
         return decompressed_tensor_key, decompressed_nparray
 
@@ -164,9 +164,9 @@ class TensorCodec:
         tensor_name, origin, round_number, report, tags = tensor_key
         if not np.isscalar(nparray):
             assert nparray.shape == base_model_nparray.shape, (
-                'Shape of updated layer ({}) is not equal to base '
-                'layer shape of ({})'.format(
-                    nparray.shape, base_model_nparray.shape))
+                f'Shape of updated layer ({nparray.shape}) is not equal to base '
+                f'layer shape of ({base_model_nparray.shape})'
+            )
         assert 'model' not in tags, (
             'The tensorkey should be provided '
             'from the layer with new weights, not the base model')
@@ -202,8 +202,9 @@ class TensorCodec:
         tensor_name, origin, round_number, report, tags = tensor_key
         if not np.isscalar(base_model_nparray):
             assert (delta.shape == base_model_nparray.shape), (
-                'Shape of delta ({}) is not equal to shape of model'
-                ' layer ({})'.format(delta.shape, base_model_nparray.shape))
+                f'Shape of delta ({delta.shape}) is not equal to shape of model'
+                f' layer ({base_model_nparray.shape})'
+            )
         # assert('model' in tensor_key[3]), 'The tensorkey should be provided
         # from the base model'
         # Aggregator UUID has the prefix 'aggregator'

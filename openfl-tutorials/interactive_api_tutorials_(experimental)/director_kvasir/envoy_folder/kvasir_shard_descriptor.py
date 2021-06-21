@@ -1,20 +1,29 @@
+# Copyright (C) 2020-2021 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+"""Kvasir shard descriptor."""
+
+
 import os
-from pathlib import Path
 from hashlib import sha384
+from pathlib import Path
+
 import numpy as np
 from PIL import Image
+
 from openfl.interface.interactive_api.shard_descriptor import ShardDescriptor
 
 
 class KvasirShardDescriptor(ShardDescriptor):
+    """Shard descriptor class."""
 
     def __init__(self, data_folder: str = 'kvasir_data',
                  rank_worldsize: str = '1,1',
                  enforce_image_hw: str = None) -> None:
+        """Initialize KvasirShardDescriptor."""
         super().__init__()
 
         self.data_folder = Path.cwd() / data_folder
-        self.download_data(self.data_folder)
+        # self.download_data(self.data_folder)  # NOQA
 
         # Settings for resizing data
         self.enforce_image_hw = tuple(int(size) for size in enforce_image_hw.split(',')) if \
@@ -37,19 +46,21 @@ class KvasirShardDescriptor(ShardDescriptor):
 
     @staticmethod
     def download_data(data_folder):
+        """Download data."""
         zip_file_path = data_folder / 'kvasir.zip'
         os.makedirs(data_folder, exist_ok=True)
-        os.system("wget -nc"
+        os.system('wget -nc'
                   + " 'https://datasets.simula.no/hyper-kvasir/hyper-kvasir-segmented-images.zip'"
-                  + f" -O {zip_file_path.relative_to(Path.cwd())}")
-        ZIP_SHA384 = 'e30d18a772c6520476e55b610a4db457237f151e'\
-            '19182849d54b49ae24699881c1e18e0961f77642be900450ef8b22e7'
+                  + f' -O {zip_file_path.relative_to(Path.cwd())}')
+        zip_sha384 = 'e30d18a772c6520476e55b610a4db457237f151e' \
+                     '19182849d54b49ae24699881c1e18e0961f77642be900450ef8b22e7'
         assert sha384(open(zip_file_path, 'rb').read(
-            os.path.getsize(zip_file_path))).hexdigest() == ZIP_SHA384
-        os.system(f"unzip -n {zip_file_path.relative_to(Path.cwd())}"
-                  + f" -d {data_folder.relative_to(Path.cwd())}")
+            os.path.getsize(zip_file_path))).hexdigest() == zip_sha384
+        os.system(f'unzip -n {zip_file_path.relative_to(Path.cwd())}'
+                  + f' -d {data_folder.relative_to(Path.cwd())}')
 
     def __getitem__(self, index):
+        """Return a item by the index."""
         name = self.images_names[index]
         # Reading data
         img = Image.open(self.images_path / name)
@@ -61,30 +72,34 @@ class KvasirShardDescriptor(ShardDescriptor):
             mask = mask.resize(self.enforce_image_hw[::-1])
         img = np.asarray(img)
         mask = np.asarray(mask)
-        assert(img.shape[2] == 3)
+        assert img.shape[2] == 3
 
-        return (img, mask[:, :, 0].astype(np.uint8))
+        return img, mask[:, :, 0].astype(np.uint8)
 
     def __len__(self):
+        """Return the len of the dataset."""
         return len(self.images_names)
 
     @property
     def sample_shape(self):
-        # int( sum( [str(dim) for dim in sample.shape] ) )
+        """Return the sample shape info."""
         return self._sample_shape
 
     @property
     def target_shape(self):
+        """Return the target shape info."""
         return self._target_shape
 
     @property
     def dataset_description(self) -> str:
-        return f'Kvasir dataset, shard number {self.rank_worldsize[0]}'\
-            f' out of {self.rank_worldsize[1]}'
+        """Return the dataset description."""
+        return f'Kvasir dataset, shard number {self.rank_worldsize[0]}' \
+               f' out of {self.rank_worldsize[1]}'
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     import logging
+
     root = logging.getLogger()
     root.setLevel(logging.INFO)
 

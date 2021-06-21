@@ -3,34 +3,35 @@
 
 """Collaborator module."""
 
-from logging import getLogger
 from enum import Enum
+from logging import getLogger
 from time import sleep
 
+from openfl.databases import TensorDB
+from openfl.pipelines import NoCompressionPipeline
+from openfl.pipelines import TensorCodec
 from openfl.protocols import utils
 from openfl.utilities import TensorKey
-from openfl.pipelines import TensorCodec, NoCompressionPipeline
-from openfl.databases import TensorDB
 
 
 class OptTreatment(Enum):
     """Optimizer Methods."""
 
     RESET = 1
-    """
+    '''
     RESET tells each collaborator to reset the optimizer state at the beginning
     of each round.
-    """
+    '''
     CONTINUE_LOCAL = 2
-    """
+    '''
     CONTINUE_LOCAL tells each collaborator to continue with the local optimizer
     state from the previous round.
-    """
+    '''
     CONTINUE_GLOBAL = 3
-    """
+    '''
     CONTINUE_GLOBAL tells each collaborator to continue with the federally
     averaged optimizer state from the previous round.
-    """
+    '''
 
 
 class Collaborator:
@@ -100,9 +101,8 @@ class Collaborator:
         if hasattr(OptTreatment, opt_treatment):
             self.opt_treatment = OptTreatment[opt_treatment]
         else:
-            self.logger.error("Unknown opt_treatment: %s." % opt_treatment)
-            raise NotImplementedError(
-                "Unknown opt_treatment: %s." % opt_treatment)
+            self.logger.error(f'Unknown opt_treatment: {opt_treatment}.')
+            raise NotImplementedError(f'Unknown opt_treatment: {opt_treatment}.')
 
         self.task_runner.set_optimizer_treatment(self.opt_treatment.name)
 
@@ -115,8 +115,7 @@ class Collaborator:
             elif sleep_time > 0:
                 sleep(sleep_time)  # some sleep function
             else:
-                self.logger.info(
-                    'Received the following tasks: {}'.format(tasks))
+                self.logger.info(f'Received the following tasks: {tasks}')
                 for task in tasks:
                     self.do_task(task, round_number)
 
@@ -141,13 +140,11 @@ class Collaborator:
             elif sleep_time > 0:
                 sleep(sleep_time)  # some sleep function
             else:
-                self.logger.info(
-                    'Received the following tasks: {}'.format(tasks))
+                self.logger.info(f'Received the following tasks: {tasks}')
                 for task in tasks:
                     self.do_task(task, round_number)
-                self.logger.info(
-                    'All tasks completed on {} for round {}...'.format(
-                        self.collaborator_name, round_number))
+                self.logger.info(f'All tasks completed on {self.collaborator_name} '
+                                 f'for round {round_number}...')
                 break
 
     def get_tasks(self):
@@ -234,30 +231,27 @@ class Collaborator:
         """
         # try to get from the store
         tensor_name, origin, round_number, report, tags = tensor_key
-        self.logger.debug(
-            'Attempting to retrieve tensor {} from local store'.format(
-                tensor_key)
-        )
+        self.logger.debug(f'Attempting to retrieve tensor {tensor_key} from local store')
         nparray = self.tensor_db.get_tensor_from_cache(tensor_key)
 
         # if None and origin is our client, request it from the client
         if nparray is None:
             if origin == self.collaborator_name:
                 self.logger.info(
-                    'Attempting to find locally stored {} tensor from prior'
-                    ' round...'.format(tensor_name))
+                    f'Attempting to find locally stored {tensor_name} tensor from prior round...'
+                )
                 prior_round = round_number - 1
                 while prior_round >= 0:
                     nparray = self.tensor_db.get_tensor_from_cache(
                         TensorKey(tensor_name, origin, prior_round, report, tags))
                     if nparray is not None:
-                        self.logger.debug(
-                            'Found tensor {} in local TensorDB for round'
-                            ' {}'.format(tensor_name, prior_round))
+                        self.logger.debug(f'Found tensor {tensor_name} in local TensorDB '
+                                          f'for round {prior_round}')
                         return nparray
                     prior_round -= 1
-                self.logger.info('Cannot find any prior version of tensor {}'
-                                 ' locally...'.format(tensor_name))
+                self.logger.info(
+                    f'Cannot find any prior version of tensor {tensor_name} locally...'
+                )
             self.logger.debug('Unable to get tensor from local store...'
                               'attempting to retrieve from client')
             # Determine whether there are additional compression related
@@ -302,8 +296,7 @@ class Collaborator:
                     require_lossless=True
                 )
         else:
-            self.logger.debug('Found tensor {} in local TensorDB'.format(
-                tensor_key))
+            self.logger.debug(f'Found tensor {tensor_key} in local TensorDB')
 
         return nparray
 
@@ -334,7 +327,7 @@ class Collaborator:
         """
         tensor_name, origin, round_number, report, tags = tensor_key
 
-        self.logger.debug('Requesting aggregated tensor {}'.format(tensor_key))
+        self.logger.debug(f'Requesting aggregated tensor {tensor_key}')
         tensor = self.client.get_aggregated_tensor(
             self.collaborator_name, tensor_name, round_number, report, tags, require_lossless)
 
@@ -370,9 +363,9 @@ class Collaborator:
             tensor_name, origin, fl_round, report, tags = tensor
 
             if report:
-                self.logger.info(
-                    f'Sending metric for task {task_name},'
-                    f' round number {round_number}:'
+                self.logger.metric(
+                    f'Round {round_number}, collaborator {self.collaborator_name} '
+                    f'is sending metric for task {task_name}:'
                     f' {tensor_name}\t{tensor_dict[tensor]}')
 
         self.client.send_local_task_results(

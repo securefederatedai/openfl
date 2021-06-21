@@ -5,18 +5,20 @@
 This file defines openfl entrypoints to be used directly through python (not CLI)
 """
 
+import logging
 import os
+from copy import copy
 from logging import getLogger
 from pathlib import Path
-from copy import copy
+
 from flatten_json import flatten_preserve_lists
-import openfl.interface.workspace as workspace
+
 import openfl.interface.aggregator as aggregator
 import openfl.interface.collaborator as collaborator
-
+import openfl.interface.workspace as workspace
 from openfl.federated import Plan
-
 from openfl.protocols import utils
+from openfl.utilities import add_log_level
 from openfl.utilities import split_tensor_dict_for_holdouts
 
 logger = getLogger(__name__)
@@ -39,12 +41,13 @@ def setup_plan(log_level='CRITICAL'):
     cols_config = 'plan/cols.yaml'
     data_config = 'plan/data.yaml'
 
+    current_level = logging.root.level
     getLogger().setLevel(log_level)
-    plan = Plan.Parse(plan_config_path=Path(plan_config),
+    plan = Plan.parse(plan_config_path=Path(plan_config),
                       cols_config_path=Path(cols_config),
                       data_config_path=Path(data_config),
                       resolve=False)
-    getLogger().setLevel('INFO')
+    getLogger().setLevel(current_level)
 
     return plan
 
@@ -107,7 +110,7 @@ def unflatten(config, separator='.'):
     return config
 
 
-def setup_logging():
+def setup_logging(level='INFO', log_file=None):
     """Initialize logging settings."""
     # Setup logging
     from logging import basicConfig
@@ -118,15 +121,28 @@ def setup_logging():
         import tensorflow as tf
         tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
     console = Console(width=160)
-    basicConfig(
-        level='INFO',
-        format='%(message)s',
-        datefmt='[%X]',
-        handlers=[RichHandler(console=console)]
-    )
+    metric = 25
+    add_log_level('METRIC', metric)
+
+    if isinstance(level, str):
+        level = level.upper()
+
+    handlers = []
+    if log_file:
+        fh = logging.FileHandler(log_file)
+        formatter = logging.Formatter(
+            '%(asctime)s %(levelname)s %(message)s %(filename)s:%(lineno)d')
+        fh.setFormatter(formatter)
+        handlers.append(fh)
+
+    console = Console(width=160)
+    handlers.append(RichHandler(console=console))
+    basicConfig(level=level, format='%(message)s',
+                datefmt='[%X]', handlers=handlers)
 
 
-def init(workspace_template='default', agg_fqdn=None, col_names=['one', 'two']):
+def init(workspace_template: str = 'default', log_level: str = 'INFO',
+         log_file: str = None, agg_fqdn: str = None, col_names=None):
     """
     Initialize the openfl package.
 
@@ -149,6 +165,10 @@ def init(workspace_template='default', agg_fqdn=None, col_names=['one', 'two']):
             Other options include are any of the template names [
             keras_cnn_mnist, tf_2dunet, tf_cnn_histology, mtorch_cnn_histology,
             torch_cnn_mnist]
+        log_level : str
+            Log level for logging. METRIC level is available
+        log_file : str
+            Name of the file in which the log will be duplicated
         agg_fqdn : str
            The local node's fully qualified domain name (if it can't be
            resolved automatically)
@@ -160,6 +180,8 @@ def init(workspace_template='default', agg_fqdn=None, col_names=['one', 'two']):
     Returns:
         None
     """
+    if col_names is None:
+        col_names = ['one', 'two']
     workspace.create(WORKSPACE_PREFIX, workspace_template)
     os.chdir(WORKSPACE_PREFIX)
     workspace.certify()
@@ -172,7 +194,7 @@ def init(workspace_template='default', agg_fqdn=None, col_names=['one', 'two']):
         collaborator.certify(col_name, silent=True)
         data_path += 1
 
-    setup_logging()
+    setup_logging(level=log_level, log_file=log_file)
 
 
 def create_collaborator(plan, name, model, aggregator):
@@ -188,7 +210,7 @@ def create_collaborator(plan, name, model, aggregator):
     return plan.get_collaborator(name, task_runner=model, client=aggregator)
 
 
-def run_experiment(collaborator_dict, override_config={}):
+def run_experiment(collaborator_dict: dict, override_config: dict = None):
     """
     Core function that executes the FL Plan.
 
@@ -207,6 +229,9 @@ def run_experiment(collaborator_dict, override_config={}):
             The final model resulting from the federated learning experiment
     """
     from sys import path
+
+    if override_config is None:
+        override_config = {}
 
     file = Path(__file__).resolve()
     root = file.parent.resolve()  # interface root, containing command modules
@@ -253,11 +278,9 @@ def run_experiment(collaborator_dict, override_config={}):
         ) for collaborator in plan.authorized_cols
     }
 
-    for round_num in range(rounds_to_train):
+    for _ in range(rounds_to_train):
         for col in plan.authorized_cols:
-
             collaborator = collaborators[col]
-
             collaborator.run_simulation()
 
     # Set the weights for the final model
