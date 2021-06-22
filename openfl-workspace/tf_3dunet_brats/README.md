@@ -1,5 +1,9 @@
 # 3D U-Net for the BraTS dataset.
 
+This is a full example for training the Brain Tumor Segmentation 2020 ([BraTS2020](https://www.med.upenn.edu/cbica/brats2020/data.html)) with OpenFL. Note: This is **not** the 3D U-Net that was used in the paper and not the sharding used. Nevertheless, it should make a good template for how to train using OpenFL.
+
+The files `src\dataloader.py` and `src\define_model.py` are where we define the TensorFlow [dataset loader](https://www.tensorflow.org/api_docs/python/tf/data/Dataset) and the 3D U-Net model. This demonstrates how to use an out-of-memory data loader that pulls batches of data from files as needed.
+
 ## Steps to run.
 
 1. Download the [BraTS 2020 dataset](https://www.med.upenn.edu/cbica/brats2020/registration.html). It should be the one labeled **BraTS'20 Training Data: Segmentation Task**. 
@@ -33,7 +37,7 @@ ${DATA_PATH}/MICCAI_BraTS2020_TrainingData
 ```
 If `tree` is not installed, then run `sudo apt-get install tree` to install it (Ubuntu).
 
-3. In order for each collaborator to use separate slice of data, we split main folder into subfolders, one for each collaborator. Recall that in the real world, each collaborator will have it's own data and this split already exists.
+3. In order for each collaborator to use separate slice of data, we split main folder into subfolders, one for each collaborator. **NOTE:** In the real world each collaborator will have it's own data and this split already exists. We're splitting here to simulate a federation with different participants.
 
 ```bash
 #!/bin/bash
