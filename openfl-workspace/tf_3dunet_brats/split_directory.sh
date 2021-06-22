@@ -1,4 +1,7 @@
 #!/bin/bash
+# Copyright (C) 2020-2021 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 # Split the BraTS data directory into NUM_COLLABORATORS 
 
 SOURCE=${1}  # The directory where the BraTS dataset is located (e.g. ~/data/MICCAI_BraTS2020_TrainingData)
