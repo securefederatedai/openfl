@@ -2,7 +2,9 @@
 
 ## Steps to run.
 
-1. Download the [BraTS 2020 dataset](https://www.med.upenn.edu/cbica/brats2020/registration.html).  Extract the `MICCAI_BraTS2020_TrainingData.zip` zip file to any folder (let's call that folder `${DATA_PATH}`). The file structure of `${DATA_PATH}` should look like this: 
+1. Download the [BraTS 2020 dataset](https://www.med.upenn.edu/cbica/brats2020/registration.html). It should be the one labeled **BraTS'20 Training Data: Segmentation Task**. 
+
+2. Extract the `MICCAI_BraTS2020_TrainingData.zip` zip file to any folder (let's call that folder `${DATA_PATH}`). The file structure of `${DATA_PATH}` should look like this: 
 
 ```bash
 user@localhost ~$ tree ${DATA_PATH} -L 2
@@ -31,7 +33,7 @@ ${DATA_PATH}/MICCAI_BraTS2020_TrainingData
 ```
 If `tree` is not installed, then run `sudo apt-get install tree` to install it (Ubuntu).
 
-2. In order for each collaborator to use separate slice of data, we split main folder into subfolders, one for each collaborator. Recall that in the real world, each collaborator will have it's own data and this split already exists.
+3. In order for each collaborator to use separate slice of data, we split main folder into subfolders, one for each collaborator. Recall that in the real world, each collaborator will have it's own data and this split already exists.
 
 ```bash
 #!/bin/bash
@@ -107,7 +109,7 @@ ${NEW_PATH}
     ├── ...
 ```
 
-3. Now update the `plan/data.yaml` file to reflect the new data directories:
+4. Now update the `plan/data.yaml` file to reflect the new data directories:
 
 ```
 $ cat plan/data.yaml
@@ -131,7 +133,7 @@ two,${NEW_PATH}/split_1
 
 where you replace `${NEW_PATH}` by the new directory path
 
-4. We are ready to train! Try executing the [Hello Federation](https://openfl.readthedocs.io/en/latest/running_the_federation.baremetal.html#hello-federation-your-first-federated-learning-training) steps. Make sure you have `openfl` installed in your Python virtual environment. All you have to do is to specify collaborator data paths to slice folders. We have combined all 'Hello Federation' steps in a single bash script, so it is easier to test:
+5. We are ready to train! Try executing the [Hello Federation](https://openfl.readthedocs.io/en/latest/running_the_federation.baremetal.html#hello-federation-your-first-federated-learning-training) steps. Make sure you have `openfl` installed in your Python virtual environment. All you have to do is to specify collaborator data paths to slice folders. We have combined all 'Hello Federation' steps in a single bash script, so it is easier to test:
 
 ```bash
 bash tests/github/test_hello_federation.sh tf_3dunet_brats fed_work12345alpha81671 one123dragons beta34unicorns localhost --col1-data-path $NEW_PATH/split_0 --col2-data-path $NEW_PATH/$SUBFOLDER/split_1 --rounds-to-train 5
