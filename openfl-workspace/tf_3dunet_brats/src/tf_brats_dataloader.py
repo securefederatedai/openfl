@@ -21,7 +21,7 @@ class DatasetGenerator:
                  train_test_split=0.80,
                  validate_test_split=0.5,
                  number_input_channels=1,
-                 number_output_classes=1,
+                 num_classes=1,
                  random_seed=816,
                  shard=0):
 
@@ -31,7 +31,7 @@ class DatasetGenerator:
         self.train_test_split = train_test_split
         self.validate_test_split = validate_test_split
         self.num_input_channels = number_input_channels
-        self.number_output_classes = number_output_classes
+        self.num_classes = num_classes
         self.random_seed = random_seed
         self.shard = shard  # For Horovod, gives different shard per worker
 
@@ -319,7 +319,12 @@ class DatasetGenerator:
 class TensorFlowBratsDataLoader(TensorFlowDataLoader):
     """TensorFlow Data Loader for the BraTS dataset."""
 
-    def __init__(self, data_path, batch_size=4, crop_dim=64, percent_train=0.8, pre_split_shuffle=True, **kwargs):
+    def __init__(self, data_path, batch_size=4, 
+                 crop_dim=64, percent_train=0.8, 
+                 pre_split_shuffle=True, 
+                 number_input_channels=1,
+                 num_classes=1,
+                 **kwargs):
         """Initialize.
 
         Args:
@@ -338,15 +343,17 @@ class TensorFlowBratsDataLoader(TensorFlowDataLoader):
 
         self.brats_data = DatasetGenerator(crop_dim,
                               data_path=data_path,
+                              number_input_channels=number_input_channels,
                               batch_size=batch_size,
                               train_test_split=percent_train,
                               validate_test_split=0.5,
-                              number_output_classes=1,
+                              num_classes=num_classes,
                               random_seed=816)
 
         self.batch_size = batch_size
         self.crop_dim = crop_dim
-        
+        self.num_classes = num_classes
+
 
     def get_feature_shape(self):
         """Get the shape of an example feature array.

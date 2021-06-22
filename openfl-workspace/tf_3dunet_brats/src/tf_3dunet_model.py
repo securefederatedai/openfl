@@ -28,28 +28,29 @@ class TensorFlow3dUNet(KerasTaskRunner):
 
         self.model = self.create_model(
             self.feature_shape,
+            self.data_loader.num_classes,
             **kwargs
         )
         self.initialize_tensorkeys_for_functions()
-        
+
         self.model.summary(print_fn=self.logger.info, line_length=120)
 
     def create_model(self,
                      input_shape,
+                     n_cl_out=1,
                      **kwargs):
-        """Create the TensorFlow CNN Histology model.
+        """Create the TensorFlow 3D U-Net CNN model.
 
         Args:
-            training_smoothing (float): (Default=32.0)
-            validation_smoothing (float): (Default=1.0)
+            input_shape (list): input shape of the data
+            n_cl_out (int): Number of output classes in label (Default=1)
             **kwargs: Additional parameters to pass to the function
 
         """
-       
+
         # ## Define Model
         #
-
-        model = build_model(input_shape)
+        model = build_model(input_shape, n_cl_out)
 
         self.optimizer = tf.keras.optimizers.Adam()
 

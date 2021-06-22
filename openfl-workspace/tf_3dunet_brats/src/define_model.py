@@ -1,8 +1,3 @@
- Copyright (C) 2020-2021 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
-
-"""You may copy this file as the starting point of your own model."""
-
 import tensorflow as tf
 
 def dice_coef(target, prediction, axis=(1, 2, 3), smooth=0.0001):
@@ -55,8 +50,8 @@ def dice_loss(target, prediction, axis=(1, 2, 3), smooth=0.0001):
 
 
 def build_model(input_shape,
-                use_upsampling=False,
                 n_cl_out=1,
+                use_upsampling=False,
                 dropout=0.2,
                 print_summary=True,
                 seed=816,
@@ -83,7 +78,11 @@ def build_model(input_shape,
         **kwargs: Additional parameters to pass to the function
 
     """
-    inputs = tf.keras.layers.Input(batch_shape=[None] + input_shape, name="brats_mr_image")
+    
+    if (input_shape[0] % ((depth-1)**2)) > 0:
+        raise ValueError(f'Crop dimension must be a multiple of 2^(depth of U-Net - 1) = {(depth - 1)**2}')
+
+    inputs = tf.keras.layers.Input(input_shape, name="brats_mr_image")
 
     activation = tf.keras.activations.relu
     
