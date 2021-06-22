@@ -76,7 +76,7 @@ class FLExperiment:
         # DO CERTIFICATES exchange
 
     def start(self, *, model_provider, task_keeper, data_loader,
-              rounds_to_train, collaborators, delta_updates=False, opt_treatment='RESET'):
+              rounds_to_train, delta_updates=False, opt_treatment='RESET'):
         """Prepare experiment and run."""
         self.prepare_workspace_distribution(
             model_provider, task_keeper, data_loader, rounds_to_train,
@@ -87,7 +87,7 @@ class FLExperiment:
         initial_tensor_dict = self._get_initial_tensor_dict(model_provider)
         response = self.federation.dir_client.set_new_experiment(
             name=self.experiment_name,
-            col_names=collaborators,
+            col_names=self.plan.authorized_cols,
             arch_path=self.arch_path,
             initial_tensor_dict=initial_tensor_dict
         )
