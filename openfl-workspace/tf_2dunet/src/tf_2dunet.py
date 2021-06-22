@@ -62,7 +62,7 @@ class TensorFlow2DUNet(TensorFlowTaskRunner):
 
         self.tvars = tf.trainable_variables()
 
-        self.optimizer = tf.train.RMSPropOptimizer(1e-5)
+        self.optimizer = tf.train.RMSPropOptimizer(1e-2)
 
         self.gvs = self.optimizer.compute_gradients(self.loss, self.tvars)
         self.train_step = self.optimizer.apply_gradients(self.gvs,
