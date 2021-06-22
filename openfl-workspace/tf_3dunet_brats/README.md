@@ -41,7 +41,8 @@ If `tree` is not installed, then run `sudo apt-get install tree` to install it (
 
 3. In order for each collaborator to use separate slice of data, we split main folder into subfolders, one for each collaborator. **NOTE:** In the real world each collaborator will have it's own data and this split already exists. We're splitting here to simulate a federation with different participants.
 
-```bash
+#### `split_directory.sh`
+```bash 
 #!/bin/bash
 # Split the BraTS data directory into NUM_COLLABORATORS
 
