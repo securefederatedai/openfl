@@ -1,6 +1,3 @@
-# Copyright (C) 2020-2021 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
-
 import tensorflow as tf
 
 def dice_coef(target, prediction, axis=(1, 2, 3), smooth=0.0001):

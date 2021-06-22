@@ -17,7 +17,11 @@ class TensorFlow3dUNet(KerasTaskRunner):
 
     """
 
-    def __init__(self, **kwargs):
+    def __init__(self, initial_filters=16, 
+                 depth=5, 
+                 batch_norm=True,
+                 use_upsampling=False, 
+                 **kwargs):
         """Initialize.
 
         Args:
@@ -27,8 +31,12 @@ class TensorFlow3dUNet(KerasTaskRunner):
         super().__init__(**kwargs)
 
         self.model = self.create_model(
-            self.feature_shape,
-            self.data_loader.num_classes,
+            input_shape=self.feature_shape,
+            n_cl_out=self.data_loader.num_classes,
+            initial_filters=initial_filters,
+            use_upsampling=use_upsampling,
+            depth=depth,
+            batch_norm=batch_norm,
             **kwargs
         )
         self.initialize_tensorkeys_for_functions()
@@ -38,7 +46,16 @@ class TensorFlow3dUNet(KerasTaskRunner):
     def create_model(self,
                      input_shape,
                      n_cl_out=1,
+                     use_upsampling=False,
+                     dropout=0.2,
+                     print_summary=True,
+                     seed=816,
+                     depth=5,
+                     dropout_at=[2, 3],
+                     initial_filters=16,
+                     batch_norm=True,
                      **kwargs):
+
         """Create the TensorFlow 3D U-Net CNN model.
 
         Args:
@@ -50,7 +67,16 @@ class TensorFlow3dUNet(KerasTaskRunner):
 
         # ## Define Model
         #
-        model = build_model(input_shape, n_cl_out)
+        model = build_model(input_shape, 
+                            n_cl_out=n_cl_out,
+                            use_upsampling=use_upsampling,
+                            dropout=dropout,
+                            print_summary=print_summary,
+                            seed=seed,
+                            depth=depth,
+                            dropout_at=dropout_at,
+                            initial_filters=initial_filters,
+                            batch_norm=batch_norm)
 
         self.optimizer = tf.keras.optimizers.Adam()
 
