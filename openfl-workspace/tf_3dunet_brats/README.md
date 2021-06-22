@@ -1,6 +1,6 @@
 # 3D U-Net for the BraTS dataset.
 
-This is a full example for training the Brain Tumor Segmentation 2020 ([BraTS2020](https://www.med.upenn.edu/cbica/brats2020/data.html)) with OpenFL. Note: This is **not** the 3D U-Net that was used in the paper and not the sharding used. Nevertheless, it should make a good template for how to train using OpenFL.
+This is a full example for training the Brain Tumor Segmentation 2020 ([BraTS2020](https://www.med.upenn.edu/cbica/brats2020/data.html)) with OpenFL. *Note: This is **not** the 3D U-Net model that was used in the paper and not the sharding used. Nevertheless, it should make a good template for how to train using OpenFL.*
 
 The files `src\dataloader.py` and `src\define_model.py` are where we define the TensorFlow [dataset loader](https://www.tensorflow.org/api_docs/python/tf/data/Dataset) and the 3D U-Net model. This demonstrates how to use an out-of-memory data loader that pulls batches of data from files as needed.
 
