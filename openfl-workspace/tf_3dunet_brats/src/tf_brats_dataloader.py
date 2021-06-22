@@ -3,7 +3,7 @@
 
 """You may copy this file as the starting point of your own model."""
 
-from openfl.federated import KerasDataLoader
+from openfl.federated import TensorFlowDataLoader, KerasDataLoader
 
 import nibabel as nib
 import os
@@ -27,7 +27,7 @@ class DatasetGenerator:
 
         self.data_path = os.path.abspath(os.path.expanduser(data_path))
         self.batch_size = batch_size
-        self.crop_dim = crop_dim
+        self.crop_dim = [crop_dim, crop_dim, crop_dim, number_input_channels]
         self.train_test_split = train_test_split
         self.validate_test_split = validate_test_split
         self.num_input_channels = number_input_channels
@@ -198,6 +198,10 @@ class DatasetGenerator:
 
         return img, msk
 
+    def get_input_shape(self):
+
+        return self.crop_dim
+
     def plot_images(self, ds, slice_num=90):
         """
         Plot images from dataset
@@ -312,7 +316,7 @@ class DatasetGenerator:
 
         return ds_train, ds_val, ds_test
 
-class TensorFlowBratsDataLoader(KerasDataLoader):
+class TensorFlowBratsDataLoader(TensorFlowDataLoader):
     """TensorFlow Data Loader for the BraTS dataset."""
 
     def __init__(self, data_path, batch_size=4, crop_dim=64, percent_train=0.8, pre_split_shuffle=True, **kwargs):
@@ -349,7 +353,7 @@ class TensorFlowBratsDataLoader(KerasDataLoader):
         Returns:
             tuple: shape of an example feature array
         """
-        return self.crop_dim + [1]
+        return self.brats_data.get_input_shape()
 
     def get_train_loader(self, batch_size=None, num_batches=None):
         """

@@ -78,8 +78,7 @@ def build_model(input_shape,
         **kwargs: Additional parameters to pass to the function
 
     """
-    
-    inputs = tf.keras.layers.Input(input_shape, name='brats_mr_image')
+    inputs = tf.keras.layers.Input(batch_shape=[None] + input_shape, name="brats_mr_image")
 
     activation = tf.keras.activations.relu
     
@@ -133,9 +132,6 @@ def build_model(input_shape,
                                 kernel_size=(1, 1, 1), 
                                 activation='sigmoid')(net)
 
-    model = tf.keras.models.Model(inputs=[inputs], outputs=[net], name="unet3d_brats")
-
-    if print_summary:
-        print(model.summary())
+    model = tf.keras.models.Model(inputs=[inputs], outputs=[net])
 
     return model

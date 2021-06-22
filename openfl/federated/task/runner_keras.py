@@ -41,7 +41,7 @@ class KerasTaskRunner(TaskRunner):
         # this is a map of all of the required tensors for each of the public
         # functions in KerasTaskRunner
         self.required_tensorkeys_for_function = {}
-        ke.backend.clear_session()
+        
 
     def rebuild_model(self, round_num, input_tensor_dict, validation=False):
         """
@@ -173,8 +173,6 @@ class KerasTaskRunner(TaskRunner):
                     f'Param_metrics = {metrics}, model_metrics_names = {model_metrics_names}'
                 )
 
-        self.logger.info("TONY TNY")
-
         history = self.model.fit(batch_generator,
                                  verbose=1,
                                  **kwargs)
@@ -197,17 +195,19 @@ class KerasTaskRunner(TaskRunner):
         output_tensor_dict : {TensorKey: nparray} (these correspond to acc,
          precision, f1_score, etc.)
         """
-        batch_size = 1
+        
         if 'batch_size' in kwargs:
             batch_size = kwargs['batch_size']
+        else:
+            batch_size = 1
+
         self.rebuild_model(round_num, input_tensor_dict, validation=True)
         param_metrics = kwargs['metrics']
 
         vals = self.model.evaluate(
-            self.data_loader.X_valid,
-            self.data_loader.y_valid,
+            self.data_loader.get_valid_loader(batch_size),
             batch_size=batch_size,
-            verbose=0
+            verbose=1
         )
         model_metrics_names = self.model.metrics_names
         if type(vals) is not list:

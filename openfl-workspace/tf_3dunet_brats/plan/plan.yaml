@@ -2,7 +2,7 @@ aggregator:
   defaults: plan/defaults/aggregator.yaml
   settings:
     best_state_path: save/tf_3dunet_brats_best.pbuf
-    db_store_rounds: 1
+    db_store_rounds: 2
     init_state_path: save/tf_3dunet_brats_init.pbuf
     last_state_path: save/tf_3dunet_brats_latest.pbuf
     rounds_to_train: 10
@@ -25,24 +25,18 @@ collaborator:
     delta_updates: true
     opt_treatment: RESET
   template: openfl.component.Collaborator
-compression_pipeline:
-  defaults: plan/defaults/compression_pipeline.yaml
-  settings: {}
-  template: openfl.pipelines.NoCompressionPipeline
 data_loader:
   defaults: plan/defaults/data_loader.yaml
   settings:
     batch_size: 4
-    collaborator_count: 1
-    crop_dim:
-    - 64
-    - 64
-    - 64
+    collaborator_count: 2
     percent_train: 0.8
-  template: code.tf_brats_dataloader.TensorFlowBratsDataLoader
+    crop_dim: 64
+  template: src.tf_brats_dataloader.TensorFlowBratsDataLoader
 network:
   defaults: plan/defaults/network.yaml
   settings:
+    agg_addr: localhost.localdomain
     agg_port: auto
     cert_folder: cert
     client_reconnect_interval: 5
@@ -53,7 +47,7 @@ network:
 task_runner:
   defaults: plan/defaults/task_runner.yaml
   settings: {}
-  template: code.tf_3dunet_model.TensorFlow3dUNet
+  template: src.tf_3dunet_model.TensorFlow3dUNet
 tasks:
   aggregated_model_validation:
     function: validate
@@ -63,7 +57,7 @@ tasks:
       metrics:
       - dice_coef
       - soft_dice_coef
-  defaults: plan/defaults/tasks_keras.yaml
+  defaults: plan/defaults/tasks_tensorflow.yaml
   locally_tuned_model_validation:
     function: validate
     kwargs:
@@ -71,12 +65,13 @@ tasks:
       batch_size: 4
       metrics:
       - dice_coef
-      - soft_dice_coef    
+      - soft_dice_coef
   settings: {}
   train:
-    function: train_batches
+    function: train
     kwargs:
       batch_size: 4
+      epochs: 1
       metrics:
       - loss
       num_batches: 1

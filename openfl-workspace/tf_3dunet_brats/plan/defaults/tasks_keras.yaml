@@ -1,27 +1,23 @@
 aggregated_model_validation:
   function : validate
   kwargs   :
-    batch_size : 4
+    batch_size : 32
     apply      : global
     metrics    :
       - accuracy
-      - dice_coef
-      - soft_dice_coef
 
 locally_tuned_model_validation:
   function : validate
   kwargs   :
-    batch_size : 4
+    batch_size : 32
     apply      : local
     metrics    :
       - accuracy
-      - dice_coef
-      - soft_dice_coef
 
 train:
   function : train
   kwargs   :
-    batch_size : 4
+    batch_size : 32
     epochs     : 1
     metrics    :
     - loss

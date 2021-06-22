@@ -3,15 +3,11 @@
 
 """You may copy this file as the starting point of your own model."""
 
-import os
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
-
 import tensorflow as tf
 
 from openfl.federated import KerasTaskRunner
 
 from .define_model import build_model, dice_coef, soft_dice_coef, dice_loss
-
 
 class TensorFlow3dUNet(KerasTaskRunner):
     """Initialize.
@@ -30,29 +26,38 @@ class TensorFlow3dUNet(KerasTaskRunner):
         """
         super().__init__(**kwargs)
 
-        self.optimizer = tf.keras.optimizers.Adam(learning_rate=0.01)
-        self.dice_loss = dice_loss
-        self.dice_coef = dice_coef
-        self.soft_dice_coef = soft_dice_coef
-
-        self.model = self.define_model(**kwargs)
-
-        
+        self.model = self.create_model(
+            self.feature_shape,
+            **kwargs
+        )
         self.initialize_tensorkeys_for_functions()
 
-    
-    def define_model(self, **kwargs):
+    def create_model(self,
+                     input_shape,
+                     **kwargs):
+        """Create the TensorFlow CNN Histology model.
 
-        
-        self.model = build_model(self.feature_shape, **kwargs)
+        Args:
+            training_smoothing (float): (Default=32.0)
+            validation_smoothing (float): (Default=1.0)
+            **kwargs: Additional parameters to pass to the function
 
-        self.model.compile(
-                loss=self.dice_loss,
-                optimizer=self.optimizer,
-                metrics=[self.dice_coef, self.soft_dice_coef],
-            )
+        """
+       
+        # ## Define Model
+        #
 
-        self.tvars = self.model.layers
+        model = build_model(input_shape)
+
+        self.optimizer = tf.keras.optimizers.Adam()
+
+        model.compile(
+            loss=dice_loss,
+            optimizer=self.optimizer,
+            metrics=[dice_coef, soft_dice_coef],
+        )
+
+        self.tvars = model.layers
         print(f'layer names: {[var.name for var in self.tvars]}')
 
         self.opt_vars = self.optimizer.variables()
@@ -61,7 +66,7 @@ class TensorFlow3dUNet(KerasTaskRunner):
         # Two opt_vars for one tvar: gradient and square sum for RMSprop.
         self.fl_vars = self.tvars + self.opt_vars
 
-        return self.model
+        return model
 
 
 if __name__ == "__main__":
@@ -132,7 +137,7 @@ if __name__ == "__main__":
 
     print(args)
 
-    brats_data = DatasetGenerator([args.crop_dim, args.crop_dim, args.crop_dim],
+    brats_data = DatasetGenerator(args.crop_dim,
                                 data_path=os.path.abspath(os.path.expanduser(args.data_path)),
                                 batch_size=args.batch_size,
                                 train_test_split=args.train_test_split,
@@ -142,7 +147,7 @@ if __name__ == "__main__":
                                 random_seed=args.random_seed
                                 )
 
-    model = build_model([args.crop_dim, args.crop_dim, args.crop_dim, args.number_input_channels],
+    model = create_model([args.crop_dim, args.crop_dim, args.crop_dim, args.number_input_channels],
                         use_upsampling=args.use_upsampling,
                         n_cl_out=args.number_output_classes,
                         dropout=0.2,
