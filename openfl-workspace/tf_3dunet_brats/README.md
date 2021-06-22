@@ -1,4 +1,4 @@
-# 3D U-Net for the BraTS dataset
+# TensorFlow 3D U-Net for the BraTS dataset
 
 This is a full example for training the Brain Tumor Segmentation 2020 ([BraTS2020](https://www.med.upenn.edu/cbica/brats2020/data.html)) with OpenFL. *Note: This is **not** the 3D U-Net model that was used in the paper and not the sharding used. Nevertheless, it should make a good template for how to train using OpenFL.*
 
