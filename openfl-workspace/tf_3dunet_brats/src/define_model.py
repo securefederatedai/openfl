@@ -79,8 +79,8 @@ def build_model(input_shape,
 
     """
     
-    if (input_shape[0] % (2**(depth-1))) > 0:
-        raise ValueError(f'Crop dimension must be a multiple of 2^(depth of U-Net - 1) = {2**(depth - 1)}')
+    if (input_shape[0] % (2**depth)) > 0:
+        raise ValueError(f'Crop dimension must be a multiple of 2^(depth of U-Net) = {2**depth)}')
 
     inputs = tf.keras.layers.Input(input_shape, name="brats_mr_image")
 
