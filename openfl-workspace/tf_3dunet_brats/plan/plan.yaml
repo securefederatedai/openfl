@@ -2,10 +2,10 @@ aggregator:
   defaults: plan/defaults/aggregator.yaml
   settings:
     best_state_path: save/tf_3dunet_brats_best.pbuf
-    db_store_rounds: 2
     init_state_path: save/tf_3dunet_brats_init.pbuf
     last_state_path: save/tf_3dunet_brats_latest.pbuf
     rounds_to_train: 10
+    db_store_rounds: 2
   template: openfl.component.Aggregator
 assigner:
   defaults: plan/defaults/assigner.yaml
@@ -29,9 +29,10 @@ data_loader:
   defaults: plan/defaults/data_loader.yaml
   settings:
     batch_size: 4
-    collaborator_count: 2
+    crop_dim: 128
+    num_classes: 1
+    number_input_channels: 1
     percent_train: 0.8
-    crop_dim: 64
   template: src.tf_brats_dataloader.TensorFlowBratsDataLoader
 network:
   defaults: plan/defaults/network.yaml
