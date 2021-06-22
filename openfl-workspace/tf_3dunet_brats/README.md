@@ -2,7 +2,7 @@
 
 ## Steps to run.
 
-1. Download the [BraTS 2020 dataset](https://www.med.upenn.edu/cbica/brats2020/data.html).  Extract the `MICCAI_BraTS2020_TrainingData.zip` zip file to any folder (let's call that folder `${DATA_PATH}`). The file structure of `${DATA_PATH}` should look like this: 
+1. Download the [BraTS 2020 dataset](https://www.med.upenn.edu/cbica/brats2020/registration.html).  Extract the `MICCAI_BraTS2020_TrainingData.zip` zip file to any folder (let's call that folder `${DATA_PATH}`). The file structure of `${DATA_PATH}` should look like this: 
 
 ```bash
 user@localhost ~$ tree ${DATA_PATH} -L 2
