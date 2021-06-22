@@ -181,11 +181,11 @@ class DatasetGenerator:
              "3": "enhancing tumour"}
          """
         # Combine all masks but background
-        if self.number_output_classes == 1:
+        if self.num_classes == 1:
             msk[msk > 0] = 1.0
         else:
-            msk_temp = np.zeros(list(msk.shape) + [self.number_output_classes])
-            for channel in range(self.number_output_classes):
+            msk_temp = np.zeros(list(msk.shape) + [self.num_classes])
+            for channel in range(self.num_classes):
                 msk_temp[msk == channel, channel] = 1.0
             msk = msk_temp
 
