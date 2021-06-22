@@ -31,6 +31,8 @@ class TensorFlow3dUNet(KerasTaskRunner):
             **kwargs
         )
         self.initialize_tensorkeys_for_functions()
+        
+        self.model.summary(print_fn=self.logger.info, line_length=120)
 
     def create_model(self,
                      input_shape,
