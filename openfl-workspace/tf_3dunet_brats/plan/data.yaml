@@ -11,6 +11,6 @@
 # Symbolically link the ./data directory to whereever you have BraTS stored.
 # e.g. ln -s ~/data/MICCAI_BraTS2020_TrainingData ./data/one
 
-one,./data/MICCAI_BraTS_2020_Data_Training/HGG/0
-two,./data/MICCAI_BraTS_2020_Data_Training/HGG/1
+one,./data/MICCAI_BraTS_2020_Data_Training/split_0
+two,./data/MICCAI_BraTS_2020_Data_Training/split_1
 
