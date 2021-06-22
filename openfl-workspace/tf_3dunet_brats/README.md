@@ -55,7 +55,7 @@ help() {
     echo
 }
 
-if [ "$#" -ne 2 ] || ! [ -d ${1} ]; then
+if [ "$#" -lt 2 ] || ! [ -d ${1} ]; then
     help
     exit 1
 fi
