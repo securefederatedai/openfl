@@ -29,7 +29,7 @@ data_loader:
   defaults: plan/defaults/data_loader.yaml
   settings:
     batch_size: 4
-    crop_dim: 64
+    crop_dim: 128
     num_classes: 1
     number_input_channels: 1
     percent_train: 0.8
@@ -76,7 +76,8 @@ tasks:
   train:
     function: train
     kwargs:
-      apply: local
       batch_size: 4
+      epochs: 1
       metrics:
       - loss
+      num_batches: 1
