@@ -4,23 +4,19 @@ aggregated_model_validation:
     batch_size : 32
     apply      : global
     metrics    :
-      - clean_accuracy
-      - adversarial_accuracy
-
+      - accuracy
+   
 locally_tuned_model_validation:
   function : validate
   kwargs   :
     batch_size : 32
     apply      : local
     metrics    :
-      - clean_accuracy
-      - adversarial_accuracy
-
+      - accuracy
 train:
   function : train
   kwargs   :
     batch_size : 32
     epochs     : 1
     metrics    :
-    - adv_ce
-    - base_ce
+    - loss
