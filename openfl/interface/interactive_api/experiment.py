@@ -103,50 +103,6 @@ class FLExperiment:
         else:
             self.logger.info('Experiment was not accepted or failed.')
 
-    def start_experiment(self, model_provider, log_level='INFO', log_file=None):
-        """
-        Start the aggregator.
-
-        This method requires model_provider to start an experiment with another
-        model initialization without workspace redistribution.
-        """
-        # Start the aggregator
-        self.logger.info('Starting experiment!')
-        self.plan.resolve()
-
-        initial_tensor_dict = self._get_initial_tensor_dict(model_provider)
-
-        metric = 25
-        add_log_level('METRIC', metric)
-
-        if isinstance(log_level, str):
-            log_level = log_level.upper()
-
-        handlers = []
-        if log_file:
-            fh = logging.FileHandler(log_file)
-            formatter = logging.Formatter(
-                '%(asctime)s %(levelname)s %(message)s %(filename)s:%(lineno)d')
-            fh.setFormatter(formatter)
-            handlers.append(fh)
-
-        console = Console(width=160)
-        handlers.append(RichHandler(console=console))
-        logging.basicConfig(level=log_level, format='%(message)s',
-                            datefmt='[%X]', handlers=handlers)
-
-        # This is not good we ask directors_client directly
-        self.federation.dir_client.set_new_experiment(
-            name=self.experiment_name,
-            col_names=self.plan.authorized_cols,
-            arch_path=self.arch_path,
-            initial_tensor_dict=initial_tensor_dict
-        )
-
-        # Remove the workspace archive
-        os.remove(self.arch_path)
-        del self.arch_path
-
     @staticmethod
     def _export_python_env():
         """Prepare requirements.txt."""

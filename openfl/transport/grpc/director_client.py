@@ -13,6 +13,9 @@ from openfl.pipelines import NoCompressionPipeline
 from openfl.protocols import director_pb2
 from openfl.protocols import director_pb2_grpc
 from openfl.protocols.utils import construct_model_proto
+from openfl.protocols.utils import deconstruct_model_proto
+from subprocess import check_call
+from sys import executable
 
 logger = logging.getLogger(__name__)
 
@@ -85,6 +88,17 @@ class ShardDirectorClient:
         shutil.unpack_archive(arch_name, experiment_name)
         os.remove(arch_name)
 
+        os.chdir(experiment_name)
+
+        requirements_filename = 'requirements.txt'
+
+        if os.path.isfile(requirements_filename):
+            check_call([
+                executable, '-m', 'pip', 'install', '-r', 'requirements.txt'],
+                shell=False)
+        else:
+            logger.error('No ' + requirements_filename + ' file found.')
+
     def _get_experiment_data(self):
         """Generate the experiment data request."""
         yield director_pb2.WaitExperimentRequest(collaborator_name=self.shard_name)
@@ -142,3 +156,23 @@ class DirectorClient:
         """Request a shard registry."""
         resp = self.stub.GetRegisterdShards(director_pb2.GetRegisterdShardsRequest())
         return resp.shard_info
+
+    def _get_trained_model(self, model_type):
+        """Get trained model RPC."""
+        get_model_request = director_pb2.GetTrainedModelRequest(ModelType=model_type)
+        model_proto_response = director_pb2.GetTrainedModel(get_model_request)
+        tensor_dict, _ = deconstruct_model_proto(
+            model_proto_response.model_proto,
+            NoCompressionPipeline()
+        )
+        return tensor_dict
+
+    def get_best_model(self):
+        """Get best model method."""
+        model_type = director_pb2.GetTrainedModelRequest.BEST_MODEL
+        return self._get_trained_model(model_type)
+
+    def get_last_model(self):
+        """Get last model method."""
+        model_type = director_pb2.GetTrainedModelRequest.LAST_MODEL
+        return self._get_trained_model(model_type)
