@@ -41,6 +41,7 @@ class KerasTaskRunner(TaskRunner):
         # this is a map of all of the required tensors for each of the public
         # functions in KerasTaskRunner
         self.required_tensorkeys_for_function = {}
+        ke.backend.clear_session()
         
 
     def rebuild_model(self, round_num, input_tensor_dict, validation=False):
@@ -206,7 +207,6 @@ class KerasTaskRunner(TaskRunner):
 
         vals = self.model.evaluate(
             self.data_loader.get_valid_loader(batch_size),
-            batch_size=batch_size,
             verbose=1
         )
         model_metrics_names = self.model.metrics_names

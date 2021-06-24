@@ -68,7 +68,7 @@ class Aggregator:
         self.quit_job_sent_to = []
 
         self.tensor_db = TensorDB()
-        self.db_store_rounds = db_store_rounds
+        self.db_store_rounds = db_store_rounds  # I think this generates an error on the second round if it is set to 1 for the aggregator.
         self.compression_pipeline = compression_pipeline \
             or NoCompressionPipeline()
         self.tensor_codec = TensorCodec(self.compression_pipeline)
