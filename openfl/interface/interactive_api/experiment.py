@@ -45,8 +45,15 @@ class FLExperiment:
     def get_best_model(self):
         """Retrieve the model with the best score."""
         # Next line relies on aggregator inner field where model dicts are stored
-        best_tensor_dict = self.server.aggregator.best_tensor_dict
-        self.task_runner_stub.rebuild_model(best_tensor_dict, validation=True, device='cpu')
+        tensor_dict = self.federation.dir_client.get_best_model()
+        self.task_runner_stub.rebuild_model(tensor_dict, validation=True, device='cpu')
+        return self.task_runner_stub.model
+
+    def get_last_model(self):
+        """Retrieve the aggregated model after the last round."""
+        # Next line relies on aggregator inner field where model dicts are stored
+        tensor_dict = self.federation.dir_client.get_last_model()
+        self.task_runner_stub.rebuild_model(tensor_dict, validation=True, device='cpu')
         return self.task_runner_stub.model
 
     def prepare_workspace_distribution(
