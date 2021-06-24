@@ -4,7 +4,7 @@ aggregator:
     best_state_path: save/tf_3dunet_brats_best.pbuf
     init_state_path: save/tf_3dunet_brats_init.pbuf
     last_state_path: save/tf_3dunet_brats_latest.pbuf
-    db_store_rounds: 1
+    db_store_rounds: 2
     rounds_to_train: 10
   template: openfl.component.Aggregator
 assigner:
@@ -21,7 +21,7 @@ assigner:
 collaborator:
   defaults: plan/defaults/collaborator.yaml
   settings:
-    db_store_rounds: 1
+    db_store_rounds: 2
     delta_updates: true
     opt_treatment: RESET
   template: openfl.component.Collaborator
