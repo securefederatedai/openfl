@@ -7,7 +7,7 @@ import tensorflow as tf
 
 from openfl.federated import KerasTaskRunner
 
-from helper_functions.define_model import build_model, dice_coef, soft_dice_coef, dice_loss
+from .define_model import build_model, dice_coef, soft_dice_coef, dice_loss
 
 class TensorFlow3dUNet(KerasTaskRunner):
     """Initialize.
