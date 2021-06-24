@@ -57,7 +57,7 @@ class TensorFlowBratsDataLoader(TensorFlowDataLoader):
         Returns:
             tuple: shape of an example feature array
         """
-        return self.brats_data.get_input_shape()
+        return tuple(self.brats_data.get_input_shape())
 
     def get_train_loader(self, batch_size=None, num_batches=None):
         """
