@@ -88,13 +88,11 @@ class ShardDirectorClient:
         shutil.unpack_archive(arch_name, experiment_name)
         os.remove(arch_name)
 
-        os.chdir(experiment_name)
-
-        requirements_filename = 'requirements.txt'
+        requirements_filename = f'./{experiment_name}/requirements.txt'
 
         if os.path.isfile(requirements_filename):
             check_call([
-                executable, '-m', 'pip', 'install', '-r', 'requirements.txt'],
+                executable, '-m', 'pip', 'install', '-r', requirements_filename],
                 shell=False)
         else:
             logger.error('No ' + requirements_filename + ' file found.')
