@@ -42,7 +42,7 @@ class KerasTaskRunner(TaskRunner):
         # functions in KerasTaskRunner
         self.required_tensorkeys_for_function = {}
         ke.backend.clear_session()
-        
+
     def rebuild_model(self, round_num, input_tensor_dict, validation=False):
         """
         Parse tensor names and update weights of model. Handles the optimizer treatment.
