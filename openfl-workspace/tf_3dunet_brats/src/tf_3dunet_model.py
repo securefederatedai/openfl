@@ -7,7 +7,7 @@ import tensorflow as tf
 
 from openfl.federated import KerasTaskRunner
 
-from src.define_model import build_model, dice_coef, soft_dice_coef, dice_loss
+from helper_functions.define_model import build_model, dice_coef, soft_dice_coef, dice_loss
 
 class TensorFlow3dUNet(KerasTaskRunner):
     """Initialize.
@@ -101,6 +101,7 @@ class TensorFlow3dUNet(KerasTaskRunner):
 if __name__ == "__main__":
 
     from tf_brats_dataloader import DatasetGenerator
+    import os
 
     import argparse
 
@@ -135,7 +136,7 @@ if __name__ == "__main__":
                     type=int,
                     default=1,
                     help="Number of input channels")
-    parser.add_argument("--number_output_classes",
+    parser.add_argument("--num_classes",
                     type=int,
                     default=1,
                     help="Number of output classes/channels")
@@ -172,13 +173,13 @@ if __name__ == "__main__":
                                 train_test_split=args.train_test_split,
                                 validate_test_split=args.validate_test_split,
                                 number_input_channels=args.number_input_channels,
-                                number_output_classes=args.number_output_classes,
+                                num_classes=args.num_classes,
                                 random_seed=args.random_seed
                                 )
 
-    model = create_model([args.crop_dim, args.crop_dim, args.crop_dim, args.number_input_channels],
+    model = build_model([args.crop_dim, args.crop_dim, args.crop_dim, args.number_input_channels],
                         use_upsampling=args.use_upsampling,
-                        n_cl_out=args.number_output_classes,
+                        n_cl_out=args.num_classes,
                         dropout=0.2,
                         print_summary=args.print_model,
                         seed=args.random_seed,

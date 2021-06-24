@@ -5,7 +5,7 @@
 
 from openfl.federated import TensorFlowDataLoader
 
-from src.dataloader import DatasetGenerator
+from helper_functions.dataloader import DatasetGenerator
 
 import os
 
