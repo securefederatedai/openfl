@@ -40,7 +40,6 @@ class FastEstimatorTaskRunner(TaskRunner):
                 self.system.epoch_idx = progress['epoch_idx']
                 self.system.global_step = progress['global_step']
 
-        tf.config.run_functions_eagerly(True)
         estimator_kwargs = {}
         for k, v in estimator.system.__dict__.items():
             if k in ['pipeline', 'network', 'log_steps',

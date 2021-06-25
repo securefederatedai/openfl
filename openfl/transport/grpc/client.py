@@ -109,6 +109,7 @@ class CollaboratorGRPCClient:
         self.certificate = certificate
         self.private_key = private_key
 
+        # Note: max_metadata_size is getting clamped to 16777216
         self.channel_options = [
             ('grpc.max_metadata_size', 32 * 1024 * 1024),
             ('grpc.max_send_message_length', 128 * 1024 * 1024),

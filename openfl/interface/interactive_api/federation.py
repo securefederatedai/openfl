@@ -2,8 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 """Federation API module."""
 
-from socket import getfqdn
-
+from openfl.utilities.utils import getfqdn_env
 
 class Federation:
     """
@@ -24,7 +23,7 @@ class Federation:
         pricate key to enable mTLS.
         """
         if central_node_fqdn is None:
-            self.fqdn = getfqdn()
+            self.fqdn = getfqdn_env()
         else:
             self.fqdn = central_node_fqdn
 

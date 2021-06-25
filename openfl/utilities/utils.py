@@ -1,9 +1,15 @@
 # Copyright (C) 2020-2021 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 """Utilities module."""
-
+import os
 import numpy as np
+from socket import getfqdn
 
+def getfqdn_env(name: str = ''):
+    fqdn = os.environ.get('FQDN', None)
+    if fqdn is not None:
+        return fqdn
+    return getfqdn(name)
 
 def split_tensor_dict_into_floats_and_non_floats(tensor_dict):
     """
