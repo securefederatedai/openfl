@@ -113,7 +113,7 @@ class FLExperiment:
         with open('./requirements.txt', 'w') as f:
             for package in requirements_generator:
                 # there is a pip bug with pkg-resources==0.0.0 req
-                if '==' not in package or '0.0.0':
+                if '==' not in package or '0.0.0' in package:
                     # We do not export dependencies without version
                     continue
                 f.write(package + '\n')
