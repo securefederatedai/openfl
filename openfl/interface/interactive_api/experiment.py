@@ -3,19 +3,14 @@
 
 """Python low-level API module."""
 import functools
-import logging
 import os
 from collections import defaultdict
 from copy import deepcopy
 from logging import getLogger
 from pathlib import Path
 
-from rich.console import Console
-from rich.logging import RichHandler
-
 from openfl.federated import Plan
 from openfl.interface.cli_helper import WORKSPACE
-from openfl.utilities import add_log_level
 from openfl.utilities import split_tensor_dict_for_holdouts
 from openfl.utilities.logs import setup_loggers
 
@@ -45,8 +40,15 @@ class FLExperiment:
     def get_best_model(self):
         """Retrieve the model with the best score."""
         # Next line relies on aggregator inner field where model dicts are stored
-        best_tensor_dict = self.server.aggregator.best_tensor_dict
-        self.task_runner_stub.rebuild_model(best_tensor_dict, validation=True, device='cpu')
+        tensor_dict = self.federation.dir_client.get_best_model()
+        self.task_runner_stub.rebuild_model(tensor_dict, validation=True, device='cpu')
+        return self.task_runner_stub.model
+
+    def get_last_model(self):
+        """Retrieve the aggregated model after the last round."""
+        # Next line relies on aggregator inner field where model dicts are stored
+        tensor_dict = self.federation.dir_client.get_last_model()
+        self.task_runner_stub.rebuild_model(tensor_dict, validation=True, device='cpu')
         return self.task_runner_stub.model
 
     def prepare_workspace_distribution(
@@ -137,8 +139,6 @@ class FLExperiment:
         arch_path = make_archive(archive_name, archive_type, tmp_dir + '/workspace')
 
         rmtree(tmp_dir)
-
-        return arch_path
 
         return arch_path
 

@@ -7,20 +7,10 @@
 import asyncio
 import logging
 
-from rich.console import Console
-from rich.logging import RichHandler
-
 from openfl.component.director.director import serve
 
-root = logging.getLogger()
-root.setLevel(logging.INFO)
-console = Console(width=160)
-handler = RichHandler(console=console)
-formatter = logging.Formatter(
-    '[%(asctime)s][%(name)s][%(levelname)s] - %(message)s'
-)
-handler.setFormatter(formatter)
-root.addHandler(handler)
+from openfl.interface.cli import setup_logging
+setup_logging()
 
 logger = logging.getLogger(__name__)
 

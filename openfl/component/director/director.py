@@ -19,6 +19,7 @@ from openfl.federated import Plan
 from openfl.pipelines import NoCompressionPipeline
 from openfl.protocols import director_pb2
 from openfl.protocols import director_pb2_grpc
+from openfl.protocols.utils import construct_model_proto
 from openfl.protocols.utils import deconstruct_model_proto
 
 logger = logging.getLogger(__name__)
@@ -90,6 +91,26 @@ class Director(director_pb2_grpc.FederationDirectorServicer):
             tensorboard_address=f'http://{self.fqdn}:{self.tensorboard_port}'
         )
 
+    async def GetTrainedModel(self, request, context):  # NOQA:N802
+        if not hasattr(self, 'aggregator_server'):
+            logger.error('Aggregator has not started yet')
+            return director_pb2.TrainedModelResponse()
+        elif self.aggregator_server.aggregator.last_tensor_dict is None:
+            logger.error('Aggregator have no aggregated model to return')
+            return director_pb2.TrainedModelResponse()
+
+        if request.model_type == director_pb2.GetTrainedModelRequest.BEST_MODEL:
+            tensor_dict = self.aggregator_server.aggregator.best_tensor_dict
+        elif request.model_type == director_pb2.GetTrainedModelRequest.LAST_MODEL:
+            tensor_dict = self.aggregator_server.aggregator.last_tensor_dict
+        else:
+            logger.error('Incorrect model type')
+            return director_pb2.TrainedModelResponse()
+
+        model_proto = construct_model_proto(tensor_dict, 0, NoCompressionPipeline())
+
+        return director_pb2.TrainedModelResponse(model_proto=model_proto)
+
     async def GetExperimentData(self, request, context):  # NOQA:N802
         """Receive experiment data."""
         # TODO: add size filling
@@ -159,14 +180,14 @@ class Director(director_pb2_grpc.FederationDirectorServicer):
         plan.authorized_cols = list(self.col_exp_queues.keys())
 
         logger.info('🧿 Starting the Aggregator Service.')
-        grpc_server = plan.interactive_api_get_server(
+        self.aggregator_server = plan.interactive_api_get_server(
             initial_tensor_dict,
             chain='',
             certificate='',
             private_key='')
 
-        server = grpc_server.get_server()
-        server.start()
+        grpc_server = self.aggregator_server.get_server()
+        grpc_server.start()
 
     def run_tensorboard(self):
         """Run the tensorboard."""

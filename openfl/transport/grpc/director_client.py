@@ -157,8 +157,8 @@ class DirectorClient:
 
     def _get_trained_model(self, model_type):
         """Get trained model RPC."""
-        get_model_request = director_pb2.GetTrainedModelRequest(ModelType=model_type)
-        model_proto_response = director_pb2.GetTrainedModel(get_model_request)
+        get_model_request = director_pb2.GetTrainedModelRequest(model_type=model_type)
+        model_proto_response = self.stub.GetTrainedModel(get_model_request)
         tensor_dict, _ = deconstruct_model_proto(
             model_proto_response.model_proto,
             NoCompressionPipeline()
