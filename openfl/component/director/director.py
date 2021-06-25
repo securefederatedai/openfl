@@ -92,12 +92,21 @@ class Director(director_pb2_grpc.FederationDirectorServicer):
         )
 
     async def GetTrainedModel(self, request, context):  # NOQA:N802
-        if request.ModelType == director_pb2.GetTrainedModelRequest.BEST_MODEL:
-            tensor_dict = self.self.aggregator_server.aggregator.best_tensor_dict
-        elif request.ModelType == director_pb2.GetTrainedModelRequest.LAST_MODEL:
-            tensor_dict = self.self.aggregator_server.aggregator.last_tensor_dict
+        if not hasattr(self, 'aggregator_server'):
+            logger.error('Aggregator has not started yet')
+            return director_pb2.TrainedModelResponse()
+        elif self.aggregator_server.aggregator.last_tensor_dict is None:
+            logger.error('Aggregator have no aggregated model to return')
+            return director_pb2.TrainedModelResponse()
+
+        if request.model_type == director_pb2.GetTrainedModelRequest.BEST_MODEL:
+            tensor_dict = self.aggregator_server.aggregator.best_tensor_dict
+        elif request.model_type == director_pb2.GetTrainedModelRequest.LAST_MODEL:
+            tensor_dict = self.aggregator_server.aggregator.last_tensor_dict
         else:
             logger.error('Incorrect model type')
+            return director_pb2.TrainedModelResponse()
+
         model_proto = construct_model_proto(tensor_dict, 0, NoCompressionPipeline())
 
         return director_pb2.TrainedModelResponse(model_proto=model_proto)

@@ -3,19 +3,14 @@
 
 """Python low-level API module."""
 import functools
-import logging
 import os
 from collections import defaultdict
 from copy import deepcopy
 from logging import getLogger
 from pathlib import Path
 
-from rich.console import Console
-from rich.logging import RichHandler
-
 from openfl.federated import Plan
 from openfl.interface.cli_helper import WORKSPACE
-from openfl.utilities import add_log_level
 from openfl.utilities import split_tensor_dict_for_holdouts
 from openfl.utilities.logs import setup_loggers
 
@@ -144,8 +139,6 @@ class FLExperiment:
         arch_path = make_archive(archive_name, archive_type, tmp_dir + '/workspace')
 
         rmtree(tmp_dir)
-
-        return arch_path
 
         return arch_path
 
