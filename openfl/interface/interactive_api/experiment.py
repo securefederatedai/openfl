@@ -112,7 +112,7 @@ class FLExperiment:
         requirements_generator = freeze.freeze()
         with open('./requirements.txt', 'w') as f:
             for package in requirements_generator:
-                if '==' not in package:
+                if '==' not in package or '0.0.0' in package:
                     # We do not export dependencies without version
                     continue
                 f.write(package + '\n')
