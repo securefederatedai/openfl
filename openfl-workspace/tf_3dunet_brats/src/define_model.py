@@ -1,27 +1,24 @@
 import tensorflow as tf
 
+
 def dice_coef(target, prediction, axis=(1, 2, 3), smooth=0.0001):
-        """
-        Sorenson Dice
-        \frac{  2 \times \left | T \right | \cap \left | P \right |}{ \left | T \right | +  \left | P \right |  }
-        where T is ground truth mask and P is the prediction mask
-        """
-        prediction = tf.round(prediction)  # Round to 0 or 1
+    """
+    Sorenson Dice
+    """
+    prediction = tf.round(prediction)  # Round to 0 or 1
 
-        intersection = tf.reduce_sum(target * prediction, axis=axis)
-        union = tf.reduce_sum(target + prediction, axis=axis)
-        numerator = tf.constant(2.) * intersection + smooth
-        denominator = union + smooth
-        coef = numerator / denominator
+    intersection = tf.reduce_sum(target * prediction, axis=axis)
+    union = tf.reduce_sum(target + prediction, axis=axis)
+    numerator = tf.constant(2.) * intersection + smooth
+    denominator = union + smooth
+    coef = numerator / denominator
 
-        return tf.reduce_mean(coef)
+    return tf.reduce_mean(coef)
 
 
 def soft_dice_coef(target, prediction, axis=(1, 2, 3), smooth=0.0001):
     """
     Sorenson (Soft) Dice - Don't round predictions
-    \frac{  2 \times \left | T \right | \cap \left | P \right |}{ \left | T \right | +  \left | P \right |  }
-    where T is ground truth mask and P is the prediction mask
     """
     intersection = tf.reduce_sum(target * prediction, axis=axis)
     union = tf.reduce_sum(target + prediction, axis=axis)
@@ -44,7 +41,7 @@ def dice_loss(target, prediction, axis=(1, 2, 3), smooth=0.0001):
     t = tf.reduce_sum(target, axis=axis)
     numerator = tf.reduce_mean(intersection + smooth)
     denominator = tf.reduce_mean(t + p + smooth)
-    dice_loss = -tf.math.log(2.*numerator) + tf.math.log(denominator)
+    dice_loss = -tf.math.log(2. * numerator) + tf.math.log(denominator)
 
     return dice_loss
 
@@ -78,17 +75,17 @@ def build_model(input_shape,
         **kwargs: Additional parameters to pass to the function
 
     """
-    
+
     if (input_shape[0] % (2**depth)) > 0:
         raise ValueError(f'Crop dimension must be a multiple of 2^(depth of U-Net) = {2**depth}')
 
     inputs = tf.keras.layers.Input(input_shape, name="brats_mr_image")
 
     activation = tf.keras.activations.relu
-    
+
     params = dict(kernel_size=(3, 3, 3), activation=activation,
-                padding='same', 
-                kernel_initializer=tf.keras.initializers.he_uniform(seed=seed))
+                  padding='same',
+                  kernel_initializer=tf.keras.initializers.he_uniform(seed=seed))
 
     convb_layers = {}
 
@@ -117,9 +114,11 @@ def build_model(input_shape,
             up = tf.keras.layers.UpSampling3D(
                 name='up{}'.format(depth + i + 1), size=(2, 2, 2))(net)
         else:
-            up = tf.keras.layers.Conv3DTranspose(
-                name='transConv{}'.format(depth + i + 1), filters=filters, 
-                kernel_size=(2, 2, 2), strides=(2, 2, 2), padding='same')(net)
+            up = tf.keras.layers.Conv3DTranspose(name='transConv{}'.format(depth + i + 1),
+                                                 filters=filters,
+                                                 kernel_size=(2, 2, 2),
+                                                 strides=(2, 2, 2),
+                                                 padding='same')(net)
         net = tf.keras.layers.concatenate(
             [up, convb_layers['conv{}b'.format(depth - i - 1)]],
             axis=-1
@@ -133,8 +132,8 @@ def build_model(input_shape,
         filters //= 2
 
     net = tf.keras.layers.Conv3D(name='prediction', filters=n_cl_out,
-                                kernel_size=(1, 1, 1), 
-                                activation='sigmoid')(net)
+                                 kernel_size=(1, 1, 1),
+                                 activation='sigmoid')(net)
 
     model = tf.keras.models.Model(inputs=[inputs], outputs=[net])
 

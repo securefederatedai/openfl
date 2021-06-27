@@ -10,6 +10,7 @@ import tensorflow as tf
 import numpy as np
 import os
 
+
 class DatasetGenerator:
 
     def __init__(self, crop_dim,
@@ -19,7 +20,7 @@ class DatasetGenerator:
                  num_classes=1,
                  train_test_split=0.80,
                  validate_test_split=0.5,
-                 random_seed=816, 
+                 random_seed=816,
                  shard=0):
 
         self.data_path = os.path.abspath(os.path.expanduser(data_path))
@@ -28,7 +29,7 @@ class DatasetGenerator:
         self.num_input_channels = number_input_channels
         self.num_classes = num_classes
         self.random_seed = random_seed
-        
+
         self.train_test_split = train_test_split
         self.validate_test_split = validate_test_split
         self.shard = shard
@@ -44,7 +45,7 @@ class DatasetGenerator:
         """
 
         filenames = tf.io.gfile.glob(os.path.join(self.data_path, "*/*_seg.nii.gz"))
-        
+
         """
         Create a dictionary of tuples with image filename and label filename
         """
@@ -53,14 +54,13 @@ class DatasetGenerator:
         for idx, filename in enumerate(filenames):
             self.filenames[idx] = [filename.replace("_seg.nii.gz", "_flair.nii.gz"), filename]
 
-
     def z_normalize_img(self, img):
         """
         Normalize the image so that the mean value for each image
         is 0 and the standard deviation is 1.
         """
 
-        ## TODO: Correct this for multiple MRI channels
+        # TODO: Correct this for multiple MRI channels
         return (img - np.mean(img)) / np.std(img)
 
     def crop(self, img, msk, randomize):
@@ -73,26 +73,26 @@ class DatasetGenerator:
         # Do we randomize?
         is_random = randomize and np.random.rand() > 0.5
 
-        for idx in range(len(img.shape)-1):  # Go through each dimension
+        for idx in range(len(img.shape) - 1):  # Go through each dimension
 
             cropLen = self.crop_dim[idx]
             imgLen = img.shape[idx]
 
-            start = (imgLen-cropLen)//2
+            start = (imgLen - cropLen) // 2
 
             ratio_crop = 0.20  # Crop up this this % of pixels for offset
             # Number of pixels to offset crop in this dimension
-            offset = int(np.floor(start*ratio_crop))
+            offset = int(np.floor(start * ratio_crop))
 
             if offset > 0:
                 if is_random:
                     start += np.random.choice(range(-offset, offset))
                     if ((start + cropLen) > imgLen):  # Don't fall off the image
-                        start = (imgLen-cropLen)//2
+                        start = (imgLen - cropLen) // 2
             else:
                 start = 0
 
-            slices.append(slice(start, start+cropLen))
+            slices.append(slice(start, start + cropLen))
 
         return img[tuple(slices)], msk[tuple(slices)]
 
@@ -106,14 +106,14 @@ class DatasetGenerator:
         # If the axes aren't equal then we can't rotate them.
         equal_dim_axis = []
         for idx in range(0, len(self.crop_dim)):
-            for jdx in range(idx+1, len(self.crop_dim)):
+            for jdx in range(idx + 1, len(self.crop_dim)):
                 if self.crop_dim[idx] == self.crop_dim[jdx]:
                     equal_dim_axis.append([idx, jdx])  # Valid rotation axes
         dim_to_rotate = equal_dim_axis
 
         if np.random.rand() > 0.5:
             # Random 0,1 (axes to flip)
-            ax = np.random.choice(np.arange(len(self.crop_dim)-1))
+            ax = np.random.choice(np.arange(len(self.crop_dim) - 1))
             img = np.flip(img, ax)
             msk = np.flip(msk, ax)
 
@@ -137,7 +137,7 @@ class DatasetGenerator:
         idx = idx.numpy()
         imgFile = self.filenames[idx][0]
         mskFile = self.filenames[idx][1]
-        
+
         img_temp = np.array(nib.load(imgFile).dataobj)
         img_temp = np.rot90(img_temp)
 
@@ -163,10 +163,7 @@ class DatasetGenerator:
             # Normalize
             img_temp = self.z_normalize_img(img_temp)
 
-            img[...,channel] = img_temp
-
-
-        #img = np.expand_dims(img, -1)
+            img[..., channel] = img_temp
 
         msk = np.rot90(np.array(nib.load(mskFile).dataobj))
         msk = np.expand_dims(msk, -1)
@@ -217,10 +214,10 @@ class DatasetGenerator:
             bs = img.shape[0]
 
             for idx in range(bs):
-                plt.subplot(bs, num_cols, idx*num_cols + 1)
+                plt.subplot(bs, num_cols, idx * num_cols + 1)
                 plt.imshow(img[idx, :, :, slice_num, img_channel], cmap="bone")
                 plt.title("MRI", fontsize=18)
-                plt.subplot(bs, num_cols, idx*num_cols + 2)
+                plt.subplot(bs, num_cols, idx * num_cols + 2)
                 plt.imshow(msk[idx, :, :, slice_num, msk_channel], cmap="bone")
                 plt.title("Tumor", fontsize=18)
 
@@ -300,15 +297,14 @@ class DatasetGenerator:
                                                        [x, False], [tf.float32, tf.float32]),
                               num_parallel_calls=tf.data.experimental.AUTOTUNE)
 
-        #ds_train = ds_train.repeat()
         ds_train = ds_train.batch(self.batch_size, drop_remainder=True)
         ds_train = ds_train.prefetch(tf.data.experimental.AUTOTUNE)
 
-        batch_size_val = max(1, self.batch_size//2)    # Could be any batch size you'd like
+        batch_size_val = max(1, self.batch_size // 2)    # Could be any batch size you'd like
         ds_val = ds_val.batch(batch_size_val, drop_remainder=True)
         ds_val = ds_val.prefetch(tf.data.experimental.AUTOTUNE)
 
-        batch_size_test = max(1, self.batch_size//2)   # Could be any batch size you'd like
+        batch_size_test = max(1, self.batch_size // 2)   # Could be any batch size you'd like
         ds_test = ds_test.batch(batch_size_test, drop_remainder=True)
         ds_test = ds_test.prefetch(tf.data.experimental.AUTOTUNE)
 

@@ -9,12 +9,13 @@ from .dataloader import DatasetGenerator
 
 import os
 
+
 class TensorFlowBratsDataLoader(TensorFlowDataLoader):
     """TensorFlow Data Loader for the BraTS dataset."""
 
-    def __init__(self, data_path, batch_size=4, 
-                 crop_dim=64, percent_train=0.8, 
-                 pre_split_shuffle=True, 
+    def __init__(self, data_path, batch_size=4,
+                 crop_dim=64, percent_train=0.8,
+                 pre_split_shuffle=True,
                  number_input_channels=1,
                  num_classes=1,
                  **kwargs):
@@ -27,7 +28,7 @@ class TensorFlowBratsDataLoader(TensorFlowDataLoader):
             percent_train (float): The percentage of the data to use for training (Default=0.8)
             pre_split_shuffle (bool): True= shuffle the dataset before
             performing the train/validate split (Default=True)
-            **kwargs: Additional arguments, passed to super init 
+            **kwargs: Additional arguments, passed to super init
 
         Returns:
             Data loader with BraTS data
@@ -39,18 +40,17 @@ class TensorFlowBratsDataLoader(TensorFlowDataLoader):
         self.crop_dim = [crop_dim, crop_dim, crop_dim, number_input_channels]
         self.num_input_channels = number_input_channels
         self.num_classes = num_classes
-        
+
         self.train_test_split = percent_train
 
         self.brats_data = DatasetGenerator(crop_dim,
-                              data_path=data_path,
-                              number_input_channels=number_input_channels,
-                              batch_size=batch_size,
-                              train_test_split=percent_train,
-                              validate_test_split=0.5,
-                              num_classes=num_classes,
-                              random_seed=816)
-
+                                           data_path=data_path,
+                                           number_input_channels=number_input_channels,
+                                           batch_size=batch_size,
+                                           train_test_split=percent_train,
+                                           validate_test_split=0.5,
+                                           num_classes=num_classes,
+                                           random_seed=816)
 
     def get_feature_shape(self):
         """Get the shape of an example feature array.
@@ -91,4 +91,3 @@ class TensorFlowBratsDataLoader(TensorFlowDataLoader):
             int: number of validation samples
         """
         return self.brats_data.num_val
-

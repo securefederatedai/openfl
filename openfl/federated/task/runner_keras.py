@@ -42,7 +42,6 @@ class KerasTaskRunner(TaskRunner):
         # functions in KerasTaskRunner
         self.required_tensorkeys_for_function = {}
         ke.backend.clear_session()
-        
 
     def rebuild_model(self, round_num, input_tensor_dict, validation=False):
         """
@@ -196,7 +195,7 @@ class KerasTaskRunner(TaskRunner):
         output_tensor_dict : {TensorKey: nparray} (these correspond to acc,
          precision, f1_score, etc.)
         """
-        
+
         if 'batch_size' in kwargs:
             batch_size = kwargs['batch_size']
         else:

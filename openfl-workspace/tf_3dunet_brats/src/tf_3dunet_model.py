@@ -9,6 +9,7 @@ from openfl.federated import KerasTaskRunner
 
 from .define_model import build_model, dice_coef, soft_dice_coef, dice_loss
 
+
 class TensorFlow3dUNet(KerasTaskRunner):
     """Initialize.
 
@@ -17,10 +18,10 @@ class TensorFlow3dUNet(KerasTaskRunner):
 
     """
 
-    def __init__(self, initial_filters=16, 
-                 depth=5, 
+    def __init__(self, initial_filters=16,
+                 depth=5,
                  batch_norm=True,
-                 use_upsampling=False, 
+                 use_upsampling=False,
                  **kwargs):
         """Initialize.
 
@@ -67,7 +68,7 @@ class TensorFlow3dUNet(KerasTaskRunner):
 
         # ## Define Model
         #
-        model = build_model(input_shape, 
+        model = build_model(input_shape,
                             n_cl_out=n_cl_out,
                             use_upsampling=use_upsampling,
                             dropout=dropout,
@@ -110,43 +111,44 @@ if __name__ == "__main__":
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
     parser.add_argument("--data_path",
-                        default="~/data/MICCAI_BraTS2020_TrainingData/",  # Or wherever you unzipped the BraTS datset,
+                        default="~/data/MICCAI_BraTS2020_TrainingData/",
+                        # Or wherever you unzipped the BraTS datset,
                         help="Root directory for BraTS 2020 dataset")
     parser.add_argument("--epochs",
-                    type=int,
-                    default=5,
-                    help="Number of epochs")
+                        type=int,
+                        default=5,
+                        help="Number of epochs")
     parser.add_argument("--crop_dim",
-                    type=int,
-                    default=64,
-                    help="Crop all dimensions to this (height, width, depth)")
+                        type=int,
+                        default=64,
+                        help="Crop all dimensions to this (height, width, depth)")
     parser.add_argument("--batch_size",
-                    type=int,
-                    default=4,
-                    help="Training batch size")
+                        type=int,
+                        default=4,
+                        help="Training batch size")
     parser.add_argument("--train_test_split",
-                    type=float,
-                    default=0.80,
-                    help="Train/test split (0-1)")
+                        type=float,
+                        default=0.80,
+                        help="Train/test split (0-1)")
     parser.add_argument("--validate_test_split",
-                    type=float,
-                    default=0.50,
-                    help="Validation/test split (0-1)")
+                        type=float,
+                        default=0.50,
+                        help="Validation/test split (0-1)")
     parser.add_argument("--number_input_channels",
-                    type=int,
-                    default=1,
-                    help="Number of input channels")
+                        type=int,
+                        default=1,
+                        help="Number of input channels")
     parser.add_argument("--num_classes",
-                    type=int,
-                    default=1,
-                    help="Number of output classes/channels")
+                        type=int,
+                        default=1,
+                        help="Number of output classes/channels")
     parser.add_argument("--random_seed",
-                    default=816,
-                    help="Random seed for determinism")
+                        default=816,
+                        help="Random seed for determinism")
     parser.add_argument("--print_model",
-                    action="store_true",
-                    default=True,
-                    help="Print the summary of the model layers")
+                        action="store_true",
+                        default=True,
+                        help="Print the summary of the model layers")
     parser.add_argument("--filters",
                         type=int,
                         default=16,
@@ -160,22 +162,22 @@ if __name__ == "__main__":
                         default=True,
                         help="Use batch normalization")
     parser.add_argument("--saved_model_name",
-                    default="saved_model_3DUnet",
-                    help="Save model to this path")
+                        default="saved_model_3DUnet",
+                        help="Save model to this path")
 
     args = parser.parse_args()
 
     print(args)
 
     brats_data = DatasetGenerator(args.crop_dim,
-                                data_path=os.path.abspath(os.path.expanduser(args.data_path)),
-                                batch_size=args.batch_size,
-                                train_test_split=args.train_test_split,
-                                validate_test_split=args.validate_test_split,
-                                number_input_channels=args.number_input_channels,
-                                num_classes=args.num_classes,
-                                random_seed=args.random_seed
-                                )
+                                  data_path=os.path.abspath(os.path.expanduser(args.data_path)),
+                                  batch_size=args.batch_size,
+                                  train_test_split=args.train_test_split,
+                                  validate_test_split=args.validate_test_split,
+                                  number_input_channels=args.number_input_channels,
+                                  num_classes=args.num_classes,
+                                  random_seed=args.random_seed
+                                  )
 
     model = build_model([args.crop_dim, args.crop_dim, args.crop_dim, args.number_input_channels],
                         use_upsampling=args.use_upsampling,
@@ -186,27 +188,27 @@ if __name__ == "__main__":
                         depth=5,
                         dropout_at=[2, 3],
                         initial_filters=args.filters,
-                        batch_norm=args.use_batchnorm 
+                        batch_norm=args.use_batchnorm
                         )
 
     model.compile(loss=dice_loss,
-                  optimizer = tf.keras.optimizers.Adam(learning_rate=0.01),
+                  optimizer=tf.keras.optimizers.Adam(learning_rate=0.01),
                   metrics=[dice_coef, soft_dice_coef]
-                 )
+                  )
 
     checkpoint = tf.keras.callbacks.ModelCheckpoint(args.saved_model_name,
-                                         verbose=1,
-                                         save_best_only=True)
+                                                    verbose=1,
+                                                    save_best_only=True)
 
     # TensorBoard
     import datetime
-    logs_dir = os.path.join("tensorboard_logs", 
+    logs_dir = os.path.join("tensorboard_logs",
                             datetime.datetime.now().strftime("%Y%m%d-%H%M%S"))
     tb_logs = tf.keras.callbacks.TensorBoard(log_dir=logs_dir)
 
-    callbacks = [checkpoint, tb_logs]            
+    callbacks = [checkpoint, tb_logs]
 
-    history = model.fit(brats_data.ds_train, 
-                        validation_data=brats_data.ds_val, 
+    history = model.fit(brats_data.ds_train,
+                        validation_data=brats_data.ds_val,
                         epochs=args.epochs,
                         callbacks=callbacks)
