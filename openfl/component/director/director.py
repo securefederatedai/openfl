@@ -78,7 +78,8 @@ class Director(director_pb2_grpc.FederationDirectorServicer):
             tensor_dict, _ = deconstruct_model_proto(request.model_proto, NoCompressionPipeline())
 
         self.create_workspace(request.name, npbytes)
-        self._run_aggregator(tensor_dict, request.name)
+        # await self._run_aggregator(tensor_dict, request.name)
+        asyncio.create_task(self._run_aggregator(tensor_dict, request.name))
 
         logger.info(f'New experiment {request.name} for '
                     f'collaborators {request.collaborator_names}')
@@ -92,6 +93,7 @@ class Director(director_pb2_grpc.FederationDirectorServicer):
         )
 
     async def GetTrainedModel(self, request, context):  # NOQA:N802
+        logger.info('Request GetTrainedModel has got!')
         if not hasattr(self, 'aggregator_server'):
             logger.error('Aggregator has not started yet')
             return director_pb2.TrainedModelResponse()
@@ -167,7 +169,7 @@ class Director(director_pb2_grpc.FederationDirectorServicer):
 
         shutil.unpack_archive(arch_name, experiment_name)
 
-    def _run_aggregator(
+    async def _run_aggregator(
             self,
             initial_tensor_dict,
             experiment_name,
@@ -188,6 +190,21 @@ class Director(director_pb2_grpc.FederationDirectorServicer):
 
         grpc_server = self.aggregator_server.get_server()
         grpc_server.start()
+        # logger.info('Starting Aggregator gRPC Server')
+
+        try:
+            while not self.aggregator_server.aggregator.all_quit_jobs_sent():
+                print('Awaiting quit sending to collaborators')
+                await asyncio.sleep(10)
+        except KeyboardInterrupt:
+            pass
+        finally:
+            os.chdir(cwd)
+            shutil.rmtree(experiment_name)
+
+        grpc_server.stop(0)
+
+        # self.aggregator_server.serve()
 
     def run_tensorboard(self):
         """Run the tensorboard."""

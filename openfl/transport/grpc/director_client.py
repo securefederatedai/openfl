@@ -68,6 +68,10 @@ class ShardDirectorClient:
 
         return experiment_name
 
+    def remove_workspace(self, experiment_name):
+        """Remove the workspace."""
+        shutil.rmtree(experiment_name)
+
     @staticmethod
     def create_workspace(experiment_name, response_iter):
         """Create a collaborator workspace for the experiment."""

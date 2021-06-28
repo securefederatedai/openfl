@@ -30,14 +30,16 @@ class CollaboratorManager:
         """Run of the collaborator manager working cycle."""
         while True:
             try:
+                # Workspace import should not be done by gRPC client!
                 experiment_name = self.director_client.get_experiment_data()
             except Exception as exc:
                 time.sleep(1)
                 logger.error(f'Error: {exc}')
             try:
                 self._run_collaborator(experiment_name)
-            except Exception as exc:
-                logger.error(f'Experiment running was failed: {exc}')
+            finally:
+                # Workspace cleaning should not be done by gRPC client!
+                self.director_client.remove_workspace(experiment_name)
 
     def _run_collaborator(self, experiment_name,
                           plan='plan/plan.yaml',):  # TODO: path params, change naming
@@ -58,8 +60,10 @@ class CollaboratorManager:
         logger.info('🧿 Starting a Collaborator Service.')
 
         col = plan.get_collaborator(self.name, shard_descriptor=self.shard_descriptor)
-        col.run()
-        os.chdir(cwd)
+        try:
+            col.run()
+        finally:
+            os.chdir(cwd)
 
     def start(self):
         """Start the collaborator manager."""
