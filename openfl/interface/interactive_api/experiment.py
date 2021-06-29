@@ -87,16 +87,17 @@ class FLExperiment:
         self.logger.info('Starting experiment!')
         self.plan.resolve()
         initial_tensor_dict = self._get_initial_tensor_dict(model_provider)
-        response = self.federation.dir_client.set_new_experiment(
-            name=self.experiment_name,
-            col_names=self.plan.authorized_cols,
-            arch_path=self.arch_path,
-            initial_tensor_dict=initial_tensor_dict
-        )
-
-        # Remove the workspace archive
-        os.remove(self.arch_path)
-        del self.arch_path
+        try:
+            response = self.federation.dir_client.set_new_experiment(
+                name=self.experiment_name,
+                col_names=self.plan.authorized_cols,
+                arch_path=self.arch_path,
+                initial_tensor_dict=initial_tensor_dict
+            )
+        finally:
+            # Remove the workspace archive
+            os.remove(self.arch_path)
+            del self.arch_path
 
         if response.accepted:
             self.logger.info('Experiment was accepted and launched.')
