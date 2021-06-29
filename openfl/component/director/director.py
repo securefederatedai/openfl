@@ -190,21 +190,18 @@ class Director(director_pb2_grpc.FederationDirectorServicer):
 
         grpc_server = self.aggregator_server.get_server()
         grpc_server.start()
-        # logger.info('Starting Aggregator gRPC Server')
+        logger.info('Starting Aggregator gRPC Server')
 
         try:
             while not self.aggregator_server.aggregator.all_quit_jobs_sent():
-                print('Awaiting quit sending to collaborators')
+                # Awaiting quit job sent to collaborators
                 await asyncio.sleep(10)
         except KeyboardInterrupt:
             pass
         finally:
             os.chdir(cwd)
             shutil.rmtree(experiment_name)
-
-        grpc_server.stop(0)
-
-        # self.aggregator_server.serve()
+            grpc_server.stop(0)
 
     def run_tensorboard(self):
         """Run the tensorboard."""
