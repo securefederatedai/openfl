@@ -102,7 +102,7 @@ if __name__ == '__main__':
     setup_logging()
 
     data_folder = 'data'
-    rank_worldsize = '1,100'
+    rank_worldsize = '1,2'
     enforce_image_hw = '529,622'
 
     kvasir_sd = KvasirShardDescriptor(

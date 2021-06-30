@@ -17,6 +17,9 @@ from yaml import safe_load
 
 from openfl.component.director.director import serve
 from openfl.interface.cli_helper import WORKSPACE
+from openfl.utilities.ca import download_step_bin  
+from openfl.component.ca.ca import get_token 
+from openfl.component.ca.ca import certify 
 
 logger = logging.getLogger(__name__)
 
@@ -56,3 +59,32 @@ def create(director_path):
     (director_path / 'cert').mkdir(parents=True, exist_ok=True)
     (director_path / 'logs').mkdir(parents=True, exist_ok=True)
     shutil.copyfile(WORKSPACE / 'default/director.yaml', director_path / 'director.yaml')
+    url = 'http://api.github.com/repos/smallstep/certificates/releases/latest'
+    download_step_bin(url, 'step-ca_linux', 'amd', prefix=director_path)
+    url = 'http://api.github.com/repos/smallstep/cli/releases/latest'
+    download_step_bin(url, 'step_linux', 'amd', prefix=director_path)
+
+@director.command(name='certify')
+@option('-f', '--fqdn', required=True,
+        help='fqdn')
+@option('-t', '--token', 'token_with_cert', required=True,
+        help='token')
+def certify_(fqdn, token_with_cert):
+    """Create a collaborator manager workspace."""
+    certify(fqdn, 'agg', token_with_cert)
+
+@director.command(name='get-token')
+@option('-n', '--name', required=True)
+@option('--ca-url', required=True)
+def get_token_(name, ca_url):
+    """
+    Create authentication token.
+
+    Args:
+        name: common name for following certificate
+                    (aggregator fqdn or collaborator name)
+        ca_url: full url of CA server
+    """
+    token = get_token(name, ca_url)
+    print('Token:')
+    print(token)

@@ -19,6 +19,8 @@ from yaml import safe_load
 from openfl.component.collaborator_manager.collaborator_manager import CollaboratorManager
 from openfl.interface.cli_helper import SITEPACKS
 from openfl.interface.cli_helper import WORKSPACE
+from openfl.utilities.ca import download_step_bin  
+from openfl.component.ca.ca import certify
 
 logger = logging.getLogger(__name__)
 
@@ -66,7 +68,17 @@ def create(collaborator_manager_path):
                     collaborator_manager_path / 'shard_config.yaml')
     shutil.copyfile(SITEPACKS / 'openfl/component/collaborator_manager/shard_descriptor.py',
                     collaborator_manager_path / 'shard_descriptor.py')
+    url = 'http://api.github.com/repos/smallstep/cli/releases/latest'
+    download_step_bin(url, 'step_linux', 'amd', prefix=collaborator_manager_path)
 
+@collaborator_manager.command(name='certify')
+@option('-f', '--fqdn', required=True,
+        help='fqdn')
+@option('-t', '--token', 'token_with_cert', required=True,
+        help='token')
+def certify_(fqdn, token_with_cert):
+    """Create a collaborator manager workspace."""
+    certify(fqdn, 'col', token_with_cert)
 
 def shard_descriptor_from_config(shard_config_path: str):
     """Build a shard descriptor from config."""
