@@ -1,15 +1,15 @@
 set -e
 # Test the pipeline
 
-TEMPLATE=${1:-'keras_cnn_mnist'}  # ['torch_cnn_mnist', 'keras_cnn_mnist']
+TEMPLATE=${1:-'torch_cnn_mnist_benchmark'}  # ['torch_cnn_mnist', 'keras_cnn_mnist']
 FED_WORKSPACE=${2:-'fed_work12345alpha81671'}   # This can be whatever unique directory name you want
 COL1=${3:-'one123dragons'}  # This can be any unique label (lowercase)
-COL2=${4:-'beta34unicorns'} # This can be any unique label (lowercase)
+#COL2=${4:-'beta34unicorns'} # This can be any unique label (lowercase)
 
 FQDN=${5:-$(hostname --all-fqdns | awk '{print $1}')}
 
 COL1_DATA_PATH=1
-COL2_DATA_PATH=2
+#COL2_DATA_PATH=2
 
 help() {
     echo "Usage: test_hello_federation.sh TEMPLATE FED_WORKSPACE COL1 COL2 [OPTIONS]"
@@ -29,7 +29,7 @@ while (($#)); do
     case "${1:-}" in
     (--rounds-to-train) ROUNDS_TO_TRAIN="$2" ; shift 2 ;;
     (--col1-data-path) COL1_DATA_PATH="$2" ; shift 2 ;;
-    (--col2-data-path) COL2_DATA_PATH="$2" ; shift 2 ;;
+    #(--col2-data-path) COL2_DATA_PATH="$2" ; shift 2 ;;
     (-h|--help) help ; exit 0 ;;
 
     (--)        shift ; break ;;
@@ -105,16 +105,16 @@ COL1_DIRECTORY=${FED_DIRECTORY}/${COL1}
 create_collaborator ${FED_WORKSPACE} ${FED_DIRECTORY} ${COL1} ${COL1_DIRECTORY} ${COL1_DATA_PATH}
 
 # Create collaborator #2
-COL2_DIRECTORY=${FED_DIRECTORY}/${COL2}
-create_collaborator ${FED_WORKSPACE} ${FED_DIRECTORY} ${COL2} ${COL2_DIRECTORY} ${COL2_DATA_PATH}
+#COL2_DIRECTORY=${FED_DIRECTORY}/${COL2}
+#create_collaborator ${FED_WORKSPACE} ${FED_DIRECTORY} ${COL2} ${COL2_DIRECTORY} ${COL2_DATA_PATH}
 
 # # Run the federation
-cd ${FED_DIRECTORY}
-fx aggregator start & 
-sleep 5 
-cd ${COL1_DIRECTORY}/${FED_WORKSPACE}
-fx collaborator start -n ${COL1} & 
-cd ${COL2_DIRECTORY}/${FED_WORKSPACE}
-fx collaborator start -n ${COL2}
-wait
-rm -rf ${FED_DIRECTORY}
+#cd ${FED_DIRECTORY}
+#fx aggregator start & 
+#sleep 5 
+#cd ${COL1_DIRECTORY}/${FED_WORKSPACE}
+#fx collaborator start -n ${COL1} & 
+#cd ${COL2_DIRECTORY}/${FED_WORKSPACE}
+#fx collaborator start -n ${COL2}
+#wait
+#rm -rf ${FED_DIRECTORY}

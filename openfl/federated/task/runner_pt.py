@@ -36,6 +36,13 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
         """
         super().__init__()
         TaskRunner.__init__(self, **kwargs)
+        # adding thread number
+        #pt.set_num_threads(24)
+        print("the number of intra-op parallel cpu threads: {}".format(pt.get_num_threads()))
+        # For inter-op parallelism
+        #pt.set_num_interop_threads(24)
+        print("the number of inter-op parallel cpu threads: {}".format(pt.get_num_interop_threads()))
+        
         if device:
             self.device = device
         else:

@@ -11,6 +11,10 @@ from openfl.utilities import split_tensor_dict_for_holdouts
 from openfl.utilities import TensorKey
 from .runner import TaskRunner
 
+# tf.config.threading.set_intra_op_parallelism_threads(48)
+# tf.config.threading.set_inter_op_parallelism_threads(48)
+# print("the number of intra-op parallel cpu threads: {}".format(tf.config.threading.get_intra_op_parallelism_threads()))
+# print("the number of inter-op parallel cpu threads: {}".format(tf.config.threading.get_inter_op_parallelism_threads()))
 
 class TensorFlowTaskRunner(TaskRunner):
     """

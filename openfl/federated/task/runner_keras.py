@@ -32,8 +32,12 @@ class KerasTaskRunner(TaskRunner):
         Args:
             **kwargs: Additional parameters to pass to the function
         """
+        tf.config.threading.set_intra_op_parallelism_threads(24)
+        tf.config.threading.set_inter_op_parallelism_threads(1)
+        print("the number of intra-op parallel cpu threads: {}".format(tf.config.threading.get_intra_op_parallelism_threads()))
+        print("the number of inter-op parallel cpu threads: {}".format(tf.config.threading.get_inter_op_parallelism_threads()))
         super().__init__(**kwargs)
-
+        
         self.model = ke.Model()
 
         self.model_tensor_names = []
@@ -42,6 +46,7 @@ class KerasTaskRunner(TaskRunner):
         # functions in KerasTaskRunner
         self.required_tensorkeys_for_function = {}
         ke.backend.clear_session()
+
 
     def rebuild_model(self, round_num, input_tensor_dict, validation=False):
         """

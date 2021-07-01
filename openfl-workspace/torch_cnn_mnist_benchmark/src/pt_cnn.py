@@ -132,8 +132,9 @@ class PyTorchCNN(PyTorchTaskRunner):
         start = time.time()
         results = super().train_epoch(batch_generator=batch_generator)
         end = time.time()
-        with open('times_torch_cnn_mnist.csv', 'w+') as f:
+        with open('times_torch_cnn_mnist.csv', 'a+') as f:
             f.write(f'{end-start}\n')
+        f.close()
         return results
 
     def reset_opt_vars(self):

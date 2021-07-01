@@ -4,6 +4,7 @@
 """You may copy this file as the starting point of your own model."""
 
 import tensorflow as tf
+import time
 
 from openfl.federated import KerasTaskRunner
 
@@ -106,3 +107,24 @@ class TensorFlowCNN(KerasTaskRunner):
         self.fl_vars = self.tvars + self.opt_vars
 
         return model
+
+    def train_iteration(self, batch_generator, metrics: list = None, **kwargs):
+        """Train single epoch.
+
+        Override this function for custom training.
+
+        Args:
+            batch_generator: Generator of training batches.
+                Each batch is a tuple of N train images and N train labels
+                where N is the batch size of the DataLoader of the current TaskRunner instance.
+
+            epochs: Number of epochs to train.
+            metrics: Names of metrics to save.
+        """
+        start = time.time()
+        results = super().train_iteration(batch_generator=batch_generator, metrics=metrics)
+        end = time.time()
+        with open('times_keras_cnn_mnist.csv', 'a+') as f:
+            f.write(f'{end-start}\n')
+        f.close()
+        return results

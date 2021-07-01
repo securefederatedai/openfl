@@ -21,9 +21,9 @@ data_loader :
   defaults : plan/defaults/data_loader.yaml
   template : src.ptmnist_inmemory.PyTorchMNISTInMemory
   settings :
-    collaborator_count : 2
+    collaborator_count : 1
     data_group_name    : mnist
-    batch_size         : 256
+    batch_size         : 512
 
 task_runner :
   defaults : plan/defaults/task_runner.yaml

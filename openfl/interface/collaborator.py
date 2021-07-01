@@ -44,11 +44,17 @@ def start_(context, plan, collaborator_name, data_config, secure):
                       data_config_path=Path(data_config))
 
     # TODO: Need to restructure data loader config file loader
+    if not secure:
+        echo(f'Data = {plan.cols_data_paths}')
+        logger.info('🧿 Starting a Collaborator Service.')
 
-    echo(f'Data = {plan.cols_data_paths}')
-    logger.info('🧿 Starting a Collaborator Service.')
+        plan.get_collaborator(collaborator_name).run()
+    else:
+        logger.info('🧿 Starting the Collaborator Service inside Intel SGX Enclave.')
+        import subprocess, os
+        os.environ['SGX'] = "1" 
+        subprocess.run(["./pal_loader", "./fx",  "fx", "collaborator" , "start", "-n" , collaborator_name], encoding='utf8')
 
-    plan.get_collaborator(collaborator_name).run()
 
 
 def register_data_path(collaborator_name, data_path=None, silent=False):

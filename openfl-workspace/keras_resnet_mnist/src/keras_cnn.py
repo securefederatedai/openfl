@@ -8,6 +8,7 @@ from tensorflow.keras import Sequential
 from tensorflow.keras.layers import Conv2D
 from tensorflow.keras.layers import Dense
 from tensorflow.keras.layers import Flatten
+from tensorflow.keras.applications.resnet50 import ResNet50
 
 from openfl.federated import KerasTaskRunner
 
@@ -53,34 +54,43 @@ class KerasCNN(KerasTaskRunner):
             tensorflow.python.keras.engine.sequential.Sequential: The model defined in Keras
 
         """
+        # model = Sequential()
+
+        # model.add(Conv2D(conv1_channels_out,
+        #                  kernel_size=conv_kernel_size,
+        #                  strides=conv_strides,
+        #                  activation='relu',
+        #                  input_shape=input_shape))
+
+        # model.add(Conv2D(conv2_channels_out,
+        #                  kernel_size=conv_kernel_size,
+        #                  strides=conv_strides,
+        #                  activation='relu'))
+
+        # model.add(Flatten())
+
+        # model.add(Dense(final_dense_inputsize, activation='relu'))
+
+        # model.add(Dense(num_classes, activation='softmax'))
         model = Sequential()
+        model.add(ResNet50(include_top = False, pooling = 'avg', weights = 'imagenet', input_shape=(32, 32, 3)))
+        model.add(Dense(10, activation = 'softmax'))
+        # Say not to train first layer (ResNet) model as it is already trained
+        model.layers[0].trainable = False
+        model.compile(optimizer='Adam', loss='categorical_crossentropy', metrics=['accuracy'])
 
-        model.add(Conv2D(conv1_channels_out,
-                         kernel_size=conv_kernel_size,
-                         strides=conv_strides,
-                         activation='relu',
-                         input_shape=input_shape))
-
-        model.add(Conv2D(conv2_channels_out,
-                         kernel_size=conv_kernel_size,
-                         strides=conv_strides,
-                         activation='relu'))
-
-        model.add(Flatten())
-
-        model.add(Dense(final_dense_inputsize, activation='relu'))
-
-        model.add(Dense(num_classes, activation='softmax'))
-
-        model.compile(loss=ke.losses.categorical_crossentropy,
-                      optimizer=ke.optimizers.Adam(),
-                      metrics=['accuracy'])
+        # model = ke.applications.ResNet50(include_top=False,
+        #     weights="imagenet",
+        #     input_shape=(32,32,3))
+        # model.compile(loss=ke.losses.categorical_crossentropy,
+        #               optimizer=ke.optimizers.Adam(),
+        #               metrics=['accuracy'])
 
         # initialize the optimizer variables
-        opt_vars = model.optimizer.variables()
+        #opt_vars = model.optimizer.variables()
 
-        for v in opt_vars:
-            v.initializer.run(session=self.sess)
+        #for v in opt_vars:
+        #    v.initializer.run(session=self.sess)
 
         return model
 
