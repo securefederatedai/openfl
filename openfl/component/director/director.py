@@ -44,10 +44,6 @@ class Director(director_pb2_grpc.FederationDirectorServicer):
         self.director_port = None
         self.tensorboard_port = 6006
         self.tensorboard_thread = None
-        self.step = None
-        self.step_ca = None
-        self.pki_dir = './cert'
-        self.step_config_dir = './step_config/'
 
     async def AcknowledgeShard(self, shard_info, context):  # NOQA:N802
         """Receive acknowledge shard info."""
@@ -187,8 +183,8 @@ class Director(director_pb2_grpc.FederationDirectorServicer):
         self.aggregator_server = plan.interactive_api_get_server(
             initial_tensor_dict,
             chain='../cert/root_ca.crt',
-            certificate='../agg_nnlicv674.inn.intel.com.crt',
-            private_key='../agg_nnlicv674.inn.intel.com.key')
+            certificate='../cert/dir_nnlicv674.inn.intel.com.crt',
+            private_key='../cert/dir_nnlicv674.inn.intel.com.key')
 
         grpc_server = self.aggregator_server.get_server()
         grpc_server.start()
@@ -207,81 +203,18 @@ class Director(director_pb2_grpc.FederationDirectorServicer):
         except Exception as exc:
             logger.error(f'Failed to run tensorboard: {exc}')
     
-    def check_kill_process(self, pstring):
-        """Kill process by name."""
-        import signal
-
-        for line in os.popen("ps ax | grep " + pstring + " | grep -v grep"):
-            fields = line.split()
-            pid = fields[0]
-            os.kill(int(pid), signal.SIGKILL)
-
-    def create_dirs(self):
-        """Create CA directories."""
-        prefix = Path('.')
-        (prefix / self.pki_dir).mkdir(parents=True, exist_ok=True)
-        (prefix / self.step_config_dir).mkdir(parents=True, exist_ok=True)
-
-    def run_ca(self, password, ca_url):
-        """
-        Create certificate authority for federation.
-
-        Args:
-            password: Simple password for encrypting root private keys
-            ca_url: url for ca server like: 'host:port'
-
-        """
-        self.check_kill_process('step-ca')
-        self.create_dirs()
-        with open(f'{self.pki_dir}/pass_file', 'w') as f:
-            f.write(password)
-
-        print('Setting Up Certificate Authority...\n')
-
-        dirs = os.listdir('./step')
-        for dir_ in dirs:
-            if 'step_' in dir_:
-                self.step = f'./step/{dir_}/bin/step'
-            if 'step-ca' in dir_:
-                self.step_ca = f'./step/{dir_}/bin/step-ca'
-        assert(self.step and self.step_ca and os.path.exists(self.step) and os.path.exists(self.step_ca))
-
-        print('Create CA Config')
-        os.environ["STEPPATH"] = self.step_config_dir
-        shutil.rmtree(self.step_config_dir, ignore_errors=True)
-        name = ca_url.split(':')[0]
-        os.system(f'./{self.step} ca init --name name --dns {name} '
-                + f'--address {ca_url}  --provisioner prov '
-                + f'--password-file {self.pki_dir}/pass_file')
-
-        os.system(f'./{self.step} ca provisioner remove prov --all')
-        os.system(f'./{self.step} crypto jwk create {self.step_config_dir}/certs/pub.json '
-                + f'{self.step_config_dir}/secrets/priv.json --password-file={self.pki_dir}/pass_file')
-        os.system(f'./{self.step} ca provisioner add provisioner {self.step_config_dir}/certs/pub.json')
-        print('Up CA server')
-
-        self.ca_thread = threading.Thread(
-            target=lambda: os.system(
-                f'{self.step_ca} --password-file {self.pki_dir}/pass_file {self.step_config_dir}/config/ca.json'
-            ),
-        )
-        try:
-            self.ca_thread.start()
-        except Exception as exc:
-            logger.error(f'Failed to up ca server: {exc}')
-
-        print('\nDone.')
 
 
 async def serve(*args, **kwargs):
     """Launch the director GRPC server."""
+    from click import confirm
+    from openfl.component.ca.ca import get_token 
     channel_opt = [('grpc.max_send_message_length', 512 * 1024 * 1024),
                    ('grpc.max_receive_message_length', 512 * 1024 * 1024)]
     server = aio.server(options=channel_opt)
     director = Director(*args, **kwargs)
     director_pb2_grpc.add_FederationDirectorServicer_to_server(director, server)
     director.run_tensorboard()
-    director.run_ca('123','nnlicv674.inn.intel.com:4343')
     # Add pass addr from director.yaml
     listen_addr = '[::]:50051'
     server.add_insecure_port(listen_addr)

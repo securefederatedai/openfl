@@ -453,10 +453,10 @@ openfl.component.aggregation_functions.AggregationFunctionInterface
 
     def get_client(self, collaborator_name, aggregator_uuid, federation_uuid):
         """Get gRPC client for the specified collaborator."""
-        common_name ='1,2'
+        common_name =collaborator_name
 
         chain = '../cert/root_ca.crt'
-        certificate = f'../col_{common_name}.crt'
+        certificate = f'../cert/col_{common_name}.crt'
         private_key = f'../col_{common_name}.key'
 
         client_args = self.config['network'][SETTINGS]
