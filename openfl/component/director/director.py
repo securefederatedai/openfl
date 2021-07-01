@@ -14,6 +14,7 @@ from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 
 from grpc import aio
+from grpc import ssl_server_credentials
 
 from openfl.federated import Plan
 from openfl.pipelines import NoCompressionPipeline
@@ -21,6 +22,7 @@ from openfl.protocols import director_pb2
 from openfl.protocols import director_pb2_grpc
 from openfl.protocols.utils import construct_model_proto
 from openfl.protocols.utils import deconstruct_model_proto
+from openfl.utilities.ca import get_credentials
 
 logger = logging.getLogger(__name__)
 
@@ -180,11 +182,12 @@ class Director(director_pb2_grpc.FederationDirectorServicer):
         plan.authorized_cols = list(self.col_exp_queues.keys())
 
         logger.info('🧿 Starting the Aggregator Service.')
+        root_ca, key, cert = get_credentials('../cert')
         self.aggregator_server = plan.interactive_api_get_server(
             initial_tensor_dict,
-            chain='../cert/root_ca.crt',
-            certificate='../cert/dir_nnlicv674.inn.intel.com.crt',
-            private_key='../cert/dir_nnlicv674.inn.intel.com.key')
+            chain=root_ca,
+            certificate=cert,
+            private_key=key)
 
         grpc_server = self.aggregator_server.get_server()
         grpc_server.start()
@@ -217,7 +220,24 @@ async def serve(*args, **kwargs):
     director.run_tensorboard()
     # Add pass addr from director.yaml
     listen_addr = '[::]:50051'
-    server.add_insecure_port(listen_addr)
+    print('pwd:::')
+    os.system('pwd')
+    root_ca, key, cert = get_credentials('./cert/')
+    print(root_ca ,key ,cert)
+    assert(root_ca and key and cert)
+    with open(key, 'rb') as f:
+        key_b = f.read()
+    with open(cert, 'rb') as f:
+        cert_b = f.read()
+    with open(root_ca, 'rb') as f:
+        root_ca_b = f.read()
+    server_credentials = ssl_server_credentials(
+        ((key_b, cert_b),),
+        root_certificates=root_ca_b,
+        require_client_auth=True
+    )
+    server.add_secure_port(listen_addr, server_credentials)
+    # server.add_insecure_port(listen_addr)
     logger.info(f'Starting server on {listen_addr}')
     await server.start()
     await server.wait_for_termination()

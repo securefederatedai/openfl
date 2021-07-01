@@ -457,7 +457,7 @@ openfl.component.aggregation_functions.AggregationFunctionInterface
 
         chain = '../cert/root_ca.crt'
         certificate = f'../cert/col_{common_name}.crt'
-        private_key = f'../col_{common_name}.key'
+        private_key = f'../cert/col_{common_name}.key'
 
         client_args = self.config['network'][SETTINGS]
 

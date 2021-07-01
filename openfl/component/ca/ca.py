@@ -59,10 +59,14 @@ def get_token(name, ca_url):
     import subprocess
     import os
     import base64 
-    step = './step/step_0.15.16/bin/step'
     step_config_dir = './step_config/'
     pki_dir = './cert'
-
+    step, _ = get_bin_names('.')
+    if not step:
+        url = 'http://api.github.com/repos/smallstep/cli/releases/latest'
+        download_step_bin(url, 'step_linux', 'amd', prefix='./')
+    step, _ = get_bin_names('.')
+    assert(step)
     os.environ["STEPPATH"] = step_config_dir
     try:
         token = subprocess.check_output(f'./{step} ca token {name} 'f'--key {step_config_dir}/secrets/priv.json 'f'--password-file {pki_dir}/pass_file 'f'--ca-url {ca_url} ', shell=True)
