@@ -772,6 +772,9 @@ class Aggregator:
                     self.logger.info('{0}:\t{1:.4f}'.format(agg_tensor_name, agg_results))
                 # TODO Add all of the logic for saving the model based
                 #  on best accuracy, lowest loss, etc.
+                """TODO: pass which tasks and validation keys will determine the best model, and
+                    how this determination works.
+                    For now, some metrics are not even better at greater values.  
                 if 'validate_agg' in tags:
                     # Compare the accuracy of the model, and
                     # potentially save it
@@ -780,6 +783,7 @@ class Aggregator:
                             'Saved the best model with score {:f}'.format(agg_results))
                         self.best_model_score = agg_results
                         self._save_model(round_number, self.best_state_path)
+                """
             if 'trained' in tags:
                 self._prepare_trained(tensor_name, origin, round_number, report, agg_results)
 
