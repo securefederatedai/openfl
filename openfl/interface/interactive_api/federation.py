@@ -44,7 +44,7 @@ class Federation:
         self.api_private_key = api_private_key
 
         # Create Director client
-        self.dir_client = DirectorClient(f'{director_node_fqdn}:{director_port}')
+        self.dir_client = DirectorClient(f'{director_node_fqdn}:{director_port}', disable_tls, cert_chain, api_private_key, api_cert)
 
         self.sample_shape, self.target_shape = self._request_data_shape()
 

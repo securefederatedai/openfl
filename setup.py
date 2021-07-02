@@ -28,6 +28,7 @@ setup(
         'openfl.component.collaborator',
         'openfl.component.collaborator_manager',
         'openfl.component.director',
+        'openfl.component.ca',
         'openfl.utilities',
         'openfl.utilities.optimizers.torch',
         'openfl.utilities.optimizers.keras',

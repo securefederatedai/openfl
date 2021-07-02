@@ -102,7 +102,7 @@ if __name__ == '__main__':
     setup_logging()
 
     data_folder = 'data'
-    rank_worldsize = '1,100'
+    rank_worldsize = '1,2'
     enforce_image_hw = '529,622'
 
     kvasir_sd = KvasirShardDescriptor(
@@ -116,11 +116,12 @@ if __name__ == '__main__':
     from openfl.component.collaborator_manager.collaborator_manager import CollaboratorManager
 
     shard_name = rank_worldsize
-    director_uri = 'localhost:50051'
+    director_uri = 'nnlicv674.inn.intel.com:50051'
 
     keeper = CollaboratorManager(
         shard_name=shard_name,
         director_uri=director_uri,
-        shard_descriptor=kvasir_sd)
+        shard_descriptor=kvasir_sd,
+        disable_tls=True)
 
     keeper.start()

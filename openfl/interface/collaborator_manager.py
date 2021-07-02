@@ -19,6 +19,8 @@ from yaml import safe_load
 from openfl.component.collaborator_manager.collaborator_manager import CollaboratorManager
 from openfl.interface.cli_helper import SITEPACKS
 from openfl.interface.cli_helper import WORKSPACE
+from openfl.component.ca.ca import certify
+from openfl.component.ca.ca import download_step_bin
 
 logger = logging.getLogger(__name__)
 
@@ -35,15 +37,16 @@ def collaborator_manager(context):
         help='Current shard name')
 @option('-d', '--director-uri', required=True,
         help='The FQDN of the federation director')
+@option('--disable-tls', default=False)
 @option('-sc', '--shard-config-path', default='shard_config.yaml',
         help='The shard config path', type=ClickPath(exists=True))
-def start_(shard_name, director_uri, shard_config_path):
+def start_(shard_name, director_uri, shard_config_path, disable_tls):
     """Start the collaborator manager."""
     logger.info('🧿 Starting the Collaborator Manager.')
 
     shard_descriptor = shard_descriptor_from_config(shard_config_path)
     keeper = CollaboratorManager(shard_name=shard_name, director_uri=director_uri,
-                                 shard_descriptor=shard_descriptor)
+                                 shard_descriptor=shard_descriptor, disable_tls=disable_tls)
 
     keeper.start()
 
@@ -67,6 +70,14 @@ def create(collaborator_manager_path):
     shutil.copyfile(SITEPACKS / 'openfl/component/collaborator_manager/shard_descriptor.py',
                     collaborator_manager_path / 'shard_descriptor.py')
 
+@collaborator_manager.command(name='certify')
+@option('-n', '--name', required=True,
+        help='fqdn')
+@option('-t', '--token', 'token_with_cert', required=True,
+        help='token')
+def certify_(name, token_with_cert):
+    """Create a collaborator manager workspace."""
+    certify(name, 'col', './cert', token_with_cert)
 
 def shard_descriptor_from_config(shard_config_path: str):
     """Build a shard descriptor from config."""
