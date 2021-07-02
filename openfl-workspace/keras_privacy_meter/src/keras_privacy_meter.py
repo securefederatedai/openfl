@@ -287,6 +287,8 @@ class KerasPrivacyMeter(KerasTaskRunner):
             **self.tensor_dict_split_fn_kwargs
         )
 
+        tags = ('trained',)
+
         # create global tensorkeys (these will be stored locally until the ML privacy meter is run on the model)
         global_tensorkey_model_dict = {
             TensorKey(tensor_name, origin, round_num, False, tags):
