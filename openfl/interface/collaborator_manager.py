@@ -37,15 +37,16 @@ def collaborator_manager(context):
         help='Current shard name')
 @option('-d', '--director-uri', required=True,
         help='The FQDN of the federation director')
+@option('--disable-tls', default=False)
 @option('-sc', '--shard-config-path', default='shard_config.yaml',
         help='The shard config path', type=ClickPath(exists=True))
-def start_(shard_name, director_uri, shard_config_path):
+def start_(shard_name, director_uri, shard_config_path, disable_tls):
     """Start the collaborator manager."""
     logger.info('🧿 Starting the Collaborator Manager.')
 
     shard_descriptor = shard_descriptor_from_config(shard_config_path)
     keeper = CollaboratorManager(shard_name=shard_name, director_uri=director_uri,
-                                 shard_descriptor=shard_descriptor)
+                                 shard_descriptor=shard_descriptor, disable_tls=disable_tls)
 
     keeper.start()
 

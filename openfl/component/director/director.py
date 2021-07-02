@@ -208,7 +208,7 @@ class Director(director_pb2_grpc.FederationDirectorServicer):
     
 
 
-async def serve(*args, **kwargs):
+async def serve(*args, disable_tls=False, **kwargs):
     """Launch the director GRPC server."""
     from click import confirm
     from openfl.component.ca.ca import get_token 
@@ -220,24 +220,23 @@ async def serve(*args, **kwargs):
     director.run_tensorboard()
     # Add pass addr from director.yaml
     listen_addr = '[::]:50051'
-    print('pwd:::')
-    os.system('pwd')
-    root_ca, key, cert = get_credentials('./cert/')
-    print(root_ca ,key ,cert)
-    assert(root_ca and key and cert)
-    with open(key, 'rb') as f:
-        key_b = f.read()
-    with open(cert, 'rb') as f:
-        cert_b = f.read()
-    with open(root_ca, 'rb') as f:
-        root_ca_b = f.read()
-    server_credentials = ssl_server_credentials(
-        ((key_b, cert_b),),
-        root_certificates=root_ca_b,
-        require_client_auth=True
-    )
-    server.add_secure_port(listen_addr, server_credentials)
-    # server.add_insecure_port(listen_addr)
+    if disable_tls:
+        server.add_insecure_port(listen_addr)
+    else:
+        root_ca, key, cert = get_credentials('./cert/')
+        assert(root_ca and key and cert)
+        with open(key, 'rb') as f:
+            key_b = f.read()
+        with open(cert, 'rb') as f:
+            cert_b = f.read()
+        with open(root_ca, 'rb') as f:
+            root_ca_b = f.read()
+        server_credentials = ssl_server_credentials(
+            ((key_b, cert_b),),
+            root_certificates=root_ca_b,
+            require_client_auth=True
+        )
+        server.add_secure_port(listen_addr, server_credentials)
     logger.info(f'Starting server on {listen_addr}')
     await server.start()
     await server.wait_for_termination()

@@ -33,7 +33,8 @@ def director(context):
 @director.command(name='start')
 @option('-c', '--director-config-path', default='director.yaml',
         help='The director config file path', type=ClickPath(exists=True))
-def start(director_config_path):
+@option('--disable-tls', default=False)
+def start(director_config_path, disable_tls):
     """Start the director service."""
     logger.info('🧿 Starting the Director Service.')
     with open(director_config_path) as stream:
@@ -42,7 +43,7 @@ def start(director_config_path):
     sample_shape = settings.get('sample_shape', '').split(',')
     target_shape = settings.get('target_shape', '').split(',')
     logger.info(f'Sample shape: {sample_shape}, target shape: {target_shape}')
-    asyncio.run(serve(sample_shape=sample_shape, target_shape=target_shape))
+    asyncio.run(serve(disable_tls=disable_tls,sample_shape=sample_shape, target_shape=target_shape))
 
 
 @director.command(name='create-workspace')

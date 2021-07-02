@@ -17,4 +17,4 @@ logger = logging.getLogger(__name__)
 if __name__ == '__main__':
     sample_shape = ['529', '622', '3']
     target_shape = ['529', '622']
-    asyncio.run(serve(sample_shape=list(sample_shape), target_shape=list(target_shape)))
+    asyncio.run(serve(sample_shape=list(sample_shape), target_shape=list(target_shape), disable_tls=True))
