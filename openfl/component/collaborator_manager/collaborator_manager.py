@@ -20,10 +20,13 @@ logger = logging.getLogger(__name__)
 class CollaboratorManager:
     """Collaborator manager class."""
 
-    def __init__(self, shard_name, director_uri, shard_descriptor, disable_tls=False) -> None:
+    def __init__(self, shard_name, director_uri, shard_descriptor,
+                 root_ca, key, cert, disable_tls=False) -> None:
         """Initialize a collaborator manager object."""
         self.name = shard_name
-        self.director_client = ShardDirectorClient(director_uri, shard_name=shard_name,disable_tls=disable_tls)
+        self.director_client = ShardDirectorClient(director_uri, shard_name=shard_name,
+                                                   disable_tls=disable_tls,
+                                                   root_ca=root_ca, key=key, cert=cert)
         self.shard_descriptor = shard_descriptor
 
     def run(self):

@@ -24,15 +24,16 @@ logger = logging.getLogger(__name__)
 class ShardDirectorClient:
     """The internal director client class."""
 
-    def __init__(self, director_uri, shard_name, disable_tls=False) -> None:
+    def __init__(self, director_uri, shard_name, disable_tls=False,
+                 root_ca=None, key=None, cert=None) -> None:
         """Initialize a shard director client object."""
         self.shard_name = shard_name
         options = [('grpc.max_message_length', 100 * 1024 * 1024)]
         if disable_tls:
             channel = grpc.insecure_channel(director_uri, options=options)
         else:
-            root_ca, key, cert = get_credentials('./cert/')
-            assert(root_ca and key and cert)
+            if not (root_ca and key and cert):
+                raise Exception('No certificates provided')
             with open(root_ca, 'rb') as f:
                 root_ca_b = f.read()
             with open(key, 'rb') as f:

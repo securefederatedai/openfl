@@ -31,3 +31,40 @@ we do not need to deconstruct model proto on director side, just pass it to the 
 add support for exporting pacages installed from github
 collaborator should try to connect the same fqdn the director is running on
 tensorboard falls after the first experimnet
+
+
+Should get_token be run only on ca node? Why we need ca_url then?
+# PKI setup procedure
+1. fx ca create <dir> <uri> <pass>
+# cd to ca folder
+2. fx ca run
+3. fx ca get token <name>     * (N_envoy + director + Frontends)
+
+# director create <dir path>
+4. fx director certify <token>
+# director start <config>
+
+# fx collaborator_manager create <dir path>
+5. fx envoy certify <token>    * N
+# fx collaborator_manager start <config>
+
+# ??? frontend CLI ???
+6. api_layer certify <token>
+# choose certs in a notebook or script
+
+# Proposed scenario
+# We move all the certs generation routine to a separate CLI component
+# as the procedure is the same for all out entities + step ca has nothing 
+# to do with openfl entities
+1. fx pki start-ca <dir> <uri> <pass>
+# checks if there are binaries and creates if not
+
+# This is run on ca node
+2. fx pki get_token     * (N_envoy + director + Frontends)
+# get_token Procedure is exactly the same for all openfl actors 
+
+3. fx pki get_certs <name> <token>    * (N_envoy + director)
+# Envoys and director can get certificates using the unified CLI command
+
+4. from step_ca import get_certs
+# Frontends use python API

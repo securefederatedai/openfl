@@ -219,13 +219,10 @@ class Director(director_pb2_grpc.FederationDirectorServicer):
             self.tensorboard_thread.start()
         except Exception as exc:
             logger.error(f'Failed to run tensorboard: {exc}')
-    
 
 
-async def serve(*args, disable_tls=False, **kwargs):
+async def serve(*args, disable_tls=False, root_ca=None, key=None, cert=None, **kwargs):
     """Launch the director GRPC server."""
-    from click import confirm
-    from openfl.component.ca.ca import get_token 
     channel_opt = [('grpc.max_send_message_length', 512 * 1024 * 1024),
                    ('grpc.max_receive_message_length', 512 * 1024 * 1024)]
     server = aio.server(options=channel_opt)
@@ -237,8 +234,8 @@ async def serve(*args, disable_tls=False, **kwargs):
     if disable_tls:
         server.add_insecure_port(listen_addr)
     else:
-        root_ca, key, cert = get_credentials('./cert/')
-        assert(root_ca and key and cert)
+        if not (root_ca and key and cert):
+            raise Exception('No certificates provided')
         with open(key, 'rb') as f:
             key_b = f.read()
         with open(cert, 'rb') as f:
