@@ -48,7 +48,6 @@ class VOCDatasetSD(ShardDescriptor):
 
     def __init__(self, data_dir, split, keep_difficult=False):
         """Dataset for VOC data.
-
         Args:
             data_dir: the root of the VOC2007 or VOC2012 dataset,
                 the directory contains the following sub-directories:

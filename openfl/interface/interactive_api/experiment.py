@@ -3,19 +3,14 @@
 
 """Python low-level API module."""
 import functools
-import logging
 import os
 from collections import defaultdict
 from copy import deepcopy
 from logging import getLogger
 from pathlib import Path
 
-from rich.console import Console
-from rich.logging import RichHandler
-
 from openfl.federated import Plan
 from openfl.interface.cli_helper import WORKSPACE
-from openfl.utilities import add_log_level
 from openfl.utilities import split_tensor_dict_for_holdouts
 from openfl.utilities.logs import setup_loggers
 
@@ -45,8 +40,15 @@ class FLExperiment:
     def get_best_model(self):
         """Retrieve the model with the best score."""
         # Next line relies on aggregator inner field where model dicts are stored
-        best_tensor_dict = self.server.aggregator.best_tensor_dict
-        self.task_runner_stub.rebuild_model(best_tensor_dict, validation=True, device='cpu')
+        tensor_dict = self.federation.dir_client.get_best_model()
+        self.task_runner_stub.rebuild_model(tensor_dict, validation=True, device='cpu')
+        return self.task_runner_stub.model
+
+    def get_last_model(self):
+        """Retrieve the aggregated model after the last round."""
+        # Next line relies on aggregator inner field where model dicts are stored
+        tensor_dict = self.federation.dir_client.get_last_model()
+        self.task_runner_stub.rebuild_model(tensor_dict, validation=True, device='cpu')
         return self.task_runner_stub.model
 
     def prepare_workspace_distribution(
@@ -76,7 +78,7 @@ class FLExperiment:
         # DO CERTIFICATES exchange
 
     def start(self, *, model_provider, task_keeper, data_loader,
-              rounds_to_train, collaborators, delta_updates=False, opt_treatment='RESET'):
+              rounds_to_train, delta_updates=False, opt_treatment='RESET'):
         """Prepare experiment and run."""
         self.prepare_workspace_distribution(
             model_provider, task_keeper, data_loader, rounds_to_train,
@@ -85,16 +87,17 @@ class FLExperiment:
         self.logger.info('Starting experiment!')
         self.plan.resolve()
         initial_tensor_dict = self._get_initial_tensor_dict(model_provider)
-        response = self.federation.dir_client.set_new_experiment(
-            name=self.experiment_name,
-            col_names=collaborators,
-            arch_path=self.arch_path,
-            initial_tensor_dict=initial_tensor_dict
-        )
-
-        # Remove the workspace archive
-        os.remove(self.arch_path)
-        del self.arch_path
+        try:
+            response = self.federation.dir_client.set_new_experiment(
+                name=self.experiment_name,
+                col_names=self.plan.authorized_cols,
+                arch_path=self.arch_path,
+                initial_tensor_dict=initial_tensor_dict
+            )
+        finally:
+            # Remove the workspace archive
+            os.remove(self.arch_path)
+            del self.arch_path
 
         if response.accepted:
             self.logger.info('Experiment was accepted and launched.')
@@ -103,50 +106,6 @@ class FLExperiment:
         else:
             self.logger.info('Experiment was not accepted or failed.')
 
-    def start_experiment(self, model_provider, log_level='INFO', log_file=None):
-        """
-        Start the aggregator.
-
-        This method requires model_provider to start an experiment with another
-        model initialization without workspace redistribution.
-        """
-        # Start the aggregator
-        self.logger.info('Starting experiment!')
-        self.plan.resolve()
-
-        initial_tensor_dict = self._get_initial_tensor_dict(model_provider)
-
-        metric = 25
-        add_log_level('METRIC', metric)
-
-        if isinstance(log_level, str):
-            log_level = log_level.upper()
-
-        handlers = []
-        if log_file:
-            fh = logging.FileHandler(log_file)
-            formatter = logging.Formatter(
-                '%(asctime)s %(levelname)s %(message)s %(filename)s:%(lineno)d')
-            fh.setFormatter(formatter)
-            handlers.append(fh)
-
-        console = Console(width=160)
-        handlers.append(RichHandler(console=console))
-        logging.basicConfig(level=log_level, format='%(message)s',
-                            datefmt='[%X]', handlers=handlers)
-
-        # This is not good we ask directors_client directly
-        self.federation.dir_client.set_new_experiment(
-            name=self.experiment_name,
-            col_names=self.plan.authorized_cols,
-            arch_path=self.arch_path,
-            initial_tensor_dict=initial_tensor_dict
-        )
-
-        # Remove the workspace archive
-        os.remove(self.arch_path)
-        del self.arch_path
-
     @staticmethod
     def _export_python_env():
         """Prepare requirements.txt."""
@@ -154,7 +113,8 @@ class FLExperiment:
         requirements_generator = freeze.freeze()
         with open('./requirements.txt', 'w') as f:
             for package in requirements_generator:
-                if '==' not in package:
+                # there is a pip bug with pkg-resources==0.0.0 req
+                if '==' not in package or '0.0.0' in package:
                     # We do not export dependencies without version
                     continue
                 f.write(package + '\n')
@@ -209,8 +169,18 @@ class FLExperiment:
         # Change plan name to default one
         plan.name = 'plan.yaml'
 
+        # Seems like we still need to fill authorized_cols list
+        # So aggregator know when to start sending tasks
+        # We also could change the aggregator logic so it will send tasks to aggregator
+        # as soon as it connects. This change should be a part of a bigger PR
+        # brining in fault tolerance changes
+        plan.authorized_cols = [shard_info.node_info.name for shard_info in
+                                self.federation.get_shard_registry()]
         # Network part of the plan
-        plan.config['network']['settings']['agg_addr'] = self.federation.director_node_fqdn
+        # We keep in mind that an aggregator FQND will be the same as the directors FQDN
+        # We just choose a port randomly from plan hash
+        plan.config['network']['settings']['agg_addr'] = \
+            self.federation.director_node_fqdn.split(':')[0]  # We drop the port
         plan.config['network']['settings']['disable_tls'] = self.federation.disable_tls
 
         # Aggregator part of the plan
