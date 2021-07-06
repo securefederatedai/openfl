@@ -1,4 +1,5 @@
 *.egg-info
+*.pkl
 __pycache__
 /build
 /dist

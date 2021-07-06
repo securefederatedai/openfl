@@ -147,7 +147,7 @@ def start_ca(ca_path, ca_url, password):
     import threading
 
     _check_kill_process('step-ca')
-    logger.info('Up CA server')
+    logger.info('Creating CA')
 
     ca_path = Path(ca_path)
     step_config_dir = ca_path / 'step_config'
@@ -166,6 +166,7 @@ def start_ca(ca_path, ca_url, password):
             f'{step_ca} --password-file {pass_file} {ca_json}'
         ),
     )
+    logger.info('Up CA server')
     try:
         ca_thread.start()
     except Exception as exc:

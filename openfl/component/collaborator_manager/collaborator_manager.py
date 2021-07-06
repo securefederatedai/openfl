@@ -24,6 +24,9 @@ class CollaboratorManager:
                  root_ca, key, cert, disable_tls=False) -> None:
         """Initialize a collaborator manager object."""
         self.name = shard_name
+        self.root_ca = root_ca
+        self.key = key
+        self.cert = cert
         self.director_client = ShardDirectorClient(director_uri, shard_name=shard_name,
                                                    disable_tls=disable_tls,
                                                    root_ca=root_ca, key=key, cert=cert)
@@ -39,12 +42,12 @@ class CollaboratorManager:
                 time.sleep(1)
                 logger.error(f'Error: {exc}')
             try:
-                self._run_collaborator(experiment_name)
+                self._run_collaborator(experiment_name, self.root_ca, self.key, self.cert)
             finally:
                 # Workspace cleaning should not be done by gRPC client!
                 self.director_client.remove_workspace(experiment_name)
 
-    def _run_collaborator(self, experiment_name,
+    def _run_collaborator(self, experiment_name, root_ca, key, cert,
                           plan='plan/plan.yaml',):  # TODO: path params, change naming
         """Run the collaborator for the experiment running."""
         cwd = os.getcwd()
@@ -62,7 +65,7 @@ class CollaboratorManager:
         echo(f'Data = {plan.cols_data_paths}')
         logger.info('🧿 Starting a Collaborator Service.')
 
-        col = plan.get_collaborator(self.name, shard_descriptor=self.shard_descriptor)
+        col = plan.get_collaborator(self.name, self.root_ca,self.key,self.cert, shard_descriptor=self.shard_descriptor)
         try:
             col.run()
         finally:

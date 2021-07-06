@@ -22,7 +22,6 @@ from openfl.protocols import director_pb2
 from openfl.protocols import director_pb2_grpc
 from openfl.protocols.utils import construct_model_proto
 from openfl.protocols.utils import deconstruct_model_proto
-from openfl.utilities.ca import get_credentials
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +29,7 @@ logger = logging.getLogger(__name__)
 class Director(director_pb2_grpc.FederationDirectorServicer):
     """Director class."""
 
-    def __init__(self, sample_shape: list, target_shape: list) -> None:
+    def __init__(self, root_ca, key, cert, sample_shape: list, target_shape: list) -> None:
         """Initialize a director object."""
         # TODO: add working directory
         super().__init__()
@@ -46,6 +45,9 @@ class Director(director_pb2_grpc.FederationDirectorServicer):
         self.director_port = None
         self.tensorboard_port = 6006
         self.tensorboard_thread = None
+        self.root_ca = root_ca
+        self.key = key
+        self.cert = cert
 
     async def AcknowledgeShard(self, shard_info, context):  # NOQA:N802
         """Receive acknowledge shard info."""
@@ -184,12 +186,11 @@ class Director(director_pb2_grpc.FederationDirectorServicer):
         plan.authorized_cols = list(self.col_exp_queues.keys())
 
         logger.info('🧿 Starting the Aggregator Service.')
-        root_ca, key, cert = get_credentials('../cert')
         self.aggregator_server = plan.interactive_api_get_server(
             initial_tensor_dict,
-            chain=root_ca,
-            certificate=cert,
-            private_key=key)
+            chain=self.root_ca,
+            certificate=self.cert,
+            private_key=self.key)
 
         grpc_server = self.aggregator_server.get_server()
         grpc_server.start()
@@ -226,7 +227,7 @@ async def serve(*args, disable_tls=False, root_ca=None, key=None, cert=None, **k
     channel_opt = [('grpc.max_send_message_length', 512 * 1024 * 1024),
                    ('grpc.max_receive_message_length', 512 * 1024 * 1024)]
     server = aio.server(options=channel_opt)
-    director = Director(*args, **kwargs)
+    director = Director(*args, root_ca, key, cert, **kwargs)
     director_pb2_grpc.add_FederationDirectorServicer_to_server(director, server)
     director.run_tensorboard()
     # Add pass addr from director.yaml

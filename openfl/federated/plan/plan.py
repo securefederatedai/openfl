@@ -399,7 +399,7 @@ openfl.component.aggregation_functions.AggregationFunctionInterface
 
         return self.runner_
 
-    def get_collaborator(self, collaborator_name,
+    def get_collaborator(self, collaborator_name, root_ca=None,key=None,cert=None,
                          task_runner=None, client=None, shard_descriptor=None):
         """Get collaborator."""
         defaults = self.config.get(
@@ -443,7 +443,10 @@ openfl.component.aggregation_functions.AggregationFunctionInterface
             defaults[SETTINGS]['client'] = self.get_client(
                 collaborator_name,
                 self.aggregator_uuid,
-                self.federation_uuid
+                self.federation_uuid,
+                root_ca,
+                key,
+                cert
             )
 
         if self.collaborator_ is None:
@@ -451,13 +454,18 @@ openfl.component.aggregation_functions.AggregationFunctionInterface
 
         return self.collaborator_
 
-    def get_client(self, collaborator_name, aggregator_uuid, federation_uuid):
+    def get_client(self, collaborator_name, aggregator_uuid, federation_uuid, root_ca=None,key=None,cert=None):
         """Get gRPC client for the specified collaborator."""
         common_name =collaborator_name
-
-        chain = '../cert/root_ca.crt'
-        certificate = f'../cert/col_{common_name}.crt'
-        private_key = f'../cert/col_{common_name}.key'
+        if(root_ca or key or cert):
+            assert(root_ca and key and cert)
+            chain = root_ca
+            certificate = cert
+            private_key = key
+        else:
+            chain = '../cert/root_ca.crt'
+            certificate = f'../cert/col_{common_name}.crt'
+            private_key = f'../cert/col_{common_name}.key'
 
         client_args = self.config['network'][SETTINGS]
 
@@ -504,6 +512,7 @@ openfl.component.aggregation_functions.AggregationFunctionInterface
     def interactive_api_get_server(self, tensor_dict, chain, certificate, private_key):
         """Get gRPC server of the aggregator instance."""
         server_args = self.config['network'][SETTINGS]
+        print(server_args)
 
         # patch certificates
         server_args['ca'] = chain

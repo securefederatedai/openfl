@@ -14,7 +14,6 @@ from openfl.protocols import director_pb2
 from openfl.protocols import director_pb2_grpc
 from openfl.protocols.utils import construct_model_proto
 from openfl.protocols.utils import deconstruct_model_proto
-from openfl.utilities.ca import get_credentials
 from subprocess import check_call
 from sys import executable
 
@@ -161,7 +160,6 @@ class DirectorClient:
         """Report shard info to the director."""
         logger.info('Send report AcknowledgeShard')
 
-        self.stub = director_pb2_grpc.FederationDirectorStub(channel)
 
     def set_new_experiment(self, name, col_names, arch_path,
                            initial_tensor_dict=None):

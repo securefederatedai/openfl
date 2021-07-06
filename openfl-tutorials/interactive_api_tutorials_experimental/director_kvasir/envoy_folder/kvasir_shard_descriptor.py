@@ -116,12 +116,15 @@ if __name__ == '__main__':
     from openfl.component.collaborator_manager.collaborator_manager import CollaboratorManager
 
     shard_name = rank_worldsize
-    director_uri = 'nnlicv674.inn.intel.com:50051'
+    director_uri = 'localhost:50051'
 
     keeper = CollaboratorManager(
         shard_name=shard_name,
         director_uri=director_uri,
         shard_descriptor=kvasir_sd,
-        disable_tls=True)
+        disable_tls=False,
+        root_ca='/home/radionov/fork/pki/openfl-tutorials/interactive_api_tutorials_experimental/director_kvasir/envoy_folder/cert/root_ca.crt',
+        key='/home/radionov/fork/pki/openfl-tutorials/interactive_api_tutorials_experimental/director_kvasir/envoy_folder/cert/1,2.key',
+        cert='/home/radionov/fork/pki/openfl-tutorials/interactive_api_tutorials_experimental/director_kvasir/envoy_folder/cert/1,2.crt')
 
     keeper.start()
