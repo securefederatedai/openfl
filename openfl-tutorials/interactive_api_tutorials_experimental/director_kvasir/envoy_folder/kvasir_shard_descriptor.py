@@ -102,7 +102,7 @@ if __name__ == '__main__':
     setup_logging()
 
     data_folder = 'data'
-    rank_worldsize = '1,2'
+    rank_worldsize = '1,100'
     enforce_image_hw = '529,622'
 
     kvasir_sd = KvasirShardDescriptor(
@@ -115,7 +115,7 @@ if __name__ == '__main__':
 
     from openfl.component.collaborator_manager.collaborator_manager import CollaboratorManager
 
-    shard_name = rank_worldsize
+    shard_name = 'one' 
     director_uri = 'localhost:50051'
 
     keeper = CollaboratorManager(
@@ -123,8 +123,8 @@ if __name__ == '__main__':
         director_uri=director_uri,
         shard_descriptor=kvasir_sd,
         disable_tls=False,
-        root_ca='/home/radionov/fork/pki/openfl-tutorials/interactive_api_tutorials_experimental/director_kvasir/envoy_folder/cert/root_ca.crt',
-        key='/home/radionov/fork/pki/openfl-tutorials/interactive_api_tutorials_experimental/director_kvasir/envoy_folder/cert/1,2.key',
-        cert='/home/radionov/fork/pki/openfl-tutorials/interactive_api_tutorials_experimental/director_kvasir/envoy_folder/cert/1,2.crt')
+        root_ca='/home/user/openfl-tutorials/interactive_api_tutorials_experimental/director_kvasir/envoy_folder/cert/root_ca.crt',
+        key='/home/user/openfl-tutorials/interactive_api_tutorials_experimental/director_kvasir/envoy_folder/cert/one.key',
+        cert='/home/user/openfl-tutorials/interactive_api_tutorials_experimental/director_kvasir/envoy_folder/cert/one.crt')
 
     keeper.start()

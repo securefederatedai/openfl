@@ -19,6 +19,7 @@ if __name__ == '__main__':
     target_shape = ['529', '622']
     asyncio.run(serve(sample_shape=list(sample_shape), target_shape=list(target_shape),
                       disable_tls=False,
-                      root_ca='/home/radionov/fork/pki/openfl-tutorials/interactive_api_tutorials_experimental/director_kvasir/director_folder/cert/root_ca.crt',
-                      key='/home/radionov/fork/pki/openfl-tutorials/interactive_api_tutorials_experimental/director_kvasir/director_folder/cert/localhost.key',
-                      cert='/home/radionov/fork/pki/openfl-tutorials/interactive_api_tutorials_experimental/director_kvasir/director_folder/cert/localhost.crt'))
+                      # an absolute path is required
+                      root_ca='/home/user/openfl/openfl-tutorials/interactive_api_tutorials_experimental/director_kvasir/director_folder/cert/root_ca.crt',
+                      key='/home/user/openfl/openfl-tutorials/interactive_api_tutorials_experimental/director_kvasir/director_folder/cert/localhost.key',
+                      cert='/home/user/openfl/openfl-tutorials/interactive_api_tutorials_experimental/director_kvasir/director_folder/cert/localhost.crt'))
