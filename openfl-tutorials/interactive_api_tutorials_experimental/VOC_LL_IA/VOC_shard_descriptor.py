@@ -53,6 +53,7 @@ class VOCDatasetSD(ShardDescriptor):
                 the directory contains the following sub-directories:
                 Annotations, ImageSets, JPEGImages, SegmentationClass, SegmentationObject.
         """
+
         self.data_dir = data_dir
         self.split = split
         image_sets_file = os.path.join(self.data_dir, 'ImageSets', 'Main', f'{self.split}.txt')
