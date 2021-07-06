@@ -8,8 +8,8 @@ import asyncio
 import logging
 
 from openfl.component.director.director import serve
-
 from openfl.interface.cli import setup_logging
+
 setup_logging()
 
 logger = logging.getLogger(__name__)
