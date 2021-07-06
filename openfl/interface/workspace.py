@@ -34,10 +34,6 @@ def create_dirs(prefix):
     (prefix / 'save').mkdir(parents=True, exist_ok=True)  # model weight saves / initialization
     (prefix / 'src').mkdir(parents=True, exist_ok=True)  # model code
 
-    src = WORKSPACE / 'workspace/plan/defaults'  # from default workspace
-    dst = prefix / 'plan/defaults'  # to created workspace
-
-    copytree(src=src, dst=dst, dirs_exist_ok=True)
     copyfile(WORKSPACE / 'workspace' / '.workspace', prefix / '.workspace')
 
 
