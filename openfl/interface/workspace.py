@@ -22,7 +22,6 @@ def create_dirs(prefix):
     """Create workspace directories."""
     from shutil import copyfile
 
-    from openfl.interface.cli_helper import copytree
     from openfl.interface.cli_helper import WORKSPACE
 
     echo('Creating Workspace Directories')
