@@ -225,7 +225,7 @@ class Plan(object):
         self.name_ = None
 
     @property
-    def hash(self): # NOQA
+    def hash(self):  # NOQA
         """Generate hash for this instance."""
         self.hash_ = sha384(dump(self.config).encode('utf-8'))
         Plan.logger.info(f'FL-Plan hash is [blue]{self.hash_.hexdigest()}[/]',
@@ -399,7 +399,7 @@ openfl.component.aggregation_functions.AggregationFunctionInterface
 
         return self.runner_
 
-    def get_collaborator(self, collaborator_name, root_ca=None,key=None,cert=None,
+    def get_collaborator(self, collaborator_name, root_ca=None, key=None, cert=None,
                          task_runner=None, client=None, shard_descriptor=None):
         """Get collaborator."""
         defaults = self.config.get(
@@ -454,9 +454,10 @@ openfl.component.aggregation_functions.AggregationFunctionInterface
 
         return self.collaborator_
 
-    def get_client(self, collaborator_name, aggregator_uuid, federation_uuid, root_ca=None,key=None,cert=None):
+    def get_client(self, collaborator_name, aggregator_uuid, federation_uuid,
+                   root_ca=None, key=None, cert=None):
         """Get gRPC client for the specified collaborator."""
-        common_name =collaborator_name
+        common_name = collaborator_name
         if(root_ca or key or cert):
             assert(root_ca and key and cert)
             chain = root_ca
@@ -512,7 +513,6 @@ openfl.component.aggregation_functions.AggregationFunctionInterface
     def interactive_api_get_server(self, tensor_dict, chain, certificate, private_key):
         """Get gRPC server of the aggregator instance."""
         server_args = self.config['network'][SETTINGS]
-        print(server_args)
 
         # patch certificates
         server_args['ca'] = chain

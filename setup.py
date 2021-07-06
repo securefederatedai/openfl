@@ -68,7 +68,8 @@ setup(
         'cryptography>=3.4.6',
         'cloudpickle',
         'tensorboardX',
-        'tensorboard'
+        'tensorboard',
+        'requests'
     ],
     python_requires='>=3.6, <3.9',
     project_urls={

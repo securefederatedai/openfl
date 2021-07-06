@@ -6,10 +6,10 @@
 import logging
 import os
 import shutil
+from subprocess import check_call
+from sys import executable
 
 import grpc
-
-from subprocess import check_call
 
 from openfl.pipelines import NoCompressionPipeline
 from openfl.protocols import director_pb2
@@ -17,7 +17,6 @@ from openfl.protocols import director_pb2_grpc
 from openfl.protocols.utils import construct_model_proto
 from openfl.protocols.utils import deconstruct_model_proto
 
-from sys import executable
 
 logger = logging.getLogger(__name__)
 
@@ -153,15 +152,11 @@ class DirectorClient:
             )
 
             channel = grpc.secure_channel(director_uri, credentials, options=channel_opt)
-
-        # channel = grpc.insecure_channel(director_uri, options=options)
-
         self.stub = director_pb2_grpc.FederationDirectorStub(channel)
 
     def report_shard_info(self, shard_descriptor) -> bool:
         """Report shard info to the director."""
         logger.info('Send report AcknowledgeShard')
-
 
     def set_new_experiment(self, name, col_names, arch_path,
                            initial_tensor_dict=None):

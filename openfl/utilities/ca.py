@@ -3,7 +3,9 @@
 """Generic check functions."""
 import os
 
+
 def get_credentials(folder_path):
+    """Get credentials from folder by template."""
     root_ca, key, cert = None, None, None
     if os.path.exists(folder_path):
         for f in os.listdir(folder_path):

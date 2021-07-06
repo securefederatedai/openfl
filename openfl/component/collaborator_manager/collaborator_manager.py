@@ -65,7 +65,8 @@ class CollaboratorManager:
         echo(f'Data = {plan.cols_data_paths}')
         logger.info('🧿 Starting a Collaborator Service.')
 
-        col = plan.get_collaborator(self.name, self.root_ca,self.key,self.cert, shard_descriptor=self.shard_descriptor)
+        col = plan.get_collaborator(self.name, self.root_ca, self.key,
+                                    self.cert, shard_descriptor=self.shard_descriptor)
         try:
             col.run()
         finally:

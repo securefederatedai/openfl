@@ -4,12 +4,14 @@
 """Aggregator module."""
 
 
-import requests
-import urllib.request
-import shutil
+import base64
 import os
-from pathlib import Path
+import shutil
+import urllib.request
 from logging import getLogger
+from pathlib import Path
+
+import requests
 
 
 logger = getLogger(__name__)
@@ -25,7 +27,6 @@ def download_step_bin(url, grep_name, architecture, prefix='./'):
         architecture: architecture type to grep
         prefix: folder path to download
     """
-
     result = requests.get(url)
     assets = result.json()['assets']
     urls = []
@@ -35,7 +36,7 @@ def download_step_bin(url, grep_name, architecture, prefix='./'):
     url = urls[-1]
     url = url.replace('https', 'http')
     name = url.split('/')[-1]
-    print('Downloading:', name)
+    logger.info('Downloading:', name)
     urllib.request.urlretrieve(url, f'{prefix}/{name}')
     shutil.unpack_archive(f'{prefix}/{name}', f'{prefix}/step')
 
@@ -59,7 +60,6 @@ def get_token(name, ca_url, ca_path='.'):
     if not step:
         raise Exception('Step-CA is not installed!\nRun `fx pki start_ca` first')
 
-    # os.environ["STEPPATH"] = step_config_dir
     try:
         priv_json = step_config_dir / 'secrets' / 'priv.json'
         pass_file = pki_dir / 'pass_file'
@@ -69,7 +69,7 @@ def get_token(name, ca_url, ca_path='.'):
             f'--key {priv_json} --root {root_crt} '
             f'--password-file {pass_file} 'f'--ca-url {ca_url} ', shell=True)
     except subprocess.CalledProcessError as exc:
-        print(f'Error code {exc.returncode}: {exc.output}')
+        logger.error(f'Error code {exc.returncode}: {exc.output}')
         return
 
     if token[-1:] == b'\n':
@@ -83,12 +83,10 @@ def get_token(name, ca_url, ca_path='.'):
     base64_bytes = base64.b64encode(root_ca)
     base64_message = base64_bytes.decode('ascii')
     return str(length) + token.decode('ascii') + base64_message
-    # print('Token:')
-    # print(length, token.decode('ascii'),, sep='')
 
 
 def get_bin_names(ca_path):
-    import os
+    """Get paths of step binaries."""
     ca_path = Path(ca_path)
     step = None
     step_ca = None
@@ -104,9 +102,6 @@ def get_bin_names(ca_path):
 
 def certify(name, cert_path, token_with_cert):
     """Create a collaborator manager workspace."""
-    import os
-    import base64
-    # Create folder
     os.makedirs(cert_path, exist_ok=True)
 
     length = int(token_with_cert[:4])
@@ -130,6 +125,7 @@ def certify(name, cert_path, token_with_cert):
 
 
 def remove_ca(ca_path):
+    """Kill step-ca process and rm ca directory."""
     _check_kill_process('step-ca')
     shutil.rmtree(ca_path, ignore_errors=True)
 
@@ -151,7 +147,7 @@ def start_ca(ca_path, ca_url, password):
 
     ca_path = Path(ca_path)
     step_config_dir = ca_path / 'step_config'
-    os.environ["STEPPATH"] = str(step_config_dir)
+    os.environ['STEPPATH'] = str(step_config_dir)
     step, step_ca = get_bin_names(ca_path)
 
     if not (step and step_ca and os.path.exists(step) and os.path.exists(step_ca)):
@@ -172,14 +168,12 @@ def start_ca(ca_path, ca_url, password):
     except Exception as exc:
         logger.error(f'Failed to up ca server: {exc}')
 
-    print('\nDone.')
-
 
 def _check_kill_process(pstring):
     """Kill process by name."""
     import signal
 
-    for line in os.popen("ps ax | grep " + pstring + " | grep -v grep"):
+    for line in os.popen('ps ax | grep ' + pstring + ' | grep -v grep'):
         fields = line.split()
         pid = fields[0]
         os.kill(int(pid), signal.SIGKILL)
@@ -209,14 +203,14 @@ def _create_ca(ca_path, ca_url, password):
     assert(step and step_ca and os.path.exists(step) and os.path.exists(step_ca))
 
     logger.info('Create CA Config')
-    os.environ["STEPPATH"] = str(step_config_dir)
+    os.environ['STEPPATH'] = str(step_config_dir)
     shutil.rmtree(step_config_dir, ignore_errors=True)
     name = ca_url.split(':')[0]
     os.system(f'{step} ca init --name name --dns {name} '
-            + f'--address {ca_url}  --provisioner prov '
-            + f'--password-file {pki_dir}/pass_file')
+              + f'--address {ca_url}  --provisioner prov '
+              + f'--password-file {pki_dir}/pass_file')
 
     os.system(f'{step} ca provisioner remove prov --all')
     os.system(f'{step} crypto jwk create {step_config_dir}/certs/pub.json '
-            + f'{step_config_dir}/secrets/priv.json --password-file={pki_dir}/pass_file')
+              + f'{step_config_dir}/secrets/priv.json --password-file={pki_dir}/pass_file')
     os.system(f'{step} ca provisioner add provisioner {step_config_dir}/certs/pub.json')

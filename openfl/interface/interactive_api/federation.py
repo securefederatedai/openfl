@@ -3,8 +3,8 @@
 """Federation API module."""
 
 from socket import getfqdn
-from openfl.transport.grpc.director_client import DirectorClient
 
+from openfl.transport.grpc.director_client import DirectorClient
 from .shard_descriptor import DummyShardDescriptor
 
 
@@ -42,7 +42,8 @@ class Federation:
         self.api_private_key = api_private_key
 
         # Create Director client
-        self.dir_client = DirectorClient(f'{director_node_fqdn}:{director_port}', disable_tls, cert_chain, api_private_key, api_cert)
+        self.dir_client = DirectorClient(f'{director_node_fqdn}:{director_port}',
+                                         disable_tls, cert_chain, api_private_key, api_cert)
 
         self.sample_shape, self.target_shape = self._request_data_shape()
 

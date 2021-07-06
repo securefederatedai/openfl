@@ -32,11 +32,11 @@ def director(context):
 @option('-c', '--director-config-path', default='director.yaml',
         help='The director config file path', type=ClickPath(exists=True))
 @option('--disable-tls', default=False)
-@option('-rc', '--root-cert-path','root_ca', default=None,
+@option('-rc', '--root-cert-path', 'root_ca', default=None,
         help='Path to a root CA cert')
-@option('-pk', '--private-key-path','key', default=None,
+@option('-pk', '--private-key-path', 'key', default=None,
         help='Path to a private key')
-@option('-oc', '--public-cert-path','cert', default=None,
+@option('-oc', '--public-cert-path', 'cert', default=None,
         help='Path to a signed certificate')
 def start(director_config_path, disable_tls, root_ca, key, cert):
     """Start the director service."""
