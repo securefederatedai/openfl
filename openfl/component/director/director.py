@@ -97,6 +97,7 @@ class Director(director_pb2_grpc.FederationDirectorServicer):
         )
 
     async def GetTrainedModel(self, request, context):  # NOQA:N802
+        """RPC for retrieving trained models."""
         logger.info('Request GetTrainedModel has got!')
         if not hasattr(self, 'aggregator_server'):
             logger.error('Aggregator has not started yet')

@@ -531,9 +531,7 @@ openfl.component.aggregation_functions.AggregationFunctionInterface
         interface_objects = []
         serializer = Plan.build(
             self.config['api_layer']['required_plugin_components']['serializer_plugin'], {})
-        # import os
-        # print("\n\n CWD \n\n", os.getcwd())
-        # from .layers import soft_dice_coef
+
         for filename in ['model_interface_file',
                          'tasks_interface_file', 'dataloader_interface_file']:
             interface_objects.append(

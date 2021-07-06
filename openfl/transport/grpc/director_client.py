@@ -9,12 +9,14 @@ import shutil
 
 import grpc
 
+from subprocess import check_call
+
 from openfl.pipelines import NoCompressionPipeline
 from openfl.protocols import director_pb2
 from openfl.protocols import director_pb2_grpc
 from openfl.protocols.utils import construct_model_proto
 from openfl.protocols.utils import deconstruct_model_proto
-from subprocess import check_call
+
 from sys import executable
 
 logger = logging.getLogger(__name__)
