@@ -3,11 +3,11 @@
 
 """You may copy this file as the starting point of your own model."""
 
-from openfl.federated import TensorFlowDataLoader
-
-from .dataloader import DatasetGenerator
 
 import os
+
+from openfl.federated import TensorFlowDataLoader
+from .dataloader import DatasetGenerator
 
 
 class TensorFlowBratsDataLoader(TensorFlowDataLoader):
@@ -53,7 +53,9 @@ class TensorFlowBratsDataLoader(TensorFlowDataLoader):
                                            random_seed=816)
 
     def get_feature_shape(self):
-        """Get the shape of an example feature array.
+        """
+        Get the shape of an example feature array.
+
         Returns:
             tuple: shape of an example feature array
         """
@@ -62,6 +64,7 @@ class TensorFlowBratsDataLoader(TensorFlowDataLoader):
     def get_train_loader(self, batch_size=None, num_batches=None):
         """
         Get training data loader.
+
         Returns
         -------
         loader object
@@ -71,6 +74,7 @@ class TensorFlowBratsDataLoader(TensorFlowDataLoader):
     def get_valid_loader(self, batch_size=None):
         """
         Get validation data loader.
+
         Returns:
             loader object
         """
@@ -79,6 +83,7 @@ class TensorFlowBratsDataLoader(TensorFlowDataLoader):
     def get_train_data_size(self):
         """
         Get total number of training samples.
+
         Returns:
             int: number of training samples
         """
@@ -87,6 +92,7 @@ class TensorFlowBratsDataLoader(TensorFlowDataLoader):
     def get_valid_data_size(self):
         """
         Get total number of validation samples.
+
         Returns:
             int: number of validation samples
         """

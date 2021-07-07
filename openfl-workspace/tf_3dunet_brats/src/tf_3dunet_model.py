@@ -6,8 +6,7 @@
 import tensorflow as tf
 
 from openfl.federated import KerasTaskRunner
-
-from .define_model import build_model, dice_coef, soft_dice_coef, dice_loss
+from .define_model import build_model, dice_coef, dice_loss, soft_dice_coef
 
 
 class TensorFlow3dUNet(KerasTaskRunner):
@@ -52,11 +51,10 @@ class TensorFlow3dUNet(KerasTaskRunner):
                      print_summary=True,
                      seed=816,
                      depth=5,
-                     dropout_at=[2, 3],
+                     dropout_at=(2, 3),
                      initial_filters=16,
                      batch_norm=True,
                      **kwargs):
-
         """Create the TensorFlow 3D U-Net CNN model.
 
         Args:
@@ -65,8 +63,8 @@ class TensorFlow3dUNet(KerasTaskRunner):
             **kwargs: Additional parameters to pass to the function
 
         """
-
-        # ## Define Model
+        #
+        # Define Model
         #
         model = build_model(input_shape,
                             n_cl_out=n_cl_out,
@@ -99,7 +97,7 @@ class TensorFlow3dUNet(KerasTaskRunner):
         return model
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
 
     from tf_brats_dataloader import DatasetGenerator
     import os
@@ -107,63 +105,63 @@ if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser(
-        description="Train 3D U-Net model", add_help=True,
+        description='Train 3D U-Net model', add_help=True,
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
-    parser.add_argument("--data_path",
-                        default="~/data/MICCAI_BraTS2020_TrainingData/",
+    parser.add_argument('--data_path',
+                        default='~/data/MICCAI_BraTS2020_TrainingData/',
                         # Or wherever you unzipped the BraTS datset,
-                        help="Root directory for BraTS 2020 dataset")
-    parser.add_argument("--epochs",
+                        help='Root directory for BraTS 2020 dataset')
+    parser.add_argument('--epochs',
                         type=int,
                         default=5,
-                        help="Number of epochs")
-    parser.add_argument("--crop_dim",
+                        help='Number of epochs')
+    parser.add_argument('--crop_dim',
                         type=int,
                         default=64,
-                        help="Crop all dimensions to this (height, width, depth)")
-    parser.add_argument("--batch_size",
+                        help='Crop all dimensions to this (height, width, depth)')
+    parser.add_argument('--batch_size',
                         type=int,
                         default=4,
-                        help="Training batch size")
-    parser.add_argument("--train_test_split",
+                        help='Training batch size')
+    parser.add_argument('--train_test_split',
                         type=float,
                         default=0.80,
-                        help="Train/test split (0-1)")
-    parser.add_argument("--validate_test_split",
+                        help='Train/test split (0-1)')
+    parser.add_argument('--validate_test_split',
                         type=float,
                         default=0.50,
-                        help="Validation/test split (0-1)")
-    parser.add_argument("--number_input_channels",
+                        help='Validation/test split (0-1)')
+    parser.add_argument('--number_input_channels',
                         type=int,
                         default=1,
-                        help="Number of input channels")
-    parser.add_argument("--num_classes",
+                        help='Number of input channels')
+    parser.add_argument('--num_classes',
                         type=int,
                         default=1,
-                        help="Number of output classes/channels")
-    parser.add_argument("--random_seed",
+                        help='Number of output classes/channels')
+    parser.add_argument('--random_seed',
                         default=816,
-                        help="Random seed for determinism")
-    parser.add_argument("--print_model",
-                        action="store_true",
+                        help='Random seed for determinism')
+    parser.add_argument('--print_model',
+                        action='store_true',
                         default=True,
-                        help="Print the summary of the model layers")
-    parser.add_argument("--filters",
+                        help='Print the summary of the model layers')
+    parser.add_argument('--filters',
                         type=int,
                         default=16,
-                        help="Number of filters in the first convolutional layer")
-    parser.add_argument("--use_upsampling",
-                        action="store_true",
+                        help='Number of filters in the first convolutional layer')
+    parser.add_argument('--use_upsampling',
+                        action='store_true',
                         default=False,
-                        help="Use upsampling instead of transposed convolution")
-    parser.add_argument("--use_batchnorm",
-                        action="store_true",
+                        help='Use upsampling instead of transposed convolution')
+    parser.add_argument('--use_batchnorm',
+                        action='store_true',
                         default=True,
-                        help="Use batch normalization")
-    parser.add_argument("--saved_model_name",
-                        default="saved_model_3DUnet",
-                        help="Save model to this path")
+                        help='Use batch normalization')
+    parser.add_argument('--saved_model_name',
+                        default='saved_model_3DUnet',
+                        help='Save model to this path')
 
     args = parser.parse_args()
 
@@ -202,8 +200,8 @@ if __name__ == "__main__":
 
     # TensorBoard
     import datetime
-    logs_dir = os.path.join("tensorboard_logs",
-                            datetime.datetime.now().strftime("%Y%m%d-%H%M%S"))
+    logs_dir = os.path.join('tensorboard_logs',
+                            datetime.datetime.now().strftime('%Y%m%d-%H%M%S'))
     tb_logs = tf.keras.callbacks.TensorBoard(log_dir=logs_dir)
 
     callbacks = [checkpoint, tb_logs]

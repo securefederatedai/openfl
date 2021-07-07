@@ -3,15 +3,15 @@
 
 """You may copy this file as the starting point of your own model."""
 
-import nibabel as nib
-
-import tensorflow as tf
-
-import numpy as np
 import os
+
+import nibabel as nib
+import numpy as np
+import tensorflow as tf
 
 
 class DatasetGenerator:
+    """Generate a TensorFlow data loader from the BraTS .nii.gz files."""
 
     def __init__(self, crop_dim,
                  data_path,
@@ -22,7 +22,7 @@ class DatasetGenerator:
                  validate_test_split=0.5,
                  random_seed=816,
                  shard=0):
-
+        """Initialize the class."""
         self.data_path = os.path.abspath(os.path.expanduser(data_path))
         self.batch_size = batch_size
         self.crop_dim = [crop_dim, crop_dim, crop_dim, number_input_channels]
@@ -40,34 +40,30 @@ class DatasetGenerator:
 
     def create_file_list(self):
         """
-        Get list of the files from the BraTS raw data
+        Get list of the files from the BraTS raw data.
+
         Split into training and testing sets.
         """
+        filenames = tf.io.gfile.glob(os.path.join(self.data_path, '*/*_seg.nii.gz'))
 
-        filenames = tf.io.gfile.glob(os.path.join(self.data_path, "*/*_seg.nii.gz"))
+        # Create a dictionary of tuples with image filename and label filename
 
-        """
-        Create a dictionary of tuples with image filename and label filename
-        """
         self.numFiles = len(filenames)
         self.filenames = {}
         for idx, filename in enumerate(filenames):
-            self.filenames[idx] = [filename.replace("_seg.nii.gz", "_flair.nii.gz"), filename]
+            self.filenames[idx] = [filename.replace('_seg.nii.gz', '_flair.nii.gz'), filename]
 
     def z_normalize_img(self, img):
         """
-        Normalize the image so that the mean value for each image
-        is 0 and the standard deviation is 1.
-        """
+        Normalize the image.
 
+        The mean value for each image is 0 and the standard deviation is 1.
+        """
         # TODO: Correct this for multiple MRI channels
         return (img - np.mean(img)) / np.std(img)
 
     def crop(self, img, msk, randomize):
-        """
-        Randomly crop the image and mask
-        """
-
+        """Randomly crop the image and mask."""
         slices = []
 
         # Do we randomize?
@@ -75,10 +71,10 @@ class DatasetGenerator:
 
         for idx in range(len(img.shape) - 1):  # Go through each dimension
 
-            cropLen = self.crop_dim[idx]
-            imgLen = img.shape[idx]
+            croplen = self.crop_dim[idx]
+            imglen = img.shape[idx]
 
-            start = (imgLen - cropLen) // 2
+            start = (imglen - croplen) // 2
 
             ratio_crop = 0.20  # Crop up this this % of pixels for offset
             # Number of pixels to offset crop in this dimension
@@ -87,21 +83,21 @@ class DatasetGenerator:
             if offset > 0:
                 if is_random:
                     start += np.random.choice(range(-offset, offset))
-                    if ((start + cropLen) > imgLen):  # Don't fall off the image
-                        start = (imgLen - cropLen) // 2
+                    if ((start + croplen) > imglen):  # Don't fall off the image
+                        start = (imglen - croplen) // 2
             else:
                 start = 0
 
-            slices.append(slice(start, start + cropLen))
+            slices.append(slice(start, start + croplen))
 
         return img[tuple(slices)], msk[tuple(slices)]
 
     def augment_data(self, img, msk):
         """
-        Data augmentation
+        Augmentation the input images.
+
         Flip image and mask. Rotate image and mask.
         """
-
         # Determine if axes are equal and can be rotated
         # If the axes aren't equal then we can't rotate them.
         equal_dim_axis = []
@@ -130,15 +126,12 @@ class DatasetGenerator:
         return img, msk
 
     def read_nifti_file(self, idx, randomize=False):
-        """
-        Read Nifti file
-        """
-
+        """Read Nifti file."""
         idx = idx.numpy()
-        imgFile = self.filenames[idx][0]
-        mskFile = self.filenames[idx][1]
+        imgfile = self.filenames[idx][0]
+        mskfile = self.filenames[idx][1]
 
-        img_temp = np.array(nib.load(imgFile).dataobj)
+        img_temp = np.array(nib.load(imgfile).dataobj)
         img_temp = np.rot90(img_temp)
 
         img = np.zeros(list(img_temp.shape) + [self.num_input_channels])
@@ -150,13 +143,13 @@ class DatasetGenerator:
         for channel in range(1, self.num_input_channels):
 
             if channel == 1:
-                imgFile = self.filenames[idx][1].replace("_flair", "_t1")
+                imgfile = self.filenames[idx][1].replace('_flair', '_t1')
             elif channel == 2:
-                imgFile = self.filenames[idx][1].replace("_flair", "_t1ce")
+                imgfile = self.filenames[idx][1].replace('_flair', '_t1ce')
             elif channel == 3:
-                imgFile = self.filenames[idx][1].replace("_flair", "_t2")
+                imgfile = self.filenames[idx][1].replace('_flair', '_t2')
 
-            img_temp = np.array(nib.load(imgFile).dataobj)
+            img_temp = np.array(nib.load(imgfile).dataobj)
 
             img_temp = np.rot90(img_temp)
 
@@ -165,16 +158,15 @@ class DatasetGenerator:
 
             img[..., channel] = img_temp
 
-        msk = np.rot90(np.array(nib.load(mskFile).dataobj))
+        msk = np.rot90(np.array(nib.load(mskfile).dataobj))
         msk = np.expand_dims(msk, -1)
 
-        """
-        "labels": {
-             "0": "background",
-             "1": "edema",
-             "2": "non-enhancing tumor",
-             "3": "enhancing tumour"}
-         """
+        # labels: {
+        #      0: background,
+        #      1: edema,
+        #      2: non-enhancing tumor,
+        #      3: enhancing tumour}
+
         # Combine all masks but background
         if self.num_classes == 1:
             msk[msk > 0] = 1.0
@@ -194,13 +186,11 @@ class DatasetGenerator:
         return img, msk
 
     def get_input_shape(self):
-
+        """Get the shape of the input."""
         return self.crop_dim
 
     def plot_images(self, ds, slice_num=90):
-        """
-        Plot images from dataset
-        """
+        """Plot images from dataset."""
         import matplotlib.pyplot as plt
 
         plt.figure(figsize=(20, 20))
@@ -215,74 +205,57 @@ class DatasetGenerator:
 
             for idx in range(bs):
                 plt.subplot(bs, num_cols, idx * num_cols + 1)
-                plt.imshow(img[idx, :, :, slice_num, img_channel], cmap="bone")
-                plt.title("MRI", fontsize=18)
+                plt.imshow(img[idx, :, :, slice_num, img_channel], cmap='bone')
+                plt.title('MRI', fontsize=18)
                 plt.subplot(bs, num_cols, idx * num_cols + 2)
-                plt.imshow(msk[idx, :, :, slice_num, msk_channel], cmap="bone")
-                plt.title("Tumor", fontsize=18)
+                plt.imshow(msk[idx, :, :, slice_num, msk_channel], cmap='bone')
+                plt.title('Tumor', fontsize=18)
 
         plt.show()
 
-        print("Mean pixel value of image = {}".format(
-            np.mean(img[0, :, :, :, 0])))
+        print(f'Mean pixel value of image = {np.mean(img[0, :, :, :, 0])}')
 
     def display_train_images(self, slice_num=90):
-        """
-        Plots some training images
-        """
+        """Plot some training images."""
         self.plot_images(self.ds_train, slice_num)
 
     def display_validation_images(self, slice_num=90):
-        """
-        Plots some validation images
-        """
+        """Plot some validation images."""
         self.plot_images(self.ds_val, slice_num)
 
     def display_test_images(self, slice_num=90):
-        """
-        Plots some test images
-        """
+        """Plot some test images."""
         self.plot_images(self.ds_test, slice_num)
 
     def get_train(self):
-        """
-        Return train dataset
-        """
+        """Return train dataset."""
         return self.ds_train
 
     def get_test(self):
-        """
-        Return test dataset
-        """
+        """Return test dataset."""
         return self.ds_test
 
     def get_validate(self):
-        """
-        Return validation dataset
-        """
+        """Return validation dataset."""
         return self.ds_val
 
     def get_dataset(self):
-        """
-        Create a TensorFlow data loader
-        """
-        self.num_train = int(self.numFiles * self.train_test_split)
-        numValTest = self.numFiles - self.num_train
+        """Create a TensorFlow data loader."""
+        self.num_train = int(self.numfiles * self.train_test_split)
+        numvaltest = self.numfiles - self.num_train
 
-        ds = tf.data.Dataset.range(self.numFiles).shuffle(
-            self.numFiles, self.random_seed)  # Shuffle the dataset
+        ds = tf.data.Dataset.range(self.numfiles).shuffle(
+            self.numfiles, self.random_seed)  # Shuffle the dataset
 
-        """
-        Horovod Sharding
-        Here we are not actually dividing the dataset into shards
-        but instead just reshuffling the training dataset for every
-        shard. Then in the training loop we just go through the training
-        dataset but the number of steps is divided by the number of shards.
-        """
+        # Horovod Sharding
+        # Here we are not actually dividing the dataset into shards
+        # but instead just reshuffling the training dataset for every
+        # shard. Then in the training loop we just go through the training
+        # dataset but the number of steps is divided by the number of shards.
         ds_train = ds.take(self.num_train).shuffle(
             self.num_train, self.shard)  # Reshuffle based on shard
         ds_val_test = ds.skip(self.num_train)
-        self.num_val = int(numValTest * self.validate_test_split)
+        self.num_val = int(numvaltest * self.validate_test_split)
         self.num_test = self.num_train - self.num_val
         ds_val = ds_val_test.take(self.num_val)
         ds_test = ds_val_test.skip(self.num_val)

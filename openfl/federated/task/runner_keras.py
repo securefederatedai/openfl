@@ -195,7 +195,6 @@ class KerasTaskRunner(TaskRunner):
         output_tensor_dict : {TensorKey: nparray} (these correspond to acc,
          precision, f1_score, etc.)
         """
-
         if 'batch_size' in kwargs:
             batch_size = kwargs['batch_size']
         else:
