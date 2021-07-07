@@ -3,8 +3,8 @@
 """Federation API module."""
 
 from socket import getfqdn
-from openfl.transport.grpc.director_client import DirectorClient
 
+from openfl.transport.grpc.director_client import DirectorClient
 from .shard_descriptor import DummyShardDescriptor
 
 
