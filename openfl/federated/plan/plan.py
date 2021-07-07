@@ -5,7 +5,7 @@
 from hashlib import sha384
 from importlib import import_module
 from logging import getLogger
-from os.path import splitext, join
+from os.path import join, splitext
 from pathlib import Path
 
 from yaml import dump
@@ -14,7 +14,6 @@ from yaml import SafeDumper
 
 from openfl.component.aggregation_functions import AggregationFunctionInterface
 from openfl.component.aggregation_functions import WeightedAverage
-from openfl.interface.cli_helper import WORKSPACE
 from openfl.transport import AggregatorGRPCServer
 from openfl.transport import CollaboratorGRPCClient
 from openfl.utilities.utils import getfqdn_env

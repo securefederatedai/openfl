@@ -10,8 +10,9 @@ from cryptography import x509
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import rsa
-from cryptography.x509.oid import NameOID, ExtensionOID
 from cryptography.x509.extensions import ExtensionNotFound
+from cryptography.x509.oid import ExtensionOID, NameOID
+
 
 def generate_root_cert(days_to_expiration=365):
     """Generate_root_certificate."""
@@ -113,8 +114,12 @@ def sign_certificate(csr, issuer_private_key, issuer_name, days_to_expiration=36
         x509.BasicConstraints(ca=ca, path_length=None), critical=True,
     )
     try:
-        builder = builder.add_extension(csr.extensions.get_extension_for_oid(ExtensionOID.SUBJECT_ALTERNATIVE_NAME).value, critical=False)
-    except ExtensionNotFound as e:
+        builder = builder.add_extension(
+            csr.extensions.get_extension_for_oid(
+                ExtensionOID.SUBJECT_ALTERNATIVE_NAME
+            ).value, critical=False
+        )
+    except ExtensionNotFound:
         pass  # Might not have alternative name
 
     signed_cert = builder.sign(

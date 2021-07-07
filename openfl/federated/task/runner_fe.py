@@ -3,7 +3,6 @@
 """FastEstimatorTaskRunner module."""
 
 import numpy as np
-import tensorflow as tf
 
 from openfl.utilities import split_tensor_dict_for_holdouts
 from openfl.utilities import TensorKey

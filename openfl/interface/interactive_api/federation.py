@@ -4,6 +4,7 @@
 
 from openfl.utilities.utils import getfqdn_env
 
+
 class Federation:
     """
     Federation class.
