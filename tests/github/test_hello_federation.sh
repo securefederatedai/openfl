@@ -6,7 +6,7 @@ FED_WORKSPACE=${2:-'fed_work12345alpha81671'}   # This can be whatever unique di
 COL1=${3:-'one123dragons'}  # This can be any unique label (lowercase)
 COL2=${4:-'beta34unicorns'} # This can be any unique label (lowercase)
 
-FQDN=${5:-$(hostname --all-fqdns | awk '{print $1}')}
+FQDN=${5:-$(hostname --fqdn | awk '{print $1}')}
 
 COL1_DATA_PATH=1
 COL2_DATA_PATH=2
