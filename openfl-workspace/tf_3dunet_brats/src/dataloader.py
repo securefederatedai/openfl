@@ -48,7 +48,7 @@ class DatasetGenerator:
 
         # Create a dictionary of tuples with image filename and label filename
 
-        self.numFiles = len(filenames)
+        self.numfiles = len(filenames)
         self.filenames = {}
         for idx, filename in enumerate(filenames):
             self.filenames[idx] = [filename.replace('_seg.nii.gz', '_flair.nii.gz'), filename]

@@ -27,8 +27,6 @@ if [ "$#" -lt 2 ] || ! [ -d ${1} ]; then
     exit 1
 fi
 
-
-
 get_seeded_random()
 {
   seed="$1"
@@ -37,7 +35,11 @@ get_seeded_random()
 }
 
 # Remove the destination directory if it exists
-rm -r ${DESTINATION}
+if [ -d ${DESTINATION} ] 
+then
+    echo "Removing existing directory." 
+    rm -r ${DESTINATION}
+fi
 
 n=0
 # Find the subdirectories under the SOURCE directory and randomly shuffle them (seed is the same)

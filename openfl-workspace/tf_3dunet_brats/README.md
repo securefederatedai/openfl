@@ -44,7 +44,10 @@ If `tree` is not installed, then run `sudo apt-get install tree` to install it (
 #### `split_directory.sh`
 ```bash 
 #!/bin/bash
-# Split the BraTS data directory into NUM_COLLABORATORS
+# Copyright (C) 2020-2021 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+# Split the BraTS data directory into NUM_COLLABORATORS 
 
 SOURCE=${1}  # The directory where the BraTS dataset is located (e.g. ~/data/MICCAI_BraTS2020_TrainingData)
 DESTINATION=${2}   # The destination directory for the randomized, split training data folders
@@ -77,7 +80,11 @@ get_seeded_random()
 }
 
 # Remove the destination directory if it exists
-rm -r ${DESTINATION}
+if [ -d ${DESTINATION} ] 
+then
+    echo "Removing existing directory." 
+    rm -r ${DESTINATION}
+fi
 
 n=0
 # Find the subdirectories under the SOURCE directory and randomly shuffle them (seed is the same)
