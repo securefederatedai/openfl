@@ -3,6 +3,7 @@
 """PKI CLI."""
 
 import logging
+import os
 from pathlib import Path
 
 from click import group
@@ -11,9 +12,11 @@ from click import pass_context
 from click import Path as ClickPath
 
 from openfl.component.ca.ca import certify
+from openfl.component.ca.ca import get_bin_names
 from openfl.component.ca.ca import get_token
+from openfl.component.ca.ca import install
 from openfl.component.ca.ca import remove_ca
-from openfl.component.ca.ca import start_ca
+from openfl.component.ca.ca import run_ca
 
 
 logger = logging.getLogger(__name__)
@@ -28,20 +31,39 @@ def pki(context):
     context.obj['group'] = 'pki'
 
 
-@pki.command(name='start-ca')
+@pki.command(name='run')
+@option('-p', '--ca-path', required=True,
+        help='The ca path', type=ClickPath())
+def run(ca_path):
+    """Run CA server."""
+    ca_path = Path(ca_path)
+    step_config_dir = ca_path / 'step_config'
+    pki_dir = ca_path / 'cert'
+    pass_file = pki_dir / 'pass_file'
+    ca_json = step_config_dir / 'config' / 'ca.json'
+    _, step_ca = get_bin_names(ca_path)
+    if (not os.path.exists(step_config_dir) or not os.path.exists(pki_dir)
+            or not os.path.exists(pass_file) or not os.path.exists(ca_json)
+            or not os.path.exists(step_ca)):
+        logger.warning('CA is not installed or corrupted, please install it first')
+        return
+    run_ca(step_ca, pass_file, ca_json)
+
+
+@pki.command(name='install')
 @option('-p', '--ca-path', required=True,
         help='The ca path', type=ClickPath())
 @option('--password', required=True)
 @option('--ca-url', required=False, default=CA_URL)
-def start_ca_(ca_path, password, ca_url):
+def install_(ca_path, password, ca_url):
     """Create a ca workspace."""
-    start_ca(ca_path, ca_url, password)
+    install(ca_path, ca_url, password)
 
 
-@pki.command(name='remove-ca')
+@pki.command(name='uninstall')
 @option('-p', '--ca-path', required=True,
         help='The CA path', type=ClickPath())
-def remove_ca_(ca_path):
+def uninstall(ca_path):
     """Remove step-CA."""
     remove_ca(ca_path)
 

@@ -7,17 +7,21 @@
 import base64
 import os
 import shutil
+import signal
+import subprocess
+import time
 import urllib.request
 from logging import getLogger
 from pathlib import Path
 
 import requests
+from click import confirm
 
 
 logger = getLogger(__name__)
 
 
-def download_step_bin(url, grep_name, architecture, prefix='./'):
+def download_step_bin(url, grep_name, architecture, prefix='./', confirmation=True):
     """
     Donwload step binaries from github.
 
@@ -27,6 +31,8 @@ def download_step_bin(url, grep_name, architecture, prefix='./'):
         architecture: architecture type to grep
         prefix: folder path to download
     """
+    if confirmation:
+        confirm('CA binaries from github will be downloaded now', default=True, abort=True)
     result = requests.get(url)
     assets = result.json()['assets']
     urls = []
@@ -36,7 +42,7 @@ def download_step_bin(url, grep_name, architecture, prefix='./'):
     url = urls[-1]
     url = url.replace('https', 'http')
     name = url.split('/')[-1]
-    logger.info('Downloading:', name)
+    logger.info(f'Donwloading {name}')
     urllib.request.urlretrieve(url, f'{prefix}/{name}')
     shutil.unpack_archive(f'{prefix}/{name}', f'{prefix}/step')
 
@@ -50,20 +56,17 @@ def get_token(name, ca_url, ca_path='.'):
                     (aggregator fqdn or collaborator name)
         ca_url: full url of CA server
     """
-    import subprocess
-    import base64
-
     ca_path = Path(ca_path)
     step_config_dir = ca_path / 'step_config'
     pki_dir = ca_path / 'cert'
     step, _ = get_bin_names(ca_path)
     if not step:
-        raise Exception('Step-CA is not installed!\nRun `fx pki start_ca` first')
+        raise Exception('Step-CA is not installed!\nRun `fx pki install` first')
 
+    priv_json = step_config_dir / 'secrets' / 'priv.json'
+    pass_file = pki_dir / 'pass_file'
+    root_crt = step_config_dir / 'certs' / 'root_ca.crt'
     try:
-        priv_json = step_config_dir / 'secrets' / 'priv.json'
-        pass_file = pki_dir / 'pass_file'
-        root_crt = step_config_dir / 'certs' / 'root_ca.crt'
         token = subprocess.check_output(
             f'{step} ca token {name} '
             f'--key {priv_json} --root {root_crt} '
@@ -130,7 +133,7 @@ def remove_ca(ca_path):
     shutil.rmtree(ca_path, ignore_errors=True)
 
 
-def start_ca(ca_path, ca_url, password):
+def install(ca_path, ca_url, password):
     """
     Create certificate authority for federation.
 
@@ -139,50 +142,54 @@ def start_ca(ca_path, ca_url, password):
         ca_url: url for ca server like: 'host:port'
 
     """
-    import os
-    import threading
-
-    _check_kill_process('step-ca')
     logger.info('Creating CA')
 
     ca_path = Path(ca_path)
+    ca_path.mkdir(parents=True, exist_ok=True)
     step_config_dir = ca_path / 'step_config'
     os.environ['STEPPATH'] = str(step_config_dir)
     step, step_ca = get_bin_names(ca_path)
 
     if not (step and step_ca and os.path.exists(step) and os.path.exists(step_ca)):
-        _create_ca(ca_path, ca_url, password)
         step, step_ca = get_bin_names(ca_path)
-
-    pki_dir = ca_path / 'cert'
-    pass_file = pki_dir / 'pass_file'
-    ca_json = step_config_dir / 'config' / 'ca.json'
-    ca_thread = threading.Thread(
-        target=lambda: os.system(
-            f'{step_ca} --password-file {pass_file} {ca_json}'
-        ),
-    )
-    logger.info('Up CA server')
-    try:
-        ca_thread.start()
-    except Exception as exc:
-        logger.error(f'Failed to up ca server: {exc}')
+        if not (step and step_ca):
+            confirm('CA binaries from github will be downloaded now', default=True, abort=True)
+            url = 'http://api.github.com/repos/smallstep/certificates/releases/latest'
+            download_step_bin(url, 'step-ca_linux', 'amd', prefix=ca_path, confirmation=False)
+            url = 'http://api.github.com/repos/smallstep/cli/releases/latest'
+            download_step_bin(url, 'step_linux', 'amd', prefix=ca_path, confirmation=False)
+    step_config_dir = ca_path / 'step_config'
+    if (not os.path.exists(step_config_dir)
+            or confirm('CA exists, do you want to recreate it?', default=True)):
+        _create_ca(ca_path, ca_url, password)
 
 
-def _check_kill_process(pstring):
+def run_ca(step_ca, pass_file, ca_json):
+    """Run CA server."""
+    if _check_kill_process('step-ca', confirmation=True):
+        logger.info('Up CA server')
+        os.system(f'{step_ca} --password-file {pass_file} {ca_json}')
+
+
+def _check_kill_process(pstring, confirmation=False):
     """Kill process by name."""
-    import signal
+    pids = []
 
     for line in os.popen('ps ax | grep ' + pstring + ' | grep -v grep'):
         fields = line.split()
-        pid = fields[0]
-        os.kill(int(pid), signal.SIGKILL)
+        pids.append(fields[0])
+
+    if len(pids):
+        if confirmation and not confirm('CA server is already running. Stop him?', default=True):
+            return False
+        for pid in pids:
+            os.kill(int(pid), signal.SIGKILL)
+        time.sleep(2)
+    return True
 
 
 def _create_ca(ca_path, ca_url, password):
     """Create a ca workspace."""
-    import os
-
     step = None
     step_ca = None
     pki_dir = ca_path / 'cert'
@@ -193,12 +200,6 @@ def _create_ca(ca_path, ca_url, password):
 
     with open(f'{pki_dir}/pass_file', 'w') as f:
         f.write(password)
-    step, step_ca = get_bin_names(ca_path)
-    if not (step and step_ca):
-        url = 'http://api.github.com/repos/smallstep/certificates/releases/latest'
-        download_step_bin(url, 'step-ca_linux', 'amd', prefix=ca_path)
-        url = 'http://api.github.com/repos/smallstep/cli/releases/latest'
-        download_step_bin(url, 'step_linux', 'amd', prefix=ca_path)
     step, step_ca = get_bin_names(ca_path)
     assert(step and step_ca and os.path.exists(step) and os.path.exists(step_ca))
 
