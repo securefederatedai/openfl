@@ -180,3 +180,9 @@ class DirectorClient:
         """Get last model method."""
         model_type = director_pb2.GetTrainedModelRequest.LAST_MODEL
         return self._get_trained_model(model_type)
+
+    def stream_metrics(self, experiment_name):
+        """Stream metrics RPC."""
+        request = director_pb2.StreamMetricsRequest(experiment_name=experiment_name)
+        for metric_message in self.stub.StreamMetrics(request):
+            yield metric_message

@@ -78,7 +78,6 @@ class Director(director_pb2_grpc.FederationDirectorServicer):
             tensor_dict, _ = deconstruct_model_proto(request.model_proto, NoCompressionPipeline())
 
         self.create_workspace(request.name, npbytes)
-        # await self._run_aggregator(tensor_dict, request.name)
         asyncio.create_task(self._run_aggregator(tensor_dict, request.name))
 
         logger.info(f'New experiment {request.name} for '
@@ -155,6 +154,34 @@ class Director(director_pb2_grpc.FederationDirectorServicer):
             shard_info=self.shard_registry
         )
         return resp
+
+    async def StreamMetrics(self, request, context):  # NOQA:N802
+        """Request to stream metrics from the aggregator to frontend."""
+        experimnet_name = request.experiment_name
+        # We should probably set a name to the aggregator and verify it here.
+        # Moreover, we may save the experiment name in plan.yaml and retrieve it
+        # during the aggregator initialization
+        logger.info(f'Request StreamMetrics for {experimnet_name} experimnet has got!')
+
+        while not self.aggregator_server.aggregator.all_quit_jobs_sent() or \
+                not self.aggregator_server.aggregator.metric_queue.empty():
+            # If the aggregator has not fineished the experimnet
+            # or it finished but metric_queue is not empty we send metrics
+
+            # But here we may have a problem if the new experiment starts too quickly
+
+            while not self.aggregator_server.aggregator.metric_queue.empty():
+                metric_origin, task_name, metric_name, metric_value, round = \
+                    self.aggregator_server.aggregator.metric_queue.get()
+                yield director_pb2.StreamMetricsResponse(
+                    metric_origin=metric_origin,
+                    task_name=task_name,
+                    metric_name=metric_name,
+                    metric_value=float(metric_value),
+                    round=round)
+
+            # Awaiting quit job sent to collaborators
+            await asyncio.sleep(3)
 
     @staticmethod
     def create_workspace(experiment_name, npbytes):
