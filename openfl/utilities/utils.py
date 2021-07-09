@@ -3,7 +3,8 @@
 """Utilities module."""
 
 import logging
-
+import os
+import shutil
 import numpy as np
 
 
@@ -31,6 +32,36 @@ def add_log_level(level_name, level_num, method_name=None):
     setattr(logging, level_name, level_num)
     setattr(logging.getLoggerClass(), method_name, log_for_level)
     setattr(logging, method_name, log_to_root)
+
+
+class UnpackWorkspace:
+    """Workspace context manager.
+
+    It unpacks the archive at the begining of the experiment and removes the archive.
+    Then in moving to the workspace's folder.
+    Exiting it removes the workspace
+    """
+
+    def __init__(self, archive_path) -> None:
+        """Initialize workspace context manager."""
+        self.cwd = os.getcwd()
+
+        self.workspace_name = os.path.basename(archive_path).split('.')[0]
+        if os.path.exists(self.workspace_name):
+            shutil.rmtree(self.workspace_name)
+        os.makedirs(self.workspace_name)
+        shutil.unpack_archive(archive_path, self.workspace_name)
+
+        os.remove(archive_path)
+
+    def __enter__(self):
+        """Enter workspace context manager."""
+        os.chdir(f'{self.cwd}/{self.workspace_name}')
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        """Exit workspace context manager."""
+        os.chdir(self.cwd)
+        shutil.rmtree(self.workspace_name)
 
 
 def split_tensor_dict_into_floats_and_non_floats(tensor_dict):
