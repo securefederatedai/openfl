@@ -56,6 +56,7 @@ class RetryOnRpcErrorClientInterceptor(
             if isinstance(response, grpc.RpcError):
 
                 # If status code is not in retryable status codes
+                self.sleeping_policy.logger.info(f'Response code: {response.code()}')
                 if (
                     self.status_for_retry
                     and response.code() not in self.status_for_retry

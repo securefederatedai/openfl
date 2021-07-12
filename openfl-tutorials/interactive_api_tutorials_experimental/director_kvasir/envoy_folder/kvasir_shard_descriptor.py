@@ -23,7 +23,7 @@ class KvasirShardDescriptor(ShardDescriptor):
         super().__init__()
 
         self.data_folder = Path.cwd() / data_folder
-        # self.download_data(self.data_folder)  # NOQA
+        self.download_data(self.data_folder)  # NOQA
 
         # Settings for resizing data
         self.enforce_image_hw = tuple(int(size) for size in enforce_image_hw.split(',')) if \
@@ -98,13 +98,11 @@ class KvasirShardDescriptor(ShardDescriptor):
 
 
 if __name__ == '__main__':
-    import logging
-
-    root = logging.getLogger()
-    root.setLevel(logging.INFO)
+    from openfl.interface.cli import setup_logging
+    setup_logging()
 
     data_folder = 'data'
-    rank_worldsize = '1,2'
+    rank_worldsize = '1,100'
     enforce_image_hw = '529,622'
 
     kvasir_sd = KvasirShardDescriptor(

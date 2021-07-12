@@ -19,6 +19,7 @@ from openfl.federated import Plan
 from openfl.pipelines import NoCompressionPipeline
 from openfl.protocols import director_pb2
 from openfl.protocols import director_pb2_grpc
+from openfl.protocols.utils import construct_model_proto
 from openfl.protocols.utils import deconstruct_model_proto
 
 logger = logging.getLogger(__name__)
@@ -77,7 +78,7 @@ class Director(director_pb2_grpc.FederationDirectorServicer):
             tensor_dict, _ = deconstruct_model_proto(request.model_proto, NoCompressionPipeline())
 
         self.create_workspace(request.name, npbytes)
-        self._run_aggregator(tensor_dict, request.name)
+        asyncio.create_task(self._run_aggregator(tensor_dict, request.name))
 
         logger.info(f'New experiment {request.name} for '
                     f'collaborators {request.collaborator_names}')
@@ -89,6 +90,28 @@ class Director(director_pb2_grpc.FederationDirectorServicer):
             accepted=True,
             tensorboard_address=f'http://{self.fqdn}:{self.tensorboard_port}'
         )
+
+    async def GetTrainedModel(self, request, context):  # NOQA:N802
+        """RPC for retrieving trained models."""
+        logger.info('Request GetTrainedModel has got!')
+        if not hasattr(self, 'aggregator_server'):
+            logger.error('Aggregator has not started yet')
+            return director_pb2.TrainedModelResponse()
+        elif self.aggregator_server.aggregator.last_tensor_dict is None:
+            logger.error('Aggregator have no aggregated model to return')
+            return director_pb2.TrainedModelResponse()
+
+        if request.model_type == director_pb2.GetTrainedModelRequest.BEST_MODEL:
+            tensor_dict = self.aggregator_server.aggregator.best_tensor_dict
+        elif request.model_type == director_pb2.GetTrainedModelRequest.LAST_MODEL:
+            tensor_dict = self.aggregator_server.aggregator.last_tensor_dict
+        else:
+            logger.error('Incorrect model type')
+            return director_pb2.TrainedModelResponse()
+
+        model_proto = construct_model_proto(tensor_dict, 0, NoCompressionPipeline())
+
+        return director_pb2.TrainedModelResponse(model_proto=model_proto)
 
     async def GetExperimentData(self, request, context):  # NOQA:N802
         """Receive experiment data."""
@@ -132,6 +155,34 @@ class Director(director_pb2_grpc.FederationDirectorServicer):
         )
         return resp
 
+    async def StreamMetrics(self, request, context):  # NOQA:N802
+        """Request to stream metrics from the aggregator to frontend."""
+        experimnet_name = request.experiment_name
+        # We should probably set a name to the aggregator and verify it here.
+        # Moreover, we may save the experiment name in plan.yaml and retrieve it
+        # during the aggregator initialization
+        logger.info(f'Request StreamMetrics for {experimnet_name} experimnet has got!')
+
+        while not self.aggregator_server.aggregator.all_quit_jobs_sent() or \
+                not self.aggregator_server.aggregator.metric_queue.empty():
+            # If the aggregator has not fineished the experimnet
+            # or it finished but metric_queue is not empty we send metrics
+
+            # But here we may have a problem if the new experiment starts too quickly
+
+            while not self.aggregator_server.aggregator.metric_queue.empty():
+                metric_origin, task_name, metric_name, metric_value, round = \
+                    self.aggregator_server.aggregator.metric_queue.get()
+                yield director_pb2.StreamMetricsResponse(
+                    metric_origin=metric_origin,
+                    task_name=task_name,
+                    metric_name=metric_name,
+                    metric_value=float(metric_value),
+                    round=round)
+
+            # Awaiting quit job sent to collaborators
+            await asyncio.sleep(3)
+
     @staticmethod
     def create_workspace(experiment_name, npbytes):
         """Create the aggregator workspace."""
@@ -146,7 +197,7 @@ class Director(director_pb2_grpc.FederationDirectorServicer):
 
         shutil.unpack_archive(arch_name, experiment_name)
 
-    def _run_aggregator(
+    async def _run_aggregator(
             self,
             initial_tensor_dict,
             experiment_name,
@@ -159,14 +210,26 @@ class Director(director_pb2_grpc.FederationDirectorServicer):
         plan.authorized_cols = list(self.col_exp_queues.keys())
 
         logger.info('🧿 Starting the Aggregator Service.')
-        grpc_server = plan.interactive_api_get_server(
+        self.aggregator_server = plan.interactive_api_get_server(
             initial_tensor_dict,
             chain='',
             certificate='',
             private_key='')
 
-        server = grpc_server.get_server()
-        server.start()
+        grpc_server = self.aggregator_server.get_server()
+        grpc_server.start()
+        logger.info('Starting Aggregator gRPC Server')
+
+        try:
+            while not self.aggregator_server.aggregator.all_quit_jobs_sent():
+                # Awaiting quit job sent to collaborators
+                await asyncio.sleep(10)
+        except KeyboardInterrupt:
+            pass
+        finally:
+            os.chdir(cwd)
+            shutil.rmtree(experiment_name)
+            grpc_server.stop(0)
 
     def run_tensorboard(self):
         """Run the tensorboard."""

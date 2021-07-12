@@ -2,8 +2,9 @@
 // Licensed subject to the terms of the separately executed evaluation license agreement between Intel Corporation and you.
 syntax = "proto3";
 
-import "openfl/protocols/federation.proto";
+import "federation.proto";
 
+// Envoy Messages
 
 message NodeInfo {
     string name = 1;
@@ -25,29 +26,6 @@ message ShardAcknowledgement {
     bool accepted = 1;
 }
 
-message SetNewExperimentResponse{
-    bool accepted = 1;
-    string tensorboard_address = 2;
-}
-
-message ExperimentData {
-    uint32 size = 1; // size, in bytes, of the data sent in npbytes
-	bytes npbytes = 2; //actual data
-}
-
-message ExperimentInfo {
-    string name = 1;
-    repeated string collaborator_names = 2;
-    ExperimentData experiment_data = 3;
-    ModelProto model_proto = 4;
-}
-
-message GetRegisterdShardsRequest {}
-
-message GetRegisterdShardsResponse {
-    repeated ShardInfo shard_info= 1;
-}
-
 message WaitExperimentRequest {
     string collaborator_name = 1;
 }
@@ -61,15 +39,68 @@ message GetExperimentDataRequest {
     string collaborator_name = 2;
 }
 
+message ExperimentData {
+    uint32 size = 1; // size, in bytes, of the data sent in npbytes
+	bytes npbytes = 2; //actual data
+}
+
+// API Messages
+
+message ExperimentInfo {
+    string name = 1;
+    repeated string collaborator_names = 2;
+    ExperimentData experiment_data = 3;
+    ModelProto model_proto = 4;
+}
+
+message SetNewExperimentResponse{
+    bool accepted = 1;
+    string tensorboard_address = 2;
+}
+
+message GetRegisterdShardsRequest {}
+
+message GetRegisterdShardsResponse {
+    repeated ShardInfo shard_info= 1;
+}
+
+message GetTrainedModelRequest {
+    enum ModelType {
+        BEST_MODEL = 0;
+        LAST_MODEL = 1;
+    }
+    ModelType model_type = 1;
+}
+
+message TrainedModelResponse {
+    ModelProto model_proto = 1;
+}
+
 message GetShardsInfoRequest {}
 
+message StreamMetricsRequest {
+    string experiment_name = 1;
+}
+
+message StreamMetricsResponse {
+    string metric_origin = 1;
+    string task_name = 2;
+    string metric_name = 3;
+    float metric_value = 4;
+    uint32 round = 5;
+}
+
 service FederationDirector {
+    // Envoy RPCs
     rpc AcknowledgeShard (ShardInfo) returns (ShardAcknowledgement) {}
     // Shard owner could also provide some public data for tests
     rpc WaitExperiment (stream WaitExperimentRequest) returns (stream WaitExperimentResponse) {}
     rpc GetExperimentData (GetExperimentDataRequest) returns (stream ExperimentData) {}
 
+    // API RPCs
     rpc SetNewExperiment (stream ExperimentInfo) returns (SetNewExperimentResponse) {}
     rpc GetRegisterdShards (GetRegisterdShardsRequest) returns (GetRegisterdShardsResponse) {}
     rpc GetShardsInfo (GetShardsInfoRequest) returns (ShardInfo) {}
+    rpc GetTrainedModel (GetTrainedModelRequest) returns (TrainedModelResponse) {}
+    rpc StreamMetrics (StreamMetricsRequest) returns (stream StreamMetricsResponse) {}
 }

@@ -475,7 +475,7 @@ openfl.component.aggregation_functions.AggregationFunctionInterface
 
         return self.client_
 
-    def get_server(self):
+    def get_server(self, **kwargs):
         """Get gRPC server of the aggregator instance."""
         common_name = self.config['network'][SETTINGS]['agg_addr'].lower()
 
@@ -490,6 +490,9 @@ openfl.component.aggregation_functions.AggregationFunctionInterface
         server_args['ca'] = chain
         server_args['certificate'] = certificate
         server_args['private_key'] = private_key
+
+        for arg, value in kwargs.items():
+            server_args[arg] = value
 
         server_args['aggregator'] = self.get_aggregator()
 
@@ -519,6 +522,7 @@ openfl.component.aggregation_functions.AggregationFunctionInterface
         interface_objects = []
         serializer = Plan.build(
             self.config['api_layer']['required_plugin_components']['serializer_plugin'], {})
+
         for filename in ['model_interface_file',
                          'tasks_interface_file', 'dataloader_interface_file']:
             interface_objects.append(
