@@ -458,15 +458,14 @@ openfl.component.aggregation_functions.AggregationFunctionInterface
                    root_ca=None, key=None, cert=None):
         """Get gRPC client for the specified collaborator."""
         common_name = collaborator_name
-        if(root_ca or key or cert):
-            assert(root_ca and key and cert)
+        if root_ca and key and cert:
             chain = root_ca
             certificate = cert
             private_key = key
         else:
-            chain = '../cert/root_ca.crt'
-            certificate = f'../cert/col_{common_name}.crt'
-            private_key = f'../cert/col_{common_name}.key'
+            chain = 'cert/cert_chain.crt'
+            certificate = f'cert/client/col_{common_name}.crt'
+            private_key = f'cert/client/col_{common_name}.key'
 
         client_args = self.config['network'][SETTINGS]
 
@@ -484,13 +483,18 @@ openfl.component.aggregation_functions.AggregationFunctionInterface
 
         return self.client_
 
-    def get_server(self, **kwargs):
+    def get_server(self, root_ca=None, key=None, cert=None, **kwargs):
         """Get gRPC server of the aggregator instance."""
         common_name = self.config['network'][SETTINGS]['agg_addr'].lower()
 
-        chain = '../cert/root_ca.crt'
-        certificate = f'agg_{common_name}.crt'
-        private_key = f'agg_{common_name}.key'
+        if root_ca and key and cert:
+            chain = '../cert/root_ca.crt'
+            certificate = f'agg_{common_name}.crt'
+            private_key = f'agg_{common_name}.key'
+        else:
+            chain = 'cert/cert_chain.crt'
+            certificate = f'cert/server/agg_{common_name}.crt'
+            private_key = f'cert/server/agg_{common_name}.key'
 
         server_args = self.config['network'][SETTINGS]
 

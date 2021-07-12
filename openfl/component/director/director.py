@@ -218,9 +218,14 @@ class Director(director_pb2_grpc.FederationDirectorServicer):
             initial_tensor_dict,
             chain=self.root_ca,
             certificate=self.cert,
-            private_key=self.key)
+            private_key=self.key
+        )
 
-        grpc_server = self.aggregator_server.get_server()
+        grpc_server = self.aggregator_server.get_server(
+            root_ca=self.root_ca,
+            cert=self.cert,
+            key=self.key
+        )
         grpc_server.start()
         logger.info('Starting Aggregator gRPC Server')
 
