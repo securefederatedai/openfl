@@ -16,7 +16,8 @@ class FrameworkAdapterPlugin(FrameworkAdapterPluginInterface):
         """Prepare model for serialization (optional)."""
         # Source: https://github.com/tensorflow/tensorflow/issues/34697
         from tensorflow.keras.models import Model
-        from tensorflow.python.keras.layers import deserialize, serialize
+        from tensorflow.python.keras.layers import deserialize
+        from tensorflow.python.keras.layers import serialize
         from tensorflow.python.keras.saving import saving_utils
 
         def unpack(model, training_config, weights):

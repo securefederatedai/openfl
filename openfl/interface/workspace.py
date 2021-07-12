@@ -109,9 +109,14 @@ def create(prefix, template):
 @workspace.command(name='export')
 def export_():
     """Export federated learning workspace."""
-    from os import getcwd, makedirs
-    from os.path import basename, join
-    from shutil import make_archive, copytree, copy2, ignore_patterns
+    from os import getcwd
+    from os import makedirs
+    from os.path import basename
+    from os.path import join
+    from shutil import copy2
+    from shutil import copytree
+    from shutil import ignore_patterns
+    from shutil import make_archive
     from tempfile import mkdtemp
 
     from plan import freeze_plan
@@ -175,7 +180,8 @@ def export_():
 def import_(archive):
     """Import federated learning workspace."""
     from os import chdir
-    from os.path import isfile, basename
+    from os.path import basename
+    from os.path import isfile
     from shutil import unpack_archive
     from subprocess import check_call
     from sys import executable
@@ -207,7 +213,9 @@ def certify():
     """Create certificate authority for federation."""
     from cryptography.hazmat.primitives import serialization
 
-    from openfl.cryptography.ca import generate_root_cert, generate_signing_csr, sign_certificate
+    from openfl.cryptography.ca import generate_root_cert
+    from openfl.cryptography.ca import generate_signing_csr
+    from openfl.cryptography.ca import sign_certificate
     from openfl.interface.cli_helper import PKI_DIR
 
     echo('Setting Up Certificate Authority...\n')
