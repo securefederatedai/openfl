@@ -35,15 +35,24 @@ def collaborator_manager(context):
         help='Current shard name')
 @option('-d', '--director-uri', required=True,
         help='The FQDN of the federation director')
+@option('--disable-tls', default=False)
 @option('-sc', '--shard-config-path', default='shard_config.yaml',
         help='The shard config path', type=ClickPath(exists=True))
-def start_(shard_name, director_uri, shard_config_path):
+@option('-rc', '--root-cert-path', default=None,
+        help='Path to a root CA cert')
+@option('-pk', '--private-key-path', default=None,
+        help='Path to a private key')
+@option('-oc', '--public-cert-path', default=None,
+        help='Path to a signed certificate')
+def start_(shard_name, director_uri, shard_config_path, disable_tls,
+           root_ca, key, cert):
     """Start the collaborator manager."""
     logger.info('🧿 Starting the Collaborator Manager.')
 
     shard_descriptor = shard_descriptor_from_config(shard_config_path)
     keeper = CollaboratorManager(shard_name=shard_name, director_uri=director_uri,
-                                 shard_descriptor=shard_descriptor)
+                                 shard_descriptor=shard_descriptor, disable_tls=disable_tls,
+                                 root_ca=root_ca, key=key, cert=cert)
 
     keeper.start()
 

@@ -225,7 +225,7 @@ class Plan(object):
         self.name_ = None
 
     @property
-    def hash(self): # NOQA
+    def hash(self):  # NOQA
         """Generate hash for this instance."""
         self.hash_ = sha384(dump(self.config).encode('utf-8'))
         Plan.logger.info(f'FL-Plan hash is [blue]{self.hash_.hexdigest()}[/]',
@@ -399,7 +399,7 @@ openfl.component.aggregation_functions.AggregationFunctionInterface
 
         return self.runner_
 
-    def get_collaborator(self, collaborator_name,
+    def get_collaborator(self, collaborator_name, root_ca=None, key=None, cert=None,
                          task_runner=None, client=None, shard_descriptor=None):
         """Get collaborator."""
         defaults = self.config.get(
@@ -443,7 +443,10 @@ openfl.component.aggregation_functions.AggregationFunctionInterface
             defaults[SETTINGS]['client'] = self.get_client(
                 collaborator_name,
                 self.aggregator_uuid,
-                self.federation_uuid
+                self.federation_uuid,
+                root_ca,
+                key,
+                cert
             )
 
         if self.collaborator_ is None:
@@ -451,13 +454,19 @@ openfl.component.aggregation_functions.AggregationFunctionInterface
 
         return self.collaborator_
 
-    def get_client(self, collaborator_name, aggregator_uuid, federation_uuid):
+    def get_client(self, collaborator_name, aggregator_uuid, federation_uuid,
+                   root_ca=None, key=None, cert=None):
         """Get gRPC client for the specified collaborator."""
         common_name = collaborator_name
-
-        chain = 'cert/cert_chain.crt'
-        certificate = f'cert/client/col_{common_name}.crt'
-        private_key = f'cert/client/col_{common_name}.key'
+        if(root_ca or key or cert):
+            assert(root_ca and key and cert)
+            chain = root_ca
+            certificate = cert
+            private_key = key
+        else:
+            chain = '../cert/root_ca.crt'
+            certificate = f'../cert/col_{common_name}.crt'
+            private_key = f'../cert/col_{common_name}.key'
 
         client_args = self.config['network'][SETTINGS]
 
@@ -479,9 +488,9 @@ openfl.component.aggregation_functions.AggregationFunctionInterface
         """Get gRPC server of the aggregator instance."""
         common_name = self.config['network'][SETTINGS]['agg_addr'].lower()
 
-        chain = 'cert/cert_chain.crt'
-        certificate = f'cert/server/agg_{common_name}.crt'
-        private_key = f'cert/server/agg_{common_name}.key'
+        chain = '../cert/root_ca.crt'
+        certificate = f'agg_{common_name}.crt'
+        private_key = f'agg_{common_name}.key'
 
         server_args = self.config['network'][SETTINGS]
 

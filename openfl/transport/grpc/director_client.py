@@ -24,12 +24,29 @@ logger = logging.getLogger(__name__)
 class ShardDirectorClient:
     """The internal director client class."""
 
-    def __init__(self, director_uri, shard_name) -> None:
+    def __init__(self, director_uri, shard_name, disable_tls=False,
+                 root_ca=None, key=None, cert=None) -> None:
         """Initialize a shard director client object."""
         self.shard_name = shard_name
         options = [('grpc.max_message_length', 100 * 1024 * 1024)]
-        channel = grpc.insecure_channel(director_uri, options=options)
+        if disable_tls:
+            channel = grpc.insecure_channel(director_uri, options=options)
+        else:
+            if not (root_ca and key and cert):
+                raise Exception('No certificates provided')
+            with open(root_ca, 'rb') as f:
+                root_ca_b = f.read()
+            with open(key, 'rb') as f:
+                key_b = f.read()
+            with open(cert, 'rb') as f:
+                cert_b = f.read()
 
+            credentials = grpc.ssl_channel_credentials(
+                root_certificates=root_ca_b,
+                private_key=key_b,
+                certificate_chain=cert_b
+            )
+            channel = grpc.secure_channel(director_uri, credentials, options=options)
         self.stub = director_pb2_grpc.FederationDirectorStub(channel)
 
     def report_shard_info(self, shard_descriptor) -> bool:
@@ -114,12 +131,32 @@ class ShardDirectorClient:
 class DirectorClient:
     """Director client class for users."""
 
-    def __init__(self, director_uri) -> None:
+    def __init__(self, director_uri, disable_tls, root_ca, key, cert) -> None:
         """Initialize director client object."""
         channel_opt = [('grpc.max_send_message_length', 512 * 1024 * 1024),
                        ('grpc.max_receive_message_length', 512 * 1024 * 1024)]
-        channel = grpc.insecure_channel(director_uri, options=channel_opt)
+        if disable_tls:
+            channel = grpc.insecure_channel(director_uri, options=channel_opt)
+        else:
+            with open(root_ca, 'rb') as f:
+                root_ca_b = f.read()
+            with open(key, 'rb') as f:
+                key_b = f.read()
+            with open(cert, 'rb') as f:
+                cert_b = f.read()
+
+            credentials = grpc.ssl_channel_credentials(
+                root_certificates=root_ca_b,
+                private_key=key_b,
+                certificate_chain=cert_b
+            )
+
+            channel = grpc.secure_channel(director_uri, credentials, options=channel_opt)
         self.stub = director_pb2_grpc.FederationDirectorStub(channel)
+
+    def report_shard_info(self, shard_descriptor) -> bool:
+        """Report shard info to the director."""
+        logger.info('Send report AcknowledgeShard')
 
     def set_new_experiment(self, name, col_names, arch_path,
                            initial_tensor_dict=None):

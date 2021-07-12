@@ -28,6 +28,7 @@ setup(
         'openfl.component.collaborator',
         'openfl.component.collaborator_manager',
         'openfl.component.director',
+        'openfl.component.ca',
         'openfl.utilities',
         'openfl.utilities.optimizers.torch',
         'openfl.utilities.optimizers.keras',
@@ -67,7 +68,8 @@ setup(
         'cryptography>=3.4.6',
         'cloudpickle',
         'tensorboardX',
-        'tensorboard'
+        'tensorboard',
+        'requests'
     ],
     python_requires='>=3.6, <3.9',
     project_urls={
