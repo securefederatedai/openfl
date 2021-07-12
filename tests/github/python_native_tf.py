@@ -85,7 +85,8 @@ def build_model(input_shape,
 
 if __name__ == '__main__':
     fx.init('keras_cnn_mnist')
-    from openfl.federated import FederatedModel, FederatedDataSet
+    from openfl.federated import FederatedDataSet
+    from openfl.federated import FederatedModel
     from tensorflow.python.keras.utils.data_utils import get_file
 
     origin_folder = 'https://storage.googleapis.com/tensorflow/tf-keras-datasets/'

@@ -135,8 +135,12 @@ class FLExperiment:
     @staticmethod
     def _pack_the_workspace():
         """Packing the archive."""
-        from shutil import make_archive, copytree, ignore_patterns, rmtree
-        from os import getcwd, makedirs
+        from shutil import copytree
+        from shutil import ignore_patterns
+        from shutil import make_archive
+        from shutil import rmtree
+        from os import getcwd
+        from os import makedirs
         from os.path import basename
 
         archive_type = 'zip'
