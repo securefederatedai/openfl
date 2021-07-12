@@ -153,7 +153,9 @@ def switch_plan(name):
     from shutil import copyfile
     from os.path import isfile
 
-    from yaml import load, dump, FullLoader
+    from yaml import dump
+    from yaml import FullLoader
+    from yaml import load
 
     plan_file = f'plan/plans/{name}/plan.yaml'
     if isfile(plan_file):
