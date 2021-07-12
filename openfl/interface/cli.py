@@ -15,8 +15,13 @@ from click import style
 
 def setup_logging(level='info'):
     """Initialize logging settings."""
-    from logging import basicConfig, NOTSET, DEBUG, INFO
-    from logging import WARNING, ERROR, CRITICAL
+    from logging import basicConfig
+    from logging import CRITICAL
+    from logging import DEBUG
+    from logging import ERROR
+    from logging import INFO
+    from logging import NOTSET
+    from logging import WARNING
     from rich.console import Console
     from rich.logging import RichHandler
     import os
