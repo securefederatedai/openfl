@@ -2,8 +2,8 @@
 # SPDX-License-Identifier: Apache-2.0
 
 """Aggregator module."""
-from logging import getLogger
 import queue
+from logging import getLogger
 
 from openfl.databases import TensorDB
 from openfl.pipelines import NoCompressionPipeline
