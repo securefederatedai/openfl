@@ -49,6 +49,11 @@ class FederationDirectorStub(object):
                 request_serializer=director__pb2.GetTrainedModelRequest.SerializeToString,
                 response_deserializer=director__pb2.TrainedModelResponse.FromString,
                 )
+        self.StreamMetrics = channel.unary_stream(
+                '/FederationDirector/StreamMetrics',
+                request_serializer=director__pb2.StreamMetricsRequest.SerializeToString,
+                response_deserializer=director__pb2.StreamMetricsResponse.FromString,
+                )
 
 
 class FederationDirectorServicer(object):
@@ -99,6 +104,12 @@ class FederationDirectorServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def StreamMetrics(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_FederationDirectorServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -136,6 +147,11 @@ def add_FederationDirectorServicer_to_server(servicer, server):
                     servicer.GetTrainedModel,
                     request_deserializer=director__pb2.GetTrainedModelRequest.FromString,
                     response_serializer=director__pb2.TrainedModelResponse.SerializeToString,
+            ),
+            'StreamMetrics': grpc.unary_stream_rpc_method_handler(
+                    servicer.StreamMetrics,
+                    request_deserializer=director__pb2.StreamMetricsRequest.FromString,
+                    response_serializer=director__pb2.StreamMetricsResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -263,5 +279,22 @@ class FederationDirector(object):
         return grpc.experimental.unary_unary(request, target, '/FederationDirector/GetTrainedModel',
             director__pb2.GetTrainedModelRequest.SerializeToString,
             director__pb2.TrainedModelResponse.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def StreamMetrics(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_stream(request, target, '/FederationDirector/StreamMetrics',
+            director__pb2.StreamMetricsRequest.SerializeToString,
+            director__pb2.StreamMetricsResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

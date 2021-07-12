@@ -10,9 +10,9 @@ from logging import getLogger
 from pathlib import Path
 
 from openfl.federated import Plan
+from openfl.interface.cli import setup_logging
 from openfl.interface.cli_helper import WORKSPACE
 from openfl.utilities import split_tensor_dict_for_holdouts
-from openfl.utilities.logs import setup_loggers
 
 
 class FLExperiment:
@@ -35,7 +35,7 @@ class FLExperiment:
             self.serializer_plugin = serializer_plugin
 
         self.logger = getLogger(__name__)
-        setup_loggers()
+        setup_logging()
 
     def get_best_model(self):
         """Retrieve the model with the best score."""
@@ -50,6 +50,19 @@ class FLExperiment:
         tensor_dict = self.federation.dir_client.get_last_model()
         self.task_runner_stub.rebuild_model(tensor_dict, validation=True, device='cpu')
         return self.task_runner_stub.model
+
+    def stream_metrics(self):
+        """Stream metrics."""
+        from openfl.utilities.logs import write_metric
+        for metric_response in self.federation.dir_client.stream_metrics(self.experiment_name):
+            # self.logger.metric(
+            # print(
+            write_metric(
+                metric_response.metric_origin,
+                metric_response.task_name,
+                metric_response.metric_name,
+                metric_response.metric_value,
+                metric_response.round)
 
     def prepare_workspace_distribution(
             self, model_provider, task_keeper, data_loader,
@@ -122,8 +135,12 @@ class FLExperiment:
     @staticmethod
     def _pack_the_workspace():
         """Packing the archive."""
-        from shutil import make_archive, copytree, ignore_patterns, rmtree
-        from os import getcwd, makedirs
+        from shutil import copytree
+        from shutil import ignore_patterns
+        from shutil import make_archive
+        from shutil import rmtree
+        from os import getcwd
+        from os import makedirs
         from os.path import basename
 
         archive_type = 'zip'

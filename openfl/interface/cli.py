@@ -19,6 +19,7 @@ def setup_logging(level='info', log_file=None):
     """Initialize logging settings."""
     import logging
     from logging import basicConfig
+
     from rich.console import Console
     from rich.logging import RichHandler
 

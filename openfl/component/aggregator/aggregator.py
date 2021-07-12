@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 """Aggregator module."""
+import queue
 from logging import getLogger
 
 from openfl.databases import TensorDB
@@ -83,6 +84,7 @@ class Aggregator:
         self.best_tensor_dict: dict = {}
         self.last_tensor_dict: dict = {}
 
+        self.metric_queue = queue.Queue()
         self.best_model_score = None
 
         if kwargs.get('initial_tensor_dict', None) is not None:
@@ -491,6 +493,8 @@ class Aggregator:
                                 tensor_key.tensor_name, nparray, round_number)
                 self.logger.metric(f'Round {round_number}, collaborator {tensor_key.tags[-1]} '
                                    f'{task_name} result {tensor_key.tensor_name}:\t{nparray}')
+                self.metric_queue.put((tensor_key.tags[-1], task_name,
+                                       tensor_key.tensor_name, nparray, round_number))
             task_results.append(tensor_key)
             # By giving task_key it's own weight, we can support different
             # training/validation weights
@@ -764,6 +768,8 @@ class Aggregator:
                                        f'{agg_tensor_name}:\t{agg_results:.4f}')
                 self.log_metric('Aggregator', task_name, tensor_key.tensor_name,
                                 agg_results, round_number)
+                self.metric_queue.put(('Aggregator', task_name, tensor_key.tensor_name,
+                                       agg_results, round_number))
                 # TODO Add all of the logic for saving the model based
                 #  on best accuracy, lowest loss, etc.
                 if 'validate_agg' in tags:

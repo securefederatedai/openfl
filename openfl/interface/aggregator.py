@@ -59,7 +59,8 @@ def _generate_cert_request(fqdn):
 def generate_cert_request(fqdn):
     """Create aggregator certificate key pair."""
     from openfl.cryptography.participant import generate_csr
-    from openfl.cryptography.io import write_crt, write_key
+    from openfl.cryptography.io import write_crt
+    from openfl.cryptography.io import write_key
     from openfl.interface.cli_helper import PKI_DIR
 
     if fqdn is None:
@@ -113,7 +114,9 @@ def certify(fqdn, silent):
     from click import confirm
 
     from openfl.cryptography.ca import sign_certificate
-    from openfl.cryptography.io import read_key, read_crt, read_csr
+    from openfl.cryptography.io import read_crt
+    from openfl.cryptography.io import read_csr
+    from openfl.cryptography.io import read_key
     from openfl.cryptography.io import write_crt
     from openfl.interface.cli_helper import PKI_DIR
 

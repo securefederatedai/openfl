@@ -20,9 +20,11 @@ if __name__ == '__main__':
     import torch.nn as nn
     import torch.nn.functional as F
     import torch.optim as optim
-    from torchvision import datasets, transforms
+    from torchvision import datasets
+    from torchvision import transforms
 
-    from openfl.federated import FederatedModel, FederatedDataSet
+    from openfl.federated import FederatedDataSet
+    from openfl.federated import FederatedModel
 
     def cross_entropy(output, target):
         """Binary cross-entropy metric."""

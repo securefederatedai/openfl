@@ -18,7 +18,7 @@ get best model "DONE"
 envoy registry - remove envoy 
 remove experiment workspace on envoy and director in case of fail (demo error) "DONE"
 directors API registry
-logs streaming 
+logs streaming "DONE"
 remove pickling
 shard descriptor `get_item` from validation set
 return error to API if collaborator fails
