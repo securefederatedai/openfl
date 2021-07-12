@@ -5,7 +5,8 @@
 from hashlib import sha384
 from importlib import import_module
 from logging import getLogger
-from os.path import join, splitext
+from os.path import join
+from os.path import splitext
 from pathlib import Path
 
 from yaml import dump

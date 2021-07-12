@@ -11,7 +11,8 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.x509.extensions import ExtensionNotFound
-from cryptography.x509.oid import ExtensionOID, NameOID
+from cryptography.x509.oid import ExtensionOID
+from cryptography.x509.oid import NameOID
 
 
 def generate_root_cert(days_to_expiration=365):
