@@ -171,14 +171,14 @@ class Director(director_pb2_grpc.FederationDirectorServicer):
             # But here we may have a problem if the new experiment starts too quickly
 
             while not self.aggregator_server.aggregator.metric_queue.empty():
-                metric_origin, task_name, metric_name, metric_value, round = \
+                metric_origin, task_name, metric_name, metric_value, round_ = \
                     self.aggregator_server.aggregator.metric_queue.get()
                 yield director_pb2.StreamMetricsResponse(
                     metric_origin=metric_origin,
                     task_name=task_name,
                     metric_name=metric_name,
                     metric_value=float(metric_value),
-                    round=round)
+                    round=round_)
 
             # Awaiting quit job sent to collaborators
             await asyncio.sleep(3)

@@ -6,10 +6,10 @@
 import logging
 import os
 import shutil
+from subprocess import check_call
+from sys import executable
 
 import grpc
-
-from subprocess import check_call
 
 from openfl.pipelines import NoCompressionPipeline
 from openfl.protocols import director_pb2
@@ -17,7 +17,6 @@ from openfl.protocols import director_pb2_grpc
 from openfl.protocols.utils import construct_model_proto
 from openfl.protocols.utils import deconstruct_model_proto
 
-from sys import executable
 
 logger = logging.getLogger(__name__)
 

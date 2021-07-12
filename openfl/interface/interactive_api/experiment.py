@@ -10,9 +10,9 @@ from logging import getLogger
 from pathlib import Path
 
 from openfl.federated import Plan
+from openfl.interface.cli import setup_logging
 from openfl.interface.cli_helper import WORKSPACE
 from openfl.utilities import split_tensor_dict_for_holdouts
-from openfl.interface.cli import setup_logging
 
 
 class FLExperiment:
