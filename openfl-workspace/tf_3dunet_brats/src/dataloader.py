@@ -36,7 +36,16 @@ class DatasetGenerator:
 
         self.create_file_list()
 
-        self.ds_train, self.ds_val, self.ds_test = self.get_dataset()
+        if self.num_files > 0:
+
+            self.ds_train, self.ds_val, self.ds_test = self.get_dataset()
+
+        else:
+
+            self.ds_train = None
+            self.ds_val = None
+            self.ds_test = None
+            raise ValueError(f'ERROR: No BraTS datafiles found under directory {self.data_path}')
 
     def create_file_list(self):
         """
