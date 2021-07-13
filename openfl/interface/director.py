@@ -44,8 +44,8 @@ def start(director_config_path, disable_tls, root_ca, key, cert):
     with open(director_config_path) as stream:
         director_config = safe_load(stream)
     settings = director_config.get('settings', {})
-    sample_shape = settings.get('sample_shape', '').split(',')
-    target_shape = settings.get('target_shape', '').split(',')
+    sample_shape = settings.get('sample_shape', '')
+    target_shape = settings.get('target_shape', '')
     logger.info(f'Sample shape: {sample_shape}, target shape: {target_shape}')
     asyncio.run(serve(
         disable_tls=disable_tls,

@@ -38,13 +38,13 @@ def collaborator_manager(context):
 @option('--disable-tls', default=False)
 @option('-sc', '--shard-config-path', default='shard_config.yaml',
         help='The shard config path', type=ClickPath(exists=True))
-@option('-rc', '--root-cert-path', default=None,
+@option('-rc', '--root-cert-path', 'root_ca', default=None,
         help='Path to a root CA cert')
-@option('-pk', '--private-key-path', default=None,
+@option('-pk', '--private-key-path', 'key', default=None,
         help='Path to a private key')
-@option('-oc', '--public-cert-path', default=None,
+@option('-oc', '--public-cert-path', 'cert', default=None,
         help='Path to a signed certificate')
-def start_(shard_name, director_uri, shard_config_path, disable_tls,
+def start_(shard_name, director_uri, disable_tls, shard_config_path,
            root_ca, key, cert):
     """Start the collaborator manager."""
     logger.info('🧿 Starting the Collaborator Manager.')

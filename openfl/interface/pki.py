@@ -94,5 +94,6 @@ def get_token_(name, ca_url, ca_path):
         help='The ca path', type=ClickPath())
 def certify_(name, token_with_cert, certs_path):
     """Create a collaborator manager workspace."""
+    certs_path = Path(certs_path)
     certs_path.mkdir(parents=True, exist_ok=True)
     certify(name, certs_path, token_with_cert)
