@@ -24,9 +24,9 @@ class CollaboratorManager:
                  root_ca, key, cert, disable_tls=False) -> None:
         """Initialize a collaborator manager object."""
         self.name = shard_name
-        self.root_ca = root_ca
-        self.key = key
-        self.cert = cert
+        self.root_ca = Path(root_ca).absolute()
+        self.key = Path(key).absolute()
+        self.cert = Path(cert).absolute()
         self.director_client = ShardDirectorClient(director_uri, shard_name=shard_name,
                                                    disable_tls=disable_tls,
                                                    root_ca=root_ca, key=key, cert=cert)
@@ -65,8 +65,8 @@ class CollaboratorManager:
         echo(f'Data = {plan.cols_data_paths}')
         logger.info('🧿 Starting a Collaborator Service.')
 
-        col = plan.get_collaborator(self.name, self.root_ca, self.key,
-                                    self.cert, shard_descriptor=self.shard_descriptor)
+        col = plan.get_collaborator(self.name, root_ca, key,
+                                    cert, shard_descriptor=self.shard_descriptor)
         try:
             col.run()
         finally:

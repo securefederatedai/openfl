@@ -45,9 +45,9 @@ class Director(director_pb2_grpc.FederationDirectorServicer):
         self.director_port = None
         self.tensorboard_port = 6006
         self.tensorboard_thread = None
-        self.root_ca = root_ca
-        self.key = key
-        self.cert = cert
+        self.root_ca = Path(root_ca).absolute()
+        self.key = Path(key).absolute()
+        self.cert = Path(cert).absolute()
 
     async def AcknowledgeShard(self, shard_info, context):  # NOQA:N802
         """Receive acknowledge shard info."""
@@ -221,11 +221,7 @@ class Director(director_pb2_grpc.FederationDirectorServicer):
             private_key=self.key
         )
 
-        grpc_server = self.aggregator_server.get_server(
-            root_ca=self.root_ca,
-            cert=self.cert,
-            key=self.key
-        )
+        grpc_server = self.aggregator_server.get_server()
         grpc_server.start()
         logger.info('Starting Aggregator gRPC Server')
 
