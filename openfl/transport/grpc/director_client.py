@@ -6,6 +6,7 @@
 import logging
 import os
 import shutil
+import time
 from subprocess import check_call
 from sys import executable
 
@@ -113,9 +114,15 @@ class ShardDirectorClient:
         requirements_filename = f'./{experiment_name}/requirements.txt'
 
         if os.path.isfile(requirements_filename):
-            check_call([
-                executable, '-m', 'pip', 'install', '-r', requirements_filename],
-                shell=False)
+            attempts = 3
+            for _ in range(attempts):
+                try:
+                    check_call([
+                        executable, '-m', 'pip', 'install', '-r', requirements_filename],
+                        shell=False)
+                except Exception as exc:
+                    logger.error(f'Failed to install requirements: {exc}')
+                    time.sleep(3)
         else:
             logger.error('No ' + requirements_filename + ' file found.')
 

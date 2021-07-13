@@ -39,8 +39,8 @@ class CollaboratorManager:
                 # Workspace import should not be done by gRPC client!
                 experiment_name = self.director_client.get_experiment_data()
             except Exception as exc:
-                time.sleep(1)
                 logger.error(f'Error: {exc}')
+                continue
             try:
                 self._run_collaborator(experiment_name, self.root_ca, self.key, self.cert)
             finally:
