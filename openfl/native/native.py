@@ -76,6 +76,7 @@ def update_plan(override_config):
     Returns:
         None
     """
+    from openfl.utilities.utils import unflatten
     plan = setup_plan()
     flat_plan_config = flatten(plan.config, return_complete=True)
     for k, v in override_config.items():
@@ -88,23 +89,6 @@ def update_plan(override_config):
     plan.config = unflatten(flat_plan_config, '.')
     plan.resolve()
     return plan
-
-
-def unflatten(config, separator='.'):
-    """Unfold `config` settings that have `separator` in their names."""
-    keys_to_separate = [k for k in config if separator in k]
-    if len(keys_to_separate) > 0:
-        for key in keys_to_separate:
-            prefix = separator.join(key.split(separator)[:-1])
-            suffix = key.split(separator)[-1]
-            if prefix in config:
-                temp = {**config[prefix], suffix: config[key]}
-                config[prefix] = temp
-            else:
-                config[prefix] = {suffix: config[key]}
-            del config[key]
-        unflatten(config, separator)
-    return config
 
 
 def setup_logging():

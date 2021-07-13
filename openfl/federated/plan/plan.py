@@ -94,7 +94,7 @@ class Plan(object):
 
             # walk the top level keys and load 'defaults' in sorted order
             for section in sorted(plan.config.keys()):
-                defaults = plan.config[section].get(DEFAULTS)
+                defaults = plan.config[section].pop(DEFAULTS, None)
 
                 if defaults is not None:
                     defaults = WORKSPACE / 'workspace' / defaults
@@ -267,8 +267,8 @@ class Plan(object):
     def get_tasks(self):
         """Get federation tasks."""
         tasks = self.config.get('tasks', {})
-        tasks.pop(DEFAULTS)
-        tasks.pop(SETTINGS)
+        tasks.pop(DEFAULTS, None)
+        tasks.pop(SETTINGS, None)
         for task in tasks:
             aggregation_type = tasks[task].get('aggregation_type')
             if aggregation_type is None:
