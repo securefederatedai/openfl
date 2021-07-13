@@ -41,7 +41,12 @@ then
     rm -r ${DESTINATION}
 fi
 
+printf "Shard into ${NUM_COLLABORATORS} directories under ${DESTINATION}."
+echo ' '
+spin='-\|/'
+
 n=0
+i=0
 # Find the subdirectories under the SOURCE directory and randomly shuffle them (seed is the same)
 for f in `find ${SOURCE} -mindepth 1 -maxdepth 2 -type d | shuf --random-source=<(get_seeded_random 816)`; do
 
@@ -50,10 +55,16 @@ for f in `find ${SOURCE} -mindepth 1 -maxdepth 2 -type d | shuf --random-source=
   # The folder to put the folder
   idx=$((n % ${NUM_COLLABORATORS}))
 
-  d=${DESTINATION}/split_${idx}/$(basename -- ${f})
+  i=$(( (i+1) %4 ))
+  printf "\r${spin:$i:1} ${f}"
+
+  d=${DESTINATION}/split_${idx}/
 
   # Make the directory (if it doesn't exist) and copy the folder to it.
   mkdir -p ${d}
   cp -r ${f} ${d}
 
 done
+
+echo ' '
+echo ' '

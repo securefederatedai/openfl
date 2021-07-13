@@ -53,11 +53,12 @@ class DatasetGenerator:
 
         Split into training and testing sets.
         """
-        filenames = tf.io.gfile.glob(os.path.join(self.data_path, '*/*_seg.nii.gz'))
+        searchpath = os.path.join(self.data_path, '*/*_seg.nii.gz')
+        filenames = tf.io.gfile.glob(searchpath)
 
         # Create a dictionary of tuples with image filename and label filename
 
-        self.numfiles = len(filenames)
+        self.num_files = len(filenames)
         self.filenames = {}
         for idx, filename in enumerate(filenames):
             self.filenames[idx] = [filename.replace('_seg.nii.gz', '_flair.nii.gz'), filename]
@@ -250,11 +251,11 @@ class DatasetGenerator:
 
     def get_dataset(self):
         """Create a TensorFlow data loader."""
-        self.num_train = int(self.numfiles * self.train_test_split)
-        numvaltest = self.numfiles - self.num_train
+        self.num_train = int(self.num_files * self.train_test_split)
+        numvaltest = self.num_files - self.num_train
 
-        ds = tf.data.Dataset.range(self.numfiles).shuffle(
-            self.numfiles, self.random_seed)  # Shuffle the dataset
+        ds = tf.data.Dataset.range(self.num_files).shuffle(
+            self.num_files, self.random_seed)  # Shuffle the dataset
 
         # Horovod Sharding
         # Here we are not actually dividing the dataset into shards
