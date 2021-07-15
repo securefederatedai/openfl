@@ -5,7 +5,6 @@
 from hashlib import sha384
 from importlib import import_module
 from logging import getLogger
-from os.path import join
 from os.path import splitext
 from pathlib import Path
 
@@ -97,7 +96,7 @@ class Plan(object):
                 defaults = plan.config[section].get(DEFAULTS)
 
                 if defaults is not None:
-                    defaults = join(plan_config_path.absolute().parent.parent, defaults)
+                    defaults = WORKSPACE / 'workspace' / defaults
 
                     plan.files.append(defaults)
 
