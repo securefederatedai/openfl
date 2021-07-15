@@ -93,20 +93,3 @@ def split_tensor_dict_for_holdouts(logger, tensor_dict,
     holdout_tensors = {**holdout_tensors, **not_supported_tensors_dict}
 
     return tensors_to_send, holdout_tensors
-
-
-def unflatten(config, separator='.'):
-    """Unfold `config` settings that have `separator` in their names."""
-    keys_to_separate = [k for k in config if separator in k]
-    if len(keys_to_separate) > 0:
-        for key in keys_to_separate:
-            prefix = separator.join(key.split(separator)[:-1])
-            suffix = key.split(separator)[-1]
-            if prefix in config:
-                temp = {**config[prefix], suffix: config[key]}
-                config[prefix] = temp
-            else:
-                config[prefix] = {suffix: config[key]}
-            del config[key]
-        unflatten(config, separator)
-    return config
