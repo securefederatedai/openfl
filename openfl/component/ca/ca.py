@@ -14,6 +14,7 @@ import urllib.request
 from logging import getLogger
 from pathlib import Path
 
+import json
 import requests
 from click import confirm
 
@@ -70,7 +71,7 @@ def get_token(name, ca_url, ca_path='.'):
         token = subprocess.check_output(
             f'{step} ca token {name} '
             f'--key {priv_json} --root {root_crt} '
-            f'--password-file {pass_file} 'f'--ca-url {ca_url} ', shell=True)
+            f'--password-file {pass_file} 'f'--ca-url {ca_url}', shell=True)
     except subprocess.CalledProcessError as exc:
         logger.error(f'Error code {exc.returncode}: {exc.output}')
         return
@@ -162,6 +163,7 @@ def install(ca_path, ca_url, password):
     if (not os.path.exists(step_config_dir)
             or confirm('CA exists, do you want to recreate it?', default=True)):
         _create_ca(ca_path, ca_url, password)
+    _configure(step_config_dir)
 
 
 def run_ca(step_ca, pass_file, ca_json):
@@ -215,3 +217,17 @@ def _create_ca(ca_path, ca_url, password):
     os.system(f'{step} crypto jwk create {step_config_dir}/certs/pub.json '
               + f'{step_config_dir}/secrets/priv.json --password-file={pki_dir}/pass_file')
     os.system(f'{step} ca provisioner add provisioner {step_config_dir}/certs/pub.json')
+
+
+def _configure(step_config_dir):
+    conf_file = step_config_dir / 'config' / 'ca.json'
+    with open(conf_file, 'r+') as f:
+        data = json.load(f)
+        data.setdefault('authority', {}).setdefault('claims', {})
+        data['authority']['claims']['maxTLSCertDuration'] = f'{365 * 24}h'
+        data['authority']['claims']['defaultTLSCertDuration'] = f'{365 * 24}h'
+        data['authority']['claims']['maxUserSSHCertDuration'] = '24h'
+        data['authority']['claims']['defaultUserSSHCertDuration'] = '24h'
+        f.seek(0)
+        json.dump(data, f, indent=4)
+        f.truncate()
