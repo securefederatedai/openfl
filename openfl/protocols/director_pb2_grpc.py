@@ -54,6 +54,11 @@ class FederationDirectorStub(object):
                 request_serializer=director__pb2.StreamMetricsRequest.SerializeToString,
                 response_deserializer=director__pb2.StreamMetricsResponse.FromString,
                 )
+        self.RemoveExperimentData = channel.unary_unary(
+                '/FederationDirector/RemoveExperimentData',
+                request_serializer=director__pb2.RemoveExperimnetRequest.SerializeToString,
+                response_deserializer=director__pb2.RemoveExperimnetResponse.FromString,
+                )
 
 
 class FederationDirectorServicer(object):
@@ -110,6 +115,12 @@ class FederationDirectorServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def RemoveExperimentData(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_FederationDirectorServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -152,6 +163,11 @@ def add_FederationDirectorServicer_to_server(servicer, server):
                     servicer.StreamMetrics,
                     request_deserializer=director__pb2.StreamMetricsRequest.FromString,
                     response_serializer=director__pb2.StreamMetricsResponse.SerializeToString,
+            ),
+            'RemoveExperimentData': grpc.unary_unary_rpc_method_handler(
+                    servicer.RemoveExperimentData,
+                    request_deserializer=director__pb2.RemoveExperimnetRequest.FromString,
+                    response_serializer=director__pb2.RemoveExperimnetResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -296,5 +312,22 @@ class FederationDirector(object):
         return grpc.experimental.unary_stream(request, target, '/FederationDirector/StreamMetrics',
             director__pb2.StreamMetricsRequest.SerializeToString,
             director__pb2.StreamMetricsResponse.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def RemoveExperimentData(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/FederationDirector/RemoveExperimentData',
+            director__pb2.RemoveExperimnetRequest.SerializeToString,
+            director__pb2.RemoveExperimnetResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

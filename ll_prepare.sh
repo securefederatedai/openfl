@@ -30,8 +30,8 @@ workspace should be unpacked by CollaboratorManager component but not by the grp
 we do not need to deconstruct model proto on director side, just pass it to the aggregator
 add support for exporting pacages installed from github
 collaborator should try to connect the same fqdn the director is running on
-tensorboard falls after the first experimnet
-
+When the aggregator fails director should notify everyone
+How long certificates work?
 
 Should get_token be run only on ca node? Why we need ca_url then?
 # PKI setup procedure

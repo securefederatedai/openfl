@@ -4,6 +4,12 @@ syntax = "proto3";
 
 import "federation.proto";
 
+
+message RequestHeader {
+    string sender = 1;
+}
+
+
 // Envoy Messages
 
 message NodeInfo {
@@ -47,10 +53,11 @@ message ExperimentData {
 // API Messages
 
 message ExperimentInfo {
-    string name = 1;
-    repeated string collaborator_names = 2;
-    ExperimentData experiment_data = 3;
-    ModelProto model_proto = 4;
+    RequestHeader header = 1;
+    string name = 2;
+    repeated string collaborator_names = 3;
+    ExperimentData experiment_data = 4;
+    ModelProto model_proto = 5;
 }
 
 message SetNewExperimentResponse{
@@ -58,7 +65,9 @@ message SetNewExperimentResponse{
     string tensorboard_address = 2;
 }
 
-message GetRegisterdShardsRequest {}
+message GetRegisterdShardsRequest {
+    RequestHeader header = 1;
+}
 
 message GetRegisterdShardsResponse {
     repeated ShardInfo shard_info= 1;
@@ -69,17 +78,22 @@ message GetTrainedModelRequest {
         BEST_MODEL = 0;
         LAST_MODEL = 1;
     }
-    ModelType model_type = 1;
+    RequestHeader header = 1;
+    string experiment_name = 2;
+    ModelType model_type = 3;
 }
 
 message TrainedModelResponse {
     ModelProto model_proto = 1;
 }
 
-message GetShardsInfoRequest {}
+message GetShardsInfoRequest {
+    RequestHeader header = 1;
+}
 
 message StreamMetricsRequest {
-    string experiment_name = 1;
+    RequestHeader header = 1;
+    string experiment_name = 2;
 }
 
 message StreamMetricsResponse {
@@ -88,6 +102,15 @@ message StreamMetricsResponse {
     string metric_name = 3;
     float metric_value = 4;
     uint32 round = 5;
+}
+
+message RemoveExperimnetRequest {
+    RequestHeader header = 1;
+    string experiment_name = 2;
+}
+
+message RemoveExperimnetResponse {
+    bool acknowledgement = 1;
 }
 
 service FederationDirector {
@@ -103,4 +126,5 @@ service FederationDirector {
     rpc GetShardsInfo (GetShardsInfoRequest) returns (ShardInfo) {}
     rpc GetTrainedModel (GetTrainedModelRequest) returns (TrainedModelResponse) {}
     rpc StreamMetrics (StreamMetricsRequest) returns (stream StreamMetricsResponse) {}
+    rpc RemoveExperimentData (RemoveExperimnetRequest) returns (RemoveExperimnetResponse) {}
 }

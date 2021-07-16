@@ -138,7 +138,7 @@ class ShardDirectorClient:
 class DirectorClient:
     """Director client class for users."""
 
-    def __init__(self, director_uri, disable_tls, root_ca, key, cert) -> None:
+    def __init__(self, client_id, director_uri, disable_tls, root_ca, key, cert) -> None:
         """Initialize director client object."""
         channel_opt = [('grpc.max_send_message_length', 512 * 1024 * 1024),
                        ('grpc.max_receive_message_length', 512 * 1024 * 1024)]
@@ -161,6 +161,9 @@ class DirectorClient:
             channel = grpc.secure_channel(director_uri, credentials, options=channel_opt)
         self.stub = director_pb2_grpc.FederationDirectorStub(channel)
 
+        self.client_id = client_id
+        self.header = director_pb2.RequestHeader(sender=self.client_id)
+
     def report_shard_info(self, shard_descriptor) -> bool:
         """Report shard info to the director."""
         logger.info('Send report AcknowledgeShard')
@@ -182,6 +185,7 @@ class DirectorClient:
                         raise StopIteration
                     # TODO: add hash or/and size to check
                     experiment_info = director_pb2.ExperimentInfo(
+                        header=self.header,
                         name=name,
                         collaborator_names=col_names,
                         model_proto=model_proto
@@ -196,17 +200,21 @@ class DirectorClient:
 
     def get_shard_info(self):
         """Request the shard info to the director."""
-        resp = self.stub.GetShardsInfo(director_pb2.GetShardsInfoRequest())
+        resp = self.stub.GetShardsInfo(director_pb2.GetShardsInfoRequest(header=self.header))
         return resp.sample_shape, resp.target_shape
 
     def request_shard_registry(self):
         """Request a shard registry."""
-        resp = self.stub.GetRegisterdShards(director_pb2.GetRegisterdShardsRequest())
+        resp = self.stub.GetRegisterdShards(director_pb2.GetRegisterdShardsRequest(
+            header=self.header))
         return resp.shard_info
 
-    def _get_trained_model(self, model_type):
+    def _get_trained_model(self, experiment_name, model_type):
         """Get trained model RPC."""
-        get_model_request = director_pb2.GetTrainedModelRequest(model_type=model_type)
+        get_model_request = director_pb2.GetTrainedModelRequest(
+            header=self.header,
+            experiment_name=experiment_name,
+            model_type=model_type)
         model_proto_response = self.stub.GetTrainedModel(get_model_request)
         tensor_dict, _ = deconstruct_model_proto(
             model_proto_response.model_proto,
@@ -214,18 +222,28 @@ class DirectorClient:
         )
         return tensor_dict
 
-    def get_best_model(self):
+    def get_best_model(self, experiment_name):
         """Get best model method."""
         model_type = director_pb2.GetTrainedModelRequest.BEST_MODEL
-        return self._get_trained_model(model_type)
+        return self._get_trained_model(experiment_name, model_type)
 
-    def get_last_model(self):
+    def get_last_model(self, experiment_name):
         """Get last model method."""
         model_type = director_pb2.GetTrainedModelRequest.LAST_MODEL
-        return self._get_trained_model(model_type)
+        return self._get_trained_model(experiment_name, model_type)
 
     def stream_metrics(self, experiment_name):
         """Stream metrics RPC."""
-        request = director_pb2.StreamMetricsRequest(experiment_name=experiment_name)
+        request = director_pb2.StreamMetricsRequest(
+            header=self.header,
+            experiment_name=experiment_name)
         for metric_message in self.stub.StreamMetrics(request):
             yield metric_message
+
+    def remove_experiment_data(self, experiment_name):
+        """Remove experiment data RPC."""
+        request = director_pb2.RemoveExperimnetRequest(
+            header=self.header,
+            experiment_name=experiment_name)
+        response = self.stub.RemoveExperimentData(request)
+        return response.acknowledgement

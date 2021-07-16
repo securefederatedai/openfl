@@ -13,6 +13,7 @@ from openfl.federated import Plan
 from openfl.interface.cli import setup_logging
 from openfl.interface.cli_helper import WORKSPACE
 from openfl.utilities import split_tensor_dict_for_holdouts
+from openfl.utilities.logs import write_metric
 
 
 class FLExperiment:
@@ -40,22 +41,28 @@ class FLExperiment:
     def get_best_model(self):
         """Retrieve the model with the best score."""
         # Next line relies on aggregator inner field where model dicts are stored
-        tensor_dict = self.federation.dir_client.get_best_model()
+        tensor_dict = self.federation.dir_client.get_best_model(
+            experiment_name=self.experiment_name)
         self.task_runner_stub.rebuild_model(tensor_dict, validation=True, device='cpu')
         return self.task_runner_stub.model
 
     def get_last_model(self):
         """Retrieve the aggregated model after the last round."""
         # Next line relies on aggregator inner field where model dicts are stored
-        tensor_dict = self.federation.dir_client.get_last_model()
+        tensor_dict = self.federation.dir_client.get_last_model(
+            experiment_name=self.experiment_name)
         self.task_runner_stub.rebuild_model(tensor_dict, validation=True, device='cpu')
         return self.task_runner_stub.model
 
     def stream_metrics(self):
         """Stream metrics."""
-        from openfl.utilities.logs import write_metric
         for metric_response in self.federation.dir_client.stream_metrics(self.experiment_name):
-            # self.logger.metric(
+            print(
+                metric_response.metric_origin,
+                metric_response.task_name,
+                metric_response.metric_name,
+                float(metric_response.metric_value),
+                metric_response.round)
             # print(
             write_metric(
                 metric_response.metric_origin,
@@ -63,6 +70,17 @@ class FLExperiment:
                 metric_response.metric_name,
                 metric_response.metric_value,
                 metric_response.round)
+
+    def remove_experiment_data(self):
+        """Remove experiment data."""
+        log_message = 'Removing experiment data '
+        if self.federation.dir_client.remove_experiment_data(
+                experiment_name=self.experiment_name):
+            log_message += 'succeed.'
+        else:
+            log_message += 'failed.'
+
+        self.logger.info(log_message)
 
     def prepare_workspace_distribution(
             self, model_provider, task_keeper, data_loader,
