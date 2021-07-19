@@ -5,6 +5,12 @@
 
 import numpy as np
 
+from openfl.utilities.data import DataSplitter
+from openfl.utilities.data import EqualNumPyDataSplitter
+from openfl.utilities.data import EqualPyTorchDatasetSplitter
+from openfl.utilities.data import NumPyDataSplitter
+from openfl.utilities.data import PyTorchDatasetSplitter
+from . import DataLoader
 from .loader_pt import PyTorchDataLoader
 
 
@@ -29,8 +35,10 @@ class FederatedDataSet(PyTorchDataLoader):
 
     """
 
+    data_splitter: DataSplitter
+
     def __init__(self, X_train, y_train, X_valid, y_valid,
-                 batch_size=1, num_classes=None, **kwargs):
+                 batch_size=1, num_classes=None, data_splitter=None):
         """
         Initialize.
 
@@ -61,8 +69,9 @@ class FederatedDataSet(PyTorchDataLoader):
             num_classes = np.unique(self.y_train).shape[0]
             print(f'Inferred {num_classes} classes from the provided labels...')
         self.num_classes = num_classes
+        self.data_splitter = data_splitter or EqualNumPyDataSplitter()
 
-    def split(self, num_collaborators, shuffle=True, equally=False):
+    def split(self, num_collaborators):
         """Create a Federated Dataset for each of the collaborators.
 
         Args:
@@ -77,42 +86,109 @@ class FederatedDataSet(PyTorchDataLoader):
             list[FederatedDataSets]
                 A dataset slice for each collaborator
         """
-        if shuffle:
-            train_shuffle = np.random.choice(
-                len(self.X_train), len(self.X_train), replace=False
-            )
-            self.X_train = self.X_train[train_shuffle]
-            self.y_train = self.y_train[train_shuffle]
-            val_shuffle = np.random.choice(
-                len(self.X_valid), len(self.X_valid), replace=False
-            )
-            self.X_valid = self.X_valid[val_shuffle]
-            self.y_valid = self.y_valid[val_shuffle]
+        if isinstance(self.data_splitter, NumPyDataSplitter):  # numpy arrays only
+            train_split = self.data_splitter.split((self.X_train, self.y_train), num_collaborators)
+            valid_split = self.data_splitter.split((self.X_valid, self.y_valid), num_collaborators)
 
-        if equally:
-            X_train = np.array_split(self.X_train, num_collaborators)
-            y_train = np.array_split(self.y_train, num_collaborators)
-            X_valid = np.array_split(self.X_valid, num_collaborators)
-            y_valid = np.array_split(self.y_valid, num_collaborators)
+            return [
+                FederatedDataSet(
+                    train_split[i]['data'],
+                    train_split[i]['labels'],
+                    valid_split[i]['data'],
+                    valid_split[i]['labels'],
+                    batch_size=self.batch_size,
+                    num_classes=self.num_classes
+                ) for i in range(num_collaborators)
+            ]
         else:
-            train_split = np.sort(np.random.choice(
-                len(self.X_train), num_collaborators - 1, replace=False)
-            )
-            val_split = np.sort(np.random.choice(
-                len(self.X_val), num_collaborators - 1, replace=False)
-            )
-            X_train = np.split(self.X_train, train_split)
-            y_train = np.split(self.y_train, train_split)
-            X_valid = np.split(self.X_valid, val_split)
-            y_valid = np.split(self.y_valid, val_split)
+            raise NotImplementedError(f'Data splitter {self.data_splitter} is not supported.')
+
+
+class PyTorchFederatedDataset(DataLoader):
+    """FederatedDataset for PyTorch Datasets."""
+
+    def __init__(self, train_set, valid_set, batch_size, data_splitter=None):
+        """Initialize.
+
+        Args:
+            train_set(torch.utils.data.Dataset): Training set.
+            valid_set(torch.utils.data.Dataset): Validation set.
+        """
+        self.train_set = train_set
+        self.valid_set = valid_set
+        self.batch_size = batch_size
+        if data_splitter is None:
+            self.data_splitter = EqualPyTorchDatasetSplitter
+        elif isinstance(data_splitter, PyTorchDatasetSplitter):
+            self.data_splitter = data_splitter
+        else:
+            raise ValueError('data_splitter should either be None'
+                             + ' or inherit from openfl.utilities.data.PyTorchDatasetSplitter')
+
+    def get_feature_shape(self):
+        """
+        Get the shape of an example feature array.
+
+        Returns:
+            tuple: shape of an example feature array
+        """
+        return self.train_set[0][0].shape
+
+    def get_train_loader(self, batch_size=None, num_batches=None):
+        """
+        Get training data loader.
+
+        Returns:
+            loader object (class defined by inheritor)
+        """
+        import torch.utils.data
+        return torch.utils.data.DataLoader(self.train_set, batch_size or self.batch_size)
+
+    def get_valid_loader(self, batch_size=None):
+        """
+        Get validation data loader.
+
+        Returns:
+            loader object (class defined by inheritor)
+        """
+        import torch.utils.data
+        return torch.utils.data.DataLoader(self.valid_set, batch_size or self.batch_size)
+
+    def get_train_data_size(self):
+        """
+        Get total number of training samples.
+
+        Returns:
+            int: number of training samples
+        """
+        return len(self.train_set)
+
+    def get_valid_data_size(self):
+        """
+        Get total number of validation samples.
+
+        Returns:
+            int: number of validation samples
+        """
+        return len(self.valid_set)
+
+    def split(self, num_collaborators):
+        """Create a Federated Dataset for each of the collaborators.
+
+        Args:
+            num_collaborators: int
+                Collaborators to split the dataset between
+        Returns:
+            list[PyTorchFederatedDataset]: A dataset slice for each collaborator
+        """
+        train_split = self.data_splitter.split(self.train_set, num_collaborators)
+        valid_split = self.data_splitter.split(self.valid_set, num_collaborators)
 
         return [
-            FederatedDataSet(
-                X_train[i],
-                y_train[i],
-                X_valid[i],
-                y_valid[i],
+            PyTorchFederatedDataset(
+                train_split[i],
+                valid_split[i],
                 batch_size=self.batch_size,
-                num_classes=self.num_classes
+                data_splitter=self.data_splitter
             ) for i in range(num_collaborators)
         ]
