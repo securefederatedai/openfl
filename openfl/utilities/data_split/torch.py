@@ -8,6 +8,7 @@ from torch.utils.data import Dataset
 from torch.utils.data import Subset
 
 from openfl.utilities.data_split.data_splitter import DataSplitter
+from openfl.utilities.data_split.numpy import DirichletNumPyDataSplitter
 from openfl.utilities.data_split.numpy import LogNormalNumPyDataSplitter
 
 
@@ -77,3 +78,17 @@ class RandomPyTorchDatasetSplitter(PyTorchDatasetSplitter):
         last_range = np.arange(start=idx[-1], stop=len(data))
         subsets.append(Subset(data, last_range))
         return subsets
+
+
+class DirichletPyTorchDatasetSplitter(PyTorchDatasetSplitter):
+    """PyTorch dataset version of dirichlet split."""
+
+    def __init__(self, alpha=0.5, min_samples_per_col=10):
+        """Initialize."""
+        self.numpy_splitter = DirichletNumPyDataSplitter(alpha, min_samples_per_col)
+
+    def split(self, data, num_collaborators):
+        """Split the data."""
+        labels = np.array([label for _, label in data])
+        idx_batch = self.numpy_splitter.split_dirichlet(labels, num_collaborators)
+        return [Subset(data, idx) for idx in idx_batch]

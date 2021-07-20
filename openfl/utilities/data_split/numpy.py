@@ -157,3 +157,42 @@ class LogNormalNumPyDataSplitter(NumPyDataSplitter):
                     print(f'Appending {idx_to_append} of {label} class to {col} col...')
                     idx[col] = np.append(idx[col], idx_to_append)
         return idx
+
+
+class DirichletNumPyDataSplitter(NumPyDataSplitter):
+    """Numpy splitter according to dirichlet distribution."""
+
+    def __init__(self, alpha=0.5, min_samples_per_col=10):
+        """Initialize."""
+        self.alpha = alpha
+        self.min_samples_per_col = min_samples_per_col
+
+    def split_dirichlet(self, labels, num_collaborators):
+        """Dirichlet split implementation."""
+        if len(labels.shape) > 1:
+            labels = np.argmax(labels, axis=1)
+        classes = len(np.unique(labels))
+        min_size = 0
+
+        n = len(labels)
+        while min_size < self.min_samples_per_col:
+            idx_batch = [[] for _ in range(num_collaborators)]
+            for k in range(classes):
+                idx_k = np.where(labels == k)[0]
+                np.random.shuffle(idx_k)
+                proportions = np.random.dirichlet(np.repeat(self.alpha, num_collaborators))
+                proportions = [p * (len(idx_j) < n / num_collaborators)
+                               for p, idx_j in zip(proportions, idx_batch)]
+                proportions = np.array(proportions)
+                proportions = proportions / proportions.sum()
+                proportions = (np.cumsum(proportions) * len(idx_k)).astype(int)[:-1]
+                idx_splitted = np.split(idx_k, proportions)
+                idx_batch = [idx_j + idx.tolist() for idx_j, idx in zip(idx_batch, idx_splitted)]
+                min_size = min([len(idx_j) for idx_j in idx_batch])
+        return idx_batch
+
+    def split(self, data, num_collaborators):
+        """Split the data."""
+        samples, labels = data
+        idx_batch = self.split_dirichlet(labels, num_collaborators)
+        return [{'samples': samples[idx], 'labels': labels[idx]} for idx in idx_batch]
