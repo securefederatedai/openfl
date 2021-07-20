@@ -11,13 +11,17 @@ import numpy as np
 import torch
 from torch.utils.data import Dataset
 from torch.utils.data import Subset
-from torch.utils.data import TensorDataset
 from tqdm import trange
 
 
 def get_label_count(labels, label):
     """Count samples with label `label` in `labels` array."""
     return len(np.nonzero(labels == label)[0])
+
+
+def one_hot(labels, classes):
+    """Apply One-Hot encoding to labels."""
+    return np.eye(classes)[labels]
 
 
 class DataSplitter(ABC):
@@ -152,7 +156,8 @@ class LogNormalNumPyDataSplitter(NumPyDataSplitter):
                 print(f'Assigning {slice_start}:{slice_end} of {label} class to {col} col...')
                 idx[col] += list(label_idx[slice_start:slice_end])
         assert all([len(i) == samples_per_col for i in idx]), \
-            f'All collaborators should have {samples_per_col} elements'
+            f'All collaborators should have {samples_per_col} elements' \
+            + f'but distribution is {[len(i) for i in idx]}'
 
         props_shape = (self.num_classes, num_collaborators // 10, self.classes_per_col)
         props = np.random.lognormal(self.mu, self.sigma, props_shape)
@@ -186,11 +191,6 @@ class EqualPyTorchDatasetSplitter(PyTorchDatasetSplitter):
                 for shard_num in range(num_collaborators)]
 
 
-def one_hot(labels, classes):
-    """Apply One-Hot encoding to labels."""
-    return np.eye(classes)[labels]
-
-
 class LogNormalPyTorchDatasetSplitter(PyTorchDatasetSplitter):
     """Pytorch Dataset-based implementation of lognormal data split."""
 
@@ -217,21 +217,9 @@ class LogNormalPyTorchDatasetSplitter(PyTorchDatasetSplitter):
 
     def split(self, data, num_collaborators):
         """Split the data."""
-        data, labels = list(zip(*data))
-        data = np.array([x.numpy() if isinstance(x, torch.Tensor) else x for x in data])
+        labels = [label for _, label in data]
         labels = np.array([y.numpy() if isinstance(y, torch.Tensor) else y for y in labels])
-        labels_one_hot = False
-        if len(labels.shape) > 1:
-            labels_one_hot = True
-            labels = labels.argmax(axis=1)
-        split_result = self.numpy_splitter.split((data, labels), num_collaborators)
-        datasets = []
-        for chunk in split_result:
-            slice_data = torch.tensor(chunk['data'])
-            slice_labels = torch.tensor(chunk['labels']
-                                        if not labels_one_hot
-                                        else one_hot(chunk['labels'], self.num_classes))
-
-            slice_dataset = TensorDataset(slice_data, slice_labels)
-            datasets.append(slice_dataset)
+        flat_labels = labels.argmax(axis=1) if len(labels.shape) > 1 else labels
+        idx = self.numpy_splitter.get_indices(flat_labels, num_collaborators)
+        datasets = [Subset(data, col_idx) for col_idx in idx]
         return datasets
