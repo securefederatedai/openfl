@@ -27,7 +27,7 @@ setup(
         'openfl.component.aggregator',
         'openfl.component.collaborator',
         'openfl.utilities',
-        'openfl.utilities.data',
+        'openfl.utilities.data_split',
         'openfl.utilities.optimizers.torch',
         'openfl.utilities.optimizers.keras',
         'openfl.protocols',

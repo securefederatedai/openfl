@@ -5,11 +5,10 @@
 
 import numpy as np
 
-from openfl.utilities.data import DataSplitter
-from openfl.utilities.data import EqualNumPyDataSplitter
-from openfl.utilities.data import EqualPyTorchDatasetSplitter
-from openfl.utilities.data import NumPyDataSplitter
-from openfl.utilities.data import PyTorchDatasetSplitter
+from openfl.utilities.data_split import EqualNumPyDataSplitter
+from openfl.utilities.data_split import EqualPyTorchDatasetSplitter
+from openfl.utilities.data_split import NumPyDataSplitter
+from openfl.utilities.data_split import PyTorchDatasetSplitter
 from . import DataLoader
 from .loader_pt import PyTorchDataLoader
 
@@ -35,7 +34,7 @@ class FederatedDataSet(PyTorchDataLoader):
 
     """
 
-    data_splitter: DataSplitter
+    data_splitter: NumPyDataSplitter
 
     def __init__(self, X_train, y_train, X_valid, y_valid,
                  batch_size=1, num_classes=None, data_splitter=None):
@@ -69,7 +68,12 @@ class FederatedDataSet(PyTorchDataLoader):
             num_classes = np.unique(self.y_train).shape[0]
             print(f'Inferred {num_classes} classes from the provided labels...')
         self.num_classes = num_classes
-        self.data_splitter = data_splitter or EqualNumPyDataSplitter()
+        if data_splitter is None:
+            self.data_splitter = EqualNumPyDataSplitter()
+        elif isinstance(data_splitter, NumPyDataSplitter):
+            self.data_splitter = data_splitter
+        else:
+            raise NotImplementedError(f'Data splitter {data_splitter} is not supported')
 
     def split(self, num_collaborators):
         """Create a Federated Dataset for each of the collaborators.
@@ -86,26 +90,25 @@ class FederatedDataSet(PyTorchDataLoader):
             list[FederatedDataSets]
                 A dataset slice for each collaborator
         """
-        if isinstance(self.data_splitter, NumPyDataSplitter):  # numpy arrays only
-            train_split = self.data_splitter.split((self.X_train, self.y_train), num_collaborators)
-            valid_split = self.data_splitter.split((self.X_valid, self.y_valid), num_collaborators)
+        train_split = self.data_splitter.split((self.X_train, self.y_train), num_collaborators)
+        valid_split = self.data_splitter.split((self.X_valid, self.y_valid), num_collaborators)
 
-            return [
-                FederatedDataSet(
-                    train_split[i]['data'],
-                    train_split[i]['labels'],
-                    valid_split[i]['data'],
-                    valid_split[i]['labels'],
-                    batch_size=self.batch_size,
-                    num_classes=self.num_classes
-                ) for i in range(num_collaborators)
-            ]
-        else:
-            raise NotImplementedError(f'Data splitter {self.data_splitter} is not supported.')
+        return [
+            FederatedDataSet(
+                train_split[i]['data'],
+                train_split[i]['labels'],
+                valid_split[i]['data'],
+                valid_split[i]['labels'],
+                batch_size=self.batch_size,
+                num_classes=self.num_classes
+            ) for i in range(num_collaborators)
+        ]
 
 
 class PyTorchFederatedDataset(DataLoader):
     """FederatedDataset for PyTorch Datasets."""
+
+    data_splitter: PyTorchDatasetSplitter
 
     def __init__(self, train_set, valid_set, batch_size, data_splitter=None):
         """Initialize.
