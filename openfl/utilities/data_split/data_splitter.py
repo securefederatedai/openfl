@@ -1,3 +1,4 @@
+"""openfl.utilities.data_split.data_splitter module."""
 from abc import ABC
 from abc import abstractmethod
 from typing import Iterable

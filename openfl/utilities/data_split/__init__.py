@@ -1,6 +1,6 @@
 """openfl.utilities.data package."""
-from openfl.utilities.data_split.numpy import EqualNumPyDataSplitter
 from openfl.utilities.data_split.data_splitter import DataSplitter
+from openfl.utilities.data_split.numpy import EqualNumPyDataSplitter
 from openfl.utilities.data_split.numpy import LogNormalNumPyDataSplitter
 from openfl.utilities.data_split.numpy import NumPyDataSplitter
 from openfl.utilities.data_split.numpy import RandomNumPyDataSplitter
