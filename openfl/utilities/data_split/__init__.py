@@ -20,7 +20,7 @@ __all__ = [
     'NumPyDataSplitter',
     'PyTorchDatasetSplitter',
     'RandomNumPyDataSplitter',
-    'DirichletPyTorchDatasetSplitter'
+    'DirichletPyTorchDatasetSplitter',
     'EqualPyTorchDatasetSplitter',
     'RandomPyTorchDatasetSplitter'
 ]
