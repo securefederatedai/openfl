@@ -57,13 +57,11 @@ class FLExperiment:
     def stream_metrics(self):
         """Stream metrics."""
         for metric_response in self.federation.dir_client.stream_metrics(self.experiment_name):
-            print(
-                metric_response.metric_origin,
-                metric_response.task_name,
-                metric_response.metric_name,
-                float(metric_response.metric_value),
-                metric_response.round)
-            # print(
+            self.logger.metric(
+                f'Round {metric_response.round}, '
+                f'collaborator {metric_response.metric_origin} '
+                f'{metric_response.task_name} result '
+                f'{metric_response.metric_name}:\t{metric_response.metric_value}')
             write_metric(
                 metric_response.metric_origin,
                 metric_response.task_name,
