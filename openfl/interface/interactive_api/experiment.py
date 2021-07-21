@@ -8,12 +8,12 @@ from collections import defaultdict
 from copy import deepcopy
 from logging import getLogger
 from pathlib import Path
+from tensorboardX import SummaryWriter
 
 from openfl.federated import Plan
 from openfl.interface.cli import setup_logging
 from openfl.interface.cli_helper import WORKSPACE
 from openfl.utilities import split_tensor_dict_for_holdouts
-from openfl.utilities.logs import write_metric
 
 
 class FLExperiment:
@@ -28,6 +28,7 @@ class FLExperiment:
         """
         self.federation = federation
         self.experiment_name = experiment_name
+        self.summary_writer = None
 
         if serializer_plugin is None:
             self.serializer_plugin = \
@@ -54,20 +55,31 @@ class FLExperiment:
         self.task_runner_stub.rebuild_model(tensor_dict, validation=True, device='cpu')
         return self.task_runner_stub.model
 
-    def stream_metrics(self):
+    def stream_metrics(self, tensorboard_logs=True):
         """Stream metrics."""
+        if tensorboard_logs:
+            if not self.summary_writer:
+                self.summary_writer = SummaryWriter(f'./logs/{self.experiment_name}', flush_secs=5)
+
+            def write_metric(node_name, task_name, metric_name, metric, round_number):
+                """Write metric callback."""
+                self.summary_writer.add_scalar(
+                    f'{node_name}/{task_name}/{metric_name}', metric, round_number)
+
         for metric_response in self.federation.dir_client.stream_metrics(self.experiment_name):
             self.logger.metric(
                 f'Round {metric_response.round}, '
                 f'collaborator {metric_response.metric_origin} '
                 f'{metric_response.task_name} result '
                 f'{metric_response.metric_name}:\t{metric_response.metric_value}')
-            write_metric(
-                metric_response.metric_origin,
-                metric_response.task_name,
-                metric_response.metric_name,
-                metric_response.metric_value,
-                metric_response.round)
+
+            if tensorboard_logs:
+                write_metric(
+                    metric_response.metric_origin,
+                    metric_response.task_name,
+                    metric_response.metric_name,
+                    metric_response.metric_value,
+                    metric_response.round)
 
     def remove_experiment_data(self):
         """Remove experiment data."""
