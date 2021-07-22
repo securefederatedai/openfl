@@ -29,25 +29,54 @@ logger = logging.getLogger(__name__)
 class Director(director_pb2_grpc.FederationDirectorServicer):
     """Director class."""
 
-    def __init__(self, root_ca, key, cert, sample_shape: list, target_shape: list) -> None:
+    def __init__(self, disable_tls, root_ca, key, cert,
+                 sample_shape: list, target_shape: list) -> None:
         """Initialize a director object."""
         # TODO: add working directory
         super().__init__()
         self.sample_shape, self.target_shape = sample_shape, target_shape
         self.shard_registry = []
-        self.experiments = set()
         self.col_exp_queues = defaultdict(asyncio.Queue)
-        self.experiment_data = {}
-        self.experiments_queue = asyncio.Queue()
+
+        self.experiments = set()  # Do not know what it is
+        self.experiment_data = {}  # {Experiment name : archive bytes}
+        # What if two experimnets come with the same name from different users?
+        self.experiments_queue = asyncio.Queue()  # Experimnets waiting to be executed
+        self.experiment_stash = defaultdict(dict)  # Running of finished experimnets
+        # {API name : {experiment name : aggregator}}
+
         self.executor = ProcessPoolExecutor(max_workers=2)
         self.aggregator_task = None  # TODO: add check if exists and wait on terminate
         self.fqdn = socket.getfqdn()
         self.director_port = None
         self.tensorboard_port = 6006
         self.tensorboard_thread = None
+        self.disable_tls = disable_tls
         self.root_ca = Path(root_ca).absolute()
         self.key = Path(key).absolute()
         self.cert = Path(cert).absolute()
+
+    def validate_caller(self, request, context):
+        """
+        Validate the caller.
+
+        Args:
+            request: The gRPC message request
+            context: The gRPC context
+
+        Returns:
+            True - if the caller has valid cert
+            False - if the callers cert name is invalid
+        """
+        # Can we close the request right here?
+        if not self.disable_tls:
+            caller_cert_name = context.auth_context()[
+                'x509_common_name'][0].decode('utf-8')
+            caller_common_name = request.header.sender
+            if not caller_cert_name == caller_common_name:
+                return False
+
+        return True
 
     async def AcknowledgeShard(self, shard_info, context):  # NOQA:N802
         """Receive acknowledge shard info."""
@@ -75,6 +104,11 @@ class Director(director_pb2_grpc.FederationDirectorServicer):
             else:
                 raise Exception('Bad request')
 
+        if not self.validate_caller(request, context):
+            # Can we send reject before reading the stream?
+            return director_pb2.SetNewExperimentResponse(
+                accepted=False)
+
         # TODO: save to file
         self.experiment_data[request.name] = npbytes
         tensor_dict = None
@@ -82,7 +116,11 @@ class Director(director_pb2_grpc.FederationDirectorServicer):
             tensor_dict, _ = deconstruct_model_proto(request.model_proto, NoCompressionPipeline())
 
         self.create_workspace(request.name, npbytes)
-        asyncio.create_task(self._run_aggregator(tensor_dict, request.name))
+        asyncio.create_task(self._run_aggregator(
+            request.header.sender,
+            tensor_dict,
+            request.name,
+            request.collaborator_names))
 
         logger.info(f'New experiment {request.name} for '
                     f'collaborators {request.collaborator_names}')
@@ -97,18 +135,27 @@ class Director(director_pb2_grpc.FederationDirectorServicer):
 
     async def GetTrainedModel(self, request, context):  # NOQA:N802
         """RPC for retrieving trained models."""
+        if not self.validate_caller(request, context):
+            return director_pb2.TrainedModelResponse()
         logger.info('Request GetTrainedModel has got!')
-        if not hasattr(self, 'aggregator_server'):
+
+        caller = request.header.sender
+        exp_name = request.experiment_name
+
+        if exp_name not in self.experiment_stash[caller]:
             logger.error('Aggregator has not started yet')
             return director_pb2.TrainedModelResponse()
-        elif self.aggregator_server.aggregator.last_tensor_dict is None:
+
+        aggregator = self.experiment_stash[caller][exp_name].aggregator
+
+        if aggregator.last_tensor_dict is None:
             logger.error('Aggregator have no aggregated model to return')
             return director_pb2.TrainedModelResponse()
 
         if request.model_type == director_pb2.GetTrainedModelRequest.BEST_MODEL:
-            tensor_dict = self.aggregator_server.aggregator.best_tensor_dict
+            tensor_dict = aggregator.best_tensor_dict
         elif request.model_type == director_pb2.GetTrainedModelRequest.LAST_MODEL:
-            tensor_dict = self.aggregator_server.aggregator.last_tensor_dict
+            tensor_dict = aggregator.last_tensor_dict
         else:
             logger.error('Incorrect model type')
             return director_pb2.TrainedModelResponse()
@@ -145,6 +192,8 @@ class Director(director_pb2_grpc.FederationDirectorServicer):
     async def GetShardsInfo(self, request, context):  # NOQA:N802
         """Request a shard info."""
         logger.info('Request GetShardsInfo has got!')
+        if not self.validate_caller(request, context):
+            return director_pb2.ShardInfo()
         resp = director_pb2.ShardInfo(
             sample_shape=self.sample_shape,
             target_shape=self.target_shape
@@ -161,22 +210,27 @@ class Director(director_pb2_grpc.FederationDirectorServicer):
 
     async def StreamMetrics(self, request, context):  # NOQA:N802
         """Request to stream metrics from the aggregator to frontend."""
-        experimnet_name = request.experiment_name
+        if not self.validate_caller(request, context):
+            return
+        caller = request.header.sender
+        exp_name = request.experiment_name
         # We should probably set a name to the aggregator and verify it here.
         # Moreover, we may save the experiment name in plan.yaml and retrieve it
         # during the aggregator initialization
-        logger.info(f'Request StreamMetrics for {experimnet_name} experimnet has got!')
+        logger.info(f'Request StreamMetrics for {exp_name} experimnet has got!')
 
-        while not self.aggregator_server.aggregator.all_quit_jobs_sent() or \
-                not self.aggregator_server.aggregator.metric_queue.empty():
+        aggregator = self.experiment_stash[caller][exp_name].aggregator
+
+        while not aggregator.all_quit_jobs_sent() or \
+                not aggregator.metric_queue.empty():
             # If the aggregator has not fineished the experimnet
             # or it finished but metric_queue is not empty we send metrics
 
             # But here we may have a problem if the new experiment starts too quickly
 
-            while not self.aggregator_server.aggregator.metric_queue.empty():
+            while not aggregator.metric_queue.empty():
                 metric_origin, task_name, metric_name, metric_value, round_ = \
-                    self.aggregator_server.aggregator.metric_queue.get()
+                    aggregator.metric_queue.get()
                 yield director_pb2.StreamMetricsResponse(
                     metric_origin=metric_origin,
                     task_name=task_name,
@@ -185,7 +239,20 @@ class Director(director_pb2_grpc.FederationDirectorServicer):
                     round=round_)
 
             # Awaiting quit job sent to collaborators
-            await asyncio.sleep(3)
+            await asyncio.sleep(5)
+
+    async def RemoveExperimentData(self, request, context):
+        """Remove experiment data RPC."""
+        response = director_pb2.RemoveExperimnetResponse(acknowledgement=False)
+        if not self.validate_caller(request, context):
+            return response
+
+        caller = request.header.sender
+        if request.experiment_name in self.experiment_stash[caller]:
+            del self.experiment_stash[caller][request.experiment_name]
+
+        response.acknowledgement = True
+        return response
 
     @staticmethod
     def create_workspace(experiment_name, npbytes):
@@ -203,30 +270,35 @@ class Director(director_pb2_grpc.FederationDirectorServicer):
 
     async def _run_aggregator(
             self,
+            experiment_sender,
             initial_tensor_dict,
             experiment_name,
+            collaborator_names,
             plan='plan/plan.yaml',
     ):  # TODO: path params, change naming
         """Run aggregator."""
         cwd = os.getcwd()
         os.chdir(f'{cwd}/{experiment_name}')
         plan = Plan.parse(plan_config_path=Path(plan))
-        plan.authorized_cols = list(self.col_exp_queues.keys())
+
+        plan.authorized_cols = list(collaborator_names)
 
         logger.info('🧿 Starting the Aggregator Service.')
-        self.aggregator_server = plan.interactive_api_get_server(
+        aggregator_server = plan.interactive_api_get_server(
             initial_tensor_dict,
             chain=self.root_ca,
             certificate=self.cert,
             private_key=self.key
         )
+        self.experiment_stash[experiment_sender][experiment_name] = \
+            aggregator_server
 
-        grpc_server = self.aggregator_server.get_server()
+        grpc_server = aggregator_server.get_server()
         grpc_server.start()
         logger.info('Starting Aggregator gRPC Server')
 
         try:
-            while not self.aggregator_server.aggregator.all_quit_jobs_sent():
+            while not aggregator_server.aggregator.all_quit_jobs_sent():
                 # Awaiting quit job sent to collaborators
                 await asyncio.sleep(10)
         except KeyboardInterrupt:
@@ -235,6 +307,8 @@ class Director(director_pb2_grpc.FederationDirectorServicer):
             os.chdir(cwd)
             shutil.rmtree(experiment_name)
             grpc_server.stop(0)
+            # Temporary solution to free RAM used by TensorDB
+            aggregator_server.aggregator.tensor_db.clean_up(0)
 
     def run_tensorboard(self):
         """Run the tensorboard."""
@@ -256,7 +330,7 @@ async def serve(*args, disable_tls=False, root_ca=None, key=None, cert=None, **k
     channel_opt = [('grpc.max_send_message_length', 512 * 1024 * 1024),
                    ('grpc.max_receive_message_length', 512 * 1024 * 1024)]
     server = aio.server(options=channel_opt)
-    director = Director(*args, root_ca, key, cert, **kwargs)
+    director = Director(*args, disable_tls, root_ca, key, cert, **kwargs)
     director_pb2_grpc.add_FederationDirectorServicer_to_server(director, server)
     director.run_tensorboard()
     # Add pass addr from director.yaml

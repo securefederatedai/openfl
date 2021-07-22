@@ -123,11 +123,8 @@ if __name__ == '__main__':
         director_uri=director_uri,
         shard_descriptor=kvasir_sd,
         disable_tls=False,
-        root_ca=('/home/user/openfl-tutorials/interactive_api_tutorials_experimental/'
-                 'director_kvasir/envoy_folder/cert/root_ca.crt'),
-        key=('/home/user/openfl-tutorials/interactive_api_tutorials_experimental/'
-             'director_kvasir/envoy_folder/cert/one.key'),
-        cert=('/home/user/openfl-tutorials/interactive_api_tutorials_experimental/'
-              'director_kvasir/envoy_folder/cert/one.crt'))
+        root_ca=('./cert/root_ca.crt'),
+        key=('./cert/one.key'),
+        cert=('./cert/one.crt'))
 
     keeper.start()

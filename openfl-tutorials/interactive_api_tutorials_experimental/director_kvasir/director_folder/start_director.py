@@ -20,9 +20,6 @@ if __name__ == '__main__':
     asyncio.run(serve(sample_shape=list(sample_shape), target_shape=list(target_shape),
                       disable_tls=False,
                       # an absolute path is required
-                      root_ca='/home/user/openfl/openfl-tutorials/interactive_api_tutorials_'\
-                              'experimental/director_kvasir/director_folder/cert/root_ca.crt',
-                      key='/home/user/openfl/openfl-tutorials/interactive_api_tutorials_'\
-                          'experimental/director_kvasir/director_folder/cert/localhost.key',
-                      cert='/home/user/openfl/openfl-tutorials/interactive_api_tutorials_'\
-                           'experimental/director_kvasir/director_folder/cert/localhost.crt'))
+                      root_ca='./cert/root_ca.crt',
+                      key='./cert/localhost.key',
+                      cert='./cert/localhost.crt'))

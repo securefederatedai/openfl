@@ -8,6 +8,7 @@ from collections import defaultdict
 from copy import deepcopy
 from logging import getLogger
 from pathlib import Path
+from tensorboardX import SummaryWriter
 
 from openfl.federated import Plan
 from openfl.interface.cli import setup_logging
@@ -27,6 +28,7 @@ class FLExperiment:
         """
         self.federation = federation
         self.experiment_name = experiment_name
+        self.summary_writer = None
 
         if serializer_plugin is None:
             self.serializer_plugin = \
@@ -40,29 +42,55 @@ class FLExperiment:
     def get_best_model(self):
         """Retrieve the model with the best score."""
         # Next line relies on aggregator inner field where model dicts are stored
-        tensor_dict = self.federation.dir_client.get_best_model()
+        tensor_dict = self.federation.dir_client.get_best_model(
+            experiment_name=self.experiment_name)
         self.task_runner_stub.rebuild_model(tensor_dict, validation=True, device='cpu')
         return self.task_runner_stub.model
 
     def get_last_model(self):
         """Retrieve the aggregated model after the last round."""
         # Next line relies on aggregator inner field where model dicts are stored
-        tensor_dict = self.federation.dir_client.get_last_model()
+        tensor_dict = self.federation.dir_client.get_last_model(
+            experiment_name=self.experiment_name)
         self.task_runner_stub.rebuild_model(tensor_dict, validation=True, device='cpu')
         return self.task_runner_stub.model
 
-    def stream_metrics(self):
+    def stream_metrics(self, tensorboard_logs=True):
         """Stream metrics."""
-        from openfl.utilities.logs import write_metric
+        if tensorboard_logs:
+            if not self.summary_writer:
+                self.summary_writer = SummaryWriter(f'./logs/{self.experiment_name}', flush_secs=5)
+
+            def write_metric(node_name, task_name, metric_name, metric, round_number):
+                """Write metric callback."""
+                self.summary_writer.add_scalar(
+                    f'{node_name}/{task_name}/{metric_name}', metric, round_number)
+
         for metric_response in self.federation.dir_client.stream_metrics(self.experiment_name):
-            # self.logger.metric(
-            # print(
-            write_metric(
-                metric_response.metric_origin,
-                metric_response.task_name,
-                metric_response.metric_name,
-                metric_response.metric_value,
-                metric_response.round)
+            self.logger.metric(
+                f'Round {metric_response.round}, '
+                f'collaborator {metric_response.metric_origin} '
+                f'{metric_response.task_name} result '
+                f'{metric_response.metric_name}:\t{metric_response.metric_value}')
+
+            if tensorboard_logs:
+                write_metric(
+                    metric_response.metric_origin,
+                    metric_response.task_name,
+                    metric_response.metric_name,
+                    metric_response.metric_value,
+                    metric_response.round)
+
+    def remove_experiment_data(self):
+        """Remove experiment data."""
+        log_message = 'Removing experiment data '
+        if self.federation.dir_client.remove_experiment_data(
+                experiment_name=self.experiment_name):
+            log_message += 'succeed.'
+        else:
+            log_message += 'failed.'
+
+        self.logger.info(log_message)
 
     def prepare_workspace_distribution(
             self, model_provider, task_keeper, data_loader,
