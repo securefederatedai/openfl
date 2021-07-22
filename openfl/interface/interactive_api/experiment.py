@@ -8,6 +8,7 @@ from collections import defaultdict
 from copy import deepcopy
 from logging import getLogger
 from pathlib import Path
+
 from tensorboardX import SummaryWriter
 
 from openfl.federated import Plan

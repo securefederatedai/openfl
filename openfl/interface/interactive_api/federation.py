@@ -2,9 +2,8 @@
 # SPDX-License-Identifier: Apache-2.0
 """Federation API module."""
 
-from openfl.utilities.utils import getfqdn_env
-
 from openfl.transport.grpc.director_client import DirectorClient
+from openfl.utilities.utils import getfqdn_env
 from .shard_descriptor import DummyShardDescriptor
 
 

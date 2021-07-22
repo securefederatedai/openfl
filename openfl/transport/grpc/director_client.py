@@ -7,6 +7,7 @@ import logging
 import os
 import shutil
 import time
+from datetime import datetime
 from subprocess import check_call
 from sys import executable
 
@@ -134,6 +135,17 @@ class ShardDirectorClient:
         """Generate a node info message."""
         return director_pb2.NodeInfo(name=self.shard_name)
 
+    def send_health_check(self, collaborator_name, is_experiment_running, valid_duration):
+        """Send envoy health check."""
+        status = director_pb2.CollaboratorStatus(
+            name=collaborator_name,
+            is_experiment_running=is_experiment_running,
+        )
+        status.valid_duration.seconds = valid_duration
+        logger.debug(f'Sending health check status: {status}')
+
+        return self.stub.CollaboratorHealthCheck(status)
+
 
 class DirectorClient:
     """Director client class for users."""
@@ -242,8 +254,27 @@ class DirectorClient:
 
     def remove_experiment_data(self, experiment_name):
         """Remove experiment data RPC."""
-        request = director_pb2.RemoveExperimnetRequest(
+        request = director_pb2.RemoveExperimentRequest(
             header=self.header,
             experiment_name=experiment_name)
         response = self.stub.RemoveExperimentData(request)
         return response.acknowledgement
+
+    def get_envoys(self, raw_result=False):
+        """Get envoys info."""
+        envoys = self.stub.GetEnvoys(director_pb2.GetEnvoysRequest())
+        if raw_result:
+            return envoys
+        now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        result = {}
+        for envoy in envoys.envoy_infos:
+            result[envoy.shard_info.node_info.name] = {
+                'shard_info': envoy.shard_info,
+                'is_online': envoy.is_online or False,
+                'is_experiment_running': envoy.is_experiment_running or False,
+                'last_updated': datetime.fromtimestamp(
+                    envoy.last_updated.seconds).strftime('%Y-%m-%d %H:%M:%S'),
+                'current_time': now,
+                'valid_duration': envoy.valid_duration
+            }
+        return result

@@ -9,6 +9,7 @@ import os
 import shutil
 import socket
 import threading
+import time
 from collections import defaultdict
 from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
@@ -36,6 +37,7 @@ class Director(director_pb2_grpc.FederationDirectorServicer):
         super().__init__()
         self.sample_shape, self.target_shape = sample_shape, target_shape
         self.shard_registry = []
+        self._shard_registry = {}
         self.col_exp_queues = defaultdict(asyncio.Queue)
 
         self.experiments = set()  # Do not know what it is
@@ -89,6 +91,11 @@ class Director(director_pb2_grpc.FederationDirectorServicer):
             return reply
         logger.info('Request was accepted')
         self.shard_registry.append(shard_info)
+        self._shard_registry[shard_info.node_info.name] = {
+            'shard_info': shard_info,
+            'is_online': True,
+            'is_experiment_running': False
+        }
 
         reply.accepted = True
         return reply
@@ -241,9 +248,9 @@ class Director(director_pb2_grpc.FederationDirectorServicer):
             # Awaiting quit job sent to collaborators
             await asyncio.sleep(5)
 
-    async def RemoveExperimentData(self, request, context):
+    async def RemoveExperimentData(self, request, context):  # NOQA:N802
         """Remove experiment data RPC."""
-        response = director_pb2.RemoveExperimnetResponse(acknowledgement=False)
+        response = director_pb2.RemoveExperimentResponse(acknowledgement=False)
         if not self.validate_caller(request, context):
             return response
 
@@ -253,6 +260,39 @@ class Director(director_pb2_grpc.FederationDirectorServicer):
 
         response.acknowledgement = True
         return response
+
+    async def CollaboratorHealthCheck(self, request, context):  # NOQA:N802
+        """Accept health check from envoy."""
+        logger.debug(f'Request CollaboratorHealthCheck has got: {request}')
+        shard_info = self._shard_registry.get(request.name)
+        if not shard_info:
+            logger.error(f'Unknown shard {request.name}')
+            return director_pb2.CollaboratorHealthCheckResponse(accepted=False)
+
+        shard_info['is_online']: True
+        shard_info['is_experiment_running'] = request.is_experiment_running
+        shard_info['valid_duration'] = request.valid_duration.seconds
+        shard_info['last_updated'] = time.time()
+
+        return director_pb2.CollaboratorHealthCheckResponse(accepted=True)
+
+    async def GetEnvoys(self, request, context):  # NOQA:N802
+        """Get a status information about envoys."""
+        resp = director_pb2.GetEnvoysResponse()
+        logger.info(f'Shard registry: {self._shard_registry}')
+        for name, envoy in self._shard_registry.items():
+            logger.info(name, envoy)
+            envoy_info = director_pb2.EnvoyInfo(
+                shard_info=envoy['shard_info'],
+                is_online=time.time() < envoy['last_updated'] + envoy['valid_duration'],
+                is_experiment_running=envoy['is_experiment_running']
+            )
+            envoy_info.valid_duration.seconds = envoy['valid_duration']
+            envoy_info.last_updated.seconds = int(envoy['last_updated'])
+
+            resp.envoy_infos.append(envoy_info)
+
+        return resp
 
     @staticmethod
     def create_workspace(experiment_name, npbytes):

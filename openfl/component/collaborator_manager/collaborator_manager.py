@@ -6,6 +6,8 @@
 import logging
 import os
 import sys
+import time
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 from click import echo
@@ -14,6 +16,9 @@ from openfl.federated import Plan
 from openfl.transport.grpc.director_client import ShardDirectorClient
 
 logger = logging.getLogger(__name__)
+
+
+DEFAULT_TIMEOUT_IN_SECONDS = 60
 
 
 class CollaboratorManager:
@@ -30,6 +35,10 @@ class CollaboratorManager:
                                                    disable_tls=disable_tls,
                                                    root_ca=root_ca, key=key, cert=cert)
         self.shard_descriptor = shard_descriptor
+        self.executor = ThreadPoolExecutor()
+        self.running_experiments = {}
+        self.is_experiment_running = False
+        self._health_check_future = None
 
     def run(self):
         """Run of the collaborator manager working cycle."""
@@ -38,16 +47,30 @@ class CollaboratorManager:
                 # Workspace import should not be done by gRPC client!
                 experiment_name = self.director_client.get_experiment_data()
             except Exception as exc:
-                logger.error(f'Error: {exc}')
+                logger.error(f'Failed to get experiment: {exc}')
                 continue
+            self.is_experiment_running = True
             try:
-                self._run_collaborator(experiment_name, self.root_ca, self.key, self.cert)
+                self._run_collaborator(experiment_name)
+            except Exception as exc:
+                logger.error(f'Collaborator failed: {exc}')
             finally:
                 # Workspace cleaning should not be done by gRPC client!
                 self.director_client.remove_workspace(experiment_name)
+                self.is_experiment_running = False
 
-    def _run_collaborator(self, experiment_name, root_ca, key, cert,
-                          plan='plan/plan.yaml',):  # TODO: path params, change naming
+    def send_health_check(self):
+        """Send health check to the director."""
+        logger.info('The health check sender is started.')
+        while True:
+            self.director_client.send_health_check(
+                self.name,
+                self.is_experiment_running,
+                DEFAULT_TIMEOUT_IN_SECONDS
+            )
+            time.sleep(DEFAULT_TIMEOUT_IN_SECONDS / 2)
+
+    def _run_collaborator(self, experiment_name, plan='plan/plan.yaml',):
         """Run the collaborator for the experiment running."""
         cwd = os.getcwd()
         os.chdir(f'{cwd}/{experiment_name}')  # TODO: probably it should be another way
@@ -60,12 +83,11 @@ class CollaboratorManager:
         )
 
         # TODO: Need to restructure data loader config file loader
-
         echo(f'Data = {plan.cols_data_paths}')
         logger.info('🧿 Starting a Collaborator Service.')
 
-        col = plan.get_collaborator(self.name, root_ca, key,
-                                    cert, shard_descriptor=self.shard_descriptor)
+        col = plan.get_collaborator(self.name, self.root_ca, self.key,
+                                    self.cert, shard_descriptor=self.shard_descriptor)
         try:
             col.run()
         finally:
@@ -82,8 +104,8 @@ class CollaboratorManager:
             if acknowledgement:
                 # Shard accepted for participation in the federation
                 logger.info('Shard accepted')
+                self._health_check_future = self.executor.submit(self.send_health_check)
                 self.run()
             else:
                 # Shut down
                 logger.error('Report shard info was not accepted')
-                exit()
