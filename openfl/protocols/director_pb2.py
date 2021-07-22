@@ -13,7 +13,7 @@ _sym_db = _symbol_database.Default()
 
 from google.protobuf import timestamp_pb2 as google_dot_protobuf_dot_timestamp__pb2
 from google.protobuf import duration_pb2 as google_dot_protobuf_dot_duration__pb2
-import federation_pb2 as federation__pb2
+import openfl.protocols.federation_pb2 as federation__pb2
 
 
 DESCRIPTOR = _descriptor.FileDescriptor(
