@@ -5,8 +5,25 @@
 import logging
 import os
 import shutil
+from socket import getfqdn
 
 import numpy as np
+
+
+def getfqdn_env(name: str = '') -> str:
+    """
+    Get the system FQDN, with priority given to environment variables.
+
+    Args:
+        name: The name from which to extract the FQDN.
+
+    Returns:
+        The FQDN of the system.
+    """
+    fqdn = os.environ.get('FQDN', None)
+    if fqdn is not None:
+        return fqdn
+    return getfqdn(name)
 
 
 def add_log_level(level_name, level_num, method_name=None):

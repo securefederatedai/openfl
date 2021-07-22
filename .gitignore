@@ -6,9 +6,9 @@ __pycache__
 .vscode
 .ipynb_checkpoints
 venv/*
+.idea
 
 *.jpg
 *.crt
 *.key
-*.pkl
 # openfl-tutorials/interactive_api_tutorials_experimental/director_kvasir
