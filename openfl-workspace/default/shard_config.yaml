@@ -1,0 +1,3 @@
+template: shard_descriptor.ShardDescriptor
+params:
+  data_path: data

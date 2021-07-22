@@ -3,14 +3,15 @@
 
 """Python low-level API module."""
 import functools
-import logging
 import os
 from collections import defaultdict
 from copy import deepcopy
 from logging import getLogger
 from pathlib import Path
+from tensorboardX import SummaryWriter
 
 from openfl.federated import Plan
+from openfl.interface.cli import setup_logging
 from openfl.interface.cli_helper import WORKSPACE
 from openfl.utilities import split_tensor_dict_for_holdouts
 
@@ -18,7 +19,7 @@ from openfl.utilities import split_tensor_dict_for_holdouts
 class FLExperiment:
     """Central class for FL experiment orchestration."""
 
-    def __init__(self, federation, serializer_plugin=None) -> None:
+    def __init__(self, federation, experiment_name='test', serializer_plugin=None) -> None:
         """
         Initialize an experiment inside a federation.
 
@@ -26,6 +27,8 @@ class FLExperiment:
         Information about the data on collaborators is contained on the federation level.
         """
         self.federation = federation
+        self.experiment_name = experiment_name
+        self.summary_writer = None
 
         if serializer_plugin is None:
             self.serializer_plugin = \
@@ -34,13 +37,60 @@ class FLExperiment:
             self.serializer_plugin = serializer_plugin
 
         self.logger = getLogger(__name__)
+        setup_logging()
 
     def get_best_model(self):
         """Retrieve the model with the best score."""
         # Next line relies on aggregator inner field where model dicts are stored
-        best_tensor_dict = self.server.aggregator.best_tensor_dict
-        self.task_runner_stub.rebuild_model(best_tensor_dict, validation=True, device='cpu')
+        tensor_dict = self.federation.dir_client.get_best_model(
+            experiment_name=self.experiment_name)
+        self.task_runner_stub.rebuild_model(tensor_dict, validation=True, device='cpu')
         return self.task_runner_stub.model
+
+    def get_last_model(self):
+        """Retrieve the aggregated model after the last round."""
+        # Next line relies on aggregator inner field where model dicts are stored
+        tensor_dict = self.federation.dir_client.get_last_model(
+            experiment_name=self.experiment_name)
+        self.task_runner_stub.rebuild_model(tensor_dict, validation=True, device='cpu')
+        return self.task_runner_stub.model
+
+    def stream_metrics(self, tensorboard_logs=True):
+        """Stream metrics."""
+        if tensorboard_logs:
+            if not self.summary_writer:
+                self.summary_writer = SummaryWriter(f'./logs/{self.experiment_name}', flush_secs=5)
+
+            def write_metric(node_name, task_name, metric_name, metric, round_number):
+                """Write metric callback."""
+                self.summary_writer.add_scalar(
+                    f'{node_name}/{task_name}/{metric_name}', metric, round_number)
+
+        for metric_response in self.federation.dir_client.stream_metrics(self.experiment_name):
+            self.logger.metric(
+                f'Round {metric_response.round}, '
+                f'collaborator {metric_response.metric_origin} '
+                f'{metric_response.task_name} result '
+                f'{metric_response.metric_name}:\t{metric_response.metric_value}')
+
+            if tensorboard_logs:
+                write_metric(
+                    metric_response.metric_origin,
+                    metric_response.task_name,
+                    metric_response.metric_name,
+                    metric_response.metric_value,
+                    metric_response.round)
+
+    def remove_experiment_data(self):
+        """Remove experiment data."""
+        log_message = 'Removing experiment data '
+        if self.federation.dir_client.remove_experiment_data(
+                experiment_name=self.experiment_name):
+            log_message += 'succeed.'
+        else:
+            log_message += 'failed.'
+
+        self.logger.info(log_message)
 
     def prepare_workspace_distribution(
             self, model_provider, task_keeper, data_loader,
@@ -64,29 +114,38 @@ class FLExperiment:
         self._export_python_env()
 
         # Compress te workspace to restore it on collaborator
-        self._pack_the_workspace()
+        self.arch_path = self._pack_the_workspace()
 
         # DO CERTIFICATES exchange
 
-    def start_experiment(self, model_provider):
-        """
-        Start the aggregator.
-
-        This method requires model_provider to start an experiment with another
-        model initialization without workspace redistribution.
-        """
-        # Start the aggregator
+    def start(self, *, model_provider, task_keeper, data_loader,
+              rounds_to_train, delta_updates=False, opt_treatment='RESET'):
+        """Prepare experiment and run."""
+        self.prepare_workspace_distribution(
+            model_provider, task_keeper, data_loader, rounds_to_train,
+            delta_updates=delta_updates, opt_treatment=opt_treatment
+        )
+        self.logger.info('Starting experiment!')
         self.plan.resolve()
-
         initial_tensor_dict = self._get_initial_tensor_dict(model_provider)
-        self.server = self.plan.interactive_api_get_server(
-            initial_tensor_dict,
-            chain=self.federation.cert_chain,
-            certificate=self.federation.agg_certificate,
-            private_key=self.federation.agg_private_key)
+        try:
+            response = self.federation.dir_client.set_new_experiment(
+                name=self.experiment_name,
+                col_names=self.plan.authorized_cols,
+                arch_path=self.arch_path,
+                initial_tensor_dict=initial_tensor_dict
+            )
+        finally:
+            # Remove the workspace archive
+            os.remove(self.arch_path)
+            del self.arch_path
 
-        logging.basicConfig(level=logging.INFO)
-        self.server.serve()
+        if response.accepted:
+            self.logger.info('Experiment was accepted and launched.')
+            self.logger.info('You can watch the experiment through tensorboard:')
+            self.logger.info(response.tensorboard_address)
+        else:
+            self.logger.info('Experiment was not accepted or failed.')
 
     @staticmethod
     def _export_python_env():
@@ -95,7 +154,8 @@ class FLExperiment:
         requirements_generator = freeze.freeze()
         with open('./requirements.txt', 'w') as f:
             for package in requirements_generator:
-                if '==' not in package:
+                # there is a pip bug with pkg-resources==0.0.0 req
+                if '==' not in package or '0.0.0' in package:
                     # We do not export dependencies without version
                     continue
                 f.write(package + '\n')
@@ -123,9 +183,11 @@ class FLExperiment:
 
         copytree('./', tmp_dir + '/workspace', ignore=ignore)
 
-        make_archive(archive_name, archive_type, tmp_dir + '/workspace')
+        arch_path = make_archive(archive_name, archive_type, tmp_dir + '/workspace')
 
         rmtree(tmp_dir)
+
+        return arch_path
 
     def _get_initial_tensor_dict(self, model_provider):
         """Extract initial weights from the model."""
@@ -152,9 +214,18 @@ class FLExperiment:
         # Change plan name to default one
         plan.name = 'plan.yaml'
 
-        plan.authorized_cols = list(self.federation.col_data_paths.keys())
+        # Seems like we still need to fill authorized_cols list
+        # So aggregator know when to start sending tasks
+        # We also could change the aggregator logic so it will send tasks to aggregator
+        # as soon as it connects. This change should be a part of a bigger PR
+        # brining in fault tolerance changes
+        plan.authorized_cols = [shard_info.node_info.name for shard_info in
+                                self.federation.get_shard_registry()]
         # Network part of the plan
-        plan.config['network']['settings']['agg_addr'] = self.federation.fqdn
+        # We keep in mind that an aggregator FQND will be the same as the directors FQDN
+        # We just choose a port randomly from plan hash
+        plan.config['network']['settings']['agg_addr'] = \
+            self.federation.director_node_fqdn.split(':')[0]  # We drop the port
         plan.config['network']['settings']['disable_tls'] = self.federation.disable_tls
 
         # Aggregator part of the plan
@@ -356,18 +427,24 @@ class DataInterface:
         at initialization time for dataloader customization
     """
 
-    def __init__(self, user_dataset_class, **kwargs):
+    def __init__(self, **kwargs):
         """Initialize DataLoader."""
-        self.UserDatasetClass = user_dataset_class
         self.kwargs = kwargs
 
-    def _delayed_init(self, data_path):
+    @property
+    def shard_descriptor(self):
+        """Return shard descriptor."""
+        return self._shard_descriptor
+
+    @shard_descriptor.setter
+    def shard_descriptor(self, shard_descriptor):
         """
         Describe per-collaborator procedures or sharding.
 
         This method will be called during a collaborator initialization.
-        data_path variable will be set according to data.yaml.
+        Local shard_descriptor  will be set by Envoy.
         """
+        self._shard_descriptor = shard_descriptor
         raise NotImplementedError
 
     def get_train_loader(self, **kwargs):

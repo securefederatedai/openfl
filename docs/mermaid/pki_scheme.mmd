@@ -1,0 +1,20 @@
+sequenceDiagram
+Title: Collaborator Certificate Signing Flow
+  participant A as Aggregator
+  participant CA as CA
+  participant C as Collaborator
+  CA->>CA: 1. Create CA:<br>`step ca init --password-file pass_file`
+  CA->>CA: 2. Up HTTPS CA server:<br>`step_ca ca_config.json`
+  CA->>CA: 3. Generate JWK pair:<br>`step crypto jwk create pub.json priv.json --password-file pass_file`
+  CA->>CA: 4. Get JWT for aggregator:<br>`step ca token localhost --key priv.json --password-file pass_file --ca-url ca_url`
+  CA->>A: 5. Copy JWT to aggregator. 
+  A->>CA: 6. Certify node:<br>`step ca certificate localhost agg.crt agg.key --token AbC1d2E..`
+  Note over A,CA: Get agg.crt
+  CA->>CA: 7. Get JWT for collaborator:<br>`step ca token col_name --key priv.json --password-file pass_file --ca-url ca_url`
+  CA->>C: 8. Copy JWT to collaborator. 
+  C->>CA: 9. Certify node:<br>`step ca certificate col_name col_name.crt col_name.key --token AbC1d2E..`
+  Note over C,CA: Get col_name.crt
+  CA->>A: 10. Copy root_ca.crt to aggregator
+  Note over A,CA: This could be done at step 5 with token
+  CA->>C: 11. Copy root_ca.crt to collaborator
+  Note over C,CA: This could be done at step 8 with token
