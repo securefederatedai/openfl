@@ -104,7 +104,7 @@ def get_bin_names(ca_path):
     return step, step_ca
 
 
-def certify(name, cert_path, token_with_cert):
+def certify(name, cert_path: Path, token_with_cert, ca_path: Path = Path('.')):
     """Create a collaborator manager workspace."""
     os.makedirs(cert_path, exist_ok=True)
 
@@ -113,12 +113,12 @@ def certify(name, cert_path, token_with_cert):
     root_ca = token_with_cert[length + 4:]
     message_bytes = base64.b64decode(root_ca)
 
-    step, _ = get_bin_names('.')
+    step, _ = get_bin_names(ca_path)
     if not step:
         url = 'http://api.github.com/repos/smallstep/cli/releases/latest'
-        download_step_bin(url, 'step_linux', 'amd', prefix='./')
-        step, _ = get_bin_names('.')
-    assert(step)
+        download_step_bin(url, 'step_linux', 'amd', prefix=ca_path)
+        step, _ = get_bin_names(ca_path)
+    assert step
 
     # write ca cert to file
     with open(f'{cert_path}/root_ca.crt', mode='wb') as file:
@@ -139,6 +139,7 @@ def install(ca_path, ca_url, password):
     Create certificate authority for federation.
 
     Args:
+        ca_path: path to ca directory
         password: Simple password for encrypting root private keys
         ca_url: url for ca server like: 'host:port'
 

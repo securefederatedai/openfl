@@ -90,10 +90,13 @@ def get_token_(name, ca_url, ca_path):
 @pki.command(name='certify')
 @option('-n', '--name', required=True)
 @option('-t', '--token', 'token_with_cert', required=True)
-@option('-p', '--certs-path', required=False, default=Path('.') / 'cert',
-        help='The ca path', type=ClickPath())
-def certify_(name, token_with_cert, certs_path):
+@option('-c', '--certs-path', required=False, default=Path('.') / 'cert',
+        help='The path where certificates will be stored', type=ClickPath())
+@option('-p', '--ca-path', default='.', help='The path to CA client',
+        type=ClickPath(), required=False)
+def certify_(name, token_with_cert, certs_path, ca_path):
     """Create a collaborator manager workspace."""
     certs_path = Path(certs_path)
+    ca_path = Path(ca_path)
     certs_path.mkdir(parents=True, exist_ok=True)
-    certify(name, certs_path, token_with_cert)
+    certify(name, certs_path, token_with_cert, ca_path)
