@@ -35,6 +35,10 @@ def download_step_bin(url, grep_name, architecture, prefix='./', confirmation=Tr
     if confirmation:
         confirm('CA binaries from github will be downloaded now', default=True, abort=True)
     result = requests.get(url)
+    if result.status_code != 200:
+        logger.warning('Can\'t download binaries from github. Please try lately.')
+        return
+
     assets = result.json()['assets']
     urls = []
     for a in assets:
