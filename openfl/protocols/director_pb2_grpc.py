@@ -56,8 +56,18 @@ class FederationDirectorStub(object):
                 )
         self.RemoveExperimentData = channel.unary_unary(
                 '/FederationDirector/RemoveExperimentData',
-                request_serializer=director__pb2.RemoveExperimnetRequest.SerializeToString,
-                response_deserializer=director__pb2.RemoveExperimnetResponse.FromString,
+                request_serializer=director__pb2.RemoveExperimentRequest.SerializeToString,
+                response_deserializer=director__pb2.RemoveExperimentResponse.FromString,
+                )
+        self.CollaboratorHealthCheck = channel.unary_unary(
+                '/FederationDirector/CollaboratorHealthCheck',
+                request_serializer=director__pb2.CollaboratorStatus.SerializeToString,
+                response_deserializer=director__pb2.CollaboratorHealthCheckResponse.FromString,
+                )
+        self.GetEnvoys = channel.unary_unary(
+                '/FederationDirector/GetEnvoys',
+                request_serializer=director__pb2.GetEnvoysRequest.SerializeToString,
+                response_deserializer=director__pb2.GetEnvoysResponse.FromString,
                 )
 
 
@@ -121,6 +131,18 @@ class FederationDirectorServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def CollaboratorHealthCheck(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def GetEnvoys(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_FederationDirectorServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -166,8 +188,18 @@ def add_FederationDirectorServicer_to_server(servicer, server):
             ),
             'RemoveExperimentData': grpc.unary_unary_rpc_method_handler(
                     servicer.RemoveExperimentData,
-                    request_deserializer=director__pb2.RemoveExperimnetRequest.FromString,
-                    response_serializer=director__pb2.RemoveExperimnetResponse.SerializeToString,
+                    request_deserializer=director__pb2.RemoveExperimentRequest.FromString,
+                    response_serializer=director__pb2.RemoveExperimentResponse.SerializeToString,
+            ),
+            'CollaboratorHealthCheck': grpc.unary_unary_rpc_method_handler(
+                    servicer.CollaboratorHealthCheck,
+                    request_deserializer=director__pb2.CollaboratorStatus.FromString,
+                    response_serializer=director__pb2.CollaboratorHealthCheckResponse.SerializeToString,
+            ),
+            'GetEnvoys': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetEnvoys,
+                    request_deserializer=director__pb2.GetEnvoysRequest.FromString,
+                    response_serializer=director__pb2.GetEnvoysResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -327,7 +359,41 @@ class FederationDirector(object):
             timeout=None,
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/FederationDirector/RemoveExperimentData',
-            director__pb2.RemoveExperimnetRequest.SerializeToString,
-            director__pb2.RemoveExperimnetResponse.FromString,
+            director__pb2.RemoveExperimentRequest.SerializeToString,
+            director__pb2.RemoveExperimentResponse.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def CollaboratorHealthCheck(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/FederationDirector/CollaboratorHealthCheck',
+            director__pb2.CollaboratorStatus.SerializeToString,
+            director__pb2.CollaboratorHealthCheckResponse.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def GetEnvoys(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/FederationDirector/GetEnvoys',
+            director__pb2.GetEnvoysRequest.SerializeToString,
+            director__pb2.GetEnvoysResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

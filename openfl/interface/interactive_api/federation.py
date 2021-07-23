@@ -2,9 +2,8 @@
 # SPDX-License-Identifier: Apache-2.0
 """Federation API module."""
 
-from openfl.utilities.utils import getfqdn_env
-
 from openfl.transport.grpc.director_client import DirectorClient
+from openfl.utilities.utils import getfqdn_env
 from .shard_descriptor import DummyShardDescriptor
 
 
@@ -32,10 +31,9 @@ class Federation:
         - director_node_fqdn: Address and port a director's service is running on.
             User passes here an address with a port.
         """
-
         self.client_id = client_id
         if director_node_fqdn is None:
-            self.director_node_fqdn = getfqdn()
+            self.director_node_fqdn = getfqdn_env()
         else:
             self.director_node_fqdn = director_node_fqdn
 
