@@ -17,7 +17,17 @@ from openfl.plugins.data_splitters import PyTorchDatasetSplitter
 
 
 class KvasirDataset(Dataset):
+    """Kvasir dataset contains 1000 images for all collaborators.
+
+    Args:
+        data_folder: path to dataset on disk
+        collaborator_count: total number of collaborators
+        collaborator_num: number of current collaborator
+        is_validation: validation option
+    """
+
     def __init__(self, data_folder: str = 'kvasir_data', enforce_image_hw: str = None) -> None:
+        """Initialize."""
         self.data_folder = Path.cwd() / data_folder
         self.download_data(self.data_folder)  # NOQA
         # Settings for resizing data
@@ -78,11 +88,13 @@ class KvasirShardDescriptor(ShardDescriptor):
         if data_splitter is None:
             self.data_splitter = EqualPyTorchDatasetSplitter()
         else:
-            assert isinstance(data_splitter, PyTorchDatasetSplitter), 'data_splitter should inherit from openfl.plugins.data_splitters.PyTorchDatasetSplitter class'
+            assert isinstance(data_splitter, PyTorchDatasetSplitter), \
+                'data_splitter should inherit from ' \
+                + 'openfl.plugins.data_splitters.PyTorchDatasetSplitter class'
             self.data_splitter = data_splitter
         # Settings for sharding the dataset
         self.rank, self.worldsize = tuple(int(num) for num in rank_worldsize.split(','))
-        
+
         # Sharding
         self.subset = self.data_splitter.split(self.dataset, self.worldsize)[self.rank]
 
