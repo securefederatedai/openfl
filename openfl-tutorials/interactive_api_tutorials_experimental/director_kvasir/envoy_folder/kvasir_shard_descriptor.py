@@ -9,40 +9,24 @@ from pathlib import Path
 
 import numpy as np
 from PIL import Image
+from torch.utils.data import Dataset
 
 from openfl.interface.interactive_api.shard_descriptor import ShardDescriptor
+from openfl.plugins.data_splitters import EqualPyTorchDatasetSplitter
+from openfl.plugins.data_splitters import PyTorchDatasetSplitter
 
 
-class KvasirShardDescriptor(ShardDescriptor):
-    """Shard descriptor class."""
-
-    def __init__(self, data_folder: str = 'kvasir_data',
-                 rank_worldsize: str = '1,1',
-                 enforce_image_hw: str = None) -> None:
-        """Initialize KvasirShardDescriptor."""
-        super().__init__()
-
+class KvasirDataset(Dataset):
+    def __init__(self, data_folder: str = 'kvasir_data', enforce_image_hw: str = None) -> None:
         self.data_folder = Path.cwd() / data_folder
         self.download_data(self.data_folder)  # NOQA
-
         # Settings for resizing data
         self.enforce_image_hw = tuple(int(size) for size in enforce_image_hw.split(',')) if \
             enforce_image_hw is not None else None
-        # Settings for sharding the dataset
-        self.rank_worldsize = tuple(int(num) for num in rank_worldsize.split(','))
-
         self.images_path = self.data_folder / 'segmented-images' / 'images'
         self.masks_path = self.data_folder / 'segmented-images' / 'masks'
-
         self.images_names = [img_name for img_name in sorted(os.listdir(
             self.images_path)) if len(img_name) > 3 and img_name[-3:] == 'jpg']
-        # Sharding
-        self.images_names = self.images_names[self.rank_worldsize[0] - 1::self.rank_worldsize[1]]
-
-        # Calculating data and target shapes
-        sample, target = self[0]
-        self._sample_shape = [str(dim) for dim in sample.shape]
-        self._target_shape = [str(dim) for dim in target.shape]
 
     @staticmethod
     def download_data(data_folder):
@@ -58,6 +42,10 @@ class KvasirShardDescriptor(ShardDescriptor):
             os.path.getsize(zip_file_path))).hexdigest() == zip_sha384
         os.system(f'unzip -n {zip_file_path.relative_to(Path.cwd())}'
                   + f' -d {data_folder.relative_to(Path.cwd())}')
+
+    def __len__(self):
+        """Return the len of the dataset."""
+        return len(self.images_names)
 
     def __getitem__(self, index):
         """Return a item by the index."""
@@ -76,9 +64,40 @@ class KvasirShardDescriptor(ShardDescriptor):
 
         return img, mask[:, :, 0].astype(np.uint8)
 
+
+class KvasirShardDescriptor(ShardDescriptor):
+    """Shard descriptor class."""
+
+    def __init__(self, data_folder: str = 'kvasir_data',
+                 rank_worldsize: str = '1,1',
+                 enforce_image_hw: str = None,
+                 data_splitter=None) -> None:
+        """Initialize KvasirShardDescriptor."""
+        super().__init__()
+        self.dataset = KvasirDataset(data_folder=data_folder, enforce_image_hw=enforce_image_hw)
+        if data_splitter is None:
+            self.data_splitter = EqualPyTorchDatasetSplitter()
+        else:
+            assert isinstance(data_splitter, PyTorchDatasetSplitter), 'data_splitter should inherit from openfl.plugins.data_splitters.PyTorchDatasetSplitter class'
+            self.data_splitter = data_splitter
+        # Settings for sharding the dataset
+        self.rank, self.worldsize = tuple(int(num) for num in rank_worldsize.split(','))
+        
+        # Sharding
+        self.subset = self.data_splitter.split(self.dataset, self.worldsize)[self.rank]
+
+        # Calculating data and target shapes
+        sample, target = self[0]
+        self._sample_shape = [str(dim) for dim in sample.shape]
+        self._target_shape = [str(dim) for dim in target.shape]
+
+    def __getitem__(self, index):
+        """Return a item by the index."""
+        return self.subset.__getitem__(index)
+
     def __len__(self):
         """Return the len of the dataset."""
-        return len(self.images_names)
+        return self.subset.__len__()
 
     @property
     def sample_shape(self):
@@ -93,8 +112,8 @@ class KvasirShardDescriptor(ShardDescriptor):
     @property
     def dataset_description(self) -> str:
         """Return the dataset description."""
-        return f'Kvasir dataset, shard number {self.rank_worldsize[0]}' \
-               f' out of {self.rank_worldsize[1]}'
+        return f'Kvasir dataset, shard number {self.rank}' \
+               f' out of {self.worldsize}'
 
 
 if __name__ == '__main__':
@@ -122,9 +141,12 @@ if __name__ == '__main__':
         shard_name=shard_name,
         director_uri=director_uri,
         shard_descriptor=kvasir_sd,
-        disable_tls=False,
-        root_ca=('./cert/root_ca.crt'),
-        key=('./cert/one.key'),
-        cert=('./cert/one.crt'))
+        disable_tls=True,
+        root_ca=('/home/user/openfl-tutorials/interactive_api_tutorials_experimental/'
+                 'director_kvasir/envoy_folder/cert/root_ca.crt'),
+        key=('/home/user/openfl-tutorials/interactive_api_tutorials_experimental/'
+             'director_kvasir/envoy_folder/cert/one.key'),
+        cert=('/home/user/openfl-tutorials/interactive_api_tutorials_experimental/'
+              'director_kvasir/envoy_folder/cert/one.crt'))
 
     keeper.start()

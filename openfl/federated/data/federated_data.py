@@ -5,10 +5,10 @@
 
 import numpy as np
 
-from openfl.utilities.data_split import EqualNumPyDataSplitter
-from openfl.utilities.data_split import EqualPyTorchDatasetSplitter
-from openfl.utilities.data_split import NumPyDataSplitter
-from openfl.utilities.data_split import PyTorchDatasetSplitter
+from openfl.plugins.data_splitters import EqualNumPyDataSplitter
+from openfl.plugins.data_splitters import EqualPyTorchDatasetSplitter
+from openfl.plugins.data_splitters import NumPyDataSplitter
+from openfl.plugins.data_splitters import PyTorchDatasetSplitter
 from . import DataLoader
 from .loader_pt import PyTorchDataLoader
 

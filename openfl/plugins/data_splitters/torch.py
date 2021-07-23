@@ -1,4 +1,4 @@
-"""openfl.utilities.data_split.torch module."""
+"""openfl.plugins.data_splitters.torch module."""
 from abc import abstractmethod
 from typing import List
 
@@ -7,9 +7,9 @@ import torch
 from torch.utils.data import Dataset
 from torch.utils.data import Subset
 
-from openfl.utilities.data_split.data_splitter import DataSplitter
-from openfl.utilities.data_split.numpy import DirichletNumPyDataSplitter
-from openfl.utilities.data_split.numpy import LogNormalNumPyDataSplitter
+from openfl.plugins.data_splitters.data_splitter import DataSplitter
+from openfl.plugins.data_splitters.numpy import DirichletNumPyDataSplitter
+from openfl.plugins.data_splitters.numpy import LogNormalNumPyDataSplitter
 
 
 class PyTorchDatasetSplitter(DataSplitter):
