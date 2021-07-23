@@ -1,6 +1,8 @@
 # Copyright (C) 2020-2021 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 """Utilities module."""
+import os
+from socket import getfqdn
 
 import logging
 import os
@@ -63,6 +65,22 @@ class UnpackWorkspace:
         """Exit workspace context manager."""
         os.chdir(self.cwd)
         shutil.rmtree(self.workspace_name)
+
+def getfqdn_env(name: str = '') -> str:
+    """
+    Get the system FQDN, with priority given to environment variables.
+
+    Args:
+        name: The name from which to extract the FQDN.
+
+    Returns:
+        The FQDN of the system.
+    """
+    fqdn = os.environ.get('FQDN', None)
+    if fqdn is not None:
+        return fqdn
+    return getfqdn(name)
+
 
 
 def split_tensor_dict_into_floats_and_non_floats(tensor_dict):
