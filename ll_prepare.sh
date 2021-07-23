@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-git clone https://github.com/igor-davidyuk/openfl.git
+git clone https://github.com/intel/openfl.git
 cd openfl
 git checkout model-proto-ll
 python3.7 -m pip install --upgrade pip
