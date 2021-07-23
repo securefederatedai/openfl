@@ -104,7 +104,7 @@ def get_bin_names(ca_path):
     return step, step_ca
 
 
-def certify(name, cert_path: Path, token_with_cert, ca_path: Path = Path('.')):
+def certify(name, cert_path: Path, token_with_cert, ca_path: Path):
     """Create a collaborator manager workspace."""
     os.makedirs(cert_path, exist_ok=True)
 
