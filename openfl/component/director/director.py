@@ -36,7 +36,6 @@ class Director(director_pb2_grpc.FederationDirectorServicer):
         # TODO: add working directory
         super().__init__()
         self.sample_shape, self.target_shape = sample_shape, target_shape
-        self.shard_registry = []
         self._shard_registry = {}
         self.col_exp_queues = defaultdict(asyncio.Queue)
 
@@ -90,7 +89,6 @@ class Director(director_pb2_grpc.FederationDirectorServicer):
             logger.info('Request was not accepted')
             return reply
         logger.info('Request was accepted')
-        self.shard_registry.append(shard_info)
         self._shard_registry[shard_info.node_info.name] = {
             'shard_info': shard_info,
             'is_online': True,
@@ -211,7 +209,9 @@ class Director(director_pb2_grpc.FederationDirectorServicer):
         """Request registered shards."""
         logger.info('Request GetRegisterdShards has got!')
         resp = director_pb2.GetRegisterdShardsResponse(
-            shard_info=self.shard_registry
+            shard_info=[
+                shard_status['shard_info'] for shard_status in self._shard_registry.values()
+            ]
         )
         return resp
 
