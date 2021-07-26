@@ -138,7 +138,7 @@ def cli(context, log_level):
     setup_logging(log_level, log_file)
 
 
-@cli.resultcallback()
+@cli.result_callback()
 @pass_context
 def end(context, result, **kwargs):
     """Print the result of the operation."""

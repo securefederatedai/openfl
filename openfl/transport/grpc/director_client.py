@@ -210,14 +210,14 @@ class DirectorClient:
             resp = self.stub.SetNewExperiment(st())
             return resp
 
-    def get_shard_info(self):
-        """Request the shard info to the director."""
-        resp = self.stub.GetShardsInfo(director_pb2.GetShardsInfoRequest(header=self.header))
+    def get_dataset_info(self):
+        """Request the dataset info from the director."""
+        resp = self.stub.GetDatasetInfo(director_pb2.GetDatasetInfoRequest(header=self.header))
         return resp.sample_shape, resp.target_shape
 
     def request_shard_registry(self):
         """Request a shard registry."""
-        resp = self.stub.GetRegisterdShards(director_pb2.GetRegisterdShardsRequest(
+        resp = self.stub.GetRegisteredShards(director_pb2.GetRegisteredShardsRequest(
             header=self.header))
         return resp.shard_info
 

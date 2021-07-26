@@ -50,8 +50,6 @@ class Director(director_pb2_grpc.FederationDirectorServicer):
         self.aggregator_task = None  # TODO: add check if exists and wait on terminate
         self.fqdn = socket.getfqdn()
         self.director_port = None
-        self.tensorboard_port = 6006
-        self.tensorboard_thread = None
         self.disable_tls = disable_tls
         self.root_ca = Path(root_ca).absolute()
         self.key = Path(key).absolute()
@@ -134,9 +132,7 @@ class Director(director_pb2_grpc.FederationDirectorServicer):
             await queue.put(request.name)
         logger.info('Send response')
         return director_pb2.SetNewExperimentResponse(
-            accepted=True,
-            tensorboard_address=f'http://{self.fqdn}:{self.tensorboard_port}'
-        )
+            accepted=True)
 
     async def GetTrainedModel(self, request, context):  # NOQA:N802
         """RPC for retrieving trained models."""
@@ -194,9 +190,9 @@ class Director(director_pb2_grpc.FederationDirectorServicer):
 
         yield director_pb2.WaitExperimentResponse(experiment_name=experiment_name)
 
-    async def GetShardsInfo(self, request, context):  # NOQA:N802
-        """Request a shard info."""
-        logger.info('Request GetShardsInfo has got!')
+    async def GetDatasetInfo(self, request, context):  # NOQA:N802
+        """Request the info about target and sample shapes in the dataset."""
+        logger.info('Request GetDatasetInfo has got!')
         if not self.validate_caller(request, context):
             return director_pb2.ShardInfo()
         resp = director_pb2.ShardInfo(
@@ -205,10 +201,10 @@ class Director(director_pb2_grpc.FederationDirectorServicer):
         )
         return resp
 
-    async def GetRegisterdShards(self, request, context):  # NOQA:N802
+    async def GetRegisteredShards(self, request, context):  # NOQA:N802
         """Request registered shards."""
-        logger.info('Request GetRegisterdShards has got!')
-        resp = director_pb2.GetRegisterdShardsResponse(
+        logger.info('Request GetRegisteredShards has got!')
+        resp = director_pb2.GetRegisteredShardsResponse(
             shard_info=[
                 shard_status['shard_info'] for shard_status in self._shard_registry.values()
             ]
@@ -350,20 +346,6 @@ class Director(director_pb2_grpc.FederationDirectorServicer):
             # Temporary solution to free RAM used by TensorDB
             aggregator_server.aggregator.tensor_db.clean_up(0)
 
-    def run_tensorboard(self):
-        """Run the tensorboard."""
-        log_path = os.getcwd()
-        self.tensorboard_thread = threading.Thread(
-            target=lambda: os.system(
-                f'tensorboard --logdir={log_path} --host={"0.0.0.0"} '
-                f'--port={self.tensorboard_port}'
-            ),
-        )
-        try:
-            self.tensorboard_thread.start()
-        except Exception as exc:
-            logger.error(f'Failed to run tensorboard: {exc}')
-
 
 async def serve(*args, disable_tls=False, root_ca=None, key=None, cert=None, **kwargs):
     """Launch the director GRPC server."""
@@ -372,7 +354,7 @@ async def serve(*args, disable_tls=False, root_ca=None, key=None, cert=None, **k
     server = aio.server(options=channel_opt)
     director = Director(*args, disable_tls, root_ca, key, cert, **kwargs)
     director_pb2_grpc.add_FederationDirectorServicer_to_server(director, server)
-    director.run_tensorboard()
+
     # Add pass addr from director.yaml
     listen_addr = '[::]:50051'
     if disable_tls:

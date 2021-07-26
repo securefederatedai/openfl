@@ -32,32 +32,57 @@ class FLExperiment:
         self.summary_writer = None
 
         if serializer_plugin is None:
-            self.serializer_plugin = \
+            serializer_plugin = \
                 'openfl.plugins.interface_serializer.cloudpickle_serializer.CloudpickleSerializer'
-        else:
-            self.serializer_plugin = serializer_plugin
+        self.serializer_plugin = serializer_plugin
+
+        self.experiment_accepted = False
 
         self.logger = getLogger(__name__)
         setup_logging()
 
+    def _assert_experiment_accepted(self):
+        """Function to assure experiment is sent to director."""
+        if not self.experiment_accepted:
+            self.logger.error('The experimnet has not been accepted by director')
+            self.logger.error(
+                'Report the experiment first: '
+                'use the Experiment.start() method.')
+            raise Exception
+
     def get_best_model(self):
         """Retrieve the model with the best score."""
-        # Next line relies on aggregator inner field where model dicts are stored
+        self._assert_experiment_accepted()
         tensor_dict = self.federation.dir_client.get_best_model(
             experiment_name=self.experiment_name)
-        self.task_runner_stub.rebuild_model(tensor_dict, validation=True, device='cpu')
-        return self.task_runner_stub.model
+
+        return self._rebuild_model(tensor_dict)
 
     def get_last_model(self):
         """Retrieve the aggregated model after the last round."""
-        # Next line relies on aggregator inner field where model dicts are stored
+        self._assert_experiment_accepted()
         tensor_dict = self.federation.dir_client.get_last_model(
             experiment_name=self.experiment_name)
-        self.task_runner_stub.rebuild_model(tensor_dict, validation=True, device='cpu')
+
+        return self._rebuild_model(tensor_dict)
+
+    def _rebuild_model(self, tensor_dict):
+        """Use tensor dict to update model weights."""
+        if len(tensor_dict) == 0:
+            self.logger.error('No tensors received from director')
+            self.logger.error(
+                'Possible reasons:\n'
+                '1. Aggregated model is not ready \n'
+                '2. Experiment data removed from director'
+            )
+        else:
+            self.task_runner_stub.rebuild_model(tensor_dict, validation=True, device='cpu')
+
         return self.task_runner_stub.model
 
     def stream_metrics(self, tensorboard_logs=True):
         """Stream metrics."""
+        self._assert_experiment_accepted()
         if tensorboard_logs:
             if not self.summary_writer:
                 self.summary_writer = SummaryWriter(f'./logs/{self.experiment_name}', flush_secs=5)
@@ -84,10 +109,12 @@ class FLExperiment:
 
     def remove_experiment_data(self):
         """Remove experiment data."""
+        self._assert_experiment_accepted()
         log_message = 'Removing experiment data '
         if self.federation.dir_client.remove_experiment_data(
                 experiment_name=self.experiment_name):
             log_message += 'succeed.'
+            self.experiment_accepted = False
         else:
             log_message += 'failed.'
 
@@ -143,10 +170,14 @@ class FLExperiment:
 
         if response.accepted:
             self.logger.info('Experiment was accepted and launched.')
-            self.logger.info('You can watch the experiment through tensorboard:')
-            self.logger.info(response.tensorboard_address)
+            self.experiment_accepted = True
         else:
             self.logger.info('Experiment was not accepted or failed.')
+
+    def restore_experiment_state(self, model_provider):
+        """Method to restore accepted experimnet object."""
+        self.task_runner_stub = self.plan.get_core_task_runner(model_provider=model_provider)
+        self.experiment_accepted = True
 
     @staticmethod
     def _export_python_env():
