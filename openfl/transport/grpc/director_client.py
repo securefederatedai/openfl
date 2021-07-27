@@ -124,6 +124,8 @@ class ShardDirectorClient:
                 except Exception as exc:
                     logger.error(f'Failed to install requirements: {exc}')
                     time.sleep(3)
+                else:
+                    break
         else:
             logger.error('No ' + requirements_filename + ' file found.')
 
