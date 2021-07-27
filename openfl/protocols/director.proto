@@ -66,11 +66,11 @@ message SetNewExperimentResponse{
     string tensorboard_address = 2;
 }
 
-message GetRegisterdShardsRequest {
+message GetRegisteredShardsRequest {
     RequestHeader header = 1;
 }
 
-message GetRegisterdShardsResponse {
+message GetRegisteredShardsResponse {
     repeated ShardInfo shard_info= 1;
 }
 
@@ -88,7 +88,7 @@ message TrainedModelResponse {
     ModelProto model_proto = 1;
 }
 
-message GetShardsInfoRequest {
+message GetDatasetInfoRequest {
     RequestHeader header = 1;
 }
 
@@ -147,8 +147,8 @@ service FederationDirector {
 
     // API RPCs
     rpc SetNewExperiment (stream ExperimentInfo) returns (SetNewExperimentResponse) {}
-    rpc GetRegisterdShards (GetRegisterdShardsRequest) returns (GetRegisterdShardsResponse) {}
-    rpc GetShardsInfo (GetShardsInfoRequest) returns (ShardInfo) {}
+    rpc GetRegisteredShards (GetRegisteredShardsRequest) returns (GetRegisteredShardsResponse) {}
+    rpc GetDatasetInfo (GetDatasetInfoRequest) returns (ShardInfo) {}
     rpc GetTrainedModel (GetTrainedModelRequest) returns (TrainedModelResponse) {}
     rpc StreamMetrics (StreamMetricsRequest) returns (stream StreamMetricsResponse) {}
     rpc RemoveExperimentData (RemoveExperimentRequest) returns (RemoveExperimentResponse) {}

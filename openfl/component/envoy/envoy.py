@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 DEFAULT_TIMEOUT_IN_SECONDS = 60
 
 
-class CollaboratorManager:
+class Envoy:
     """Collaborator manager class."""
 
     def __init__(self, shard_name, director_uri, shard_descriptor,
