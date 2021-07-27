@@ -178,10 +178,6 @@ class DirectorClient:
         self.client_id = client_id
         self.header = director_pb2.RequestHeader(sender=self.client_id)
 
-    def report_shard_info(self, shard_descriptor) -> bool:
-        """Report shard info to the director."""
-        logger.info('Send report AcknowledgeShard')
-
     def set_new_experiment(self, name, col_names, arch_path,
                            initial_tensor_dict=None):
         """Send the new experiment to director to launch."""
