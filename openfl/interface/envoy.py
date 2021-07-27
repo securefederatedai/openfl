@@ -50,9 +50,15 @@ def start_(shard_name, director_uri, disable_tls, shard_config_path,
     logger.info('🧿 Starting the Collaborator Manager.')
 
     shard_descriptor = shard_descriptor_from_config(shard_config_path)
-    envoy = Envoy(shard_name=shard_name, director_uri=director_uri,
-                                 shard_descriptor=shard_descriptor, disable_tls=disable_tls,
-                                 root_ca=root_ca, key=key, cert=cert)
+    envoy = Envoy(
+        shard_name=shard_name,
+        director_uri=director_uri,
+        shard_descriptor=shard_descriptor,
+        disable_tls=disable_tls,
+        root_ca=root_ca,
+        key=key,
+        cert=cert
+    )
 
     envoy.start()
 

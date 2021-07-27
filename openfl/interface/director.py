@@ -15,7 +15,7 @@ from click import pass_context
 from click import Path as ClickPath
 from yaml import safe_load
 
-from openfl.component.director.director import serve
+from openfl.component.director import serve
 from openfl.interface.cli_helper import WORKSPACE
 
 logger = logging.getLogger(__name__)
@@ -47,11 +47,19 @@ def start(director_config_path, disable_tls, root_ca, key, cert):
     sample_shape = settings.get('sample_shape', '')
     target_shape = settings.get('target_shape', '')
     logger.info(f'Sample shape: {sample_shape}, target shape: {target_shape}')
+    listen_ip = settings.get('listen_ip')
+    listen_port = settings.get('listen_port')
+    kwargs = {}
+    if listen_ip:
+        kwargs['listen_ip'] = listen_ip
+    if listen_port:
+        kwargs['listen_port'] = listen_port
     asyncio.run(serve(
         disable_tls=disable_tls,
         sample_shape=sample_shape,
         target_shape=target_shape,
-        root_ca=root_ca, key=key, cert=cert))
+        root_ca=root_ca, key=key, cert=cert, **kwargs
+    ))
 
 
 @director.command(name='create-workspace')

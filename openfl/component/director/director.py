@@ -8,10 +8,8 @@ import logging
 import os
 import shutil
 import socket
-import threading
 import time
 from collections import defaultdict
-from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 
 from grpc import aio
@@ -30,8 +28,9 @@ logger = logging.getLogger(__name__)
 class Director(director_pb2_grpc.FederationDirectorServicer):
     """Director class."""
 
-    def __init__(self, disable_tls, root_ca, key, cert,
-                 sample_shape: list, target_shape: list) -> None:
+    def __init__(self, *, disable_tls: bool = False,
+                 root_ca: str = None, key: str = None, cert: str = None,
+                 sample_shape: list = None, target_shape: list = None) -> None:
         """Initialize a director object."""
         # TODO: add working directory
         super().__init__()
@@ -41,19 +40,27 @@ class Director(director_pb2_grpc.FederationDirectorServicer):
 
         self.experiments = set()  # Do not know what it is
         self.experiment_data = {}  # {Experiment name : archive bytes}
-        # What if two experimnets come with the same name from different users?
-        self.experiments_queue = asyncio.Queue()  # Experimnets waiting to be executed
-        self.experiment_stash = defaultdict(dict)  # Running of finished experimnets
+        # What if two experiments come with the same name from different users?
+        self.experiments_queue = asyncio.Queue()  # experiments waiting to be executed
+        self.experiment_stash = defaultdict(dict)  # Running of finished experiments
         # {API name : {experiment name : aggregator}}
 
-        self.executor = ProcessPoolExecutor(max_workers=2)
-        self.aggregator_task = None  # TODO: add check if exists and wait on terminate
         self.fqdn = socket.getfqdn()
         self.director_port = None
         self.disable_tls = disable_tls
-        self.root_ca = Path(root_ca).absolute()
-        self.key = Path(key).absolute()
-        self.cert = Path(cert).absolute()
+        self.root_ca = None
+        self.key = None
+        self.cert = None
+        self.fill_certs(root_ca, key, cert)
+
+    def fill_certs(self, root_ca, key, cert):
+        """Fill certificates."""
+        if not self.disable_tls:
+            if not (root_ca and key and cert):
+                raise Exception('No certificates provided')
+            self.root_ca = Path(root_ca).absolute()
+            self.key = Path(key).absolute()
+            self.cert = Path(cert).absolute()
 
     def validate_caller(self, request, context):
         """
@@ -184,11 +191,11 @@ class Director(director_pb2_grpc.FederationDirectorServicer):
         logger.info('Request WaitExperiment has got!')
         async for msg in request_iterator:
             logger.info(msg)
-        queue = self.col_exp_queues[msg.collaborator_name]
-        experiment_name = await queue.get()
-        logger.info(f'Experiment {experiment_name} was prepared')
+            queue = self.col_exp_queues[msg.collaborator_name]
+            experiment_name = await queue.get()
+            logger.info(f'Experiment {experiment_name} was prepared')
 
-        yield director_pb2.WaitExperimentResponse(experiment_name=experiment_name)
+            yield director_pb2.WaitExperimentResponse(experiment_name=experiment_name)
 
     async def GetDatasetInfo(self, request, context):  # NOQA:N802
         """Request the info about target and sample shapes in the dataset."""
@@ -347,16 +354,22 @@ class Director(director_pb2_grpc.FederationDirectorServicer):
             aggregator_server.aggregator.tensor_db.clean_up(0)
 
 
-async def serve(*args, disable_tls=False, root_ca=None, key=None, cert=None, **kwargs):
+async def serve(disable_tls=False, root_ca=None, key=None, cert=None,
+                listen_ip='[::]', listen_port=50051, **kwargs):
     """Launch the director GRPC server."""
     channel_opt = [('grpc.max_send_message_length', 512 * 1024 * 1024),
                    ('grpc.max_receive_message_length', 512 * 1024 * 1024)]
     server = aio.server(options=channel_opt)
-    director = Director(*args, disable_tls, root_ca, key, cert, **kwargs)
+    director = Director(
+        disable_tls=disable_tls,
+        root_ca=root_ca,
+        key=key,
+        cert=cert,
+        **kwargs
+    )
     director_pb2_grpc.add_FederationDirectorServicer_to_server(director, server)
 
-    # Add pass addr from director.yaml
-    listen_addr = '[::]:50051'
+    listen_addr = f'{listen_ip}:{listen_port}'
     if disable_tls:
         server.add_insecure_port(listen_addr)
     else:
