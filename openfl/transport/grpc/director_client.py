@@ -36,12 +36,15 @@ class ShardDirectorClient:
         else:
             if not (root_ca and key and cert):
                 raise Exception('No certificates provided')
-            with open(root_ca, 'rb') as f:
-                root_ca_b = f.read()
-            with open(key, 'rb') as f:
-                key_b = f.read()
-            with open(cert, 'rb') as f:
-                cert_b = f.read()
+            try:
+                with open(root_ca, 'rb') as f:
+                    root_ca_b = f.read()
+                with open(key, 'rb') as f:
+                    key_b = f.read()
+                with open(cert, 'rb') as f:
+                    cert_b = f.read()
+            except FileNotFoundError as exc:
+                raise Exception(f'Provided certificate file is not exist: {exc.filename}')
 
             credentials = grpc.ssl_channel_credentials(
                 root_certificates=root_ca_b,
@@ -152,19 +155,25 @@ class ShardDirectorClient:
 class DirectorClient:
     """Director client class for users."""
 
-    def __init__(self, client_id, director_uri, disable_tls, root_ca, key, cert) -> None:
+    def __init__(self, client_id, director_uri, disable_tls=False,
+                 root_ca=None, key=None, cert=None) -> None:
         """Initialize director client object."""
         channel_opt = [('grpc.max_send_message_length', 512 * 1024 * 1024),
                        ('grpc.max_receive_message_length', 512 * 1024 * 1024)]
         if disable_tls:
             channel = grpc.insecure_channel(director_uri, options=channel_opt)
         else:
-            with open(root_ca, 'rb') as f:
-                root_ca_b = f.read()
-            with open(key, 'rb') as f:
-                key_b = f.read()
-            with open(cert, 'rb') as f:
-                cert_b = f.read()
+            if not (root_ca and key and cert):
+                raise Exception('No certificates provided')
+            try:
+                with open(root_ca, 'rb') as f:
+                    root_ca_b = f.read()
+                with open(key, 'rb') as f:
+                    key_b = f.read()
+                with open(cert, 'rb') as f:
+                    cert_b = f.read()
+            except FileNotFoundError as exc:
+                raise Exception(f'Provided certificate file is not exist: {exc.filename}')
 
             credentials = grpc.ssl_channel_credentials(
                 root_certificates=root_ca_b,
