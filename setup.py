@@ -26,7 +26,7 @@ setup(
         'openfl.component.assigner',
         'openfl.component.aggregator',
         'openfl.component.collaborator',
-        'openfl.component.collaborator_manager',
+        'openfl.component.envoy',
         'openfl.component.director',
         'openfl.component.ca',
         'openfl.utilities',

@@ -43,9 +43,9 @@ Should get_token be run only on ca node? Why we need ca_url then?
 4. fx director certify <token>
 # director start <config>
 
-# fx collaborator_manager create <dir path>
+# fx envoy create <dir path>
 5. fx envoy certify <token>    * N
-# fx collaborator_manager start <config>
+# fx envoy start <config>
 
 # ??? frontend CLI ???
 6. api_layer certify <token>
