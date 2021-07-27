@@ -16,7 +16,7 @@ from click import pass_context
 from click import Path as ClickPath
 from yaml import safe_load
 
-from openfl.component.collaborator_manager.collaborator_manager import CollaboratorManager
+from openfl.component.envoy.envoy import Envoy
 from openfl.interface.cli_helper import SITEPACKS
 from openfl.interface.cli_helper import WORKSPACE
 
@@ -25,12 +25,12 @@ logger = logging.getLogger(__name__)
 
 @group()
 @pass_context
-def collaborator_manager(context):
+def envoy(context):
     """Manage Federated Learning Envoy."""
     context.obj['group'] = 'collaborator-manager'
 
 
-@collaborator_manager.command(name='start')
+@envoy.command(name='start')
 @option('-n', '--shard-name', required=True,
         help='Current shard name')
 @option('-d', '--director-uri', required=True,
@@ -50,31 +50,31 @@ def start_(shard_name, director_uri, disable_tls, shard_config_path,
     logger.info('🧿 Starting the Collaborator Manager.')
 
     shard_descriptor = shard_descriptor_from_config(shard_config_path)
-    keeper = CollaboratorManager(shard_name=shard_name, director_uri=director_uri,
+    envoy = Envoy(shard_name=shard_name, director_uri=director_uri,
                                  shard_descriptor=shard_descriptor, disable_tls=disable_tls,
                                  root_ca=root_ca, key=key, cert=cert)
 
-    keeper.start()
+    envoy.start()
 
 
-@collaborator_manager.command(name='create-workspace')
+@envoy.command(name='create-workspace')
 @option('-p', '--collaborator-manager-path', required=True,
         help='The Collaborator Manager path', type=ClickPath())
-def create(collaborator_manager_path):
+def create(envoy_path):
     """Create a collaborator manager workspace."""
-    collaborator_manager_path = Path(collaborator_manager_path)
-    if collaborator_manager_path.exists():
+    envoy_path = Path(envoy_path)
+    if envoy_path.exists():
         if not click.confirm('Collaborator manager workspace already exists. Recreate?',
                              default=True):
             sys.exit(1)
-        shutil.rmtree(collaborator_manager_path)
-    (collaborator_manager_path / 'cert').mkdir(parents=True, exist_ok=True)
-    (collaborator_manager_path / 'logs').mkdir(parents=True, exist_ok=True)
-    (collaborator_manager_path / 'data').mkdir(parents=True, exist_ok=True)
+        shutil.rmtree(envoy_path)
+    (envoy_path / 'cert').mkdir(parents=True, exist_ok=True)
+    (envoy_path / 'logs').mkdir(parents=True, exist_ok=True)
+    (envoy_path / 'data').mkdir(parents=True, exist_ok=True)
     shutil.copyfile(WORKSPACE / 'default/shard_config.yaml',
-                    collaborator_manager_path / 'shard_config.yaml')
-    shutil.copyfile(SITEPACKS / 'openfl/component/collaborator_manager/shard_descriptor.py',
-                    collaborator_manager_path / 'shard_descriptor.py')
+                    envoy_path / 'shard_config.yaml')
+    shutil.copyfile(SITEPACKS / 'openfl/component/envoy/shard_descriptor.py',
+                    envoy_path / 'shard_descriptor.py')
 
 
 def shard_descriptor_from_config(shard_config_path: str):

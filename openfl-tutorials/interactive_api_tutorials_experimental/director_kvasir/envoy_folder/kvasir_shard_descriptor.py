@@ -113,16 +113,16 @@ if __name__ == '__main__':
     print(kvasir_sd.dataset_description)
     print(kvasir_sd.sample_shape, kvasir_sd.target_shape)
 
-    from openfl.component.collaborator_manager.collaborator_manager import CollaboratorManager
+    from openfl.component.envoy.envoy import Envoy
 
     shard_name = 'one'
     director_uri = 'localhost:50051'
 
-    keeper = CollaboratorManager(
+    keeper = Envoy(
         shard_name=shard_name,
         director_uri=director_uri,
         shard_descriptor=kvasir_sd,
-        disable_tls=False,
+        disable_tls=True,
         root_ca=('./cert/root_ca.crt'),
         key=('./cert/one.key'),
         cert=('./cert/one.crt'))
