@@ -220,6 +220,7 @@ class FLExperiment:
         return arch_path
 
     def remove_workspace_archive(self):
+        """Remove the workspace archive."""
         os.remove(self.arch_path)
         del self.arch_path
 
