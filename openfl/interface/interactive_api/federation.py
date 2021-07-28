@@ -57,4 +57,4 @@ class Federation:
 
     def get_shard_registry(self):
         """Return a shard registry."""
-        return self.dir_client.request_shard_registry()
+        return self.dir_client.get_envoys()

@@ -66,14 +66,6 @@ message SetNewExperimentResponse{
     string tensorboard_address = 2;
 }
 
-message GetRegisteredShardsRequest {
-    RequestHeader header = 1;
-}
-
-message GetRegisteredShardsResponse {
-    repeated ShardInfo shard_info= 1;
-}
-
 message GetTrainedModelRequest {
     enum ModelType {
         BEST_MODEL = 0;
@@ -147,7 +139,6 @@ service FederationDirector {
 
     // API RPCs
     rpc SetNewExperiment (stream ExperimentInfo) returns (SetNewExperimentResponse) {}
-    rpc GetRegisteredShards (GetRegisteredShardsRequest) returns (GetRegisteredShardsResponse) {}
     rpc GetDatasetInfo (GetDatasetInfoRequest) returns (ShardInfo) {}
     rpc GetTrainedModel (GetTrainedModelRequest) returns (TrainedModelResponse) {}
     rpc StreamMetrics (StreamMetricsRequest) returns (stream StreamMetricsResponse) {}

@@ -222,12 +222,6 @@ class DirectorClient:
         resp = self.stub.GetDatasetInfo(director_pb2.GetDatasetInfoRequest(header=self.header))
         return resp.sample_shape, resp.target_shape
 
-    def request_shard_registry(self):
-        """Request a shard registry."""
-        resp = self.stub.GetRegisteredShards(director_pb2.GetRegisteredShardsRequest(
-            header=self.header))
-        return resp.shard_info
-
     def _get_trained_model(self, experiment_name, model_type):
         """Get trained model RPC."""
         get_model_request = director_pb2.GetTrainedModelRequest(

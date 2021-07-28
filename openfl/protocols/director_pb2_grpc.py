@@ -34,11 +34,6 @@ class FederationDirectorStub(object):
                 request_serializer=director__pb2.ExperimentInfo.SerializeToString,
                 response_deserializer=director__pb2.SetNewExperimentResponse.FromString,
                 )
-        self.GetRegisteredShards = channel.unary_unary(
-                '/FederationDirector/GetRegisteredShards',
-                request_serializer=director__pb2.GetRegisteredShardsRequest.SerializeToString,
-                response_deserializer=director__pb2.GetRegisteredShardsResponse.FromString,
-                )
         self.GetDatasetInfo = channel.unary_unary(
                 '/FederationDirector/GetDatasetInfo',
                 request_serializer=director__pb2.GetDatasetInfoRequest.SerializeToString,
@@ -101,12 +96,6 @@ class FederationDirectorServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
-    def GetRegisteredShards(self, request, context):
-        """Missing associated documentation comment in .proto file."""
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
-
     def GetDatasetInfo(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
@@ -165,11 +154,6 @@ def add_FederationDirectorServicer_to_server(servicer, server):
                     servicer.SetNewExperiment,
                     request_deserializer=director__pb2.ExperimentInfo.FromString,
                     response_serializer=director__pb2.SetNewExperimentResponse.SerializeToString,
-            ),
-            'GetRegisteredShards': grpc.unary_unary_rpc_method_handler(
-                    servicer.GetRegisteredShards,
-                    request_deserializer=director__pb2.GetRegisteredShardsRequest.FromString,
-                    response_serializer=director__pb2.GetRegisteredShardsResponse.SerializeToString,
             ),
             'GetDatasetInfo': grpc.unary_unary_rpc_method_handler(
                     servicer.GetDatasetInfo,
@@ -276,23 +260,6 @@ class FederationDirector(object):
         return grpc.experimental.stream_unary(request_iterator, target, '/FederationDirector/SetNewExperiment',
             director__pb2.ExperimentInfo.SerializeToString,
             director__pb2.SetNewExperimentResponse.FromString,
-            options, channel_credentials,
-            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
-
-    @staticmethod
-    def GetRegisteredShards(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/FederationDirector/GetRegisteredShards',
-            director__pb2.GetRegisteredShardsRequest.SerializeToString,
-            director__pb2.GetRegisteredShardsResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 

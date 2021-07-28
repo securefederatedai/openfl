@@ -21,7 +21,7 @@ from openfl.utilities import split_tensor_dict_for_holdouts
 class FLExperiment:
     """Central class for FL experiment orchestration."""
 
-    def __init__(self, federation, experiment_name='test-'+time.strftime("%Y%m%d-%H%M%S"),
+    def __init__(self, federation, experiment_name='test-' + time.strftime('%Y%m%d-%H%M%S'),
                  serializer_plugin=None) -> None:
         """
         Initialize an experiment inside a federation.
@@ -258,9 +258,10 @@ class FLExperiment:
         # We also could change the aggregator logic so it will send tasks to aggregator
         # as soon as it connects. This change should be a part of a bigger PR
         # brining in fault tolerance changes
+        shard_registry = self.federation.get_shard_registry()
         plan.authorized_cols = [
-            shard_info.node_info.name
-            for shard_info in self.federation.get_shard_registry()
+            name for name, info in shard_registry.items()
+            if info['is_online'] and not info['is_experiment_running']
         ]
         # Network part of the plan
         # We keep in mind that an aggregator FQND will be the same as the directors FQDN

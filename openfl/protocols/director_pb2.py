@@ -22,7 +22,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   syntax='proto3',
   serialized_options=None,
   create_key=_descriptor._internal_create_key,
-  serialized_pb=b'\n\x0e\x64irector.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x1egoogle/protobuf/duration.proto\x1a\x10\x66\x65\x64\x65ration.proto\"\x1f\n\rRequestHeader\x12\x0e\n\x06sender\x18\x01 \x01(\t\"U\n\x08NodeInfo\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0e\n\x06\x61\x64ress\x18\x02 \x01(\t\x12\x16\n\x0e\x63uda_available\x18\x03 \x01(\x08\x12\x13\n\x0bmemory_size\x18\x04 \x01(\r\"\x83\x01\n\tShardInfo\x12\x1c\n\tnode_info\x18\x01 \x01(\x0b\x32\t.NodeInfo\x12\x19\n\x11shard_description\x18\x02 \x01(\t\x12\x11\n\tn_samples\x18\x03 \x01(\x04\x12\x14\n\x0csample_shape\x18\x04 \x03(\t\x12\x14\n\x0ctarget_shape\x18\x05 \x03(\t\"(\n\x14ShardAcknowledgement\x12\x10\n\x08\x61\x63\x63\x65pted\x18\x01 \x01(\x08\"2\n\x15WaitExperimentRequest\x12\x19\n\x11\x63ollaborator_name\x18\x01 \x01(\t\"1\n\x16WaitExperimentResponse\x12\x17\n\x0f\x65xperiment_name\x18\x01 \x01(\t\"N\n\x18GetExperimentDataRequest\x12\x17\n\x0f\x65xperiment_name\x18\x01 \x01(\t\x12\x19\n\x11\x63ollaborator_name\x18\x02 \x01(\t\"/\n\x0e\x45xperimentData\x12\x0c\n\x04size\x18\x01 \x01(\r\x12\x0f\n\x07npbytes\x18\x02 \x01(\x0c\"\xa6\x01\n\x0e\x45xperimentInfo\x12\x1e\n\x06header\x18\x01 \x01(\x0b\x32\x0e.RequestHeader\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\x1a\n\x12\x63ollaborator_names\x18\x03 \x03(\t\x12(\n\x0f\x65xperiment_data\x18\x04 \x01(\x0b\x32\x0f.ExperimentData\x12 \n\x0bmodel_proto\x18\x05 \x01(\x0b\x32\x0b.ModelProto\"I\n\x18SetNewExperimentResponse\x12\x10\n\x08\x61\x63\x63\x65pted\x18\x01 \x01(\x08\x12\x1b\n\x13tensorboard_address\x18\x02 \x01(\t\"<\n\x1aGetRegisteredShardsRequest\x12\x1e\n\x06header\x18\x01 \x01(\x0b\x32\x0e.RequestHeader\"=\n\x1bGetRegisteredShardsResponse\x12\x1e\n\nshard_info\x18\x01 \x03(\x0b\x32\n.ShardInfo\"\xb5\x01\n\x16GetTrainedModelRequest\x12\x1e\n\x06header\x18\x01 \x01(\x0b\x32\x0e.RequestHeader\x12\x17\n\x0f\x65xperiment_name\x18\x02 \x01(\t\x12\x35\n\nmodel_type\x18\x03 \x01(\x0e\x32!.GetTrainedModelRequest.ModelType\"+\n\tModelType\x12\x0e\n\nBEST_MODEL\x10\x00\x12\x0e\n\nLAST_MODEL\x10\x01\"8\n\x14TrainedModelResponse\x12 \n\x0bmodel_proto\x18\x01 \x01(\x0b\x32\x0b.ModelProto\"7\n\x15GetDatasetInfoRequest\x12\x1e\n\x06header\x18\x01 \x01(\x0b\x32\x0e.RequestHeader\"O\n\x14StreamMetricsRequest\x12\x1e\n\x06header\x18\x01 \x01(\x0b\x32\x0e.RequestHeader\x12\x17\n\x0f\x65xperiment_name\x18\x02 \x01(\t\"{\n\x15StreamMetricsResponse\x12\x15\n\rmetric_origin\x18\x01 \x01(\t\x12\x11\n\ttask_name\x18\x02 \x01(\t\x12\x13\n\x0bmetric_name\x18\x03 \x01(\t\x12\x14\n\x0cmetric_value\x18\x04 \x01(\x02\x12\r\n\x05round\x18\x05 \x01(\r\"R\n\x17RemoveExperimentRequest\x12\x1e\n\x06header\x18\x01 \x01(\x0b\x32\x0e.RequestHeader\x12\x17\n\x0f\x65xperiment_name\x18\x02 \x01(\t\"3\n\x18RemoveExperimentResponse\x12\x17\n\x0f\x61\x63knowledgement\x18\x01 \x01(\x08\"t\n\x12\x43ollaboratorStatus\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x1d\n\x15is_experiment_running\x18\x02 \x01(\x08\x12\x31\n\x0evalid_duration\x18\x03 \x01(\x0b\x32\x19.google.protobuf.Duration\"3\n\x1f\x43ollaboratorHealthCheckResponse\x12\x10\n\x08\x61\x63\x63\x65pted\x18\x01 \x01(\x08\"\xc2\x01\n\tEnvoyInfo\x12\x1e\n\nshard_info\x18\x01 \x01(\x0b\x32\n.ShardInfo\x12\x11\n\tis_online\x18\x02 \x01(\x08\x12\x1d\n\x15is_experiment_running\x18\x03 \x01(\x08\x12\x30\n\x0clast_updated\x18\x04 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\x31\n\x0evalid_duration\x18\x05 \x01(\x0b\x32\x19.google.protobuf.Duration\"\x12\n\x10GetEnvoysRequest\"4\n\x11GetEnvoysResponse\x12\x1f\n\x0b\x65nvoy_infos\x18\x01 \x03(\x0b\x32\n.EnvoyInfo2\x8d\x06\n\x12\x46\x65\x64\x65rationDirector\x12\x37\n\x10\x41\x63knowledgeShard\x12\n.ShardInfo\x1a\x15.ShardAcknowledgement\"\x00\x12G\n\x0eWaitExperiment\x12\x16.WaitExperimentRequest\x1a\x17.WaitExperimentResponse\"\x00(\x01\x30\x01\x12\x43\n\x11GetExperimentData\x12\x19.GetExperimentDataRequest\x1a\x0f.ExperimentData\"\x00\x30\x01\x12\x42\n\x10SetNewExperiment\x12\x0f.ExperimentInfo\x1a\x19.SetNewExperimentResponse\"\x00(\x01\x12R\n\x13GetRegisteredShards\x12\x1b.GetRegisteredShardsRequest\x1a\x1c.GetRegisteredShardsResponse\"\x00\x12\x36\n\x0eGetDatasetInfo\x12\x16.GetDatasetInfoRequest\x1a\n.ShardInfo\"\x00\x12\x43\n\x0fGetTrainedModel\x12\x17.GetTrainedModelRequest\x1a\x15.TrainedModelResponse\"\x00\x12\x42\n\rStreamMetrics\x12\x15.StreamMetricsRequest\x1a\x16.StreamMetricsResponse\"\x00\x30\x01\x12M\n\x14RemoveExperimentData\x12\x18.RemoveExperimentRequest\x1a\x19.RemoveExperimentResponse\"\x00\x12R\n\x17\x43ollaboratorHealthCheck\x12\x13.CollaboratorStatus\x1a .CollaboratorHealthCheckResponse\"\x00\x12\x34\n\tGetEnvoys\x12\x11.GetEnvoysRequest\x1a\x12.GetEnvoysResponse\"\x00\x62\x06proto3'
+  serialized_pb=b'\n\x0e\x64irector.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x1egoogle/protobuf/duration.proto\x1a\x10\x66\x65\x64\x65ration.proto\"\x1f\n\rRequestHeader\x12\x0e\n\x06sender\x18\x01 \x01(\t\"U\n\x08NodeInfo\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0e\n\x06\x61\x64ress\x18\x02 \x01(\t\x12\x16\n\x0e\x63uda_available\x18\x03 \x01(\x08\x12\x13\n\x0bmemory_size\x18\x04 \x01(\r\"\x83\x01\n\tShardInfo\x12\x1c\n\tnode_info\x18\x01 \x01(\x0b\x32\t.NodeInfo\x12\x19\n\x11shard_description\x18\x02 \x01(\t\x12\x11\n\tn_samples\x18\x03 \x01(\x04\x12\x14\n\x0csample_shape\x18\x04 \x03(\t\x12\x14\n\x0ctarget_shape\x18\x05 \x03(\t\"(\n\x14ShardAcknowledgement\x12\x10\n\x08\x61\x63\x63\x65pted\x18\x01 \x01(\x08\"2\n\x15WaitExperimentRequest\x12\x19\n\x11\x63ollaborator_name\x18\x01 \x01(\t\"1\n\x16WaitExperimentResponse\x12\x17\n\x0f\x65xperiment_name\x18\x01 \x01(\t\"N\n\x18GetExperimentDataRequest\x12\x17\n\x0f\x65xperiment_name\x18\x01 \x01(\t\x12\x19\n\x11\x63ollaborator_name\x18\x02 \x01(\t\"/\n\x0e\x45xperimentData\x12\x0c\n\x04size\x18\x01 \x01(\r\x12\x0f\n\x07npbytes\x18\x02 \x01(\x0c\"\xa6\x01\n\x0e\x45xperimentInfo\x12\x1e\n\x06header\x18\x01 \x01(\x0b\x32\x0e.RequestHeader\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\x1a\n\x12\x63ollaborator_names\x18\x03 \x03(\t\x12(\n\x0f\x65xperiment_data\x18\x04 \x01(\x0b\x32\x0f.ExperimentData\x12 \n\x0bmodel_proto\x18\x05 \x01(\x0b\x32\x0b.ModelProto\"I\n\x18SetNewExperimentResponse\x12\x10\n\x08\x61\x63\x63\x65pted\x18\x01 \x01(\x08\x12\x1b\n\x13tensorboard_address\x18\x02 \x01(\t\"\xb5\x01\n\x16GetTrainedModelRequest\x12\x1e\n\x06header\x18\x01 \x01(\x0b\x32\x0e.RequestHeader\x12\x17\n\x0f\x65xperiment_name\x18\x02 \x01(\t\x12\x35\n\nmodel_type\x18\x03 \x01(\x0e\x32!.GetTrainedModelRequest.ModelType\"+\n\tModelType\x12\x0e\n\nBEST_MODEL\x10\x00\x12\x0e\n\nLAST_MODEL\x10\x01\"8\n\x14TrainedModelResponse\x12 \n\x0bmodel_proto\x18\x01 \x01(\x0b\x32\x0b.ModelProto\"7\n\x15GetDatasetInfoRequest\x12\x1e\n\x06header\x18\x01 \x01(\x0b\x32\x0e.RequestHeader\"O\n\x14StreamMetricsRequest\x12\x1e\n\x06header\x18\x01 \x01(\x0b\x32\x0e.RequestHeader\x12\x17\n\x0f\x65xperiment_name\x18\x02 \x01(\t\"{\n\x15StreamMetricsResponse\x12\x15\n\rmetric_origin\x18\x01 \x01(\t\x12\x11\n\ttask_name\x18\x02 \x01(\t\x12\x13\n\x0bmetric_name\x18\x03 \x01(\t\x12\x14\n\x0cmetric_value\x18\x04 \x01(\x02\x12\r\n\x05round\x18\x05 \x01(\r\"R\n\x17RemoveExperimentRequest\x12\x1e\n\x06header\x18\x01 \x01(\x0b\x32\x0e.RequestHeader\x12\x17\n\x0f\x65xperiment_name\x18\x02 \x01(\t\"3\n\x18RemoveExperimentResponse\x12\x17\n\x0f\x61\x63knowledgement\x18\x01 \x01(\x08\"t\n\x12\x43ollaboratorStatus\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x1d\n\x15is_experiment_running\x18\x02 \x01(\x08\x12\x31\n\x0evalid_duration\x18\x03 \x01(\x0b\x32\x19.google.protobuf.Duration\"3\n\x1f\x43ollaboratorHealthCheckResponse\x12\x10\n\x08\x61\x63\x63\x65pted\x18\x01 \x01(\x08\"\xc2\x01\n\tEnvoyInfo\x12\x1e\n\nshard_info\x18\x01 \x01(\x0b\x32\n.ShardInfo\x12\x11\n\tis_online\x18\x02 \x01(\x08\x12\x1d\n\x15is_experiment_running\x18\x03 \x01(\x08\x12\x30\n\x0clast_updated\x18\x04 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\x31\n\x0evalid_duration\x18\x05 \x01(\x0b\x32\x19.google.protobuf.Duration\"\x12\n\x10GetEnvoysRequest\"4\n\x11GetEnvoysResponse\x12\x1f\n\x0b\x65nvoy_infos\x18\x01 \x03(\x0b\x32\n.EnvoyInfo2\xb9\x05\n\x12\x46\x65\x64\x65rationDirector\x12\x37\n\x10\x41\x63knowledgeShard\x12\n.ShardInfo\x1a\x15.ShardAcknowledgement\"\x00\x12G\n\x0eWaitExperiment\x12\x16.WaitExperimentRequest\x1a\x17.WaitExperimentResponse\"\x00(\x01\x30\x01\x12\x43\n\x11GetExperimentData\x12\x19.GetExperimentDataRequest\x1a\x0f.ExperimentData\"\x00\x30\x01\x12\x42\n\x10SetNewExperiment\x12\x0f.ExperimentInfo\x1a\x19.SetNewExperimentResponse\"\x00(\x01\x12\x36\n\x0eGetDatasetInfo\x12\x16.GetDatasetInfoRequest\x1a\n.ShardInfo\"\x00\x12\x43\n\x0fGetTrainedModel\x12\x17.GetTrainedModelRequest\x1a\x15.TrainedModelResponse\"\x00\x12\x42\n\rStreamMetrics\x12\x15.StreamMetricsRequest\x1a\x16.StreamMetricsResponse\"\x00\x30\x01\x12M\n\x14RemoveExperimentData\x12\x18.RemoveExperimentRequest\x1a\x19.RemoveExperimentResponse\"\x00\x12R\n\x17\x43ollaboratorHealthCheck\x12\x13.CollaboratorStatus\x1a .CollaboratorHealthCheckResponse\"\x00\x12\x34\n\tGetEnvoys\x12\x11.GetEnvoysRequest\x1a\x12.GetEnvoysResponse\"\x00\x62\x06proto3'
   ,
   dependencies=[google_dot_protobuf_dot_timestamp__pb2.DESCRIPTOR,google_dot_protobuf_dot_duration__pb2.DESCRIPTOR,federation__pb2.DESCRIPTOR,])
 
@@ -48,8 +48,8 @@ _GETTRAINEDMODELREQUEST_MODELTYPE = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   serialized_options=None,
-  serialized_start=1137,
-  serialized_end=1180,
+  serialized_start=1012,
+  serialized_end=1055,
 )
 _sym_db.RegisterEnumDescriptor(_GETTRAINEDMODELREQUEST_MODELTYPE)
 
@@ -472,70 +472,6 @@ _SETNEWEXPERIMENTRESPONSE = _descriptor.Descriptor(
 )
 
 
-_GETREGISTEREDSHARDSREQUEST = _descriptor.Descriptor(
-  name='GetRegisteredShardsRequest',
-  full_name='GetRegisteredShardsRequest',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  create_key=_descriptor._internal_create_key,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='header', full_name='GetRegisteredShardsRequest.header', index=0,
-      number=1, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=873,
-  serialized_end=933,
-)
-
-
-_GETREGISTEREDSHARDSRESPONSE = _descriptor.Descriptor(
-  name='GetRegisteredShardsResponse',
-  full_name='GetRegisteredShardsResponse',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  create_key=_descriptor._internal_create_key,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='shard_info', full_name='GetRegisteredShardsResponse.shard_info', index=0,
-      number=1, type=11, cpp_type=10, label=3,
-      has_default_value=False, default_value=[],
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=935,
-  serialized_end=996,
-)
-
-
 _GETTRAINEDMODELREQUEST = _descriptor.Descriptor(
   name='GetTrainedModelRequest',
   full_name='GetTrainedModelRequest',
@@ -578,8 +514,8 @@ _GETTRAINEDMODELREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=999,
-  serialized_end=1180,
+  serialized_start=874,
+  serialized_end=1055,
 )
 
 
@@ -610,8 +546,8 @@ _TRAINEDMODELRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1182,
-  serialized_end=1238,
+  serialized_start=1057,
+  serialized_end=1113,
 )
 
 
@@ -642,8 +578,8 @@ _GETDATASETINFOREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1240,
-  serialized_end=1295,
+  serialized_start=1115,
+  serialized_end=1170,
 )
 
 
@@ -681,8 +617,8 @@ _STREAMMETRICSREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1297,
-  serialized_end=1376,
+  serialized_start=1172,
+  serialized_end=1251,
 )
 
 
@@ -741,8 +677,8 @@ _STREAMMETRICSRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1378,
-  serialized_end=1501,
+  serialized_start=1253,
+  serialized_end=1376,
 )
 
 
@@ -780,8 +716,8 @@ _REMOVEEXPERIMENTREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1503,
-  serialized_end=1585,
+  serialized_start=1378,
+  serialized_end=1460,
 )
 
 
@@ -812,8 +748,8 @@ _REMOVEEXPERIMENTRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1587,
-  serialized_end=1638,
+  serialized_start=1462,
+  serialized_end=1513,
 )
 
 
@@ -858,8 +794,8 @@ _COLLABORATORSTATUS = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1640,
-  serialized_end=1756,
+  serialized_start=1515,
+  serialized_end=1631,
 )
 
 
@@ -890,8 +826,8 @@ _COLLABORATORHEALTHCHECKRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1758,
-  serialized_end=1809,
+  serialized_start=1633,
+  serialized_end=1684,
 )
 
 
@@ -950,8 +886,8 @@ _ENVOYINFO = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1812,
-  serialized_end=2006,
+  serialized_start=1687,
+  serialized_end=1881,
 )
 
 
@@ -975,8 +911,8 @@ _GETENVOYSREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=2008,
-  serialized_end=2026,
+  serialized_start=1883,
+  serialized_end=1901,
 )
 
 
@@ -1007,16 +943,14 @@ _GETENVOYSRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=2028,
-  serialized_end=2080,
+  serialized_start=1903,
+  serialized_end=1955,
 )
 
 _SHARDINFO.fields_by_name['node_info'].message_type = _NODEINFO
 _EXPERIMENTINFO.fields_by_name['header'].message_type = _REQUESTHEADER
 _EXPERIMENTINFO.fields_by_name['experiment_data'].message_type = _EXPERIMENTDATA
 _EXPERIMENTINFO.fields_by_name['model_proto'].message_type = federation__pb2._MODELPROTO
-_GETREGISTEREDSHARDSREQUEST.fields_by_name['header'].message_type = _REQUESTHEADER
-_GETREGISTEREDSHARDSRESPONSE.fields_by_name['shard_info'].message_type = _SHARDINFO
 _GETTRAINEDMODELREQUEST.fields_by_name['header'].message_type = _REQUESTHEADER
 _GETTRAINEDMODELREQUEST.fields_by_name['model_type'].enum_type = _GETTRAINEDMODELREQUEST_MODELTYPE
 _GETTRAINEDMODELREQUEST_MODELTYPE.containing_type = _GETTRAINEDMODELREQUEST
@@ -1039,8 +973,6 @@ DESCRIPTOR.message_types_by_name['GetExperimentDataRequest'] = _GETEXPERIMENTDAT
 DESCRIPTOR.message_types_by_name['ExperimentData'] = _EXPERIMENTDATA
 DESCRIPTOR.message_types_by_name['ExperimentInfo'] = _EXPERIMENTINFO
 DESCRIPTOR.message_types_by_name['SetNewExperimentResponse'] = _SETNEWEXPERIMENTRESPONSE
-DESCRIPTOR.message_types_by_name['GetRegisteredShardsRequest'] = _GETREGISTEREDSHARDSREQUEST
-DESCRIPTOR.message_types_by_name['GetRegisteredShardsResponse'] = _GETREGISTEREDSHARDSRESPONSE
 DESCRIPTOR.message_types_by_name['GetTrainedModelRequest'] = _GETTRAINEDMODELREQUEST
 DESCRIPTOR.message_types_by_name['TrainedModelResponse'] = _TRAINEDMODELRESPONSE
 DESCRIPTOR.message_types_by_name['GetDatasetInfoRequest'] = _GETDATASETINFOREQUEST
@@ -1124,20 +1056,6 @@ SetNewExperimentResponse = _reflection.GeneratedProtocolMessageType('SetNewExper
   # @@protoc_insertion_point(class_scope:SetNewExperimentResponse)
   })
 _sym_db.RegisterMessage(SetNewExperimentResponse)
-
-GetRegisteredShardsRequest = _reflection.GeneratedProtocolMessageType('GetRegisteredShardsRequest', (_message.Message,), {
-  'DESCRIPTOR' : _GETREGISTEREDSHARDSREQUEST,
-  '__module__' : 'director_pb2'
-  # @@protoc_insertion_point(class_scope:GetRegisteredShardsRequest)
-  })
-_sym_db.RegisterMessage(GetRegisteredShardsRequest)
-
-GetRegisteredShardsResponse = _reflection.GeneratedProtocolMessageType('GetRegisteredShardsResponse', (_message.Message,), {
-  'DESCRIPTOR' : _GETREGISTEREDSHARDSRESPONSE,
-  '__module__' : 'director_pb2'
-  # @@protoc_insertion_point(class_scope:GetRegisteredShardsResponse)
-  })
-_sym_db.RegisterMessage(GetRegisteredShardsResponse)
 
 GetTrainedModelRequest = _reflection.GeneratedProtocolMessageType('GetTrainedModelRequest', (_message.Message,), {
   'DESCRIPTOR' : _GETTRAINEDMODELREQUEST,
@@ -1232,8 +1150,8 @@ _FEDERATIONDIRECTOR = _descriptor.ServiceDescriptor(
   index=0,
   serialized_options=None,
   create_key=_descriptor._internal_create_key,
-  serialized_start=2083,
-  serialized_end=2864,
+  serialized_start=1958,
+  serialized_end=2655,
   methods=[
   _descriptor.MethodDescriptor(
     name='AcknowledgeShard',
@@ -1276,19 +1194,9 @@ _FEDERATIONDIRECTOR = _descriptor.ServiceDescriptor(
     create_key=_descriptor._internal_create_key,
   ),
   _descriptor.MethodDescriptor(
-    name='GetRegisteredShards',
-    full_name='FederationDirector.GetRegisteredShards',
-    index=4,
-    containing_service=None,
-    input_type=_GETREGISTEREDSHARDSREQUEST,
-    output_type=_GETREGISTEREDSHARDSRESPONSE,
-    serialized_options=None,
-    create_key=_descriptor._internal_create_key,
-  ),
-  _descriptor.MethodDescriptor(
     name='GetDatasetInfo',
     full_name='FederationDirector.GetDatasetInfo',
-    index=5,
+    index=4,
     containing_service=None,
     input_type=_GETDATASETINFOREQUEST,
     output_type=_SHARDINFO,
@@ -1298,7 +1206,7 @@ _FEDERATIONDIRECTOR = _descriptor.ServiceDescriptor(
   _descriptor.MethodDescriptor(
     name='GetTrainedModel',
     full_name='FederationDirector.GetTrainedModel',
-    index=6,
+    index=5,
     containing_service=None,
     input_type=_GETTRAINEDMODELREQUEST,
     output_type=_TRAINEDMODELRESPONSE,
@@ -1308,7 +1216,7 @@ _FEDERATIONDIRECTOR = _descriptor.ServiceDescriptor(
   _descriptor.MethodDescriptor(
     name='StreamMetrics',
     full_name='FederationDirector.StreamMetrics',
-    index=7,
+    index=6,
     containing_service=None,
     input_type=_STREAMMETRICSREQUEST,
     output_type=_STREAMMETRICSRESPONSE,
@@ -1318,7 +1226,7 @@ _FEDERATIONDIRECTOR = _descriptor.ServiceDescriptor(
   _descriptor.MethodDescriptor(
     name='RemoveExperimentData',
     full_name='FederationDirector.RemoveExperimentData',
-    index=8,
+    index=7,
     containing_service=None,
     input_type=_REMOVEEXPERIMENTREQUEST,
     output_type=_REMOVEEXPERIMENTRESPONSE,
@@ -1328,7 +1236,7 @@ _FEDERATIONDIRECTOR = _descriptor.ServiceDescriptor(
   _descriptor.MethodDescriptor(
     name='CollaboratorHealthCheck',
     full_name='FederationDirector.CollaboratorHealthCheck',
-    index=9,
+    index=8,
     containing_service=None,
     input_type=_COLLABORATORSTATUS,
     output_type=_COLLABORATORHEALTHCHECKRESPONSE,
@@ -1338,7 +1246,7 @@ _FEDERATIONDIRECTOR = _descriptor.ServiceDescriptor(
   _descriptor.MethodDescriptor(
     name='GetEnvoys',
     full_name='FederationDirector.GetEnvoys',
-    index=10,
+    index=9,
     containing_service=None,
     input_type=_GETENVOYSREQUEST,
     output_type=_GETENVOYSRESPONSE,

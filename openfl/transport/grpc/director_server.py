@@ -202,14 +202,6 @@ class DirectorGRPCServer(director_pb2_grpc.FederationDirectorServicer):
         )
         return resp
 
-    async def GetRegisteredShards(self, request, context):  # NOQA:N802
-        """Request registered shards."""
-        logger.info('Request GetRegisteredShards has got!')
-        resp = director_pb2.GetRegisteredShardsResponse(
-            shard_info=self.director.get_registered_shards()
-        )
-        return resp
-
     async def StreamMetrics(self, request, context):  # NOQA:N802
         """Request to stream metrics from the aggregator to frontend."""
         if not self.validate_caller(request, context):
