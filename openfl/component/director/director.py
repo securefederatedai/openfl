@@ -14,12 +14,11 @@ from pathlib import Path
 
 from openfl.federated import Plan
 from openfl.protocols import director_pb2
-from openfl.protocols import director_pb2_grpc
 
 logger = logging.getLogger(__name__)
 
 
-class Director(director_pb2_grpc.FederationDirectorServicer):
+class Director:
     """Director class."""
 
     def __init__(self, *, disable_tls: bool = False,
