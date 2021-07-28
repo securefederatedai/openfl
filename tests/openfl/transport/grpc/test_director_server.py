@@ -8,12 +8,13 @@ from unittest import mock
 import pytest
 
 from openfl.component.director import Director
+from openfl.transport import DirectorGRPCServer
 
 
 @pytest.fixture
 def insecure_director():
     """Initialize an insecure director mock."""
-    director = Director(disable_tls=True)
+    director = DirectorGRPCServer(director_cls=Director, disable_tls=True)
 
     return director
 
@@ -21,7 +22,8 @@ def insecure_director():
 @pytest.fixture
 def secure_director():
     """Initialize a secure director mock."""
-    director = Director(
+    director = DirectorGRPCServer(
+        director_cls=Director,
         disable_tls=False,
         root_ca='./cert/root_ca.crt',
         key='./cert/localhost.key',

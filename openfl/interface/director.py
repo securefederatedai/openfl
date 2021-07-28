@@ -2,7 +2,6 @@
 # SPDX-License-Identifier: Apache-2.0
 """Director CLI."""
 
-import asyncio
 import logging
 import shutil
 import sys
@@ -15,8 +14,9 @@ from click import pass_context
 from click import Path as ClickPath
 from yaml import safe_load
 
-from openfl.component.director import serve
+from openfl.component.director import Director
 from openfl.interface.cli_helper import WORKSPACE
+from openfl.transport import DirectorGRPCServer
 
 logger = logging.getLogger(__name__)
 
@@ -54,12 +54,17 @@ def start(director_config_path, disable_tls, root_ca, key, cert):
         kwargs['listen_ip'] = listen_ip
     if listen_port:
         kwargs['listen_port'] = listen_port
-    asyncio.run(serve(
+    director_server = DirectorGRPCServer(
+        director_cls=Director,
         disable_tls=disable_tls,
         sample_shape=sample_shape,
         target_shape=target_shape,
-        root_ca=root_ca, key=key, cert=cert, **kwargs
-    ))
+        root_ca=root_ca,
+        key=key,
+        cert=cert,
+        **kwargs
+    )
+    director_server.start()
 
 
 @director.command(name='create-workspace')

@@ -4,10 +4,8 @@
 """Director package."""
 
 from .director import Director
-from .director import serve
 
 
 __all__ = [
     'Director',
-    'serve',
 ]
