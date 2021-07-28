@@ -124,8 +124,7 @@ class DirectorGRPCServer(director_pb2_grpc.FederationDirectorServicer):
 
         if not self.validate_caller(request, context):
             # Can we send reject before reading the stream?
-            return director_pb2.SetNewExperimentResponse(
-                accepted=False)
+            return director_pb2.SetNewExperimentResponse(accepted=False)
         tensor_dict = None
         if request.model_proto:
             tensor_dict, _ = deconstruct_model_proto(request.model_proto, NoCompressionPipeline())
@@ -139,8 +138,7 @@ class DirectorGRPCServer(director_pb2_grpc.FederationDirectorServicer):
         )
 
         logger.info('Send response')
-        return director_pb2.SetNewExperimentResponse(
-            accepted=is_accepted)
+        return director_pb2.SetNewExperimentResponse(accepted=is_accepted)
 
     async def GetTrainedModel(self, request, context):  # NOQA:N802
         """RPC for retrieving trained models."""

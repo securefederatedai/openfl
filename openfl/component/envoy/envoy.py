@@ -18,7 +18,7 @@ from openfl.transport.grpc.director_client import ShardDirectorClient
 logger = logging.getLogger(__name__)
 
 
-DEFAULT_TIMEOUT_IN_SECONDS = 60
+DEFAULT_TIMEOUT_IN_SECONDS = 60  # TODO: make configurable
 DEFAULT_RETRY_TIMEOUT_IN_SECONDS = 5
 
 

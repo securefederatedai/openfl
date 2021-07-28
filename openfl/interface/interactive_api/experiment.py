@@ -182,13 +182,15 @@ class FLExperiment:
         """Prepare requirements.txt."""
         from pip._internal.operations import freeze
         requirements_generator = freeze.freeze()
+
+        def is_package_has_version(package: str) -> bool:
+            return '==' in package and package != 'pkg-resources==0.0.0'
+
         with open('./requirements.txt', 'w') as f:
-            for package in requirements_generator:
-                # there is a pip bug with pkg-resources==0.0.0 req
-                if '==' not in package or '0.0.0' in package:
-                    # We do not export dependencies without version
+            for pack in requirements_generator:
+                if is_package_has_version(pack):
                     continue
-                f.write(package + '\n')
+                f.write(pack + '\n')
 
     @staticmethod
     def _pack_the_workspace():
