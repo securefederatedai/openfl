@@ -164,9 +164,7 @@ class FLExperiment:
                 initial_tensor_dict=initial_tensor_dict
             )
         finally:
-            # Remove the workspace archive
-            os.remove(self.arch_path)
-            del self.arch_path
+            self.remove_workspace_archive()
 
         if response.accepted:
             self.logger.info('Experiment was accepted and launched.')
@@ -221,6 +219,10 @@ class FLExperiment:
 
         return arch_path
 
+    def remove_workspace_archive(self):
+        os.remove(self.arch_path)
+        del self.arch_path
+
     def _get_initial_tensor_dict(self, model_provider):
         """Extract initial weights from the model."""
         self.task_runner_stub = self.plan.get_core_task_runner(model_provider=model_provider)
@@ -251,8 +253,10 @@ class FLExperiment:
         # We also could change the aggregator logic so it will send tasks to aggregator
         # as soon as it connects. This change should be a part of a bigger PR
         # brining in fault tolerance changes
-        plan.authorized_cols = [shard_info.node_info.name for shard_info in
-                                self.federation.get_shard_registry()]
+        plan.authorized_cols = [
+            shard_info.node_info.name
+            for shard_info in self.federation.get_shard_registry()
+        ]
         # Network part of the plan
         # We keep in mind that an aggregator FQND will be the same as the directors FQDN
         # We just choose a port randomly from plan hash

@@ -18,8 +18,8 @@ if __name__ == '__main__':
     target_shape = ['529', '622']
     director = DirectorGRPCServer(
         director_cls=Director,
-        sample_shape=list(sample_shape),
-        target_shape=list(target_shape),
+        sample_shape=sample_shape,
+        target_shape=target_shape,
         disable_tls=False,
         # an absolute path is required
         root_ca='./cert/root_ca.crt',

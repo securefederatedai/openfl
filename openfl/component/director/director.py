@@ -31,7 +31,6 @@ class Director:
         self._shard_registry = {}
         self.col_exp_queues = defaultdict(asyncio.Queue)
 
-        self.experiments = set()  # Do not know what it is
         self.experiment_data = {}  # {Experiment name : archive bytes}
         # What if two experiments come with the same name from different users?
         self.experiments_queue = asyncio.Queue()  # experiments waiting to be executed
@@ -46,8 +45,8 @@ class Director:
     def acknowledge_shard(self, shard_info: director_pb2.ShardInfo) -> bool:
         """Save shard info to shard registry if it's acceptable."""
         is_accepted = False
-        if (self.sample_shape != shard_info.sample_shape) or \
-                (self.target_shape != shard_info.target_shape):
+        if (self.sample_shape != shard_info.sample_shape or
+                self.target_shape != shard_info.target_shape):
             logger.info('Request was not accepted')
             return is_accepted
         logger.info('Request was accepted')

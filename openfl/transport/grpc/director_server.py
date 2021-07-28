@@ -67,8 +67,7 @@ class DirectorGRPCServer(director_pb2_grpc.FederationDirectorServicer):
         """
         # Can we close the request right here?
         if not self.disable_tls:
-            caller_cert_name = context.auth_context()[
-                'x509_common_name'][0].decode('utf-8')
+            caller_cert_name = context.auth_context()['x509_common_name'][0].decode('utf-8')
             caller_common_name = request.header.sender
             if not caller_cert_name == caller_common_name:
                 return False

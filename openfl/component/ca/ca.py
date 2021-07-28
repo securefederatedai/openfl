@@ -39,15 +39,16 @@ def download_step_bin(url, grep_name, architecture, prefix='./', confirmation=Tr
         logger.warning('Can\'t download binaries from github. Please try lately.')
         return
 
-    assets = result.json()['assets']
-    urls = []
-    for a in assets:
-        if grep_name in a['name'] and architecture in a['name']:  # 'amd'
-            urls.append(a['browser_download_url'])
+    assets = result.json().get('assets', [])
+    urls = [
+        a['browser_download_url']
+        for a in assets
+        if grep_name in a['name'] and architecture in a['name']
+    ]
     url = urls[-1]
     url = url.replace('https', 'http')
     name = url.split('/')[-1]
-    logger.info(f'Donwloading {name}')
+    logger.info(f'Downloading {name}')
     urllib.request.urlretrieve(url, f'{prefix}/{name}')
     shutil.unpack_archive(f'{prefix}/{name}', f'{prefix}/step')
 
@@ -129,7 +130,7 @@ def certify(name, cert_path: Path, token_with_cert, ca_path: Path):
         file.write(message_bytes)
     # request to ca server
     os.system(f'./{step} ca certificate {name} {cert_path}/{name}.crt '
-              + f'{cert_path}/{name}.key -f --token {token}')
+              f'{cert_path}/{name}.key -f --token {token}')
 
 
 def remove_ca(ca_path):
@@ -215,12 +216,12 @@ def _create_ca(ca_path, ca_url, password):
     shutil.rmtree(step_config_dir, ignore_errors=True)
     name = ca_url.split(':')[0]
     os.system(f'{step} ca init --name name --dns {name} '
-              + f'--address {ca_url}  --provisioner prov '
-              + f'--password-file {pki_dir}/pass_file')
+              f'--address {ca_url}  --provisioner prov '
+              f'--password-file {pki_dir}/pass_file')
 
     os.system(f'{step} ca provisioner remove prov --all')
     os.system(f'{step} crypto jwk create {step_config_dir}/certs/pub.json '
-              + f'{step_config_dir}/secrets/priv.json --password-file={pki_dir}/pass_file')
+              f'{step_config_dir}/secrets/priv.json --password-file={pki_dir}/pass_file')
     os.system(f'{step} ca provisioner add provisioner {step_config_dir}/certs/pub.json')
 
 

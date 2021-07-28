@@ -81,6 +81,7 @@ def get_token_(name, ca_url, ca_path):
         name: common name for following certificate
                     (aggregator fqdn or collaborator name)
         ca_url: full url of CA server
+        ca_path: the path to CA binaries
     """
     token = get_token(name, ca_url, ca_path)
     print('Token:')

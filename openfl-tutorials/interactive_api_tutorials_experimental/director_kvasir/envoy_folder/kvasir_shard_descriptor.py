@@ -23,11 +23,12 @@ class KvasirShardDescriptor(ShardDescriptor):
         super().__init__()
 
         self.data_folder = Path.cwd() / data_folder
-        self.download_data(self.data_folder)  # NOQA
+        self.download_data(self.data_folder)
 
         # Settings for resizing data
-        self.enforce_image_hw = tuple(int(size) for size in enforce_image_hw.split(',')) if \
-            enforce_image_hw is not None else None
+        self.enforce_image_hw = None
+        if enforce_image_hw is not None:
+            self.enforce_image_hw = tuple(int(size) for size in enforce_image_hw.split(','))
         # Settings for sharding the dataset
         self.rank_worldsize = tuple(int(num) for num in rank_worldsize.split(','))
 
@@ -50,14 +51,14 @@ class KvasirShardDescriptor(ShardDescriptor):
         zip_file_path = data_folder / 'kvasir.zip'
         os.makedirs(data_folder, exist_ok=True)
         os.system('wget -nc'
-                  + " 'https://datasets.simula.no/hyper-kvasir/hyper-kvasir-segmented-images.zip'"
-                  + f' -O {zip_file_path.relative_to(Path.cwd())}')
+                  " 'https://datasets.simula.no/hyper-kvasir/hyper-kvasir-segmented-images.zip'"
+                  f' -O {zip_file_path.relative_to(Path.cwd())}')
         zip_sha384 = 'e30d18a772c6520476e55b610a4db457237f151e' \
                      '19182849d54b49ae24699881c1e18e0961f77642be900450ef8b22e7'
         assert sha384(open(zip_file_path, 'rb').read(
             os.path.getsize(zip_file_path))).hexdigest() == zip_sha384
         os.system(f'unzip -n {zip_file_path.relative_to(Path.cwd())}'
-                  + f' -d {data_folder.relative_to(Path.cwd())}')
+                  f' -d {data_folder.relative_to(Path.cwd())}')
 
     def __getitem__(self, index):
         """Return a item by the index."""
@@ -123,8 +124,9 @@ if __name__ == '__main__':
         director_uri=director_uri,
         shard_descriptor=kvasir_sd,
         disable_tls=True,
-        root_ca=('./cert/root_ca.crt'),
-        key=('./cert/one.key'),
-        cert=('./cert/one.crt'))
+        root_ca='./cert/root_ca.crt',
+        key='./cert/one.key',
+        cert='./cert/one.crt',
+    )
 
     keeper.start()

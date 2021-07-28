@@ -19,6 +19,7 @@ logger = logging.getLogger(__name__)
 
 
 DEFAULT_TIMEOUT_IN_SECONDS = 60
+DEFAULT_RETRY_TIMEOUT_IN_SECONDS = 5
 
 
 class Envoy:
@@ -48,6 +49,7 @@ class Envoy:
                 experiment_name = self.director_client.get_experiment_data()
             except Exception as exc:
                 logger.error(f'Failed to get experiment: {exc}')
+                time.sleep(DEFAULT_RETRY_TIMEOUT_IN_SECONDS)
                 continue
             self.is_experiment_running = True
             try:
@@ -78,9 +80,7 @@ class Envoy:
         # This is needed for python module finder
         sys.path.append(os.getcwd())
 
-        plan = Plan.parse(
-            plan_config_path=Path(plan)
-        )
+        plan = Plan.parse(plan_config_path=Path(plan))
 
         # TODO: Need to restructure data loader config file loader
         echo(f'Data = {plan.cols_data_paths}')
