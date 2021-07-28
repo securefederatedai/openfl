@@ -4,6 +4,7 @@
 """Python low-level API module."""
 import functools
 import os
+import time
 from collections import defaultdict
 from copy import deepcopy
 from logging import getLogger
@@ -20,7 +21,8 @@ from openfl.utilities import split_tensor_dict_for_holdouts
 class FLExperiment:
     """Central class for FL experiment orchestration."""
 
-    def __init__(self, federation, experiment_name='test', serializer_plugin=None) -> None:
+    def __init__(self, federation, experiment_name='test-'+time.strftime("%Y%m%d-%H%M%S"),
+                 serializer_plugin=None) -> None:
         """
         Initialize an experiment inside a federation.
 
