@@ -12,8 +12,9 @@ from PIL import Image
 from torch.utils.data import Dataset
 
 from openfl.interface.interactive_api.shard_descriptor import ShardDescriptor
-from openfl.plugins.data_splitters import EqualPyTorchDatasetSplitter
-from openfl.plugins.data_splitters import PyTorchDatasetSplitter
+from openfl.plugins.data_splitters import EqualNumPyDataSplitter
+from openfl.plugins.data_splitters import NumPyDataSplitter
+from openfl.plugins.data_splitters import RandomNumPyDataSplitter
 
 
 class KvasirDataset(Dataset):
@@ -85,18 +86,19 @@ class KvasirShardDescriptor(ShardDescriptor):
         """Initialize KvasirShardDescriptor."""
         super().__init__()
         self.dataset = KvasirDataset(data_folder=data_folder, enforce_image_hw=enforce_image_hw)
+        X, y = list(zip(*self.dataset))
         if data_splitter is None:
-            self.data_splitter = EqualPyTorchDatasetSplitter()
+            self.data_splitter = EqualNumPyDataSplitter()
         else:
-            assert isinstance(data_splitter, PyTorchDatasetSplitter), \
+            assert isinstance(data_splitter, NumPyDataSplitter), \
                 'data_splitter should inherit from ' \
-                + 'openfl.plugins.data_splitters.PyTorchDatasetSplitter class'
+                + 'openfl.plugins.data_splitters.NumPyDataSplitter class'
             self.data_splitter = data_splitter
         # Settings for sharding the dataset
         self.rank, self.worldsize = tuple(int(num) for num in rank_worldsize.split(','))
 
         # Sharding
-        self.subset = self.data_splitter.split(self.dataset, self.worldsize)[self.rank]
+        self.subset = self.data_splitter.split(X, y, self.worldsize)[self.rank]
 
         # Calculating data and target shapes
         sample, target = self[0]
@@ -139,7 +141,8 @@ if __name__ == '__main__':
     kvasir_sd = KvasirShardDescriptor(
         data_folder,
         rank_worldsize=rank_worldsize,
-        enforce_image_hw=enforce_image_hw)
+        enforce_image_hw=enforce_image_hw,
+        data_splitter=RandomNumPyDataSplitter())
 
     print(kvasir_sd.dataset_description)
     print(kvasir_sd.sample_shape, kvasir_sd.target_shape)
