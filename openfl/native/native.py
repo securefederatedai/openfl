@@ -130,7 +130,8 @@ def setup_logging(level='INFO', log_file=None):
     if log_file:
         fh = logging.FileHandler(log_file)
         formatter = logging.Formatter(
-            '%(asctime)s %(levelname)s %(message)s %(filename)s:%(lineno)d')
+            '%(asctime)s %(levelname)s %(message)s %(filename)s:%(lineno)d'
+        )
         fh.setFormatter(formatter)
         handlers.append(fh)
 

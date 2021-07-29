@@ -26,7 +26,8 @@ class Envoy:
     """Collaborator manager class."""
 
     def __init__(self, shard_name, director_uri, shard_descriptor,
-                 root_ca, key, cert, disable_tls=False) -> None:
+                 root_ca: str = None, key: str = None, cert: str = None,
+                 disable_tls: bool = False) -> None:
         """Initialize a envoy object."""
         self.name = shard_name
         self.root_ca = Path(root_ca).absolute() if root_ca is not None else None
@@ -96,12 +97,12 @@ class Envoy:
     def start(self):
         """Start the envoy."""
         try:
-            acknowledgement = self.director_client.report_shard_info(self.shard_descriptor)
+            is_accepted = self.director_client.report_shard_info(self.shard_descriptor)
         except Exception as exc:
             logger.exception(str(exc))
             logger.exception('Failed to report shard info')
         else:
-            if acknowledgement:
+            if is_accepted:
                 # Shard accepted for participation in the federation
                 logger.info('Shard accepted')
                 self._health_check_future = self.executor.submit(self.send_health_check)

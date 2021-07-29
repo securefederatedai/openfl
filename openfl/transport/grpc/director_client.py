@@ -75,9 +75,8 @@ class ShardDirectorClient:
         logger.info('Send WaitExperiment request')
         response_iter = self.stub.WaitExperiment(self._get_experiment_data())
         logger.info('WaitExperiment response has received')
-        experiment_name = None
-        for response in response_iter:
-            experiment_name = response.experiment_name
+        response = next(response_iter)
+        experiment_name = response.experiment_name
         if not experiment_name:
             raise Exception('No experiment')
         logger.info(f'Request experiment {experiment_name}')
@@ -91,9 +90,10 @@ class ShardDirectorClient:
 
         return experiment_name
 
-    def remove_workspace(self, experiment_name):
+    @staticmethod
+    def remove_workspace(experiment_name):
         """Remove the workspace."""
-        shutil.rmtree(experiment_name)
+        shutil.rmtree(experiment_name, ignore_errors=True)
 
     @staticmethod
     def create_workspace(experiment_name, response_iter):
@@ -258,11 +258,11 @@ class DirectorClient:
                 'metric_value': metric_message.metric_value,
                 'round': metric_message.round}
 
-    def remove_experiment_data(self, experiment_name):
+    def remove_experiment_data(self, name):
         """Remove experiment data RPC."""
         request = director_pb2.RemoveExperimentRequest(
             header=self.header,
-            experiment_name=experiment_name)
+            experiment_name=name)
         response = self.stub.RemoveExperimentData(request)
         return response.acknowledgement
 

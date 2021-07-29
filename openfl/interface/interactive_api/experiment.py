@@ -21,8 +21,13 @@ from openfl.utilities import split_tensor_dict_for_holdouts
 class FLExperiment:
     """Central class for FL experiment orchestration."""
 
-    def __init__(self, federation, experiment_name='test-' + time.strftime('%Y%m%d-%H%M%S'),
-                 serializer_plugin=None) -> None:
+    def __init__(
+            self,
+            federation,
+            experiment_name: str = None,
+            serializer_plugin: str = 'openfl.plugins.interface_serializer.'
+                                     'cloudpickle_serializer.CloudpickleSerializer'
+    ) -> None:
         """
         Initialize an experiment inside a federation.
 
@@ -30,12 +35,8 @@ class FLExperiment:
         Information about the data on collaborators is contained on the federation level.
         """
         self.federation = federation
-        self.experiment_name = experiment_name
+        self.experiment_name = experiment_name or 'test-' + time.strftime('%Y%m%d-%H%M%S')
         self.summary_writer = None
-
-        if serializer_plugin is None:
-            serializer_plugin = \
-                'openfl.plugins.interface_serializer.cloudpickle_serializer.CloudpickleSerializer'
         self.serializer_plugin = serializer_plugin
 
         self.experiment_accepted = False
@@ -102,14 +103,15 @@ class FLExperiment:
 
         self.summary_writer.add_scalar(
             f'{metric["metric_origin"]}/{metric["task_name"]}/{metric["metric_name"]}',
-            metric["metric_value"], metric["round"])
+            metric['metric_value'], metric['round'])
 
     def remove_experiment_data(self):
         """Remove experiment data."""
         self._assert_experiment_accepted()
         log_message = 'Removing experiment data '
         if self.federation.dir_client.remove_experiment_data(
-                experiment_name=self.experiment_name):
+                name=self.experiment_name
+        ):
             log_message += 'succeed.'
             self.experiment_accepted = False
         else:

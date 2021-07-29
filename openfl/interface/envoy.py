@@ -6,7 +6,6 @@ import logging
 import shutil
 import sys
 from importlib import import_module
-from os import path
 from pathlib import Path
 
 import click
@@ -17,7 +16,6 @@ from click import Path as ClickPath
 from yaml import safe_load
 
 from openfl.component.envoy.envoy import Envoy
-from openfl.interface.cli_helper import SITEPACKS
 from openfl.interface.cli_helper import WORKSPACE
 
 logger = logging.getLogger(__name__)
@@ -90,9 +88,13 @@ def shard_descriptor_from_config(shard_config_path: str):
     """Build a shard descriptor from config."""
     with open(shard_config_path) as stream:
         shard_config = safe_load(stream)
-    class_name = path.splitext(shard_config['template'])[1].strip('.')
-    module_path = path.splitext(shard_config['template'])[0]
-    params = shard_config['params']
+    template = shard_config.get('template')
+    if not template:
+        raise Exception(f'You should define a shard '
+                        f'descriptor template in {shard_config_path}')
+    class_name = template.split('.')[-1]
+    module_path = '.'.join(template.split('.')[:-1])
+    params = shard_config.get('params', {})
 
     module = import_module(module_path)
     instance = getattr(module, class_name)(**params)

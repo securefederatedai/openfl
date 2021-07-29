@@ -34,7 +34,7 @@ class DirectorGRPCServer(director_pb2_grpc.FederationDirectorServicer):
         self.root_ca = None
         self.key = None
         self.cert = None
-        self.fill_certs(root_ca, key, cert)
+        self._fill_certs(root_ca, key, cert)
         self.server = None
         self.director = director_cls(
             disable_tls=self.disable_tls,
@@ -44,7 +44,7 @@ class DirectorGRPCServer(director_pb2_grpc.FederationDirectorServicer):
             **kwargs
         )
 
-    def fill_certs(self, root_ca, key, cert):
+    def _fill_certs(self, root_ca, key, cert):
         """Fill certificates."""
         if not self.disable_tls:
             if not (root_ca and key and cert):
@@ -69,7 +69,7 @@ class DirectorGRPCServer(director_pb2_grpc.FederationDirectorServicer):
         if not self.disable_tls:
             caller_cert_name = context.auth_context()['x509_common_name'][0].decode('utf-8')
             caller_common_name = request.header.sender
-            if not caller_cert_name == caller_common_name:
+            if caller_cert_name != caller_common_name:
                 return False
 
         return True

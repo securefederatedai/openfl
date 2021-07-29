@@ -137,10 +137,10 @@ class Director:
             # Awaiting quit job sent to collaborators
             await asyncio.sleep(5)
 
-    def remove_experiment_data(self, experiment_name: str, caller: str):
+    def remove_experiment_data(self, name: str, caller: str):
         """Remove experiment data RPC."""
-        if experiment_name in self.experiment_stash.get(caller, {}):
-            del self.experiment_stash[caller][experiment_name]
+        if name in self.experiment_stash.get(caller, {}):
+            del self.experiment_stash[caller][name]
 
     def collaborator_health_check(self, *, collaborator_name: str,
                                   is_experiment_running: bool,

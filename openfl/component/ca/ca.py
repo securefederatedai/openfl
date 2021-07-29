@@ -225,7 +225,10 @@ def _create_ca(ca_path: Path, ca_url: str, password: str):
     call(f'{step_path} ca provisioner remove prov --all', shell=True)
     call(f'{step_path} crypto jwk create {step_config_dir}/certs/pub.json '
          f'{step_config_dir}/secrets/priv.json --password-file={pki_dir}/pass_file', shell=True)
-    call(f'{step_path} ca provisioner add provisioner {step_config_dir}/certs/pub.json', shell=True)
+    call(
+        f'{step_path} ca provisioner add provisioner {step_config_dir}/certs/pub.json',
+        shell=True
+    )
 
 
 def _configure(step_config_dir):

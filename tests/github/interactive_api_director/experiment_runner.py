@@ -33,9 +33,9 @@ def prepare_collaborator_workspace(col_dir, arch_path):
 
 
 def run_aggregator(model_interface, fl_experiment):
-    logger.info('run_aggregator')
+    logger.info('Aggregator has been started.')
     fl_experiment.start_experiment(model_interface)
-    logger.info('Aggregator stopped')
+    logger.info('Aggregator has been stopped.')
 
 
 def run_experiment(col_data_paths, model_interface, arch_path, fl_experiment):
