@@ -1,7 +1,8 @@
 """PyTorch FedProx optimizer module."""
 
-import torch
 import math
+
+import torch
 from torch.optim import Optimizer
 from torch.optim.optimizer import required
 
@@ -96,29 +97,31 @@ class FedProxOptimizer(Optimizer):
         for param_group in self.param_groups:
             param_group['w_old'] = old_weights
 
-from typing import List
-from torch import Tensor
+
 class FedProxAdam(Optimizer):
+    """FedProxAdam optimizer."""
 
     def __init__(self, params, mu=0, lr=1e-3, betas=(0.9, 0.999), eps=1e-8,
                  weight_decay=0, amsgrad=False):
+        """Initialize."""
         if not 0.0 <= lr:
-            raise ValueError("Invalid learning rate: {}".format(lr))
+            raise ValueError(f'Invalid learning rate: {lr}')
         if not 0.0 <= eps:
-            raise ValueError("Invalid epsilon value: {}".format(eps))
+            raise ValueError(f'Invalid epsilon value: {eps}')
         if not 0.0 <= betas[0] < 1.0:
-            raise ValueError("Invalid beta parameter at index 0: {}".format(betas[0]))
+            raise ValueError(f'Invalid beta parameter at index 0: {betas[0]}')
         if not 0.0 <= betas[1] < 1.0:
-            raise ValueError("Invalid beta parameter at index 1: {}".format(betas[1]))
+            raise ValueError(f'Invalid beta parameter at index 1: {betas[1]}')
         if not 0.0 <= weight_decay:
-            raise ValueError("Invalid weight_decay value: {}".format(weight_decay))
+            raise ValueError(f'Invalid weight_decay value: {weight_decay}')
         if mu < 0.0:
             raise ValueError(f'Invalid mu value: {mu}')
-        defaults = dict(lr=lr, betas=betas, eps=eps,
-                        weight_decay=weight_decay, amsgrad=amsgrad, mu=mu)
+        defaults = {'lr': lr, 'betas': betas, 'eps': eps,
+                    'weight_decay': 'weight_decay', 'amsgrad': amsgrad, 'mu': mu}
         super(FedProxAdam, self).__init__(params, defaults)
 
     def __setstate__(self, state):
+        """Set optimizer state."""
         super(FedProxAdam, self).__setstate__(state)
         for group in self.param_groups:
             group.setdefault('amsgrad', False)
@@ -130,7 +133,7 @@ class FedProxAdam(Optimizer):
 
     @torch.no_grad()
     def step(self, closure=None):
-        """Performs a single optimization step.
+        """Perform a single optimization step.
 
         Args:
             closure (callable, optional): A closure that reevaluates the model
@@ -146,7 +149,6 @@ class FedProxAdam(Optimizer):
             grads = []
             exp_avgs = []
             exp_avg_sqs = []
-            state_sums = []
             max_exp_avg_sqs = []
             state_steps = []
 
@@ -154,7 +156,9 @@ class FedProxAdam(Optimizer):
                 if p.grad is not None:
                     params_with_grad.append(p)
                     if p.grad.is_sparse:
-                        raise RuntimeError('Adam does not support sparse gradients, please consider SparseAdam instead')
+                        raise RuntimeError(
+                            'Adam does not support sparse gradients, '
+                            'please consider SparseAdam instead')
                     grads.append(p.grad)
 
                     state = self.state[p]
@@ -164,10 +168,12 @@ class FedProxAdam(Optimizer):
                         # Exponential moving average of gradient values
                         state['exp_avg'] = torch.zeros_like(p, memory_format=torch.preserve_format)
                         # Exponential moving average of squared gradient values
-                        state['exp_avg_sq'] = torch.zeros_like(p, memory_format=torch.preserve_format)
+                        state['exp_avg_sq'] = torch.zeros_like(
+                            p, memory_format=torch.preserve_format)
                         if group['amsgrad']:
                             # Maintains max of all exp. moving avg. of sq. grad. values
-                            state['max_exp_avg_sq'] = torch.zeros_like(p, memory_format=torch.preserve_format)
+                            state['max_exp_avg_sq'] = torch.zeros_like(
+                                p, memory_format=torch.preserve_format)
 
                     exp_avgs.append(state['exp_avg'])
                     exp_avg_sqs.append(state['exp_avg_sq'])
@@ -182,37 +188,37 @@ class FedProxAdam(Optimizer):
 
             beta1, beta2 = group['betas']
             self.adam(params_with_grad,
-                   grads,
-                   exp_avgs,
-                   exp_avg_sqs,
-                   max_exp_avg_sqs,
-                   state_steps,
-                   group['amsgrad'],
-                   beta1,
-                   beta2,
-                   group['lr'],
-                   group['weight_decay'],
-                   group['eps'],
-                   group['mu'],
-                   group['w_old']
-                   )
+                      grads,
+                      exp_avgs,
+                      exp_avg_sqs,
+                      max_exp_avg_sqs,
+                      state_steps,
+                      group['amsgrad'],
+                      beta1,
+                      beta2,
+                      group['lr'],
+                      group['weight_decay'],
+                      group['eps'],
+                      group['mu'],
+                      group['w_old']
+                      )
         return loss
 
-    def adam(self,params: List[Tensor],
-         grads: List[Tensor],
-         exp_avgs: List[Tensor],
-         exp_avg_sqs: List[Tensor],
-         max_exp_avg_sqs: List[Tensor],
-         state_steps: List[int],
-         amsgrad: bool,
-         beta1: float,
-         beta2: float,
-         lr: float,
-         weight_decay: float,
-         eps: float, 
-         mu: float,
-         w_old):
-
+    def adam(self, params,
+             grads,
+             exp_avgs,
+             exp_avg_sqs,
+             max_exp_avg_sqs,
+             state_steps,
+             amsgrad,
+             beta1: float,
+             beta2: float,
+             lr: float,
+             weight_decay: float,
+             eps: float,
+             mu: float,
+             w_old):
+        """Updtae optimizer parameters."""
         for i, param in enumerate(params):
             w_old_p = w_old[i]
             grad = grads[i]
