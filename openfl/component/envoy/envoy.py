@@ -29,9 +29,9 @@ class Envoy:
                  root_ca, key, cert, disable_tls=False) -> None:
         """Initialize a collaborator manager object."""
         self.name = shard_name
-        self.root_ca = Path(root_ca).absolute()
-        self.key = Path(key).absolute()
-        self.cert = Path(cert).absolute()
+        self.root_ca = Path(root_ca).absolute() if root_ca is not None else None
+        self.key = Path(key).absolute() if root_ca is not None else None
+        self.cert = Path(cert).absolute() if root_ca is not None else None
         self.director_client = ShardDirectorClient(director_uri, shard_name=shard_name,
                                                    disable_tls=disable_tls,
                                                    root_ca=root_ca, key=key, cert=cert)

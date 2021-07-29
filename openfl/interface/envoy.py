@@ -35,7 +35,8 @@ def envoy(context):
         help='Current shard name')
 @option('-d', '--director-uri', required=True,
         help='The FQDN of the federation director')
-@option('--disable-tls', default=False)
+@option('--disable-tls', default=False,
+        is_flag=True)
 @option('-sc', '--shard-config-path', default='shard_config.yaml',
         help='The shard config path', type=ClickPath(exists=True))
 @option('-rc', '--root-cert-path', 'root_ca', default=None,
@@ -79,8 +80,10 @@ def create(envoy_path):
     (envoy_path / 'data').mkdir(parents=True, exist_ok=True)
     shutil.copyfile(WORKSPACE / 'default/shard_config.yaml',
                     envoy_path / 'shard_config.yaml')
-    shutil.copyfile(SITEPACKS / 'openfl/component/envoy/shard_descriptor.py',
+    shutil.copyfile(WORKSPACE / 'default/shard_descriptor.py',
                     envoy_path / 'shard_descriptor.py')
+    shutil.copyfile(WORKSPACE / 'default/requirements.txt',
+                    envoy_path / 'requirements.txt')
 
 
 def shard_descriptor_from_config(shard_config_path: str):

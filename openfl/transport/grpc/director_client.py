@@ -251,7 +251,12 @@ class DirectorClient:
             header=self.header,
             experiment_name=experiment_name)
         for metric_message in self.stub.StreamMetrics(request):
-            yield metric_message
+            yield {
+                'metric_origin': metric_message.metric_origin,
+                'task_name': metric_message.task_name,
+                'metric_name': metric_message.metric_name,
+                'metric_value': metric_message.metric_value,
+                'round': metric_message.round}
 
     def remove_experiment_data(self, experiment_name):
         """Remove experiment data RPC."""

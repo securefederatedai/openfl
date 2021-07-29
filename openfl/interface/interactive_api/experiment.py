@@ -82,32 +82,27 @@ class FLExperiment:
 
         return self.task_runner_stub.model
 
-    def stream_metrics(self, tensorboard_logs=True):
+    def stream_metrics(self, tensorboard_logs: bool = True) -> None:
         """Stream metrics."""
         self._assert_experiment_accepted()
-        if tensorboard_logs:
-            if not self.summary_writer:
-                self.summary_writer = SummaryWriter(f'./logs/{self.experiment_name}', flush_secs=5)
-
-            def write_metric(node_name, task_name, metric_name, metric, round_number):
-                """Write metric callback."""
-                self.summary_writer.add_scalar(
-                    f'{node_name}/{task_name}/{metric_name}', metric, round_number)
-
-        for metric_response in self.federation.dir_client.stream_metrics(self.experiment_name):
+        for metric_message_dict in self.federation.dir_client.stream_metrics(self.experiment_name):
             self.logger.metric(
-                f'Round {metric_response.round}, '
-                f'collaborator {metric_response.metric_origin} '
-                f'{metric_response.task_name} result '
-                f'{metric_response.metric_name}:\t{metric_response.metric_value}')
+                f'Round {metric_message_dict["round"]}, '
+                f'collaborator {metric_message_dict["metric_origin"]} '
+                f'{metric_message_dict["task_name"]} result '
+                f'{metric_message_dict["metric_name"]}:\t{metric_message_dict["metric_value"]}')
 
             if tensorboard_logs:
-                write_metric(
-                    metric_response.metric_origin,
-                    metric_response.task_name,
-                    metric_response.metric_name,
-                    metric_response.metric_value,
-                    metric_response.round)
+                self.write_tensorboard_metric(metric_message_dict)
+
+    def write_tensorboard_metric(self, metric: dict) -> None:
+        """Write metric callback."""
+        if not self.summary_writer:
+            self.summary_writer = SummaryWriter(f'./logs/{self.experiment_name}', flush_secs=5)
+
+        self.summary_writer.add_scalar(
+            f'{metric["metric_origin"]}/{metric["task_name"]}/{metric["metric_name"]}',
+            metric["metric_value"], metric["round"])
 
     def remove_experiment_data(self):
         """Remove experiment data."""
@@ -209,7 +204,7 @@ class FLExperiment:
         archive_name = basename(getcwd())
 
         tmp_dir = 'temp_' + archive_name
-        makedirs(tmp_dir)
+        makedirs(tmp_dir, exist_ok=True)
 
         ignore = ignore_patterns(
             '__pycache__', 'data', 'cert', tmp_dir, '*.crt', '*.key',

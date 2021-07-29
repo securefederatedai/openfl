@@ -211,15 +211,9 @@ class DirectorGRPCServer(director_pb2_grpc.FederationDirectorServicer):
         # during the aggregator initialization
         logger.info(f'Request StreamMetrics for {request.experiment_name} experiment has got!')
 
-        async for metric_origin, task_name, metric_name, metric_value, round_ in \
+        async for message in \
                 self.director.stream_metrics(request.experiment_name, request.header.sender):
-            yield director_pb2.StreamMetricsResponse(
-                metric_origin=metric_origin,
-                task_name=task_name,
-                metric_name=metric_name,
-                metric_value=float(metric_value),
-                round=round_
-            )
+            yield message
 
     async def RemoveExperimentData(self, request, context):  # NOQA:N802
         """Remove experiment data RPC."""
