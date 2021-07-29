@@ -14,6 +14,7 @@ import time
 import urllib.request
 from logging import getLogger
 from pathlib import Path
+from subprocess import call
 
 import requests
 from click import confirm
@@ -22,7 +23,7 @@ from click import confirm
 logger = getLogger(__name__)
 
 
-def download_step_bin(url, grep_name, architecture, prefix='./', confirmation=True):
+def download_step_bin(url, grep_name, architecture, prefix='.', confirmation=True):
     """
     Donwload step binaries from github.
 
@@ -31,6 +32,7 @@ def download_step_bin(url, grep_name, architecture, prefix='./', confirmation=Tr
         grep_name: name to grep over github assets
         architecture: architecture type to grep
         prefix: folder path to download
+        conformation: request user conformation or not
     """
     if confirmation:
         confirm('CA binaries from github will be downloaded now', default=True, abort=True)
@@ -61,6 +63,7 @@ def get_token(name, ca_url, ca_path='.'):
         name: common name for following certificate
                     (aggregator fqdn or collaborator name)
         ca_url: full url of CA server
+        ca_path: path to ca folder
     """
     ca_path = Path(ca_path)
     step_config_dir = ca_path / 'step_config'
@@ -81,8 +84,7 @@ def get_token(name, ca_url, ca_path='.'):
         logger.error(f'Error code {exc.returncode}: {exc.output}')
         return
 
-    if token[-1:] == b'\n':
-        token = token[:-1]
+    token = token.strip()
     length = len(token)
     assert(length < 10000)
     length = str(10000 + length)[-4:]
@@ -99,7 +101,7 @@ def get_bin_names(ca_path):
     ca_path = Path(ca_path)
     step = None
     step_ca = None
-    if os.path.exists(ca_path / 'step'):
+    if (ca_path / 'step').exists():
         dirs = os.listdir(ca_path / 'step')
         for dir_ in dirs:
             if 'step_' in dir_:
@@ -129,8 +131,8 @@ def certify(name, cert_path: Path, token_with_cert, ca_path: Path):
     with open(f'{cert_path}/root_ca.crt', mode='wb') as file:
         file.write(message_bytes)
     # request to ca server
-    os.system(f'./{step} ca certificate {name} {cert_path}/{name}.crt '
-              f'{cert_path}/{name}.key -f --token {token}')
+    call(f'./{step} ca certificate {name} {cert_path}/{name}.crt '
+         f'{cert_path}/{name}.key -f --token {token}', shell=True)
 
 
 def remove_ca(ca_path):
@@ -145,8 +147,8 @@ def install(ca_path, ca_url, password):
 
     Args:
         ca_path: path to ca directory
-        password: Simple password for encrypting root private keys
         ca_url: url for ca server like: 'host:port'
+        password: Simple password for encrypting root private keys
 
     """
     logger.info('Creating CA')
@@ -157,16 +159,14 @@ def install(ca_path, ca_url, password):
     os.environ['STEPPATH'] = str(step_config_dir)
     step, step_ca = get_bin_names(ca_path)
 
-    if not (step and step_ca and os.path.exists(step) and os.path.exists(step_ca)):
-        step, step_ca = get_bin_names(ca_path)
-        if not (step and step_ca):
-            confirm('CA binaries from github will be downloaded now', default=True, abort=True)
-            url = 'http://api.github.com/repos/smallstep/certificates/releases/latest'
-            download_step_bin(url, 'step-ca_linux', 'amd', prefix=ca_path, confirmation=False)
-            url = 'http://api.github.com/repos/smallstep/cli/releases/latest'
-            download_step_bin(url, 'step_linux', 'amd', prefix=ca_path, confirmation=False)
+    if not (step and step_ca and step.exists() and step_ca.exists()):
+        confirm('CA binaries from github will be downloaded now', default=True, abort=True)
+        url = 'http://api.github.com/repos/smallstep/certificates/releases/latest'
+        download_step_bin(url, 'step-ca_linux', 'amd', prefix=ca_path, confirmation=False)
+        url = 'http://api.github.com/repos/smallstep/cli/releases/latest'
+        download_step_bin(url, 'step_linux', 'amd', prefix=ca_path, confirmation=False)
     step_config_dir = ca_path / 'step_config'
-    if (not os.path.exists(step_config_dir)
+    if (not step_config_dir.exists()
             or confirm('CA exists, do you want to recreate it?', default=True)):
         _create_ca(ca_path, ca_url, password)
     _configure(step_config_dir)
@@ -176,14 +176,17 @@ def run_ca(step_ca, pass_file, ca_json):
     """Run CA server."""
     if _check_kill_process('step-ca', confirmation=True):
         logger.info('Up CA server')
-        os.system(f'{step_ca} --password-file {pass_file} {ca_json}')
+        call(f'{step_ca} --password-file {pass_file} {ca_json}', shell=True)
 
 
 def _check_kill_process(pstring, confirmation=False):
     """Kill process by name."""
     pids = []
+    proc = subprocess.Popen(f'ps ax | grep {pstring} | grep -v grep',
+                            shell=True, stdout=subprocess.PIPE)
+    text = proc.communicate()[0].decode('utf-8')
 
-    for line in os.popen('ps ax | grep ' + pstring + ' | grep -v grep'):
+    for line in text.splitlines():
         fields = line.split()
         pids.append(fields[0])
 
@@ -209,20 +212,20 @@ def _create_ca(ca_path, ca_url, password):
     with open(f'{pki_dir}/pass_file', 'w') as f:
         f.write(password)
     step, step_ca = get_bin_names(ca_path)
-    assert(step and step_ca and os.path.exists(step) and os.path.exists(step_ca))
+    assert(step and step_ca and step.exists() and step_ca.exists())
 
     logger.info('Create CA Config')
     os.environ['STEPPATH'] = str(step_config_dir)
     shutil.rmtree(step_config_dir, ignore_errors=True)
     name = ca_url.split(':')[0]
-    os.system(f'{step} ca init --name name --dns {name} '
-              f'--address {ca_url}  --provisioner prov '
-              f'--password-file {pki_dir}/pass_file')
+    call(f'{step} ca init --name name --dns {name} '
+         f'--address {ca_url}  --provisioner prov '
+         f'--password-file {pki_dir}/pass_file', shell=True)
 
-    os.system(f'{step} ca provisioner remove prov --all')
-    os.system(f'{step} crypto jwk create {step_config_dir}/certs/pub.json '
-              f'{step_config_dir}/secrets/priv.json --password-file={pki_dir}/pass_file')
-    os.system(f'{step} ca provisioner add provisioner {step_config_dir}/certs/pub.json')
+    call(f'{step} ca provisioner remove prov --all', shell=True)
+    call(f'{step} crypto jwk create {step_config_dir}/certs/pub.json '
+         f'{step_config_dir}/secrets/priv.json --password-file={pki_dir}/pass_file', shell=True)
+    call(f'{step} ca provisioner add provisioner {step_config_dir}/certs/pub.json', shell=True)
 
 
 def _configure(step_config_dir):
