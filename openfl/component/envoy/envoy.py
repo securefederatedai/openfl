@@ -27,7 +27,7 @@ class Envoy:
 
     def __init__(self, shard_name, director_uri, shard_descriptor,
                  root_ca, key, cert, disable_tls=False) -> None:
-        """Initialize a collaborator manager object."""
+        """Initialize a envoy object."""
         self.name = shard_name
         self.root_ca = Path(root_ca).absolute() if root_ca is not None else None
         self.key = Path(key).absolute() if root_ca is not None else None
@@ -42,7 +42,7 @@ class Envoy:
         self._health_check_future = None
 
     def run(self):
-        """Run of the collaborator manager working cycle."""
+        """Run of the envoy working cycle."""
         while True:
             try:
                 # Workspace import should not be done by gRPC client!
@@ -94,7 +94,7 @@ class Envoy:
             os.chdir(cwd)
 
     def start(self):
-        """Start the collaborator manager."""
+        """Start the envoy."""
         try:
             acknowledgement = self.director_client.report_shard_info(self.shard_descriptor)
         except Exception as exc:

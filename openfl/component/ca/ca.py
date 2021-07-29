@@ -32,7 +32,7 @@ def download_step_bin(url, grep_name, architecture, prefix='.', confirmation=Tru
         grep_name: name to grep over github assets
         architecture: architecture type to grep
         prefix: folder path to download
-        conformation: request user conformation or not
+        confirmation: request user confirmation or not
     """
     if confirmation:
         confirm('CA binaries from github will be downloaded now', default=True, abort=True)
@@ -68,8 +68,8 @@ def get_token(name, ca_url, ca_path='.'):
     ca_path = Path(ca_path)
     step_config_dir = ca_path / 'step_config'
     pki_dir = ca_path / 'cert'
-    step, _ = get_bin_names(ca_path)
-    if not step:
+    step_path, _ = get_ca_bin_paths(ca_path)
+    if not step_path:
         raise Exception('Step-CA is not installed!\nRun `fx pki install` first')
 
     priv_json = step_config_dir / 'secrets' / 'priv.json'
@@ -77,7 +77,7 @@ def get_token(name, ca_url, ca_path='.'):
     root_crt = step_config_dir / 'certs' / 'root_ca.crt'
     try:
         token = subprocess.check_output(
-            f'{step} ca token {name} '
+            f'{step_path} ca token {name} '
             f'--key {priv_json} --root {root_crt} '
             f'--password-file {pass_file} 'f'--ca-url {ca_url}', shell=True)
     except subprocess.CalledProcessError as exc:
@@ -86,7 +86,10 @@ def get_token(name, ca_url, ca_path='.'):
 
     token = token.strip()
     length = len(token)
-    assert(length < 10000)
+    token_max_size = 10000
+    if length > token_max_size:
+        raise Exception(f'Length of the token is too large. '
+                        f'Token max size: {token_max_size}, actual size: {length}.')
     length = str(10000 + length)[-4:]
     with open(step_config_dir / 'certs' / 'root_ca.crt', mode='rb') as file:
         root_ca = file.read()
@@ -96,7 +99,7 @@ def get_token(name, ca_url, ca_path='.'):
     return str(length) + token.decode('ascii') + base64_message
 
 
-def get_bin_names(ca_path):
+def get_ca_bin_paths(ca_path):
     """Get paths of step binaries."""
     ca_path = Path(ca_path)
     step = None
@@ -112,7 +115,7 @@ def get_bin_names(ca_path):
 
 
 def certify(name, cert_path: Path, token_with_cert, ca_path: Path):
-    """Create a collaborator manager workspace."""
+    """Create a envoy workspace."""
     os.makedirs(cert_path, exist_ok=True)
 
     length = int(token_with_cert[:4])
@@ -120,18 +123,17 @@ def certify(name, cert_path: Path, token_with_cert, ca_path: Path):
     root_ca = token_with_cert[length + 4:]
     message_bytes = base64.b64decode(root_ca)
 
-    step, _ = get_bin_names(ca_path)
-    if not step:
+    step_path, _ = get_ca_bin_paths(ca_path)
+    if not step_path:
         url = 'http://api.github.com/repos/smallstep/cli/releases/latest'
         download_step_bin(url, 'step_linux', 'amd', prefix=ca_path)
-        step, _ = get_bin_names(ca_path)
-    assert step
+        step_path, _ = get_ca_bin_paths(ca_path)
+    if not step_path:
+        raise Exception('Step-CA is not installed!\nRun `fx pki install` first')
 
-    # write ca cert to file
     with open(f'{cert_path}/root_ca.crt', mode='wb') as file:
         file.write(message_bytes)
-    # request to ca server
-    call(f'./{step} ca certificate {name} {cert_path}/{name}.crt '
+    call(f'./{step_path} ca certificate {name} {cert_path}/{name}.crt '
          f'{cert_path}/{name}.key -f --token {token}', shell=True)
 
 
@@ -157,9 +159,9 @@ def install(ca_path, ca_url, password):
     ca_path.mkdir(parents=True, exist_ok=True)
     step_config_dir = ca_path / 'step_config'
     os.environ['STEPPATH'] = str(step_config_dir)
-    step, step_ca = get_bin_names(ca_path)
+    step_path, step_ca_path = get_ca_bin_paths(ca_path)
 
-    if not (step and step_ca and step.exists() and step_ca.exists()):
+    if not (step_path and step_ca_path and step_path.exists() and step_ca_path.exists()):
         confirm('CA binaries from github will be downloaded now', default=True, abort=True)
         url = 'http://api.github.com/repos/smallstep/certificates/releases/latest'
         download_step_bin(url, 'step-ca_linux', 'amd', prefix=ca_path, confirmation=False)
@@ -199,10 +201,8 @@ def _check_kill_process(pstring, confirmation=False):
     return True
 
 
-def _create_ca(ca_path, ca_url, password):
+def _create_ca(ca_path: Path, ca_url: str, password: str):
     """Create a ca workspace."""
-    step = None
-    step_ca = None
     pki_dir = ca_path / 'cert'
     step_config_dir = ca_path / 'step_config'
 
@@ -211,21 +211,21 @@ def _create_ca(ca_path, ca_url, password):
 
     with open(f'{pki_dir}/pass_file', 'w') as f:
         f.write(password)
-    step, step_ca = get_bin_names(ca_path)
-    assert(step and step_ca and step.exists() and step_ca.exists())
+    step_path, step_ca_path = get_ca_bin_paths(ca_path)
+    assert(step_path and step_ca_path and step_path.exists() and step_ca_path.exists())
 
     logger.info('Create CA Config')
     os.environ['STEPPATH'] = str(step_config_dir)
     shutil.rmtree(step_config_dir, ignore_errors=True)
     name = ca_url.split(':')[0]
-    call(f'{step} ca init --name name --dns {name} '
+    call(f'{step_path} ca init --name name --dns {name} '
          f'--address {ca_url}  --provisioner prov '
          f'--password-file {pki_dir}/pass_file', shell=True)
 
-    call(f'{step} ca provisioner remove prov --all', shell=True)
-    call(f'{step} crypto jwk create {step_config_dir}/certs/pub.json '
+    call(f'{step_path} ca provisioner remove prov --all', shell=True)
+    call(f'{step_path} crypto jwk create {step_config_dir}/certs/pub.json '
          f'{step_config_dir}/secrets/priv.json --password-file={pki_dir}/pass_file', shell=True)
-    call(f'{step} ca provisioner add provisioner {step_config_dir}/certs/pub.json', shell=True)
+    call(f'{step_path} ca provisioner add provisioner {step_config_dir}/certs/pub.json', shell=True)
 
 
 def _configure(step_config_dir):

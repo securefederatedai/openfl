@@ -73,7 +73,7 @@ Token must be copied to each node by some secure way. Each step is considered in
     Https is provided by root certificate which was copy with JWT.
     Server authenticates client by JWT and client authenticates server by root certificate.
 
-Now signed certificate and private key are stored on current node. Signed certificate has one year time-to-live. You should certify all node that will participate in federation: director, all collaborator managers and api-layer node.
+Now signed certificate and private key are stored on current node. Signed certificate has one year time-to-live. You should certify all node that will participate in federation: director, all envoys and api-layer node.
 
 ******************************************
 Defining a Federated Learning Experiment

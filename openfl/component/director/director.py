@@ -118,8 +118,7 @@ class Director:
         """Stream metrics from the aggregator."""
         aggregator = self.experiment_stash[caller][experiment_name].aggregator
 
-        while not aggregator.all_quit_jobs_sent() or \
-                not aggregator.metric_queue.empty():
+        while not aggregator.all_quit_jobs_sent() or not aggregator.metric_queue.empty():
             # If the aggregator has not fineished the experimnet
             # or it finished but metric_queue is not empty we send metrics
 
@@ -140,7 +139,7 @@ class Director:
 
     def remove_experiment_data(self, experiment_name: str, caller: str):
         """Remove experiment data RPC."""
-        if experiment_name in self.experiment_stash[caller]:
+        if experiment_name in self.experiment_stash.get(caller, {}):
             del self.experiment_stash[caller][experiment_name]
 
     def collaborator_health_check(self, *, collaborator_name: str,

@@ -35,8 +35,11 @@ class KvasirShardDescriptor(ShardDescriptor):
         self.images_path = self.data_folder / 'segmented-images' / 'images'
         self.masks_path = self.data_folder / 'segmented-images' / 'masks'
 
-        self.images_names = [img_name for img_name in sorted(os.listdir(
-            self.images_path)) if len(img_name) > 3 and img_name[-3:] == 'jpg']
+        self.images_names = [
+            img_name
+            for img_name in sorted(os.listdir(self.images_path))
+            if len(img_name) > 3 and img_name[-3:] == 'jpg'
+        ]
         # Sharding
         self.images_names = self.images_names[self.rank_worldsize[0] - 1::self.rank_worldsize[1]]
 

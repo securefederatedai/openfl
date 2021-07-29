@@ -47,8 +47,8 @@ def envoy(context):
         help='Path to a signed certificate')
 def start_(shard_name, director_uri, disable_tls, shard_config_path,
            root_ca, key, cert):
-    """Start the collaborator manager."""
-    logger.info('🧿 Starting the Collaborator Manager.')
+    """Start the Envoy."""
+    logger.info('🧿 Starting the Envoy.')
 
     shard_descriptor = shard_descriptor_from_config(shard_config_path)
     envoy = Envoy(
@@ -65,13 +65,13 @@ def start_(shard_name, director_uri, disable_tls, shard_config_path,
 
 
 @envoy.command(name='create-workspace')
-@option('-p', '--collaborator-manager-path', required=True,
-        help='The Collaborator Manager path', type=ClickPath())
+@option('-p', '--envoy-path', required=True,
+        help='The Envoy path', type=ClickPath())
 def create(envoy_path):
-    """Create a collaborator manager workspace."""
+    """Create a envoy workspace."""
     envoy_path = Path(envoy_path)
     if envoy_path.exists():
-        if not click.confirm('Collaborator manager workspace already exists. Recreate?',
+        if not click.confirm('Envoy workspace already exists. Recreate?',
                              default=True):
             sys.exit(1)
         shutil.rmtree(envoy_path)
