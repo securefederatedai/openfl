@@ -82,6 +82,8 @@ def create(envoy_path):
                     envoy_path / 'shard_config.yaml')
     shutil.copyfile(WORKSPACE / 'default/shard_descriptor.py',
                     envoy_path / 'shard_descriptor.py')
+    shutil.copyfile(WORKSPACE / 'default/requirements.txt',
+                    envoy_path / 'requirements.txt')
 
 
 def shard_descriptor_from_config(shard_config_path: str):

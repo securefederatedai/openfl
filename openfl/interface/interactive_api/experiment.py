@@ -87,10 +87,10 @@ class FLExperiment:
         self._assert_experiment_accepted()
         for metric_message_dict in self.federation.dir_client.stream_metrics(self.experiment_name):
             self.logger.metric(
-                f'Round {metric_message_dict.round}, '
-                f'collaborator {metric_message_dict.metric_origin} '
-                f'{metric_message_dict.task_name} result '
-                f'{metric_message_dict.metric_name}:\t{metric_message_dict.metric_value}')
+                f'Round {metric_message_dict["round"]}, '
+                f'collaborator {metric_message_dict["metric_origin"]} '
+                f'{metric_message_dict["task_name"]} result '
+                f'{metric_message_dict["metric_name"]}:\t{metric_message_dict["metric_value"]}')
 
             if tensorboard_logs:
                 self.write_tensorboard_metric(metric_message_dict)
@@ -101,8 +101,8 @@ class FLExperiment:
             self.summary_writer = SummaryWriter(f'./logs/{self.experiment_name}', flush_secs=5)
 
         self.summary_writer.add_scalar(
-            f'{metric.metric_origin}/{metric.task_name}/{metric.metric_name}',
-            metric.metric_value, metric.round)
+            f'{metric["metric_origin"]}/{metric["task_name"]}/{metric["metric_name"]}',
+            metric["metric_value"], metric["round"])
 
     def remove_experiment_data(self):
         """Remove experiment data."""
@@ -204,7 +204,7 @@ class FLExperiment:
         archive_name = basename(getcwd())
 
         tmp_dir = 'temp_' + archive_name
-        makedirs(tmp_dir)
+        makedirs(tmp_dir, exist_ok=True)
 
         ignore = ignore_patterns(
             '__pycache__', 'data', 'cert', tmp_dir, '*.crt', '*.key',
