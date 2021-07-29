@@ -1,3 +1,5 @@
-template: shard_descriptor.ShardDescriptor
+template: kvasir_shard_descriptor.KvasirShardDescriptor
 params:
-  data_path: data
+  data_folder: kvasir_data
+  rank_worldsize: 1,90
+  enforce_image_hw: '300,400'

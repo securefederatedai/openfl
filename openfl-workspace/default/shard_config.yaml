@@ -1,3 +1,5 @@
-template: shard_descriptor.ShardDescriptor
+template: shard_descriptor.LocalShardDescriptor
 params:
   data_path: data
+  sample_shape: []
+  target_shape: []

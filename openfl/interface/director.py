@@ -31,7 +31,8 @@ def director(context):
 @director.command(name='start')
 @option('-c', '--director-config-path', default='director.yaml',
         help='The director config file path', type=ClickPath(exists=True))
-@option('--disable-tls', default=False)
+@option('--disable-tls', default=False,
+        is_flag=True)
 @option('-rc', '--root-cert-path', 'root_ca', default=None,
         help='Path to a root CA cert')
 @option('-pk', '--private-key-path', 'key', default=None,
