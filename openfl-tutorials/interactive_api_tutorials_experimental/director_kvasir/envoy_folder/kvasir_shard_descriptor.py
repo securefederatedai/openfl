@@ -10,6 +10,7 @@ from pathlib import Path
 import numpy as np
 from PIL import Image
 from torch.utils.data import Dataset
+from torch.utils.data import Subset
 
 from openfl.interface.interactive_api.shard_descriptor import ShardDescriptor
 from openfl.plugins.data_splitters import EqualNumPyDataSplitter
@@ -86,7 +87,7 @@ class KvasirShardDescriptor(ShardDescriptor):
         """Initialize KvasirShardDescriptor."""
         super().__init__()
         self.dataset = KvasirDataset(data_folder=data_folder, enforce_image_hw=enforce_image_hw)
-        X, y = list(zip(*self.dataset))
+
         if data_splitter is None:
             self.data_splitter = EqualNumPyDataSplitter()
         else:
@@ -98,7 +99,8 @@ class KvasirShardDescriptor(ShardDescriptor):
         self.rank, self.worldsize = tuple(int(num) for num in rank_worldsize.split(','))
 
         # Sharding
-        self.subset = self.data_splitter.split(X, y, self.worldsize)[self.rank]
+        indices = self.data_splitter.split([y for _, y in self.dataset], self.worldsize)[self.rank]
+        self.subset = Subset(self.dataset, indices)
 
         # Calculating data and target shapes
         sample, target = self[0]

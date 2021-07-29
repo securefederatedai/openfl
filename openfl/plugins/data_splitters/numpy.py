@@ -1,7 +1,7 @@
 """UnbalancedFederatedDataset module."""
 
 from abc import abstractmethod
-from typing import Dict
+from typing import List
 from typing import Tuple
 
 import numpy as np
@@ -25,7 +25,7 @@ class NumPyDataSplitter(DataSplitter):
 
     @abstractmethod
     def split(self, data: Tuple[np.ndarray, np.ndarray], num_collaborators: int) \
-            -> Dict[str, np.ndarray]:
+            -> List[List[int]]:
         """Split the data."""
         raise NotImplementedError
 
@@ -41,18 +41,12 @@ class EqualNumPyDataSplitter(NumPyDataSplitter):
         """
         self.shuffle = shuffle
 
-    def split(self, data, num_collaborators):
+    def split(self, labels, num_collaborators):
         """Split the data."""
-        samples, labels = data
-        if self.shuffle:
-            shuffled_idx = np.random.choice(
-                len(labels), len(labels), replace=False
-            )
-            samples = samples[shuffled_idx]
-            labels = labels[shuffled_idx]
-        X = np.array_split(samples, num_collaborators)
-        y = np.array_split(labels, num_collaborators)
-        return [{'data': samples, 'labels': labels} for samples, labels in zip(X, y)]
+        idx = np.random.choice(len(labels), len(labels), replace=False) if self.shuffle \
+            else range(len(labels))
+        slices = np.array_split(idx, num_collaborators)
+        return slices
 
 
 class RandomNumPyDataSplitter(NumPyDataSplitter):
@@ -66,21 +60,13 @@ class RandomNumPyDataSplitter(NumPyDataSplitter):
         """
         self.shuffle = shuffle
 
-    def split(self, data, num_collaborators):
+    def split(self, labels, num_collaborators):
         """Split the data."""
-        samples, labels = data
-        if self.shuffle:
-            shuffled_idx = np.random.choice(
-                len(labels), len(labels), replace=False
-            )
-            samples = samples[shuffled_idx]
-            labels = labels[shuffled_idx]
-        random_idx = np.sort(np.random.choice(
-            len(labels), num_collaborators - 1, replace=False)
-        )
-        X = np.split(samples, random_idx)
-        y = np.split(labels, random_idx)
-        return [{'data': samples, 'labels': labels} for samples, labels in zip(X, y)]
+        idx = np.random.choice(len(labels), len(labels), replace=False) if self.shuffle \
+            else range(len(labels))
+        random_idx = np.sort(np.random.choice(len(labels), num_collaborators - 1, replace=False))
+
+        return np.split(idx, random_idx)
 
 
 class LogNormalNumPyDataSplitter(NumPyDataSplitter):
@@ -105,23 +91,8 @@ class LogNormalNumPyDataSplitter(NumPyDataSplitter):
         self.classes_per_col = classes_per_col
         self.min_samples_per_class = min_samples_per_class
 
-    def split(self, data, num_collaborators):
+    def split(self, labels, num_collaborators):
         """Split the data."""
-        samples, labels = data
-        idx = self.get_indices(labels, num_collaborators)
-        return [{'data': samples[i], 'labels':labels[i]} for i in idx]
-
-    def get_indices(self,
-                    labels,
-                    num_collaborators):
-        """Split labels into unequal parts by lognormal law.
-
-        Args:
-            labels(np.ndarray): Array of class labels.
-            num_collaborators(int): Number of data slices.
-        Returns:
-            np.ndarray: Array of arrays of data indices assigned per collaborator.
-        """
         idx = [[] for _ in range(num_collaborators)]
         samples_per_col = self.classes_per_col * self.min_samples_per_class
         for col in range(num_collaborators):
@@ -167,8 +138,8 @@ class DirichletNumPyDataSplitter(NumPyDataSplitter):
         self.alpha = alpha
         self.min_samples_per_col = min_samples_per_col
 
-    def split_dirichlet(self, labels, num_collaborators):
-        """Dirichlet split implementation."""
+    def split(self, labels, num_collaborators):
+        """Split the data."""
         if len(labels.shape) > 1:
             labels = np.argmax(labels, axis=1)
         classes = len(np.unique(labels))
@@ -190,9 +161,3 @@ class DirichletNumPyDataSplitter(NumPyDataSplitter):
                 idx_batch = [idx_j + idx.tolist() for idx_j, idx in zip(idx_batch, idx_splitted)]
                 min_size = min([len(idx_j) for idx_j in idx_batch])
         return idx_batch
-
-    def split(self, data, num_collaborators):
-        """Split the data."""
-        samples, labels = data
-        idx_batch = self.split_dirichlet(labels, num_collaborators)
-        return [{'samples': samples[idx], 'labels': labels[idx]} for idx in idx_batch]

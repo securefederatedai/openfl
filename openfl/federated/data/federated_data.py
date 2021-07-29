@@ -90,15 +90,15 @@ class FederatedDataSet(PyTorchDataLoader):
             list[FederatedDataSets]
                 A dataset slice for each collaborator
         """
-        train_split = self.data_splitter.split((self.X_train, self.y_train), num_collaborators)
-        valid_split = self.data_splitter.split((self.X_valid, self.y_valid), num_collaborators)
+        train_idx = self.data_splitter.split(self.y_train, num_collaborators)
+        valid_idx = self.data_splitter.split(self.y_valid, num_collaborators)
 
         return [
             FederatedDataSet(
-                train_split[i]['data'],
-                train_split[i]['labels'],
-                valid_split[i]['data'],
-                valid_split[i]['labels'],
+                self.X_train[train_idx[i]],
+                self.y_train[train_idx[i]],
+                self.X_valid[valid_idx[i]],
+                self.y_valid[valid_idx[i]],
                 batch_size=self.batch_size,
                 num_classes=self.num_classes
             ) for i in range(num_collaborators)

@@ -60,7 +60,7 @@ class LogNormalPyTorchDatasetSplitter(PyTorchDatasetSplitter):
         labels = [label for _, label in data]
         labels = np.array([y.numpy() if isinstance(y, torch.Tensor) else y for y in labels])
         flat_labels = labels.argmax(axis=1) if len(labels.shape) > 1 else labels
-        idx = self.numpy_splitter.get_indices(flat_labels, num_collaborators)
+        idx = self.numpy_splitter.split(flat_labels, num_collaborators)
         datasets = [Subset(data, col_idx) for col_idx in idx]
         return datasets
 
@@ -90,5 +90,5 @@ class DirichletPyTorchDatasetSplitter(PyTorchDatasetSplitter):
     def split(self, data, num_collaborators):
         """Split the data."""
         labels = np.array([label for _, label in data])
-        idx_batch = self.numpy_splitter.split_dirichlet(labels, num_collaborators)
+        idx_batch = self.numpy_splitter.split(labels, num_collaborators)
         return [Subset(data, idx) for idx in idx_batch]
