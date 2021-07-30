@@ -257,8 +257,7 @@ class FLExperiment:
         # brining in fault tolerance changes
         shard_registry = self.federation.get_shard_registry()
         plan.authorized_cols = [
-            name for name, info in shard_registry.items()
-            if info['is_online'] and not info['is_experiment_running']
+            name for name, info in shard_registry.items() if info['is_online']
         ]
         # Network part of the plan
         # We keep in mind that an aggregator FQND will be the same as the directors FQDN
