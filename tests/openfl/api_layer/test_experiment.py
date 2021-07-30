@@ -4,9 +4,8 @@
 
 import pytest
 
-from .test_federation import federation_object  # NOQA
-
 from openfl.interface.interactive_api.experiment import FLExperiment
+from .test_federation import federation_object  # NOQA
 # TaskInterface, DataInterface, ModelInterface,
 
 EXPERIMENT_MAME = 'test experiment'
