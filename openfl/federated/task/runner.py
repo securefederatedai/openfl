@@ -57,7 +57,7 @@ class TaskRunner(object):
         """
         Get the data_loader object.
 
-        Serves Up batches and provides info regarding data_loader.
+        Serves up batches and provides info regarding data_loader.
 
         Returns:
             data_loader object
