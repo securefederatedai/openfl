@@ -50,6 +50,9 @@ def start(director_config_path, disable_tls, root_ca, key, cert):
     logger.info(f'Sample shape: {sample_shape}, target shape: {target_shape}')
     listen_ip = settings.get('listen_ip')
     listen_port = settings.get('listen_port')
+    root_ca = root_ca or settings.get('root_ca')
+    key = key or settings.get('key')
+    cert = cert or settings.get('cert')
     kwargs = {}
     if listen_ip:
         kwargs['listen_ip'] = listen_ip
