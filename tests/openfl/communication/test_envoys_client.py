@@ -1,13 +1,18 @@
-import pytest
+# Copyright (C) 2020-2021 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+"""Derector Envoy's client tests module."""
+
 from unittest import mock
 
-from openfl.protocols import director_pb2
+import pytest
+
 from openfl.transport.grpc.director_client import ShardDirectorClient
 
 
 @pytest.fixture
 @mock.patch('openfl.transport.grpc.director_client.director_pb2_grpc')
 def director_client(director_pb2_grpc):
+    """Director client fixture."""
     director_pb2_grpc.FederationDirectorStub.return_value = mock.Mock()
 
     director_uri = 'fqdn'
@@ -21,6 +26,7 @@ def director_client(director_pb2_grpc):
 
 
 def test_repotr_shard_info(director_client):
+    """Test repoer shard info RPC."""
     shard_descriptor = mock.MagicMock()
     shard_descriptor.dataset_description = 'description'
     shard_descriptor.__len__.return_value = 10
