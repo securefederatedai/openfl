@@ -1,4 +1,5 @@
 *.egg-info
+*.pkl
 __pycache__
 /build
 /dist
@@ -6,3 +7,7 @@ __pycache__
 .ipynb_checkpoints
 venv/*
 .idea
+
+*.jpg
+*.crt
+*.key

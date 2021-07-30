@@ -2,7 +2,9 @@
 # SPDX-License-Identifier: Apache-2.0
 """Federation API module."""
 
+from openfl.transport.grpc.director_client import DirectorClient
 from openfl.utilities.utils import getfqdn_env
+from .shard_descriptor import DummyShardDescriptor
 
 
 class Federation:
@@ -13,37 +15,46 @@ class Federation:
     their local data and network setting to enable communication in federation.
     """
 
-    def __init__(self, central_node_fqdn=None, disable_tls=False,
-                 cert_chain=None, agg_certificate=None, agg_private_key=None) -> None:
+    def __init__(self, client_id, director_node_fqdn=None, director_port=None, disable_tls=False,
+                 cert_chain=None, api_cert=None, api_private_key=None) -> None:
         """
         Initialize federation.
 
-        Federation API class should be initialized with the aggregator node FQDN
+        Federation API class should be initialized with the Director node FQDN
         and encryption settings. One may disable mTLS in trusted environments or
-        provide paths to a certificate chain to CA, aggregator certificate and
+        provide paths to a certificate chain to CA, API certificate and
         pricate key to enable mTLS.
+
+        Args:
+        - client_id: name of created Frontend API instance.
+            The same name user certify.
+        - director_node_fqdn: Address and port a director's service is running on.
+            User passes here an address with a port.
         """
-        if central_node_fqdn is None:
-            self.fqdn = getfqdn_env()
+        self.client_id = client_id
+        if director_node_fqdn is None:
+            self.director_node_fqdn = getfqdn_env()
         else:
-            self.fqdn = central_node_fqdn
+            self.director_node_fqdn = director_node_fqdn
 
         self.disable_tls = disable_tls
 
         self.cert_chain = cert_chain
-        self.agg_certificate = agg_certificate
-        self.agg_private_key = agg_private_key
+        self.api_cert = api_cert
+        self.api_private_key = api_private_key
 
-    def register_collaborators(self, col_data_paths: dict) -> None:
-        """
-        Provide data to be stored in data.yaml.
+        # Create Director client
+        self.dir_client = DirectorClient(client_id, f'{director_node_fqdn}:{director_port}',
+                                         disable_tls, cert_chain, api_private_key, api_cert)
 
-        This method should be used to provide information about collaborators
-        participating federation.
-        Arguments:
-        col_data_paths: dict(collaborator name : local data path)
-        """
-        self.col_data_paths = col_data_paths
-        with open('./data.yaml', 'w') as f:
-            for col_name, data_path in self.col_data_paths.items():
-                f.write(f'{col_name},{data_path}\n')
+        # Request sample and target shapes from Director.
+        # This is an internal method for finding out dataset properties in a Federation.
+        self.sample_shape, self.target_shape = self.dir_client.get_dataset_info()
+
+    def get_dummy_shard_descriptor(self, size):
+        """Return a dummy shard descriptor."""
+        return DummyShardDescriptor(self.sample_shape, self.target_shape, size)
+
+    def get_shard_registry(self):
+        """Return a shard registry."""
+        return self.dir_client.get_envoys()
