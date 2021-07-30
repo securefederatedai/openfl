@@ -1,6 +1,6 @@
 # Copyright (C) 2020-2021 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-"""Collaborator manager CLI."""
+"""Envoy CLI."""
 
 import logging
 import shutil
@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 @pass_context
 def envoy(context):
     """Manage Federated Learning Envoy."""
-    context.obj['group'] = 'collaborator-manager'
+    context.obj['group'] = 'envoy'
 
 
 @envoy.command(name='start')

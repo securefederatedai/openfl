@@ -1,7 +1,7 @@
 # Copyright (C) 2020-2021 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Collaborator manager module."""
+"""Envoy module."""
 
 import logging
 import os
@@ -23,7 +23,7 @@ DEFAULT_RETRY_TIMEOUT_IN_SECONDS = 5
 
 
 class Envoy:
-    """Collaborator manager class."""
+    """Envoy class."""
 
     def __init__(self, shard_name, director_uri, shard_descriptor,
                  root_ca: str = None, key: str = None, cert: str = None,

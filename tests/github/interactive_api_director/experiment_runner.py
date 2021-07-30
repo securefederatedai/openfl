@@ -106,7 +106,7 @@ def run_federation(shards: typing.Dict[str, Shard], director_path: str):
     running_processes.append(p)
     for collaborator_path, shard in shards.items():
         p = subprocess.Popen(
-            f'fx collaborator-manager start '
+            f'fx envoy start '
             f'-n {shard.shard_name} -d {shard.director_uri} -p {shard.data_path}',
             shell=True,
             cwd=os.path.join(collaborator_path)
