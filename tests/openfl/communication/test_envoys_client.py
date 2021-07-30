@@ -25,7 +25,7 @@ def director_client(director_pb2_grpc):
     return director_client
 
 
-def test_repotr_shard_info(director_client):
+def test_report_shard_info(director_client):
     """Test report_shard_info RPC."""
     shard_descriptor = mock.MagicMock()
     shard_descriptor.dataset_description = 'description'
