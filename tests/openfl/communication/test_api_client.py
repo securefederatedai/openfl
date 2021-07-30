@@ -25,14 +25,14 @@ def director_client(director_pb2_grpc):
 
 
 def test_get_dataset_info(director_client):
-    """Test get dataset info RPC."""
+    """Test get_dataset_info RPC."""
     director_client.get_dataset_info()
     director_client.stub.GetDatasetInfo.assert_called_once()
 
 
 @mock.patch('openfl.transport.grpc.director_client.deconstruct_model_proto')
 def test_get_best_model(deconstruct_model_proto, director_client):
-    """Test get best model RPC."""
+    """Test get_best_model RPC."""
     deconstruct_model_proto.return_value = {}, {}
     director_client.get_best_model('test name')
     director_client.stub.GetTrainedModel.assert_called_once()
