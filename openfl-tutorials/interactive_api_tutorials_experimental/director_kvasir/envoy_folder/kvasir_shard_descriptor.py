@@ -126,7 +126,7 @@ if __name__ == '__main__':
         shard_name=shard_name,
         director_uri=director_uri,
         shard_descriptor=kvasir_sd,
-        disable_tls=True,
+        disable_tls=False,
         root_ca='./cert/root_ca.crt',
         key='./cert/one.key',
         cert='./cert/one.crt',
