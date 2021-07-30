@@ -22,6 +22,8 @@ from click import confirm
 
 logger = getLogger(__name__)
 
+TOKEN_DELIMITER = '.'
+
 
 def download_step_bin(url, grep_name, architecture, prefix='.', confirmation=True):
     """
@@ -85,18 +87,16 @@ def get_token(name, ca_url, ca_path='.'):
         return
 
     token = token.strip()
-    length = len(token)
-    token_max_size = 10000
-    if length > token_max_size:
-        raise Exception(f'Length of the token is too large. '
-                        f'Token max size: {token_max_size}, actual size: {length}.')
-    length = str(10000 + length)[-4:]
+    token_b64 = base64.b64encode(token.encode('utf-8'))
+
     with open(step_config_dir / 'certs' / 'root_ca.crt', mode='rb') as file:
         root_ca = file.read()
+    root_ca_b64 = base64.b64encode(root_ca)
 
-    base64_bytes = base64.b64encode(root_ca)
-    base64_message = base64_bytes.decode('ascii')
-    return str(length) + token.decode('ascii') + base64_message
+    return TOKEN_DELIMITER.join([
+        token_b64.decode('utf-8'),
+        root_ca_b64.decode('utf-8'),
+    ])
 
 
 def get_ca_bin_paths(ca_path):
@@ -118,10 +118,9 @@ def certify(name, cert_path: Path, token_with_cert, ca_path: Path):
     """Create an envoy workspace."""
     os.makedirs(cert_path, exist_ok=True)
 
-    length = int(token_with_cert[:4])
-    token = token_with_cert[4:length + 4]
-    root_ca = token_with_cert[length + 4:]
-    message_bytes = base64.b64decode(root_ca)
+    token, root_ca = token_with_cert.split(TOKEN_DELIMITER)
+    token = base64.b64decode(token)
+    root_ca = base64.b64decode(root_ca)
 
     step_path, _ = get_ca_bin_paths(ca_path)
     if not step_path:
@@ -132,7 +131,7 @@ def certify(name, cert_path: Path, token_with_cert, ca_path: Path):
         raise Exception('Step-CA is not installed!\nRun `fx pki install` first')
 
     with open(f'{cert_path}/root_ca.crt', mode='wb') as file:
-        file.write(message_bytes)
+        file.write(root_ca)
     call(f'./{step_path} ca certificate {name} {cert_path}/{name}.crt '
          f'{cert_path}/{name}.key -f --token {token}', shell=True)
 
