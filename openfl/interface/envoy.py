@@ -66,7 +66,7 @@ def start_(shard_name, director_uri, disable_tls, shard_config_path,
 @option('-p', '--envoy-path', required=True,
         help='The Envoy path', type=ClickPath())
 def create(envoy_path):
-    """Create a envoy workspace."""
+    """Create an envoy workspace."""
     envoy_path = Path(envoy_path)
     if envoy_path.exists():
         if not click.confirm('Envoy workspace already exists. Recreate?',

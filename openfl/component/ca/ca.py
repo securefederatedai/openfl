@@ -115,7 +115,7 @@ def get_ca_bin_paths(ca_path):
 
 
 def certify(name, cert_path: Path, token_with_cert, ca_path: Path):
-    """Create a envoy workspace."""
+    """Create an envoy workspace."""
     os.makedirs(cert_path, exist_ok=True)
 
     length = int(token_with_cert[:4])

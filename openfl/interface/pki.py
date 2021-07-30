@@ -96,7 +96,7 @@ def get_token_(name, ca_url, ca_path):
 @option('-p', '--ca-path', default='.', help='The path to CA client',
         type=ClickPath(), required=False)
 def certify_(name, token_with_cert, certs_path, ca_path):
-    """Create a envoy workspace."""
+    """Create an envoy workspace."""
     certs_path = Path(certs_path)
     ca_path = Path(ca_path)
     certs_path.mkdir(parents=True, exist_ok=True)
