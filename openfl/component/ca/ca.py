@@ -87,7 +87,7 @@ def get_token(name, ca_url, ca_path='.'):
         return
 
     token = token.strip()
-    token_b64 = base64.b64encode(token.encode('utf-8'))
+    token_b64 = base64.b64encode(token)
 
     with open(step_config_dir / 'certs' / 'root_ca.crt', mode='rb') as file:
         root_ca = file.read()
@@ -119,7 +119,7 @@ def certify(name, cert_path: Path, token_with_cert, ca_path: Path):
     os.makedirs(cert_path, exist_ok=True)
 
     token, root_ca = token_with_cert.split(TOKEN_DELIMITER)
-    token = base64.b64decode(token)
+    token = base64.b64decode(token).decode('utf-8')
     root_ca = base64.b64decode(root_ca)
 
     step_path, _ = get_ca_bin_paths(ca_path)
