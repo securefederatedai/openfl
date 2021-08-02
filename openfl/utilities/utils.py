@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 """Utilities module."""
 
+import hashlib
 import logging
 import os
 import shutil
@@ -170,3 +171,26 @@ def split_tensor_dict_for_holdouts(logger, tensor_dict,
     holdout_tensors = {**holdout_tensors, **not_supported_tensors_dict}
 
     return tensors_to_send, holdout_tensors
+
+
+def sha384sum(file_path):
+    """Calculate SHA384 hash for file specified.
+
+    Args:
+        file_path(path-like): path-like object giving the pathname
+            (absolute or relative to the current working directory)
+            of the file to be opened or an integer file descriptor of the file to be wrapped.
+
+    Returns:
+        str: SHA384 hash value.
+    """
+    h = hashlib.sha384()
+    with open(file_path, 'rb') as file:
+        while True:
+            # Reading is buffered, so we can read smaller chunks.
+            chunk = file.read(h.block_size)
+            if not chunk:
+                break
+            h.update(chunk)
+
+    return h.hexdigest()

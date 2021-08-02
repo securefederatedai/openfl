@@ -1,7 +1,8 @@
 import os
-from hashlib import sha384
 from skimage import io
 import numpy as np
+
+from openfl.utilities import sha384sum
 
 
 def load_data():
@@ -10,8 +11,8 @@ def load_data():
               " -O ./data/kvasir.zip")
     zip_sha384 = 'e30d18a772c6520476e55b610a4db457237f151e' \
                  '19182849d54b49ae24699881c1e18e0961f77642be900450ef8b22e7'
-    assert sha384(open('./data/kvasir.zip', 'rb').read(
-        os.path.getsize('./data/kvasir.zip'))).hexdigest() == zip_sha384
+    if sha384sum('./data/kvasir.zip') != zip_sha384:
+        raise SystemError('ZIP File hash doesn\'t match expected file hash.')
     os.system('unzip -n ./data/kvasir.zip -d ./data')
 
 
