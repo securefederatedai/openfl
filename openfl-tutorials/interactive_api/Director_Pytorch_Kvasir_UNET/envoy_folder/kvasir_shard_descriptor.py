@@ -17,7 +17,10 @@ from openfl.plugins.data_splitters import RandomPyTorchDatasetSplitter
 
 
 class KvasirDataset(Dataset):
+    """Kvasir dataset."""
+
     def __init__(self, data_folder, enforce_image_hw):
+        """Initialize."""
         self.data_folder = Path.cwd() / data_folder
         self.download_data(self.data_folder)
 
@@ -67,6 +70,7 @@ class KvasirDataset(Dataset):
         return img, mask[:, :, 0].astype(np.uint8)
 
     def __len__(self):
+        """Return the len of the dataset."""
         return len(self.images_names)
 
 
