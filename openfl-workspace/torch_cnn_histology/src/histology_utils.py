@@ -4,7 +4,6 @@
 """You may copy this file as the starting point of your own model."""
 
 from collections.abc import Iterable
-from hashlib import sha384
 from logging import getLogger
 from os import makedirs
 from os import path
