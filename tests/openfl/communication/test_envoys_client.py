@@ -17,10 +17,10 @@ def director_client(director_pb2_grpc):
 
     director_uri = 'fqdn'
     shard_name = 'test shard'
-    disable_tls = True
+    tls = False
     root_ca, key, cert = None, None, None
     director_client = ShardDirectorClient(
-        director_uri, shard_name, disable_tls,
+        director_uri, shard_name, tls,
         root_ca, key, cert)
     return director_client
 

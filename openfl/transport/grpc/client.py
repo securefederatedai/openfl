@@ -93,7 +93,7 @@ class CollaboratorGRPCClient:
     def __init__(self,
                  agg_addr,
                  agg_port,
-                 disable_tls,
+                 tls,
                  disable_client_auth,
                  ca,
                  certificate,
@@ -104,7 +104,7 @@ class CollaboratorGRPCClient:
                  **kwargs):
         """Initialize."""
         self.uri = f'{agg_addr}:{agg_port}'
-        self.disable_tls = disable_tls
+        self.tls = tls
         self.disable_client_auth = disable_client_auth
         self.ca = ca
         self.certificate = certificate
@@ -118,7 +118,7 @@ class CollaboratorGRPCClient:
 
         self.logger = getLogger(__name__)
 
-        if self.disable_tls:
+        if not self.tls:
             self.channel = self.create_insecure_channel(self.uri)
         else:
             self.channel = self.create_tls_channel(
@@ -242,7 +242,7 @@ class CollaboratorGRPCClient:
         # channel.close() is idempotent. Call again here in case it wasn't issued previously
         self.disconnect()
 
-        if self.disable_tls:
+        if not self.tls:
             self.channel = self.create_insecure_channel(self.uri)
         else:
             self.channel = self.create_tls_channel(

@@ -26,7 +26,7 @@ Create a virtual Python environment. Please, install only packages that are requ
 ******************************************
 Certification
 ******************************************
-If you have trusted workspace and connection should not be encrypted you can use :code:`disable_tls` option while starting expirement.
+If you have trusted workspace and connection should not be encrypted you can use :code:`disable_tls` option while starting experiment.
 Otherwise it is necessary to certify each node participating in the federation. Certificates allow to use mutual tls connection between nodes.
 You can certify nodes by your own pki system or use pki provided by OpenFL. It is based on `step-ca <https://github.com/smallstep/certificates>`_
 as a server and `step <https://github.com/smallstep/cli>`_ as a client utilities. They are downloaded from github during workspace setup. Regardless of the certification method,
@@ -96,7 +96,7 @@ Federation API class should be initialized with the aggregator node FQDN and enc
 
 .. code-block:: python
 
-    federation = Federation(central_node_fqdn: str, disable_tls: bool, cert_chain: str, agg_certificate: str, agg_private_key: str)
+    federation = Federation(central_node_fqdn: str, tls: bool, cert_chain: str, agg_certificate: str, agg_private_key: str)
 
 Federation's :code:`register_collaborators` method should be used to provide an information about collaborators participating in a federation.
 It requires a dictionary object - :code:`{collaborator name : local data path}`.

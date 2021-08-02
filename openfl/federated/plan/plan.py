@@ -514,7 +514,7 @@ openfl.component.aggregation_functions.AggregationFunctionInterface
         return self.server_
 
     def interactive_api_get_server(self, *, tensor_dict, chain, certificate,
-                                   private_key, disable_tls):
+                                   private_key, tls):
         """Get gRPC server of the aggregator instance."""
         server_args = self.config['network'][SETTINGS]
 
@@ -522,7 +522,7 @@ openfl.component.aggregation_functions.AggregationFunctionInterface
         server_args['ca'] = chain
         server_args['certificate'] = certificate
         server_args['private_key'] = private_key
-        server_args['disable_tls'] = disable_tls
+        server_args['tls'] = tls
 
         server_args['aggregator'] = self.get_aggregator(tensor_dict)
 
