@@ -33,7 +33,8 @@ def setup_logging(level='info', log_file=None):
     if log_file:
         fh = logging.FileHandler(log_file)
         formatter = logging.Formatter(
-            '%(asctime)s %(levelname)s %(message)s %(filename)s:%(lineno)d')
+            '%(asctime)s %(levelname)s %(message)s %(filename)s:%(lineno)d'
+        )
         fh.setFormatter(formatter)
         handlers.append(fh)
 
@@ -138,7 +139,7 @@ def cli(context, log_level):
     setup_logging(log_level, log_file)
 
 
-@cli.resultcallback()
+@cli.result_callback()
 @pass_context
 def end(context, result, **kwargs):
     """Print the result of the operation."""

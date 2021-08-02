@@ -36,12 +36,15 @@ class ShardDirectorClient:
         else:
             if not (root_ca and key and cert):
                 raise Exception('No certificates provided')
-            with open(root_ca, 'rb') as f:
-                root_ca_b = f.read()
-            with open(key, 'rb') as f:
-                key_b = f.read()
-            with open(cert, 'rb') as f:
-                cert_b = f.read()
+            try:
+                with open(root_ca, 'rb') as f:
+                    root_ca_b = f.read()
+                with open(key, 'rb') as f:
+                    key_b = f.read()
+                with open(cert, 'rb') as f:
+                    cert_b = f.read()
+            except FileNotFoundError as exc:
+                raise Exception(f'Provided certificate file is not exist: {exc.filename}')
 
             credentials = grpc.ssl_channel_credentials(
                 root_certificates=root_ca_b,
@@ -72,9 +75,8 @@ class ShardDirectorClient:
         logger.info('Send WaitExperiment request')
         response_iter = self.stub.WaitExperiment(self._get_experiment_data())
         logger.info('WaitExperiment response has received')
-        experiment_name = None
-        for response in response_iter:
-            experiment_name = response.experiment_name
+        response = next(response_iter)
+        experiment_name = response.experiment_name
         if not experiment_name:
             raise Exception('No experiment')
         logger.info(f'Request experiment {experiment_name}')
@@ -88,9 +90,10 @@ class ShardDirectorClient:
 
         return experiment_name
 
-    def remove_workspace(self, experiment_name):
+    @staticmethod
+    def remove_workspace(experiment_name):
         """Remove the workspace."""
-        shutil.rmtree(experiment_name)
+        shutil.rmtree(experiment_name, ignore_errors=True)
 
     @staticmethod
     def create_workspace(experiment_name, response_iter):
@@ -124,6 +127,8 @@ class ShardDirectorClient:
                 except Exception as exc:
                     logger.error(f'Failed to install requirements: {exc}')
                     time.sleep(3)
+                else:
+                    break
         else:
             logger.error('No ' + requirements_filename + ' file found.')
 
@@ -150,19 +155,25 @@ class ShardDirectorClient:
 class DirectorClient:
     """Director client class for users."""
 
-    def __init__(self, client_id, director_uri, disable_tls, root_ca, key, cert) -> None:
+    def __init__(self, client_id, director_uri, disable_tls=False,
+                 root_ca=None, key=None, cert=None) -> None:
         """Initialize director client object."""
         channel_opt = [('grpc.max_send_message_length', 512 * 1024 * 1024),
                        ('grpc.max_receive_message_length', 512 * 1024 * 1024)]
         if disable_tls:
             channel = grpc.insecure_channel(director_uri, options=channel_opt)
         else:
-            with open(root_ca, 'rb') as f:
-                root_ca_b = f.read()
-            with open(key, 'rb') as f:
-                key_b = f.read()
-            with open(cert, 'rb') as f:
-                cert_b = f.read()
+            if not (root_ca and key and cert):
+                raise Exception('No certificates provided')
+            try:
+                with open(root_ca, 'rb') as f:
+                    root_ca_b = f.read()
+                with open(key, 'rb') as f:
+                    key_b = f.read()
+                with open(cert, 'rb') as f:
+                    cert_b = f.read()
+            except FileNotFoundError as exc:
+                raise Exception(f'Provided certificate file is not exist: {exc.filename}')
 
             credentials = grpc.ssl_channel_credentials(
                 root_certificates=root_ca_b,
@@ -175,10 +186,6 @@ class DirectorClient:
 
         self.client_id = client_id
         self.header = director_pb2.RequestHeader(sender=self.client_id)
-
-    def report_shard_info(self, shard_descriptor) -> bool:
-        """Report shard info to the director."""
-        logger.info('Send report AcknowledgeShard')
 
     def set_new_experiment(self, name, col_names, arch_path,
                            initial_tensor_dict=None):
@@ -210,16 +217,10 @@ class DirectorClient:
             resp = self.stub.SetNewExperiment(st())
             return resp
 
-    def get_shard_info(self):
-        """Request the shard info to the director."""
-        resp = self.stub.GetShardsInfo(director_pb2.GetShardsInfoRequest(header=self.header))
+    def get_dataset_info(self):
+        """Request the dataset info from the director."""
+        resp = self.stub.GetDatasetInfo(director_pb2.GetDatasetInfoRequest(header=self.header))
         return resp.sample_shape, resp.target_shape
-
-    def request_shard_registry(self):
-        """Request a shard registry."""
-        resp = self.stub.GetRegisterdShards(director_pb2.GetRegisterdShardsRequest(
-            header=self.header))
-        return resp.shard_info
 
     def _get_trained_model(self, experiment_name, model_type):
         """Get trained model RPC."""
@@ -250,13 +251,18 @@ class DirectorClient:
             header=self.header,
             experiment_name=experiment_name)
         for metric_message in self.stub.StreamMetrics(request):
-            yield metric_message
+            yield {
+                'metric_origin': metric_message.metric_origin,
+                'task_name': metric_message.task_name,
+                'metric_name': metric_message.metric_name,
+                'metric_value': metric_message.metric_value,
+                'round': metric_message.round}
 
-    def remove_experiment_data(self, experiment_name):
+    def remove_experiment_data(self, name):
         """Remove experiment data RPC."""
         request = director_pb2.RemoveExperimentRequest(
             header=self.header,
-            experiment_name=experiment_name)
+            experiment_name=name)
         response = self.stub.RemoveExperimentData(request)
         return response.acknowledgement
 

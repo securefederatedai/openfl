@@ -12,7 +12,7 @@ from click import pass_context
 from click import Path as ClickPath
 
 from openfl.component.ca.ca import certify
-from openfl.component.ca.ca import get_bin_names
+from openfl.component.ca.ca import get_ca_bin_paths
 from openfl.component.ca.ca import get_token
 from openfl.component.ca.ca import install
 from openfl.component.ca.ca import remove_ca
@@ -41,13 +41,13 @@ def run(ca_path):
     pki_dir = ca_path / 'cert'
     pass_file = pki_dir / 'pass_file'
     ca_json = step_config_dir / 'config' / 'ca.json'
-    _, step_ca = get_bin_names(ca_path)
+    _, step_ca_path = get_ca_bin_paths(ca_path)
     if (not os.path.exists(step_config_dir) or not os.path.exists(pki_dir)
             or not os.path.exists(pass_file) or not os.path.exists(ca_json)
-            or not os.path.exists(step_ca)):
+            or not os.path.exists(step_ca_path)):
         logger.warning('CA is not installed or corrupted, please install it first')
         return
-    run_ca(step_ca, pass_file, ca_json)
+    run_ca(step_ca_path, pass_file, ca_json)
 
 
 @pki.command(name='install')
@@ -81,6 +81,7 @@ def get_token_(name, ca_url, ca_path):
         name: common name for following certificate
                     (aggregator fqdn or collaborator name)
         ca_url: full url of CA server
+        ca_path: the path to CA binaries
     """
     token = get_token(name, ca_url, ca_path)
     print('Token:')
@@ -90,10 +91,13 @@ def get_token_(name, ca_url, ca_path):
 @pki.command(name='certify')
 @option('-n', '--name', required=True)
 @option('-t', '--token', 'token_with_cert', required=True)
-@option('-p', '--certs-path', required=False, default=Path('.') / 'cert',
-        help='The ca path', type=ClickPath())
-def certify_(name, token_with_cert, certs_path):
-    """Create a collaborator manager workspace."""
+@option('-c', '--certs-path', required=False, default=Path('.') / 'cert',
+        help='The path where certificates will be stored', type=ClickPath())
+@option('-p', '--ca-path', default='.', help='The path to CA client',
+        type=ClickPath(), required=False)
+def certify_(name, token_with_cert, certs_path, ca_path):
+    """Create an envoy workspace."""
     certs_path = Path(certs_path)
+    ca_path = Path(ca_path)
     certs_path.mkdir(parents=True, exist_ok=True)
-    certify(name, certs_path, token_with_cert)
+    certify(name, certs_path, token_with_cert, ca_path)

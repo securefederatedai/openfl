@@ -93,8 +93,11 @@ class KvasirDataset(Dataset):
 
         self.images_path = images_path
         self.masks_path = masks_path
-        self.images_names = [img_name for img_name in sorted(os.listdir(
-            self.images_path)) if len(img_name) > 3 and img_name[-3:] == 'jpg']
+        self.images_names = [
+            img_name
+            for img_name in sorted(os.listdir(self.images_path))
+            if len(img_name) > 3 and img_name[-3:] == 'jpg'
+        ]
 
         assert (len(self.images_names) > 2), "Too few images"
 

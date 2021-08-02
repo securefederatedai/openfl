@@ -14,8 +14,6 @@ logger = getLogger(__name__)
 
 writer = None
 
-# To avoid creating object at import phase:
-
 
 def get_writer():
     """Create global writer object."""

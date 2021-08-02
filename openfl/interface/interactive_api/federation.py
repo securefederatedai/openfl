@@ -47,7 +47,9 @@ class Federation:
         self.dir_client = DirectorClient(client_id, f'{director_node_fqdn}:{director_port}',
                                          disable_tls, cert_chain, api_private_key, api_cert)
 
-        self.sample_shape, self.target_shape = self._request_data_shape()
+        # Request sample and target shapes from Director.
+        # This is an internal method for finding out dataset properties in a Federation.
+        self.sample_shape, self.target_shape = self.dir_client.get_dataset_info()
 
     def get_dummy_shard_descriptor(self, size):
         """Return a dummy shard descriptor."""
@@ -55,13 +57,4 @@ class Federation:
 
     def get_shard_registry(self):
         """Return a shard registry."""
-        return self.dir_client.request_shard_registry()
-
-    def _request_data_shape(self):
-        """
-        Request sample and target shapes from Director.
-
-        This is an internal method for finding out dataset properties in a Federation.
-        """
-        sample_shape, target_shape = self.dir_client.get_shard_info()
-        return sample_shape, target_shape
+        return self.dir_client.get_envoys()

@@ -7,229 +7,118 @@ import asyncio
 import logging
 import os
 import shutil
-import socket
-import threading
 import time
+import typing
 from collections import defaultdict
-from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 
-from grpc import aio
-from grpc import ssl_server_credentials
-
 from openfl.federated import Plan
-from openfl.pipelines import NoCompressionPipeline
 from openfl.protocols import director_pb2
-from openfl.protocols import director_pb2_grpc
-from openfl.protocols.utils import construct_model_proto
-from openfl.protocols.utils import deconstruct_model_proto
 
 logger = logging.getLogger(__name__)
 
 
-class Director(director_pb2_grpc.FederationDirectorServicer):
+class Director:
     """Director class."""
 
-    def __init__(self, disable_tls, root_ca, key, cert,
-                 sample_shape: list, target_shape: list) -> None:
+    def __init__(self, *, disable_tls: bool = False,
+                 root_ca: Path = None, key: Path = None, cert: Path = None,
+                 sample_shape: list = None, target_shape: list = None) -> None:
         """Initialize a director object."""
         # TODO: add working directory
         super().__init__()
         self.sample_shape, self.target_shape = sample_shape, target_shape
-        self.shard_registry = []
         self._shard_registry = {}
         self.col_exp_queues = defaultdict(asyncio.Queue)
 
-        self.experiments = set()  # Do not know what it is
         self.experiment_data = {}  # {Experiment name : archive bytes}
-        # What if two experimnets come with the same name from different users?
-        self.experiments_queue = asyncio.Queue()  # Experimnets waiting to be executed
-        self.experiment_stash = defaultdict(dict)  # Running of finished experimnets
+        # What if two experiments come with the same name from different users?
+        self.experiments_queue = asyncio.Queue()  # experiments waiting to be executed
+        self.experiment_stash = defaultdict(dict)  # Running of finished experiments
         # {API name : {experiment name : aggregator}}
 
-        self.executor = ProcessPoolExecutor(max_workers=2)
-        self.aggregator_task = None  # TODO: add check if exists and wait on terminate
-        self.fqdn = socket.getfqdn()
-        self.director_port = None
-        self.tensorboard_port = 6006
-        self.tensorboard_thread = None
         self.disable_tls = disable_tls
-        self.root_ca = Path(root_ca).absolute()
-        self.key = Path(key).absolute()
-        self.cert = Path(cert).absolute()
+        self.root_ca = root_ca
+        self.key = key
+        self.cert = cert
 
-    def validate_caller(self, request, context):
-        """
-        Validate the caller.
-
-        Args:
-            request: The gRPC message request
-            context: The gRPC context
-
-        Returns:
-            True - if the caller has valid cert
-            False - if the callers cert name is invalid
-        """
-        # Can we close the request right here?
-        if not self.disable_tls:
-            caller_cert_name = context.auth_context()[
-                'x509_common_name'][0].decode('utf-8')
-            caller_common_name = request.header.sender
-            if not caller_cert_name == caller_common_name:
-                return False
-
-        return True
-
-    async def AcknowledgeShard(self, shard_info, context):  # NOQA:N802
-        """Receive acknowledge shard info."""
-        logger.info(f'AcknowledgeShard request has got: {shard_info}')
-        reply = director_pb2.ShardAcknowledgement(accepted=False)
-        # If dataset do not match the data interface of the problem
-        if (self.sample_shape != shard_info.sample_shape) or \
-                (self.target_shape != shard_info.target_shape):
+    def acknowledge_shard(self, shard_info: director_pb2.ShardInfo) -> bool:
+        """Save shard info to shard registry if it's acceptable."""
+        is_accepted = False
+        if (self.sample_shape != shard_info.sample_shape
+                or self.target_shape != shard_info.target_shape):
             logger.info('Request was not accepted')
-            return reply
+            return is_accepted
         logger.info('Request was accepted')
-        self.shard_registry.append(shard_info)
         self._shard_registry[shard_info.node_info.name] = {
             'shard_info': shard_info,
             'is_online': True,
             'is_experiment_running': False
         }
+        is_accepted = True
+        return is_accepted
 
-        reply.accepted = True
-        return reply
-
-    async def SetNewExperiment(self, stream, context):  # NOQA:N802
-        """Request to set new experiment."""
-        logger.info(f'SetNewExperiment request has got {stream}')
-        # TODO: add streaming reader
-        npbytes = b''
-        async for request in stream:
-            if request.experiment_data.size == len(request.experiment_data.npbytes):
-                npbytes += request.experiment_data.npbytes
-            else:
-                raise Exception('Bad request')
-
-        if not self.validate_caller(request, context):
-            # Can we send reject before reading the stream?
-            return director_pb2.SetNewExperimentResponse(
-                accepted=False)
-
+    async def set_new_experiment(self, *, experiment_name: str, sender_name: str,
+                                 tensor_dict: dict,
+                                 collaborator_names: typing.Iterable[str], data: bytes) -> bool:
+        """Set new experiment."""
         # TODO: save to file
-        self.experiment_data[request.name] = npbytes
-        tensor_dict = None
-        if request.model_proto:
-            tensor_dict, _ = deconstruct_model_proto(request.model_proto, NoCompressionPipeline())
+        self.experiment_data[experiment_name] = data
 
-        self.create_workspace(request.name, npbytes)
+        self.create_workspace(experiment_name, data)
         asyncio.create_task(self._run_aggregator(
-            request.header.sender,
+            sender_name,
             tensor_dict,
-            request.name,
-            request.collaborator_names))
+            experiment_name,
+            collaborator_names
+        ))
 
-        logger.info(f'New experiment {request.name} for '
-                    f'collaborators {request.collaborator_names}')
-        for col_name in request.collaborator_names:
+        logger.info(f'New experiment {experiment_name} for '
+                    f'collaborators {collaborator_names}')
+        for col_name in collaborator_names:
             queue = self.col_exp_queues[col_name]
-            await queue.put(request.name)
-        logger.info('Send response')
-        return director_pb2.SetNewExperimentResponse(
-            accepted=True,
-            tensorboard_address=f'http://{self.fqdn}:{self.tensorboard_port}'
-        )
+            await queue.put(experiment_name)
 
-    async def GetTrainedModel(self, request, context):  # NOQA:N802
-        """RPC for retrieving trained models."""
-        if not self.validate_caller(request, context):
-            return director_pb2.TrainedModelResponse()
-        logger.info('Request GetTrainedModel has got!')
+        return True
 
-        caller = request.header.sender
-        exp_name = request.experiment_name
-
-        if exp_name not in self.experiment_stash[caller]:
+    async def get_trained_model(self, experiment_name: str, caller: str):
+        """Get trained models."""
+        if experiment_name not in self.experiment_stash[caller]:
             logger.error('Aggregator has not started yet')
-            return director_pb2.TrainedModelResponse()
+            return None, None
 
-        aggregator = self.experiment_stash[caller][exp_name].aggregator
+        aggregator = self.experiment_stash[caller][experiment_name].aggregator
 
         if aggregator.last_tensor_dict is None:
             logger.error('Aggregator have no aggregated model to return')
-            return director_pb2.TrainedModelResponse()
+            return None, None
 
-        if request.model_type == director_pb2.GetTrainedModelRequest.BEST_MODEL:
-            tensor_dict = aggregator.best_tensor_dict
-        elif request.model_type == director_pb2.GetTrainedModelRequest.LAST_MODEL:
-            tensor_dict = aggregator.last_tensor_dict
-        else:
-            logger.error('Incorrect model type')
-            return director_pb2.TrainedModelResponse()
+        return aggregator.best_tensor_dict, aggregator.last_tensor_dict
 
-        model_proto = construct_model_proto(tensor_dict, 0, NoCompressionPipeline())
+    def get_experiment_data(self, experiment_name: str) -> bytes:
+        """Get experiment data."""
+        return self.experiment_data.get(experiment_name, b'')
 
-        return director_pb2.TrainedModelResponse(model_proto=model_proto)
-
-    async def GetExperimentData(self, request, context):  # NOQA:N802
-        """Receive experiment data."""
-        # TODO: add size filling
-        # TODO: add experiment name field
-        # TODO: rename npbytes to data
-        content = self.experiment_data.get(request.experiment_name, b'')
-        logger.info(f'Content length: {len(content)}')
-        max_buffer_size = (2 * 1024 * 1024)
-
-        for i in range(0, len(content), max_buffer_size):
-            chunk = content[i:i + max_buffer_size]
-            logger.info(f'Send {len(chunk)} bytes')
-            yield director_pb2.ExperimentData(size=len(chunk), npbytes=chunk)
-
-    async def WaitExperiment(self, request_iterator, context):  # NOQA:N802
-        """Request for wait an experiment."""
-        logger.info('Request WaitExperiment has got!')
-        async for msg in request_iterator:
-            logger.info(msg)
-        queue = self.col_exp_queues[msg.collaborator_name]
+    async def wait_experiment(self, collaborator_name: str) -> str:
+        """Wait an experiment."""
+        queue = self.col_exp_queues[collaborator_name]
         experiment_name = await queue.get()
-        logger.info(f'Experiment {experiment_name} was prepared')
 
-        yield director_pb2.WaitExperimentResponse(experiment_name=experiment_name)
+        return experiment_name
 
-    async def GetShardsInfo(self, request, context):  # NOQA:N802
-        """Request a shard info."""
-        logger.info('Request GetShardsInfo has got!')
-        if not self.validate_caller(request, context):
-            return director_pb2.ShardInfo()
-        resp = director_pb2.ShardInfo(
-            sample_shape=self.sample_shape,
-            target_shape=self.target_shape
-        )
-        return resp
+    def get_dataset_info(self):
+        """Get dataset info."""
+        return self.sample_shape, self.target_shape
 
-    async def GetRegisterdShards(self, request, context):  # NOQA:N802
-        """Request registered shards."""
-        logger.info('Request GetRegisterdShards has got!')
-        resp = director_pb2.GetRegisterdShardsResponse(
-            shard_info=self.shard_registry
-        )
-        return resp
+    def get_registered_shards(self) -> list:
+        """Get registered shard infos."""
+        return [shard_status['shard_info'] for shard_status in self._shard_registry.values()]
 
-    async def StreamMetrics(self, request, context):  # NOQA:N802
-        """Request to stream metrics from the aggregator to frontend."""
-        if not self.validate_caller(request, context):
-            return
-        caller = request.header.sender
-        exp_name = request.experiment_name
-        # We should probably set a name to the aggregator and verify it here.
-        # Moreover, we may save the experiment name in plan.yaml and retrieve it
-        # during the aggregator initialization
-        logger.info(f'Request StreamMetrics for {exp_name} experimnet has got!')
+    async def stream_metrics(self, experiment_name: str, caller: str):
+        """Stream metrics from the aggregator."""
+        aggregator = self.experiment_stash[caller][experiment_name].aggregator
 
-        aggregator = self.experiment_stash[caller][exp_name].aggregator
-
-        while not aggregator.all_quit_jobs_sent() or \
-                not aggregator.metric_queue.empty():
+        while not aggregator.all_quit_jobs_sent() or not aggregator.metric_queue.empty():
             # If the aggregator has not fineished the experimnet
             # or it finished but metric_queue is not empty we send metrics
 
@@ -248,40 +137,34 @@ class Director(director_pb2_grpc.FederationDirectorServicer):
             # Awaiting quit job sent to collaborators
             await asyncio.sleep(5)
 
-    async def RemoveExperimentData(self, request, context):  # NOQA:N802
+    def remove_experiment_data(self, name: str, caller: str):
         """Remove experiment data RPC."""
-        response = director_pb2.RemoveExperimentResponse(acknowledgement=False)
-        if not self.validate_caller(request, context):
-            return response
+        if name in self.experiment_stash.get(caller, {}):
+            del self.experiment_stash[caller][name]
 
-        caller = request.header.sender
-        if request.experiment_name in self.experiment_stash[caller]:
-            del self.experiment_stash[caller][request.experiment_name]
-
-        response.acknowledgement = True
-        return response
-
-    async def CollaboratorHealthCheck(self, request, context):  # NOQA:N802
+    def collaborator_health_check(self, *, collaborator_name: str,
+                                  is_experiment_running: bool,
+                                  valid_duration: int) -> bool:
         """Accept health check from envoy."""
-        logger.debug(f'Request CollaboratorHealthCheck has got: {request}')
-        shard_info = self._shard_registry.get(request.name)
+        is_accepted = False
+        shard_info = self._shard_registry.get(collaborator_name)
         if not shard_info:
-            logger.error(f'Unknown shard {request.name}')
-            return director_pb2.CollaboratorHealthCheckResponse(accepted=False)
+            logger.error(f'Unknown shard {collaborator_name}')
+            return is_accepted
+        is_accepted = True
 
         shard_info['is_online']: True
-        shard_info['is_experiment_running'] = request.is_experiment_running
-        shard_info['valid_duration'] = request.valid_duration.seconds
+        shard_info['is_experiment_running'] = is_experiment_running
+        shard_info['valid_duration'] = valid_duration
         shard_info['last_updated'] = time.time()
 
-        return director_pb2.CollaboratorHealthCheckResponse(accepted=True)
+        return is_accepted
 
-    async def GetEnvoys(self, request, context):  # NOQA:N802
+    def get_envoys(self) -> list:
         """Get a status information about envoys."""
-        resp = director_pb2.GetEnvoysResponse()
         logger.info(f'Shard registry: {self._shard_registry}')
-        for name, envoy in self._shard_registry.items():
-            logger.info(name, envoy)
+        envoy_infos = []
+        for envoy in self._shard_registry.values():
             envoy_info = director_pb2.EnvoyInfo(
                 shard_info=envoy['shard_info'],
                 is_online=time.time() < envoy['last_updated'] + envoy['valid_duration'],
@@ -290,9 +173,9 @@ class Director(director_pb2_grpc.FederationDirectorServicer):
             envoy_info.valid_duration.seconds = envoy['valid_duration']
             envoy_info.last_updated.seconds = int(envoy['last_updated'])
 
-            resp.envoy_infos.append(envoy_info)
+            envoy_infos.append(envoy_info)
 
-        return resp
+        return envoy_infos
 
     @staticmethod
     def create_workspace(experiment_name, npbytes):
@@ -325,10 +208,11 @@ class Director(director_pb2_grpc.FederationDirectorServicer):
 
         logger.info('🧿 Starting the Aggregator Service.')
         aggregator_server = plan.interactive_api_get_server(
-            initial_tensor_dict,
+            tensor_dict=initial_tensor_dict,
             chain=self.root_ca,
             certificate=self.cert,
-            private_key=self.key
+            private_key=self.key,
+            disable_tls=self.disable_tls,
         )
         self.experiment_stash[experiment_sender][experiment_name] = \
             aggregator_server
@@ -349,49 +233,3 @@ class Director(director_pb2_grpc.FederationDirectorServicer):
             grpc_server.stop(0)
             # Temporary solution to free RAM used by TensorDB
             aggregator_server.aggregator.tensor_db.clean_up(0)
-
-    def run_tensorboard(self):
-        """Run the tensorboard."""
-        log_path = os.getcwd()
-        self.tensorboard_thread = threading.Thread(
-            target=lambda: os.system(
-                f'tensorboard --logdir={log_path} --host={"0.0.0.0"} '
-                f'--port={self.tensorboard_port}'
-            ),
-        )
-        try:
-            self.tensorboard_thread.start()
-        except Exception as exc:
-            logger.error(f'Failed to run tensorboard: {exc}')
-
-
-async def serve(*args, disable_tls=False, root_ca=None, key=None, cert=None, **kwargs):
-    """Launch the director GRPC server."""
-    channel_opt = [('grpc.max_send_message_length', 512 * 1024 * 1024),
-                   ('grpc.max_receive_message_length', 512 * 1024 * 1024)]
-    server = aio.server(options=channel_opt)
-    director = Director(*args, disable_tls, root_ca, key, cert, **kwargs)
-    director_pb2_grpc.add_FederationDirectorServicer_to_server(director, server)
-    director.run_tensorboard()
-    # Add pass addr from director.yaml
-    listen_addr = '[::]:50051'
-    if disable_tls:
-        server.add_insecure_port(listen_addr)
-    else:
-        if not (root_ca and key and cert):
-            raise Exception('No certificates provided')
-        with open(key, 'rb') as f:
-            key_b = f.read()
-        with open(cert, 'rb') as f:
-            cert_b = f.read()
-        with open(root_ca, 'rb') as f:
-            root_ca_b = f.read()
-        server_credentials = ssl_server_credentials(
-            ((key_b, cert_b),),
-            root_certificates=root_ca_b,
-            require_client_auth=True
-        )
-        server.add_secure_port(listen_addr, server_credentials)
-    logger.info(f'Starting server on {listen_addr}')
-    await server.start()
-    await server.wait_for_termination()

@@ -504,8 +504,7 @@ openfl.component.aggregation_functions.AggregationFunctionInterface
         server_args['certificate'] = certificate
         server_args['private_key'] = private_key
 
-        for arg, value in kwargs.items():
-            server_args[arg] = value
+        server_args.update(kwargs)
 
         server_args['aggregator'] = self.get_aggregator()
 
@@ -514,7 +513,8 @@ openfl.component.aggregation_functions.AggregationFunctionInterface
 
         return self.server_
 
-    def interactive_api_get_server(self, tensor_dict, chain, certificate, private_key):
+    def interactive_api_get_server(self, *, tensor_dict, chain, certificate,
+                                   private_key, disable_tls):
         """Get gRPC server of the aggregator instance."""
         server_args = self.config['network'][SETTINGS]
 
@@ -522,6 +522,7 @@ openfl.component.aggregation_functions.AggregationFunctionInterface
         server_args['ca'] = chain
         server_args['certificate'] = certificate
         server_args['private_key'] = private_key
+        server_args['disable_tls'] = disable_tls
 
         server_args['aggregator'] = self.get_aggregator(tensor_dict)
 
@@ -532,14 +533,16 @@ openfl.component.aggregation_functions.AggregationFunctionInterface
 
     def deserialize_interface_objects(self):
         """Deserialize objects for TaskRunner."""
-        interface_objects = []
         serializer = Plan.build(
             self.config['api_layer']['required_plugin_components']['serializer_plugin'], {})
-
-        for filename in ['model_interface_file',
-                         'tasks_interface_file', 'dataloader_interface_file']:
-            interface_objects.append(
-                serializer.restore_object(self.config['api_layer']['settings'][filename])
-            )
+        filenames = [
+            'model_interface_file',
+            'tasks_interface_file',
+            'dataloader_interface_file'
+        ]
+        interface_objects = [
+            serializer.restore_object(self.config['api_layer']['settings'][filename])
+            for filename in filenames
+        ]
         model_provider, task_keeper, data_loader = interface_objects
         return model_provider, task_keeper, data_loader

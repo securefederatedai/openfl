@@ -34,14 +34,9 @@ class FederationDirectorStub(object):
                 request_serializer=director__pb2.ExperimentInfo.SerializeToString,
                 response_deserializer=director__pb2.SetNewExperimentResponse.FromString,
                 )
-        self.GetRegisterdShards = channel.unary_unary(
-                '/FederationDirector/GetRegisterdShards',
-                request_serializer=director__pb2.GetRegisterdShardsRequest.SerializeToString,
-                response_deserializer=director__pb2.GetRegisterdShardsResponse.FromString,
-                )
-        self.GetShardsInfo = channel.unary_unary(
-                '/FederationDirector/GetShardsInfo',
-                request_serializer=director__pb2.GetShardsInfoRequest.SerializeToString,
+        self.GetDatasetInfo = channel.unary_unary(
+                '/FederationDirector/GetDatasetInfo',
+                request_serializer=director__pb2.GetDatasetInfoRequest.SerializeToString,
                 response_deserializer=director__pb2.ShardInfo.FromString,
                 )
         self.GetTrainedModel = channel.unary_unary(
@@ -101,13 +96,7 @@ class FederationDirectorServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
-    def GetRegisterdShards(self, request, context):
-        """Missing associated documentation comment in .proto file."""
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
-
-    def GetShardsInfo(self, request, context):
+    def GetDatasetInfo(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -166,14 +155,9 @@ def add_FederationDirectorServicer_to_server(servicer, server):
                     request_deserializer=director__pb2.ExperimentInfo.FromString,
                     response_serializer=director__pb2.SetNewExperimentResponse.SerializeToString,
             ),
-            'GetRegisterdShards': grpc.unary_unary_rpc_method_handler(
-                    servicer.GetRegisterdShards,
-                    request_deserializer=director__pb2.GetRegisterdShardsRequest.FromString,
-                    response_serializer=director__pb2.GetRegisterdShardsResponse.SerializeToString,
-            ),
-            'GetShardsInfo': grpc.unary_unary_rpc_method_handler(
-                    servicer.GetShardsInfo,
-                    request_deserializer=director__pb2.GetShardsInfoRequest.FromString,
+            'GetDatasetInfo': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetDatasetInfo,
+                    request_deserializer=director__pb2.GetDatasetInfoRequest.FromString,
                     response_serializer=director__pb2.ShardInfo.SerializeToString,
             ),
             'GetTrainedModel': grpc.unary_unary_rpc_method_handler(
@@ -280,7 +264,7 @@ class FederationDirector(object):
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
     @staticmethod
-    def GetRegisterdShards(request,
+    def GetDatasetInfo(request,
             target,
             options=(),
             channel_credentials=None,
@@ -290,25 +274,8 @@ class FederationDirector(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/FederationDirector/GetRegisterdShards',
-            director__pb2.GetRegisterdShardsRequest.SerializeToString,
-            director__pb2.GetRegisterdShardsResponse.FromString,
-            options, channel_credentials,
-            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
-
-    @staticmethod
-    def GetShardsInfo(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/FederationDirector/GetShardsInfo',
-            director__pb2.GetShardsInfoRequest.SerializeToString,
+        return grpc.experimental.unary_unary(request, target, '/FederationDirector/GetDatasetInfo',
+            director__pb2.GetDatasetInfoRequest.SerializeToString,
             director__pb2.ShardInfo.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

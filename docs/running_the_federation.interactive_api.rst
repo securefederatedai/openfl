@@ -58,22 +58,22 @@ Token must be copied to each node by some secure way. Each step is considered in
     .. code-block:: console
 
        $ fx pki get-token -n <subject>
-    | :code:`-n` - subject name, fqdn for director, collaborator name for collaborator-manager or api name for api-layer node
+    | :code:`-n` - subject name, fqdn for director, collaborator name for envoy or api name for api-layer node
 
     Run this command on ca side, from ca folder. Output is a token which contains JWT (json web token) from CA server and CA
     root certificate concatenated together. This JWT have twenty-four hours time-to-live.
 
-4. Copy token to node side (director or collaborator-manager) by some secure channel and run certify command.
+4. Copy token to node side (director or envoy) by some secure channel and run certify command.
     .. code-block:: console
 
        $ fx pki certify -n <subject> -t <token>
-    | :code:`-n` - subject name, fqdn for director, collaborator name for collaborator-manager or api name for api-layer node
+    | :code:`-n` - subject name, fqdn for director, collaborator name for envoy or api name for api-layer node
     | :code:`-t` - output token from previous command
     This command call step client, to connect to CA server over https.
     Https is provided by root certificate which was copy with JWT.
     Server authenticates client by JWT and client authenticates server by root certificate.
 
-Now signed certificate and private key are stored on current node. Signed certificate has one year time-to-live. You should certify all node that will participate in federation: director, all collaborator managers and api-layer node.
+Now signed certificate and private key are stored on current node. Signed certificate has one year time-to-live. You should certify all node that will participate in federation: director, all envoys and api-layer node.
 
 ******************************************
 Defining a Federated Learning Experiment

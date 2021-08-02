@@ -120,7 +120,6 @@ def setup_logging(level='INFO', log_file=None):
     if True if pkgutil.find_loader('tensorflow') else False:
         import tensorflow as tf
         tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
-    console = Console(width=160)
     metric = 25
     add_log_level('METRIC', metric)
 
@@ -131,7 +130,8 @@ def setup_logging(level='INFO', log_file=None):
     if log_file:
         fh = logging.FileHandler(log_file)
         formatter = logging.Formatter(
-            '%(asctime)s %(levelname)s %(message)s %(filename)s:%(lineno)d')
+            '%(asctime)s %(levelname)s %(message)s %(filename)s:%(lineno)d'
+        )
         fh.setFormatter(formatter)
         handlers.append(fh)
 

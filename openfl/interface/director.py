@@ -2,7 +2,6 @@
 # SPDX-License-Identifier: Apache-2.0
 """Director CLI."""
 
-import asyncio
 import logging
 import shutil
 import sys
@@ -15,8 +14,9 @@ from click import pass_context
 from click import Path as ClickPath
 from yaml import safe_load
 
-from openfl.component.director.director import serve
+from openfl.component.director import Director
 from openfl.interface.cli_helper import WORKSPACE
+from openfl.transport import DirectorGRPCServer
 
 logger = logging.getLogger(__name__)
 
@@ -31,7 +31,8 @@ def director(context):
 @director.command(name='start')
 @option('-c', '--director-config-path', default='director.yaml',
         help='The director config file path', type=ClickPath(exists=True))
-@option('--disable-tls', default=False)
+@option('--disable-tls', default=False,
+        is_flag=True)
 @option('-rc', '--root-cert-path', 'root_ca', default=None,
         help='Path to a root CA cert')
 @option('-pk', '--private-key-path', 'key', default=None,
@@ -47,11 +48,27 @@ def start(director_config_path, disable_tls, root_ca, key, cert):
     sample_shape = settings.get('sample_shape', '')
     target_shape = settings.get('target_shape', '')
     logger.info(f'Sample shape: {sample_shape}, target shape: {target_shape}')
-    asyncio.run(serve(
+    listen_ip = settings.get('listen_ip')
+    listen_port = settings.get('listen_port')
+    root_ca = root_ca or settings.get('root_ca')
+    key = key or settings.get('key')
+    cert = cert or settings.get('cert')
+    kwargs = {}
+    if listen_ip:
+        kwargs['listen_ip'] = listen_ip
+    if listen_port:
+        kwargs['listen_port'] = listen_port
+    director_server = DirectorGRPCServer(
+        director_cls=Director,
         disable_tls=disable_tls,
         sample_shape=sample_shape,
         target_shape=target_shape,
-        root_ca=root_ca, key=key, cert=cert))
+        root_ca=root_ca,
+        key=key,
+        cert=cert,
+        **kwargs
+    )
+    director_server.start()
 
 
 @director.command(name='create-workspace')

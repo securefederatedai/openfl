@@ -45,7 +45,7 @@ class VOCDataset_SD(ShardDescriptor):
         self.data_dir = data_dir
         self.split = split
         image_sets_file = os.path.join(self.data_dir, "ImageSets", "Main", "%s.txt" % self.split)
-        self.ids = self.__class__._read_image_ids(image_sets_file)
+        self.ids = self._read_image_ids(image_sets_file)
         self.keep_difficult = keep_difficult
 
         self.class_dict = {class_name: i for i, class_name in enumerate(self.class_names)}

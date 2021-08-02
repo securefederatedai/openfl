@@ -4,6 +4,7 @@
 """Python low-level API module."""
 import functools
 import os
+import time
 from collections import defaultdict
 from copy import deepcopy
 from logging import getLogger
@@ -20,7 +21,13 @@ from openfl.utilities import split_tensor_dict_for_holdouts
 class FLExperiment:
     """Central class for FL experiment orchestration."""
 
-    def __init__(self, federation, experiment_name='test', serializer_plugin=None) -> None:
+    def __init__(
+            self,
+            federation,
+            experiment_name: str = None,
+            serializer_plugin: str = 'openfl.plugins.interface_serializer.'
+                                     'cloudpickle_serializer.CloudpickleSerializer'
+    ) -> None:
         """
         Initialize an experiment inside a federation.
 
@@ -28,66 +35,85 @@ class FLExperiment:
         Information about the data on collaborators is contained on the federation level.
         """
         self.federation = federation
-        self.experiment_name = experiment_name
+        self.experiment_name = experiment_name or 'test-' + time.strftime('%Y%m%d-%H%M%S')
         self.summary_writer = None
+        self.serializer_plugin = serializer_plugin
 
-        if serializer_plugin is None:
-            self.serializer_plugin = \
-                'openfl.plugins.interface_serializer.cloudpickle_serializer.CloudpickleSerializer'
-        else:
-            self.serializer_plugin = serializer_plugin
+        self.experiment_accepted = False
 
         self.logger = getLogger(__name__)
         setup_logging()
 
+    def _assert_experiment_accepted(self):
+        """Assure experiment is sent to director."""
+        if not self.experiment_accepted:
+            self.logger.error('The experimnet has not been accepted by director')
+            self.logger.error(
+                'Report the experiment first: '
+                'use the Experiment.start() method.')
+            raise Exception
+
     def get_best_model(self):
         """Retrieve the model with the best score."""
-        # Next line relies on aggregator inner field where model dicts are stored
+        self._assert_experiment_accepted()
         tensor_dict = self.federation.dir_client.get_best_model(
             experiment_name=self.experiment_name)
-        self.task_runner_stub.rebuild_model(tensor_dict, validation=True, device='cpu')
-        return self.task_runner_stub.model
+
+        return self._rebuild_model(tensor_dict)
 
     def get_last_model(self):
         """Retrieve the aggregated model after the last round."""
-        # Next line relies on aggregator inner field where model dicts are stored
+        self._assert_experiment_accepted()
         tensor_dict = self.federation.dir_client.get_last_model(
             experiment_name=self.experiment_name)
-        self.task_runner_stub.rebuild_model(tensor_dict, validation=True, device='cpu')
+
+        return self._rebuild_model(tensor_dict)
+
+    def _rebuild_model(self, tensor_dict):
+        """Use tensor dict to update model weights."""
+        if len(tensor_dict) == 0:
+            self.logger.error('No tensors received from director')
+            self.logger.error(
+                'Possible reasons:\n'
+                '1. Aggregated model is not ready \n'
+                '2. Experiment data removed from director'
+            )
+        else:
+            self.task_runner_stub.rebuild_model(tensor_dict, validation=True, device='cpu')
+
         return self.task_runner_stub.model
 
-    def stream_metrics(self, tensorboard_logs=True):
+    def stream_metrics(self, tensorboard_logs: bool = True) -> None:
         """Stream metrics."""
-        if tensorboard_logs:
-            if not self.summary_writer:
-                self.summary_writer = SummaryWriter(f'./logs/{self.experiment_name}', flush_secs=5)
-
-            def write_metric(node_name, task_name, metric_name, metric, round_number):
-                """Write metric callback."""
-                self.summary_writer.add_scalar(
-                    f'{node_name}/{task_name}/{metric_name}', metric, round_number)
-
-        for metric_response in self.federation.dir_client.stream_metrics(self.experiment_name):
+        self._assert_experiment_accepted()
+        for metric_message_dict in self.federation.dir_client.stream_metrics(self.experiment_name):
             self.logger.metric(
-                f'Round {metric_response.round}, '
-                f'collaborator {metric_response.metric_origin} '
-                f'{metric_response.task_name} result '
-                f'{metric_response.metric_name}:\t{metric_response.metric_value}')
+                f'Round {metric_message_dict["round"]}, '
+                f'collaborator {metric_message_dict["metric_origin"]} '
+                f'{metric_message_dict["task_name"]} result '
+                f'{metric_message_dict["metric_name"]}:\t{metric_message_dict["metric_value"]}')
 
             if tensorboard_logs:
-                write_metric(
-                    metric_response.metric_origin,
-                    metric_response.task_name,
-                    metric_response.metric_name,
-                    metric_response.metric_value,
-                    metric_response.round)
+                self.write_tensorboard_metric(metric_message_dict)
+
+    def write_tensorboard_metric(self, metric: dict) -> None:
+        """Write metric callback."""
+        if not self.summary_writer:
+            self.summary_writer = SummaryWriter(f'./logs/{self.experiment_name}', flush_secs=5)
+
+        self.summary_writer.add_scalar(
+            f'{metric["metric_origin"]}/{metric["task_name"]}/{metric["metric_name"]}',
+            metric['metric_value'], metric['round'])
 
     def remove_experiment_data(self):
         """Remove experiment data."""
+        self._assert_experiment_accepted()
         log_message = 'Removing experiment data '
         if self.federation.dir_client.remove_experiment_data(
-                experiment_name=self.experiment_name):
+                name=self.experiment_name
+        ):
             log_message += 'succeed.'
+            self.experiment_accepted = False
         else:
             log_message += 'failed.'
 
@@ -137,29 +163,33 @@ class FLExperiment:
                 initial_tensor_dict=initial_tensor_dict
             )
         finally:
-            # Remove the workspace archive
-            os.remove(self.arch_path)
-            del self.arch_path
+            self.remove_workspace_archive()
 
         if response.accepted:
             self.logger.info('Experiment was accepted and launched.')
-            self.logger.info('You can watch the experiment through tensorboard:')
-            self.logger.info(response.tensorboard_address)
+            self.experiment_accepted = True
         else:
             self.logger.info('Experiment was not accepted or failed.')
+
+    def restore_experiment_state(self, model_provider):
+        """Restore accepted experimnet object."""
+        self.task_runner_stub = self.plan.get_core_task_runner(model_provider=model_provider)
+        self.experiment_accepted = True
 
     @staticmethod
     def _export_python_env():
         """Prepare requirements.txt."""
         from pip._internal.operations import freeze
         requirements_generator = freeze.freeze()
+
+        def is_package_has_version(package: str) -> bool:
+            return '==' in package and package != 'pkg-resources==0.0.0'
+
         with open('./requirements.txt', 'w') as f:
-            for package in requirements_generator:
-                # there is a pip bug with pkg-resources==0.0.0 req
-                if '==' not in package or '0.0.0' in package:
-                    # We do not export dependencies without version
+            for pack in requirements_generator:
+                if is_package_has_version(pack):
                     continue
-                f.write(package + '\n')
+                f.write(pack + '\n')
 
     @staticmethod
     def _pack_the_workspace():
@@ -176,7 +206,7 @@ class FLExperiment:
         archive_name = basename(getcwd())
 
         tmp_dir = 'temp_' + archive_name
-        makedirs(tmp_dir)
+        makedirs(tmp_dir, exist_ok=True)
 
         ignore = ignore_patterns(
             '__pycache__', 'data', 'cert', tmp_dir, '*.crt', '*.key',
@@ -189,6 +219,11 @@ class FLExperiment:
         rmtree(tmp_dir)
 
         return arch_path
+
+    def remove_workspace_archive(self):
+        """Remove the workspace archive."""
+        os.remove(self.arch_path)
+        del self.arch_path
 
     def _get_initial_tensor_dict(self, model_provider):
         """Extract initial weights from the model."""
@@ -220,8 +255,10 @@ class FLExperiment:
         # We also could change the aggregator logic so it will send tasks to aggregator
         # as soon as it connects. This change should be a part of a bigger PR
         # brining in fault tolerance changes
-        plan.authorized_cols = [shard_info.node_info.name for shard_info in
-                                self.federation.get_shard_registry()]
+        shard_registry = self.federation.get_shard_registry()
+        plan.authorized_cols = [
+            name for name, info in shard_registry.items() if info['is_online']
+        ]
         # Network part of the plan
         # We keep in mind that an aggregator FQND will be the same as the directors FQDN
         # We just choose a port randomly from plan hash

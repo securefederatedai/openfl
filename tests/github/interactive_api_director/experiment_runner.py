@@ -33,9 +33,9 @@ def prepare_collaborator_workspace(col_dir, arch_path):
 
 
 def run_aggregator(model_interface, fl_experiment):
-    logger.info('run_aggregator')
+    logger.info('Aggregator has been started.')
     fl_experiment.start_experiment(model_interface)
-    logger.info('Aggregator stopped')
+    logger.info('Aggregator has been stopped.')
 
 
 def run_experiment(col_data_paths, model_interface, arch_path, fl_experiment):
@@ -106,7 +106,7 @@ def run_federation(shards: typing.Dict[str, Shard], director_path: str):
     running_processes.append(p)
     for collaborator_path, shard in shards.items():
         p = subprocess.Popen(
-            f'fx collaborator-manager start '
+            f'fx envoy start '
             f'-n {shard.shard_name} -d {shard.director_uri} -p {shard.data_path}',
             shell=True,
             cwd=os.path.join(collaborator_path)
