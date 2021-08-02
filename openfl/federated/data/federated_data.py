@@ -126,7 +126,7 @@ class PyTorchFederatedDataset(DataLoader):
             self.data_splitter = data_splitter
         else:
             raise ValueError('data_splitter should either be None'
-                             + ' or inherit from openfl.utilities.data.PyTorchDatasetSplitter')
+                             + ' or inherit from openfl.plugins.data_splitters.PyTorchDatasetSplitter')
 
     def get_feature_shape(self):
         """
