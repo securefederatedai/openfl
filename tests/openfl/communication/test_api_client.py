@@ -38,7 +38,4 @@ def test_get_best_model(deconstruct_model_proto, director_client):
     director_client.stub.GetTrainedModel.assert_called_once()
 
     request = director_client.stub.GetTrainedModel.call_args
-    model_type_arg = request.args[0].model_type
-    model_type_kwarg = request.kwargs.values().__iter__().__next__().model_type
-    assert (model_type_arg == director_pb2.GetTrainedModelRequest.BEST_MODEL
-            or model_type_kwarg == director_pb2.GetTrainedModelRequest.BEST_MODEL)
+    assert request.args[0].model_type == director_pb2.GetTrainedModelRequest.BEST_MODEL
