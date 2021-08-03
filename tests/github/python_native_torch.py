@@ -81,16 +81,16 @@ if __name__ == '__main__':
     print(f'Original validation data size: {len(valid_images)}\n')
 
     # Collaborator one's data
-    print(f'Collaborator one\'s training data size: \
-            {len(collaborator_models[0].data_loader.X_train)}')
-    print(f'Collaborator one\'s validation data size: \
-            {len(collaborator_models[0].data_loader.X_valid)}\n')
+    print(f'Collaborator one\'s training data size: '
+          f'{len(collaborator_models[0].data_loader.X_train)}')
+    print(f'Collaborator one\'s validation data size: '
+          f'{len(collaborator_models[0].data_loader.X_valid)}\n')
 
     # Collaborator two's data
-    print(f'Collaborator two\'s training data size: \
-            {len(collaborator_models[1].data_loader.X_train)}')
-    print(f'Collaborator two\'s validation data size: \
-            {len(collaborator_models[1].data_loader.X_valid)}\n')
+    print(f'Collaborator two\'s training data size: '
+          f'{len(collaborator_models[1].data_loader.X_train)}')
+    print(f'Collaborator two\'s validation data size: '
+          f'{len(collaborator_models[1].data_loader.X_valid)}\n')
 
     print(fx.get_plan())
     final_fl_model = fx.run_experiment(collaborators, {'aggregator.settings.rounds_to_train': 5})

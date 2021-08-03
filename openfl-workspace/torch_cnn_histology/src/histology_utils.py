@@ -24,12 +24,12 @@ logger = getLogger(__name__)
 class HistologyDataset(ImageFolder):
     """Colorectal Histology Dataset."""
 
-    URL = 'https://zenodo.org/record/53169/files/Kather_' \
-          'texture_2016_image_tiles_5000.zip?download=1'
+    URL = ('https://zenodo.org/record/53169/files/Kather_'
+           'texture_2016_image_tiles_5000.zip?download=1')
     FILENAME = 'Kather_texture_2016_image_tiles_5000.zip'
     FOLDER_NAME = 'Kather_texture_2016_image_tiles_5000'
-    ZIP_SHA384 = '7d86abe1d04e68b77c055820c2a4c582a1d25d2983e38ab724e'\
-        'ac75affce8b7cb2cbf5ba68848dcfd9d84005d87d6790'
+    ZIP_SHA384 = ('7d86abe1d04e68b77c055820c2a4c582a1d25d2983e38ab724e'
+                  'ac75affce8b7cb2cbf5ba68848dcfd9d84005d87d6790')
     DEFAULT_PATH = path.join(path.expanduser('~'), '.openfl', 'data')
 
     def __init__(self, root: str = DEFAULT_PATH, **kwargs) -> None:
