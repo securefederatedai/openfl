@@ -126,13 +126,14 @@ class Director:
 
             while not aggregator.metric_queue.empty():
                 metric_origin, task_name, metric_name, metric_value, round_ = \
-                    aggregator.metric_queue.get()
+                    aggregator.metric_queue.get()  # NOQA:N400
                 yield director_pb2.StreamMetricsResponse(
                     metric_origin=metric_origin,
                     task_name=task_name,
                     metric_name=metric_name,
                     metric_value=float(metric_value),
-                    round=round_)
+                    round=round_
+                )
 
             # Awaiting quit job sent to collaborators
             await asyncio.sleep(5)
@@ -214,8 +215,7 @@ class Director:
             private_key=self.key,
             disable_tls=self.disable_tls,
         )
-        self.experiment_stash[experiment_sender][experiment_name] = \
-            aggregator_server
+        self.experiment_stash[experiment_sender][experiment_name] = aggregator_server
 
         grpc_server = aggregator_server.get_server()
         grpc_server.start()

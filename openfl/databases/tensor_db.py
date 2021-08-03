@@ -122,10 +122,9 @@ class TensorDB:
 
         """
         if len(collaborator_weight_dict) != 0:
-            assert (np.abs(
-                1.0 - sum(collaborator_weight_dict.values())
-            ) < 0.01), \
+            assert np.abs(1.0 - sum(collaborator_weight_dict.values())) < 0.01, (
                 f'Collaborator weights do not sum to 1.0: {collaborator_weight_dict}'
+            )
 
         collaborator_names = collaborator_weight_dict.keys()
         agg_tensor_dict = {}
@@ -178,8 +177,6 @@ class TensorDB:
 
     def _iterate(self, order_by='round', ascending=False):
         columns = ['round', 'nparray', 'tensor_name', 'tags']
-
-        for _, row in self.tensor_db[columns]\
-                          .sort_values(by=order_by, ascending=ascending)\
-                          .iterrows():
+        rows = self.tensor_db[columns].sort_values(by=order_by, ascending=ascending).iterrows()
+        for _, row in rows:
             yield row

@@ -72,8 +72,7 @@ class Aggregator:
 
         self.tensor_db = TensorDB()
         self.db_store_rounds = db_store_rounds
-        self.compression_pipeline = compression_pipeline \
-            or NoCompressionPipeline()
+        self.compression_pipeline = compression_pipeline or NoCompressionPipeline()
         self.tensor_codec = TensorCodec(self.compression_pipeline)
         self.logger = getLogger(__name__)
 
@@ -327,8 +326,8 @@ class Aggregator:
             named_tensor : protobuf NamedTensor
                 the tensor requested by the collaborator
         """
-        self.logger.debug(f'Retrieving aggregated tensor {tensor_name},{round_number},{tags} \
-                    for collaborator {collaborator_name}')
+        self.logger.debug(f'Retrieving aggregated tensor {tensor_name},{round_number},{tags} '
+                          f'for collaborator {collaborator_name}')
 
         if 'compressed' in tags or require_lossless:
             compress_lossless = True
@@ -396,22 +395,35 @@ class Aggregator:
                 'The original model layer should be present if the latest '
                 'aggregated model is present')
             delta_tensor_key, delta_nparray = self.tensor_codec.generate_delta(
-                tensor_key, nparray, model_nparray)
-            delta_comp_tensor_key, delta_comp_nparray, metadata = \
-                self.tensor_codec.compress(delta_tensor_key, delta_nparray,
-                                           lossless=compress_lossless)
-            named_tensor = utils.construct_named_tensor(delta_comp_tensor_key,
-                                                        delta_comp_nparray, metadata,
-                                                        lossless=compress_lossless)
+                tensor_key,
+                nparray,
+                model_nparray
+            )
+            delta_comp_tensor_key, delta_comp_nparray, metadata = self.tensor_codec.compress(
+                delta_tensor_key,
+                delta_nparray,
+                lossless=compress_lossless
+            )
+            named_tensor = utils.construct_named_tensor(
+                delta_comp_tensor_key,
+                delta_comp_nparray,
+                metadata,
+                lossless=compress_lossless
+            )
 
         else:
             # Assume every other tensor requires lossless compression
-            compressed_tensor_key, compressed_nparray, metadata = \
-                self.tensor_codec.compress(tensor_key, nparray,
-                                           require_lossless=True)
-            named_tensor = utils.construct_named_tensor(compressed_tensor_key,
-                                                        compressed_nparray, metadata,
-                                                        lossless=compress_lossless)
+            compressed_tensor_key, compressed_nparray, metadata = self.tensor_codec.compress(
+                tensor_key,
+                nparray,
+                require_lossless=True
+            )
+            named_tensor = utils.construct_named_tensor(
+                compressed_tensor_key,
+                compressed_nparray,
+                metadata,
+                lossless=compress_lossless
+            )
 
         return named_tensor
 
@@ -746,8 +758,10 @@ class Aggregator:
         task_key = TaskResultKey(task_name, collaborators_for_task[0], self.round_number)
         for tensor_key in self.collaborator_tasks_results[task_key]:
             tensor_name, origin, round_number, report, tags = tensor_key
-            assert (tags[-1] == collaborators_for_task[0]), \
+            assert (tags[-1] == collaborators_for_task[0]), (
                 f'Tensor {tensor_key} in task {task_name} has not been processed correctly'
+            )
+
             # Strip the collaborator label, and lookup aggregated tensor
             new_tags = tuple(tags[:-1])
             agg_tensor_key = TensorKey(tensor_name, origin, round_number, report, new_tags)

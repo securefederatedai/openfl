@@ -210,9 +210,8 @@ class DirectorGRPCServer(director_pb2_grpc.FederationDirectorServicer):
         # Moreover, we may save the experiment name in plan.yaml and retrieve it
         # during the aggregator initialization
         logger.info(f'Request StreamMetrics for {request.experiment_name} experiment has got!')
-
-        async for message in \
-                self.director.stream_metrics(request.experiment_name, request.header.sender):
+        metrics = self.director.stream_metrics(request.experiment_name, request.header.sender)
+        async for message in metrics:
             yield message
 
     async def RemoveExperimentData(self, request, context):  # NOQA:N802
