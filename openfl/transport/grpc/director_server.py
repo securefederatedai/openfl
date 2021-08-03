@@ -146,22 +146,24 @@ class DirectorGRPCServer(director_pb2_grpc.FederationDirectorServicer):
             return director_pb2.TrainedModelResponse()
         logger.info('Request GetTrainedModel has got!')
 
-        best_tensor_dict, last_tensor_dict = await self.director.get_trained_model(
-            request.experiment_name,
-            request.header.sender
-        )
-
         if request.model_type == director_pb2.GetTrainedModelRequest.BEST_MODEL:
-            tensor_dict = best_tensor_dict
+            model_type = 'best'
         elif request.model_type == director_pb2.GetTrainedModelRequest.LAST_MODEL:
-            tensor_dict = last_tensor_dict
+            model_type = 'last'
         else:
             logger.error('Incorrect model type')
             return director_pb2.TrainedModelResponse()
-        if not tensor_dict:
+
+        trained_model_dict = self.director.get_trained_model(
+            experiment_name=request.experiment_name,
+            caller=request.header.sender,
+            model_type=model_type
+        )
+
+        if trained_model_dict is None:
             return director_pb2.TrainedModelResponse()
 
-        model_proto = construct_model_proto(tensor_dict, 0, NoCompressionPipeline())
+        model_proto = construct_model_proto(trained_model_dict, 0, NoCompressionPipeline())
 
         return director_pb2.TrainedModelResponse(model_proto=model_proto)
 
@@ -206,13 +208,19 @@ class DirectorGRPCServer(director_pb2_grpc.FederationDirectorServicer):
         """Request to stream metrics from the aggregator to frontend."""
         if not self.validate_caller(request, context):
             return
-        # We should probably set a name to the aggregator and verify it here.
-        # Moreover, we may save the experiment name in plan.yaml and retrieve it
-        # during the aggregator initialization
+
         logger.info(f'Request StreamMetrics for {request.experiment_name} experiment has got!')
-        metrics = self.director.stream_metrics(request.experiment_name, request.header.sender)
-        async for message in metrics:
-            yield message
+
+        while True:
+            metric_dict = self.director.get_next_metric(
+                experiment_name=request.experiment_name, caller=request.header.sender
+            )
+            if len(metric_dict) == 0:
+                await asyncio.sleep(5)
+                continue
+            if metric_dict is None:
+                break
+            yield director_pb2.StreamMetricsResponse(**metric_dict)
 
     async def RemoveExperimentData(self, request, context):  # NOQA:N802
         """Remove experiment data RPC."""
@@ -220,7 +228,9 @@ class DirectorGRPCServer(director_pb2_grpc.FederationDirectorServicer):
         if not self.validate_caller(request, context):
             return response
 
-        self.director.remove_experiment_data(request.experiment_name, request.header.sender)
+        self.director.remove_experiment_data(
+            experiment_name=request.experiment_name,
+            caller=request.header.sender)
 
         response.acknowledgement = True
         return response

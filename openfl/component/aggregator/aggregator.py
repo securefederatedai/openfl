@@ -503,12 +503,18 @@ class Aggregator:
                 named_tensor, collaborator_name
             )
             if 'metric' in tensor_key.tags:
+                metric_dict = {
+                    'metric_origin': tensor_key.tags[-1],
+                    'task_name': task_name,
+                    'metric_name': tensor_key.tensor_name,
+                    'metric_value': nparray,
+                    'round': round_number}
                 self.log_metric(tensor_key.tags[-1], task_name,
                                 tensor_key.tensor_name, nparray, round_number)
                 self.logger.metric(f'Round {round_number}, collaborator {tensor_key.tags[-1]} '
                                    f'{task_name} result {tensor_key.tensor_name}:\t{nparray}')
-                self.metric_queue.put((tensor_key.tags[-1], task_name,
-                                       tensor_key.tensor_name, nparray, round_number))
+                self.metric_queue.put(metric_dict)
+
             task_results.append(tensor_key)
             # By giving task_key it's own weight, we can support different
             # training/validation weights
@@ -772,6 +778,13 @@ class Aggregator:
                 agg_tensor_key, collaborator_weight_dict, aggregation_function=agg_function)
             if report:
                 # Print the aggregated metric
+                metric_dict = {
+                    'metric_origin': 'Aggregator',
+                    'task_name': task_name,
+                    'metric_name': tensor_key.tensor_name,
+                    'metric_value': agg_results,
+                    'round': round_number}
+
                 if agg_results is None:
                     self.logger.warning(
                         f'Aggregated metric {agg_tensor_name} could not be collected '
@@ -784,8 +797,7 @@ class Aggregator:
                                        f'{agg_tensor_name}:\t{agg_results:.4f}')
                 self.log_metric('Aggregator', task_name, tensor_key.tensor_name,
                                 agg_results, round_number)
-                self.metric_queue.put(('Aggregator', task_name, tensor_key.tensor_name,
-                                       agg_results, round_number))
+                self.metric_queue.put(metric_dict)
                 # TODO Add all of the logic for saving the model based
                 #  on best accuracy, lowest loss, etc.
                 if 'validate_agg' in tags:
