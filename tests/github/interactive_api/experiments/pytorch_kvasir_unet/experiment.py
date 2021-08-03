@@ -30,7 +30,7 @@ model_interface = ModelInterface(model=model_unet, optimizer=optimizer_adam,
 initial_model = deepcopy(model_unet)
 
 fed_dataset = FedDataset(KvasirDataset, train_bs=8, valid_bs=8)
-federation = Federation(central_node_fqdn=getfqdn(), disable_tls=True)
+federation = Federation(central_node_fqdn=getfqdn(), tls=False)
 
 # First number which is a collaborators rank is also passed as a cuda device identifier
 col_data_paths = {'one': '1,2',
