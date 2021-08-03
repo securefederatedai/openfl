@@ -173,21 +173,23 @@ def split_tensor_dict_for_holdouts(logger, tensor_dict,
     return tensors_to_send, holdout_tensors
 
 
-def sha384sum(file_path, chunk_size=8192):
-    """Calculate SHA384 hash for file specified.
+def validate_file_hash(file_path, expected_hash, hasher=None, chunk_size=8192):
+    """Validate SHA384 hash for file specified.
 
     Args:
         file_path(path-like): path-like object giving the pathname
             (absolute or relative to the current working directory)
             of the file to be opened or an integer file descriptor of the file to be wrapped.
-
-    Returns:
-        str: SHA384 hash value.
+        expected_hash(str): hash string to compare with.
+        hasher(_Hash): hash algorithm. Default value: `hashlib.sha384()`
+        chunk_size(int): Buffer size for file reading.
     """
-    h = hashlib.sha384()
+    if hasher is None:
+        hasher = hashlib.sha384()
     with open(file_path, 'rb') as file:
         # Reading is buffered, so we can read smaller chunks.
         while chunk := file.read(chunk_size):
-            h.update(chunk)
+            hasher.update(chunk)
 
-    return h.hexdigest()
+    if hasher.hexdigest() != expected_hash:
+        raise SystemError('ZIP File hash doesn\'t match expected file hash.')

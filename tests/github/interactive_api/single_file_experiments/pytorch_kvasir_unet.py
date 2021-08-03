@@ -52,15 +52,14 @@ import PIL
 from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms as tsf
 from skimage import io
-from openfl.utilities import sha384sum
+from openfl.utilities import validate_file_hash
 
 os.makedirs('data', exist_ok=True)
 os.system(
     "wget -nc 'https://datasets.simula.no/hyper-kvasir/hyper-kvasir-segmented-images.zip' -O ./data/kvasir.zip")
 ZIP_SHA384 = 'e30d18a772c6520476e55b610a4db457237f151e' \
              '19182849d54b49ae24699881c1e18e0961f77642be900450ef8b22e7'
-if sha384sum('./data/kvasir.zip') != ZIP_SHA384:
-    raise SystemError('ZIP File hash doesn\'t match expected file hash.')
+validate_file_hash('./data/kvasir.zip', ZIP_SHA384)
 os.system('unzip -n ./data/kvasir.zip -d ./data')
 
 DATA_PATH = './data/segmented-images/'

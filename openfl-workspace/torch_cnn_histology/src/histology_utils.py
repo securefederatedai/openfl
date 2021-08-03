@@ -17,7 +17,7 @@ from torchvision.datasets import ImageFolder
 from torchvision.transforms import ToTensor
 from tqdm import tqdm
 
-from openfl.utilities import sha384sum
+from openfl.utilities import validate_file_hash
 
 logger = getLogger(__name__)
 
@@ -40,8 +40,7 @@ class HistologyDataset(ImageFolder):
         if not path.exists(filepath):
             self.pbar = tqdm(total=None)
             urlretrieve(HistologyDataset.URL, filepath, self.report_hook)  # nosec
-            if sha384sum(filepath) != HistologyDataset.ZIP_SHA384:
-                raise SystemError('ZIP File hash doesn\'t match expected file hash.')
+            validate_file_hash(filepath, HistologyDataset.ZIP_SHA384)
             with ZipFile(filepath, 'r') as f:
                 f.extractall(root)
 

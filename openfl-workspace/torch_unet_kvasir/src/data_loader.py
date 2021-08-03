@@ -16,7 +16,7 @@ from torchvision.datasets.utils import download_url
 from tqdm import tqdm
 
 from openfl.federated import PyTorchDataLoader
-from openfl.utilities import sha384sum
+from openfl.utilities import validate_file_hash
 
 
 def read_data(image_path, mask_path):
@@ -96,8 +96,7 @@ def load_kvasir_dataset():
     data_url = 'https://datasets.simula.no/hyper-kvasir/hyper-kvasir-segmented-images.zip'
     filename = 'kvasir.zip'
     download_url(data_url, '.', filename=filename)
-    if sha384sum(filename) != zip_sha384:
-        raise SystemError('ZIP File hash doesn\'t match expected file hash.')
+    validate_file_hash(filename, zip_sha384)
 
     with zipfile.ZipFile(filename, 'r') as zip_ref:
         for member in tqdm(iterable=zip_ref.infolist(), desc='Unzipping dataset'):

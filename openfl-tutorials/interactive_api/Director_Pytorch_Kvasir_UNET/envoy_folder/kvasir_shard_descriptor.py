@@ -10,7 +10,7 @@ import numpy as np
 from PIL import Image
 
 from openfl.interface.interactive_api.shard_descriptor import ShardDescriptor
-from openfl.utilities import sha384sum
+from openfl.utilities import validate_file_hash
 
 
 class KvasirShardDescriptor(ShardDescriptor):
@@ -58,8 +58,7 @@ class KvasirShardDescriptor(ShardDescriptor):
                   f' -O {zip_file_path.relative_to(Path.cwd())}')
         zip_sha384 = 'e30d18a772c6520476e55b610a4db457237f151e' \
                      '19182849d54b49ae24699881c1e18e0961f77642be900450ef8b22e7'
-        if sha384sum(zip_file_path) != zip_sha384:
-            raise SystemError('ZIP File hash doesn\'t match expected file hash.')
+        validate_file_hash(zip_file_path, zip_sha384)
         os.system(f'unzip -n {zip_file_path.relative_to(Path.cwd())}'
                   f' -d {data_folder.relative_to(Path.cwd())}')
 
