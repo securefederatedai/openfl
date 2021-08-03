@@ -173,7 +173,7 @@ def split_tensor_dict_for_holdouts(logger, tensor_dict,
     return tensors_to_send, holdout_tensors
 
 
-def sha384sum(file_path):
+def sha384sum(file_path, chunk_size=8192):
     """Calculate SHA384 hash for file specified.
 
     Args:
@@ -186,11 +186,8 @@ def sha384sum(file_path):
     """
     h = hashlib.sha384()
     with open(file_path, 'rb') as file:
-        while True:
-            # Reading is buffered, so we can read smaller chunks.
-            chunk = file.read(h.block_size)
-            if not chunk:
-                break
+        # Reading is buffered, so we can read smaller chunks.
+        while chunk := file.read(chunk_size):
             h.update(chunk)
 
     return h.hexdigest()
