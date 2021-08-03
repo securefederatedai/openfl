@@ -13,7 +13,7 @@ from torch.utils.data import Dataset
 from torch.utils.data import Subset
 
 from openfl.interface.interactive_api.shard_descriptor import ShardDescriptor
-from openfl.plugins.data_splitters import RandomPyTorchDatasetSplitter
+from openfl.plugins.data_splitters import RandomNumPyDataSplitter
 
 
 class KvasirDataset(Dataset):
@@ -84,12 +84,13 @@ class KvasirShardDescriptor(ShardDescriptor):
         super().__init__()
 
         dataset = KvasirDataset(data_folder, enforce_image_hw)
-        data_splitter = RandomPyTorchDatasetSplitter()
+        labels = [label for _, label in dataset]
+        data_splitter = RandomNumPyDataSplitter()
         # Settings for sharding the dataset
         self.rank, self.world_size = tuple(int(num) for num in rank_worldsize.split(','))
 
         # Sharding
-        shard_idx = data_splitter.split(dataset, self.world_size)[self.rank]
+        shard_idx = data_splitter.split(labels, self.world_size)[self.rank]
         self.shard = Subset(dataset, shard_idx)
 
         # Calculating data and target shapes

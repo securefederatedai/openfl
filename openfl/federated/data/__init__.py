@@ -23,6 +23,5 @@ if pkgutil.find_loader('tensorflow'):
 if pkgutil.find_loader('torch'):
     from .loader_pt import PyTorchDataLoader  # NOQA
     from .federated_data import FederatedDataSet  # NOQA
-    from .federated_data import PyTorchFederatedDataset  # NOQA
 if pkgutil.find_loader('torch') and pkgutil.find_loader('tensorflow'):
     from .loader_fe import FastEstimatorDataLoader  # NOQA
