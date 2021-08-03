@@ -192,7 +192,12 @@ class DirectorClient:
         logger.info('SetNewExperiment')
         if initial_tensor_dict:
             model_proto = construct_model_proto(initial_tensor_dict, 0, NoCompressionPipeline())
-            experiment_info_gen = self._get_experiment_info(arch_path, name, col_names, model_proto)
+            experiment_info_gen = self._get_experiment_info(
+                arch_path=arch_path,
+                name=name,
+                col_names=col_names,
+                model_proto=model_proto,
+            )
             resp = self.stub.SetNewExperiment(experiment_info_gen)
             return resp
 
