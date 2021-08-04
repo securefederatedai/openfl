@@ -211,15 +211,12 @@ class DirectorGRPCServer(director_pb2_grpc.FederationDirectorServicer):
 
         logger.info(f'Request StreamMetrics for {request.experiment_name} experiment has got!')
 
-        while True:
-            metric_dict = self.director.get_next_metric(
+        for metric_dict in self.director.get_next_metric(
                 experiment_name=request.experiment_name, caller=request.header.sender
-            )
-            if len(metric_dict) == 0:
+        ):
+            if metric_dict is None:
                 await asyncio.sleep(5)
                 continue
-            if metric_dict is None:
-                break
             yield director_pb2.StreamMetricsResponse(**metric_dict)
 
     async def RemoveExperimentData(self, request, context):  # NOQA:N802

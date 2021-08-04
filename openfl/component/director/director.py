@@ -120,21 +120,6 @@ class Director:
         """Get registered shard infos."""
         return [shard_status['shard_info'] for shard_status in self._shard_registry.values()]
 
-    async def stream_metrics(self, experiment_name: str, caller: str):
-        """Stream metrics from the aggregator."""
-        aggregator = self.experiment_stash[caller][experiment_name].aggregator
-
-        while not aggregator.all_quit_jobs_sent() or not aggregator.metric_queue.empty():
-            # If the aggregator has not fineished the experimnet
-            # or it finished but metric_queue is not empty we send metrics
-            # But here we may have a problem if the new experiment
-            # with the same name starts too quickly
-            while not aggregator.metric_queue.empty():
-                yield aggregator.metric_queue.get()
-
-            # Awaiting quit job sent to collaborators
-            await asyncio.sleep(5)
-
     def get_next_metric(self, experiment_name: str, caller: str):
         """
         Stream metrics from the aggregator.
@@ -149,18 +134,20 @@ class Director:
         Returns:
             metric_dict - {'metric_origin','task_name','metric_name','metric_value','round'}
                 if the queue is not empty
-            {} - empty dictionary if queue is empty but the experiment is still running
-            None - if the experiment is finished and there is no more metrics to report
+            None - f queue is empty but the experiment is still running
+
+        Raises:
+            StopIteration - if the experiment is finished and there is no more metrics to report
         """
         aggregator = self.experiment_stash[caller][experiment_name].aggregator
 
         if not aggregator.metric_queue.empty():
-            return aggregator.metric_queue.get()
+            yield aggregator.metric_queue.get()
 
         if aggregator.all_quit_jobs_sent():
-            return None
+            raise StopIteration
 
-        return {}
+        yield None
 
     def remove_experiment_data(self, experiment_name: str, caller: str):
         """Remove experiment data from stash."""
