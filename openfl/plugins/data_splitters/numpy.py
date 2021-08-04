@@ -2,7 +2,6 @@
 
 from abc import abstractmethod
 from typing import List
-from typing import Tuple
 
 import numpy as np
 from tqdm import trange
@@ -24,7 +23,7 @@ class NumPyDataSplitter(DataSplitter):
     """Base class for splitting numpy arrays of data."""
 
     @abstractmethod
-    def split(self, data: Tuple[np.ndarray, np.ndarray], num_collaborators: int) \
+    def split(self, labels: np.ndarray, num_collaborators: int) \
             -> List[List[int]]:
         """Split the data."""
         raise NotImplementedError
@@ -140,8 +139,6 @@ class DirichletNumPyDataSplitter(NumPyDataSplitter):
 
     def split(self, labels, num_collaborators):
         """Split the data."""
-        if len(labels.shape) > 1:
-            labels = np.argmax(labels, axis=1)
         classes = len(np.unique(labels))
         min_size = 0
 
