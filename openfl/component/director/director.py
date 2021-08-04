@@ -140,14 +140,14 @@ class Director:
             StopIteration - if the experiment is finished and there is no more metrics to report
         """
         aggregator = self.experiment_stash[caller][experiment_name].aggregator
+        while True:
+            if not aggregator.metric_queue.empty():
+                yield aggregator.metric_queue.get()
 
-        if not aggregator.metric_queue.empty():
-            yield aggregator.metric_queue.get()
+            if aggregator.all_quit_jobs_sent():
+                raise StopIteration
 
-        if aggregator.all_quit_jobs_sent():
-            raise StopIteration
-
-        yield None
+            yield None
 
     def remove_experiment_data(self, experiment_name: str, caller: str):
         """Remove experiment data from stash."""
