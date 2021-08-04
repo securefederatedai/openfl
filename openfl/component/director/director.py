@@ -120,7 +120,7 @@ class Director:
         """Get registered shard infos."""
         return [shard_status['shard_info'] for shard_status in self._shard_registry.values()]
 
-    def get_next_metric(self, experiment_name: str, caller: str):
+    def stream_metrics(self, experiment_name: str, caller: str):
         """
         Stream metrics from the aggregator.
 
@@ -145,7 +145,7 @@ class Director:
                 yield aggregator.metric_queue.get()
                 continue
 
-            if aggregator.all_quit_jobs_sent():
+            if aggregator.all_quit_jobs_sent() and aggregator.metric_queue.empty():
                 return
 
             yield None
