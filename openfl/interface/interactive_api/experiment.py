@@ -262,8 +262,8 @@ class FLExperiment:
         # Network part of the plan
         # We keep in mind that an aggregator FQND will be the same as the directors FQDN
         # We just choose a port randomly from plan hash
-        plan.config['network']['settings']['agg_addr'] = \
-            self.federation.director_node_fqdn.split(':')[0]  # We drop the port
+        director_fqdn = self.federation.director_node_fqdn.split(':')[0]  # We drop the port
+        plan.config['network']['settings']['agg_addr'] = director_fqdn
         plan.config['network']['settings']['disable_tls'] = self.federation.disable_tls
 
         # Aggregator part of the plan
