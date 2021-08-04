@@ -52,6 +52,10 @@ class FederatedDataSet(PyTorchDataLoader):
                 The batch size for the data loader
             num_classes : int
                 The number of classes the model will be trained on
+            train_splitter: NumPyDataSplitter
+                Data splitter for train dataset.
+            valid_splitter: NumPyDataSplitter
+                Data splitter for validation dataset.
             **kwargs: Additional arguments to pass to the function
 
         """
@@ -67,9 +71,9 @@ class FederatedDataSet(PyTorchDataLoader):
             print(f'Inferred {num_classes} classes from the provided labels...')
         self.num_classes = num_classes
         if train_splitter is None:
-            self.data_splitter = EqualNumPyDataSplitter()
+            self.train_splitter = EqualNumPyDataSplitter()
         elif isinstance(train_splitter, NumPyDataSplitter):
-            self.data_splitter = train_splitter
+            self.train_splitter = train_splitter
         else:
             raise NotImplementedError(f'Data splitter {train_splitter} is not supported')
 
