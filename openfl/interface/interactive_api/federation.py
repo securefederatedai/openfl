@@ -15,7 +15,7 @@ class Federation:
     their local data and network setting to enable communication in federation.
     """
 
-    def __init__(self, client_id, director_node_fqdn=None, director_port=None, disable_tls=False,
+    def __init__(self, client_id, director_node_fqdn=None, director_port=None, tls=True,
                  cert_chain=None, api_cert=None, api_private_key=None) -> None:
         """
         Initialize federation.
@@ -37,7 +37,7 @@ class Federation:
         else:
             self.director_node_fqdn = director_node_fqdn
 
-        self.disable_tls = disable_tls
+        self.tls = tls
 
         self.cert_chain = cert_chain
         self.api_cert = api_cert
@@ -45,7 +45,7 @@ class Federation:
 
         # Create Director client
         self.dir_client = DirectorClient(client_id, f'{director_node_fqdn}:{director_port}',
-                                         disable_tls, cert_chain, api_private_key, api_cert)
+                                         tls, cert_chain, api_private_key, api_cert)
 
         # Request sample and target shapes from Director.
         # This is an internal method for finding out dataset properties in a Federation.

@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 class DirectorGRPCServer(director_pb2_grpc.FederationDirectorServicer):
     """Director transport class."""
 
-    def __init__(self, *, director_cls, disable_tls: bool = False,
+    def __init__(self, *, director_cls, tls: bool = True,
                  root_ca: str = None, key: str = None, cert: str = None,
                  listen_ip='[::]', listen_port=50051, **kwargs) -> None:
         """Initialize a director object."""
@@ -30,14 +30,14 @@ class DirectorGRPCServer(director_pb2_grpc.FederationDirectorServicer):
         super().__init__()
 
         self.listen_addr = f'{listen_ip}:{listen_port}'
-        self.disable_tls = disable_tls
+        self.tls = tls
         self.root_ca = None
         self.key = None
         self.cert = None
         self._fill_certs(root_ca, key, cert)
         self.server = None
         self.director = director_cls(
-            disable_tls=self.disable_tls,
+            tls=self.tls,
             root_ca=self.root_ca,
             key=self.key,
             cert=self.cert,
@@ -46,7 +46,7 @@ class DirectorGRPCServer(director_pb2_grpc.FederationDirectorServicer):
 
     def _fill_certs(self, root_ca, key, cert):
         """Fill certificates."""
-        if not self.disable_tls:
+        if self.tls:
             if not (root_ca and key and cert):
                 raise Exception('No certificates provided')
             self.root_ca = Path(root_ca).absolute()
@@ -66,7 +66,7 @@ class DirectorGRPCServer(director_pb2_grpc.FederationDirectorServicer):
             False - if the callers cert name is invalid
         """
         # Can we close the request right here?
-        if not self.disable_tls:
+        if self.tls:
             caller_cert_name = context.auth_context()['x509_common_name'][0].decode('utf-8')
             caller_common_name = request.header.sender
             if caller_cert_name != caller_common_name:
@@ -84,7 +84,7 @@ class DirectorGRPCServer(director_pb2_grpc.FederationDirectorServicer):
         self.server = aio.server(options=channel_opt)
         director_pb2_grpc.add_FederationDirectorServicer_to_server(self, self.server)
 
-        if self.disable_tls:
+        if not self.tls:
             self.server.add_insecure_port(self.listen_addr)
         else:
             with open(self.key, 'rb') as f:

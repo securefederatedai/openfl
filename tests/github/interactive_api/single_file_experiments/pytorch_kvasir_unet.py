@@ -337,7 +337,7 @@ from openfl.interface.interactive_api.federation import Federation
 # will determine fqdn by itself
 from socket import getfqdn
 
-federation = Federation(central_node_fqdn=getfqdn(), disable_tls=True)
+federation = Federation(central_node_fqdn=getfqdn(), tls=False)
 # First number which is a collaborators rank is also passed as a cuda device identifier
 col_data_paths = {'one': '1,2',
                   'two': '2,2'}
@@ -350,7 +350,7 @@ federation.register_collaborators(col_data_paths=col_data_paths)
 # agg_certificate = 'cert/agg_certificate.crt'
 # agg_private_key = 'cert/agg_private.key'
 
-# federation = Federation(central_node_fqdn=getfqdn(), disable_tls=True,
+# federation = Federation(central_node_fqdn=getfqdn(), tls=False,
 #                        cert_chain=cert_chain, agg_certificate=agg_certificate, agg_private_key=agg_private_key)
 # col_data_paths = {'one': '1,1',}
 # federation.register_collaborators(col_data_paths=col_data_paths)

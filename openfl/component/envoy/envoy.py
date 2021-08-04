@@ -27,14 +27,14 @@ class Envoy:
 
     def __init__(self, shard_name, director_uri, shard_descriptor,
                  root_ca: str = None, key: str = None, cert: str = None,
-                 disable_tls: bool = False) -> None:
+                 tls: bool = True) -> None:
         """Initialize a envoy object."""
         self.name = shard_name
         self.root_ca = Path(root_ca).absolute() if root_ca is not None else None
         self.key = Path(key).absolute() if root_ca is not None else None
         self.cert = Path(cert).absolute() if root_ca is not None else None
         self.director_client = ShardDirectorClient(director_uri, shard_name=shard_name,
-                                                   disable_tls=disable_tls,
+                                                   tls=tls,
                                                    root_ca=root_ca, key=key, cert=cert)
         self.shard_descriptor = shard_descriptor
         self.executor = ThreadPoolExecutor()

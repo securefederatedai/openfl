@@ -18,9 +18,9 @@ def director_client(director_pb2_grpc):
 
     client_id = 'one'
     director_uri = 'localhost'
-    disable_tls = True
+    tls = False
     root_ca, key, cert = None, None, None
-    director_client = DirectorClient(client_id, director_uri, disable_tls, root_ca, key, cert)
+    director_client = DirectorClient(client_id, director_uri, tls, root_ca, key, cert)
     return director_client
 
 

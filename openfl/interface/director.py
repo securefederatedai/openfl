@@ -31,15 +31,15 @@ def director(context):
 @director.command(name='start')
 @option('-c', '--director-config-path', default='director.yaml',
         help='The director config file path', type=ClickPath(exists=True))
-@option('--disable-tls', default=False,
-        is_flag=True)
+@option('--tls/--disable-tls', default=True,
+        is_flag=True, help='Use TLS or not (By default TLS is enabled)')
 @option('-rc', '--root-cert-path', 'root_ca', default=None,
         help='Path to a root CA cert')
 @option('-pk', '--private-key-path', 'key', default=None,
         help='Path to a private key')
 @option('-oc', '--public-cert-path', 'cert', default=None,
         help='Path to a signed certificate')
-def start(director_config_path, disable_tls, root_ca, key, cert):
+def start(director_config_path, tls, root_ca, key, cert):
     """Start the director service."""
     logger.info('🧿 Starting the Director Service.')
     with open(director_config_path) as stream:
@@ -60,7 +60,7 @@ def start(director_config_path, disable_tls, root_ca, key, cert):
         kwargs['listen_port'] = listen_port
     director_server = DirectorGRPCServer(
         director_cls=Director,
-        disable_tls=disable_tls,
+        tls=tls,
         sample_shape=sample_shape,
         target_shape=target_shape,
         root_ca=root_ca,

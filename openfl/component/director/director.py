@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 class Director:
     """Director class."""
 
-    def __init__(self, *, disable_tls: bool = False,
+    def __init__(self, *, tls: bool = True,
                  root_ca: Path = None, key: Path = None, cert: Path = None,
                  sample_shape: list = None, target_shape: list = None) -> None:
         """Initialize a director object."""
@@ -37,7 +37,7 @@ class Director:
         self.experiment_stash = defaultdict(dict)  # Running of finished experiments
         # {API name : {experiment name : aggregator}}
 
-        self.disable_tls = disable_tls
+        self.tls = tls
         self.root_ca = root_ca
         self.key = key
         self.cert = cert
@@ -213,7 +213,7 @@ class Director:
             chain=self.root_ca,
             certificate=self.cert,
             private_key=self.key,
-            disable_tls=self.disable_tls,
+            tls=self.tls,
         )
         self.experiment_stash[experiment_sender][experiment_name] = aggregator_server
 
