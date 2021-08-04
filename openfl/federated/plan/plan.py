@@ -25,7 +25,7 @@ DEFAULTS = 'defaults'
 AUTO = 'auto'
 
 
-class Plan(object):
+class Plan:
     """Federated Learning plan."""
 
     logger = getLogger(__name__)
@@ -64,7 +64,8 @@ class Plan(object):
 
     @staticmethod
     def parse(plan_config_path: Path, cols_config_path: Path = None,
-              data_config_path: Path = None, resolve=True):
+              data_config_path: Path = None, resolve=True,
+              working_dir: Path = None):
         """
         Parse the Federated Learning plan.
 
@@ -76,12 +77,18 @@ class Plan(object):
             data_config_path (string): The filepath to the federation
                                        collaborator data configuration
                                        [optional]
+            working_dir: the path to working directory
         Returns:
             A federated learning plan object
         """
+        if working_dir:
+            plan_config_path = working_dir / plan_config_path
+            if cols_config_path:
+                cols_config_path = working_dir / cols_config_path
+            if data_config_path:
+                data_config_path = working_dir / data_config_path
         try:
-
-            plan = Plan()
+            plan = Plan(working_dir=working_dir)
             plan.config = Plan.load(plan_config_path)  # load plan configuration
             plan.name = plan_config_path.name
             plan.files = [plan_config_path]  # collect all the plan files
@@ -146,10 +153,11 @@ class Plan(object):
 
             return plan
 
-        except Exception:
+        except Exception as exc:
             Plan.logger.error(f'Parsing Federated Learning Plan : '
                               f'[red]FAILURE[/] : [blue]{plan_config_path}[/].',
                               extra={'markup': True})
+            Plan.logger.exception(exc)
             raise
 
     @staticmethod
@@ -203,7 +211,7 @@ class Plan(object):
 
         return instance
 
-    def __init__(self):
+    def __init__(self, working_dir: Path = None):
         """Initialize."""
         self.config = {}  # dictionary containing patched plan definition
         self.authorized_cols = []  # authorized collaborator list
@@ -223,6 +231,7 @@ class Plan(object):
 
         self.hash_ = None
         self.name_ = None
+        self.working_dir = working_dir or Path()
 
     @property
     def hash(self):  # NOQA
@@ -541,7 +550,9 @@ openfl.component.aggregation_functions.AggregationFunctionInterface
             'dataloader_interface_file'
         ]
         interface_objects = [
-            serializer.restore_object(self.config['api_layer']['settings'][filename])
+            serializer.restore_object(
+                self.working_dir / Path(self.config['api_layer']['settings'][filename])
+            )
             for filename in filenames
         ]
         model_provider, task_keeper, data_loader = interface_objects

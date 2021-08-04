@@ -184,10 +184,15 @@ class DirectorGRPCServer(director_pb2_grpc.FederationDirectorServicer):
         logger.info('Request WaitExperiment has got!')
         async for msg in request_iterator:
             logger.info(msg)
-            experiment_name = await self.director.wait_experiment(msg.collaborator_name)
-            logger.info(f'Experiment {experiment_name} was prepared')
+            experiment_data = await self.director.wait_experiment(msg.collaborator_name)
+            experiment_name = experiment_data['experiment_name']
+            client_id = experiment_data['client_id']
+            logger.info(f'Experiment {experiment_name} for {client_id} was prepared')
 
-            yield director_pb2.WaitExperimentResponse(experiment_name=experiment_name)
+            yield director_pb2.WaitExperimentResponse(
+                experiment_name=experiment_name,
+                client_id=client_id
+            )
 
     async def GetDatasetInfo(self, request, context):  # NOQA:N802
         """Request the info about target and sample shapes in the dataset."""

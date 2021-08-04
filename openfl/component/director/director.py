@@ -64,20 +64,25 @@ class Director:
         """Set new experiment."""
         # TODO: save to file
         self.experiment_data[experiment_name] = data
+        experiment_work_dir = Path(f'{os.getcwd()}/{sender_name}/{experiment_name}')
 
-        self.create_workspace(experiment_name, data)
+        self.create_workspace(experiment_name, experiment_work_dir, data)
         asyncio.create_task(self._run_aggregator(
-            sender_name,
-            tensor_dict,
-            experiment_name,
-            collaborator_names
+            experiment_sender=sender_name,
+            initial_tensor_dict=tensor_dict,
+            experiment_name=experiment_name,
+            collaborator_names=collaborator_names,
+            experiment_work_dir=experiment_work_dir
         ))
 
         logger.info(f'New experiment {experiment_name} for '
                     f'collaborators {collaborator_names}')
         for col_name in collaborator_names:
             queue = self.col_exp_queues[col_name]
-            await queue.put(experiment_name)
+            await queue.put({
+                'experiment_name': experiment_name,
+                'client_id': sender_name
+            })
 
         return True
 
@@ -102,9 +107,9 @@ class Director:
     async def wait_experiment(self, collaborator_name: str) -> str:
         """Wait an experiment."""
         queue = self.col_exp_queues[collaborator_name]
-        experiment_name = await queue.get()
+        experiment_data = await queue.get()
 
-        return experiment_name
+        return experiment_data
 
     def get_dataset_info(self):
         """Get dataset info."""
@@ -178,31 +183,32 @@ class Director:
         return envoy_infos
 
     @staticmethod
-    def create_workspace(experiment_name, npbytes):
+    def create_workspace(experiment_name, experiment_work_dir, npbytes):
         """Create the aggregator workspace."""
-        if os.path.exists(experiment_name):
-            shutil.rmtree(experiment_name)
-        os.makedirs(experiment_name)
+        if os.path.exists(experiment_work_dir):
+            shutil.rmtree(experiment_work_dir)
+        os.makedirs(experiment_work_dir)
 
-        arch_name = f'{experiment_name}/{experiment_name}' + '.zip'
+        arch_name = f'{experiment_work_dir}/{experiment_name}' + '.zip'
         logger.info(f'arch_name: {arch_name}')
         with open(arch_name, 'wb') as content_file:
             content_file.write(npbytes)
 
-        shutil.unpack_archive(arch_name, experiment_name)
+        shutil.unpack_archive(arch_name, experiment_work_dir)
 
     async def _run_aggregator(
-            self,
+            self, *,
             experiment_sender,
             initial_tensor_dict,
             experiment_name,
             collaborator_names,
-            plan='plan/plan.yaml',
+            experiment_work_dir: Path
     ):  # TODO: path params, change naming
         """Run aggregator."""
-        cwd = os.getcwd()
-        os.chdir(f'{cwd}/{experiment_name}')
-        plan = Plan.parse(plan_config_path=Path(plan))
+        plan = Plan.parse(
+            plan_config_path=Path('plan/plan.yaml'),
+            working_dir=experiment_work_dir
+        )
 
         plan.authorized_cols = list(collaborator_names)
 
@@ -214,8 +220,7 @@ class Director:
             private_key=self.key,
             tls=self.tls,
         )
-        self.experiment_stash[experiment_sender][experiment_name] = \
-            aggregator_server
+        self.experiment_stash[experiment_sender][experiment_name] = aggregator_server
 
         grpc_server = aggregator_server.get_server()
         grpc_server.start()
@@ -228,8 +233,7 @@ class Director:
         except KeyboardInterrupt:
             pass
         finally:
-            os.chdir(cwd)
-            shutil.rmtree(experiment_name)
+            shutil.rmtree(experiment_work_dir)
             grpc_server.stop(0)
             # Temporary solution to free RAM used by TensorDB
             aggregator_server.aggregator.tensor_db.clean_up(0)

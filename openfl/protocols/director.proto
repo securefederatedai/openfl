@@ -39,6 +39,7 @@ message WaitExperimentRequest {
 
 message WaitExperimentResponse {
     string experiment_name = 1;
+    string client_id = 2;
 }
 
 message GetExperimentDataRequest {

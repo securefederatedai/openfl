@@ -4,12 +4,7 @@
 """Director clients module."""
 
 import logging
-import os
-import shutil
-import time
 from datetime import datetime
-from subprocess import check_call
-from sys import executable
 
 import grpc
 
@@ -70,67 +65,28 @@ class ShardDirectorClient:
         acknowledgement = self.stub.AcknowledgeShard(shard_info)
         return acknowledgement.accepted
 
-    def get_experiment_data(self):
-        """Get an experiment data from the director."""
+    def wait_experiment(self):
+        """Wait an experiment data from the director."""
         logger.info('Send WaitExperiment request')
         response_iter = self.stub.WaitExperiment(self._get_experiment_data())
         logger.info('WaitExperiment response has received')
         response = next(response_iter)
         experiment_name = response.experiment_name
+        client_id = response.client_id
         if not experiment_name:
             raise Exception('No experiment')
+        return experiment_name, client_id
+
+    def get_experiment_data(self, experiment_name):
+        """Get an experiment data from the director."""
         logger.info(f'Request experiment {experiment_name}')
         request = director_pb2.GetExperimentDataRequest(
             experiment_name=experiment_name,
             collaborator_name=self.shard_name
         )
-        response_iter = self.stub.GetExperimentData(request)
+        data_stream = self.stub.GetExperimentData(request)
 
-        self.create_workspace(experiment_name, response_iter)
-
-        return experiment_name
-
-    @staticmethod
-    def remove_workspace(experiment_name):
-        """Remove the workspace."""
-        shutil.rmtree(experiment_name, ignore_errors=True)
-
-    @staticmethod
-    def create_workspace(experiment_name, response_iter):
-        """Create a collaborator workspace for the experiment."""
-        if os.path.exists(experiment_name):
-            shutil.rmtree(experiment_name)
-        os.makedirs(experiment_name)
-
-        arch_name = f'{experiment_name}/{experiment_name}' + '.zip'
-        logger.info(f'arch_name: {arch_name}')
-        with open(arch_name, 'wb') as content_file:
-            for response in response_iter:
-                logger.info(f'Size: {response.size}')
-                if response.size == len(response.npbytes):
-                    content_file.write(response.npbytes)
-                else:
-                    raise Exception('Broken archive')
-
-        shutil.unpack_archive(arch_name, experiment_name)
-        os.remove(arch_name)
-
-        requirements_filename = f'./{experiment_name}/requirements.txt'
-
-        if os.path.isfile(requirements_filename):
-            attempts = 3
-            for _ in range(attempts):
-                try:
-                    check_call([
-                        executable, '-m', 'pip', 'install', '-r', requirements_filename],
-                        shell=False)
-                except Exception as exc:
-                    logger.error(f'Failed to install requirements: {exc}')
-                    time.sleep(3)
-                else:
-                    break
-        else:
-            logger.error('No ' + requirements_filename + ' file found.')
+        return data_stream
 
     def _get_experiment_data(self):
         """Generate the experiment data request."""
