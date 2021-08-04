@@ -51,8 +51,11 @@ class KvasirDataset(Dataset):
         """
         self.images_path = './data/segmented-images/images/'
         self.masks_path = './data/segmented-images/masks/'
-        self.images_names = [img_name for img_name in sorted(listdir(
-            self.images_path)) if len(img_name) > 3 and img_name[-3:] == 'jpg']
+        self.images_names = [
+            img_name
+            for img_name in sorted(listdir(self.images_path))
+            if len(img_name) > 3 and img_name[-3:] == 'jpg'
+        ]
 
         self.images_names = self.images_names[shard_num:: collaborator_count]
         self.is_validation = is_validation

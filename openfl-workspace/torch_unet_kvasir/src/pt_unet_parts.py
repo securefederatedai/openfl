@@ -71,7 +71,8 @@ class Down(nn.Module):
         super(Down, self).__init__()
         self.mpconv = nn.Sequential(
             nn.MaxPool2d(2),
-            DoubleConv(in_ch, out_ch))
+            DoubleConv(in_ch, out_ch)
+        )
 
     def forward(self, x):
         """Run forward."""

@@ -370,9 +370,8 @@ def certify(collaborator_name, silent, request_pkg=False, import_=False):
         unpack_archive(import_, extract_dir=PKI_DIR)
         updated_crts = glob(f'{PKI_DIR}/client/*.crt')
         cert_difference = list(set(updated_crts) - set(previous_crts))
-        if len(cert_difference) > 0:
+        if len(cert_difference) != 0:
             crt = basename(cert_difference[0])
             echo(f'Certificate {crt} installed to PKI directory')
         else:
-            crt = basename(updated_crts[0])
             echo('Certificate updated in the PKI directory')

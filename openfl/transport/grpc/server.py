@@ -29,7 +29,7 @@ class AggregatorGRPCServer(AggregatorServicer):
     def __init__(self,
                  aggregator,
                  agg_port,
-                 disable_tls=False,
+                 tls=True,
                  disable_client_auth=False,
                  ca=None,
                  certificate=None,
@@ -42,7 +42,7 @@ class AggregatorGRPCServer(AggregatorServicer):
             aggregator: The aggregator
         Args:
             fltask (FLtask): The gRPC service task.
-            disable_tls (bool): To disable the TLS. (Default: False)
+            tls (bool): To disable the TLS. (Default: True)
             disable_client_auth (bool): To disable the client side
             authentication. (Default: False)
             ca (str): File path to the CA certificate.
@@ -52,7 +52,7 @@ class AggregatorGRPCServer(AggregatorServicer):
         """
         self.aggregator = aggregator
         self.uri = f'[::]:{agg_port}'
-        self.disable_tls = disable_tls
+        self.tls = tls
         self.disable_client_auth = disable_client_auth
         self.ca = ca
         self.certificate = certificate
@@ -80,7 +80,7 @@ class AggregatorGRPCServer(AggregatorServicer):
              valid then raises error.
 
         """
-        if not self.disable_tls:
+        if self.tls:
             common_name = context.auth_context()[
                 'x509_common_name'][0].decode('utf-8')
             collaborator_common_name = request.header.sender
@@ -205,19 +205,19 @@ class AggregatorGRPCServer(AggregatorServicer):
         # turn data stream into local model update
         return Acknowledgement(header=self.get_header(collaborator_name))
 
-    def serve(self):
-        """Start an aggregator gRPC service."""
+    def get_server(self):
+        """Return gRPC server."""
         self.server = server(ThreadPoolExecutor(max_workers=cpu_count()),
                              options=self.channel_options)
 
         add_AggregatorServicer_to_server(self, self.server)
 
-        if self.disable_tls:
+        if not self.tls:
 
             self.logger.warn(
                 'gRPC is running on insecure channel with TLS disabled.')
-
-            self.server.add_insecure_port(self.uri)
+            port = self.server.add_insecure_port(self.uri)
+            self.logger.info(f'Insecure port: {port}')
 
         else:
 
@@ -239,8 +239,13 @@ class AggregatorGRPCServer(AggregatorServicer):
 
             self.server.add_secure_port(self.uri, self.server_credentials)
 
-        self.logger.info('Starting Aggregator gRPC Server')
+        return self.server
 
+    def serve(self):
+        """Start an aggregator gRPC service."""
+        self.get_server()
+
+        self.logger.info('Starting Aggregator gRPC Server')
         self.server.start()
 
         try:
