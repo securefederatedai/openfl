@@ -143,9 +143,10 @@ class Director:
         while True:
             if not aggregator.metric_queue.empty():
                 yield aggregator.metric_queue.get()
+                continue
 
             if aggregator.all_quit_jobs_sent():
-                raise StopIteration
+                return
 
             yield None
 
