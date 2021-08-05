@@ -56,7 +56,7 @@ class KvasirShardDescriptor(ShardDescriptor):
         os.system('wget -nc'
                   " 'https://datasets.simula.no/hyper-kvasir/hyper-kvasir-segmented-images.zip'"
                   f' -O {zip_file_path.relative_to(Path.cwd())}')
-        zip_sha384 = ('e30d18a772c6520476e55b610a4db457237f151e' 
+        zip_sha384 = ('e30d18a772c6520476e55b610a4db457237f151e'
                       '19182849d54b49ae24699881c1e18e0961f77642be900450ef8b22e7')
         validate_file_hash(zip_file_path, zip_sha384)
         os.system(f'unzip -n {zip_file_path.relative_to(Path.cwd())}'
