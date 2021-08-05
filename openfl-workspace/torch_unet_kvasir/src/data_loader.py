@@ -4,9 +4,7 @@
 """You may copy this file as the starting point of your own model."""
 
 import zipfile
-from hashlib import sha384
 from os import listdir
-from os import path
 
 import numpy as np
 import PIL
@@ -18,6 +16,7 @@ from torchvision.datasets.utils import download_url
 from tqdm import tqdm
 
 from openfl.federated import PyTorchDataLoader
+from openfl.utilities import validate_file_hash
 
 
 def read_data(image_path, mask_path):
@@ -97,8 +96,7 @@ def load_kvasir_dataset():
     data_url = 'https://datasets.simula.no/hyper-kvasir/hyper-kvasir-segmented-images.zip'
     filename = 'kvasir.zip'
     download_url(data_url, '.', filename=filename)
-    assert sha384(open(filename, 'rb').read(
-        path.getsize(filename))).hexdigest() == zip_sha384
+    validate_file_hash(filename, zip_sha384)
 
     with zipfile.ZipFile(filename, 'r') as zip_ref:
         for member in tqdm(iterable=zip_ref.infolist(), desc='Unzipping dataset'):
