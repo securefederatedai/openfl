@@ -11,6 +11,7 @@ import numpy as np
 from PIL import Image
 
 from openfl.interface.interactive_api.shard_descriptor import ShardDescriptor
+from openfl.plugins.data_splitters import RandomNumPyDataSplitter
 
 
 class KvasirShardDescriptor(ShardDescriptor):
@@ -29,8 +30,8 @@ class KvasirShardDescriptor(ShardDescriptor):
         self.enforce_image_hw = None
         if enforce_image_hw is not None:
             self.enforce_image_hw = tuple(int(size) for size in enforce_image_hw.split(','))
-        # Settings for sharding the dataset
-        self.rank_worldsize = tuple(int(num) for num in rank_worldsize.split(','))
+            # Settings for sharding the dataset
+        self.rank, self.worldsize = tuple(int(num) for num in rank_worldsize.split(','))
 
         self.images_path = self.data_folder / 'segmented-images' / 'images'
         self.masks_path = self.data_folder / 'segmented-images' / 'masks'
@@ -41,7 +42,9 @@ class KvasirShardDescriptor(ShardDescriptor):
             if len(img_name) > 3 and img_name[-3:] == 'jpg'
         ]
         # Sharding
-        self.images_names = self.images_names[self.rank_worldsize[0] - 1::self.rank_worldsize[1]]
+        data_splitter = RandomNumPyDataSplitter()
+        shard_idx = data_splitter.split(self.images_names, self.worldsize)[self.rank]
+        self.images_names = [self.images_names[i] for i in shard_idx]
 
         # Calculating data and target shapes
         sample, target = self[0]
@@ -97,8 +100,8 @@ class KvasirShardDescriptor(ShardDescriptor):
     @property
     def dataset_description(self) -> str:
         """Return the dataset description."""
-        return f'Kvasir dataset, shard number {self.rank_worldsize[0]}' \
-               f' out of {self.rank_worldsize[1]}'
+        return f'Kvasir dataset, shard number {self.rank}' \
+               f' out of {self.worldsize}'
 
 
 if __name__ == '__main__':
