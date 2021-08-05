@@ -163,10 +163,10 @@ class Collaborator:
         kwargs = self.task_config[task]['kwargs']
 
         # this would return a list of what tensors we require as TensorKeys
-        required_tensorkeys_relative = \
-            self.task_runner.get_required_tensorkeys_for_function(
-                func_name, **kwargs
-            )
+        required_tensorkeys_relative = self.task_runner.get_required_tensorkeys_for_function(
+            func_name,
+            **kwargs
+        )
 
         # models actually return "relative" tensorkeys of (name, LOCAL|GLOBAL,
         # round_offset)
@@ -270,10 +270,9 @@ class Collaborator:
                     tensor_dependencies[0]
                 )
                 if prior_model_layer is not None:
-                    uncompressed_delta = \
-                        self.get_aggregated_tensor_from_aggregator(
-                            tensor_dependencies[1]
-                        )
+                    uncompressed_delta = self.get_aggregated_tensor_from_aggregator(
+                        tensor_dependencies[1]
+                    )
                     new_model_tk, nparray = self.tensor_codec.apply_delta(
                         tensor_dependencies[1],
                         uncompressed_delta,
@@ -396,14 +395,15 @@ class Collaborator:
             # The original model will not be present for the optimizer on the
             # first round.
             if model_nparray is not None:
-                delta_tensor_key, delta_nparray = \
-                    self.tensor_codec.generate_delta(
-                        tensor_key,
-                        nparray,
-                        model_nparray
-                    )
-                delta_comp_tensor_key, delta_comp_nparray, metadata = \
-                    self.tensor_codec.compress(delta_tensor_key, delta_nparray)
+                delta_tensor_key, delta_nparray = self.tensor_codec.generate_delta(
+                    tensor_key,
+                    nparray,
+                    model_nparray
+                )
+                delta_comp_tensor_key, delta_comp_nparray, metadata = self.tensor_codec.compress(
+                    delta_tensor_key,
+                    delta_nparray
+                )
 
                 named_tensor = utils.construct_named_tensor(
                     delta_comp_tensor_key,
@@ -414,10 +414,11 @@ class Collaborator:
                 return named_tensor
 
         # Assume every other tensor requires lossless compression
-        compressed_tensor_key, compressed_nparray, metadata = \
-            self.tensor_codec.compress(
-                tensor_key, nparray, require_lossless=True
-            )
+        compressed_tensor_key, compressed_nparray, metadata = self.tensor_codec.compress(
+            tensor_key,
+            nparray,
+            require_lossless=True
+        )
         named_tensor = utils.construct_named_tensor(
             compressed_tensor_key,
             compressed_nparray,
@@ -447,20 +448,18 @@ class Collaborator:
         )
         tensor_name, origin, round_number, report, tags = tensor_key
         if 'compressed' in tags:
-            decompressed_tensor_key, decompressed_nparray = \
-                self.tensor_codec.decompress(
-                    tensor_key,
-                    data=raw_bytes,
-                    transformer_metadata=metadata,
-                    require_lossless=True
-                )
+            decompressed_tensor_key, decompressed_nparray = self.tensor_codec.decompress(
+                tensor_key,
+                data=raw_bytes,
+                transformer_metadata=metadata,
+                require_lossless=True
+            )
         elif 'lossy_compressed' in tags:
-            decompressed_tensor_key, decompressed_nparray = \
-                self.tensor_codec.decompress(
-                    tensor_key,
-                    data=raw_bytes,
-                    transformer_metadata=metadata
-                )
+            decompressed_tensor_key, decompressed_nparray = self.tensor_codec.decompress(
+                tensor_key,
+                data=raw_bytes,
+                transformer_metadata=metadata
+            )
         else:
             # There could be a case where the compression pipeline is bypassed
             # entirely

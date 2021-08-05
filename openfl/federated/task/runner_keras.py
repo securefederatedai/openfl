@@ -446,20 +446,21 @@ class KerasTaskRunner(TaskRunner):
         tensor_names = model_layer_names + opt_names
         self.logger.debug(f'Updating model tensor names: {tensor_names}')
         self.required_tensorkeys_for_function['train'] = [
-            TensorKey(
-                tensor_name, 'GLOBAL', 0, ('model',)
-            ) for tensor_name in tensor_names
+            TensorKey(tensor_name, 'GLOBAL', 0, ('model',))
+            for tensor_name in tensor_names
         ]
 
         # Validation may be performed on local or aggregated (global) model,
         # so there is an extra lookup dimension for kwargs
         self.required_tensorkeys_for_function['validate'] = {}
-        self.required_tensorkeys_for_function['validate']['local_model=True'] = \
-            [TensorKey(tensor_name, 'LOCAL', 0, ('trained',))
-             for tensor_name in tensor_names]
-        self.required_tensorkeys_for_function['validate']['local_model=False'] = \
-            [TensorKey(tensor_name, 'GLOBAL', 0, ('model',))
-             for tensor_name in tensor_names]
+        self.required_tensorkeys_for_function['validate']['local_model=True'] = [
+            TensorKey(tensor_name, 'LOCAL', 0, ('trained',))
+            for tensor_name in tensor_names
+        ]
+        self.required_tensorkeys_for_function['validate']['local_model=False'] = [
+            TensorKey(tensor_name, 'GLOBAL', 0, ('model',))
+            for tensor_name in tensor_names
+        ]
 
     def initialize_tensorkeys_for_functions(self, with_opt_vars=False):
         """
@@ -487,40 +488,41 @@ class KerasTaskRunner(TaskRunner):
             **self.tensor_dict_split_fn_kwargs
         )
         if not with_opt_vars:
-            validation_global_model_dict = global_model_dict
-            validation_local_model_dict = local_model_dict
+            global_model_dict_val = global_model_dict
+            local_model_dict_val = local_model_dict
         else:
             output_model_dict = self.get_tensor_dict(with_opt_vars=False)
-            validation_global_model_dict, validation_local_model_dict =\
-                split_tensor_dict_for_holdouts(
-                    self.logger,
-                    output_model_dict,
-                    **self.tensor_dict_split_fn_kwargs
-                )
+            global_model_dict_val, local_model_dict_val = split_tensor_dict_for_holdouts(
+                self.logger,
+                output_model_dict,
+                **self.tensor_dict_split_fn_kwargs
+            )
 
         self.required_tensorkeys_for_function['train'] = [
-            TensorKey(
-                tensor_name, 'GLOBAL', 0, False, ('model',)
-            ) for tensor_name in global_model_dict
+            TensorKey(tensor_name, 'GLOBAL', 0, False, ('model',))
+            for tensor_name in global_model_dict
         ]
         self.required_tensorkeys_for_function['train'] += [
-            TensorKey(
-                tensor_name, 'LOCAL', 0, False, ('model',)
-            ) for tensor_name in local_model_dict
+            TensorKey(tensor_name, 'LOCAL', 0, False, ('model',))
+            for tensor_name in local_model_dict
         ]
 
         # Validation may be performed on local or aggregated (global) model,
         # so there is an extra lookup dimension for kwargs
         self.required_tensorkeys_for_function['validate'] = {}
         # TODO This is not stateless. The optimizer will not be
-        self.required_tensorkeys_for_function['validate']['apply=local'] = \
-            [TensorKey(tensor_name, 'LOCAL', 0, False, ('trained',))
-             for tensor_name in {
-                 **validation_global_model_dict,
-                 **validation_local_model_dict}]
-        self.required_tensorkeys_for_function['validate']['apply=global'] = \
-            [TensorKey(tensor_name, 'GLOBAL', 0, False, ('model',))
-             for tensor_name in validation_global_model_dict]
-        self.required_tensorkeys_for_function['validate']['apply=global'] += \
-            [TensorKey(tensor_name, 'LOCAL', 0, False, ('model',))
-             for tensor_name in validation_local_model_dict]
+        self.required_tensorkeys_for_function['validate']['apply=local'] = [
+            TensorKey(tensor_name, 'LOCAL', 0, False, ('trained',))
+            for tensor_name in {
+                **global_model_dict_val,
+                **local_model_dict_val
+            }
+        ]
+        self.required_tensorkeys_for_function['validate']['apply=global'] = [
+            TensorKey(tensor_name, 'GLOBAL', 0, False, ('model',))
+            for tensor_name in global_model_dict_val
+        ]
+        self.required_tensorkeys_for_function['validate']['apply=global'] += [
+            TensorKey(tensor_name, 'LOCAL', 0, False, ('model',))
+            for tensor_name in local_model_dict_val
+        ]

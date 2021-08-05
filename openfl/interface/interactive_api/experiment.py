@@ -262,8 +262,8 @@ class FLExperiment:
         # Network part of the plan
         # We keep in mind that an aggregator FQND will be the same as the directors FQDN
         # We just choose a port randomly from plan hash
-        plan.config['network']['settings']['agg_addr'] = \
-            self.federation.director_node_fqdn.split(':')[0]  # We drop the port
+        director_fqdn = self.federation.director_node_fqdn.split(':')[0]  # We drop the port
+        plan.config['network']['settings']['agg_addr'] = director_fqdn
         plan.config['network']['settings']['tls'] = self.federation.tls
 
         # Aggregator part of the plan
@@ -297,25 +297,30 @@ class FLExperiment:
         # TaskRunner framework plugin
         # ['required_plugin_components'] should be already in the default plan with all the fields
         # filled with the default values
-        plan.config['task_runner']['required_plugin_components'] = {}
-        plan.config['task_runner']['required_plugin_components']['framework_adapters'] = \
-            model_provider.framework_plugin
+        plan.config['task_runner'] = {
+            'required_plugin_components': {
+                'framework_adapters': model_provider.framework_plugin
+            }
+        }
 
         # API layer
-        plan.config['api_layer'] = {}
-        plan.config['api_layer']['required_plugin_components'] = {}
-        plan.config['api_layer']['settings'] = {}
-        plan.config['api_layer']['required_plugin_components']['serializer_plugin'] = \
-            self.serializer_plugin
-        plan.config['api_layer']['settings'] = {
-            'model_interface_file': model_interface_file,
-            'tasks_interface_file': tasks_interface_file,
-            'dataloader_interface_file': dataloader_interface_file, }
+        plan.config['api_layer'] = {
+            'required_plugin_components': {
+                'serializer_plugin': self.serializer_plugin
+            },
+            'settings': {
+                'model_interface_file': model_interface_file,
+                'tasks_interface_file': tasks_interface_file,
+                'dataloader_interface_file': dataloader_interface_file,
+            }
+        }
 
-        plan.config['assigner']['settings']['task_groups'][0]['tasks'] = \
-            [entry for entry in plan.config['tasks']
-                if (type(plan.config['tasks'][entry]) is dict)
-                and ('function' in plan.config['tasks'][entry])]
+        plan.config['assigner']['settings']['task_groups'][0]['tasks'] = [
+            entry
+            for entry in plan.config['tasks']
+            if (type(plan.config['tasks'][entry]) is dict
+                and 'function' in plan.config['tasks'][entry])
+        ]
         self.plan = deepcopy(plan)
 
     def _serialize_interface_objects(self, model_provider, task_keeper, data_loader):
