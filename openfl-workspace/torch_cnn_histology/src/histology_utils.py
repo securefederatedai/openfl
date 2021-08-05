@@ -4,7 +4,6 @@
 """You may copy this file as the starting point of your own model."""
 
 from collections.abc import Iterable
-from hashlib import sha384
 from logging import getLogger
 from os import makedirs
 from os import path
@@ -17,6 +16,8 @@ from torch.utils.data import random_split
 from torchvision.datasets import ImageFolder
 from torchvision.transforms import ToTensor
 from tqdm import tqdm
+
+from openfl.utilities import validate_file_hash
 
 logger = getLogger(__name__)
 
@@ -39,8 +40,7 @@ class HistologyDataset(ImageFolder):
         if not path.exists(filepath):
             self.pbar = tqdm(total=None)
             urlretrieve(HistologyDataset.URL, filepath, self.report_hook)  # nosec
-            assert sha384(open(filepath, 'rb').read(  # nosec
-                path.getsize(filepath))).hexdigest() == HistologyDataset.ZIP_SHA384
+            validate_file_hash(filepath, HistologyDataset.ZIP_SHA384)
             with ZipFile(filepath, 'r') as f:
                 f.extractall(root)
 
