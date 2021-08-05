@@ -71,6 +71,8 @@ class Aggregator:
         self.quit_job_sent_to = []
 
         self.tensor_db = TensorDB()
+        # FIXME: I think next line generates an error on the second round
+        # if it is set to 1 for the aggregator.
         self.db_store_rounds = db_store_rounds
         self.compression_pipeline = compression_pipeline \
             or NoCompressionPipeline()
