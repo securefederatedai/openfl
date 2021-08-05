@@ -60,17 +60,19 @@ class Director:
 
     async def set_new_experiment(self, *, experiment_name: str, sender_name: str,
                                  tensor_dict: dict,
-                                 collaborator_names: typing.Iterable[str], data: bytes) -> bool:
+                                 collaborator_names: typing.Iterable[str],
+                                 data_file_path: str) -> bool:
         """Set new experiment."""
         # TODO: save to file
-        self.experiment_data[experiment_name] = data
+        self.experiment_data[experiment_name] = data_file_path
 
-        self.create_workspace(experiment_name, data)
+        self.create_workspace(experiment_name, data_file_path)
         asyncio.create_task(self._run_aggregator(
             sender_name,
             tensor_dict,
             experiment_name,
-            collaborator_names
+            collaborator_names,
+            data_file_path
         ))
 
         logger.info(f'New experiment {experiment_name} for '
@@ -178,18 +180,15 @@ class Director:
         return envoy_infos
 
     @staticmethod
-    def create_workspace(experiment_name, npbytes):
+    def create_workspace(experiment_name: str, data_file_path: Path):
         """Create the aggregator workspace."""
         if os.path.exists(experiment_name):
             shutil.rmtree(experiment_name)
         os.makedirs(experiment_name)
-
         arch_name = f'{experiment_name}/{experiment_name}' + '.zip'
-        logger.info(f'arch_name: {arch_name}')
-        with open(arch_name, 'wb') as content_file:
-            content_file.write(npbytes)
-
+        shutil.copy(data_file_path, arch_name)
         shutil.unpack_archive(arch_name, experiment_name)
+        os.remove(arch_name)
 
     async def _run_aggregator(
             self,
@@ -197,6 +196,7 @@ class Director:
             initial_tensor_dict,
             experiment_name,
             collaborator_names,
+            data_file_name,
             plan='plan/plan.yaml',
     ):  # TODO: path params, change naming
         """Run aggregator."""
@@ -230,6 +230,7 @@ class Director:
         finally:
             os.chdir(cwd)
             shutil.rmtree(experiment_name)
+            os.remove(data_file_name)
             grpc_server.stop(0)
             # Temporary solution to free RAM used by TensorDB
             aggregator_server.aggregator.tensor_db.clean_up(0)
