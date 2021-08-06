@@ -23,7 +23,7 @@ class NumPyDataSplitter(DataSplitter):
     """Base class for splitting numpy arrays of data."""
 
     @abstractmethod
-    def split(self, labels: np.ndarray, num_collaborators: int) \
+    def split(self, data: np.ndarray, num_collaborators: int) \
             -> List[List[int]]:
         """Split the data."""
         raise NotImplementedError
@@ -40,10 +40,10 @@ class EqualNumPyDataSplitter(NumPyDataSplitter):
         """
         self.shuffle = shuffle
 
-    def split(self, labels, num_collaborators):
+    def split(self, data, num_collaborators):
         """Split the data."""
-        idx = np.random.choice(len(labels), len(labels), replace=False) if self.shuffle \
-            else range(len(labels))
+        idx = np.random.choice(len(data), len(data), replace=False) if self.shuffle \
+            else range(len(data))
         slices = np.array_split(idx, num_collaborators)
         return slices
 
@@ -59,11 +59,11 @@ class RandomNumPyDataSplitter(NumPyDataSplitter):
         """
         self.shuffle = shuffle
 
-    def split(self, labels, num_collaborators):
+    def split(self, data, num_collaborators):
         """Split the data."""
-        idx = np.random.choice(len(labels), len(labels), replace=False) if self.shuffle \
-            else range(len(labels))
-        random_idx = np.sort(np.random.choice(len(labels), num_collaborators - 1, replace=False))
+        idx = np.random.choice(len(data), len(data), replace=False) if self.shuffle \
+            else range(len(data))
+        random_idx = np.sort(np.random.choice(len(data), num_collaborators - 1, replace=False))
 
         return np.split(idx, random_idx)
 
@@ -90,14 +90,14 @@ class LogNormalNumPyDataSplitter(NumPyDataSplitter):
         self.classes_per_col = classes_per_col
         self.min_samples_per_class = min_samples_per_class
 
-    def split(self, labels, num_collaborators):
+    def split(self, data, num_collaborators):
         """Split the data."""
         idx = [[] for _ in range(num_collaborators)]
         samples_per_col = self.classes_per_col * self.min_samples_per_class
         for col in range(num_collaborators):
             for c in range(self.classes_per_col):
                 label = (col + c) % self.num_classes
-                label_idx = np.nonzero(labels == label)[0]
+                label_idx = np.nonzero(data == label)[0]
                 slice_start = col // self.num_classes * samples_per_col
                 slice_start += self.min_samples_per_class * c
                 slice_end = slice_start + self.min_samples_per_class
@@ -109,7 +109,7 @@ class LogNormalNumPyDataSplitter(NumPyDataSplitter):
 
         props_shape = (self.num_classes, num_collaborators // 10, self.classes_per_col)
         props = np.random.lognormal(self.mu, self.sigma, props_shape)
-        num_samples_per_class = [[[get_label_count(labels, label) - self.min_samples_per_class]]
+        num_samples_per_class = [[[get_label_count(data, label) - self.min_samples_per_class]]
                                  for label in range(self.num_classes)]
         num_samples_per_class = np.array(num_samples_per_class)
         props = num_samples_per_class * props / np.sum(props, (1, 2), keepdims=True)
@@ -119,10 +119,10 @@ class LogNormalNumPyDataSplitter(NumPyDataSplitter):
                 num_samples = int(props[label, col // 10, j])
 
                 print(f'Trying to append {num_samples} of {label} class to {col} col...')
-                slice_start = np.count_nonzero(labels[np.hstack(idx)] == label)
+                slice_start = np.count_nonzero(data[np.hstack(idx)] == label)
                 slice_end = slice_start + num_samples
-                if slice_end < get_label_count(labels, label):
-                    label_subset = np.nonzero(labels == (col + j) % self.num_classes)[0]
+                if slice_end < get_label_count(data, label):
+                    label_subset = np.nonzero(data == (col + j) % self.num_classes)[0]
                     idx_to_append = label_subset[slice_start:slice_end]
                     print(f'Appending {idx_to_append} of {label} class to {col} col...')
                     idx[col] = np.append(idx[col], idx_to_append)
@@ -137,16 +137,16 @@ class DirichletNumPyDataSplitter(NumPyDataSplitter):
         self.alpha = alpha
         self.min_samples_per_col = min_samples_per_col
 
-    def split(self, labels, num_collaborators):
+    def split(self, data, num_collaborators):
         """Split the data."""
-        classes = len(np.unique(labels))
+        classes = len(np.unique(data))
         min_size = 0
 
-        n = len(labels)
+        n = len(data)
         while min_size < self.min_samples_per_col:
             idx_batch = [[] for _ in range(num_collaborators)]
             for k in range(classes):
-                idx_k = np.where(labels == k)[0]
+                idx_k = np.where(data == k)[0]
                 np.random.shuffle(idx_k)
                 proportions = np.random.dirichlet(np.repeat(self.alpha, num_collaborators))
                 proportions = [p * (len(idx_j) < n / num_collaborators)
