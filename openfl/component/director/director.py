@@ -73,11 +73,11 @@ class Director:
 
         self.create_workspace(experiment_name, data_file_path)
         asyncio.create_task(self._run_aggregator(
-            sender_name,
-            tensor_dict,
-            experiment_name,
-            collaborator_names,
-            data_file_path
+            experiment_sender=sender_name,
+            initial_tensor_dict=tensor_dict,
+            experiment_name=experiment_name,
+            collaborator_names=collaborator_names,
+            data_file_name=data_file_path
         ))
 
         logger.info(f'New experiment {experiment_name} for '
@@ -197,17 +197,18 @@ class Director:
 
     async def _run_aggregator(
             self,
+            *,
             experiment_sender,
             initial_tensor_dict,
             experiment_name,
             collaborator_names,
             data_file_name,
-            plan='plan/plan.yaml',
-    ):  # TODO: path params, change naming
+            plan_path='plan/plan.yaml'
+    ):
         """Run aggregator."""
         cwd = os.getcwd()
         os.chdir(f'{cwd}/{experiment_name}')
-        plan = Plan.parse(plan_config_path=Path(plan))
+        plan = Plan.parse(plan_config_path=Path(plan_path))
 
         plan.authorized_cols = list(collaborator_names)
 
