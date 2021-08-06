@@ -23,8 +23,7 @@ class NumPyDataSplitter(DataSplitter):
     """Base class for splitting numpy arrays of data."""
 
     @abstractmethod
-    def split(self, data: np.ndarray, num_collaborators: int) \
-            -> List[List[int]]:
+    def split(self, data: np.ndarray, num_collaborators: int) -> List[List[int]]:
         """Split the data."""
         raise NotImplementedError
 
@@ -42,8 +41,9 @@ class EqualNumPyDataSplitter(NumPyDataSplitter):
 
     def split(self, data, num_collaborators):
         """Split the data."""
-        idx = np.random.choice(len(data), len(data), replace=False) if self.shuffle \
-            else range(len(data))
+        idx = range(len(data))
+        if self.shuffle:
+            idx = np.random.permute(idx)
         slices = np.array_split(idx, num_collaborators)
         return slices
 
@@ -61,8 +61,9 @@ class RandomNumPyDataSplitter(NumPyDataSplitter):
 
     def split(self, data, num_collaborators):
         """Split the data."""
-        idx = np.random.choice(len(data), len(data), replace=False) if self.shuffle \
-            else range(len(data))
+        idx = range(len(data))
+        if self.shuffle:
+            idx = np.random.permutation(idx)
         random_idx = np.sort(np.random.choice(len(data), num_collaborators - 1, replace=False))
 
         return np.split(idx, random_idx)
@@ -103,9 +104,9 @@ class LogNormalNumPyDataSplitter(NumPyDataSplitter):
                 slice_end = slice_start + self.min_samples_per_class
                 print(f'Assigning {slice_start}:{slice_end} of {label} class to {col} col...')
                 idx[col] += list(label_idx[slice_start:slice_end])
-        assert all([len(i) == samples_per_col for i in idx]), \
-            f'All collaborators should have {samples_per_col} elements' \
-            + f'but distribution is {[len(i) for i in idx]}'
+        assert all([len(i) == samples_per_col for i in idx]), f'''
+All collaborators should have {samples_per_col} elements
+but distribution is {[len(i) for i in idx]}'''
 
         props_shape = (self.num_classes, num_collaborators // 10, self.classes_per_col)
         props = np.random.lognormal(self.mu, self.sigma, props_shape)

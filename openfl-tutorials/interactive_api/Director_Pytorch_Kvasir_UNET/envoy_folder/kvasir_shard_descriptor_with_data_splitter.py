@@ -59,8 +59,8 @@ class KvasirShardDescriptor(ShardDescriptor):
         os.system('wget -nc'
                   " 'https://datasets.simula.no/hyper-kvasir/hyper-kvasir-segmented-images.zip'"
                   f' -O {zip_file_path.relative_to(Path.cwd())}')
-        zip_sha384 = 'e30d18a772c6520476e55b610a4db457237f151e' \
-                     '19182849d54b49ae24699881c1e18e0961f77642be900450ef8b22e7'
+        zip_sha384 = ('e30d18a772c6520476e55b610a4db457237f151e',
+                      '19182849d54b49ae24699881c1e18e0961f77642be900450ef8b22e7')
         validate_file_hash(zip_file_path, zip_sha384)
         os.system(f'unzip -n {zip_file_path.relative_to(Path.cwd())}'
                   f' -d {data_folder.relative_to(Path.cwd())}')
@@ -99,8 +99,7 @@ class KvasirShardDescriptor(ShardDescriptor):
     @property
     def dataset_description(self) -> str:
         """Return the dataset description."""
-        return f'Kvasir dataset, shard number {self.rank}' \
-               f' out of {self.worldsize}'
+        return f'Kvasir dataset, shard number {self.rank} out of {self.worldsize}'
 
 
 if __name__ == '__main__':
