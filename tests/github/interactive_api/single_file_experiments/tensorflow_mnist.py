@@ -184,7 +184,7 @@ fed_dataset.valid_dataset = None
 from openfl.interface.interactive_api.federation import Federation
 
 # will determine fqdn by itself
-federation = Federation(central_node_fqdn='localhost', disable_tls=True)
+federation = Federation(central_node_fqdn='localhost', tls=False)
 # Datapath corresonds to 'RANK,WORLD_SIZE'
 col_data_paths = {'one': '1,2',
                   'two': '2,2'}

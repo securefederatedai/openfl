@@ -18,9 +18,9 @@ def director_client(director_pb2_grpc):
 
     client_id = 'one'
     director_uri = 'localhost'
-    disable_tls = True
+    tls = False
     root_ca, key, cert = None, None, None
-    director_client = DirectorClient(client_id, director_uri, disable_tls, root_ca, key, cert)
+    director_client = DirectorClient(client_id, director_uri, tls, root_ca, key, cert)
     return director_client
 
 
@@ -30,14 +30,18 @@ def test_get_dataset_info(director_client):
     director_client.stub.GetDatasetInfo.assert_called_once()
 
 
+@pytest.mark.parametrize(
+    'clients_method,model_type', [
+        ('get_best_model', 'BEST_MODEL'),
+        ('get_last_model', 'LAST_MODEL'),
+    ])
 @mock.patch('openfl.transport.grpc.director_client.deconstruct_model_proto')
-def test_get_best_model(deconstruct_model_proto, director_client):
+def test_get_best_model(deconstruct_model_proto, director_client,
+                        clients_method, model_type):
     """Test get_best_model RPC."""
     deconstruct_model_proto.return_value = {}, {}
-    director_client.get_best_model('test name')
+    getattr(director_client, clients_method)('test name')
     director_client.stub.GetTrainedModel.assert_called_once()
 
     request = director_client.stub.GetTrainedModel.call_args
-    assert request.args[0].model_type == director_pb2.GetTrainedModelRequest.BEST_MODEL or \
-        request.kwargs.values().__iter__().__next__().model_type == \
-        director_pb2.GetTrainedModelRequest.BEST_MODEL
+    assert request.args[0].model_type == getattr(director_pb2.GetTrainedModelRequest, model_type)

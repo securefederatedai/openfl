@@ -103,11 +103,12 @@ and located in data directory for this collaborator.
     imgs_all = []
     msks_all = []
     for brain_path in subdir_paths:
-        these_imgs, these_msks = \
-            nii_reader(brain_path=brain_path,
-                       task=task,
-                       channels_last=channels_last,
-                       **kwargs)
+        these_imgs, these_msks = nii_reader(
+            brain_path=brain_path,
+            task=task,
+            channels_last=channels_last,
+            **kwargs
+        )
         # the needed files where not present if a tuple of None is returned
         if these_imgs is None:
             logger.debug(f'Brain subdirectory: {brain_path} did not contain the needed files.')
@@ -121,11 +122,12 @@ and located in data directory for this collaborator.
 
     # note here that each is a list of 155 slices per brain, and so the
     # split keeps brains intact
-    imgs_all_train, msks_all_train, imgs_all_val, msks_all_val = \
-        train_val_split(features=imgs_all,
-                        labels=msks_all,
-                        percent_train=percent_train,
-                        shuffle=shuffle)
+    imgs_all_train, msks_all_train, imgs_all_val, msks_all_val = train_val_split(
+        features=imgs_all,
+        labels=msks_all,
+        percent_train=percent_train,
+        shuffle=shuffle
+    )
     # now concatenate the lists
     imgs_train = np.concatenate(imgs_all_train, axis=0)
     msks_train = np.concatenate(msks_all_train, axis=0)

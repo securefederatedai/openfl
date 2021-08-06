@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 class Director:
     """Director class."""
 
-    def __init__(self, *, disable_tls: bool = False,
+    def __init__(self, *, tls: bool = True,
                  root_ca: Path = None, key: Path = None, cert: Path = None,
                  sample_shape: list = None, target_shape: list = None) -> None:
         """Initialize a director object."""
@@ -37,7 +37,7 @@ class Director:
         self.experiment_stash = defaultdict(dict)  # Running of finished experiments
         # {API name : {experiment name : aggregator}}
 
-        self.disable_tls = disable_tls
+        self.tls = tls
         self.root_ca = root_ca
         self.key = key
         self.cert = cert
@@ -81,19 +81,25 @@ class Director:
 
         return True
 
-    async def get_trained_model(self, experiment_name: str, caller: str):
-        """Get trained models."""
+    def get_trained_model(self, experiment_name: str, caller: str, model_type: str):
+        """Get trained model."""
         if experiment_name not in self.experiment_stash[caller]:
-            logger.error('Aggregator has not started yet')
-            return None, None
+            logger.error('No experiment data in the stash')
+            return None
 
         aggregator = self.experiment_stash[caller][experiment_name].aggregator
 
         if aggregator.last_tensor_dict is None:
             logger.error('Aggregator have no aggregated model to return')
-            return None, None
+            return None
 
-        return aggregator.best_tensor_dict, aggregator.last_tensor_dict
+        if model_type == 'best':
+            return aggregator.best_tensor_dict
+        elif model_type == 'last':
+            return aggregator.last_tensor_dict
+        else:
+            logger.error('Unknown model type required.')
+            return None
 
     def get_experiment_data(self, experiment_name: str) -> bytes:
         """Get experiment data."""
@@ -114,33 +120,40 @@ class Director:
         """Get registered shard infos."""
         return [shard_status['shard_info'] for shard_status in self._shard_registry.values()]
 
-    async def stream_metrics(self, experiment_name: str, caller: str):
-        """Stream metrics from the aggregator."""
+    def stream_metrics(self, experiment_name: str, caller: str):
+        """
+        Stream metrics from the aggregator.
+
+        This method takes next metric dictionary from the aggregator's queue
+        and returns it to the caller.
+
+        Inputs:
+            experiment_name - string id for experiment
+            caller - string id for experiment owner
+
+        Returns:
+            metric_dict - {'metric_origin','task_name','metric_name','metric_value','round'}
+                if the queue is not empty
+            None - f queue is empty but the experiment is still running
+
+        Raises:
+            StopIteration - if the experiment is finished and there is no more metrics to report
+        """
         aggregator = self.experiment_stash[caller][experiment_name].aggregator
+        while True:
+            if not aggregator.metric_queue.empty():
+                yield aggregator.metric_queue.get()
+                continue
 
-        while not aggregator.all_quit_jobs_sent() or not aggregator.metric_queue.empty():
-            # If the aggregator has not fineished the experimnet
-            # or it finished but metric_queue is not empty we send metrics
+            if aggregator.all_quit_jobs_sent() and aggregator.metric_queue.empty():
+                return
 
-            # But here we may have a problem if the new experiment starts too quickly
+            yield None
 
-            while not aggregator.metric_queue.empty():
-                metric_origin, task_name, metric_name, metric_value, round_ = \
-                    aggregator.metric_queue.get()
-                yield director_pb2.StreamMetricsResponse(
-                    metric_origin=metric_origin,
-                    task_name=task_name,
-                    metric_name=metric_name,
-                    metric_value=float(metric_value),
-                    round=round_)
-
-            # Awaiting quit job sent to collaborators
-            await asyncio.sleep(5)
-
-    def remove_experiment_data(self, name: str, caller: str):
-        """Remove experiment data RPC."""
-        if name in self.experiment_stash.get(caller, {}):
-            del self.experiment_stash[caller][name]
+    def remove_experiment_data(self, experiment_name: str, caller: str):
+        """Remove experiment data from stash."""
+        if experiment_name in self.experiment_stash.get(caller, {}):
+            del self.experiment_stash[caller][experiment_name]
 
     def collaborator_health_check(self, *, collaborator_name: str,
                                   is_experiment_running: bool,
@@ -212,10 +225,9 @@ class Director:
             chain=self.root_ca,
             certificate=self.cert,
             private_key=self.key,
-            disable_tls=self.disable_tls,
+            tls=self.tls,
         )
-        self.experiment_stash[experiment_sender][experiment_name] = \
-            aggregator_server
+        self.experiment_stash[experiment_sender][experiment_name] = aggregator_server
 
         grpc_server = aggregator_server.get_server()
         grpc_server.start()

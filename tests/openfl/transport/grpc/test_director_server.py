@@ -14,7 +14,7 @@ from openfl.transport import DirectorGRPCServer
 @pytest.fixture
 def insecure_director():
     """Initialize an insecure director mock."""
-    director = DirectorGRPCServer(director_cls=Director, disable_tls=True)
+    director = DirectorGRPCServer(director_cls=Director, tls=False)
 
     return director
 
@@ -24,7 +24,6 @@ def secure_director():
     """Initialize a secure director mock."""
     director = DirectorGRPCServer(
         director_cls=Director,
-        disable_tls=False,
         root_ca='./cert/root_ca.crt',
         key='./cert/localhost.key',
         cert='./cert/localhost.crt'
@@ -48,13 +47,13 @@ def test_fill_certs(insecure_director, secure_director):
         secure_director.test_fill_certs(None, '.', '.')
 
 
-@pytest.mark.parametrize('caller_common_name,caller_cert_name,result,disable_tls', [
-    ('one', 'one', True, False), ('one', 'two', False, False),
-    ('one', 'one', True, True), ('one', 'two', True, True)])
+@pytest.mark.parametrize('caller_common_name,caller_cert_name,result,tls', [
+    ('one', 'one', True, True), ('one', 'two', False, True),
+    ('one', 'one', True, False), ('one', 'two', True, False)])
 def test_validate_caller(insecure_director, caller_common_name,
-                         caller_cert_name, result, disable_tls):
+                         caller_cert_name, result, tls):
     """Test that validate_caller works correctly."""
-    insecure_director.disable_tls = disable_tls  # only for enable TLS the validation works
+    insecure_director.tls = tls  # only for enable TLS the validation works
     request = mock.Mock()
     request.header = mock.Mock()
     request.header.sender = caller_common_name

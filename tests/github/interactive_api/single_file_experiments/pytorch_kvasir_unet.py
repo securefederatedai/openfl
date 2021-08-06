@@ -48,19 +48,18 @@ model_unet = UNet()
 optimizer_adam = optim.Adam(model_unet.parameters(), lr=1e-4)
 
 import os
-from hashlib import sha384
 import PIL
 from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms as tsf
 from skimage import io
+from openfl.utilities import validate_file_hash
 
 os.makedirs('data', exist_ok=True)
 os.system(
     "wget -nc 'https://datasets.simula.no/hyper-kvasir/hyper-kvasir-segmented-images.zip' -O ./data/kvasir.zip")
 ZIP_SHA384 = 'e30d18a772c6520476e55b610a4db457237f151e' \
              '19182849d54b49ae24699881c1e18e0961f77642be900450ef8b22e7'
-assert sha384(open('./data/kvasir.zip', 'rb').read(
-    os.path.getsize('./data/kvasir.zip'))).hexdigest() == ZIP_SHA384
+validate_file_hash('./data/kvasir.zip', ZIP_SHA384)
 os.system('unzip -n ./data/kvasir.zip -d ./data')
 
 DATA_PATH = './data/segmented-images/'
@@ -337,7 +336,7 @@ from openfl.interface.interactive_api.federation import Federation
 # will determine fqdn by itself
 from socket import getfqdn
 
-federation = Federation(central_node_fqdn=getfqdn(), disable_tls=True)
+federation = Federation(central_node_fqdn=getfqdn(), tls=False)
 # First number which is a collaborators rank is also passed as a cuda device identifier
 col_data_paths = {'one': '1,2',
                   'two': '2,2'}
@@ -350,7 +349,7 @@ federation.register_collaborators(col_data_paths=col_data_paths)
 # agg_certificate = 'cert/agg_certificate.crt'
 # agg_private_key = 'cert/agg_private.key'
 
-# federation = Federation(central_node_fqdn=getfqdn(), disable_tls=True,
+# federation = Federation(central_node_fqdn=getfqdn(), tls=False,
 #                        cert_chain=cert_chain, agg_certificate=agg_certificate, agg_private_key=agg_private_key)
 # col_data_paths = {'one': '1,1',}
 # federation.register_collaborators(col_data_paths=col_data_paths)

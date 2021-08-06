@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 class DirectorGRPCServer(director_pb2_grpc.FederationDirectorServicer):
     """Director transport class."""
 
-    def __init__(self, *, director_cls, disable_tls: bool = False,
+    def __init__(self, *, director_cls, tls: bool = True,
                  root_ca: str = None, key: str = None, cert: str = None,
                  listen_ip='[::]', listen_port=50051, **kwargs) -> None:
         """Initialize a director object."""
@@ -30,14 +30,14 @@ class DirectorGRPCServer(director_pb2_grpc.FederationDirectorServicer):
         super().__init__()
 
         self.listen_addr = f'{listen_ip}:{listen_port}'
-        self.disable_tls = disable_tls
+        self.tls = tls
         self.root_ca = None
         self.key = None
         self.cert = None
         self._fill_certs(root_ca, key, cert)
         self.server = None
         self.director = director_cls(
-            disable_tls=self.disable_tls,
+            tls=self.tls,
             root_ca=self.root_ca,
             key=self.key,
             cert=self.cert,
@@ -46,7 +46,7 @@ class DirectorGRPCServer(director_pb2_grpc.FederationDirectorServicer):
 
     def _fill_certs(self, root_ca, key, cert):
         """Fill certificates."""
-        if not self.disable_tls:
+        if self.tls:
             if not (root_ca and key and cert):
                 raise Exception('No certificates provided')
             self.root_ca = Path(root_ca).absolute()
@@ -66,7 +66,7 @@ class DirectorGRPCServer(director_pb2_grpc.FederationDirectorServicer):
             False - if the callers cert name is invalid
         """
         # Can we close the request right here?
-        if not self.disable_tls:
+        if self.tls:
             caller_cert_name = context.auth_context()['x509_common_name'][0].decode('utf-8')
             caller_common_name = request.header.sender
             if caller_cert_name != caller_common_name:
@@ -84,7 +84,7 @@ class DirectorGRPCServer(director_pb2_grpc.FederationDirectorServicer):
         self.server = aio.server(options=channel_opt)
         director_pb2_grpc.add_FederationDirectorServicer_to_server(self, self.server)
 
-        if self.disable_tls:
+        if not self.tls:
             self.server.add_insecure_port(self.listen_addr)
         else:
             with open(self.key, 'rb') as f:
@@ -146,22 +146,24 @@ class DirectorGRPCServer(director_pb2_grpc.FederationDirectorServicer):
             return director_pb2.TrainedModelResponse()
         logger.info('Request GetTrainedModel has got!')
 
-        best_tensor_dict, last_tensor_dict = await self.director.get_trained_model(
-            request.experiment_name,
-            request.header.sender
-        )
-
         if request.model_type == director_pb2.GetTrainedModelRequest.BEST_MODEL:
-            tensor_dict = best_tensor_dict
+            model_type = 'best'
         elif request.model_type == director_pb2.GetTrainedModelRequest.LAST_MODEL:
-            tensor_dict = last_tensor_dict
+            model_type = 'last'
         else:
             logger.error('Incorrect model type')
             return director_pb2.TrainedModelResponse()
-        if not tensor_dict:
+
+        trained_model_dict = self.director.get_trained_model(
+            experiment_name=request.experiment_name,
+            caller=request.header.sender,
+            model_type=model_type
+        )
+
+        if trained_model_dict is None:
             return director_pb2.TrainedModelResponse()
 
-        model_proto = construct_model_proto(tensor_dict, 0, NoCompressionPipeline())
+        model_proto = construct_model_proto(trained_model_dict, 0, NoCompressionPipeline())
 
         return director_pb2.TrainedModelResponse(model_proto=model_proto)
 
@@ -206,14 +208,16 @@ class DirectorGRPCServer(director_pb2_grpc.FederationDirectorServicer):
         """Request to stream metrics from the aggregator to frontend."""
         if not self.validate_caller(request, context):
             return
-        # We should probably set a name to the aggregator and verify it here.
-        # Moreover, we may save the experiment name in plan.yaml and retrieve it
-        # during the aggregator initialization
+
         logger.info(f'Request StreamMetrics for {request.experiment_name} experiment has got!')
 
-        async for message in \
-                self.director.stream_metrics(request.experiment_name, request.header.sender):
-            yield message
+        for metric_dict in self.director.stream_metrics(
+                experiment_name=request.experiment_name, caller=request.header.sender
+        ):
+            if metric_dict is None:
+                await asyncio.sleep(5)
+                continue
+            yield director_pb2.StreamMetricsResponse(**metric_dict)
 
     async def RemoveExperimentData(self, request, context):  # NOQA:N802
         """Remove experiment data RPC."""
@@ -221,7 +225,9 @@ class DirectorGRPCServer(director_pb2_grpc.FederationDirectorServicer):
         if not self.validate_caller(request, context):
             return response
 
-        self.director.remove_experiment_data(request.experiment_name, request.header.sender)
+        self.director.remove_experiment_data(
+            experiment_name=request.experiment_name,
+            caller=request.header.sender)
 
         response.acknowledgement = True
         return response
