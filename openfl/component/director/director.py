@@ -58,10 +58,15 @@ class Director:
         is_accepted = True
         return is_accepted
 
-    async def set_new_experiment(self, *, experiment_name: str, sender_name: str,
-                                 tensor_dict: dict,
-                                 collaborator_names: typing.Iterable[str],
-                                 data_file_path: str) -> bool:
+    async def set_new_experiment(
+            self,
+            *,
+            experiment_name: str,
+            sender_name: str,
+            tensor_dict: dict,
+            collaborator_names: typing.Iterable[str],
+            data_file_path: Path
+    ) -> bool:
         """Set new experiment."""
         # TODO: save to file
         self.experiment_data[experiment_name] = data_file_path
