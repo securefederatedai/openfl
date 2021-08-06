@@ -5,6 +5,7 @@
 
 import asyncio
 import logging
+import uuid
 from pathlib import Path
 
 from grpc import aio
@@ -115,12 +116,13 @@ class DirectorGRPCServer(director_pb2_grpc.FederationDirectorServicer):
         """Request to set new experiment."""
         logger.info(f'SetNewExperiment request has got {stream}')
         # TODO: add streaming reader
-        npbytes = b''
-        async for request in stream:
-            if request.experiment_data.size == len(request.experiment_data.npbytes):
-                npbytes += request.experiment_data.npbytes
-            else:
-                raise Exception('Bad request')
+        data_file_path = Path(str(uuid.uuid4())).absolute()
+        with open(data_file_path, 'wb') as data_file:
+            async for request in stream:
+                if request.experiment_data.size == len(request.experiment_data.npbytes):
+                    data_file.write(request.experiment_data.npbytes)
+                else:
+                    raise Exception('Bad request')
 
         if not self.validate_caller(request, context):
             # Can we send reject before reading the stream?
@@ -134,7 +136,7 @@ class DirectorGRPCServer(director_pb2_grpc.FederationDirectorServicer):
             sender_name=request.header.sender,
             tensor_dict=tensor_dict,
             collaborator_names=request.collaborator_names,
-            data=npbytes
+            data_file_path=data_file_path
         )
 
         logger.info('Send response')
@@ -172,14 +174,14 @@ class DirectorGRPCServer(director_pb2_grpc.FederationDirectorServicer):
         # TODO: add size filling
         # TODO: add experiment name field
         # TODO: rename npbytes to data
-        content = self.director.get_experiment_data(request.experiment_name)
-        logger.info(f'Content length: {len(content)}')
+        data_file_path = self.director.get_experiment_data(request.experiment_name)
         max_buffer_size = (2 * 1024 * 1024)
-
-        for i in range(0, len(content), max_buffer_size):
-            chunk = content[i:i + max_buffer_size]
-            logger.info(f'Send {len(chunk)} bytes')
-            yield director_pb2.ExperimentData(size=len(chunk), npbytes=chunk)
+        with open(data_file_path, 'rb') as df:
+            while True:
+                data = df.read(max_buffer_size)
+                if len(data) == 0:
+                    break
+                yield director_pb2.ExperimentData(size=len(data), npbytes=data)
 
     async def WaitExperiment(self, request_iterator, context):  # NOQA:N802
         """Request for wait an experiment."""
