@@ -70,19 +70,17 @@ class FederatedDataSet(PyTorchDataLoader):
             num_classes = np.unique(self.y_train).shape[0]
             print(f'Inferred {num_classes} classes from the provided labels...')
         self.num_classes = num_classes
-        if train_splitter is None:
-            self.train_splitter = EqualNumPyDataSplitter()
-        elif isinstance(train_splitter, NumPyDataSplitter):
-            self.train_splitter = train_splitter
-        else:
-            raise NotImplementedError(f'Data splitter {train_splitter} is not supported')
+        self.train_splitter = self._get_splitter_or_default(train_splitter)
+        self.valid_splitter = self._get_splitter_or_default(valid_splitter)
 
-        if valid_splitter is None:
-            self.valid_splitter = EqualNumPyDataSplitter()
-        elif isinstance(valid_splitter, NumPyDataSplitter):
-            self.valid_splitter = valid_splitter
+    @staticmethod
+    def _get_splitter_or_default(value):
+        if value is None:
+            return EqualNumPyDataSplitter()
+        if isinstance(value, NumPyDataSplitter):
+            return value
         else:
-            raise NotImplementedError(f'Data splitter {valid_splitter} is not supported')
+            raise NotImplementedError(f'Data splitter {value} is not supported')
 
     def split(self, num_collaborators):
         """Create a Federated Dataset for each of the collaborators.
