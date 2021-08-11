@@ -9,4 +9,4 @@ OpenFL Utilities
    :maxdepth: 4
 
    pki
-   data_splitters
+   splitters_data

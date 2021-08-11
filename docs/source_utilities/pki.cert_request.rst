@@ -5,4 +5,4 @@
 The old PKI
 ******
 
-.. figure:: images/openfl_flow.png
+.. figure:: ../images/openfl_flow.png
