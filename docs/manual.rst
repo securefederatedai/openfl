@@ -12,5 +12,6 @@ Manual
    install
    running_the_federation
    plan_settings
+   source_architecture/architecture
    source_utilities/utilities
    advanced_topics
