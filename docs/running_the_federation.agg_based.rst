@@ -1,7 +1,7 @@
 .. # Copyright (C) 2020-2021 Intel Corporation
 .. # SPDX-License-Identifier: Apache-2.0
 
-.. _running_the_federation:
+.. _running_the_federation_aggregato_based:
 
 **********************
 Running the Federation
@@ -18,5 +18,9 @@ The high-level workflow is shown in the figure above. Note that once OpenFL is i
 .. toctree::
    :maxdepth: 4
 
-   running_the_federation.agg_based
-   running_the_federation.director_based
+   running_the_federation.agg_based.notebook
+   running_the_federation.agg_based.baremetal
+   running_the_federation.agg_based.docker
+   running_the_federation.agg_based.certificates
+   running_the_federation.agg_based.start_nodes.rst
+   running_the_federation.director_based.interactive_api
