@@ -19,7 +19,6 @@ from openfl.protocols import director_pb2_grpc
 from openfl.protocols.utils import construct_model_proto
 from openfl.protocols.utils import deconstruct_model_proto
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -219,7 +218,7 @@ class DirectorClient:
 
     def get_dataset_info(self):
         """Request the dataset info from the director."""
-        resp = self.stub.GetDatasetInfo(director_pb2.GetDatasetInfoRequest(header=self.header))
+        resp = self.stub.GetDatasetInfo()
         return resp.sample_shape, resp.target_shape
 
     def _get_trained_model(self, experiment_name, model_type):
@@ -256,7 +255,8 @@ class DirectorClient:
                 'task_name': metric_message.task_name,
                 'metric_name': metric_message.metric_name,
                 'metric_value': metric_message.metric_value,
-                'round': metric_message.round}
+                'round': metric_message.round
+            }
 
     def remove_experiment_data(self, name):
         """Remove experiment data RPC."""
