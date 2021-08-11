@@ -3,7 +3,6 @@
 
 """Aggregator module."""
 
-
 import base64
 import json
 import os
@@ -15,17 +14,23 @@ import urllib.request
 from logging import getLogger
 from pathlib import Path
 from subprocess import call
+from typing import Union
 
 import requests
 from click import confirm
-
 
 logger = getLogger(__name__)
 
 TOKEN_DELIMITER = '.'
 
 
-def download_step_bin(url, grep_name, architecture, prefix='.', confirmation=True):
+def download_step_bin(
+        url,
+        grep_name,
+        architecture,
+        prefix: Union[Path, str] = '.',
+        confirmation=True
+) -> None:
     """
     Donwload step binaries from github.
 
@@ -70,7 +75,7 @@ def get_token(name, ca_url, ca_path='.'):
     ca_path = Path(ca_path)
     step_config_dir = ca_path / 'step_config'
     pki_dir = ca_path / 'cert'
-    step_path, _ = get_ca_bin_paths(ca_path)
+    step_path = get_step_bin_path(ca_path)
     if not step_path:
         raise Exception('Step-CA is not installed!\nRun `fx pki install` first')
 
@@ -99,19 +104,24 @@ def get_token(name, ca_url, ca_path='.'):
     ])
 
 
-def get_ca_bin_paths(ca_path):
-    """Get paths of step binaries."""
-    ca_path = Path(ca_path)
-    step = None
-    step_ca = None
-    if (ca_path / 'step').exists():
-        dirs = os.listdir(ca_path / 'step')
-        for dir_ in dirs:
-            if 'step_' in dir_:
-                step = ca_path / 'step' / dir_ / 'bin' / 'step'
-            if 'step-ca' in dir_:
-                step_ca = ca_path / 'step' / dir_ / 'bin' / 'step-ca'
-    return step, step_ca
+def get_step_bin_path(ca_path: Union[Path, str]) -> Union[Path, None]:
+    """Get path of step binary."""
+    ca_path = Path(ca_path) / 'step'
+    step_path = None
+    if ca_path.exists():
+        ca_last_version = os.listdir(ca_path)[-1]
+        step_path = ca_path / ca_last_version / 'bin' / 'step'
+    return step_path
+
+
+def get_step_ca_bin_path(ca_path: Union[Path, str]) -> Union[Path, None]:
+    """Get path of step-ca binary."""
+    ca_path = Path(ca_path) / 'step'
+    step_path = None
+    if ca_path.exists():
+        ca_last_version = os.listdir(ca_path)[-1]
+        step_path = ca_path / ca_last_version / 'bin' / 'step-ca'
+    return step_path
 
 
 def certify(name, cert_path: Path, token_with_cert, ca_path: Path):
@@ -122,11 +132,11 @@ def certify(name, cert_path: Path, token_with_cert, ca_path: Path):
     token = base64.b64decode(token).decode('utf-8')
     root_ca = base64.b64decode(root_ca)
 
-    step_path, _ = get_ca_bin_paths(ca_path)
+    step_path = get_step_bin_path(ca_path)
     if not step_path:
         url = 'http://api.github.com/repos/smallstep/cli/releases/latest'
         download_step_bin(url, 'step_linux', 'amd', prefix=ca_path)
-        step_path, _ = get_ca_bin_paths(ca_path)
+        step_path = get_step_bin_path(ca_path)
     if not step_path:
         raise Exception('Step-CA is not installed!\nRun `fx pki install` first')
 
@@ -158,7 +168,8 @@ def install(ca_path, ca_url, password):
     ca_path.mkdir(parents=True, exist_ok=True)
     step_config_dir = ca_path / 'step_config'
     os.environ['STEPPATH'] = str(step_config_dir)
-    step_path, step_ca_path = get_ca_bin_paths(ca_path)
+    step_path = get_step_bin_path(ca_path)
+    step_ca_path = get_step_ca_bin_path(ca_path)
 
     if not (step_path and step_ca_path and step_path.exists() and step_ca_path.exists()):
         confirm('CA binaries from github will be downloaded now', default=True, abort=True)
@@ -210,8 +221,9 @@ def _create_ca(ca_path: Path, ca_url: str, password: str):
 
     with open(f'{pki_dir}/pass_file', 'w') as f:
         f.write(password)
-    step_path, step_ca_path = get_ca_bin_paths(ca_path)
-    assert(step_path and step_ca_path and step_path.exists() and step_ca_path.exists())
+    step_path = get_step_bin_path(ca_path)
+    step_ca_path = get_step_ca_bin_path(ca_path)
+    assert (step_path and step_ca_path and step_path.exists() and step_ca_path.exists())
 
     logger.info('Create CA Config')
     os.environ['STEPPATH'] = str(step_config_dir)

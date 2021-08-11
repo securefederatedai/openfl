@@ -12,12 +12,11 @@ from click import pass_context
 from click import Path as ClickPath
 
 from openfl.component.ca.ca import certify
-from openfl.component.ca.ca import get_ca_bin_paths
+from openfl.component.ca.ca import get_step_ca_bin_path
 from openfl.component.ca.ca import get_token
 from openfl.component.ca.ca import install
 from openfl.component.ca.ca import remove_ca
 from openfl.component.ca.ca import run_ca
-
 
 logger = logging.getLogger(__name__)
 
@@ -41,7 +40,8 @@ def run(ca_path):
     pki_dir = ca_path / 'cert'
     pass_file = pki_dir / 'pass_file'
     ca_json = step_config_dir / 'config' / 'ca.json'
-    _, step_ca_path = get_ca_bin_paths(ca_path)
+    step_ca_path = get_step_ca_bin_path(ca_path)
+
     if (not os.path.exists(step_config_dir) or not os.path.exists(pki_dir)
             or not os.path.exists(pass_file) or not os.path.exists(ca_json)
             or not os.path.exists(step_ca_path)):
