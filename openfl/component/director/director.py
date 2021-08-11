@@ -62,7 +62,7 @@ class Director:
             self,
             *,
             experiment_name: str,
-            sender: str,
+            sender_name: str,
             tensor_dict: dict,
             collaborator_names: typing.Iterable[str],
             data_file_path: Path
@@ -73,7 +73,7 @@ class Director:
 
         self.create_workspace(experiment_name, data_file_path)
         asyncio.create_task(self._run_aggregator(
-            experiment_sender=sender,
+            experiment_sender=sender_name,
             initial_tensor_dict=tensor_dict,
             experiment_name=experiment_name,
             collaborator_names=collaborator_names,
@@ -88,13 +88,13 @@ class Director:
 
         return True
 
-    def get_trained_model(self, experiment_name: str, sender: str, model_type: str):
+    def get_trained_model(self, experiment_name: str, caller: str, model_type: str):
         """Get trained model."""
-        if experiment_name not in self.experiment_stash[sender]:
+        if experiment_name not in self.experiment_stash[caller]:
             logger.error('No experiment data in the stash')
             return None
 
-        aggregator = self.experiment_stash[sender][experiment_name].aggregator
+        aggregator = self.experiment_stash[caller][experiment_name].aggregator
 
         if aggregator.last_tensor_dict is None:
             logger.error('Aggregator have no aggregated model to return')
@@ -127,7 +127,7 @@ class Director:
         """Get registered shard infos."""
         return [shard_status['shard_info'] for shard_status in self._shard_registry.values()]
 
-    def stream_metrics(self, experiment_name: str, sender: str):
+    def stream_metrics(self, experiment_name: str, caller: str):
         """
         Stream metrics from the aggregator.
 
@@ -146,7 +146,7 @@ class Director:
         Raises:
             StopIteration - if the experiment is finished and there is no more metrics to report
         """
-        aggregator = self.experiment_stash[sender][experiment_name].aggregator
+        aggregator = self.experiment_stash[caller][experiment_name].aggregator
         while True:
             if not aggregator.metric_queue.empty():
                 yield aggregator.metric_queue.get()
@@ -157,10 +157,10 @@ class Director:
 
             yield None
 
-    def remove_experiment_data(self, experiment_name: str, sender: str):
+    def remove_experiment_data(self, experiment_name: str, caller: str):
         """Remove experiment data from stash."""
-        if experiment_name in self.experiment_stash.get(sender, {}):
-            del self.experiment_stash[sender][experiment_name]
+        if experiment_name in self.experiment_stash.get(caller, {}):
+            del self.experiment_stash[caller][experiment_name]
 
     def collaborator_health_check(self, *, collaborator_name: str,
                                   is_experiment_running: bool,
