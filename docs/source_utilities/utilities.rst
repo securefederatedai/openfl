@@ -2,15 +2,11 @@
 .. # SPDX-License-Identifier: Apache-2.0
 
 ******
-Manual
+OpenFL Utilities
 ******
 
 .. toctree::
    :maxdepth: 4
 
-   overview
-   install
-   running_the_federation
-   plan_settings
-   source_utilities/utilities
-   advanced_topics
+   pki
+   data_splitters

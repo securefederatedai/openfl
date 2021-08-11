@@ -1,7 +1,7 @@
 .. # Copyright (C) 2020-2021 Intel Corporation
 .. # SPDX-License-Identifier: Apache-2.0
 
-.. _running_the_federation_aggregato_based:
+.. _running_the_federation_aggregator_based:
 
 **********************
 Running the Federation
