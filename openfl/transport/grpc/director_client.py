@@ -154,7 +154,7 @@ class ShardDirectorClient:
 class DirectorClient:
     """Director client class for users."""
 
-    def __init__(self, client_id, director_uri, tls=True,
+    def __init__(self, director_uri, tls=True,
                  root_ca=None, key=None, cert=None) -> None:
         """Initialize director client object."""
         channel_opt = [('grpc.max_send_message_length', 512 * 1024 * 1024),
@@ -182,9 +182,6 @@ class DirectorClient:
 
             channel = grpc.secure_channel(director_uri, credentials, options=channel_opt)
         self.stub = director_pb2_grpc.FederationDirectorStub(channel)
-
-        self.client_id = client_id
-        self.header = director_pb2.RequestHeader(sender=self.client_id)
 
     def set_new_experiment(self, name, col_names, arch_path,
                            initial_tensor_dict=None):
@@ -224,7 +221,6 @@ class DirectorClient:
     def _get_trained_model(self, experiment_name, model_type):
         """Get trained model RPC."""
         get_model_request = director_pb2.GetTrainedModelRequest(
-            header=self.header,
             experiment_name=experiment_name,
             model_type=model_type)
         model_proto_response = self.stub.GetTrainedModel(get_model_request)

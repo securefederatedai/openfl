@@ -16,11 +16,10 @@ def director_client(director_pb2_grpc):
     """Director client fixture."""
     director_pb2_grpc.FederationDirectorStub.return_value = mock.Mock()
 
-    client_id = 'one'
     director_uri = 'localhost'
     tls = False
     root_ca, key, cert = None, None, None
-    director_client = DirectorClient(client_id, director_uri, tls, root_ca, key, cert)
+    director_client = DirectorClient(director_uri, tls, root_ca, key, cert)
     return director_client
 
 

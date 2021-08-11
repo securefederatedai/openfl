@@ -47,19 +47,21 @@ def test_fill_certs(insecure_director, secure_director):
         secure_director.test_fill_certs(None, '.', '.')
 
 
-@pytest.mark.parametrize('caller_common_name,caller_cert_name,result,tls', [
-    ('one', 'one', True, True), ('one', 'two', False, True),
-    ('one', 'one', True, False), ('one', 'two', True, False)])
-def test_validate_caller(insecure_director, caller_common_name,
-                         caller_cert_name, result, tls):
-    """Test that validate_caller works correctly."""
-    insecure_director.tls = tls  # only for enable TLS the validation works
-    request = mock.Mock()
-    request.header = mock.Mock()
-    request.header.sender = caller_common_name
+def test_get_sender_tls(insecure_director):
+    """Test that get_sender works correctly with TLS."""
+    insecure_director.tls = True
     context = mock.Mock()
+    sender = 'sender'
     context.auth_context = mock.Mock(
-        return_value={'x509_common_name': [caller_cert_name.encode('utf-8')]}
+        return_value={'x509_common_name': [sender.encode('utf-8')]}
     )
+    result = insecure_director.get_sender(context)
+    assert result == sender
 
-    assert result == insecure_director.validate_caller(request, context)
+
+def test_get_sender_no_tls(insecure_director):
+    """Test that get_sender works correctly without TLS."""
+    context = mock.Mock()
+    default_sender = 'unauthorized_sender'
+    result = insecure_director.get_sender(context)
+    assert result == default_sender
