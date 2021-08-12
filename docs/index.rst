@@ -32,7 +32,7 @@ can use any deep learning frameworks, such as `Tensorflow <https://www.tensorflo
    :caption: Contents:
 
    manual
-   source/openfl/openfl
+   openfl
    models
    data
    troubleshooting
