@@ -12,6 +12,5 @@ Manual
    install
    running_the_federation
    plan_settings
-   source/components/components
    source/utilities/utilities
    advanced_topics
