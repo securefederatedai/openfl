@@ -4,8 +4,6 @@
 """Envoy module."""
 
 import logging
-import os
-import sys
 import time
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
@@ -14,6 +12,7 @@ from click import echo
 
 from openfl.federated import Plan
 from openfl.transport.grpc.director_client import ShardDirectorClient
+from .workspace import CollaboratorWorkspace
 
 logger = logging.getLogger(__name__)
 
@@ -47,19 +46,20 @@ class Envoy:
         while True:
             try:
                 # Workspace import should not be done by gRPC client!
-                experiment_name = self.director_client.get_experiment_data()
+                experiment_name = self.director_client.wait_experiment()
+                data_stream = self.director_client.get_experiment_data(experiment_name)
             except Exception as exc:
                 logger.error(f'Failed to get experiment: {exc}')
                 time.sleep(DEFAULT_RETRY_TIMEOUT_IN_SECONDS)
                 continue
             self.is_experiment_running = True
             try:
-                self._run_collaborator(experiment_name)
+                with CollaboratorWorkspace(experiment_name, data_stream):
+                    self._run_collaborator(experiment_name)
             except Exception as exc:
                 logger.error(f'Collaborator failed: {exc}')
             finally:
                 # Workspace cleaning should not be done by gRPC client!
-                self.director_client.remove_workspace(experiment_name)
                 self.is_experiment_running = False
 
     def send_health_check(self):
@@ -75,12 +75,6 @@ class Envoy:
 
     def _run_collaborator(self, experiment_name, plan='plan/plan.yaml',):
         """Run the collaborator for the experiment running."""
-        cwd = os.getcwd()
-        os.chdir(f'{cwd}/{experiment_name}')  # TODO: probably it should be another way
-
-        # This is needed for python module finder
-        sys.path.append(os.getcwd())
-
         plan = Plan.parse(plan_config_path=Path(plan))
 
         # TODO: Need to restructure data loader config file loader
@@ -89,10 +83,7 @@ class Envoy:
 
         col = plan.get_collaborator(self.name, self.root_ca, self.key,
                                     self.cert, shard_descriptor=self.shard_descriptor)
-        try:
-            col.run()
-        finally:
-            os.chdir(cwd)
+        col.run()
 
     def start(self):
         """Start the envoy."""

@@ -380,6 +380,7 @@ openfl.component.aggregation_functions.AggregationFunctionInterface
                 TEMPLATE: 'openfl.federated.task.task_runner.CoreTaskRunner',
                 SETTINGS: {}
             })
+        Plan.logger.info(f'{defaults=}')
 
         # We are importing a CoreTaskRunner instance!!!
         if self.runner_ is None:
