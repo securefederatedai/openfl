@@ -228,9 +228,9 @@ class Director:
         logger.info('🧿 Starting the Aggregator Service.')
         aggregator_server = plan.interactive_api_get_server(
             tensor_dict=initial_tensor_dict,
-            chain=self.root_ca,
-            certificate=self.cert,
-            private_key=self.key,
+            root_ca=self.root_ca,
+            cert=self.cert,
+            key=self.key,
             tls=self.tls,
         )
         self.experiment_stash[experiment_sender][experiment_name] = aggregator_server

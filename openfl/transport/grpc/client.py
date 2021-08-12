@@ -40,9 +40,9 @@ class RetryOnRpcErrorClientInterceptor(
     """Retry gRPC connection on failure."""
 
     def __init__(
-        self,
-        sleeping_policy,
-        status_for_retry: Optional[Tuple[grpc.StatusCode]] = None,
+            self,
+            sleeping_policy,
+            status_for_retry: Optional[Tuple[grpc.StatusCode]] = None,
     ):
         """Initialize function for gRPC retry."""
         self.sleeping_policy = sleeping_policy
@@ -58,8 +58,8 @@ class RetryOnRpcErrorClientInterceptor(
                 # If status code is not in retryable status codes
                 self.sleeping_policy.logger.info(f'Response code: {response.code()}')
                 if (
-                    self.status_for_retry
-                    and response.code() not in self.status_for_retry
+                        self.status_for_retry
+                        and response.code() not in self.status_for_retry
                 ):
                     return response
 
@@ -72,7 +72,7 @@ class RetryOnRpcErrorClientInterceptor(
         return self._intercept_call(continuation, client_call_details, request)
 
     def intercept_stream_unary(
-        self, continuation, client_call_details, request_iterator
+            self, continuation, client_call_details, request_iterator
     ):
         """Wrap intercept call for stream->unary RPC."""
         return self._intercept_call(continuation, client_call_details, request_iterator)
@@ -84,6 +84,7 @@ def _atomic_connection(func):
         response = func(self, *args, **kwargs)
         self.disconnect()
         return response
+
     return wrapper
 
 
@@ -95,9 +96,9 @@ class CollaboratorGRPCClient:
                  agg_port,
                  tls,
                  disable_client_auth,
-                 ca,
-                 certificate,
-                 private_key,
+                 root_ca,
+                 cert,
+                 key,
                  aggregator_uuid=None,
                  federation_uuid=None,
                  single_col_cert_common_name=None,
@@ -106,9 +107,9 @@ class CollaboratorGRPCClient:
         self.uri = f'{agg_addr}:{agg_port}'
         self.tls = tls
         self.disable_client_auth = disable_client_auth
-        self.ca = ca
-        self.certificate = certificate
-        self.private_key = private_key
+        self.root_ca = root_ca
+        self.cert = cert
+        self.key = key
 
         self.channel_options = [
             ('grpc.max_metadata_size', 32 * 1024 * 1024),
@@ -123,10 +124,10 @@ class CollaboratorGRPCClient:
         else:
             self.channel = self.create_tls_channel(
                 self.uri,
-                self.ca,
+                self.root_ca,
                 self.disable_client_auth,
-                self.certificate,
-                self.private_key
+                self.cert,
+                self.key
             )
 
         self.header = None
@@ -166,39 +167,39 @@ class CollaboratorGRPCClient:
 
         return grpc.insecure_channel(uri, options=self.channel_options)
 
-    def create_tls_channel(self, uri, ca, disable_client_auth,
-                           certificate, private_key):
+    def create_tls_channel(self, uri, root_ca, disable_client_auth,
+                           cert, key_b):
         """
         Set an secure gRPC channel (i.e. TLS).
 
         Args:
             uri: The uniform resource identifier fo the insecure channel
-            ca: The Certificate Authority filename
+            root_ca: The Certificate Authority filename
             disable_client_auth (boolean): True disabled client-side
              authentication (not recommended, throws warning to user)
-            certificate: The client certficate filename from the collaborator
+            cert: The client certficate filename from the collaborator
              (signed by the certificate authority)
 
         Returns:
             An insecure gRPC channel object
         """
-        with open(ca, 'rb') as f:
-            root_certificates = f.read()
+        with open(root_ca, 'rb') as f:
+            root_ca_b = f.read()
 
         if disable_client_auth:
             self.logger.warn('Client-side authentication is disabled.')
-            private_key = None
-            client_cert = None
+            key_b = None
+            cert_b = None
         else:
-            with open(private_key, 'rb') as f:
-                private_key = f.read()
-            with open(certificate, 'rb') as f:
-                client_cert = f.read()
+            with open(key_b, 'rb') as f:
+                key_b = f.read()
+            with open(cert, 'rb') as f:
+                cert_b = f.read()
 
         credentials = grpc.ssl_channel_credentials(
-            root_certificates=root_certificates,
-            private_key=private_key,
-            certificate_chain=client_cert
+            root_certificates=root_ca_b,
+            private_key=key_b,
+            certificate_chain=cert_b
         )
 
         return grpc.secure_channel(
@@ -247,10 +248,10 @@ class CollaboratorGRPCClient:
         else:
             self.channel = self.create_tls_channel(
                 self.uri,
-                self.ca,
+                self.root_ca,
                 self.disable_client_auth,
-                self.certificate,
-                self.private_key
+                self.cert,
+                self.key
             )
 
         self.logger.debug(f'Connecting to gRPC at {self.uri}')
