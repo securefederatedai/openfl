@@ -205,7 +205,7 @@ class CollaboratorGRPCClient:
             uri, credentials, options=self.channel_options)
 
     def _set_header(self, collaborator_name):
-        self.header = self.header = MessageHeader(
+        self.header = MessageHeader(
             sender=collaborator_name,
             receiver=self.aggregator_uuid,
             federation_uuid=self.federation_uuid,
