@@ -54,21 +54,26 @@ class DirectorGRPCServer(director_pb2_grpc.FederationDirectorServicer):
             self.key = Path(key).absolute()
             self.cert = Path(cert).absolute()
 
-    def get_sender(self, context):
+    def validate_caller(self, request, context):
         """
-        Get sender name.
+        Validate the caller.
 
         Args:
+            request: The gRPC message request
             context: The gRPC context
 
         Returns:
-            If TLS is used return sender name from certificate
-            If TLS is unused return default name 'unauthorized_sender'
+            True - if the caller has valid cert
+            False - if the callers cert name is invalid
         """
-        sender = 'unauthorized_sender'
+        # Can we close the request right here?
         if self.tls:
-            sender = context.auth_context()['x509_common_name'][0].decode('utf-8')
-        return sender
+            caller_cert_name = context.auth_context()['x509_common_name'][0].decode('utf-8')
+            caller_common_name = request.header.sender
+            if caller_cert_name != caller_common_name:
+                return False
+
+        return True
 
     def start(self):
         """Launch the director GRPC server."""
@@ -118,15 +123,17 @@ class DirectorGRPCServer(director_pb2_grpc.FederationDirectorServicer):
                     data_file.write(request.experiment_data.npbytes)
                 else:
                     raise Exception('Bad request')
-        sender = self.get_sender(context)
 
+        if not self.validate_caller(request, context):
+            # Can we send reject before reading the stream?
+            return director_pb2.SetNewExperimentResponse(accepted=False)
         tensor_dict = None
         if request.model_proto:
             tensor_dict, _ = deconstruct_model_proto(request.model_proto, NoCompressionPipeline())
 
         is_accepted = await self.director.set_new_experiment(
             experiment_name=request.name,
-            sender=sender,
+            sender_name=request.header.sender,
             tensor_dict=tensor_dict,
             collaborator_names=request.collaborator_names,
             data_file_path=data_file_path
@@ -137,6 +144,8 @@ class DirectorGRPCServer(director_pb2_grpc.FederationDirectorServicer):
 
     async def GetTrainedModel(self, request, context):  # NOQA:N802
         """RPC for retrieving trained models."""
+        if not self.validate_caller(request, context):
+            return director_pb2.TrainedModelResponse()
         logger.info('Request GetTrainedModel has got!')
 
         if request.model_type == director_pb2.GetTrainedModelRequest.BEST_MODEL:
@@ -147,10 +156,9 @@ class DirectorGRPCServer(director_pb2_grpc.FederationDirectorServicer):
             logger.error('Incorrect model type')
             return director_pb2.TrainedModelResponse()
 
-        sender = self.get_sender(context)
         trained_model_dict = self.director.get_trained_model(
             experiment_name=request.experiment_name,
-            sender=sender,
+            caller=request.header.sender,
             model_type=model_type
         )
 
@@ -188,6 +196,8 @@ class DirectorGRPCServer(director_pb2_grpc.FederationDirectorServicer):
     async def GetDatasetInfo(self, request, context):  # NOQA:N802
         """Request the info about target and sample shapes in the dataset."""
         logger.info('Request GetDatasetInfo has got!')
+        if not self.validate_caller(request, context):
+            return director_pb2.ShardInfo()
 
         sample_shape, target_shape = self.director.get_dataset_info()
         resp = director_pb2.ShardInfo(
@@ -198,12 +208,14 @@ class DirectorGRPCServer(director_pb2_grpc.FederationDirectorServicer):
 
     async def StreamMetrics(self, request, context):  # NOQA:N802
         """Request to stream metrics from the aggregator to frontend."""
+        if not self.validate_caller(request, context):
+            return
+
         logger.info(f'Request StreamMetrics for {request.experiment_name} experiment has got!')
-        metrics = self.director.stream_metrics(
-            experiment_name=request.experiment_name,
-            sender=request.header.sender
-        )
-        for metric_dict in metrics:
+
+        for metric_dict in self.director.stream_metrics(
+                experiment_name=request.experiment_name, caller=request.header.sender
+        ):
             if metric_dict is None:
                 await asyncio.sleep(5)
                 continue
@@ -211,12 +223,15 @@ class DirectorGRPCServer(director_pb2_grpc.FederationDirectorServicer):
 
     async def RemoveExperimentData(self, request, context):  # NOQA:N802
         """Remove experiment data RPC."""
-        sender = self.get_sender(context)
+        response = director_pb2.RemoveExperimentResponse(acknowledgement=False)
+        if not self.validate_caller(request, context):
+            return response
+
         self.director.remove_experiment_data(
             experiment_name=request.experiment_name,
-            sender=sender,
-        )
-        response = director_pb2.RemoveExperimentResponse(acknowledgement=True)
+            caller=request.header.sender)
+
+        response.acknowledgement = True
         return response
 
     async def CollaboratorHealthCheck(self, request, context):  # NOQA:N802

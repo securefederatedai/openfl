@@ -77,11 +77,12 @@ class AggregatorGRPCServer(AggregatorServicer):
 
         Raises:
             ValueError: If the collaborator or collaborator certificate is not
-            valid then raises error.
+             valid then raises error.
 
         """
         if self.tls:
-            common_name = context.auth_context()['x509_common_name'][0].decode('utf-8')
+            common_name = context.auth_context()[
+                'x509_common_name'][0].decode('utf-8')
             collaborator_common_name = request.header.sender
             if not self.aggregator.valid_collaborator_cn_and_id(
                     common_name, collaborator_common_name):
@@ -206,10 +207,8 @@ class AggregatorGRPCServer(AggregatorServicer):
 
     def get_server(self):
         """Return gRPC server."""
-        self.server = server(
-            thread_pool=ThreadPoolExecutor(max_workers=cpu_count()),
-            options=self.channel_options,
-        )
+        self.server = server(ThreadPoolExecutor(max_workers=cpu_count()),
+                             options=self.channel_options)
 
         add_AggregatorServicer_to_server(self, self.server)
 
