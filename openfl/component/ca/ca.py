@@ -119,7 +119,7 @@ def get_step_ca_bin_path(ca_path: Union[Path, str]) -> Union[Path, None]:
     ca_path = Path(ca_path) / 'step'
     step_path = None
     if ca_path.exists():
-        ca_last_version = os.listdir(ca_path)[-1]
+        ca_last_version = sorted(os.listdir(ca_path))[-1]
         step_path = ca_path / ca_last_version / 'bin' / 'step-ca'
     return step_path
 
