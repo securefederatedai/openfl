@@ -190,31 +190,35 @@ class DirectorClient:
                            initial_tensor_dict=None):
         """Send the new experiment to director to launch."""
         logger.info('SetNewExperiment')
-        model_proto = None
         if initial_tensor_dict:
             model_proto = construct_model_proto(initial_tensor_dict, 0, NoCompressionPipeline())
-
-        with open(arch_path, 'rb') as arch:
-            def st():
-                max_buffer_size = (2 * 1024 * 1024)
-                chunk = arch.read(max_buffer_size)
-                while chunk != b'':
-                    if not chunk:
-                        raise StopIteration
-                    # TODO: add hash or/and size to check
-                    experiment_info = director_pb2.ExperimentInfo(
-                        header=self.header,
-                        name=name,
-                        collaborator_names=col_names,
-                        model_proto=model_proto
-                    )
-                    experiment_info.experiment_data.size = len(chunk)
-                    experiment_info.experiment_data.npbytes = chunk
-                    yield experiment_info
-                    chunk = arch.read(max_buffer_size)
-
-            resp = self.stub.SetNewExperiment(st())
+            experiment_info_gen = self._get_experiment_info(
+                arch_path=arch_path,
+                name=name,
+                col_names=col_names,
+                model_proto=model_proto,
+            )
+            resp = self.stub.SetNewExperiment(experiment_info_gen)
             return resp
+
+    def _get_experiment_info(self, arch_path, name, col_names, model_proto):
+        with open(arch_path, 'rb') as arch:
+            max_buffer_size = 2 * 1024 * 1024
+            chunk = arch.read(max_buffer_size)
+            while chunk != b'':
+                if not chunk:
+                    raise StopIteration
+                # TODO: add hash or/and size to check
+                experiment_info = director_pb2.ExperimentInfo(
+                    header=self.header,
+                    name=name,
+                    collaborator_names=col_names,
+                    model_proto=model_proto
+                )
+                experiment_info.experiment_data.size = len(chunk)
+                experiment_info.experiment_data.npbytes = chunk
+                yield experiment_info
+                chunk = arch.read(max_buffer_size)
 
     def get_dataset_info(self):
         """Request the dataset info from the director."""
