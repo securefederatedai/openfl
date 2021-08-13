@@ -10,18 +10,18 @@ Director-based workflow
 Establishing a long-living Federation with Director
 #######################################
 
-# Install OpenFL 
+#. Install OpenFL 
 ==================
 
-# Implement Shard Descriptors
+#. Implement Shard Descriptors
 ==================
 
 Then the data owners need to implement `Shard Descriptors` Python classes. 
 
-# Start Director
+#. Start Director
 ==================
 
-# Start Envoys
+#. Start Envoys
 ==================
 
 Describing an FL experimnet using Interactive Python API
