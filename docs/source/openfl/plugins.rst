@@ -2,7 +2,7 @@
 .. # SPDX-License-Identifier: Apache-2.0
 
 ******
-OpenFL plugins
+|productName| plugins
 ******
 
 .. toctree::

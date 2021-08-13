@@ -4,7 +4,7 @@
 .. _openfl_components:
 
 ******
-OpenFL core components
+|productName| core components
 ******
 
 .. toctree::
@@ -29,8 +29,8 @@ The aggregator is spawned by the Director (described below) when a new experimen
 Collaborator
 =============
 
-Collaborator is also a short living entity, it manages training the model on local data: executes assigned tasks, converts DL framework-specific tensor objects to OpenFL inner representation, and exchanges model parameters with the aggregator.
-Converting tensors is done by Framework adapter plugins. OpenFL ships with Pytorch and TensorFlow 2 framework adapters, this list will be extended in the future. User is free to implement their adapter for the required DL framework enabling OpenFL support for experiments using this framework. The adapter plugin interface is simple: there are two required methods to load and extract tensors from a model and optimizer. Model is loaded with relevant weights before every task and at the end of the training task, weights are extracted to be sent to the central node and aggregated.
+Collaborator is also a short living entity, it manages training the model on local data: executes assigned tasks, converts DL framework-specific tensor objects to |productName| inner representation, and exchanges model parameters with the aggregator.
+Converting tensors is done by Framework adapter plugins. |productName| ships with Pytorch and TensorFlow 2 framework adapters, this list will be extended in the future. User is free to implement their adapter for the required DL framework enabling |productName| support for experiments using this framework. The adapter plugin interface is simple: there are two required methods to load and extract tensors from a model and optimizer. Model is loaded with relevant weights before every task and at the end of the training task, weights are extracted to be sent to the central node and aggregated.
 Collaborator instance is created by Envoy (described below) when a new experiment is submitted. Every collaborator is a unique service as it is loaded with a local Shard Descriptor to perform tasks included in an FL experiment.
 
 .. _openfl_ll_components:

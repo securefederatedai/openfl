@@ -2,7 +2,7 @@
 .. # SPDX-License-Identifier: Apache-2.0
 
 ******
-OpenFL PKI solutions
+|productName| PKI solutions
 ******
 
 .. toctree::

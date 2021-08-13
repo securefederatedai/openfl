@@ -2,7 +2,7 @@
 .. # SPDX-License-Identifier: Apache-2.0
 
 ******
-OpenFL inter-component communication
+|productName| inter-component communication
 ******
 
 .. toctree::
