@@ -74,3 +74,4 @@ class ExperimentWorkspace:
         shutil.rmtree(self.experiment_name, ignore_errors=True)
         if self.experiment_work_dir in sys.path:
             sys.path.remove(self.experiment_work_dir)
+        os.remove(self.data_file_path)
