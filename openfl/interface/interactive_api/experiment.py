@@ -188,8 +188,7 @@ class FLExperiment:
         with open('./requirements.txt', 'w') as f:
             for pack in requirements_generator:
                 if is_package_has_version(pack):
-                    continue
-                f.write(pack + '\n')
+                    f.write(pack + '\n')
 
     @staticmethod
     def _pack_the_workspace():
