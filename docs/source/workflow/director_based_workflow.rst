@@ -37,14 +37,18 @@ that may be used to identify participants during experiment definition and execu
     .. code-block:: console
 
        FQDN=$1
-       fx director start -c director_config.yaml -rc cert/root_ca.crt -pk cert/"${FQDN}".key -oc cert/"${FQDN}".crt
+       fx director start -c director_config.yaml \
+            -rc cert/root_ca.crt \
+            -pk cert/"${FQDN}".key \
+            -oc cert/"${FQDN}".crt
 
-1. Start Envoys
+4. Start Envoys
 ==================
 
     .. code-block:: console
 
-        $ fx envoy start -n env_one --disable-tls --shard-config-path shard_config.yaml -d director_fqdn:port
+        $ fx envoy start -n env_one --disable-tls \
+            --shard-config-path shard_config.yaml -d director_fqdn:port
 
     .. code-block:: console
 
