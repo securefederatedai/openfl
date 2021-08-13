@@ -23,4 +23,3 @@ The high-level workflow is shown in the figure above. Note that once OpenFL is i
    running_the_federation.agg_based.docker
    running_the_federation.agg_based.certificates
    running_the_federation.agg_based.start_nodes.rst
-   running_the_federation.director_based.interactive_api

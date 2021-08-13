@@ -4,7 +4,7 @@
 .. _interactive_api:
 
 #########################################################
-Experimental: |productName| Interactive Python API
+Beta: |productName| Interactive Python API
 #########################################################
 
 *********************************

@@ -62,7 +62,9 @@ that may be used to identify participants during experiment definition and execu
             -pk cert/"$ENVOY_NAME".key -oc cert/"$ENVOY_NAME".crt
 
 
-Describing an FL experimnet using Interactive Python API
+5. Describing an FL experimnet using Interactive Python API
 #######################################
 
-another story
+At this point, data scientists may register their experiments to be executed in the federation. 
+OpenFL provides a separate frontend Director’s client and :ref:`Interactive Python API <interactive_api>` 
+to register experiments. 
