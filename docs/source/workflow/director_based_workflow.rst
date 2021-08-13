@@ -4,20 +4,18 @@
 .. _director_workflow:
 
 ************
-Establishing a long-living Federation with Director
+Director-based workflow
 ************
 
-Section 1
-#############
+Establishing a long-living Federation with Director
+#######################################
 
 some step
 ==================
 
-Section 2
-#############
 
-************
+
 Describing an FL experimnet using Interactive Python API
-************
+#######################################
 
 another story
