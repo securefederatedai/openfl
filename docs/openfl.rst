@@ -2,7 +2,7 @@
 .. # SPDX-License-Identifier: Apache-2.0
 
 ******
-OpenFL package structure
+OpenFL structure
 ******
 
 .. toctree::

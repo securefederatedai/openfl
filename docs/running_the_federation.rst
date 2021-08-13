@@ -19,4 +19,4 @@ The high-level workflow is shown in the figure above. Note that once OpenFL is i
    :maxdepth: 4
 
    running_the_federation.agg_based
-   running_the_federation.director_based
+   source/workflow/director_based_workflow
