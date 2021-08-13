@@ -12,7 +12,7 @@ from pathlib import Path
 
 from openfl.federated import Plan
 from openfl.protocols import director_pb2
-from .workspace import AggregatorWorkspace
+from openfl.utilities.workspace import ExperimentWorkspace
 
 logger = logging.getLogger(__name__)
 
@@ -203,7 +203,7 @@ class Director:
             **kwargs
     ) -> None:
         """Run aggregator in a workspace."""
-        with AggregatorWorkspace(experiment_name, data_file_name):
+        with ExperimentWorkspace(experiment_name, data_file_name):
             await self._run_aggregator(experiment_name=experiment_name, **kwargs)
 
     async def _run_aggregator(

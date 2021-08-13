@@ -5,6 +5,7 @@
 
 import logging
 import time
+import uuid
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
@@ -12,7 +13,7 @@ from click import echo
 
 from openfl.federated import Plan
 from openfl.transport.grpc.director_client import ShardDirectorClient
-from .workspace import CollaboratorWorkspace
+from openfl.utilities.workspace import ExperimentWorkspace
 
 logger = logging.getLogger(__name__)
 
@@ -52,15 +53,29 @@ class Envoy:
                 logger.error(f'Failed to get experiment: {exc}')
                 time.sleep(DEFAULT_RETRY_TIMEOUT_IN_SECONDS)
                 continue
+            data_file_path = self._save_data_stream_to_file(data_stream)
             self.is_experiment_running = True
             try:
-                with CollaboratorWorkspace(experiment_name, data_stream):
+                with ExperimentWorkspace(
+                        experiment_name, data_file_path, is_install_requirements=True
+                ):
                     self._run_collaborator(experiment_name)
             except Exception as exc:
                 logger.error(f'Collaborator failed: {exc}')
             finally:
                 # Workspace cleaning should not be done by gRPC client!
                 self.is_experiment_running = False
+
+    @staticmethod
+    def _save_data_stream_to_file(data_stream):
+        data_file_path = Path(str(uuid.uuid4())).absolute()
+        with open(data_file_path, 'wb') as data_file:
+            for response in data_stream:
+                if response.size == len(response.npbytes):
+                    data_file.write(response.npbytes)
+                else:
+                    raise Exception('Broken archive')
+        return data_file_path
 
     def send_health_check(self):
         """Send health check to the director."""
