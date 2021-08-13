@@ -13,9 +13,10 @@ Establishing a long-living Federation with Director
 1. Install |productName| 
 ==================
 
-Please, refer to :ref:`_install_software_root`
+Make sure that you installed |productName| in your virtual environment.
+If not, use the instruction :ref:`install_initial_steps`.
 
-2. Implement Shard Descriptors
+1. Implement Shard Descriptors
 ==================
 
 Then the data owners need to implement `Shard Descriptors` Python classes. 
