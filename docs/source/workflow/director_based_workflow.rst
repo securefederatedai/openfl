@@ -10,13 +10,15 @@ Director-based workflow
 Establishing a long-living Federation with Director
 #######################################
 
-#. Install OpenFL 
+1. Install OpenFL 
 ==================
 
 Please, refer to :ref:`_install_software_root`
 
-#. Implement Shard Descriptors
+2. Implement Shard Descriptors
 ==================
+
+Then the data owners need to implement `Shard Descriptors` Python classes. 
 
 OpenFL framework provides a ‘Shard descriptor’ interface that should be described on every collaborator node 
 to provide a unified data interface for FL experiments. Abstract “Shard descriptor” should be subclassed and 
@@ -25,12 +27,19 @@ during training. Shard descriptor is a subscriptable object that implements `__g
 as well as several additional methods to access ‘sample shape’, ‘target shape’, and ‘shard description’ text 
 that may be used to identify participants during experiment definition and execution.
 
-Then the data owners need to implement `Shard Descriptors` Python classes. 
-
-#. Start Director
+3. Start Director
 ==================
 
-#. Start Envoys
+    .. code-block:: console
+
+       $ fx director start --disable-tls -c director_config.yaml
+
+    .. code-block:: console
+    
+       FQDN=$1
+       fx director start -c director_config.yaml -rc cert/root_ca.crt -pk cert/"${FQDN}".key -oc cert/"${FQDN}".crt
+
+1. Start Envoys
 ==================
 
 Describing an FL experimnet using Interactive Python API
