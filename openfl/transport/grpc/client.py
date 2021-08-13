@@ -96,9 +96,9 @@ class CollaboratorGRPCClient:
                  agg_port,
                  tls,
                  disable_client_auth,
-                 root_ca,
-                 cert,
-                 key,
+                 root_certificate,
+                 certificate,
+                 private_key,
                  aggregator_uuid=None,
                  federation_uuid=None,
                  single_col_cert_common_name=None,
@@ -107,9 +107,9 @@ class CollaboratorGRPCClient:
         self.uri = f'{agg_addr}:{agg_port}'
         self.tls = tls
         self.disable_client_auth = disable_client_auth
-        self.root_ca = root_ca
-        self.cert = cert
-        self.key = key
+        self.root_certificate = root_certificate
+        self.certificate = certificate
+        self.private_key = private_key
 
         self.channel_options = [
             ('grpc.max_metadata_size', 32 * 1024 * 1024),
@@ -124,10 +124,10 @@ class CollaboratorGRPCClient:
         else:
             self.channel = self.create_tls_channel(
                 self.uri,
-                self.root_ca,
+                self.root_certificate,
                 self.disable_client_auth,
-                self.cert,
-                self.key
+                self.certificate,
+                self.private_key
             )
 
         self.header = None
@@ -167,39 +167,39 @@ class CollaboratorGRPCClient:
 
         return grpc.insecure_channel(uri, options=self.channel_options)
 
-    def create_tls_channel(self, uri, root_ca, disable_client_auth,
-                           cert, key_b):
+    def create_tls_channel(self, uri, root_certificate, disable_client_auth,
+                           certificate, private_key):
         """
         Set an secure gRPC channel (i.e. TLS).
 
         Args:
             uri: The uniform resource identifier fo the insecure channel
-            root_ca: The Certificate Authority filename
+            root_certificate: The Certificate Authority filename
             disable_client_auth (boolean): True disabled client-side
              authentication (not recommended, throws warning to user)
-            cert: The client certficate filename from the collaborator
+            certificate: The client certficate filename from the collaborator
              (signed by the certificate authority)
 
         Returns:
             An insecure gRPC channel object
         """
-        with open(root_ca, 'rb') as f:
-            root_ca_b = f.read()
+        with open(root_certificate, 'rb') as f:
+            root_certificate_b = f.read()
 
         if disable_client_auth:
             self.logger.warn('Client-side authentication is disabled.')
-            key_b = None
-            cert_b = None
+            private_key_b = None
+            certificate_b = None
         else:
-            with open(key_b, 'rb') as f:
-                key_b = f.read()
-            with open(cert, 'rb') as f:
-                cert_b = f.read()
+            with open(private_key, 'rb') as f:
+                private_key_b = f.read()
+            with open(certificate, 'rb') as f:
+                certificate_b = f.read()
 
         credentials = grpc.ssl_channel_credentials(
-            root_certificates=root_ca_b,
-            private_key=key_b,
-            certificate_chain=cert_b
+            root_certificates=root_certificate_b,
+            private_key=private_key_b,
+            certificate_chain=certificate_b,
         )
 
         return grpc.secure_channel(
@@ -248,10 +248,10 @@ class CollaboratorGRPCClient:
         else:
             self.channel = self.create_tls_channel(
                 self.uri,
-                self.root_ca,
+                self.root_certificate,
                 self.disable_client_auth,
-                self.cert,
-                self.key
+                self.certificate,
+                self.private_key
             )
 
         self.logger.debug(f'Connecting to gRPC at {self.uri}')

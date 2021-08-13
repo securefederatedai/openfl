@@ -3,7 +3,6 @@
 
 """Aggregator module."""
 
-
 import base64
 import json
 import os
@@ -18,7 +17,6 @@ from subprocess import call
 
 import requests
 from click import confirm
-
 
 logger = getLogger(__name__)
 
@@ -89,9 +87,9 @@ def get_token(name, ca_url, ca_path='.'):
     token = token.strip()
     token_b64 = base64.b64encode(token)
 
-    with open(step_config_dir / 'certs' / 'root_ca.crt', mode='rb') as file:
-        root_ca = file.read()
-    root_ca_b64 = base64.b64encode(root_ca)
+    with open(root_crt, mode='rb') as file:
+        root_certificate_b = file.read()
+    root_ca_b64 = base64.b64encode(root_certificate_b)
 
     return TOKEN_DELIMITER.join([
         token_b64.decode('utf-8'),
@@ -118,9 +116,9 @@ def certify(name, cert_path: Path, token_with_cert, ca_path: Path):
     """Create an envoy workspace."""
     os.makedirs(cert_path, exist_ok=True)
 
-    token, root_ca = token_with_cert.split(TOKEN_DELIMITER)
+    token, root_certificate = token_with_cert.split(TOKEN_DELIMITER)
     token = base64.b64decode(token).decode('utf-8')
-    root_ca = base64.b64decode(root_ca)
+    root_certificate = base64.b64decode(root_certificate)
 
     step_path, _ = get_ca_bin_paths(ca_path)
     if not step_path:
@@ -131,7 +129,7 @@ def certify(name, cert_path: Path, token_with_cert, ca_path: Path):
         raise Exception('Step-CA is not installed!\nRun `fx pki install` first')
 
     with open(f'{cert_path}/root_ca.crt', mode='wb') as file:
-        file.write(root_ca)
+        file.write(root_certificate)
     call(f'./{step_path} ca certificate {name} {cert_path}/{name}.crt '
          f'{cert_path}/{name}.key -f --token {token}', shell=True)
 
@@ -211,7 +209,7 @@ def _create_ca(ca_path: Path, ca_url: str, password: str):
     with open(f'{pki_dir}/pass_file', 'w') as f:
         f.write(password)
     step_path, step_ca_path = get_ca_bin_paths(ca_path)
-    assert(step_path and step_ca_path and step_path.exists() and step_ca_path.exists())
+    assert (step_path and step_ca_path and step_path.exists() and step_ca_path.exists())
 
     logger.info('Create CA Config')
     os.environ['STEPPATH'] = str(step_config_dir)

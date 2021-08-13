@@ -19,7 +19,6 @@ from openfl.protocols import director_pb2_grpc
 from openfl.protocols.utils import construct_model_proto
 from openfl.protocols.utils import deconstruct_model_proto
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -27,29 +26,29 @@ class ShardDirectorClient:
     """The internal director client class."""
 
     def __init__(self, director_uri, shard_name, tls=True,
-                 root_ca=None, key=None, cert=None) -> None:
+                 root_certificate=None, private_key=None, certificate=None) -> None:
         """Initialize a shard director client object."""
         self.shard_name = shard_name
         options = [('grpc.max_message_length', 100 * 1024 * 1024)]
         if not tls:
             channel = grpc.insecure_channel(director_uri, options=options)
         else:
-            if not (root_ca and key and cert):
+            if not (root_certificate and private_key and certificate):
                 raise Exception('No certificates provided')
             try:
-                with open(root_ca, 'rb') as f:
-                    root_ca_b = f.read()
-                with open(key, 'rb') as f:
-                    key_b = f.read()
-                with open(cert, 'rb') as f:
-                    cert_b = f.read()
+                with open(root_certificate, 'rb') as f:
+                    root_certificate_b = f.read()
+                with open(private_key, 'rb') as f:
+                    private_key_b = f.read()
+                with open(certificate, 'rb') as f:
+                    certificate_b = f.read()
             except FileNotFoundError as exc:
                 raise Exception(f'Provided certificate file is not exist: {exc.filename}')
 
             credentials = grpc.ssl_channel_credentials(
-                root_certificates=root_ca_b,
-                private_key=key_b,
-                certificate_chain=cert_b
+                root_certificates=root_certificate_b,
+                private_key=private_key_b,
+                certificate_chain=certificate_b
             )
             channel = grpc.secure_channel(director_uri, credentials, options=options)
         self.stub = director_pb2_grpc.FederationDirectorStub(channel)
@@ -156,29 +155,29 @@ class DirectorClient:
     """Director client class for users."""
 
     def __init__(self, client_id, director_uri, tls=True,
-                 root_ca=None, key=None, cert=None) -> None:
+                 root_certificate=None, private_key=None, certificate=None) -> None:
         """Initialize director client object."""
         channel_opt = [('grpc.max_send_message_length', 512 * 1024 * 1024),
                        ('grpc.max_receive_message_length', 512 * 1024 * 1024)]
         if not tls:
             channel = grpc.insecure_channel(director_uri, options=channel_opt)
         else:
-            if not (root_ca and key and cert):
+            if not (root_certificate and private_key and certificate):
                 raise Exception('No certificates provided')
             try:
-                with open(root_ca, 'rb') as f:
-                    root_ca_b = f.read()
-                with open(key, 'rb') as f:
-                    key_b = f.read()
-                with open(cert, 'rb') as f:
-                    cert_b = f.read()
+                with open(root_certificate, 'rb') as f:
+                    root_certificate_b = f.read()
+                with open(private_key, 'rb') as f:
+                    private_key_b = f.read()
+                with open(certificate, 'rb') as f:
+                    certificate_b = f.read()
             except FileNotFoundError as exc:
                 raise Exception(f'Provided certificate file is not exist: {exc.filename}')
 
             credentials = grpc.ssl_channel_credentials(
-                root_certificates=root_ca_b,
-                private_key=key_b,
-                certificate_chain=cert_b
+                root_certificates=root_certificate_b,
+                private_key=private_key_b,
+                certificate_chain=certificate_b
             )
 
             channel = grpc.secure_channel(director_uri, credentials, options=channel_opt)
@@ -260,7 +259,8 @@ class DirectorClient:
                 'task_name': metric_message.task_name,
                 'metric_name': metric_message.metric_name,
                 'metric_value': metric_message.metric_value,
-                'round': metric_message.round}
+                'round': metric_message.round,
+            }
 
     def remove_experiment_data(self, name):
         """Remove experiment data RPC."""

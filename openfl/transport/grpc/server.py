@@ -31,9 +31,9 @@ class AggregatorGRPCServer(AggregatorServicer):
                  agg_port,
                  tls=True,
                  disable_client_auth=False,
-                 root_ca=None,
-                 cert=None,
-                 key=None,
+                 root_certificate=None,
+                 certificate=None,
+                 private_key=None,
                  **kwargs):
         """
         Class initializer.
@@ -45,18 +45,18 @@ class AggregatorGRPCServer(AggregatorServicer):
             tls (bool): To disable the TLS. (Default: True)
             disable_client_auth (bool): To disable the client side
             authentication. (Default: False)
-            root_ca (str): File path to the CA certificate.
-            cert (str): File path to the server certificate.
-            key (str): File path to the private key.
+            root_certificate (str): File path to the CA certificate.
+            certificate (str): File path to the server certificate.
+            private_key (str): File path to the private key.
             kwargs (dict): Additional arguments to pass into function
         """
         self.aggregator = aggregator
         self.uri = f'[::]:{agg_port}'
         self.tls = tls
         self.disable_client_auth = disable_client_auth
-        self.root_ca = root_ca
-        self.cert = cert
-        self.key = key
+        self.root_certificate = root_certificate
+        self.certificate = certificate
+        self.private_key = private_key
         self.channel_options = [
             ('grpc.max_metadata_size', 32 * 1024 * 1024),
             ('grpc.max_send_message_length', 128 * 1024 * 1024),
@@ -221,19 +221,19 @@ class AggregatorGRPCServer(AggregatorServicer):
 
         else:
 
-            with open(self.key, 'rb') as f:
-                key_b = f.read()
-            with open(self.cert, 'rb') as f:
-                cert_b = f.read()
-            with open(self.root_ca, 'rb') as f:
-                root_ca_b = f.read()
+            with open(self.private_key, 'rb') as f:
+                private_key_b = f.read()
+            with open(self.certificate, 'rb') as f:
+                certificate_b = f.read()
+            with open(self.root_certificate, 'rb') as f:
+                root_certificate_b = f.read()
 
             if self.disable_client_auth:
                 self.logger.warn('Client-side authentication is disabled.')
 
             self.server_credentials = ssl_server_credentials(
-                ((key_b, cert_b),),
-                root_certificates=root_ca_b,
+                ((private_key_b, certificate_b),),
+                root_certificates=root_certificate_b,
                 require_client_auth=not self.disable_client_auth
             )
 

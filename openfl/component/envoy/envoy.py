@@ -17,7 +17,6 @@ from openfl.transport.grpc.director_client import ShardDirectorClient
 
 logger = logging.getLogger(__name__)
 
-
 DEFAULT_TIMEOUT_IN_SECONDS = 60  # TODO: make configurable
 DEFAULT_RETRY_TIMEOUT_IN_SECONDS = 5
 
@@ -26,16 +25,19 @@ class Envoy:
     """Envoy class."""
 
     def __init__(self, shard_name, director_uri, shard_descriptor,
-                 root_ca: str = None, key: str = None, cert: str = None,
+                 root_certificate: str = None, private_key: str = None, certificate: str = None,
                  tls: bool = True) -> None:
         """Initialize a envoy object."""
         self.name = shard_name
-        self.root_ca = Path(root_ca).absolute() if root_ca is not None else None
-        self.key = Path(key).absolute() if root_ca is not None else None
-        self.cert = Path(cert).absolute() if root_ca is not None else None
+        self.root_certificate = Path(
+            root_certificate).absolute() if root_certificate is not None else None
+        self.private_key = Path(private_key).absolute() if root_certificate is not None else None
+        self.certificate = Path(certificate).absolute() if root_certificate is not None else None
         self.director_client = ShardDirectorClient(director_uri, shard_name=shard_name,
                                                    tls=tls,
-                                                   root_ca=root_ca, key=key, cert=cert)
+                                                   root_certificate=root_certificate,
+                                                   private_key=private_key,
+                                                   certificate=certificate)
         self.shard_descriptor = shard_descriptor
         self.executor = ThreadPoolExecutor()
         self.running_experiments = {}
@@ -73,7 +75,7 @@ class Envoy:
             )
             time.sleep(DEFAULT_TIMEOUT_IN_SECONDS / 2)
 
-    def _run_collaborator(self, experiment_name, plan='plan/plan.yaml',):
+    def _run_collaborator(self, experiment_name, plan='plan/plan.yaml', ):
         """Run the collaborator for the experiment running."""
         cwd = os.getcwd()
         os.chdir(f'{cwd}/{experiment_name}')  # TODO: probably it should be another way
@@ -87,8 +89,8 @@ class Envoy:
         echo(f'Data = {plan.cols_data_paths}')
         logger.info('🧿 Starting a Collaborator Service.')
 
-        col = plan.get_collaborator(self.name, self.root_ca, self.key,
-                                    self.cert, shard_descriptor=self.shard_descriptor)
+        col = plan.get_collaborator(self.name, self.root_certificate, self.private_key,
+                                    self.certificate, shard_descriptor=self.shard_descriptor)
         try:
             col.run()
         finally:
