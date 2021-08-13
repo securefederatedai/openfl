@@ -25,10 +25,11 @@ logger = logging.getLogger(__name__)
 class ShardDirectorClient:
     """The internal director client class."""
 
-    def __init__(self, director_uri, shard_name, tls=True,
+    def __init__(self, *, director_addr, director_port, shard_name, tls=True,
                  root_certificate=None, private_key=None, certificate=None) -> None:
         """Initialize a shard director client object."""
         self.shard_name = shard_name
+        director_uri = f'{director_addr}:{director_port}'
         options = [('grpc.max_message_length', 100 * 1024 * 1024)]
         if not tls:
             channel = grpc.insecure_channel(director_uri, options=options)
@@ -154,9 +155,10 @@ class ShardDirectorClient:
 class DirectorClient:
     """Director client class for users."""
 
-    def __init__(self, client_id, director_uri, tls=True,
+    def __init__(self, *, client_id, director_addr, director_port, tls=True,
                  root_certificate=None, private_key=None, certificate=None) -> None:
         """Initialize director client object."""
+        director_uri = f'{director_addr}:{director_port}'
         channel_opt = [('grpc.max_send_message_length', 512 * 1024 * 1024),
                        ('grpc.max_receive_message_length', 512 * 1024 * 1024)]
         if not tls:

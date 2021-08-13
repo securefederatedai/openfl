@@ -48,14 +48,14 @@ def start(director_config_path, tls, root_certificate, private_key, certificate)
     sample_shape = settings.get('sample_shape', '')
     target_shape = settings.get('target_shape', '')
     logger.info(f'Sample shape: {sample_shape}, target shape: {target_shape}')
-    listen_ip = settings.get('listen_ip')
+    listen_addr = settings.get('listen_addr')
     listen_port = settings.get('listen_port')
     root_certificate = root_certificate or settings.get('root_certificate')
     private_key = private_key or settings.get('private_key')
     certificate = certificate or settings.get('certificate')
     kwargs = {}
-    if listen_ip:
-        kwargs['listen_ip'] = listen_ip
+    if listen_addr:
+        kwargs['listen_addr'] = listen_addr
     if listen_port:
         kwargs['listen_port'] = listen_port
     director_server = DirectorGRPCServer(

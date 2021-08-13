@@ -17,13 +17,15 @@ def director_client(director_pb2_grpc):
     director_pb2_grpc.FederationDirectorStub.return_value = mock.Mock()
 
     client_id = 'one'
-    director_uri = 'localhost'
+    director_addr = 'localhost'
+    director_port = 50051
     tls = False
     root_certificate, private_key, certificate = None, None, None
     director_client = DirectorClient(
-        client_id,
-        director_uri,
-        tls,
+        client_id=client_id,
+        director_addr=director_addr,
+        director_port=director_port,
+        tls=tls,
         root_certificate,
         private_key,
         certificate
