@@ -35,12 +35,24 @@ that may be used to identify participants during experiment definition and execu
        $ fx director start --disable-tls -c director_config.yaml
 
     .. code-block:: console
-    
+
        FQDN=$1
        fx director start -c director_config.yaml -rc cert/root_ca.crt -pk cert/"${FQDN}".key -oc cert/"${FQDN}".crt
 
 1. Start Envoys
 ==================
+
+    .. code-block:: console
+
+        $ fx envoy start -n env_one --disable-tls --shard-config-path shard_config.yaml -d director_fqdn:port
+
+    .. code-block:: console
+
+        ENVOY_NAME=$1
+        DIRECTOR_FQDN=$2
+
+        fx envoy start -n "$ENVOY_NAME" --shard-config-path shard_config.yaml -d "$DIRECTOR_FQDN":50051 -rc cert/root_ca.crt -pk cert/"$ENVOY_NAME".key -oc cert/"$ENVOY_NAME".crt
+
 
 Describing an FL experimnet using Interactive Python API
 #######################################
