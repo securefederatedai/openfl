@@ -8,5 +8,12 @@ OpenFL core components
 .. toctree::
    :maxdepth: 4
 
-   components.long_living
-   components.spawning
+   `Spawning`_
+   `Long-living`_
+
+Spawning
+##########
+
+Long-living
+#############
+
