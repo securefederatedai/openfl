@@ -12,14 +12,14 @@ col_names = ['one', 'two']
 username = getpass.getuser()
 director_path = f'/home/{username}/test/exp_1/director'
 
-director_addr = 'localhost'
+director_host = 'localhost'
 director_port = 50051
 
 shards = {
     f'/home/{username}/test/exp_1/{col_name}':
         Shard(
             shard_name=col_name,
-            director_addr=director_addr,
+            director_host=director_host,
             director_port=director_port,
             data_path=f'/home/{username}/test/data/{col_name}'
         )

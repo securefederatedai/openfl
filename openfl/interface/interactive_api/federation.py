@@ -46,12 +46,12 @@ class Federation:
         # Create Director client
         self.dir_client = DirectorClient(
             client_id=client_id,
-            director_addr=director_node_fqdn,
+            director_host=director_node_fqdn,
             director_port=director_port,
             tls=tls,
-            root_ca=cert_chain,
-            key=api_private_key,
-            cert=api_cert
+            root_certificate=cert_chain,
+            private_key=api_private_key,
+            certificate=api_cert
         )
 
         # Request sample and target shapes from Director.

@@ -24,7 +24,7 @@ DEFAULT_RETRY_TIMEOUT_IN_SECONDS = 5
 class Envoy:
     """Envoy class."""
 
-    def __init__(self, *, shard_name, director_addr, director_port, shard_descriptor,
+    def __init__(self, *, shard_name, director_host, director_port, shard_descriptor,
                  root_certificate: str = None, private_key: str = None, certificate: str = None,
                  tls: bool = True) -> None:
         """Initialize a envoy object."""
@@ -34,7 +34,7 @@ class Envoy:
         self.private_key = Path(private_key).absolute() if root_certificate is not None else None
         self.certificate = Path(certificate).absolute() if root_certificate is not None else None
         self.director_client = ShardDirectorClient(
-            director_addr=director_addr,
+            director_host=director_host,
             director_port=director_port,
             shard_name=shard_name,
             tls=tls,
