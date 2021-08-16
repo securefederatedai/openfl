@@ -7,12 +7,6 @@
 Director-based workflow
 ************
 
-.. toctree::
-    :maxdepth: 2
- 
-    `Establishing a long-living Federation with Director`_
-    interactive_python_api
-
 .. _establishing_federation_director:
 
 Establishing a long-living Federation with Director
@@ -76,3 +70,9 @@ that may be used to identify participants during experiment definition and execu
 At this point, data scientists may register their experiments to be executed in the federation. 
 OpenFL provides a separate frontend Director’s client and :ref:`Interactive Python API <interactive_api>` 
 to register experiments. 
+
+.. toctree::
+    :maxdepth: 2
+ 
+    `Establishing a long-living Federation with Director`_
+    interactive_python_api
