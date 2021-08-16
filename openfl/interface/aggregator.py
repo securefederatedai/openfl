@@ -62,7 +62,7 @@ def generate_cert_request(fqdn):
     from openfl.cryptography.participant import generate_csr
     from openfl.cryptography.io import write_crt
     from openfl.cryptography.io import write_key
-    from openfl.interface.cli_helper import PKI_DIR
+    from openfl.component.ca.ca import CA_PKI_DIR
 
     if fqdn is None:
         fqdn = getfqdn_env()
@@ -77,14 +77,14 @@ def generate_cert_request(fqdn):
 
     server_private_key, server_csr = generate_csr(common_name, server=True)
 
-    (PKI_DIR / 'server').mkdir(parents=True, exist_ok=True)
+    (CA_PKI_DIR / 'server').mkdir(parents=True, exist_ok=True)
 
     echo('  Writing AGGREGATOR certificate key pair to: ' + style(
-        f'{PKI_DIR}/server', fg='green'))
+        f'{CA_PKI_DIR}/server', fg='green'))
 
     # Write aggregator csr and key to disk
-    write_crt(server_csr, PKI_DIR / 'server' / f'{file_name}.csr')
-    write_key(server_private_key, PKI_DIR / 'server' / f'{file_name}.key')
+    write_crt(server_csr, CA_PKI_DIR / 'server' / f'{file_name}.csr')
+    write_key(server_private_key, CA_PKI_DIR / 'server' / f'{file_name}.key')
 
 
 # TODO: function not used
@@ -119,7 +119,7 @@ def certify(fqdn, silent):
     from openfl.cryptography.io import read_csr
     from openfl.cryptography.io import read_key
     from openfl.cryptography.io import write_crt
-    from openfl.interface.cli_helper import PKI_DIR
+    from openfl.component.ca.ca import CA_PKI_DIR
 
     if fqdn is None:
         fqdn = getfqdn_env()
@@ -131,28 +131,28 @@ def certify(fqdn, silent):
     signing_crt_path = 'ca/signing-ca.crt'
 
     # Load CSR
-    if not Path(PKI_DIR / f'{cert_name}.csr').exists():
+    if not Path(CA_PKI_DIR / f'{cert_name}.csr').exists():
         echo(style('Aggregator certificate signing request not found.', fg='red')
              + ' Please run `fx aggregator generate-cert-request`'
-             ' to generate the certificate request.')
+               ' to generate the certificate request.')
 
-    csr, csr_hash = read_csr(PKI_DIR / f'{cert_name}.csr')
+    csr, csr_hash = read_csr(CA_PKI_DIR / f'{cert_name}.csr')
 
     # Load private signing key
-    if not Path(PKI_DIR / signing_key_path).exists():
+    if not Path(CA_PKI_DIR / signing_key_path).exists():
         echo(style('Signing key not found.', fg='red')
              + ' Please run `fx workspace certify`'
-             ' to initialize the local certificate authority.')
+               ' to initialize the local certificate authority.')
 
-    signing_key = read_key(PKI_DIR / signing_key_path)
+    signing_key = read_key(CA_PKI_DIR / signing_key_path)
 
     # Load signing cert
-    if not Path(PKI_DIR / signing_crt_path).exists():
+    if not Path(CA_PKI_DIR / signing_crt_path).exists():
         echo(style('Signing certificate not found.', fg='red')
              + ' Please run `fx workspace certify`'
-             ' to initialize the local certificate authority.')
+               ' to initialize the local certificate authority.')
 
-    signing_crt = read_crt(PKI_DIR / signing_crt_path)
+    signing_crt = read_crt(CA_PKI_DIR / signing_crt_path)
 
     echo('The CSR Hash for file '
          + style(f'{cert_name}.csr', fg='green')
@@ -163,7 +163,7 @@ def certify(fqdn, silent):
 
         echo(' Signing AGGREGATOR certificate')
         signed_agg_cert = sign_certificate(csr, signing_key, signing_crt.subject)
-        write_crt(signed_agg_cert, PKI_DIR / f'{cert_name}.crt')
+        write_crt(signed_agg_cert, CA_PKI_DIR / f'{cert_name}.crt')
 
     else:
 
@@ -171,7 +171,7 @@ def certify(fqdn, silent):
 
             echo(' Signing AGGREGATOR certificate')
             signed_agg_cert = sign_certificate(csr, signing_key, signing_crt.subject)
-            write_crt(signed_agg_cert, PKI_DIR / f'{cert_name}.crt')
+            write_crt(signed_agg_cert, CA_PKI_DIR / f'{cert_name}.crt')
 
         else:
             echo(style('Not signing certificate.', fg='red')
