@@ -7,16 +7,17 @@
 Director-based workflow
 ************
 
+************
 Establishing a long-living Federation with Director
-#######################################
+************
 
 1. Install |productName| 
 ==================
 
-Make sure that you installed |productName| in your virtual environment.
+Make sure that you installed |productName| in your virtual Python environment.
 If not, use the instruction :ref:`install_initial_steps`.
 
-1. Implement Shard Descriptors
+2. Implement Shard Descriptors
 ==================
 
 Then the data owners need to implement `Shard Descriptors` Python classes. 
@@ -63,7 +64,7 @@ that may be used to identify participants during experiment definition and execu
 
 
 5. Describing an FL experimnet using Interactive Python API
-#######################################
+====================================
 
 At this point, data scientists may register their experiments to be executed in the federation. 
 OpenFL provides a separate frontend Director’s client and :ref:`Interactive Python API <interactive_api>` 
