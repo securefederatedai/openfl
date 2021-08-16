@@ -3,9 +3,9 @@
 
 .. _director_workflow:
 
-************
+************************
 Director-based workflow
-************
+************************
 
 .. _establishing_federation_director:
 
@@ -71,18 +71,17 @@ At this point, data scientists may register their experiments to be executed in 
 OpenFL provides a separate frontend Director’s client and :ref:`Interactive Python API <interactive_api>` 
 to register experiments. 
 
+
 .. _interactive_api:
 
-#########################################################
 Beta: |productName| Interactive Python API
-#########################################################
+#######################################
 
-*********************************
 Python Interactive API Concepts
-*********************************
+===============================
 
 Workspace
-==========
+----------
 To initialize the workspace, create an empty folder and a Jupyter notebook (or a Python script) inside it. Root folder of the notebook will be considered as the workspace.
 If some objects are imported in the notebook from local modules, source code should be kept inside the workspace.
 If one decides to keep local test data inside the workspace, :code:`data` folder should be used as it will not be exported.
@@ -90,18 +89,19 @@ If one decides to keep certificates inside the workspace, :code:`cert` folder sh
 Only relevant source code or resources should be kept inside the workspace, since it will be zipped and transferred to collaborator machines.
 
 Python Environment
-===================
+---------------------
 Create a virtual Python environment. Please, install only packages that are required for conducting the experiment, since Python environment will be replicated on collaborator nodes.
 
 
-******************************************
+
 Defining a Federated Learning Experiment
-******************************************
+========================================
+
 Interactive API allows setting up an experiment from a single entrypoint - a Jupyter notebook or a Python script.
 Defining an experiment includes setting up several interface entities and experiment parameters.
 
 Federation API
-===================
+----------------
 *Federation* entity is introduced to register and keep information about collaborators settings and their local data, as well as network settings to enable communication inside the federation. 
 Each federation is bound to some Machine Learning problem in a sense that all collaborators dataset shards should follow the same annotation format for all samples. Once you created a federation, it may be used in several subsequent experiments.
 
@@ -121,7 +121,7 @@ Federation's :code:`register_collaborators` method should be used to provide an 
 It requires a dictionary object - :code:`{collaborator name : local data path}`.
 
 Experiment API
-===================
+----------------
 
 *Experiment* entity allows registering training related objects, FL tasks and settings.
 To set up an FL experiment someone should use the Experiment interactive API. 
