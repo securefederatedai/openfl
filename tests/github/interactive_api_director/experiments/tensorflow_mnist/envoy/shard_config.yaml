@@ -1,0 +1,3 @@
+template: shard_descriptor.MNISTShardDescriptor
+params:
+  rank_worldsize: 1,90
