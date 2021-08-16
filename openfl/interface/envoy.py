@@ -37,14 +37,14 @@ def envoy(context):
         is_flag=True, help='Use TLS or not (By default TLS is enabled)')
 @option('-sc', '--shard-config-path', default='shard_config.yaml',
         help='The shard config path', type=ClickPath(exists=True))
-@option('-rc', '--root-cert-path', 'root_ca', default=None,
+@option('-rc', '--root-cert-path', 'root_certificate', default=None,
         help='Path to a root CA cert')
-@option('-pk', '--private-key-path', 'key', default=None,
+@option('-pk', '--private-key-path', 'private_key', default=None,
         help='Path to a private key')
-@option('-oc', '--public-cert-path', 'cert', default=None,
+@option('-oc', '--public-cert-path', 'certificate', default=None,
         help='Path to a signed certificate')
 def start_(shard_name, director_uri, tls, shard_config_path,
-           root_ca, key, cert):
+           root_certificate, private_key, certificate):
     """Start the Envoy."""
     logger.info('🧿 Starting the Envoy.')
 
@@ -54,9 +54,9 @@ def start_(shard_name, director_uri, tls, shard_config_path,
         director_uri=director_uri,
         shard_descriptor=shard_descriptor,
         tls=tls,
-        root_ca=root_ca,
-        key=key,
-        cert=cert
+        root_certificate=root_certificate,
+        private_key=private_key,
+        certificate=certificate
     )
 
     envoy.start()
