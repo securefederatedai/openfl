@@ -154,7 +154,7 @@ class ShardDirectorClient:
 class DirectorClient:
     """Director client class for users."""
 
-    def __init__(self, client_id, director_uri, tls=True,
+    def __init__(self, director_uri, tls=True,
                  root_certificate=None, private_key=None, certificate=None) -> None:
         """Initialize director client object."""
         channel_opt = [('grpc.max_send_message_length', 512 * 1024 * 1024),

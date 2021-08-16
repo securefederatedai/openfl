@@ -8,7 +8,6 @@ import pytest
 
 from openfl.interface.interactive_api.federation import Federation
 
-CLIENT_ID = 'id test'
 SAMPLE_SHAPE = (10, 10, 3)
 TARGET_SHAPE = (2,)
 
@@ -20,7 +19,7 @@ def federation_object(mock_client_class):
     mock_client_instance = mock.Mock()
     mock_client_class.return_value = mock_client_instance
     mock_client_instance.get_dataset_info.return_value = (SAMPLE_SHAPE, TARGET_SHAPE)
-    return Federation(client_id=CLIENT_ID)
+    return Federation()
 
 
 def test_federation_initialization(federation_object):
