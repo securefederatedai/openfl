@@ -8,9 +8,9 @@ Director-based workflow
 ************
 
 .. toctree::
-    :maxdepth: 1
+    :maxdepth: 2
  
-    establishing_federation_director_
+    `Establishing a long-living Federation with Director`_
     interactive_python_api
 
 .. _establishing_federation_director:
