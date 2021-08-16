@@ -26,9 +26,9 @@ def director_client(director_pb2_grpc):
         director_addr=director_addr,
         director_port=director_port,
         tls=tls,
-        root_certificate,
-        private_key,
-        certificate
+        root_certificate=root_certificate,
+        private_key=private_key,
+        certificate=certificate
     )
     return director_client
 
