@@ -43,7 +43,7 @@ class EqualNumPyDataSplitter(NumPyDataSplitter):
         """Split the data."""
         idx = range(len(data))
         if self.shuffle:
-            idx = np.random.permute(idx)
+            idx = np.random.permutation(idx)
         slices = np.array_split(idx, num_collaborators)
         return slices
 
