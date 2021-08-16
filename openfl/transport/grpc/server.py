@@ -31,7 +31,7 @@ class AggregatorGRPCServer(AggregatorServicer):
                  agg_port,
                  tls=True,
                  disable_client_auth=False,
-                 ca=None,
+                 root_certificate=None,
                  certificate=None,
                  private_key=None,
                  **kwargs):
@@ -45,7 +45,7 @@ class AggregatorGRPCServer(AggregatorServicer):
             tls (bool): To disable the TLS. (Default: True)
             disable_client_auth (bool): To disable the client side
             authentication. (Default: False)
-            ca (str): File path to the CA certificate.
+            root_certificate (str): File path to the CA certificate.
             certificate (str): File path to the server certificate.
             private_key (str): File path to the private key.
             kwargs (dict): Additional arguments to pass into function
@@ -54,7 +54,7 @@ class AggregatorGRPCServer(AggregatorServicer):
         self.uri = f'[::]:{agg_port}'
         self.tls = tls
         self.disable_client_auth = disable_client_auth
-        self.ca = ca
+        self.root_certificate = root_certificate
         self.certificate = certificate
         self.private_key = private_key
         self.channel_options = [
@@ -222,18 +222,18 @@ class AggregatorGRPCServer(AggregatorServicer):
         else:
 
             with open(self.private_key, 'rb') as f:
-                private_key = f.read()
+                private_key_b = f.read()
             with open(self.certificate, 'rb') as f:
-                certificate_chain = f.read()
-            with open(self.ca, 'rb') as f:
-                root_certificates = f.read()
+                certificate_b = f.read()
+            with open(self.root_certificate, 'rb') as f:
+                root_certificate_b = f.read()
 
             if self.disable_client_auth:
                 self.logger.warn('Client-side authentication is disabled.')
 
             self.server_credentials = ssl_server_credentials(
-                ((private_key, certificate_chain),),
-                root_certificates=root_certificates,
+                ((private_key_b, certificate_b),),
+                root_certificates=root_certificate_b,
                 require_client_auth=not self.disable_client_auth
             )
 
