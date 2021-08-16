@@ -18,8 +18,14 @@ def director_client(director_pb2_grpc):
 
     director_uri = 'localhost'
     tls = False
-    root_ca, key, cert = None, None, None
-    director_client = DirectorClient(director_uri, tls, root_ca, key, cert)
+    root_certificate, private_key, certificate = None, None, None
+    director_client = DirectorClient(
+        director_uri,
+        tls,
+        root_certificate,
+        private_key,
+        certificate
+    )
     return director_client
 
 

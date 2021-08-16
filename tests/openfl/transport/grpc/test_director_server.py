@@ -24,21 +24,21 @@ def secure_director():
     """Initialize a secure director mock."""
     director = DirectorGRPCServer(
         director_cls=Director,
-        root_ca='./cert/root_ca.crt',
-        key='./cert/localhost.key',
-        cert='./cert/localhost.crt'
+        root_certificate='./cert/root_ca.crt',
+        private_key='./cert/localhost.key',
+        certificate='./cert/localhost.crt'
     )
     return director
 
 
 def test_fill_certs(insecure_director, secure_director):
     """Test that fill_cert fill certificates params correctly."""
-    assert insecure_director.root_ca is None
-    assert insecure_director.key is None
-    assert insecure_director.cert is None
-    assert isinstance(secure_director.root_ca, Path)
-    assert isinstance(secure_director.key, Path)
-    assert isinstance(secure_director.cert, Path)
+    assert insecure_director.root_certificate is None
+    assert insecure_director.private_key is None
+    assert insecure_director.certificate is None
+    assert isinstance(secure_director.root_certificate, Path)
+    assert isinstance(secure_director.private_key, Path)
+    assert isinstance(secure_director.certificate, Path)
     with pytest.raises(Exception):
         secure_director.test_fill_certs('.', '.', None)
     with pytest.raises(Exception):

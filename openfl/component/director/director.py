@@ -22,7 +22,7 @@ class Director:
     """Director class."""
 
     def __init__(self, *, tls: bool = True,
-                 root_ca: Path = None, key: Path = None, cert: Path = None,
+                 root_certificate: Path = None, private_key: Path = None, certificate: Path = None,
                  sample_shape: list = None, target_shape: list = None) -> None:
         """Initialize a director object."""
         # TODO: add working directory
@@ -38,9 +38,9 @@ class Director:
         # {API name : {experiment name : aggregator}}
 
         self.tls = tls
-        self.root_ca = root_ca
-        self.key = key
-        self.cert = cert
+        self.root_certificate = root_certificate
+        self.private_key = private_key
+        self.certificate = certificate
 
     def acknowledge_shard(self, shard_info: director_pb2.ShardInfo) -> bool:
         """Save shard info to shard registry if it's acceptable."""
@@ -228,9 +228,9 @@ class Director:
         logger.info('🧿 Starting the Aggregator Service.')
         aggregator_server = plan.interactive_api_get_server(
             tensor_dict=initial_tensor_dict,
-            chain=self.root_ca,
-            certificate=self.cert,
-            private_key=self.key,
+            root_certificate=self.root_certificate,
+            certificate=self.certificate,
+            private_key=self.private_key,
             tls=self.tls,
         )
         self.experiment_stash[experiment_sender][experiment_name] = aggregator_server
