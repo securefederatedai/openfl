@@ -7,6 +7,13 @@
 Director-based workflow
 ************************
 
+.. toctree::
+    :maxdepth: 2
+ 
+    establishing_federation_director_
+    interactive_api_
+
+
 .. _establishing_federation_director:
 
 Establishing a long-living Federation with Director
@@ -26,12 +33,27 @@ Then the data owners need to implement `Shard Descriptors` Python classes.
 |productName| framework provides a ‘Shard descriptor’ interface that should be described on every collaborator node 
 to provide a unified data interface for FL experiments. Abstract “Shard descriptor” should be subclassed and 
 all its methods should be implemented to describe the way data samples and labels will be loaded from disk 
-during training. Shard descriptor is a subscriptable object that implements `__getitem__()` and `len()` methods 
+during training. Shard descriptor is a subscriptable object that implements :code:`__getitem__()` and :code:`len()` methods 
 as well as several additional methods to access ‘sample shape’, ‘target shape’, and ‘shard description’ text 
 that may be used to identify participants during experiment definition and execution.
 
-3. Start Director
+3. (Optional) Obtain certificates using Step-CA 
 ==================
+
+All communications inside a Federation may be protected with mTLS. User may use certificates provided by their organization 
+or utilize :ref:`PKI <semi_automatic_certification>` provided by |productName|.
+
+4. Start Director
+==================
+
+Create Director workspace
+-------------------
+
+Tune Director config
+-------------------
+
+Use CLI to start Director
+-------------------
 
     .. code-block:: console
 
@@ -45,7 +67,7 @@ that may be used to identify participants during experiment definition and execu
             -pk cert/"${FQDN}".key \
             -oc cert/"${FQDN}".crt
 
-4. Start Envoys
+5. Start Envoys
 ==================
 
     .. code-block:: console
@@ -64,7 +86,7 @@ that may be used to identify participants during experiment definition and execu
             -pk cert/"$ENVOY_NAME".key -oc cert/"$ENVOY_NAME".crt
 
 
-5. Describing an FL experimnet using Interactive Python API
+6. Describing an FL experimnet using Interactive Python API
 ====================================
 
 At this point, data scientists may register their experiments to be executed in the federation. 
