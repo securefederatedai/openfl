@@ -66,6 +66,7 @@ def start(director_config_path, tls, root_certificate, private_key, certificate)
         root_certificate=root_certificate,
         private_key=private_key,
         certificate=certificate,
+        settings=settings,
         **kwargs
     )
     director_server.start()

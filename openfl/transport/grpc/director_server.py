@@ -237,13 +237,15 @@ class DirectorGRPCServer(director_pb2_grpc.FederationDirectorServicer):
     async def CollaboratorHealthCheck(self, request, context):  # NOQA:N802
         """Accept health check from envoy."""
         logger.debug(f'Request CollaboratorHealthCheck has got: {request}')
-        is_accepted = self.director.collaborator_health_check(
+        health_check_period = self.director.collaborator_health_check(
             collaborator_name=request.name,
             is_experiment_running=request.is_experiment_running,
             valid_duration=request.valid_duration.seconds,
         )
+        resp = director_pb2.CollaboratorHealthCheckResponse()
+        resp.health_check_period.seconds = health_check_period
 
-        return director_pb2.CollaboratorHealthCheckResponse(accepted=is_accepted)
+        return resp
 
     async def GetEnvoys(self, request, context):  # NOQA:N802
         """Get a status information about envoys."""

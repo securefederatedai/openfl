@@ -113,7 +113,7 @@ message CollaboratorStatus {
 }
 
 message CollaboratorHealthCheckResponse {
-    bool accepted = 1;
+    google.protobuf.Duration health_check_period = 1;
 }
 
 message EnvoyInfo {
