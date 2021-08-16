@@ -7,9 +7,16 @@
 Director-based workflow
 ************
 
-************
+.. toctree::
+    :maxdepth: 1
+ 
+    establishing_federation_director_
+    interactive_python_api
+
+.. _establishing_federation_director:
+
 Establishing a long-living Federation with Director
-************
+#######################################
 
 1. Install |productName| 
 ==================
