@@ -9,6 +9,7 @@ from pathlib import Path
 from click import group
 from click import option
 from click import pass_context
+from click import password_option
 from click import Path as ClickPath
 
 from openfl.component.ca.ca import certify
@@ -53,7 +54,7 @@ def run(ca_path):
 @pki.command(name='install')
 @option('-p', '--ca-path', required=True,
         help='The ca path', type=ClickPath())
-@option('--password', required=True)
+@password_option()
 @option('--ca-url', required=False, default=CA_URL)
 def install_(ca_path, password, ca_url):
     """Create a ca workspace."""
