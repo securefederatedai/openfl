@@ -85,22 +85,49 @@ In the case of a certified Federation:
             -pk cert/priv.key \
             -oc cert/open.crt
 
-1. Start Envoys
+5. Start Envoys
 ==================
+
+Envoys are |productName|'s 'agents' on collaborator nodes that may recieve an experiment archive and provide 
+access to local data.
+When started Envoy will try to connect to the Director.
+
+Create Envoy workspace
+-------------------
+
+The Envoy component also requires a folder to operate in. Use the following CLI command to create a workspace 
+with convenient folder structure and default Envoy's config and Shard Descriptor Python script:
+
+    .. code-block:: console
+
+        $ fx envoy create-workspace -p envoy_ws
+
+Setup Envoy's config
+-------------------
+
+Unlike Director’s config, the one for Envoy should contain settings for the local Shard Descriptor. 
+The template field must be filled with the address of the local Shard Descriptor class, and settings filed 
+should list arbitrary settings required to initialize the Shard Descriptor.
+
+Use CLI to start Envoy
+-------------------
+
+To start the Envoy without mTLS use the following CLI command: 
 
     .. code-block:: console
 
         $ fx envoy start -n env_one --disable-tls \
             --shard-config-path shard_config.yaml -d director_fqdn:port
 
+Alternatively, use the following command to establish a secured connection:
+
     .. code-block:: console
 
-        $ ENVOY_NAME=$1
-        $ DIRECTOR_FQDN=$2
+        $ ENVOY_NAME=envoy_example_name
 
         $ fx envoy start -n "$ENVOY_NAME" \
             --shard-config-path shard_config.yaml \
-            -d "$DIRECTOR_FQDN":50051 -rc cert/root_ca.crt \
+            -d director_fqdn:port -rc cert/root_ca.crt \
             -pk cert/"$ENVOY_NAME".key -oc cert/"$ENVOY_NAME".crt
 
 

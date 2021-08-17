@@ -16,7 +16,7 @@
 
 .. _openfl_spawning_components:
 
-Spawning
+Spawning components
 ##########
 
 Aggregator
@@ -35,7 +35,7 @@ Collaborator instance is created by Envoy (described below) when a new experimen
 
 .. _openfl_ll_components:
 
-Long-living
+Long-living components
 #############
 
 Director
