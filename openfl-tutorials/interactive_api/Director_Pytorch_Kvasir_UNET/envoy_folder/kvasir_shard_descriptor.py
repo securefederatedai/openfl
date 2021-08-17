@@ -119,11 +119,13 @@ if __name__ == '__main__':
     from openfl.component.envoy.envoy import Envoy
 
     shard_name = 'one'
-    director_uri = 'localhost:50051'
+    director_host = 'localhost'
+    director_port = 50051
 
     keeper = Envoy(
         shard_name=shard_name,
-        director_uri=director_uri,
+        director_host=director_host,
+        director_port=director_port,
         shard_descriptor=kvasir_sd,
         tls=True,
         root_certificate='./cert/root_ca.crt',

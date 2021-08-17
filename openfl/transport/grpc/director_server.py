@@ -25,12 +25,12 @@ class DirectorGRPCServer(director_pb2_grpc.FederationDirectorServicer):
 
     def __init__(self, *, director_cls, tls: bool = True,
                  root_certificate: str = None, private_key: str = None, certificate: str = None,
-                 listen_ip='[::]', listen_port=50051, **kwargs) -> None:
+                 listen_addr='[::]', listen_port=50051, **kwargs) -> None:
         """Initialize a director object."""
         # TODO: add working directory
         super().__init__()
 
-        self.listen_addr = f'{listen_ip}:{listen_port}'
+        self.listen_uri = f'{listen_addr}:{listen_port}'
         self.tls = tls
         self.root_certificate = None
         self.private_key = None
@@ -86,7 +86,7 @@ class DirectorGRPCServer(director_pb2_grpc.FederationDirectorServicer):
         director_pb2_grpc.add_FederationDirectorServicer_to_server(self, self.server)
 
         if not self.tls:
-            self.server.add_insecure_port(self.listen_addr)
+            self.server.add_insecure_port(self.listen_uri)
         else:
             with open(self.private_key, 'rb') as f:
                 private_key_b = f.read()
@@ -99,8 +99,8 @@ class DirectorGRPCServer(director_pb2_grpc.FederationDirectorServicer):
                 root_certificates=root_certificate_b,
                 require_client_auth=True
             )
-            self.server.add_secure_port(self.listen_addr, server_credentials)
-        logger.info(f'Starting server on {self.listen_addr}')
+            self.server.add_secure_port(self.listen_uri, server_credentials)
+        logger.info(f'Starting server on {self.listen_uri}')
         await self.server.start()
         await self.server.wait_for_termination()
 

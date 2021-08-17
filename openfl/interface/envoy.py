@@ -31,8 +31,10 @@ def envoy(context):
 @envoy.command(name='start')
 @option('-n', '--shard-name', required=True,
         help='Current shard name')
-@option('-d', '--director-uri', required=True,
+@option('-dh', '--director-host', required=True,
         help='The FQDN of the federation director')
+@option('-dp', '--director-port', required=True,
+        help='The federation director port')
 @option('--tls/--disable-tls', default=True,
         is_flag=True, help='Use TLS or not (By default TLS is enabled)')
 @option('-sc', '--shard-config-path', default='shard_config.yaml',
@@ -43,7 +45,7 @@ def envoy(context):
         help='Path to a private key')
 @option('-oc', '--public-cert-path', 'certificate', default=None,
         help='Path to a signed certificate')
-def start_(shard_name, director_uri, tls, shard_config_path,
+def start_(shard_name, director_host, director_port, tls, shard_config_path,
            root_certificate, private_key, certificate):
     """Start the Envoy."""
     logger.info('🧿 Starting the Envoy.')
@@ -51,7 +53,8 @@ def start_(shard_name, director_uri, tls, shard_config_path,
     shard_descriptor = shard_descriptor_from_config(shard_config_path)
     envoy = Envoy(
         shard_name=shard_name,
-        director_uri=director_uri,
+        director_host=director_host,
+        director_port=director_port,
         shard_descriptor=shard_descriptor,
         tls=tls,
         root_certificate=root_certificate,

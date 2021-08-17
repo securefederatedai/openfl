@@ -24,13 +24,15 @@ col_names = ['one', 'two']
 username = getpass.getuser()
 director_path = f'/home/{username}/test/exp_1/director'
 
-director_uri = 'localhost:50051'
+director_host = 'localhost'
+director_port = 50051
 
 shards = {
     f'/home/{username}/test/exp_1/{col_name}':
         Shard(
             shard_name=col_name,
-            director_uri=director_uri,
+            director_host=director_host,
+            director_port=director_port,
             data_path=f'/home/{username}/test/data/{col_name}'
         )
     for col_name in col_names
@@ -94,7 +96,10 @@ arch_path = fl_experiment.prepare_workspace_distribution(
 
 sleep(2)
 
-director_client = DirectorClient(director_uri)
+director_client = DirectorClient(
+    director_host=director_host,
+    director_port=director_port
+)
 resp = director_client.set_new_experiment(experiment_name, col_names, arch_path,
                                           model_interface, fl_experiment)
 logger.info(f'Response from director: {resp}')

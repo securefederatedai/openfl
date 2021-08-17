@@ -20,13 +20,14 @@ logger = logging.getLogger(__name__)
 class ShardDirectorClient:
     """The internal director client class."""
 
-    def __init__(self, director_uri, shard_name, tls=True,
+    def __init__(self, *, director_host, director_port, shard_name, tls=True,
                  root_certificate=None, private_key=None, certificate=None) -> None:
         """Initialize a shard director client object."""
         self.shard_name = shard_name
+        director_addr = f'{director_host}:{director_port}'
         options = [('grpc.max_message_length', 100 * 1024 * 1024)]
         if not tls:
-            channel = grpc.insecure_channel(director_uri, options=options)
+            channel = grpc.insecure_channel(director_addr, options=options)
         else:
             if not (root_certificate and private_key and certificate):
                 raise Exception('No certificates provided')
@@ -45,7 +46,7 @@ class ShardDirectorClient:
                 private_key=private_key_b,
                 certificate_chain=certificate_b
             )
-            channel = grpc.secure_channel(director_uri, credentials, options=options)
+            channel = grpc.secure_channel(director_addr, credentials, options=options)
         self.stub = director_pb2_grpc.FederationDirectorStub(channel)
 
     def report_shard_info(self, shard_descriptor) -> bool:
@@ -110,13 +111,14 @@ class ShardDirectorClient:
 class DirectorClient:
     """Director client class for users."""
 
-    def __init__(self, client_id, director_uri, tls=True,
+    def __init__(self, *, client_id, director_host, director_port, tls=True,
                  root_certificate=None, private_key=None, certificate=None) -> None:
         """Initialize director client object."""
+        director_addr = f'{director_host}:{director_port}'
         channel_opt = [('grpc.max_send_message_length', 512 * 1024 * 1024),
                        ('grpc.max_receive_message_length', 512 * 1024 * 1024)]
         if not tls:
-            channel = grpc.insecure_channel(director_uri, options=channel_opt)
+            channel = grpc.insecure_channel(director_addr, options=channel_opt)
         else:
             if not (root_certificate and private_key and certificate):
                 raise Exception('No certificates provided')
@@ -136,7 +138,7 @@ class DirectorClient:
                 certificate_chain=certificate_b
             )
 
-            channel = grpc.secure_channel(director_uri, credentials, options=channel_opt)
+            channel = grpc.secure_channel(director_addr, credentials, options=channel_opt)
         self.stub = director_pb2_grpc.FederationDirectorStub(channel)
 
         self.client_id = client_id

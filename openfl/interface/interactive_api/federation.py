@@ -44,8 +44,15 @@ class Federation:
         self.api_private_key = api_private_key
 
         # Create Director client
-        self.dir_client = DirectorClient(client_id, f'{director_node_fqdn}:{director_port}',
-                                         tls, cert_chain, api_private_key, api_cert)
+        self.dir_client = DirectorClient(
+            client_id=client_id,
+            director_host=director_node_fqdn,
+            director_port=director_port,
+            tls=tls,
+            root_certificate=cert_chain,
+            private_key=api_private_key,
+            certificate=api_cert
+        )
 
         # Request sample and target shapes from Director.
         # This is an internal method for finding out dataset properties in a Federation.

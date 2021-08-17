@@ -15,17 +15,19 @@ def director_client(director_pb2_grpc):
     """Director client fixture."""
     director_pb2_grpc.FederationDirectorStub.return_value = mock.Mock()
 
-    director_uri = 'fqdn'
+    director_host = 'fqdn'
+    director_port = 50051
     shard_name = 'test shard'
     tls = False
     root_certificate, private_key, certificate = None, None, None
     director_client = ShardDirectorClient(
-        director_uri,
-        shard_name,
-        tls,
-        root_certificate,
-        private_key,
-        certificate,
+        director_host=director_host,
+        director_port=director_port,
+        shard_name=shard_name,
+        tls=tls,
+        root_certificate=root_certificate,
+        private_key=private_key,
+        certificate=certificate,
     )
     return director_client
 

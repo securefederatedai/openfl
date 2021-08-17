@@ -91,7 +91,8 @@ def create_federation(director_path: str, collaborator_paths: typing.Iterable[st
 @dataclass
 class Shard:
     shard_name: str
-    director_uri: str
+    director_host: str
+    director_port: int
     data_path: str
 
 
@@ -107,7 +108,8 @@ def run_federation(shards: typing.Dict[str, Shard], director_path: str):
     for collaborator_path, shard in shards.items():
         p = subprocess.Popen(
             f'fx envoy start '
-            f'-n {shard.shard_name} -d {shard.director_uri} -p {shard.data_path}',
+            f'-n {shard.shard_name} -dh {shard.director_host} '
+            f'-dp {shard.director_port} -p {shard.data_path}',
             shell=True,
             cwd=os.path.join(collaborator_path)
         )
