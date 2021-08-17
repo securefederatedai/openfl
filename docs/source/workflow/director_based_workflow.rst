@@ -145,8 +145,8 @@ Beta: |productName| Interactive Python API
 #######################################
 
 The |productName| Python Interactive API should help data scientists to adapt single node training code for 
-running in the FL manner. The process of defining an FL experimnent is fully decopupled from establishing 
-a Federation. Everything that a data scientist needs to prepare an experiment is a Python interpreter and access to the Director.   
+running in the FL manner. The process of defining an FL experimnent is fully decoupled from the establishing 
+a Federation routine. Everything that a data scientist needs to prepare an experiment is a Python interpreter and access to the Director.   
 
 Python Interactive API Concepts
 ===============================
