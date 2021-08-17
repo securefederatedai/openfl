@@ -173,8 +173,11 @@ Defining an experiment includes setting up several interface entities and experi
 
 Federation API
 ----------------
-*Federation* entity is introduced to register and keep information about collaborators settings and their local data, as well as network settings to enable communication inside the federation. 
-Each federation is bound to some Machine Learning problem in a sense that all collaborators dataset shards should follow the same annotation format for all samples. Once you created a federation, it may be used in several subsequent experiments.
+*Federation* entity is introduced to register and keep information about collaborators settings and their local data, 
+as well as network settings to enable communication inside the federation. 
+Each federation is bound to some Machine Learning problem in a sense that all collaborators dataset shards should 
+follow the same annotation format for all samples. Once you created a federation, it may be used in several 
+subsequent experiments.
 
 To set up a federation, use Federation Interactive API.
 
@@ -182,14 +185,18 @@ To set up a federation, use Federation Interactive API.
 
     from openfl.interface.interactive_api.federation import Federation
 
-Federation API class should be initialized with the aggregator node FQDN and encryption settings. Someone may disable mTLS in trusted environments or provide paths to the certificate chain of CA, aggregator certificate and private key to enable mTLS.
+Federation API class should be initialized with the aggregator node FQDN and encryption settings. User may disable mTLS in trusted environments or provide paths to the certificate chain of CA, aggregator certificate and private key to enable mTLS.
 
 .. code-block:: python
 
-    federation = Federation(central_node_fqdn: str, tls: bool, cert_chain: str, agg_certificate: str, agg_private_key: str)
+    federation = Federation(
+        client_id: str, director_node_fqdn: str, director_port: str
+        tls: bool, ca_cert_chain: str, cert: str, private_key: str)
 
-Federation's :code:`register_collaborators` method should be used to provide an information about collaborators participating in a federation.
-It requires a dictionary object - :code:`{collaborator name : local data path}`.
+* Federation's :code:`get_dummy_shard_descriptor` method should be used to create a fummy Shard Descriptor 
+that fakes access to real data. It may be used for debugging the user's experiment pipeline.
+* Federation's :code:`get_shard_registry` method returns information about the envoys connected to the Director 
+and their Shard Descriptors.
 
 Experiment API
 ----------------
@@ -201,13 +208,14 @@ To set up an FL experiment someone should use the Experiment interactive API.
 
     from openfl.interface.interactive_api.experiment import FLExperiment
 
-*Experiment* is being initialized by taking federation as a parameter.
+*Experiment* is being initialized by taking a Federation object and the experiment name as parameters.
 
 .. code-block:: python
 
-    fl_experiment = FLExperiment(federation=federation)
+    fl_experiment = FLExperiment(federation: Federation, experiment_name: str)
 
-To start an experiment user must register *DataLoader*, *Federated Learning tasks* and *Model* with *Optimizer*. There are several supplementary interface classes for these purposes.
+To start an experiment user must register *DataLoader*, *Federated Learning tasks* and *Model* with *Optimizer*. 
+There are several supplementary interface classes for these entities.
 
 .. code-block:: python
 
@@ -216,19 +224,24 @@ To start an experiment user must register *DataLoader*, *Federated Learning task
 Registering model and optimizer
 --------------------------------
 
-First, user instantiate and initilize a model and optimizer in their favorite Deep Learning framework. Please, note that for now interactive API supports only *Keras* and *PyTorch* off-the-shelf.
-Initialized model and optimizer objects then should be passed to the :code:`ModelInterface` along with the path to correct Framework Adapter plugin inside OpenFL package. If desired DL framework is not covered by existing plugins, someone can implement the plugin's interface and point :code:`framework_plugin` to the implementation inside the workspace.
+First, user instantiate and initilize a model and optimizer in their favorite Deep Learning framework. 
+Please, note that for now interactive API supports only *Keras* and *PyTorch* off-the-shelf.
+Initialized model and optimizer objects then should be passed to the :code:`ModelInterface` along with the 
+path to correct Framework Adapter plugin inside OpenFL package. If desired DL framework is not covered by 
+existing plugins, user can implement the plugin's interface and point :code:`framework_plugin` to the implementation 
+inside the workspace.
 
 .. code-block:: python
 
     from openfl.interface.interactive_api.experiment import ModelInterface
-    MI = ModelInterface(model=model_unet, optimizer=optimizer_adam, framework_plugin=framework_adapter)
+    MI = ModelInterface(model, optimizer, framework_plugin: str)
 
 Registering FL tasks
 ---------------------
 
-We have an agreement on what we consider to be a FL task.
-Interactive API currently allows registering only standalone functions defined in the main module or imported from other modules inside the workspace.
+|productName| has a specific concept of an FL task.
+Interactive API currently allows registering only standalone functions defined in the main module or 
+imported from other modules inside the workspace.
 We also have requirements on task signature. Task should accept the following objects:
 
 1. model - will be rebuilt with relevant weights for every task by `TaskRunner`
