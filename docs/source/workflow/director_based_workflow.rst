@@ -37,37 +37,55 @@ during training. Shard descriptor is a subscriptable object that implements :cod
 as well as several additional methods to access ‘sample shape’, ‘target shape’, and ‘shard description’ text 
 that may be used to identify participants during experiment definition and execution.
 
-3. (Optional) Obtain certificates using Step-CA 
+3. (Optional) Create certificates using Step-CA 
 ==================
 
-All communications inside a Federation may be protected with mTLS. User may use certificates provided by their organization 
+All communications inside a Federation may be encrypted with mTLS. User may adapt certificates provided by their organization 
 or utilize :ref:`PKI <semi_automatic_certification>` provided by |productName|.
 
 4. Start Director
 ==================
 
+Director is a central component in the Federation. It should be started on a node with at least one open port. 
+Learn more about the Director component here: :ref:`openfl_ll_components`
+
 Create Director workspace
 -------------------
+
+Director requires a folder to operate in. Recieved experiments will be deployed in this folder. 
+Moreover, supplementary files like Director's config files and certificates may be stored in this folder. 
+One may use CLI command to create a structured workspace for Director with a default config file.
+
+    .. code-block:: console
+
+        $ fx director create-workspace -p director_ws
 
 Tune Director config
 -------------------
 
+Director should be started from a config file. Basic config file should contain the Director's node FQDN, an open port, 
+and :code:`sample_shape` and :code:`target_shape` fields with string representation of the unified data interface in the Federation. 
+But it also may contain paths to certificates. 
+
 Use CLI to start Director
 -------------------
+
+When the Director's config has been set up, one may use CLI to start the Director. Without mTLS protection:
 
     .. code-block:: console
 
        $ fx director start --disable-tls -c director_config.yaml
 
+In the case of a certified Federation:
+
     .. code-block:: console
 
-       $ FQDN=$1
        $ fx director start -c director_config.yaml \
             -rc cert/root_ca.crt \
-            -pk cert/"${FQDN}".key \
-            -oc cert/"${FQDN}".crt
+            -pk cert/priv.key \
+            -oc cert/open.crt
 
-5. Start Envoys
+1. Start Envoys
 ==================
 
     .. code-block:: console
