@@ -279,63 +279,84 @@ Registering Federated DataLoader
 
 :code:`DataInterface` is provided to support seamless remote data adaption.
 
-As *Shard Descriptor's* responsibilities are reading and formating the local data, *DataLoader* is expected to 
+As the *Shard Descriptor's* responsibilities are reading and formating the local data, the *DataLoader* is expected to 
 contain batching and augmenting data logic, common for all collaborators. 
 
 User must subclass :code:`DataInterface` and implement the following methods:
 
-* :code:`_delayed_init(self, data_path)` is the most important method. It will be called during collaborator 
-  initialization procedure with relevant :code:`data_path` (one that corresponds to the collaborator name that 
-  user registered in federation). User Dataset class should be instantiated with local :code:`data_path` here. 
-  If dataset initalization procedure differs for some of the  collaborators, the initialization logic must be 
-  described here. Dataset sharding procedure for test runs should also be described in this method. User is free 
-  to save objects in class fields for later use.
+.. code-block:: python
+
+    class CustomDataLoader(DataInterface):
+        def __init__(self, **kwargs):
+            # Initialize superclass with kwargs: this array will be passed
+            # to get_data_loader methods
+            super().__init__(**kwargs)
+            # Set up augmentation, save required parameters,
+            # use it as you regular dataset class
+            validation_fraction = kwargs.get('validation_fraction', 0.5)
+            ...
+            
+        @property
+        def shard_descriptor(self):
+            return self._shard_descriptor
+            
+        @shard_descriptor.setter
+        def shard_descriptor(self, shard_descriptor):
+            self._shard_descriptor = shard_descriptor
+            # You can implement data splitting logic here
+            # Or update your data set according to local Shard Descriptor atributes if required
+
+        def get_train_loader(self, **kwargs):
+            # these are the same kwargs you provided to __init__,
+            # But passed on a collaborator machine
+            bs = kwargs.get('train_batch_size', 32)
+            return foo_loader()
+
+        # so on, see the full list of methods below
+
+* Shard Descriptor setter and getter methods:
+  :code:`shard_descriptor(self, shard_descriptor)` setter is the most important method. It will be called during collaborator 
+  initialization procedure with the local Shard Descriptor. Any logic that is triggered with the Shard Descriptor replacement 
+  must be also put here.
 * :code:`get_train_loader(self, **kwargs)` will be called before training tasks execution. This method must return anything user expects to recieve in the training task with :code:`data_loader` contract argument. :code:`kwargs` dict holds the same information that was provided during :code:`DataInterface` initialization.
 * :code:`get_valid_loader(self, **kwargs)` - see the point above (just replace training with validation)
-* :code:`get_train_data_size(self)` - return number of samples in local train dataset.
+* :code:`get_train_data_size(self)` - return number of samples in local train dataset. Use the information provided by Shard Descriptor, take into account you train / validation split. 
 * :code:`get_valid_data_size(self)` - return number of samples in local validation dataset. 
 
-It is initialized with User Dataset class object and all the keyword arguments can be used by dataloaders during training or validation.
+User Dataset class should be instantiated to pass futher to the *Experiment* object. Dummy *Shard Descriptor* 
+(or custom local one) may be set up to test the augmentation or batching pipeline.
+Keyword arguments used during initialization on the frontend node may be used during dataloaders construction on collaborator machines.
 
 
-Preparing workspace distribution
----------------------------------
-Now we may use :code:`Experiment` API to prepare a workspace archive for transferring to collaborator's node. In order to run a collaborator, we want to replicate the workspace and the Python environment.
+Starting an FL experiment
+========================================
+Now we may use :code:`Experiment` API to prepare a workspace archive for transferring to the *Director*. In order to run *Collaborators*, we want to replicate the workspace and the Python environment 
+on remote machines.
 
-Instances of interface classes :code:`(TaskInterface, DataInterface, ModelInterface)` must be passed to :code:`FLExperiment.prepare_workspace_distribution()` method along with other parameters. 
+Instances of interface classes :code:`(TaskInterface, DataInterface, ModelInterface)` must be passed to :code:`FLExperiment.start()` method along with other parameters. 
 
 This method:
 
-* Compiles all provided setings to a Plan object. This is the central place where all actors in federation look up their parameters.
+* Compiles all provided setings to a Plan object. Plan is the central place where all actors in federation look up their parameters.
 * Saves plan.yaml to the :code:`plan/` folder inside the workspace.
 * Serializes interface objects on the disk.
 * Prepares :code:`requirements.txt` for remote Python environment setup.
-* Compressess the workspace to an archive so it can be coppied to collaborator nodes.
+* Compressess the whole workspace to an archive.
+* Sends the experiment archive to the Director so it may distribute the archive across the Federation and start the *Aggregator*.
   
-Starting the aggregator
----------------------------
+Observing the Experiment execution
+----------------------------------
 
-As all previous steps done, the experiment is ready to start
-:code:`FLExperiment.start_experiment()` method requires :code:`model_interface` object with initialized weights.
+If the Experiment was accepted by the *Director* user can oversee its execution with 
+:code:`Flexperiment.stream_metrics()` method that will is able to print metrics from the FL tasks (and save tensorboard logs).
 
-It starts a local aggregator that will wait for collaborators to connect.
+When the Experiment is finished, user may retrieve trained models in the native format using :code:`Flexperiment.get_best_model()` 
+and :code:`Flexperiment.get_last_model()` metods.
 
-Starting collaborators
-=======================
+:code:`Flexperiment.remove_experiment_data()` allows erasing the experiment's artifacts from the Director.
 
-The process of starting collaborators has not changed.
-User must transfer the workspace archive to a remote node and type in console:
+When the Experiment is finished
+----------------------------------
 
-.. code-block:: python
-
-    fx workspace import --archive ws.zip
-
-Please, note that aggregator and all the collaborator nodes should have the same Python interpreter version as the machine used for defining the experiment.
-
-then cd to the workspace and run
-
-.. code-block:: python
-
-    fx collaborator start -d data.yaml -n one
-
-For more details, please refer to the TaskRunner API section.
+User may utilize the same Federation object to report another experiment or even schedule several experiments that 
+will be executed one by one.
