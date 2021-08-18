@@ -240,7 +240,6 @@ class DirectorGRPCServer(director_pb2_grpc.FederationDirectorServicer):
         health_check_period = self.director.collaborator_health_check(
             collaborator_name=request.name,
             is_experiment_running=request.is_experiment_running,
-            valid_duration=request.valid_duration.seconds,
         )
         resp = director_pb2.CollaboratorHealthCheckResponse()
         resp.health_check_period.seconds = health_check_period

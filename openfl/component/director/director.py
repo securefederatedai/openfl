@@ -171,19 +171,19 @@ class Director:
         if experiment_name in self.experiment_stash.get(caller, {}):
             del self.experiment_stash[caller][experiment_name]
 
-    def collaborator_health_check(self, *, collaborator_name: str,
-                                  is_experiment_running: bool,
-                                  valid_duration: int) -> int:
+    def collaborator_health_check(
+            self, *, collaborator_name: str, is_experiment_running: bool
+    ) -> int:
         """Accept health check from envoy."""
         shard_info = self._shard_registry.get(collaborator_name)
         if not shard_info:
             raise Exception(f'Unknown shard {collaborator_name}')
 
+        hc_period = self.settings.get('envoy_health_check_period', ENVOY_HEALTH_CHECK_PERIOD)
         shard_info['is_online']: True
         shard_info['is_experiment_running'] = is_experiment_running
-        shard_info['valid_duration'] = valid_duration
+        shard_info['valid_duration'] = 2 * hc_period
         shard_info['last_updated'] = time.time()
-        hc_period = self.settings.get('envoy_health_check_period', ENVOY_HEALTH_CHECK_PERIOD)
 
         return hc_period
 

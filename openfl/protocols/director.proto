@@ -109,7 +109,6 @@ message RemoveExperimentResponse {
 message CollaboratorStatus {
     string name = 1;
     bool is_experiment_running = 2;
-    google.protobuf.Duration valid_duration = 3;
 }
 
 message CollaboratorHealthCheckResponse {
