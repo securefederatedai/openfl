@@ -1,0 +1,4 @@
+template: market_shard_descriptor.MarketShardDescriptor
+params:
+  data_folder: Market
+  rank_worldsize: 1,2

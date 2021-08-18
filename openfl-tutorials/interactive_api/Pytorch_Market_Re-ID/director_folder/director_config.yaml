@@ -1,0 +1,4 @@
+settings:
+  listen_ip: nnlicv838.inn.intel.com
+  sample_shape: ['64', '128', '3']
+  target_shape: ['1501']
