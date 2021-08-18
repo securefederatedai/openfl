@@ -193,10 +193,10 @@ Federation API class should be initialized with the aggregator node FQDN and enc
         client_id: str, director_node_fqdn: str, director_port: str
         tls: bool, ca_cert_chain: str, cert: str, private_key: str)
 
-* Federation's :code:`get_dummy_shard_descriptor` method should be used to create a fummy Shard Descriptor 
-that fakes access to real data. It may be used for debugging the user's experiment pipeline.
+* Federation's :code:`get_dummy_shard_descriptor` method should be used to create a fummy Shard Descriptor that 
+  fakes access to real data. It may be used for debugging the user's experiment pipeline.
 * Federation's :code:`get_shard_registry` method returns information about the envoys connected to the Director 
-and their Shard Descriptors.
+  and their Shard Descriptors.
 
 Experiment API
 ----------------
@@ -277,16 +277,26 @@ It adds the callable and the task contract to the task registry.
 Registering Federated DataLoader
 ---------------------------------
 
-:code:`DataInterface` is provided to support a remote DataLoader initialization.
+:code:`DataInterface` is provided to support seamless remote data adaption.
 
-It is initialized with User Dataset class object and all the keyword arguments can be used by dataloaders during training or validation.
-User must subclass :code:`DataInterface` and implements several methods.
+As *Shard Descriptor's* responsibilities are reading and formating the local data, *DataLoader* is expected to 
+contain batching and augmenting data logic, common for all collaborators. 
 
-* :code:`_delayed_init(self, data_path)` is the most important method. It will be called during collaborator initialization procedure with relevant :code:`data_path` (one that corresponds to the collaborator name that user registered in federation). User Dataset class should be instantiated with local :code:`data_path` here. If dataset initalization procedure differs for some of the  collaborators, the initialization logic must be described here. Dataset sharding procedure for test runs should also be described in this method. User is free to save objects in class fields for later use.
+User must subclass :code:`DataInterface` and implement the following methods:
+
+* :code:`_delayed_init(self, data_path)` is the most important method. It will be called during collaborator 
+  initialization procedure with relevant :code:`data_path` (one that corresponds to the collaborator name that 
+  user registered in federation). User Dataset class should be instantiated with local :code:`data_path` here. 
+  If dataset initalization procedure differs for some of the  collaborators, the initialization logic must be 
+  described here. Dataset sharding procedure for test runs should also be described in this method. User is free 
+  to save objects in class fields for later use.
 * :code:`get_train_loader(self, **kwargs)` will be called before training tasks execution. This method must return anything user expects to recieve in the training task with :code:`data_loader` contract argument. :code:`kwargs` dict holds the same information that was provided during :code:`DataInterface` initialization.
-* :code:`get_valid_loader(self, **kwargs)` - see the point above only with validation data
+* :code:`get_valid_loader(self, **kwargs)` - see the point above (just replace training with validation)
 * :code:`get_train_data_size(self)` - return number of samples in local train dataset.
 * :code:`get_valid_data_size(self)` - return number of samples in local validation dataset. 
+
+It is initialized with User Dataset class object and all the keyword arguments can be used by dataloaders during training or validation.
+
 
 Preparing workspace distribution
 ---------------------------------
