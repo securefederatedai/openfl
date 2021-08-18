@@ -20,6 +20,7 @@ logger = getLogger(__name__)
 class AverageMeter(object):
     """
     Computes and stores the average and current value.
+
     Code imported from https://github.com/pytorch/examples/blob/master/imagenet/main.py#L247-L262
     """
 
@@ -67,7 +68,7 @@ def compute_ap_cmc(index, good_index, junk_index):
 
 
 def evaluate(distmat, q_pids, g_pids, q_camids, g_camids):
-    """Evaluation."""
+    """Evaluate model."""
     num_q, num_g = distmat.shape
     index = np.argsort(distmat, axis=1)  # from small to large
 
@@ -97,9 +98,9 @@ def evaluate(distmat, q_pids, g_pids, q_camids, g_camids):
         logger.error(f'{num_no_gt} query imgs do not have groundtruth.')
 
     cmc = cmc / (num_q - num_no_gt)
-    map = ap / (num_q - num_no_gt)
+    mean_ap = ap / (num_q - num_no_gt)
 
-    return cmc, map
+    return cmc, mean_ap
 
 
 @torch.no_grad()
@@ -153,10 +154,7 @@ class ImageDataset(Dataset):
 
 
 def read_image(img_path):
-    """
-    Keep reading image until succeed.
-    This can avoid IOError incurred by heavy IO process.
-    """
+    """Keep reading image until succeed. This can avoid IOError incurred by heavy IO process."""
     got_img = False
     if not img_path.exists():
         raise IOError(f'{img_path} does not exist')
@@ -173,8 +171,10 @@ def read_image(img_path):
 
 class RandomIdentitySampler(Sampler):
     """
-    Randomly sample N identities.
-    Then for each identity, randomly sample K instances, therefore batch size is N*K.
+    Random Sampler.
+
+    Randomly sample N identities, then for each identity,
+    randomly sample K instances, therefore batch size is N*K.
 
     Args:
     - data_source (Dataset): dataset to sample from.
@@ -225,5 +225,5 @@ class RandomIdentitySampler(Sampler):
         return iter(ret)
 
     def __len__(self):
-        """Number of examples in an epoch."""
+        """Return number of examples in an epoch."""
         return self.length

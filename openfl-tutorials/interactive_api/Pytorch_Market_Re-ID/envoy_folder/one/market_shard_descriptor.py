@@ -133,7 +133,7 @@ class MarketShardDescriptor(ShardDescriptor):
             if pid == -1:
                 continue  # junk images are just ignored
             pid_container.add(pid)
-        pid2label = {pid:label for label, pid in enumerate(pid_container)}
+        pid2label = {pid: label for label, pid in enumerate(pid_container)}
 
         dataset = []
         for img_path in img_paths:
