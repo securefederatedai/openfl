@@ -3,6 +3,7 @@ bash start_director.sh &
 
 sleep 3
 cd ../envoy
+pip install sd_requirements.txt
 python kvasir_shard_descriptor.py &
 
 sleep 2
