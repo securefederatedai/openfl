@@ -147,9 +147,9 @@ class Plan(object):
             return plan
 
         except Exception:
-            Plan.logger.error(f'Parsing Federated Learning Plan : '
-                              f'[red]FAILURE[/] : [blue]{plan_config_path}[/].',
-                              extra={'markup': True})
+            Plan.logger.exception(f'Parsing Federated Learning Plan : '
+                                  f'[red]FAILURE[/] : [blue]{plan_config_path}[/].',
+                                  extra={'markup': True})
             raise
 
     @staticmethod
