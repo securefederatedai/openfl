@@ -1,12 +1,12 @@
 # Copyright (C) 2020-2021 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-import copy
-from collections import defaultdict
-import random
-from logging import getLogger
+"""Tools for metric computation and Dataloader."""
 
-logger = getLogger(__name__)
+import copy
+import random
+from collections import defaultdict
+from logging import getLogger
 
 import numpy as np
 import torch
@@ -14,23 +14,28 @@ from PIL import Image
 from torch.utils.data import Dataset
 from torch.utils.data.sampler import Sampler
 
+logger = getLogger(__name__)
+
 
 class AverageMeter(object):
-    """Computes and stores the average and current value.
-
-       Code imported from https://github.com/pytorch/examples/blob/master/imagenet/main.py#L247-L262
+    """
+    Computes and stores the average and current value.
+    Code imported from https://github.com/pytorch/examples/blob/master/imagenet/main.py#L247-L262
     """
 
     def __init__(self):
+        """Initialize Average Meter."""
         self.reset()
 
     def reset(self):
+        """Reset values."""
         self.val = 0
         self.avg = 0
         self.sum = 0
         self.count = 0
 
     def update(self, val, n=1):
+        """Update values."""
         self.val = val
         self.sum += val * n
         self.count += n
@@ -38,6 +43,7 @@ class AverageMeter(object):
 
 
 def compute_ap_cmc(index, good_index, junk_index):
+    """Compute validation metrics."""
     ap = 0
     cmc = np.zeros(len(index))
 
@@ -48,36 +54,32 @@ def compute_ap_cmc(index, good_index, junk_index):
     # find good_index index
     ngood = len(good_index)
     mask = np.in1d(index, good_index)
-    rows_good = np.argwhere(mask == True)
+    rows_good = np.argwhere(mask)
     rows_good = rows_good.flatten()
 
     cmc[rows_good[0]:] = 1.0
     for i in range(ngood):
         d_recall = 1.0 / ngood
         precision = (i + 1) * 1.0 / (rows_good[i] + 1)
-        # if rows_good[i]!=0:
-        #     old_precision = i*1.0/rows_good[i]
-        # else:
-        #     old_precision=1.0
-        # ap = ap + d_recall*(old_precision + precision)/2
         ap = ap + d_recall * precision
 
     return ap, cmc
 
 
 def evaluate(distmat, q_pids, g_pids, q_camids, g_camids):
+    """Evaluation."""
     num_q, num_g = distmat.shape
-    index = np.argsort(distmat, axis=1) # from small to large
+    index = np.argsort(distmat, axis=1)  # from small to large
 
-    num_no_gt = 0 # num of query imgs without groundtruth
+    num_no_gt = 0  # num of query imgs without groundtruth
     num_r1 = 0
-    CMC = np.zeros(len(g_pids))
-    AP = 0
+    cmc = np.zeros(len(g_pids))
+    ap = 0
 
     for i in range(num_q):
         # groundtruth index
-        query_index = np.argwhere(g_pids==q_pids[i])
-        camera_index = np.argwhere(g_camids==q_camids[i])
+        query_index = np.argwhere(g_pids == q_pids[i])
+        camera_index = np.argwhere(g_camids == q_camids[i])
         good_index = np.setdiff1d(query_index, camera_index, assume_unique=True)
         if good_index.size == 0:
             num_no_gt += 1
@@ -85,25 +87,26 @@ def evaluate(distmat, q_pids, g_pids, q_camids, g_camids):
         # remove gallery samples that have the same pid and camid with query
         junk_index = np.intersect1d(query_index, camera_index)
 
-        ap_tmp, CMC_tmp = compute_ap_cmc(index[i], good_index, junk_index)
-        if CMC_tmp[0]==1:
+        ap_tmp, cmc_tmp = compute_ap_cmc(index[i], good_index, junk_index)
+        if cmc_tmp[0] == 1:
             num_r1 += 1
-        CMC = CMC + CMC_tmp
-        AP += ap_tmp
+        cmc = cmc + cmc_tmp
+        ap += ap_tmp
 
     if num_no_gt > 0:
-        logger.info(f'{num_no_gt} query imgs do not have groundtruth.')
+        logger.error(f'{num_no_gt} query imgs do not have groundtruth.')
 
-    CMC = CMC / (num_q - num_no_gt)
-    mAP = AP / (num_q - num_no_gt)
+    cmc = cmc / (num_q - num_no_gt)
+    map = ap / (num_q - num_no_gt)
 
-    return CMC, mAP
+    return cmc, map
 
 
 @torch.no_grad()
 def extract_feature(model, dataloader):
+    """Extract features for validation."""
     features, pids, camids = [], [], []
-    for batch_idx, (imgs, batch_pids, batch_camids) in enumerate(dataloader):
+    for imgs, batch_pids, batch_camids in dataloader:
         flip_imgs = fliplr(imgs)
         imgs, flip_imgs = imgs.cuda(), flip_imgs.cuda()
         batch_features = model(imgs).data
@@ -121,33 +124,39 @@ def extract_feature(model, dataloader):
 
 
 def fliplr(img):
-    ''' flip horizontal'''
-    inv_idx = torch.arange(img.size(3)-1, -1, -1).long()  # N x C x H x W
+    """Flip horizontal."""
+    inv_idx = torch.arange(img.size(3) - 1, -1, -1).long()  # N x C x H x W
     img_flip = img.index_select(3, inv_idx)
 
     return img_flip
 
 
 class ImageDataset(Dataset):
-    """Image Person ReID Dataset"""
+    """Image Person ReID Dataset."""
+
     def __init__(self, dataset, transform=None):
+        """Initialize Dataset."""
         self.dataset = dataset
         self.transform = transform
 
     def __len__(self):
+        """Length of dataset."""
         return len(self.dataset)
 
     def __getitem__(self, index):
+        """Get item from dataset."""
         img_path, pid, camid = self.dataset[index]
         img = read_image(img_path)
         if self.transform is not None:
             img = self.transform(img)
         return img, pid, camid
 
-    
+
 def read_image(img_path):
-    """Keep reading image until succeed.
-    This can avoid IOError incurred by heavy IO process."""
+    """
+    Keep reading image until succeed.
+    This can avoid IOError incurred by heavy IO process.
+    """
     got_img = False
     if not img_path.exists():
         raise IOError(f'{img_path} does not exist')
@@ -156,21 +165,24 @@ def read_image(img_path):
             img = Image.open(img_path).convert('RGB')
             got_img = True
         except IOError:
-            logger.info(f"IOError incurred when reading '{img_path}'. Will redo. Don't worry. Just chill.")
+            logger.info(f"IOError incurred when reading '{img_path}'."
+                        f" Will redo. Don't worry. Just chill.")
             pass
     return img
 
 
 class RandomIdentitySampler(Sampler):
     """
-    Randomly sample N identities, then for each identity,
-    randomly sample K instances, therefore batch size is N*K.
+    Randomly sample N identities.
+    Then for each identity, randomly sample K instances, therefore batch size is N*K.
 
     Args:
     - data_source (Dataset): dataset to sample from.
     - num_instances (int): number of instances per identity.
     """
+
     def __init__(self, data_source, num_instances=4):
+        """Initialize Sampler."""
         self.data_source = data_source
         self.num_instances = num_instances
         self.index_dic = defaultdict(list)
@@ -189,6 +201,7 @@ class RandomIdentitySampler(Sampler):
             self.length += num - num % self.num_instances
 
     def __iter__(self):
+        """Iterate over Sampler."""
         list_container = []
 
         for pid in self.pids:
@@ -212,4 +225,5 @@ class RandomIdentitySampler(Sampler):
         return iter(ret)
 
     def __len__(self):
+        """Number of examples in an epoch."""
         return self.length
