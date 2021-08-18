@@ -77,7 +77,6 @@ class RandomErasing(object):
 
     def __call__(self, img):
         """Call of Erasing."""
-
         if random.uniform(0, 1) >= self.probability:
             return img
 
