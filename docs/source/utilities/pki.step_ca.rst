@@ -22,10 +22,10 @@ Token must be copied to each node by some secure way. Each step is considered in
 1. Create CA, i.e create root key pair, CA server config and other.
     .. code-block:: console
 
-       $ fx pki install -p </path/to/ca/dir> --password <123> --ca-url <host:port>
+       $ fx pki install -p </path/to/ca/dir> --ca-url <host:port>
     | :code:`-p` - path to folder, which will contain ca files.
-    | :code:`--password` - password that will encrypts some ca files.
     | :code:`--ca-url` - host and port which ca server will listen
+    When executing this command, you will be prompted for a password and password confirmation. The password will encrypt some ca files.
     This command will also download `step-ca <https://github.com/smallstep/certificates>`_ and `step <https://github.com/smallstep/cli>`_ binaries from github.
 
 2. Run CA https server.
