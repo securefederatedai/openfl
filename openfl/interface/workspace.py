@@ -396,7 +396,7 @@ def dockerize_(context, base_image, save):
             dockerfile=dockerfile_workspace)
 
     except Exception as e:
-        echo('Faild to build the image\n' + str(e) + '\n')
+        echo('Failed to build the image\n' + str(e) + '\n')
         sys.exit(1)
     else:
         echo('The workspace image has been built successfully!')
