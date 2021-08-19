@@ -9,7 +9,7 @@ import random
 from PIL import Image
 
 
-class RandomCropping(object):
+class ResizeRandomCropping(object):
     """
     With a probability, first increase image size to (1 + 1/8), and then perform random crop.
 
@@ -44,9 +44,9 @@ class RandomCropping(object):
         y_maxrange = new_height - self.height
         x1 = int(round(random.uniform(0, x_maxrange)))
         y1 = int(round(random.uniform(0, y_maxrange)))
-        croped_img = resized_img.crop((x1, y1, x1 + self.width, y1 + self.height))
+        cropped_img = resized_img.crop((x1, y1, x1 + self.width, y1 + self.height))
 
-        return croped_img
+        return cropped_img
 
 
 class RandomErasing(object):

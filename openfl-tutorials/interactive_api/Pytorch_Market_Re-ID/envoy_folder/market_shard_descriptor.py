@@ -15,6 +15,10 @@ from openfl.interface.interactive_api.shard_descriptor import ShardDescriptor
 
 logger = getLogger(__name__)
 
+# Previously download data and put to project folder
+# URL: https://www.kaggle.com/pengcw1/market-1501
+
+# search in whole project directory
 DATAPATH = list(Path.cwd().parents[2].rglob('**/Market'))[0]    # parent directory of project
 
 
@@ -24,9 +28,7 @@ class MarketShardDescriptor(ShardDescriptor):
 
     Reference:
     Zheng et al. Scalable Person Re-identification: A Benchmark. ICCV 2015.
-
     URL: http://www.liangzheng.org/Project/project_reid.html
-    Download data: https://www.kaggle.com/pengcw1/market-1501
 
     Dataset statistics:
         identities: 1501 (+1 for background)
@@ -38,13 +40,14 @@ class MarketShardDescriptor(ShardDescriptor):
         super().__init__()
 
         # Settings for sharding the dataset
-        self.rank_worldsize = tuple(int(num) for num in rank_worldsize.split(','))
+        self.rank, self.worldsize = tuple(int(num) for num in rank_worldsize.split(','))
 
         self.pattern = re.compile(r'([-\d]+)_c(\d)')
         self.dataset_dir = Path(DATAPATH)
         self.train_dir = self.dataset_dir / 'bounding_box_train'
         self.query_dir = self.dataset_dir / 'query'
         self.gallery_dir = self.dataset_dir / 'bounding_box_test'
+        self.imgs_path = list(self.train_dir.glob('*.jpg'))[self.rank - 1::self.worldsize]
 
         self._check_before_run()
 
@@ -77,16 +80,11 @@ class MarketShardDescriptor(ShardDescriptor):
 
     def __len__(self):
         """Length of shard."""
-        start = self.rank_worldsize[0] - 1
-        step = self.rank_worldsize[1]
-        return len(list(self.train_dir.glob('*.jpg'))[start::step])
+        return len(self.imgs_path)
 
     def __getitem__(self, index: int):
         """Return a item by the index."""
-        start = self.rank_worldsize[0] - 1
-        step = self.rank_worldsize[1]
-        imgs_path = list(self.train_dir.glob('*.jpg'))[start::step]
-        img_path = imgs_path[index]
+        img_path = self.imgs_path[index]
         pid, _ = map(int, self.pattern.search(img_path.name).groups())
 
         img = Image.open(img_path)
@@ -106,8 +104,8 @@ class MarketShardDescriptor(ShardDescriptor):
     @property
     def dataset_description(self) -> str:
         """Return the dataset description."""
-        return (f'Market dataset, shard number {self.rank_worldsize[0]} '
-                f'out of {self.rank_worldsize[1]}')
+        return (f'Market dataset, shard number {self.rank} '
+                f'out of {self.worldsize}')
 
     def _check_before_run(self):
         """Check if all files are available before going deeper."""
@@ -123,9 +121,7 @@ class MarketShardDescriptor(ShardDescriptor):
     def _process_dir(self, dir_path, relabel=False, label_start=0):
         """Get data from directory."""
         pattern = re.compile(r'([-\d]+)_c(\d)')
-        start = self.rank_worldsize[0] - 1
-        step = self.rank_worldsize[1]
-        img_paths = list(dir_path.glob('*.jpg'))[start::step]
+        img_paths = list(dir_path.glob('*.jpg'))[self.rank - 1::self.worldsize]
 
         pid_container = set()
         for img_path in img_paths:
