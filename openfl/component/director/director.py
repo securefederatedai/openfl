@@ -5,8 +5,6 @@
 
 import asyncio
 import logging
-import os
-import shutil
 import time
 import typing
 from collections import defaultdict
@@ -14,6 +12,7 @@ from pathlib import Path
 
 from openfl.federated import Plan
 from openfl.protocols import director_pb2
+from openfl.utilities.workspace import ExperimentWorkspace
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +21,7 @@ class Director:
     """Director class."""
 
     def __init__(self, *, tls: bool = True,
-                 root_ca: Path = None, key: Path = None, cert: Path = None,
+                 root_certificate: Path = None, private_key: Path = None, certificate: Path = None,
                  sample_shape: list = None, target_shape: list = None) -> None:
         """Initialize a director object."""
         # TODO: add working directory
@@ -38,9 +37,9 @@ class Director:
         # {API name : {experiment name : aggregator}}
 
         self.tls = tls
-        self.root_ca = root_ca
-        self.key = key
-        self.cert = cert
+        self.root_certificate = root_certificate
+        self.private_key = private_key
+        self.certificate = certificate
 
     def acknowledge_shard(self, shard_info: director_pb2.ShardInfo) -> bool:
         """Save shard info to shard registry if it's acceptable."""
@@ -71,13 +70,12 @@ class Director:
         # TODO: save to file
         self.experiment_data[experiment_name] = data_file_path
 
-        self.create_workspace(experiment_name, data_file_path)
-        asyncio.create_task(self._run_aggregator(
+        asyncio.create_task(self._run_aggregator_in_workspace(
+            experiment_name=experiment_name,
+            data_file_name=data_file_path,
             experiment_sender=sender_name,
             initial_tensor_dict=tensor_dict,
-            experiment_name=experiment_name,
             collaborator_names=collaborator_names,
-            data_file_name=data_file_path
         ))
 
         logger.info(f'New experiment {experiment_name} for '
@@ -197,16 +195,16 @@ class Director:
 
         return envoy_infos
 
-    @staticmethod
-    def create_workspace(experiment_name: str, data_file_path: Path):
-        """Create the aggregator workspace."""
-        if os.path.exists(experiment_name):
-            shutil.rmtree(experiment_name)
-        os.makedirs(experiment_name)
-        arch_name = f'{experiment_name}/{experiment_name}' + '.zip'
-        shutil.copy(data_file_path, arch_name)
-        shutil.unpack_archive(arch_name, experiment_name)
-        os.remove(arch_name)
+    async def _run_aggregator_in_workspace(
+            self,
+            *,
+            experiment_name: str,
+            data_file_name: Path,
+            **kwargs
+    ) -> None:
+        """Run aggregator in a workspace."""
+        with ExperimentWorkspace(experiment_name, data_file_name):
+            await self._run_aggregator(experiment_name=experiment_name, **kwargs)
 
     async def _run_aggregator(
             self,
@@ -215,22 +213,18 @@ class Director:
             initial_tensor_dict,
             experiment_name,
             collaborator_names,
-            data_file_name,
             plan_path='plan/plan.yaml'
-    ):
+    ) -> None:
         """Run aggregator."""
-        cwd = os.getcwd()
-        os.chdir(f'{cwd}/{experiment_name}')
         plan = Plan.parse(plan_config_path=Path(plan_path))
-
         plan.authorized_cols = list(collaborator_names)
 
         logger.info('🧿 Starting the Aggregator Service.')
         aggregator_server = plan.interactive_api_get_server(
             tensor_dict=initial_tensor_dict,
-            chain=self.root_ca,
-            certificate=self.cert,
-            private_key=self.key,
+            root_certificate=self.root_certificate,
+            certificate=self.certificate,
+            private_key=self.private_key,
             tls=self.tls,
         )
         self.experiment_stash[experiment_sender][experiment_name] = aggregator_server
@@ -246,9 +240,6 @@ class Director:
         except KeyboardInterrupt:
             pass
         finally:
-            os.chdir(cwd)
-            shutil.rmtree(experiment_name)
-            os.remove(data_file_name)
             grpc_server.stop(0)
             # Temporary solution to free RAM used by TensorDB
             aggregator_server.aggregator.tensor_db.clean_up(0)
