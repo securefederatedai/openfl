@@ -22,7 +22,8 @@ Spawning components
 Aggregator
 ===========
 
-The aggregator is a short-living entity, which means that its lifespan is limited by experiment execution time. It orchestrates collaborators according to the FL plan and performs model updates aggregation.
+The aggregator is a short-living entity, which means that its lifespan is limited by experiment execution time. 
+It orchestrates collaborators according to the FL plan and performs model updates aggregation.
 The aggregator is spawned by the Director (described below) when a new experiment is submitted.
 
 
@@ -48,5 +49,6 @@ Director support several concurrent frontend connections (yet experiments are ru
 Envoy
 =========
 
-Some text
-
+|productName| comes with another long-existing actor called Envoy. It runs on collaborator machines connected to a *Director*. 
+There is one to one mapping between *Envoys* and Dataset shards: every *Envoy* needs exactly one *Shard Descriptor* to run. 
+When the *Director* starts an experiment, *Envoy* will accept the experiment workspace, prepare the environment and start a *Collaborator* 

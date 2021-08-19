@@ -315,16 +315,16 @@ User must subclass :code:`DataInterface` and implement the following methods:
         # so on, see the full list of methods below
 
 * Shard Descriptor setter and getter methods:
-  :code:`shard_descriptor(self, shard_descriptor)` setter is the most important method. It will be called during collaborator 
+  :code:`shard_descriptor(self, shard_descriptor)` setter is the most important method. It will be called during the *Collaborator* 
   initialization procedure with the local Shard Descriptor. Any logic that is triggered with the Shard Descriptor replacement 
   must be also put here.
-* :code:`get_train_loader(self, **kwargs)` will be called before training tasks execution. This method must return anything user expects to recieve in the training task with :code:`data_loader` contract argument. :code:`kwargs` dict holds the same information that was provided during :code:`DataInterface` initialization.
+* :code:`get_train_loader(self, **kwargs)` will be called before training tasks execution. This method must return anything the user expects to receive in the training task with :code:`data_loader` contract argument. :code:`kwargs` dict holds the same information that was provided during :code:`DataInterface` initialization.
 * :code:`get_valid_loader(self, **kwargs)` - see the point above (just replace training with validation)
-* :code:`get_train_data_size(self)` - return number of samples in local train dataset. Use the information provided by Shard Descriptor, take into account you train / validation split. 
+* :code:`get_train_data_size(self)` - return number of samples in local train dataset. Use the information provided by Shard Descriptor, take into account your train / validation split. 
 * :code:`get_valid_data_size(self)` - return number of samples in local validation dataset. 
 
-User Dataset class should be instantiated to pass futher to the *Experiment* object. Dummy *Shard Descriptor* 
-(or custom local one) may be set up to test the augmentation or batching pipeline.
+User Dataset class should be instantiated to pass further to the *Experiment* object. Dummy *Shard Descriptor* 
+(or a custom local one) may be set up to test the augmentation or batching pipeline.
 Keyword arguments used during initialization on the frontend node may be used during dataloaders construction on collaborator machines.
 
 
@@ -337,11 +337,11 @@ Instances of interface classes :code:`(TaskInterface, DataInterface, ModelInterf
 
 This method:
 
-* Compiles all provided setings to a Plan object. Plan is the central place where all actors in federation look up their parameters.
+* Compiles all provided settings to a Plan object. The Plan is the central place where all actors in federation look up their parameters.
 * Saves plan.yaml to the :code:`plan/` folder inside the workspace.
 * Serializes interface objects on the disk.
 * Prepares :code:`requirements.txt` for remote Python environment setup.
-* Compressess the whole workspace to an archive.
+* Compresses the whole workspace to an archive.
 * Sends the experiment archive to the Director so it may distribute the archive across the Federation and start the *Aggregator*.
   
 Observing the Experiment execution
@@ -358,5 +358,5 @@ and :code:`Flexperiment.get_last_model()` metods.
 When the Experiment is finished
 ----------------------------------
 
-User may utilize the same Federation object to report another experiment or even schedule several experiments that 
+Users may utilize the same Federation object to report another experiment or even schedule several experiments that 
 will be executed one by one.
