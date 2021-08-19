@@ -53,10 +53,10 @@ class MarketShardDescriptor(ShardDescriptor):
 
         self.train, self.num_train_pids, self.num_train_imgs = self._process_dir(self.train_dir)
         self.query, self.num_query_pids, self.num_query_imgs = self._process_dir(self.query_dir)
-        self.gallery, self.num_gallery_pids, self.num_gallery_imgs = self._process_dir(self.gal_dir)
+        self.gallery, self.num_gal_pids, self.num_gal_imgs = self._process_dir(self.gal_dir)
 
         num_total_pids = self.num_train_pids + self.num_query_pids
-        num_total_imgs = self.num_train_imgs + self.num_query_imgs + self.num_gallery_imgs
+        num_total_imgs = self.num_train_imgs + self.num_query_imgs + self.num_gal_imgs
 
         logger.info(
             '=> Market1501 loaded\n'
@@ -66,7 +66,7 @@ class MarketShardDescriptor(ShardDescriptor):
             '  ------------------------------\n'
             f'  train    | {self.num_train_pids} | {self.num_train_imgs}\n'
             f'  query    | {self.num_query_pids} | {self.num_query_imgs}\n'
-            f'  gallery  | {self.num_gallery_pids} | {self.num_gallery_imgs}\n'
+            f'  gallery  | {self.num_gal_pids} | {self.num_gal_imgs}\n'
             '------------------------------\n'
             f'total    | {num_total_pids} | {num_total_imgs}\n'
             '  ------------------------------'
