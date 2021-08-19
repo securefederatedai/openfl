@@ -120,12 +120,11 @@ class MarketShardDescriptor(ShardDescriptor):
 
     def _process_dir(self, dir_path, relabel=False, label_start=0):
         """Get data from directory."""
-        pattern = re.compile(r'([-\d]+)_c(\d)')
         img_paths = list(dir_path.glob('*.jpg'))[self.rank - 1::self.worldsize]
 
         pid_container = set()
         for img_path in img_paths:
-            pid, _ = map(int, pattern.search(img_path.name).groups())
+            pid, _ = map(int, self.pattern.search(img_path.name).groups())
             if pid == -1:
                 continue  # junk images are just ignored
             pid_container.add(pid)
@@ -133,7 +132,7 @@ class MarketShardDescriptor(ShardDescriptor):
 
         dataset = []
         for img_path in img_paths:
-            pid, camid = map(int, pattern.search(img_path.name).groups())
+            pid, camid = map(int, self.pattern.search(img_path.name).groups())
             if pid == -1:
                 continue  # junk images are just ignored
             if label_start == 0:
