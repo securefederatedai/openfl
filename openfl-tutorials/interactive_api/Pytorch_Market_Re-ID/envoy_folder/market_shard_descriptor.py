@@ -46,20 +46,14 @@ class MarketShardDescriptor(ShardDescriptor):
         self.dataset_dir = Path(DATAPATH)
         self.train_dir = self.dataset_dir / 'bounding_box_train'
         self.query_dir = self.dataset_dir / 'query'
-        self.gallery_dir = self.dataset_dir / 'bounding_box_test'
+        self.gal_dir = self.dataset_dir / 'bounding_box_test'
         self.imgs_path = list(self.train_dir.glob('*.jpg'))[self.rank - 1::self.worldsize]
 
         self._check_before_run()
 
-        self.train, self.num_train_pids, self.num_train_imgs = self._process_dir(
-            self.train_dir, relabel=True
-        )
-        self.query, self.num_query_pids, self.num_query_imgs = self._process_dir(
-            self.query_dir, relabel=False
-        )
-        self.gallery, self.num_gallery_pids, self.num_gallery_imgs = self._process_dir(
-            self.gallery_dir, relabel=False
-        )
+        self.train, self.num_train_pids, self.num_train_imgs = self._process_dir(self.train_dir)
+        self.query, self.num_query_pids, self.num_query_imgs = self._process_dir(self.query_dir)
+        self.gallery, self.num_gallery_pids, self.num_gallery_imgs = self._process_dir(self.gal_dir)
 
         num_total_pids = self.num_train_pids + self.num_query_pids
         num_total_imgs = self.num_train_imgs + self.num_query_imgs + self.num_gallery_imgs
@@ -85,11 +79,11 @@ class MarketShardDescriptor(ShardDescriptor):
     def __getitem__(self, index: int):
         """Return a item by the index."""
         img_path = self.imgs_path[index]
-        pid, _ = map(int, self.pattern.search(img_path.name).groups())
+        pid, camid = map(int, self.pattern.search(img_path.name).groups())
 
         img = Image.open(img_path)
         img = np.asarray(img)
-        return img, pid
+        return img, pid, camid
 
     @property
     def sample_shape(self):
@@ -99,7 +93,7 @@ class MarketShardDescriptor(ShardDescriptor):
     @property
     def target_shape(self):
         """Return the target shape info."""
-        return ['1501']
+        return ['2']
 
     @property
     def dataset_description(self) -> str:
@@ -115,10 +109,10 @@ class MarketShardDescriptor(ShardDescriptor):
             raise RuntimeError(f'{self.train_dir} is not available')
         if not self.query_dir.exists():
             raise RuntimeError(f'{self.query_dir} is not available')
-        if not self.gallery_dir.exists():
-            raise RuntimeError(f'{self.gallery_dir} is not available')
+        if not self.gal_dir.exists():
+            raise RuntimeError(f'{self.gal_dir} is not available')
 
-    def _process_dir(self, dir_path, relabel=False, label_start=0):
+    def _process_dir(self, dir_path, label_start=0):
         """Get data from directory."""
         img_paths = list(dir_path.glob('*.jpg'))[self.rank - 1::self.worldsize]
 
@@ -128,7 +122,6 @@ class MarketShardDescriptor(ShardDescriptor):
             if pid == -1:
                 continue  # junk images are just ignored
             pid_container.add(pid)
-        pid2label = {pid: label for label, pid in enumerate(pid_container)}
 
         dataset = []
         for img_path in img_paths:
@@ -139,8 +132,6 @@ class MarketShardDescriptor(ShardDescriptor):
                 assert 0 <= pid <= 1501  # pid == 0 means background
             assert 1 <= camid <= 6
             camid -= 1  # index starts from 0
-            if relabel:
-                pid = pid2label[pid] + label_start
             dataset.append((img_path, pid, camid))
 
         num_pids = len(pid_container)
