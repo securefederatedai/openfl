@@ -1,18 +1,20 @@
-import logging
-from socket import getfqdn
-
-import torch.optim as optim
-
-
-from tests.github.interactive_api_director.experiments.pytorch_kvasir_unet.data_loader import load_data
-from tests.github.interactive_api_director.experiments.pytorch_kvasir_unet.model import UNet
-from tests.github.interactive_api_director.experiments.pytorch_kvasir_unet.dataset import KvasirDataset, FedDataset
-from openfl.interface.interactive_api.experiment import ModelInterface, FLExperiment
-from openfl.interface.interactive_api.federation import Federation
-from tests.github.interactive_api_director.experiments.pytorch_kvasir_unet.tasks import validate, task_interface
-# from tests.github.interactive_api.experiment_runner import run_experiment
-
 from copy import deepcopy
+
+import numpy as np
+import PIL
+import torch.optim as optim
+from tests.github.interactive_api_director.experiments.pytorch_kvasir_unet.model import UNet
+from tests.github.interactive_api_director.experiments.pytorch_kvasir_unet.tasks import task_interface
+from tests.github.interactive_api_director.experiments.pytorch_kvasir_unet.tasks import validate
+from torch.utils.data import DataLoader
+from torch.utils.data import Dataset
+from torch.utils.data import SubsetRandomSampler
+from torchvision import transforms as tsf
+
+from openfl.interface.interactive_api.experiment import DataInterface
+from openfl.interface.interactive_api.experiment import FLExperiment
+from openfl.interface.interactive_api.experiment import ModelInterface
+from openfl.interface.interactive_api.federation import Federation
 
 
 federation = Federation(client_id='frontend', director_node_fqdn='localhost', director_port=50051, tls=False)
@@ -23,13 +25,6 @@ shard_registry
 dummy_shard_desc = federation.get_dummy_shard_descriptor(size=10)
 sample, target = dummy_shard_desc[0]
 
-from openfl.interface.interactive_api.experiment import TaskInterface, DataInterface, ModelInterface, FLExperiment
-
-import os
-import PIL
-import numpy as np
-from torch.utils.data import Dataset, DataLoader, SubsetRandomSampler
-from torchvision import transforms as tsf
 
 # Now you can implement you data loaders using dummy_shard_desc
 class KvasirSD(DataInterface, Dataset):
@@ -68,7 +63,6 @@ class KvasirSD(DataInterface, Dataset):
         
         self.train_indeces = np.arange(len(self.shard_descriptor) - validation_size)
         self.val_indeces = np.arange(len(self.shard_descriptor) - validation_size, len(self.shard_descriptor))
-        
 
     def __getitem__(self, index):
         img, mask = self.shard_descriptor[index]
@@ -116,15 +110,12 @@ for i, (sample, target) in enumerate(fed_dataset.get_train_loader()):
 model_unet = UNet()
 optimizer_adam = optim.Adam(model_unet.parameters(), lr=1e-4)
 
-from copy import deepcopy
-
 framework_adapter = 'openfl.plugins.frameworks_adapters.pytorch_adapter.FrameworkAdapterPlugin'
 MI = ModelInterface(model=model_unet, optimizer=optimizer_adam, framework_plugin=framework_adapter)
 
 # Save the initial model state
 initial_model = deepcopy(model_unet)
 
-from tests.github.interactive_api_director.experiments.pytorch_kvasir_unet.tasks import task_interface
 # create an experimnet in federation
 experiment_name = 'kvasir_test_experiment'
 fl_experiment = FLExperiment(federation=federation, experiment_name=experiment_name)
