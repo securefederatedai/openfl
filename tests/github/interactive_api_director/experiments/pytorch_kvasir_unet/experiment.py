@@ -29,7 +29,7 @@ sample, target = dummy_shard_desc[0]
 # Now you can implement you data loaders using dummy_shard_desc
 class KvasirSD(DataInterface, Dataset):
 
-    def __init__(self, validation_fraction=1/8, **kwargs):
+    def __init__(self, validation_fraction=1/8, train_bs, valid_bs, **kwargs):
         super().__init__(**kwargs)
         
         self.validation_fraction = validation_fraction
@@ -44,6 +44,8 @@ class KvasirSD(DataInterface, Dataset):
             tsf.ToPILImage(),
             tsf.Resize((332, 332), interpolation=PIL.Image.NEAREST),
             tsf.ToTensor()])
+        self.train_bs = train_bs
+        self.valid_bs = valid_bs
         
     @property
     def shard_descriptor(self):
@@ -80,7 +82,7 @@ class KvasirSD(DataInterface, Dataset):
         """
         train_sampler = SubsetRandomSampler(self.train_indeces)
         return DataLoader(
-            self, num_workers=8, batch_size=self.kwargs['train_bs'], sampler=train_sampler
+            self, num_workers=8, batch_size=self.train_bs, sampler=train_sampler
             )
 
     def get_valid_loader(self, **kwargs):
@@ -88,7 +90,7 @@ class KvasirSD(DataInterface, Dataset):
         Output of this method will be provided to tasks without optimizer in contract
         """
         val_sampler = SubsetRandomSampler(self.val_indeces)
-        return DataLoader(self, num_workers=8, batch_size=self.kwargs['valid_bs'], sampler=val_sampler)
+        return DataLoader(self, num_workers=8, batch_size=self.valid_bs, sampler=val_sampler)
 
     def get_train_data_size(self):
         """
