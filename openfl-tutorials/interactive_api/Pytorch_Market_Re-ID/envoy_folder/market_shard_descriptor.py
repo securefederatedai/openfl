@@ -18,9 +18,6 @@ logger = getLogger(__name__)
 # Previously download data and put to project folder
 # URL: https://www.kaggle.com/pengcw1/market-1501
 
-# search in whole project directory
-DATAPATH = list(Path.cwd().parents[2].rglob('**/Market'))[0]    # parent directory of project
-
 
 class MarketShardDescriptor(ShardDescriptor):
     """
@@ -35,7 +32,7 @@ class MarketShardDescriptor(ShardDescriptor):
         images: 12936 (train) + 3368 (query) + 15913 (gallery)
     """
 
-    def __init__(self, rank_worldsize: str = '1,1') -> None:
+    def __init__(self, datafolder: str = 'Market', rank_worldsize: str ='1,1') -> None:
         """Initialize MarketShardDescriptor."""
         super().__init__()
 
@@ -43,47 +40,43 @@ class MarketShardDescriptor(ShardDescriptor):
         self.rank, self.worldsize = tuple(int(num) for num in rank_worldsize.split(','))
 
         self.pattern = re.compile(r'([-\d]+)_c(\d)')
-        self.dataset_dir = Path(DATAPATH)
+        # parent directory of project
+        self.dataset_dir = list(Path.cwd().parents[2].rglob(f'**/{datafolder}'))[0]
         self.train_dir = self.dataset_dir / 'bounding_box_train'
         self.query_dir = self.dataset_dir / 'query'
         self.gal_dir = self.dataset_dir / 'bounding_box_test'
-        self.imgs_path = list(self.train_dir.glob('*.jpg'))[self.rank - 1::self.worldsize]
 
         self._check_before_run()
 
-        self.train, self.num_train_pids, self.num_train_imgs = self._process_dir(self.train_dir)
-        self.query, self.num_query_pids, self.num_query_imgs = self._process_dir(self.query_dir)
-        self.gallery, self.num_gal_pids, self.num_gal_imgs = self._process_dir(self.gal_dir)
+        self.train_path = list(self.train_dir.glob('*.jpg'))[self.rank - 1::self.worldsize]
+        self.query_path = list(self.query_dir.glob('*.jpg'))[self.rank - 1::self.worldsize]
+        self.gal_path = list(self.gal_dir.glob('*.jpg'))[self.rank - 1::self.worldsize]
 
-        num_total_pids = self.num_train_pids + self.num_query_pids
-        num_total_imgs = self.num_train_imgs + self.num_query_imgs + self.num_gal_imgs
+        self.mode = 'train'
+        self.imgs_path = self.train_path
 
-        logger.info(
-            '=> Market1501 loaded\n'
-            'Dataset statistics:\n'
-            '  ------------------------------\n'
-            '  subset   | # ids | # images\n'
-            '  ------------------------------\n'
-            f'  train    | {self.num_train_pids} | {self.num_train_imgs}\n'
-            f'  query    | {self.num_query_pids} | {self.num_query_imgs}\n'
-            f'  gallery  | {self.num_gal_pids} | {self.num_gal_imgs}\n'
-            '------------------------------\n'
-            f'total    | {num_total_pids} | {num_total_imgs}\n'
-            '  ------------------------------'
-        )
+    def set_mode(self, mode='train'):
+        self.mode = mode
+        if self.mode == 'train':
+            self.imgs_path = self.train_path
+        elif self.mode == 'query':
+            self.imgs_path = self.query_path
+        elif self.mode == 'gallery':
+            self.imgs_path = self.gal_path
+        else:
+            raise Exception(f'Wrong mode: {mode}')
 
     def __len__(self):
         """Length of shard."""
         return len(self.imgs_path)
 
     def __getitem__(self, index: int):
-        """Return a item by the index."""
+        """Return an item by the index."""
         img_path = self.imgs_path[index]
         pid, camid = map(int, self.pattern.search(img_path.name).groups())
 
         img = Image.open(img_path)
-        img = np.asarray(img)
-        return img, pid, camid
+        return img, (pid, camid)
 
     @property
     def sample_shape(self):
@@ -111,29 +104,3 @@ class MarketShardDescriptor(ShardDescriptor):
             raise RuntimeError(f'{self.query_dir} is not available')
         if not self.gal_dir.exists():
             raise RuntimeError(f'{self.gal_dir} is not available')
-
-    def _process_dir(self, dir_path, label_start=0):
-        """Get data from directory."""
-        img_paths = list(dir_path.glob('*.jpg'))[self.rank - 1::self.worldsize]
-
-        pid_container = set()
-        for img_path in img_paths:
-            pid, _ = map(int, self.pattern.search(img_path.name).groups())
-            if pid == -1:
-                continue  # junk images are just ignored
-            pid_container.add(pid)
-
-        dataset = []
-        for img_path in img_paths:
-            pid, camid = map(int, self.pattern.search(img_path.name).groups())
-            if pid == -1:
-                continue  # junk images are just ignored
-            if label_start == 0:
-                assert 0 <= pid <= 1501  # pid == 0 means background
-            assert 1 <= camid <= 6
-            camid -= 1  # index starts from 0
-            dataset.append((img_path, pid, camid))
-
-        num_pids = len(pid_container)
-        num_imgs = len(dataset)
-        return dataset, num_pids, num_imgs

@@ -11,7 +11,6 @@ from logging import getLogger
 import numpy as np
 import torch
 from PIL import Image
-from torch.utils.data import Dataset
 from torch.utils.data.sampler import Sampler
 
 logger = getLogger(__name__)
@@ -107,7 +106,7 @@ def evaluate(distmat, q_pids, g_pids, q_camids, g_camids):
 def extract_feature(model, dataloader):
     """Extract features for validation."""
     features, pids, camids = [], [], []
-    for imgs, batch_pids, batch_camids in dataloader:
+    for imgs, (batch_pids, batch_camids) in dataloader:
         flip_imgs = fliplr(imgs)
         imgs, flip_imgs = imgs.cuda(), flip_imgs.cuda()
         batch_features = model(imgs).data
@@ -132,43 +131,6 @@ def fliplr(img):
     return img_flip
 
 
-class ImageDataset(Dataset):
-    """Image Person ReID Dataset."""
-
-    def __init__(self, dataset, transform=None):
-        """Initialize Dataset."""
-        self.dataset = dataset
-        self.transform = transform
-
-    def __len__(self):
-        """Length of dataset."""
-        return len(self.dataset)
-
-    def __getitem__(self, index):
-        """Get item from dataset."""
-        img_path, pid, camid = self.dataset[index]
-        img = read_image(img_path)
-        if self.transform is not None:
-            img = self.transform(img)
-        return img, pid, camid
-
-
-def read_image(img_path):
-    """Keep reading image until succeed. This can avoid IOError incurred by heavy IO process."""
-    got_img = False
-    if not img_path.exists():
-        raise IOError(f'{img_path} does not exist')
-    while not got_img:
-        try:
-            img = Image.open(img_path).convert('RGB')
-            got_img = True
-        except IOError:
-            logger.info(f"IOError incurred when reading '{img_path}'."
-                        f" Will redo. Don't worry. Just chill.")
-            pass
-    return img
-
-
 class RandomIdentitySampler(Sampler):
     """
     Random Sampler.
@@ -186,7 +148,7 @@ class RandomIdentitySampler(Sampler):
         self.data_source = data_source
         self.num_instances = num_instances
         self.index_dic = defaultdict(list)
-        for index, (_, pid, _) in enumerate(data_source):
+        for index, (_, (pid, _)) in enumerate(data_source):
             self.index_dic[pid].append(index)
         self.pids = list(self.index_dic.keys())
         self.num_identities = len(self.pids)

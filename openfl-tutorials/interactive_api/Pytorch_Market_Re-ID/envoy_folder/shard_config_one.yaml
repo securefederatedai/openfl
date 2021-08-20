@@ -1,3 +1,4 @@
 template: market_shard_descriptor.MarketShardDescriptor
 params:
+  datafolder: Market
   rank_worldsize: 1,2
