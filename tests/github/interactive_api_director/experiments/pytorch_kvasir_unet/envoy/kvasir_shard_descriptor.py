@@ -18,7 +18,8 @@ class KvasirShardDescriptor(ShardDescriptor):
     """Shard descriptor class."""
 
     def __init__(self, data_folder: str = 'kvasir_data',
-                 rank_worldsize: str = '1,1',
+                 rank=1,
+                 worldsize=1,
                  enforce_image_hw: List[int] = None) -> None:
         """Initialize KvasirShardDescriptor."""
         super().__init__()
@@ -31,7 +32,8 @@ class KvasirShardDescriptor(ShardDescriptor):
         if enforce_image_hw is not None:
             self.enforce_image_hw = tuple(enforce_image_hw)
         # Settings for sharding the dataset
-        self.rank_worldsize = tuple(int(num) for num in rank_worldsize.split(','))
+        self.rank = rank
+        self.worldsize = worldsize
 
         self.images_path = self.data_folder / 'segmented-images' / 'images'
         self.masks_path = self.data_folder / 'segmented-images' / 'masks'
