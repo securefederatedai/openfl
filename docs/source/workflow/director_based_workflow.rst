@@ -40,13 +40,14 @@ that may be used to identify participants during experiment definition and execu
 3. (Optional) Create certificates using Step-CA 
 ==================
 
-All communications inside a Federation may be encrypted with mTLS. User may adapt certificates provided by their organization 
-or utilize :ref:`PKI <semi_automatic_certification>` provided by |productName|.
+The use of mTLS is strongly recommended for deployments in untrusted environments to establish participant identity and 
+to encrypt communication. Users may either import certificates provided by their organization or utilize 
+:ref:PKI <semi_automatic_certification> provided by |productName|.
 
 4. Start Director
 ==================
 
-Director is a central component in the Federation. It should be started on a node with at least one open port. 
+Director is a central component in the Federation. It should be started on a node with at least two open ports. 
 Learn more about the Director component here: :ref:`openfl_ll_components`
 
 Create Director workspace
@@ -135,7 +136,7 @@ Alternatively, use the following command to establish a secured connection:
 ====================================
 
 At this point, data scientists may register their experiments to be executed in the federation. 
-OpenFL provides a separate frontend Director’s client and :ref:`Interactive Python API <interactive_api>` 
+|productName| provides a separate frontend Director’s client and :ref:`Interactive Python API <interactive_api>` 
 to register experiments. 
 
 
@@ -227,7 +228,7 @@ Registering model and optimizer
 First, user instantiate and initilize a model and optimizer in their favorite Deep Learning framework. 
 Please, note that for now interactive API supports only *Keras* and *PyTorch* off-the-shelf.
 Initialized model and optimizer objects then should be passed to the :code:`ModelInterface` along with the 
-path to correct Framework Adapter plugin inside OpenFL package. If desired DL framework is not covered by 
+path to correct Framework Adapter plugin inside |productName| package. If desired DL framework is not covered by 
 existing plugins, user can implement the plugin's interface and point :code:`framework_plugin` to the implementation 
 inside the workspace.
 
@@ -348,12 +349,12 @@ Observing the Experiment execution
 ----------------------------------
 
 If the Experiment was accepted by the *Director* user can oversee its execution with 
-:code:`Flexperiment.stream_metrics()` method that will is able to print metrics from the FL tasks (and save tensorboard logs).
+:code:`FLexperiment.stream_metrics()` method that will is able to print metrics from the FL tasks (and save tensorboard logs).
 
-When the Experiment is finished, user may retrieve trained models in the native format using :code:`Flexperiment.get_best_model()` 
-and :code:`Flexperiment.get_last_model()` metods.
+When the Experiment is finished, user may retrieve trained models in the native format using :code:`FLexperiment.get_best_model()` 
+and :code:`FLexperiment.get_last_model()` metods.
 
-:code:`Flexperiment.remove_experiment_data()` allows erasing the experiment's artifacts from the Director.
+:code:`FLexperiment.remove_experiment_data()` allows erasing the experiment's artifacts from the Director.
 
 When the Experiment is finished
 ----------------------------------

@@ -2,16 +2,11 @@
 .. # SPDX-License-Identifier: Apache-2.0
 
 ******
-|productName| Plugin Components
+|productName| plugins
 ******
 
 .. toctree::
    :maxdepth: 2
 
-   framework_adapter_
    `...`_
-
-.. _framework_adapter:
-
-Framework Adapter
-######################
+   `...`_
