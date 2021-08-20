@@ -9,9 +9,17 @@
    :maxdepth: 2
 
    framework_adapter_
-   `...`_
+   serializer_plugin_
 
 .. _framework_adapter:
+
+Framework Adapter
+######################
+
+text
+
+
+.. _serializer_plugin:
 
 Framework Adapter
 ######################
