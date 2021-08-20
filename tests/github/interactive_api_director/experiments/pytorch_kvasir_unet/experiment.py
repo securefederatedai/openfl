@@ -74,7 +74,7 @@ class KvasirSD(DataInterface, Dataset):
         return len(self.shard_descriptor)
     
     
-    def get_train_loader(self, **kwargs):
+    def get_train_loader(self):
         """
         Output of this method will be provided to tasks with optimizer in contract
         """
