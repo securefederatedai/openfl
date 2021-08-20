@@ -7,7 +7,6 @@ import re
 from logging import getLogger
 from pathlib import Path
 
-import numpy as np
 from PIL import Image
 
 from openfl.interface.interactive_api.shard_descriptor import ShardDescriptor
@@ -32,7 +31,7 @@ class MarketShardDescriptor(ShardDescriptor):
         images: 12936 (train) + 3368 (query) + 15913 (gallery)
     """
 
-    def __init__(self, datafolder: str = 'Market', rank_worldsize: str ='1,1') -> None:
+    def __init__(self, datafolder: str = 'Market', rank_worldsize: str = '1,1') -> None:
         """Initialize MarketShardDescriptor."""
         super().__init__()
 
@@ -56,6 +55,7 @@ class MarketShardDescriptor(ShardDescriptor):
         self.imgs_path = self.train_path
 
     def set_mode(self, mode='train'):
+        """Set mode for getitem."""
         self.mode = mode
         if self.mode == 'train':
             self.imgs_path = self.train_path

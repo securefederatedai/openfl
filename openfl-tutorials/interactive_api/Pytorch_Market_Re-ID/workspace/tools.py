@@ -10,7 +10,6 @@ from logging import getLogger
 
 import numpy as np
 import torch
-from PIL import Image
 from torch.utils.data.sampler import Sampler
 
 logger = getLogger(__name__)
