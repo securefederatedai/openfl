@@ -44,7 +44,7 @@ class KvasirShardDescriptor(ShardDescriptor):
             if Path(img_name).suffix == '.jpg'
         ]
         # Sharding
-        self.images_names = self.images_names[self.rank_worldsize[0] - 1::self.rank_worldsize[1]]
+        self.images_names = self.images_names[self.rank - 1::self.worldsize]
 
         # Calculating data and target shapes
         sample, target = self[0]
@@ -99,8 +99,8 @@ class KvasirShardDescriptor(ShardDescriptor):
     @property
     def dataset_description(self) -> str:
         """Return the dataset description."""
-        return (f'Kvasir dataset, shard number {self.rank_worldsize[0]}'
-                f' out of {self.rank_worldsize[1]}')
+        return (f'Kvasir dataset, shard number {self.rank}'
+                f' out of {self.worldsize}')
 
 
 if __name__ == '__main__':
@@ -108,12 +108,14 @@ if __name__ == '__main__':
     setup_logging()
 
     data_folder = 'data'
-    rank_worldsize = '1,100'
+    rank = 1
+    worldsize = 100
     enforce_image_hw = '529,622'
 
     kvasir_sd = KvasirShardDescriptor(
         data_folder,
-        rank_worldsize=rank_worldsize,
+        rank=rank,
+        worldsize=worldsize,
         enforce_image_hw=enforce_image_hw)
 
     print(kvasir_sd.dataset_description)
