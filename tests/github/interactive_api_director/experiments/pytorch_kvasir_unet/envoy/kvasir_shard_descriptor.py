@@ -5,6 +5,7 @@
 
 import os
 from pathlib import Path
+from typing import List
 
 import numpy as np
 from PIL import Image
@@ -18,17 +19,17 @@ class KvasirShardDescriptor(ShardDescriptor):
 
     def __init__(self, data_folder: str = 'kvasir_data',
                  rank_worldsize: str = '1,1',
-                 enforce_image_hw: str = None) -> None:
+                 enforce_image_hw: List[int] = None) -> None:
         """Initialize KvasirShardDescriptor."""
         super().__init__()
-
+        
         self.data_folder = Path.cwd() / data_folder
         self.download_data(self.data_folder)
 
         # Settings for resizing data
         self.enforce_image_hw = None
         if enforce_image_hw is not None:
-            self.enforce_image_hw = tuple(int(size) for size in enforce_image_hw.split(','))
+            self.enforce_image_hw = tuple(enforce_image_hw)
         # Settings for sharding the dataset
         self.rank_worldsize = tuple(int(num) for num in rank_worldsize.split(','))
 
