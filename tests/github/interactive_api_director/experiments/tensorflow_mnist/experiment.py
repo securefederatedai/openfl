@@ -52,7 +52,7 @@ def function_defined_in_notebook(some_parameter):
 
 TI = TaskInterface()
 # Task interface currently supports only standalone functions.
-@TI.register_fl_task(model='model', data_loader='train_dataset', \
+@TI.register_fl_task(model='model', data_loader='train_dataset',
                      device='device', optimizer='optimizer')     
 def train(model, train_dataset, optimizer, device, loss_fn=loss_fn, warmup=False):
 
