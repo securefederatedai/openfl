@@ -169,8 +169,8 @@ Create a virtual Python environment. Please, install only packages that are requ
 Defining a Federated Learning Experiment
 ========================================
 
-Interactive API allows setting up an experiment from a single entrypoint - a Jupyter notebook or a Python script.
-Defining an experiment includes setting up several interface entities and experiment parameters.
+Interactive API allows to register and start an FL experiment from a single entry point - a Jupyter notebook or a Python script.
+An FL experiment definition process includes setting up several interface entities and experiment parameters.
 
 Federation API
 ----------------
