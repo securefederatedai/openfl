@@ -41,7 +41,7 @@ class KvasirShardDescriptor(ShardDescriptor):
         self.images_names = [
             img_name
             for img_name in sorted(os.listdir(self.images_path))
-            if len(img_name) > 3 and img_name[-3:] == 'jpg'
+            if Path(img_name).suffix == '.jpg'
         ]
         # Sharding
         self.images_names = self.images_names[self.rank_worldsize[0] - 1::self.rank_worldsize[1]]
