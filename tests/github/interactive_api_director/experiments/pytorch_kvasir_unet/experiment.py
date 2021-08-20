@@ -29,7 +29,7 @@ sample, target = dummy_shard_desc[0]
 # Now you can implement you data loaders using dummy_shard_desc
 class KvasirSD(DataInterface, Dataset):
 
-    def __init__(self, validation_fraction=1/8, train_bs, valid_bs, **kwargs):
+    def __init__(self, train_bs, valid_bs, validation_fraction=1/8, **kwargs):
         super().__init__(**kwargs)
         
         self.validation_fraction = validation_fraction
