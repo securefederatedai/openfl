@@ -85,7 +85,7 @@ class KvasirSD(DataInterface, Dataset):
             self, num_workers=8, batch_size=self.train_bs, sampler=train_sampler
             )
 
-    def get_valid_loader(self, **kwargs):
+    def get_valid_loader(self):
         """
         Output of this method will be provided to tasks without optimizer in contract
         """
