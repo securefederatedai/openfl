@@ -15,7 +15,7 @@ from tests.github.interactive_api_director.experiments.pytorch_kvasir_unet.tasks
 from copy import deepcopy
 
 
-federation = Federation(client_id='frontend', director_node_fqdn='localhost', director_port='50051', tls=False)
+federation = Federation(client_id='frontend', director_node_fqdn='localhost', director_port=50051, tls=False)
 
 shard_registry = federation.get_shard_registry()
 shard_registry
