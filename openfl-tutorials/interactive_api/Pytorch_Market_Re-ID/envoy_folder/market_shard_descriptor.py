@@ -6,16 +6,14 @@
 import re
 from logging import getLogger
 from pathlib import Path
+import zipfile
 
+import gdown
 from PIL import Image
 
 from openfl.interface.interactive_api.shard_descriptor import ShardDescriptor
 
-
 logger = getLogger(__name__)
-
-# Previously download data and put to project folder
-# URL: https://www.kaggle.com/pengcw1/market-1501
 
 
 class MarketShardDescriptor(ShardDescriptor):
@@ -31,20 +29,20 @@ class MarketShardDescriptor(ShardDescriptor):
         images: 12936 (train) + 3368 (query) + 15913 (gallery)
     """
 
-    def __init__(self, datafolder: str = 'Market', rank_worldsize: str = '1,1') -> None:
+    def __init__(self, datafolder: str = 'Market-1501-v15.09.15',
+                 rank_worldsize: str = '1,1') -> None:
         """Initialize MarketShardDescriptor."""
         super().__init__()
 
         # Settings for sharding the dataset
         self.rank, self.worldsize = tuple(int(num) for num in rank_worldsize.split(','))
 
+        self.download()
         self.pattern = re.compile(r'([-\d]+)_c(\d)')
-        # parent directory of project
-        self.dataset_dir = list(Path.cwd().parents[2].rglob(f'**/{datafolder}'))[0]
+        self.dataset_dir = Path.cwd() / datafolder
         self.train_dir = self.dataset_dir / 'bounding_box_train'
         self.query_dir = self.dataset_dir / 'query'
         self.gal_dir = self.dataset_dir / 'bounding_box_test'
-
         self._check_before_run()
 
         self.train_path = list(self.train_dir.glob('*.jpg'))[self.rank - 1::self.worldsize]
@@ -104,3 +102,18 @@ class MarketShardDescriptor(ShardDescriptor):
             raise RuntimeError(f'{self.query_dir} is not available')
         if not self.gal_dir.exists():
             raise RuntimeError(f'{self.gal_dir} is not available')
+
+    @staticmethod
+    def download():
+        url = 'https://drive.google.com/uc?id=0B8-rUzbwVRk0c054eEozWG9COHM'
+        output = 'Market.zip'
+        gdown.download(url, output, quiet=False)
+
+        with zipfile.ZipFile(output, 'r') as zip_ref:
+            zip_ref.extractall(Path.cwd())
+
+        Path(output).unlink()  # remove zip
+
+
+if __name__ == '__main__':
+    MarketShardDescriptor.download()
