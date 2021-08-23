@@ -5,14 +5,12 @@
 
 import re
 import zipfile
-from logging import getLogger
 from pathlib import Path
 
 import gdown
 from PIL import Image
-from openfl.interface.interactive_api.shard_descriptor import ShardDescriptor
 
-logger = getLogger(__name__)
+from openfl.interface.interactive_api.shard_descriptor import ShardDescriptor
 
 
 class MarketShardDescriptor(ShardDescriptor):
