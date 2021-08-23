@@ -17,7 +17,6 @@ from openfl.utilities.workspace import ExperimentWorkspace
 
 logger = logging.getLogger(__name__)
 
-DEFAULT_TIMEOUT_IN_SECONDS = 60  # TODO: make configurable
 DEFAULT_RETRY_TIMEOUT_IN_SECONDS = 5
 
 
@@ -87,12 +86,11 @@ class Envoy:
         """Send health check to the director."""
         logger.info('The health check sender is started.')
         while True:
-            self.director_client.send_health_check(
-                self.name,
-                self.is_experiment_running,
-                DEFAULT_TIMEOUT_IN_SECONDS
+            timeout = self.director_client.send_health_check(
+                collaborator_name=self.name,
+                is_experiment_running=self.is_experiment_running
             )
-            time.sleep(DEFAULT_TIMEOUT_IN_SECONDS / 2)
+            time.sleep(timeout)
 
     def _run_collaborator(self, plan='plan/plan.yaml'):
         """Run the collaborator for the experiment running."""
