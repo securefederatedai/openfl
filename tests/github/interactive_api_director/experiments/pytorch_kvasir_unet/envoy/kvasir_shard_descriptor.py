@@ -110,7 +110,7 @@ if __name__ == '__main__':
     data_folder = 'data'
     rank = 1
     worldsize = 100
-    enforce_image_hw = '529,622'
+    enforce_image_hw = [300, 400]
 
     kvasir_sd = KvasirShardDescriptor(
         data_folder,
@@ -133,10 +133,7 @@ if __name__ == '__main__':
         director_host=director_host,
         director_port=director_port,
         shard_descriptor=kvasir_sd,
-        tls=False,
-        root_certificate='./cert/root_ca.crt',
-        private_key='./cert/one.key',
-        certificate='./cert/one.crt',
+        tls=False
     )
 
     keeper.start()
