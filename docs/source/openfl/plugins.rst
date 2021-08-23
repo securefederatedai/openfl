@@ -22,22 +22,22 @@ The Framework adapter plugin interface is simple: there are two required methods
 a model and an optimizer. 
 
 :code:`get_tensor_dict` method accepts a model and optionally an optimizer. It should return a dictionary :code:`{tensor_name : ndarray}` 
-that maps tensor names to tensors in the numpy representation.
+that maps tensor names to tensors in the NumPy representation.
 
 .. code-block:: python
 
    @staticmethod
    def get_tensor_dict(model, optimizer=None) -> dict:
 
-:code:`set_tensor_dict` method accepts a tensor dictionary, a model and optionally an optimizer. It loads weights from tensor dictionary 
-to the model inplace. Tensor names in the dictionary matches corresponding names set in :code:`get_tensor_dict`
+:code:`set_tensor_dict` method accepts a tensor dictionary, a model, and optionally an optimizer. It loads weights from the tensor dictionary 
+to the model in place. Tensor names in the dictionary match corresponding names set in :code:`get_tensor_dict`
 
 .. code-block:: python
 
    @staticmethod
    def set_tensor_dict(model, tensor_dict, optimizer=None, device='cpu') -> None:
 
-Implement :code:`serialization_setup` optional method if some preparation are required before the model serialization. 
+Implement :code:`serialization_setup` optional method if some preparation is required before the model serialization. 
 This method would be called on the frontend Python API during an FL experiment extraction to the Director side.
 
 .. code-block:: python
@@ -60,7 +60,7 @@ A Serializer plugin must implement :code:`serialize` method that creates a pytho
    @staticmethod
    def serialize(object_, filename: str) -> None:
 
-As well as :code:`restore_object` that will load previously serialized object from disc.
+As well as :code:`restore_object` that will load previously serialized object from disk.
 
 .. code-block:: python
 
