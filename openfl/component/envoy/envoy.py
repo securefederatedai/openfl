@@ -56,7 +56,7 @@ class Envoy:
                 experiment_name = self.director_client.wait_experiment()
                 data_stream = self.director_client.get_experiment_data(experiment_name)
             except Exception as exc:
-                logger.error(f'Failed to get experiment: {exc}')
+                logger.exception(f'Failed to get experiment: {exc}')
                 time.sleep(DEFAULT_RETRY_TIMEOUT_IN_SECONDS)
                 continue
             data_file_path = self._save_data_stream_to_file(data_stream)
@@ -65,9 +65,9 @@ class Envoy:
                 with ExperimentWorkspace(
                         experiment_name, data_file_path, is_install_requirements=True
                 ):
-                    self._run_collaborator(experiment_name)
+                    self._run_collaborator()
             except Exception as exc:
-                logger.error(f'Collaborator failed: {exc}')
+                logger.exception(f'Collaborator failed with error: {exc}:')
             finally:
                 # Workspace cleaning should not be done by gRPC client!
                 self.is_experiment_running = False
@@ -94,7 +94,7 @@ class Envoy:
             )
             time.sleep(DEFAULT_TIMEOUT_IN_SECONDS / 2)
 
-    def _run_collaborator(self, experiment_name, plan='plan/plan.yaml', ):
+    def _run_collaborator(self, plan='plan/plan.yaml'):
         """Run the collaborator for the experiment running."""
         plan = Plan.parse(plan_config_path=Path(plan))
 
@@ -111,8 +111,7 @@ class Envoy:
         try:
             is_accepted = self.director_client.report_shard_info(self.shard_descriptor)
         except Exception as exc:
-            logger.exception(str(exc))
-            logger.exception('Failed to report shard info')
+            logger.exception(f'Failed to report shard info: {exc}')
         else:
             if is_accepted:
                 # Shard accepted for participation in the federation
