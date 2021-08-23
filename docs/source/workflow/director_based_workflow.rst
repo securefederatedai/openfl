@@ -42,7 +42,7 @@ that may be used to identify participants during experiment definition and execu
 
 The use of mTLS is strongly recommended for deployments in untrusted environments to establish participant identity and 
 to encrypt communication. Users may either import certificates provided by their organization or utilize 
-:ref:PKI <semi_automatic_certification> provided by |productName|.
+:ref:`PKI <semi_automatic_certification>` provided by |productName|.
 
 4. Start Director
 ==================
