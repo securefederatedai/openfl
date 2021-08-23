@@ -105,6 +105,9 @@ class MarketShardDescriptor(ShardDescriptor):
         """Download Market1501 dataset."""
         url = 'https://drive.google.com/uc?id=0B8-rUzbwVRk0c054eEozWG9COHM'
         output = 'Market.zip'
+        if Path(output).exists():
+            return None
+
         gdown.download(url, output, quiet=False)
 
         with zipfile.ZipFile(output, 'r') as zip_ref:
