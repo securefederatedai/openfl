@@ -4,13 +4,12 @@
 """Market shard descriptor."""
 
 import re
+import zipfile
 from logging import getLogger
 from pathlib import Path
-import zipfile
 
 import gdown
 from PIL import Image
-
 from openfl.interface.interactive_api.shard_descriptor import ShardDescriptor
 
 logger = getLogger(__name__)
@@ -105,6 +104,7 @@ class MarketShardDescriptor(ShardDescriptor):
 
     @staticmethod
     def download():
+        """Download Market1501 dataset."""
         url = 'https://drive.google.com/uc?id=0B8-rUzbwVRk0c054eEozWG9COHM'
         output = 'Market.zip'
         gdown.download(url, output, quiet=False)
