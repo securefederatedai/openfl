@@ -33,13 +33,13 @@ def director(context):
         help='The director config file path', type=ClickPath(exists=True))
 @option('--tls/--disable-tls', default=True,
         is_flag=True, help='Use TLS or not (By default TLS is enabled)')
-@option('-rc', '--root-cert-path', 'root_ca', default=None,
+@option('-rc', '--root-cert-path', 'root_certificate', default=None,
         help='Path to a root CA cert')
-@option('-pk', '--private-key-path', 'key', default=None,
+@option('-pk', '--private-key-path', 'private_key', default=None,
         help='Path to a private key')
-@option('-oc', '--public-cert-path', 'cert', default=None,
+@option('-oc', '--public-cert-path', 'certificate', default=None,
         help='Path to a signed certificate')
-def start(director_config_path, tls, root_ca, key, cert):
+def start(director_config_path, tls, root_certificate, private_key, certificate):
     """Start the director service."""
     logger.info('🧿 Starting the Director Service.')
     with open(director_config_path) as stream:
@@ -48,14 +48,14 @@ def start(director_config_path, tls, root_ca, key, cert):
     sample_shape = settings.get('sample_shape', '')
     target_shape = settings.get('target_shape', '')
     logger.info(f'Sample shape: {sample_shape}, target shape: {target_shape}')
-    listen_ip = settings.get('listen_ip')
+    listen_host = settings.get('listen_host')
     listen_port = settings.get('listen_port')
-    root_ca = root_ca or settings.get('root_ca')
-    key = key or settings.get('key')
-    cert = cert or settings.get('cert')
+    root_certificate = root_certificate or settings.get('root_certificate')
+    private_key = private_key or settings.get('private_key')
+    certificate = certificate or settings.get('certificate')
     kwargs = {}
-    if listen_ip:
-        kwargs['listen_ip'] = listen_ip
+    if listen_host:
+        kwargs['listen_host'] = listen_host
     if listen_port:
         kwargs['listen_port'] = listen_port
     director_server = DirectorGRPCServer(
@@ -63,9 +63,10 @@ def start(director_config_path, tls, root_ca, key, cert):
         tls=tls,
         sample_shape=sample_shape,
         target_shape=target_shape,
-        root_ca=root_ca,
-        key=key,
-        cert=cert,
+        root_certificate=root_certificate,
+        private_key=private_key,
+        certificate=certificate,
+        settings=settings,
         **kwargs
     )
     director_server.start()

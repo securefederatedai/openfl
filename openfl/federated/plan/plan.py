@@ -147,9 +147,9 @@ class Plan(object):
             return plan
 
         except Exception:
-            Plan.logger.error(f'Parsing Federated Learning Plan : '
-                              f'[red]FAILURE[/] : [blue]{plan_config_path}[/].',
-                              extra={'markup': True})
+            Plan.logger.exception(f'Parsing Federated Learning Plan : '
+                                  f'[red]FAILURE[/] : [blue]{plan_config_path}[/].',
+                                  extra={'markup': True})
             raise
 
     @staticmethod
@@ -399,8 +399,8 @@ openfl.component.aggregation_functions.AggregationFunctionInterface
 
         return self.runner_
 
-    def get_collaborator(self, collaborator_name, root_ca=None, key=None, cert=None,
-                         task_runner=None, client=None, shard_descriptor=None):
+    def get_collaborator(self, collaborator_name, root_certificate=None, private_key=None,
+                         certificate=None, task_runner=None, client=None, shard_descriptor=None):
         """Get collaborator."""
         defaults = self.config.get(
             'collaborator',
@@ -444,9 +444,9 @@ openfl.component.aggregation_functions.AggregationFunctionInterface
                 collaborator_name,
                 self.aggregator_uuid,
                 self.federation_uuid,
-                root_ca,
-                key,
-                cert
+                root_certificate,
+                private_key,
+                certificate
             )
 
         if self.collaborator_ is None:
@@ -455,15 +455,11 @@ openfl.component.aggregation_functions.AggregationFunctionInterface
         return self.collaborator_
 
     def get_client(self, collaborator_name, aggregator_uuid, federation_uuid,
-                   root_ca=None, key=None, cert=None):
+                   root_certificate=None, private_key=None, certificate=None):
         """Get gRPC client for the specified collaborator."""
         common_name = collaborator_name
-        if root_ca and key and cert:
-            chain = root_ca
-            certificate = cert
-            private_key = key
-        else:
-            chain = 'cert/cert_chain.crt'
+        if not root_certificate or not private_key or not certificate:
+            root_certificate = 'cert/cert_chain.crt'
             certificate = f'cert/client/col_{common_name}.crt'
             private_key = f'cert/client/col_{common_name}.key'
 
@@ -471,7 +467,7 @@ openfl.component.aggregation_functions.AggregationFunctionInterface
 
         # patch certificates
 
-        client_args['ca'] = chain
+        client_args['root_certificate'] = root_certificate
         client_args['certificate'] = certificate
         client_args['private_key'] = private_key
 
@@ -483,16 +479,12 @@ openfl.component.aggregation_functions.AggregationFunctionInterface
 
         return self.client_
 
-    def get_server(self, root_ca=None, key=None, cert=None, **kwargs):
+    def get_server(self, root_certificate=None, private_key=None, certificate=None, **kwargs):
         """Get gRPC server of the aggregator instance."""
         common_name = self.config['network'][SETTINGS]['agg_addr'].lower()
 
-        if root_ca and key and cert:
-            chain = '../cert/root_ca.crt'
-            certificate = f'agg_{common_name}.crt'
-            private_key = f'agg_{common_name}.key'
-        else:
-            chain = 'cert/cert_chain.crt'
+        if not root_certificate or not private_key or not certificate:
+            root_certificate = 'cert/cert_chain.crt'
             certificate = f'cert/server/agg_{common_name}.crt'
             private_key = f'cert/server/agg_{common_name}.key'
 
@@ -500,11 +492,10 @@ openfl.component.aggregation_functions.AggregationFunctionInterface
 
         # patch certificates
 
-        server_args['ca'] = chain
+        server_args.update(kwargs)
+        server_args['root_certificate'] = root_certificate
         server_args['certificate'] = certificate
         server_args['private_key'] = private_key
-
-        server_args.update(kwargs)
 
         server_args['aggregator'] = self.get_aggregator()
 
@@ -513,13 +504,13 @@ openfl.component.aggregation_functions.AggregationFunctionInterface
 
         return self.server_
 
-    def interactive_api_get_server(self, *, tensor_dict, chain, certificate,
+    def interactive_api_get_server(self, *, tensor_dict, root_certificate, certificate,
                                    private_key, tls):
         """Get gRPC server of the aggregator instance."""
         server_args = self.config['network'][SETTINGS]
 
         # patch certificates
-        server_args['ca'] = chain
+        server_args['root_certificate'] = root_certificate
         server_args['certificate'] = certificate
         server_args['private_key'] = private_key
         server_args['tls'] = tls

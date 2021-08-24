@@ -9,15 +9,19 @@ from pathlib import Path
 from click import group
 from click import option
 from click import pass_context
+from click import password_option
 from click import Path as ClickPath
 
+from openfl.component.ca.ca import CA_CONFIG_JSON
+from openfl.component.ca.ca import CA_PASSWORD_FILE
+from openfl.component.ca.ca import CA_PKI_DIR
+from openfl.component.ca.ca import CA_STEP_CONFIG_DIR
 from openfl.component.ca.ca import certify
 from openfl.component.ca.ca import get_ca_bin_paths
 from openfl.component.ca.ca import get_token
 from openfl.component.ca.ca import install
 from openfl.component.ca.ca import remove_ca
 from openfl.component.ca.ca import run_ca
-
 
 logger = logging.getLogger(__name__)
 
@@ -37,23 +41,23 @@ def pki(context):
 def run(ca_path):
     """Run CA server."""
     ca_path = Path(ca_path)
-    step_config_dir = ca_path / 'step_config'
-    pki_dir = ca_path / 'cert'
-    pass_file = pki_dir / 'pass_file'
-    ca_json = step_config_dir / 'config' / 'ca.json'
+    step_config_dir = ca_path / CA_STEP_CONFIG_DIR
+    pki_dir = ca_path / CA_PKI_DIR
+    password_file = pki_dir / CA_PASSWORD_FILE
+    ca_json = step_config_dir / CA_CONFIG_JSON
     _, step_ca_path = get_ca_bin_paths(ca_path)
     if (not os.path.exists(step_config_dir) or not os.path.exists(pki_dir)
-            or not os.path.exists(pass_file) or not os.path.exists(ca_json)
+            or not os.path.exists(password_file) or not os.path.exists(ca_json)
             or not os.path.exists(step_ca_path)):
         logger.warning('CA is not installed or corrupted, please install it first')
         return
-    run_ca(step_ca_path, pass_file, ca_json)
+    run_ca(step_ca_path, password_file, ca_json)
 
 
 @pki.command(name='install')
 @option('-p', '--ca-path', required=True,
         help='The ca path', type=ClickPath())
-@option('--password', required=True)
+@password_option()
 @option('--ca-url', required=False, default=CA_URL)
 def install_(ca_path, password, ca_url):
     """Create a ca workspace."""

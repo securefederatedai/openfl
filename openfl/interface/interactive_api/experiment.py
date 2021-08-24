@@ -188,8 +188,7 @@ class FLExperiment:
         with open('./requirements.txt', 'w') as f:
             for pack in requirements_generator:
                 if is_package_has_version(pack):
-                    continue
-                f.write(pack + '\n')
+                    f.write(pack + '\n')
 
     @staticmethod
     def _pack_the_workspace():
@@ -297,10 +296,8 @@ class FLExperiment:
         # TaskRunner framework plugin
         # ['required_plugin_components'] should be already in the default plan with all the fields
         # filled with the default values
-        plan.config['task_runner'] = {
-            'required_plugin_components': {
-                'framework_adapters': model_provider.framework_plugin
-            }
+        plan.config['task_runner']['required_plugin_components'] = {
+            'framework_adapters': model_provider.framework_plugin
         }
 
         # API layer

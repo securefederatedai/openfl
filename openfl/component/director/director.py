@@ -5,8 +5,6 @@
 
 import asyncio
 import logging
-import os
-import shutil
 import time
 import typing
 from collections import defaultdict
@@ -14,16 +12,27 @@ from pathlib import Path
 
 from openfl.federated import Plan
 from openfl.protocols import director_pb2
+from openfl.utilities.workspace import ExperimentWorkspace
 
 logger = logging.getLogger(__name__)
+
+ENVOY_HEALTH_CHECK_PERIOD = 60  # in seconds
 
 
 class Director:
     """Director class."""
 
-    def __init__(self, *, tls: bool = True,
-                 root_ca: Path = None, key: Path = None, cert: Path = None,
-                 sample_shape: list = None, target_shape: list = None) -> None:
+    def __init__(
+            self,
+            *,
+            tls: bool = True,
+            root_certificate: Path = None,
+            private_key: Path = None,
+            certificate: Path = None,
+            sample_shape: list = None,
+            target_shape: list = None,
+            settings: dict = None
+    ) -> None:
         """Initialize a director object."""
         # TODO: add working directory
         super().__init__()
@@ -38,9 +47,10 @@ class Director:
         # {API name : {experiment name : aggregator}}
 
         self.tls = tls
-        self.root_ca = root_ca
-        self.key = key
-        self.cert = cert
+        self.root_certificate = root_certificate
+        self.private_key = private_key
+        self.certificate = certificate
+        self.settings = settings or {}
 
     def acknowledge_shard(self, shard_info: director_pb2.ShardInfo) -> bool:
         """Save shard info to shard registry if it's acceptable."""
@@ -58,19 +68,25 @@ class Director:
         is_accepted = True
         return is_accepted
 
-    async def set_new_experiment(self, *, experiment_name: str, sender_name: str,
-                                 tensor_dict: dict,
-                                 collaborator_names: typing.Iterable[str], data: bytes) -> bool:
+    async def set_new_experiment(
+            self,
+            *,
+            experiment_name: str,
+            sender_name: str,
+            tensor_dict: dict,
+            collaborator_names: typing.Iterable[str],
+            data_file_path: Path
+    ) -> bool:
         """Set new experiment."""
         # TODO: save to file
-        self.experiment_data[experiment_name] = data
+        self.experiment_data[experiment_name] = data_file_path
 
-        self.create_workspace(experiment_name, data)
-        asyncio.create_task(self._run_aggregator(
-            sender_name,
-            tensor_dict,
-            experiment_name,
-            collaborator_names
+        asyncio.create_task(self._run_aggregator_in_workspace(
+            experiment_name=experiment_name,
+            data_file_name=data_file_path,
+            experiment_sender=sender_name,
+            initial_tensor_dict=tensor_dict,
+            collaborator_names=collaborator_names,
         ))
 
         logger.info(f'New experiment {experiment_name} for '
@@ -155,23 +171,21 @@ class Director:
         if experiment_name in self.experiment_stash.get(caller, {}):
             del self.experiment_stash[caller][experiment_name]
 
-    def collaborator_health_check(self, *, collaborator_name: str,
-                                  is_experiment_running: bool,
-                                  valid_duration: int) -> bool:
+    def collaborator_health_check(
+            self, *, collaborator_name: str, is_experiment_running: bool
+    ) -> int:
         """Accept health check from envoy."""
-        is_accepted = False
         shard_info = self._shard_registry.get(collaborator_name)
         if not shard_info:
-            logger.error(f'Unknown shard {collaborator_name}')
-            return is_accepted
-        is_accepted = True
+            raise Exception(f'Unknown shard {collaborator_name}')
 
+        hc_period = self.settings.get('envoy_health_check_period', ENVOY_HEALTH_CHECK_PERIOD)
         shard_info['is_online']: True
         shard_info['is_experiment_running'] = is_experiment_running
-        shard_info['valid_duration'] = valid_duration
+        shard_info['valid_duration'] = 2 * hc_period
         shard_info['last_updated'] = time.time()
 
-        return is_accepted
+        return hc_period
 
     def get_envoys(self) -> list:
         """Get a status information about envoys."""
@@ -190,41 +204,36 @@ class Director:
 
         return envoy_infos
 
-    @staticmethod
-    def create_workspace(experiment_name, npbytes):
-        """Create the aggregator workspace."""
-        if os.path.exists(experiment_name):
-            shutil.rmtree(experiment_name)
-        os.makedirs(experiment_name)
-
-        arch_name = f'{experiment_name}/{experiment_name}' + '.zip'
-        logger.info(f'arch_name: {arch_name}')
-        with open(arch_name, 'wb') as content_file:
-            content_file.write(npbytes)
-
-        shutil.unpack_archive(arch_name, experiment_name)
+    async def _run_aggregator_in_workspace(
+            self,
+            *,
+            experiment_name: str,
+            data_file_name: Path,
+            **kwargs
+    ) -> None:
+        """Run aggregator in a workspace."""
+        with ExperimentWorkspace(experiment_name, data_file_name):
+            await self._run_aggregator(experiment_name=experiment_name, **kwargs)
 
     async def _run_aggregator(
             self,
+            *,
             experiment_sender,
             initial_tensor_dict,
             experiment_name,
             collaborator_names,
-            plan='plan/plan.yaml',
-    ):  # TODO: path params, change naming
+            plan_path='plan/plan.yaml'
+    ) -> None:
         """Run aggregator."""
-        cwd = os.getcwd()
-        os.chdir(f'{cwd}/{experiment_name}')
-        plan = Plan.parse(plan_config_path=Path(plan))
-
+        plan = Plan.parse(plan_config_path=Path(plan_path))
         plan.authorized_cols = list(collaborator_names)
 
         logger.info('🧿 Starting the Aggregator Service.')
         aggregator_server = plan.interactive_api_get_server(
             tensor_dict=initial_tensor_dict,
-            chain=self.root_ca,
-            certificate=self.cert,
-            private_key=self.key,
+            root_certificate=self.root_certificate,
+            certificate=self.certificate,
+            private_key=self.private_key,
             tls=self.tls,
         )
         self.experiment_stash[experiment_sender][experiment_name] = aggregator_server
@@ -240,8 +249,6 @@ class Director:
         except KeyboardInterrupt:
             pass
         finally:
-            os.chdir(cwd)
-            shutil.rmtree(experiment_name)
             grpc_server.stop(0)
             # Temporary solution to free RAM used by TensorDB
             aggregator_server.aggregator.tensor_db.clean_up(0)

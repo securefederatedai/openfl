@@ -2,8 +2,10 @@
 # SPDX-License-Identifier: Apache-2.0
 """Kvasir shard descriptor."""
 
+
 import os
 from pathlib import Path
+from typing import List
 
 import numpy as np
 from PIL import Image
@@ -16,20 +18,22 @@ class KvasirShardDescriptor(ShardDescriptor):
     """Shard descriptor class."""
 
     def __init__(self, data_folder: str = 'kvasir_data',
-                 rank_worldsize: str = '1,1',
-                 enforce_image_hw: str = None) -> None:
+                 rank=1,
+                 worldsize=1,
+                 enforce_image_hw: List[int] = None) -> None:
         """Initialize KvasirShardDescriptor."""
         super().__init__()
-
+        
         self.data_folder = Path.cwd() / data_folder
         self.download_data(self.data_folder)
 
         # Settings for resizing data
         self.enforce_image_hw = None
         if enforce_image_hw is not None:
-            self.enforce_image_hw = tuple(int(size) for size in enforce_image_hw.split(','))
+            self.enforce_image_hw = tuple(enforce_image_hw)
         # Settings for sharding the dataset
-        self.rank_worldsize = tuple(int(num) for num in rank_worldsize.split(','))
+        self.rank = rank
+        self.worldsize = worldsize
 
         self.images_path = self.data_folder / 'segmented-images' / 'images'
         self.masks_path = self.data_folder / 'segmented-images' / 'masks'
@@ -37,10 +41,10 @@ class KvasirShardDescriptor(ShardDescriptor):
         self.images_names = [
             img_name
             for img_name in sorted(os.listdir(self.images_path))
-            if len(img_name) > 3 and img_name[-3:] == 'jpg'
+            if Path(img_name).suffix == '.jpg'
         ]
         # Sharding
-        self.images_names = self.images_names[self.rank_worldsize[0] - 1::self.rank_worldsize[1]]
+        self.images_names = self.images_names[self.rank - 1::self.worldsize]
 
         # Calculating data and target shapes
         sample, target = self[0]
@@ -95,22 +99,23 @@ class KvasirShardDescriptor(ShardDescriptor):
     @property
     def dataset_description(self) -> str:
         """Return the dataset description."""
-        return (f'Kvasir dataset, shard number {self.rank_worldsize[0]}'
-                f' out of {self.rank_worldsize[1]}')
+        return (f'Kvasir dataset, shard number {self.rank}'
+                f' out of {self.worldsize}')
 
 
 if __name__ == '__main__':
     from openfl.interface.cli import setup_logging
-
     setup_logging()
 
     data_folder = 'data'
-    rank_worldsize = '1,100'
-    enforce_image_hw = '529,622'
+    rank = 1
+    worldsize = 100
+    enforce_image_hw = [300, 400]
 
     kvasir_sd = KvasirShardDescriptor(
         data_folder,
-        rank_worldsize=rank_worldsize,
+        rank=rank,
+        worldsize=worldsize,
         enforce_image_hw=enforce_image_hw)
 
     print(kvasir_sd.dataset_description)
@@ -122,15 +127,13 @@ if __name__ == '__main__':
     director_host = 'localhost'
     director_port = 50051
 
+
     keeper = Envoy(
         shard_name=shard_name,
         director_host=director_host,
         director_port=director_port,
         shard_descriptor=kvasir_sd,
-        tls=True,
-        root_certificate='./cert/root_ca.crt',
-        private_key='./cert/one.key',
-        certificate='./cert/one.crt',
+        tls=False
     )
 
     keeper.start()

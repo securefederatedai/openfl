@@ -3,7 +3,6 @@
 
 """Aggregator module."""
 
-
 import base64
 import json
 import os
@@ -19,10 +18,13 @@ from subprocess import call
 import requests
 from click import confirm
 
-
 logger = getLogger(__name__)
 
 TOKEN_DELIMITER = '.'
+CA_STEP_CONFIG_DIR = Path('step_config')
+CA_PKI_DIR = Path('cert')
+CA_PASSWORD_FILE = Path('pass_file')
+CA_CONFIG_JSON = Path('config/ca.json')
 
 
 def download_step_bin(url, grep_name, architecture, prefix='.', confirmation=True):
@@ -68,14 +70,14 @@ def get_token(name, ca_url, ca_path='.'):
         ca_path: path to ca folder
     """
     ca_path = Path(ca_path)
-    step_config_dir = ca_path / 'step_config'
-    pki_dir = ca_path / 'cert'
+    step_config_dir = ca_path / CA_STEP_CONFIG_DIR
+    pki_dir = ca_path / CA_PKI_DIR
     step_path, _ = get_ca_bin_paths(ca_path)
     if not step_path:
         raise Exception('Step-CA is not installed!\nRun `fx pki install` first')
 
     priv_json = step_config_dir / 'secrets' / 'priv.json'
-    pass_file = pki_dir / 'pass_file'
+    pass_file = pki_dir / CA_PASSWORD_FILE
     root_crt = step_config_dir / 'certs' / 'root_ca.crt'
     try:
         token = subprocess.check_output(
@@ -89,9 +91,9 @@ def get_token(name, ca_url, ca_path='.'):
     token = token.strip()
     token_b64 = base64.b64encode(token)
 
-    with open(step_config_dir / 'certs' / 'root_ca.crt', mode='rb') as file:
-        root_ca = file.read()
-    root_ca_b64 = base64.b64encode(root_ca)
+    with open(root_crt, mode='rb') as file:
+        root_certificate_b = file.read()
+    root_ca_b64 = base64.b64encode(root_certificate_b)
 
     return TOKEN_DELIMITER.join([
         token_b64.decode('utf-8'),
@@ -118,9 +120,9 @@ def certify(name, cert_path: Path, token_with_cert, ca_path: Path):
     """Create an envoy workspace."""
     os.makedirs(cert_path, exist_ok=True)
 
-    token, root_ca = token_with_cert.split(TOKEN_DELIMITER)
+    token, root_certificate = token_with_cert.split(TOKEN_DELIMITER)
     token = base64.b64decode(token).decode('utf-8')
-    root_ca = base64.b64decode(root_ca)
+    root_certificate = base64.b64decode(root_certificate)
 
     step_path, _ = get_ca_bin_paths(ca_path)
     if not step_path:
@@ -131,7 +133,7 @@ def certify(name, cert_path: Path, token_with_cert, ca_path: Path):
         raise Exception('Step-CA is not installed!\nRun `fx pki install` first')
 
     with open(f'{cert_path}/root_ca.crt', mode='wb') as file:
-        file.write(root_ca)
+        file.write(root_certificate)
     call(f'./{step_path} ca certificate {name} {cert_path}/{name}.crt '
          f'{cert_path}/{name}.key -f --token {token}', shell=True)
 
@@ -156,7 +158,7 @@ def install(ca_path, ca_url, password):
 
     ca_path = Path(ca_path)
     ca_path.mkdir(parents=True, exist_ok=True)
-    step_config_dir = ca_path / 'step_config'
+    step_config_dir = ca_path / CA_STEP_CONFIG_DIR
     os.environ['STEPPATH'] = str(step_config_dir)
     step_path, step_ca_path = get_ca_bin_paths(ca_path)
 
@@ -166,7 +168,7 @@ def install(ca_path, ca_url, password):
         download_step_bin(url, 'step-ca_linux', 'amd', prefix=ca_path, confirmation=False)
         url = 'http://api.github.com/repos/smallstep/cli/releases/latest'
         download_step_bin(url, 'step_linux', 'amd', prefix=ca_path, confirmation=False)
-    step_config_dir = ca_path / 'step_config'
+    step_config_dir = ca_path / CA_STEP_CONFIG_DIR
     if (not step_config_dir.exists()
             or confirm('CA exists, do you want to recreate it?', default=True)):
         _create_ca(ca_path, ca_url, password)
@@ -202,8 +204,8 @@ def _check_kill_process(pstring, confirmation=False):
 
 def _create_ca(ca_path: Path, ca_url: str, password: str):
     """Create a ca workspace."""
-    pki_dir = ca_path / 'cert'
-    step_config_dir = ca_path / 'step_config'
+    pki_dir = ca_path / CA_PKI_DIR
+    step_config_dir = ca_path / CA_STEP_CONFIG_DIR
 
     pki_dir.mkdir(parents=True, exist_ok=True)
     step_config_dir.mkdir(parents=True, exist_ok=True)
@@ -211,7 +213,7 @@ def _create_ca(ca_path: Path, ca_url: str, password: str):
     with open(f'{pki_dir}/pass_file', 'w') as f:
         f.write(password)
     step_path, step_ca_path = get_ca_bin_paths(ca_path)
-    assert(step_path and step_ca_path and step_path.exists() and step_ca_path.exists())
+    assert (step_path and step_ca_path and step_path.exists() and step_ca_path.exists())
 
     logger.info('Create CA Config')
     os.environ['STEPPATH'] = str(step_config_dir)
@@ -231,7 +233,7 @@ def _create_ca(ca_path: Path, ca_url: str, password: str):
 
 
 def _configure(step_config_dir):
-    conf_file = step_config_dir / 'config' / 'ca.json'
+    conf_file = step_config_dir / CA_CONFIG_JSON
     with open(conf_file, 'r+') as f:
         data = json.load(f)
         data.setdefault('authority', {}).setdefault('claims', {})
