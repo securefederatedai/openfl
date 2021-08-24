@@ -57,5 +57,5 @@ Envoy
 
 |productName| comes with another long-existing actor called Envoy. It runs on collaborator machines connected to a *Director*. 
 There is one to one mapping between *Envoys* and Dataset shards: every *Envoy* needs exactly one 
-`*Shard Descriptor* <https://github.com/intel/openfl/blob/develop/openfl/interface/interactive_api/shard_descriptor.py>`_ to run. 
+*`Shard Descriptor <https://github.com/intel/openfl/blob/develop/openfl/interface/interactive_api/shard_descriptor.py>`_* to run. 
 When the *Director* starts an experiment, *Envoy* will accept the experiment workspace, prepare the environment and start a *Collaborator*.
