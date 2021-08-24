@@ -109,9 +109,14 @@ def create(prefix, template):
 @workspace.command(name='export')
 def export_():
     """Export federated learning workspace."""
-    from os import getcwd, makedirs
-    from os.path import basename, join
-    from shutil import make_archive, copytree, copy2, ignore_patterns
+    from os import getcwd
+    from os import makedirs
+    from os.path import basename
+    from os.path import join
+    from shutil import copy2
+    from shutil import copytree
+    from shutil import ignore_patterns
+    from shutil import make_archive
     from tempfile import mkdtemp
 
     from plan import freeze_plan
@@ -175,7 +180,8 @@ def export_():
 def import_(archive):
     """Import federated learning workspace."""
     from os import chdir
-    from os.path import isfile, basename
+    from os.path import basename
+    from os.path import isfile
     from shutil import unpack_archive
     from subprocess import check_call
     from sys import executable
@@ -207,28 +213,30 @@ def certify():
     """Create certificate authority for federation."""
     from cryptography.hazmat.primitives import serialization
 
-    from openfl.cryptography.ca import generate_root_cert, generate_signing_csr, sign_certificate
-    from openfl.interface.cli_helper import PKI_DIR
+    from openfl.cryptography.ca import generate_root_cert
+    from openfl.cryptography.ca import generate_signing_csr
+    from openfl.cryptography.ca import sign_certificate
+    from openfl.interface.cli_helper import CERT_DIR
 
     echo('Setting Up Certificate Authority...\n')
 
     echo('1.  Create Root CA')
     echo('1.1 Create Directories')
 
-    (PKI_DIR / 'ca/root-ca/private').mkdir(
+    (CERT_DIR / 'ca/root-ca/private').mkdir(
         parents=True, exist_ok=True, mode=0o700)
-    (PKI_DIR / 'ca/root-ca/db').mkdir(parents=True, exist_ok=True)
+    (CERT_DIR / 'ca/root-ca/db').mkdir(parents=True, exist_ok=True)
 
     echo('1.2 Create Database')
 
-    with open(PKI_DIR / 'ca/root-ca/db/root-ca.db', 'w') as f:
+    with open(CERT_DIR / 'ca/root-ca/db/root-ca.db', 'w') as f:
         pass  # write empty file
-    with open(PKI_DIR / 'ca/root-ca/db/root-ca.db.attr', 'w') as f:
+    with open(CERT_DIR / 'ca/root-ca/db/root-ca.db.attr', 'w') as f:
         pass  # write empty file
 
-    with open(PKI_DIR / 'ca/root-ca/db/root-ca.crt.srl', 'w') as f:
+    with open(CERT_DIR / 'ca/root-ca/db/root-ca.crt.srl', 'w') as f:
         f.write('01')  # write file with '01'
-    with open(PKI_DIR / 'ca/root-ca/db/root-ca.crl.srl', 'w') as f:
+    with open(CERT_DIR / 'ca/root-ca/db/root-ca.crl.srl', 'w') as f:
         f.write('01')  # write file with '01'
 
     echo('1.3 Create CA Request and Certificate')
@@ -239,12 +247,12 @@ def certify():
     root_private_key, root_cert = generate_root_cert()
 
     # Write root CA certificate to disk
-    with open(PKI_DIR / root_crt_path, 'wb') as f:
+    with open(CERT_DIR / root_crt_path, 'wb') as f:
         f.write(root_cert.public_bytes(
             encoding=serialization.Encoding.PEM,
         ))
 
-    with open(PKI_DIR / root_key_path, 'wb') as f:
+    with open(CERT_DIR / root_key_path, 'wb') as f:
         f.write(root_private_key.private_bytes(
             encoding=serialization.Encoding.PEM,
             format=serialization.PrivateFormat.TraditionalOpenSSL,
@@ -254,20 +262,20 @@ def certify():
     echo('2.  Create Signing Certificate')
     echo('2.1 Create Directories')
 
-    (PKI_DIR / 'ca/signing-ca/private').mkdir(
+    (CERT_DIR / 'ca/signing-ca/private').mkdir(
         parents=True, exist_ok=True, mode=0o700)
-    (PKI_DIR / 'ca/signing-ca/db').mkdir(parents=True, exist_ok=True)
+    (CERT_DIR / 'ca/signing-ca/db').mkdir(parents=True, exist_ok=True)
 
     echo('2.2 Create Database')
 
-    with open(PKI_DIR / 'ca/signing-ca/db/signing-ca.db', 'w') as f:
+    with open(CERT_DIR / 'ca/signing-ca/db/signing-ca.db', 'w') as f:
         pass  # write empty file
-    with open(PKI_DIR / 'ca/signing-ca/db/signing-ca.db.attr', 'w') as f:
+    with open(CERT_DIR / 'ca/signing-ca/db/signing-ca.db.attr', 'w') as f:
         pass  # write empty file
 
-    with open(PKI_DIR / 'ca/signing-ca/db/signing-ca.crt.srl', 'w') as f:
+    with open(CERT_DIR / 'ca/signing-ca/db/signing-ca.crt.srl', 'w') as f:
         f.write('01')  # write file with '01'
-    with open(PKI_DIR / 'ca/signing-ca/db/signing-ca.crl.srl', 'w') as f:
+    with open(CERT_DIR / 'ca/signing-ca/db/signing-ca.crl.srl', 'w') as f:
         f.write('01')  # write file with '01'
 
     echo('2.3 Create Signing Certificate CSR')
@@ -279,12 +287,12 @@ def certify():
     signing_private_key, signing_csr = generate_signing_csr()
 
     # Write Signing CA CSR to disk
-    with open(PKI_DIR / signing_csr_path, 'wb') as f:
+    with open(CERT_DIR / signing_csr_path, 'wb') as f:
         f.write(signing_csr.public_bytes(
             encoding=serialization.Encoding.PEM,
         ))
 
-    with open(PKI_DIR / signing_key_path, 'wb') as f:
+    with open(CERT_DIR / signing_key_path, 'wb') as f:
         f.write(signing_private_key.private_bytes(
             encoding=serialization.Encoding.PEM,
             format=serialization.PrivateFormat.TraditionalOpenSSL,
@@ -295,7 +303,7 @@ def certify():
 
     signing_cert = sign_certificate(signing_csr, root_private_key, root_cert.subject, ca=True)
 
-    with open(PKI_DIR / signing_crt_path, 'wb') as f:
+    with open(CERT_DIR / signing_crt_path, 'wb') as f:
         f.write(signing_cert.public_bytes(
             encoding=serialization.Encoding.PEM,
         ))
@@ -303,10 +311,10 @@ def certify():
     echo('3   Create Certificate Chain')
 
     # create certificate chain file by combining root-ca and signing-ca
-    with open(PKI_DIR / 'cert_chain.crt', 'w') as d:
-        with open(PKI_DIR / 'ca/root-ca.crt') as s:
+    with open(CERT_DIR / 'cert_chain.crt', 'w') as d:
+        with open(CERT_DIR / 'ca/root-ca.crt') as s:
             d.write(s.read())
-        with open(PKI_DIR / 'ca/signing-ca.crt') as s:
+        with open(CERT_DIR / 'ca/signing-ca.crt') as s:
             d.write(s.read())
 
     echo('\nDone.')
@@ -373,8 +381,10 @@ def dockerize_(context, base_image, save):
     context.invoke(export_)
     workspace_archive = workspace_name + '.zip'
 
-    build_args = {'WORKSPACE_NAME': workspace_name,
-                  'BASE_IMAGE': base_image}
+    build_args = {
+        'WORKSPACE_NAME': workspace_name,
+        'BASE_IMAGE': base_image
+    }
 
     client = docker.from_env(timeout=3600)
     try:
@@ -386,7 +396,7 @@ def dockerize_(context, base_image, save):
             dockerfile=dockerfile_workspace)
 
     except Exception as e:
-        echo('Faild to build the image\n' + str(e) + '\n')
+        echo('Failed to build the image\n' + str(e) + '\n')
         sys.exit(1)
     else:
         echo('The workspace image has been built successfully!')

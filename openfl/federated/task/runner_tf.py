@@ -291,17 +291,18 @@ class TensorFlowTaskRunner(TaskRunner):
             None
         """
         if with_opt_vars:
-            self.assign_ops, self.placeholders = \
-                tf_set_tensor_dict(
-                    tensor_dict, self.sess, self.fl_vars,
-                    self.assign_ops, self.placeholders
-                )
+            self.assign_ops, self.placeholders = tf_set_tensor_dict(
+                tensor_dict, self.sess, self.fl_vars,
+                self.assign_ops, self.placeholders
+            )
         else:
-            self.tvar_assign_ops, self.tvar_placeholders = \
-                tf_set_tensor_dict(
-                    tensor_dict, self.sess, self.tvars,
-                    self.tvar_assign_ops, self.tvar_placeholders
-                )
+            self.tvar_assign_ops, self.tvar_placeholders = tf_set_tensor_dict(
+                tensor_dict,
+                self.sess,
+                self.tvars,
+                self.tvar_assign_ops,
+                self.tvar_placeholders
+            )
 
     def reset_opt_vars(self):
         """Reinitialize the optimizer variables."""
@@ -369,16 +370,15 @@ class TensorFlowTaskRunner(TaskRunner):
             **self.tensor_dict_split_fn_kwargs
         )
         if not with_opt_vars:
-            validation_global_model_dict = global_model_dict
-            validation_local_model_dict = local_model_dict
+            global_model_dict_val = global_model_dict
+            local_model_dict_val = local_model_dict
         else:
             output_model_dict = self.get_tensor_dict(with_opt_vars=False)
-            validation_global_model_dict, validation_local_model_dict =\
-                split_tensor_dict_for_holdouts(
-                    self.logger,
-                    output_model_dict,
-                    **self.tensor_dict_split_fn_kwargs
-                )
+            global_model_dict_val, local_model_dict_val = split_tensor_dict_for_holdouts(
+                self.logger,
+                output_model_dict,
+                **self.tensor_dict_split_fn_kwargs
+            )
 
         self.required_tensorkeys_for_function['train_batches'] = [
             TensorKey(tensor_name, 'GLOBAL', 0, False, ('model',))
@@ -391,16 +391,21 @@ class TensorFlowTaskRunner(TaskRunner):
         # model, so there is an extra lookup dimension for kwargs
         self.required_tensorkeys_for_function['validate'] = {}
         # TODO This is not stateless. The optimizer will not be
-        self.required_tensorkeys_for_function['validate']['apply=local'] = \
-            [TensorKey(tensor_name, 'LOCAL', 0, False, ('trained',))
-             for tensor_name in
-             {**validation_global_model_dict, **validation_local_model_dict}]
-        self.required_tensorkeys_for_function['validate']['apply=global'] = \
-            [TensorKey(tensor_name, 'GLOBAL', 0, False, ('model',))
-             for tensor_name in validation_global_model_dict]
-        self.required_tensorkeys_for_function['validate']['apply=global'] += \
-            [TensorKey(tensor_name, 'LOCAL', 0, False, ('model',))
-             for tensor_name in validation_local_model_dict]
+        self.required_tensorkeys_for_function['validate']['apply=local'] = [
+            TensorKey(tensor_name, 'LOCAL', 0, False, ('trained',))
+            for tensor_name in {
+                **global_model_dict_val,
+                **local_model_dict_val
+            }
+        ]
+        self.required_tensorkeys_for_function['validate']['apply=global'] = [
+            TensorKey(tensor_name, 'GLOBAL', 0, False, ('model',))
+            for tensor_name in global_model_dict_val
+        ]
+        self.required_tensorkeys_for_function['validate']['apply=global'] += [
+            TensorKey(tensor_name, 'LOCAL', 0, False, ('model',))
+            for tensor_name in local_model_dict_val
+        ]
 
 
 # FIXME: what's a nicer construct than this? ugly interface. Perhaps we

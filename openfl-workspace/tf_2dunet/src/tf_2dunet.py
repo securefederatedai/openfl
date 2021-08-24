@@ -62,7 +62,7 @@ class TensorFlow2DUNet(TensorFlowTaskRunner):
 
         self.tvars = tf.trainable_variables()
 
-        self.optimizer = tf.train.RMSPropOptimizer(1e-5)
+        self.optimizer = tf.train.RMSPropOptimizer(1e-2)
 
         self.gvs = self.optimizer.compute_gradients(self.loss, self.tvars)
         self.train_step = self.optimizer.apply_gradients(self.gvs,
@@ -93,9 +93,11 @@ def dice_coef(y_true, y_pred, smooth=1.0, **kwargs):
 
     """
     intersection = tf.reduce_sum(y_true * y_pred, axis=[1, 2, 3])
-    coef = (tf.constant(2.) * intersection + tf.constant(smooth)) / \
-           (tf.reduce_sum(y_true, axis=[1, 2, 3]) + tf.reduce_sum(
-               y_pred, axis=(1, 2, 3)) + tf.constant(smooth))
+    coef = (
+        (tf.constant(2.) * intersection + tf.constant(smooth))
+        / (tf.reduce_sum(y_true, axis=[1, 2, 3])
+           + tf.reduce_sum(y_pred, axis=[1, 2, 3]) + tf.constant(smooth))
+    )
     return tf.reduce_mean(coef)
 
 

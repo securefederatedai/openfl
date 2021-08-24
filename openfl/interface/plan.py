@@ -44,11 +44,11 @@ def initialize(context, plan_config, cols_config, data_config,
      the federation.
     """
     from pathlib import Path
-    from socket import getfqdn
 
     from openfl.federated import Plan
     from openfl.protocols import utils
     from openfl.utilities import split_tensor_dict_for_holdouts
+    from openfl.utilities.utils import getfqdn_env
 
     plan = Plan.parse(plan_config_path=Path(plan_config),
                       cols_config_path=Path(cols_config),
@@ -94,10 +94,7 @@ def initialize(context, plan_config, cols_config, data_config,
 
     if (plan_origin['network']['settings']['agg_addr'] == 'auto'
             or aggregator_address):
-        plan_origin['network']['settings'] = plan_origin['network'].get(
-            'settings', {})
-        plan_origin['network']['settings']['agg_addr'] =\
-            aggregator_address or getfqdn()
+        plan_origin['network']['settings']['agg_addr'] = aggregator_address or getfqdn_env()
 
         logger.warn(f'Patching Aggregator Addr in Plan'
                     f" 🠆 {plan_origin['network']['settings']['agg_addr']}")
@@ -153,7 +150,9 @@ def switch_plan(name):
     from shutil import copyfile
     from os.path import isfile
 
-    from yaml import load, dump, FullLoader
+    from yaml import dump
+    from yaml import FullLoader
+    from yaml import load
 
     plan_file = f'plan/plans/{name}/plan.yaml'
     if isfile(plan_file):

@@ -29,9 +29,9 @@ class AggregatorGRPCServer(AggregatorServicer):
     def __init__(self,
                  aggregator,
                  agg_port,
-                 disable_tls=False,
+                 tls=True,
                  disable_client_auth=False,
-                 ca=None,
+                 root_certificate=None,
                  certificate=None,
                  private_key=None,
                  **kwargs):
@@ -42,19 +42,19 @@ class AggregatorGRPCServer(AggregatorServicer):
             aggregator: The aggregator
         Args:
             fltask (FLtask): The gRPC service task.
-            disable_tls (bool): To disable the TLS. (Default: False)
+            tls (bool): To disable the TLS. (Default: True)
             disable_client_auth (bool): To disable the client side
             authentication. (Default: False)
-            ca (str): File path to the CA certificate.
+            root_certificate (str): File path to the CA certificate.
             certificate (str): File path to the server certificate.
             private_key (str): File path to the private key.
             kwargs (dict): Additional arguments to pass into function
         """
         self.aggregator = aggregator
         self.uri = f'[::]:{agg_port}'
-        self.disable_tls = disable_tls
+        self.tls = tls
         self.disable_client_auth = disable_client_auth
-        self.ca = ca
+        self.root_certificate = root_certificate
         self.certificate = certificate
         self.private_key = private_key
         self.channel_options = [
@@ -80,7 +80,7 @@ class AggregatorGRPCServer(AggregatorServicer):
              valid then raises error.
 
         """
-        if not self.disable_tls:
+        if self.tls:
             common_name = context.auth_context()[
                 'x509_common_name'][0].decode('utf-8')
             collaborator_common_name = request.header.sender
@@ -205,42 +205,47 @@ class AggregatorGRPCServer(AggregatorServicer):
         # turn data stream into local model update
         return Acknowledgement(header=self.get_header(collaborator_name))
 
-    def serve(self):
-        """Start an aggregator gRPC service."""
+    def get_server(self):
+        """Return gRPC server."""
         self.server = server(ThreadPoolExecutor(max_workers=cpu_count()),
                              options=self.channel_options)
 
         add_AggregatorServicer_to_server(self, self.server)
 
-        if self.disable_tls:
+        if not self.tls:
 
             self.logger.warn(
                 'gRPC is running on insecure channel with TLS disabled.')
-
-            self.server.add_insecure_port(self.uri)
+            port = self.server.add_insecure_port(self.uri)
+            self.logger.info(f'Insecure port: {port}')
 
         else:
 
             with open(self.private_key, 'rb') as f:
-                private_key = f.read()
+                private_key_b = f.read()
             with open(self.certificate, 'rb') as f:
-                certificate_chain = f.read()
-            with open(self.ca, 'rb') as f:
-                root_certificates = f.read()
+                certificate_b = f.read()
+            with open(self.root_certificate, 'rb') as f:
+                root_certificate_b = f.read()
 
             if self.disable_client_auth:
                 self.logger.warn('Client-side authentication is disabled.')
 
             self.server_credentials = ssl_server_credentials(
-                ((private_key, certificate_chain),),
-                root_certificates=root_certificates,
+                ((private_key_b, certificate_b),),
+                root_certificates=root_certificate_b,
                 require_client_auth=not self.disable_client_auth
             )
 
             self.server.add_secure_port(self.uri, self.server_credentials)
 
-        self.logger.info('Starting Aggregator gRPC Server')
+        return self.server
 
+    def serve(self):
+        """Start an aggregator gRPC service."""
+        self.get_server()
+
+        self.logger.info('Starting Aggregator gRPC Server')
         self.server.start()
 
         try:

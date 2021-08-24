@@ -56,7 +56,9 @@ class Down(nn.Module):
         """Initialize layer."""
         super(Down, self).__init__()
         self.mpconv = nn.Sequential(
-            nn.MaxPool2d(2), DoubleConv(in_ch, out_ch))
+            nn.MaxPool2d(2),
+            DoubleConv(in_ch, out_ch)
+        )
 
     def forward(self, x):
         """Do forward pass."""
@@ -74,11 +76,12 @@ class Up(nn.Module):
         self.out_ch = out_ch
         if bilinear:
             self.up = nn.Upsample(
-                scale_factor=2, mode='bilinear', align_corners=True)
-        else:
-            self.up = nn.ConvTranspose2d(
-                in_ch, in_ch // 2, 2, stride=2
+                scale_factor=2,
+                mode='bilinear',
+                align_corners=True
             )
+        else:
+            self.up = nn.ConvTranspose2d(in_ch, in_ch // 2, 2, stride=2)
         self.conv = DoubleConv(in_ch, out_ch)
 
     def forward(self, x1, x2):
@@ -87,8 +90,10 @@ class Up(nn.Module):
         diff_y = x2.size()[2] - x1.size()[2]
         diff_x = x2.size()[3] - x1.size()[3]
 
-        x1 = F.pad(x1, (diff_x // 2, diff_x - diff_x
-                   // 2, diff_y // 2, diff_y - diff_y // 2))
+        x1 = F.pad(
+            x1,
+            (diff_x // 2, diff_x - diff_x // 2, diff_y // 2, diff_y - diff_y // 2)
+        )
 
         x = torch.cat([x2, x1], dim=1)
         x = self.conv(x)

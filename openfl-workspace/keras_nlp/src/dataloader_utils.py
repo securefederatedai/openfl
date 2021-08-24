@@ -130,14 +130,14 @@ def import_raw_data_(data_path='', num_samples=0):
 
     logger.info(f'[DL]-import_raw_data: Number of samples = {len(input_texts)}')
     logger.info(f'[DL]-import_raw_data: Number of unique input tokens = {num_encoder_tokens}')
-    logger.info(f'[DL]-import_raw_data: \
-                  Number of unique decoder tokens = {num_decoder_tokens}')
+    logger.info(f'[DL]-import_raw_data: '
+                f'Number of unique decoder tokens = {num_decoder_tokens}')
 
-    logger.info(f'[DL]-import_raw_data: \
-                  Max sequence length for inputs = {max_encoder_seq_length}')
+    logger.info(f'[DL]-import_raw_data: '
+                f'Max sequence length for inputs = {max_encoder_seq_length}')
 
-    logger.info(f'[DL]-import_raw_data: \
-                  Max sequence length for outputs = {max_decoder_seq_length}')
+    logger.info(f'[DL]-import_raw_data: '
+                f'Max sequence length for outputs = {max_decoder_seq_length}')
 
     logger.info(f'[DL]-import_raw_data: encoder_input_data = {encoder_input_data.shape}')
     logger.info(f'[DL]-import_raw_data: decoder_input_data = {decoder_input_data.shape}')
@@ -193,8 +193,10 @@ def load_shard(collaborator_count, shard_num, data_path, num_samples, split_rati
                numpy.ndarray: y_valid)
       Dict: details, from DataLoader_utils.get_datasets
     """
-    details, encoder_input_data, decoder_input_data, decoder_target_data = \
-        import_raw_data_(data_path, num_samples)
+    details, encoder_input_data, decoder_input_data, decoder_target_data = import_raw_data_(
+        data_path,
+        num_samples
+    )
 
     train_val_dataset = get_datasets_(encoder_input_data, decoder_input_data,
                                       decoder_target_data, num_samples, split_ratio)
@@ -211,7 +213,8 @@ def load_shard(collaborator_count, shard_num, data_path, num_samples, split_rati
     logger.info(f'[DL]load_shard: X_train_encoder = {X_train_encoder.shape}')
     logger.info(f'[DL]load_shard: y_train = {y_train.shape}')
 
-    out = (X_train_encoder, X_train_decoder, y_train), \
-          (X_valid_encoder, X_valid_decoder, y_valid), details
-
-    return out
+    return (
+        (X_train_encoder, X_train_decoder, y_train),
+        (X_valid_encoder, X_valid_decoder, y_valid),
+        details
+    )

@@ -63,8 +63,7 @@ class FederatedModel(TaskRunner):
         self.runner.optimizer = self.optimizer
         self.loss_fn = loss_fn
         self.runner.loss_fn = self.loss_fn
-        self.tensor_dict_split_fn_kwargs = \
-            self.runner.tensor_dict_split_fn_kwargs
+        self.tensor_dict_split_fn_kwargs = self.runner.tensor_dict_split_fn_kwargs
         self.initialize_tensorkeys_for_functions()
 
     def __getattribute__(self, attr):

@@ -3,7 +3,6 @@
 """FastEstimatorTaskRunner module."""
 
 import numpy as np
-import tensorflow as tf
 
 from openfl.utilities import split_tensor_dict_for_holdouts
 from openfl.utilities import TensorKey
@@ -40,7 +39,6 @@ class FastEstimatorTaskRunner(TaskRunner):
                 self.system.epoch_idx = progress['epoch_idx']
                 self.system.global_step = progress['global_step']
 
-        tf.config.run_functions_eagerly(True)
         estimator_kwargs = {}
         for k, v in estimator.system.__dict__.items():
             if k in ['pipeline', 'network', 'log_steps',
@@ -70,8 +68,7 @@ class FastEstimatorTaskRunner(TaskRunner):
         self.runner.model = self.model
         self.runner.optimizer = self.optimizer
         self.required_tensorkeys_for_function = {}
-        self.tensor_dict_split_fn_kwargs = \
-            self.runner.tensor_dict_split_fn_kwargs
+        self.tensor_dict_split_fn_kwargs = self.runner.tensor_dict_split_fn_kwargs
         self.initialize_tensorkeys_for_functions()
         self.epoch_idx = 0
         self.global_step = None

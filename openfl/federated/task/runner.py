@@ -72,8 +72,7 @@ class TaskRunner(object):
         Returns:
             None
         """
-        if data_loader.get_feature_shape() != \
-                self.data_loader.get_feature_shape():
+        if data_loader.get_feature_shape() != self.data_loader.get_feature_shape():
             raise ValueError(
                 'The data_loader feature shape is not compatible with model.')
 

@@ -76,19 +76,16 @@ class RandomGroupedAssigner(Assigner):
                     self.authorized_cols[i] for i in
                     randomized_col_idx[col_idx:col_idx + num_col_in_group]
                 ]
-                self.task_group_collaborators[group['name']] = \
-                    rand_col_group_list
+                self.task_group_collaborators[group['name']] = rand_col_group_list
                 for col in rand_col_group_list:
                     self.collaborator_tasks[col][round_num] = group['tasks']
                 # Now populate reverse lookup of tasks->group
                 for task in group['tasks']:
                     # This should append the list of collaborators performing
                     # that task
-                    self.collaborators_for_task[task][round_num] \
-                        += rand_col_group_list
+                    self.collaborators_for_task[task][round_num] += rand_col_group_list
                 col_idx += num_col_in_group
-            assert (col_idx == col_list_size), (
-                'Task groups were not divided properly')
+            assert (col_idx == col_list_size), 'Task groups were not divided properly'
 
     def get_tasks_for_collaborator(self, collaborator_name, round_number):
         """Get tasks for the collaborator specified."""

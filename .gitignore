@@ -1,7 +1,13 @@
 *.egg-info
+*.pkl
 __pycache__
 /build
 /dist
 .vscode
 .ipynb_checkpoints
 venv/*
+.idea
+
+*.jpg
+*.crt
+*.key

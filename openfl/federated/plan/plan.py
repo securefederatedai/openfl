@@ -7,7 +7,6 @@ from importlib import import_module
 from logging import getLogger
 from os.path import splitext
 from pathlib import Path
-from socket import getfqdn
 
 from yaml import dump
 from yaml import safe_load
@@ -18,6 +17,7 @@ from openfl.component.aggregation_functions import WeightedAverage
 from openfl.interface.cli_helper import WORKSPACE
 from openfl.transport import AggregatorGRPCServer
 from openfl.transport import CollaboratorGRPCClient
+from openfl.utilities.utils import getfqdn_env
 
 SETTINGS = 'settings'
 TEMPLATE = 'template'
@@ -147,9 +147,9 @@ class Plan(object):
             return plan
 
         except Exception:
-            Plan.logger.error(f'Parsing Federated Learning Plan : '
-                              f'[red]FAILURE[/] : [blue]{plan_config_path}[/].',
-                              extra={'markup': True})
+            Plan.logger.exception(f'Parsing Federated Learning Plan : '
+                                  f'[red]FAILURE[/] : [blue]{plan_config_path}[/].',
+                                  extra={'markup': True})
             raise
 
     @staticmethod
@@ -182,6 +182,27 @@ class Plan(object):
 
         return instance
 
+    @staticmethod
+    def import_(template):
+        """
+        Import an instance of a openfl Component or Federated DataLoader/TaskRunner.
+
+        Args:
+            template: Fully qualified object path
+
+        Returns:
+            A Python object
+        """
+        class_name = splitext(template)[1].strip('.')
+        module_path = splitext(template)[0]
+        Plan.logger.info(f'Importing [red]🡆[/] Object [red]{class_name}[/] '
+                         f'from [red]{module_path}[/] Module.',
+                         extra={'markup': True})
+        module = import_module(module_path)
+        instance = getattr(module, class_name)
+
+        return instance
+
     def __init__(self):
         """Initialize."""
         self.config = {}  # dictionary containing patched plan definition
@@ -204,7 +225,7 @@ class Plan(object):
         self.name_ = None
 
     @property
-    def hash(self): # NOQA
+    def hash(self):  # NOQA
         """Generate hash for this instance."""
         self.hash_ = sha384(dump(self.config).encode('utf-8'))
         Plan.logger.info(f'FL-Plan hash is [blue]{self.hash_.hexdigest()}[/]',
@@ -221,7 +242,7 @@ class Plan(object):
             'rounds_to_train']
 
         if self.config['network'][SETTINGS]['agg_addr'] == AUTO:
-            self.config['network'][SETTINGS]['agg_addr'] = getfqdn()
+            self.config['network'][SETTINGS]['agg_addr'] = getfqdn_env()
 
         if self.config['network'][SETTINGS]['agg_port'] == AUTO:
             self.config['network'][SETTINGS]['agg_port'] = int(
@@ -258,7 +279,16 @@ class Plan(object):
         defaults[SETTINGS]['authorized_cols'] = self.authorized_cols
         defaults[SETTINGS]['assigner'] = self.get_assigner()
         defaults[SETTINGS]['compression_pipeline'] = self.get_tensor_pipe()
+        log_metric_callback = defaults[SETTINGS].get('log_metric_callback')
 
+        if log_metric_callback:
+            if isinstance(log_metric_callback, dict):
+                log_metric_callback = Plan.import_(**log_metric_callback)
+            elif not callable(log_metric_callback):
+                raise TypeError(f'log_metric_callback should be callable object '
+                                f'or be import from code part, get {log_metric_callback}')
+
+        defaults[SETTINGS]['log_metric_callback'] = log_metric_callback
         if self.aggregator_ is None:
             self.aggregator_ = Plan.build(**defaults, initial_tensor_dict=tensor_dict)
 
@@ -318,12 +348,9 @@ openfl.component.aggregation_functions.AggregationFunctionInterface
         return self.loader_
 
     # Python interactive api
-    def initialize_data_loader(self, data_loader, collaborator_name):
+    def initialize_data_loader(self, data_loader, shard_descriptor):
         """Get data loader."""
-        data_path = self.cols_data_paths[
-            collaborator_name
-        ]
-        data_loader._delayed_init(data_path=data_path)
+        data_loader.shard_descriptor = shard_descriptor
         return data_loader
 
     # legacy api (TaskRunner subclassing)
@@ -372,8 +399,8 @@ openfl.component.aggregation_functions.AggregationFunctionInterface
 
         return self.runner_
 
-    def get_collaborator(self, collaborator_name,
-                         task_runner=None, client=None):
+    def get_collaborator(self, collaborator_name, root_certificate=None, private_key=None,
+                         certificate=None, task_runner=None, client=None, shard_descriptor=None):
         """Get collaborator."""
         defaults = self.config.get(
             'collaborator',
@@ -398,7 +425,7 @@ openfl.component.aggregation_functions.AggregationFunctionInterface
             if 'openfl.federated.task.task_runner' in self.config['task_runner']['template']:
                 # Interactive API
                 model_provider, task_keeper, data_loader = self.deserialize_interface_objects()
-                data_loader = self.initialize_data_loader(data_loader, collaborator_name)
+                data_loader = self.initialize_data_loader(data_loader, shard_descriptor)
                 defaults[SETTINGS]['task_runner'] = self.get_core_task_runner(
                     data_loader=data_loader,
                     model_provider=model_provider,
@@ -416,7 +443,10 @@ openfl.component.aggregation_functions.AggregationFunctionInterface
             defaults[SETTINGS]['client'] = self.get_client(
                 collaborator_name,
                 self.aggregator_uuid,
-                self.federation_uuid
+                self.federation_uuid,
+                root_certificate,
+                private_key,
+                certificate
             )
 
         if self.collaborator_ is None:
@@ -424,19 +454,20 @@ openfl.component.aggregation_functions.AggregationFunctionInterface
 
         return self.collaborator_
 
-    def get_client(self, collaborator_name, aggregator_uuid, federation_uuid):
+    def get_client(self, collaborator_name, aggregator_uuid, federation_uuid,
+                   root_certificate=None, private_key=None, certificate=None):
         """Get gRPC client for the specified collaborator."""
         common_name = collaborator_name
-
-        chain = 'cert/cert_chain.crt'
-        certificate = f'cert/client/col_{common_name}.crt'
-        private_key = f'cert/client/col_{common_name}.key'
+        if not root_certificate or not private_key or not certificate:
+            root_certificate = 'cert/cert_chain.crt'
+            certificate = f'cert/client/col_{common_name}.crt'
+            private_key = f'cert/client/col_{common_name}.key'
 
         client_args = self.config['network'][SETTINGS]
 
         # patch certificates
 
-        client_args['ca'] = chain
+        client_args['root_certificate'] = root_certificate
         client_args['certificate'] = certificate
         client_args['private_key'] = private_key
 
@@ -448,19 +479,21 @@ openfl.component.aggregation_functions.AggregationFunctionInterface
 
         return self.client_
 
-    def get_server(self):
+    def get_server(self, root_certificate=None, private_key=None, certificate=None, **kwargs):
         """Get gRPC server of the aggregator instance."""
         common_name = self.config['network'][SETTINGS]['agg_addr'].lower()
 
-        chain = 'cert/cert_chain.crt'
-        certificate = f'cert/server/agg_{common_name}.crt'
-        private_key = f'cert/server/agg_{common_name}.key'
+        if not root_certificate or not private_key or not certificate:
+            root_certificate = 'cert/cert_chain.crt'
+            certificate = f'cert/server/agg_{common_name}.crt'
+            private_key = f'cert/server/agg_{common_name}.key'
 
         server_args = self.config['network'][SETTINGS]
 
         # patch certificates
 
-        server_args['ca'] = chain
+        server_args.update(kwargs)
+        server_args['root_certificate'] = root_certificate
         server_args['certificate'] = certificate
         server_args['private_key'] = private_key
 
@@ -471,14 +504,16 @@ openfl.component.aggregation_functions.AggregationFunctionInterface
 
         return self.server_
 
-    def interactive_api_get_server(self, tensor_dict, chain, certificate, private_key):
+    def interactive_api_get_server(self, *, tensor_dict, root_certificate, certificate,
+                                   private_key, tls):
         """Get gRPC server of the aggregator instance."""
         server_args = self.config['network'][SETTINGS]
 
         # patch certificates
-        server_args['ca'] = chain
+        server_args['root_certificate'] = root_certificate
         server_args['certificate'] = certificate
         server_args['private_key'] = private_key
+        server_args['tls'] = tls
 
         server_args['aggregator'] = self.get_aggregator(tensor_dict)
 
@@ -489,13 +524,16 @@ openfl.component.aggregation_functions.AggregationFunctionInterface
 
     def deserialize_interface_objects(self):
         """Deserialize objects for TaskRunner."""
-        interface_objects = []
         serializer = Plan.build(
             self.config['api_layer']['required_plugin_components']['serializer_plugin'], {})
-        for filename in ['model_interface_file',
-                         'tasks_interface_file', 'dataloader_interface_file']:
-            interface_objects.append(
-                serializer.restore_object(self.config['api_layer']['settings'][filename])
-            )
+        filenames = [
+            'model_interface_file',
+            'tasks_interface_file',
+            'dataloader_interface_file'
+        ]
+        interface_objects = [
+            serializer.restore_object(self.config['api_layer']['settings'][filename])
+            for filename in filenames
+        ]
         model_provider, task_keeper, data_loader = interface_objects
         return model_provider, task_keeper, data_loader
