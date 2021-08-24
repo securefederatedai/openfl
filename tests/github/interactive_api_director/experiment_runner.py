@@ -59,31 +59,45 @@ def run_experiment(col_data_paths, model_interface, arch_path, fl_experiment):
     logger.info('The experiment completed!')
 
 
-def create_director(director_path, recreate):
-    logger.info('Creating the director!')
+def create_director(director_path, recreate, config):
+    logger.info(f'Creating the director in {director_path}!')
     if os.path.exists(director_path):
         if not recreate:
             return
         shutil.rmtree(director_path)
-    os.makedirs(director_path)
-    # TODO: copy data to director directory (certificates)
+    subprocess.Popen(
+        f'fx director create-workspace -p {director_path}',
+        shell=True
+    ).wait()
+    shutil.copy(config, director_path)
 
 
-def create_envoy(col_path, recreate):
+def create_envoy(col_path, recreate, shard_config, shard_descriptor):
     logger.info(f'Creating the envoy in {col_path}!')
     if os.path.exists(col_path):
         if not recreate:
             return
         shutil.rmtree(col_path)
-    os.makedirs(col_path)
-    # TODO: copy data to envoy directory (certificates)
+    subprocess.Popen(
+        f'fx envoy create-workspace -p {col_path}',
+        shell=True
+    ).wait()
+    shutil.copy(shard_config, col_path)
+    shutil.copy(shard_descriptor, col_path)
 
 
-def create_federation(director_path: str, collaborator_paths: typing.Iterable[str], recreate=False):
+def create_federation(
+    director_path: str,
+    collaborator_paths: typing.Iterable[str],
+    director_config,
+    shard_config,
+    shard_descriptor,
+    recreate=False
+):
     logger.info('Creating the federation!')
-    create_director(director_path, recreate)
+    create_director(director_path, recreate, director_config)
     for col_path in collaborator_paths:
-        create_envoy(col_path, recreate)
+        create_envoy(col_path, recreate, shard_config, shard_descriptor)
     # TODO: create mTLS
     logger.info('Federation was created')
 
@@ -100,7 +114,8 @@ def run_federation(shards: typing.Dict[str, Shard], director_path: str):
     logger.info('Starting the experiment!')
     running_processes = []
     p = subprocess.Popen(
-        f"fx director start", shell=True,
+        f"fx director start --disable-tls",
+        shell=True,
         cwd=os.path.join(director_path)
     )
     sleep(2)
