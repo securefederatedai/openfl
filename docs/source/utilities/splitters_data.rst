@@ -4,18 +4,16 @@
 .. _data_splitting:
 
 ************************************
-Specifying Custom Data Splits
+Dataset Splitters
 ************************************
 
--------------------------------
-Usage
--------------------------------
 
-|productName| allows developers to use custom data splits **for simulation runs on a single dataset**.
-In order to do this, you should:
+|productName| allows developers to use specify custom data splits **for simulation runs on a single dataset**.
+
+You may apply data splitters differently depending on |productName| workflow that you follow. 
 
 Native Python API
-==========
+==================
 
 Choose from predefined |productName| data splitters functions:
 

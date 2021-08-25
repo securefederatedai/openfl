@@ -38,7 +38,7 @@ and we encourage users to contribute new adapters for DL frameworks they would l
 
 Model is loaded with relevant weights before every task and at the end of the training task, weights are extracted to be sent to the central node and aggregated.
 *Collaborator* instance is created by *Envoy* (described below) when a new experiment is submitted. 
-Every *collaborator* is a unique service as it is loaded with a local *Shard Descriptor* to perform tasks included in an FL experiment.
+Every *Collaborator* is a unique service as it is loaded with a local *Shard Descriptor* to perform tasks included in an FL experiment.
 
 .. _openfl_ll_components:
 
