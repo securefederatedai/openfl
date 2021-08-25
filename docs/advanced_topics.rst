@@ -15,5 +15,4 @@ Advanced Topics
    overriding_agg_fn
    bash_autocomplete_activation
    log_metric_callback
-
-
+   data_splitting
