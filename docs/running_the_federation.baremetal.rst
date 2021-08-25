@@ -84,7 +84,7 @@ On the Aggregator
     
        $ fx plan initialize
 
-    This will initialize the plan and autopopulate the `fully qualified domain name (FQDN) <https://en.wikipedia.org/wiki/Fully_qualified_domain_name>`_ of the aggregator node. This FQDN is embedded within the plan so the collaborators know the externally accessible aggregator server address to connect to. If you face connection issues with the autopopulated FQDN in the plan, this value can be overridden with the :code:`-a` flag, for example :code:`fx plan initialize -a aggregator-hostname.internal-domain.com`.
+    This will initialize the plan and autopopulate the `fully qualified domain name (FQDN) <https://en.wikipedia.org/wiki/Fully_qualified_domain_name>`_ of the aggregator node. This FQDN is embedded within the plan so the collaborators know the externally accessible aggregator server address to connect to. If you face connection issues with the autopopulated FQDN in the plan, this value can be overridden with the :code:`-a` flag, for example :code:`fx plan initialize -a aggregator-hostname.internal-domain.com`. Alternatively, you can override the apparent FQDN of the system by setting an FQDN environment variable (:code:`export FQDN=x.x.x.x`) before invoking :code:`fx plan initialize`.
    
    .. note::
     

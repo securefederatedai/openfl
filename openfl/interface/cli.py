@@ -12,39 +12,36 @@ from click import option
 from click import pass_context
 from click import style
 
+from openfl.utilities import add_log_level
 
-def setup_logging(level='info'):
+
+def setup_logging(level='info', log_file=None):
     """Initialize logging settings."""
+    import logging
     from logging import basicConfig
-    from logging import CRITICAL
-    from logging import DEBUG
-    from logging import ERROR
-    from logging import INFO
-    from logging import NOTSET
-    from logging import WARNING
+
     from rich.console import Console
     from rich.logging import RichHandler
-    import os
+
+    metric = 25
+    add_log_level('METRIC', metric)
+
+    if isinstance(level, str):
+        level = level.upper()
+
+    handlers = []
+    if log_file:
+        fh = logging.FileHandler(log_file)
+        formatter = logging.Formatter(
+            '%(asctime)s %(levelname)s %(message)s %(filename)s:%(lineno)d'
+        )
+        fh.setFormatter(formatter)
+        handlers.append(fh)
 
     console = Console(width=160)
-
-    levels = \
-        {
-            'notset': NOTSET,
-            'debug': DEBUG,
-            'info': INFO,
-            'warning': WARNING,
-            'error': ERROR,
-            'critical': CRITICAL
-        }
-
-    if level.lower() in ['debug', 'error']:
-        os.environ['GRPC_VERBOSITY'] = level.upper()
-
-    level = levels.get(level.lower(), levels['notset'])
-
+    handlers.append(RichHandler(console=console))
     basicConfig(level=level, format='%(message)s',
-                datefmt='[%X]', handlers=[RichHandler(console=console)])
+                datefmt='[%X]', handlers=handlers)
 
 
 def disable_warnings():
@@ -129,6 +126,7 @@ class CLI(Group):
 @pass_context
 def cli(context, log_level):
     """Command-line Interface."""
+    import os
     from sys import argv
 
     context.ensure_object(dict)
@@ -137,10 +135,11 @@ def cli(context, log_level):
     context.obj['script'] = argv[0]
     context.obj['arguments'] = argv[1:]
 
-    setup_logging(log_level)
+    log_file = os.getenv('LOG_FILE')
+    setup_logging(log_level, log_file)
 
 
-@cli.resultcallback()
+@cli.result_callback()
 @pass_context
 def end(context, result, **kwargs):
     """Print the result of the operation."""
@@ -190,7 +189,6 @@ def entry():
     file = Path(__file__).resolve()
     root = file.parent.resolve()  # interface root, containing command modules
     work = Path.cwd().resolve()
-
     path.append(str(root))
     path.insert(0, str(work))
 

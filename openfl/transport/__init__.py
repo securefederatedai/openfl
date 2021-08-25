@@ -5,8 +5,10 @@
 
 from .grpc import AggregatorGRPCServer
 from .grpc import CollaboratorGRPCClient
+from .grpc import DirectorGRPCServer
 
 __all__ = [
     'AggregatorGRPCServer',
-    'CollaboratorGRPCClient'
+    'CollaboratorGRPCClient',
+    'DirectorGRPCServer',
 ]

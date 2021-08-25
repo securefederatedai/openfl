@@ -90,7 +90,7 @@ class NLPDataLoader(KerasDataLoader):
         """
         return self.X_valid[0].shape[0]
 
-    # TODO: first param sould be self. it should be added or renamed
+    @staticmethod
     def _batch_generator(X1, X2, y, idxs, batch_size, num_batches):
         """
         Generate batch of data.
@@ -107,7 +107,7 @@ class NLPDataLoader(KerasDataLoader):
         for i in range(num_batches):
             a = i * batch_size
             b = a + batch_size
-            yield X1[idxs[a:b]], X2[idxs[a:b]], y[idxs[a:b]]
+            yield [X1[idxs[a:b]], X2[idxs[a:b]]], y[idxs[a:b]]
 
     def _get_batch_generator(self, X1, X2, y, batch_size):
         """

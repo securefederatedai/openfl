@@ -11,7 +11,8 @@ Therefore, security keys and certificates will need to be created for the
 aggregator and collaborators
 to negotiate the connection securely. For the :ref:`Hello Federation <running_the_federation>` demo
 we will run the aggregator and collaborators on the same localhost server
-so these configuration steps just need to be done once on that machine.
+so these configuration steps just need to be done once on that machine. We have two pki
+workflows: manual and semi-automatic (with step-ca).
 
     .. note::
     
@@ -20,10 +21,16 @@ so these configuration steps just need to be done once on that machine.
 .. _install_certs:
 
 .. kroki:: mermaid/CSR_signing.mmd
-    :caption: Certificate generation and signing
+    :caption: Manual certificate generation and signing
     :align: center
     :type: mermaid
 
+.. _install_certs:
+
+.. kroki:: mermaid/pki_scheme.mmd
+    :caption: Step-ca certificate generation and signing
+    :align: center
+    :type: mermaid
 
     
 .. _install_certs_agg:
@@ -46,7 +53,7 @@ Before you run the federation make sure you have activated a Python virtual envi
     
        $ fx workspace certify
 
-3. Run the aggregator certificate creation command, replacing **AFQDN** with the actual `fully qualified domain name (FQDN) <https://en.wikipedia.org/wiki/Fully_qualified_domain_name>`_ for the aggregator machine. 
+3. Run the aggregator certificate creation command, replacing **AFQDN** with the actual `fully qualified domain name (FQDN) <https://en.wikipedia.org/wiki/Fully_qualified_domain_name>`_ for the aggregator machine. Alternatively, you can override the apparent FQDN of the system by setting an FQDN environment variable (:code:`export FQDN=x.x.x.x`) before creating the certificate.
 
     .. code-block:: console
     
@@ -68,7 +75,7 @@ Before you run the federation make sure you have activated a Python virtual envi
     
          $ fx aggregator generate-cert-request
        
-4. Run the aggregator certificate signing command, replacing **AFQDN** with the actual `fully qualified domain name (FQDN) <https://en.wikipedia.org/wiki/Fully_qualified_domain_name>`_ for the aggregator machine. 
+4. Run the aggregator certificate signing command, replacing **AFQDN** with the actual `fully qualified domain name (FQDN) <https://en.wikipedia.org/wiki/Fully_qualified_domain_name>`_ for the aggregator machine. Alternatively, you can override the apparent FQDN of the system by setting an FQDN environment variable (:code:`export FQDN=x.x.x.x`) before signing the certificate.
 
     .. code-block:: console
     
