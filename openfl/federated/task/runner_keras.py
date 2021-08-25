@@ -63,7 +63,7 @@ class KerasTaskRunner(TaskRunner):
     def train(self, col_name, round_num, input_tensor_dict,
               metrics, epochs=1, batch_size=1, **kwargs):
         """
-        Perform the training for a specified number of batches.
+        Perform the training.
 
         Is expected to perform draws randomly, without replacement until data is exausted.
         Then data is replaced and shuffled and draws continue.

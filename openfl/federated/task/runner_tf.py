@@ -86,15 +86,15 @@ class TensorFlowTaskRunner(TaskRunner):
     def train_batches(self, col_name, round_num, input_tensor_dict,
                       epochs=1, use_tqdm=False, **kwargs):
         """
-        Perform the training for a specified number of batches.
+        Perform the training.
 
         Is expected to perform draws randomly, without replacement until data is exausted. Then
         data is replaced and shuffled and draws continue.
 
         Args:
-            num_batches: Number of batches to train on
             use_tqdm (bool): True = use tqdm to print a progress
              bar (Default=False)
+            epochs (int): Number of epochs to train 
         Returns:
             float: loss metric
         """
