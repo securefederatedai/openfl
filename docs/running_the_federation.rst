@@ -18,5 +18,5 @@ The high-level workflow is shown in the figure above. Note that once OpenFL is i
 .. toctree::
    :maxdepth: 2
 
-   running_the_federation.agg_based
+   source/workflow/running_the_federation.agg_based
    source/workflow/director_based_workflow
