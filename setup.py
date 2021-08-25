@@ -44,6 +44,7 @@ setup(
         'openfl.plugins',
         'openfl.plugins.interface_serializer',
         'openfl.plugins.frameworks_adapters',
+        'openfl.plugins.data_splitters',
         'openfl-workspace',
         'openfl-docker',
         'openfl-tutorials',
