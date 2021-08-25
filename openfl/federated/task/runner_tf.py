@@ -94,7 +94,7 @@ class TensorFlowTaskRunner(TaskRunner):
         Args:
             use_tqdm (bool): True = use tqdm to print a progress
              bar (Default=False)
-            epochs (int): Number of epochs to train 
+            epochs (int): Number of epochs to train
         Returns:
             float: loss metric
         """
