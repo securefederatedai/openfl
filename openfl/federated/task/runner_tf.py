@@ -84,17 +84,17 @@ class TensorFlowTaskRunner(TaskRunner):
             self.set_tensor_dict(input_tensor_dict, with_opt_vars=False)
 
     def train_batches(self, col_name, round_num, input_tensor_dict,
-                      num_batches, use_tqdm=False, **kwargs):
+                      epochs=1, use_tqdm=False, **kwargs):
         """
-        Perform the training for a specified number of batches.
+        Perform the training.
 
         Is expected to perform draws randomly, without replacement until data is exausted. Then
         data is replaced and shuffled and draws continue.
 
         Args:
-            num_batches: Number of batches to train on
             use_tqdm (bool): True = use tqdm to print a progress
              bar (Default=False)
+            epochs (int): Number of epochs to train
         Returns:
             float: loss metric
         """
@@ -107,22 +107,17 @@ class TensorFlowTaskRunner(TaskRunner):
         self.rebuild_model(round_num, input_tensor_dict)
 
         tf.keras.backend.set_learning_phase(True)
-
         losses = []
-        batch_num = 0
 
-        while batch_num < num_batches:
+        for epoch in range(epochs):
+            self.logger.info(f'Run {epoch} epoch of {round_num} round')
             # get iterator for batch draws (shuffling happens here)
             gen = self.data_loader.get_train_loader(batch_size)
             if use_tqdm:
                 gen = tqdm.tqdm(gen, desc='training epoch')
 
             for (X, y) in gen:
-                if batch_num >= num_batches:
-                    break
-                else:
-                    losses.append(self.train_batch(X, y))
-                    batch_num += 1
+                losses.append(self.train_batch(X, y))
 
         # Output metric tensors (scalar)
         origin = col_name
