@@ -37,8 +37,8 @@ def envoy(context):
         help='The federation director port')
 @option('--tls/--disable-tls', default=True,
         is_flag=True, help='Use TLS or not (By default TLS is enabled)')
-@option('-sc', '--shard-config-path', default='shard_config.yaml',
-        help='The shard config path', type=ClickPath(exists=True))
+@option('-sc', '--envoy-config-path', default='envoy_config.yaml',
+        help='The envoy config path', type=ClickPath(exists=True))
 @option('-rc', '--root-cert-path', 'root_certificate', default=None,
         help='Path to a root CA cert')
 @option('-pk', '--private-key-path', 'private_key', default=None,
@@ -49,8 +49,12 @@ def start_(shard_name, director_host, director_port, tls, shard_config_path,
            root_certificate, private_key, certificate):
     """Start the Envoy."""
     logger.info('🧿 Starting the Envoy.')
+    with open(shard_config_path) as stream:
+        envoy_config = safe_load(stream)
 
-    shard_descriptor = shard_descriptor_from_config(shard_config_path)
+        # pass envoy parameters
+
+    shard_descriptor = shard_descriptor_from_config(envoy_config.get('shard_descriptor', {}))
     envoy = Envoy(
         shard_name=shard_name,
         director_host=director_host,
@@ -79,8 +83,8 @@ def create(envoy_path):
     (envoy_path / 'cert').mkdir(parents=True, exist_ok=True)
     (envoy_path / 'logs').mkdir(parents=True, exist_ok=True)
     (envoy_path / 'data').mkdir(parents=True, exist_ok=True)
-    shutil.copyfile(WORKSPACE / 'default/shard_config.yaml',
-                    envoy_path / 'shard_config.yaml')
+    shutil.copyfile(WORKSPACE / 'default/envoy_config.yaml',
+                    envoy_path / 'envoy_config.yaml')
     shutil.copyfile(WORKSPACE / 'default/shard_descriptor.py',
                     envoy_path / 'shard_descriptor.py')
     shutil.copyfile(WORKSPACE / 'default/requirements.txt',
@@ -89,8 +93,6 @@ def create(envoy_path):
 
 def shard_descriptor_from_config(shard_config_path: str):
     """Build a shard descriptor from config."""
-    with open(shard_config_path) as stream:
-        shard_config = safe_load(stream)
     template = shard_config.get('template')
     if not template:
         raise Exception(f'You should define a shard '

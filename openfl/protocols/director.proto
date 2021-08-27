@@ -7,13 +7,18 @@ import "google/protobuf/duration.proto";
 import "federation.proto";
 
 
+message CudaDeviceInfo {
+    uint64 index = 1;
+    uint64 memory_total = 2;
+    uint64 memory_utilized = 3;
+}
+
 // Envoy Messages
 
 message NodeInfo {
     string name = 1;
     string adress = 2;
-    bool cuda_available = 3;
-    uint32 memory_size = 4;
+    repeated CudaDeviceInfo cuda_devices = 3;
 }
 
 message ShardInfo {
