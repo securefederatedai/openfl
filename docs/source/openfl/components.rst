@@ -23,7 +23,7 @@ Aggregator
 ===========
 
 The *Aggregator* is a short-living entity, which means that its lifespan is limited by experiment execution time. 
-It orchestrates *Collaborators* according to the FL plan and performs model updates aggregation.
+It orchestrates *Collaborators* according to the FL plan and performs model aggregation at the end of each round.
 The *Aggregator* is spawned by the *Director* (described below) when a new experiment is submitted.
 
 

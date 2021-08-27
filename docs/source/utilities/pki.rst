@@ -19,7 +19,7 @@ Certification of Actors in Federation with Semi-automatic PKI
 
 If you have trusted workspace and connection should not be encrypted you can use :code:`disable_tls` option while starting experiment.
 Otherwise it is necessary to certify each node participating in the federation. Certificates allow to use mutual tls connection between nodes.
-You can certify nodes by your own pki system or use pki provided by OpenFL. It is based on `step-ca <https://github.com/smallstep/certificates>`_
+You can certify nodes by your own PKI system or use PKI provided by OpenFL. It is based on `step-ca <https://github.com/smallstep/certificates>`_
 as a server and `step <https://github.com/smallstep/cli>`_ as a client utilities. They are downloaded from github during workspace setup. Regardless of the certification method,
 paths to certificates on each node are provided at start of experiment. Pki workflow from OpenFL will be discussed below.
 

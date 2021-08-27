@@ -37,8 +37,8 @@ to the model in place. Tensor names in the dictionary match corresponding names 
    @staticmethod
    def set_tensor_dict(model, tensor_dict, optimizer=None, device='cpu') -> None:
 
-Implement :code:`serialization_setup` optional method if some preparation is required before the model serialization. 
-This method would be called on the frontend Python API during an FL experiment extraction to the Director side.
+If your new framework model cannot be directly serialized with pickle-type libraries, you can optionally 
+implement the :code:`serialization_setup` method to prepare the model object for serialization.
 
 .. code-block:: python
 
