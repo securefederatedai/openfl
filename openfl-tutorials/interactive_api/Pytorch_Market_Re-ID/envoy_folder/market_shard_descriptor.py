@@ -105,7 +105,7 @@ class MarketShardDescriptor(ShardDescriptor):
         """Download Market1501 dataset."""
         zip_exists = False
 
-        output = 'Market.zip'
+        output = 'Market-1501-v15.09.15.zip'
         if Path(output).exists():
             zip_exists = True
             if Path('Market-1501-v15.09.15').exists():
