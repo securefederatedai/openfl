@@ -145,6 +145,10 @@ class Collaborator:
                     '{} received the following tasks: {}'.format(self.collaborator_name, tasks))
                 for task in tasks:
                     self.do_task(task, round_number)
+
+                # Cleaning tensor db
+                self.tensor_db.clean_up(self.db_store_rounds)
+
                 self.logger.info(
                     'All tasks completed on {} for round {}...'.format(
                         self.collaborator_name, round_number))
