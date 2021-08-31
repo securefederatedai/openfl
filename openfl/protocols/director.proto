@@ -19,6 +19,7 @@ message NodeInfo {
     string name = 1;
     string adress = 2;
     repeated CudaDeviceInfo cuda_devices = 3;
+    string cuda_version = 4;
 }
 
 message ShardInfo {
