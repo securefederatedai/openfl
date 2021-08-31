@@ -103,8 +103,8 @@ class MarketShardDescriptor(ShardDescriptor):
     @staticmethod
     def download():
         """Download Market1501 dataset."""
-		if Path('Market-1501-v15.09.15').exists():
-			return None
+        if Path('Market-1501-v15.09.15').exists():
+            return None
 
         output = 'Market-1501-v15.09.15.zip'
         if not Path(output).exists():
