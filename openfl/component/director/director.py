@@ -195,6 +195,20 @@ class Director:
 
         return envoy_infos
 
+    def get_experiments(self, caller: str) -> list:
+        experiments = self.experiment_stash[caller]
+        result = [{
+            'name': name,
+            'status': 'pending',
+            'collaborators_amount': 0,
+            'tasks_amount': '0',
+            'progress': 0.0,
+        }
+            for name, val in experiments.items()
+        ]
+
+        return result
+
     async def _run_aggregator_in_workspace(
             self,
             *,

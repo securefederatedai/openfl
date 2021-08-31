@@ -8,141 +8,156 @@ import "federation.proto";
 
 
 message RequestHeader {
-    string sender = 1;
+  string sender = 1;
 }
 
 // Envoy Messages
 
 message NodeInfo {
-    string name = 1;
-    string adress = 2;
-    bool cuda_available = 3;
-    uint32 memory_size = 4;
+  string name = 1;
+  string adress = 2;
+  bool cuda_available = 3;
+  uint32 memory_size = 4;
 }
 
 message ShardInfo {
-    NodeInfo node_info = 1;
-    string shard_description = 2;
-    uint64 n_samples = 3;
-    // We just pass numpy shapes
-    repeated string sample_shape = 4;
-    repeated string target_shape = 5;
+  NodeInfo node_info = 1;
+  string shard_description = 2;
+  uint64 n_samples = 3;
+  // We just pass numpy shapes
+  repeated string sample_shape = 4;
+  repeated string target_shape = 5;
 }
 
 message ShardAcknowledgement {
-    bool accepted = 1;
+  bool accepted = 1;
 }
 
 message WaitExperimentRequest {
-    string collaborator_name = 1;
+  string collaborator_name = 1;
 }
 
 message WaitExperimentResponse {
-    string experiment_name = 1;
+  string experiment_name = 1;
 }
 
 message GetExperimentDataRequest {
-    string experiment_name = 1;
-    string collaborator_name = 2;
+  string experiment_name = 1;
+  string collaborator_name = 2;
 }
 
 message ExperimentData {
-    uint32 size = 1; // size, in bytes, of the data sent in npbytes
-	bytes npbytes = 2; //actual data
+  uint32 size = 1; // size, in bytes, of the data sent in npbytes
+  bytes npbytes = 2; //actual data
 }
 
 // API Messages
 
 message ExperimentInfo {
-    RequestHeader header = 1;
-    string name = 2;
-    repeated string collaborator_names = 3;
-    ExperimentData experiment_data = 4;
-    ModelProto model_proto = 5;
+  RequestHeader header = 1;
+  string name = 2;
+  repeated string collaborator_names = 3;
+  ExperimentData experiment_data = 4;
+  ModelProto model_proto = 5;
+}
+
+message GetExperimentsRequest {}
+
+message ExperimentDescription {
+  string name = 1;
+  string status = 2;
+  uint32 collaborators_amount = 3;
+  uint32 tasks_amount = 4;
+  float progress = 5;
+}
+
+message ExperimentDescriptionList {
+  repeated ExperimentDescriptionList experiments = 1;
 }
 
 message SetNewExperimentResponse{
-    bool accepted = 1;
-    string tensorboard_address = 2;
+  bool accepted = 1;
+  string tensorboard_address = 2;
 }
 
 message GetTrainedModelRequest {
-    enum ModelType {
-        BEST_MODEL = 0;
-        LAST_MODEL = 1;
-    }
-    RequestHeader header = 1;
-    string experiment_name = 2;
-    ModelType model_type = 3;
+  enum ModelType {
+    BEST_MODEL = 0;
+    LAST_MODEL = 1;
+  }
+  RequestHeader header = 1;
+  string experiment_name = 2;
+  ModelType model_type = 3;
 }
 
 message TrainedModelResponse {
-    ModelProto model_proto = 1;
+  ModelProto model_proto = 1;
 }
 
 message GetDatasetInfoRequest {
-    RequestHeader header = 1;
+  RequestHeader header = 1;
 }
 
 message StreamMetricsRequest {
-    RequestHeader header = 1;
-    string experiment_name = 2;
+  RequestHeader header = 1;
+  string experiment_name = 2;
 }
 
 message StreamMetricsResponse {
-    string metric_origin = 1;
-    string task_name = 2;
-    string metric_name = 3;
-    float metric_value = 4;
-    uint32 round = 5;
+  string metric_origin = 1;
+  string task_name = 2;
+  string metric_name = 3;
+  float metric_value = 4;
+  uint32 round = 5;
 }
 
 message RemoveExperimentRequest {
-    RequestHeader header = 1;
-    string experiment_name = 2;
+  RequestHeader header = 1;
+  string experiment_name = 2;
 }
 
 message RemoveExperimentResponse {
-    bool acknowledgement = 1;
+  bool acknowledgement = 1;
 }
 
 message CollaboratorStatus {
-    string name = 1;
-    bool is_experiment_running = 2;
-    google.protobuf.Duration valid_duration = 3;
+  string name = 1;
+  bool is_experiment_running = 2;
+  google.protobuf.Duration valid_duration = 3;
 }
 
 message CollaboratorHealthCheckResponse {
-    bool accepted = 1;
+  bool accepted = 1;
 }
 
 message EnvoyInfo {
-    ShardInfo shard_info = 1;
-    bool is_online = 2;
-    bool is_experiment_running = 3;
-    google.protobuf.Timestamp last_updated = 4;
-    google.protobuf.Duration valid_duration = 5;
+  ShardInfo shard_info = 1;
+  bool is_online = 2;
+  bool is_experiment_running = 3;
+  google.protobuf.Timestamp last_updated = 4;
+  google.protobuf.Duration valid_duration = 5;
 }
 
 message GetEnvoysRequest {}
 
 message GetEnvoysResponse {
-    repeated EnvoyInfo envoy_infos = 1;
+  repeated EnvoyInfo envoy_infos = 1;
 }
 
 service FederationDirector {
-    // Envoy RPCs
-    rpc AcknowledgeShard (ShardInfo) returns (ShardAcknowledgement) {}
-    // Shard owner could also provide some public data for tests
-    rpc WaitExperiment (stream WaitExperimentRequest) returns (stream WaitExperimentResponse) {}
-    rpc GetExperimentData (GetExperimentDataRequest) returns (stream ExperimentData) {}
-
-    // API RPCs
-    rpc SetNewExperiment (stream ExperimentInfo) returns (SetNewExperimentResponse) {}
-    rpc GetDatasetInfo (GetDatasetInfoRequest) returns (ShardInfo) {}
-    rpc GetTrainedModel (GetTrainedModelRequest) returns (TrainedModelResponse) {}
-    rpc StreamMetrics (StreamMetricsRequest) returns (stream StreamMetricsResponse) {}
-    rpc RemoveExperimentData (RemoveExperimentRequest) returns (RemoveExperimentResponse) {}
-    rpc CollaboratorHealthCheck (CollaboratorStatus) returns (CollaboratorHealthCheckResponse) {}
-    rpc GetEnvoys (GetEnvoysRequest) returns (GetEnvoysResponse) {}
+  // Envoy RPCs
+  rpc AcknowledgeShard (ShardInfo) returns (ShardAcknowledgement) {}
+  // Shard owner could also provide some public data for tests
+  rpc WaitExperiment (stream WaitExperimentRequest) returns (stream WaitExperimentResponse) {}
+  rpc GetExperimentData (GetExperimentDataRequest) returns (stream ExperimentData) {}
+  // Experimnets RPCs
+  rpc GetExperiments (GetExperimentsRequest) returns (ExperimentDescriptionList) {}
+  // API RPCs
+  rpc SetNewExperiment (stream ExperimentInfo) returns (SetNewExperimentResponse) {}
+  rpc GetDatasetInfo (GetDatasetInfoRequest) returns (ShardInfo) {}
+  rpc GetTrainedModel (GetTrainedModelRequest) returns (TrainedModelResponse) {}
+  rpc StreamMetrics (StreamMetricsRequest) returns (stream StreamMetricsResponse) {}
+  rpc RemoveExperimentData (RemoveExperimentRequest) returns (RemoveExperimentResponse) {}
+  rpc CollaboratorHealthCheck (CollaboratorStatus) returns (CollaboratorHealthCheckResponse) {}
+  rpc GetEnvoys (GetEnvoysRequest) returns (GetEnvoysResponse) {}
 }

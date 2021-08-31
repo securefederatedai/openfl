@@ -75,6 +75,12 @@ class DirectorGRPCServer(director_pb2_grpc.FederationDirectorServicer):
 
         return True
 
+    def get_caller_name(self, context):
+        caller_name = 'unauthorized_caller'
+        if self.tls:
+            caller_name = context.auth_context()['x509_common_name'][0].decode('utf-8')
+        return caller_name
+
     def start(self):
         """Launch the director GRPC server."""
         asyncio.run(self._run())
@@ -250,3 +256,17 @@ class DirectorGRPCServer(director_pb2_grpc.FederationDirectorServicer):
         envoy_infos = self.director.get_envoys()
 
         return director_pb2.GetEnvoysResponse(envoy_infos=envoy_infos)
+
+    async def GetExperiments(self, request, context):  # NOQA:N802
+        caller = self.get_caller_name(context)
+        experiments = self.director.get_experiments(caller)
+        experiment_descriptions_list = [
+            director_pb2.ExperimentDescription(
+                name=exp['name'],
+                status=exp['status'],
+                collaborators_amount=exp['collaborators_amount'],
+                tasks_amount=exp['tasks_amount'],
+                progress=exp['tasks_amount'],
+            ) for exp in experiments
+        ]
+        return director_pb2.ExperimentDescriptionList(experiments=experiment_descriptions_list)

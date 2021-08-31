@@ -246,3 +246,7 @@ class DirectorClient:
                 'valid_duration': envoy.valid_duration
             }
         return result
+
+    def get_experiments(self):
+        experiments = self.stub.GetExperiments(director_pb2.GetExperimentDataRequest())
+        return experiments
