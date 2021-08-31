@@ -2,20 +2,20 @@
 .. # SPDX-License-Identifier: Apache-2.0
 
 .. _data_splitting:
-===============================
-Specifying custom data splits
-===============================
 
--------------------------------
-Usage
--------------------------------
-|productName| allows developers to use custom data splits **for single-node simulation**.
-In order to do this, you should:
+************************************
+Dataset Splitters
+************************************
 
-Python API
-==========
 
-Choose from predefined |productName| aggregation functions:
+|productName| allows developers to use specify custom data splits **for simulation runs on a single dataset**.
+
+You may apply data splitters differently depending on |productName| workflow that you follow. 
+
+Native Python API
+==================
+
+Choose from predefined |productName| data splitters functions:
 
 - ``openfl.plugins.data_splitters.EqualNumPyDataSplitter`` (default)
 - ``openfl.plugins.data_splitters.RandomNumPyDataSplitter``
@@ -25,10 +25,10 @@ Or create an implementation of :class:`openfl.plugins.data_splitters.NumPyDataSp
 and pass it to FederatedDataset constructor as either ``train_splitter`` or ``valid_splitter`` keyword argument.
 
 
-CLI
-====
+Using in Shard Descriptor
+==================
 
-Choose from predefined |productName| aggregation functions:
+Choose from predefined |productName| data splitters functions:
 
 - ``openfl.plugins.data_splitters.EqualNumPyDataSplitter`` (default)
 - ``openfl.plugins.data_splitters.RandomNumPyDataSplitter``
@@ -41,17 +41,19 @@ After defining the splitting behavior, you need to use it on your data to perfor
 This function receives ``data`` - NumPy array required to build the subsets of data indices (see definition of :meth:`openfl.plugins.data_splitters.NumPyDataSplitter.split`). It could be the whole dataset, or labels only, or anything else.
 ``split`` function returns a list of lists of indices which represent the collaborator-wise indices groups.
 
-    .. code-block:: python
-        X_train, y_train = ... # train set
-        X_valid, y_valid = ... # valid set
-        train_splitter = RandomNumPyDataSplitter()
-        valid_splitter = RandomNumPyDataSplitter()
-        # collaborator_count value is passed to DataLoader constructor
-        # shard_num can be evaluated from data_path
-        train_idx = train_splitter.split(y_train, collaborator_count)[shard_num]
-        valid_idx = valid_splitter.split(y_valid, collaborator_count)[shard_num]
-        X_train_shard = X_train[train_idx]
-        X_valid_shard = X_valid[valid_idx]
+.. code-block:: python
+
+    X_train, y_train = ... # train set
+    X_valid, y_valid = ... # valid set
+    train_splitter = RandomNumPyDataSplitter()
+    valid_splitter = RandomNumPyDataSplitter()
+    # collaborator_count value is passed to DataLoader constructor
+    # shard_num can be evaluated from data_path
+    train_idx = train_splitter.split(y_train, collaborator_count)[shard_num]
+    valid_idx = valid_splitter.split(y_valid, collaborator_count)[shard_num]
+    X_train_shard = X_train[train_idx]
+    X_valid_shard = X_valid[valid_idx]
 
 .. note::
+
     By default, we shuffle the data and perform equal split (see :class:`openfl.plugins.data_splitters.EqualNumPyDataSplitter`).

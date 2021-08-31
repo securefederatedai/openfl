@@ -16,7 +16,7 @@ class FrameworkAdapterPluginInterface:
         pass
 
     @staticmethod
-    def get_tensor_dict(model, optimizer=None):
+    def get_tensor_dict(model, optimizer=None) -> dict:
         """
         Extract tensor dict from a model and an optimizer.
 

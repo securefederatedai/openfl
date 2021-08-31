@@ -2,15 +2,11 @@
 .. # SPDX-License-Identifier: Apache-2.0
 
 ******
-Manual
+|productName| Utilities
 ******
 
 .. toctree::
    :maxdepth: 2
 
-   overview
-   install
-   running_the_federation
-   plan_settings
-   source/utilities/utilities
-   advanced_topics
+   pki
+   splitters_data

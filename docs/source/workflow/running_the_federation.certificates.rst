@@ -1,6 +1,8 @@
 .. # Copyright (C) 2020 Intel Corporation
 .. # Licensed subject to the terms of the separately executed evaluation license agreement between Intel Corporation and you.
 
+.. _instruction_manual_certs:
+
 **************************
 Configuring the Federation
 **************************
@@ -24,8 +26,6 @@ workflows: manual and semi-automatic (with step-ca).
     :caption: Manual certificate generation and signing
     :align: center
     :type: mermaid
-
-.. _install_certs:
 
 .. kroki:: mermaid/pki_scheme.mmd
     :caption: Step-ca certificate generation and signing
