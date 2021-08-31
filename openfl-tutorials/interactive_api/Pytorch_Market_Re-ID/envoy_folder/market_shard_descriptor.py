@@ -103,15 +103,11 @@ class MarketShardDescriptor(ShardDescriptor):
     @staticmethod
     def download():
         """Download Market1501 dataset."""
-        zip_exists = False
-
-        output = 'Market-1501-v15.09.15.zip'
-        if Path(output).exists():
-            zip_exists = True
 		if Path('Market-1501-v15.09.15').exists():
 			return None
 
-        if not zip_exists:
+        output = 'Market-1501-v15.09.15.zip'
+        if not Path(output).exists():
             url = 'https://drive.google.com/uc?id=0B8-rUzbwVRk0c054eEozWG9COHM'
             gdown.download(url, output, quiet=False)
 
