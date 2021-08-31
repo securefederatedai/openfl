@@ -66,4 +66,4 @@ There is one to one mapping between *Envoys* and Dataset shards: every *Envoy* n
 `Shard Descriptor <https://github.com/intel/openfl/blob/develop/openfl/interface/interactive_api/shard_descriptor.py>`_ to run. 
 When the *Director* starts an experiment, *Envoy* will accept the experiment workspace, prepare the environment and start a *Collaborator*.
 
-*Diagram*
+.. figure:: static_diagram.svg
