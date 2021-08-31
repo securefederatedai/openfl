@@ -10,8 +10,9 @@
 .. toctree::
    :maxdepth: 2
 
-   `Spawning`_
-   `Long-living`_
+   `Spawning components`_
+   `Long-living components`_
+   `Static Diagram`_
 
 
 .. _openfl_spawning_components:
@@ -65,5 +66,9 @@ Envoy
 There is one to one mapping between *Envoys* and Dataset shards: every *Envoy* needs exactly one 
 `Shard Descriptor <https://github.com/intel/openfl/blob/develop/openfl/interface/interactive_api/shard_descriptor.py>`_ to run. 
 When the *Director* starts an experiment, *Envoy* will accept the experiment workspace, prepare the environment and start a *Collaborator*.
+
+
+Static Diagram
+#############
 
 .. figure:: static_diagram.svg
