@@ -49,7 +49,8 @@ def download_step_bin(url, grep_name, architecture, prefix='.', confirmation=Tru
     archive_urls = [
         a['browser_download_url']
         for a in assets
-        if grep_name in a['name'] and architecture in a['name'] and 'gzip' in a['content_type']
+        if (grep_name in a['name'] and architecture in a['name']
+            and 'application/gzip' in a['content_type'])
     ]
     archive_url = archive_urls[-1]
     archive_url = archive_url.replace('https', 'http')
