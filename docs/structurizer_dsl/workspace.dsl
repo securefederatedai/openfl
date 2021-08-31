@@ -8,7 +8,7 @@ workspace "OpenFL" "An open framework for Federated Learning." {
             governor = softwareSystem "Governor" "CCF-based system for corporate clients"
         }
         openfl = softwareSystem "OpenFL" "An open framework for Federated Learning" {
-            apiLayer = container "Python API component" "A set of tools to setup register FL Experiments" {
+            apiLayer = container "Python API component" "A set of tools to setup and register FL Experiments" {
                 federationInterface = component "Federaion Interface"
                 experimentInterface = component "Experiment Interface"
                 # TaskInterface = component ""
@@ -22,7 +22,7 @@ workspace "OpenFL" "An open framework for Federated Learning." {
                 }
             }
             group "Collaborator node" {
-                envoy = container "Envoy" "A long-living entity that can adapt a local data set and spawn collaborators" {
+                envoy = container "Envoy" "A long-living entity that can adapt a local dataset and spawn collaborators" {
                     shardDescriptor = component "Shard Descriptor" "Data manager's interface aimed to unify data access" {
                         tags "Interface"
                     }

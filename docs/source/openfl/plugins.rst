@@ -11,6 +11,11 @@
    framework_adapter_
    serializer_plugin_
 
+
+|productName| is designed to be a flexible and extensible framework. Plugins are interchangeable parts of 
+|productName| components. Different plugins support varying usage scenarios. |productName| users are free to provide 
+their implementations of |productName| plugins to support desired behavior.
+
 .. _framework_adapter:
 
 Framework Adapter

@@ -48,9 +48,15 @@ Long-living components
 Director
 ==========
 
-*Director* is a long-living entity; it is a central node of the federation and may take in several experiments (with the same data interface). When an experiment is reported director starts an aggregator and sends the experiment data to involved envoys; during the experiment, Director oversees the aggregator and updates the user on the status of the experiment.
-*Director* runs two services: one for frontend users and another one for envoys. It can distribute an experiment reported with the frontend API across the federation and communicate back a trained model snapshot and metrics.
-*Director* support several concurrent frontend connections (yet experiments are run one by one)
+*Director* is a long-living entity; it is a central node of the federation and may take in several experiments 
+(with the same data interface). When an experiment is reported director starts an aggregator and sends 
+the experiment data to involved envoys; during the experiment, Director oversees the aggregator and updates 
+the user on the status of the experiment.
+*Director* runs two services: one for frontend users and another one for envoys. It can distribute an experiment 
+reported with the frontend API across the federation and communicate back a trained model snapshot and metrics.
+*Director* supports several concurrent frontend connections (yet experiments are run one by one).
+To learn more about using the |productName| frontend Python API, please refer to :ref:`interactive_api`
+
 
 Envoy
 =========
@@ -59,3 +65,5 @@ Envoy
 There is one to one mapping between *Envoys* and Dataset shards: every *Envoy* needs exactly one 
 `Shard Descriptor <https://github.com/intel/openfl/blob/develop/openfl/interface/interactive_api/shard_descriptor.py>`_ to run. 
 When the *Director* starts an experiment, *Envoy* will accept the experiment workspace, prepare the environment and start a *Collaborator*.
+
+*Diagram*
