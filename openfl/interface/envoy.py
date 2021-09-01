@@ -49,10 +49,23 @@ def start_(shard_name, director_host, director_port, tls, shard_config_path,
            root_certificate, private_key, certificate):
     """Start the Envoy."""
     logger.info('🧿 Starting the Envoy.')
+    # Reed the Envoy config
     with open(shard_config_path) as stream:
         envoy_config = safe_load(stream)
 
-        # pass envoy parameters
+    envoy_params = envoy_config.get('params', {})
+    for plugin_name, plugin_settings in envoy_config.get('optional_plugin_components', {}).items():
+        template = plugin_settings.get('template')
+        if not template:
+            raise Exception('You should put a template'
+                            f'for plugin {plugin_name}')
+        class_name = template.split('.')[-1]
+        module_path = '.'.join(template.split('.')[:-1])
+        plugin_params = plugin_settings.get('params', {})
+
+        module = import_module(module_path)
+        instance = getattr(module, class_name)(**plugin_params)
+        envoy_params[plugin_name] = instance
 
     shard_descriptor = shard_descriptor_from_config(envoy_config.get('shard_descriptor', {}))
     envoy = Envoy(
@@ -63,7 +76,8 @@ def start_(shard_name, director_host, director_port, tls, shard_config_path,
         tls=tls,
         root_certificate=root_certificate,
         private_key=private_key,
-        certificate=certificate
+        certificate=certificate,
+        **envoy_params
     )
 
     envoy.start()
