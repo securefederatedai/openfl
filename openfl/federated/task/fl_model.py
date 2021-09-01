@@ -96,6 +96,4 @@ class FederatedModel(TaskRunner):
                 data_loader=data_slice,
                 **kwargs
             )
-            for data_slice in self.data_loader.split(
-                num_collaborators, equally=True
-            )]
+            for data_slice in self.data_loader.split(num_collaborators)]

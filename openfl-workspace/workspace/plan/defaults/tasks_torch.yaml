@@ -17,3 +17,4 @@ train:
   kwargs   :
     metrics     :
     - loss
+    epochs : 1

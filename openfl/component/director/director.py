@@ -16,13 +16,23 @@ from openfl.utilities.workspace import ExperimentWorkspace
 
 logger = logging.getLogger(__name__)
 
+ENVOY_HEALTH_CHECK_PERIOD = 60  # in seconds
+
 
 class Director:
     """Director class."""
 
-    def __init__(self, *, tls: bool = True,
-                 root_certificate: Path = None, private_key: Path = None, certificate: Path = None,
-                 sample_shape: list = None, target_shape: list = None) -> None:
+    def __init__(
+            self,
+            *,
+            tls: bool = True,
+            root_certificate: Path = None,
+            private_key: Path = None,
+            certificate: Path = None,
+            sample_shape: list = None,
+            target_shape: list = None,
+            settings: dict = None
+    ) -> None:
         """Initialize a director object."""
         # TODO: add working directory
         super().__init__()
@@ -40,6 +50,7 @@ class Director:
         self.root_certificate = root_certificate
         self.private_key = private_key
         self.certificate = certificate
+        self.settings = settings or {}
 
     def acknowledge_shard(self, shard_info: director_pb2.ShardInfo) -> bool:
         """Save shard info to shard registry if it's acceptable."""
@@ -160,23 +171,21 @@ class Director:
         if experiment_name in self.experiment_stash.get(caller, {}):
             del self.experiment_stash[caller][experiment_name]
 
-    def collaborator_health_check(self, *, collaborator_name: str,
-                                  is_experiment_running: bool,
-                                  valid_duration: int) -> bool:
+    def collaborator_health_check(
+            self, *, collaborator_name: str, is_experiment_running: bool
+    ) -> int:
         """Accept health check from envoy."""
-        is_accepted = False
         shard_info = self._shard_registry.get(collaborator_name)
         if not shard_info:
-            logger.error(f'Unknown shard {collaborator_name}')
-            return is_accepted
-        is_accepted = True
+            raise Exception(f'Unknown shard {collaborator_name}')
 
+        hc_period = self.settings.get('envoy_health_check_period', ENVOY_HEALTH_CHECK_PERIOD)
         shard_info['is_online']: True
         shard_info['is_experiment_running'] = is_experiment_running
-        shard_info['valid_duration'] = valid_duration
+        shard_info['valid_duration'] = 2 * hc_period
         shard_info['last_updated'] = time.time()
 
-        return is_accepted
+        return hc_period
 
     def get_envoys(self) -> list:
         """Get a status information about envoys."""

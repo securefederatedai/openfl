@@ -129,7 +129,7 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
         return output_tensor_dict, {}
 
     def train_batches(self, col_name, round_num, input_tensor_dict,
-                      num_batches=None, use_tqdm=False, **kwargs):
+                      use_tqdm=False, epochs=1, **kwargs):
         """Train batches.
 
         Train the model on the requested number of batches.
@@ -138,9 +138,8 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
             col_name:            Name of the collaborator
             round_num:           What round is it
             input_tensor_dict:   Required input tensors (for model)
-            num_batches:         The number of batches to train on before
-                                 returning
             use_tqdm (bool):     Use tqdm to print a progress bar (Default=True)
+            epochs:              The number of epochs to train
 
         Returns:
             global_output_dict:  Tensors to send back to the aggregator
@@ -150,10 +149,12 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
         # set to "training" mode
         self.train()
         self.to(self.device)
-        loader = self.data_loader.get_train_loader(num_batches)
-        if use_tqdm:
-            loader = tqdm.tqdm(loader, desc='train epoch')
-        metric = self.train_epoch(loader)
+        for epoch in range(epochs):
+            self.logger.info(f'Run {epoch} epoch of {round_num} round')
+            loader = self.data_loader.get_train_loader()
+            if use_tqdm:
+                loader = tqdm.tqdm(loader, desc='train epoch')
+            metric = self.train_epoch(loader)
         # Output metric tensors (scalar)
         origin = col_name
         tags = ('trained',)

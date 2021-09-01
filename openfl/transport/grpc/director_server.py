@@ -25,12 +25,12 @@ class DirectorGRPCServer(director_pb2_grpc.FederationDirectorServicer):
 
     def __init__(self, *, director_cls, tls: bool = True,
                  root_certificate: str = None, private_key: str = None, certificate: str = None,
-                 listen_addr='[::]', listen_port=50051, **kwargs) -> None:
+                 listen_host='[::]', listen_port=50051, **kwargs) -> None:
         """Initialize a director object."""
         # TODO: add working directory
         super().__init__()
 
-        self.listen_uri = f'{listen_addr}:{listen_port}'
+        self.listen_uri = f'{listen_host}:{listen_port}'
         self.tls = tls
         self.root_certificate = None
         self.private_key = None
@@ -243,13 +243,14 @@ class DirectorGRPCServer(director_pb2_grpc.FederationDirectorServicer):
     async def CollaboratorHealthCheck(self, request, context):  # NOQA:N802
         """Accept health check from envoy."""
         logger.debug(f'Request CollaboratorHealthCheck has got: {request}')
-        is_accepted = self.director.collaborator_health_check(
+        health_check_period = self.director.collaborator_health_check(
             collaborator_name=request.name,
             is_experiment_running=request.is_experiment_running,
-            valid_duration=request.valid_duration.seconds,
         )
+        resp = director_pb2.CollaboratorHealthCheckResponse()
+        resp.health_check_period.seconds = health_check_period
 
-        return director_pb2.CollaboratorHealthCheckResponse(accepted=is_accepted)
+        return resp
 
     async def GetEnvoys(self, request, context):  # NOQA:N802
         """Get a status information about envoys."""

@@ -16,7 +16,7 @@ model = keras.Model(inputs=inputs, outputs=outputs)
 optimizer = keras.optimizers.SGD(learning_rate=1e-3)
 # Instantiate a loss function.
 loss_fn = keras.losses.SparseCategoricalCrossentropy(from_logits=True)
-
+model.compile(optimizer, loss_fn)
 # Prepare the metrics.
 train_acc_metric = keras.metrics.SparseCategoricalAccuracy()
 val_acc_metric = keras.metrics.SparseCategoricalAccuracy()

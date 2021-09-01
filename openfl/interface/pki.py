@@ -57,7 +57,7 @@ def run(ca_path):
 @pki.command(name='install')
 @option('-p', '--ca-path', required=True,
         help='The ca path', type=ClickPath())
-@password_option()
+@password_option(prompt='The password will encrypt some ca files \nEnter the password')
 @option('--ca-url', required=False, default=CA_URL)
 def install_(ca_path, password, ca_url):
     """Create a ca workspace."""
