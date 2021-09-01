@@ -98,15 +98,15 @@ class ShardDirectorClient:
         """Generate a node info message."""
         return director_pb2.NodeInfo(name=self.shard_name)
 
-    def send_health_check(self, *, collaborator_name: str, is_experiment_running: bool) -> int:
+    def send_health_check(self, *, envoy_name: str, is_experiment_running: bool) -> int:
         """Send envoy health check."""
-        status = director_pb2.CollaboratorStatus(
-            name=collaborator_name,
+        status = director_pb2.EnvoyStatus(
+            name=envoy_name,
             is_experiment_running=is_experiment_running,
         )
         logger.debug(f'Sending health check status: {status}')
 
-        response = self.stub.CollaboratorHealthCheck(status)
+        response = self.stub.EnvoyHealthCheck(status)
         health_check_period = response.health_check_period.seconds
 
         return health_check_period
