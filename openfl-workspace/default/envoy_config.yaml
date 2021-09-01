@@ -16,8 +16,13 @@
 # 2. sample_shape - shape of sample's numpy representaion that will by return from __getitem__ 
 # 3. target_shape - shape of target's numpy representaion that will by return from __getitem__ 
 
-envoy:
+
+params:
   cuda_devices: []
+  optional_plugin_components:
+    cuda_device_monitor:
+      template : openfl.plugins.processing_units_monitor.pynvml_monitor.PynvmlCUDADeviceMonitor
+        settings : []
 
 shard_descriptor:
   template: shard_descriptor.LocalShardDescriptor

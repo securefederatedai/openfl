@@ -25,7 +25,7 @@ class Envoy:
 
     def __init__(self, *, shard_name, director_host, director_port, shard_descriptor,
                  root_certificate: str = None, private_key: str = None, certificate: str = None,
-                 tls: bool = True) -> None:
+                 tls: bool = True, **envoy_params) -> None:
         """Initialize a envoy object."""
         self.name = shard_name
         self.root_certificate = Path(
@@ -41,7 +41,13 @@ class Envoy:
             private_key=private_key,
             certificate=certificate
         )
+
         self.shard_descriptor = shard_descriptor
+        self.cuda_devices = envoy_params.get('cuda_devices', [])
+
+        # Optional plugins
+        self.cuda_device_monitor = envoy_params.get('cuda_device_monitor', None)
+
         self.executor = ThreadPoolExecutor()
         self.running_experiments = {}
         self.is_experiment_running = False
@@ -87,7 +93,7 @@ class Envoy:
         logger.info('The health check sender is started.')
         while True:
             timeout = self.director_client.send_health_check(
-                collaborator_name=self.name,
+                envoy_name=self.name,
                 is_experiment_running=self.is_experiment_running
             )
             time.sleep(timeout)
