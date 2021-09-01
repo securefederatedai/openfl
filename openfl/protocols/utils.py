@@ -24,10 +24,13 @@ def model_proto_to_bytes_and_metadata(model_proto):
     round_number = None
     for tensor_proto in model_proto.tensors:
         bytes_dict[tensor_proto.name] = tensor_proto.data_bytes
-        metadata_dict[tensor_proto.name] = [{'int_to_float': proto.int_to_float,
-                                             'int_list': proto.int_list,
-                                             'bool_list': proto.bool_list} for proto in
-                                            tensor_proto.transformer_metadata]
+        metadata_dict[tensor_proto.name] = [{
+            'int_to_float': proto.int_to_float,
+            'int_list': proto.int_list,
+            'bool_list': proto.bool_list
+        }
+            for proto in tensor_proto.transformer_metadata
+        ]
         if round_number is None:
             round_number = tensor_proto.round_number
         else:
@@ -255,3 +258,8 @@ def proto_to_datastream(proto, logger, max_buffer_size=(2 * 1024 * 1024)):
         chunk = npbytes[i: i + buffer_size]
         reply = DataStream(npbytes=chunk, size=len(chunk))
         yield reply
+
+
+def get_headers(context) -> dict:
+    """Get headers from context."""
+    return {header[0]: header[1] for header in context.invocation_metadata()}

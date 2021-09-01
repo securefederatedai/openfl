@@ -11,6 +11,7 @@ import grpc
 from openfl.pipelines import NoCompressionPipeline
 from openfl.protocols import director_pb2
 from openfl.protocols import director_pb2_grpc
+from openfl.protocols import interceptors
 from openfl.protocols.utils import construct_model_proto
 from openfl.protocols.utils import deconstruct_model_proto
 
@@ -113,14 +114,22 @@ class ShardDirectorClient:
 class DirectorClient:
     """Director client class for users."""
 
-    def __init__(self, *, client_id, director_host, director_port, tls=True,
+    def __init__(self, *, director_host, director_port, client_id=None, tls=True,
                  root_certificate=None, private_key=None, certificate=None) -> None:
         """Initialize director client object."""
         director_addr = f'{director_host}:{director_port}'
         channel_opt = [('grpc.max_send_message_length', 512 * 1024 * 1024),
                        ('grpc.max_receive_message_length', 512 * 1024 * 1024)]
         if not tls:
+            if client_id is None:
+                raise Exception('"client_id" is mandatory in case of tls == False')
             channel = grpc.insecure_channel(director_addr, options=channel_opt)
+            headers = {
+                'client_id': client_id,
+            }
+            header_interceptor = interceptors.headers_adder(headers)
+            channel = grpc.intercept_channel(channel, header_interceptor)
+
         else:
             if not (root_certificate and private_key and certificate):
                 raise Exception('No certificates provided')
@@ -142,9 +151,6 @@ class DirectorClient:
 
             channel = grpc.secure_channel(director_addr, credentials, options=channel_opt)
         self.stub = director_pb2_grpc.FederationDirectorStub(channel)
-
-        self.client_id = client_id
-        self.header = director_pb2.RequestHeader(sender=self.client_id)
 
     def set_new_experiment(self, name, col_names, arch_path,
                            initial_tensor_dict=None):
@@ -170,7 +176,6 @@ class DirectorClient:
                     raise StopIteration
                 # TODO: add hash or/and size to check
                 experiment_info = director_pb2.ExperimentInfo(
-                    header=self.header,
                     name=name,
                     collaborator_names=col_names,
                     model_proto=model_proto
@@ -182,19 +187,19 @@ class DirectorClient:
 
     def get_dataset_info(self):
         """Request the dataset info from the director."""
-        resp = self.stub.GetDatasetInfo(director_pb2.GetDatasetInfoRequest(header=self.header))
+        resp = self.stub.GetDatasetInfo(director_pb2.GetDatasetInfoRequest())
         return resp.sample_shape, resp.target_shape
 
     def _get_trained_model(self, experiment_name, model_type):
         """Get trained model RPC."""
         get_model_request = director_pb2.GetTrainedModelRequest(
-            header=self.header,
             experiment_name=experiment_name,
-            model_type=model_type)
+            model_type=model_type,
+        )
         model_proto_response = self.stub.GetTrainedModel(get_model_request)
         tensor_dict, _ = deconstruct_model_proto(
             model_proto_response.model_proto,
-            NoCompressionPipeline()
+            NoCompressionPipeline(),
         )
         return tensor_dict
 
@@ -210,9 +215,7 @@ class DirectorClient:
 
     def stream_metrics(self, experiment_name):
         """Stream metrics RPC."""
-        request = director_pb2.StreamMetricsRequest(
-            header=self.header,
-            experiment_name=experiment_name)
+        request = director_pb2.StreamMetricsRequest(experiment_name=experiment_name)
         for metric_message in self.stub.StreamMetrics(request):
             yield {
                 'metric_origin': metric_message.metric_origin,
@@ -224,9 +227,7 @@ class DirectorClient:
 
     def remove_experiment_data(self, name):
         """Remove experiment data RPC."""
-        request = director_pb2.RemoveExperimentRequest(
-            header=self.header,
-            experiment_name=name)
+        request = director_pb2.RemoveExperimentRequest(experiment_name=name)
         response = self.stub.RemoveExperimentData(request)
         return response.acknowledgement
 

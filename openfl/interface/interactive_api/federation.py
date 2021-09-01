@@ -15,7 +15,7 @@ class Federation:
     their local data and network setting to enable communication in federation.
     """
 
-    def __init__(self, client_id, director_node_fqdn=None, director_port=None, tls=True,
+    def __init__(self, director_node_fqdn=None, director_port=None, client_id=None, tls=True,
                  cert_chain=None, api_cert=None, api_private_key=None) -> None:
         """
         Initialize federation.
@@ -31,7 +31,6 @@ class Federation:
         - director_node_fqdn: Address and port a director's service is running on.
             User passes here an address with a port.
         """
-        self.client_id = client_id
         if director_node_fqdn is None:
             self.director_node_fqdn = getfqdn_env()
         else:
@@ -45,9 +44,9 @@ class Federation:
 
         # Create Director client
         self.dir_client = DirectorClient(
-            client_id=client_id,
             director_host=director_node_fqdn,
             director_port=director_port,
+            client_id=client_id,
             tls=tls,
             root_certificate=cert_chain,
             private_key=api_private_key,
