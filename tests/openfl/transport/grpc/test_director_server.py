@@ -63,7 +63,7 @@ def test_get_sender_no_tls(insecure_director):
     """Test that get_sender works correctly without TLS."""
     context = mock.Mock()
     client_id = 'client_id'
-    context.invocation_metadata = [('client_id', 'client_id')]
+    context.invocation_metadata.return_value = (('client_id', client_id),)
     result = insecure_director.get_caller(context)
     assert result == client_id
 
