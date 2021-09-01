@@ -127,7 +127,7 @@ class DirectorGRPCServer(director_pb2_grpc.FederationDirectorServicer):
 
         is_accepted = await self.director.set_new_experiment(
             experiment_name=request.name,
-            caller=caller,
+            sender_name=caller,
             tensor_dict=tensor_dict,
             collaborator_names=request.collaborator_names,
             data_file_path=data_file_path
