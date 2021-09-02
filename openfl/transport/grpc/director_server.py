@@ -76,7 +76,7 @@ class DirectorGRPCServer(director_pb2_grpc.FederationDirectorServicer):
         return True
 
     def get_caller_name(self, context):
-        caller_name = 'unauthorized_caller'
+        caller_name = 'frontend'
         if self.tls:
             caller_name = context.auth_context()['x509_common_name'][0].decode('utf-8')
         return caller_name
@@ -258,7 +258,7 @@ class DirectorGRPCServer(director_pb2_grpc.FederationDirectorServicer):
 
         return director_pb2.GetEnvoysResponse(envoy_infos=envoy_infos)
 
-    async def GetExperiments(self, request, context):  # NOQA:N802
+    async def GetExperimentDescriptions(self, request, context):  # NOQA:N802
         caller = self.get_caller_name(context)
         experiments = self.director.get_experiments(caller)
         experiment_descriptions_list = [
@@ -270,4 +270,6 @@ class DirectorGRPCServer(director_pb2_grpc.FederationDirectorServicer):
                 progress=exp['tasks_amount'],
             ) for exp in experiments
         ]
-        return director_pb2.ExperimentDescriptionList(experiments=experiment_descriptions_list)
+        return director_pb2.GetExperimentDescriptionsResponse(
+            experiments=experiment_descriptions_list
+        )

@@ -5,10 +5,11 @@
 
 import asyncio
 import logging
-import time
 import typing
 from collections import defaultdict
 from pathlib import Path
+
+import time
 
 from openfl.federated import Plan
 from openfl.protocols import director_pb2
@@ -206,15 +207,18 @@ class Director:
 
     def get_experiments(self, caller: str) -> list:
         experiments = self.experiment_stash[caller]
-        result = [{
-            'name': name,
-            'status': 'pending',
-            'collaborators_amount': 0,
-            'tasks_amount': '0',
-            'progress': 0.0,
-        }
-            for name, val in experiments.items()
-        ]
+        result = []
+        for name, val in experiments.items():
+            collaborators_amount = len(val.aggregator.autorized_cols)
+            tasks_amount = len({task['function'] for task in val.aggregator.assigner.tasks})
+            progress = val.aggregator.round_number / val.aggregator.rounds_to_train
+            result.append({
+                'name': name,
+                'status': 'pending',
+                'collaborators_amount': collaborators_amount,
+                'tasks_amount': tasks_amount,
+                'progress': progress,
+            })
 
         return result
 

@@ -250,5 +250,7 @@ class DirectorClient:
         return result
 
     def get_experiments(self):
-        experiments = self.stub.GetExperiments(director_pb2.GetExperimentDataRequest())
+        experiments = self.stub.GetExperimentDescriptions(
+            director_pb2.GetExperimentDescriptionsRequest()
+        )
         return experiments

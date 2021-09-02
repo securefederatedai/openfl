@@ -4,11 +4,11 @@
 
 import logging
 import shutil
-import sys
 from importlib import import_module
 from pathlib import Path
 
 import click
+import sys
 from click import group
 from click import option
 from click import pass_context
@@ -28,23 +28,23 @@ def envoy(context):
     context.obj['group'] = 'envoy'
 
 
-@envoy.command(name='start')
-@option('-n', '--shard-name', required=True,
-        help='Current shard name')
-@option('-dh', '--director-host', required=True,
-        help='The FQDN of the federation director')
-@option('-dp', '--director-port', required=True,
-        help='The federation director port')
-@option('--tls/--disable-tls', default=True,
-        is_flag=True, help='Use TLS or not (By default TLS is enabled)')
-@option('-sc', '--shard-config-path', default='shard_config.yaml',
-        help='The shard config path', type=ClickPath(exists=True))
-@option('-rc', '--root-cert-path', 'root_certificate', default=None,
-        help='Path to a root CA cert')
-@option('-pk', '--private-key-path', 'private_key', default=None,
-        help='Path to a private key')
-@option('-oc', '--public-cert-path', 'certificate', default=None,
-        help='Path to a signed certificate')
+# @envoy.command(name='start')
+# @option('-n', '--shard-name', required=True,
+#         help='Current shard name')
+# @option('-dh', '--director-host', required=True,
+#         help='The FQDN of the federation director')
+# @option('-dp', '--director-port', required=True,
+#         help='The federation director port')
+# @option('--tls/--disable-tls', default=True,
+#         is_flag=True, help='Use TLS or not (By default TLS is enabled)')
+# @option('-sc', '--shard-config-path', default='shard_config.yaml',
+#         help='The shard config path', type=ClickPath(exists=True))
+# @option('-rc', '--root-cert-path', 'root_certificate', default=None,
+#         help='Path to a root CA cert')
+# @option('-pk', '--private-key-path', 'private_key', default=None,
+#         help='Path to a private key')
+# @option('-oc', '--public-cert-path', 'certificate', default=None,
+#         help='Path to a signed certificate')
 def start_(shard_name, director_host, director_port, tls, shard_config_path,
            root_certificate, private_key, certificate):
     """Start the Envoy."""
@@ -103,3 +103,16 @@ def shard_descriptor_from_config(shard_config_path: str):
     instance = getattr(module, class_name)(**params)
 
     return instance
+
+
+if __name__ == '__main__':
+    start_(
+        shard_name='env_one',
+        director_host='localhost',
+        director_port=50051,
+        tls=False,
+        shard_config_path='/home/dmitry/code/openfl/openfl-tutorials/interactive_api/Director_Pytorch_Kvasir_UNET/envoy_folder/shard_config.yaml',
+        root_certificate=None,
+        private_key=None,
+        certificate=None,
+    )

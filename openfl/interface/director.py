@@ -4,10 +4,10 @@
 
 import logging
 import shutil
-import sys
 from pathlib import Path
 
 import click
+import sys
 from click import group
 from click import option
 from click import pass_context
@@ -28,17 +28,17 @@ def director(context):
     context.obj['group'] = 'director'
 
 
-@director.command(name='start')
-@option('-c', '--director-config-path', default='director.yaml',
-        help='The director config file path', type=ClickPath(exists=True))
-@option('--tls/--disable-tls', default=True,
-        is_flag=True, help='Use TLS or not (By default TLS is enabled)')
-@option('-rc', '--root-cert-path', 'root_certificate', default=None,
-        help='Path to a root CA cert')
-@option('-pk', '--private-key-path', 'private_key', default=None,
-        help='Path to a private key')
-@option('-oc', '--public-cert-path', 'certificate', default=None,
-        help='Path to a signed certificate')
+# @director.command(name='start')
+# @option('-c', '--director-config-path', default='director.yaml',
+#         help='The director config file path', type=ClickPath(exists=True))
+# @option('--tls/--disable-tls', default=True,
+#         is_flag=True, help='Use TLS or not (By default TLS is enabled)')
+# @option('-rc', '--root-cert-path', 'root_certificate', default=None,
+#         help='Path to a root CA cert')
+# @option('-pk', '--private-key-path', 'private_key', default=None,
+#         help='Path to a private key')
+# @option('-oc', '--public-cert-path', 'certificate', default=None,
+#         help='Path to a signed certificate')
 def start(director_config_path, tls, root_certificate, private_key, certificate):
     """Start the director service."""
     logger.info('🧿 Starting the Director Service.')
@@ -85,3 +85,13 @@ def create(director_path):
     (director_path / 'cert').mkdir(parents=True, exist_ok=True)
     (director_path / 'logs').mkdir(parents=True, exist_ok=True)
     shutil.copyfile(WORKSPACE / 'default/director.yaml', director_path / 'director.yaml')
+
+
+if __name__ == '__main__':
+    start(
+        director_config_path='/home/dmitry/code/openfl/openfl-tutorials/interactive_api/Director_Pytorch_Kvasir_UNET/director_folder/director_config.yaml',
+        tls=False,
+        root_certificate=None,
+        private_key=None,
+        certificate=None
+    )
