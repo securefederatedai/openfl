@@ -117,7 +117,7 @@ class FedProxAdam(Optimizer):
         if mu < 0.0:
             raise ValueError(f'Invalid mu value: {mu}')
         defaults = {'lr': lr, 'betas': betas, 'eps': eps,
-                    'weight_decay': 'weight_decay', 'amsgrad': amsgrad, 'mu': mu}
+                    'weight_decay': weight_decay, 'amsgrad': amsgrad, 'mu': mu}
         super(FedProxAdam, self).__init__(params, defaults)
 
     def __setstate__(self, state):
