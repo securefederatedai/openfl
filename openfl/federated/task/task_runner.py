@@ -72,8 +72,8 @@ class CoreTaskRunner(object):
 
         else:
             suffix = 'validate' + validation_flag
-            tags = ('metric', suffix)
-
+            tags = (suffix,)
+        tags = ('metric', *tags)
         metric_dict = {
             TensorKey(metric, origin, round_num, True, tags):
                 np.array(value) for metric, value in metric_dict.items()
@@ -245,31 +245,36 @@ class CoreTaskRunner(object):
         # We rely on validation type tasks parameter `apply`
         # In the interface layer we add those parameters automatically
         if 'apply' not in kwargs:
-            return [TensorKey(tensor_name, 'GLOBAL', 0, False, ('model',))
-                    for tensor_name in self.required_tensorkeys_for_function[
-                        'global_model_dict']] + \
-                [TensorKey(tensor_name, 'LOCAL', 0, False, ('model',))
-                 for tensor_name in self.required_tensorkeys_for_function['local_model_dict']]
+            return [
+                TensorKey(tensor_name, 'GLOBAL', 0, False, ('model',))
+                for tensor_name in self.required_tensorkeys_for_function['global_model_dict']
+            ] + [
+                TensorKey(tensor_name, 'LOCAL', 0, False, ('model',))
+                for tensor_name in self.required_tensorkeys_for_function['local_model_dict']
+            ]
 
         if kwargs['apply'] == 'local':
-            return [TensorKey(tensor_name, 'LOCAL', 0, False, ('trained',))
-                    for tensor_name in {
-                **self.required_tensorkeys_for_function['validation_local_model_dict'],
-                **self.required_tensorkeys_for_function['validation_global_model_dict']
-            }]
+            return [
+                TensorKey(tensor_name, 'LOCAL', 0, False, ('trained',))
+                for tensor_name in {
+                    **self.required_tensorkeys_for_function['local_model_dict_val'],
+                    **self.required_tensorkeys_for_function['global_model_dict_val']
+                }
+            ]
 
         elif kwargs['apply'] == 'global':
-            return [TensorKey(tensor_name, 'GLOBAL', 0, False, ('model',))
-                    for tensor_name in self.required_tensorkeys_for_function[
-                'validation_global_model_dict']] + \
-                [TensorKey(tensor_name, 'LOCAL', 0, False, ('model',))
-                 for tensor_name in self.required_tensorkeys_for_function[
-                 'validation_local_model_dict']]
+            return [
+                TensorKey(tensor_name, 'GLOBAL', 0, False, ('model',))
+                for tensor_name in self.required_tensorkeys_for_function['global_model_dict_val']
+            ] + [
+                TensorKey(tensor_name, 'LOCAL', 0, False, ('model',))
+                for tensor_name in self.required_tensorkeys_for_function['local_model_dict_val']
+            ]
 
     def initialize_tensorkeys_for_functions(self, with_opt_vars=False):
-        """Set the required tensors for all publicly accessible methods that \
-        could be called as part of a task. \
-        By default, this is just all of the layers and optimizer of the model. \
+        """Set the required tensors for all publicly accessible task methods.
+
+        By default, this is just all of the layers and optimizer of the model.
         Custom tensors should be added to this function.
 
         Args:
@@ -281,12 +286,11 @@ class CoreTaskRunner(object):
         # TODO: Framework adapters should have separate methods for dealing with optimizer
         # Set model dict for validation tasks
         output_model_dict = self.get_tensor_dict(with_opt_vars=False)
-        validation_global_model_dict, validation_local_model_dict = \
-            split_tensor_dict_for_holdouts(
-                self.logger,
-                output_model_dict,
-                **self.tensor_dict_split_fn_kwargs
-            )
+        global_model_dict_val, local_model_dict_val = split_tensor_dict_for_holdouts(
+            self.logger,
+            output_model_dict,
+            **self.tensor_dict_split_fn_kwargs
+        )
         # Now set model dict for training tasks
         if with_opt_vars:
             output_model_dict = self.get_tensor_dict(with_opt_vars=True)
@@ -295,15 +299,13 @@ class CoreTaskRunner(object):
                 **self.tensor_dict_split_fn_kwargs
             )
         else:
-            global_model_dict = validation_global_model_dict
-            local_model_dict = validation_local_model_dict
+            global_model_dict = global_model_dict_val
+            local_model_dict = local_model_dict_val
 
         self.required_tensorkeys_for_function['global_model_dict'] = global_model_dict
         self.required_tensorkeys_for_function['local_model_dict'] = local_model_dict
-        self.required_tensorkeys_for_function['validation_global_model_dict'] = \
-            validation_global_model_dict
-        self.required_tensorkeys_for_function['validation_local_model_dict'] = \
-            validation_local_model_dict
+        self.required_tensorkeys_for_function['global_model_dict_val'] = global_model_dict_val
+        self.required_tensorkeys_for_function['local_model_dict_val'] = local_model_dict_val
 
     def reset_opt_vars(self):
         """

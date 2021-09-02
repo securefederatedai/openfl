@@ -1,0 +1,83 @@
+aggregator:
+  defaults: plan/defaults/aggregator.yaml
+  settings:
+    best_state_path: save/tf_3dunet_brats_best.pbuf
+    init_state_path: save/tf_3dunet_brats_init.pbuf
+    last_state_path: save/tf_3dunet_brats_latest.pbuf
+    db_store_rounds: 2
+    rounds_to_train: 10
+  template: openfl.component.Aggregator
+assigner:
+  defaults: plan/defaults/assigner.yaml
+  settings:
+    task_groups:
+    - name: train_and_validate
+      percentage: 1.0
+      tasks:
+      - aggregated_model_validation
+      - train
+      - locally_tuned_model_validation
+  template: openfl.component.RandomGroupedAssigner
+collaborator:
+  defaults: plan/defaults/collaborator.yaml
+  settings:
+    db_store_rounds: 2
+    delta_updates: true
+    opt_treatment: RESET
+  template: openfl.component.Collaborator
+data_loader:
+  defaults: plan/defaults/data_loader.yaml
+  settings:
+    batch_size: 4
+    crop_dim: 64
+    num_classes: 1
+    number_input_channels: 1
+    percent_train: 0.8
+  template: src.tf_brats_dataloader.TensorFlowBratsDataLoader
+network:
+  defaults: plan/defaults/network.yaml
+  settings:
+    agg_addr: DESKTOP-AOKV1IJ.localdomain
+    agg_port: auto
+    cert_folder: cert
+    client_reconnect_interval: 5
+    disable_client_auth: false
+    disable_tls: false
+    hash_salt: auto
+  template: openfl.federation.Network
+task_runner:
+  defaults: plan/defaults/task_runner.yaml
+  settings:
+    batch_norm: true
+    batch_size: 4
+    depth: 4
+    initial_filters: 16
+    use_upsampling: false
+  template: src.tf_3dunet_model.TensorFlow3dUNet
+tasks:
+  aggregated_model_validation:
+    function: validate
+    kwargs:
+      apply: global
+      batch_size: 4
+      metrics:
+      - dice_coef
+      - soft_dice_coef
+  defaults: plan/defaults/tasks_tensorflow.yaml
+  locally_tuned_model_validation:
+    function: validate
+    kwargs:
+      apply: local
+      batch_size: 4
+      metrics:
+      - dice_coef
+      - soft_dice_coef
+  settings: {}
+  train:
+    function: train
+    kwargs:
+      batch_size: 4
+      epochs: 1
+      metrics:
+      - loss
+      num_batches: 1

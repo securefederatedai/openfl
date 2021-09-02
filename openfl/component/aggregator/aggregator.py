@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 """Aggregator module."""
+import queue
 from logging import getLogger
 
 from openfl.databases import TensorDB
@@ -11,6 +12,7 @@ from openfl.protocols import ModelProto
 from openfl.protocols import utils
 from openfl.utilities import TaskResultKey
 from openfl.utilities import TensorKey
+from openfl.utilities.logs import write_metric
 
 
 class Aggregator:
@@ -42,6 +44,7 @@ class Aggregator:
                  assigner,
 
                  rounds_to_train=256,
+                 log_metric_callback=None,
                  single_col_cert_common_name=None,
                  compression_pipeline=None,
                  db_store_rounds=1,
@@ -68,9 +71,10 @@ class Aggregator:
         self.quit_job_sent_to = []
 
         self.tensor_db = TensorDB()
+        # FIXME: I think next line generates an error on the second round
+        # if it is set to 1 for the aggregator.
         self.db_store_rounds = db_store_rounds
-        self.compression_pipeline = compression_pipeline \
-            or NoCompressionPipeline()
+        self.compression_pipeline = compression_pipeline or NoCompressionPipeline()
         self.tensor_codec = TensorCodec(self.compression_pipeline)
         self.logger = getLogger(__name__)
 
@@ -81,6 +85,7 @@ class Aggregator:
         self.best_tensor_dict: dict = {}
         self.last_tensor_dict: dict = {}
 
+        self.metric_queue = queue.Queue()
         self.best_model_score = None
 
         if kwargs.get('initial_tensor_dict', None) is not None:
@@ -102,6 +107,8 @@ class Aggregator:
         self.collaborator_tasks_results = {}  # {TaskResultKey: list of TensorKeys}
 
         self.collaborator_task_weight = {}  # {TaskResultKey: data_size}
+
+        self.log_metric = write_metric
 
     def _load_initial_tensors(self):
         """
@@ -321,8 +328,8 @@ class Aggregator:
             named_tensor : protobuf NamedTensor
                 the tensor requested by the collaborator
         """
-        self.logger.debug(f'Retrieving aggregated tensor {tensor_name},{round_number},{tags} \
-                    for collaborator {collaborator_name}')
+        self.logger.debug(f'Retrieving aggregated tensor {tensor_name},{round_number},{tags} '
+                          f'for collaborator {collaborator_name}')
 
         if 'compressed' in tags or require_lossless:
             compress_lossless = True
@@ -390,22 +397,35 @@ class Aggregator:
                 'The original model layer should be present if the latest '
                 'aggregated model is present')
             delta_tensor_key, delta_nparray = self.tensor_codec.generate_delta(
-                tensor_key, nparray, model_nparray)
-            delta_comp_tensor_key, delta_comp_nparray, metadata = \
-                self.tensor_codec.compress(delta_tensor_key, delta_nparray,
-                                           lossless=compress_lossless)
-            named_tensor = utils.construct_named_tensor(delta_comp_tensor_key,
-                                                        delta_comp_nparray, metadata,
-                                                        lossless=compress_lossless)
+                tensor_key,
+                nparray,
+                model_nparray
+            )
+            delta_comp_tensor_key, delta_comp_nparray, metadata = self.tensor_codec.compress(
+                delta_tensor_key,
+                delta_nparray,
+                lossless=compress_lossless
+            )
+            named_tensor = utils.construct_named_tensor(
+                delta_comp_tensor_key,
+                delta_comp_nparray,
+                metadata,
+                lossless=compress_lossless
+            )
 
         else:
             # Assume every other tensor requires lossless compression
-            compressed_tensor_key, compressed_nparray, metadata = \
-                self.tensor_codec.compress(tensor_key, nparray,
-                                           require_lossless=True)
-            named_tensor = utils.construct_named_tensor(compressed_tensor_key,
-                                                        compressed_nparray, metadata,
-                                                        lossless=compress_lossless)
+            compressed_tensor_key, compressed_nparray, metadata = self.tensor_codec.compress(
+                tensor_key,
+                nparray,
+                require_lossless=True
+            )
+            named_tensor = utils.construct_named_tensor(
+                compressed_tensor_key,
+                compressed_nparray,
+                metadata,
+                lossless=compress_lossless
+            )
 
         return named_tensor
 
@@ -482,6 +502,18 @@ class Aggregator:
             tensor_key, nparray = self._process_named_tensor(
                 named_tensor, collaborator_name
             )
+            if 'metric' in tensor_key.tags:
+                metric_dict = {
+                    'metric_origin': tensor_key.tags[-1],
+                    'task_name': task_name,
+                    'metric_name': tensor_key.tensor_name,
+                    'metric_value': nparray,
+                    'round': round_number}
+                self.log_metric(tensor_key.tags[-1], task_name,
+                                tensor_key.tensor_name, nparray, round_number)
+                self.logger.metric(f'Round {round_number}, collaborator {tensor_key.tags[-1]} '
+                                   f'{task_name} result {tensor_key.tensor_name}:\t{nparray}')
+                self.metric_queue.put(metric_dict)
 
             task_results.append(tensor_key)
             # By giving task_key it's own weight, we can support different
@@ -708,7 +740,6 @@ class Aggregator:
             task_name : str
                 The task name to compute
         """
-        self.logger.info(f'{task_name} task metrics...')
         # By default, print out all of the metrics that the validation
         # task sent
         # This handles getting the subset of collaborators that may be
@@ -735,8 +766,10 @@ class Aggregator:
         task_key = TaskResultKey(task_name, collaborators_for_task[0], self.round_number)
         for tensor_key in self.collaborator_tasks_results[task_key]:
             tensor_name, origin, round_number, report, tags = tensor_key
-            assert (tags[-1] == collaborators_for_task[0]), \
+            assert (tags[-1] == collaborators_for_task[0]), (
                 f'Tensor {tensor_key} in task {task_name} has not been processed correctly'
+            )
+
             # Strip the collaborator label, and lookup aggregated tensor
             new_tags = tuple(tags[:-1])
             agg_tensor_key = TensorKey(tensor_name, origin, round_number, report, new_tags)
@@ -745,22 +778,34 @@ class Aggregator:
                 agg_tensor_key, collaborator_weight_dict, aggregation_function=agg_function)
             if report:
                 # Print the aggregated metric
+                metric_dict = {
+                    'metric_origin': 'Aggregator',
+                    'task_name': task_name,
+                    'metric_name': tensor_key.tensor_name,
+                    'metric_value': agg_results,
+                    'round': round_number}
+
                 if agg_results is None:
                     self.logger.warning(
                         f'Aggregated metric {agg_tensor_name} could not be collected '
-                        f'for round {self.round_number}. Skipping reporting for this round'
-                    )
+                        f'for round {self.round_number}. Skipping reporting for this round')
                 if agg_function:
-                    self.logger.info(f'{agg_function} {agg_tensor_name}:\t{agg_results:.4f}')
+                    self.logger.metric(f'Round {round_number}, aggregator: {task_name} '
+                                       f'{agg_function} {agg_tensor_name}:\t{agg_results:.4f}')
                 else:
-                    self.logger.info(f'{agg_tensor_name}:\t{agg_results:.4f}')
+                    self.logger.metric(f'Round {round_number}, aggregator: {task_name} '
+                                       f'{agg_tensor_name}:\t{agg_results:.4f}')
+                self.log_metric('Aggregator', task_name, tensor_key.tensor_name,
+                                agg_results, round_number)
+                self.metric_queue.put(metric_dict)
                 # TODO Add all of the logic for saving the model based
                 #  on best accuracy, lowest loss, etc.
                 if 'validate_agg' in tags:
                     # Compare the accuracy of the model, and
                     # potentially save it
                     if self.best_model_score is None or self.best_model_score < agg_results:
-                        self.logger.info(f'Saved the best model with score {agg_results:f}')
+                        self.logger.metric(f'Round {round_number}: saved the best '
+                                           f'model with score {agg_results:f}')
                         self.best_model_score = agg_results
                         self._save_model(round_number, self.best_state_path)
             if 'trained' in tags:
@@ -904,5 +949,5 @@ the_dragon = '''
                                      #      #*#@##,      .++:.,#
                                     `*      @#            +.
                                   @@@
-                                 #`@
+                                 # `@
                                   ,                                                        '''

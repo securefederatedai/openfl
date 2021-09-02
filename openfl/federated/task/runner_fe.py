@@ -68,8 +68,7 @@ class FastEstimatorTaskRunner(TaskRunner):
         self.runner.model = self.model
         self.runner.optimizer = self.optimizer
         self.required_tensorkeys_for_function = {}
-        self.tensor_dict_split_fn_kwargs = \
-            self.runner.tensor_dict_split_fn_kwargs
+        self.tensor_dict_split_fn_kwargs = self.runner.tensor_dict_split_fn_kwargs
         self.initialize_tensorkeys_for_functions()
         self.epoch_idx = 0
         self.global_step = None

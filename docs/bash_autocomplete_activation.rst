@@ -14,18 +14,23 @@ If not use the instruction :ref:`install_initial_steps`.
 
 Create ~/.fx-autocomplete.sh script
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
    This step need to be done only one time when you don't have `~/.fx-autocomplete.sh` or `~/.fx-autocomplete.sh` have corrupted content.
+   
    .. code-block:: console
 
       $ _FX_COMPLETE=bash_source fx > ~/.fx-autocomplete.sh
 
    Check that command was executed correctly.
+
    .. code-block:: console
 
       $ cat ~/.fx-autocomplete.sh
 
    Console output should look like example below (Click==8.0.1), but could be different depend on `Click https://click.palletsprojects.com/en/8.0.x/`_ version:
+   
    .. code-block:: console
+
       _fx_completion() {
           local IFS=$'\n'
           local response
@@ -57,15 +62,20 @@ Create ~/.fx-autocomplete.sh script
 
 Activate autocomplete feature
 ~~~~~~~~~~~~~~~~~~~~~
+
    This step should be done every time when you open a new terminal window.
 
    .. code-block:: console
+
       $ source ~/.fx-autocomplete.sh
 
 Auto activation autocomplete
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
    To save your time you can add autocomplete activation step to `~/.bashrc`.
+   
    .. code-block:: bash
       . ~/.fx-autocomplete.sh
+
    Save `~/.bashrc`.
    Open new terminal to use updated `~/.bashrc`.

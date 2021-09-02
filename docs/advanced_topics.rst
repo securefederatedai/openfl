@@ -14,5 +14,4 @@ Advanced Topics
    compression_settings
    overriding_agg_fn
    bash_autocomplete_activation
-
-
+   log_metric_callback

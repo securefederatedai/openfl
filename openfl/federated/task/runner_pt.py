@@ -129,7 +129,7 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
         return output_tensor_dict, {}
 
     def train_batches(self, col_name, round_num, input_tensor_dict,
-                      num_batches=None, use_tqdm=False, **kwargs):
+                      use_tqdm=False, epochs=1, **kwargs):
         """Train batches.
 
         Train the model on the requested number of batches.
@@ -138,9 +138,8 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
             col_name:            Name of the collaborator
             round_num:           What round is it
             input_tensor_dict:   Required input tensors (for model)
-            num_batches:         The number of batches to train on before
-                                 returning
             use_tqdm (bool):     Use tqdm to print a progress bar (Default=True)
+            epochs:              The number of epochs to train
 
         Returns:
             global_output_dict:  Tensors to send back to the aggregator
@@ -150,10 +149,12 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
         # set to "training" mode
         self.train()
         self.to(self.device)
-        loader = self.data_loader.get_train_loader(num_batches)
-        if use_tqdm:
-            loader = tqdm.tqdm(loader, desc='train epoch')
-        metric = self.train_epoch(loader)
+        for epoch in range(epochs):
+            self.logger.info(f'Run {epoch} epoch of {round_num} round')
+            loader = self.data_loader.get_train_loader()
+            if use_tqdm:
+                loader = tqdm.tqdm(loader, desc='train epoch')
+            metric = self.train_epoch(loader)
         # Output metric tensors (scalar)
         origin = col_name
         tags = ('trained',)
@@ -314,9 +315,9 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
             return self.required_tensorkeys_for_function[func_name]
 
     def initialize_tensorkeys_for_functions(self, with_opt_vars=False):
-        """Set the required tensors for all publicly accessible methods that \
-        could be called as part of a task. \
-        By default, this is just all of the layers and optimizer of the model. \
+        """Set the required tensors for all publicly accessible task methods.
+
+        By default, this is just all of the layers and optimizer of the model.
         Custom tensors should be added to this function.
 
         Args:
@@ -335,16 +336,15 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
             **self.tensor_dict_split_fn_kwargs
         )
         if not with_opt_vars:
-            validation_global_model_dict = global_model_dict
-            validation_local_model_dict = local_model_dict
+            global_model_dict_val = global_model_dict
+            local_model_dict_val = local_model_dict
         else:
             output_model_dict = self.get_tensor_dict(with_opt_vars=False)
-            validation_global_model_dict, validation_local_model_dict = \
-                split_tensor_dict_for_holdouts(
-                    self.logger,
-                    output_model_dict,
-                    **self.tensor_dict_split_fn_kwargs
-                )
+            global_model_dict_val, local_model_dict_val = split_tensor_dict_for_holdouts(
+                self.logger,
+                output_model_dict,
+                **self.tensor_dict_split_fn_kwargs
+            )
 
         self.required_tensorkeys_for_function['train_batches'] = [
             TensorKey(tensor_name, 'GLOBAL', 0, False, ('model',))
@@ -368,21 +368,20 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
         # so there is an extra lookup dimension for kwargs
         self.required_tensorkeys_for_function['validate'] = {}
         # TODO This is not stateless. The optimizer will not be
-        self.required_tensorkeys_for_function['validate']['apply=local'] = \
-            [TensorKey(
-                tensor_name, 'LOCAL', 0, False, ('trained',)
-            ) for tensor_name in {
-                **validation_global_model_dict,
-                **validation_local_model_dict
+        self.required_tensorkeys_for_function['validate']['apply=local'] = [
+            TensorKey(tensor_name, 'LOCAL', 0, False, ('trained',))
+            for tensor_name in {
+                **global_model_dict_val,
+                **local_model_dict_val
             }]
-        self.required_tensorkeys_for_function['validate']['apply=global'] = \
-            [TensorKey(
-                tensor_name, 'GLOBAL', 0, False, ('model',)
-            ) for tensor_name in validation_global_model_dict]
-        self.required_tensorkeys_for_function['validate']['apply=global'] += \
-            [TensorKey(
-                tensor_name, 'LOCAL', 0, False, ('model',)
-            ) for tensor_name in validation_local_model_dict]
+        self.required_tensorkeys_for_function['validate']['apply=global'] = [
+            TensorKey(tensor_name, 'GLOBAL', 0, False, ('model',))
+            for tensor_name in global_model_dict_val
+        ]
+        self.required_tensorkeys_for_function['validate']['apply=global'] += [
+            TensorKey(tensor_name, 'LOCAL', 0, False, ('model',))
+            for tensor_name in local_model_dict_val
+        ]
 
     def load_native(self, filepath, model_state_dict_key='model_state_dict',
                     optimizer_state_dict_key='optimizer_state_dict', **kwargs):

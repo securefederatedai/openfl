@@ -6,10 +6,11 @@ Manual
 ******
 
 .. toctree::
-   :maxdepth: 4
+   :maxdepth: 2
 
    overview
    install
    running_the_federation
    plan_settings
+   source/utilities/utilities
    advanced_topics

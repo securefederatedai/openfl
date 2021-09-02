@@ -1,0 +1,4 @@
+tensorflow>=2
+nibabel
+numpy
+
