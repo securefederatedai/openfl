@@ -20,6 +20,8 @@ from openfl.protocols.utils import get_headers
 
 logger = logging.getLogger(__name__)
 
+CLIENT_ID_DEFAULT = '__default__'
+
 
 class DirectorGRPCServer(director_pb2_grpc.FederationDirectorServicer):
     """Director transport class."""
@@ -65,9 +67,7 @@ class DirectorGRPCServer(director_pb2_grpc.FederationDirectorServicer):
         if self.tls:
             return context.auth_context()['x509_common_name'][0].decode('utf-8')
         headers = get_headers(context)
-        client_id = headers.get('client_id')
-        if client_id is None:
-            raise Exception('No "client_id" in request context when TLS=False')
+        client_id = headers.get('client_id', CLIENT_ID_DEFAULT)
         return client_id
 
     def start(self):

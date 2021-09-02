@@ -73,5 +73,6 @@ def test_get_sender_no_tls_no_client_id(insecure_director):
     context = mock.Mock()
     context.invocation_metadata = mock.Mock()
     context.invocation_metadata.return_value = (('key', 'value'),)
-    with pytest.raises(Exception, match='No "client_id" in request context when TLS=False'):
-        insecure_director.get_caller(context)
+    default_client_id = '__default__'
+    result = insecure_director.get_caller(context)
+    assert result == default_client_id

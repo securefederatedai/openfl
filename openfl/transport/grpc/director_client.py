@@ -14,6 +14,7 @@ from openfl.protocols import director_pb2_grpc
 from openfl.protocols import interceptors
 from openfl.protocols.utils import construct_model_proto
 from openfl.protocols.utils import deconstruct_model_proto
+from openfl.transport.grpc.director_server import CLIENT_ID_DEFAULT
 
 logger = logging.getLogger(__name__)
 
@@ -114,22 +115,29 @@ class ShardDirectorClient:
 class DirectorClient:
     """Director client class for users."""
 
-    def __init__(self, *, director_host, director_port, client_id=None, tls=True,
-                 root_certificate=None, private_key=None, certificate=None) -> None:
+    def __init__(
+            self, *,
+            client_id: str,
+            director_host: str,
+            director_port: int,
+            tls: bool,
+            root_certificate: str,
+            private_key: str,
+            certificate: str,
+    ) -> None:
         """Initialize director client object."""
         director_addr = f'{director_host}:{director_port}'
         channel_opt = [('grpc.max_send_message_length', 512 * 1024 * 1024),
                        ('grpc.max_receive_message_length', 512 * 1024 * 1024)]
         if not tls:
-            if client_id is None:
-                raise Exception('"client_id" is mandatory in case of tls == False')
+            if not client_id:
+                client_id = CLIENT_ID_DEFAULT
             channel = grpc.insecure_channel(director_addr, options=channel_opt)
             headers = {
                 'client_id': client_id,
             }
             header_interceptor = interceptors.headers_adder(headers)
             channel = grpc.intercept_channel(channel, header_interceptor)
-
         else:
             if not (root_certificate and private_key and certificate):
                 raise Exception('No certificates provided')
