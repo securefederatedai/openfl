@@ -12,6 +12,8 @@ Preparation
 Make sure that you inside virtual environment with installed |productName|.
 If not use the instruction :ref:`install_initial_steps`.
 
+Just a test line.
+
 Create ~/.fx-autocomplete.sh script
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
