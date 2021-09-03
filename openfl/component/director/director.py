@@ -209,7 +209,7 @@ class Director:
         experiments = self.experiment_stash[caller]
         result = []
         for name, val in experiments.items():
-            collaborators_amount = len(val.aggregator.autorized_cols)
+            collaborators_amount = len(val.aggregator.authorized_cols)
             tasks_amount = len({task['function'] for task in val.aggregator.assigner.tasks})
             progress = val.aggregator.round_number / val.aggregator.rounds_to_train
             result.append({
