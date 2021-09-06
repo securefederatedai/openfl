@@ -37,7 +37,7 @@ def envoy(context):
         help='The federation director port')
 @option('--tls/--disable-tls', default=True,
         is_flag=True, help='Use TLS or not (By default TLS is enabled)')
-@option('-sc', '--envoy-config-path', default='envoy_config.yaml',
+@option('-ec', '--envoy-config-path', default='envoy_config.yaml',
         help='The envoy config path', type=ClickPath(exists=True))
 @option('-rc', '--root-cert-path', 'root_certificate', default=None,
         help='Path to a root CA cert')
@@ -45,12 +45,12 @@ def envoy(context):
         help='Path to a private key')
 @option('-oc', '--public-cert-path', 'certificate', default=None,
         help='Path to a signed certificate')
-def start_(shard_name, director_host, director_port, tls, shard_config_path,
+def start_(shard_name, director_host, director_port, tls, envoy_config_path,
            root_certificate, private_key, certificate):
     """Start the Envoy."""
     logger.info('🧿 Starting the Envoy.')
     # Reed the Envoy config
-    with open(shard_config_path) as stream:
+    with open(envoy_config_path) as stream:
         envoy_config = safe_load(stream)
 
     envoy_params = envoy_config.get('params', {})
@@ -105,12 +105,13 @@ def create(envoy_path):
                     envoy_path / 'requirements.txt')
 
 
-def shard_descriptor_from_config(shard_config_path: str):
+def shard_descriptor_from_config(shard_config: dict):
     """Build a shard descriptor from config."""
+    print(shard_config)
     template = shard_config.get('template')
     if not template:
-        raise Exception(f'You should define a shard '
-                        f'descriptor template in {shard_config_path}')
+        raise Exception('You should define a shard '
+                        'descriptor template in the envoy config')
     class_name = template.split('.')[-1]
     module_path = '.'.join(template.split('.')[:-1])
     params = shard_config.get('params', {})
