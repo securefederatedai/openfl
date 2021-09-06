@@ -51,7 +51,7 @@ class ShardDirectorClient:
             channel = grpc.secure_channel(director_addr, credentials, options=options)
         self.stub = director_pb2_grpc.FederationDirectorStub(channel)
 
-    def report_shard_info(self, shard_descriptor) -> bool:
+    def report_shard_info(self, shard_descriptor, cuda_devices) -> bool:
         """Report shard info to the director."""
         logger.info('Send report AcknowledgeShard')
         # True considered as successful registration
@@ -62,7 +62,8 @@ class ShardDirectorClient:
             target_shape=shard_descriptor.target_shape
         )
 
-        shard_info.node_info.CopyFrom(self._get_node_info())
+        shard_info.node_info.name = self.shard_name
+        shard_info.node_info.cuda_devices = cuda_devices
 
         acknowledgement = self.stub.AcknowledgeShard(shard_info)
         return acknowledgement.accepted
@@ -93,10 +94,6 @@ class ShardDirectorClient:
     def _get_experiment_data(self):
         """Generate the experiment data request."""
         yield director_pb2.WaitExperimentRequest(collaborator_name=self.shard_name)
-
-    def _get_node_info(self):
-        """Generate a node info message."""
-        return director_pb2.NodeInfo(name=self.shard_name)
 
     def send_health_check(self, *, envoy_name: str, is_experiment_running: bool) -> int:
         """Send envoy health check."""
