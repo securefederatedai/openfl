@@ -54,10 +54,10 @@ class FederationDirectorStub(object):
                 request_serializer=director__pb2.RemoveExperimentRequest.SerializeToString,
                 response_deserializer=director__pb2.RemoveExperimentResponse.FromString,
                 )
-        self.CollaboratorHealthCheck = channel.unary_unary(
-                '/FederationDirector/CollaboratorHealthCheck',
-                request_serializer=director__pb2.CollaboratorStatus.SerializeToString,
-                response_deserializer=director__pb2.CollaboratorHealthCheckResponse.FromString,
+        self.EnvoyHealthCheck = channel.unary_unary(
+                '/FederationDirector/EnvoyHealthCheck',
+                request_serializer=director__pb2.EnvoyStatus.SerializeToString,
+                response_deserializer=director__pb2.EnvoyHealthCheckResponse.FromString,
                 )
         self.GetEnvoys = channel.unary_unary(
                 '/FederationDirector/GetEnvoys',
@@ -120,7 +120,7 @@ class FederationDirectorServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
-    def CollaboratorHealthCheck(self, request, context):
+    def EnvoyHealthCheck(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -175,10 +175,10 @@ def add_FederationDirectorServicer_to_server(servicer, server):
                     request_deserializer=director__pb2.RemoveExperimentRequest.FromString,
                     response_serializer=director__pb2.RemoveExperimentResponse.SerializeToString,
             ),
-            'CollaboratorHealthCheck': grpc.unary_unary_rpc_method_handler(
-                    servicer.CollaboratorHealthCheck,
-                    request_deserializer=director__pb2.CollaboratorStatus.FromString,
-                    response_serializer=director__pb2.CollaboratorHealthCheckResponse.SerializeToString,
+            'EnvoyHealthCheck': grpc.unary_unary_rpc_method_handler(
+                    servicer.EnvoyHealthCheck,
+                    request_deserializer=director__pb2.EnvoyStatus.FromString,
+                    response_serializer=director__pb2.EnvoyHealthCheckResponse.SerializeToString,
             ),
             'GetEnvoys': grpc.unary_unary_rpc_method_handler(
                     servicer.GetEnvoys,
@@ -332,7 +332,7 @@ class FederationDirector(object):
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
     @staticmethod
-    def CollaboratorHealthCheck(request,
+    def EnvoyHealthCheck(request,
             target,
             options=(),
             channel_credentials=None,
@@ -342,9 +342,9 @@ class FederationDirector(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/FederationDirector/CollaboratorHealthCheck',
-            director__pb2.CollaboratorStatus.SerializeToString,
-            director__pb2.CollaboratorHealthCheckResponse.FromString,
+        return grpc.experimental.unary_unary(request, target, '/FederationDirector/EnvoyHealthCheck',
+            director__pb2.EnvoyStatus.SerializeToString,
+            director__pb2.EnvoyHealthCheckResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 

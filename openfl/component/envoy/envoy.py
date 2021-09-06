@@ -74,7 +74,6 @@ class Envoy:
             except Exception as exc:
                 logger.exception(f'Collaborator failed with error: {exc}:')
             finally:
-                # Workspace cleaning should not be done by gRPC client!
                 self.is_experiment_running = False
 
     @staticmethod
@@ -113,7 +112,9 @@ class Envoy:
     def start(self):
         """Start the envoy."""
         try:
-            is_accepted = self.director_client.report_shard_info(self.shard_descriptor)
+            is_accepted = self.director_client.report_shard_info(
+                shard_descriptor=self.shard_descriptor,
+                cuda_devices=self.cuda_devices)
         except Exception as exc:
             logger.exception(f'Failed to report shard info: {exc}')
         else:
