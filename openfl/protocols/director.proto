@@ -17,9 +17,7 @@ message CudaDeviceInfo {
 
 message NodeInfo {
     string name = 1;
-    string adress = 2;
-    repeated CudaDeviceInfo cuda_devices = 3;
-    string cuda_version = 4;
+    repeated uint64 cuda_devices = 2;
 }
 
 message ShardInfo {
@@ -73,7 +71,6 @@ message ExperimentInfo {
 
 message SetNewExperimentResponse{
     bool accepted = 1;
-    string tensorboard_address = 2;
 }
 
 message GetTrainedModelRequest {
