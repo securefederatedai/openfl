@@ -7,13 +7,13 @@
 Install the |productName| Package
 #################################
 
-On every node in the federation you will need to install the |productName| package.
+Perform this procedure on every node in the federation.
 
 1. Install a Python 3.6 (or higher) virtual environment. Conda (version 4.9 or above) is preferred, but other virtual environments should work as well.
    Conda can either be installed via the `Anaconda <https://www.anaconda.com/products/individual>`_
    or `Miniconda <https://docs.conda.io/en/latest/miniconda.html>`_ distributions.
 
-   Once :code:`conda` is installed you may need to logout and back in for the changes to take effect.
+   Once conda is installed, you may need to log out and log in again for the changes to take effect.
 
 2. Create a new conda environment for the project.
 
@@ -27,25 +27,23 @@ On every node in the federation you will need to install the |productName| packa
 
       $ conda activate env_name
 
-4. Install |productName| package:
+4. Install the |productName| package.
 
-   **Please Note:** PyPI (pip) package is currently (May 2021) provided ONLY for Linux OS. **For installation on Windows and MacOS, please follow the manual installation from source.** 
+	**Linux** installation: 
 
-   A. **Linux** installation: 
-
-      .. parsed-literal::
+      .. code-block:: console
 
          $ pip install \ |productWheel|\
    
-   B. **Windows** (and probably **MacOS**) installation:
+	**Windows** (and probably **macOS**) installation:
 
-      i) Clone |productName| repository:
+      1. Clone the |productName| repository:
 
          .. code-block:: console
 
            $ git clone https://github.com/intel/openfl.git 
 
-      ii) Inside your python environment, call `pip install`: 
+      2. From inside the Python environment, call `pip install`: 
 
          .. code-block:: console
 
@@ -54,9 +52,9 @@ On every node in the federation you will need to install the |productName| packa
 
 
 
-5. At this point |productName| should be available within the virtual environment. To test, run the :code:`fx` command. This command is only available within this virtual environment.
+5. Run the :code:`fx` command in the virtual environment to confirm |productName| is available.
 
    .. figure:: images/fx_help.png
       :scale: 70 %
 
-.. centered:: fx command
+.. centered:: Output of the fx Command
