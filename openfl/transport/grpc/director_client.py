@@ -63,7 +63,7 @@ class ShardDirectorClient:
         )
 
         shard_info.node_info.name = self.shard_name
-        shard_info.node_info.cuda_devices = cuda_devices
+        shard_info.node_info.cuda_devices[:] = cuda_devices
 
         acknowledgement = self.stub.AcknowledgeShard(shard_info)
         return acknowledgement.accepted
