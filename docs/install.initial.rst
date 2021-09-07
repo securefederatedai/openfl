@@ -31,9 +31,9 @@ Perform this procedure on every node in the federation.
 
 	- **Linux** installation: 
 
-      .. code-block:: console
+		.. code-block:: console
 
-         $ pip install \ |productWheel|\
+         $ pip install |productWheel|
    
 	- **Windows** (and probably **macOS**) installation:
 
