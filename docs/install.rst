@@ -14,7 +14,6 @@ Installing the Software
 .. toctree::
    :maxdepth: 4
 
-.. install.design
-
+   install.design
    install.installing
    
