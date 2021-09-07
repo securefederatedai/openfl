@@ -23,7 +23,7 @@ Establishing a long-living Federation with Director
 ==================
 
 Make sure that you installed |productName| in your virtual Python environment.
-If not, use the instruction :ref:`install_initial_steps`.
+If not, use the instruction :ref:`install_package`.
 
 2. Implement Shard Descriptors
 ==================

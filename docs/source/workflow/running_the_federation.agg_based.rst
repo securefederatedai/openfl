@@ -7,7 +7,7 @@
 Aggregator-based workflow.
 **********************
 
-First make sure you've installed the software :ref:`using these instructions <install_initial_steps>`
+First make sure you've installed the software :ref:`using these instructions <install_package>`
 
 .. figure:: images/openfl_flow.png
 

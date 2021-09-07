@@ -20,7 +20,7 @@ Hello Federation - Your First Federated Learning Training
 
 We will show you how to set up |productName|. 
 Before you run the federation make sure you have installed |productName| 
-:ref:`using these instructions <install_initial_steps>` on every node (*i.e.* aggregator and collaborators).
+:ref:`using these instructions <install_package>` on every node (*i.e.* aggregator and collaborators).
 
 .. _creating_workspaces:
 

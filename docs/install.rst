@@ -9,11 +9,11 @@ Installing the Software
 
 .. note::
 
-   This project is expected to be continually developed and improved. Changes to this manual, the project code, and the project design should be expected.
+   This project is continually being developed and improved. Expect changes to this manual, the project code, and the project design.
 
 .. toctree::
    :maxdepth: 4
 
-   install.design
+.. install.design
    install.installing
    

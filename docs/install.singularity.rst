@@ -8,7 +8,7 @@ Singularity Installation
 
 .. note::
 
-   Make sure you've run the :ref:`the initial steps <install_initial_steps>` section first.
+   Make sure you've run the :ref:`the initial steps <install_package>` section first.
 
 .. note::
     You'll need Docker installed on the node where you'll 

@@ -39,7 +39,7 @@ On the Aggregator Node
 ######################
 
 Before you run the federation make sure you have activated a Python virtual environment (e.g. :code:`conda activate`), installed the |productName| package
-:ref:`using these instructions <install_initial_steps>`, and are in the correct directory for the :ref:`project workspace <creating_workspaces>`.
+:ref:`using these instructions <install_package>`, and are in the correct directory for the :ref:`project workspace <creating_workspaces>`.
 
 1. Change directory to the path for your project's workspace:
 
@@ -113,7 +113,7 @@ Exporting the Workspace
 On the Collaborator Nodes
 #########################
 
-Before you run the federation make sure you have activated a Python virtual environment (e.g. :code:`conda activate`) and installed the |productName| package :ref:`using these instructions <install_initial_steps>`.
+Before you run the federation make sure you have activated a Python virtual environment (e.g. :code:`conda activate`) and installed the |productName| package :ref:`using these instructions <install_package>`.
 
 1. Make sure you have copied the :ref:`workspace archive <workspace_export>` (:code:`.zip`) from the aggregator node to the collaborator node.
 
