@@ -15,5 +15,6 @@ Installing the Software
    :maxdepth: 4
 
 .. install.design
+
    install.installing
    
