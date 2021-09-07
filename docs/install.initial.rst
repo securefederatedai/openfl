@@ -29,13 +29,13 @@ Perform this procedure on every node in the federation.
 
 4. Install the |productName| package.
 
-	#. **Linux** installation: 
+	A. **Linux** installation: 
 
-		.. code-block:: console
+		.. parsed-literal::
 
-			$ pip install \|productWheel|
+			$ pip install \ |productWheel|\
    
-	#. **Windows** (and probably **macOS**) installation:
+	B. **Windows** (and probably **macOS**) installation:
 
 		  #. Clone the |productName| repository:
 
