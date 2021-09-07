@@ -29,21 +29,21 @@ Perform this procedure on every node in the federation.
 
 4. Install the |productName| package.
 
-	- **Linux** installation: 
+	#. **Linux** installation: 
 
 		.. code-block:: console
 
-			$ pip install |productWheel|
+			$ pip install \|productWheel|
    
-	- **Windows** (and probably **macOS**) installation:
+	#. **Windows** (and probably **macOS**) installation:
 
-		  1. Clone the |productName| repository:
+		  #. Clone the |productName| repository:
 
 			 .. code-block:: console
 
 			   $ git clone https://github.com/intel/openfl.git 
 
-		  2. From inside the Python environment, call :code:`pip install`: 
+		  #. From inside the Python environment, call :code:`pip install`: 
 
 			 .. code-block:: console
 
