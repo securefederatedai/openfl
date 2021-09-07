@@ -8,6 +8,7 @@ import logging
 import typing
 from collections import defaultdict
 from pathlib import Path
+from typing import List
 
 import time
 
@@ -206,12 +207,15 @@ class Director:
         return envoy_infos
 
     def get_experiments(self, caller: str) -> list:
-        experiments = self.experiment_stash[caller]
+        experiments = self.experiment_stash.get(caller, {})
         result = []
-        for name, val in experiments.items():
-            collaborators_amount = len(val.aggregator.authorized_cols)
-            tasks_amount = len({task['function'] for task in val.aggregator.assigner.tasks})
-            progress = val.aggregator.round_number / val.aggregator.rounds_to_train
+        for name, exp in experiments.items():
+            collaborators_amount = len(exp.aggregator.authorized_cols)
+            tasks_amount = len({
+                task['function']
+                for task in exp.aggregator.assigner.tasks.values()
+            })
+            progress = _get_experiment_progress(exp)
             result.append({
                 'name': name,
                 'status': 'pending',
@@ -221,6 +225,28 @@ class Director:
             })
 
         return result
+
+    def get_experiment(self, caller: str, name: str) -> dict:
+        exp = self.experiment_stash.get(caller, {}).get(name, {})
+        progress = _get_experiment_progress(exp)
+        model_statuses = _get_model_download_statuses(exp)
+        tasks = _get_experiment_tasks(exp)
+        collaborators = _get_experiment_collaborators(exp)
+        return {
+            'name': name,
+            'status': 'pending',
+            'progress': progress,
+            'downloadStatuses': {
+                'models': model_statuses,
+                'logs': [{
+                    'name': 'aggregator',
+                    'status': 'ready'
+                }],
+            },
+            'collaborators': collaborators,
+            'tasks': tasks
+
+        }
 
     async def _run_aggregator_in_workspace(
             self,
@@ -270,3 +296,41 @@ class Director:
             grpc_server.stop(0)
             # Temporary solution to free RAM used by TensorDB
             aggregator_server.aggregator.tensor_db.clean_up(0)
+
+
+def _get_model_download_statuses(experiment) -> List[dict]:
+    best_model_status = 'ready' if experiment.aggregator.best_tensor_dict else 'pending'
+    last_model_status = 'ready' if experiment.aggregator.last_tensor_dict else 'pending'
+    model_statuses = [{
+        'name': 'best',
+        'status': best_model_status,
+    }, {
+        'name': 'last',
+        'status': last_model_status,
+    }, {
+        'name': 'init',
+        'status': 'ready'
+    }]
+    return model_statuses
+
+
+def _get_experiment_progress(experiment) -> float:
+    return experiment.aggregator.round_number / experiment.aggregator.rounds_to_train
+
+
+def _get_experiment_tasks(experiment) -> List[dict]:
+    return [{
+        'name': task['function'],
+        'description': task['description'],
+    } for task in experiment.aggregator.assigner.tasks.values()]
+
+
+def _get_experiment_collaborators(experiment) -> List[dict]:
+    return [{
+        'name': name,
+        'status': '',
+        'progress': 0.0,
+        'round': 0,
+        'currentTask': '',
+        'nextTask': ''
+    } for name, col in experiment.aggregator.authorized_cols.items()]

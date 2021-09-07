@@ -70,12 +70,6 @@ class DirectorGRPCServer(director_pb2_grpc.FederationDirectorServicer):
         client_id = headers.get('client_id', CLIENT_ID_DEFAULT)
         return client_id
 
-    def get_caller_name(self, context):
-        caller_name = 'frontend'
-        if self.tls:
-            caller_name = context.auth_context()['x509_common_name'][0].decode('utf-8')
-        return caller_name
-
     def start(self):
         """Launch the director GRPC server."""
         asyncio.run(self._run())
@@ -248,7 +242,7 @@ class DirectorGRPCServer(director_pb2_grpc.FederationDirectorServicer):
         return director_pb2.GetEnvoysResponse(envoy_infos=envoy_infos)
 
     async def GetExperimentDescriptions(self, request, context):  # NOQA:N802
-        caller = self.get_caller_name(context)
+        caller = self.get_caller(context)
         experiments = self.director.get_experiments(caller)
         experiment_descriptions_list = [
             director_pb2.ExperimentDescription(
@@ -256,9 +250,14 @@ class DirectorGRPCServer(director_pb2_grpc.FederationDirectorServicer):
                 status=exp['status'],
                 collaborators_amount=exp['collaborators_amount'],
                 tasks_amount=exp['tasks_amount'],
-                progress=exp['tasks_amount'],
+                progress=exp['progress'],
             ) for exp in experiments
         ]
         return director_pb2.GetExperimentDescriptionsResponse(
             experiments=experiment_descriptions_list
         )
+
+    async def GetExperimentDescription(self, request, context):  # NOQA:N802
+        caller = self.get_caller(context)
+        experiment = self.director.get_experiment(caller, request.name)
+        return experiment
