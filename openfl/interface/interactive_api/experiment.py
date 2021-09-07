@@ -183,7 +183,10 @@ class FLExperiment:
         requirements_generator = freeze.freeze()
 
         def is_package_has_version(package: str) -> bool:
-            return '==' in package and package != 'pkg-resources==0.0.0'
+            return ('==' in package
+                    and package not in ['pkg-resources==0.0.0', 'pkg_resources==0.0.0']
+                    and '-e ' not in package
+                    )
 
         with open('./requirements.txt', 'w') as f:
             for pack in requirements_generator:
