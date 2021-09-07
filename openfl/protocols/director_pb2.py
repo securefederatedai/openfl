@@ -21,7 +21,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
     syntax='proto3',
     serialized_options=None,
     create_key=_descriptor._internal_create_key,
-    serialized_pb=b'\n\x0e\x64irector.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x1egoogle/protobuf/duration.proto\x1a\x10\x66\x65\x64\x65ration.proto\"\x1f\n\rRequestHeader\x12\x0e\n\x06sender\x18\x01 \x01(\t\"U\n\x08NodeInfo\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0e\n\x06\x61\x64ress\x18\x02 \x01(\t\x12\x16\n\x0e\x63uda_available\x18\x03 \x01(\x08\x12\x13\n\x0bmemory_size\x18\x04 \x01(\r\"\x83\x01\n\tShardInfo\x12\x1c\n\tnode_info\x18\x01 \x01(\x0b\x32\t.NodeInfo\x12\x19\n\x11shard_description\x18\x02 \x01(\t\x12\x11\n\tn_samples\x18\x03 \x01(\x04\x12\x14\n\x0csample_shape\x18\x04 \x03(\t\x12\x14\n\x0ctarget_shape\x18\x05 \x03(\t\"(\n\x14ShardAcknowledgement\x12\x10\n\x08\x61\x63\x63\x65pted\x18\x01 \x01(\x08\"2\n\x15WaitExperimentRequest\x12\x19\n\x11\x63ollaborator_name\x18\x01 \x01(\t\"1\n\x16WaitExperimentResponse\x12\x17\n\x0f\x65xperiment_name\x18\x01 \x01(\t\"N\n\x18GetExperimentDataRequest\x12\x17\n\x0f\x65xperiment_name\x18\x01 \x01(\t\x12\x19\n\x11\x63ollaborator_name\x18\x02 \x01(\t\"/\n\x0e\x45xperimentData\x12\x0c\n\x04size\x18\x01 \x01(\r\x12\x0f\n\x07npbytes\x18\x02 \x01(\x0c\"\xa6\x01\n\x0e\x45xperimentInfo\x12\x1e\n\x06header\x18\x01 \x01(\x0b\x32\x0e.RequestHeader\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\x1a\n\x12\x63ollaborator_names\x18\x03 \x03(\t\x12(\n\x0f\x65xperiment_data\x18\x04 \x01(\x0b\x32\x0f.ExperimentData\x12 \n\x0bmodel_proto\x18\x05 \x01(\x0b\x32\x0b.ModelProto\"\"\n GetExperimentDescriptionsRequest\"{\n\x15\x45xperimentDescription\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0e\n\x06status\x18\x02 \x01(\t\x12\x1c\n\x14\x63ollaborators_amount\x18\x03 \x01(\r\x12\x14\n\x0ctasks_amount\x18\x04 \x01(\r\x12\x10\n\x08progress\x18\x05 \x01(\x02\"P\n!GetExperimentDescriptionsResponse\x12+\n\x0b\x65xperiments\x18\x01 \x03(\x0b\x32\x16.ExperimentDescription\"I\n\x18SetNewExperimentResponse\x12\x10\n\x08\x61\x63\x63\x65pted\x18\x01 \x01(\x08\x12\x1b\n\x13tensorboard_address\x18\x02 \x01(\t\"\xb5\x01\n\x16GetTrainedModelRequest\x12\x1e\n\x06header\x18\x01 \x01(\x0b\x32\x0e.RequestHeader\x12\x17\n\x0f\x65xperiment_name\x18\x02 \x01(\t\x12\x35\n\nmodel_type\x18\x03 \x01(\x0e\x32!.GetTrainedModelRequest.ModelType\"+\n\tModelType\x12\x0e\n\nBEST_MODEL\x10\x00\x12\x0e\n\nLAST_MODEL\x10\x01\"8\n\x14TrainedModelResponse\x12 \n\x0bmodel_proto\x18\x01 \x01(\x0b\x32\x0b.ModelProto\"7\n\x15GetDatasetInfoRequest\x12\x1e\n\x06header\x18\x01 \x01(\x0b\x32\x0e.RequestHeader\"O\n\x14StreamMetricsRequest\x12\x1e\n\x06header\x18\x01 \x01(\x0b\x32\x0e.RequestHeader\x12\x17\n\x0f\x65xperiment_name\x18\x02 \x01(\t\"{\n\x15StreamMetricsResponse\x12\x15\n\rmetric_origin\x18\x01 \x01(\t\x12\x11\n\ttask_name\x18\x02 \x01(\t\x12\x13\n\x0bmetric_name\x18\x03 \x01(\t\x12\x14\n\x0cmetric_value\x18\x04 \x01(\x02\x12\r\n\x05round\x18\x05 \x01(\r\"R\n\x17RemoveExperimentRequest\x12\x1e\n\x06header\x18\x01 \x01(\x0b\x32\x0e.RequestHeader\x12\x17\n\x0f\x65xperiment_name\x18\x02 \x01(\t\"3\n\x18RemoveExperimentResponse\x12\x17\n\x0f\x61\x63knowledgement\x18\x01 \x01(\x08\"A\n\x12\x43ollaboratorStatus\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x1d\n\x15is_experiment_running\x18\x02 \x01(\x08\"Y\n\x1f\x43ollaboratorHealthCheckResponse\x12\x36\n\x13health_check_period\x18\x01 \x01(\x0b\x32\x19.google.protobuf.Duration\"\xc2\x01\n\tEnvoyInfo\x12\x1e\n\nshard_info\x18\x01 \x01(\x0b\x32\n.ShardInfo\x12\x11\n\tis_online\x18\x02 \x01(\x08\x12\x1d\n\x15is_experiment_running\x18\x03 \x01(\x08\x12\x30\n\x0clast_updated\x18\x04 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\x31\n\x0evalid_duration\x18\x05 \x01(\x0b\x32\x19.google.protobuf.Duration\"\x12\n\x10GetEnvoysRequest\"4\n\x11GetEnvoysResponse\x12\x1f\n\x0b\x65nvoy_infos\x18\x01 \x03(\x0b\x32\n.EnvoyInfo2\x9f\x06\n\x12\x46\x65\x64\x65rationDirector\x12\x37\n\x10\x41\x63knowledgeShard\x12\n.ShardInfo\x1a\x15.ShardAcknowledgement\"\x00\x12G\n\x0eWaitExperiment\x12\x16.WaitExperimentRequest\x1a\x17.WaitExperimentResponse\"\x00(\x01\x30\x01\x12\x43\n\x11GetExperimentData\x12\x19.GetExperimentDataRequest\x1a\x0f.ExperimentData\"\x00\x30\x01\x12\x64\n\x19GetExperimentDescriptions\x12!.GetExperimentDescriptionsRequest\x1a\".GetExperimentDescriptionsResponse\"\x00\x12\x42\n\x10SetNewExperiment\x12\x0f.ExperimentInfo\x1a\x19.SetNewExperimentResponse\"\x00(\x01\x12\x36\n\x0eGetDatasetInfo\x12\x16.GetDatasetInfoRequest\x1a\n.ShardInfo\"\x00\x12\x43\n\x0fGetTrainedModel\x12\x17.GetTrainedModelRequest\x1a\x15.TrainedModelResponse\"\x00\x12\x42\n\rStreamMetrics\x12\x15.StreamMetricsRequest\x1a\x16.StreamMetricsResponse\"\x00\x30\x01\x12M\n\x14RemoveExperimentData\x12\x18.RemoveExperimentRequest\x1a\x19.RemoveExperimentResponse\"\x00\x12R\n\x17\x43ollaboratorHealthCheck\x12\x13.CollaboratorStatus\x1a .CollaboratorHealthCheckResponse\"\x00\x12\x34\n\tGetEnvoys\x12\x11.GetEnvoysRequest\x1a\x12.GetEnvoysResponse\"\x00\x62\x06proto3'
+    serialized_pb=b'\n\x0e\x64irector.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x1egoogle/protobuf/duration.proto\x1a\x10\x66\x65\x64\x65ration.proto\"U\n\x08NodeInfo\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0e\n\x06\x61\x64ress\x18\x02 \x01(\t\x12\x16\n\x0e\x63uda_available\x18\x03 \x01(\x08\x12\x13\n\x0bmemory_size\x18\x04 \x01(\r\"\x83\x01\n\tShardInfo\x12\x1c\n\tnode_info\x18\x01 \x01(\x0b\x32\t.NodeInfo\x12\x19\n\x11shard_description\x18\x02 \x01(\t\x12\x11\n\tn_samples\x18\x03 \x01(\x04\x12\x14\n\x0csample_shape\x18\x04 \x03(\t\x12\x14\n\x0ctarget_shape\x18\x05 \x03(\t\"(\n\x14ShardAcknowledgement\x12\x10\n\x08\x61\x63\x63\x65pted\x18\x01 \x01(\x08\"2\n\x15WaitExperimentRequest\x12\x19\n\x11\x63ollaborator_name\x18\x01 \x01(\t\"1\n\x16WaitExperimentResponse\x12\x17\n\x0f\x65xperiment_name\x18\x01 \x01(\t\"N\n\x18GetExperimentDataRequest\x12\x17\n\x0f\x65xperiment_name\x18\x01 \x01(\t\x12\x19\n\x11\x63ollaborator_name\x18\x02 \x01(\t\"/\n\x0e\x45xperimentData\x12\x0c\n\x04size\x18\x01 \x01(\r\x12\x0f\n\x07npbytes\x18\x02 \x01(\x0c\"\x86\x01\n\x0e\x45xperimentInfo\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\x1a\n\x12\x63ollaborator_names\x18\x03 \x03(\t\x12(\n\x0f\x65xperiment_data\x18\x04 \x01(\x0b\x32\x0f.ExperimentData\x12 \n\x0bmodel_proto\x18\x05 \x01(\x0b\x32\x0b.ModelProto\"I\n\x18SetNewExperimentResponse\x12\x10\n\x08\x61\x63\x63\x65pted\x18\x01 \x01(\x08\x12\x1b\n\x13tensorboard_address\x18\x02 \x01(\t\"\x95\x01\n\x16GetTrainedModelRequest\x12\x17\n\x0f\x65xperiment_name\x18\x02 \x01(\t\x12\x35\n\nmodel_type\x18\x03 \x01(\x0e\x32!.GetTrainedModelRequest.ModelType\"+\n\tModelType\x12\x0e\n\nBEST_MODEL\x10\x00\x12\x0e\n\nLAST_MODEL\x10\x01\"8\n\x14TrainedModelResponse\x12 \n\x0bmodel_proto\x18\x01 \x01(\x0b\x32\x0b.ModelProto\"\x17\n\x15GetDatasetInfoRequest\"/\n\x14StreamMetricsRequest\x12\x17\n\x0f\x65xperiment_name\x18\x02 \x01(\t\"{\n\x15StreamMetricsResponse\x12\x15\n\rmetric_origin\x18\x01 \x01(\t\x12\x11\n\ttask_name\x18\x02 \x01(\t\x12\x13\n\x0bmetric_name\x18\x03 \x01(\t\x12\x14\n\x0cmetric_value\x18\x04 \x01(\x02\x12\r\n\x05round\x18\x05 \x01(\r\"2\n\x17RemoveExperimentRequest\x12\x17\n\x0f\x65xperiment_name\x18\x02 \x01(\t\"3\n\x18RemoveExperimentResponse\x12\x17\n\x0f\x61\x63knowledgement\x18\x01 \x01(\x08\"A\n\x12\x43ollaboratorStatus\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x1d\n\x15is_experiment_running\x18\x02 \x01(\x08\"Y\n\x1f\x43ollaboratorHealthCheckResponse\x12\x36\n\x13health_check_period\x18\x01 \x01(\x0b\x32\x19.google.protobuf.Duration\"\xc2\x01\n\tEnvoyInfo\x12\x1e\n\nshard_info\x18\x01 \x01(\x0b\x32\n.ShardInfo\x12\x11\n\tis_online\x18\x02 \x01(\x08\x12\x1d\n\x15is_experiment_running\x18\x03 \x01(\x08\x12\x30\n\x0clast_updated\x18\x04 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\x31\n\x0evalid_duration\x18\x05 \x01(\x0b\x32\x19.google.protobuf.Duration\"\x12\n\x10GetEnvoysRequest\"4\n\x11GetEnvoysResponse\x12\x1f\n\x0b\x65nvoy_infos\x18\x01 \x03(\x0b\x32\n.EnvoyInfo2\xb9\x05\n\x12\x46\x65\x64\x65rationDirector\x12\x37\n\x10\x41\x63knowledgeShard\x12\n.ShardInfo\x1a\x15.ShardAcknowledgement\"\x00\x12G\n\x0eWaitExperiment\x12\x16.WaitExperimentRequest\x1a\x17.WaitExperimentResponse\"\x00(\x01\x30\x01\x12\x43\n\x11GetExperimentData\x12\x19.GetExperimentDataRequest\x1a\x0f.ExperimentData\"\x00\x30\x01\x12\x42\n\x10SetNewExperiment\x12\x0f.ExperimentInfo\x1a\x19.SetNewExperimentResponse\"\x00(\x01\x12\x36\n\x0eGetDatasetInfo\x12\x16.GetDatasetInfoRequest\x1a\n.ShardInfo\"\x00\x12\x43\n\x0fGetTrainedModel\x12\x17.GetTrainedModelRequest\x1a\x15.TrainedModelResponse\"\x00\x12\x42\n\rStreamMetrics\x12\x15.StreamMetricsRequest\x1a\x16.StreamMetricsResponse\"\x00\x30\x01\x12M\n\x14RemoveExperimentData\x12\x18.RemoveExperimentRequest\x1a\x19.RemoveExperimentResponse\"\x00\x12R\n\x17\x43ollaboratorHealthCheck\x12\x13.CollaboratorStatus\x1a .CollaboratorHealthCheckResponse\"\x00\x12\x34\n\tGetEnvoys\x12\x11.GetEnvoysRequest\x1a\x12.GetEnvoysResponse\"\x00\x62\x06proto3'
     ,
     dependencies=[google_dot_protobuf_dot_timestamp__pb2.DESCRIPTOR,
                   google_dot_protobuf_dot_duration__pb2.DESCRIPTOR, federation__pb2.DESCRIPTOR, ])
@@ -46,41 +46,10 @@ _GETTRAINEDMODELREQUEST_MODELTYPE = _descriptor.EnumDescriptor(
     ],
     containing_type=None,
     serialized_options=None,
-    serialized_start=1255,
-    serialized_end=1298,
+    serialized_start=915,
+    serialized_end=958,
 )
 _sym_db.RegisterEnumDescriptor(_GETTRAINEDMODELREQUEST_MODELTYPE)
-
-_REQUESTHEADER = _descriptor.Descriptor(
-    name='RequestHeader',
-    full_name='RequestHeader',
-    filename=None,
-    file=DESCRIPTOR,
-    containing_type=None,
-    create_key=_descriptor._internal_create_key,
-    fields=[
-        _descriptor.FieldDescriptor(
-            name='sender', full_name='RequestHeader.sender', index=0,
-            number=1, type=9, cpp_type=9, label=1,
-            has_default_value=False, default_value=b"".decode('utf-8'),
-            message_type=None, enum_type=None, containing_type=None,
-            is_extension=False, extension_scope=None,
-            serialized_options=None, file=DESCRIPTOR, create_key=_descriptor._internal_create_key),
-    ],
-    extensions=[
-    ],
-    nested_types=[],
-    enum_types=[
-    ],
-    serialized_options=None,
-    is_extendable=False,
-    syntax='proto3',
-    extension_ranges=[],
-    oneofs=[
-    ],
-    serialized_start=101,
-    serialized_end=132,
-)
 
 _NODEINFO = _descriptor.Descriptor(
     name='NodeInfo',
@@ -130,8 +99,8 @@ _NODEINFO = _descriptor.Descriptor(
     extension_ranges=[],
     oneofs=[
     ],
-    serialized_start=134,
-    serialized_end=219,
+    serialized_start=101,
+    serialized_end=186,
 )
 
 _SHARDINFO = _descriptor.Descriptor(
@@ -189,8 +158,8 @@ _SHARDINFO = _descriptor.Descriptor(
     extension_ranges=[],
     oneofs=[
     ],
-    serialized_start=222,
-    serialized_end=353,
+    serialized_start=189,
+    serialized_end=320,
 )
 
 _SHARDACKNOWLEDGEMENT = _descriptor.Descriptor(
@@ -220,8 +189,8 @@ _SHARDACKNOWLEDGEMENT = _descriptor.Descriptor(
     extension_ranges=[],
     oneofs=[
     ],
-    serialized_start=355,
-    serialized_end=395,
+    serialized_start=322,
+    serialized_end=362,
 )
 
 _WAITEXPERIMENTREQUEST = _descriptor.Descriptor(
@@ -251,8 +220,8 @@ _WAITEXPERIMENTREQUEST = _descriptor.Descriptor(
     extension_ranges=[],
     oneofs=[
     ],
-    serialized_start=397,
-    serialized_end=447,
+    serialized_start=364,
+    serialized_end=414,
 )
 
 _WAITEXPERIMENTRESPONSE = _descriptor.Descriptor(
@@ -282,8 +251,8 @@ _WAITEXPERIMENTRESPONSE = _descriptor.Descriptor(
     extension_ranges=[],
     oneofs=[
     ],
-    serialized_start=449,
-    serialized_end=498,
+    serialized_start=416,
+    serialized_end=465,
 )
 
 _GETEXPERIMENTDATAREQUEST = _descriptor.Descriptor(
@@ -321,8 +290,8 @@ _GETEXPERIMENTDATAREQUEST = _descriptor.Descriptor(
     extension_ranges=[],
     oneofs=[
     ],
-    serialized_start=500,
-    serialized_end=578,
+    serialized_start=467,
+    serialized_end=545,
 )
 
 _EXPERIMENTDATA = _descriptor.Descriptor(
@@ -359,8 +328,8 @@ _EXPERIMENTDATA = _descriptor.Descriptor(
     extension_ranges=[],
     oneofs=[
     ],
-    serialized_start=580,
-    serialized_end=627,
+    serialized_start=547,
+    serialized_end=594,
 )
 
 _EXPERIMENTINFO = _descriptor.Descriptor(
@@ -372,35 +341,28 @@ _EXPERIMENTINFO = _descriptor.Descriptor(
     create_key=_descriptor._internal_create_key,
     fields=[
         _descriptor.FieldDescriptor(
-            name='header', full_name='ExperimentInfo.header', index=0,
-            number=1, type=11, cpp_type=10, label=1,
-            has_default_value=False, default_value=None,
-            message_type=None, enum_type=None, containing_type=None,
-            is_extension=False, extension_scope=None,
-            serialized_options=None, file=DESCRIPTOR, create_key=_descriptor._internal_create_key),
-        _descriptor.FieldDescriptor(
-            name='name', full_name='ExperimentInfo.name', index=1,
+            name='name', full_name='ExperimentInfo.name', index=0,
             number=2, type=9, cpp_type=9, label=1,
             has_default_value=False, default_value=b"".decode('utf-8'),
             message_type=None, enum_type=None, containing_type=None,
             is_extension=False, extension_scope=None,
             serialized_options=None, file=DESCRIPTOR, create_key=_descriptor._internal_create_key),
         _descriptor.FieldDescriptor(
-            name='collaborator_names', full_name='ExperimentInfo.collaborator_names', index=2,
+            name='collaborator_names', full_name='ExperimentInfo.collaborator_names', index=1,
             number=3, type=9, cpp_type=9, label=3,
             has_default_value=False, default_value=[],
             message_type=None, enum_type=None, containing_type=None,
             is_extension=False, extension_scope=None,
             serialized_options=None, file=DESCRIPTOR, create_key=_descriptor._internal_create_key),
         _descriptor.FieldDescriptor(
-            name='experiment_data', full_name='ExperimentInfo.experiment_data', index=3,
+            name='experiment_data', full_name='ExperimentInfo.experiment_data', index=2,
             number=4, type=11, cpp_type=10, label=1,
             has_default_value=False, default_value=None,
             message_type=None, enum_type=None, containing_type=None,
             is_extension=False, extension_scope=None,
             serialized_options=None, file=DESCRIPTOR, create_key=_descriptor._internal_create_key),
         _descriptor.FieldDescriptor(
-            name='model_proto', full_name='ExperimentInfo.model_proto', index=4,
+            name='model_proto', full_name='ExperimentInfo.model_proto', index=3,
             number=5, type=11, cpp_type=10, label=1,
             has_default_value=False, default_value=None,
             message_type=None, enum_type=None, containing_type=None,
@@ -418,123 +380,8 @@ _EXPERIMENTINFO = _descriptor.Descriptor(
     extension_ranges=[],
     oneofs=[
     ],
-    serialized_start=630,
-    serialized_end=796,
-)
-
-_GETEXPERIMENTDESCRIPTIONSREQUEST = _descriptor.Descriptor(
-    name='GetExperimentDescriptionsRequest',
-    full_name='GetExperimentDescriptionsRequest',
-    filename=None,
-    file=DESCRIPTOR,
-    containing_type=None,
-    create_key=_descriptor._internal_create_key,
-    fields=[
-    ],
-    extensions=[
-    ],
-    nested_types=[],
-    enum_types=[
-    ],
-    serialized_options=None,
-    is_extendable=False,
-    syntax='proto3',
-    extension_ranges=[],
-    oneofs=[
-    ],
-    serialized_start=798,
-    serialized_end=832,
-)
-
-_EXPERIMENTDESCRIPTION = _descriptor.Descriptor(
-    name='ExperimentDescription',
-    full_name='ExperimentDescription',
-    filename=None,
-    file=DESCRIPTOR,
-    containing_type=None,
-    create_key=_descriptor._internal_create_key,
-    fields=[
-        _descriptor.FieldDescriptor(
-            name='name', full_name='ExperimentDescription.name', index=0,
-            number=1, type=9, cpp_type=9, label=1,
-            has_default_value=False, default_value=b"".decode('utf-8'),
-            message_type=None, enum_type=None, containing_type=None,
-            is_extension=False, extension_scope=None,
-            serialized_options=None, file=DESCRIPTOR, create_key=_descriptor._internal_create_key),
-        _descriptor.FieldDescriptor(
-            name='status', full_name='ExperimentDescription.status', index=1,
-            number=2, type=9, cpp_type=9, label=1,
-            has_default_value=False, default_value=b"".decode('utf-8'),
-            message_type=None, enum_type=None, containing_type=None,
-            is_extension=False, extension_scope=None,
-            serialized_options=None, file=DESCRIPTOR, create_key=_descriptor._internal_create_key),
-        _descriptor.FieldDescriptor(
-            name='collaborators_amount', full_name='ExperimentDescription.collaborators_amount',
-            index=2,
-            number=3, type=13, cpp_type=3, label=1,
-            has_default_value=False, default_value=0,
-            message_type=None, enum_type=None, containing_type=None,
-            is_extension=False, extension_scope=None,
-            serialized_options=None, file=DESCRIPTOR, create_key=_descriptor._internal_create_key),
-        _descriptor.FieldDescriptor(
-            name='tasks_amount', full_name='ExperimentDescription.tasks_amount', index=3,
-            number=4, type=13, cpp_type=3, label=1,
-            has_default_value=False, default_value=0,
-            message_type=None, enum_type=None, containing_type=None,
-            is_extension=False, extension_scope=None,
-            serialized_options=None, file=DESCRIPTOR, create_key=_descriptor._internal_create_key),
-        _descriptor.FieldDescriptor(
-            name='progress', full_name='ExperimentDescription.progress', index=4,
-            number=5, type=2, cpp_type=6, label=1,
-            has_default_value=False, default_value=float(0),
-            message_type=None, enum_type=None, containing_type=None,
-            is_extension=False, extension_scope=None,
-            serialized_options=None, file=DESCRIPTOR, create_key=_descriptor._internal_create_key),
-    ],
-    extensions=[
-    ],
-    nested_types=[],
-    enum_types=[
-    ],
-    serialized_options=None,
-    is_extendable=False,
-    syntax='proto3',
-    extension_ranges=[],
-    oneofs=[
-    ],
-    serialized_start=834,
-    serialized_end=957,
-)
-
-_GETEXPERIMENTDESCRIPTIONSRESPONSE = _descriptor.Descriptor(
-    name='GetExperimentDescriptionsResponse',
-    full_name='GetExperimentDescriptionsResponse',
-    filename=None,
-    file=DESCRIPTOR,
-    containing_type=None,
-    create_key=_descriptor._internal_create_key,
-    fields=[
-        _descriptor.FieldDescriptor(
-            name='experiments', full_name='GetExperimentDescriptionsResponse.experiments', index=0,
-            number=1, type=11, cpp_type=10, label=3,
-            has_default_value=False, default_value=[],
-            message_type=None, enum_type=None, containing_type=None,
-            is_extension=False, extension_scope=None,
-            serialized_options=None, file=DESCRIPTOR, create_key=_descriptor._internal_create_key),
-    ],
-    extensions=[
-    ],
-    nested_types=[],
-    enum_types=[
-    ],
-    serialized_options=None,
-    is_extendable=False,
-    syntax='proto3',
-    extension_ranges=[],
-    oneofs=[
-    ],
-    serialized_start=959,
-    serialized_end=1039,
+    serialized_start=597,
+    serialized_end=731,
 )
 
 _SETNEWEXPERIMENTRESPONSE = _descriptor.Descriptor(
@@ -572,8 +419,8 @@ _SETNEWEXPERIMENTRESPONSE = _descriptor.Descriptor(
     extension_ranges=[],
     oneofs=[
     ],
-    serialized_start=1041,
-    serialized_end=1114,
+    serialized_start=733,
+    serialized_end=806,
 )
 
 _GETTRAINEDMODELREQUEST = _descriptor.Descriptor(
@@ -585,21 +432,14 @@ _GETTRAINEDMODELREQUEST = _descriptor.Descriptor(
     create_key=_descriptor._internal_create_key,
     fields=[
         _descriptor.FieldDescriptor(
-            name='header', full_name='GetTrainedModelRequest.header', index=0,
-            number=1, type=11, cpp_type=10, label=1,
-            has_default_value=False, default_value=None,
-            message_type=None, enum_type=None, containing_type=None,
-            is_extension=False, extension_scope=None,
-            serialized_options=None, file=DESCRIPTOR, create_key=_descriptor._internal_create_key),
-        _descriptor.FieldDescriptor(
-            name='experiment_name', full_name='GetTrainedModelRequest.experiment_name', index=1,
+            name='experiment_name', full_name='GetTrainedModelRequest.experiment_name', index=0,
             number=2, type=9, cpp_type=9, label=1,
             has_default_value=False, default_value=b"".decode('utf-8'),
             message_type=None, enum_type=None, containing_type=None,
             is_extension=False, extension_scope=None,
             serialized_options=None, file=DESCRIPTOR, create_key=_descriptor._internal_create_key),
         _descriptor.FieldDescriptor(
-            name='model_type', full_name='GetTrainedModelRequest.model_type', index=2,
+            name='model_type', full_name='GetTrainedModelRequest.model_type', index=1,
             number=3, type=14, cpp_type=8, label=1,
             has_default_value=False, default_value=0,
             message_type=None, enum_type=None, containing_type=None,
@@ -618,8 +458,8 @@ _GETTRAINEDMODELREQUEST = _descriptor.Descriptor(
     extension_ranges=[],
     oneofs=[
     ],
-    serialized_start=1117,
-    serialized_end=1298,
+    serialized_start=809,
+    serialized_end=958,
 )
 
 _TRAINEDMODELRESPONSE = _descriptor.Descriptor(
@@ -649,8 +489,8 @@ _TRAINEDMODELRESPONSE = _descriptor.Descriptor(
     extension_ranges=[],
     oneofs=[
     ],
-    serialized_start=1300,
-    serialized_end=1356,
+    serialized_start=960,
+    serialized_end=1016,
 )
 
 _GETDATASETINFOREQUEST = _descriptor.Descriptor(
@@ -661,13 +501,6 @@ _GETDATASETINFOREQUEST = _descriptor.Descriptor(
     containing_type=None,
     create_key=_descriptor._internal_create_key,
     fields=[
-        _descriptor.FieldDescriptor(
-            name='header', full_name='GetDatasetInfoRequest.header', index=0,
-            number=1, type=11, cpp_type=10, label=1,
-            has_default_value=False, default_value=None,
-            message_type=None, enum_type=None, containing_type=None,
-            is_extension=False, extension_scope=None,
-            serialized_options=None, file=DESCRIPTOR, create_key=_descriptor._internal_create_key),
     ],
     extensions=[
     ],
@@ -680,8 +513,8 @@ _GETDATASETINFOREQUEST = _descriptor.Descriptor(
     extension_ranges=[],
     oneofs=[
     ],
-    serialized_start=1358,
-    serialized_end=1413,
+    serialized_start=1018,
+    serialized_end=1041,
 )
 
 _STREAMMETRICSREQUEST = _descriptor.Descriptor(
@@ -693,14 +526,7 @@ _STREAMMETRICSREQUEST = _descriptor.Descriptor(
     create_key=_descriptor._internal_create_key,
     fields=[
         _descriptor.FieldDescriptor(
-            name='header', full_name='StreamMetricsRequest.header', index=0,
-            number=1, type=11, cpp_type=10, label=1,
-            has_default_value=False, default_value=None,
-            message_type=None, enum_type=None, containing_type=None,
-            is_extension=False, extension_scope=None,
-            serialized_options=None, file=DESCRIPTOR, create_key=_descriptor._internal_create_key),
-        _descriptor.FieldDescriptor(
-            name='experiment_name', full_name='StreamMetricsRequest.experiment_name', index=1,
+            name='experiment_name', full_name='StreamMetricsRequest.experiment_name', index=0,
             number=2, type=9, cpp_type=9, label=1,
             has_default_value=False, default_value=b"".decode('utf-8'),
             message_type=None, enum_type=None, containing_type=None,
@@ -718,8 +544,8 @@ _STREAMMETRICSREQUEST = _descriptor.Descriptor(
     extension_ranges=[],
     oneofs=[
     ],
-    serialized_start=1415,
-    serialized_end=1494,
+    serialized_start=1043,
+    serialized_end=1090,
 )
 
 _STREAMMETRICSRESPONSE = _descriptor.Descriptor(
@@ -777,8 +603,8 @@ _STREAMMETRICSRESPONSE = _descriptor.Descriptor(
     extension_ranges=[],
     oneofs=[
     ],
-    serialized_start=1496,
-    serialized_end=1619,
+    serialized_start=1092,
+    serialized_end=1215,
 )
 
 _REMOVEEXPERIMENTREQUEST = _descriptor.Descriptor(
@@ -790,14 +616,7 @@ _REMOVEEXPERIMENTREQUEST = _descriptor.Descriptor(
     create_key=_descriptor._internal_create_key,
     fields=[
         _descriptor.FieldDescriptor(
-            name='header', full_name='RemoveExperimentRequest.header', index=0,
-            number=1, type=11, cpp_type=10, label=1,
-            has_default_value=False, default_value=None,
-            message_type=None, enum_type=None, containing_type=None,
-            is_extension=False, extension_scope=None,
-            serialized_options=None, file=DESCRIPTOR, create_key=_descriptor._internal_create_key),
-        _descriptor.FieldDescriptor(
-            name='experiment_name', full_name='RemoveExperimentRequest.experiment_name', index=1,
+            name='experiment_name', full_name='RemoveExperimentRequest.experiment_name', index=0,
             number=2, type=9, cpp_type=9, label=1,
             has_default_value=False, default_value=b"".decode('utf-8'),
             message_type=None, enum_type=None, containing_type=None,
@@ -815,8 +634,8 @@ _REMOVEEXPERIMENTREQUEST = _descriptor.Descriptor(
     extension_ranges=[],
     oneofs=[
     ],
-    serialized_start=1621,
-    serialized_end=1703,
+    serialized_start=1217,
+    serialized_end=1267,
 )
 
 _REMOVEEXPERIMENTRESPONSE = _descriptor.Descriptor(
@@ -846,8 +665,8 @@ _REMOVEEXPERIMENTRESPONSE = _descriptor.Descriptor(
     extension_ranges=[],
     oneofs=[
     ],
-    serialized_start=1705,
-    serialized_end=1756,
+    serialized_start=1269,
+    serialized_end=1320,
 )
 
 _COLLABORATORSTATUS = _descriptor.Descriptor(
@@ -885,8 +704,8 @@ _COLLABORATORSTATUS = _descriptor.Descriptor(
     extension_ranges=[],
     oneofs=[
     ],
-    serialized_start=1758,
-    serialized_end=1823,
+    serialized_start=1322,
+    serialized_end=1387,
 )
 
 _COLLABORATORHEALTHCHECKRESPONSE = _descriptor.Descriptor(
@@ -917,8 +736,8 @@ _COLLABORATORHEALTHCHECKRESPONSE = _descriptor.Descriptor(
     extension_ranges=[],
     oneofs=[
     ],
-    serialized_start=1825,
-    serialized_end=1914,
+    serialized_start=1389,
+    serialized_end=1478,
 )
 
 _ENVOYINFO = _descriptor.Descriptor(
@@ -976,8 +795,8 @@ _ENVOYINFO = _descriptor.Descriptor(
     extension_ranges=[],
     oneofs=[
     ],
-    serialized_start=1917,
-    serialized_end=2111,
+    serialized_start=1481,
+    serialized_end=1675,
 )
 
 _GETENVOYSREQUEST = _descriptor.Descriptor(
@@ -1000,8 +819,8 @@ _GETENVOYSREQUEST = _descriptor.Descriptor(
     extension_ranges=[],
     oneofs=[
     ],
-    serialized_start=2113,
-    serialized_end=2131,
+    serialized_start=1677,
+    serialized_end=1695,
 )
 
 _GETENVOYSRESPONSE = _descriptor.Descriptor(
@@ -1031,23 +850,16 @@ _GETENVOYSRESPONSE = _descriptor.Descriptor(
     extension_ranges=[],
     oneofs=[
     ],
-    serialized_start=2133,
-    serialized_end=2185,
+    serialized_start=1697,
+    serialized_end=1749,
 )
 
 _SHARDINFO.fields_by_name['node_info'].message_type = _NODEINFO
-_EXPERIMENTINFO.fields_by_name['header'].message_type = _REQUESTHEADER
 _EXPERIMENTINFO.fields_by_name['experiment_data'].message_type = _EXPERIMENTDATA
 _EXPERIMENTINFO.fields_by_name['model_proto'].message_type = federation__pb2._MODELPROTO
-_GETEXPERIMENTDESCRIPTIONSRESPONSE.fields_by_name[
-    'experiments'].message_type = _EXPERIMENTDESCRIPTION
-_GETTRAINEDMODELREQUEST.fields_by_name['header'].message_type = _REQUESTHEADER
 _GETTRAINEDMODELREQUEST.fields_by_name['model_type'].enum_type = _GETTRAINEDMODELREQUEST_MODELTYPE
 _GETTRAINEDMODELREQUEST_MODELTYPE.containing_type = _GETTRAINEDMODELREQUEST
 _TRAINEDMODELRESPONSE.fields_by_name['model_proto'].message_type = federation__pb2._MODELPROTO
-_GETDATASETINFOREQUEST.fields_by_name['header'].message_type = _REQUESTHEADER
-_STREAMMETRICSREQUEST.fields_by_name['header'].message_type = _REQUESTHEADER
-_REMOVEEXPERIMENTREQUEST.fields_by_name['header'].message_type = _REQUESTHEADER
 _COLLABORATORHEALTHCHECKRESPONSE.fields_by_name[
     'health_check_period'].message_type = google_dot_protobuf_dot_duration__pb2._DURATION
 _ENVOYINFO.fields_by_name['shard_info'].message_type = _SHARDINFO
@@ -1056,7 +868,6 @@ _ENVOYINFO.fields_by_name[
 _ENVOYINFO.fields_by_name[
     'valid_duration'].message_type = google_dot_protobuf_dot_duration__pb2._DURATION
 _GETENVOYSRESPONSE.fields_by_name['envoy_infos'].message_type = _ENVOYINFO
-DESCRIPTOR.message_types_by_name['RequestHeader'] = _REQUESTHEADER
 DESCRIPTOR.message_types_by_name['NodeInfo'] = _NODEINFO
 DESCRIPTOR.message_types_by_name['ShardInfo'] = _SHARDINFO
 DESCRIPTOR.message_types_by_name['ShardAcknowledgement'] = _SHARDACKNOWLEDGEMENT
@@ -1065,11 +876,6 @@ DESCRIPTOR.message_types_by_name['WaitExperimentResponse'] = _WAITEXPERIMENTRESP
 DESCRIPTOR.message_types_by_name['GetExperimentDataRequest'] = _GETEXPERIMENTDATAREQUEST
 DESCRIPTOR.message_types_by_name['ExperimentData'] = _EXPERIMENTDATA
 DESCRIPTOR.message_types_by_name['ExperimentInfo'] = _EXPERIMENTINFO
-DESCRIPTOR.message_types_by_name[
-    'GetExperimentDescriptionsRequest'] = _GETEXPERIMENTDESCRIPTIONSREQUEST
-DESCRIPTOR.message_types_by_name['ExperimentDescription'] = _EXPERIMENTDESCRIPTION
-DESCRIPTOR.message_types_by_name[
-    'GetExperimentDescriptionsResponse'] = _GETEXPERIMENTDESCRIPTIONSRESPONSE
 DESCRIPTOR.message_types_by_name['SetNewExperimentResponse'] = _SETNEWEXPERIMENTRESPONSE
 DESCRIPTOR.message_types_by_name['GetTrainedModelRequest'] = _GETTRAINEDMODELREQUEST
 DESCRIPTOR.message_types_by_name['TrainedModelResponse'] = _TRAINEDMODELRESPONSE
@@ -1085,13 +891,6 @@ DESCRIPTOR.message_types_by_name['EnvoyInfo'] = _ENVOYINFO
 DESCRIPTOR.message_types_by_name['GetEnvoysRequest'] = _GETENVOYSREQUEST
 DESCRIPTOR.message_types_by_name['GetEnvoysResponse'] = _GETENVOYSRESPONSE
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
-
-RequestHeader = _reflection.GeneratedProtocolMessageType('RequestHeader', (_message.Message,), {
-    'DESCRIPTOR': _REQUESTHEADER,
-    '__module__': 'director_pb2'
-    # @@protoc_insertion_point(class_scope:RequestHeader)
-})
-_sym_db.RegisterMessage(RequestHeader)
 
 NodeInfo = _reflection.GeneratedProtocolMessageType('NodeInfo', (_message.Message,), {
     'DESCRIPTOR': _NODEINFO,
@@ -1152,30 +951,6 @@ ExperimentInfo = _reflection.GeneratedProtocolMessageType('ExperimentInfo', (_me
     # @@protoc_insertion_point(class_scope:ExperimentInfo)
 })
 _sym_db.RegisterMessage(ExperimentInfo)
-
-GetExperimentDescriptionsRequest = _reflection.GeneratedProtocolMessageType(
-    'GetExperimentDescriptionsRequest', (_message.Message,), {
-        'DESCRIPTOR': _GETEXPERIMENTDESCRIPTIONSREQUEST,
-        '__module__': 'director_pb2'
-        # @@protoc_insertion_point(class_scope:GetExperimentDescriptionsRequest)
-    })
-_sym_db.RegisterMessage(GetExperimentDescriptionsRequest)
-
-ExperimentDescription = _reflection.GeneratedProtocolMessageType('ExperimentDescription',
-                                                                 (_message.Message,), {
-                                                                     'DESCRIPTOR': _EXPERIMENTDESCRIPTION,
-                                                                     '__module__': 'director_pb2'
-                                                                     # @@protoc_insertion_point(class_scope:ExperimentDescription)
-                                                                 })
-_sym_db.RegisterMessage(ExperimentDescription)
-
-GetExperimentDescriptionsResponse = _reflection.GeneratedProtocolMessageType(
-    'GetExperimentDescriptionsResponse', (_message.Message,), {
-        'DESCRIPTOR': _GETEXPERIMENTDESCRIPTIONSRESPONSE,
-        '__module__': 'director_pb2'
-        # @@protoc_insertion_point(class_scope:GetExperimentDescriptionsResponse)
-    })
-_sym_db.RegisterMessage(GetExperimentDescriptionsResponse)
 
 SetNewExperimentResponse = _reflection.GeneratedProtocolMessageType('SetNewExperimentResponse',
                                                                     (_message.Message,), {
@@ -1287,8 +1062,8 @@ _FEDERATIONDIRECTOR = _descriptor.ServiceDescriptor(
     index=0,
     serialized_options=None,
     create_key=_descriptor._internal_create_key,
-    serialized_start=2188,
-    serialized_end=2987,
+    serialized_start=1752,
+    serialized_end=2449,
     methods=[
         _descriptor.MethodDescriptor(
             name='AcknowledgeShard',
@@ -1321,19 +1096,9 @@ _FEDERATIONDIRECTOR = _descriptor.ServiceDescriptor(
             create_key=_descriptor._internal_create_key,
         ),
         _descriptor.MethodDescriptor(
-            name='GetExperimentDescriptions',
-            full_name='FederationDirector.GetExperimentDescriptions',
-            index=3,
-            containing_service=None,
-            input_type=_GETEXPERIMENTDESCRIPTIONSREQUEST,
-            output_type=_GETEXPERIMENTDESCRIPTIONSRESPONSE,
-            serialized_options=None,
-            create_key=_descriptor._internal_create_key,
-        ),
-        _descriptor.MethodDescriptor(
             name='SetNewExperiment',
             full_name='FederationDirector.SetNewExperiment',
-            index=4,
+            index=3,
             containing_service=None,
             input_type=_EXPERIMENTINFO,
             output_type=_SETNEWEXPERIMENTRESPONSE,
@@ -1343,7 +1108,7 @@ _FEDERATIONDIRECTOR = _descriptor.ServiceDescriptor(
         _descriptor.MethodDescriptor(
             name='GetDatasetInfo',
             full_name='FederationDirector.GetDatasetInfo',
-            index=5,
+            index=4,
             containing_service=None,
             input_type=_GETDATASETINFOREQUEST,
             output_type=_SHARDINFO,
@@ -1353,7 +1118,7 @@ _FEDERATIONDIRECTOR = _descriptor.ServiceDescriptor(
         _descriptor.MethodDescriptor(
             name='GetTrainedModel',
             full_name='FederationDirector.GetTrainedModel',
-            index=6,
+            index=5,
             containing_service=None,
             input_type=_GETTRAINEDMODELREQUEST,
             output_type=_TRAINEDMODELRESPONSE,
@@ -1363,7 +1128,7 @@ _FEDERATIONDIRECTOR = _descriptor.ServiceDescriptor(
         _descriptor.MethodDescriptor(
             name='StreamMetrics',
             full_name='FederationDirector.StreamMetrics',
-            index=7,
+            index=6,
             containing_service=None,
             input_type=_STREAMMETRICSREQUEST,
             output_type=_STREAMMETRICSRESPONSE,
@@ -1373,7 +1138,7 @@ _FEDERATIONDIRECTOR = _descriptor.ServiceDescriptor(
         _descriptor.MethodDescriptor(
             name='RemoveExperimentData',
             full_name='FederationDirector.RemoveExperimentData',
-            index=8,
+            index=7,
             containing_service=None,
             input_type=_REMOVEEXPERIMENTREQUEST,
             output_type=_REMOVEEXPERIMENTRESPONSE,
@@ -1383,7 +1148,7 @@ _FEDERATIONDIRECTOR = _descriptor.ServiceDescriptor(
         _descriptor.MethodDescriptor(
             name='CollaboratorHealthCheck',
             full_name='FederationDirector.CollaboratorHealthCheck',
-            index=9,
+            index=8,
             containing_service=None,
             input_type=_COLLABORATORSTATUS,
             output_type=_COLLABORATORHEALTHCHECKRESPONSE,
@@ -1393,7 +1158,7 @@ _FEDERATIONDIRECTOR = _descriptor.ServiceDescriptor(
         _descriptor.MethodDescriptor(
             name='GetEnvoys',
             full_name='FederationDirector.GetEnvoys',
-            index=10,
+            index=9,
             containing_service=None,
             input_type=_GETENVOYSREQUEST,
             output_type=_GETENVOYSRESPONSE,

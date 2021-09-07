@@ -47,19 +47,32 @@ def test_fill_certs(insecure_director, secure_director):
         secure_director.test_fill_certs(None, '.', '.')
 
 
-@pytest.mark.parametrize('caller_common_name,caller_cert_name,result,tls', [
-    ('one', 'one', True, True), ('one', 'two', False, True),
-    ('one', 'one', True, False), ('one', 'two', True, False)])
-def test_validate_caller(insecure_director, caller_common_name,
-                         caller_cert_name, result, tls):
-    """Test that validate_caller works correctly."""
-    insecure_director.tls = tls  # only for enable TLS the validation works
-    request = mock.Mock()
-    request.header = mock.Mock()
-    request.header.sender = caller_common_name
+def test_get_caller_tls(insecure_director):
+    """Test that get_caller works correctly with TLS."""
+    insecure_director.tls = True
     context = mock.Mock()
+    client_id = 'client_id'
     context.auth_context = mock.Mock(
-        return_value={'x509_common_name': [caller_cert_name.encode('utf-8')]}
+        return_value={'x509_common_name': [client_id.encode('utf-8')]}
     )
+    result = insecure_director.get_caller(context)
+    assert result == client_id
 
-    assert result == insecure_director.validate_caller(request, context)
+
+def test_get_sender_no_tls(insecure_director):
+    """Test that get_sender works correctly without TLS."""
+    context = mock.Mock()
+    client_id = 'client_id'
+    context.invocation_metadata.return_value = (('client_id', client_id),)
+    result = insecure_director.get_caller(context)
+    assert result == client_id
+
+
+def test_get_sender_no_tls_no_client_id(insecure_director):
+    """Test that get_sender works correctly without TLS and client_id."""
+    context = mock.Mock()
+    context.invocation_metadata = mock.Mock()
+    context.invocation_metadata.return_value = (('key', 'value'),)
+    default_client_id = '__default__'
+    result = insecure_director.get_caller(context)
+    assert result == default_client_id
