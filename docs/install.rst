@@ -12,6 +12,7 @@ Installing the Software
 Install the following software on every node in the learning federation.
 
 .. toctree::
+   :maxdepth: 2
 
    install.initial
    install.docker
