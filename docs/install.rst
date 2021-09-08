@@ -9,15 +9,17 @@
 Installing the Software
 ***********************
 
+.. note::
+
+   This project is continually being developed and improved. Expect changes to this manual, the project code, and the project design.
+
 Install the following software on every node in the learning federation.
 
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 1
 
    install.initial
    install.docker
    
-.. note::
 
-   This project is continually being developed and improved. Expect changes to this manual, the project code, and the project design.
    
