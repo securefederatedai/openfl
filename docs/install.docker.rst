@@ -43,9 +43,9 @@ Build the Docker Image (Optional)
 Things to Consider
 ~~~~~~~~~~~~~~~~~~
 
-When using OpenFL in a Docker container, you need to consider the following:
+Docker containers have the components to initiate and run a federation. However, there are tasks that require your attention.
 
-  * Docker containers are the essential components to have a working environment that is able to initiate and run a federation. Orchestration and pipeline automation is currently not supported and would need to be handled manually.
+  *  Orchestration and pipeline automation is currently not supported and would need to be handled manually.
 
   * `PKI exchange <https://en.wikipedia.org/wiki/Public_key_infrastructure>`_ required to validate and welcome new collaborators to the federation will need to be handled outside the containers through a bash script (not provided). The PKI exchange can also be performed manually in the following manner:
 
