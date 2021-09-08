@@ -13,7 +13,7 @@ Build the Docker Image (Optional)
 
 1. Install Docker on all nodes in the federation.
 
-	Check that Docker is installed and running properly with the Docker *Hello World* command:
+Check that Docker is installed and running properly with the Docker *Hello World* command:
 
     .. code-block:: console
 
