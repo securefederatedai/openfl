@@ -35,7 +35,7 @@ Build the Docker Image (Optional)
 	.. parsed-literal::
 
 	   $ git clone https://github.com/intel/openfl.git
-	   $ cd \ |productWheel|\
+	   $ cd \ |productWheel|
 	   $ ./scripts/build_base_docker_image.sh
 
 
