@@ -3,9 +3,8 @@
 
 .. _install_package:
 
-#################################
 Install the |productName| Package
-#################################
+=================================
 
 Perform this procedure on every node in the federation.
 
