@@ -9,8 +9,7 @@ Build the Docker Image (Optional)
 
 .. note::
 
-   The Docker version of |productName| is to provide an isolated environment complete with the prerequisites to run a federation. When the execution is over, 
-the container can be destroyed and the results of the computation will be available on a directory on the local host.
+   The Docker version of |productName| is to provide an isolated environment complete with the prerequisites to run a federation. When the execution is over, the container can be destroyed and the results of the computation will be available on a directory on the local host.
 
 1. Install Docker on all nodes in the federation.
 
@@ -27,16 +26,16 @@ the container can be destroyed and the results of the computation will be availa
       
 2. Build an image from the latest official |productName| release:
 
-	.. code-block:: console
+	.. parsed-literal::
 
-	   $ docker pull intel/openfl
+	   $ docker pull intel/\ |productWheel|\
    
 	If you prefer to build an image from a specific commit or branch, perform the following commands:
 
-	.. code-block:: console
+	.. parsed-literal::
 
 	   $ git clone https://github.com/intel/openfl.git
-	   $ cd openfl
+	   $ cd \ |productWheel|\
 	   $ ./scripts/build_base_docker_image.sh
 
 
