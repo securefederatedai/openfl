@@ -214,7 +214,7 @@ def _create_ca(ca_path: Path, ca_url: str, password: str):
 
     with open(f'{pki_dir}/pass_file', 'w') as f:
         f.write(password)
-    os.chmod(f'{pki_dir}/pass_file',0o600)
+    os.chmod(f'{pki_dir}/pass_file', 0o600)
     step_path, step_ca_path = get_ca_bin_paths(ca_path)
     assert (step_path and step_ca_path and step_path.exists() and step_ca_path.exists())
 
