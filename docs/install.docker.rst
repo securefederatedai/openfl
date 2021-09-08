@@ -12,8 +12,7 @@ Build the Docker Image (Optional)
    The Docker version of |productName| is to provide an isolated environment complete with the prerequisites to run a federation. When the execution is over, the container can be destroyed and the results of the computation will be available on a directory on the local host.
 
 1. Install Docker on all nodes in the federation.
-
-Check that Docker is installed and running properly with the Docker *Hello World* command:
+	Check that Docker is installed and running properly with the Docker *Hello World* command:
 
     .. code-block:: console
 
