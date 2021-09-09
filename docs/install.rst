@@ -18,6 +18,4 @@ Install the following software on every node in the learning federation.
 
    install.initial
    install.docker
-   
 
-   
