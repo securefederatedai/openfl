@@ -1,7 +1,5 @@
 .. # Copyright (C) 2020-2021 Intel Corporation
 .. # SPDX-License-Identifier: Apache-2.0
-.. install.design
-.. install.installing
 
 .. _install_software_root:
 
