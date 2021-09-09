@@ -8,6 +8,7 @@ Running the Federation
 **********************
 
 You can use the following workflows to create a learning federation.
+
 - :ref:`Aggregator-Based Workflow <running_the_federation_aggregator_workflow>`
 - :ref:`Director-Based Workflow <running_the_federation_director_workflow>`
 
@@ -23,7 +24,7 @@ The :ref:`aggregator-based workflow <running_the_federation_aggregator_based>` u
 
 .. note::
 
-	Follow the procedure in the aggregator-based workflow to become familiar with the APIs in |productName| and conventions such as FL Plans, aggregators, and collaborators. 
+	Follow the procedure in the aggregator-based workflow to become familiar with the APIs in |productName| and conventions such as *FL Plans*, *Aggregators*, and *Collaborators*. 
 
 
 .. _running_the_federation_director_workflow:
