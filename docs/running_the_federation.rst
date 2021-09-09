@@ -15,8 +15,8 @@ You can use the following workflows to create a learning federation.
 
 .. _running_the_federation_aggregator_workflow:
 
-Aggregator-Based Workflow
-=========================
+**Aggregator-Based Workflow**
+
 The :ref:`aggregator-based workflow <running_the_federation_aggregator_based>` uses short-lived components in a federation, which is terminated when the experiment is finished. 
 
 - The *Collaborator* uses a local dataset to train a global model and the *Aggregator* receives model updates from collaborators and combines them to form the global model.
@@ -29,8 +29,8 @@ The :ref:`aggregator-based workflow <running_the_federation_aggregator_based>` u
 
 .. _running_the_federation_director_workflow:
 
-Director-Based Workflow
-=======================
+**Director-Based Workflow**
+
 The :ref:`director-based workflow <director_workflow>` uses long-lived components in a federation. These components continue to be available to distribute more experiments in the federation.
 	
 - The *Director* is the central node of the federation. This component starts an *Aggregator* for each experiment, sends data to connected collaborator nodes, and provides updates on the status.
