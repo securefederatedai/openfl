@@ -42,12 +42,11 @@ The procedure below summarizes the steps to set up an aggregator-based workflow.
 
 
 
-Continue to the following sections for detailed instructions.
+Continue to the following sections for detailed instructions on setting up this workflow.
 
 .. toctree::
    :maxdepth: 2
 
-   running_the_federation.notebook
    running_the_federation.baremetal
    running_the_federation.docker
    running_the_federation.certificates
