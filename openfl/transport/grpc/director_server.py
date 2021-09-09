@@ -226,14 +226,15 @@ class DirectorGRPCServer(director_pb2_grpc.FederationDirectorServicer):
         response.acknowledgement = True
         return response
 
-    async def CollaboratorHealthCheck(self, request, context):  # NOQA:N802
+    async def EnvoyHealthCheck(self, request, context):  # NOQA:N802
         """Accept health check from envoy."""
-        logger.debug(f'Request CollaboratorHealthCheck has got: {request}')
-        health_check_period = self.director.collaborator_health_check(
-            collaborator_name=request.name,
+        logger.debug(f'Request EnvoyHealthCheck has got: {request}')
+        health_check_period = self.director.envoy_health_check(
+            envoy_name=request.name,
             is_experiment_running=request.is_experiment_running,
+            cuda_devices_status=request.cuda_devices
         )
-        resp = director_pb2.CollaboratorHealthCheckResponse()
+        resp = director_pb2.EnvoyHealthCheckResponse()
         resp.health_check_period.seconds = health_check_period
 
         return resp
