@@ -11,13 +11,15 @@ message CudaDeviceInfo {
     uint64 index = 1;
     uint64 memory_total = 2;
     uint64 memory_utilized = 3;
+    string device_utilization = 4;
+    string cuda_driver_version = 5;
 }
 
 // Envoy Messages
 
 message NodeInfo {
     string name = 1;
-    repeated uint64 cuda_devices = 2;
+    repeated CudaDeviceInfo cuda_devices = 2;
 }
 
 message ShardInfo {
@@ -54,6 +56,7 @@ message ExperimentData {
 message EnvoyStatus {
     string name = 1;
     bool is_experiment_running = 2;
+    repeated CudaDeviceInfo cuda_devices = 3;
 }
 
 message EnvoyHealthCheckResponse {
@@ -128,6 +131,7 @@ service FederationDirector {
     // Shard owner could also provide some public data for tests
     rpc WaitExperiment (stream WaitExperimentRequest) returns (stream WaitExperimentResponse) {}
     rpc GetExperimentData (GetExperimentDataRequest) returns (stream ExperimentData) {}
+    rpc EnvoyHealthCheck (EnvoyStatus) returns (EnvoyHealthCheckResponse) {}
 
     // API RPCs
     rpc SetNewExperiment (stream ExperimentInfo) returns (SetNewExperimentResponse) {}
@@ -135,6 +139,5 @@ service FederationDirector {
     rpc GetTrainedModel (GetTrainedModelRequest) returns (TrainedModelResponse) {}
     rpc StreamMetrics (StreamMetricsRequest) returns (stream StreamMetricsResponse) {}
     rpc RemoveExperimentData (RemoveExperimentRequest) returns (RemoveExperimentResponse) {}
-    rpc EnvoyHealthCheck (EnvoyStatus) returns (EnvoyHealthCheckResponse) {}
     rpc GetEnvoys (GetEnvoysRequest) returns (GetEnvoysResponse) {}
 }
