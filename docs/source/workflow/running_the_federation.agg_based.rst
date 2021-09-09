@@ -14,7 +14,7 @@ This workflow uses short-lived components in a federation, which is terminated w
 
 An overview of this workflow is shown below.
 
-.. figure:: ./images/openfl_flow.png
+.. figure:: /images/openfl_flow.png
 
 .. centered:: Overview of the Aggregator-Based Workflow
 
