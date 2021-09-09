@@ -321,7 +321,7 @@ def _get_experiment_progress(experiment) -> float:
 def _get_experiment_tasks(experiment) -> List[dict]:
     return [{
         'name': task['function'],
-        'description': task['description'],
+        'description': 'Task description',
     } for task in experiment.aggregator.assigner.tasks.values()]
 
 
@@ -333,4 +333,4 @@ def _get_experiment_collaborators(experiment) -> List[dict]:
         'round': 0,
         'currentTask': '',
         'nextTask': ''
-    } for name, col in experiment.aggregator.authorized_cols.items()]
+    } for name in experiment.aggregator.authorized_cols]

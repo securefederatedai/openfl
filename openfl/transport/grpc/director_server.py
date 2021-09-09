@@ -260,4 +260,48 @@ class DirectorGRPCServer(director_pb2_grpc.FederationDirectorServicer):
     async def GetExperimentDescription(self, request, context):  # NOQA:N802
         caller = self.get_caller(context)
         experiment = self.director.get_experiment(caller, request.name)
-        return experiment
+        models_statuses = [
+            director_pb2.DownloadStatus(
+                name=ms['name'],
+                status=ms['status']
+            )
+            for ms in experiment['downloadStatuses']['models']
+        ]
+        logs_statuses = [
+            director_pb2.DownloadStatus(
+                name=ls['name'],
+                status=ls['status']
+            )
+            for ls in experiment['downloadStatuses']['logs']
+        ]
+        download_statuses = director_pb2.DownloadStatuses(
+            models=models_statuses,
+            logs=logs_statuses,
+        )
+        collaborators = [
+            director_pb2.CollaboratorDescription(
+                name=col['name'],
+                status=col['status'],
+                progress=col['progress'],
+                round=col['round'],
+                currentTask=col['currentTask'],
+                nextTask=col['nextTask']
+            )
+            for col in experiment['collaborators']
+        ]
+        tasks = [
+            director_pb2.TaskDescription(
+                name=task['name'],
+                description=task['description']
+            )
+            for task in experiment['tasks']
+        ]
+
+        return director_pb2.GetExperimentDescriptionResponse(
+            name=experiment['name'],
+            status=experiment['status'],
+            progress=experiment['progress'],
+            downloadStatuses=download_statuses,
+            collaborators=collaborators,
+            tasks=tasks,
+        )
