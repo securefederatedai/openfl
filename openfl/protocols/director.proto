@@ -102,9 +102,11 @@ message GetExperimentDescriptionResponse {
   string name = 1;
   string status = 2;
   float progress = 3;
-  DownloadStatuses downloadStatuses = 4;
-  repeated CollaboratorDescription collaborators = 5;
-  repeated TaskDescription tasks = 6;
+  uint32 totalRounds = 4;
+  uint32 currentRound = 5;
+  DownloadStatuses downloadStatuses = 6;
+  repeated CollaboratorDescription collaborators = 7;
+  repeated TaskDescription tasks = 8;
 }
 
 message SetNewExperimentResponse{

@@ -301,6 +301,8 @@ class DirectorGRPCServer(director_pb2_grpc.FederationDirectorServicer):
             name=experiment['name'],
             status=experiment['status'],
             progress=experiment['progress'],
+            currentRound=experiment['currentRound'],
+            totalRounds=experiment['totalRounds'],
             downloadStatuses=download_statuses,
             collaborators=collaborators,
             tasks=tasks,

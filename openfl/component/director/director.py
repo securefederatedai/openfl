@@ -236,6 +236,8 @@ class Director:
             'name': name,
             'status': 'pending',
             'progress': progress,
+            'currentRound': exp.aggregator.round_number,
+            'totalRounds': exp.aggregator.rounds_to_train,
             'downloadStatuses': {
                 'models': model_statuses,
                 'logs': [{
@@ -328,7 +330,7 @@ def _get_experiment_tasks(experiment) -> List[dict]:
 def _get_experiment_collaborators(experiment) -> List[dict]:
     return [{
         'name': name,
-        'status': '',
+        'status': 'pending',
         'progress': 0.0,
         'round': 0,
         'currentTask': '',
