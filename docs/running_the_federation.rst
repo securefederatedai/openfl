@@ -38,11 +38,11 @@ The :ref:`director-based workflow <director_workflow>` uses long-lived component
 	
 .. note::
 
-	Follow the procedure in the director-based workflow to become familiar with the setup required and APIs provided for each role in the federation: Director manager, Envoy manager, and Experiment manager (data scientist). 
+	Follow the procedure in the director-based workflow to become familiar with the setup required and APIs provided for each role in the federation: *Director manager*, *Envoy manager*, and *Experiment manager (data scientist)*. 
 
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    :hidden:
 
    source/workflow/running_the_federation.agg_based
