@@ -14,7 +14,7 @@ This workflow uses short-lived components in a federation, which is terminated w
 
 An overview of this workflow is shown below.
 
-.. figure:: ../images/openfl_flow.png
+.. figure:: ./images/openfl_flow.png
 
 .. centered:: Overview of the Aggregator-Based Workflow
 
@@ -32,13 +32,14 @@ The procedure below summarizes the steps to set up an aggregator-based workflow.
 
 	.. code-block:: console
 
-      $ fx aggregator start
+		$ fx aggregator start
 
 6. Start the federation on the each of the collaborator nodes.
 
 	.. code-block:: console
 
-      $ fx collaborator start
+		$ fx collaborator start
+
 
 
 Continue to the following sections for detailed instructions.
