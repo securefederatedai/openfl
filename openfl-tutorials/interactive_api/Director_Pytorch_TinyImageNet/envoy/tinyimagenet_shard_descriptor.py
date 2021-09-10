@@ -19,6 +19,7 @@ logger = logging.getLogger(__name__)
 
 class TinyImageNetDataset(Dataset):
     """TinyImageNet dataset class."""
+
     NUM_IMAGES_PER_CLASS = 500
 
     def __init__(self, data_folder: Path, data_type='train', rank=1, worldsize=1):

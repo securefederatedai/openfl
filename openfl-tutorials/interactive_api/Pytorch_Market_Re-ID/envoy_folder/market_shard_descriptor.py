@@ -78,6 +78,7 @@ class MarketShardDescriptor(ShardDescriptor):
         return img, (pid, camid)
 
     def get_dataset(self, dataset_type):
+        """Return a dataset by type."""
         ds = deepcopy(self)
         ds.set_mode(dataset_type)
 
@@ -119,10 +120,10 @@ class MarketShardDescriptor(ShardDescriptor):
 
         output = 'Market-1501-v15.09.15.zip'
         if not Path(output).exists():
-            logger.info('Try to download')
+            logger.info('Try to download.')
             url = 'https://drive.google.com/uc?id=0B8-rUzbwVRk0c054eEozWG9COHM'
             gdown.download(url, output, quiet=False)
-        logger.info(f'Market-1501-v15.09.15.zip is downloaded')
+        logger.info(f'{output} is downloaded.')
 
         with zipfile.ZipFile(output, 'r') as zip_ref:
             zip_ref.extractall(Path.cwd())
