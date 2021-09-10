@@ -3,15 +3,15 @@
 
 .. _running_notebook:
 
-*************************
-Jupyter Notebook Workflow
-*************************
+*****************************
+Simulated Federation Workflow
+*****************************
 
 This workflow will start a Jupyter notebook server and return a URL you can use to access the tutorials. Jupyter notebooks are provided for PyTorch and TensorFlow that simulate a federation on a local machine.
 
 .. note::
 
-	Follow the procedure in the Jupyter notebook workflow to become familiar with the APIs in |productName| and conventions such as *FL Plans*, *Aggregators*, and *Collaborators*. 
+	Follow the procedure in the simulated federation workflow to become familiar with the APIs in |productName| and conventions such as *FL Plans*, *Aggregators*, and *Collaborators*. 
 	
 
 Start the Tutorials
@@ -62,7 +62,7 @@ For a basic experiment, run the following command.
      fx.init()
 	 
 	 
-This creates a workspace directory containing default FL Plan values for your experiments, and set up a an experiment with two collaborators (the collaborators are creatively named 'one' and 'two').
+This creates a workspace directory containing default FL Plan values for your experiments, and sets up a an experiment with two collaborators (the collaborators are creatively named 'one' and 'two').
 
 For an experiment with more collaborators, run the following command.
 
@@ -76,13 +76,19 @@ For an experiment with more collaborators, run the following command.
 
 	The following are template recommendations for training models:
 	
-	- For Keras models, run :code:`fx.init("keras_cnn_mnist")` to start with the *keras_cnn_mnist* template.
-	- For PyTorch models, run :code:`fx.init("torch_cnn_mnist")` to start with the *torch_cnn_mnist* template.
+	- For Keras models, run :code:`fx.init('keras_cnn_mnist')` to start with the *keras_cnn_mnist* template.
+	- For PyTorch models, run :code:`fx.init('torch_cnn_mnist')` to start with the *torch_cnn_mnist* template.
+	
 
 Step 3: Customize the Federated Learning Plan (FL Plan)
 -------------------------------------------------------
 
-The :code:`fx.init` command modifies an FL Plan, described by the :code:`plan.yaml` file located in the :code:`plan` directory of the workspace.
+For this example, the experiment is set up with the *keras_cnn_mnist* template.	
+
+   .. code-block:: python
+
+		fx.init('keras_cnn_mnist')
+	 
 
 See the FL plan values that can be set with the :code:`fx.get_plan()` command.
 
