@@ -15,11 +15,9 @@ sequenceDiagram
   D->>-F: Approves
 
   rect rgb(225, 255, 225)
-    note over ER,E: Envoys may start awaiting experiments <br>
-    even if the queue is empty
+    note over ER,E: Envoys may start awaiting experiments <br>even if the queue is empty
     E-)+D: Wait Experiment *STREAM*
-    note over ER,D: Assuming the Experiment is the next in the queue <br>
-    and the Envoy is assigned for this Experiment
+    note over ER,D: Assuming the Experiment is the next in the queue <br>and the Envoy is assigned for this Experiment
     D->>ER: Gets experiment name (pop operation)
     D->>-E: Wait Experiment Response
 
@@ -39,12 +37,10 @@ sequenceDiagram
   end
 
   rect rgb(225, 225, 255)
-    note over ER,F: Restoring experiment on the Frontend <br>
-    from the Director's experiment representation
+    note over ER,F: Restoring experiment on the Frontend <br>from the Director's experiment representation
     F->>+D: Restore experiment by name
     D->>ER: Gets required data
-    note over ER,D: The Registry may also return <br>
-    the experiment by its identifier
+    note over ER,D: The Registry may also return <br>the experiment by its identifier
     D->>-F: Response with model structure and the plan
   end
 
