@@ -97,7 +97,7 @@ class Envoy:
             if self.cuda_device_monitor is not None:
                 cuda_devices_info = {}
                 for device_id in self.cuda_devices:
-                    cuda_devices_info[str(device_id)] = {
+                    cuda_devices_info[device_id] = {
                         'memory_total':
                         self.cuda_device_monitor.get_device_memory_total(device_id),
                         'memory_used':

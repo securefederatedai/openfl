@@ -68,7 +68,7 @@ def start_(shard_name, director_host, director_port, tls, envoy_config_path,
         certificate = Path(certificate).absolute()
 
     envoy_params = envoy_config.get('params', {})
-    for plugin_name, plugin_settings in envoy_config.get('optional_plugin_components', {}).items():
+    for plugin_name, plugin_settings in envoy_params.get('optional_plugin_components', {}).items():
         template = plugin_settings.get('template')
         if not template:
             raise Exception('You should put a template'
@@ -124,7 +124,6 @@ def create(envoy_path):
 
 def shard_descriptor_from_config(shard_config: dict):
     """Build a shard descriptor from config."""
-    print(shard_config)
     template = shard_config.get('template')
     if not template:
         raise Exception('You should define a shard '
