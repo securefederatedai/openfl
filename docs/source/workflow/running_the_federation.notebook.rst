@@ -21,13 +21,13 @@ Start the Tutorials
 
 	.. code-block:: python
 
-     fx
+		fx
 
 2. Start a Jupyter server. This returns a URL to access available tutorials.
 
 	.. code-block:: python
 
-     fx tutorial start
+		fx tutorial start
 
 3. Open the URL (including the token) in your browser.
 
