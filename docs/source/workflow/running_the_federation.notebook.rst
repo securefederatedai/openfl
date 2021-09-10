@@ -15,7 +15,7 @@ This workflow will start a Jupyter notebook server and return a URL you can use 
 	
 
 Start the Tutorials
-~~~~~~~~~~~~~~~~~~~
+===================
 
 1. Start a Python 3.6 (or higher) virtual environment and confirm |productName| is available.
 
@@ -31,24 +31,40 @@ Start the Tutorials
 
 3. Open the URL (including the token) in your browser.
 
-4. Choose a tutorial from which to start. Each tutorial is a demonstration of a simulated federated learning. 
-The following are examples of available tutorials:
+4. Choose a tutorial from which to start. Each tutorial is a demonstration of a simulated federated learning. The following are examples of available tutorials:
 
  - :code:`Federated Keras MNIST Tutorial`: workspace with a simple `Keras <http://keras.io/>`_ CNN model that will download the `MNIST <http://yann.lecun.com/exdb/mnist/>`_ dataset and train in a federation.
  - :code:`Federated Pytorch MNIST Tutorial`: workspace with a simple `PyTorch <https://pytorch.org/>`_ CNN model that will download the `MNIST <http://yann.lecun.com/exdb/mnist/>`_ dataset and train in a federation.
 
 
 Familiarize with the |productName| Python API Concepts
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+======================================================
 
-As a first step to using the |productName| Python API, add the following lines to your python script:
+Step 1: Enable the |productName| Python API
+-------------------------------------------
+
+Add the following lines to your python script.
 
     .. code-block:: python
 
      import openfl.native as fx
      from openfl.federated import FederatedModel,FederatedDataSet
 
-This will load the |productName| package and import wrappers that adapt your existing data and models to a (simulated) federated context. To setup |productName| for a basic experiment, just run :code:`fx.init()`. This command will create a new workspace directory containing default plan values for your experiments, and setup a two collaborator experiment (the collaborators are creatively named 'one' and 'two'). If you want to create an experiment with a large number of collaborators, this can be done programmatically as follows:
+This loads the |productName| package and import wrappers that adapt your existing data and models to a (simulated) federated context.
+
+Step 2: Set Up the Experiment
+-----------------------------
+
+For a basic experiment, run the following command.
+
+    .. code-block:: python
+
+     fx.init()
+	 
+	 
+This creates a workspace directory containing default FL Plan values for your experiments, and set up a an experiment with two collaborators (the collaborators are creatively named 'one' and 'two').
+
+For an experiment with more collaborators, run the following command.
 
     .. code-block:: python
 
@@ -56,7 +72,14 @@ This will load the |productName| package and import wrappers that adapt your exi
      fx.init('keras_cnn_mnist',col_names=collaborator_list)
 
 
-One last point about :code:`fx.init()`. For Keras models, we recommend starting with the :code:`keras_cnn_mnist` template (by running :code:`fx.init("keras_cnn_mnist")`, and for pytorch models `torch_cnn_mnist` (by running :code:`fx.init("torch_cnn_mnist")`)
+.. note::
+
+The following are template recommendations for training models:
+- For Keras models, run :code:`fx.init("keras_cnn_mnist")` to start with the *keras_cnn_mnist* template.
+- For PyTorch models, run :code:`fx.init("torch_cnn_mnist")` to start with the *torch_cnn_mnist* template.
+
+Step 3: Customize the FL Plan
+-----------------------------
 
 At this point you may be wondering what goes into a FL.Plan, and how you can customize it. To see what is part of the FL.Plan that was created with the :code:`fx.init` command, run :code:`fx.get_plan()`:
 
