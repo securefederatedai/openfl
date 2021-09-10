@@ -103,15 +103,3 @@ def shard_descriptor_from_config(shard_config_path: str):
     instance = getattr(module, class_name)(**params)
 
     return instance
-
-# if __name__ == '__main__':
-#     start_(
-#         shard_name='env_one',
-#         director_host='localhost',
-#         director_port=50051,
-#         tls=False,
-#         shard_config_path='/home/dmitry/code/openfl/openfl-tutorials/interactive_api/Director_Pytorch_Kvasir_UNET/envoy_folder/shard_config.yaml',
-#         root_certificate=None,
-#         private_key=None,
-#         certificate=None,
-#     )
