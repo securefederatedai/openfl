@@ -84,7 +84,7 @@ Step 3: Customize the Federated Learning Plan (FL Plan)
 
 The :code:`fx.init` command modifies an FL Plan, described by the :code:`plan.yaml` file located in the :code:`plan` directory of the workspace.
 
-See the FL plan values that can be set with the following command.
+See the FL plan values that can be set with the :code:`fx.get_plan()` command.
 
     .. code-block:: python
 
@@ -101,7 +101,7 @@ See the FL plan values that can be set with the following command.
 
 Based on this plan values, the experiment will run for 10 rounds. You can customize the experiment to run for 20 rounds either at runtime or ahead of time.
 
-Set the values at **runtime** with the :code:`override-config` parameter of :code:`fx.run_experiment`.
+Set the value at **runtime** with the :code:`override-config` parameter of :code:`fx.run_experiment`.
 
     .. code-block:: python
 
@@ -109,7 +109,7 @@ Set the values at **runtime** with the :code:`override-config` parameter of :cod
      fx.run_experiment(experiment_collaborators,override_config={"aggregator.settings.rounds_to_train": 20})
 
 
-Set the values **ahead of time** with :code:`fx.update_plan()`.
+Set the value **ahead of time** with :code:`fx.update_plan()`.
 
     .. code-block:: python
 
