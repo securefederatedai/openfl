@@ -4,27 +4,27 @@ sequenceDiagram
   participant E as Envoy
   participant F as Frontend API
 
-  E-)+D: Acknowledge Shard
+  E-)+D: Acknowledge Shard request
   note over ER,D: Envoy registry is a dict-like object
-  D->>ER: Creates and puts to Registry
+  D->>ER: Creates and puts to the Registry
   activate ER
   D->>-E: Approves
   loop Healthcheck timeout
     E-)+D: Sends status
-    D->>ER: Adds info or updates state
+    D->>ER: Adds info or updates ER state
     activate ER
     D->>-E: Acknowledges
   end
   rect rgb(225, 255, 225)
-    Note over D: API requests overlap with healthcheck loop
+    Note over D: API requests may overlap <br>with the healthcheck loop
     F-)+D: Requests Shard Registry
     D->>ER: Gets required info
-    D->>-F: Replies with Registry state
+    D->>-F: Replies with the Registry state
   end
   D-->E: Disconnect
   D-->D: Waits several Healthcheck timeouts
-  D->>ER: Removes from Registry
+  D->>ER: Removes from the Registry
   deactivate ER
   deactivate ER
-  Note over ER: Will not be included in next API Registry request
+  Note over ER: Will not be included in the next <br>API Registry request
             

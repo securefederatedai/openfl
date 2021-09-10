@@ -4,12 +4,13 @@ sequenceDiagram
     rect rgb(0, 255, 0,.1)
         Note over D,E: A Federation startup process
         D->D: Starts
-        E->E: Adapting a dataset
-        E->E: Starts
+        E->E: Starts and loads local Shard Descriptor
         E-->>D: Connects using FQDN and pwd
-        E-->>D: Communicates dataset info to
-        D-->D: Keeps a list of connected Envoys
+        E-->>+D: Communicates dataset info
         D-->D: Ensures unified data interface
+        D-->>-E: Approves
+        D-->D: Keeps a list of connected Envoys
+        
     end
     Note over D,E: We consider a Federation set up
     rect rgb(0, 0, 255,.05)
@@ -22,7 +23,7 @@ sequenceDiagram
             D-->D: The experiment ends
         end
         D->D: Starts an Aggregator
-        D-->>E: Sends workspace(?) and <br>the FL plan to envoys
+        D-->>E: Sends the experiment archive <br>and the FL plan to envoys
         E-->E: Starts a Collaborator
         D-->D: Fills the model with the final weigts <br>and returns to user
     end
