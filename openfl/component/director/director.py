@@ -83,7 +83,8 @@ class Director:
         # TODO: save to file
         self.experiment_data[experiment_name] = data_file_path
 
-        asyncio.create_task(self._run_aggregator_in_workspace(
+        loop = asyncio.get_event_loop()  # TODO: refactor after end of support for python3.6
+        loop.create_task(self._run_aggregator_in_workspace(
             experiment_name=experiment_name,
             data_file_name=data_file_path,
             experiment_sender=sender_name,
