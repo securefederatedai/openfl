@@ -3,32 +3,44 @@
 
 .. _running_notebook:
 
+*************************
 Jupyter Notebook Workflow
-#########################
+*************************
 
-New to |productName|? Get familiar with our native Python API using the built-in tutorials. After installing the |productName| package in your virtual environment, simply run :code:`fx tutorial start` from the command line. This will start a Jupyter notebook server and return a URL you can use to access each of our tutorials. We provide several jupyter notebooks for Pytorch and Tensorflow that simulate a federation on a local machine.  These tutorials provide a convient entrypoint for learning about |productName| :ref:`conventions <definitions_and_conventions>`  like FL Plans, aggregators, collaborators and more. 
+This workflow will start a Jupyter notebook server and return a URL you can use to access the tutorials. Jupyter notebooks are provided for PyTorch and TensorFlow that simulate a federation on a local machine.
 
 .. note::
 
-	Follow the procedure in the aggregator-based workflow to become familiar with the APIs in |productName| and conventions such as *FL Plans*, *Aggregators*, and *Collaborators*. 
+	Follow the procedure in the Jupyter notebook workflow to become familiar with the APIs in |productName| and conventions such as *FL Plans*, *Aggregators*, and *Collaborators*. 
 	
 
-Starting the tutorials
-~~~~~~~~~~~~~~~~~
+Start the Tutorials
+~~~~~~~~~~~~~~~~~~~
 
-1. Make sure you have initialized the virtual environment and can run the :code:`fx` command.
+1. Start a Python 3.6 (or higher) virtual environment and confirm |productName| is available.
 
-2. Run :code:`fx tutorial start`. This will start a jupyter server on your machine. 
+	.. code-block:: python
 
-3. Copy the URL (including token) to your browser
+     fx
 
-4. Choose a tutorial from which to start. Each of these represent simulated federated learning training demos. The existing tutorials are:
+2. Start a Jupyter server. This returns a URL to access available tutorials.
+
+	.. code-block:: python
+
+     fx tutorial start
+
+3. Open the URL (including the token) in your browser.
+
+4. Choose a tutorial from which to start. Each tutorial is a demonstration of a simulated federated learning. 
+
+The following are examples of available tutorials:
 
  - :code:`Federated Keras MNIST Tutorial`: workspace with a simple `Keras <http://keras.io/>`_ CNN model that will download the `MNIST <http://yann.lecun.com/exdb/mnist/>`_ dataset and train in a federation.
  - :code:`Federated Pytorch MNIST Tutorial`: workspace with a simple `PyTorch <https://pytorch.org/>`_ CNN model that will download the `MNIST <http://yann.lecun.com/exdb/mnist/>`_ dataset and train in a federation.
 
-|productName| Python API Concepts
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Familiarize with the |productName| Python API Concepts
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 As a first step to using the |productName| Python API, add the following lines to your python script:
 
