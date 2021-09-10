@@ -22,7 +22,7 @@ sequenceDiagram
     D->>-F: Replies with the Registry state
   end
   D-->E: Disconnect
-  D-->D: Waits several Healthcheck timeouts
+  D-->D: Waits for several Healthcheck timeouts
   D->>ER: Removes from the Registry
   deactivate ER
   deactivate ER
