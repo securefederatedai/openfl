@@ -74,9 +74,10 @@ For an experiment with more collaborators, run the following command.
 
 .. note::
 
-The following are template recommendations for training models:
-- For Keras models, run :code:`fx.init("keras_cnn_mnist")` to start with the *keras_cnn_mnist* template.
-- For PyTorch models, run :code:`fx.init("torch_cnn_mnist")` to start with the *torch_cnn_mnist* template.
+	The following are template recommendations for training models:
+	
+	- For Keras models, run :code:`fx.init("keras_cnn_mnist")` to start with the *keras_cnn_mnist* template.
+	- For PyTorch models, run :code:`fx.init("torch_cnn_mnist")` to start with the *torch_cnn_mnist* template.
 
 Step 3: Customize the FL Plan
 -----------------------------
