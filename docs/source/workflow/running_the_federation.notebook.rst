@@ -32,7 +32,6 @@ Start the Tutorials
 3. Open the URL (including the token) in your browser.
 
 4. Choose a tutorial from which to start. Each tutorial is a demonstration of a simulated federated learning. 
-
 The following are examples of available tutorials:
 
  - :code:`Federated Keras MNIST Tutorial`: workspace with a simple `Keras <http://keras.io/>`_ CNN model that will download the `MNIST <http://yann.lecun.com/exdb/mnist/>`_ dataset and train in a federation.
