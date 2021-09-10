@@ -1,0 +1,29 @@
+sequenceDiagram
+    participant D as Director
+    participant E as Envoy
+    rect rgb(0, 255, 0,.1)
+        Note over D,E: A Federation startup process
+        D->D: Starts
+        E->E: Adapting a dataset
+        E->E: Starts
+        E-->>D: Connects using FQDN and pwd
+        E-->>D: Communicates dataset info to
+        D-->D: Keeps a list of connected Envoys
+        D-->D: Ensures unified data interface
+    end
+    Note over D,E: We consider a Federation set up
+    rect rgb(0, 0, 255,.05)
+        Note over D,E: An Experiment's start
+        D->D: Registers a model, FL tasks and an FL plan
+        D->D:Starts an Aggregator with a toy plan
+        Note left of D: An Envoy with dummy data is <br>started locally
+        opt Test run failed
+            D-->D: Notifies user that <br>the experiment is inconsistent
+            D-->D: The experiment ends
+        end
+        D->D: Starts an Aggregator
+        D-->>E: Sends workspace(?) and <br>the FL plan to envoys
+        E-->E: Starts a Collaborator
+        D-->D: Fills the model with the final weigts <br>and returns to user
+    end
+    Note over D,E: The Experiment ended. <br> The Federation keeps existing.

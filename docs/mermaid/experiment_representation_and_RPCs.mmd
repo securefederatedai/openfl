@@ -1,0 +1,59 @@
+sequenceDiagram
+  participant ER as Experiment Representation
+  participant D as Director
+  participant E as Envoy
+  participant F as Frontend API
+
+  F->>+D: Set New Experiment
+  D->>+ER: Creates ER and puts in registry
+  note over ER,D: Experiment registry is a queue-like object
+  D->>-F: Approves
+
+  F->>+D: Get Registered experiments
+  D->>ER: Gets name and status
+  note over ER,D: Registry also return experiments by user id
+  D->>-F: Approves
+
+  rect rgb(225, 255, 225)
+    note over ER,E: The Experiment distribution procedure
+    note over ER,E: May be started even if there are no experiments in queue
+    E-)+D: Wait Experiment *STREAM*
+    note over ER,D: The Experiment is the next in the queue
+    note over ER,D: and the Envoy is assigned for this Experiment
+    D->>ER: Gets experiment name (by order)
+    D->>-E: Wait Experiment Response
+
+    E->>+D: Get Experiment Data
+    D->>ER: Gets experiment archive (by name)
+    D->>ER: Sets status to Active ?
+    D->>-E: Experiment Data
+  end
+
+  rect rgb(255, 225, 225)
+  note over ER,E: The Experiment execution
+    D-->D: Starts an aggregator that orchestrates experiment
+    D->>ER: Removes experiment archive ?
+    D-->D: Finishes the experiment and releases involved Envoys
+    D->>+ER: Puts training artifacts
+    D->>ER: Sets status to Finished ?
+  end
+
+  rect rgb(225, 225, 255)
+    note over ER,F: Restoring experiment on Frontend from Director's representation
+    F->>+D: Restore experiment by name
+    D->>ER: Gets required data
+    note over ER,D: Registry also return experiments by name
+    D->>-F: Response with model structure and the plan
+  end
+
+
+  F->>+D: Requests training artifacts
+  D->>ER: Gets training artifacts
+  D->>-F: Respond
+
+  F->>+D: Requests removing the Experiment entry
+  D->>ER: Removes Experiment from registry
+
+  deactivate ER
+  deactivate ER
+  
