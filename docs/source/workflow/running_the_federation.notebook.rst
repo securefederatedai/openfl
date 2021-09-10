@@ -79,10 +79,12 @@ For an experiment with more collaborators, run the following command.
 	- For Keras models, run :code:`fx.init("keras_cnn_mnist")` to start with the *keras_cnn_mnist* template.
 	- For PyTorch models, run :code:`fx.init("torch_cnn_mnist")` to start with the *torch_cnn_mnist* template.
 
-Step 3: Customize the FL Plan
------------------------------
+Step 3: Customize the Federated Learning Plan (FL Plan)
+-------------------------------------------------------
 
-At this point you may be wondering what goes into a FL.Plan, and how you can customize it. To see what is part of the FL.Plan that was created with the :code:`fx.init` command, run :code:`fx.get_plan()`:
+The :code:`fx.init` command modifies an FL Plan, described by the :code:`plan.yaml` file located in the :code:`plan` directory of the workspace.
+
+See the FL plan values that can be set with the following command.
 
     .. code-block:: python
 
@@ -97,17 +99,26 @@ At this point you may be wondering what goes into a FL.Plan, and how you can cus
        ...
      }
 
-The :code:`fx.get_plan()` command returns all of the plan values that can be set. If you wish to change any of them, these can be provided at experiment runtime in the :code:`override-config` parameter of :code:`fx.run_experiment`, or ahead of time with :code:`fx.update_plan()`. Based on the plan returned above, we see that this experiment will run for 10 rounds. If we wanted to train for 20 rounds instead, we could provide that overriden key value pair as follows:
+Based on this plan values, the experiment will run for 10 rounds. You can customize the experiment to run for 20 rounds either at runtime or ahead of time.
+
+Set the values at **runtime** with the :code:`override-config` parameter of :code:`fx.run_experiment`.
+
+    .. code-block:: python
+
+     #set values at experiment runtime
+     fx.run_experiment(experiment_collaborators,override_config={"aggregator.settings.rounds_to_train": 20})
+
+
+Set the values **ahead of time** with :code:`fx.update_plan()`.
 
     .. code-block:: python
 
      #Set values ahead of time with fx.update_plan() 
      fx.update_plan({"aggregator.settings.rounds_to_train": 20})
 
-     #Or set values at experiment runtime
-     fx.run_experiment(experiment_collaborators,override_config={"aggregator.settings.rounds_to_train": 20})
 
-
+Step 4: Wrap the Data and Model
+-------------------------------
 Now that our workspace has been created and know the plan for the experiment, we can actually wrap the data and model. :code:`FederatedDataSet` wraps in-memory numpy datasets and includes a setup function that will split the data into N mutually-exclusive chunks for each collaborator participating in the experiment. 
 
     .. code-block:: python
