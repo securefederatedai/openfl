@@ -34,7 +34,7 @@ Perform this procedure on every node in the federation.
 
 			$ pip install \ |productWheel|\
    
-	B. **Windows**\* \  (and probably **macOS**\* \ ) installation:
+	B. **Windows**\* \  (and probably **macOS**\* \) installation:
 
 		  #. Clone the |productName| repository:
 
