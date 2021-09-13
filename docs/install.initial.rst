@@ -9,9 +9,9 @@ Install the |productName| Package
 
 Perform this procedure on every node in the federation.
 
-1. Install a Python 3.6 (or higher) virtual environment. Conda (version 4.9 or above) is preferred, but other virtual environments should work as well.
-   Conda can either be installed via the `Anaconda <https://www.anaconda.com/products/individual>`_
-   or `Miniconda <https://docs.conda.io/en/latest/miniconda.html>`_ distributions.
+1. Install a Python\ :sup:`*`\  3.6 (or higher) virtual environment. Conda\ :sup:`*`\  (version 4.9 or above) is preferred, but other virtual environments should work as well.
+   Conda can either be installed via the `Anaconda <https://www.anaconda.com/products/individual>`_\ :sup:`*`\ 
+   or `Miniconda <https://docs.conda.io/en/latest/miniconda.html>`_\ :sup:`*`\  distributions.
 
    Once conda is installed, you may need to log out and log in again for the changes to take effect.
 
@@ -29,13 +29,13 @@ Perform this procedure on every node in the federation.
 
 4. Install the |productName| package.
 
-	A. **Linux** installation: 
+	A. **Linux**\ :sup:`*`\  installation: 
 
 		.. parsed-literal::
 
 			$ pip install \ |productWheel|\
    
-	B. **Windows** (and probably **macOS**) installation:
+	B. **Windows**\ :sup:`*`\  (and probably **macOS**\ :sup:`*`\ ) installation:
 
 		  #. Clone the |productName| repository:
 
