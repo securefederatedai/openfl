@@ -11,9 +11,9 @@
 Welcome to the |productName| Documentation!
 *******************************************
 
-Open Federated Learning (|productName|) is a Python 3 library for federated learning that enables organizations to collaboratively train a model without sharing sensitive information.
+Open Federated Learning (|productName|) is a Python\ :sup:`*`\ 3 library for federated learning that enables organizations to collaboratively train a model without sharing sensitive information.
 
-The aggregation to create the global training model is framework-agnostic, while the collaboration from local training models using local datasets supports any deep learning frameworks, such as `TensorFlow <https://www.tensorflow.org/>`_\ :sup:`*`\ or `PyTorch <https://pytorch.org/>`_\ :sup:`*`\, via a plugin framework.
+The aggregation to create the global training model is framework-agnostic, while the collaboration from local training models using local datasets supports any deep learning frameworks, such as `TensorFlow <https://www.tensorflow.org/>`_\ :sup:`*`\  or `PyTorch <https://pytorch.org/>`_\ :sup:`*`\, via a plugin framework.
 
 .. |productName| has the following components:
 
