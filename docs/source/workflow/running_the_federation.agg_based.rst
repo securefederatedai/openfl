@@ -28,13 +28,16 @@ The procedure below summarizes the steps to set up an aggregator-based workflow.
 
 4. Ensure each node in the federation has a valid PKI certificate.
 
-5. Start the federation on the aggregator node.
+5. Start the federation.
+
+- On the aggregator node.
 
 	.. code-block:: console
 
 		$ fx aggregator start
 
-	Start the federation on the each of the collaborator nodes.
+	
+- On the each of the collaborator nodes.
 
 	.. code-block:: console
 
