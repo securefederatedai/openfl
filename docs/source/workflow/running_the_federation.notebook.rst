@@ -134,7 +134,7 @@ Use the :code:`FederatedDataSet` function to wrap in-memory numpy datasets and s
 
 Similarly, the :code:`FederatedModel` function takes as an argument your model definition. For the first example, you can wrap a Keras model in a function that outputs the compiled model.
 
-	**Example 1:**
+**Example 1:**
 
     .. code-block:: python
 
@@ -156,7 +156,7 @@ For the second example with a PyTorch model, the :code:`FederatedModel` function
 - The lambda optimizer method that can be set to a newly instantiated network
 - The loss function
 
-	**Example 2:**
+**Example 2:**
 
     .. code-block:: python
 
