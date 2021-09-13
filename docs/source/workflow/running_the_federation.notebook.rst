@@ -203,7 +203,7 @@ This command creates a model for each collaborator with their data shard.
 
 .. note::
 
-In production deployments of |productName|, each collaborator will have the data on premise. Splitting data into shards is not necessary.
+	In production deployments of |productName|, each collaborator will have the data on premise. Splitting data into shards is not necessary.
 
 Step 6: Run the Experiment
 --------------------------
