@@ -10,7 +10,7 @@ Aggregator-Based Workflow
 This workflow uses short-lived components in a federation, which is terminated when the experiment is finished. The components are as follows:
 
 - The *Collaborator* uses a local dataset to train a global model and the *Aggregator* receives model updates from collaborators and combines them to form the global model.
-- The *Aggregator* is framework-agnostic, while the *Collaborator* can use any deep learning frameworks, such as `TensorFlow <https://www.tensorflow.org/>`_ or `PyTorch <https://pytorch.org/>`_.
+- The *Aggregator* is framework-agnostic, while the *Collaborator* can use any deep learning frameworks, such as `TensorFlow <https://www.tensorflow.org/>`_\ :sup:`*`\  or `PyTorch <https://pytorch.org/>`_\ :sup:`*`\.
 
 An overview of this workflow is shown below.
 
