@@ -90,7 +90,6 @@ Create a Workspace on the Aggregator
     
        $ fx plan initialize
 
-
 	.. note::
 		
 		While models can be trained from scratch, in many cases the federation performs fine-tuning of a previously trained model. For this reason, pre-trained weights for the model are stored in protobuf files on the aggregator and passed to collaborators during initialization. 
@@ -102,16 +101,19 @@ Create a Workspace on the Aggregator
 	- override the autopopulated FQDN value with the :code:`-a` flag
 	
 		.. code-block:: console
+		
 			$ fx plan initialize -a aggregator-hostname.internal-domain.com
 		
 	- override the apparent FQDN of the system by setting an FQDN environment variable,
 
 		.. code-block:: console
+		
 			$ export FQDN=x.x.x.x
 		
 	and initializing the FL Plan
 	
 		.. code-block:: console
+		
 			$ fx plan initialize
 
    
