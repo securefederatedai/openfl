@@ -192,19 +192,26 @@ For the second example with a PyTorch model, the :code:`FederatedModel` function
 Step 5: Define the Collaborators
 --------------------------------
 
-Now we just need to define which collaborators (that were created with :code:`fx.init()`) will take part in the experiment. If you want to use the same collaborator list, this can be done in a single line with a dictionary comprehension:
+Define the collaborators taking part in the experiment. The example below uses the collaborator list, created earlier with the the :code:`fx.init()` command.
 
     .. code-block:: python
 
      experiment_collaborators = {col_name:col_model for col_name,col_model \
                                       in zip(collaborator_list,fl_model.setup(len(collaborator_list)))}
 
-This command will create a model for each collaborator each their data slice. In production deployments of |productName|, each collaborator will have the data on premise, and the splitting of data into shards is not necessary.
+This command creates a model for each collaborator with their data shard.
 
-We are now ready to run our experiment!
+.. note::
+
+In production deployments of |productName|, each collaborator will have the data on premise. Splitting data into shards is not necessary.
+
+Step 6: Run the Experiment
+--------------------------
+
+Run the experiment for five rounds and return the final model once completed.
 
     .. code-block:: python
 
      final_fl_model = fx.run_experiment(experiment_collaborators,override_config={"aggregator.settings.rounds_to_train": 5})
 
-This will run the experiment for five rounds, and return the final model once it has completed. 
+
