@@ -43,7 +43,7 @@ Familiarize with the |productName| Python API Concepts
 Step 1: Enable the |productName| Python API
 -------------------------------------------
 
-Add the following lines to your python script.
+Add the following lines to your Python script.
 
     .. code-block:: python
 
@@ -125,13 +125,16 @@ Set the value **ahead of time** with :code:`fx.update_plan()`.
 
 Step 4: Wrap the Data and Model
 -------------------------------
-Now that our workspace has been created and know the plan for the experiment, we can actually wrap the data and model. :code:`FederatedDataSet` wraps in-memory numpy datasets and includes a setup function that will split the data into N mutually-exclusive chunks for each collaborator participating in the experiment. 
+
+Use the :code:`FederatedDataSet` function to wrap in-memory numpy datasets and split the data into N mutually-exclusive chunks for each collaborator participating in the experiment.
 
     .. code-block:: python
 
      fl_data = FederatedDataSet(train_images,train_labels,valid_images,valid_labels,batch_size=32,num_classes=classes)
 
-Similarly, the :code:`FederatedModel` wrapper takes as an argument your model definition. If you have a Tensorflow/Keras model, wrap it in a function that outputs the fully compiled model (as in the example below):
+Similarly, the :code:`FederatedModel` function takes as an argument your model definition. For the first example, you can wrap a Keras model in a function that outputs the compiled model.
+
+	**Example 1:**
 
     .. code-block:: python
 
@@ -147,7 +150,13 @@ Similarly, the :code:`FederatedModel` wrapper takes as an argument your model de
 
      fl_model = FederatedModel(build_model,data_loader=fl_data)
 
-If you have a Pytorch model, there are three parameters that should be passed to the :code:`FederatedModel`: The class that defines the network definition and associated forward function, lambda optimizer method that can be set to a newly instantiated network, and finally the loss function. See below for an example:
+For the second example with a PyTorch model, the :code:`FederatedModel` function takes the following parameters: 
+
+- The class that defines the network definition and associated forward function
+- The lambda optimizer method that can be set to a newly instantiated network
+- The loss function
+
+	**Example 2:**
 
     .. code-block:: python
 
@@ -179,6 +188,9 @@ If you have a Pytorch model, there are three parameters that should be passed to
 
      fl_model = FederatedModel(build_model=Net,optimizer=optimizer,loss_fn=cross_entropy,data_loader=fl_data)
 
+
+Step 5: Define the Collaborators
+--------------------------------
 
 Now we just need to define which collaborators (that were created with :code:`fx.init()`) will take part in the experiment. If you want to use the same collaborator list, this can be done in a single line with a dictionary comprehension:
 
