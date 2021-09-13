@@ -88,13 +88,13 @@ Create a Workspace on the Aggregator
 
     .. code-block:: console
     
-       $ fx plan initialize\
+		$ fx plan initialize
 
 	.. note::
 		
 		While models can be trained from scratch, in many cases the federation performs fine-tuning of a previously trained model. For this reason, pre-trained weights for the model are stored in protobuf files on the aggregator and passed to collaborators during initialization. 
 		
-		The protobuf file with the initial weights is found in **${WORKSPACE_TEMPLATE}_init.pbuf**.\
+		The protobuf file with the initial weights is found in **${WORKSPACE_TEMPLATE}_init.pbuf**.
 
     This command initializes the FL Plan and autopopulates the `fully qualified domain name (FQDN) <https://en.wikipedia.org/wiki/Fully_qualified_domain_name>`_ of the aggregator node. This FQDN is embedded within the FL Plan so the collaborators know address of the externally accessible aggregator server to connect to. 
 	
