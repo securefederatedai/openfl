@@ -43,7 +43,7 @@ Create a Workspace on the Aggregator
  - :code:`torch_cnn_histology`: workspace with a simple `PyTorch <http://pytorch.org/>`_ CNN model that will download the `Colorectal Histology <https://zenodo.org/record/53169#.XGZemKwzbmG>`_ dataset and train in a federation.
  - :code:`torch_cnn_mnist`: workspace with a simple `PyTorch <http://pytorch.org>`_ CNN model that will download the `MNIST <http://yann.lecun.com/exdb/mnist/>`_ dataset and train in a federation.
 
-3.  This example uses the :code:`keras_cnn_mnist` template. 
+3. This example uses the :code:`keras_cnn_mnist` template. 
 
 	Set the environment variables to use the :code:`keras_cnn_mnist` as the template and :code:`${HOME}/my_federation` as the path to the workspace directory.
 
@@ -84,7 +84,7 @@ Create a Workspace on the Aggregator
         $ pip install -r requirements.txt
       
   
-7.  While models can be trained from scratch, in many cases the federation performs fine-tuning of a previously trained model. For this reason, pre-trained weights for the model are stored in protobuf files on the aggregator and passed to collaborators during initialization.
+7.	While models can be trained from scratch, in many cases the federation performs fine-tuning of a previously trained model. For this reason, pre-trained weights for the model are stored in protobuf files on the aggregator and passed to collaborators during initialization. 
 
 	The protobuf file with the initial weights is found in **${WORKSPACE_TEMPLATE}_init.pbuf**.
 	
@@ -94,7 +94,7 @@ Create a Workspace on the Aggregator
     
 		$ fx plan initialize
 		
-		
+	
     This command initializes the FL Plan and autopopulates the `fully qualified domain name (FQDN) <https://en.wikipedia.org/wiki/Fully_qualified_domain_name>`_ of the aggregator node. This FQDN is embedded within the FL Plan so the collaborators know address of the externally accessible aggregator server to connect to. 
 	
 	If you face connection issues with the autopopulated FQDN in the FL Plan, you can do one of the following:
