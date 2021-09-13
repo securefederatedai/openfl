@@ -7,7 +7,7 @@
 Simulated Federation Workflow
 *****************************
 
-This workflow will start a Jupyter\ :sup:`*`\  notebook server and return a URL you can use to access the tutorials. Jupyter notebooks are provided for PyTorch\ :sup:`*`\  and TensorFlow\ :sup:`*`\  that simulate a federation on a local machine.
+This workflow will start a Jupyter\* \  notebook server and return a URL you can use to access the tutorials. Jupyter notebooks are provided for PyTorch\* \  and TensorFlow\* \  that simulate a federation on a local machine.
 
 .. note::
 
@@ -17,7 +17,7 @@ This workflow will start a Jupyter\ :sup:`*`\  notebook server and return a URL 
 Start the Tutorials
 ===================
 
-1. Start a Python\ :sup:`*`\  3.6 (or higher) virtual environment and confirm |productName| is available.
+1. Start a Python\* \  3.6 (or higher) virtual environment and confirm |productName| is available.
 
 	.. code-block:: python
 
