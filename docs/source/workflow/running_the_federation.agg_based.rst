@@ -34,7 +34,7 @@ The procedure below summarizes the steps to set up an aggregator-based workflow.
 
 		$ fx aggregator start
 
-6. Start the federation on the each of the collaborator nodes.
+	Start the federation on the each of the collaborator nodes.
 
 	.. code-block:: console
 
