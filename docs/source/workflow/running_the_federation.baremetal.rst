@@ -3,14 +3,14 @@
 
 .. _running_baremetal:
 
-*********************
-Create the Federation
-*********************
+*******************************
+Create the Aggregator Workspace
+*******************************
 
 Prerequisites
 =============
 
-You have installed the |prodName| package on every node (aggregator and collaborators) in the federation.
+You have installed the |productName| package on every node (aggregator and collaborators) in the federation.
 
 See :ref:`install_package` for details.
 
@@ -105,7 +105,7 @@ Create a Workspace on the Aggregator
 			$ fx plan initialize -a aggregator-hostname.internal-domain.com
 		
 	- override the apparent FQDN of the system by setting an FQDN environment variable,
-
+	
 		.. code-block:: console
 		
 			$ export FQDN=x.x.x.x
@@ -115,8 +115,8 @@ Create a Workspace on the Aggregator
 		.. code-block:: console
 		
 			$ fx plan initialize
+		
 
-   
 .. note::
     
        Each workspace may have multiple Federated Learning plans and multiple collaborator lists associated with it. Therefore, the Aggregator has the following optional parameters.
