@@ -32,7 +32,7 @@ Create a Workspace on the Aggregator
 
 	.. code-block:: python
 
-		fx
+		$ fx
 
 
 2. Choose a workspace template, which are end-to-end federated learning training demonstrations. The following are existing templates:
@@ -95,7 +95,7 @@ Create a Workspace on the Aggregator
 		$ fx plan initialize
 		
 	
-    This command initializes the FL Plan and autopopulates the `fully qualified domain name (FQDN) <https://en.wikipedia.org/wiki/Fully_qualified_domain_name>`_ of the aggregator node. This FQDN is embedded within the FL Plan so the collaborators know address of the externally accessible aggregator server to connect to. 
+    This command initializes the FL Plan and autopopulates the `fully qualified domain name (FQDN) <https://en.wikipedia.org/wiki/Fully_qualified_domain_name>`_ of the aggregator node. This FQDN is embedded within the FL Plan so the collaborators know address of the externally accessible aggregator server to connect to.
 	
 	If you face connection issues with the autopopulated FQDN in the FL Plan, you can do one of the following:
 	
