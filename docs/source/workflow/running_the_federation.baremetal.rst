@@ -88,7 +88,7 @@ Create a Workspace on the Aggregator
 
     .. code-block:: console
     
-       $ fx plan initialize
+       $ fx plan initialize\
 
 	.. note::
 		
@@ -96,7 +96,9 @@ Create a Workspace on the Aggregator
 		
 		The protobuf file with the initial weights is found in **${WORKSPACE_TEMPLATE}_init.pbuf**.\
 
-    This command initializes the FL Plan and autopopulates the `fully qualified domain name (FQDN) <https://en.wikipedia.org/wiki/Fully_qualified_domain_name>`_ of the aggregator node. This FQDN is embedded within the FL Plan so the collaborators know address of the externally accessible aggregator server to connect to. If you face connection issues with the autopopulated FQDN in the FL Plan, you can do one of the following:
+    This command initializes the FL Plan and autopopulates the `fully qualified domain name (FQDN) <https://en.wikipedia.org/wiki/Fully_qualified_domain_name>`_ of the aggregator node. This FQDN is embedded within the FL Plan so the collaborators know address of the externally accessible aggregator server to connect to. 
+	
+	If you face connection issues with the autopopulated FQDN in the FL Plan, you can do one of the following:
 	
 	- override the autopopulated FQDN value with the :code:`-a` flag
 	
@@ -110,11 +112,11 @@ Create a Workspace on the Aggregator
 		
 			$ export FQDN=x.x.x.x
 		
-	and initializing the FL Plan
+		and initializing the FL Plan
 	
-		.. code-block:: console
-		
-			$ fx plan initialize
+			.. code-block:: console
+			
+				$ fx plan initialize
 
    
 .. note::
