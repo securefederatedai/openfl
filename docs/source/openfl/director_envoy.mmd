@@ -5,7 +5,7 @@ sequenceDiagram
         Note over D,E: A Federation startup process
         D->D: Starts
         E->E: Starts and loads local Shard Descriptor
-        E-->>D: Connects using FQDN and pwd
+        E-->>D: Connects using FQDN and certificate
         E-->>+D: Communicates dataset info
         D-->D: Ensures unified data interface
         D-->>-E: Approves
