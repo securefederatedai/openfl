@@ -4,7 +4,7 @@
 .. _install_docker:
 
 *********************************************
-Build the Docker\* \  Image (Optional)
+Docker\* \-Based Federation Workflow
 *********************************************
 
 .. note::

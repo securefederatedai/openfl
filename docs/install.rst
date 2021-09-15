@@ -17,5 +17,5 @@ Install the following software on every node in the learning federation.
    :maxdepth: 1
 
    install.initial
-   install.docker
+.. install.docker
 
