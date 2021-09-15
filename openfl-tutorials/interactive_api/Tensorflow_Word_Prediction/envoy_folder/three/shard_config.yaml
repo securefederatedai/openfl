@@ -1,0 +1,4 @@
+template: shard_descriptor.NextWordShardDescriptor
+params:
+  title: Wailing Well  # https://www.thin-ghost.org/items/show/164
+  author: M. R. James

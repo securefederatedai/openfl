@@ -1,0 +1,5 @@
+# https://www.hplovecraft.com/writings/texts/fiction/wid.aspx
+template: shard_descriptor.NextWordShardDescriptor
+params:
+  title: The Whisperer in Darkness
+  author: H. P. Lovecraft

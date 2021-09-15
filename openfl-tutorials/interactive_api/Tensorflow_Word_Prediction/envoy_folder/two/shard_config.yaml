@@ -1,0 +1,4 @@
+template: shard_descriptor.NextWordShardDescriptor
+params:
+  title: Pledged to the Dead  # https://www.gutenberg.org/files/32514/32514-h/32514-h.htm
+  author: Seabury Quinn
