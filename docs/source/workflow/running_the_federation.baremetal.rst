@@ -89,7 +89,8 @@ Create a Workspace on the Aggregator
 
     While models can be trained from scratch, in many cases the federation performs fine-tuning of a previously trained model. For this reason, pre-trained weights for the model are stored in protobuf files on the aggregator and passed to collaborators during initialization. 
     
-    The protobuf file with the initial weights is found in **${WORKSPACE_TEMPLATE}_init.pbuf**.\
+    The protobuf file with the initial weights is found in **${WORKSPACE_TEMPLATE}_init.pbuf**.
+
 
     .. code-block:: console
     
