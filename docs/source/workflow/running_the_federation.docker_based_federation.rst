@@ -4,7 +4,7 @@
 .. _docker_based_federation:
 
 *********************************************
-Docker\*\-Based Federation Workflow
+Deploy the Federation in Docker\* \
 *********************************************
 
 .. note::

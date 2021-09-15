@@ -4,7 +4,7 @@
 .. _running_the_federation_docker_based_workspace:
 
 *****************************************
-Deploy the Workspace in Docker
+Deploy the Workspace in Docker\* \
 *****************************************
 
 Prerequisites
