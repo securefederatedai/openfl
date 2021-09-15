@@ -21,10 +21,9 @@ Prepare the Workspace in a Docker Container
 
        $ fx workspace dockerize 
 
+By default, the image is saved as `WORKSPACE_NAME_image.tar` in the workspace directory.
 
-    By default, the image is saved as `WORKSPACE_NAME_image.tar` in the workspace directory.
-
-2. The image then can be distributed and run on other machines without any environment prepartion.
+2. The image can be distributed and run on other nodes without any environment preparation.
 
     .. code-block:: console
 
