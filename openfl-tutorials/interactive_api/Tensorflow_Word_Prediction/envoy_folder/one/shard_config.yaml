@@ -1,5 +1,5 @@
-# https://www.hplovecraft.com/writings/texts/fiction/wid.aspx
+# https://www.gutenberg.org/files/36668/36668-h/36668-h.htm
 template: shard_descriptor.NextWordShardDescriptor
 params:
-  title: The Whisperer in Darkness
-  author: H. P. Lovecraft
+  title: Polish Fairy Tales
+  author: A. J. Gliński
