@@ -51,6 +51,5 @@ Continue to the following sections for detailed instructions on setting up this 
    :maxdepth: 2
 
    running_the_federation.baremetal
-   running_the_federation.docker
    running_the_federation.certificates
    running_the_federation.start_nodes.rst

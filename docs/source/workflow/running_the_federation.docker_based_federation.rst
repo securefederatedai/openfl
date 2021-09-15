@@ -54,7 +54,7 @@ Docker containers have the components to initiate and run a federation. However,
      * Copy the files (:code:`scp` or some other secure file transfer) from one host to another
      * Create a shared file system across the federation hosts. *This option might not be ideal for hosts not connected to the same internal network*
 
-.. figure:: images/docker_design.png
+.. figure:: /images/docker_design.png
    :alt: Docker design
    :align: center
    :scale: 70%
