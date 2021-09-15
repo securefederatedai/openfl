@@ -4,7 +4,7 @@
 .. _install_docker:
 
 *********************************************
-Docker\* \-Based Federation Workflow
+Docker\*\-Based Federation Workflow
 *********************************************
 
 .. note::

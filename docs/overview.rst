@@ -5,6 +5,11 @@
 Overview
 ********
 
+.. note::
+
+   This project is continually being developed and improved. Expect changes to this manual, the project code, and the project design.
+   
+
 .. toctree::
 
    overview.what_is_federated_learning
