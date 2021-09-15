@@ -10,5 +10,5 @@ Docker\*\-Based Workspace Workflow
 .. toctree::
    :maxdepth: 1
 
-   source/workflow/running_the_federation.baremetal
-   source/workflow/running_the_federation.docker_based_workspace
+   running_the_federation.baremetal
+   running_the_federation.docker_based_workspace
