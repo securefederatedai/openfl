@@ -7,10 +7,6 @@ import "google/protobuf/duration.proto";
 import "federation.proto";
 
 
-message RequestHeader {
-    string sender = 1;
-}
-
 // Envoy Messages
 
 message NodeInfo {
@@ -54,7 +50,6 @@ message ExperimentData {
 // API Messages
 
 message ExperimentInfo {
-    RequestHeader header = 1;
     string name = 2;
     repeated string collaborator_names = 3;
     ExperimentData experiment_data = 4;
@@ -71,7 +66,6 @@ message GetTrainedModelRequest {
         BEST_MODEL = 0;
         LAST_MODEL = 1;
     }
-    RequestHeader header = 1;
     string experiment_name = 2;
     ModelType model_type = 3;
 }
@@ -80,12 +74,9 @@ message TrainedModelResponse {
     ModelProto model_proto = 1;
 }
 
-message GetDatasetInfoRequest {
-    RequestHeader header = 1;
-}
+message GetDatasetInfoRequest {}
 
 message StreamMetricsRequest {
-    RequestHeader header = 1;
     string experiment_name = 2;
 }
 
@@ -98,7 +89,6 @@ message StreamMetricsResponse {
 }
 
 message RemoveExperimentRequest {
-    RequestHeader header = 1;
     string experiment_name = 2;
 }
 
