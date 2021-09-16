@@ -11,7 +11,6 @@ from collections import defaultdict
 from pathlib import Path
 
 from openfl.federated import Plan
-from openfl.protocols import director_pb2
 from openfl.utilities.workspace import ExperimentWorkspace
 
 logger = logging.getLogger(__name__)
@@ -52,15 +51,15 @@ class Director:
         self.certificate = certificate
         self.settings = settings or {}
 
-    def acknowledge_shard(self, shard_info: director_pb2.ShardInfo) -> bool:
+    def acknowledge_shard(self, shard_info: dict) -> bool:
         """Save shard info to shard registry if it's acceptable."""
         is_accepted = False
-        if (self.sample_shape != shard_info.sample_shape
-                or self.target_shape != shard_info.target_shape):
+        if (self.sample_shape != shard_info['sample_shape']
+                or self.target_shape != shard_info['target_shape']):
             logger.info('Request was not accepted')
             return is_accepted
         logger.info('Request was accepted')
-        self._shard_registry[shard_info.node_info.name] = {
+        self._shard_registry[shard_info['node_info']['name']] = {
             'shard_info': shard_info,
             'is_online': True,
             'is_experiment_running': False
@@ -133,9 +132,9 @@ class Director:
         """Get dataset info."""
         return self.sample_shape, self.target_shape
 
-    def get_registered_shards(self) -> list:
-        """Get registered shard infos."""
-        return [shard_status['shard_info'] for shard_status in self._shard_registry.values()]
+    # def get_registered_shards(self) -> list:
+    #     """Get registered shard infos."""
+    #     return [shard_status['shard_info'] for shard_status in self._shard_registry.values()]
 
     def stream_metrics(self, experiment_name: str, caller: str):
         """
@@ -189,26 +188,21 @@ class Director:
 
         if cuda_devices_status is not None:
             for i in range(len(cuda_devices_status)):
-                shard_info['shard_info'].node_info.cuda_devices[i] = cuda_devices_status[i]
+                shard_info['shard_info']['node_info']['cuda_devices'][i] = cuda_devices_status[i]
 
         return hc_period
 
     def get_envoys(self) -> list:
         """Get a status information about envoys."""
+        
         logger.info(f'Shard registry: {self._shard_registry}')
-        envoy_infos = []
-        for envoy in self._shard_registry.values():
-            envoy_info = director_pb2.EnvoyInfo(
-                shard_info=envoy['shard_info'],
-                is_online=time.time() < envoy['last_updated'] + envoy['valid_duration'],
-                is_experiment_running=envoy['is_experiment_running']
-            )
-            envoy_info.valid_duration.seconds = envoy['valid_duration']
-            envoy_info.last_updated.seconds = int(envoy['last_updated'])
+        for envoy_info in self._shard_registry.values():
+            envoy_info['is_online'] = (
+                time.time() < envoy_info['last_updated'] +
+                envoy_info['valid_duration']
+                )
 
-            envoy_infos.append(envoy_info)
-
-        return envoy_infos
+        return self._shard_registry.values()
 
     async def _run_aggregator_in_workspace(
             self,
