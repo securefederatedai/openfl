@@ -2,10 +2,10 @@
 # SPDX-License-Identifier: Apache-2.0
 
 """Python low-level API module."""
-import functools
+import json
 import os
 import time
-from collections import defaultdict
+
 from copy import deepcopy
 from logging import getLogger
 from pathlib import Path
@@ -278,10 +278,15 @@ class FLExperiment:
 
         # Tasks part
         for name in task_keeper.task_registry:
+            agg_type_cls = task_keeper.aggregation_types[name].__class__
             if task_keeper.task_contract[name]['optimizer'] is not None:
                 # This is training task
-                plan.config['tasks'][name] = {'function': name,
-                                              'kwargs': task_keeper.task_settings[name]}
+                plan.config['tasks'][name] = {
+                    'function': name,
+                    'aggregation_type': {
+                        'template': f'{agg_type_cls.__module__}.{agg_type_cls.__name__}'
+                    },
+                    'kwargs': task_keeper.task_settings[name]}
             else:
                 # This is a validation type task (not altering the model state)
                 for name_prefix, apply_kwarg in zip(['localy_tuned_model_', 'aggregated_model_'],
@@ -291,7 +296,11 @@ class FLExperiment:
                     task_kwargs.update({'apply': apply_kwarg})
                     plan.config['tasks'][name_prefix + name] = {
                         'function': name,
-                        'kwargs': task_kwargs}
+                        'aggregation_type': {
+                            'template': f'{agg_type_cls.__module__}.{agg_type_cls.__name__}'
+                        },
+                        'kwargs': task_kwargs
+                    }
 
         # TaskRunner framework plugin
         # ['required_plugin_components'] should be already in the default plan with all the fields
@@ -334,171 +343,3 @@ class FLExperiment:
                 [task_keeper, data_loader],
                 ['tasks_interface_file', 'dataloader_interface_file']):
             serializer.serialize(object_, self.plan.config['api_layer']['settings'][filename])
-
-
-class TaskInterface:
-    """
-    Task keeper class.
-
-    Task should accept the following entities that exist on collaborator nodes:
-    1. model - will be rebuilt with relevant weights for every task by `TaskRunner`
-    2. data_loader - data loader equipped with `repository adapter` that provides local data
-    3. device - a device to be used on collaborator machines
-    4. optimizer (optional)
-
-    Task returns a dictionary {metric name: metric value for this task}
-    """
-
-    def __init__(self) -> None:
-        """Initialize task registry."""
-        # Mapping 'task name' -> callable
-        self.task_registry = {}
-        # Mapping 'task name' -> arguments
-        self.task_contract = {}
-        # Mapping 'task name' -> arguments
-        self.task_settings = defaultdict(dict)
-
-    def register_fl_task(self, model, data_loader, device, optimizer=None):
-        """
-        Register FL tasks.
-
-        The task contract should be set up by providing variable names:
-        [model, data_loader, device] - necessarily
-        and optimizer - optionally
-
-        All tasks should accept contract entities to be run on collaborator node.
-        Moreover we ask users return dict{'metric':value} in every task
-        `
-        TI = TaskInterface()
-
-        task_settings = {
-            'batch_size': 32,
-            'some_arg': 228,
-        }
-        @TI.add_kwargs(**task_settings)
-        @TI.register_fl_task(model='my_model', data_loader='train_loader',
-                device='device', optimizer='my_Adam_opt')
-        def foo_task(my_model, train_loader, my_Adam_opt, device, batch_size, some_arg=356)
-            ...
-        `
-        """
-        # The highest level wrapper for allowing arguments for the decorator
-        def decorator_with_args(training_method):
-            # We could pass hooks to the decorator
-            # @functools.wraps(training_method)
-            functools.wraps(training_method)
-
-            def wrapper_decorator(**task_keywords):
-                metric_dict = training_method(**task_keywords)
-                return metric_dict
-
-            # Saving the task and the contract for later serialization
-            self.task_registry[training_method.__name__] = wrapper_decorator
-            contract = {'model': model, 'data_loader': data_loader,
-                        'device': device, 'optimizer': optimizer}
-            self.task_contract[training_method.__name__] = contract
-            # We do not alter user environment
-            return training_method
-
-        return decorator_with_args
-
-    def add_kwargs(self, **task_kwargs):
-        """
-        Register tasks settings.
-
-        Warning! We do not actually need to register additional kwargs,
-        we ust serialize them.
-        This one is a decorator because we need task name and
-        to be consistent with the main registering method
-        """
-        # The highest level wrapper for allowing arguments for the decorator
-        def decorator_with_args(training_method):
-            # Saving the task's settings to be written in plan
-            self.task_settings[training_method.__name__] = task_kwargs
-
-            return training_method
-
-        return decorator_with_args
-
-
-class ModelInterface:
-    """
-    Registers model graph and optimizer.
-
-    To be serialized and sent to collaborator nodes
-
-    This is the place to determine correct framework adapter
-        as they are needed to fill the model graph with trained tensors.
-
-    There is no support for several models / optimizers yet.
-    """
-
-    def __init__(self, model, optimizer, framework_plugin) -> None:
-        """
-        Initialize model keeper.
-
-        Tensors in provided graphs will be used for
-        initialization of the global model.
-
-        Arguments:
-        model: Union[tuple, graph]
-        optimizer: Union[tuple, optimizer]
-        """
-        self.model = model
-        self.optimizer = optimizer
-        self.framework_plugin = framework_plugin
-
-    def provide_model(self):
-        """Retrieve model."""
-        return self.model
-
-    def provide_optimizer(self):
-        """Retrieve optimizer."""
-        return self.optimizer
-
-
-class DataInterface:
-    """
-    The class to define dataloaders.
-
-    In the future users will have to adapt `unified data interface hook`
-        in their dataloaders.
-    For now, we can provide `data_path` variable on every collaborator node
-        at initialization time for dataloader customization
-    """
-
-    def __init__(self, **kwargs):
-        """Initialize DataLoader."""
-        self.kwargs = kwargs
-
-    @property
-    def shard_descriptor(self):
-        """Return shard descriptor."""
-        return self._shard_descriptor
-
-    @shard_descriptor.setter
-    def shard_descriptor(self, shard_descriptor):
-        """
-        Describe per-collaborator procedures or sharding.
-
-        This method will be called during a collaborator initialization.
-        Local shard_descriptor  will be set by Envoy.
-        """
-        self._shard_descriptor = shard_descriptor
-        raise NotImplementedError
-
-    def get_train_loader(self, **kwargs):
-        """Output of this method will be provided to tasks with optimizer in contract."""
-        raise NotImplementedError
-
-    def get_valid_loader(self, **kwargs):
-        """Output of this method will be provided to tasks without optimizer in contract."""
-        raise NotImplementedError
-
-    def get_train_data_size(self):
-        """Information for aggregation."""
-        raise NotImplementedError
-
-    def get_valid_data_size(self):
-        """Information for aggregation."""
-        raise NotImplementedError

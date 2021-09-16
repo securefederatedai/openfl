@@ -20,6 +20,7 @@ setup(
         'openfl',
         'openfl.interface',
         'openfl.interface.interactive_api',
+        'openfl.interface.interactive_api.experiment',
         'openfl.component',
         'openfl.cryptography',
         'openfl.native',
