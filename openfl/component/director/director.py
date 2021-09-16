@@ -219,7 +219,7 @@ class Director:
             progress = _get_experiment_progress(exp)
             result.append({
                 'name': name,
-                'status': 'pending',
+                'status': 'pending_mock',
                 'collaborators_amount': collaborators_amount,
                 'tasks_amount': tasks_amount,
                 'progress': progress,
@@ -235,7 +235,7 @@ class Director:
         collaborators = _get_experiment_collaborators(exp)
         return {
             'name': name,
-            'status': 'pending',
+            'status': 'pending_mock',
             'progress': progress,
             'currentRound': exp.aggregator.round_number,
             'totalRounds': exp.aggregator.rounds_to_train,
@@ -324,16 +324,16 @@ def _get_experiment_progress(experiment) -> float:
 def _get_experiment_tasks(experiment) -> List[dict]:
     return [{
         'name': task['function'],
-        'description': 'Task description',
+        'description': 'Task description Mock',
     } for task in experiment.aggregator.assigner.tasks.values()]
 
 
 def _get_experiment_collaborators(experiment) -> List[dict]:
     return [{
         'name': name,
-        'status': 'pending',
+        'status': 'pending_mock',
         'progress': 0.0,
         'round': 0,
-        'currentTask': '',
-        'nextTask': ''
+        'currentTask': 'Current Task Mock',
+        'nextTask': 'Next Task Mock'
     } for name in experiment.aggregator.authorized_cols]
