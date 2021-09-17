@@ -29,7 +29,6 @@ There are two ways to run this workflow:
 
 .. toctree::
    :maxdepth: 2
-   :hidden:
 
    running_the_federation.docker
    running_the_federation.manual
