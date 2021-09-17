@@ -30,6 +30,6 @@ There are two ways to run this workflow:
 .. toctree::
    :maxdepth: 2
 
-   source/workflow/running_the_federation.docker
-   source/workflow/running_the_federation.manual
-
+   running_the_federation.docker
+   running_the_federation.manual
+   
