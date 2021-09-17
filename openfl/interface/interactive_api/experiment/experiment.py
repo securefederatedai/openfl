@@ -240,7 +240,8 @@ class FLExperiment:
     def _prepare_plan(self, model_provider, task_keeper, data_loader,
                       rounds_to_train,
                       delta_updates=False, opt_treatment='RESET',
-                      model_interface_file='model_obj.pkl', tasks_interface_file='tasks_obj.pkl',
+                      model_interface_file='model_obj.pkl',
+                      tasks_interface_file='tasks_obj.pkl',
                       dataloader_interface_file='loader_obj.pkl'):
         """Fill plan.yaml file using provided setting."""
         # Create a folder to store plans
@@ -281,14 +282,10 @@ class FLExperiment:
 
         # Tasks part
         for name in task_keeper.task_registry:
-            agg_type_cls = task_keeper.aggregation_types[name].__class__
             if task_keeper.task_contract[name]['optimizer'] is not None:
                 # This is training task
                 plan.config['tasks'][name] = {
                     'function': name,
-                    'aggregation_type': {
-                        'template': f'{agg_type_cls.__module__}.{agg_type_cls.__name__}'
-                    },
                     'kwargs': task_keeper.task_settings[name]}
             else:
                 # This is a validation type task (not altering the model state)
@@ -299,9 +296,6 @@ class FLExperiment:
                     task_kwargs.update({'apply': apply_kwarg})
                     plan.config['tasks'][name_prefix + name] = {
                         'function': name,
-                        'aggregation_type': {
-                            'template': f'{agg_type_cls.__module__}.{agg_type_cls.__name__}'
-                        },
                         'kwargs': task_kwargs
                     }
 

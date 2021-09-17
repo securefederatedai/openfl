@@ -259,7 +259,8 @@ class Plan(object):
 
         defaults[SETTINGS]['authorized_cols'] = self.authorized_cols
         defaults[SETTINGS]['rounds_to_train'] = self.rounds_to_train
-        defaults[SETTINGS]['tasks'] = self.get_tasks()
+        task_interface = self.restore_object('tasks_obj.pkl')
+        defaults[SETTINGS]['tasks'] = self.get_tasks(task_interface.aggregation_types)
 
         if self.assigner_ is None:
             self.assigner_ = Plan.build(**defaults)
@@ -294,11 +295,15 @@ class Plan(object):
 
         return self.aggregator_
 
-    def get_tasks(self):
+    def get_tasks(self, aggregation_functions=None):
         """Get federation tasks."""
         tasks = self.config.get('tasks', {})
         tasks.pop(DEFAULTS, None)
         tasks.pop(SETTINGS, None)
+        if aggregation_functions:
+            for task in tasks:
+                tasks[task]['aggregation_type'] = aggregation_functions[tasks[task]['function']]
+            return tasks
         for task in tasks:
             aggregation_type = tasks[task].get('aggregation_type')
             if aggregation_type is None:
@@ -524,16 +529,16 @@ openfl.component.aggregation_functions.AggregationFunctionInterface
 
     def deserialize_interface_objects(self):
         """Deserialize objects for TaskRunner."""
-        serializer = Plan.build(
-            self.config['api_layer']['required_plugin_components']['serializer_plugin'], {})
+        api_layer = self.config['api_layer']
         filenames = [
             'model_interface_file',
             'tasks_interface_file',
             'dataloader_interface_file'
         ]
-        interface_objects = [
-            serializer.restore_object(self.config['api_layer']['settings'][filename])
-            for filename in filenames
-        ]
-        model_provider, task_keeper, data_loader = interface_objects
-        return model_provider, task_keeper, data_loader
+        return (self.restore_object(api_layer['settings'][filename]) for filename in filenames)
+
+    def restore_object(self, filename):
+        serializer_plugin = self.config['api_layer']['required_plugin_components']['serializer_plugin']
+        serializer = Plan.build(serializer_plugin, {})
+        obj = serializer.restore_object(filename)
+        return obj
