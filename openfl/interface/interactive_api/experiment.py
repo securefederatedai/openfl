@@ -434,25 +434,6 @@ class TaskInterface:
         return decorator_with_args
 
 
-    def add_kwargs(self, **task_kwargs):
-        """
-        Register tasks settings.
-
-        Warning! We do not actually need to register additional kwargs,
-        we ust serialize them.
-        This one is a decorator because we need task name and
-        to be consistent with the main registering method
-        """
-        # The highest level wrapper for allowing arguments for the decorator
-        def decorator_with_args(training_method):
-            # Saving the task's settings to be written in plan
-            self.task_settings[training_method.__name__] = task_kwargs
-
-            return training_method
-
-        return decorator_with_args
-
-
 class ModelInterface:
     """
     Registers model graph and optimizer.
