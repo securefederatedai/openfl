@@ -57,7 +57,5 @@ There are two ways to run this workflow:
    :hidden:
 
    running_the_federation.docker
-   running_the_federation.baremetal
-   running_the_federation.certificates
-   running_the_federation.start_nodes.rst
+   running_the_federation.manual
 
