@@ -19,31 +19,6 @@ An overview of this workflow is shown below.
 .. centered:: Overview of the Aggregator-Based Workflow
 
 
-The procedure below summarizes the steps to set up an aggregator-based workflow.
-
-1. Install the |productName| package on all the nodes in the federation :ref:`using these instructions <install_package>`.
-
-2. Create a federated learning workspace on one of the nodes. This node is called the aggregator.
-
-3. Distribute the workspace from the aggregator node to the other collaborator nodes.
-
-4. Ensure each node in the federation has a valid PKI certificate.
-
-5. Start the federation.
-
-	- On the aggregator node.
-
-		.. code-block:: console
-
-			fx aggregator start
-
-		
-	- On the each of the collaborator nodes.
-
-		.. code-block:: console
-
-			fx collaborator start
-
 
 There are two ways to run this workflow:
 

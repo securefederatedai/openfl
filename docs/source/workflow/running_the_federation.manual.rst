@@ -32,10 +32,11 @@ The procedure below summarizes the steps to set up an aggregator-based workflow 
 
 			fx collaborator start
 
+
 .. toctree::
    :maxdepth: 2
    :hidden:
 
    running_the_federation.baremetal
    running_the_federation.certificates
-   running_the_federation.start_nodes.rst
+   running_the_federation.start_nodes
