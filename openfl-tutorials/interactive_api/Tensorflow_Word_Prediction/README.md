@@ -8,10 +8,4 @@ Different envoys could have different texts, there were used 3 books of fairy ta
 
 ### 2. Keras Model
 At this point OpenFL maintains Sequential API and Functional API. Keras Submodels are not supported.
-(Problem at serialization step, more specifically at InputLayer, that is required, but it creates
-only if wrap model with functional API https://stackoverflow.com/questions/58153888/how-to-set-the-input-of-a-keras-subclass-model-in-tensorflow)
-
-### 3. Vocabulary storing
-As we use secure approach, we couldn't share data between envoys, so there is applied open-source 
-word-vectors (code you could find at shard_descriptor.py).
-There is you can find prepared vectors at keyed_vectors.pkl
+https://github.com/intel/openfl/issues/185

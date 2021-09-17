@@ -59,29 +59,17 @@ class NextWordShardDescriptor(ShardDescriptor):
     def get_sequences(data):
         """
         Transform words to sequences, for X transform to vectors as well.
-
-        To make vocab, clean it, sort by frequency (pip install wordfreq) and get keyed vectors:
-            if not spacy.util.is_package('en_core_web_sm'):
-                spacy.cli.download('en_core_web_sm')
-            nlp = spacy.load('en_core_web_sm')
-
-            clean_vocab_list = [word for word in nlp.vocab.strings
-                                if re.fullmatch(r'[a-z]+', word) and
-                                if wordfreq.zipf_frequency(word, 'en', wordlist='small') > 3.7]
-
-            word_to_vector = pd.Series([], name='vector')
-            for word in clean_vocab_list:
-                word_to_vector[word] = nlp(word).vector
-            word_to_vector.to_pickle('keyed_vectors.pkl')
         """
         # spacy en_core_web_sm vocab_size = 10719, vector_size = 96
         x_seq = []
         y_seq = []
-        vectors = pd.read_pickle('keyed_vectors.pkl')
+        # created with vectors/make_vocab.py
+        vectors = pd.read_feather(Path.cwd() / 'vectors' / 'keyed_vectors.feather')
+        vectors.set_index('index', inplace=True)
         for i in range(len(data) - 3):
             x = data[i:i + 3]  # make 3-grams
             y = data[i + 3]
-            cur_x = [vectors[word] for word in x if word in vectors]
+            cur_x = [vectors.vector[word] for word in x if word in vectors.index]
             if len(cur_x) == 3 and y in vectors:
                 x_seq.append(cur_x)
                 y_seq.append(vectors.index.get_loc(y))
