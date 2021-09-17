@@ -1,19 +1,30 @@
 .. # Copyright (C) 2020-2021 Intel Corporation
 .. # SPDX-License-Identifier: Apache-2.0
+.. not used
 
 .. _running_the_federation_docker_based_workspace:
 
-*****************************************
-Deploy the Workspace in Docker\* \
-*****************************************
+********************
+Docker\* \  Approach
+********************
+
+There are two ways you can run |productName| with Docker\* \.
+
+- Deploy a federation in a Docker container
+- Deploy your workspace in a Docker container
+
+
+.. _running_the_federation_docker_based_workspace:
+Deploy Your Workspace in a Docker Container
+===========================================
 
 Prerequisites
-=============
+-------------
 
 You have already set up a TaskRunner and run :code:`fx plan initialize` in the workspace directory. See :ref:`running_the_federation.baremetal` for details.
 
 Prepare the Workspace in a Docker Container
-===========================================
+-------------------------------------------
 
 1. Build an image with |productName| installed and the workspace imported.
 

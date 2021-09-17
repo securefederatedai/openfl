@@ -32,7 +32,7 @@ Create a Workspace on the Aggregator
 
 	.. code-block:: python
 
-		$ fx
+		fx
 
 
 2.	Choose a workspace template, which are end-to-end federated learning training demonstrations. The following are existing templates:
@@ -49,14 +49,14 @@ Create a Workspace on the Aggregator
 	
     .. code-block:: console
     
-        $ export WORKSPACE_TEMPLATE=keras_cnn_mnist
-        $ export WORKSPACE_PATH=${HOME}/my_federation
+        export WORKSPACE_TEMPLATE=keras_cnn_mnist
+        export WORKSPACE_PATH=${HOME}/my_federation
 
 4.  Create a workspace for the new federation project.
 
     .. code-block:: console
     
-       $ fx workspace create --prefix ${WORKSPACE_PATH} --template ${WORKSPACE_TEMPLATE}
+       fx workspace create --prefix ${WORKSPACE_PATH} --template ${WORKSPACE_TEMPLATE}
        
     where :code:`--prefix` is the directory to create your workspace.  
     
@@ -64,7 +64,7 @@ Create a Workspace on the Aggregator
 
     .. code-block:: console
     
-       $ fx workspace create --prefix ${WORKSPACE_PATH}
+       fx workspace create --prefix ${WORKSPACE_PATH}
        
     .. note::
     
@@ -74,13 +74,13 @@ Create a Workspace on the Aggregator
 
     .. code-block:: console
     
-        $ cd ${WORKSPACE_PATH}
+        cd ${WORKSPACE_PATH}
 
 6.  Install workspace requirements:
 
     .. code-block:: console
     
-        $ pip install -r requirements.txt
+        pip install -r requirements.txt
       
   
 7.	Create an initial set of random model weights.
@@ -94,7 +94,7 @@ Create a Workspace on the Aggregator
 
     .. code-block:: console
     
-		$ fx plan initialize
+		fx plan initialize
 	
 
     This command initializes the FL Plan and autopopulates the `fully qualified domain name (FQDN) <https://en.wikipedia.org/wiki/Fully_qualified_domain_name>`_ of the aggregator node. This FQDN is embedded within the FL Plan so the collaborators know address of the externally accessible aggregator server to connect to.
@@ -105,19 +105,19 @@ Create a Workspace on the Aggregator
 	
 		.. code-block:: console
 		
-			$ fx plan initialize -a aggregator-hostname.internal-domain.com
+			fx plan initialize -a aggregator-hostname.internal-domain.com
 		
 	- override the apparent FQDN of the system by setting an FQDN environment variable,
 	
 		.. code-block:: console
 		
-			$ export FQDN=x.x.x.x
+			export FQDN=x.x.x.x
 		
 		and initializing the FL Plan
 	
 		.. code-block:: console
 		
-			$ fx plan initialize
+			fx plan initialize
 		
 
 .. note::

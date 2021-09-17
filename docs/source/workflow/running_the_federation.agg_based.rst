@@ -18,6 +18,7 @@ An overview of this workflow is shown below.
 
 .. centered:: Overview of the Aggregator-Based Workflow
 
+
 The procedure below summarizes the steps to set up an aggregator-based workflow.
 
 1. Install the |productName| package on all the nodes in the federation :ref:`using these instructions <install_package>`.
@@ -34,22 +35,29 @@ The procedure below summarizes the steps to set up an aggregator-based workflow.
 
 		.. code-block:: console
 
-			$ fx aggregator start
+			fx aggregator start
 
 		
 	- On the each of the collaborator nodes.
 
 		.. code-block:: console
 
-			$ fx collaborator start
+			fx collaborator start
 
 
+There are two ways to run this workflow:
 
-Continue to the following sections for detailed instructions on setting up this workflow.
+- :ref:`Docker approach <running_the_federation.docker>`
+- :ref:`Manual approach <running_the_federation.baremetal>`
+
+
 
 .. toctree::
    :maxdepth: 2
+   :hidden:
 
+   running_the_federation.docker
    running_the_federation.baremetal
    running_the_federation.certificates
    running_the_federation.start_nodes.rst
+

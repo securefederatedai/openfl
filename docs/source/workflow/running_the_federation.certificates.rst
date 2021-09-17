@@ -3,9 +3,9 @@
 
 .. _instruction_manual_certs:
 
-**************************
-Configuring the Federation
-**************************
+************************
+Configure the Federation
+************************
 
 `TLS <https://en.wikipedia.org/wiki/Transport_Layer_Security>`_ encryption is
 used for the network connections.
