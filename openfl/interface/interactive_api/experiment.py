@@ -402,12 +402,8 @@ class TaskInterface:
 
             # Saving the task and the contract for later serialization
             self.task_registry[training_method.__name__] = wrapper_decorator
-            contract = {
-                'model': model,
-                'data_loader': data_loader,
-                'device': device,
-                'optimizer': optimizer
-            }
+            contract = {'model': model, 'data_loader': data_loader,
+                        'device': device, 'optimizer': optimizer}
             self.task_contract[training_method.__name__] = contract
             self.aggregation_types[training_method.__name__] = aggregation_type
             # We do not alter user environment
