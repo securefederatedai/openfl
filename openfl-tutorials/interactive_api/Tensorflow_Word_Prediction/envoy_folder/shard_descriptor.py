@@ -57,9 +57,7 @@ class NextWordShardDescriptor(ShardDescriptor):
 
     @staticmethod
     def get_sequences(data):
-        """
-        Transform words to sequences, for X transform to vectors as well.
-        """
+        """Transform words to sequences, for X transform to vectors as well."""
         # spacy en_core_web_sm vocab_size = 10719, vector_size = 96
         x_seq = []
         y_seq = []

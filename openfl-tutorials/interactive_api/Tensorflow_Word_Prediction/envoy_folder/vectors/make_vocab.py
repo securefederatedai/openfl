@@ -13,8 +13,8 @@ if not spacy.util.is_package('en_core_web_sm'):
 nlp = spacy.load('en_core_web_sm')
 
 clean_vocab_list = [word for word in nlp.vocab.strings
-                    if re.fullmatch(r'[a-z]+', word) and
-                    zipf_frequency(word, 'en', wordlist='small') > 3.7]
+                    if re.fullmatch(r'[a-z]+', word)
+                    and zipf_frequency(word, 'en', wordlist='small') > 3.7]
 
 word_to_vector = pd.Series([], name='vector')
 for word in clean_vocab_list:
