@@ -13,7 +13,7 @@ from openfl.interface.interactive_api.shard_descriptor import ShardDescriptor
 
 
 class NextWordShardDescriptor(ShardDescriptor):
-    """"Data - any text."""
+    """Data is any text."""
 
     def __init__(self, title: str = '', author: str = '') -> None:
         """Initialize NextWordShardDescriptor."""
@@ -26,7 +26,7 @@ class NextWordShardDescriptor(ShardDescriptor):
         self.X, self.y = self.get_sequences(self.data)
 
     def __len__(self):
-        """Number of sequences."""
+        """Count number of sequences."""
         return len(self.X)
 
     def __getitem__(self, index: int):
