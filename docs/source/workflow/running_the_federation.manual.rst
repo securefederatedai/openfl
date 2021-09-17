@@ -36,7 +36,7 @@ The procedure below summarizes the steps to set up an aggregator-based workflow 
 .. toctree::
    :maxdepth: 2
 
-   running_the_federation.baremetal
-   running_the_federation.certificates
-   running_the_federation.start_nodes
+   source/workflow/running_the_federation.baremetal
+   source/workflow/running_the_federation.certificates
+   source/workflow/running_the_federation.start_nodes
       

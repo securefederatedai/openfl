@@ -13,7 +13,7 @@ You can use the following approaches to create a learning federation.
 .. toctree::
    :maxdepth: 1
 
-   running_the_federation.agg_based
-   director_based_workflow
-   running_the_federation.notebook
+   source/workflow/running_the_federation.agg_based
+   source/workflow/director_based_workflow
+   source/workflow/running_the_federation.notebook
    
