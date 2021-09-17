@@ -126,6 +126,7 @@ class Envoy:
 
         col = plan.get_collaborator(self.name, self.root_certificate, self.private_key,
                                     self.certificate, shard_descriptor=self.shard_descriptor)
+        col.set_available_devices(cuda=self.cuda_devices)
         col.run()
 
     def start(self):

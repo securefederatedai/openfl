@@ -6,6 +6,7 @@
 from enum import Enum
 from logging import getLogger
 from time import sleep
+from typing import Tuple
 
 from openfl.databases import TensorDB
 from openfl.pipelines import NoCompressionPipeline
@@ -13,6 +14,12 @@ from openfl.pipelines import TensorCodec
 from openfl.protocols import utils
 from openfl.utilities import TensorKey
 
+class DevicePolicy(Enum):
+    """Device assignment policy."""
+
+    CPU_ONLY = 1
+
+    CUDA_PREFERRED = 2
 
 class OptTreatment(Enum):
     """Optimizer Methods."""
@@ -68,6 +75,7 @@ class Collaborator:
                  task_runner,
                  task_config,
                  opt_treatment=OptTreatment.RESET,
+                 device_assignment_policy=DevicePolicy.CPU_ONLY,
                  delta_updates=False,
                  compression_pipeline=None,
                  db_store_rounds=1,
@@ -104,7 +112,21 @@ class Collaborator:
             self.logger.error(f'Unknown opt_treatment: {opt_treatment}.')
             raise NotImplementedError(f'Unknown opt_treatment: {opt_treatment}.')
 
+        if hasattr(DevicePolicy, device_assignment_policy):
+            self.device_assignment_policy = DevicePolicy[device_assignment_policy]
+        else:
+            self.logger.error(f'Unknown device_assignment_policy: {device_assignment_policy}.')
+            raise NotImplementedError(f'Unknown device_assignment_policy: {device_assignment_policy}.')
+
         self.task_runner.set_optimizer_treatment(self.opt_treatment.name)
+
+    def set_available_devices(self, cuda: Tuple[str]=[]):
+        """
+        Set available CUDA devices.
+        
+        Cuda tuple contains string indeces, ('1', '3').
+        """
+        self.cuda_devices = cuda
 
     def run(self):
         """Run the collaborator."""
@@ -161,6 +183,12 @@ class Collaborator:
         # map this task to an actual function name and kwargs
         func_name = self.task_config[task]['function']
         kwargs = self.task_config[task]['kwargs']
+
+        if (self.device_assignment_policy.name == 'CUDA_PREFERRED' and 
+            len(self.cuda_devices) > 0):
+            kwargs['device'] = 'cuda:' + str(self.cuda_devices[0])
+        else:
+            kwargs['device'] = 'cpu'
 
         # this would return a list of what tensors we require as TensorKeys
         required_tensorkeys_relative = self.task_runner.get_required_tensorkeys_for_function(
