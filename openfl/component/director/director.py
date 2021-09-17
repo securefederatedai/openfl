@@ -38,6 +38,7 @@ class Experiment:
             data_path: Union[Path, str],
             collaborators: List[str],
             sender: str,
+            init_tensor_dict: dict,
             plan_path: Union[Path, str] = 'plan/plan.yaml',
             aggregator: AggregatorGRPCServer = None,
             users: Iterable[str] = None,
@@ -49,6 +50,7 @@ class Experiment:
         self.data_path = data_path
         self.collaborators = collaborators
         self.sender = sender
+        self.init_tensor_dict = init_tensor_dict
         if isinstance(plan_path, str):
             plan_path = Path(plan_path)
         self.plan_path = plan_path
@@ -58,8 +60,6 @@ class Experiment:
 
     async def start(
             self,
-            tensor_dict,
-            plan_path,
             tls=False,
             root_certificate=None,
             certificate=None,
@@ -69,8 +69,7 @@ class Experiment:
         try:
             with ExperimentWorkspace(self.name, self.data_path):
                 self.aggregator = self._create_aggregator(
-                    tensor_dict=tensor_dict,
-                    plan_path=plan_path,
+                    plan_path=self.plan_path,
                     tls=tls,
                     root_certificate=root_certificate,
                     certificate=certificate,
@@ -83,7 +82,6 @@ class Experiment:
 
     def _create_aggregator(
             self,
-            tensor_dict,
             plan_path,
             tls=False,
             root_certificate=None,
@@ -95,7 +93,7 @@ class Experiment:
 
         logger.info('🧿 Starting the Aggregator Service.')
         aggregator_server = plan.interactive_api_get_server(
-            tensor_dict=tensor_dict,
+            tensor_dict=self.init_tensor_dict,
             root_certificate=root_certificate,
             certificate=certificate,
             private_key=private_key,
@@ -141,7 +139,9 @@ class ExperimentsList:
             self.__experiments_queue = list(self.__dict.keys())
 
     @property
-    def active_experiment(self) -> Experiment:
+    def active_experiment(self) -> Union[Experiment, None]:
+        if self.__active_experiment in None:
+            return None
         return self.__dict[self.__active_experiment]
 
     @property
@@ -166,12 +166,15 @@ class ExperimentsList:
         self.__archived_experiments.insert(0, self.active_experiment)
         self.__active_experiment = None
 
-    def set_next(self) -> None:
+    def set_next(self) -> bool:
         if self.active_experiment is not None:
             raise Exception("Finish active experiment before start next.")
         if not self.queue:
             raise Exception("There is no experiments in experiment queue.")
-        self.__active_experiment = self.__experiments_queue.pop(0)
+        if self.__experiments_queue:
+            self.__active_experiment = self.__experiments_queue.pop(0)
+            return True
+        return False
 
 
 class Director:
@@ -209,8 +212,15 @@ class Director:
     async def start(self):
         loop = asyncio.get_event_loop()
         while True:
+            if self.experiments.active_experiment is None:
+                if not self.experiments.set_next():
+                    await asyncio.sleep(10)
+                    continue
             loop.create_task(self.experiments.active_experiment.start(
-                tensor_dict=tensor_dict
+                tls=self.tls,
+                root_certificate=self.root_certificate,
+                certificate=self.certificate,
+                private_key=self.private_key,
             ))
 
     def acknowledge_shard(self, shard_info: director_pb2.ShardInfo) -> bool:
@@ -234,7 +244,8 @@ class Director:
             *,
             experiment_name: str,
             sender_name: str,
-            data_file_path: Path
+            data_file_path: Path,
+            tensor_dict: dict,
     ) -> None:
         """Set new experiment."""
         experiment = Experiment(
@@ -242,6 +253,7 @@ class Director:
             data_path=data_file_path,
             users=[sender_name],
             sender=sender_name,
+            init_tensor_dict=tensor_dict,
         )
         self.experiments.add(experiment)
 
