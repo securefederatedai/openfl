@@ -47,8 +47,8 @@ The procedure below summarizes the steps to set up an aggregator-based workflow.
 
 There are two ways to run this workflow:
 
-- :ref:`running_the_federation.docker`
-- :ref:`running_the_federation.baremetal`
+- Docker approach
+- Manual approach
 
 
 
