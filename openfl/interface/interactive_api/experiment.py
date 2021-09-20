@@ -12,6 +12,7 @@ from pathlib import Path
 
 from tensorboardX import SummaryWriter
 
+from openfl.component.aggregation_functions import WeightedAverage
 from openfl.federated import Plan
 from openfl.interface.cli import setup_logging
 from openfl.interface.cli_helper import WORKSPACE

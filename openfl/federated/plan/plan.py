@@ -538,7 +538,9 @@ openfl.component.aggregation_functions.AggregationFunctionInterface
         return (self.restore_object(api_layer['settings'][filename]) for filename in filenames)
 
     def restore_object(self, filename):
-        serializer_plugin = self.config['api_layer']['required_plugin_components']['serializer_plugin']
+        """Deserialize an object."""
+        required_plugin_components = self.config['api_layer']['required_plugin_components']
+        serializer_plugin = required_plugin_components['serializer_plugin']
         serializer = Plan.build(serializer_plugin, {})
         obj = serializer.restore_object(filename)
         return obj
