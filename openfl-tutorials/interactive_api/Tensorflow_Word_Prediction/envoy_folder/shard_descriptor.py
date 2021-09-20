@@ -3,6 +3,7 @@
 """Market shard descriptor."""
 
 import re
+import urllib.request
 from pathlib import Path
 
 import numpy as np
@@ -21,7 +22,8 @@ class NextWordShardDescriptor(ShardDescriptor):
 
         self.title = title
         self.author = author
-        self.dataset_dir = list(Path.cwd().rglob(f'{title}.txt'))[0]
+
+        self.dataset_dir = self.download(title)
         self.data = self.load_data(self.dataset_dir)  # list of words
         self.X, self.y = self.get_sequences(self.data)
 
@@ -75,3 +77,17 @@ class NextWordShardDescriptor(ShardDescriptor):
         x_seq = np.array(x_seq)
         y_seq = to_categorical(y_seq, num_classes=vectors.shape[0])
         return x_seq, y_seq
+
+    @staticmethod
+    def download(title):
+        """Download text by title form Github Gist."""
+        url = ('https://gist.githubusercontent.com/katerina-merkulova/e351b11c67832034b49652835b'
+               '14adb0/raw/726f324c258f502debf23c6091c6c355735da212/' + title.replace(' ', '_')
+               + '.txt')
+        filepath = Path.cwd() / f'{title}.txt'
+        if not filepath.exists():
+            response = urllib.request.urlopen(url)
+            content = response.read().decode('utf-8')
+            with open(filepath, 'w', encoding='utf-8') as file:
+                file.write(content)
+        return filepath
