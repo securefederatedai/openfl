@@ -389,7 +389,6 @@ class TaskInterface:
             ...
         `
         """
-
         # The highest level wrapper for allowing arguments for the decorator
         def decorator_with_args(training_method):
             # We could pass hooks to the decorator
@@ -449,6 +448,13 @@ class TaskInterface:
         return decorator_with_args
 
     def get_agg_fn(self, task_fn_name):
+        """Get aggregation type for the task function.
+
+        Args:
+            task_fn_name(str): Task function name.
+        Returns:
+            Return value. Aggregation function.
+        """
         if (task_fn_name not in self.aggregation_functions
                 or self.aggregation_functions[task_fn_name] is None):
             return WeightedAverage()
