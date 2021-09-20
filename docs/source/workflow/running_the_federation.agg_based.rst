@@ -22,13 +22,14 @@ An overview of this workflow is shown below.
 
 There are two ways to run this workflow:
 
-- Docker approach
-- Manual approach
+- :ref:`Docker approach <running_the_federation_docker>`
+- :ref: `Manual approach <running_the_federation_manual>`
 
 
 
 .. toctree::
    :maxdepth: 2
+   :hidden:
 
    running_the_federation.docker
    running_the_federation.manual
