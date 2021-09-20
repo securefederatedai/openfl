@@ -27,15 +27,15 @@ Setting Up the Certificate Authority
     
        cd WORKSPACE.PATH
 
-2. Set up the aggregator node as the `Certificate Authority <https://en.wikipedia.org/wiki/Certificate_authority>`_ for the Federation. 
+2. Set up the aggregator node as the `Certificate Authority <https://en.wikipedia.org/wiki/Certificate_authority>`_ for the federation. 
 
-    All certificates will be signed by the aggregator node. Follow the command-line instructions and enter in the information as prompted. The command will create a simple database file to keep track of all issued certificates. 
+ All certificates will be signed by the aggregator node. Follow the instructions and enter the information as prompted. The command will create a simple database file to keep track of all issued certificates. 
 
     .. code-block:: console
     
        fx workspace certify
 
-3. Run the aggregator certificate creation command, replacing **AFQDN** with the actual `fully qualified domain name (FQDN) <https://en.wikipedia.org/wiki/Fully_qualified_domain_name>`_ for the aggregator node. Alternatively, you can override the apparent FQDN of the system by setting an FQDN environment variable (:code:`export FQDN=x.x.x.x`) before creating the certificate.
+3. Run the aggregator certificate creation command, replacing :code:`AFQDN` with the actual `fully qualified domain name (FQDN) <https://en.wikipedia.org/wiki/Fully_qualified_domain_name>`_ for the aggregator node.
 
     .. code-block:: console
     
@@ -43,7 +43,7 @@ Setting Up the Certificate Authority
        
     .. note::
     
-       On Linux\*\, you can discover the FQDN with the command:
+       On Linux\*\, you can discover the FQDN with this command:
     
            .. code-block:: console
         
@@ -51,11 +51,17 @@ Setting Up the Certificate Authority
             
    .. note::
    
+      You can override the apparent FQDN of the system by setting an FQDN environment variable before creating the certificate.
+      
+        .. code-block:: console
+        
+            fx aggregator generate-cert-request export FQDN=x.x.x.x
+      
       If you omit the :code:`--fdqn` parameter, then :code:`fx` will automatically use the FQDN of the current node assuming the node has been correctly set with a static address. 
    
-      .. code-block:: console
+        .. code-block:: console
     
-         fx aggregator generate-cert-request
+            fx aggregator generate-cert-request
        
 4. Run the aggregator certificate signing command, replacing **AFQDN** with the actual `fully qualified domain name (FQDN) <https://en.wikipedia.org/wiki/Fully_qualified_domain_name>`_ for the aggregator node. Alternatively, you can override the apparent FQDN of the system by setting an FQDN environment variable (:code:`export FQDN=x.x.x.x`) before signing the certificate.
 
