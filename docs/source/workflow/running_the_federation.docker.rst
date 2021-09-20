@@ -33,7 +33,7 @@ Procedure
        $ docker run -it --network host openfl
    
 
-You can now experiment with |productName| in the container, for example, run the :ref:`Hello Federation script <running_the_federation.baremetal>`.
+You can now experiment with |productName| in the container, for example, run the :doc:`Hello Federation script <running_the_federation.baremetal>`.
 
 
 

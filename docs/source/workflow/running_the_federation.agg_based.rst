@@ -31,7 +31,7 @@ An overview of this workflow is shown below.
 
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
    :hidden:
 
    running_the_federation.docker
