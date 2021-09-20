@@ -1,31 +1,11 @@
 .. # Copyright (C) 2020-2021 Intel Corporation
 .. # SPDX-License-Identifier: Apache-2.0
 
-.. _running_baremetal:
-
-*********************
-Create the Federation
-*********************
-
-.. note::
-
-    Ensure you have installed the |productName| package on every node (aggregator and collaborators) in the federation.
-
-    See :ref:`install_package` for details.
-
-
-You can use the :download:`"Hello Federation" bash script <../tests/github/test_hello_federation.sh>` to quickly create a federation with two collaborators for you to test the project pipeline.
-
-.. literalinclude:: ../tests/github/test_hello_federation.sh
-  :language: bash
-
-
-However, continue with the following procedure for details in creating a federation manually.
-
 .. _creating_workspaces:
 
-Create a Workspace on the Aggregator
-====================================
+********************************************
+STEP 1: Create a Workspace on the Aggregator
+********************************************
 
 1.	Start a Python\* \  3.6 (or higher) virtual environment and confirm |productName| is available.
 

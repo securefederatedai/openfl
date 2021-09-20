@@ -3,9 +3,9 @@
 
 .. _instruction_manual_certs:
 
-************************
-Configure the Federation
-************************
+********************************
+STEP 2: Configure the Federation
+********************************
 
 `TLS <https://en.wikipedia.org/wiki/Transport_Layer_Security>`_ encryption is used for the network connections. Therefore, security keys and certificates will need to be created for the aggregator and collaborators to negotiate the connection securely. For the :ref:`Hello Federation <running_the_federation>` demo we will run the aggregator and collaborators on the same localhost server so these configuration steps just need to be done once on that machine. We have two pki workflows: manual and semi-automatic (with step-ca).
 

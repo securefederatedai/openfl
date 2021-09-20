@@ -3,9 +3,9 @@
 
 .. _running_the_federation.start_nodes:
 
-********************
-Start the Federation
-********************
+****************************
+STEP 3: Start the Federation
+****************************
 
 On the Aggregator
 ~~~~~~~~~~~~~~~~~

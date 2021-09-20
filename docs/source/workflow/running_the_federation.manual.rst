@@ -26,12 +26,13 @@ However, continue with the following procedure for details in creating a federat
     - Creates a federated learning workspace on one of the nodes. This node is called the aggregator.
 
 
-:doc:`STEP 2: Configure the Federation <running_the_federation.certificates`
+:doc:`STEP 2: Configure the Federation <running_the_federation.certificates>`
 
     - Issues each node in the federation with a valid PKI certificate.
     - Distributes the workspace from the aggregator node to the other collaborator nodes.
 
-:doc:`STEP 3: Start the Federation <running_the_federation.start_nodes`
+
+:doc:`STEP 3: Start the Federation <running_the_federation.start_nodes>`
 
 
     
