@@ -23,7 +23,7 @@ However, continue with the following procedure for details in creating a federat
 
 :doc:`STEP 1: Create a Workspace on the Aggregator <running_the_federation.baremetal>`
 
-    - Creates a federated learning workspace on one of the nodes. This node is called the aggregator.
+    - Creates a federated learning workspace on one of the nodes.
 
 
 :doc:`STEP 2: Configure the Federation <running_the_federation.certificates>`
