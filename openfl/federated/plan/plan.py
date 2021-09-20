@@ -540,6 +540,8 @@ openfl.component.aggregation_functions.AggregationFunctionInterface
 
     def restore_object(self, filename):
         """Deserialize an object."""
+        if 'api_layer' not in self.config:  # old API
+            return None
         required_plugin_components = self.config['api_layer']['required_plugin_components']
         serializer_plugin = required_plugin_components['serializer_plugin']
         serializer = Plan.build(serializer_plugin, {})
