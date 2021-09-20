@@ -12,6 +12,7 @@ from pathlib import Path
 
 from tensorboardX import SummaryWriter
 
+from openfl.component.aggregation_functions import AggregationFunctionInterface
 from openfl.component.aggregation_functions import WeightedAverage
 from openfl.federated import Plan
 from openfl.interface.cli import setup_logging
@@ -362,9 +363,9 @@ class TaskInterface:
         # Mapping 'task name' -> arguments
         self.task_settings = defaultdict(dict)
         # Mapping task name -> callable
-        self.aggregation_types = {}
+        self.aggregation_functions = {}
 
-    def register_fl_task(self, model, data_loader, device, optimizer=None, aggregation_type=None):
+    def register_fl_task(self, model, data_loader, device, optimizer=None):
         """
         Register FL tasks.
 
@@ -388,8 +389,6 @@ class TaskInterface:
             ...
         `
         """
-        if aggregation_type is None:
-            aggregation_type = WeightedAverage()
 
         # The highest level wrapper for allowing arguments for the decorator
         def decorator_with_args(training_method):
@@ -406,7 +405,6 @@ class TaskInterface:
             contract = {'model': model, 'data_loader': data_loader,
                         'device': device, 'optimizer': optimizer}
             self.task_contract[training_method.__name__] = contract
-            self.aggregation_types[training_method.__name__] = aggregation_type
             # We do not alter user environment
             return training_method
 
@@ -429,6 +427,32 @@ class TaskInterface:
             return training_method
 
         return decorator_with_args
+
+    def set_agg_fn(self, agg_fn: AggregationFunctionInterface = None):
+        """Set aggregation function for the task.
+
+        Args:
+            agg_fn: Aggregation function.
+
+        You might need to override default FedAvg aggregation with built-in aggregation types:
+            - openfl.component.aggregation_functions.GeometricMedian
+            - openfl.component.aggregation_functions.Median
+        or define your own AggregationFunctionInterface subclass.
+        See more details on `Overriding the aggregation function`_ documentation page.
+        .. _Overriding the aggregation function:
+            https://openfl.readthedocs.io/en/latest/overriding_agg_fn.html
+        """
+        def decorator_with_args(training_method):
+            self.aggregation_functions[training_method.__name__] = agg_fn
+            return training_method
+
+        return decorator_with_args
+
+    def get_agg_fn(self, task_fn_name):
+        if (task_fn_name not in self.aggregation_functions
+                or self.aggregation_functions[task_fn_name] is None):
+            return WeightedAverage()
+        return self.aggregation_functions[task_fn_name]
 
 
 class ModelInterface:
