@@ -1,6 +1,8 @@
 .. # Copyright (C) 2020-2021 Intel Corporation
 .. # SPDX-License-Identifier: Apache-2.0
 
+.. _running_the_federation.start_nodes:
+
 ********************
 Start the Federation
 ********************
@@ -12,7 +14,7 @@ On the Aggregator
 
     .. code-block:: console
     
-       $ fx aggregator start
+       fx aggregator start
 
     At this point, the aggregator is running and waiting
     for the collaborators to connect. When all of the collaborators
@@ -32,7 +34,7 @@ On the Collaborator
 
     .. code-block:: console
 
-       $ fx collaborator start -n COLLABORATOR.LABEL
+       fx collaborator start -n COLLABORATOR.LABEL
 
     where **COLLABORATOR_LABEL** is the label for this collaborator.
 

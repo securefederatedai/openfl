@@ -9,7 +9,7 @@ Manual Approach
 
 The procedure below summarizes the steps to set up an aggregator-based workflow manually.
 
-1. Install the |productName| package on all the nodes in the federation :ref:`using these instructions <install_package>`.
+1. Install the |productName| package on all the nodes in the federation. See :ref:`install_package>` for details.
 
 2. Create a federated learning workspace on one of the nodes. This node is called the aggregator.
 
@@ -33,8 +33,11 @@ The procedure below summarizes the steps to set up an aggregator-based workflow 
 			fx collaborator start
 
 
+    
+
 .. toctree::
    :maxdepth: 2
+   :hidden:
 
    running_the_federation.baremetal
    running_the_federation.certificates
