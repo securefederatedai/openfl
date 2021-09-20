@@ -12,7 +12,7 @@ Prerequisites
 
 You have installed the |productName| package on every node (aggregator and collaborators) in the federation.
 
-See :ref:`install_package` for details.
+See :doc:`install_package` for details.
 
 TL;DR
 =====
