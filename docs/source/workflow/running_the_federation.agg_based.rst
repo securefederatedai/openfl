@@ -7,6 +7,12 @@
 Aggregator-Based Workflow
 *************************
 
+There are two ways to run this workflow:
+
+- :ref:`Docker approach <running_the_federation_docker>`
+- :ref:`Manual approach <running_the_federation_manual>`
+
+
 This workflow uses short-lived components in a federation, which is terminated when the experiment is finished. The components are as follows:
 
 - The *Collaborator* uses a local dataset to train a global model and the *Aggregator* receives model updates from collaborators and combines them to form the global model.
@@ -20,10 +26,7 @@ An overview of this workflow is shown below.
 
 
 
-There are two ways to run this workflow:
 
-- :ref:`Docker approach <running_the_federation_docker>`
-- :ref: `Manual approach <running_the_federation_manual>`
 
 
 
