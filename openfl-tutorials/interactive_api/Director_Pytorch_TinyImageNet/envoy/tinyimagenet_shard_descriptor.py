@@ -117,4 +117,5 @@ class TinyImageNetShardDescriptor(ShardDescriptor):
                 f' out of {self.worldsize}')
 
     def __len__(self):
+        """Return the len of the dataset."""
         return 0
