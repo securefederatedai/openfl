@@ -14,12 +14,11 @@ You have installed the |productName| package on every node (aggregator and colla
 
 See :ref:`install_package` for details.
 
-TL;DR
-=====
 
-Here's the :download:`"Hello Federation" bash script <../tests/github/test_hello_federation.sh>` used for testing the project pipeline.
 
-.. literalinclude:: ../tests/github/test_hello_federation.sh
+You can use the :download:`"Hello Federation" bash script </tests/github/test_hello_federation.sh>` to test the project pipeline.
+
+.. literalinclude:: /tests/github/test_hello_federation.sh
   :language: bash
 
 
@@ -58,9 +57,9 @@ Create a Workspace on the Aggregator
     
        fx workspace create --prefix ${WORKSPACE_PATH} --template ${WORKSPACE_TEMPLATE}
        
-    where :code:`--prefix` is the directory to create your workspace.  
+      
     
-    The list of pre-created templates can be found by simply running the command:
+    See a list of available templates by running this command:
 
     .. code-block:: console
     
