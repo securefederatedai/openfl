@@ -43,7 +43,7 @@ class TinyImageNetDataset(Dataset):
         """Return the len of the dataset."""
         return len(self.image_paths)
 
-    def __getitem__(self, index: int) -> Tuple[Image, int]:
+    def __getitem__(self, index: int) -> Tuple['Image', int]:
         """Return an item by the index."""
         file_path = self.image_paths[index]
         label = self.labels[os.path.basename(file_path)]
@@ -115,3 +115,6 @@ class TinyImageNetShardDescriptor(ShardDescriptor):
         """Return the dataset description."""
         return (f'TinyImageNetDataset dataset, shard number {self.rank}'
                 f' out of {self.worldsize}')
+
+    def __len__(self):
+        return 0
