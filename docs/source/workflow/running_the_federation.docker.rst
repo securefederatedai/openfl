@@ -7,7 +7,7 @@
 Docker\* \  Approach
 ********************
 
-There are two ways you can run |productName| with Docker\* \.
+There are two ways you can run |productName| with Docker\*\.
 
 - :ref:`Deploy a federation in a Docker container <running_the_federation_docker_base_image>`
 - :ref:`Deploy the workspace in a Docker container <running_the_federation_docker_workspace>`
@@ -21,7 +21,7 @@ Option 1: Deploy a Federation in a Docker Container
 Prerequisites
 -------------
 
-You have already built an |productName| image. See :ref:`install.docker` for details.
+You have already built an |productName| image. See :doc:`install.docker` for details.
 
 Procedure
 ---------
@@ -30,7 +30,7 @@ Procedure
 
     .. code-block:: console
 
-       $ docker run -it --network host openfl
+       docker run -it --network host openfl
    
 
 You can now experiment with |productName| in the container, for example, run the :doc:`Hello Federation script <running_the_federation.baremetal>`.
@@ -46,7 +46,7 @@ Option 2: Deploy Your Workspace in a Docker Container
 Prerequisites
 -------------
 
-You have already set up a TaskRunner and run :code:`fx plan initialize` in the workspace directory. See :ref:`running_the_federation.baremetal` for details.
+You have already set up a TaskRunner and run :code:`fx plan initialize` in the workspace directory. See :doc:`running_the_federation.baremetal` for details.
 
 Procedure
 ---------
@@ -55,7 +55,7 @@ Procedure
 
     .. code-block:: console
 
-       $ fx workspace dockerize 
+       fx workspace dockerize 
 
 
     By default, the image is saved as **WORKSPACE_NAME_image.tar** in the workspace directory.
@@ -64,7 +64,7 @@ Procedure
 
     .. code-block:: console
 
-       $ docker run -it --rm \
+       docker run -it --rm \
             --network host \
             -v user_data_folder:/home/user/workspace/data \
             ${WORSPACE_IMAGE_NAME} \
@@ -75,7 +75,7 @@ Procedure
     
         The FL Plan should be initialized with the FQDN of the node where the aggregator container will be running.
 
-3. Generate PKI certificates for all collaborators and the aggregator. See :ref:`/utilities/pki` for details.
+3. Generate PKI certificates for all collaborators and the aggregator. See :doc:`pki` for details.
 
-4. Start the federation.
+4. Start the federation. See :doc:`running_the_federation.start_nodes` for details.
 
