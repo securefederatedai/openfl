@@ -64,7 +64,7 @@ Procedure
 
     .. code-block:: console
 
-       docker run -it --rm \
+        docker run -it --rm \
             --network host \
             -v user_data_folder:/home/user/workspace/data \
             ${WORSPACE_IMAGE_NAME} \
@@ -75,7 +75,7 @@ Procedure
     
         The FL Plan should be initialized with the FQDN of the node where the aggregator container will be running.
 
-3. Generate PKI certificates for all collaborators and the aggregator. See :doc:`/utilities/pki` for details.
+3. Generate PKI certificates for all collaborators and the aggregator. See :doc:`/source/utilities/pki` for details.
 
 4. :doc:`running_the_federation.start_nodes`.
 

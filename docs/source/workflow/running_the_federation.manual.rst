@@ -7,36 +7,37 @@
 Manual Approach
 ***************
 
-The procedure below summarizes the steps to set up an aggregator-based workflow manually.
+.. note::
 
-1. Install the |productName| package on all the nodes in the federation. See :ref:`install_package>` for details.
+    Ensure you have installed the |productName| package on every node (aggregator and collaborators) in the federation.
 
-2. Create a federated learning workspace on one of the nodes. This node is called the aggregator.
+    See :ref:`install_package` for details.
 
-3. Distribute the workspace from the aggregator node to the other collaborator nodes.
 
-4. Ensure each node in the federation has a valid PKI certificate.
+You can use the :download:`"Hello Federation" bash script <../tests/github/test_hello_federation.sh>` to quickly create a federation (an aggregator node and two collaborator nodes) for you to test the project pipeline.
 
-5. Start the federation.
+.. literalinclude:: ../tests/github/test_hello_federation.sh
+  :language: bash
 
-	- On the aggregator node.
+However, continue with the following procedure for details in creating a federation with an aggregator-based workflow.
 
-		.. code-block:: console
+:doc:`STEP 1: Create a Workspace on the Aggregator <running_the_federation.baremetal>`
 
-			fx aggregator start
+    - Creates a federated learning workspace on one of the nodes. This node is called the aggregator.
 
-		
-	- On the each of the collaborator nodes.
 
-		.. code-block:: console
+:doc:`STEP 2: Configure the Federation <running_the_federation.certificates`
 
-			fx collaborator start
+    - Issues each node in the federation with a valid PKI certificate.
+    - Distributes the workspace from the aggregator node to the other collaborator nodes.
+
+:doc:`STEP 3: Start the Federation <running_the_federation.start_nodes`
 
 
     
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
    :hidden:
 
    running_the_federation.baremetal
