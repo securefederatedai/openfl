@@ -7,9 +7,10 @@
 STEP 2: Configure the Federation
 ********************************
 
-The procedure in this step:
-    - Issues each node in the federation with a valid PKI certificate. See :doc:`/source/utilities/pki` for details on available workflows.
-    - Distributes the workspace from the aggregator node to the other collaborator nodes.
+The objectives in this step:
+
+    - Ensure each node in the federation has a valid PKI certificate. See :doc:`/source/utilities/pki` for details on available workflows.
+    - Distribute the workspace from the aggregator node to the other collaborator nodes.
 
     
 .. _install_certs_agg:
@@ -28,7 +29,7 @@ Setting Up the Certificate Authority
 
 2. Set up the aggregator node as the `Certificate Authority <https://en.wikipedia.org/wiki/Certificate_authority>`_ for the Federation. 
 
-All certificates will be signed by the aggregator node. Follow the command-line instructions and enter in the information as prompted. The command will create a simple database file to keep track of all issued certificates. 
+    All certificates will be signed by the aggregator node. Follow the command-line instructions and enter in the information as prompted. The command will create a simple database file to keep track of all issued certificates. 
 
     .. code-block:: console
     
