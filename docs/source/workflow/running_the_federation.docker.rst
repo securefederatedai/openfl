@@ -62,12 +62,12 @@ Procedure
 
 2. The image can be distributed and run on other nodes without any environment preparation.
 
-    .. code-block:: console
+    .. parsed-literal::
 
-        docker run -it --rm \
-            --network host \
-            -v user_data_folder:/home/user/workspace/data \
-            ${WORSPACE_IMAGE_NAME} \
+        docker run -it --rm \\
+            --network host \\
+            -v user_data_folder:/home/user/workspace/data \\
+            ${WORKSPACE_IMAGE_NAME} \\
             bash
 
 
