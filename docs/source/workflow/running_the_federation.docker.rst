@@ -46,7 +46,7 @@ Option 2: Deploy Your Workspace in a Docker Container
 Prerequisites
 -------------
 
-You have already set up a TaskRunner and run :code:`fx plan initialize` in the workspace directory. See :ref:`creating_workspaces` for details.
+You have already set up a TaskRunner and run :code:`fx plan initialize` in the workspace directory. See :ref:`Create a Workspace on the Aggregator <creating_workspaces>` for details.
 
 Procedure
 ---------

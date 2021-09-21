@@ -14,7 +14,7 @@ Manual Approach
     See :ref:`install_package` for details.
 
 
-You can use the :download:`"Hello Federation" bash script <../tests/github/test_hello_federation.sh>` to quickly create a federation (an aggregator node and two collaborator nodes) for you to test the project pipeline.
+You can use the :download:`"Hello Federation" bash script <../tests/github/test_hello_federation.sh>` to quickly create a federation (an aggregator node and two collaborator nodes) to test the project pipeline.
 
 .. literalinclude:: ../tests/github/test_hello_federation.sh
   :language: bash
@@ -28,7 +28,7 @@ However, continue with the following procedure for details in creating a federat
 
 :doc:`STEP 2: Configure the Federation <running_the_federation.certificates>`
 
-    - Issues each node in the federation with a valid PKI certificate.
+    - Ensures each node in the federation has a valid PKI certificate.
     - Distributes the workspace from the aggregator node to the other collaborator nodes.
 
 

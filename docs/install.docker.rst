@@ -13,6 +13,8 @@ Build the Docker\* \  Image
 
 1. Install Docker on all nodes in the federation.
 
+ See the `Docker installation guide <https://docs.docker.com/engine/install/>`_ for details. 
+
 2. Check that Docker is running properly with the *Hello World* command:
 
     .. code-block:: console
