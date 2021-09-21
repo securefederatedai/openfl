@@ -4,11 +4,11 @@
 
 import logging
 import shutil
-import sys
 from importlib import import_module
 from pathlib import Path
 
 import click
+import sys
 from click import group
 from click import option
 from click import pass_context
@@ -103,3 +103,19 @@ def shard_descriptor_from_config(shard_config_path: str):
     instance = getattr(module, class_name)(**params)
 
     return instance
+
+#
+# if __name__ == '__main__':
+#     import os
+#
+#     print(os.getcwd())
+#     start_(
+#         shard_name='env_one',
+#         director_host='localhost',
+#         director_port=50051,
+#         tls=False,
+#         shard_config_path='shard_config.yaml',
+#         root_certificate=None,
+#         private_key=None,
+#         certificate=None,
+#     )

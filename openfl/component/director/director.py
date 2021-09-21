@@ -164,7 +164,7 @@ class ExperimentsList:
 
     @property
     def active_experiment(self) -> Union[Experiment, None]:
-        if self.__active_experiment in None:
+        if self.__active_experiment is None:
             return None
         return self.__dict[self.__active_experiment]
 
@@ -192,9 +192,11 @@ class ExperimentsList:
 
     def set_next(self) -> bool:
         if self.active_experiment is not None:
-            raise Exception("Finish active experiment before start next.")
+            # raise Exception("Finish active experiment before start next.")
+            return False
         if not self.queue:
-            raise Exception("There is no experiments in experiment queue.")
+            # raise Exception("There is no experiments in experiment queue.")
+            return False
         if self.__experiments_queue:
             self.__active_experiment = self.__experiments_queue.pop(0)
             return True
