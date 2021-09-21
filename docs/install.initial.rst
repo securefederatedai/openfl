@@ -10,9 +10,9 @@ Install the |productName| Package
 Perform this procedure on every node in the federation.
 
 1. Install a Python\* \  3.6 (or higher) virtual environment. Conda\* \  (version 4.9 or above) is preferred, but other virtual environments should work as well.
-   Conda can either be installed via the `Anaconda <https://www.anaconda.com/products/individual>`_\* \  or `Miniconda <https://docs.conda.io/en/latest/miniconda.html>`_\* \  distributions.
-
-   Once conda is installed, you may need to log out and log in again for the changes to take effect.
+   Conda can either be installed via the `Anaconda <https://www.anaconda.com/products/individual>`_\* \  or `Miniconda <https://docs.conda.io/en/latest/miniconda.html>`_\* \  distributions. 
+   
+ See the `conda installation guide <https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html>` for details.
 
 2. Create a new conda environment for the project.
 
