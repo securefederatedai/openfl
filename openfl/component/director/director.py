@@ -117,9 +117,9 @@ class Director:
         """Get dataset info."""
         return self.sample_shape, self.target_shape
 
-    # def get_registered_shards(self) -> list:
-    #     """Get registered shard infos."""
-    #     return [shard_status['shard_info'] for shard_status in self._shard_registry.values()]
+    def get_registered_shards(self) -> list:  # Why is it here?
+        """Get registered shard infos."""
+        return [shard_status['shard_info'] for shard_status in self._shard_registry.values()]
 
     async def stream_metrics(self, experiment_name: str, caller: str):
         """
@@ -190,13 +190,12 @@ class Director:
 
     def get_envoys(self) -> list:
         """Get a status information about envoys."""
-        
         logger.info(f'Shard registry: {self._shard_registry}')
         for envoy_info in self._shard_registry.values():
             envoy_info['is_online'] = (
-                time.time() < envoy_info['last_updated'] +
-                envoy_info['valid_duration']
-                )
+                time.time() < envoy_info['last_updated']
+                + envoy_info['valid_duration']
+            )
 
         return self._shard_registry.values()
 

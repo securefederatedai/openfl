@@ -235,7 +235,7 @@ class DirectorGRPCServer(director_pb2_grpc.FederationDirectorServicer):
         cuda_devices_info = [
             MessageToDict(message, preserving_proto_field_name=True)
             for message in request.cuda_devices
-            ]
+        ]
         health_check_period = self.director.envoy_health_check(
             envoy_name=request.name,
             is_experiment_running=request.is_experiment_running,
@@ -252,8 +252,9 @@ class DirectorGRPCServer(director_pb2_grpc.FederationDirectorServicer):
         response = []
         for envoy_info in envoy_infos:
             envoy_info_message = director_pb2.EnvoyInfo(
-                shard_info=ParseDict(envoy_info['shard_info'], director_pb2.ShardInfo(),
-                ignore_unknown_fields=True),
+                shard_info=ParseDict(
+                    envoy_info['shard_info'], director_pb2.ShardInfo(),
+                    ignore_unknown_fields=True),
                 is_online=envoy_info['is_online'],
                 is_experiment_running=envoy_info['is_experiment_running'])
             envoy_info_message.valid_duration.seconds = envoy_info['valid_duration']
