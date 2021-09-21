@@ -223,6 +223,7 @@ class Plan(object):
 
         self.hash_ = None
         self.name_ = None
+        self.serializer_ = None
 
     @property
     def hash(self):  # NOQA
@@ -538,12 +539,23 @@ openfl.component.aggregation_functions.AggregationFunctionInterface
         ]
         return (self.restore_object(api_layer['settings'][filename]) for filename in filenames)
 
+    def get_serializer_plugin(self, **kwargs):
+        """Get serializer plugin.
+
+        This plugin is used for serialization of interfaces in new interactive API
+        """
+        if self.serializer_ is None:
+            if 'api_layer' not in self.config:  # legacy API
+                return None
+            required_plugin_components = self.config['api_layer']['required_plugin_components']
+            serializer_plugin = required_plugin_components['serializer_plugin']
+            self.serializer_ = Plan.build(serializer_plugin, **kwargs)
+        return self.serializer_
+
     def restore_object(self, filename):
         """Deserialize an object."""
-        if 'api_layer' not in self.config:  # old API
+        serializer_plugin = self.get_serializer_plugin()
+        if serializer_plugin is None:
             return None
-        required_plugin_components = self.config['api_layer']['required_plugin_components']
-        serializer_plugin = required_plugin_components['serializer_plugin']
-        serializer = Plan.build(serializer_plugin, {})
-        obj = serializer.restore_object(filename)
+        obj = serializer_plugin.restore_object(filename)
         return obj
