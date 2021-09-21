@@ -4,8 +4,10 @@
 
 import re
 import urllib.request
+import zipfile
 from pathlib import Path
 
+import gdown
 import numpy as np
 import pandas as pd
 from tensorflow.keras.utils import to_categorical
@@ -23,7 +25,7 @@ class NextWordShardDescriptor(ShardDescriptor):
         self.title = title
         self.author = author
 
-        self.dataset_dir = self.download(title)
+        self.dataset_dir = self.download_data(title)
         self.data = self.load_data(self.dataset_dir)  # list of words
         self.X, self.y = self.get_sequences(self.data)
 
@@ -63,9 +65,13 @@ class NextWordShardDescriptor(ShardDescriptor):
         # spacy en_core_web_sm vocab_size = 10719, vector_size = 96
         x_seq = []
         y_seq = []
-        # created with vectors/make_vocab.py
-        vectors = pd.read_feather(Path.cwd() / 'vectors' / 'keyed_vectors.feather')
+
+        # created with make_vocab.py from
+        # https://gist.github.com/katerina-merkulova/e351b11c67832034b49652835b14adb0
+        NextWordShardDescriptor.download_vectors()
+        vectors = pd.read_feather(Path.cwd() / 'keyed_vectors.feather')
         vectors.set_index('index', inplace=True)
+
         for i in range(len(data) - 3):
             x = data[i:i + 3]  # make 3-grams
             y = data[i + 3]
@@ -79,7 +85,7 @@ class NextWordShardDescriptor(ShardDescriptor):
         return x_seq, y_seq
 
     @staticmethod
-    def download(title):
+    def download_data(title):
         """Download text by title form Github Gist."""
         url = ('https://gist.githubusercontent.com/katerina-merkulova/e351b11c67832034b49652835b'
                '14adb0/raw/726f324c258f502debf23c6091c6c355735da212/' + title.replace(' ', '_')
@@ -91,3 +97,19 @@ class NextWordShardDescriptor(ShardDescriptor):
             with open(filepath, 'w', encoding='utf-8') as file:
                 file.write(content)
         return filepath
+
+    @staticmethod
+    def download_vectors():
+        """Download vectors."""
+        if Path('keyed_vectors.feather').exists():
+            return None
+
+        output = 'keyed_vectors.zip'
+        if not Path(output).exists():
+            url = 'https://drive.google.com/uc?id=1QfidtkJ9qxzNLs1pgXoY_hqnBjsDI_2i&export=download'
+            gdown.download(url, output, quiet=False)
+
+        with zipfile.ZipFile(output, 'r') as zip_ref:
+            zip_ref.extractall(Path.cwd())
+
+        Path(output).unlink()  # remove zip
