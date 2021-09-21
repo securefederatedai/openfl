@@ -19,7 +19,6 @@ class AggregationFunctionInterface(metaclass=SingletonABCMeta):
     @abstractmethod
     def call(self,
              local_tensors: List[LocalTensor],
-             weights: np.ndarray,
              db_iterator: Iterator[pd.Series],
              tensor_name: str,
              fl_round: int,

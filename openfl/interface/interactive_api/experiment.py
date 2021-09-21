@@ -427,11 +427,11 @@ class TaskInterface:
 
         return decorator_with_args
 
-    def set_agg_fn(self, agg_fn: AggregationFunctionInterface = None):
+    def set_aggregation_function(self, aggregation_function: AggregationFunctionInterface):
         """Set aggregation function for the task.
 
         Args:
-            agg_fn: Aggregation function.
+            aggregation_function: Aggregation function.
 
         You might need to override default FedAvg aggregation with built-in aggregation types:
             - openfl.component.aggregation_functions.GeometricMedian
@@ -442,23 +442,25 @@ class TaskInterface:
             https://openfl.readthedocs.io/en/latest/overriding_agg_fn.html
         """
         def decorator_with_args(training_method):
-            self.aggregation_functions[training_method.__name__] = agg_fn
+            if not isinstance(aggregation_function, AggregationFunctionInterface):
+                raise Exception('aggregation_function must implement '
+                                'AggregationFunctionInterface interface.')
+            self.aggregation_functions[training_method.__name__] = aggregation_function
             return training_method
 
         return decorator_with_args
 
-    def get_agg_fn(self, task_fn_name):
+    def get_aggregation_function(self, function_name):
         """Get aggregation type for the task function.
 
         Args:
-            task_fn_name(str): Task function name.
+            function_name(str): Task function name.
         Returns:
             Return value. Aggregation function.
         """
-        if (task_fn_name not in self.aggregation_functions
-                or self.aggregation_functions[task_fn_name] is None):
+        if function_name not in self.aggregation_functions:
             return WeightedAverage()
-        return self.aggregation_functions[task_fn_name]
+        return self.aggregation_functions[function_name]
 
 
 class ModelInterface:

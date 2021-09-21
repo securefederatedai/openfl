@@ -303,7 +303,7 @@ class Plan(object):
         tasks.pop(SETTINGS, None)
         if task_interface:
             for task in tasks:
-                agg_fn = task_interface.get_agg_fn(tasks[task]['function'])
+                agg_fn = task_interface.get_aggregation_function(tasks[task]['function'])
                 tasks[task]['aggregation_type'] = agg_fn
             return tasks
         for task in tasks:
@@ -549,7 +549,7 @@ openfl.component.aggregation_functions.AggregationFunctionInterface
                 return None
             required_plugin_components = self.config['api_layer']['required_plugin_components']
             serializer_plugin = required_plugin_components['serializer_plugin']
-            self.serializer_ = Plan.build(serializer_plugin, **kwargs)
+            self.serializer_ = Plan.build(serializer_plugin, kwargs)
         return self.serializer_
 
     def restore_object(self, filename):
