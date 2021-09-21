@@ -77,5 +77,5 @@ Procedure
 
 3. Generate PKI certificates for all collaborators and the aggregator. See :doc:`/source/utilities/pki` for details.
 
-4. :doc:`running_the_federation.start_nodes`.
+4. :doc:`Start the federation <running_the_federation.start_nodes>`.
 
