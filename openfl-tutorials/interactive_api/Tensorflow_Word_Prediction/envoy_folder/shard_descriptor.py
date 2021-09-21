@@ -40,12 +40,14 @@ class NextWordShardDescriptor(ShardDescriptor):
     @property
     def sample_shape(self):
         """Return the sample shape info."""
-        return ['3', '96']  # three vectors
+        length, n_gram, vector_size = self.X.shape
+        return [str(n_gram), str(vector_size)]  # three vectors
 
     @property
     def target_shape(self):
         """Return the target shape info."""
-        return ['10719']  # row at one-hot matrix with n = vocab_size
+        length, vocab_size = self.y.shape
+        return [str(vocab_size)]  # row at one-hot matrix with n = vocab_size
 
     @property
     def dataset_description(self) -> str:
@@ -69,14 +71,14 @@ class NextWordShardDescriptor(ShardDescriptor):
         # created with make_vocab.py from
         # https://gist.github.com/katerina-merkulova/e351b11c67832034b49652835b14adb0
         NextWordShardDescriptor.download_vectors()
-        vectors = pd.read_feather(Path.cwd() / 'keyed_vectors.feather')
+        vectors = pd.read_feather('keyed_vectors.feather')
         vectors.set_index('index', inplace=True)
 
         for i in range(len(data) - 3):
             x = data[i:i + 3]  # make 3-grams
             y = data[i + 3]
             cur_x = [vectors.vector[word] for word in x if word in vectors.index]
-            if len(cur_x) == 3 and y in vectors:
+            if len(cur_x) == 3 and y in vectors.index:
                 x_seq.append(cur_x)
                 y_seq.append(vectors.index.get_loc(y))
 
