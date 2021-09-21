@@ -108,7 +108,7 @@ class NextWordShardDescriptor(ShardDescriptor):
 
         output = 'keyed_vectors.zip'
         if not Path(output).exists():
-            url = 'https://drive.google.com/uc?id=1QfidtkJ9qxzNLs1pgXoY_hqnBjsDI_2i&export=download'
+            url = 'https://drive.google.com/uc?id=1QfidtkJ9qxzNLs1pgXoY_hqnBjsDI_2i'
             gdown.download(url, output, quiet=False)
 
         with zipfile.ZipFile(output, 'r') as zip_ref:
