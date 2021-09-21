@@ -1,6 +1,10 @@
 # Copyright (C) 2020-2021 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-"""pynvml CUDA Device monitor plugin module."""
+"""
+pynvml CUDA Device monitor plugin module.
+
+Required package: nvidia-ml-py3
+"""
 
 import pynvml
 
@@ -9,15 +13,15 @@ from .cuda_device_monitor import CUDADeviceMonitor
 
 class PynvmlCUDADeviceMonitor(CUDADeviceMonitor):
     """CUDA Device monitor plugin using pynvml lib."""
-    # required package: nvidia-ml-py3
 
     def __init__(self) -> None:
+        """Initialize pynvml plugin."""
         super().__init__()
         pynvml.nvmlInit()
 
     def get_driver_version(self) -> str:
         """Get CUDA driver version."""
-        return pynvml.nvmlSystemGetDriverVersion().decode("utf-8")
+        return pynvml.nvmlSystemGetDriverVersion().decode('utf-8')
 
     def get_device_memory_total(self, index: int) -> int:
         """Get total memory available on the device."""
