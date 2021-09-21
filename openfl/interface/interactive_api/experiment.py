@@ -272,7 +272,8 @@ class FLExperiment:
         # Collaborator part
         plan.config['collaborator']['settings']['delta_updates'] = delta_updates
         plan.config['collaborator']['settings']['opt_treatment'] = opt_treatment
-        plan.config['collaborator']['settings']['device_assignment_policy'] = device_assignment_policy
+        plan.config['collaborator']['settings'][
+            'device_assignment_policy'] = device_assignment_policy
 
         # DataLoader part
         for setting, value in data_loader.kwargs.items():

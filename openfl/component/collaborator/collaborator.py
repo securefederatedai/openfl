@@ -14,12 +14,14 @@ from openfl.pipelines import TensorCodec
 from openfl.protocols import utils
 from openfl.utilities import TensorKey
 
+
 class DevicePolicy(Enum):
     """Device assignment policy."""
 
     CPU_ONLY = 1
 
     CUDA_PREFERRED = 2
+
 
 class OptTreatment(Enum):
     """Optimizer Methods."""
@@ -116,14 +118,16 @@ class Collaborator:
             self.device_assignment_policy = DevicePolicy[device_assignment_policy]
         else:
             self.logger.error(f'Unknown device_assignment_policy: {device_assignment_policy}.')
-            raise NotImplementedError(f'Unknown device_assignment_policy: {device_assignment_policy}.')
+            raise NotImplementedError(
+                f'Unknown device_assignment_policy: {device_assignment_policy}.'
+            )
 
         self.task_runner.set_optimizer_treatment(self.opt_treatment.name)
 
-    def set_available_devices(self, cuda: Tuple[str]=[]):
+    def set_available_devices(self, cuda: Tuple[str] = ()):
         """
         Set available CUDA devices.
-        
+
         Cuda tuple contains string indeces, ('1', '3').
         """
         self.cuda_devices = cuda
@@ -184,8 +188,10 @@ class Collaborator:
         func_name = self.task_config[task]['function']
         kwargs = self.task_config[task]['kwargs']
 
-        if (self.device_assignment_policy.name == 'CUDA_PREFERRED' and 
-            len(self.cuda_devices) > 0):
+        if (self.device_assignment_policy.name == (
+            'CUDA_PREFERRED' and len(self.cuda_devices) > 0
+        )
+        ):
             kwargs['device'] = 'cuda:' + str(self.cuda_devices[0])
         else:
             kwargs['device'] = 'cpu'
