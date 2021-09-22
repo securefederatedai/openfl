@@ -4,10 +4,10 @@
 
 import logging
 import shutil
+import sys
 from pathlib import Path
 
 import click
-import sys
 from click import group
 from click import option
 from click import pass_context

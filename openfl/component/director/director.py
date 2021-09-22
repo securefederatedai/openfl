@@ -5,13 +5,12 @@
 
 import asyncio
 import logging
+import time
 from collections import defaultdict
 from pathlib import Path
 from typing import Iterable
 from typing import List
 from typing import Union
-
-import time
 
 from openfl.federated import Plan
 from openfl.protocols import director_pb2
@@ -24,6 +23,8 @@ ENVOY_HEALTH_CHECK_PERIOD = 60  # in seconds
 
 
 class Status:
+    """Experiment's statuses."""
+
     PENDING = 'pending'
     FINISHED = 'finished'
     IN_PROGRESS = 'inProgress'
@@ -31,6 +32,7 @@ class Status:
 
 
 class Experiment:
+    """Experiment class."""
 
     def __init__(
             self, *,
@@ -66,6 +68,7 @@ class Experiment:
             certificate=None,
             private_key=None,
     ) -> None:
+        """Start the experiment."""
         self.status = Status.IN_PROGRESS
         try:
             logger.info(f'New experiment {self.name} for '
@@ -138,14 +141,17 @@ class Experiment:
             self.aggregator.tensor_db.clean_up(0)
 
     @property
-    def aggregator(self):
+    def aggregator(self) -> Union[AggregatorGRPCServer, None]:
+        """Get aggregator."""
         if self.__aggregator_grpc_server:
             return self.__aggregator_grpc_server.aggregator
 
 
 class ExperimentsList:
+    """ExperimentsList class."""
 
     def __init__(self, experiments: List[Experiment] = None, **kwargs) -> None:
+        """Initialize an experiments list object."""
         super().__init__(**kwargs)
         self.__active_experiment = None
         self.col_exp_queues = defaultdict(asyncio.Queue)
@@ -163,19 +169,23 @@ class ExperimentsList:
 
     @property
     def active_experiment(self) -> Union[Experiment, None]:
+        """Get active experiment."""
         if self.__active_experiment is None:
             return None
         return self.__dict[self.__active_experiment]
 
     @property
     def queue(self) -> List[str]:
+        """Get queue of not started experiments."""
         return self.__experiments_queue
 
     def add(self, experiment: Experiment) -> None:
+        """Add experiment to queue of not started experiments."""
         self.__dict[experiment.name] = experiment
         self.__experiments_queue.append(experiment.name)
 
     def remove(self, name) -> None:
+        """Remove experiment from everywhere."""
         if self.__active_experiment == name:
             self.__active_experiment = None
         if name in self.__experiments_queue:
@@ -191,11 +201,10 @@ class ExperimentsList:
         self.__active_experiment = None
 
     def set_next(self) -> bool:
+        """Set next experiment from the queue."""
         if self.active_experiment is not None:
-            # raise Exception("Finish active experiment before start next.")
             return False
         if not self.queue:
-            # raise Exception("There is no experiments in experiment queue.")
             return False
         if self.__experiments_queue:
             self.__active_experiment = self.__experiments_queue.pop(0)
@@ -209,6 +218,7 @@ class ExperimentsList:
             certificate: Union[Path, str],
             private_key: Union[Path, str],
     ) -> None:
+        """Start active experiment."""
         loop = asyncio.get_event_loop()
         run_aggregator = loop.create_task(self.active_experiment.start(
             tls=tls,
@@ -223,12 +233,15 @@ class ExperimentsList:
         self._finish_active()
 
     def __getitem__(self, key) -> Experiment:
+        """Get experiment by name."""
         return self.__dict[key]
 
     def get(self, key, default=None) -> Experiment:
+        """Get experiment by name."""
         return self.__dict.get(key, default)
 
     def __contains__(self, key) -> bool:
+        """Check if experiment exists."""
         return key in self.__dict
 
 
@@ -258,6 +271,7 @@ class Director:
         self.settings = settings or {}
 
     async def start(self):
+        """Start director. This function monitors experiments queue."""
         loop = asyncio.get_event_loop()
         while True:
             if self.experiments.set_next():
