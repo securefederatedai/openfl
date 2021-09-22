@@ -54,7 +54,7 @@ class Experiment:
         if isinstance(plan_path, str):
             plan_path = Path(plan_path)
         self.plan_path = plan_path
-        self._aggregator_grpc_server = aggregator_grpc_server
+        self.__aggregator_grpc_server = aggregator_grpc_server
         self.users = set() if users is None else set(users)
         self.status = Status.PENDING
         self.col_exp_queues = defaultdict(asyncio.Queue)
@@ -68,21 +68,18 @@ class Experiment:
     ) -> None:
         self.status = Status.IN_PROGRESS
         try:
-            loop = asyncio.get_event_loop()
-            loop.create_task(self._run_aggregator(
+            logger.info(f'New experiment {self.name} for '
+                        f'collaborators {self.collaborators}')
+
+            await self._run_aggregator(
                 tls=tls,
                 root_certificate=root_certificate,
                 certificate=certificate,
                 private_key=private_key,
-            ))
-            logger.info(f'New experiment {self.name} for '
-                        f'collaborators {self.collaborators}')
-            for col_name in self.collaborators:
-                queue = self.col_exp_queues[col_name]
-                await queue.put(self.name)
+            )
+            self.status = Status.FINISHED
         except Exception:
             self.status = Status.FAILED
-        self.status = Status.FINISHED
 
     async def _run_aggregator(
             self,
@@ -92,7 +89,7 @@ class Experiment:
             private_key=None,
     ) -> None:
         with ExperimentWorkspace(self.name, self.data_path):
-            self._aggregator_grpc_server = self._create_aggregator_grpc_server(
+            self.__aggregator_grpc_server = self._create_aggregator_grpc_server(
                 plan_path=self.plan_path,
                 tls=tls,
                 root_certificate=root_certificate,
@@ -125,7 +122,7 @@ class Experiment:
     async def _run_aggregator_server(self) -> None:
         """Run aggregator."""
         logger.info('🧿 Starting the Aggregator Service.')
-        grpc_server = self._aggregator_grpc_server.get_server()
+        grpc_server = self.__aggregator_grpc_server.get_server()
         grpc_server.start()
         logger.info('Starting Aggregator gRPC Server')
 
@@ -142,8 +139,8 @@ class Experiment:
 
     @property
     def aggregator(self):
-        if self._aggregator_grpc_server:
-            return self._aggregator_grpc_server.aggregator
+        if self.__aggregator_grpc_server:
+            return self.__aggregator_grpc_server.aggregator
 
 
 class ExperimentsList:
@@ -151,6 +148,8 @@ class ExperimentsList:
     def __init__(self, experiments: List[Experiment] = None, **kwargs) -> None:
         super().__init__(**kwargs)
         self.__active_experiment = None
+        self.col_exp_queues = defaultdict(asyncio.Queue)
+
         if experiments is None:
             self.__experiments_queue = []
             self.__archived_experiments = []
@@ -187,7 +186,8 @@ class ExperimentsList:
             del self.__dict[name]
 
     def _finish_active(self) -> None:
-        self.__archived_experiments.insert(0, self.active_experiment)
+        self.__dict[self.__active_experiment].__aggregator_grpc_server = None
+        self.__archived_experiments.insert(0, self.__active_experiment)
         self.__active_experiment = None
 
     def set_next(self) -> bool:
@@ -209,12 +209,17 @@ class ExperimentsList:
             certificate: Union[Path, str],
             private_key: Union[Path, str],
     ) -> None:
-        await self.active_experiment.start(
+        loop = asyncio.get_event_loop()
+        run_aggregator = loop.create_task(self.active_experiment.start(
             tls=tls,
             root_certificate=root_certificate,
             certificate=certificate,
             private_key=private_key,
-        )
+        ))
+        for col_name in self.active_experiment.collaborators:
+            queue = self.col_exp_queues[col_name]
+            await queue.put(self.active_experiment.name)
+        await run_aggregator
         self._finish_active()
 
     def __getitem__(self, key) -> Experiment:
@@ -255,16 +260,14 @@ class Director:
     async def start(self):
         loop = asyncio.get_event_loop()
         while True:
-            if self.experiments.active_experiment is None and not self.experiments.set_next():
-                await asyncio.sleep(10)
-                continue
-            else:
+            if self.experiments.set_next():
                 loop.create_task(self.experiments.start_active(
                     tls=self.tls,
                     root_certificate=self.root_certificate,
                     certificate=self.certificate,
                     private_key=self.private_key,
                 ))
+            await asyncio.sleep(10)
 
     def acknowledge_shard(self, shard_info: director_pb2.ShardInfo) -> bool:
         """Save shard info to shard registry if it's acceptable."""
@@ -290,7 +293,7 @@ class Director:
             tensor_dict: dict,
             collaborator_names: Iterable[str],
             data_file_path: Path,
-    ) -> None:
+    ) -> bool:
         """Set new experiment."""
         experiment = Experiment(
             name=experiment_name,
@@ -301,6 +304,7 @@ class Director:
             init_tensor_dict=tensor_dict,
         )
         self.experiments.add(experiment)
+        return True
 
     def get_trained_model(self, experiment_name: str, caller: str, model_type: str):
         """Get trained model."""
@@ -329,9 +333,7 @@ class Director:
 
     async def wait_experiment(self, collaborator_name: str) -> str:
         """Wait an experiment."""
-        while self.experiments.active_experiment is None:
-            await asyncio.sleep(10)
-        queue = self.experiments.active_experiment.col_exp_queues[collaborator_name]
+        queue = self.experiments.col_exp_queues[collaborator_name]
         experiment_name = await queue.get()
 
         return experiment_name

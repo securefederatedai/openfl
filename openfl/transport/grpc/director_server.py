@@ -73,10 +73,10 @@ class DirectorGRPCServer(director_pb2_grpc.FederationDirectorServicer):
     def start(self):
         """Launch the director GRPC server."""
         loop = asyncio.get_event_loop()  # TODO: refactor after end of support for python3.6
+        loop.create_task(self.director.start())
         loop.run_until_complete(self._run())
 
     async def _run(self):
-        await self.director.start()
         channel_opt = [('grpc.max_send_message_length', 512 * 1024 * 1024),
                        ('grpc.max_receive_message_length', 512 * 1024 * 1024)]
         self.server = aio.server(options=channel_opt)
@@ -113,6 +113,8 @@ class DirectorGRPCServer(director_pb2_grpc.FederationDirectorServicer):
         """Request to set new experiment."""
         logger.info(f'SetNewExperiment request has got {stream}')
         # TODO: add streaming reader
+        # TODO: If we set new experiment during another experiment run
+        #       path will be gotten from running experiment workspace
         data_file_path = Path(str(uuid.uuid4())).absolute()
         with open(data_file_path, 'wb') as data_file:
             async for request in stream:

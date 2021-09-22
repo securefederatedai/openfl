@@ -85,13 +85,3 @@ def create(director_path):
     (director_path / 'cert').mkdir(parents=True, exist_ok=True)
     (director_path / 'logs').mkdir(parents=True, exist_ok=True)
     shutil.copyfile(WORKSPACE / 'default/director.yaml', director_path / 'director.yaml')
-
-# if __name__ == '__main__':
-#     start(
-#         director_config_path='/home/dmitry/code/openfl/openfl-tutorials/interactive_api/'
-#                              'Director_Pytorch_Kvasir_UNET/director_folder/director_config.yaml',
-#         tls=False,
-#         root_certificate=None,
-#         private_key=None,
-#         certificate=None,
-#     )
