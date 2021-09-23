@@ -10,7 +10,6 @@ from pathlib import Path
 import gdown
 import numpy as np
 import pandas as pd
-from tensorflow.keras.utils import to_categorical
 
 from openfl.interface.interactive_api.shard_descriptor import ShardDescriptor
 
@@ -83,8 +82,10 @@ class NextWordShardDescriptor(ShardDescriptor):
                 y_seq.append(vectors.index.get_loc(y))
 
         x_seq = np.array(x_seq)
-        y_seq = to_categorical(y_seq, num_classes=vectors.shape[0])
-        return x_seq, y_seq
+        y_seq = np.array(y_seq)
+        y = np.zeros((y_seq.size, y_seq.max() + 1))
+        y[np.arange(y_seq.size), y_seq] = 1
+        return x_seq, y
 
     @staticmethod
     def download_data(title):

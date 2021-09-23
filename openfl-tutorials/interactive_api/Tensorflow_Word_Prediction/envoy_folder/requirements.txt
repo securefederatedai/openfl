@@ -1,3 +1,0 @@
-gdown==3.13.0
-pyarrow==5.0.0
-tensorflow==2.5.1
