@@ -1,4 +1,3 @@
 template: mnist_shard_descriptor.MnistShardDescriptor
 params:
-  data_folder: mnist_data
-  rank_worldsize: 1, 2
+  rank_worldsize: 2, 2

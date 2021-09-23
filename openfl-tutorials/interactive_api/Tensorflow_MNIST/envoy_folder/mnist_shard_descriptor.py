@@ -4,63 +4,43 @@
 """Mnist Shard Descriptor."""
 
 import logging
-from pathlib import Path
-from typing import Tuple
-
-from base import Dataset
-from base import ShardDescriptor
-
 
 import numpy as np
-from numpy import ndarray
-
-
 from tensorflow import keras
 
+from openfl.interface.interactive_api.shard_descriptor import ShardDescriptor
 
 logger = logging.getLogger(__name__)
 
 
-class MnistDataset(Dataset):
-    """Mnist dataset class."""
-
-
-    def __init__(self, data_folder: Path, X_data, y_labels, data_type='train'):
-        """Initialize Mnist Dataset."""
-        self._common_data_folder = data_folder
-        self.X_data = X_data
-        self.y_labels = y_labels
-        self.data_type = data_type
-        assert len(X_data) == len(y_labels), 'Count of data samples and labels must be the same'
-
-    def __len__(self) -> int:
-        """Return the len of the dataset."""
-        return len(self.y_labels)
-
-    def __getitem__(self, index: int) -> Tuple[ndarray, int]:
-        """Return an item by the index."""
-        x = self.X_data[index]
-        label = self.y_labels[index]
-        return x, label
-
-
 class MnistShardDescriptor(ShardDescriptor):
-    """Shard descriptor class."""
+    """Mnist Shard descriptor class."""
 
     def __init__(
             self,
-            data_folder: str = 'data',
             rank_worldsize: str = '1, 1',
             **kwargs
     ):
         """Initialize MnistShardDescriptor."""
-        self.data_folder = Path.cwd() / data_folder
-        (x_train, y_train), (x_test, y_test) = self.download_data()
-        self.x_train = x_train
-        self.y_train = y_train
-        self.x_test = x_test
-        self.y_test = y_test
         self.rank, self.worldsize = tuple(int(num) for num in rank_worldsize.split(','))
+        (x_train, y_train), (x_test, y_test) = self.download_data()
+        self.x_train = x_train[self.rank - 1::self.worldsize]
+        self.y_train = y_train[self.rank - 1::self.worldsize]
+        self.x_test = x_test[self.rank - 1::self.worldsize]
+        self.y_test = y_test[self.rank - 1::self.worldsize]
+        self.dataset_mode = None
+
+    def set_dataset_type(self, mode='train'):
+        """Select training or testing mode."""
+        self.dataset_mode = mode
+
+    def get_train_size(self):
+        """Return train dataset size."""
+        return len(self.x_train)
+
+    def get_test_size(self):
+        """Return test dataset size."""
+        return len(self.x_test)
 
     def download_data(self):
         """Download prepared dataset."""
@@ -69,22 +49,12 @@ class MnistShardDescriptor(ShardDescriptor):
         x_test = np.reshape(x_test, (-1, 784))
         return (x_train, y_train), (x_test, y_test)
 
-    def get_dataset(self, dataset_type):
-        """Return a dataset by type."""
-        if dataset_type == 'train':
-            self.rank, self.worldsize
-            return MnistDataset(
-                self.data_folder,
-                self.x_train[self.rank - 1::self.worldsize, :],
-                self.y_train[self.rank - 1::self.worldsize],
-                data_type=dataset_type
-            )
-        return MnistDataset(
-                self.data_folder,
-                self.x_test[self.rank - 1::self.worldsize, :],
-                self.y_test[self.rank - 1::self.worldsize],
-                data_type=dataset_type,
-            )
+    def __getitem__(self, index: int):
+        """Return an item by the index."""
+        if self.dataset_mode == 'train':
+            return self.x_train[index], self.y_train[index]
+        else:
+            return self.x_test[index], self.y_test[index]
 
     @property
     def sample_shape(self):
@@ -104,4 +74,10 @@ class MnistShardDescriptor(ShardDescriptor):
 
     def __len__(self):
         """Return the len of the dataset."""
-        return 0
+        if self.dataset_mode is None:
+            return 0
+
+        if self.dataset_mode == 'train':
+            return len(self.x_train)
+        else:
+            return len(self.x_test)
