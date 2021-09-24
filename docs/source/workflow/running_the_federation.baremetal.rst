@@ -14,15 +14,7 @@ STEP 1: Create a Workspace on the Aggregator
 		fx
 
 
-2.	Choose a workspace template, which are end-to-end federated learning training demonstrations. The following are existing templates:
-
- - :code:`keras_cnn_mnist`: workspace with a simple `Keras <http://keras.io/>`_ CNN model that will download the `MNIST <http://yann.lecun.com/exdb/mnist/>`_ dataset and train in a federation.
- - :code:`tf_2dunet`: workspace with a simple `TensorFlow <http://tensorflow.org>`_ CNN model that will use the `BraTS <https://www.med.upenn.edu/sbia/brats2017/data.html>`_ dataset and train in a federation.
- - :code:`tf_cnn_histology`: workspace with a simple `TensorFlow <http://tensorflow.org>`_ CNN model that will download the `Colorectal Histology <https://zenodo.org/record/53169#.XGZemKwzbmG>`_ dataset and train in a federation.
- - :code:`torch_cnn_histology`: workspace with a simple `PyTorch <http://pytorch.org/>`_ CNN model that will download the `Colorectal Histology <https://zenodo.org/record/53169#.XGZemKwzbmG>`_ dataset and train in a federation.
- - :code:`torch_cnn_mnist`: workspace with a simple `PyTorch <http://pytorch.org>`_ CNN model that will download the `MNIST <http://yann.lecun.com/exdb/mnist/>`_ dataset and train in a federation.
-
-3. 	This example uses the :code:`keras_cnn_mnist` template. 
+2. 	This example uses the :code:`keras_cnn_mnist` template. 
 	
 	Set the environment variables to use the :code:`keras_cnn_mnist` as the template and :code:`${HOME}/my_federation` as the path to the workspace directory.
 	
@@ -31,23 +23,31 @@ STEP 1: Create a Workspace on the Aggregator
         export WORKSPACE_TEMPLATE=keras_cnn_mnist
         export WORKSPACE_PATH=${HOME}/my_federation
 
-4.  Create a workspace for the new federation project.
+3.	Decide a workspace template, which are end-to-end federated learning training demonstrations. The following is a sampleb of available templates:
 
-    .. code-block:: console
-    
-       fx workspace create --prefix ${WORKSPACE_PATH} --template ${WORKSPACE_TEMPLATE}
-       
-      
-    
-    See a list of available templates by running this command:
+ - :code:`keras_cnn_mnist`: workspace with a simple `Keras <http://keras.io/>`_ CNN model that will download the `MNIST <http://yann.lecun.com/exdb/mnist/>`_ dataset and train in a federation.
+ - :code:`tf_2dunet`: workspace with a simple `TensorFlow <http://tensorflow.org>`_ CNN model that will use the `BraTS <https://www.med.upenn.edu/sbia/brats2017/data.html>`_ dataset and train in a federation.
+ - :code:`tf_cnn_histology`: workspace with a simple `TensorFlow <http://tensorflow.org>`_ CNN model that will download the `Colorectal Histology <https://zenodo.org/record/53169#.XGZemKwzbmG>`_ dataset and train in a federation.
+ - :code:`torch_cnn_histology`: workspace with a simple `PyTorch <http://pytorch.org/>`_ CNN model that will download the `Colorectal Histology <https://zenodo.org/record/53169#.XGZemKwzbmG>`_ dataset and train in a federation.
+ - :code:`torch_cnn_mnist`: workspace with a simple `PyTorch <http://pytorch.org>`_ CNN model that will download the `MNIST <http://yann.lecun.com/exdb/mnist/>`_ dataset and train in a federation.
+ 
+  See the complete list of available templates.
 
     .. code-block:: console
     
        fx workspace create --prefix ${WORKSPACE_PATH}
        
+
+4.  Create a workspace directory for the new federation project.
+
+    .. code-block:: console
+    
+       fx workspace create --prefix ${WORKSPACE_PATH} --template ${WORKSPACE_TEMPLATE}
+       
+       
     .. note::
     
-		You can use your own models by overwriting the Python scripts in the :code:`src` subdirectory in the workspace.
+		You can use your own models by overwriting the Python scripts in the **src** subdirectory in the workspace directory.
 
 5.  Change to the workspace directory.
 
@@ -55,7 +55,7 @@ STEP 1: Create a Workspace on the Aggregator
     
         cd ${WORKSPACE_PATH}
 
-6.  Install workspace requirements:
+6.  Install the workspace requirements:
 
     .. code-block:: console
     

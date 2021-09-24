@@ -9,7 +9,7 @@ STEP 2: Configure the Federation
 
 The objectives in this step:
 
-    - Ensure each node in the federation has a valid PKI certificate. See :doc:`/source/utilities/pki` for details on available workflows.
+    - Ensure each node in the federation has a valid public key infrastructure (PKI) certificate. See :doc:`/source/utilities/pki` for details on available workflows.
     - Distribute the workspace from the aggregator node to the other collaborator nodes.
 
     
@@ -21,7 +21,7 @@ On the Aggregator Node
 Setting Up the Certificate Authority
 ------------------------------------
 
-1. Change to the path for your project's workspace:
+1. Change to the path of your workspace:
 
     .. code-block:: console
     
@@ -78,7 +78,7 @@ Setting Up the Certificate Authority
         
            fx aggregator certify export FQDN=x.x.x.x
 
-5. This node now has a signed security certificate as the aggreator for this new federation. You should have the following files.
+5. This node now has a signed security certificate as the aggregator for this new federation. You should have the following files.
 
     +---------------------------+--------------------------------------------------+
     | File Type                 | Filename                                         |
@@ -105,7 +105,7 @@ Exporting the Workspace
 
    The :code:`export` command will archive the current workspace (with a :code:`zip` file extension) and create a **requirements.txt** of the current Python\*\ packages in the virtual environment. 
    
-2. Transfer this zip file to each collaborator node.
+2. The next step is to transfer this workspace archive to each collaborator node.
 
 
 .. _install_certs_colab:
@@ -121,7 +121,7 @@ On the Collaborator Nodes
     
        fx workspace import --archive WORKSPACE.zip
 
- where :code:`WORKSPACE.zip` is the name of the workspace archive. This will unzip the workspace to the current directory and install the required Python packages within the current virtual environment.
+ where **WORKSPACE.zip** is the name of the workspace archive. This will unzip the workspace to the current directory and install the required Python packages within the current virtual environment.
    
 3. For each test machine you want to run as collaborator nodes, create a collaborator certificate request to be signed by the certificate authority. 
 
@@ -155,7 +155,7 @@ On the Collaborator Nodes
           
    where :code:`/PATH/TO/col_COL.LABEL_to_agg_cert_request.zip` is the path to the Collaborator CSR Package containing the :code:`.csr` file from the collaborator. The certificate authority will sign this certificate for use in the federation.
 
-   The command packages the signed collaborator certificate, along with the :code:`cert_chain.crt` needed to verify certificate signatures, for transport back to the Collaborator node:
+   The command packages the signed collaborator certificate, along with the **cert_chain.crt** file needed to verify certificate signatures, for transport back to the Collaborator node:
 
     +---------------------------------+----------------------------------------------------------+
     | File Type                       | Filename                                                 |
@@ -163,7 +163,7 @@ On the Collaborator Nodes
     | Certificate and Chain Package   | WORKSPACE.PATH/agg_to_col_COL.LABEL_signed_cert.zip      |
     +---------------------------------+----------------------------------------------------------+
 
-5. On the Collaborator node, import the signed certificate and certificate chain into your workspace. 
+5. On the collaborator node, import the signed certificate and certificate chain into your workspace. 
 
     .. code-block:: console
         

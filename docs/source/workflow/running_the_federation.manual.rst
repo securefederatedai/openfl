@@ -28,7 +28,7 @@ However, continue with the following procedure for details in creating a federat
 
 :doc:`STEP 2: Configure the Federation <running_the_federation.certificates>`
 
-    - Ensures each node in the federation has a valid PKI certificate.
+    - Ensures each node in the federation has a valid public key infrastructure (PKI) certificate.
     - Distributes the workspace from the aggregator node to the other collaborator nodes.
 
 

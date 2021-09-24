@@ -7,41 +7,36 @@
 STEP 3: Start the Federation
 ****************************
 
-On the Aggregator
-~~~~~~~~~~~~~~~~~
+On the Aggregator Node
+======================
 
-1. Now we’re ready to start the aggregator by running the Python script. 
+1. Start the aggregator. 
 
     .. code-block:: console
     
        fx aggregator start
 
-    At this point, the aggregator is running and waiting
-    for the collaborators to connect. When all of the collaborators
-    connect, the aggregator starts training. When the last round of
-    training is complete, the aggregator stores the final weights in
-    the protobuf file that was specified in the YAML file
-    (in this case *save/${WORKSPACE_TEMPLATE}_latest.pbuf*).
+    Now, the aggregator is running and waiting for the collaborators to connect. When all of the collaborators connect, the aggregator starts training. When the last round of training is completed, the aggregator stores the final weights in the protobuf file that was specified in the YAML file, which in this example is located at *save/${WORKSPACE_TEMPLATE}_latest.pbuf*.
 
 .. _running_collaborators:
 
-On the Collaborator
-~~~~~~~~~~~~~~~~~~~
+On the Collaborator Nodes
+=========================
 
 1. Open a new terminal, change the directory to the workspace, and activate the virtual environment.
 
-2. Now run the collaborator with the :code:`fx` command.
+2. Run the collaborator.
 
     .. code-block:: console
 
        fx collaborator start -n COLLABORATOR.LABEL
 
-    where **COLLABORATOR_LABEL** is the label for this collaborator.
+    where :code:`COLLABORATOR_LABEL` is the label for this collaborator.
 
     .. note::
 
-       Each workspace may have multiple Federated Learning plans and multiple collaborator lists associated with it.
-       Therefore, the Collaborator has the following optional parameters.
+       Each workspace may have multiple FL Plans and multiple collaborator lists associated with it.
+       Therefore, the collaborator has the following optional parameters.
        
            +-------------------------+---------------------------------------------------------+
            | Optional Parameters     | Description                                             |
@@ -51,4 +46,4 @@ On the Collaborator
            | -d, --data_config PATH  | The data set/shard configuration file                   |
            +-------------------------+---------------------------------------------------------+
 
-3. Repeat this for each collaborator in the federation. Once all collaborators have joined,  the aggregator will start and you will see log messages describing the progress of the federated training.
+3. Repeat the earlier steps for each collaborator node in the federation. Once all collaborators have connected, the aggregator will start training. You will see log messages describing the progress of the federated training.
