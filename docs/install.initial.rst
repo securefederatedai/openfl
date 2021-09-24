@@ -38,8 +38,8 @@ Perform this procedure on every node in the federation.
 
 		  #. Clone the |productName| repository:
 
-			 .. code-block:: console
-
+            .. code-block:: console
+            
                 git clone https://github.com/intel/openfl.git 
 
 
