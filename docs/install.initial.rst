@@ -36,14 +36,14 @@ Perform this procedure on every node in the federation.
    
 	B. **Windows**\* \  (and probably **macOS**\* \) installation:
 
-		  #. Clone the |productName| repository:
-
+        #. Clone the |productName| repository:
+        
             .. code-block:: console
             
                 git clone https://github.com/intel/openfl.git 
 
 
-          #. From inside the Python environment, call :code:`pip install`: 
+        #. From inside the Python environment, call :code:`pip install`: 
 
             .. code-block:: console
             
