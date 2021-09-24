@@ -43,12 +43,12 @@ Perform this procedure on every node in the federation.
                 git clone https://github.com/intel/openfl.git 
 
 
-		  #. From inside the Python environment, call :code:`pip install`: 
+          #. From inside the Python environment, call :code:`pip install`: 
 
-			 .. code-block:: console
-
-				cd openfl/
-				pip install .
+            .. code-block:: console
+            
+                cd openfl/
+                pip install .
 
 
 
