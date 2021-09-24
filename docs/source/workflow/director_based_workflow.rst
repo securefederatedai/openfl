@@ -40,9 +40,9 @@ Director Manager: Set Up the Director
 
 The *Director manager* sets up the *Director*, which is the central node of the federation.
 
-    - :ref: `step1_install_director_prerequisites`
-    - :ref: `STEP 2: Create Public Key Infrastructure (PKI) Certificate Using Step-CA (Optional) <step2_create_pki_using_step_ca>`
-    - :ref: `step3_start_the_director`
+    - :ref:`step1_install_director_prerequisites`
+    - :ref:`STEP 2: Create Public Key Infrastructure (PKI) Certificate Using Step-CA (Optional) <step2_create_pki_using_step_ca>`
+    - :ref:`step3_start_the_director`
 
 
 .. _step1_install_director_prerequisites:
@@ -104,9 +104,9 @@ Envoy Manager: Set Up the Envoy
 
 The *Envoy manager* sets up the *Envoys*, which are long-lived components on collaborator nodes. Envoys receive an experiment archive and provide access to local data. When started, Envoys will try to connect to the Director.
 
-    - :ref: `step1_install_envoy_prerequisites`
-    - :ref: `STEP 2: Sign Public Key Infrastructure (PKI) Certificate (Optional) <step2_sign_pki_envoy>`
-    - :ref: `step3_start_the_envoy`
+    - :ref:`step1_install_envoy_prerequisites`
+    - :ref:`STEP 2: Sign Public Key Infrastructure (PKI) Certificate (Optional) <step2_sign_pki_envoy>`
+    - :ref:`step3_start_the_envoy`
 
 .. _step1_install_envoy_prerequisites:
 
@@ -305,37 +305,37 @@ The *Experiment* entity registers training-related objects, FL tasks, and settin
 
 .. _experiment_api_modelinterface:
 
-    Register the Model and Optimizer ( :code:`ModelInterface` )
-    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Register the Model and Optimizer ( :code:`ModelInterface` )
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-    Instantiate and initialize a model and optimizer in your preferred deep learning framework.
+Instantiate and initialize a model and optimizer in your preferred deep learning framework.
 
-        .. code-block:: python
+    .. code-block:: python
 
-            from openfl.interface.interactive_api.experiment import ModelInterface
-            MI = ModelInterface(model, optimizer, framework_plugin: str)
-        
-    The initialized model and optimizer objects should be passed to the :code:`ModelInterface` along with the path to correct Framework Adapter plugin inside |productName| package.
+        from openfl.interface.interactive_api.experiment import ModelInterface
+        MI = ModelInterface(model, optimizer, framework_plugin: str)
     
-    .. note::
-        The |productName| interactive API supports *Keras* and *PyTorch* models via existing plugins. You can implement other deep learning models via the plugin interface and point the :code:`framework_plugin` to your implementation. 
-    
+The initialized model and optimizer objects should be passed to the :code:`ModelInterface` along with the path to correct Framework Adapter plugin inside |productName| package.
+
+.. note::
+    The |productName| interactive API supports *Keras* and *PyTorch* models via existing plugins. You can implement other deep learning models via the plugin interface and point the :code:`framework_plugin` to your implementation. 
+
 
 .. _experiment_api_taskinterface:
 
-    Register FL Tasks ( :code:`TaskInterface` )
-    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Register FL Tasks ( :code:`TaskInterface` )
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-    An FL task accepts the following objects:
-    
-        - :code:`model` - will be rebuilt with relevant weights for every task by `TaskRunner`
-        - :code:`data_loader` - data loader that will provide local data
-        - :code:`device` - a device to be used for execution on collaborator machines
-        - :code:`optimizer` (optional) - model optimizer; only for training tasks
-    
-    Register an FL task and accompanying information. 
-    
-        .. code-block:: python
+An FL task accepts the following objects:
+
+    - :code:`model` - will be rebuilt with relevant weights for every task by `TaskRunner`
+    - :code:`data_loader` - data loader that will provide local data
+    - :code:`device` - a device to be used for execution on collaborator machines
+    - :code:`optimizer` (optional) - model optimizer; only for training tasks
+
+Register an FL task and accompanying information. 
+
+    .. code-block:: python
 
         TI = TaskInterface()
 
@@ -349,27 +349,27 @@ The *Experiment* entity registers training-related objects, FL tasks, and settin
         def foo(my_model, train_loader, my_Adam_opt, device, batch_size, some_arg=356)
         ...
 
-    FL tasks return a dictionary object with metrics: :code:`{metric name: metric value for this task}`.
+FL tasks return a dictionary object with metrics: :code:`{metric name: metric value for this task}`.
+
+.. note::
+    The |productName| interactive API currently allows registering only standalone functions defined in the main module or imported from other modules inside the workspace.
     
-    .. note::
-        The |productName| interactive API currently allows registering only standalone functions defined in the main module or imported from other modules inside the workspace.
-        
-        The :code:`TaskInterface` class must be instantiated before you can use its methods to register FL tasks.
-        
-            - :code:`@TI.register_fl_task()` needs tasks argument names for :code:`model`, :code:`data_loader`, :code:`device` , and :code:`optimizer` (optional) that constitute a *task contract*. This method adds the callable and the task contract to the task registry.
-            - :code:`@TI.add_kwargs()` should be used to set up arguments that are not included in the contract.
+    The :code:`TaskInterface` class must be instantiated before you can use its methods to register FL tasks.
     
+        - :code:`@TI.register_fl_task()` needs tasks argument names for :code:`model`, :code:`data_loader`, :code:`device` , and :code:`optimizer` (optional) that constitute a *task contract*. This method adds the callable and the task contract to the task registry.
+        - :code:`@TI.add_kwargs()` should be used to set up arguments that are not included in the contract.
+
 
 .. _experiment_api_datainterface:
 
-    Register Federated Data Loader ( :code:`DataInterface` )
-    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Register Federated Data Loader ( :code:`DataInterface` )
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-    A *shard descriptor* defines how to read and format the local data. Therefore, the *data loader* contains the batching and augmenting data logic, which are common for all collaborators.
-    
-    Subclass :code:`DataInterface` and implement the following methods.
-    
-        .. code-block:: python
+A *shard descriptor* defines how to read and format the local data. Therefore, the *data loader* contains the batching and augmenting data logic, which are common for all collaborators.
+
+Subclass :code:`DataInterface` and implement the following methods.
+
+    .. code-block:: python
 
         class CustomDataLoader(DataInterface):
             def __init__(self, **kwargs):
@@ -400,20 +400,20 @@ The *Experiment* entity registers training-related objects, FL tasks, and settin
             # so on, see the full list of methods below
 
 
-    The following are shard descriptor setter and getter methods:
-    
-    - :code:`shard_descriptor(self, shard_descriptor)` is called during the *Collaborator* initialization procedure with the local shard descriptor. Include in this method any logic that is triggered with the shard descriptor replacement.
-    - :code:`get_train_loader(self, **kwargs)` is called before the execution of training tasks. This method returns the outcome of the training task according to the :code:`data_loader` contract argument. The :code:`kwargs` dict returns the same information that was provided during the :code:`DataInterface` initialization.
-    - :code:`get_valid_loader(self, **kwargs)` is called before the execution of validation tasks. This method returns the outcome of the validation task according to the :code:`data_loader` contract argument. The :code:`kwargs` dict returns the same information that was provided during the :code:`DataInterface` initialization. 
-    - :code:`get_train_data_size(self)` returns the number of samples in the local dataset for training. Use the information provided by the shard descriptor to determine how to split your training and validation tasks.
-    - :code:`get_valid_data_size(self)` returns the number of samples in the local dataset for validation.
-        
+The following are shard descriptor setter and getter methods:
 
-    .. note::
-        
-        - The *User Dataset* class should be instantiated to pass further to the *Experiment* object. 
-        - Dummy *shard descriptor* (or a custom local one) may be set up to test the augmentation or batching pipeline. 
-        - Keyword arguments used during initialization on the frontend node may be used during dataloaders construction on collaborator machines.
+- :code:`shard_descriptor(self, shard_descriptor)` is called during the *Collaborator* initialization procedure with the local shard descriptor. Include in this method any logic that is triggered with the shard descriptor replacement.
+- :code:`get_train_loader(self, **kwargs)` is called before the execution of training tasks. This method returns the outcome of the training task according to the :code:`data_loader` contract argument. The :code:`kwargs` dict returns the same information that was provided during the :code:`DataInterface` initialization.
+- :code:`get_valid_loader(self, **kwargs)` is called before the execution of validation tasks. This method returns the outcome of the validation task according to the :code:`data_loader` contract argument. The :code:`kwargs` dict returns the same information that was provided during the :code:`DataInterface` initialization. 
+- :code:`get_train_data_size(self)` returns the number of samples in the local dataset for training. Use the information provided by the shard descriptor to determine how to split your training and validation tasks.
+- :code:`get_valid_data_size(self)` returns the number of samples in the local dataset for validation.
+    
+
+.. note::
+    
+    - The *User Dataset* class should be instantiated to pass further to the *Experiment* object. 
+    - Dummy *shard descriptor* (or a custom local one) may be set up to test the augmentation or batching pipeline. 
+    - Keyword arguments used during initialization on the frontend node may be used during dataloaders construction on collaborator machines.
 
 
 
