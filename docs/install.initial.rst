@@ -18,13 +18,13 @@ Perform this procedure on every node in the federation.
 
    .. code-block:: console
 
-      $ conda create -n env_name pip python=3.6
+      conda create -n env_name pip python=3.6
 
 3. Activate the virtual environment.
 
    .. code-block:: console
 
-      $ conda activate env_name
+      conda activate env_name
 
 4. Install the |productName| package.
 
@@ -32,7 +32,7 @@ Perform this procedure on every node in the federation.
 
 		.. parsed-literal::
 
-			$ pip install \ |productWheel|\
+			pip install \ |productWheel|\
    
 	B. **Windows**\* \  (and probably **macOS**\* \) installation:
 
@@ -40,14 +40,14 @@ Perform this procedure on every node in the federation.
 
 			 .. code-block:: console
 
-			   $ git clone https://github.com/intel/openfl.git 
+                git clone https://github.com/intel/openfl.git 
 
 		  #. From inside the Python environment, call :code:`pip install`: 
 
 			 .. code-block:: console
 
-				$ cd openfl/
-				$ pip install .
+				cd openfl/
+				pip install .
 
 
 
