@@ -29,7 +29,7 @@ The director-based workflow uses long-lived components in a federation. These co
 	Follow the procedure in the director-based workflow to become familiar with the setup required and APIs provided for each role in the federation: *Director manager*, *Envoy manager*, and *Experiment manager (data scientist)*. 
 
 
-.. figure:: static_diagram.svg
+.. figure:: source/openfl/static_diagram.svg
 
 .. centered:: Overview of the Director-Based Workflow
 
@@ -40,9 +40,9 @@ Director Manager: Set Up the Director
 
 The *Director manager* sets up the *Director*, which is the central node of the federation.
 
-    :ref: `step1_install_director_prerequisites`
-    :ref: `STEP 2: Create Public Key Infrastructure (PKI) Certificate Using Step-CA (Optional) <step2_create_pki_using_step_ca>`
-    :ref: `step3_start_the_director`
+    - :ref: `step1_install_director_prerequisites`
+    - :ref: `STEP 2: Create Public Key Infrastructure (PKI) Certificate Using Step-CA (Optional) <step2_create_pki_using_step_ca>`
+    - :ref: `step3_start_the_director`
 
 
 .. _step1_install_director_prerequisites:
@@ -104,9 +104,9 @@ Envoy Manager: Set Up the Envoy
 
 The *Envoy manager* sets up the *Envoys*, which are long-lived components on collaborator nodes. Envoys receive an experiment archive and provide access to local data. When started, Envoys will try to connect to the Director.
 
-    :ref: `step1_install_envoy_prerequisites`
-    :ref: `STEP 2: Sign Public Key Infrastructure (PKI) Certificate (Optional) <step2_sign_pki_envoy>`
-    :ref: `step3_start_the_envoy`
+    - :ref: `step1_install_envoy_prerequisites`
+    - :ref: `STEP 2: Sign Public Key Infrastructure (PKI) Certificate (Optional) <step2_sign_pki_envoy>`
+    - :ref: `step3_start_the_envoy`
 
 .. _step1_install_envoy_prerequisites:
 
