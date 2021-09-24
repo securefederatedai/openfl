@@ -83,7 +83,7 @@ class NextWordShardDescriptor(ShardDescriptor):
 
         x_seq = np.array(x_seq)
         y_seq = np.array(y_seq)
-        y = np.zeros((y_seq.size, y_seq.max() + 1))
+        y = np.zeros((y_seq.size, 10719))
         y[np.arange(y_seq.size), y_seq] = 1
         return x_seq, y
 
