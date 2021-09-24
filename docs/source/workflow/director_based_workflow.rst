@@ -29,7 +29,7 @@ The director-based workflow uses long-lived components in a federation. These co
 	Follow the procedure in the director-based workflow to become familiar with the setup required and APIs provided for each role in the federation: *Director manager*, *Envoy manager*, and *Experiment manager (data scientist)*. 
 
 
-.. figure:: openfl/static_diagram.svg
+.. figure:: ../openfl/static_diagram.svg
 
 .. centered:: Overview of the Director-Based Workflow
 
