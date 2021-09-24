@@ -20,6 +20,22 @@ The following was from running_the_federation.certificates
 
 `TLS <https://en.wikipedia.org/wiki/Transport_Layer_Security>`_ encryption is used for the network connections. Therefore, security keys and certificates will need to be created for the aggregator and collaborators to negotiate the connection securely. For the :ref:`Hello Federation <running_the_federation>` demo we will run the aggregator and collaborators on the same localhost server so these configuration steps just need to be done once on that machine. We have two pki workflows: manual and semi-automatic (with step-ca).
 
+.. note::
+
+   Different certificates can be created for each project workspace.
+
+.. _install_certs:
+
+.. kroki:: mermaid/CSR_signing.mmd
+    :caption: Manual certificate generation and signing
+    :align: center
+    :type: mermaid
+
+.. kroki:: mermaid/pki_scheme.mmd
+    :caption: Step-ca certificate generation and signing
+    :align: center
+    :type: mermaid
+
 
 Certification of Actors in Federation with Semi-automatic PKI
 ******************************************
