@@ -29,7 +29,7 @@ The director-based workflow uses long-lived components in a federation. These co
 	Follow the procedure in the director-based workflow to become familiar with the setup required and APIs provided for each role in the federation: *Director manager*, *Envoy manager*, and *Experiment manager (data scientist)*. 
 
 
-.. figure:: source/openfl/static_diagram.svg
+.. figure:: openfl/static_diagram.svg
 
 .. centered:: Overview of the Director-Based Workflow
 
@@ -168,8 +168,8 @@ STEP 3: Start the Envoy
 
 .. _establishing_federation_experiment_manager:
 
-Experiment Manager: Describe an Experiment Using Interactive Python API
-=======================================================================
+Experiment Manager: Describe an Experiment
+==========================================
 
 The Experiment manager (or data scientist) registers experiments into the federation in the following manner:
 
@@ -228,6 +228,7 @@ The following are the interactive Python API to define an experiment:
 
     - :ref:`federation_api`
     - :ref:`experiment_api`
+    
         - :ref:`experiment_api_modelinterface`
         - :ref:`experiment_api_taskinterface`
         - :ref:`experiment_api_datainterface`
@@ -402,11 +403,11 @@ Subclass :code:`DataInterface` and implement the following methods.
 
 The following are shard descriptor setter and getter methods:
 
-- :code:`shard_descriptor(self, shard_descriptor)` is called during the *Collaborator* initialization procedure with the local shard descriptor. Include in this method any logic that is triggered with the shard descriptor replacement.
-- :code:`get_train_loader(self, **kwargs)` is called before the execution of training tasks. This method returns the outcome of the training task according to the :code:`data_loader` contract argument. The :code:`kwargs` dict returns the same information that was provided during the :code:`DataInterface` initialization.
-- :code:`get_valid_loader(self, **kwargs)` is called before the execution of validation tasks. This method returns the outcome of the validation task according to the :code:`data_loader` contract argument. The :code:`kwargs` dict returns the same information that was provided during the :code:`DataInterface` initialization. 
-- :code:`get_train_data_size(self)` returns the number of samples in the local dataset for training. Use the information provided by the shard descriptor to determine how to split your training and validation tasks.
-- :code:`get_valid_data_size(self)` returns the number of samples in the local dataset for validation.
+    - :code:`shard_descriptor(self, shard_descriptor)` is called during the *Collaborator* initialization procedure with the local shard descriptor. Include in this method any logic that is triggered with the shard descriptor replacement.
+    - :code:`get_train_loader(self, **kwargs)` is called before the execution of training tasks. This method returns the outcome of the training task according to the :code:`data_loader` contract argument. The :code:`kwargs` dict returns the same information that was provided during the :code:`DataInterface` initialization.
+    - :code:`get_valid_loader(self, **kwargs)` is called before the execution of validation tasks. This method returns the outcome of the validation task according to the :code:`data_loader` contract argument. The :code:`kwargs` dict returns the same information that was provided during the :code:`DataInterface` initialization. 
+    - :code:`get_train_data_size(self)` returns the number of samples in the local dataset for training. Use the information provided by the shard descriptor to determine how to split your training and validation tasks.
+    - :code:`get_valid_data_size(self)` returns the number of samples in the local dataset for validation.
     
 
 .. note::
@@ -428,7 +429,7 @@ Start an FL Experiment
 
         FLExperiment.start()
 
- .. note::
+  .. note::
     Instances of interface classes :code:`(TaskInterface, DataInterface, ModelInterface)` must be passed to :code:`FLExperiment.start()` method along with other parameters. 
     
     This method:
@@ -458,6 +459,7 @@ Complete the Experiment
 =======================
 
 When the experiment has completed:
+
     - retrieve trained models in the native format using :code:`FLexperiment.get_best_model()` and :code:`FLexperiment.get_last_model()`.
     - erase experiment artifacts from the Director with :code:`FLexperiment.remove_experiment_data()`.
     
