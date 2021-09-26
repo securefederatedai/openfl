@@ -3,6 +3,7 @@
 """Utilities module."""
 
 import hashlib
+import ipaddress
 import logging
 import os
 import re
@@ -43,6 +44,27 @@ class DomainParamType(click.ParamType):
         """Validate value, if value is valid, return it."""
         if not self.is_fqdn(value):
             self.fail(f'{value!r} is not a valid domain name', param, ctx)
+        return value
+
+
+class IpAdress(click.ParamType):
+    """IpAdress Type for click arguments."""
+
+    name = 'IpAdress type'
+
+    @staticmethod
+    def is_api_adress(address: str) -> bool:
+        """Validate ip-adress value."""
+        try:
+            _ = ipaddress.ip_address(address)
+            return True
+        except ValueError:
+            return False
+
+    def convert(self, value, param, ctx):
+        """Validate value, if value is valid, return it."""
+        if not self.is_api_adress(value):
+            self.fail(f'{value!r} is not a valid ip adress name', param, ctx)
         return value
 
 
@@ -203,3 +225,4 @@ def validate_file_hash(file_path, expected_hash, chunk_size=8192):
 
 
 DOMAIN = DomainParamType()
+IPADRESS = IpAdress()
