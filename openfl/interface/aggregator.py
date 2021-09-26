@@ -26,7 +26,6 @@ def aggregator(context):
 
 
 @aggregator.command(name='start')
-@pass_context
 @option('-p', '--plan', required=False,
         help='Federated learning plan [plan/plan.yaml]',
         default='plan/plan.yaml',
@@ -36,7 +35,7 @@ def aggregator(context):
         default='plan/cols.yaml', type=ClickPath(exists=True))
 @option('-s', '--secure', required=False,
         help='Enable Intel SGX Enclave', is_flag=True, default=False)
-def start_(context, plan, authorized_cols, secure):
+def start_(plan, authorized_cols, secure):
     """Start the aggregator service."""
     from pathlib import Path
 
