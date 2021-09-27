@@ -4,9 +4,10 @@
 """Mnist Shard Descriptor."""
 
 import logging
+import os
 
 import numpy as np
-from tensorflow import keras
+import requests
 
 from openfl.interface.interactive_api.shard_descriptor import ShardDescriptor
 
@@ -44,9 +45,20 @@ class MnistShardDescriptor(ShardDescriptor):
 
     def download_data(self):
         """Download prepared dataset."""
-        (x_train, y_train), (x_test, y_test) = keras.datasets.mnist.load_data()
-        x_train = np.reshape(x_train, (-1, 784))
-        x_test = np.reshape(x_test, (-1, 784))
+        local_file_path = 'mnist.npz'
+        mnist_url = 'https://storage.googleapis.com/tensorflow/tf-keras-datasets/mnist.npz'
+        response = requests.get(mnist_url)
+        with open(local_file_path, 'wb') as f:
+            f.write(response.content)
+
+        with np.load(local_file_path) as f:
+            x_train, y_train = f['x_train'], f['y_train']
+            x_test, y_test = f['x_test'], f['y_test']
+            x_train = np.reshape(x_train, (-1, 784))
+            x_test = np.reshape(x_test, (-1, 784))
+
+        os.remove(local_file_path)  # remove mnist.npz
+        print('Mnist data was loaded!')
         return (x_train, y_train), (x_test, y_test)
 
     def __getitem__(self, index: int):
