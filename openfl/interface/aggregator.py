@@ -11,7 +11,7 @@ from click import pass_context
 from click import Path as ClickPath
 from click import style
 
-from openfl.utilities.utils import DOMAIN
+from openfl.utilities.click_types import DOMAIN
 from openfl.utilities.utils import getfqdn_env
 
 logger = getLogger(__name__)

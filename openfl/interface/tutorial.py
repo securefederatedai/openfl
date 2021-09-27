@@ -10,7 +10,7 @@ from click import option
 from click import pass_context
 
 
-from openfl.utilities.utils import IPADDRESS
+from openfl.utilities.click_types import IPADDRESS
 
 logger = getLogger(__name__)
 
