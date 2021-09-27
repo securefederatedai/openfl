@@ -13,10 +13,11 @@ https://github.com/intel/openfl/issues/185
 ## To run experiment:
 1. Create a folder for each envoy (they can be subfolders of `envoy_folder` for simulation purposes or folders on different machines in a real-life setting), in our case we should create three folders.
 2. Put a relevant `shard_config` in each of the three folders and copy other files from `envoy_folder` there as well.
-3. Modify the `start_envoy` accordingly:
+3. Copy `shard_decriptor.py` and `sd_requirements.txt` to `workspace` (if you to test the model with new data).
+4. Modify the `start_envoy` accordingly:
    1. change `env_one` to `env_two`, `env_three` (or any unique envoy names you like)
    2. `shard_config_one.yaml` to  `shard_config_two.yaml` and `shard_config_three.yaml`.
-4. Install requirements for each envoy: `pip install -r sd_requirements.txt`
-5. Run the director: execute `start_director.sh` in `director_folder`.
-6. Run the envoys: execute `start_envoy.sh` in each envoy folder.
-7. Run the notebook in `workspace`.
+5. Install requirements for each envoy: `pip install -r sd_requirements.txt`
+6. Run the director: execute `start_director.sh` in `director_folder`.
+7. Run the envoys: execute `start_envoy.sh` in each envoy folder.
+8. Run the notebook in `workspace`.
