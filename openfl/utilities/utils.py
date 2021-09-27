@@ -47,10 +47,10 @@ class DomainParamType(click.ParamType):
         return value
 
 
-class IpAdress(click.ParamType):
-    """IpAdress Type for click arguments."""
+class IpAddress(click.ParamType):
+    """IpAddress Type for click arguments."""
 
-    name = 'IpAdress type'
+    name = 'IpAddress type'
 
     @staticmethod
     def is_api_adress(address: str) -> bool:
@@ -225,4 +225,4 @@ def validate_file_hash(file_path, expected_hash, chunk_size=8192):
 
 
 DOMAIN = DomainParamType()
-IPADRESS = IpAdress()
+IPADDRESS = IpAddress()

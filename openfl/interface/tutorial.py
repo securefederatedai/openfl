@@ -10,7 +10,7 @@ from click import option
 from click import pass_context
 
 
-from openfl.utilities.utils import IPADRESS
+from openfl.utilities.utils import IPADDRESS
 
 logger = getLogger(__name__)
 
@@ -23,7 +23,7 @@ def tutorial(context):
 
 
 @tutorial.command()
-@option('-ip', '--ip', required=False, type=IPADRESS,
+@option('-ip', '--ip', required=False, type=IPADDRESS,
         help='IP address the notebook that should start')
 @option('-port', '--port', required=False, type=IntRange(1, 65535),
         help='The port the notebook server will listen on')
