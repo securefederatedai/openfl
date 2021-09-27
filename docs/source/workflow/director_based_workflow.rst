@@ -7,11 +7,6 @@
 Director-Based Workflow
 ************************
 
-.. _overview_director:
-
-Overview
-========
-
 The director-based workflow uses long-lived components in a federation. These components continue to be available to distribute more experiments in the federation.
 	
 - The *Director* is the central node of the federation. This component starts an *aggregator* for each experiment, sends data to connected collaborator nodes, and provides updates on the status.
@@ -35,7 +30,7 @@ These are the following roles in a director-based workflow.
 
 
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 2
    :hidden:
 
    director_based_workflow.roles
