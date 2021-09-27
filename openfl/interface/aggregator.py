@@ -10,7 +10,6 @@ from click import option
 from click import pass_context
 from click import Path as ClickPath
 from click import style
-from traitlets.traitlets import default
 
 from openfl.utilities.utils import DOMAIN
 from openfl.utilities.utils import getfqdn_env

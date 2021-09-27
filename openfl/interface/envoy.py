@@ -17,8 +17,6 @@ from yaml import safe_load
 
 from openfl.component.envoy.envoy import Envoy
 from openfl.interface.cli_helper import WORKSPACE
-
-
 from openfl.utilities.utils import DOMAIN
 
 

@@ -234,7 +234,7 @@ def register_collaborator(file_name):
         help='The certified common name of the collaborator. This is only'
              ' needed for single node expiriments')
 @option('-s', '--silent', help='Do not prompt', is_flag=True)
-@option('-r', '--request-pkg',  type=ClickPath(exists=True),
+@option('-r', '--request-pkg', type=ClickPath(exists=True),
         help='The archive containing the certificate signing'
              ' request (*.zip) for a collaborator')
 @option('-i', '--import', 'import_', type=ClickPath(exists=True),
