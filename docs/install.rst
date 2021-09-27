@@ -10,7 +10,7 @@ Installing the Software
 Install the following software.
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
 
    install.initial
    install.docker
