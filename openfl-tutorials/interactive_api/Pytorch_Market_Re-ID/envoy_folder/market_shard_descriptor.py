@@ -7,7 +7,7 @@ import re
 import zipfile
 from pathlib import Path
 
-import gdown
+import wget
 from PIL import Image
 
 from openfl.interface.interactive_api.shard_descriptor import ShardDescriptor
@@ -106,15 +106,13 @@ class MarketShardDescriptor(ShardDescriptor):
         if Path('Market-1501-v15.09.15').exists():
             return None
 
-        output = 'Market-1501-v15.09.15.zip'
-        if not Path(output).exists():
-            url = 'https://drive.google.com/uc?id=0B8-rUzbwVRk0c054eEozWG9COHM'
-            gdown.download(url, output, quiet=False)
+        url = ('http://188.138.127.15:81/Datasets/Market-1501-v15.09.15.zip')
+        filename = wget.download(url)
 
-        with zipfile.ZipFile(output, 'r') as zip_ref:
+        with zipfile.ZipFile(filename, 'r') as zip_ref:
             zip_ref.extractall(Path.cwd())
 
-        Path(output).unlink()  # remove zip
+        Path(filename).unlink()  # remove zip
 
 
 if __name__ == '__main__':
