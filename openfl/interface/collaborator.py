@@ -234,10 +234,10 @@ def register_collaborator(file_name):
         help='The certified common name of the collaborator. This is only'
              ' needed for single node expiriments')
 @option('-s', '--silent', help='Do not prompt', is_flag=True)
-@option('-r', '--request-pkg',
+@option('-r', '--request-pkg',  type=ClickPath(exists=True),
         help='The archive containing the certificate signing'
              ' request (*.zip) for a collaborator')
-@option('-i', '--import', 'import_',
+@option('-i', '--import', 'import_', type=ClickPath(exists=True),
         help='Import the archive containing the collaborator\'s'
              ' certificate (signed by the CA)')
 def certify_(collaborator_name, silent, request_pkg, import_):
@@ -245,7 +245,7 @@ def certify_(collaborator_name, silent, request_pkg, import_):
     certify(collaborator_name, silent, request_pkg, import_)
 
 
-def certify(collaborator_name, silent, request_pkg=False, import_=False):
+def certify(collaborator_name, silent, request_pkg=None, import_=False):
     """Sign/certify collaborator certificate key pair."""
     from click import confirm
     from pathlib import Path
