@@ -2,7 +2,6 @@
 # SPDX-License-Identifier: Apache-2.0
 
 """Python low-level API module."""
-import functools
 import os
 import time
 from collections import defaultdict
@@ -365,7 +364,7 @@ class TaskInterface:
         # Mapping task name -> callable
         self.aggregation_functions = {}
 
-    def register_fl_task(self, training_method):
+    def register_fl_task(self, model, data_loader, device, optimizer=None):
         """
         Register FL tasks.
 
@@ -389,8 +388,10 @@ class TaskInterface:
             ...
         `
         """
-        @functools.wraps(training_method)
-        def wrapper(model, data_loader, device, optimizer=None):
+        # The highest level wrapper for allowing arguments for the decorator
+        def decorator_with_args(training_method):
+            # We could pass hooks to the decorator
+            # @functools.wraps(training_method)
 
             def wrapper_decorator(**task_keywords):
                 metric_dict = training_method(**task_keywords)
@@ -404,9 +405,9 @@ class TaskInterface:
             # We do not alter user environment
             return training_method
 
-        return wrapper
+        return decorator_with_args
 
-    def add_kwargs(self, training_method):
+    def add_kwargs(self, **task_kwargs):
         """
         Register tasks settings.
 
@@ -415,16 +416,16 @@ class TaskInterface:
         This one is a decorator because we need task name and
         to be consistent with the main registering method
         """
-        @functools.wraps(training_method)
-        def wrapper(**task_kwargs):
+        # The highest level wrapper for allowing arguments for the decorator
+        def decorator_with_args(training_method):
             # Saving the task's settings to be written in plan
             self.task_settings[training_method.__name__] = task_kwargs
 
             return training_method
 
-        return wrapper
+        return decorator_with_args
 
-    def set_aggregation_function(self, training_method):
+    def set_aggregation_function(self, aggregation_function: AggregationFunctionInterface):
         """Set aggregation function for the task.
 
         Args:
@@ -438,15 +439,14 @@ class TaskInterface:
         .. _Overriding the aggregation function:
             https://openfl.readthedocs.io/en/latest/overriding_agg_fn.html
         """
-        @functools.wraps(training_method)
-        def wrapper(aggregation_function: AggregationFunctionInterface):
+        def decorator_with_args(training_method):
+            # @functools.wraps(training_method)
             if not isinstance(aggregation_function, AggregationFunctionInterface):
                 raise Exception('aggregation_function must implement '
                                 'AggregationFunctionInterface interface.')
             self.aggregation_functions[training_method.__name__] = aggregation_function
             return training_method
-
-        return wrapper
+        return decorator_with_args
 
     def get_aggregation_function(self, function_name):
         """Get aggregation type for the task function.
