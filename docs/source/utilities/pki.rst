@@ -53,7 +53,7 @@ Otherwise, you can certify nodes with your own PKI solution or use the PKI solut
 Semi-Automatic PKI Workflow
 ===========================
 
-The |productName| PKI pipeline involves creating a local certificate authority (CA) on a \HTTPS\ server that listens for signing requests. Certificates from each client are signed by the CA via a token. The token must be copied to clients in a secure manner. 
+The |productName| PKI pipeline involves creating a local certificate authority (CA) on a \HTTPS \ server that listens for signing requests. Certificates from each client are signed by the CA via a token. The token must be copied to clients in a secure manner. 
 
 1. Create the CA.
 
@@ -62,7 +62,7 @@ The |productName| PKI pipeline involves creating a local certificate authority (
          fx pki install -p </path/to/ca/dir> --ca-url <host:port>
       | where
       | :code:`-p` defines the path to the directory that contains CA files, and
-      | :code:`--ca-url` defines the host and port that the CA server will listen
+      | :code:`--ca-url` defines the host and port that the CA server will listen.
       When executing this command, you will be prompted for a password and password confirmation. The password will encrypt some CA files.
       This command will also download `step-ca <https://github.com/smallstep/certificates>`_ and `step <https://github.com/smallstep/cli>`_ binaries from the repository.
 
@@ -82,7 +82,7 @@ The |productName| PKI pipeline involves creating a local certificate authority (
       | where
       | :code:`-n` defines the subject name, FQDN for director, collaborator name for envoy, or API name for the API-layer node.
 
-      Run this command from the CA folder on the CA server. The output is a token which contains a JWT (JSON web token) from the CA server and the CA root certificate concatenated together. This JWT is valid for 24 hours.
+      Run this command from the CA directory on the CA server. The output is a token which contains a JWT (JSON web token) from the CA server and the CA root certificate concatenated together. This JWT is valid for 24 hours.
 
 4. Copy the token to the clients (director or envoy) via a secure channel, and certify the token.
 
@@ -104,4 +104,4 @@ The signed certificate and private key are stored on each node in the federation
 Manual PKI Workflow 
 ===================
 
-This solution is embedded into the aggregator-based workflow. See :ref:`instruction_manual_certs` for details.
+This solution is embedded into the aggregator-based workflow. See :ref:`Configure the Federation <instruction_manual_certs>` for details.
