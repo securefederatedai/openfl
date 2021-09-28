@@ -17,7 +17,7 @@ from yaml import safe_load
 
 from openfl.component.envoy.envoy import Envoy
 from openfl.interface.cli_helper import WORKSPACE
-from openfl.utilities.click_types import DOMAIN
+from openfl.utilities import click_types
 
 
 logger = logging.getLogger(__name__)
@@ -34,7 +34,7 @@ def envoy(context):
 @option('-n', '--shard-name', required=True,
         help='Current shard name')
 @option('-dh', '--director-host', required=True,
-        help='The FQDN of the federation director', type=DOMAIN,)
+        help='The FQDN of the federation director', type=click_types.DomainType)
 @option('-dp', '--director-port', required=True,
         help='The federation director port', type=click.IntRange(1, 65535))
 @option('--tls/--disable-tls', default=True,

@@ -11,7 +11,7 @@ from click import pass_context
 from click import Path as ClickPath
 from click import style
 
-from openfl.utilities.click_types import DOMAIN
+from openfl.utilities import click_types
 from openfl.utilities.utils import getfqdn_env
 
 logger = getLogger(__name__)
@@ -49,7 +49,7 @@ def start_(plan, authorized_cols, secure):
 
 
 @aggregator.command(name='generate-cert-request')
-@option('--fqdn', required=False, type=DOMAIN,
+@option('--fqdn', required=False, type=click_types.DomainType,
         help=f'The fully qualified domain name of'
              f' aggregator node [{getfqdn_env()}]',
         default=getfqdn_env())
@@ -100,7 +100,7 @@ def find_certificate_name(file_name):
 
 
 @aggregator.command(name='certify')
-@option('-n', '--fqdn', type=DOMAIN,
+@option('-n', '--fqdn', type=click_types.DomainType,
         help=f'The fully qualified domain name of aggregator node [{getfqdn_env()}]',
         default=getfqdn_env())
 @option('-s', '--silent', help='Do not prompt', is_flag=True)
