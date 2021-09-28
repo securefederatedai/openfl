@@ -209,6 +209,7 @@ class ExperimentsRegistry:
             del self.__dict[name]
 
     async def get_envoy_experiment(self, envoy_name: str) -> str:
+        """Get experiment name for envoy."""
         queue = self.__col_exp_queues[envoy_name]
         return await queue.get()
 
@@ -284,11 +285,11 @@ class Director:
         self.settings = settings or {}
 
     async def run_background_tasks(self):
+        """Run director's background tasks."""
         loop = asyncio.get_event_loop()
         loop.create_task(self._monitor_experiment_task())
 
     async def _monitor_experiment_task(self):
-        """Start director. This function monitors experiments queue."""
         while True:
             await self.experiments_registry.set_next_experiment()
             await self.experiments_registry.start_active()
