@@ -1,24 +1,36 @@
 .. # Copyright (C) 2020-2021 Intel Corporation
 .. # SPDX-License-Identifier: Apache-2.0
 
-============================
-|productName| PKI solutions
-============================
+*******************************************************
+|productName| Public Key Infrastructure (PKI) Solutions
+*******************************************************
 
 .. toctree::
    :maxdepth: 2
 
+   pki_overview_
    semi_automatic_certification_
    manual_certification_
 
-.. _semi_automatic_certification:
+
+.. _pki_overview:
+
+Overview
+========
+
+Transport Layer Security (`TLS <https://en.wikipedia.org/wiki/Transport_Layer_Security>`_) encryption is used for network connections in federated learning. Therefore, security keys and certificates will need to be created for the aggregator and collaborators to negotiate the connection securely. 
+
+If you have trusted workspaces and connections, you can start your experiment with the :code:`disable_tls` option.
 
 
-PLACEHOLDER
-***********
-The following was from running_the_federation.certificates
+Otherwise, you can certify nodes with your own PKI solution or use the PKI solution workflows provided by |productName|. 
 
-`TLS <https://en.wikipedia.org/wiki/Transport_Layer_Security>`_ encryption is used for the network connections. Therefore, security keys and certificates will need to be created for the aggregator and collaborators to negotiate the connection securely. For the :ref:`Hello Federation <running_the_federation>` demo we will run the aggregator and collaborators on the same localhost server so these configuration steps just need to be done once on that machine. We have two pki workflows: manual and semi-automatic (with step-ca).
+    - :ref:`semi_automatic_certification`
+    - :ref:`manual_certification`
+
+.. note::
+
+    The |productName| PKI solution is based on `step-ca <https://github.com/smallstep/certificates>`_ as a server and `step <https://github.com/smallstep/cli>`_ as a client utilities. They are downloaded from the repository during the workspace setup.
 
 .. note::
 
@@ -36,30 +48,22 @@ The following was from running_the_federation.certificates
     :align: center
     :type: mermaid
 
+.. _semi_automatic_certification:
 
-Certification of Actors in Federation with Semi-automatic PKI
-******************************************
+Semi-Automatic PKI Workflow
+===========================
 
-If you have trusted workspace and connection should not be encrypted you can use :code:`disable_tls` option while starting experiment.
-Otherwise it is necessary to certify each node participating in the federation. Certificates allow to use mutual tls connection between nodes.
-You can certify nodes by your own PKI system or use PKI provided by OpenFL. It is based on `step-ca <https://github.com/smallstep/certificates>`_
-as a server and `step <https://github.com/smallstep/cli>`_ as a client utilities. They are downloaded from github during workspace setup. Regardless of the certification method,
-paths to certificates on each node are provided at start of experiment. Pki workflow from OpenFL will be discussed below.
+The |productName| PKI pipeline involves creating a local certificate authority (CA) on the aggregator node that listens for signing requests from collaborator nodes. Certificates from each node are signed by the CA via a token. The token must be copied to each collaborator node in a secure manner. 
 
-OpenFL PKI workflow
-===================
-Openfl PKI pipeline asumes creating local CA with https server which listen signing requests.
-Certificates from each node can be signed by requesting to CA server with special token.
-Token must be copied to each node by some secure way. Each step is considered in detail below.
+1. Create the CA.
 
-1. Create CA, i.e create root key pair, CA server config and other.
       .. code-block:: console
 
-         $ fx pki install -p </path/to/ca/dir> --ca-url <host:port>
-      | :code:`-p` - path to folder, which will contain ca files.
-      | :code:`--ca-url` - host and port which ca server will listen
-      When executing this command, you will be prompted for a password and password confirmation. The password will encrypt some ca files.
-      This command will also download `step-ca <https://github.com/smallstep/certificates>`_ and `step <https://github.com/smallstep/cli>`_ binaries from github.
+         fx pki install -p </path/to/ca/dir> --ca-url <host:port>
+      |where you use :code:`-p` to define the path to the folder that contains CA files, and
+      |              :code:`--ca-url` to define the host and port that the CA server will listen
+      When executing this command, you will be prompted for a password and password confirmation. The password will encrypt some CA files.
+      This command will also download `step-ca <https://github.com/smallstep/certificates>`_ and `step <https://github.com/smallstep/cli>`_ binaries from the repository.
 
 2. Run CA https server.
       .. code-block:: console
