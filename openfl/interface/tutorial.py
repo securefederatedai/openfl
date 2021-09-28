@@ -23,7 +23,7 @@ def tutorial(context):
 
 
 @tutorial.command()
-@option('-ip', '--ip', required=False, type=click_types.IpAdressType,
+@option('-ip', '--ip', required=False, type=click_types.IpAdress,
         help='IP address the notebook that should start')
 @option('-port', '--port', required=False, type=IntRange(1, 65535),
         help='The port the notebook server will listen on')

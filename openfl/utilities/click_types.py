@@ -64,5 +64,5 @@ class IpAddressParamType(click.ParamType):
         return value
 
 
-DomainType = DomainParamType()
-IpAdressType = IpAddressParamType()
+Domain = DomainParamType()
+IpAdress = IpAddressParamType()

@@ -49,7 +49,7 @@ def start_(plan, authorized_cols, secure):
 
 
 @aggregator.command(name='generate-cert-request')
-@option('--fqdn', required=False, type=click_types.DomainType,
+@option('--fqdn', required=False, type=click_types.Domain,
         help=f'The fully qualified domain name of'
              f' aggregator node [{getfqdn_env()}]',
         default=getfqdn_env())
@@ -100,7 +100,7 @@ def find_certificate_name(file_name):
 
 
 @aggregator.command(name='certify')
-@option('-n', '--fqdn', type=click_types.DomainType,
+@option('-n', '--fqdn', type=click_types.Domain,
         help=f'The fully qualified domain name of aggregator node [{getfqdn_env()}]',
         default=getfqdn_env())
 @option('-s', '--silent', help='Do not prompt', is_flag=True)
