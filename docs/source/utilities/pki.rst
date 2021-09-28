@@ -60,8 +60,9 @@ The |productName| PKI pipeline involves creating a local certificate authority (
       .. code-block:: console
 
          fx pki install -p </path/to/ca/dir> --ca-url <host:port>
-      |where you use :code:`-p` to define the path to the folder that contains CA files, and
-      |              :code:`--ca-url` to define the host and port that the CA server will listen
+      | where you use
+      | :code:`-p` to define the path to the folder that contains CA files, and
+      | :code:`--ca-url` to define the host and port that the CA server will listen
       When executing this command, you will be prompted for a password and password confirmation. The password will encrypt some CA files.
       This command will also download `step-ca <https://github.com/smallstep/certificates>`_ and `step <https://github.com/smallstep/cli>`_ binaries from the repository.
 
