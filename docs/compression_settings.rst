@@ -22,18 +22,21 @@ The following are the compression pipelines supported in |productName|:
     
 ``STCPipeline``
     A **lossy** pipeline consisting of three transformations: 
+    
         - *Sparsity Transform* (p_sparsity=0.1), which by default retains only the (p*100)% absolute values of greatest magnitude. 
         - *Ternary Transform*, which discretizes the sparse array into three buckets
         - *GZIP Transform*
 
 ``SKCPipeline``
-    A **lossy** pipeline consisting of three transformations: \
+    A **lossy** pipeline consisting of three transformations:
+    
         - *Sparsity Transform* (p=0.1), which by default retains only the(p*100)% absolute values of greatest magnitude. 
         - *KMeans Transform* (k=6), which applies the KMeans algorithm to the sparse array with *k* centroids
         - *GZIP Transform*
         
 ``KCPipeline``
     A **lossy** pipeline consisting of two transformations: 
+    
         - *KMeans Transform* (k=6), which applies the KMeans algorithm to the original weight array with *k* centroids
         - *GZIP Transform* 
 
@@ -41,7 +44,7 @@ The following are the compression pipelines supported in |productName|:
 Demonstration of a Compression Pipeline
 =======================================
 
-The example template, **keras_cnn_with_compression**, uses the *KCPipeline* with six centroids for KMeans. To gain a better understanding of how experiments perform with greater or fewer centroids, you can modify the *n_clusters* parameter in the template **plan.yaml**:
+The example template, **keras_cnn_with_compression**, uses the ``KCPipeline`` with six centroids for KMeans. To gain a better understanding of how experiments perform with greater or fewer centroids, you can modify the **n_clusters** parameter in the template **plan.yaml**:
 
     .. code-block:: console
     
