@@ -440,7 +440,6 @@ class TaskInterface:
             https://openfl.readthedocs.io/en/latest/overriding_agg_fn.html
         """
         def decorator_with_args(training_method):
-            # @functools.wraps(training_method)
             if not isinstance(aggregation_function, AggregationFunctionInterface):
                 raise Exception('aggregation_function must implement '
                                 'AggregationFunctionInterface interface.')
