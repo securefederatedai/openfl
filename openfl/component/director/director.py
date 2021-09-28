@@ -26,10 +26,10 @@ ENVOY_HEALTH_CHECK_PERIOD = 60  # in seconds
 class Status:
     """Experiment's statuses."""
 
-    PENDING = 'pending'
-    FINISHED = 'finished'
-    IN_PROGRESS = 'inProgress'
-    FAILED = 'failed'
+    PENDING = 'PENDING'
+    FINISHED = 'FINISHED'
+    IN_PROGRESS = 'IN_PROGRESS'
+    FAILED = 'FAILED'
 
 
 class Experiment:
