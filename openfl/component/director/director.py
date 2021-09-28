@@ -60,14 +60,19 @@ class Experiment:
         self.__aggregator_grpc_server = aggregator_grpc_server
         self.users = set() if users is None else set(users)
         self.status = Status.PENDING
-        self.col_exp_queues = defaultdict(asyncio.Queue)
+
+    @property
+    def aggregator(self) -> Union[Aggregator, None]:
+        """Get aggregator."""
+        if self.__aggregator_grpc_server:
+            return self.__aggregator_grpc_server.aggregator
 
     async def start(
-            self,
+            self, *,
             tls: bool = False,
-            root_certificate: str = None,
-            certificate: str = None,
-            private_key: str = None,
+            root_certificate: Union[Path, str] = None,
+            certificate: Union[Path, str] = None,
+            private_key: Union[Path, str] = None,
     ) -> None:
         """Start the experiment."""
         self.status = Status.IN_PROGRESS
@@ -86,11 +91,11 @@ class Experiment:
             self.status = Status.FAILED
 
     async def _run_aggregator(
-            self,
+            self, *,
             tls: bool = False,
-            root_certificate: str = None,
-            certificate: str = None,
-            private_key: str = None,
+            root_certificate: Union[Path, str] = None,
+            certificate: Union[Path, str] = None,
+            private_key: Union[Path, str] = None,
     ) -> None:
         with ExperimentWorkspace(self.name, self.data_path):
             self.__aggregator_grpc_server = self._create_aggregator_grpc_server(
@@ -103,12 +108,12 @@ class Experiment:
             await self._run_aggregator_server()
 
     def _create_aggregator_grpc_server(
-            self,
-            plan_path: str,
+            self, *,
+            plan_path: Union[Path, str],
             tls: bool = False,
-            root_certificate: str = None,
-            certificate: str = None,
-            private_key: str = None,
+            root_certificate: Union[Path, str] = None,
+            certificate: Union[Path, str] = None,
+            private_key: Union[Path, str] = None,
     ) -> AggregatorGRPCServer:
         plan = Plan.parse(plan_config_path=Path(plan_path))
         plan.authorized_cols = list(self.collaborators)
@@ -141,12 +146,6 @@ class Experiment:
             # Temporary solution to free RAM used by TensorDB
             self.aggregator.tensor_db.clean_up(0)
 
-    @property
-    def aggregator(self) -> Union[Aggregator, None]:
-        """Get aggregator."""
-        if self.__aggregator_grpc_server:
-            return self.__aggregator_grpc_server.aggregator
-
 
 class ExperimentsRegistry:
     """ExperimentsList class."""
@@ -158,10 +157,8 @@ class ExperimentsRegistry:
             certificate: Union[Path, str],
             private_key: Union[Path, str],
             experiments: List[Experiment] = None,
-            **kwargs
     ) -> None:
         """Initialize an experiments list object."""
-        super().__init__(**kwargs)
         self.__active_experiment = None
         self.__col_exp_queues = defaultdict(asyncio.Queue)
         self.tls = tls
@@ -213,11 +210,6 @@ class ExperimentsRegistry:
         queue = self.__col_exp_queues[envoy_name]
         return await queue.get()
 
-    def _finish_active(self) -> None:
-        self.__dict[self.__active_experiment].__aggregator_grpc_server = None
-        self.__archived_experiments.insert(0, self.__active_experiment)
-        self.__active_experiment = None
-
     async def set_next_experiment(self) -> None:
         """Set next experiment from the queue."""
         while True:
@@ -254,6 +246,11 @@ class ExperimentsRegistry:
         """Check if experiment exists."""
         return key in self.__dict
 
+    def _finish_active(self) -> None:
+        self.__dict[self.__active_experiment].__aggregator_grpc_server = None
+        self.__archived_experiments.insert(0, self.__active_experiment)
+        self.__active_experiment = None
+
 
 class Director:
     """Director class."""
@@ -283,16 +280,6 @@ class Director:
             private_key=self.private_key,
         )
         self.settings = settings or {}
-
-    async def run_background_tasks(self):
-        """Run director's background tasks."""
-        loop = asyncio.get_event_loop()
-        loop.create_task(self._monitor_experiment_task())
-
-    async def _monitor_experiment_task(self):
-        while True:
-            await self.experiments_registry.set_next_experiment()
-            await self.experiments_registry.start_active()
 
     def acknowledge_shard(self, shard_info: director_pb2.ShardInfo) -> bool:
         """Save shard info to shard registry if it's acceptable."""
@@ -444,3 +431,13 @@ class Director:
             envoy_infos.append(envoy_info)
 
         return envoy_infos
+
+    async def run_background_tasks(self):
+        """Run director's background tasks."""
+        loop = asyncio.get_event_loop()
+        loop.create_task(self._monitor_experiment_task())
+
+    async def _monitor_experiment_task(self):
+        while True:
+            await self.experiments_registry.set_next_experiment()
+            await self.experiments_registry.start_active()
