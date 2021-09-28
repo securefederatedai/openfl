@@ -1,5 +1,5 @@
-.. # Copyright (C) 2020 Intel Corporation
-.. # Licensed subject to the terms of the separately executed evaluation license agreement between Intel Corporation and you.
+.. # Copyright (C) 2020-2021 Intel Corporation
+.. # SPDX-License-Identifier: Apache-2.0
 
 .. _plan_settings:
 
@@ -7,7 +7,9 @@
 Plan Settings
 ***************
 
-The Federated Learning (FL) plan is described by ``plan.yaml`` file located in ``plan`` folder of the workspace.
+The Federated Learning (FL) plan is described by ``plan.yaml`` file located in the ``plan`` folder of the workspace.
+
+
 Each YAML top-level section contains 3 main subsections:
 
 * ``template``: name of the class including top-level packages names.

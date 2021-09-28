@@ -76,9 +76,9 @@ STEP 1: Create a Workspace on the Aggregator
 		fx plan initialize
 	
 
-    This command initializes the FL Plan and autopopulates the `fully qualified domain name (FQDN) <https://en.wikipedia.org/wiki/Fully_qualified_domain_name>`_ of the aggregator node. This FQDN is embedded within the FL Plan so the collaborators know address of the externally accessible aggregator server to connect to.
+    This command initializes the FL plan and autopopulates the `fully qualified domain name (FQDN) <https://en.wikipedia.org/wiki/Fully_qualified_domain_name>`_ of the aggregator node. This FQDN is embedded within the FL plan so the collaborators know address of the externally accessible aggregator server to connect to.
     
-    If you have connection issues with the autopopulated FQDN in the FL Plan, you can do **one of the following**:
+    If you have connection issues with the autopopulated FQDN in the FL plan, you can do **one of the following**:
     
 	- override the autopopulated FQDN value with the :code:`-a` flag
 	
@@ -92,7 +92,7 @@ STEP 1: Create a Workspace on the Aggregator
 		
 			export FQDN=x.x.x.x
 		
-		and initializing the FL Plan
+		and initializing the FL plan
 	
 		.. code-block:: console
 		
