@@ -7,7 +7,7 @@
 Managing Multiple Plans
 ***********************
 
-With |productName|, you can use multiple Federation Learning Plans (FL Plan) for the same workspace. All FL plans are located in the **WORKSPACE.FOLDER/plan/plans** directory. 
+With |productName|, you can use multiple Federation Learning plans (FL plan) for the same workspace. All FL plans are located in the **WORKSPACE.FOLDER/plan/plans** directory. 
 
 The following are the :code:`fx` commands to manage your FL plans:
 
@@ -65,4 +65,4 @@ To remove an FL plan, run the following command from the workspace directory.
     
         fx plan remove -n PLAN.NAME
 
-    where :code:`NEW.PLAN.NAME` is the FL plan you wish to remove. 
+    where :code:`PLAN.NAME` is the FL plan you wish to remove. 
