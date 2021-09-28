@@ -12,6 +12,7 @@ from typing import Iterable
 from typing import List
 from typing import Union
 
+from openfl.component import Aggregator
 from openfl.federated import Plan
 from openfl.protocols import director_pb2
 from openfl.transport import AggregatorGRPCServer
@@ -63,10 +64,10 @@ class Experiment:
 
     async def start(
             self,
-            tls=False,
-            root_certificate=None,
-            certificate=None,
-            private_key=None,
+            tls: bool = False,
+            root_certificate: str = None,
+            certificate: str = None,
+            private_key: str = None,
     ) -> None:
         """Start the experiment."""
         self.status = Status.IN_PROGRESS
@@ -86,10 +87,10 @@ class Experiment:
 
     async def _run_aggregator(
             self,
-            tls=False,
-            root_certificate=None,
-            certificate=None,
-            private_key=None,
+            tls: bool = False,
+            root_certificate: str = None,
+            certificate: str = None,
+            private_key: str = None,
     ) -> None:
         with ExperimentWorkspace(self.name, self.data_path):
             self.__aggregator_grpc_server = self._create_aggregator_grpc_server(
@@ -103,11 +104,11 @@ class Experiment:
 
     def _create_aggregator_grpc_server(
             self,
-            plan_path,
-            tls=False,
-            root_certificate=None,
-            certificate=None,
-            private_key=None,
+            plan_path: str,
+            tls: bool = False,
+            root_certificate: str = None,
+            certificate: str = None,
+            private_key: str = None,
     ) -> AggregatorGRPCServer:
         plan = Plan.parse(plan_config_path=Path(plan_path))
         plan.authorized_cols = list(self.collaborators)
@@ -141,20 +142,32 @@ class Experiment:
             self.aggregator.tensor_db.clean_up(0)
 
     @property
-    def aggregator(self) -> Union[AggregatorGRPCServer, None]:
+    def aggregator(self) -> Union[Aggregator, None]:
         """Get aggregator."""
         if self.__aggregator_grpc_server:
             return self.__aggregator_grpc_server.aggregator
 
 
-class ExperimentsList:
+class ExperimentsRegistry:
     """ExperimentsList class."""
 
-    def __init__(self, experiments: List[Experiment] = None, **kwargs) -> None:
+    def __init__(
+            self,
+            tls: bool,
+            root_certificate: Union[Path, str],
+            certificate: Union[Path, str],
+            private_key: Union[Path, str],
+            experiments: List[Experiment] = None,
+            **kwargs
+    ) -> None:
         """Initialize an experiments list object."""
         super().__init__(**kwargs)
         self.__active_experiment = None
-        self.col_exp_queues = defaultdict(asyncio.Queue)
+        self.__col_exp_queues = defaultdict(asyncio.Queue)
+        self.tls = tls
+        self.root_certificate = root_certificate
+        self.certificate = certificate
+        self.private_key = private_key
 
         if experiments is None:
             self.__experiments_queue = []
@@ -184,7 +197,7 @@ class ExperimentsList:
         self.__dict[experiment.name] = experiment
         self.__experiments_queue.append(experiment.name)
 
-    def remove(self, name) -> None:
+    def remove(self, name: str) -> None:
         """Remove experiment from everywhere."""
         if self.__active_experiment == name:
             self.__active_experiment = None
@@ -195,52 +208,48 @@ class ExperimentsList:
         if name in self.__dict:
             del self.__dict[name]
 
+    async def get_envoy_experiment(self, envoy_name: str) -> str:
+        queue = self.__col_exp_queues[envoy_name]
+        return await queue.get()
+
     def _finish_active(self) -> None:
         self.__dict[self.__active_experiment].__aggregator_grpc_server = None
         self.__archived_experiments.insert(0, self.__active_experiment)
         self.__active_experiment = None
 
-    def set_next(self) -> bool:
+    async def set_next_experiment(self) -> None:
         """Set next experiment from the queue."""
-        if self.active_experiment is not None:
-            return False
-        if not self.queue:
-            return False
-        if self.__experiments_queue:
+        while True:
+            if self.active_experiment is not None or not self.queue:
+                await asyncio.sleep(10)
+                continue
             self.__active_experiment = self.__experiments_queue.pop(0)
-            return True
-        return False
+            return
 
-    async def start_active(
-            self,
-            tls: bool,
-            root_certificate: Union[Path, str],
-            certificate: Union[Path, str],
-            private_key: Union[Path, str],
-    ) -> None:
+    async def start_active(self) -> None:
         """Start active experiment."""
         loop = asyncio.get_event_loop()
         run_aggregator = loop.create_task(self.active_experiment.start(
-            tls=tls,
-            root_certificate=root_certificate,
-            certificate=certificate,
-            private_key=private_key,
+            tls=self.tls,
+            root_certificate=self.root_certificate,
+            certificate=self.certificate,
+            private_key=self.private_key,
         ))
         for col_name in self.active_experiment.collaborators:
-            queue = self.col_exp_queues[col_name]
+            queue = self.__col_exp_queues[col_name]
             await queue.put(self.active_experiment.name)
         await run_aggregator
         self._finish_active()
 
-    def __getitem__(self, key) -> Experiment:
+    def __getitem__(self, key: str) -> Experiment:
         """Get experiment by name."""
         return self.__dict[key]
 
-    def get(self, key, default=None) -> Experiment:
+    def get(self, key: str, default=None) -> Experiment:
         """Get experiment by name."""
         return self.__dict.get(key, default)
 
-    def __contains__(self, key) -> bool:
+    def __contains__(self, key: str) -> bool:
         """Check if experiment exists."""
         return key in self.__dict
 
@@ -252,9 +261,9 @@ class Director:
             self,
             *,
             tls: bool = True,
-            root_certificate: Path = None,
-            private_key: Path = None,
-            certificate: Path = None,
+            root_certificate: Union[Path, str] = None,
+            private_key: Union[Path, str] = None,
+            certificate: Union[Path, str] = None,
             sample_shape: list = None,
             target_shape: list = None,
             settings: dict = None
@@ -262,26 +271,27 @@ class Director:
         """Initialize a director object."""
         self.sample_shape, self.target_shape = sample_shape, target_shape
         self._shard_registry = {}
-        self.experiments = ExperimentsList()
-
         self.tls = tls
         self.root_certificate = root_certificate
         self.private_key = private_key
         self.certificate = certificate
+        self.experiments_registry = ExperimentsRegistry(
+            tls=self.tls,
+            root_certificate=self.root_certificate,
+            certificate=self.certificate,
+            private_key=self.private_key,
+        )
         self.settings = settings or {}
 
-    async def start(self):
-        """Start director. This function monitors experiments queue."""
+    async def run_background_tasks(self):
         loop = asyncio.get_event_loop()
+        loop.create_task(self._monitor_experiment_task())
+
+    async def _monitor_experiment_task(self):
+        """Start director. This function monitors experiments queue."""
         while True:
-            if self.experiments.set_next():
-                loop.create_task(self.experiments.start_active(
-                    tls=self.tls,
-                    root_certificate=self.root_certificate,
-                    certificate=self.certificate,
-                    private_key=self.private_key,
-                ))
-            await asyncio.sleep(10)
+            await self.experiments_registry.set_next_experiment()
+            await self.experiments_registry.start_active()
 
     def acknowledge_shard(self, shard_info: director_pb2.ShardInfo) -> bool:
         """Save shard info to shard registry if it's acceptable."""
@@ -317,17 +327,17 @@ class Director:
             sender=sender_name,
             init_tensor_dict=tensor_dict,
         )
-        self.experiments.add(experiment)
+        self.experiments_registry.add(experiment)
         return True
 
     def get_trained_model(self, experiment_name: str, caller: str, model_type: str):
         """Get trained model."""
-        if (experiment_name not in self.experiments
-                or caller not in self.experiments[experiment_name].users):
+        if (experiment_name not in self.experiments_registry
+                or caller not in self.experiments_registry[experiment_name].users):
             logger.error('No experiment data in the stash')
             return None
 
-        aggregator = self.experiments[experiment_name].aggregator
+        aggregator = self.experiments_registry[experiment_name].aggregator
 
         if aggregator.last_tensor_dict is None:
             logger.error('Aggregator have no aggregated model to return')
@@ -343,13 +353,11 @@ class Director:
 
     def get_experiment_data(self, experiment_name: str) -> Path:
         """Get experiment data."""
-        return self.experiments[experiment_name].data_path
+        return self.experiments_registry[experiment_name].data_path
 
-    async def wait_experiment(self, collaborator_name: str) -> str:
+    async def wait_experiment(self, envoy_name: str) -> str:
         """Wait an experiment."""
-        queue = self.experiments.col_exp_queues[collaborator_name]
-        experiment_name = await queue.get()
-
+        experiment_name = await self.experiments_registry.get_envoy_experiment(envoy_name)
         return experiment_name
 
     def get_dataset_info(self):
@@ -379,13 +387,13 @@ class Director:
         Raises:
             StopIteration - if the experiment is finished and there is no more metrics to report
         """
-        if (experiment_name not in self.experiments
-                or caller not in self.experiments[experiment_name].users):
+        if (experiment_name not in self.experiments_registry
+                or caller not in self.experiments_registry[experiment_name].users):
             raise Exception(
                 f'No experiment name "{experiment_name}" in experiments list, or caller "{caller}"'
                 f' does not have access to this experiment'
             )
-        aggregator = self.experiments[experiment_name].aggregator
+        aggregator = self.experiments_registry[experiment_name].aggregator
 
         while True:
             if not aggregator.metric_queue.empty():
@@ -399,9 +407,9 @@ class Director:
 
     def remove_experiment_data(self, experiment_name: str, caller: str):
         """Remove experiment data from stash."""
-        if (experiment_name in self.experiments
-                and caller in self.experiments[experiment_name].users):
-            self.experiments.remove(experiment_name)
+        if (experiment_name in self.experiments_registry
+                and caller in self.experiments_registry[experiment_name].users):
+            self.experiments_registry.remove(experiment_name)
 
     def collaborator_health_check(
             self, *, collaborator_name: str, is_experiment_running: bool
