@@ -1,9 +1,10 @@
 params:
   cuda_devices: []
-  optional_plugin_components:
-    cuda_device_monitor:
-      template: openfl.plugins.processing_units_monitor.pynvml_monitor.PynvmlCUDADeviceMonitor
-      settings: []
+
+# optional_plugin_components:
+#   cuda_device_monitor:
+#     template: openfl.plugins.processing_units_monitor.pynvml_monitor.PynvmlCUDADeviceMonitor
+#     settings: []
 
 shard_descriptor:
   template: kvasir_shard_descriptor.KvasirShardDescriptor

@@ -25,7 +25,7 @@ class Envoy:
 
     def __init__(self, *, shard_name, director_host, director_port, shard_descriptor,
                  root_certificate: str = None, private_key: str = None, certificate: str = None,
-                 tls: bool = True, **envoy_params) -> None:
+                 tls: bool = True, cuda_devices=(), cuda_device_monitor=None) -> None:
         """Initialize a envoy object."""
         self.name = shard_name
         self.root_certificate = Path(
@@ -43,10 +43,10 @@ class Envoy:
         )
 
         self.shard_descriptor = shard_descriptor
-        self.cuda_devices = envoy_params.get('cuda_devices', [])
+        self.cuda_devices = tuple(cuda_devices)
 
         # Optional plugins
-        self.cuda_device_monitor = envoy_params.get('cuda_device_monitor', None)
+        self.cuda_device_monitor = cuda_device_monitor
 
         self.executor = ThreadPoolExecutor()
         self.running_experiments = {}
@@ -105,8 +105,8 @@ class Envoy:
                         'device_utilization':
                         self.cuda_device_monitor.get_device_utilization(device_id)}
 
-                devices_status_kwargs['cuda_driver_version'] = \
-                    self.cuda_device_monitor.get_driver_version()
+                devices_status_kwargs[
+                    'cuda_driver_version'] = self.cuda_device_monitor.get_driver_version()
                 devices_status_kwargs['cuda_devices_info'] = cuda_devices_info
 
             timeout = self.director_client.send_health_check(

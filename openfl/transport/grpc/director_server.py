@@ -247,7 +247,7 @@ class DirectorGRPCServer(director_pb2_grpc.FederationDirectorServicer):
     async def GetEnvoys(self, request, context):  # NOQA:N802
         """Get a status information about envoys."""
         envoy_infos = self.director.get_envoys()
-        response = []
+        envoy_statuses = []
         for envoy_info in envoy_infos:
             envoy_info_message = director_pb2.EnvoyInfo(
                 shard_info=ParseDict(
@@ -258,6 +258,6 @@ class DirectorGRPCServer(director_pb2_grpc.FederationDirectorServicer):
             envoy_info_message.valid_duration.seconds = envoy_info['valid_duration']
             envoy_info_message.last_updated.seconds = int(envoy_info['last_updated'])
 
-            response.append(envoy_info_message)
+            envoy_statuses.append(envoy_info_message)
 
-        return director_pb2.GetEnvoysResponse(envoy_infos=response)
+        return director_pb2.GetEnvoysResponse(envoy_infos=envoy_statuses)
