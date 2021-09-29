@@ -13,8 +13,8 @@ STEP 1: Preparation
 Make sure you are inside a virtual environment with |productName| installed. See :ref:`install_package` for details.
 
 
-STEP 2: Create the ``fx-autocomplete.sh`` Script
-================================================
+STEP 2: Create the fx-autocomplete.sh Script
+============================================
 
 .. note::
 
