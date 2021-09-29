@@ -50,7 +50,7 @@ def is_fqdn(hostname: str) -> bool:
 
 
 def is_api_adress(address: str) -> bool:
-    """Validate ip-adress value."""
+    """Validate ip address value."""
     try:
         ipaddress.ip_address(address)
         return True

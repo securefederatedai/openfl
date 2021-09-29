@@ -31,5 +31,5 @@ class IpAddressParamType(click.ParamType):
         return value
 
 
-Domain = FqdnParamType()
-IpAdress = IpAddressParamType()
+FQDN = FqdnParamType()
+IP_ADDRESS = IpAddressParamType()

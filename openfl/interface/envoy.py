@@ -34,7 +34,7 @@ def envoy(context):
 @option('-n', '--shard-name', required=True,
         help='Current shard name')
 @option('-dh', '--director-host', required=True,
-        help='The FQDN of the federation director', type=click_types.Domain)
+        help='The FQDN of the federation director', type=click_types.FQDN)
 @option('-dp', '--director-port', required=True,
         help='The federation director port', type=click.IntRange(1, 65535))
 @option('--tls/--disable-tls', default=True,
