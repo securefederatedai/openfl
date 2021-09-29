@@ -40,7 +40,9 @@ def test_report_shard_info(director_client):
     shard_descriptor.sample_shape = [str(dim) for dim in (1, 2)]
     shard_descriptor.target_shape = [str(dim) for dim in (10,)]
 
-    director_client.report_shard_info(shard_descriptor)
+    cuda_devices = ()
+
+    director_client.report_shard_info(shard_descriptor, cuda_devices)
 
     director_client.stub.AcknowledgeShard.assert_called_once()
     shard_info = director_client.stub.AcknowledgeShard.call_args.args[0]
