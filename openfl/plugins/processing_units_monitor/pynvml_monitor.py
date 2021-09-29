@@ -43,4 +43,4 @@ class PynvmlCUDADeviceMonitor(CUDADeviceMonitor):
         """
         handle = pynvml.nvmlDeviceGetHandleByIndex(index)
         info_utilization = pynvml.nvmlDeviceGetUtilizationRates(handle)
-        return str(info_utilization.gpu) + '%'
+        return f'{info_utilization.gpu}%'
