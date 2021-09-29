@@ -33,7 +33,7 @@ The use of mTLS is recommended for deployments in untrusted environments to esta
 STEP 3: Start the Director
 --------------------------
 
-Start the Director on a node with at least two open ports. See :ref:`openfl_ll_components` to learn more.
+Start the Director on a node with at least two open ports. See :ref:`openfl_ll_components` to learn more about the Director entity.
 
 1. Create a Director workspace with a default config file.
 

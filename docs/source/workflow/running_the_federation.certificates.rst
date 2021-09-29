@@ -153,9 +153,9 @@ On the Collaborator Nodes
         
        fx collaborator certify --request-pkg /PATH/TO/col_COL.LABEL_to_agg_cert_request.zip
           
-   where :code:`/PATH/TO/col_COL.LABEL_to_agg_cert_request.zip` is the path to the Collaborator CSR Package containing the :code:`.csr` file from the collaborator. The certificate authority will sign this certificate for use in the federation.
+   where :code:`/PATH/TO/col_COL.LABEL_to_agg_cert_request.zip` is the path to the Collaborator CSR Package containing the :code:`.csr` file from the collaborator node. The certificate authority will sign this certificate for use in the federation.
 
-   The command packages the signed collaborator certificate, along with the **cert_chain.crt** file needed to verify certificate signatures, for transport back to the Collaborator node:
+   The command packages the signed collaborator certificate, along with the **cert_chain.crt** file needed to verify certificate signatures, for transport back to the collaborator node:
 
     +---------------------------------+----------------------------------------------------------+
     | File Type                       | Filename                                                 |

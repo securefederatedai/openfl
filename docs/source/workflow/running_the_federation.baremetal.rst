@@ -101,7 +101,7 @@ STEP 1: Create a Workspace on the Aggregator
 
 .. note::
     
-       Each workspace may have multiple Federated Learning plans and multiple collaborator node lists associated with it. Therefore, :code:`fx plan initialize` has the following optional parameters.
+       Each workspace may have multiple FL plans and multiple collaborator lists associated with it. Therefore, :code:`fx plan initialize` has the following optional parameters.
        
        +-------------------------+---------------------------------------------------------+
        | Optional Parameters     | Description                                             |
