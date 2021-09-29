@@ -111,13 +111,14 @@ class Collaborator:
         if hasattr(OptTreatment, opt_treatment):
             self.opt_treatment = OptTreatment[opt_treatment]
         else:
-            self.logger.error(f'Unknown opt_treatment: {opt_treatment}.')
+            self.logger.error(f'Unknown opt_treatment: {opt_treatment.name}.')
             raise NotImplementedError(f'Unknown opt_treatment: {opt_treatment}.')
 
         if hasattr(DevicePolicy, device_assignment_policy):
             self.device_assignment_policy = DevicePolicy[device_assignment_policy]
         else:
-            self.logger.error(f'Unknown device_assignment_policy: {device_assignment_policy}.')
+            self.logger.error('Unknown device_assignment_policy: '
+                              f'{device_assignment_policy.name}.')
             raise NotImplementedError(
                 f'Unknown device_assignment_policy: {device_assignment_policy}.'
             )
@@ -188,11 +189,9 @@ class Collaborator:
         func_name = self.task_config[task]['function']
         kwargs = self.task_config[task]['kwargs']
 
-        if (self.device_assignment_policy.name == (
-            'CUDA_PREFERRED' and len(self.cuda_devices) > 0
-        )
-        ):
-            kwargs['device'] = 'cuda:' + str(self.cuda_devices[0])
+        if (self.device_assignment_policy is DevicePolicy.CUDA_PREFERRED
+                and len(self.cuda_devices) > 0):
+            kwargs['device'] = f'cuda:{self.cuda_devices[0]}'
         else:
             kwargs['device'] = 'cpu'
 

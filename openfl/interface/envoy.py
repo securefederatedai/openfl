@@ -51,11 +51,11 @@ def start_(shard_name, director_host, director_port, tls, envoy_config_path,
            root_certificate, private_key, certificate):
     """Start the Envoy."""
     logger.info('🧿 Starting the Envoy.')
-    if is_directory_traversal(shard_config_path):
+    if is_directory_traversal(envoy_config_path):
         click.echo('The shard config path is out of the openfl workspace scope.')
         sys.exit(1)
         
-    # Reed the Envoy config
+    # Read the Envoy config
     with open(envoy_config_path) as stream:
         envoy_config = safe_load(stream)
 
@@ -69,7 +69,7 @@ def start_(shard_name, director_host, director_port, tls, envoy_config_path,
         certificate = Path(certificate).absolute()
 
     envoy_params = envoy_config.get('params', {})
-    for plugin_name, plugin_settings in envoy_params.get('optional_plugin_components', {}).items():
+    for plugin_name, plugin_settings in envoy_config.get('optional_plugin_components', {}).items():
         template = plugin_settings.get('template')
         if not template:
             raise Exception('You should put a template'

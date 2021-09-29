@@ -8,6 +8,7 @@ from datetime import datetime
 
 import grpc
 
+from openfl.interface.interactive_api.shard_descriptor import ShardDescriptor
 from openfl.pipelines import NoCompressionPipeline
 from openfl.protocols import director_pb2
 from openfl.protocols import director_pb2_grpc
@@ -51,7 +52,7 @@ class ShardDirectorClient:
             channel = grpc.secure_channel(director_addr, credentials, options=options)
         self.stub = director_pb2_grpc.FederationDirectorStub(channel)
 
-    def report_shard_info(self, shard_descriptor, cuda_devices) -> bool:
+    def report_shard_info(self, shard_descriptor: ShardDescriptor, cuda_devices: tuple) -> bool:
         """Report shard info to the director."""
         logger.info('Send report AcknowledgeShard')
         # True considered as successful registration
