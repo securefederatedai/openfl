@@ -18,7 +18,7 @@
 |productName| has the following components:
 
     - :ref:`openfl_short_lived_components`
-    - :ref:`openfl_long_lived_components`
+    - :ref:`openfl_ll_components`
 
 
 .. _openfl_short_lived_components:
@@ -36,7 +36,7 @@ Aggregator
 
 The *aggregator* is a short-lived entity, which means that its lifespan is limited by the experiment execution time. It orchestrates *collaborators* according to the FL plan and performs model aggregation at the end of each round. 
 
-The *aggregator* is spawned by the :ref:`*Director* <openfl_ll_components_director>` when a new experiment is submitted.
+The *aggregator* is spawned by the *:ref:`Director <openfl_ll_components_director>`* when a new experiment is submitted.
 
 
 Collaborator
@@ -48,7 +48,7 @@ The *collaborator* is a short-lived entity that manages training the model on lo
     - converting deep learning framework-specific tensor objects to |productName| inner representation, and
     - exchanging model parameters with the *aggregator*.
 
-The *collaborator* is created by the :ref:`*Envoy* <openfl_ll_components_envoy>` when a new experiment is submitted. 
+The *collaborator* is created by the *:ref:`Envoy <openfl_ll_components_envoy>`* when a new experiment is submitted. 
 
 Every *collaborator* is a unique service. The model is loaded with a local *shard descriptor* to perform tasks included in an FL experiment. At the end of the training task, weights are extracted and sent to the central node and aggregated.
 
