@@ -17,11 +17,11 @@ Native Python API
 
 Choose from predefined |productName| data splitters functions:
 
-- ``openfl.plugins.data_splitters.EqualNumPyDataSplitter`` (default)
-- ``openfl.plugins.data_splitters.RandomNumPyDataSplitter``
+- ``openfl.utilities.data_splitters.EqualNumPyDataSplitter`` (default)
+- ``openfl.utilities.data_splitters.RandomNumPyDataSplitter``
 - ``openfl.component.aggregation_functions.LogNormalNumPyDataSplitter`` - assumes ``data`` argument as ``np.ndarray`` of integers (labels)
 - ``openfl.component.aggregation_functions.DirichletNumPyDataSplitter`` - assumes ``data`` argument as ``np.ndarray`` of integers (labels)
-Or create an implementation of :class:`openfl.plugins.data_splitters.NumPyDataSplitter`
+Or create an implementation of :class:`openfl.utilities.data_splitters.NumPyDataSplitter`
 and pass it to FederatedDataset constructor as either ``train_splitter`` or ``valid_splitter`` keyword argument.
 
 
@@ -30,15 +30,15 @@ Using in Shard Descriptor
 
 Choose from predefined |productName| data splitters functions:
 
-- ``openfl.plugins.data_splitters.EqualNumPyDataSplitter`` (default)
-- ``openfl.plugins.data_splitters.RandomNumPyDataSplitter``
+- ``openfl.utilities.data_splitters.EqualNumPyDataSplitter`` (default)
+- ``openfl.utilities.data_splitters.RandomNumPyDataSplitter``
 - ``openfl.component.aggregation_functions.LogNormalNumPyDataSplitter`` - assumes ``data`` argument as np.ndarray of integers (labels)
 - ``openfl.component.aggregation_functions.DirichletNumPyDataSplitter`` - assumes ``data`` argument as np.ndarray of integers (labels)
 Or create your own implementation of :class:`openfl.component.aggregation_functions.AggregationFunctionInterface`.
 After defining the splitting behavior, you need to use it on your data to perform a simulation. 
 
 ``NumPyDataSplitter`` requires a single ``split`` function.
-This function receives ``data`` - NumPy array required to build the subsets of data indices (see definition of :meth:`openfl.plugins.data_splitters.NumPyDataSplitter.split`). It could be the whole dataset, or labels only, or anything else.
+This function receives ``data`` - NumPy array required to build the subsets of data indices (see definition of :meth:`openfl.utilities.data_splitters.NumPyDataSplitter.split`). It could be the whole dataset, or labels only, or anything else.
 ``split`` function returns a list of lists of indices which represent the collaborator-wise indices groups.
 
 .. code-block:: python
@@ -56,4 +56,4 @@ This function receives ``data`` - NumPy array required to build the subsets of d
 
 .. note::
 
-    By default, we shuffle the data and perform equal split (see :class:`openfl.plugins.data_splitters.EqualNumPyDataSplitter`).
+    By default, we shuffle the data and perform equal split (see :class:`openfl.utilities.data_splitters.EqualNumPyDataSplitter`).
