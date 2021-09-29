@@ -189,12 +189,6 @@ class Collaborator:
         func_name = self.task_config[task]['function']
         kwargs = self.task_config[task]['kwargs']
 
-        if (self.device_assignment_policy is DevicePolicy.CUDA_PREFERRED
-                and len(self.cuda_devices) > 0):
-            kwargs['device'] = f'cuda:{self.cuda_devices[0]}'
-        else:
-            kwargs['device'] = 'cpu'
-
         # this would return a list of what tensors we require as TensorKeys
         required_tensorkeys_relative = self.task_runner.get_required_tensorkeys_for_function(
             func_name,
@@ -229,6 +223,17 @@ class Collaborator:
             # New `Core` TaskRunner contains registry of tasks
             func = self.task_runner.TASK_REGISTRY[func_name]
             self.logger.info('Using Interactive Python API')
+
+            # So far 'kwargs' contained parameters read from the plan
+            # those are parameters that the eperiment owner registered for
+            # the task.
+            # There is another set of parameters that created on the
+            # collaborator side, for instance, local processing unit identifier:s
+            if (self.device_assignment_policy is DevicePolicy.CUDA_PREFERRED
+                    and len(self.cuda_devices) > 0):
+                kwargs['device'] = f'cuda:{self.cuda_devices[0]}'
+            else:
+                kwargs['device'] = 'cpu'
         else:
             # TaskRunner subclassing API
             # Tasks are defined as methods of TaskRunner
