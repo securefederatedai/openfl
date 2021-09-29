@@ -45,7 +45,7 @@ Build the Docker\* \  Image
 .. _install_docker_consideration:
 
 Things to Consider
-~~~~~~~~~~~~~~~~~~
+==================
 
 Docker containers have the components to initiate and run a federation. However, there are tasks that require your attention.
 

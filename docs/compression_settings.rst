@@ -3,9 +3,9 @@
 
 .. _compression_settings:
 
-********************
-Compression Settings
-********************
+**************************
+Apply Compression Settings
+**************************
 
 The |productName| framework supports lossless and lossy compression pipelines. Federated learning enables a large number of participants to work together on the same model. Without a compression pipeline, this scalability results in increased communication cost. Furthermore, large models exacerbate this problem.
 

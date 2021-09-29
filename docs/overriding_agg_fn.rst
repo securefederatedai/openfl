@@ -2,15 +2,13 @@
 .. # SPDX-License-Identifier: Apache-2.0
 
 .. _overriding_agg_fn:
-===============================
-Overriding aggregation function
-===============================
 
--------------------------------
-Usage
--------------------------------
-|productName| allows developers to use custom aggregation functions per task.
-In order to do this, you should:
+*****************************
+Override Aggregation Function
+*****************************
+
+You can use custom aggregation functions for each task. 
+
 
 Python API
 ==========

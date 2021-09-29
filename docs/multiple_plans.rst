@@ -4,7 +4,7 @@
 .. _multiple_plans:
 
 ***********************
-Managing Multiple Plans
+Manage Multiple Plans
 ***********************
 
 With |productName|, you can use multiple Federation Learning plans (FL plan) for the same workspace. All FL plans are located in the **WORKSPACE.FOLDER/plan/plans** directory. 
