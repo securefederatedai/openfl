@@ -66,7 +66,7 @@ STEP 1: Create a Workspace on the Aggregator
 
     .. note::
 
-        While models can be trained from scratch, in many cases the federation performs fine-tuning of a previously trained model. For this reason, pre-trained weights for the model are stored in protobuf files on the aggregator and passed to collaborators during initialization. 
+        While models can be trained from scratch, in many cases the federation performs fine-tuning of a previously trained model. For this reason, pre-trained weights for the model are stored in protobuf files on the aggregator node and passed to collaborator nodes during initialization. 
         
         The protobuf file with the initial weights is found in **${WORKSPACE_TEMPLATE}_init.pbuf**.
 
@@ -76,7 +76,7 @@ STEP 1: Create a Workspace on the Aggregator
 		fx plan initialize
 	
 
-    This command initializes the FL plan and autopopulates the `fully qualified domain name (FQDN) <https://en.wikipedia.org/wiki/Fully_qualified_domain_name>`_ of the aggregator node. This FQDN is embedded within the FL plan so the collaborators know address of the externally accessible aggregator server to connect to.
+    This command initializes the FL plan and autopopulates the `fully qualified domain name (FQDN) <https://en.wikipedia.org/wiki/Fully_qualified_domain_name>`_ of the aggregator node. This FQDN is embedded within the FL plan so the collaborator nodes know address of the externally accessible aggregator server to connect to.
     
     If you have connection issues with the autopopulated FQDN in the FL plan, you can do **one of the following**:
     
@@ -101,7 +101,7 @@ STEP 1: Create a Workspace on the Aggregator
 
 .. note::
     
-       Each workspace may have multiple Federated Learning plans and multiple collaborator lists associated with it. Therefore, the Aggregator has the following optional parameters.
+       Each workspace may have multiple Federated Learning plans and multiple collaborator node lists associated with it. Therefore, :code:`fx plan initialize` has the following optional parameters.
        
        +-------------------------+---------------------------------------------------------+
        | Optional Parameters     | Description                                             |
