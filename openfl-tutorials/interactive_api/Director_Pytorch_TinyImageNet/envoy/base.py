@@ -4,11 +4,11 @@
 """Base shard descriptor."""
 
 
-class Dataset:
-    """Dataset class."""
+class ShardDataset:
+    """Shard dataset class."""
 
     def __len__(self):
-        """Return the len of the dataset."""
+        """Return the len of the shard dataset."""
         raise NotImplementedError
 
     def __getitem__(self, index):
@@ -19,8 +19,8 @@ class Dataset:
 class ShardDescriptor:
     """Shard descriptor class."""
 
-    def get_dataset(self, dataset_type) -> Dataset:
-        """Return a dataset by type."""
+    def get_dataset(self, dataset_type) -> ShardDataset:
+        """Return a shard dataset by type."""
         raise NotImplementedError
 
     @property

@@ -10,15 +10,15 @@ import shutil
 from pathlib import Path
 from typing import Tuple
 
-from base import Dataset
+from base import ShardDataset
 from base import ShardDescriptor
 from PIL import Image
 
 logger = logging.getLogger(__name__)
 
 
-class TinyImageNetDataset(Dataset):
-    """TinyImageNet dataset class."""
+class TinyImageNetDataset(ShardDataset):
+    """TinyImageNet shard dataset class."""
 
     NUM_IMAGES_PER_CLASS = 500
 
@@ -40,7 +40,7 @@ class TinyImageNetDataset(Dataset):
         self.fill_labels()
 
     def __len__(self) -> int:
-        """Return the len of the dataset."""
+        """Return the len of the shard dataset."""
         return len(self.image_paths)
 
     def __getitem__(self, index: int) -> Tuple['Image', int]:
@@ -84,7 +84,7 @@ class TinyImageNetShardDescriptor(ShardDescriptor):
         self.rank, self.worldsize = tuple(int(num) for num in rank_worldsize.split(','))
 
     def download_data(self):
-        """Download prepared dataset."""
+        """Download prepared shard dataset."""
         zip_file_path = self.common_data_folder / 'tiny-imagenet-200.zip'
         os.makedirs(self.common_data_folder, exist_ok=True)
         os.system(f'wget --no-clobber http://cs231n.stanford.edu/tiny-imagenet-200.zip'
@@ -92,7 +92,7 @@ class TinyImageNetShardDescriptor(ShardDescriptor):
         shutil.unpack_archive(str(zip_file_path), str(self.common_data_folder))
 
     def get_dataset(self, dataset_type):
-        """Return a dataset by type."""
+        """Return a shard dataset by type."""
         return TinyImageNetDataset(
             data_folder=self.data_folder,
             data_type=dataset_type,
@@ -112,10 +112,10 @@ class TinyImageNetShardDescriptor(ShardDescriptor):
 
     @property
     def dataset_description(self) -> str:
-        """Return the dataset description."""
+        """Return the shard dataset description."""
         return (f'TinyImageNetDataset dataset, shard number {self.rank}'
                 f' out of {self.worldsize}')
 
     def __len__(self):
-        """Return the len of the dataset."""
+        """Return the len of the shard dataset."""
         return 0
