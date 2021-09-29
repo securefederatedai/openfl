@@ -6,7 +6,7 @@ from typing import List
 import numpy as np
 from tqdm import trange
 
-from openfl.plugins.data_splitters.data_splitter import DataSplitter
+from openfl.utilities.data_splitters.data_splitter import DataSplitter
 
 
 def get_label_count(labels, label):
