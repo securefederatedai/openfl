@@ -1,5 +1,10 @@
 # Next Word Prediction Tutorial on Keras
 
+### 0. GPU supporting
+Currently GPU (with CUDA 11) is not supported by Tensorflow properly, so we disable CUDA in the tutorial. Otherwise, you can use these charms in first answer (https://stackoverflow.com/questions/41991101/importerror-libcudnn-when-running-a-tensorflow-program) to fix your environment and enjoy GPU. Don't forget to change `os.environ['CUDA_VISIBLE_DEVICES'] = '-1'` to a positive value. 
+
+As an option you can set CUDA variable for each envoy before starting it: `export CUDA_VISIBLE_DEVICES=0` 
+
 ### 1. Data
 Different envoys could have different texts, there were used 3 books of fairy tales:
 - Polish Fairy Tales by A. J. Gliński https://www.gutenberg.org/files/36668/36668-h/36668-h.htm
