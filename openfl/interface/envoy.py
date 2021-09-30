@@ -17,6 +17,8 @@ from yaml import safe_load
 
 from openfl.component.envoy.envoy import Envoy
 from openfl.interface.cli_helper import WORKSPACE
+from openfl.utilities import click_types
+
 
 logger = logging.getLogger(__name__)
 
@@ -32,19 +34,19 @@ def envoy(context):
 @option('-n', '--shard-name', required=True,
         help='Current shard name')
 @option('-dh', '--director-host', required=True,
-        help='The FQDN of the federation director')
+        help='The FQDN of the federation director', type=click_types.FQDN)
 @option('-dp', '--director-port', required=True,
-        help='The federation director port')
+        help='The federation director port', type=click.IntRange(1, 65535))
 @option('--tls/--disable-tls', default=True,
         is_flag=True, help='Use TLS or not (By default TLS is enabled)')
 @option('-ec', '--envoy-config-path', default='envoy_config.yaml',
         help='The envoy config path', type=ClickPath(exists=True))
 @option('-rc', '--root-cert-path', 'root_certificate', default=None,
-        help='Path to a root CA cert')
+        help='Path to a root CA cert', type=ClickPath(exists=True))
 @option('-pk', '--private-key-path', 'private_key', default=None,
-        help='Path to a private key')
+        help='Path to a private key', type=ClickPath(exists=True))
 @option('-oc', '--public-cert-path', 'certificate', default=None,
-        help='Path to a signed certificate')
+        help='Path to a signed certificate', type=ClickPath(exists=True))
 def start_(shard_name, director_host, director_port, tls, envoy_config_path,
            root_certificate, private_key, certificate):
     """Start the Envoy."""

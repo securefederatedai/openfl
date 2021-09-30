@@ -33,11 +33,14 @@ def director(context):
         help='The director config file path', type=ClickPath(exists=True))
 @option('--tls/--disable-tls', default=True,
         is_flag=True, help='Use TLS or not (By default TLS is enabled)')
-@option('-rc', '--root-cert-path', 'root_certificate', default=None,
+@option('-rc', '--root-cert-path', 'root_certificate', required=False,
+        type=ClickPath(exists=True), default=None,
         help='Path to a root CA cert')
-@option('-pk', '--private-key-path', 'private_key', default=None,
+@option('-pk', '--private-key-path', 'private_key', required=False,
+        type=ClickPath(exists=True), default=None,
         help='Path to a private key')
-@option('-oc', '--public-cert-path', 'certificate', default=None,
+@option('-oc', '--public-cert-path', 'certificate', required=False,
+        type=ClickPath(exists=True), default=None,
         help='Path to a signed certificate')
 def start(director_config_path, tls, root_certificate, private_key, certificate):
     """Start the director service."""
