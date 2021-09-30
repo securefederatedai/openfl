@@ -68,10 +68,10 @@ Start the Director on a node with at least two open ports. See :ref:`openfl_ll_c
 
 .. _establishing_federation_envoy:
 
-Envoy Manager: Set Up the Envoy
-===============================
+Collaborator Manager: Set Up the Envoy
+======================================
 
-The *Envoy manager* sets up the *Envoys*, which are long-lived components on collaborator nodes. Envoys receive an experiment archive and provide access to local data. When started, Envoys will try to connect to the Director.
+The *Collaborator manager* sets up the *Envoys*, which are long-lived components on collaborator nodes. Envoys receive an experiment archive and provide access to local data. When started, Envoys will try to connect to the Director.
 
     - :ref:`step1_install_envoy_prerequisites`
     - :ref:`STEP 2: Sign Public Key Infrastructure (PKI) Certificate (Optional) <step2_sign_pki_envoy>`
