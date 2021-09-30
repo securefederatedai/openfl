@@ -131,11 +131,10 @@ def freeze_plan(plan_config):
 
 
 @plan.command(name='freeze')
-@pass_context
 @option('-p', '--plan_config', required=False,
         help='Federated learning plan [plan/plan.yaml]',
         default='plan/plan.yaml', type=ClickPath(exists=True))
-def freeze(context, plan_config):
+def freeze(plan_config):
     """
     Finalize the Data Science plan.
 
@@ -182,21 +181,19 @@ def switch_plan(name):
 
 
 @plan.command(name='switch')
-@pass_context
 @option('-n', '--name', required=False,
         help='Name of the Federated learning plan',
         default='default', type=str)
-def switch_(context, name):
+def switch_(name):
     """Switch the current plan to this plan."""
     switch_plan(name)
 
 
 @plan.command(name='save')
-@pass_context
 @option('-n', '--name', required=False,
         help='Name of the Federated learning plan',
         default='default', type=str)
-def save_(context, name):
+def save_(name):
     """Save the current plan to this plan and switch."""
     from os import makedirs
     from shutil import copyfile
@@ -212,11 +209,10 @@ def save_(context, name):
 
 
 @plan.command(name='remove')
-@pass_context
 @option('-n', '--name', required=False,
         help='Name of the Federated learning plan',
         default='default', type=str)
-def remove_(context, name):
+def remove_(name):
     """Remove this plan."""
     from shutil import rmtree
 
