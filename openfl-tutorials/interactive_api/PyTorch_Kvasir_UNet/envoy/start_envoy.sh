@@ -1,4 +1,6 @@
 #!/bin/bash
 set -e
+ENVOY_NAME=$1
+SHARD_CONF=$2
 
-fx envoy start -n env_one --disable-tls --shard-config-path shard_config.yaml -dh localhost -dp 50051
+fx envoy start -n "$ENVOY_NAME" --disable-tls --shard-config-path "$SHARD_CONF" -dh localhost -dp 50051
