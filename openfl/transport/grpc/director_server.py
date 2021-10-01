@@ -207,7 +207,7 @@ class DirectorGRPCServer(director_pb2_grpc.FederationDirectorServicer):
         logger.info(f'Request StreamMetrics for {request.experiment_name} experiment has got!')
 
         caller = self.get_caller(context)
-        for metric_dict in self.director.stream_metrics(
+        async for metric_dict in self.director.stream_metrics(
                 experiment_name=request.experiment_name, caller=caller
         ):
             if metric_dict is None:

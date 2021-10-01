@@ -138,7 +138,7 @@ class Experiment:
         try:
             while not self.aggregator.all_quit_jobs_sent():
                 # Awaiting quit job sent to collaborators
-                await asyncio.sleep(10)
+                await asyncio.sleep(2)
         except KeyboardInterrupt:
             pass
         finally:
@@ -356,7 +356,7 @@ class Director:
         """Get registered shard infos."""
         return [shard_status['shard_info'] for shard_status in self._shard_registry.values()]
 
-    def stream_metrics(self, experiment_name: str, caller: str):
+    async def stream_metrics(self, experiment_name: str, caller: str):
         """
         Stream metrics from the aggregator.
 
@@ -381,6 +381,9 @@ class Director:
                 f'No experiment name "{experiment_name}" in experiments list, or caller "{caller}"'
                 f' does not have access to this experiment'
             )
+
+        while not self.experiments_registry[experiment_name].aggregator:
+            await asyncio.sleep(1)
         aggregator = self.experiments_registry[experiment_name].aggregator
 
         while True:
