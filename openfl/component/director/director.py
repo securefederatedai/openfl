@@ -43,7 +43,6 @@ class Experiment:
             sender: str,
             init_tensor_dict: dict,
             plan_path: Union[Path, str] = 'plan/plan.yaml',
-            aggregator_grpc_server: AggregatorGRPCServer = None,
             users: Iterable[str] = None,
     ) -> None:
         """Initialize an experiment object."""
@@ -57,9 +56,9 @@ class Experiment:
         if isinstance(plan_path, str):
             plan_path = Path(plan_path)
         self.plan_path = plan_path
-        self.__aggregator_grpc_server = aggregator_grpc_server
         self.users = set() if users is None else set(users)
         self.status = Status.PENDING
+        self.__aggregator_grpc_server = None
 
     @property
     def aggregator(self) -> Union[Aggregator, None]:
@@ -87,8 +86,10 @@ class Experiment:
                 private_key=private_key,
             )
             self.status = Status.FINISHED
-        except Exception:
+            logger.info(f'Experiment "{self.name}" was finished successfully.')
+        except Exception as e:
             self.status = Status.FAILED
+            logger.error(f'Experiment "{self.name}" was failed with error: {e}.')
 
     async def _run_aggregator(
             self, *,
@@ -98,14 +99,14 @@ class Experiment:
             private_key: Union[Path, str] = None,
     ) -> None:
         with ExperimentWorkspace(self.name, self.data_path):
-            self.__aggregator_grpc_server = self._create_aggregator_grpc_server(
+            aggregator_grpc_server = self._create_aggregator_grpc_server(
                 plan_path=self.plan_path,
                 tls=tls,
                 root_certificate=root_certificate,
                 certificate=certificate,
                 private_key=private_key,
             )
-            await self._run_aggregator_server()
+            await self._run_aggregator_grpc_server(aggregator_grpc_server)
 
     def _create_aggregator_grpc_server(
             self, *,
@@ -128,9 +129,11 @@ class Experiment:
         )
         return aggregator_grpc_server
 
-    async def _run_aggregator_server(self) -> None:
+    async def _run_aggregator_grpc_server(self,
+                                          aggregator_grpc_server: AggregatorGRPCServer) -> None:
         """Run aggregator."""
         logger.info('🧿 Starting the Aggregator Service.')
+        self.__aggregator_grpc_server = aggregator_grpc_server
         grpc_server = self.__aggregator_grpc_server.get_server()
         grpc_server.start()
         logger.info('Starting Aggregator gRPC Server')
