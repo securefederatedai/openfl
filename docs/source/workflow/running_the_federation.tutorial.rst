@@ -9,7 +9,7 @@
 
 These tutorials use the Jupyter\* \  notebook server to help you become familiar with the APIs used in |productName|.
 
-:ref:`running_the_federation.notebook`
+:ref:`running_notebook`
     Use this tutorial to familiarize with the APIs of the short-lived components (*Aggregator* and *Collaborator*).
     
 
