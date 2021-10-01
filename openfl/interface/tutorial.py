@@ -5,8 +5,12 @@
 from logging import getLogger
 
 from click import group
+from click import IntRange
 from click import option
 from click import pass_context
+
+
+from openfl.utilities import click_types
 
 logger = getLogger(__name__)
 
@@ -19,12 +23,11 @@ def tutorial(context):
 
 
 @tutorial.command()
-@pass_context
-@option('-ip', '--ip', required=False,
+@option('-ip', '--ip', required=False, type=click_types.IP_ADDRESS,
         help='IP address the notebook that should start')
-@option('-port', '--port', required=False,
+@option('-port', '--port', required=False, type=IntRange(1, 65535),
         help='The port the notebook server will listen on')
-def start(context, ip, port):
+def start(ip, port):
     """Start the Jupyter notebook from the tutorials directory."""
     from os import environ
     from subprocess import check_call

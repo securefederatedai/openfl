@@ -10,8 +10,8 @@ import numpy as np
 from PIL import Image
 
 from openfl.interface.interactive_api.shard_descriptor import ShardDescriptor
-from openfl.plugins.data_splitters import RandomNumPyDataSplitter
 from openfl.utilities import validate_file_hash
+from openfl.utilities.data_splitters import RandomNumPyDataSplitter
 
 
 class KvasirShardDescriptor(ShardDescriptor):
