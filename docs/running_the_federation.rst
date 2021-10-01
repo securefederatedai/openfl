@@ -3,9 +3,9 @@
 
 .. _running_the_federation:
 
-**********************
-Running the Federation
-**********************
+******************
+Run the Federation
+******************
 
 You can use the following approaches to create a learning federation.
 
@@ -15,5 +15,5 @@ You can use the following approaches to create a learning federation.
 
    source/workflow/running_the_federation.agg_based
    source/workflow/director_based_workflow
-   source/workflow/running_the_federation.notebook
+
    

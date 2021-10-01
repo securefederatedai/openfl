@@ -3,9 +3,9 @@
 
 .. _install_software_root:
 
-***********************
-Installing the Software
-***********************
+********************
+Install the Software
+********************
 
 Install the following software.
 

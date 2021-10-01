@@ -3,15 +3,15 @@
 
 .. _running_notebook:
 
-*****************************
-Simulated Federation Workflow
-*****************************
+**********************************
+Aggregator-Based Workflow Tutorial
+**********************************
 
-This workflow will start a Jupyter\* \  notebook server and return a URL you can use to access the tutorials. Jupyter notebooks are provided for PyTorch\* \  and TensorFlow\* \  that simulate a federation on a local machine.
+You will start a Jupyter\* \  notebook server and receive a URL you can use to access the tutorials. Jupyter notebooks are provided for PyTorch\* \  and TensorFlow\* \  that simulate a federation on a local machine.
 
 .. note::
 
-	Follow the procedure in the simulated federation workflow to become familiar with the APIs in |productName| and conventions such as *FL Plans*, *Aggregators*, and *Collaborators*. 
+	Follow the procedure to become familiar with the APIs used in aggregator-based workflow and conventions such as *FL Plans*, *Aggregators*, and *Collaborators*. 
 	
 
 Start the Tutorials
@@ -37,8 +37,8 @@ Start the Tutorials
  - :code:`Federated Pytorch MNIST Tutorial`: workspace with a simple `PyTorch <https://pytorch.org/>`_ CNN model that will download the `MNIST <http://yann.lecun.com/exdb/mnist/>`_ dataset and train in a federation.
 
 
-Familiarize with the |productName| Python API Concepts
-======================================================
+Familiarize with the API Concepts in an Aggregator-Based Worklow
+================================================================
 
 Step 1: Enable the |productName| Python API
 -------------------------------------------

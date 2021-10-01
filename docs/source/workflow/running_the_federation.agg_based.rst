@@ -9,8 +9,9 @@ Aggregator-Based Workflow
 
 There are two ways to run this workflow:
 
+- :ref:`Baremetal approach <running_the_federation_manual>`
 - :ref:`Docker approach <running_the_federation_docker>`
-- :ref:`Manual approach <running_the_federation_manual>`
+
 
 
 This workflow uses short-lived components in a federation, which is terminated when the experiment is finished. The components are as follows:

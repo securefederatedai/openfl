@@ -3,9 +3,9 @@
 
 .. _running_the_federation_manual:
 
-***************
-Manual Approach
-***************
+*********************
+Step-By-Step Approach
+*********************
 
 .. note::
 
