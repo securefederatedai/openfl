@@ -8,7 +8,7 @@
 The following are utilities available in |productName|.
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
    pki
    splitters_data
