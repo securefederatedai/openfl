@@ -32,6 +32,8 @@ setup(
         'openfl.utilities',
         'openfl.utilities.optimizers.torch',
         'openfl.utilities.optimizers.keras',
+        'openfl.utilities.fedcurv',
+        'openfl.utilities.fedcurv.torch',
         'openfl.protocols',
         'openfl.pipelines',
         'openfl.databases',
