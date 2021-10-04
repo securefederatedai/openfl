@@ -61,6 +61,21 @@ Example of ``plan/plan.yaml`` with modified aggregation function:
         metrics:
         - loss
 
+Interactive API
+================
+You can override aggregation function that will be used for the task this function corresponds to.
+In order to do this, call the ``set_agg_fn`` decorator method of ``TaskInterface`` and pass ``AggregationFunctionInterface`` subclass instance as a parameter.
+For example, you can try:
+
+..code_block:: python
+    from openfl.component.aggregation_functions import Median
+    TI = TaskInterface()
+    agg_fn = Median()
+    @TI.register_fl_task(model='model', data_loader='train_loader', \
+                     device='device', optimizer='optimizer')
+    @TI.set_agg_fn(agg_fn)
+
+
 ``AggregationFunctionInterface`` requires a single ``call`` function.
 This function receives tensors for a single parameter from multiple collaborators with additional metadata (see definition of :meth:`openfl.component.aggregation_functions.AggregationFunctionInterface.call`) and returns a single tensor that represents the result of aggregation.
 
