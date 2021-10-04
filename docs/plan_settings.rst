@@ -7,7 +7,7 @@
 Plan Settings
 ***************
 
-The Federated Learning (FL) plan is described by **plan.yaml** file located in the **plan** folder of the workspace.
+The Federated Learning plan (FL plan) is described by the **plan.yaml** file located in the **plan** directory of the workspace.
 
 
 Each YAML top-level section contains the following subsections:
@@ -17,14 +17,14 @@ Each YAML top-level section contains the following subsections:
 - ``defaults``: file that contains default settings for this subsection.
   Any setting from defaults file can be overriden in the **plan.yaml** file.
 
-Example of **plan.yaml**:
+The following is an example of a **plan.yaml**:
 
 .. literalinclude:: ../openfl-workspace/torch_cnn_mnist/plan/plan.yaml
   :language: yaml
 
-======================
-Configurable settings
-======================
+
+Configurable Settings
+=====================
 
 - :class:`Aggregator <openfl.component.Aggregator>`
 - :class:`Collaborator <openfl.component.Collaborator>`
@@ -32,11 +32,11 @@ Configurable settings
 - :class:`Task Runner <openfl.federated.task.runner.TaskRunner>`
 - :class:`Assigner <openfl.component.Assigner>`
 
-++++++++++++++
-Tasks
-++++++++++++++
 
-Each task subsection should contain:
+Tasks
+-----
+
+Each task subsection contains the following:
 
 - ``function``: function name to call.
   The function must be the one defined in :class:`TaskRunner <openfl.federated.TaskRunner>` class.

@@ -20,10 +20,8 @@ Predefined |productName| data splitters functions are as follows:
 
 - ``openfl.plugins.data_splitters.EqualNumPyDataSplitter`` (default)
 - ``openfl.plugins.data_splitters.RandomNumPyDataSplitter``
-- ``openfl.component.aggregation_functions.LogNormalNumPyDataSplitter`` 
-    | assumes the ``data`` argument as ``np.ndarray`` of integers (labels)
-- ``openfl.component.aggregation_functions.DirichletNumPyDataSplitter`` 
-    | assumes the ``data`` argument as ``np.ndarray`` of integers (labels)
+- ``openfl.component.aggregation_functions.LogNormalNumPyDataSplitter`` , which assumes the ``data`` argument as ``np.ndarray`` of integers (labels)
+- ``openfl.component.aggregation_functions.DirichletNumPyDataSplitter`` , which assumes the ``data`` argument as ``np.ndarray`` of integers (labels)
 
 Alternatively, you can create an implementation of :class:`openfl.plugins.data_splitters.NumPyDataSplitter` and pass it to the :code:`FederatedDataset` function as either ``train_splitter`` or ``valid_splitter`` keyword argument.
 
