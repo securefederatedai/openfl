@@ -45,11 +45,7 @@ def test_fill_certs(insecure_director, secure_director):
         secure_director._fill_certs('.', None, '.')
     with pytest.raises(Exception):
         secure_director._fill_certs(None, '.', '.')
-
-    try:
-        secure_director._fill_certs('.', '.', '.')
-    except Exception as exc:
-        raise AssertionError(f'_fill_certs method raised an exception: {exc}')
+    secure_director._fill_certs('.', '.', '.')
 
 
 def test_get_caller_tls(insecure_director):
