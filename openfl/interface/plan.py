@@ -50,9 +50,9 @@ def initialize(context, plan_config, cols_config, data_config,
     from openfl.utilities import split_tensor_dict_for_holdouts
     from openfl.utilities.utils import getfqdn_env
 
-    plan = Plan.parse(plan_config_path=Path(plan_config),
-                      cols_config_path=Path(cols_config),
-                      data_config_path=Path(data_config))
+    plan = Plan.parse(plan_config_path=Path(plan_config).absolute(),
+                      cols_config_path=Path(cols_config).absolute(),
+                      data_config_path=Path(data_config).absolute())
 
     init_state_path = plan.config['aggregator']['settings']['init_state_path']
 

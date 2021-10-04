@@ -5,14 +5,12 @@
 
 import asyncio
 import logging
-# import typing as tp
 import uuid
 from pathlib import Path
 
 from grpc import aio
 from grpc import ssl_server_credentials
 
-# from openfl.component.director import Director
 from openfl.pipelines import NoCompressionPipeline
 from openfl.protocols import director_pb2
 from openfl.protocols import director_pb2_grpc
