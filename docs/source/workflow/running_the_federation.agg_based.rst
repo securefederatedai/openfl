@@ -9,7 +9,7 @@ Aggregator-Based Workflow
 
 There are two ways to run this workflow:
 
-- :ref:`Baremetal approach <running_the_federation_manual>`
+- :ref:`Bare metal approach <running_the_federation_manual>`
 - :ref:`Docker approach <running_the_federation_docker>`
 
 
