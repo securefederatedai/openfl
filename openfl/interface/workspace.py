@@ -22,7 +22,6 @@ def create_dirs(prefix):
     """Create workspace directories."""
     from shutil import copyfile
 
-    from openfl.interface.cli_helper import copytree
     from openfl.interface.cli_helper import WORKSPACE
 
     echo('Creating Workspace Directories')
@@ -30,14 +29,9 @@ def create_dirs(prefix):
     (prefix / 'cert').mkdir(parents=True, exist_ok=True)  # certifications
     (prefix / 'data').mkdir(parents=True, exist_ok=True)  # training data
     (prefix / 'logs').mkdir(parents=True, exist_ok=True)  # training logs
-    (prefix / 'plan').mkdir(parents=True, exist_ok=True)  # federated learning plans
     (prefix / 'save').mkdir(parents=True, exist_ok=True)  # model weight saves / initialization
     (prefix / 'src').mkdir(parents=True, exist_ok=True)  # model code
 
-    src = WORKSPACE / 'workspace/plan/defaults'  # from default workspace
-    dst = prefix / 'plan/defaults'  # to created workspace
-
-    copytree(src=src, dst=dst, dirs_exist_ok=True)
     copyfile(WORKSPACE / 'workspace' / '.workspace', prefix / '.workspace')
 
 
@@ -52,6 +46,7 @@ def create_temp(prefix, template):
 
     copytree(src=WORKSPACE / template, dst=prefix, dirs_exist_ok=True,
              ignore=ignore_patterns('__pycache__'))  # from template workspace
+    apply_template_plan(prefix, template)
 
 
 def get_templates():
@@ -414,3 +409,17 @@ def dockerize_(context, base_image, save):
             for chunk in resp:
                 f.write(chunk)
         echo(f'{workspace_name} image saved to {workspace_path}/{workspace_image_tar}')
+
+
+def apply_template_plan(prefix, template):
+    """Copy plan file from template folder.
+
+    This function unfolds default values from template plan configuration
+    and writes the configuration to the current workspace.
+    """
+    from openfl.federated.plan import Plan
+    from openfl.interface.cli_helper import WORKSPACE
+
+    template_plan = Plan.parse(WORKSPACE / template / 'plan' / 'plan.yaml')
+
+    Plan.dump(prefix / 'plan' / 'plan.yaml', template_plan.config)

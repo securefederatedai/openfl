@@ -8,7 +8,6 @@ from threading import Lock
 import numpy as np
 import pandas as pd
 
-from openfl.component.aggregation_functions import WeightedAverage
 from openfl.utilities import LocalTensor
 from openfl.utilities import TensorKey
 
@@ -164,8 +163,6 @@ class TensorDB:
                          for col_name in collaborator_names]
 
         db_iterator = self._iterate()
-        if 'metric' in tags:
-            aggregation_function = WeightedAverage()  # force simple averaging for metrics
         agg_nparray = aggregation_function(local_tensors,
                                            db_iterator,
                                            tensor_name,

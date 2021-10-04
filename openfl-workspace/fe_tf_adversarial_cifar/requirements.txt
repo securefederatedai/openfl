@@ -1,4 +1,4 @@
 torch>=1.6
-tensorflow==2.5.0
+tensorflow==2.5.1
 fastestimator==1.1.2
 albumentations==0.5.2

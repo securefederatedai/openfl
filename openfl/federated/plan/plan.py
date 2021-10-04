@@ -94,7 +94,7 @@ class Plan(object):
 
             # walk the top level keys and load 'defaults' in sorted order
             for section in sorted(plan.config.keys()):
-                defaults = plan.config[section].get(DEFAULTS)
+                defaults = plan.config[section].pop(DEFAULTS, None)
 
                 if defaults is not None:
                     defaults = WORKSPACE / 'workspace' / defaults
@@ -223,6 +223,7 @@ class Plan(object):
 
         self.hash_ = None
         self.name_ = None
+        self.serializer_ = None
 
     @property
     def hash(self):  # NOQA
@@ -259,7 +260,8 @@ class Plan(object):
 
         defaults[SETTINGS]['authorized_cols'] = self.authorized_cols
         defaults[SETTINGS]['rounds_to_train'] = self.rounds_to_train
-        defaults[SETTINGS]['tasks'] = self.get_tasks()
+        task_interface = self.restore_object('tasks_obj.pkl')
+        defaults[SETTINGS]['tasks'] = self.get_tasks(task_interface)
 
         if self.assigner_ is None:
             self.assigner_ = Plan.build(**defaults)
@@ -294,11 +296,16 @@ class Plan(object):
 
         return self.aggregator_
 
-    def get_tasks(self):
+    def get_tasks(self, task_interface=None):
         """Get federation tasks."""
         tasks = self.config.get('tasks', {})
-        tasks.pop(DEFAULTS)
-        tasks.pop(SETTINGS)
+        tasks.pop(DEFAULTS, None)
+        tasks.pop(SETTINGS, None)
+        if task_interface:
+            for task in tasks:
+                agg_fn = task_interface.get_aggregation_function(tasks[task]['function'])
+                tasks[task]['aggregation_type'] = agg_fn
+            return tasks
         for task in tasks:
             aggregation_type = tasks[task].get('aggregation_type')
             if aggregation_type is None:
@@ -524,16 +531,31 @@ openfl.component.aggregation_functions.AggregationFunctionInterface
 
     def deserialize_interface_objects(self):
         """Deserialize objects for TaskRunner."""
-        serializer = Plan.build(
-            self.config['api_layer']['required_plugin_components']['serializer_plugin'], {})
+        api_layer = self.config['api_layer']
         filenames = [
             'model_interface_file',
             'tasks_interface_file',
             'dataloader_interface_file'
         ]
-        interface_objects = [
-            serializer.restore_object(self.config['api_layer']['settings'][filename])
-            for filename in filenames
-        ]
-        model_provider, task_keeper, data_loader = interface_objects
-        return model_provider, task_keeper, data_loader
+        return (self.restore_object(api_layer['settings'][filename]) for filename in filenames)
+
+    def get_serializer_plugin(self, **kwargs):
+        """Get serializer plugin.
+
+        This plugin is used for serialization of interfaces in new interactive API
+        """
+        if self.serializer_ is None:
+            if 'api_layer' not in self.config:  # legacy API
+                return None
+            required_plugin_components = self.config['api_layer']['required_plugin_components']
+            serializer_plugin = required_plugin_components['serializer_plugin']
+            self.serializer_ = Plan.build(serializer_plugin, kwargs)
+        return self.serializer_
+
+    def restore_object(self, filename):
+        """Deserialize an object."""
+        serializer_plugin = self.get_serializer_plugin()
+        if serializer_plugin is None:
+            return None
+        obj = serializer_plugin.restore_object(filename)
+        return obj
