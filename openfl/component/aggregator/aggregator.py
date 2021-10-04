@@ -5,6 +5,7 @@
 import queue
 from logging import getLogger
 
+from openfl.component.aggregation_functions import WeightedAverage
 from openfl.databases import TensorDB
 from openfl.pipelines import NoCompressionPipeline
 from openfl.pipelines import TensorCodec
@@ -762,7 +763,7 @@ class Aggregator:
         # collaborator in our subset, and apply the correct
         # transformations to the tensorkey to resolve the aggregated
         # tensor for that round
-        agg_function = self.assigner.get_aggregation_type_for_task(task_name)
+        task_agg_function = self.assigner.get_aggregation_type_for_task(task_name)
         task_key = TaskResultKey(task_name, collaborators_for_task[0], self.round_number)
         for tensor_key in self.collaborator_tasks_results[task_key]:
             tensor_name, origin, round_number, report, tags = tensor_key
@@ -774,6 +775,7 @@ class Aggregator:
             new_tags = tuple(tags[:-1])
             agg_tensor_key = TensorKey(tensor_name, origin, round_number, report, new_tags)
             agg_tensor_name, agg_origin, agg_round_number, agg_report, agg_tags = agg_tensor_key
+            agg_function = WeightedAverage() if 'metric' in tags else task_agg_function
             agg_results = self.tensor_db.get_aggregated_tensor(
                 agg_tensor_key, collaborator_weight_dict, aggregation_function=agg_function)
             if report:

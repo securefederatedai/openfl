@@ -2,7 +2,6 @@
 # SPDX-License-Identifier: Apache-2.0
 
 """Python low-level API module."""
-import functools
 import os
 import time
 from collections import defaultdict
@@ -12,6 +11,8 @@ from pathlib import Path
 
 from tensorboardX import SummaryWriter
 
+from openfl.component.aggregation_functions import AggregationFunctionInterface
+from openfl.component.aggregation_functions import WeightedAverage
 from openfl.federated import Plan
 from openfl.interface.cli import setup_logging
 from openfl.interface.cli_helper import WORKSPACE
@@ -360,6 +361,8 @@ class TaskInterface:
         self.task_contract = {}
         # Mapping 'task name' -> arguments
         self.task_settings = defaultdict(dict)
+        # Mapping task name -> callable
+        self.aggregation_functions = {}
 
     def register_fl_task(self, model, data_loader, device, optimizer=None):
         """
@@ -389,7 +392,6 @@ class TaskInterface:
         def decorator_with_args(training_method):
             # We could pass hooks to the decorator
             # @functools.wraps(training_method)
-            functools.wraps(training_method)
 
             def wrapper_decorator(**task_keywords):
                 metric_dict = training_method(**task_keywords)
@@ -422,6 +424,40 @@ class TaskInterface:
             return training_method
 
         return decorator_with_args
+
+    def set_aggregation_function(self, aggregation_function: AggregationFunctionInterface):
+        """Set aggregation function for the task.
+
+        Args:
+            aggregation_function: Aggregation function.
+
+        You might need to override default FedAvg aggregation with built-in aggregation types:
+            - openfl.component.aggregation_functions.GeometricMedian
+            - openfl.component.aggregation_functions.Median
+        or define your own AggregationFunctionInterface subclass.
+        See more details on `Overriding the aggregation function`_ documentation page.
+        .. _Overriding the aggregation function:
+            https://openfl.readthedocs.io/en/latest/overriding_agg_fn.html
+        """
+        def decorator_with_args(training_method):
+            if not isinstance(aggregation_function, AggregationFunctionInterface):
+                raise Exception('aggregation_function must implement '
+                                'AggregationFunctionInterface interface.')
+            self.aggregation_functions[training_method.__name__] = aggregation_function
+            return training_method
+        return decorator_with_args
+
+    def get_aggregation_function(self, function_name):
+        """Get aggregation type for the task function.
+
+        Args:
+            function_name(str): Task function name.
+        Returns:
+            Return value. Aggregation function.
+        """
+        if function_name not in self.aggregation_functions:
+            return WeightedAverage()
+        return self.aggregation_functions[function_name]
 
 
 class ModelInterface:
