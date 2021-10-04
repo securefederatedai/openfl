@@ -5,9 +5,6 @@
 Manual
 ******
 
-Topics
-======
-
 Learn what is |productName| and federated learning
 
 - :doc:`overview`
