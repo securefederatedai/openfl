@@ -9,13 +9,11 @@ Install the Software
 
 Depending on how you want to set up your federation, choose one of the following installation procedure.
 
-:doc:`install.initial`
+- :doc:`install.initial`
+    Follow this procedure to prepare the environment and install the |productName| package.
 
-    - prepares the environment and installs the |productName| package.
-
-:doc:`install.docker`
-
-    - builds a Docker\*\ image of |productName|, which you can use use to run your federation in an isolated environment. 
+- :doc:`install.docker`
+    Follow this procedure to build a Docker\*\ image of |productName|, which you can use use to run your federation in an isolated environment. 
 
 .. toctree::
    :maxdepth: 1

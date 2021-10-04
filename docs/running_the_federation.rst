@@ -9,12 +9,11 @@ Run the Federation
 
 The following are workflows you can consider when creating a federated learning setup.
 
-:doc:`source/workflow/running_the_federation.agg_based`
-
-    - With this workflow, the federation is terminated when the experiment is finished.
+- :doc:`source/workflow/running_the_federation.agg_based`
+    With this workflow, the federation is terminated when the experiment is finished.
     
-:doc:`source/workflow/director_based_workflow`
-    - A federation created with this workflow continues to be available to distribute more experiments in series.
+- :doc:`source/workflow/director_based_workflow`
+    A federation created with this workflow continues to be available to distribute more experiments in series.
 
    
 
