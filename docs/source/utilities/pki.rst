@@ -38,12 +38,12 @@ Otherwise, you can certify nodes with your own PKI solution or use the PKI solut
 
 .. _install_certs:
 
-.. kroki:: mermaid/CSR_signing.mmd
+.. kroki:: ../../mermaid/CSR_signing.mmd
     :caption: Manual certificate generation and signing
     :align: center
     :type: mermaid
 
-.. kroki:: mermaid/pki_scheme.mmd
+.. kroki:: ../../mermaid/pki_scheme.mmd
     :caption: Step-ca certificate generation and signing
     :align: center
     :type: mermaid

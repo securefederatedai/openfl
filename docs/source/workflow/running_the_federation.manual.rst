@@ -3,9 +3,9 @@
 
 .. _running_the_federation_manual:
 
-*********************
-Step-By-Step Approach
-*********************
+*******************
+Bare Metal Approach
+*******************
 
 .. note::
 
