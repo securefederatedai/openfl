@@ -8,6 +8,8 @@ import torch.nn.functional as F
 import tqdm
 from torch import nn
 
+from openfl.utilities.fedcurv.aggregation_function import FedCurvWeightedAverage
+
 
 def register_buffer(module: nn.Module, name: str, value: torch.Tensor):
     """Add a buffer to module.
@@ -59,14 +61,22 @@ class FedCurv:
 
     def __init__(self, model: nn.Module, importance: float):
         """Initialize.
-        
+
         Args:
             model: Base model. Parameters of it are used in loss penalty calculation.
             importance: Lambda coefficient of FedCurv algorithm.
-            """
+        """
         self.importance = importance
         self._params = {}
         self._register_fisher_parameters(model)
+
+    def register_train_task(self, task_interface):
+        """Register train task for interactive API case."""
+        @task_interface.register_fl_task(model='model', data_loader='data_loader', device='device',
+                                         optimizer='optimizer')
+        @task_interface.set_aggregation_function(FedCurvWeightedAverage())
+        def train(model, data_loader, optimizer, device, loss_fn):
+            return self.train(model, data_loader, optimizer, device, loss_fn)
 
     def _register_fisher_parameters(self, model):
         params = list(model.named_parameters())
