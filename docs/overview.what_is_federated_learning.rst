@@ -19,8 +19,9 @@ In federated learning, the model moves to meet the data rather than the data mov
 
 .. _definitions_and_conventions:
 
+***************************
 Definitions and Conventions
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+***************************
 
 Federated learning brings in a few more components to the traditional data science training pipeline:
 
