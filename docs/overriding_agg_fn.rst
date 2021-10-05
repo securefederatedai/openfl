@@ -144,5 +144,5 @@ This is an example of a custom tensor clipping aggregation function that multipl
 
             return np.average(clipped_tensors, weights=weights, axis=0)
 
-A full implementation can be found at `Federated_Pytorch_MNIST_custom_aggregation_Tutorial.ipynb<../openfl-tutorials/Federated_Pytorch_MNIST_custom_aggregation_Tutorial.ipynb>`_
+A full implementation can be found at `Federated_Pytorch_MNIST_custom_aggregation_Tutorial.ipynb <../openfl-tutorials/Federated_Pytorch_MNIST_custom_aggregation_Tutorial.ipynb>`_
 
