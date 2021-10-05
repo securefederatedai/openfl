@@ -9,7 +9,7 @@ Learn about the short-lived and long-lived components that compose |productName|
 
 - :doc:`source/openfl/components`
 
-Learn about the plugin framework that makes |productName| flexible and extensible for your use.
+Learn about the plugin framework that makes |productName| flexible and extensible for your use:
 
 - :doc:`source/openfl/plugins`
 
