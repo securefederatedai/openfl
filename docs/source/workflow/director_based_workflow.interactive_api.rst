@@ -273,7 +273,7 @@ Start an FL Experiment
 Observe the Experiment Execution
 ================================
 
-If the experiment was accepted by the *Director*, you can oversee its execution with the :code:`FLexperiment.stream_metrics()` method. This method prints metrics from the FL tasks (and saved tensorboard logs).
+If the experiment was accepted by the *Director*, you can oversee its execution with the :code:`FLexperiment.stream_metrics()` method. This method prints metrics from the FL tasks (and saved TensorBoard logs).
 
 
 .. _federation_api_complete_fl_experiment:

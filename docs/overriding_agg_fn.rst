@@ -7,7 +7,7 @@
 Override Aggregation Function
 *****************************
 
-You can use custom aggregation functions for each task via Python\*\  API or command-line interface.
+You can use custom aggregation functions for each task via Python\*\  API or command line interface.
 
 
 Python API
