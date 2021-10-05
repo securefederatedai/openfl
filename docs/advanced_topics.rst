@@ -10,19 +10,16 @@ Advanced Topics
 Learn to manage multiple Federation Learning plans (FL plan) in the same workspace:
 
 - :doc:`multiple_plans`
-| 
+
 Reduce the amount of data transferred in a federation through compression pipelines available in |productName|:
 
 - :doc:`compression_settings`
-| 
-Define your aggregation function in the federation:
+
+Customize the functions in the federation:
 
 - :doc:`overriding_agg_fn`
-| 
-Define your metric logging function in the federation:
-
 - :doc:`log_metric_callback`
-| 
+
 Speed up activating |productName| commands:
 
 - :doc:`bash_autocomplete_activation`
