@@ -2,16 +2,10 @@
 
 from copy import deepcopy
 
-import numpy as np
 import torch
-import torch.nn.functional as F
-import tqdm
-from torch import nn
-
-from openfl.utilities.fedcurv.aggregation_function import FedCurvWeightedAverage
 
 
-def register_buffer(module: nn.Module, name: str, value: torch.Tensor):
+def register_buffer(module: torch.nn.Module, name: str, value: torch.Tensor):
     """Add a buffer to module.
 
     Args:
@@ -36,8 +30,7 @@ def get_buffer(module, target):
     mod: torch.nn.Module = module.get_submodule(module_path)
 
     if not hasattr(mod, buffer_name):
-        raise AttributeError(mod._get_name() + ' has no attribute `'
-                                + buffer_name + '`')
+        raise AttributeError(f'{mod._get_name()} has no attribute `{buffer_name}`')
 
     buffer: torch.Tensor = getattr(mod, buffer_name)
 
@@ -50,16 +43,10 @@ def get_buffer(module, target):
 class FedCurv:
     """Federated Curvature class.
 
-    Create instance of it locally and replace your training loop with
-    train() function of the instance.
-
-    IMPORTANT: In order to use pure FedCurv you also need to override aggregation function
-    with openfl.utilities.fedcurv.aggregation_function.FedCurvWeightedAverage.
-
     Requires torch>=1.9.0.
     """
 
-    def __init__(self, model: nn.Module, importance: float):
+    def __init__(self, model: torch.nn.Module, importance: float):
         """Initialize.
 
         Args:
@@ -69,14 +56,6 @@ class FedCurv:
         self.importance = importance
         self._params = {}
         self._register_fisher_parameters(model)
-
-    def register_train_task(self, task_interface):
-        """Register train task for interactive API case."""
-        @task_interface.register_fl_task(model='model', data_loader='data_loader', device='device',
-                                         optimizer='optimizer')
-        @task_interface.set_aggregation_function(FedCurvWeightedAverage())
-        def train(model, data_loader, optimizer, device, loss_fn):
-            return self.train(model, data_loader, optimizer, device, loss_fn)
 
     def _register_fisher_parameters(self, model):
         params = list(model.named_parameters())
@@ -95,7 +74,7 @@ class FedCurv:
     def _update_params(self, model):
         self._params = deepcopy({n: p for n, p in model.named_parameters() if p.requires_grad})
 
-    def _diag_fisher(self, model, samples, targets, device):
+    def _diag_fisher(self, model, data_loader, device, loss_fn):
         precision_matrices = {}
         for n, p in self._params.items():
             p.data.zero_()
@@ -103,21 +82,21 @@ class FedCurv:
 
         model.eval()
         model.to(device)
-        for sample, target in zip(samples, targets):
+        for sample, target in data_loader:
             model.zero_grad()
             sample = sample.to(device)
-            output = model(sample).view(1, -1)
-            loss = F.nll_loss(F.log_softmax(output, dim=1), target)
+            output = model(sample)
+            loss = loss_fn(output, target)
             loss.backward()
 
             for n, p in model.named_parameters():
                 if p.requires_grad:
-                    precision_matrices[n].data += p.grad.data ** 2 / len(samples)
+                    precision_matrices[n].data += p.grad.data ** 2 / len(data_loader)
 
         precision_matrices = {n: p for n, p in precision_matrices.items()}
         return precision_matrices
 
-    def _penalty(self, model):
+    def get_penalty(self, model):
         loss = 0
         if not self._params:
             return loss
@@ -131,32 +110,11 @@ class FedCurv:
                 loss += _loss.sum()
         return self.importance * loss
 
-    def train(self, model, data_loader, optimizer, device, loss_fn):
-        """Training loop.
-        
-        This function has the same signature as train functions registered in TaskInterface.
-        """
-        device = 'cpu'  # force CPU training for full reproducibility
-        data_loader = tqdm.tqdm(data_loader, desc='train')
-
-        model.train()
-        model.to(device)
-        losses = []
-        samples = []
-        targets = []
-        for data, target in data_loader:
-            data, target = torch.tensor(data).to(device), torch.tensor(target).to(device)
-            samples += [x.unsqueeze(0) for x in data]
-            targets += [t.argmax().unsqueeze(0) for t in target]
-            optimizer.zero_grad()
-            output = model(data)
-            loss = loss_fn(output=output, target=target) + self._penalty(model)
-            loss.backward()
-            optimizer.step()
-            losses.append(loss.detach().cpu().numpy())
-        loss = np.mean(losses)
+    def on_train_begin(self, model):
         self._update_params(model)
-        precision_matrices = self._diag_fisher(model, samples, targets, device)
+
+    def on_train_end(self, model, data_loader, device, loss_fn):
+        precision_matrices = self._diag_fisher(model, data_loader, device, loss_fn)
         for n, m in precision_matrices.items():
             u = torch.tensor(m)
             v = torch.tensor(m) * model.get_parameter(n)
@@ -164,4 +122,3 @@ class FedCurv:
             register_buffer(model, f'{n}_v', v)
             setattr(self, f'{n}_u', u)
             setattr(self, f'{n}_v', v)
-        return {loss_fn.__name__: np.array(loss)}
