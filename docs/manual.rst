@@ -5,7 +5,7 @@
 Manual
 ******
 
-Learn what is |productName| and federated learning
+Learn what is |productName| and Federated Learning
 
 - :doc:`overview`
 
