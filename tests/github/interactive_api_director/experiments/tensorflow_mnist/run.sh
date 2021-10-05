@@ -1,10 +1,31 @@
+#!/bin/bash
+set -e
+
 cd director
 bash start_director.sh &
+PID=$!
 
 sleep 3
-cd ../envoy
-python shard_descriptor.py &
+if ! ps -p $PID > /dev/null
+then
+  echo 'Error: failed to create director'
+  exit 1
+fi
 
-sleep 2
+
+cd ../envoy
+pip install -r sd_requirements.txt
+bash start_envoy.sh &
+PID=$!
+sleep 3
+if ! ps -p $PID > /dev/null
+then
+  echo 'Error: failed to create envoy'
+  exit 1
+else
+  echo "Found $PID in $(ps -p $PID)"
+fi
+
+
 cd ../../../../../..
-python -m tests.github.interactive_api_director.experiments.tensorflow_mnist.experiment
+python -m tests.github.interactive_api_director.experiments.pytorch_kvasir_unet.experiment
