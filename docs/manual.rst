@@ -5,22 +5,22 @@
 Manual
 ******
 
-Learn what is |productName| and Federated Learning
+Learn what is |productName| and federated learning:
 
 - :doc:`overview`
 
-Establish an |productName| Federation
+Establish an |productName| federation:
 
 - :doc:`install`
 - :doc:`running_the_federation`
 
-Customize the Federation
+Customize the federation:
 
 - :doc:`plan_settings`
 - :doc:`source/utilities/utilities`
 - :doc:`advanced_topics`
 
-Familiarize with the APIs
+Familiarize with the APIs:
 
 - :doc:`source/workflow/running_the_federation.tutorial`
 
