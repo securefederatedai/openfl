@@ -3,14 +3,16 @@
 
 """Market shard descriptor."""
 
+import logging
 import re
 import zipfile
 from pathlib import Path
 
 import wget
-from PIL import Image
 
 from openfl.interface.interactive_api.shard_descriptor import ShardDescriptor
+
+logger = logging.getLogger(__name__)
 
 
 class MarketShardDescriptor(ShardDescriptor):
@@ -73,6 +75,13 @@ class MarketShardDescriptor(ShardDescriptor):
         img = Image.open(img_path)
         return img, (pid, camid)
 
+    def get_dataset(self, dataset_type):
+        """Return a dataset by type."""
+        ds = deepcopy(self)
+        ds.set_mode(dataset_type)
+
+        return ds
+
     @property
     def sample_shape(self):
         """Return the sample shape info."""
@@ -103,17 +112,16 @@ class MarketShardDescriptor(ShardDescriptor):
     @staticmethod
     def download():
         """Download Market1501 dataset."""
+        logger.info('Download Market1501 dataset.')
         if Path('Market-1501-v15.09.15').exists():
             return None
 
+        logger.info('Try to download.')
         url = ('http://188.138.127.15:81/Datasets/Market-1501-v15.09.15.zip')
         filename = wget.download(url)
+        logger.info(f'{output} is downloaded.')
 
         with zipfile.ZipFile(filename, 'r') as zip_ref:
             zip_ref.extractall(Path.cwd())
 
         Path(filename).unlink()  # remove zip
-
-
-if __name__ == '__main__':
-    MarketShardDescriptor.download()

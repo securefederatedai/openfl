@@ -40,11 +40,12 @@ def test_fill_certs(insecure_director, secure_director):
     assert isinstance(secure_director.private_key, Path)
     assert isinstance(secure_director.certificate, Path)
     with pytest.raises(Exception):
-        secure_director.test_fill_certs('.', '.', None)
+        secure_director._fill_certs('.', '.', None)
     with pytest.raises(Exception):
-        secure_director.test_fill_certs('.', None, '.')
+        secure_director._fill_certs('.', None, '.')
     with pytest.raises(Exception):
-        secure_director.test_fill_certs(None, '.', '.')
+        secure_director._fill_certs(None, '.', '.')
+    secure_director._fill_certs('.', '.', '.')
 
 
 def test_get_caller_tls(insecure_director):
