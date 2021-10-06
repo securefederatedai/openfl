@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 """Derector API's client tests module."""
 
+import sys
 from unittest import mock
 
 import pytest
@@ -53,4 +54,7 @@ def test_get_best_model(deconstruct_model_proto, director_client,
     director_client.stub.GetTrainedModel.assert_called_once()
 
     request = director_client.stub.GetTrainedModel.call_args
-    assert request.args[0].model_type == getattr(director_pb2.GetTrainedModelRequest, model_type)
+    if sys.version_info < (3, 8):
+        assert request[0][0].model_type == getattr(director_pb2.GetTrainedModelRequest, model_type)
+    else:
+        assert request.args[0].model_type == getattr(director_pb2.GetTrainedModelRequest, model_type)
