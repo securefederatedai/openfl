@@ -5,11 +5,10 @@
 
 import asyncio
 import logging
+import time
 from pathlib import Path
 from typing import Iterable
 from typing import Union
-
-import time
 
 from openfl.component.experiment import Experiment
 from openfl.component.experiment import ExperimentsRegistry

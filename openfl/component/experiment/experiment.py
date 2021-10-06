@@ -1,15 +1,20 @@
+# Copyright (C) 2020-2021 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+"""Experiment module."""
+
 import asyncio
 import logging
+from collections import defaultdict
 from pathlib import Path
 from typing import Iterable
-from typing import Union
 from typing import List
-from collections import defaultdict
+from typing import Union
 
-from openfl.transport import AggregatorGRPCServer
-from openfl.utilities.workspace import ExperimentWorkspace
 from openfl.component import Aggregator
 from openfl.federated import Plan
+from openfl.transport import AggregatorGRPCServer
+from openfl.utilities.workspace import ExperimentWorkspace
 
 logger = logging.getLogger(__name__)
 
