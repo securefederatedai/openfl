@@ -6,9 +6,11 @@
 import logging
 import re
 import zipfile
+from copy import deepcopy
 from pathlib import Path
 
 import wget
+from PIL import Image
 
 from openfl.interface.interactive_api.shard_descriptor import ShardDescriptor
 
@@ -119,7 +121,7 @@ class MarketShardDescriptor(ShardDescriptor):
         logger.info('Try to download.')
         url = ('http://188.138.127.15:81/Datasets/Market-1501-v15.09.15.zip')
         filename = wget.download(url)
-        logger.info(f'{output} is downloaded.')
+        logger.info('Market-1501-v15.09.15.zip is downloaded.')
 
         with zipfile.ZipFile(filename, 'r') as zip_ref:
             zip_ref.extractall(Path.cwd())
