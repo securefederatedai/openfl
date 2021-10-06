@@ -28,4 +28,4 @@ fi
 
 
 cd ../../../../../..
-python -m tests.github.interactive_api_director.experiments.pytorch_kvasir_unet.experiment
+python -m tests.github.interactive_api_director.experiments.tensorflow_mnist.experiment
