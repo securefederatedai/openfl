@@ -50,5 +50,5 @@ On the Collaborator Nodes
 
   When all of the Collaborators connect, the Aggregator starts training. You will see log messages describing the progress of the federated training. 
   
-  When the last round of training is completed, the Aggregator stores the final weights in the protobuf file that was specified in the YAML file, which in this example is located at *save/${WORKSPACE_TEMPLATE}_latest.pbuf*.
+  When the last round of training is completed, the Aggregator stores the final weights in the protobuf file that was specified in the YAML file, which in this example is located at **save/${WORKSPACE_TEMPLATE}_latest.pbuf**.
 

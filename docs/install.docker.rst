@@ -30,15 +30,15 @@ Build the Docker\* \  Image
 
 	.. parsed-literal::
 
-	   $ docker pull intel/\ |productWheel|\
+	   docker pull intel/\ |productWheel|\
    
 	If you prefer to build an image from a specific commit or branch, perform the following commands:
 
 	.. parsed-literal::
 
-	   $ git clone https://github.com/intel/openfl.git
-	   $ cd \ |productWheel|
-	   $ ./scripts/build_base_docker_image.sh
+	   git clone https://github.com/intel/openfl.git
+	   cd \ |productWheel|
+	   ./scripts/build_base_docker_image.sh
 
 
 
