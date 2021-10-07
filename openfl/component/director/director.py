@@ -5,6 +5,8 @@
 
 import asyncio
 import logging
+from collections import defaultdict
+
 import time
 from pathlib import Path
 from typing import Iterable
@@ -13,6 +15,11 @@ from typing import Union
 from .experiment import Experiment
 from .experiment import ExperimentsRegistry
 from openfl.protocols import director_pb2
+from .experiment import Status
+from .. import Aggregator
+from ...federated import Plan
+from ...transport import AggregatorGRPCServer
+from ...utilities.workspace import ExperimentWorkspace
 
 logger = logging.getLogger(__name__)
 
@@ -40,13 +47,9 @@ class Director:
         self.root_certificate = root_certificate
         self.private_key = private_key
         self.certificate = certificate
-        self.experiments_registry = ExperimentsRegistry(
-            tls=self.tls,
-            root_certificate=self.root_certificate,
-            certificate=self.certificate,
-            private_key=self.private_key,
-        )
+        self.experiments_registry = ExperimentsRegistry()
         self.settings = settings or {}
+        self.col_exp_queues = defaultdict(asyncio.Queue)
 
     def acknowledge_shard(self, shard_info: director_pb2.ShardInfo) -> bool:
         """Save shard info to shard registry if it's acceptable."""
@@ -108,11 +111,12 @@ class Director:
 
     def get_experiment_data(self, experiment_name: str) -> Path:
         """Get experiment data."""
-        return self.experiments_registry[experiment_name].data_path
+        return self.experiments_registry[experiment_name].archive_path
 
     async def wait_experiment(self, envoy_name: str) -> str:
         """Wait an experiment."""
-        experiment_name = await self.experiments_registry.get_envoy_experiment(envoy_name)
+        queue = self.col_exp_queues[envoy_name]
+        experiment_name = await queue.get()
         return experiment_name
 
     def get_dataset_info(self):
@@ -202,7 +206,76 @@ class Director:
 
         return envoy_infos
 
+    async def run_experiment(
+            self, *,
+            experiment: Experiment,
+    ):
+        experiment.status = Status.IN_PROGRESS
+        try:
+            logger.info(f'New experiment {experiment.name} for '
+                        f'collaborators {experiment.collaborators}')
+
+            with ExperimentWorkspace(experiment.name, experiment.archive_path):
+                aggregator_grpc_server = self._create_aggregator_grpc_server(experiment=experiment)
+                experiment.aggregator = aggregator_grpc_server.aggregator
+                await self._run_aggregator_grpc_server(
+                    aggregator_grpc_server=aggregator_grpc_server,
+                )
+            experiment.status = Status.FINISHED
+            logger.info(f'Experiment "{experiment.name}" was finished successfully.')
+        except Exception as e:
+            experiment.status = Status.FAILED
+            logger.error(f'Experiment "{experiment.name}" was failed with error: {e}.')
+
+    def _create_aggregator_grpc_server(
+            self, *,
+            experiment: Experiment,
+    ) -> AggregatorGRPCServer:
+        plan = Plan.parse(plan_config_path=Path(experiment.plan_path))
+        plan.authorized_cols = list(experiment.collaborators)
+
+        logger.info('🧿 Starting the Aggregator Service.')
+        aggregator_grpc_server = plan.interactive_api_get_server(
+            tensor_dict=experiment.init_tensor_dict,
+            root_certificate=self.root_certificate,
+            certificate=self.certificate,
+            private_key=self.private_key,
+            tls=self.tls,
+        )
+        return aggregator_grpc_server
+
+    async def _run_aggregator_grpc_server(
+            self,
+            aggregator_grpc_server: AggregatorGRPCServer,
+    ) -> Aggregator:
+        """Run aggregator."""
+        logger.info('🧿 Starting the Aggregator Service.')
+        grpc_server = aggregator_grpc_server.get_server()
+        grpc_server.start()
+        logger.info('Starting Aggregator gRPC Server')
+
+        try:
+            while not aggregator_grpc_server.aggregator.all_quit_jobs_sent():
+                # Awaiting quit job sent to collaborators
+                await asyncio.sleep(2)
+        except KeyboardInterrupt:
+            pass
+        finally:
+            grpc_server.stop(0)
+            # Temporary solution to free RAM used by TensorDB
+            aggregator_grpc_server.aggregator.tensor_db.clean_up(0)
+
     async def start_experiment_execution_loop(self):
         """Run task to monitor and run experiments."""
         while True:
-            await self.experiments_registry.run_next_experiment()
+            if (self.experiments_registry.active_experiment is not None
+                    or not self.experiments_registry.queue):
+                await asyncio.sleep(10)
+                continue
+            async with self.experiments_registry.get_next_experiment() as experiment:
+                loop = asyncio.get_event_loop()
+                run_aggregator = loop.create_task(self.run_experiment(experiment=experiment))
+                for col_name in experiment.collaborators:
+                    queue = self.col_exp_queues[col_name]
+                    await queue.put(experiment.name)
+                await run_aggregator
