@@ -1,0 +1,6 @@
+template: mvtec_shard_descriptor.MVTecShardDescriptor
+params:
+  data_folder: MVTec_data
+  rank_worldsize: 1,2
+  enforce_image_hw: '256,256'
+  obj: bottle
