@@ -40,6 +40,7 @@ class DirectorGRPCServer(director_pb2_grpc.FederationDirectorServicer):
         self.certificate = None
         self._fill_certs(root_certificate, private_key, certificate)
         self.server = None
+        self.root_dir = Path.cwd()
         self.director = director_cls(
             tls=self.tls,
             root_certificate=self.root_certificate,
@@ -113,9 +114,7 @@ class DirectorGRPCServer(director_pb2_grpc.FederationDirectorServicer):
         """Request to set new experiment."""
         logger.info(f'SetNewExperiment request has got {stream}')
         # TODO: add streaming reader
-        # TODO: If we set new experiment during another experiment run
-        #       path will be gotten from running experiment workspace
-        data_file_path = Path(str(uuid.uuid4())).absolute()
+        data_file_path = self.root_dir / str(uuid.uuid4())
         with open(data_file_path, 'wb') as data_file:
             async for request in stream:
                 if request.experiment_data.size == len(request.experiment_data.npbytes):
@@ -211,7 +210,7 @@ class DirectorGRPCServer(director_pb2_grpc.FederationDirectorServicer):
                 experiment_name=request.experiment_name, caller=caller
         ):
             if metric_dict is None:
-                await asyncio.sleep(5)
+                await asyncio.sleep(1)
                 continue
             yield director_pb2.StreamMetricsResponse(**metric_dict)
 
