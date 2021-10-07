@@ -10,8 +10,8 @@ from pathlib import Path
 from typing import Iterable
 from typing import Union
 
-from openfl.component.experiment import Experiment
-from openfl.component.experiment import ExperimentsRegistry
+from .experiment import Experiment
+from .experiment import ExperimentsRegistry
 from openfl.protocols import director_pb2
 
 logger = logging.getLogger(__name__)
@@ -202,7 +202,7 @@ class Director:
 
         return envoy_infos
 
-    async def monitor_experiment_task(self):
+    async def start_experiment_execution_loop(self):
         """Run task to monitor and run experiments."""
         while True:
             await self.experiments_registry.run_next_experiment()

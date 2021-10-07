@@ -73,12 +73,8 @@ class DirectorGRPCServer(director_pb2_grpc.FederationDirectorServicer):
     def start(self):
         """Launch the director GRPC server."""
         loop = asyncio.get_event_loop()  # TODO: refactor after end of support for python3.6
-        self._run_director_background_tasks()
+        loop.create_task(self.director.start_experiment_execution_loop())
         loop.run_until_complete(self._run_server())
-
-    def _run_director_background_tasks(self):
-        loop = asyncio.get_event_loop()
-        loop.create_task(self.director.monitor_experiment_task())
 
     async def _run_server(self):
         channel_opt = [('grpc.max_send_message_length', 512 * 1024 * 1024),
