@@ -5,21 +5,20 @@
 
 import asyncio
 import logging
-from collections import defaultdict
-
 import time
+from collections import defaultdict
 from pathlib import Path
 from typing import Iterable
 from typing import Union
 
+from openfl.component import Aggregator
+from openfl.federated import Plan
+from openfl.protocols import director_pb2
+from openfl.transport import AggregatorGRPCServer
+from openfl.utilities.workspace import ExperimentWorkspace
 from .experiment import Experiment
 from .experiment import ExperimentsRegistry
-from openfl.protocols import director_pb2
 from .experiment import Status
-from .. import Aggregator
-from ...federated import Plan
-from ...transport import AggregatorGRPCServer
-from ...utilities.workspace import ExperimentWorkspace
 
 logger = logging.getLogger(__name__)
 
@@ -210,6 +209,7 @@ class Director:
             self, *,
             experiment: Experiment,
     ):
+        """Run experiment."""
         experiment.status = Status.IN_PROGRESS
         try:
             logger.info(f'New experiment {experiment.name} for '

@@ -112,6 +112,11 @@ class ExperimentsRegistry:
 
     @asynccontextmanager
     async def get_next_experiment(self):
+        """Context manager.
+
+        On enter get experiment from queue.
+        On exit put finished experiment to archive.
+        """
         while True:
             if self.active_experiment is None and self.queue:
                 break
@@ -121,5 +126,4 @@ class ExperimentsRegistry:
             self.__active_experiment_name = self.queue.pop(0)
             yield self.active_experiment
         finally:
-            self.active_experiment.status = Status.FINISHED
             self.finish_active()
