@@ -55,7 +55,7 @@ def test_get_best_model(deconstruct_model_proto, director_client,
 
     request = director_client.stub.GetTrainedModel.call_args
     if sys.version_info < (3, 8):
-        model_type = request[0][0].model_type
+        incoming_model_type = request[0][0].model_type
     else:
-        model_type = request.args[0].model_type
-    assert model_type == getattr(director_pb2.GetTrainedModelRequest, model_type)
+        incoming_model_type = request.args[0].model_type
+    assert incoming_model_type == getattr(director_pb2.GetTrainedModelRequest, model_type)
