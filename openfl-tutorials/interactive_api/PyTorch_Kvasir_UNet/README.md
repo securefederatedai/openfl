@@ -20,7 +20,7 @@ fx envoy start -n env_one --disable-tls --shard-config-path shard_config_one.yam
 ```
 
 Optional: start second envoy:
- - Copy `envoy_folder` to another place and run from there:
+ - Copy `envoy` folder to another place and run from there:
 ```sh
 fx envoy start -n env_two --disable-tls --shard-config-path shard_config_two.yaml -dh localhost -dp 50051
 ```

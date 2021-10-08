@@ -1,6 +1,6 @@
 # TinyImagenet Classification Tutorial
 
-<img src="https://production-media.paperswithcode.com/datasets/Tiny_ImageNet-0000001404-a53923c3_XCrVSGm.jpg" alt="alt text" width="300" height="whatever">
+<img src="https://production-media.paperswithcode.com/datasets/Tiny_ImageNet-0000001404-a53923c3_XCrVSGm.jpg" alt="alt text" width="500" height="whatever">
 
 
 ### 1. About dataset
