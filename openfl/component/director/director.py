@@ -11,14 +11,9 @@ from pathlib import Path
 from typing import Iterable
 from typing import Union
 
-from openfl.component import Aggregator
-from openfl.federated import Plan
 from openfl.protocols import director_pb2
-from openfl.transport import AggregatorGRPCServer
-from openfl.utilities.workspace import ExperimentWorkspace
 from .experiment import Experiment
 from .experiment import ExperimentsRegistry
-from .experiment import Status
 
 logger = logging.getLogger(__name__)
 
@@ -205,77 +200,18 @@ class Director:
 
         return envoy_infos
 
-    async def run_experiment(
-            self, *,
-            experiment: Experiment,
-    ):
-        """Run experiment."""
-        experiment.status = Status.IN_PROGRESS
-        try:
-            logger.info(f'New experiment {experiment.name} for '
-                        f'collaborators {experiment.collaborators}')
-
-            with ExperimentWorkspace(experiment.name, experiment.archive_path):
-                aggregator_grpc_server = self._create_aggregator_grpc_server(experiment=experiment)
-                experiment.aggregator = aggregator_grpc_server.aggregator
-                await self._run_aggregator_grpc_server(
-                    aggregator_grpc_server=aggregator_grpc_server,
-                )
-            experiment.status = Status.FINISHED
-            logger.info(f'Experiment "{experiment.name}" was finished successfully.')
-        except Exception as e:
-            experiment.status = Status.FAILED
-            logger.error(f'Experiment "{experiment.name}" was failed with error: {e}.')
-
-    def _create_aggregator_grpc_server(
-            self, *,
-            experiment: Experiment,
-    ) -> AggregatorGRPCServer:
-        plan = Plan.parse(plan_config_path=Path(experiment.plan_path))
-        plan.authorized_cols = list(experiment.collaborators)
-
-        logger.info('🧿 Starting the Aggregator Service.')
-        aggregator_grpc_server = plan.interactive_api_get_server(
-            tensor_dict=experiment.init_tensor_dict,
-            root_certificate=self.root_certificate,
-            certificate=self.certificate,
-            private_key=self.private_key,
-            tls=self.tls,
-        )
-        return aggregator_grpc_server
-
-    async def _run_aggregator_grpc_server(
-            self,
-            aggregator_grpc_server: AggregatorGRPCServer,
-    ) -> Aggregator:
-        """Run aggregator."""
-        logger.info('🧿 Starting the Aggregator Service.')
-        grpc_server = aggregator_grpc_server.get_server()
-        grpc_server.start()
-        logger.info('Starting Aggregator gRPC Server')
-
-        try:
-            while not aggregator_grpc_server.aggregator.all_quit_jobs_sent():
-                # Awaiting quit job sent to collaborators
-                await asyncio.sleep(2)
-        except KeyboardInterrupt:
-            pass
-        finally:
-            grpc_server.stop(0)
-            # Temporary solution to free RAM used by TensorDB
-            aggregator_grpc_server.aggregator.tensor_db.clean_up(0)
-
     async def start_experiment_execution_loop(self):
         """Run task to monitor and run experiments."""
         while True:
-            if (self.experiments_registry.active_experiment is not None
-                    or not self.experiments_registry.queue):
-                await asyncio.sleep(10)
-                continue
             async with self.experiments_registry.get_next_experiment() as experiment:
                 loop = asyncio.get_event_loop()
-                run_aggregator = loop.create_task(self.run_experiment(experiment=experiment))
+                run_aggregator_future = loop.create_task(experiment.start(
+                    root_certificate=self.root_certificate,
+                    certificate=self.certificate,
+                    private_key=self.private_key,
+                    tls=self.tls,
+                ))
                 for col_name in experiment.collaborators:
                     queue = self.col_exp_queues[col_name]
                     await queue.put(experiment.name)
-                await run_aggregator
+                await run_aggregator_future
