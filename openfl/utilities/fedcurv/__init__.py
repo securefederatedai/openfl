@@ -1,1 +1,1 @@
-"""openfl.utilities.fedcurv package"""
+"""openfl.utilities.fedcurv package."""

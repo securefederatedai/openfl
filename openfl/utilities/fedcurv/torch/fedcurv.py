@@ -97,23 +97,44 @@ class FedCurv:
         return precision_matrices
 
     def get_penalty(self, model):
+        """Calculate the penalty term for the loss function.
+
+        Args:
+            model(torch.nn.Module): Model that stores global u_t and v_t values as buffers.
+
+        Returns:
+            float: Penalty term.
+        """
         loss = 0
         if not self._params:
             return loss
         for n, p in model.named_parameters():
             if p.requires_grad:
-                u_global, v_global = (get_buffer(model, target).detach() for target in (f'{n}_u', f'{n}_v'))
-                u_local, v_local = (getattr(self, name).detach() for name in (f'{n}_u', f'{n}_v'))
-                u = u_global - u_local
-                v = v_global - v_local
+                u_global, v_global = (get_buffer(model, target)for target in (f'{n}_u', f'{n}_v'))
+                u_local, v_local = (getattr(self, name) for name in (f'{n}_u', f'{n}_v'))
+                u = (u_global - u_local).detach()
+                v = (v_global - v_local).detach()
                 _loss = p ** 2 * u - 2 * p * v
                 loss += _loss.sum()
         return self.importance * loss
 
     def on_train_begin(self, model):
+        """Pre-train steps.
+
+        Args:
+            model(torch.nn.Module): model for training.
+        """
         self._update_params(model)
 
     def on_train_end(self, model, data_loader, device, loss_fn):
+        """Post-train steps.
+
+        Args:
+            model(torch.nn.Module): Trained model.
+            data_loader(Iterable): Train dataset iterator.
+            device(str): Model device.
+            loss_fn(Callable): Train loss function.
+        """
         precision_matrices = self._diag_fisher(model, data_loader, device, loss_fn)
         for n, m in precision_matrices.items():
             u = torch.tensor(m)
