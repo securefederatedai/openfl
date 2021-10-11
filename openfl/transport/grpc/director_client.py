@@ -57,7 +57,6 @@ class ShardDirectorClient:
         # True considered as successful registration
         shard_info = director_pb2.ShardInfo(
             shard_description=shard_descriptor.dataset_description,
-            n_samples=len(shard_descriptor),
             sample_shape=shard_descriptor.sample_shape,
             target_shape=shard_descriptor.target_shape
         )
