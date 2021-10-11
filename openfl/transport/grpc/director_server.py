@@ -40,6 +40,7 @@ class DirectorGRPCServer(director_pb2_grpc.FederationDirectorServicer):
         self.certificate = None
         self._fill_certs(root_certificate, private_key, certificate)
         self.server = None
+        self.root_dir = Path.cwd()
         self.director = director_cls(
             tls=self.tls,
             root_certificate=self.root_certificate,
@@ -72,10 +73,11 @@ class DirectorGRPCServer(director_pb2_grpc.FederationDirectorServicer):
 
     def start(self):
         """Launch the director GRPC server."""
-        loop = asyncio.get_event_loop()   # TODO: refactor after end of support for python3.6
-        loop.run_until_complete(self._run())
+        loop = asyncio.get_event_loop()  # TODO: refactor after end of support for python3.6
+        loop.create_task(self.director.start_experiment_execution_loop())
+        loop.run_until_complete(self._run_server())
 
-    async def _run(self):
+    async def _run_server(self):
         channel_opt = [('grpc.max_send_message_length', 512 * 1024 * 1024),
                        ('grpc.max_receive_message_length', 512 * 1024 * 1024)]
         self.server = aio.server(options=channel_opt)
@@ -112,7 +114,7 @@ class DirectorGRPCServer(director_pb2_grpc.FederationDirectorServicer):
         """Request to set new experiment."""
         logger.info(f'SetNewExperiment request has got {stream}')
         # TODO: add streaming reader
-        data_file_path = Path(str(uuid.uuid4())).absolute()
+        data_file_path = self.root_dir / str(uuid.uuid4())
         with open(data_file_path, 'wb') as data_file:
             async for request in stream:
                 if request.experiment_data.size == len(request.experiment_data.npbytes):
@@ -131,7 +133,7 @@ class DirectorGRPCServer(director_pb2_grpc.FederationDirectorServicer):
             sender_name=caller,
             tensor_dict=tensor_dict,
             collaborator_names=request.collaborator_names,
-            data_file_path=data_file_path
+            experiment_archive_path=data_file_path
         )
 
         logger.info('Send response')
@@ -204,11 +206,11 @@ class DirectorGRPCServer(director_pb2_grpc.FederationDirectorServicer):
         logger.info(f'Request StreamMetrics for {request.experiment_name} experiment has got!')
 
         caller = self.get_caller(context)
-        for metric_dict in self.director.stream_metrics(
+        async for metric_dict in self.director.stream_metrics(
                 experiment_name=request.experiment_name, caller=caller
         ):
             if metric_dict is None:
-                await asyncio.sleep(5)
+                await asyncio.sleep(1)
                 continue
             yield director_pb2.StreamMetricsResponse(**metric_dict)
 
