@@ -15,7 +15,8 @@ The encoder has a hierarchical structure. The receptive field of the encoder is 
 ### 3. Links
 [Original paper](https://arxiv.org/abs/2006.16067)
 [Original Github code](https://github.com/nuclearboy95/Anomaly-Detection-PatchSVDD-PyTorch/tree/934d6238e5e0ad511e2a0e7fc4f4899010e7d892)
-[MVTec ad dataset download link](ftp://guest:GU.205dldo@ftp.softronics.ch/mvtec_anomaly_detection/mvtec_anomaly_detection.tar.xz)
+[MVTec ad dataset download link](https://www.mydrive.ch/shares/38536/3830184030e49fe74747669442f0f282/download/420938113-1629952094/mvtec_anomaly_detection.tar.xz)
+
 
 ### 4. How to run this tutorial (without TLC and locally as a simulation):
 
@@ -28,7 +29,7 @@ cd director_folder
 2. Run envoy:
 ```sh
 cd envoy_folder
-./start_envoy.sh env_one shard_config_one.yaml
+./start_envoy.sh env_one shard_config.yaml
 ```
 
 Optional: start second envoy:

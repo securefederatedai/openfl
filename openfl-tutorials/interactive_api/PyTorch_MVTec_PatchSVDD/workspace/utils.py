@@ -77,6 +77,7 @@ def crop_image_CHW(image, coord, K):
     h, w = coord
     return image[:, h: h + K, w: w + K]
 
+
 def NHWC2NCHW_normalize(x):
     x = (x / 255.).astype(np.float32)
     return np.transpose(x, [0, 3, 1, 2])
