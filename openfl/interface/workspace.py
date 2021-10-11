@@ -2,6 +2,8 @@
 # SPDX-License-Identifier: Apache-2.0
 """Workspace module."""
 
+from pathlib import Path
+
 from click import Choice
 from click import confirm
 from click import echo
@@ -69,7 +71,6 @@ def create_(prefix, template):
 def create(prefix, template):
     """Create federated learning workspace."""
     from os.path import isfile
-    from pathlib import Path
     from subprocess import check_call
     from sys import executable
 
@@ -79,8 +80,8 @@ def create(prefix, template):
     if not OPENFL_USERDIR.exists():
         OPENFL_USERDIR.mkdir()
 
-    prefix = Path(prefix)
-    template = Path(template)
+    prefix = Path(prefix).absolute()
+    template = Path(template).absolute()
 
     create_dirs(prefix)
     create_temp(prefix, template)
@@ -118,7 +119,7 @@ def export_():
     from openfl.interface.cli_helper import WORKSPACE
 
     # TODO: Does this need to freeze all plans?
-    plan_file = 'plan/plan.yaml'
+    plan_file = Path('plan/plan.yaml').absolute()
     try:
         freeze_plan(plan_file)
     except Exception:
@@ -180,6 +181,8 @@ def import_(archive):
     from shutil import unpack_archive
     from subprocess import check_call
     from sys import executable
+
+    archive = Path(archive).absolute()
 
     dir_path = basename(archive).split('.')[0]
     unpack_archive(archive, extract_dir=dir_path)

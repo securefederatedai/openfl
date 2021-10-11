@@ -50,9 +50,13 @@ def initialize(context, plan_config, cols_config, data_config,
     from openfl.utilities import split_tensor_dict_for_holdouts
     from openfl.utilities.utils import getfqdn_env
 
-    plan = Plan.parse(plan_config_path=Path(plan_config).absolute(),
-                      cols_config_path=Path(cols_config).absolute(),
-                      data_config_path=Path(data_config).absolute())
+    plan_config = Path(plan_config).absolute()
+    cols_config = Path(cols_config).absolute()
+    data_config = Path(data_config).absolute()
+
+    plan = Plan.parse(plan_config_path=plan_config,
+                      cols_config_path=cols_config,
+                      data_config_path=data_config)
 
     init_state_path = plan.config['aggregator']['settings']['init_state_path']
 
@@ -90,7 +94,7 @@ def initialize(context, plan_config, cols_config, data_config,
 
     utils.dump_proto(model_proto=model_snap, fpath=init_state_path)
 
-    plan_origin = Plan.parse(Path(plan_config), resolve=False).config
+    plan_origin = Plan.parse(plan_config, resolve=False).config
 
     if (plan_origin['network']['settings']['agg_addr'] == 'auto'
             or aggregator_address):
@@ -99,14 +103,14 @@ def initialize(context, plan_config, cols_config, data_config,
         logger.warn(f'Patching Aggregator Addr in Plan'
                     f" 🠆 {plan_origin['network']['settings']['agg_addr']}")
 
-        Plan.dump(Path(plan_config), plan_origin)
+        Plan.dump(plan_config, plan_origin)
 
     plan.config = plan_origin
 
     # Record that plan with this hash has been initialized
     if 'plans' not in context.obj:
         context.obj['plans'] = []
-    context.obj['plans'].append(f'{Path(plan_config).stem}_{plan.hash[:8]}')
+    context.obj['plans'].append(f'{plan_config.stem}_{plan.hash[:8]}')
     logger.info(f"{context.obj['plans']}")
 
 
