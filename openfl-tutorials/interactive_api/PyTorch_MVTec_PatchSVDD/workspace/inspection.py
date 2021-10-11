@@ -1,11 +1,16 @@
-from data_transf import *
-from utils import *
+from data_transf import segmentation_auroc, detection_auroc
+import os
+import shutil
+import numpy as np
+from utils import distribute_scores
+import ngtpy
+from sklearn.neighbors import KDTree
+
 
 def search_NN(test_emb, train_emb_flat, NN=1, method='kdt'):
     if method == 'ngt':
         return search_NN_ngt(test_emb, train_emb_flat, NN=NN)
 
-    from sklearn.neighbors import KDTree
     kdt = KDTree(train_emb_flat)
 
     Ntest, I, J, D = test_emb.shape
@@ -22,8 +27,6 @@ def search_NN(test_emb, train_emb_flat, NN=1, method='kdt'):
 
 
 def search_NN_ngt(test_emb, train_emb_flat, NN=1):
-    import ngtpy
-
     Ntest, I, J, D = test_emb.shape
     closest_inds = np.empty((Ntest, I, J, NN), dtype=np.int32)
     l2_maps = np.empty((Ntest, I, J, NN), dtype=np.float32)
