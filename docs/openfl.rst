@@ -9,5 +9,5 @@ OpenFL structure
    :maxdepth: 4
 
    source/openfl/components
-   .. source/openfl/communication
+   source/openfl/communication
    source/openfl/plugins

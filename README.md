@@ -35,7 +35,7 @@ Intel Internet of Things Group.
 
 Check out our [online documentation](https://openfl.readthedocs.io/en/latest/index.html) to launch your first federation.  The quickest way to test OpenFL is through our [Jupyter Notebook tutorials](https://openfl.readthedocs.io/en/latest/running_the_federation.notebook.html).
 
-For more questions, please consider joining our [Slack channel](https://openfl.slack.com).
+For more questions, please consider joining our [Slack channel](https://join.slack.com/t/openfl/shared_invite/zt-ovzbohvn-T5fApk05~YS_iZhjJ5yaTw).
 
 
 ## Requirements
@@ -54,7 +54,7 @@ and release your contribution under these terms.
 ## Resources:
 * Docs and Tutorials: https://openfl.readthedocs.io/en/latest/index.html
 * Issue tracking: https://github.com/intel/openfl/issues
-* [Slack channel](https://openfl.slack.com)
+* [Slack channel](https://join.slack.com/t/openfl/shared_invite/zt-ovzbohvn-T5fApk05~YS_iZhjJ5yaTw)
 
 ## Citation
 
@@ -73,7 +73,7 @@ and release your contribution under these terms.
 Please report questions, issues and suggestions using:
 
 * [GitHub* Issues](https://github.com/intel/openfl/issues)
-* [Slack channel](https://openfl.slack.com)
+* [Slack channel](https://join.slack.com/t/openfl/shared_invite/zt-ovzbohvn-T5fApk05~YS_iZhjJ5yaTw)
 
 ### Relation to OpenFederatedLearning and the Federated Tumor Segmentation (FeTS) Initiative
 

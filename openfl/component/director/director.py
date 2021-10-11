@@ -5,16 +5,18 @@
 
 import asyncio
 import logging
-import typing
+import time
 from collections import defaultdict
 from pathlib import Path
+from typing import Iterable
+from typing import Union
 from typing import List
 
 import time
 
-from openfl.federated import Plan
 from openfl.protocols import director_pb2
-from openfl.utilities.workspace import ExperimentWorkspace
+from .experiment import Experiment
+from .experiment import ExperimentsRegistry
 
 logger = logging.getLogger(__name__)
 
@@ -28,31 +30,23 @@ class Director:
             self,
             *,
             tls: bool = True,
-            root_certificate: Path = None,
-            private_key: Path = None,
-            certificate: Path = None,
+            root_certificate: Union[Path, str] = None,
+            private_key: Union[Path, str] = None,
+            certificate: Union[Path, str] = None,
             sample_shape: list = None,
             target_shape: list = None,
             settings: dict = None
     ) -> None:
         """Initialize a director object."""
-        # TODO: add working directory
-        super().__init__()
         self.sample_shape, self.target_shape = sample_shape, target_shape
         self._shard_registry = {}
-        self.col_exp_queues = defaultdict(asyncio.Queue)
-
-        self.experiment_data = {}  # {Experiment name : archive bytes}
-        # What if two experiments come with the same name from different users?
-        self.experiments_queue = asyncio.Queue()  # experiments waiting to be executed
-        self.experiment_stash = defaultdict(dict)  # Running of finished experiments
-        # {API name : {experiment name : aggregator}}
-
         self.tls = tls
         self.root_certificate = root_certificate
         self.private_key = private_key
         self.certificate = certificate
+        self.experiments_registry = ExperimentsRegistry()
         self.settings = settings or {}
+        self.col_exp_queues = defaultdict(asyncio.Queue)
 
     def acknowledge_shard(self, shard_info: director_pb2.ShardInfo) -> bool:
         """Save shard info to shard registry if it's acceptable."""
@@ -76,37 +70,29 @@ class Director:
             experiment_name: str,
             sender_name: str,
             tensor_dict: dict,
-            collaborator_names: typing.Iterable[str],
-            data_file_path: Path
+            collaborator_names: Iterable[str],
+            experiment_archive_path: Path,
     ) -> bool:
         """Set new experiment."""
-        # TODO: save to file
-        self.experiment_data[experiment_name] = data_file_path
-
-        loop = asyncio.get_event_loop()  # TODO: refactor after end of support for python3.6
-        loop.create_task(self._run_aggregator_in_workspace(
-            experiment_name=experiment_name,
-            data_file_name=data_file_path,
-            experiment_sender=sender_name,
-            initial_tensor_dict=tensor_dict,
-            collaborator_names=collaborator_names,
-        ))
-
-        logger.info(f'New experiment {experiment_name} for '
-                    f'collaborators {collaborator_names}')
-        for col_name in collaborator_names:
-            queue = self.col_exp_queues[col_name]
-            await queue.put(experiment_name)
-
+        experiment = Experiment(
+            name=experiment_name,
+            archive_path=experiment_archive_path,
+            collaborators=list(collaborator_names),
+            users=[sender_name],
+            sender=sender_name,
+            init_tensor_dict=tensor_dict,
+        )
+        self.experiments_registry.add(experiment)
         return True
 
     def get_trained_model(self, experiment_name: str, caller: str, model_type: str):
         """Get trained model."""
-        if experiment_name not in self.experiment_stash[caller]:
+        if (experiment_name not in self.experiments_registry
+                or caller not in self.experiments_registry[experiment_name].users):
             logger.error('No experiment data in the stash')
             return None
 
-        aggregator = self.experiment_stash[caller][experiment_name].aggregator
+        aggregator = self.experiments_registry[experiment_name].aggregator
 
         if aggregator.last_tensor_dict is None:
             logger.error('Aggregator have no aggregated model to return')
@@ -120,13 +106,13 @@ class Director:
             logger.error('Unknown model type required.')
             return None
 
-    def get_experiment_data(self, experiment_name: str) -> bytes:
+    def get_experiment_data(self, experiment_name: str) -> Path:
         """Get experiment data."""
-        return self.experiment_data.get(experiment_name, b'')
+        return self.experiments_registry[experiment_name].archive_path
 
-    async def wait_experiment(self, collaborator_name: str) -> str:
+    async def wait_experiment(self, envoy_name: str) -> str:
         """Wait an experiment."""
-        queue = self.col_exp_queues[collaborator_name]
+        queue = self.col_exp_queues[envoy_name]
         experiment_name = await queue.get()
 
         return experiment_name
@@ -139,7 +125,7 @@ class Director:
         """Get registered shard infos."""
         return [shard_status['shard_info'] for shard_status in self._shard_registry.values()]
 
-    def stream_metrics(self, experiment_name: str, caller: str):
+    async def stream_metrics(self, experiment_name: str, caller: str):
         """
         Stream metrics from the aggregator.
 
@@ -158,7 +144,17 @@ class Director:
         Raises:
             StopIteration - if the experiment is finished and there is no more metrics to report
         """
-        aggregator = self.experiment_stash[caller][experiment_name].aggregator
+        if (experiment_name not in self.experiments_registry
+                or caller not in self.experiments_registry[experiment_name].users):
+            raise Exception(
+                f'No experiment name "{experiment_name}" in experiments list, or caller "{caller}"'
+                f' does not have access to this experiment'
+            )
+
+        while not self.experiments_registry[experiment_name].aggregator:
+            await asyncio.sleep(1)
+        aggregator = self.experiments_registry[experiment_name].aggregator
+
         while True:
             if not aggregator.metric_queue.empty():
                 yield aggregator.metric_queue.get()
@@ -171,8 +167,9 @@ class Director:
 
     def remove_experiment_data(self, experiment_name: str, caller: str):
         """Remove experiment data from stash."""
-        if experiment_name in self.experiment_stash.get(caller, {}):
-            del self.experiment_stash[caller][experiment_name]
+        if (experiment_name in self.experiments_registry
+                and caller in self.experiments_registry[experiment_name].users):
+            self.experiments_registry.remove(experiment_name)
 
     def collaborator_health_check(
             self, *, collaborator_name: str, is_experiment_running: bool
@@ -228,7 +225,9 @@ class Director:
         return result
 
     def get_experiment(self, caller: str, name: str) -> dict:
-        exp = self.experiment_stash.get(caller, {}).get(name, {})
+        exp = self.experiments_registry.get(name)
+        if not exp or caller not in exp.users:
+            return {}
         progress = _get_experiment_progress(exp)
         model_statuses = _get_model_download_statuses(exp)
         tasks = _get_experiment_tasks(exp)
@@ -248,57 +247,23 @@ class Director:
             },
             'collaborators': collaborators,
             'tasks': tasks
-
         }
 
-    async def _run_aggregator_in_workspace(
-            self,
-            *,
-            experiment_name: str,
-            data_file_name: Path,
-            **kwargs
-    ) -> None:
-        """Run aggregator in a workspace."""
-        with ExperimentWorkspace(experiment_name, data_file_name):
-            await self._run_aggregator(experiment_name=experiment_name, **kwargs)
-
-    async def _run_aggregator(
-            self,
-            *,
-            experiment_sender,
-            initial_tensor_dict,
-            experiment_name,
-            collaborator_names,
-            plan_path='plan/plan.yaml'
-    ) -> None:
-        """Run aggregator."""
-        plan = Plan.parse(plan_config_path=Path(plan_path))
-        plan.authorized_cols = list(collaborator_names)
-
-        logger.info('🧿 Starting the Aggregator Service.')
-        aggregator_server = plan.interactive_api_get_server(
-            tensor_dict=initial_tensor_dict,
-            root_certificate=self.root_certificate,
-            certificate=self.certificate,
-            private_key=self.private_key,
-            tls=self.tls,
-        )
-        self.experiment_stash[experiment_sender][experiment_name] = aggregator_server
-
-        grpc_server = aggregator_server.get_server()
-        grpc_server.start()
-        logger.info('Starting Aggregator gRPC Server')
-
-        try:
-            while not aggregator_server.aggregator.all_quit_jobs_sent():
-                # Awaiting quit job sent to collaborators
-                await asyncio.sleep(10)
-        except KeyboardInterrupt:
-            pass
-        finally:
-            grpc_server.stop(0)
-            # Temporary solution to free RAM used by TensorDB
-            aggregator_server.aggregator.tensor_db.clean_up(0)
+    async def start_experiment_execution_loop(self):
+        """Run task to monitor and run experiments."""
+        while True:
+            async with self.experiments_registry.get_next_experiment() as experiment:
+                loop = asyncio.get_event_loop()
+                run_aggregator_future = loop.create_task(experiment.start(
+                    root_certificate=self.root_certificate,
+                    certificate=self.certificate,
+                    private_key=self.private_key,
+                    tls=self.tls,
+                ))
+                for col_name in experiment.collaborators:
+                    queue = self.col_exp_queues[col_name]
+                    await queue.put(experiment.name)
+                await run_aggregator_future
 
 
 def _get_model_download_statuses(experiment) -> List[dict]:

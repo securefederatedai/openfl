@@ -76,7 +76,7 @@ def uninstall(ca_path):
 @option('-n', '--name', required=True)
 @option('--ca-url', required=False, default=CA_URL)
 @option('-p', '--ca-path', default='.',
-        help='The CA path', type=ClickPath())
+        help='The CA path', type=ClickPath(exists=True))
 def get_token_(name, ca_url, ca_path):
     """
     Create authentication token.
@@ -98,7 +98,7 @@ def get_token_(name, ca_url, ca_path):
 @option('-c', '--certs-path', required=False, default=Path('.') / 'cert',
         help='The path where certificates will be stored', type=ClickPath())
 @option('-p', '--ca-path', default='.', help='The path to CA client',
-        type=ClickPath(), required=False)
+        type=ClickPath(exists=True), required=False)
 def certify_(name, token_with_cert, certs_path, ca_path):
     """Create an envoy workspace."""
     certs_path = Path(certs_path)

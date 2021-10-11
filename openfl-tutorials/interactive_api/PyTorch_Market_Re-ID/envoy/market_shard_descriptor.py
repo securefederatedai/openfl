@@ -3,14 +3,18 @@
 
 """Market shard descriptor."""
 
+import logging
 import re
 import zipfile
+from copy import deepcopy
 from pathlib import Path
 
 import gdown
 from PIL import Image
 
 from openfl.interface.interactive_api.shard_descriptor import ShardDescriptor
+
+logger = logging.getLogger(__name__)
 
 
 class MarketShardDescriptor(ShardDescriptor):
@@ -73,6 +77,13 @@ class MarketShardDescriptor(ShardDescriptor):
         img = Image.open(img_path)
         return img, (pid, camid)
 
+    def get_dataset(self, dataset_type):
+        """Return a dataset by type."""
+        ds = deepcopy(self)
+        ds.set_mode(dataset_type)
+
+        return ds
+
     @property
     def sample_shape(self):
         """Return the sample shape info."""
@@ -103,13 +114,16 @@ class MarketShardDescriptor(ShardDescriptor):
     @staticmethod
     def download():
         """Download Market1501 dataset."""
+        logger.info('Download Market1501 dataset.')
         if Path('Market-1501-v15.09.15').exists():
             return None
 
         output = 'Market-1501-v15.09.15.zip'
         if not Path(output).exists():
+            logger.info('Try to download.')
             url = 'https://drive.google.com/uc?id=0B8-rUzbwVRk0c054eEozWG9COHM'
             gdown.download(url, output, quiet=False)
+        logger.info(f'{output} is downloaded.')
 
         with zipfile.ZipFile(output, 'r') as zip_ref:
             zip_ref.extractall(Path.cwd())
