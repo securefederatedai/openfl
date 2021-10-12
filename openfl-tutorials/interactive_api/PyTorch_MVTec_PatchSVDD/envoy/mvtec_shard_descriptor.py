@@ -4,11 +4,11 @@
 
 import os
 from glob import glob
-
 from pathlib import Path
+
 import numpy as np
-from PIL import Image
 from imageio import imread
+from PIL import Image
 
 from openfl.interface.interactive_api.shard_descriptor import ShardDescriptor
 

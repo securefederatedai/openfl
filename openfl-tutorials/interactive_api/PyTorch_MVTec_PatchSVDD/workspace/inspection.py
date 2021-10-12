@@ -3,13 +3,12 @@
 import os
 import shutil
 
+import ngtpy
+import numpy as np
 from data_transf import detection_auroc
 from data_transf import segmentation_auroc
-import numpy as np
-import ngtpy
-from utils import distribute_scores
-
 from sklearn.neighbors import KDTree
+from utils import distribute_scores
 
 
 def search_nn(test_emb, train_emb_flat, nn=1, method='kdt'):

@@ -1,14 +1,13 @@
 """Utilities."""
 
 import os
-
 from contextlib import contextmanager
 
-import numpy as np
 import _pickle as p
+import numpy as np
 import torch
-from torch.utils.data import Dataset
 from PIL import Image
+from torch.utils.data import Dataset
 
 
 def to_device(obj, device, non_blocking=False):
@@ -31,6 +30,7 @@ def to_device(obj, device, non_blocking=False):
 
 @contextmanager
 def task(_):
+    """Yield."""
     yield
 
 
@@ -59,7 +59,6 @@ class DictionaryConcatDataset(Dataset):
 
 def crop_chw(image, i, j, k, s=1):
     """Crop func."""
-
     if s == 1:
         h, w = i, j
     else:
@@ -69,7 +68,7 @@ def crop_chw(image, i, j, k, s=1):
 
 
 def cnn_output_size(h, k, s=1, p=0) -> int:
-    """output size.
+    """Output size.
 
     :param int H: input_size
     :param int K: filter_size
