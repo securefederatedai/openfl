@@ -28,10 +28,10 @@ Market-1501 is a large-scale public benchmark dataset for person re-identificati
     fx envoy start -n env_two --disable-tls --shard-config-path shard_config_two.yaml -dh localhost -dp 50051
     ```
 
-    4. Run `PyTorch_Kvasir_UNet.ipynb` jupyter notebook:
+    4. Run `PyTorch_Market_Re-ID.ipynb` jupyter notebook:
     ```sh
     cd workspace
-    jupyter notebook PyTorch_Kvasir_UNet.ipynb
+    jupyter notebook PyTorch_Market_Re-ID.ipynb
     ```
 
 * Run with TLC connection:
@@ -126,10 +126,10 @@ Market-1501 is a large-scale public benchmark dataset for person re-identificati
             ```
 
 
-    6. Run `PyTorch_Kvasir_UNet.ipynb` jupyter notebook:
+    6. Run `PyTorch_Market_Re-ID.ipynb` jupyter notebook:
     ```sh
     cd workspace
-    jupyter notebook PyTorch_Kvasir_UNet.ipynb
+    jupyter notebook PyTorch_Market_Re-ID.ipynb
     ```
 
 ---
