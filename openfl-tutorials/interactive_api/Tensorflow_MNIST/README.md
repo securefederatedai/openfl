@@ -13,7 +13,7 @@ We use simple fully-connected neural network defined at
 
 
 ### 3. How to run this tutorial
-* Run without TLC connection:
+* Run without TLS connection:
 
     1\. Run director:
     ```sh
@@ -39,7 +39,7 @@ We use simple fully-connected neural network defined at
     jupyter notebook Tensorflow_MNIST.ipynb
     ```
 
-* Run with TLC connection:
+* Run with TLS connection:
 
     1\. Create CA:
     ```sh

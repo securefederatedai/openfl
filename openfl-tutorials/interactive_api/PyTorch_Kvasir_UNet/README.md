@@ -6,7 +6,7 @@ The data is collected during real gastro- and colonoscopy examinations at a Hosp
 
 
 ### 2. How to run this tutorial
-* Run without TLC connection:
+* Run without TLS connection:
 
     1\. Run director:
     ```sh
@@ -17,12 +17,14 @@ The data is collected during real gastro- and colonoscopy examinations at a Hosp
     2\. Start first envoy:
     ```sh
     cd envoy
+    pip install -r requirements.txt
     fx envoy start -n env_one --disable-tls --shard-config-path shard_config_one.yaml -dh localhost -dp 50051
     ```
 
     3\. Start second envoy:
     - Copy `envoy` folder to another place and run from there:
     ```sh
+    pip install -r requirements.txt
     fx envoy start -n env_two --disable-tls --shard-config-path shard_config_two.yaml -dh localhost -dp 50051
     ```
 
@@ -32,7 +34,7 @@ The data is collected during real gastro- and colonoscopy examinations at a Hosp
     jupyter notebook PyTorch_Kvasir_UNet.ipynb
     ```
 
-* Run with TLC connection:
+* Run with TLS connection:
 
     1\. Create CA:
     ```sh
@@ -114,12 +116,14 @@ The data is collected during real gastro- and colonoscopy examinations at a Hosp
         First:
         ```sh
         cd envoy
+        pip install -r requirements.txt
         fx envoy start -n env_one --shard-config-path shard_config_one.yaml -dh localhost -dp 50051 -rc cert/root_ca.crt -pk cert/env_one.key -oc cert/env_one.crt
         ```
 
         Second:        
         ```sh
         cd <envoy/two/folder/path>
+        pip install -r requirements.txt
         fx envoy start -n env_two --shard-config-path shard_config_two.yaml -dh localhost -dp 50051 -rc cert/root_ca.crt -pk cert/env_two.key -oc cert/env_two.crt
         ```
 
