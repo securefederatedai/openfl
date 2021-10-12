@@ -15,7 +15,7 @@ In order to do this, you should:
 Python API
 ==========
 
-Create an implementation of :class:`openfl.component.aggregation_functions.AggregationFunctionInterface`
+Create an implementation of :class:`openfl.component.aggregation_functions.AggregationFunction`
 and pass it as ``tasks.{task_name}.aggregation_type`` parameter of ``override_config`` keyword argument of :func:`openfl.native.run_experiment` native function.
 
 CLI
@@ -26,7 +26,7 @@ Choose from predefined |productName| aggregation functions:
 - ``openfl.component.aggregation_functions.WeightedAverage`` (default)
 - ``openfl.component.aggregation_functions.Median``
 - ``openfl.component.aggregation_functions.GeometricMedian``
-Or create your own implementation of :class:`openfl.component.aggregation_functions.AggregationFunctionInterface`.
+Or create your own implementation of :class:`openfl.component.aggregation_functions.AggregationFunction`.
 After defining the aggregation behavior, you need to include it in ``plan/plan.yaml`` file of your workspace.
 Inside ``tasks`` section pick a task for which you want to change the aggregation
 and insert ``aggregation_type`` section with a single ``template`` key that defines a module path to your class.
@@ -64,20 +64,21 @@ Example of ``plan/plan.yaml`` with modified aggregation function:
 Interactive API
 ================
 You can override aggregation function that will be used for the task this function corresponds to.
-In order to do this, call the ``set_agg_fn`` decorator method of ``TaskInterface`` and pass ``AggregationFunctionInterface`` subclass instance as a parameter.
+In order to do this, call the ``set_agg_fn`` decorator method of ``AggregationFunctionInterface`` and pass ``AggregationFunction`` subclass instance as a parameter.
 For example, you can try:
 
 ..code_block:: python
     from openfl.component.aggregation_functions import Median
     TI = TaskInterface()
+    AFI = AggregationFunctionInterface()
     agg_fn = Median()
     @TI.register_fl_task(model='model', data_loader='train_loader', \
                      device='device', optimizer='optimizer')
-    @TI.set_agg_fn(agg_fn)
+    @AFI.set_agg_fn(agg_fn)
 
 
-``AggregationFunctionInterface`` requires a single ``call`` function.
-This function receives tensors for a single parameter from multiple collaborators with additional metadata (see definition of :meth:`openfl.component.aggregation_functions.AggregationFunctionInterface.call`) and returns a single tensor that represents the result of aggregation.
+``AggregationFunction`` requires a single ``call`` function.
+This function receives tensors for a single parameter from multiple collaborators with additional metadata (see definition of :meth:`openfl.component.aggregation_functions.AggregationFunction.call`) and returns a single tensor that represents the result of aggregation.
 
 .. note::
     By default, we use weighted averaging with weights equal to data parts (FedAvg).
@@ -89,10 +90,10 @@ Below is an example of a custom tensor clipping aggregation function that multip
 
 .. code-block:: python
 
-    from openfl.component.aggregation_functions import AggregationFunctionInterface
+    from openfl.component.aggregation_functions import AggregationFunction
     import numpy as np
 
-    class ClippedAveraging(AggregationFunctionInterface):
+    class ClippedAveraging(AggregationFunction):
         def __init__(self, ratio):
             self.ratio = ratio
             

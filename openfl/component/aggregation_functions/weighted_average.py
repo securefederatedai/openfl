@@ -5,7 +5,7 @@
 
 import numpy as np
 
-from .interface import AggregationFunctionInterface
+from .interface import AggregationFunction
 
 
 def weighted_average(tensors, weights):
@@ -13,7 +13,7 @@ def weighted_average(tensors, weights):
     return np.average(tensors, weights=weights, axis=0)
 
 
-class WeightedAverage(AggregationFunctionInterface):
+class WeightedAverage(AggregationFunction):
     """Weighted average aggregation."""
 
     def call(self, local_tensors, *_):
