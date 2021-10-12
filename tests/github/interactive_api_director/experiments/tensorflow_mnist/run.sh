@@ -2,7 +2,7 @@
 set -e
 
 cd director
-bash start_director.sh &
+fx director start --disable-tls -c director_config.yaml &
 PID=$!
 
 sleep 3
@@ -14,8 +14,7 @@ fi
 
 
 cd ../envoy
-pip install -r sd_requirements.txt
-bash start_envoy.sh &
+fx envoy start -n env_one --disable-tls --shard-config-path shard_config_one.yaml -dh localhost -dp 50051 &
 PID=$!
 sleep 3
 if ! ps -p $PID > /dev/null
