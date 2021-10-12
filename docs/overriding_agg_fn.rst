@@ -79,7 +79,7 @@ The ``AggregationFunctionInterface`` requires a single ``call`` function.
 This function receives tensors for a single parameter from multiple collaborators with additional metadata and returns a single tensor that represents the result of aggregation.
 
 .. note::
-    See the definition of `openfl.component.aggregation_functions.AggregationFunctionInterface.call <https://github.com/intel/openfl/blob/develop/openfl/component/aggregation_functions/interface.py>`_ for details.
+    See the definition of :class:`openfl.component.aggregation_functions.AggregationFunctionInterface.call` (`link <https://github.com/intel/openfl/blob/develop/openfl/component/aggregation_functions/interface.py>`_) for details.
 
 
 Example of a Custom Aggregation Function
