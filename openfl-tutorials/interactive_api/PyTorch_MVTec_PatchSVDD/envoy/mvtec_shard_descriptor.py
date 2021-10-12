@@ -3,17 +3,18 @@
 """MVTec shard descriptor."""
 
 import os
-from pathlib import Path
 from glob import glob
+
+from pathlib import Path
 import numpy as np
 from PIL import Image
 from imageio import imread
+
 from openfl.interface.interactive_api.shard_descriptor import ShardDescriptor
 
 
 class MVTecShardDescriptor(ShardDescriptor):
-    """MVTec Shard descriptor class.
-    """
+    """MVTec Shard descriptor class."""
 
     def __init__(self, data_folder: str = 'MVTec_data',
                  rank_worldsize: str = '1,1',
@@ -52,7 +53,7 @@ class MVTecShardDescriptor(ShardDescriptor):
         self.labels = self.labels[self.rank_worldsize[0] - 1::self.rank_worldsize[1]]
         # Masks
         fpattern_mask = os.path.join(self.dataset_path, f'{obj}/ground_truth/*/*.png')
-        self.fpaths_mask = list(sorted(glob(fpattern_mask)))
+        self.fpaths_mask = sorted(glob(fpattern_mask))
         self.len_anomaly = len(self.fpaths_mask)
         self.mask_path = self.fpaths_mask
 
@@ -108,9 +109,11 @@ class MVTecShardDescriptor(ShardDescriptor):
         return img, mask, label
 
     def resize(self, image, shape=(256, 256)):
+        """Resize image."""
         return np.array(Image.fromarray(image).resize(shape))
 
     def gray2rgb(self, images):
+        """Change image from gray to rgb."""
         tile_shape = tuple(np.ones(len(images.shape), dtype=int))
         tile_shape += (3,)
 

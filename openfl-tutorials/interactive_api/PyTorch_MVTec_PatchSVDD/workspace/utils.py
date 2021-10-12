@@ -1,19 +1,18 @@
-import numpy as np
+"""Utilities."""
+
 import os
-import _pickle as p
-from torch.utils.data import Dataset
-import torch
+
 from contextlib import contextmanager
+
+import numpy as np
+import _pickle as p
+import torch
+from torch.utils.data import Dataset
 from PIL import Image
 
 
 def to_device(obj, device, non_blocking=False):
-    """
-    :param obj:
-    :param device:
-    :param bool non_blocking:
-    :return:
-    """
+    """Copy to device."""
     if isinstance(obj, torch.Tensor):
         return obj.to(device, non_blocking=non_blocking)
 
@@ -36,7 +35,10 @@ def task(_):
 
 
 class DictionaryConcatDataset(Dataset):
+    """Concate dictionaries."""
+
     def __init__(self, d_of_datasets):
+        """Initialize."""
         self.d_of_datasets = d_of_datasets
         lengths = [len(d) for d in d_of_datasets.values()]
         self._length = min(lengths)
@@ -44,83 +46,97 @@ class DictionaryConcatDataset(Dataset):
         assert min(lengths) == max(lengths), 'Length of the datasets should be the same'
 
     def __getitem__(self, idx):
+        """Get item."""
         return {
             key: self.d_of_datasets[key][idx]
             for key in self.keys
         }
 
     def __len__(self):
+        """Get length."""
         return self._length
 
 
-def crop_CHW(image, i, j, K, S=1):
-    if S == 1:
+def crop_chw(image, i, j, k, s=1):
+    """Crop func."""
+
+    if s == 1:
         h, w = i, j
     else:
-        h = S * i
-        w = S * j
-    return image[:, h: h + K, w: w + K]
+        h = s * i
+        w = s * j
+    return image[:, h: h + k, w: w + k]
 
 
-def cnn_output_size(H, K, S=1, P=0) -> int:
-    """
+def cnn_output_size(h, k, s=1, p=0) -> int:
+    """output size.
+
     :param int H: input_size
     :param int K: filter_size
     :param int S: stride
     :param int P: padding
-    :return:
+    :return:.
+
     """
-    return 1 + (H - K + 2 * P) // S
+    return 1 + (h - k + 2 * p) // s
 
 
-def crop_image_CHW(image, coord, K):
+def crop_image_chw(image, coord, k):
+    """Crop func."""
     h, w = coord
-    return image[:, h: h + K, w: w + K]
+    return image[:, h: h + k, w: w + k]
 
 
-def NHWC2NCHW_normalize(x):
+def nhwc2nchw_normalize(x):
+    """NHWC to NCHW and normalize."""
     x = (x / 255.).astype(np.float32)
     return np.transpose(x, [0, 3, 1, 2])
 
 
-def NHWC2NCHW(x):
+def nhwc2nchw(x):
+    """NHWC to NCHW."""
     return np.transpose(x, [0, 3, 1, 2])
 
 
 def load_binary(fpath, encoding='ASCII'):
+    """Load binaries."""
     with open(fpath, 'rb') as f:
         return p.load(f, encoding=encoding)
 
 
 def save_binary(d, fpath):
+    """Save binary."""
     with open(fpath, 'wb') as f:
         p.dump(d, f)
 
 
 def makedirpath(fpath: str):
+    """Make path."""
     dpath = os.path.dirname(fpath)
     if dpath:
         os.makedirs(dpath, exist_ok=True)
 
 
-def distribute_scores(score_masks, output_shape, K: int, S: int) -> np.ndarray:
-    N = score_masks.shape[0]
-    results = [distribute_score(score_masks[n], output_shape, K, S) for n in range(N)]
+def distribute_scores(score_masks, output_shape, k: int, s: int) -> np.ndarray:
+    """Distribute scores."""
+    n_all = score_masks.shape[0]
+    results = [distribute_score(score_masks[n], output_shape, k, s) for n in range(n_all)]
     return np.asarray(results)
 
 
-def distribute_score(score_mask, output_shape, K: int, S: int) -> np.ndarray:
-    H, W = output_shape
-    mask = np.zeros([H, W], dtype=np.float32)
-    cnt = np.zeros([H, W], dtype=np.int32)
+def distribute_score(score_mask, output_shape, k: int, s: int) -> np.ndarray:
+    """Distribute scores."""
+    h, w = output_shape
+    mask = np.zeros([h, w], dtype=np.float32)
+    cnt = np.zeros([h, w], dtype=np.int32)
 
-    I, J = score_mask.shape[:2]
-    for i in range(I):
-        for j in range(J):
-            h, w = i * S, j * S
+    i, j = score_mask.shape[:2]
+    for i_ in range(i):
+        for j_ in range(j):
+            h_, w_ = i_ * s, j_ * s
 
-            mask[h: h + K, w: w + K] += score_mask[i, j]
-            cnt[h: h + K, w: w + K] += 1
+            mask[h_: h_ + k, w_: w_ + k] += score_mask[i_, j_]
+            cnt[h_: h_ + k, w_: w_ + k] += 1
 
     cnt[cnt == 0] = 1
 
@@ -128,4 +144,5 @@ def distribute_score(score_mask, output_shape, K: int, S: int) -> np.ndarray:
 
 
 def resize(image, shape=(256, 256)):
+    """Resize image."""
     return np.array(Image.fromarray(image).resize(shape[::-1]))
