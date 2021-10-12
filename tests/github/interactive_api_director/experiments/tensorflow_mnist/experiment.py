@@ -9,7 +9,7 @@ from tests.github.interactive_api_director.experiments.tensorflow_mnist.settings
 from tests.github.interactive_api_director.experiments.tensorflow_mnist.settings import loss_fn
 from tests.github.interactive_api_director.experiments.tensorflow_mnist.settings import train_acc_metric
 from tests.github.interactive_api_director.experiments.tensorflow_mnist.settings import val_acc_metric
-from tests.github.interactive_api_director.experiments.tensorflow_mnist.envoy.shard_descriptor import MNISTShardDescriptor
+from tests.github.interactive_api_director.experiments.tensorflow_mnist.envoy.mnist_shard_descriptor import MnistShardDescriptor
 from copy import deepcopy
 
 
@@ -35,7 +35,7 @@ shard_registry = federation.get_shard_registry()
 print(shard_registry)
 print(federation.target_shape)
 fed_dataset = FedDataset(train_bs=4, valid_bs=8)
-fed_dataset.shard_descriptor = MNISTShardDescriptor()
+fed_dataset.shard_descriptor = MnistShardDescriptor()
 for batch in fed_dataset.get_train_loader():
     samples, _ = batch
     for sample in samples:
