@@ -17,6 +17,10 @@ Python API
 
 2. In the ``override_config`` keyword argument of the :func:`openfl.native.run_experiment` native function, pass the implementation as a ``tasks.{task_name}.aggregation_type`` parameter.
 
+.. note::
+    See `Federated PyTorch MNIST Tutorial <https://github.com/intel/openfl/blob/develop/openfl-tutorials/Federated_Pytorch_MNIST_custom_aggregation_Tutorial.ipynb>`_ for an example of the :func:`openfl.native.run_experiment` native function.
+
+
 Command Line Interface
 ======================
 
