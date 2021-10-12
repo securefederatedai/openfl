@@ -518,7 +518,17 @@ class DataInterface:
 
 
 class AggregationFunctionInterface:
+    """Registers aggregation functions per task.
+
+    To be serialized and sent to aggregator node.
+
+    There is no support for aggregation functions
+    containing logic from workspace-related libraries
+    that are not present on director yet.
+    """
+
     def __init__(self):
+        """Initialize aggregation function registry."""
         # Mapping task name -> callable
         self.aggregation_functions = {}
 
