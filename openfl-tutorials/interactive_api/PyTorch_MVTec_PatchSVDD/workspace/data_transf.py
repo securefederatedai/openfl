@@ -31,14 +31,14 @@ def gray2rgb(images):
 
 
 def detection_auroc(obj, anomaly_scores, labels):
-    """detection auroc calculation."""
+    """Calculate detection auroc."""
     # 1: anomaly 0: normal
     auroc = roc_auc_score(labels, anomaly_scores)
     return auroc
 
 
 def segmentation_auroc(obj, anomaly_maps, masks):
-    """segmentation auroc calculation."""
+    """Calculate segmentation auroc."""
     gt = masks
     gt = gt.astype(np.int32)
     gt[gt == 255] = 1  # 1: anomaly
