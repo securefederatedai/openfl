@@ -26,11 +26,20 @@ The following is an example of a **plan.yaml**:
 Configurable Settings
 =====================
 
-- :class:`Aggregator <openfl.component.Aggregator>`
-- :class:`Collaborator <openfl.component.Collaborator>`
+:class:`Aggregator <openfl.component.Aggregator>`
+    `openfl.component.Aggregator <https://github.com/intel/openfl/blob/develop/openfl/component/aggregator/aggregator.py>`_
+    
+:class:`Collaborator <openfl.component.Collaborator>`
+    `openfl.component.Collaborator <https://github.com/intel/openfl/blob/develop/openfl/component/collaborator/collaborator.py>`_
+    
 - :class:`Data Loader <openfl.federated.data.loader.DataLoader>`
+    `openfl.federated.data.loader.DataLoader <https://github.com/intel/openfl/blob/develop/openfl/federated/data/loader.py>`_
+
 - :class:`Task Runner <openfl.federated.task.runner.TaskRunner>`
+    `openfl.federated.task.runner.TaskRunner <https://github.com/intel/openfl/blob/develop/openfl/federated/task/runner.py>`_
+
 - :class:`Assigner <openfl.component.Assigner>`
+    `openfl.component.Assigner <https://github.com/intel/openfl/blob/develop/openfl/component/assigner/assigner.py>`_
 
 
 Tasks
