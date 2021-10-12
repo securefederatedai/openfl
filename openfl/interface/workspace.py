@@ -81,7 +81,6 @@ def create(prefix, template):
         OPENFL_USERDIR.mkdir()
 
     prefix = Path(prefix).absolute()
-    template = Path(template).absolute()
 
     create_dirs(prefix)
     create_temp(prefix, template)
