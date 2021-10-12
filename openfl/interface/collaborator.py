@@ -192,14 +192,14 @@ def register_collaborator(file_name):
     from yaml import dump
     from yaml import FullLoader
     from yaml import load
+    from pathlib import Path
 
     col_name = find_certificate_name(file_name)
 
     cols_file = Path('plan/cols.yaml').absolute()
 
     if not isfile(cols_file):
-        from pathlib import Path
-        Path(cols_file).touch()
+        cols_file.touch()
     with open(cols_file, 'r') as f:
         doc = load(f, Loader=FullLoader)
 
