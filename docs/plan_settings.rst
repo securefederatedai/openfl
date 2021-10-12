@@ -26,10 +26,10 @@ The following is an example of a **plan.yaml**:
 Configurable Settings
 =====================
 
-:class:`Aggregator <openfl.component.Aggregator>`
+- :class:`Aggregator <openfl.component.Aggregator>`
     `openfl.component.Aggregator <https://github.com/intel/openfl/blob/develop/openfl/component/aggregator/aggregator.py>`_
     
-:class:`Collaborator <openfl.component.Collaborator>`
+- :class:`Collaborator <openfl.component.Collaborator>`
     `openfl.component.Collaborator <https://github.com/intel/openfl/blob/develop/openfl/component/collaborator/collaborator.py>`_
     
 - :class:`Data Loader <openfl.federated.data.loader.DataLoader>`
