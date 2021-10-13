@@ -260,8 +260,8 @@ class Plan(object):
 
         defaults[SETTINGS]['authorized_cols'] = self.authorized_cols
         defaults[SETTINGS]['rounds_to_train'] = self.rounds_to_train
-        aggregation_function_interface = self.restore_object('aggregation_function_obj.pkl')
-        defaults[SETTINGS]['tasks'] = self.get_tasks(aggregation_function_interface)
+        aggregation_functions_by_task = self.restore_object('aggregation_function_obj.pkl')
+        defaults[SETTINGS]['tasks'] = self.get_tasks(aggregation_functions_by_task)
 
         if self.assigner_ is None:
             self.assigner_ = Plan.build(**defaults)
@@ -296,15 +296,15 @@ class Plan(object):
 
         return self.aggregator_
 
-    def get_tasks(self, aggregation_function_interface=None):
+    def get_tasks(self, aggregation_functions_by_task=None):
         """Get federation tasks."""
         tasks = self.config.get('tasks', {})
         tasks.pop(DEFAULTS, None)
         tasks.pop(SETTINGS, None)
-        if aggregation_function_interface:
+        if aggregation_functions_by_task:
             for task in tasks:
                 function_name = tasks[task]['function']
-                agg_fn = aggregation_function_interface.get_aggregation_function(function_name)
+                agg_fn = aggregation_functions_by_task[function_name]
                 tasks[task]['aggregation_type'] = agg_fn
             return tasks
         for task in tasks:

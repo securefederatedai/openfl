@@ -121,7 +121,7 @@ class FLExperiment:
         self.logger.info(log_message)
 
     def prepare_workspace_distribution(
-            self, model_provider, task_keeper, data_loader, aggregation_function_interface,
+            self, model_provider, task_keeper, data_loader,
             rounds_to_train,
             delta_updates=False, opt_treatment='RESET'):
         """Prepare an archive from a user workspace."""
@@ -133,8 +133,7 @@ class FLExperiment:
                            dataloader_interface_file='loader_obj.pkl')
 
         # Save serialized python objects to disc
-        self._serialize_interface_objects(model_provider, task_keeper, data_loader,
-                                          aggregation_function_interface)
+        self._serialize_interface_objects(model_provider, task_keeper, data_loader)
         # Save the prepared plan
         Plan.dump(Path(f'./plan/{self.plan.name}'), self.plan.config, freeze=False)
 
@@ -148,13 +147,10 @@ class FLExperiment:
         # DO CERTIFICATES exchange
 
     def start(self, *, model_provider, task_keeper, data_loader,
-              rounds_to_train, delta_updates=False, opt_treatment='RESET',
-              aggregation_function_interface=None):
+              rounds_to_train, delta_updates=False, opt_treatment='RESET'):
         """Prepare experiment and run."""
-        if aggregation_function_interface is None:
-            aggregation_function_interface = AggregationFunctionInterface()
         self.prepare_workspace_distribution(
-            model_provider, task_keeper, data_loader, aggregation_function_interface,
+            model_provider, task_keeper, data_loader,
             rounds_to_train, delta_updates=delta_updates, opt_treatment=opt_treatment
         )
         self.logger.info('Starting experiment!')
@@ -330,8 +326,7 @@ class FLExperiment:
         ]
         self.plan = deepcopy(plan)
 
-    def _serialize_interface_objects(self, model_provider, task_keeper, data_loader,
-                                     aggregation_function_interface):
+    def _serialize_interface_objects(self, model_provider, task_keeper, data_loader):
         """Save python objects to be restored on collaborators."""
         serializer = self.plan.build(
             self.plan.config['api_layer']['required_plugin_components']['serializer_plugin'], {})
@@ -343,7 +338,7 @@ class FLExperiment:
             'model_interface_file': model_provider,
             'tasks_interface_file': task_keeper,
             'dataloader_interface_file': data_loader,
-            'aggregation_function_interface_file': aggregation_function_interface
+            'aggregation_function_interface_file': task_keeper.aggregation_functions
         }
 
         for filename, object_ in obj_dict.items():
@@ -371,6 +366,8 @@ class TaskInterface:
         self.task_contract = {}
         # Mapping 'task name' -> arguments
         self.task_settings = defaultdict(dict)
+        # Mapping 'task name' -> callable
+        self.aggregation_functions = defaultdict(WeightedAverage())
 
     def register_fl_task(self, model, data_loader, device, optimizer=None):
         """
@@ -431,6 +428,34 @@ class TaskInterface:
 
             return training_method
 
+        return decorator_with_args
+
+    def set_aggregation_function(self, aggregation_function: AggregationFunction):
+        """Set aggregation function for the task.
+
+        To be serialized and sent to aggregator node.
+
+        There is no support for aggregation functions
+        containing logic from workspace-related libraries
+        that are not present on director yet.
+
+        Args:
+            aggregation_function: Aggregation function.
+
+        You might need to override default FedAvg aggregation with built-in aggregation types:
+            - openfl.component.aggregation_functions.GeometricMedian
+            - openfl.component.aggregation_functions.Median
+        or define your own AggregationFunction subclass.
+        See more details on `Overriding the aggregation function`_ documentation page.
+        .. _Overriding the aggregation function:
+            https://openfl.readthedocs.io/en/latest/overriding_agg_fn.html
+        """
+        def decorator_with_args(training_method):
+            if not isinstance(aggregation_function, AggregationFunction):
+                raise Exception('aggregation_function must implement '
+                                'AggregationFunction interface.')
+            self.aggregation_functions[training_method.__name__] = aggregation_function
+            return training_method
         return decorator_with_args
 
 
@@ -515,53 +540,3 @@ class DataInterface:
     def get_valid_data_size(self):
         """Information for aggregation."""
         raise NotImplementedError
-
-
-class AggregationFunctionInterface:
-    """Registers aggregation functions per task.
-
-    To be serialized and sent to aggregator node.
-
-    There is no support for aggregation functions
-    containing logic from workspace-related libraries
-    that are not present on director yet.
-    """
-
-    def __init__(self):
-        """Initialize aggregation function registry."""
-        # Mapping task name -> callable
-        self.aggregation_functions = {}
-
-    def set_aggregation_function(self, aggregation_function: AggregationFunction):
-        """Set aggregation function for the task.
-
-        Args:
-            aggregation_function: Aggregation function.
-
-        You might need to override default FedAvg aggregation with built-in aggregation types:
-            - openfl.component.aggregation_functions.GeometricMedian
-            - openfl.component.aggregation_functions.Median
-        or define your own AggregationFunction subclass.
-        See more details on `Overriding the aggregation function`_ documentation page.
-        .. _Overriding the aggregation function:
-            https://openfl.readthedocs.io/en/latest/overriding_agg_fn.html
-        """
-        def decorator_with_args(training_method):
-            if not isinstance(aggregation_function, AggregationFunction):
-                raise Exception('aggregation_function must implement '
-                                'AggregationFunction interface.')
-            self.aggregation_functions[training_method.__name__] = aggregation_function
-            return training_method
-        return decorator_with_args
-
-    def get_aggregation_function(self, function_name):
-        """Get aggregation type for the task function.
-
-        Args:
-            function_name(str): Task function name.
-        Returns:
-            Return value. Aggregation function.
-        """
-        if function_name not in self.aggregation_functions:
-            return WeightedAverage()
-        return self.aggregation_functions[function_name]

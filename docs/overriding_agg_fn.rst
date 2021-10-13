@@ -64,17 +64,16 @@ Example of ``plan/plan.yaml`` with modified aggregation function:
 Interactive API
 ================
 You can override aggregation function that will be used for the task this function corresponds to.
-In order to do this, call the ``set_agg_fn`` decorator method of ``AggregationFunctionInterface`` and pass ``AggregationFunction`` subclass instance as a parameter.
+In order to do this, call the ``set_aggregation_function`` decorator method of ``TaskInterface`` and pass ``AggregationFunction`` subclass instance as a parameter.
 For example, you can try:
 
 ..code_block:: python
     from openfl.component.aggregation_functions import Median
     TI = TaskInterface()
-    AFI = AggregationFunctionInterface()
     agg_fn = Median()
     @TI.register_fl_task(model='model', data_loader='train_loader', \
                      device='device', optimizer='optimizer')
-    @AFI.set_agg_fn(agg_fn)
+    @TI.set_aggregation_function(agg_fn)
 
 
 ``AggregationFunction`` requires a single ``call`` function.
