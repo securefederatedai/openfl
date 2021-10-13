@@ -367,7 +367,7 @@ class TaskInterface:
         # Mapping 'task name' -> arguments
         self.task_settings = defaultdict(dict)
         # Mapping 'task name' -> callable
-        self.aggregation_functions = defaultdict(WeightedAverage())
+        self.aggregation_functions = defaultdict(WeightedAverage)
 
     def register_fl_task(self, model, data_loader, device, optimizer=None):
         """
