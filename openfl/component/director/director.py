@@ -9,8 +9,8 @@ import time
 from collections import defaultdict
 from pathlib import Path
 from typing import Iterable
-from typing import Union
 from typing import List
+from typing import Union
 
 from openfl.protocols import director_pb2
 from .experiment import Experiment
@@ -205,6 +205,7 @@ class Director:
         return envoy_infos
 
     def get_experiments(self, caller: str) -> list:
+        """Get experiments list for specific user."""
         experiments = self.experiments_registry.get_user_experiments(caller)
         result = []
         for exp in experiments:
@@ -224,6 +225,7 @@ class Director:
         return result
 
     def get_experiment(self, caller: str, name: str) -> dict:
+        """Get a experiment information by name for specific user."""
         exp = self.experiments_registry.get(name)
         if not exp or caller not in exp.users:
             return {}

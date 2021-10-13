@@ -172,6 +172,7 @@ class ExperimentsRegistry:
         return self.__dict.get(key, default)
 
     def get_user_experiments(self, user: str) -> List[Experiment]:
+        """Get list of experiments for specific user."""
         return [
             exp
             for exp in self.__dict.values()

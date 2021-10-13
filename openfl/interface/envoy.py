@@ -4,11 +4,11 @@
 
 import logging
 import shutil
+import sys
 from importlib import import_module
 from pathlib import Path
 
 import click
-import sys
 from click import group
 from click import option
 from click import pass_context
@@ -18,7 +18,6 @@ from yaml import safe_load
 from openfl.component.envoy.envoy import Envoy
 from openfl.interface.cli_helper import WORKSPACE
 from openfl.utilities import click_types
-
 
 logger = logging.getLogger(__name__)
 
