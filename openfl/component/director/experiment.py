@@ -171,6 +171,13 @@ class ExperimentsRegistry:
         """Get experiment by name."""
         return self.__dict.get(key, default)
 
+    def get_user_experiments(self, user: str) -> List[Experiment]:
+        return [
+            exp
+            for exp in self.__dict.values()
+            if user in exp.users
+        ]
+
     def __contains__(self, key: str) -> bool:
         """Check if experiment exists."""
         return key in self.__dict

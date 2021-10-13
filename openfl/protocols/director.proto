@@ -164,6 +164,7 @@ message EnvoyInfo {
   bool is_experiment_running = 3;
   google.protobuf.Timestamp last_updated = 4;
   google.protobuf.Duration valid_duration = 5;
+  string experiment_name = 6;
 }
 
 message GetEnvoysRequest {}

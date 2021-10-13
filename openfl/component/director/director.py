@@ -12,8 +12,6 @@ from typing import Iterable
 from typing import Union
 from typing import List
 
-import time
-
 from openfl.protocols import director_pb2
 from .experiment import Experiment
 from .experiment import ExperimentsRegistry
@@ -27,8 +25,7 @@ class Director:
     """Director class."""
 
     def __init__(
-            self,
-            *,
+            self, *,
             tls: bool = True,
             root_certificate: Union[Path, str] = None,
             private_key: Union[Path, str] = None,
@@ -47,6 +44,7 @@ class Director:
         self.experiments_registry = ExperimentsRegistry()
         self.settings = settings or {}
         self.col_exp_queues = defaultdict(asyncio.Queue)
+        self.col_exp = {}
 
     def acknowledge_shard(self, shard_info: director_pb2.ShardInfo) -> bool:
         """Save shard info to shard registry if it's acceptable."""
@@ -65,8 +63,7 @@ class Director:
         return is_accepted
 
     async def set_new_experiment(
-            self,
-            *,
+            self, *,
             experiment_name: str,
             sender_name: str,
             tensor_dict: dict,
@@ -112,8 +109,10 @@ class Director:
 
     async def wait_experiment(self, envoy_name: str) -> str:
         """Wait an experiment."""
+        self.col_exp[envoy_name] = None
         queue = self.col_exp_queues[envoy_name]
         experiment_name = await queue.get()
+        self.col_exp[envoy_name] = experiment_name
 
         return experiment_name
 
@@ -195,7 +194,8 @@ class Director:
             envoy_info = director_pb2.EnvoyInfo(
                 shard_info=envoy['shard_info'],
                 is_online=time.time() < envoy['last_updated'] + envoy['valid_duration'],
-                is_experiment_running=envoy['is_experiment_running']
+                is_experiment_running=envoy['is_experiment_running'],
+                experiment_name=self.col_exp[envoy['shard_info'].node_info.name],
             )
             envoy_info.valid_duration.seconds = envoy['valid_duration']
             envoy_info.last_updated.seconds = int(envoy['last_updated'])
@@ -205,19 +205,18 @@ class Director:
         return envoy_infos
 
     def get_experiments(self, caller: str) -> list:
-        experiments = self.experiment_stash.get(caller, {})
+        experiments = self.experiments_registry.get_user_experiments(caller)
         result = []
-        for name, exp in experiments.items():
-            collaborators_amount = len(exp.aggregator.authorized_cols)
+        for exp in experiments:
             tasks_amount = len({
                 task['function']
                 for task in exp.aggregator.assigner.tasks.values()
             })
             progress = _get_experiment_progress(exp)
             result.append({
-                'name': name,
-                'status': 'pending_mock',
-                'collaborators_amount': collaborators_amount,
+                'name': exp.name,
+                'status': exp.status,
+                'collaborators_amount': len(exp.collaborators),
                 'tasks_amount': tasks_amount,
                 'progress': progress,
             })
@@ -234,7 +233,7 @@ class Director:
         collaborators = _get_experiment_collaborators(exp)
         return {
             'name': name,
-            'status': 'pending_mock',
+            'status': exp.status,
             'progress': progress,
             'currentRound': exp.aggregator.round_number,
             'totalRounds': exp.aggregator.rounds_to_train,
