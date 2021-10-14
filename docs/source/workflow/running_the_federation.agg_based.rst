@@ -40,7 +40,7 @@ An overview of this workflow is shown below.
    :maxdepth: 3
    :hidden:
 
-   running_the_federation.docker
    running_the_federation.manual
+   running_the_federation.docker
    ../../plan_settings
    
