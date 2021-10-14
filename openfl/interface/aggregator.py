@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 """Aggregator module."""
 
+import sys
 from logging import getLogger
 
 from click import echo
@@ -12,6 +13,7 @@ from click import Path as ClickPath
 from click import style
 
 from openfl.utilities import click_types
+from openfl.utilities.path_check import is_directory_traversal
 from openfl.utilities.utils import getfqdn_env
 
 logger = getLogger(__name__)
@@ -39,6 +41,13 @@ def start_(plan, authorized_cols, secure):
     from pathlib import Path
 
     from openfl.federated import Plan
+
+    if is_directory_traversal(plan):
+        echo('Federated learning plan path is out of the openfl workspace scope.')
+        sys.exit(1)
+    if is_directory_traversal(authorized_cols):
+        echo('Authorized collaborator list file path is out of the openfl workspace scope.')
+        sys.exit(1)
 
     plan = Plan.parse(plan_config_path=Path(plan).absolute(),
                       cols_config_path=Path(authorized_cols).absolute())
