@@ -20,9 +20,9 @@ This workflow uses short-lived components in a federation, which is terminated w
 - The *Aggregator* is framework-agnostic, while the *Collaborator* can use any deep learning frameworks, such as `TensorFlow <https://www.tensorflow.org/>`_\* \  or `PyTorch <https://pytorch.org/>`_\*\.
 
 .. note::
-    You customize this workflow with the Federated Learning Plan (FL Plan), which is a `YAML <https://en.wikipedia.org/wiki/YAML>`_ file that defines the collaborators, aggregator, connections, models, data, and any other parameters that describe the training.
+    To modify the federation workspace to your requirements, you edit the Federated Learning plan (FL plan) along with the Python code defining the model and the data loader. The FL plan is a `YAML <https://en.wikipedia.org/wiki/YAML>`_ file that defines the collaborators, aggregator, connections, models, data, and any other parameters that describe the training.
 
-    In the `"Hello Federation" demonstration <https://github.com/intel/openfl/blob/develop/tests/github/test_hello_federation.sh>`_, the FL plan is described by the **plan.yaml** file located in the **plan**  directory of the workspace. To modify the federation workspace to your requirements, you edit the FL plan along with the Python code defining the model and the data loader.
+    In the `"Hello Federation" demonstration <https://github.com/intel/openfl/blob/develop/tests/github/test_hello_federation.sh>`_, the FL plan is described by the **plan.yaml** file located in the **plan**  directory of the workspace. 
     
     See :doc:`../../plan_settings` for details.
 
