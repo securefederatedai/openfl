@@ -7,6 +7,13 @@
 Advanced Topics
 ***************
 
+Speed up activating |productName| commands:
+
+- :doc:`bash_autocomplete_activation`
+
+Aggregator-Based Workflow
+=========================
+
 Learn to manage multiple Federation Learning plans (FL plan) in the same workspace:
 
 - :doc:`multiple_plans`
@@ -15,14 +22,15 @@ Reduce the amount of data transferred in a federation through compression pipeli
 
 - :doc:`compression_settings`
 
+Director-Based Workflow
+=======================
+
 Customize the functions in the federation:
 
 - :doc:`overriding_agg_fn`
 - :doc:`log_metric_callback`
 
-Speed up activating |productName| commands:
 
-- :doc:`bash_autocomplete_activation`
 
 
 
@@ -30,9 +38,10 @@ Speed up activating |productName| commands:
    :maxdepth: 4
    :hidden:
 
+   bash_autocomplete_activation
    multiple_plans
    compression_settings
    overriding_agg_fn
    log_metric_callback
-   bash_autocomplete_activation
+   
    
