@@ -5,11 +5,11 @@
 Manual
 ******
 
-Learn what is |productName| and federated learning:
+Learn what is Open Federated Learning (|productName|):
 
 - :doc:`overview`
 
-Establish an |productName| federation:
+Establish a federation with |productName|:
 
 - :doc:`install`
 - :doc:`running_the_federation`
