@@ -40,8 +40,8 @@ def start_(plan, authorized_cols, secure):
 
     from openfl.federated import Plan
 
-    plan = Plan.parse(plan_config_path=Path(plan),
-                      cols_config_path=Path(authorized_cols))
+    plan = Plan.parse(plan_config_path=Path(plan).absolute(),
+                      cols_config_path=Path(authorized_cols).absolute())
 
     logger.info('🧿 Starting the Aggregator Service.')
 
@@ -131,39 +131,44 @@ def certify(fqdn, silent):
     signing_crt_path = 'ca/signing-ca.crt'
 
     # Load CSR
-    if not Path(CERT_DIR / f'{cert_name}.csr').exists():
+    csr_path_absolute_path = Path(CERT_DIR / f'{cert_name}.csr').absolute()
+    if not csr_path_absolute_path.exists():
         echo(style('Aggregator certificate signing request not found.', fg='red')
              + ' Please run `fx aggregator generate-cert-request`'
                ' to generate the certificate request.')
 
-    csr, csr_hash = read_csr(CERT_DIR / f'{cert_name}.csr')
+    csr, csr_hash = read_csr(csr_path_absolute_path)
 
     # Load private signing key
-    if not Path(CERT_DIR / signing_key_path).exists():
+    private_sign_key_absolute_path = Path(CERT_DIR / signing_key_path).absolute()
+    if not private_sign_key_absolute_path.exists():
         echo(style('Signing key not found.', fg='red')
              + ' Please run `fx workspace certify`'
                ' to initialize the local certificate authority.')
 
-    signing_key = read_key(CERT_DIR / signing_key_path)
+    signing_key = read_key(private_sign_key_absolute_path)
 
     # Load signing cert
-    if not Path(CERT_DIR / signing_crt_path).exists():
+    signing_crt_absolute_path = Path(CERT_DIR / signing_crt_path).absolute()
+    if not signing_crt_absolute_path.exists():
         echo(style('Signing certificate not found.', fg='red')
              + ' Please run `fx workspace certify`'
                ' to initialize the local certificate authority.')
 
-    signing_crt = read_crt(CERT_DIR / signing_crt_path)
+    signing_crt = read_crt(signing_crt_absolute_path)
 
     echo('The CSR Hash for file '
          + style(f'{cert_name}.csr', fg='green')
          + ' = '
          + style(f'{csr_hash}', fg='red'))
 
+    crt_path_absolute_path = Path(CERT_DIR / f'{cert_name}.crt').absolute()
+
     if silent:
 
         echo(' Signing AGGREGATOR certificate')
         signed_agg_cert = sign_certificate(csr, signing_key, signing_crt.subject)
-        write_crt(signed_agg_cert, CERT_DIR / f'{cert_name}.crt')
+        write_crt(signed_agg_cert, crt_path_absolute_path)
 
     else:
 
@@ -171,7 +176,7 @@ def certify(fqdn, silent):
 
             echo(' Signing AGGREGATOR certificate')
             signed_agg_cert = sign_certificate(csr, signing_key, signing_crt.subject)
-            write_crt(signed_agg_cert, CERT_DIR / f'{cert_name}.crt')
+            write_crt(signed_agg_cert, crt_path_absolute_path)
 
         else:
             echo(style('Not signing certificate.', fg='red')

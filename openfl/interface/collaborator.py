@@ -39,8 +39,8 @@ def start_(plan, collaborator_name, data_config, secure):
 
     from openfl.federated import Plan
 
-    plan = Plan.parse(plan_config_path=Path(plan),
-                      data_config_path=Path(data_config))
+    plan = Plan.parse(plan_config_path=Path(plan).absolute(),
+                      data_config_path=Path(data_config).absolute())
 
     # TODO: Need to restructure data loader config file loader
 
@@ -192,14 +192,14 @@ def register_collaborator(file_name):
     from yaml import dump
     from yaml import FullLoader
     from yaml import load
+    from pathlib import Path
 
     col_name = find_certificate_name(file_name)
 
-    cols_file = 'plan/cols.yaml'
+    cols_file = Path('plan/cols.yaml').absolute()
 
     if not isfile(cols_file):
-        from pathlib import Path
-        Path(cols_file).touch()
+        cols_file.touch()
     with open(cols_file, 'r') as f:
         doc = load(f, Loader=FullLoader)
 
