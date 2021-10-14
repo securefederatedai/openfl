@@ -33,7 +33,7 @@ Procedure
        docker run -it --network host openfl
    
 
-You can now experiment with |productName| in the container. For example, you can test the project pipeline with the :download:`"Hello Federation" bash script <../../../tests/github/test_hello_federation.sh>`.
+You can now experiment with |productName| in the container. For example, you can test the project pipeline with the `"Hello Federation" bash script <https://github.com/intel/openfl/blob/develop/tests/github/test_hello_federation.sh>`_.
 
 
 
