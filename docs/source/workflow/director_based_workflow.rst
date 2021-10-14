@@ -18,9 +18,10 @@ The director-based workflow comprises the following roles and their tasks:
     - :ref:`establishing_federation_envoy`
     - :ref:`establishing_federation_experiment_manager`
 
-.. note::
+Follow the procedure in the director-based workflow to become familiar with the setup required and APIs provided for each role in the federation: *Director manager*, *Collaborator manager*, and *Experiment manager (data scientist)*. 
 
-	Follow the procedure in the director-based workflow to become familiar with the setup required and APIs provided for each role in the federation: *Director manager*, *Collaborator manager*, and *Experiment manager (data scientist)*. 
+.. note::
+    The |productName| interactive Python API enables the Experiment manager (data scientists) to define and start a federated learning experiment from a single entry point: a Jupyter/*/  notebook or a Python/*/ script. See :doc:`director_based_workflow.interactive_api` for details.
 
 An overview of this workflow is shown below.
 
