@@ -44,7 +44,7 @@ RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.8 1
 RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py && python get-pip.py && rm -rf get-pip.py
 RUN pip install --no-cache-dir  .
 
-HEALTHCHECK  --interval=1m --timeout=3s \
+HEALTHCHECK  --interval=30m --timeout=3s \
   CMD echo "Container works" || exit 1
 
 CMD [ "/bin/bash" ]
