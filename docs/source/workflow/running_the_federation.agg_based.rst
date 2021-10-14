@@ -26,13 +26,10 @@ An overview of this workflow is shown below.
 .. centered:: Overview of the Aggregator-Based Workflow
 
 
-Design Philosophy
-=================
+.. note::
+    You customize this workflow with the Federated Learning Plan (FL Plan), which is a `YAML <https://en.wikipedia.org/wiki/YAML>`_ file that defines the collaborators, aggregator, connections, models, data, and any other parameters that describe the training.
 
-You customize this workflow with the Federated Learning Plan (FL Plan), which is a `YAML <https://en.wikipedia.org/wiki/YAML>`_ file that defines the collaborators, aggregator, connections, models, data,
-and any other parameters that describe the training.
-
-In the `"Hello Federation" demonstration <https://github.com/intel/openfl/blob/develop/tests/github/test_hello_federation.sh>`_, the FL plan is described by the **plan.yaml** file located in the **plan** directory of the workspace. To modify the federation workspace to your requirements, you edit the FL plan along with the Python code defining the model and the data loader.
+    In the `"Hello Federation" demonstration <https://github.com/intel/openfl/blob/develop/tests/github/test_hello_federation.sh>`_, the FL plan is described by the **plan.yaml** file located in the **plan**  directory of the workspace. To modify the federation workspace to your requirements, you edit the FL plan along with the Python code defining the model and the data loader.
 
 
 
