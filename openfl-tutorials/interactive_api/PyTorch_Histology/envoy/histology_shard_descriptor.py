@@ -3,22 +3,21 @@
 
 """Histology Shard Descriptor."""
 
-
 import logging
 import os
+from functools import partial
 from pathlib import Path
 from typing import Tuple
-from torch.utils.data.dataset import Subset
-from tqdm import tqdm
 from urllib.request import urlretrieve
 from zipfile import ZipFile
-from torchvision.datasets import ImageFolder
 
+import numpy as np
 from base import ShardDataset
 from base import ShardDescriptor
 from PIL import Image
-import numpy as np
-from functools import partial
+from torch.utils.data.dataset import Subset
+from torchvision.datasets import ImageFolder
+from tqdm import tqdm
 
 from openfl.utilities import validate_file_hash
 
