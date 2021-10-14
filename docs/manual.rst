@@ -16,7 +16,7 @@ Establish a federation with |productName|:
 
 Customize the federation:
 
-- :doc:`plan_settings`
+- :doc:`plan_settings` (for aggregator-based workflow)
 - :doc:`source/utilities/utilities`
 - :doc:`advanced_topics`
 

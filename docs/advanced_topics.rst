@@ -6,13 +6,12 @@
 ***************
 Advanced Topics
 ***************
-
+**General**
 Speed up activating |productName| commands:
 
 - :doc:`bash_autocomplete_activation`
 
-Aggregator-Based Workflow
-=========================
+**Aggregator-Based Workflow**
 
 Learn to manage multiple Federation Learning plans (FL plan) in the same workspace:
 
@@ -22,8 +21,7 @@ Reduce the amount of data transferred in a federation through compression pipeli
 
 - :doc:`compression_settings`
 
-Director-Based Workflow
-=======================
+**Director-Based Workflow**
 
 Customize the functions in the federation:
 
