@@ -1,7 +1,7 @@
 # Copyright (C) 2020-2021 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""TinyImageNet Shard Descriptor."""
+"""Histology Shard Descriptor."""
 
 
 import logging
@@ -13,7 +13,6 @@ from tqdm import tqdm
 from urllib.request import urlretrieve
 from zipfile import ZipFile
 from torchvision.datasets import ImageFolder
-from typing import Iterable
 
 from base import ShardDataset
 from base import ShardDescriptor
@@ -25,7 +24,10 @@ from openfl.utilities import validate_file_hash
 
 logger = logging.getLogger(__name__)
 
+
 class HistologyDataset(ImageFolder):
+    """Colorectal Histology Dataset."""
+
     URL = ('https://zenodo.org/record/53169/files/Kather_'
            'texture_2016_image_tiles_5000.zip?download=1')
     FILENAME = 'Kather_texture_2016_image_tiles_5000.zip'
@@ -42,11 +44,14 @@ class HistologyDataset(ImageFolder):
 
 class HistologyShardDataset(ShardDataset):
     """Histology shard dataset class."""
+
     TRAIN_SPLIT_RATIO = 0.8
+
     def __init__(self, data_folder: Path, data_type='train', rank=1, worldsize=1):
+        """Histology shard dataset class."""
         self.data_type = data_type
         dataset = HistologyDataset(data_folder)
-        
+
         idx_range = list(range(len(dataset)))
         idx_sep = int(len(idx_range) * HistologyShardDataset.TRAIN_SPLIT_RATIO)
         train_idx, test_idx = np.split(idx_range, [idx_sep])
@@ -74,7 +79,7 @@ class HistologyShardDescriptor(ShardDescriptor):
             rank_worldsize: str = '1,1',
             **kwargs
     ):
-        """Initialize TinyImageNetShardDescriptor."""
+        """Initialize HistologyShardDescriptor."""
         self.data_folder = Path.cwd() / data_folder
         self.download_data()
         self.rank, self.worldsize = tuple(int(num) for num in rank_worldsize.split(','))
