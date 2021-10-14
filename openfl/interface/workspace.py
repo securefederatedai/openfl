@@ -187,10 +187,6 @@ def import_(archive):
     from subprocess import check_call
     from sys import executable
 
-    if is_directory_traversal(archive):
-        echo('Archive path is out of the openfl workspace scope.')
-        sys.exit(1)
-
     archive = Path(archive).absolute()
 
     dir_path = basename(archive).split('.')[0]
