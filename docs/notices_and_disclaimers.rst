@@ -13,4 +13,4 @@ Notices and Disclaimers
 
 Your costs and results may vary. 
 
-​​No license (express or implied, by estoppel or otherwise) to any intellectual property rights is granted by this document, with the sole exception that code included in this document is licensed subject to the Zero-Clause BSD open source license (0BSD), `https://opensource.org/licenses/0BSD <https://opensource.org/licenses/0BSD>`_.
+​​No license (express or implied, by estoppel or otherwise) to any intellectual property rights is granted by this document.
