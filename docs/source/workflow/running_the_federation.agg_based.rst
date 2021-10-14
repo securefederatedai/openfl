@@ -24,7 +24,7 @@ This workflow uses short-lived components in a federation, which is terminated w
 
     In the `"Hello Federation" demonstration <https://github.com/intel/openfl/blob/develop/tests/github/test_hello_federation.sh>`_, the FL plan is described by the **plan.yaml** file located in the **plan**  directory of the workspace. To modify the federation workspace to your requirements, you edit the FL plan along with the Python code defining the model and the data loader.
     
-    See :doc:`../plan_settings` for details.
+    See :doc:`../../plan_settings` for details.
 
 An overview of this workflow is shown below.
 
