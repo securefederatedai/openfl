@@ -3,9 +3,9 @@
 
 .. _plan_settings:
 
-***************
-Plan Settings
-***************
+******************************************
+Federated Learning Plan (FL Plan) Settings
+******************************************
 
 The Federated Learning plan (FL plan) is described by the **plan.yaml** file located in the **plan** directory of the workspace.
 
