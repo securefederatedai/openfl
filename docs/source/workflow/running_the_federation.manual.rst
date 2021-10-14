@@ -14,7 +14,7 @@ Bare Metal Approach
     See :ref:`install_package` for details.
 
 
-You can use the `"Hello Federation" bash script <https://github.com/intel/openfl/blob/develop/tests/github/test_hello_federation.sh>` to quickly create a federation (an aggregator node and two collaborator nodes) to test the project pipeline.
+You can use the `"Hello Federation" bash script <https://github.com/intel/openfl/blob/develop/tests/github/test_hello_federation.sh>`_ to quickly create a federation (an aggregator node and two collaborator nodes) to test the project pipeline.
 
 .. literalinclude:: ../tests/github/test_hello_federation.sh
   :language: bash

@@ -80,13 +80,13 @@ STEP 1: Create a Workspace on the Aggregator
     
     If you have connection issues with the autopopulated FQDN in the FL plan, you can do **one of the following**:
     
-	- override the autopopulated FQDN value with the :code:`-a` flag
+	- OPTION 1: override the autopopulated FQDN value with the :code:`-a` flag.
 	
 		.. code-block:: console
 		
 			fx plan initialize -a aggregator-hostname.internal-domain.com
 		
-	- override the apparent FQDN of the system by setting an FQDN environment variable,
+	- OPTION 2: override the apparent FQDN of the system by setting an FQDN environment variable.
 	
 		.. code-block:: console
 		

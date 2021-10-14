@@ -73,7 +73,7 @@ Procedure
 
     .. note::
     
-        The FL Plan should be initialized with the FQDN of the node where the aggregator container will be running.
+        The FL plan should be initialized with the FQDN of the node where the aggregator container will be running.
 
 3. Generate public key infrastructure (PKI) certificates for all collaborators and the aggregator. See :doc:`/source/utilities/pki` for details.
 

@@ -62,7 +62,7 @@ For a basic experiment, run the following command.
      fx.init()
 	 
 	 
-This creates a workspace directory containing default FL Plan values for your experiments, and sets up a an experiment with two collaborators (the collaborators are creatively named 'one' and 'two').
+This creates a workspace directory containing default FL plan values for your experiments, and sets up a an experiment with two collaborators (the collaborators are creatively named 'one' and 'two').
 
 For an experiment with more collaborators, run the following command.
 
