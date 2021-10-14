@@ -24,6 +24,6 @@ The following are workflows you can consider when creating a federated learning 
 
    source/workflow/running_the_federation.agg_based
    source/workflow/director_based_workflow
-   plan_settings
+
 
    

@@ -42,4 +42,5 @@ An overview of this workflow is shown below.
 
    running_the_federation.docker
    running_the_federation.manual
+   ../../plan_settings
    
