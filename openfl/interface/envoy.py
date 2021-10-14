@@ -52,6 +52,14 @@ def start_(shard_name, director_host, director_port, tls, shard_config_path,
     """Start the Envoy."""
     logger.info('🧿 Starting the Envoy.')
 
+    shard_config_path = Path(shard_config_path).absolute()
+    if root_certificate:
+        root_certificate = Path(root_certificate).absolute()
+    if private_key:
+        private_key = Path(private_key).absolute()
+    if certificate:
+        certificate = Path(certificate).absolute()
+
     shard_descriptor = shard_descriptor_from_config(shard_config_path)
     envoy = Envoy(
         shard_name=shard_name,
@@ -72,7 +80,7 @@ def start_(shard_name, director_host, director_port, tls, shard_config_path,
         help='The Envoy path', type=ClickPath())
 def create(envoy_path):
     """Create an envoy workspace."""
-    envoy_path = Path(envoy_path)
+    envoy_path = Path(envoy_path).absolute()
     if envoy_path.exists():
         if not click.confirm('Envoy workspace already exists. Recreate?',
                              default=True):
