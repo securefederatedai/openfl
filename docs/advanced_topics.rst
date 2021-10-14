@@ -7,26 +7,27 @@
 Advanced Topics
 ***************
 **General**
-Speed up activating |productName| commands:
 
-- :doc:`bash_autocomplete_activation`
+    Speed up activating |productName| commands:
+
+    - :doc:`bash_autocomplete_activation`
 
 **Aggregator-Based Workflow**
 
-Learn to manage multiple Federation Learning plans (FL plan) in the same workspace:
+    Learn to manage multiple Federation Learning plans (FL plan) in the same workspace:
 
-- :doc:`multiple_plans`
+    - :doc:`multiple_plans`
 
-Reduce the amount of data transferred in a federation through compression pipelines available in |productName|:
+    Reduce the amount of data transferred in a federation through compression pipelines available in |productName|:
 
-- :doc:`compression_settings`
+    - :doc:`compression_settings`
 
 **Director-Based Workflow**
 
-Customize the functions in the federation:
+    Customize the functions in the federation:
 
-- :doc:`overriding_agg_fn`
-- :doc:`log_metric_callback`
+    - :doc:`overriding_agg_fn`
+    - :doc:`log_metric_callback`
 
 
 

@@ -7,6 +7,10 @@
 Federated Learning Plan (FL Plan) Settings
 ******************************************
 
+.. note::
+    Use the Federated Learning plan (FL plan) to modify the federation workspace to your requirements in an **aggregator-based workflow**.
+    
+
 The Federated Learning plan (FL plan) is described by the **plan.yaml** file located in the **plan** directory of the workspace.
 
 
