@@ -11,7 +11,6 @@ from pathlib import Path
 from typing import Iterable
 from typing import Union
 
-from openfl.protocols import director_pb2
 from .experiment import Experiment
 from .experiment import ExperimentsRegistry
 
