@@ -12,7 +12,7 @@ from yaml import dump
 from yaml import safe_load
 from yaml import SafeDumper
 
-from openfl.component.aggregation_functions import AggregationFunctionInterface
+from openfl.component.aggregation_functions import AggregationFunction
 from openfl.component.aggregation_functions import WeightedAverage
 from openfl.interface.cli_helper import WORKSPACE
 from openfl.transport import AggregatorGRPCServer
@@ -260,8 +260,8 @@ class Plan(object):
 
         defaults[SETTINGS]['authorized_cols'] = self.authorized_cols
         defaults[SETTINGS]['rounds_to_train'] = self.rounds_to_train
-        task_interface = self.restore_object('tasks_obj.pkl')
-        defaults[SETTINGS]['tasks'] = self.get_tasks(task_interface)
+        aggregation_functions_by_task = self.restore_object('aggregation_function_obj.pkl')
+        defaults[SETTINGS]['tasks'] = self.get_tasks(aggregation_functions_by_task)
 
         if self.assigner_ is None:
             self.assigner_ = Plan.build(**defaults)
@@ -296,14 +296,15 @@ class Plan(object):
 
         return self.aggregator_
 
-    def get_tasks(self, task_interface=None):
+    def get_tasks(self, aggregation_functions_by_task=None):
         """Get federation tasks."""
         tasks = self.config.get('tasks', {})
         tasks.pop(DEFAULTS, None)
         tasks.pop(SETTINGS, None)
-        if task_interface:
+        if aggregation_functions_by_task:
             for task in tasks:
-                agg_fn = task_interface.get_aggregation_function(tasks[task]['function'])
+                function_name = tasks[task]['function']
+                agg_fn = aggregation_functions_by_task[function_name]
                 tasks[task]['aggregation_type'] = agg_fn
             return tasks
         for task in tasks:
@@ -314,9 +315,9 @@ class Plan(object):
                 if SETTINGS not in aggregation_type:
                     aggregation_type[SETTINGS] = {}
                 aggregation_type = Plan.build(**aggregation_type)
-                if not isinstance(aggregation_type, AggregationFunctionInterface):
+                if not isinstance(aggregation_type, AggregationFunction):
                     raise NotImplementedError(f'''{task} task aggregation type does not implement an interface:
-openfl.component.aggregation_functions.AggregationFunctionInterface
+openfl.component.aggregation_functions.AggregationFunction
 ''')
             tasks[task]['aggregation_type'] = aggregation_type
         return tasks

@@ -135,7 +135,7 @@ def certify(name, cert_path: Path, token_with_cert, ca_path: Path):
 
     with open(f'{cert_path}/root_ca.crt', mode='wb') as file:
         file.write(root_certificate)
-    call(f'./{step_path} ca certificate {name} {cert_path}/{name}.crt '
+    call(f'{step_path} ca certificate {name} {cert_path}/{name}.crt '
          f'{cert_path}/{name}.key --kty EC --curve P-384 -f --token {token}', shell=True)
 
 
