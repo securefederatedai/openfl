@@ -5,7 +5,7 @@
 
 import numpy as np
 
-from .interface import AggregationFunctionInterface
+from .interface import AggregationFunction
 from .weighted_average import weighted_average
 
 
@@ -43,7 +43,7 @@ def _l2dist(p1, p2):
     return np.linalg.norm([np.linalg.norm(x1 - x2) for x1, x2 in zip(p1, p2)])
 
 
-class GeometricMedian(AggregationFunctionInterface):
+class GeometricMedian(AggregationFunction):
     """Geometric median aggregation."""
 
     def call(self, local_tensors, *_) -> np.ndarray:
