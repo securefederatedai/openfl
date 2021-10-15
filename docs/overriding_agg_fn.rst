@@ -67,12 +67,13 @@ You can override aggregation function that will be used for the task this functi
 In order to do this, call the ``set_aggregation_function`` decorator method of ``TaskInterface`` and pass ``AggregationFunction`` subclass instance as a parameter.
 For example, you can try:
 
-..code_block:: python
+.. code-block:: python
+
     from openfl.component.aggregation_functions import Median
     TI = TaskInterface()
     agg_fn = Median()
     @TI.register_fl_task(model='model', data_loader='train_loader', \
-                     device='device', optimizer='optimizer')
+                         device='device', optimizer='optimizer')
     @TI.set_aggregation_function(agg_fn)
 
 .. warning::
