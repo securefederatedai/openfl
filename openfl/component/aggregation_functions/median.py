@@ -5,10 +5,10 @@
 
 import numpy as np
 
-from .interface import AggregationFunctionInterface
+from .interface import AggregationFunction
 
 
-class Median(AggregationFunctionInterface):
+class Median(AggregationFunction):
     """Median aggregation."""
 
     def call(self, local_tensors, *_):
