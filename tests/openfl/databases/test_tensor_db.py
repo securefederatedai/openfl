@@ -5,7 +5,7 @@
 import numpy as np
 import pytest
 
-from openfl.component.aggregation_functions import AggregationFunctionInterface
+from openfl.component.aggregation_functions import AggregationFunction
 from openfl.component.aggregation_functions import WeightedAverage
 from openfl.databases.tensor_db import TensorDB
 from openfl.protocols import NamedTensor
@@ -215,7 +215,7 @@ def test_get_aggregated_tensor_new_aggregation_function(tensor_db):
     """Test that get_aggregated_tensor works correctly with a given agg function."""
     collaborator_weight_dict = {'col1': 0.1, 'col2': 0.9}
 
-    class Sum(AggregationFunctionInterface):
+    class Sum(AggregationFunction):
         def call(self, local_tensors, *_):
             tensors = [local_tensor.tensor for local_tensor in local_tensors]
             return np.sum(tensors, axis=0)
