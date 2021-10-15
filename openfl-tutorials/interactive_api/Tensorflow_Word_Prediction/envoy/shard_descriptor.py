@@ -91,7 +91,7 @@ class NextWordShardDescriptor(ShardDescriptor):
     def download_data(title):
         """Download text by title form Github Gist."""
         url = ('https://gist.githubusercontent.com/katerina-merkulova/e351b11c67832034b49652835b'
-               '14adb0/raw/726f324c258f502debf23c6091c6c355735da212/' + title.replace(' ', '_')
+               '14adb0/raw/5b6667c3a2e1266f3d9125510069d23d8f24dc73/' + title.replace(' ', '_')
                + '.txt')
         filepath = Path.cwd() / f'{title}.txt'
         if not filepath.exists():
