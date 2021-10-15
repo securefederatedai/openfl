@@ -75,6 +75,10 @@ For example, you can try:
                      device='device', optimizer='optimizer')
     @TI.set_aggregation_function(agg_fn)
 
+.. warning::
+    All tasks with the same type of aggregation use the same class instance.
+    If ``AggregationFunction`` implementation has its own state, then this state will be shared across tasks.
+
 
 ``AggregationFunction`` requires a single ``call`` function.
 This function receives tensors for a single parameter from multiple collaborators with additional metadata (see definition of :meth:`openfl.component.aggregation_functions.AggregationFunction.call`) and returns a single tensor that represents the result of aggregation.
