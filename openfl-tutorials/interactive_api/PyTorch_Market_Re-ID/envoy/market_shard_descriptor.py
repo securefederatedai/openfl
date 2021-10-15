@@ -19,6 +19,7 @@ logger = logging.getLogger(__name__)
 
 
 class MarketShardDataset(ShardDataset):
+    """Market shard dataset."""
 
     def __init__(self, dataset_dir: Path, dataset_type: str, rank=1, worldsize=1):
         """Initialize MarketShardDataset."""
