@@ -21,5 +21,5 @@ from openfl.utilities.path_check import is_directory_traversal
         ('../../file', True),
     ])
 def test_is_directory_traversal(directory, expected_result):
-    """Test that is_directory_traversal works correctly."""
+    """Test that is_directory_traversal works."""
     assert is_directory_traversal(directory) is expected_result
