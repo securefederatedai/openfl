@@ -1,0 +1,13 @@
+params:
+  cuda_devices: []
+
+optional_plugin_components:
+  cuda_device_monitor:
+    template: openfl.plugins.processing_units_monitor.pynvml_monitor.PynvmlCUDADeviceMonitor
+    settings: []
+
+shard_descriptor:
+  template: tinyimagenet_shard_descriptor.TinyImageNetShardDescriptor
+  params:
+    data_folder: tinyimagenet_data
+    rank_worldsize: 1,2
