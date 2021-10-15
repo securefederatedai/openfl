@@ -17,7 +17,6 @@ from PIL import Image
 logger = logging.getLogger(__name__)
 
 
-
 class TinyImageNetDataset(ShardDataset):
     """TinyImageNet shard dataset class."""
 
