@@ -70,7 +70,8 @@ setup(
         'cloudpickle',
         'tensorboardX',
         'tensorboard',
-        'requests'
+        'requests',
+        'nvidia-ml-py3'
     ],
     python_requires='>=3.6, <3.9',
     project_urls={
