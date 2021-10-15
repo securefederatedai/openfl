@@ -55,11 +55,9 @@ def start_(shard_name, director_host, director_port, tls, envoy_config_path,
         click.echo('The shard config path is out of the openfl workspace scope.')
         sys.exit(1)
     # Read the Envoy config
-    with open(envoy_config_path) as stream:
+    with open(Path(envoy_config_path).absolute()) as stream:
         envoy_config = safe_load(stream)
 
-        # pass envoy parameters
-    shard_config_path = Path(shard_config_path).absolute()
     if root_certificate:
         root_certificate = Path(root_certificate).absolute()
     if private_key:
@@ -67,6 +65,7 @@ def start_(shard_name, director_host, director_port, tls, envoy_config_path,
     if certificate:
         certificate = Path(certificate).absolute()
 
+    # Parse envoy parameters
     envoy_params = envoy_config.get('params', {})
     for plugin_name, plugin_settings in envoy_config.get('optional_plugin_components', {}).items():
         template = plugin_settings.get('template')
@@ -80,6 +79,7 @@ def start_(shard_name, director_host, director_port, tls, envoy_config_path,
         instance = getattr(module, class_name)(**plugin_params)
         envoy_params[plugin_name] = instance
 
+    # Instantiate Shard Descriptor
     shard_descriptor = shard_descriptor_from_config(envoy_config.get('shard_descriptor', {}))
     envoy = Envoy(
         shard_name=shard_name,
