@@ -9,7 +9,7 @@ from typing import Union
 
 
 def is_directory_traversal(directory: Union[str, Path]) -> bool:
-    """Check if the directory is traversal."""
+    """Check for directory traversal."""
     cwd = os.path.abspath(os.getcwd())
     requested_path = os.path.relpath(directory, start=cwd)
     requested_path = os.path.abspath(requested_path)
