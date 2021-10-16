@@ -67,7 +67,6 @@ class MVTecShardDescriptor(ShardDescriptor):
     @staticmethod
     def download_data(data_folder):
         """Download data."""
-        zip_exists = False
         zip_file_path = data_folder / 'mvtec_anomaly_detection.tar.xz'
         if not Path(zip_file_path).exists():
             os.makedirs(data_folder, exist_ok=True)
