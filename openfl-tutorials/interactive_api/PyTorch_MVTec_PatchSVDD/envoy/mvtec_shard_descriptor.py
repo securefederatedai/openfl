@@ -24,9 +24,8 @@ class MVTecShardDescriptor(ShardDescriptor):
         """Initialize MVTecShardDescriptor."""
         super().__init__()
 
-        self.data_folder = Path.cwd() / data_folder
-        self.download_data(self.data_folder)
-        self.dataset_path = self.data_folder
+        self.dataset_path = Path.cwd() / data_folder
+        self.download_data(self.dataset_path)
         # Settings for resizing data
         self.enforce_image_hw = None
         if enforce_image_hw is not None:
@@ -41,21 +40,19 @@ class MVTecShardDescriptor(ShardDescriptor):
         # Test dataset
         fpattern = os.path.join(self.dataset_path, f'{obj}/test/*/*.png')
         fpaths = sorted(glob(fpattern))
-        fpaths1 = list(
+        fpaths_anom = list(
             filter(lambda fpath: os.path.basename(os.path.dirname(fpath)) != 'good', fpaths))
-        fpaths2 = list(
+        fpaths_good = list(
             filter(lambda fpath: os.path.basename(os.path.dirname(fpath)) == 'good', fpaths))
-        fpaths = fpaths1 + fpaths2
+        fpaths = fpaths_anom + fpaths_good
         self.test_path = fpaths[self.rank_worldsize[0] - 1::self.rank_worldsize[1]]
         # Sharding the labels
-        self.labels = np.zeros(len(fpaths1) + len(fpaths2), dtype=np.int32)
-        self.labels[:len(fpaths1)] = 1   # anomalies
+        self.labels = np.zeros(len(fpaths_anom) + len(fpaths_good), dtype=np.int32)
+        self.labels[:len(fpaths_anom)] = 1   # anomalies
         self.labels = self.labels[self.rank_worldsize[0] - 1::self.rank_worldsize[1]]
         # Masks
         fpattern_mask = os.path.join(self.dataset_path, f'{obj}/ground_truth/*/*.png')
-        self.fpaths_mask = sorted(glob(fpattern_mask))
-        self.len_anomaly = len(self.fpaths_mask)
-        self.mask_path = self.fpaths_mask
+        self.mask_path = sorted(glob(fpattern_mask))
 
     def set_mode(self, mode='train'):
         """Set mode for getitem."""
@@ -72,10 +69,7 @@ class MVTecShardDescriptor(ShardDescriptor):
         """Download data."""
         zip_exists = False
         zip_file_path = data_folder / 'mvtec_anomaly_detection.tar.xz'
-        if Path(zip_file_path).exists():
-            zip_exists = True
-
-        if not zip_exists:
+        if not Path(zip_file_path).exists():
             os.makedirs(data_folder, exist_ok=True)
             print('Downloading MVTec Dataset...this might take a while')
             os.system('wget -nc'
@@ -122,7 +116,10 @@ class MVTecShardDescriptor(ShardDescriptor):
 
     def __len__(self):
         """Return the len of the dataset."""
-        return len(self.train_path)
+        if self.mode == 'train':
+            return len(self.train_path)
+        if self.mode == 'test':
+            return len(self.test_path)
 
     @property
     def sample_shape(self):

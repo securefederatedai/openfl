@@ -20,6 +20,9 @@ The encoder has a hierarchical structure. The receptive field of the encoder is 
 
 ### 4. How to run this tutorial (without TLC and locally as a simulation):
 
+Go to example folder:
+cd <openfl_folder>/openfl-tutorials/interactive_api/PyTorch_MVTec_PatchSVDD
+
 1. Run director:
 ```sh
 cd director_folder
