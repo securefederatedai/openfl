@@ -13,12 +13,15 @@ import torch as pt
 import torch.nn as nn
 import tqdm
 
+from .runner_pt import set_tensor_dict, reset_opt_vars
+
 from openfl.utilities import Metric
 from openfl.utilities import split_tensor_dict_for_holdouts
 from openfl.utilities import TensorKey
 from .runner import TaskRunner
 
 from GANDLF.cli.main_run import main_run
+from GANDLF.parseConfig import parseConfig
 
 
 class GaNDLFTaskRunner(TaskRunner):
@@ -56,6 +59,9 @@ class GaNDLFTaskRunner(TaskRunner):
         self.device         = device
         self.reset_prev      = reset_prev
 
+        self.last_epoch = WORKING HERE do we start at 0 or will we maybe be getting from fiile
+        self.best_loss = np.inf
+
         # This is a map of all the required tensors for each of the public
         # functions in PyTorchTaskRunner
         self.required_tensorkeys_for_function = {}
@@ -82,9 +88,27 @@ class GaNDLFTaskRunner(TaskRunner):
         self.model = gandlf_results_dict['model']
         self.optimizer = gandlf_results_dict['optimizer']
 
-        # now, the issue is that the typical PyTorchTaskRunner uses "self" where we have "self.model"
+        # TODO: now, the issue is that the typical PyTorchTaskRunner uses "self" where we have "self.model"
         # need to reconcile this for model rebuilding
 
+    def _check_config(self, parameters):
+        """
+        Inspect the parameters and raise NotImplementedError if any are not supported.
+        Args:
+            parameters:   parameters read from the GaNDLF YAML config
+            
+        Returns:
+            None
+        """
+        # TODO: Fill in unsupported params below
+        unsupported_parameters = ["parallel_compute_command"]
+        unsupported_parameters_found = []
+        for key in parameters:
+            if key in unsupported_parameters:
+                unsupported_parameters_found.append(key)
+
+        if len(unsupported_parameters_found) > 0:
+            raise NotImplementedError(f'Parameters: {unsupported_parameters_found} are not currently supported in OpenFL.')
 
     # rewrite as utility function OR use self.model inside set_tensor_dict/reset_opt_vars
     def rebuild_model(self, input_tensor_dict, validation=False):
@@ -94,14 +118,15 @@ class GaNDLFTaskRunner(TaskRunner):
         Returns:
             None
         """
+
         if self.opt_treatment == 'RESET':
-            self.reset_opt_vars()
-            self.set_tensor_dict(input_tensor_dict, with_opt_vars=False)
+            reset_opt_vars(self.model)
+            set_tensor_dict(self.model, input_tensor_dict, with_opt_vars=False)
         elif (self.training_round_completed
               and self.opt_treatment == 'CONTINUE_GLOBAL' and not validation):
-            self.set_tensor_dict(input_tensor_dict, with_opt_vars=True)
+            set_tensor_dict(self.model, input_tensor_dict, with_opt_vars=True)
         else:
-            self.set_tensor_dict(input_tensor_dict, with_opt_vars=False)
+            set_tensor_dict(self.model, input_tensor_dict, with_opt_vars=False)
 
     def validate(self, col_name, round_num, input_tensor_dict,
                  use_tqdm=False, **kwargs):
@@ -116,13 +141,13 @@ class GaNDLFTaskRunner(TaskRunner):
             use_tqdm (bool):     Use tqdm to print a progress bar (Default=True)
 
         Returns:
-            global_output_dict:  Tensors to send back to the aggregator
+            global_output_dict:   Tensors to send back to the aggregator
             local_output_dict:   Tensors to maintain in the local TensorDB
 
         """
-        self.rebuild_model(round_num, input_tensor_dict, validation=True)
-        self.eval()
-        self.to(self.device)
+        self.rebuild_model(input_tensor_dict=input_tensor_dict, validation=True)
+        self.model.eval()
+        self.model.to(self.device)
         val_score = 0
         total_samples = 0
 
@@ -136,7 +161,7 @@ class GaNDLFTaskRunner(TaskRunner):
                 total_samples += samples
                 data, target = pt.tensor(data).to(self.device), pt.tensor(
                     target).to(self.device, dtype=pt.int64)
-                output = self(data)
+                output = self.model(data)
                 # get the index of the max log-probability
                 pred = output.argmax(dim=1, keepdim=True)
                 target_categorical = target.argmax(dim=1, keepdim=True)
@@ -159,11 +184,13 @@ class GaNDLFTaskRunner(TaskRunner):
         # Empty list represents metrics that should only be stored locally
         return output_tensor_dict, {}
 
+    # TODO: Do we have to pass around last_epoch and feed start_epoch to train_batches?
+    # Note even though this is called train_batches, this version uses epochs only
+    # so this all makes sense.
+
     def train_batches(self, col_name, round_num, input_tensor_dict,
                       use_tqdm=False, epochs=1, **kwargs):
-        """Train batches.
-
-        Train the model on the requested number of batches.
+        """Train batches. Here epochs are specified as apposed to batches.
 
         Args:
             col_name:            Name of the collaborator
@@ -177,28 +204,27 @@ class GaNDLFTaskRunner(TaskRunner):
             local_output_dict:   Tensors to maintain in the local TensorDB
         """
 
-        # we create a dict in this scope that will be edited by the callback.
-        output_dict = {'output_metrics':{}, 'output_model_dict': {}}
-
-        # construct our callbacks
-        callbacks = {
-            'model_construction': partialmethod(self.model_construction_callback, input_tensor_dict, False),
-            'train_complete': partialmethod(self.train_complete_callback, output_dict)
-        }
-
         # invoke GaNDLF main run
-        main_run(self.data_csv,
-                 self.config_file,
-                 self.output_dir,
-                 self.train_mode,
-                 self.device,
-                 self.reset_prev,
-                 callbacks,
-                 epochs)
+        gandlf_results_dict = main_run(data_csv=self.data_csv,
+                                       config_file=self.config_file,
+                                       output_dir=self.output_dir,
+                                       train_mode=self.train_mode,
+                                       device=self.device,
+                                       resert_prev=self.reset_prev,
+                                       epochs=epochs, 
+                                       model=self.model, 
+                                       start_epoch=self.last_epoch+1,
+                                       best_loss=self.best_loss)
 
-        # now we can retrive the results from the output_dict
-        output_metrics      = output_dict['output_metrics']
-        output_model_dict   = output_dict['output_model_dict']
+        # TODO: Make sure we do not need to update self.model and self.optimizer
+
+        # now we can retrive the results from gandlf_results_dict and self.model
+        # TODO: How to get the results below?
+        output_metrics      = gandlf_results_dict['scores']
+        output_model_dict   = gandlf_results_dict['state']['model'].get_tensor_dict()
+
+        what about epoch, start_epoch, and best_loss? All don't matter because we'er not saving to disk this info?
+        make sure these are modified according to return of training_loop
 
         # FIXME: FROM HERE DOWN SHOULD BE COMMON BETWEEN TASK RUNNERS
 
@@ -301,38 +327,40 @@ class GaNDLFTaskRunner(TaskRunner):
             state += opt_state.keys()
 
         return state
-
-def set_tensor_dict(model, optimizer, tensor_dict, device, with_opt_vars=False):
-    """Set the tensor dictionary.
-
-    Args:
-        tensor_dict: The tensor dictionary
-        with_opt_vars (bool): Return the tensor dictionary including the
-                                optimizer tensors (Default=False)
-
     """
-    # Sets tensors for model layers and optimizer state.
-    # FIXME: self.parameters() instead? Unclear if load_state_dict() or
-    #  simple assignment is better
-    # for now, state dict gives us names, which is good
-    # FIXME: do both and sanity check each time?
+    def set_tensor_dict(model, optimizer, tensor_dict, device, with_opt_vars=False):
+        -tripple quote was here- Set the tensor dictionary.
 
-    new_state = {}
-    # Grabbing keys from model's state_dict helps to confirm we have
-    # everything
-    for k in model.state_dict():
-        new_state[k] = pt.from_numpy(tensor_dict.pop(k)).to(device)
+        Args:
+            tensor_dict: The tensor dictionary
+            with_opt_vars (bool): Return the tensor dictionary including the
+                                    optimizer tensors (Default=False)
 
-    # set model state
-    model.load_state_dict(new_state)
+        -tripple quote was here -
+        # Sets tensors for model layers and optimizer state.
+        # FIXME: self.parameters() instead? Unclear if load_state_dict() or
+        #  simple assignment is better
+        # for now, state dict gives us names, which is good
+        # FIXME: do both and sanity check each time?
 
-    if with_opt_vars:
-        # see if there is state to restore first
-        if tensor_dict.pop('__opt_state_needed') == 'true':
-            _set_optimizer_state(optimizer, device, tensor_dict)
+        new_state = {}
+        # Grabbing keys from model's state_dict helps to confirm we have
+        # everything
+        for k in model.state_dict():
+            new_state[k] = pt.from_numpy(tensor_dict.pop(k)).to(device)
 
-        # sanity check that we did not record any state that was not used
-        assert len(tensor_dict) == 0
+        # set model state
+        model.load_state_dict(new_state)
+
+        if with_opt_vars:
+            # see if there is state to restore first
+            if tensor_dict.pop('__opt_state_needed') == 'true':
+                _set_optimizer_state(optimizer, device, tensor_dict)
+
+            # sanity check that we did not record any state that was not used
+            assert len(tensor_dict) == 0
+
+        """
 
     def get_optimizer(self):
         """Get the optimizer of this instance."""
@@ -472,15 +500,6 @@ def set_tensor_dict(model, optimizer, tensor_dict, device, with_opt_vars=False):
             optimizer_state_dict_key: self.optimizer.state_dict()
         }
         pt.save(pickle_dict, filepath)
-
-    def reset_opt_vars(self):
-        """
-        Reset optimizer variables.
-
-        Resets the optimizer variables
-
-        """
-        pass
 
     def train_epoch(self, batch_generator: Iterator[Tuple[np.ndarray, np.ndarray]]) -> Metric:
         """Train single epoch.

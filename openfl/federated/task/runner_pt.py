@@ -18,6 +18,53 @@ from openfl.utilities import TensorKey
 from .runner import TaskRunner
 
 
+def set_tensor_dict(model, tensor_dict, with_opt_vars=False):
+        """Set the tensor dictionary.
+
+        Args:
+            tensor_dict: The tensor dictionary
+            with_opt_vars (bool): Return the tensor dictionary including the
+                                  optimizer tensors (Default=False)
+
+        """
+        # Sets tensors for model layers and optimizer state.
+        # FIXME: model.parameters() instead? Unclear if load_state_dict() or
+        #  simple assignment is better
+        # for now, state dict gives us names, which is good
+        # FIXME: do both and sanity check each time?
+
+        # get device for correct placement of tensors
+        device = model.device
+
+        new_state = {}
+        # Grabbing keys from model's state_dict helps to confirm we have
+        # everything
+        for k in model.state_dict():
+            new_state[k] = pt.from_numpy(tensor_dict.pop(k)).to(device)
+
+        # set model state
+        model.load_state_dict(new_state)
+
+        if with_opt_vars:
+            # see if there is state to restore first
+            if tensor_dict.pop('__opt_state_needed') == 'true':
+                _set_optimizer_state(self.get_optimizer(), device, tensor_dict)
+
+            # sanity check that we did not record any state that was not used
+            assert len(tensor_dict) == 0
+
+
+def reset_opt_vars(model):
+        """
+        Reset optimizer variables.
+
+        Resets the optimizer variables
+
+        """
+        # TODO: Why pass?
+        pass
+
+
 class PyTorchTaskRunner(nn.Module, TaskRunner):
     """PyTorch Model class for Federated Learning."""
 
@@ -257,41 +304,6 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
 
         return state
 
-    def set_tensor_dict(self, tensor_dict, with_opt_vars=False):
-        """Set the tensor dictionary.
-
-        Args:
-            tensor_dict: The tensor dictionary
-            with_opt_vars (bool): Return the tensor dictionary including the
-                                  optimizer tensors (Default=False)
-
-        """
-        # Sets tensors for model layers and optimizer state.
-        # FIXME: self.parameters() instead? Unclear if load_state_dict() or
-        #  simple assignment is better
-        # for now, state dict gives us names, which is good
-        # FIXME: do both and sanity check each time?
-
-        # get device for correct placement of tensors
-        device = self.device
-
-        new_state = {}
-        # Grabbing keys from model's state_dict helps to confirm we have
-        # everything
-        for k in self.state_dict():
-            new_state[k] = pt.from_numpy(tensor_dict.pop(k)).to(device)
-
-        # set model state
-        self.load_state_dict(new_state)
-
-        if with_opt_vars:
-            # see if there is state to restore first
-            if tensor_dict.pop('__opt_state_needed') == 'true':
-                _set_optimizer_state(self.get_optimizer(), device, tensor_dict)
-
-            # sanity check that we did not record any state that was not used
-            assert len(tensor_dict) == 0
-
     def get_optimizer(self):
         """Get the optimizer of this instance."""
         return self.optimizer
@@ -431,14 +443,6 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
         }
         pt.save(pickle_dict, filepath)
 
-    def reset_opt_vars(self):
-        """
-        Reset optimizer variables.
-
-        Resets the optimizer variables
-
-        """
-        pass
 
     def train_epoch(self, batch_generator: Iterator[Tuple[np.ndarray, np.ndarray]]) -> Metric:
         """Train single epoch.
