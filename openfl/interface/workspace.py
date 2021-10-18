@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 """Workspace module."""
 
+import sys
 from pathlib import Path
 
 from click import Choice
@@ -11,6 +12,8 @@ from click import group
 from click import option
 from click import pass_context
 from click import Path as ClickPath
+
+from openfl.utilities.path_check import is_directory_traversal
 
 
 @group()
@@ -65,6 +68,9 @@ def get_templates():
 @option('--template', required=True, type=Choice(get_templates()))
 def create_(prefix, template):
     """Create the workspace."""
+    if is_directory_traversal(prefix):
+        echo('Workspace name or path is out of the openfl workspace scope.')
+        sys.exit(1)
     create(prefix, template)
 
 
