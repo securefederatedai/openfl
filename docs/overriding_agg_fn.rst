@@ -13,7 +13,7 @@ You can use custom aggregation functions for each task via Python\*\  API or com
 Python API
 ==========
 
-1. Create an implementation of :class:`openfl.component.aggregation_functions.AggregationFunctionInterface`.
+1. Create an implementation of :class:`openfl.component.aggregation_functions.AggregationFunctionInterface`. See `example <https://github.com/intel/openfl/blob/develop/openfl/component/aggregation_functions/interface.py>`_ for details.
 
 2. In the ``override_config`` keyword argument of the :func:`openfl.native.run_experiment` native function, pass the implementation as a ``tasks.{task_name}.aggregation_type`` parameter.
 
@@ -37,7 +37,7 @@ Choose from the following predefined |productName| aggregation functions:
 Custom Aggregation Functions
 ----------------------------
 
-You can also create your own implementation of :class:`openfl.component.aggregation_functions.AggregationFunctionInterface`.
+You can also create your own implementation of :class:`openfl.component.aggregation_functions.AggregationFunctionInterface`. See `example <https://github.com/intel/openfl/blob/develop/openfl/component/aggregation_functions/interface.py>`_ for details.
 
 1. Define the behavior of the aggregation.
 
