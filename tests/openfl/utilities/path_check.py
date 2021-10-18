@@ -17,6 +17,12 @@ from openfl.utilities.path_check import is_directory_traversal
         (os.getcwd(), False),
         (Path(os.getcwd(), 'first_level'), False),
         (Path(os.getcwd(), 'first_level/second_level'), False),
+        ('first_level/second_level/..', False),
+        ('first_level/../first_level', False),
+        ('..', True),
+        ('../../file', True),
+        ('/home/naive_hacker', True),
+        ('first_level/second_level/../../..', True),
         ('..', True),
         ('../../file', True),
     ])
