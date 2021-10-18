@@ -51,7 +51,7 @@ def start_(shard_name, director_host, director_port, tls, envoy_config_path,
            root_certificate, private_key, certificate):
     """Start the Envoy."""
     logger.info('🧿 Starting the Envoy.')
-    if is_directory_traversal(shard_config_path):
+    if is_directory_traversal(envoy_config_path):
         click.echo('The shard config path is out of the openfl workspace scope.')
         sys.exit(1)
     # Read the Envoy config
