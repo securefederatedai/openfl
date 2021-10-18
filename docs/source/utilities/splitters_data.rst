@@ -23,7 +23,7 @@ Predefined |productName| data splitters functions are as follows:
 - ``openfl.component.aggregation_functions.LogNormalNumPyDataSplitter`` , which assumes the ``data`` argument as ``np.ndarray`` of integers (labels)
 - ``openfl.component.aggregation_functions.DirichletNumPyDataSplitter`` , which assumes the ``data`` argument as ``np.ndarray`` of integers (labels)
 
-Alternatively, you can create an implementation of :class:`openfl.plugins.data_splitters.NumPyDataSplitter` and pass it to the :code:`FederatedDataset` function as either ``train_splitter`` or ``valid_splitter`` keyword argument.
+Alternatively, you can create an implementation of :class:`openfl.plugins.data_splitters.NumPyDataSplitter` (`link <https://github.com/intel/openfl/blob/develop/openfl/utilities/data_splitters/numpy.py>`_) and pass it to the :code:`FederatedDataset` function as either ``train_splitter`` or ``valid_splitter`` keyword argument.
 
 
 STEP 2: Define the Shard Descriptor
@@ -33,7 +33,7 @@ Apply the splitting function on your data to perform a simulation.
 
 ``NumPyDataSplitter`` requires a single ``split`` function. The :code:`split` function returns a list of indices which represents the collaborator-wise indices groups.
 
-This function receives ``data`` - NumPy array required to build the subsets of data indices (see definition of :meth:`openfl.plugins.data_splitters.NumPyDataSplitter.split`). It could be the whole dataset, or labels only, or anything else.
+This function receives ``data`` - NumPy array required to build the subsets of data indices. It could be the whole dataset, or labels only, or anything else.
 
 
 .. code-block:: python
@@ -51,4 +51,4 @@ This function receives ``data`` - NumPy array required to build the subsets of d
 
 .. note::
 
-    By default, the data is shuffled and split equally (see :class:`openfl.plugins.data_splitters.EqualNumPyDataSplitter`).
+    By default, the data is shuffled and split equally. See :class:`openfl.plugins.data_splitters.EqualNumPyDataSplitter` (`link <https://github.com/intel/openfl/blob/develop/openfl/utilities/data_splitters/numpy.py>`_) for details.
