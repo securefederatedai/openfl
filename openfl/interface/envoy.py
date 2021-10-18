@@ -67,17 +67,21 @@ def start_(shard_name, director_host, director_port, tls, envoy_config_path,
 
     # Parse envoy parameters
     envoy_params = envoy_config.get('params', {})
-    for plugin_name, plugin_settings in envoy_config.get('optional_plugin_components', {}).items():
-        template = plugin_settings.get('template')
-        if not template:
-            raise Exception('You should put a template'
-                            f'for plugin {plugin_name}')
-        module_path, _, class_name = template.rpartition('.')
-        plugin_params = plugin_settings.get('params', {})
 
-        module = import_module(module_path)
-        instance = getattr(module, class_name)(**plugin_params)
-        envoy_params[plugin_name] = instance
+    # Build optional plugin components
+    optional_plugins_section = envoy_config.get('optional_plugin_components', None)
+    if optional_plugins_section is not None:
+        for plugin_name, plugin_settings in optional_plugins_section.items():
+            template = plugin_settings.get('template')
+            if not template:
+                raise Exception('You should put a template'
+                                f'for plugin {plugin_name}')
+            module_path, _, class_name = template.rpartition('.')
+            plugin_params = plugin_settings.get('params', {})
+
+            module = import_module(module_path)
+            instance = getattr(module, class_name)(**plugin_params)
+            envoy_params[plugin_name] = instance
 
     # Instantiate Shard Descriptor
     shard_descriptor = shard_descriptor_from_config(envoy_config.get('shard_descriptor', {}))

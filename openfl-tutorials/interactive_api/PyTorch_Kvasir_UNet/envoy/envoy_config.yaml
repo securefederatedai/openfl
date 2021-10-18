@@ -1,10 +1,10 @@
 params:
-  cuda_devices: [1,2,5]
+  cuda_devices: [0,2]
   
 optional_plugin_components:
-  cuda_device_monitor:
-    template: openfl.plugins.processing_units_monitor.pynvml_monitor.PynvmlCUDADeviceMonitor
-    settings: []
+ cuda_device_monitor:
+   template: openfl.plugins.processing_units_monitor.pynvml_monitor.PynvmlCUDADeviceMonitor
+   settings: []
 
 shard_descriptor:
   template: kvasir_shard_descriptor.KvasirShardDescriptor
@@ -12,4 +12,3 @@ shard_descriptor:
     data_folder: kvasir_data
     rank_worldsize: 1,10
     enforce_image_hw: '300,400'
-  

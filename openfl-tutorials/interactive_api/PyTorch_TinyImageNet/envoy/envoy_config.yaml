@@ -1,10 +1,7 @@
 params:
   cuda_devices: []
 
-optional_plugin_components:
-  cuda_device_monitor:
-    template: openfl.plugins.processing_units_monitor.pynvml_monitor.PynvmlCUDADeviceMonitor
-    settings: []
+optional_plugin_components: {}
 
 shard_descriptor:
   template: tinyimagenet_shard_descriptor.TinyImageNetShardDescriptor
