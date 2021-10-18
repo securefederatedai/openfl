@@ -58,8 +58,8 @@ setup(
         'numpy',
         'pandas',
         'protobuf',
-        'grpcio~=1.34.0',
-        'grpcio-tools~=1.34.0',
+        'grpcio>=1.34.0',
+        'grpcio-tools>=1.34.0',
         'rich==9.1.0',
         'tqdm',
         'scikit-learn',
@@ -71,8 +71,7 @@ setup(
         'cloudpickle',
         'tensorboardX',
         'tensorboard',
-        'requests',
-        'nvidia-ml-py3'
+        'requests'
     ],
     python_requires='>=3.6, <3.9',
     project_urls={
