@@ -1,0 +1,5 @@
+# https://www.gutenberg.org/cache/epub/7439/pg7439-images.html
+template: shard_descriptor.NextWordShardDescriptor
+params:
+  title: English Fairy Tales
+  author: Joseph Jacobs
