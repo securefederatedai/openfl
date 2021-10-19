@@ -254,7 +254,8 @@ class DirectorClient:
                 'last_updated': datetime.fromtimestamp(
                     envoy.last_updated.seconds).strftime('%Y-%m-%d %H:%M:%S'),
                 'current_time': now,
-                'valid_duration': envoy.valid_duration
+                'valid_duration': envoy.valid_duration,
+                'experiment_name': 'ExperimentName Mock',
             }
         return result
 
