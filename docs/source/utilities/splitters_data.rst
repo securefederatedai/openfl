@@ -34,7 +34,7 @@ Choose from predefined |productName| data splitters functions:
 - ``openfl.utilities.data_splitters.RandomNumPyDataSplitter``
 - ``openfl.component.aggregation_functions.LogNormalNumPyDataSplitter`` - assumes ``data`` argument as np.ndarray of integers (labels)
 - ``openfl.component.aggregation_functions.DirichletNumPyDataSplitter`` - assumes ``data`` argument as np.ndarray of integers (labels)
-Or create your own implementation of :class:`openfl.component.aggregation_functions.AggregationFunctionInterface`.
+Or create your own implementation of :class:`openfl.component.aggregation_functions.AggregationFunction`.
 After defining the splitting behavior, you need to use it on your data to perform a simulation. 
 
 ``NumPyDataSplitter`` requires a single ``split`` function.

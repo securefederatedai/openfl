@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 """Collaborator module."""
 
+import sys
 from logging import getLogger
 
 from click import echo
@@ -10,6 +11,8 @@ from click import option
 from click import pass_context
 from click import Path as ClickPath
 from click import style
+
+from openfl.utilities.path_check import is_directory_traversal
 
 logger = getLogger(__name__)
 
@@ -39,8 +42,15 @@ def start_(plan, collaborator_name, data_config, secure):
 
     from openfl.federated import Plan
 
-    plan = Plan.parse(plan_config_path=Path(plan),
-                      data_config_path=Path(data_config))
+    if plan and is_directory_traversal(plan):
+        echo('Federated learning plan path is out of the openfl workspace scope.')
+        sys.exit(1)
+    if data_config and is_directory_traversal(data_config):
+        echo('The data set/shard configuration file path is out of the openfl workspace scope.')
+        sys.exit(1)
+
+    plan = Plan.parse(plan_config_path=Path(plan).absolute(),
+                      data_config_path=Path(data_config).absolute())
 
     # TODO: Need to restructure data loader config file loader
 
@@ -60,6 +70,10 @@ def register_data_path(collaborator_name, data_path=None, silent=False):
     """
     from click import prompt
     from os.path import isfile
+
+    if data_path and is_directory_traversal(data_path):
+        echo('Data path is out of the openfl workspace scope.')
+        sys.exit(1)
 
     # Ask for the data directory
     default_data_path = f'data/{collaborator_name}'
@@ -105,6 +119,9 @@ def register_data_path(collaborator_name, data_path=None, silent=False):
 def generate_cert_request_(collaborator_name,
                            data_path, silent, skip_package):
     """Generate certificate request for the collaborator."""
+    if data_path and is_directory_traversal(data_path):
+        echo('Data path is out of the openfl workspace scope.')
+        sys.exit(1)
     generate_cert_request(collaborator_name, data_path, silent, skip_package)
 
 
@@ -192,14 +209,14 @@ def register_collaborator(file_name):
     from yaml import dump
     from yaml import FullLoader
     from yaml import load
+    from pathlib import Path
 
     col_name = find_certificate_name(file_name)
 
-    cols_file = 'plan/cols.yaml'
+    cols_file = Path('plan/cols.yaml').absolute()
 
     if not isfile(cols_file):
-        from pathlib import Path
-        Path(cols_file).touch()
+        cols_file.touch()
     with open(cols_file, 'r') as f:
         doc = load(f, Loader=FullLoader)
 

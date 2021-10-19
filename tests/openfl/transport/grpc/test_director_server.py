@@ -24,9 +24,9 @@ def secure_director():
     """Initialize a secure director mock."""
     director = DirectorGRPCServer(
         director_cls=Director,
-        root_certificate='./cert/root_ca.crt',
-        private_key='./cert/localhost.key',
-        certificate='./cert/localhost.crt'
+        root_certificate=Path('./cert/root_ca.crt').absolute(),
+        private_key=Path('./cert/localhost.key').absolute(),
+        certificate=Path('./cert/localhost.crt').absolute()
     )
     return director
 

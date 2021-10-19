@@ -17,6 +17,7 @@ from yaml import safe_load
 from openfl.component.director import Director
 from openfl.interface.cli_helper import WORKSPACE
 from openfl.transport import DirectorGRPCServer
+from openfl.utilities.path_check import is_directory_traversal
 
 logger = logging.getLogger(__name__)
 
@@ -44,7 +45,11 @@ def director(context):
         help='Path to a signed certificate')
 def start(director_config_path, tls, root_certificate, private_key, certificate):
     """Start the director service."""
+    director_config_path = Path(director_config_path).absolute()
     logger.info('🧿 Starting the Director Service.')
+    if is_directory_traversal(director_config_path):
+        click.echo('The director config file path is out of the openfl workspace scope.')
+        sys.exit(1)
     with open(director_config_path) as stream:
         director_config = safe_load(stream)
     settings = director_config.get('settings', {})
@@ -53,9 +58,19 @@ def start(director_config_path, tls, root_certificate, private_key, certificate)
     logger.info(f'Sample shape: {sample_shape}, target shape: {target_shape}')
     listen_host = settings.get('listen_host')
     listen_port = settings.get('listen_port')
+
     root_certificate = root_certificate or settings.get('root_certificate')
+    if root_certificate:
+        root_certificate = Path(root_certificate).absolute()
+
     private_key = private_key or settings.get('private_key')
+    if private_key:
+        private_key = Path(private_key).absolute()
+
     certificate = certificate or settings.get('certificate')
+    if certificate:
+        certificate = Path(certificate).absolute()
+
     kwargs = {}
     if listen_host:
         kwargs['listen_host'] = listen_host
@@ -80,7 +95,10 @@ def start(director_config_path, tls, root_certificate, private_key, certificate)
         help='The director path', type=ClickPath())
 def create(director_path):
     """Create a director workspace."""
-    director_path = Path(director_path)
+    if is_directory_traversal(director_path):
+        click.echo('The director path is out of the openfl workspace scope.')
+        sys.exit(1)
+    director_path = Path(director_path).absolute()
     if director_path.exists():
         if not click.confirm('Director workspace already exists. Recreate?', default=True):
             sys.exit(1)

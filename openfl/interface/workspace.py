@@ -2,6 +2,9 @@
 # SPDX-License-Identifier: Apache-2.0
 """Workspace module."""
 
+import sys
+from pathlib import Path
+
 from click import Choice
 from click import confirm
 from click import echo
@@ -9,6 +12,8 @@ from click import group
 from click import option
 from click import pass_context
 from click import Path as ClickPath
+
+from openfl.utilities.path_check import is_directory_traversal
 
 
 @group()
@@ -63,13 +68,15 @@ def get_templates():
 @option('--template', required=True, type=Choice(get_templates()))
 def create_(prefix, template):
     """Create the workspace."""
+    if is_directory_traversal(prefix):
+        echo('Workspace name or path is out of the openfl workspace scope.')
+        sys.exit(1)
     create(prefix, template)
 
 
 def create(prefix, template):
     """Create federated learning workspace."""
     from os.path import isfile
-    from pathlib import Path
     from subprocess import check_call
     from sys import executable
 
@@ -79,8 +86,7 @@ def create(prefix, template):
     if not OPENFL_USERDIR.exists():
         OPENFL_USERDIR.mkdir()
 
-    prefix = Path(prefix)
-    template = Path(template)
+    prefix = Path(prefix).absolute()
 
     create_dirs(prefix)
     create_temp(prefix, template)
@@ -118,7 +124,7 @@ def export_():
     from openfl.interface.cli_helper import WORKSPACE
 
     # TODO: Does this need to freeze all plans?
-    plan_file = 'plan/plan.yaml'
+    plan_file = Path('plan/plan.yaml').absolute()
     try:
         freeze_plan(plan_file)
     except Exception:
@@ -180,6 +186,8 @@ def import_(archive):
     from shutil import unpack_archive
     from subprocess import check_call
     from sys import executable
+
+    archive = Path(archive).absolute()
 
     dir_path = basename(archive).split('.')[0]
     unpack_archive(archive, extract_dir=dir_path)
