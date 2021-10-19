@@ -345,6 +345,22 @@ This method:
 * Compresses the whole workspace to an archive.
 * Sends the experiment archive to the Director so it may distribute the archive across the Federation and start the *Aggregator*.
   
+FLExperiment's code:`start()` method parameters
+-------------------------------------------------
+
+* code:`model_provider` - defined earlier code:`ModelInterface` object
+* code:`task_keeper` - defined earlier code:`TaskInterface` object 
+* code:`data_loader` - defined earlier code:`DataInterface` object
+* code:`rounds_to_train` - number of aggregation rounds needed to be conducted before the experiment is considered finished
+* code:`delta_updates` - use calculated gradients instead of model checkpoints for aggregation
+* code:`opt_treatment` - optimizer state treatment in federation. Possible values: 'RESET' means the optimizer state 
+is initialized each round from noise, if 'CONTINUE_LOCAL' is used the optimizer state will be reused locally by every collaborator, 
+in case the parameter is set to 'CONTINUE_GLOBAL' the optimizer's state will be aggregated.
+* code:`device_assignment_policy` - this setting may be 'CPU_ONLY' or 'CUDA_PREFFERED'. In the first case, the code:`device` 
+parameter (which is a part of a task contract) that is passed to an FL task each round will be 'cpu'. In case 
+code:`device_assignment_policy='CUDA_PREFFERED'`, the code:`device` parameter will be 'cuda:{index}' if cuda devices 
+enabled in Envoy config and 'cpu' otherwise.
+
 Observing the Experiment execution
 ----------------------------------
 
