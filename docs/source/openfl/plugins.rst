@@ -71,3 +71,10 @@ As well as :code:`restore_object` that will load previously serialized object fr
 
    @staticmethod
    def restore_object(filename: str):
+
+
+.. _device_monitor_plugin:
+
+CUDA Device Monitor plugin
+######################
+
