@@ -13,6 +13,7 @@ from click import option
 from click import pass_context
 from click import Path as ClickPath
 
+from openfl.utilities.utils import is_package_has_version
 from openfl.utilities.path_check import is_directory_traversal
 
 
@@ -134,10 +135,8 @@ def export_():
     requirements_generator = freeze.freeze()
     with open('./requirements.txt', 'w') as f:
         for package in requirements_generator:
-            if '==' not in package:
-                # We do not export dependencies without version
-                continue
-            f.write(package + '\n')
+            if is_package_has_version(package):
+                f.write(package + '\n')
 
     archive_type = 'zip'
     archive_name = basename(getcwd())
@@ -171,7 +170,7 @@ def export_():
     # Create Zip archive of directory
     make_archive(archive_name, archive_type, tmp_dir)
 
-    echo(f'Workspace exported to archive: {archive_file_name}')
+    echo(f'!Workspace exported to archive: {archive_file_name}')
 
 
 @workspace.command(name='import')
@@ -397,9 +396,15 @@ def dockerize_(context, base_image, save):
             tag=workspace_name,
             buildargs=build_args,
             dockerfile=dockerfile_workspace)
-
-    except Exception as e:
+    except docker.errors.BuildError as e:
+        for log in e.build_log:
+            msg = log.get('stream')
+            if msg:
+                echo(msg)
         echo('Failed to build the image\n' + str(e) + '\n')
+        sys.exit(1)
+    except Exception as e:
+        echo('Failed to build the image with unexpected error\n' + str(e) + '\n')
         sys.exit(1)
     else:
         echo('The workspace image has been built successfully!')

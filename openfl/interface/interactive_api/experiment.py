@@ -17,6 +17,7 @@ from openfl.federated import Plan
 from openfl.interface.cli import setup_logging
 from openfl.interface.cli_helper import WORKSPACE
 from openfl.utilities import split_tensor_dict_for_holdouts
+from openfl.utilities.utils import is_package_has_version
 
 
 class FLExperiment:
@@ -182,12 +183,6 @@ class FLExperiment:
         """Prepare requirements.txt."""
         from pip._internal.operations import freeze
         requirements_generator = freeze.freeze()
-
-        def is_package_has_version(package: str) -> bool:
-            return ('==' in package
-                    and package not in ['pkg-resources==0.0.0', 'pkg_resources==0.0.0']
-                    and '-e ' not in package
-                    )
 
         with open('./requirements.txt', 'w') as f:
             for pack in requirements_generator:
