@@ -5,7 +5,7 @@
 Activate Bash Autocomplete
 **************************
 
-Get faster access to available |productName| commands by activating bash completion in CLI mode.
+Get faster access to available Open Federated Learning (|productName|) commands by activating bash completion in CLI mode.
 
 STEP 1: Preparation
 ===================

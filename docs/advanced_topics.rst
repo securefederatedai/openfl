@@ -8,7 +8,7 @@ Advanced Topics
 ***************
 **General**
 
-    Speed up activating |productName| commands:
+    Speed up activating Open Federated Learning (|productName|) commands:
 
     - :doc:`bash_autocomplete_activation`
 

@@ -27,7 +27,7 @@ Command Line Interface
 Predefined Aggregation Functions
 --------------------------------
 
-Choose from the following predefined |productName| aggregation functions:
+Choose from the following predefined aggregation functions:
 
 - ``openfl.component.aggregation_functions.WeightedAverage`` (default)
 - ``openfl.component.aggregation_functions.Median``
