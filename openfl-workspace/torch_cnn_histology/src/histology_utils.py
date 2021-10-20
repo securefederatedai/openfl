@@ -38,6 +38,7 @@ class HistologyDataset(ImageFolder):
         makedirs(root, exist_ok=True)
         filepath = path.join(root, HistologyDataset.FILENAME)
         if not path.exists(filepath):
+            print(f'{filepath} does not exist. Downloading...')
             self.pbar = tqdm(total=None)
             urlretrieve(HistologyDataset.URL, filepath, self.report_hook)  # nosec
             validate_file_hash(filepath, HistologyDataset.ZIP_SHA384)
