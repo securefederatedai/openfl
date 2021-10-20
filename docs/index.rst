@@ -7,9 +7,9 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-*******************************************
-Welcome to the |productName| Documentation!
-*******************************************
+*********************************************************************
+Welcome to the Open Federated Learning (|productName|) Documentation!
+*********************************************************************
 
 Open Federated Learning (|productName|) is a Python\* \ 3 library for federated learning that enables organizations to collaboratively train a model without sharing sensitive information.
 

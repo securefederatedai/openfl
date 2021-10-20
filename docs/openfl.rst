@@ -1,11 +1,11 @@
 .. # Copyright (C) 2020-2021 Intel Corporation
 .. # SPDX-License-Identifier: Apache-2.0
 
-****************
-OpenFL Structure
-****************
+*************************************************
+Open Federated Learning (|productName|) Structure
+*************************************************
 
-Learn about the short-lived and long-lived components that compose |productName|:
+Learn about the short-lived and long-lived components that compose Open Federated Learning (|productName|):
 
 - :doc:`source/openfl/components`
 

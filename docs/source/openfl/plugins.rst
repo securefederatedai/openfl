@@ -1,9 +1,9 @@
 .. # Copyright (C) 2020-2021 Intel Corporation
 .. # SPDX-License-Identifier: Apache-2.0
 
-******
-|productName| Plugin Components
-******
+*****************
+Plugin Components
+*****************
 
 .. toctree::
    :maxdepth: 2
@@ -12,7 +12,7 @@
    serializer_plugin_
 
 
-|productName| is designed to be a flexible and extensible framework. Plugins are interchangeable parts of 
+Open Federated Learning (|productName|) is designed to be a flexible and extensible framework. Plugins are interchangeable parts of 
 |productName| components. Different plugins support varying usage scenarios. |productName| users are free to provide 
 their implementations of |productName| plugins to support desired behavior.
 

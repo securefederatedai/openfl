@@ -3,10 +3,11 @@
 
 .. _troubleshooting:
 
-|productName| Troubleshooting
-#######################
+*******************************************************
+Open Federated Learning (|productName|) Troubleshooting
+*******************************************************
 
-The following is a list of commonly reported issues. If you don't see your issue reported here, please submit a `Github issue
+The following is a list of commonly reported issues in Open Federated Learning (|productName|). If you don't see your issue reported here, please submit a `Github issue
 <https://github.com/intel/openfl/issues>`_ or contact us directly on `Slack <https://join.slack.com/t/openfl/shared_invite/zt-ovzbohvn-T5fApk05~YS_iZhjJ5yaTw>`_.
 
 1. I see the error :code:`Cannot import name TensorFlowDataLoader from openfl.federated`

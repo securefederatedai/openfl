@@ -4,7 +4,7 @@
 .. _install_package:
 
 *********************************
-Install the |productName| Package
+Install the Package
 *********************************
 
 Perform this procedure on every node in the federation.
@@ -26,7 +26,7 @@ Perform this procedure on every node in the federation.
 
       conda activate env_name
 
-4. Install the |productName| package.
+4. Install the Open Federated Learning (|productName|) package.
 
     A. **Linux**\* \  installation: 
     

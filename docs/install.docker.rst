@@ -9,7 +9,7 @@ Build the Docker\* \  Image
 
 .. note::
 
-   The Docker\* \  version of |productName| is to provide an isolated environment complete with the prerequisites to run a federation. When the execution is over, the container can be destroyed and the results of the computation will be available on a directory on the local host.
+   The Docker\* \  version of Open Federated Learning (|productName|) is to provide an isolated environment complete with the prerequisites to run a federation. When the execution is over, the container can be destroyed and the results of the computation will be available on a directory on the local host.
 
 1. Install Docker on all nodes in the federation.
 

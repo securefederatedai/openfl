@@ -4,7 +4,7 @@
 .. _openfl_components:
 
 *****************************
-|productName| Core Components
+Core Components
 *****************************
 
 .. toctree::
@@ -15,7 +15,7 @@
    `Static Diagram`_
 
 
-|productName| has the following components:
+Open Federated Learning (|productName|) has the following components:
 
     - :ref:`openfl_short_lived_components`
     - :ref:`openfl_ll_components`

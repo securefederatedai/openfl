@@ -7,7 +7,7 @@
 Install the Software
 ********************
 
-Depending on how you want to set up your federation, choose one of the following installation procedure.
+Depending on how you want to set up Open Federated Learning (|productName|), choose one of the following installation procedure.
 
 :doc:`install.initial`
     Follow this procedure to prepare the environment and install the |productName| package.

@@ -4,10 +4,10 @@
 .. _interactive_api:
 
 *******************************************
-|productName| Interactive Python API (Beta)
+Interactive Python API (Beta)
 *******************************************
 
-The |productName| interactive Python API enables the Experiment manager (data scientists) to define and start a federated learning experiment from a single entry point: a Jupyter\*\ notebook or a Python script. 
+The Open Federated Learning (|productName|) interactive Python API enables the Experiment manager (data scientists) to define and start a federated learning experiment from a single entry point: a Jupyter\*\ notebook or a Python script. 
 
     - :ref:`federation_api_prerequisites`
     - :ref:`federation_api_define_fl_experiment`

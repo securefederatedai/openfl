@@ -16,8 +16,8 @@ The *Director manager* sets up the *Director*, which is the central node of the 
 
 .. _step1_install_director_prerequisites:
 
-STEP 1: Install |productName| 
------------------------------
+STEP 1: Install Open Federated Learning (|productName|) 
+-------------------------------------------------------
 
 Install |productName| in a virtual Python\*\ environment. See :ref:`install_package` for details.
 
