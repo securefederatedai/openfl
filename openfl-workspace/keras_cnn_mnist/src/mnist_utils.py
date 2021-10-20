@@ -4,11 +4,27 @@
 """You may copy this file as the starting point of your own model."""
 
 from logging import getLogger
-
-import numpy as np
+from pathlib import Path
 from tensorflow.python.keras.utils.data_utils import get_file
 
+import numpy as np
+
 logger = getLogger(__name__)
+
+
+def load_data(path='mnist.npz', cache_dir='~/.openfl/data'):
+    cache_dir = Path(cache_dir).expanduser().absolute()
+    origin_folder = 'https://storage.googleapis.com/tensorflow/tf-keras-datasets/'
+    path = get_file(
+        path,
+        origin=origin_folder + 'mnist.npz',
+        file_hash='731c5ac602752760c8e48fbffcf8c3b850d9dc2a2aedcf2cc48468fc17b673d1',
+        cache_subdir=cache_dir)
+    with np.load(path, allow_pickle=True) as f:
+        x_train, y_train = f['x_train'], f['y_train']
+        x_test, y_test = f['x_test'], f['y_test']
+
+    return (x_train, y_train), (x_test, y_test)
 
 
 def one_hot(labels, classes):
@@ -25,7 +41,7 @@ def one_hot(labels, classes):
     return np.eye(classes)[labels]
 
 
-def _load_raw_datashards(shard_num, collaborator_count):
+def _load_raw_datashards(shard_num, collaborator_count, data_dir):
     """
     Load the raw data by shard.
 
@@ -38,31 +54,20 @@ def _load_raw_datashards(shard_num, collaborator_count):
     Returns:
         2 tuples: (image, label) of the training, validation dataset
     """
-    origin_folder = 'https://storage.googleapis.com/tensorflow/tf-keras-datasets/'
-    path = get_file('mnist.npz',
-                    origin=origin_folder + 'mnist.npz',
-                    file_hash='731c5ac602752760c8e48fbffcf8c3b850d9dc2a2aedcf2cc48468fc17b673d1')
-
-    with np.load(path) as f:
-        # get all of mnist
-        X_train_tot = f['x_train']
-        y_train_tot = f['y_train']
-
-        X_valid_tot = f['x_test']
-        y_valid_tot = f['y_test']
-
+    (x_train, y_train), (x_test, y_test) = load_data(cache_dir=data_dir)
+    
     # create the shards
     shard_num = int(shard_num)
-    X_train = X_train_tot[shard_num::collaborator_count]
-    y_train = y_train_tot[shard_num::collaborator_count]
+    X_train = x_train[shard_num::collaborator_count]
+    y_train = y_train[shard_num::collaborator_count]
 
-    X_valid = X_valid_tot[shard_num::collaborator_count]
-    y_valid = y_valid_tot[shard_num::collaborator_count]
+    X_valid = x_test[shard_num::collaborator_count]
+    y_valid = y_test[shard_num::collaborator_count]
 
     return (X_train, y_train), (X_valid, y_valid)
 
 
-def load_mnist_shard(shard_num, collaborator_count, categorical=True,
+def load_mnist_shard(shard_num, collaborator_count, data_dir, categorical=True,
                      channels_last=True, **kwargs):
     """
     Load the MNIST dataset.
@@ -88,7 +93,7 @@ def load_mnist_shard(shard_num, collaborator_count, categorical=True,
     num_classes = 10
 
     (X_train, y_train), (X_valid, y_valid) = _load_raw_datashards(
-        shard_num, collaborator_count
+        shard_num, collaborator_count, data_dir
     )
 
     if channels_last:

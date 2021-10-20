@@ -10,7 +10,7 @@ from .mnist_utils import load_mnist_shard
 class TensorFlowMNISTInMemory(TensorFlowDataLoader):
     """TensorFlow Data Loader for MNIST Dataset."""
 
-    def __init__(self, data_path, batch_size, **kwargs):
+    def __init__(self, data_path, batch_size, data_dir, **kwargs):
         """
         Initialize.
 
@@ -28,7 +28,7 @@ class TensorFlowMNISTInMemory(TensorFlowDataLoader):
         # collaborator list.
 
         _, num_classes, X_train, y_train, X_valid, y_valid = load_mnist_shard(
-            shard_num=int(data_path), **kwargs
+            shard_num=int(data_path), data_dir=data_dir, **kwargs
         )
 
         self.X_train = X_train

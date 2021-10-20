@@ -3,6 +3,8 @@
 
 """Python native tests."""
 
+from pathlib import Path
+
 import numpy as np
 
 import openfl.native as fx
@@ -90,8 +92,10 @@ if __name__ == '__main__':
     from tensorflow.python.keras.utils.data_utils import get_file
 
     origin_folder = 'https://storage.googleapis.com/tensorflow/tf-keras-datasets/'
+    cache_subdir = Path('~/.openfl/data').expanduser().absolute()
     path = get_file('mnist.npz',
                     origin=origin_folder + 'mnist.npz',
+                    cache_subdir=cache_subdir,
                     file_hash='731c5ac602752760c8e48fbffcf8c3b850d9dc2a2aedcf2cc48468fc17b673d1')
 
     with np.load(path) as f:

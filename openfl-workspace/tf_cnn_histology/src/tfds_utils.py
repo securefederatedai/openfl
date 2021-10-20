@@ -38,7 +38,7 @@ def _load_raw_datashards(shard_num, collaborator_count):
     Returns:
         2 tuples: (image, label) of the training, validation dataset
     """
-    (ds), metadata = tfds.load('colorectal_histology', data_dir='.',
+    (ds), metadata = tfds.load('colorectal_histology', data_dir='~/.openfl/data',
                                shuffle_files=False, split='train', batch_size=-1,
                                with_info=True, as_supervised=True)
 

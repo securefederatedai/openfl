@@ -27,6 +27,7 @@ data_loader :
     collaborator_count : 2
     data_group_name    : mnist
     batch_size         : 256
+    data_dir           : ~/.openfl/data # made for CI tests to use preloaded data
 
 task_runner :
   defaults : plan/defaults/task_runner.yaml

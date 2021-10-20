@@ -56,7 +56,7 @@ if __name__ == '__main__':
     transform = transforms.Compose([transforms.ToTensor(),
                                     transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
 
-    trainset = datasets.MNIST(root='./data', train=True,
+    trainset = datasets.MNIST(root='~/.openfl/data', train=True,
                               download=True, transform=transform)
 
     train_images, train_labels = trainset.train_data, np.array(trainset.train_labels)

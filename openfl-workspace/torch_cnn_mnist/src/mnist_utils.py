@@ -42,7 +42,7 @@ def one_hot(labels, classes):
     return np.eye(classes)[labels]
 
 
-def _load_raw_datashards(shard_num, collaborator_count, transform=None):
+def _load_raw_datashards(shard_num, collaborator_count, data_dir='data', transform=None):
     """
     Load the raw data by shard.
 
@@ -57,7 +57,7 @@ def _load_raw_datashards(shard_num, collaborator_count, transform=None):
         2 tuples: (image, label) of the training, validation dataset
     """
     train_data, val_data = (
-        datasets.MNIST('data', train=train, download=True, transform=transform)
+        datasets.MNIST(data_dir, train=train, download=True, transform=transform)
         for train in (True, False)
     )
     X_train_tot, y_train_tot = train_data.train_data, train_data.train_labels
@@ -74,7 +74,7 @@ def _load_raw_datashards(shard_num, collaborator_count, transform=None):
     return (X_train, y_train), (X_valid, y_valid)
 
 
-def load_mnist_shard(shard_num, collaborator_count,
+def load_mnist_shard(shard_num, collaborator_count, data_dir,
                      categorical=False, channels_last=True, **kwargs):
     """
     Load the MNIST dataset.
@@ -100,7 +100,7 @@ def load_mnist_shard(shard_num, collaborator_count,
     num_classes = 10
 
     (X_train, y_train), (X_valid, y_valid) = _load_raw_datashards(
-        shard_num, collaborator_count, transform=transforms.ToTensor())
+        shard_num, collaborator_count, data_dir=data_dir, transform=transforms.ToTensor())
 
     logger.info(f'MNIST > X_train Shape : {X_train.shape}')
     logger.info(f'MNIST > y_train Shape : {y_train.shape}')
