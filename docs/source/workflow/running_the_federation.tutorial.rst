@@ -4,7 +4,7 @@
 .. _running_tutorial:
 
 ************************************************
-Open Federated Learning (|productName| Tutorials
+Open Federated Learning (|productName|) Tutorials
 ************************************************
 
 These tutorials use the Jupyter\* \  notebook server to help you become familiar with the APIs used in Open Federated Learning (|productName|).
