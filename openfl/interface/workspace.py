@@ -13,8 +13,8 @@ from click import option
 from click import pass_context
 from click import Path as ClickPath
 
-from openfl.utilities.utils import is_package_has_version
 from openfl.utilities.path_check import is_directory_traversal
+from openfl.utilities.utils import is_package_has_version
 
 
 @group()
