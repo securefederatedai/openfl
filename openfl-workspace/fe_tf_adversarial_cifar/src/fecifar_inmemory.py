@@ -5,7 +5,6 @@
 
 import os
 from pathlib import Path
-from typing import Tuple
 
 import fastestimator as fe
 import numpy as np
@@ -18,7 +17,7 @@ from tensorflow.python.keras.utils.data_utils import get_file
 from openfl.federated import FastEstimatorDataLoader
 
 
-def load_data(cache_dir, image_key: str = 'x', label_key: str = 'y') -> Tuple[NumpyDataset, NumpyDataset]:
+def load_data(cache_dir, image_key: str = 'x', label_key: str = 'y'):
     """Load and return the CIFAR10 dataset.
 
     Args:

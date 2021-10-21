@@ -27,6 +27,7 @@ def one_hot(labels, classes):
 
 
 def load_data(path='mnist.npz', cache_dir='~/.openfl/data'):
+    """Download MNIST dataset."""
     cache_dir = Path(cache_dir).expanduser().absolute()
     origin_folder = 'https://storage.googleapis.com/tensorflow/tf-keras-datasets/'
     path = get_file(

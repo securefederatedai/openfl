@@ -5,14 +5,15 @@
 
 from logging import getLogger
 from pathlib import Path
-from tensorflow.python.keras.utils.data_utils import get_file
 
 import numpy as np
+from tensorflow.python.keras.utils.data_utils import get_file
 
 logger = getLogger(__name__)
 
 
 def load_data(path='mnist.npz', cache_dir='~/.openfl/data'):
+    """Download MNIST dataset."""
     cache_dir = Path(cache_dir).expanduser().absolute()
     origin_folder = 'https://storage.googleapis.com/tensorflow/tf-keras-datasets/'
     path = get_file(
@@ -55,7 +56,7 @@ def _load_raw_datashards(shard_num, collaborator_count, data_dir):
         2 tuples: (image, label) of the training, validation dataset
     """
     (x_train, y_train), (x_test, y_test) = load_data(cache_dir=data_dir)
-    
+
     # create the shards
     shard_num = int(shard_num)
     X_train = x_train[shard_num::collaborator_count]
