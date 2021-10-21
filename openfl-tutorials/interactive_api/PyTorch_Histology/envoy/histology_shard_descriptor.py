@@ -15,7 +15,6 @@ import numpy as np
 from base import ShardDataset
 from base import ShardDescriptor
 from PIL import Image
-from torch.utils.data.dataset import Subset
 from torchvision.datasets import ImageFolder
 from tqdm import tqdm
 
@@ -55,10 +54,9 @@ class HistologyShardDataset(ShardDataset):
         idx_sep = int(len(idx_range) * HistologyShardDataset.TRAIN_SPLIT_RATIO)
         train_idx, test_idx = np.split(idx_range, [idx_sep])
         if data_type == 'train':
-            idx = train_idx[rank::worldsize]
+            self.idx = train_idx[rank - 1::worldsize]
         else:
-            idx = test_idx[rank::worldsize]
-        self.dataset = Subset(dataset, idx)
+            self.idx = test_idx[rank - 1::worldsize]
 
     def __len__(self) -> int:
         """Return the len of the shard dataset."""
@@ -66,7 +64,7 @@ class HistologyShardDataset(ShardDataset):
 
     def __getitem__(self, index: int) -> Tuple['Image', int]:
         """Return an item by the index."""
-        return self.dataset.__getitem__(index)
+        return super().__getitem__(self.idx[index])
 
 
 class HistologyShardDescriptor(ShardDescriptor):
@@ -128,7 +126,3 @@ class HistologyShardDescriptor(ShardDescriptor):
         """Return the shard dataset description."""
         return (f'Histology dataset, shard number {self.rank}'
                 f' out of {self.worldsize}')
-
-    def __len__(self):
-        """Return the len of the shard dataset."""
-        return 0
