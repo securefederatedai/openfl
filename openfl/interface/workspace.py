@@ -14,7 +14,7 @@ from click import pass_context
 from click import Path as ClickPath
 
 from openfl.utilities.path_check import is_directory_traversal
-from openfl.utilities.utils import is_package_has_version
+from openfl.utilities.utils import is_package_versioned
 
 
 @group()
@@ -135,7 +135,7 @@ def export_():
     requirements_generator = freeze.freeze()
     with open('./requirements.txt', 'w') as f:
         for package in requirements_generator:
-            if is_package_has_version(package):
+            if is_package_versioned(package):
                 f.write(package + '\n')
 
     archive_type = 'zip'
@@ -170,7 +170,7 @@ def export_():
     # Create Zip archive of directory
     make_archive(archive_name, archive_type, tmp_dir)
 
-    echo(f'!Workspace exported to archive: {archive_file_name}')
+    echo(f'Workspace exported to archive: {archive_file_name}')
 
 
 @workspace.command(name='import')
@@ -389,13 +389,14 @@ def dockerize_(context, base_image, save):
     }
 
     client = docker.from_env(timeout=3600)
+    echo('Building the Docker image')
     try:
-        echo('Building the Docker image')
         client.images.build(
             path=str(workspace_path),
             tag=workspace_name,
             buildargs=build_args,
-            dockerfile=dockerfile_workspace)
+            dockerfile=dockerfile_workspace
+        )
     except docker.errors.BuildError as e:
         for log in e.build_log:
             msg = log.get('stream')
@@ -403,14 +404,10 @@ def dockerize_(context, base_image, save):
                 echo(msg)
         echo('Failed to build the image\n' + str(e) + '\n')
         sys.exit(1)
-    except Exception as e:
-        echo('Failed to build the image with unexpected error\n' + str(e) + '\n')
-        sys.exit(1)
-    else:
-        echo('The workspace image has been built successfully!')
     finally:
         os.remove(workspace_archive)
         os.remove(dockerfile_workspace)
+    echo('The workspace image has been built successfully!')
 
     # Saving the image to a tarball
     if save:

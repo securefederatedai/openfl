@@ -17,7 +17,7 @@ from openfl.federated import Plan
 from openfl.interface.cli import setup_logging
 from openfl.interface.cli_helper import WORKSPACE
 from openfl.utilities import split_tensor_dict_for_holdouts
-from openfl.utilities.utils import is_package_has_version
+from openfl.utilities.utils import is_package_versioned
 
 
 class FLExperiment:
@@ -186,7 +186,7 @@ class FLExperiment:
 
         with open('./requirements.txt', 'w') as f:
             for pack in requirements_generator:
-                if is_package_has_version(pack):
+                if is_package_versioned(pack):
                     f.write(pack + '\n')
 
     @staticmethod
