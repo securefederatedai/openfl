@@ -19,6 +19,11 @@ RUN openssl genrsa -3 -out Pal/src/host/Linux-SGX/signer/enclave-key.pem 3072
 
 RUN pip install toml>=0.10
 
+# Variables for Graphene
+ENV PYTHONPATH=/usr/local/lib/python3.8/dist-packages
+ENV LC_ALL=C.UTF-8
+ENV LANG=C.UTF-8
+
 RUN make
 RUN make ISGX_DRIVER_PATH="" SGX=1 
 RUN meson setup build/ --buildtype=release -Ddirect=enabled -Dsgx=enabled
