@@ -1,0 +1,25 @@
+# Copyright (C) 2020-2021 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+FROM openfl_base:pre_sgx
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    autoconf bison gawk libcurl4-openssl-dev libprotobuf-c-dev \
+    ninja-build protobuf-c-compiler python3 python3-click python3-jinja2 \
+    build-essential python3-pip python3-protobuf wget git
+
+WORKDIR /
+RUN git clone https://github.com/gramineproject/gramine.git
+WORKDIR gramine
+
+# We probably want to keep this key outside the image
+RUN openssl genrsa -3 -out Pal/src/host/Linux-SGX/signer/enclave-key.pem 3072
+
+RUN pip install 'meson>=0.55' 'toml>=0.10'
+
+RUN meson setup build/ --buildtype=release -Ddirect=enabled -Dsgx=enabled
+RUN ninja -C build/
+RUN ninja -C build/ install
+
+CMD ["/bin/bash"]
