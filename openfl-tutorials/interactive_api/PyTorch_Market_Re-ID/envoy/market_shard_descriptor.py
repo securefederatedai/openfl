@@ -127,7 +127,7 @@ class MarketShardDescriptor(ShardDescriptor):
     def _check_before_run(self):
         """Check if all files are available before going deeper."""
         if not self.dataset_dir.exists():
-            raise RuntimeError(f'{self.dataset_dir} is not available')
+            raise RuntimeError(f'{self.dataset_dir} is not exists')
         for dataset_path in self.path_by_type.values():
             if not dataset_path.exists():
-                raise RuntimeError(f'{dataset_path} is not available')
+                raise RuntimeError(f'{dataset_path} is not exists')

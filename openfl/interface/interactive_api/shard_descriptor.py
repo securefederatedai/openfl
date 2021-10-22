@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 """Shard descriptor."""
 
+from typing import Iterable
 from typing import List
 
 import numpy as np
@@ -10,11 +11,11 @@ import numpy as np
 class ShardDataset:
     """Shard dataset class."""
 
-    def __len__(self):
+    def __len__(self) -> int:
         """Return the len of the shard dataset."""
         raise NotImplementedError
 
-    def __getitem__(self, index):
+    def __getitem__(self, index: int):
         """Return an item by the index."""
         raise NotImplementedError
 
@@ -22,17 +23,17 @@ class ShardDataset:
 class ShardDescriptor:
     """Shard descriptor class."""
 
-    def get_dataset(self, dataset_type) -> ShardDataset:
+    def get_dataset(self, dataset_type: str) -> ShardDataset:
         """Return a shard dataset by type."""
         raise NotImplementedError
 
     @property
-    def sample_shape(self):
+    def sample_shape(self) -> List[int]:
         """Return the sample shape info."""
         raise NotImplementedError
 
     @property
-    def target_shape(self):
+    def target_shape(self) -> List[int]:
         """Return the target shape info."""
         raise NotImplementedError
 
@@ -56,7 +57,7 @@ class DummyShardDataset(ShardDataset):
         self.samples = np.random.randint(0, 255, (self.size, *sample_shape), np.uint8)
         self.targets = np.random.randint(0, 255, (self.size, *target_shape), np.uint8)
 
-    def __len__(self):
+    def __len__(self) -> int:
         """Return the len of the dataset."""
         return self.size
 
@@ -68,13 +69,18 @@ class DummyShardDataset(ShardDataset):
 class DummyShardDescriptor(ShardDescriptor):
     """Dummy shard descriptor class."""
 
-    def __init__(self, sample_shape, target_shape, size) -> None:
+    def __init__(
+            self,
+            sample_shape: Iterable[str],
+            target_shape: Iterable[str],
+            size: int
+    ) -> None:
         """Initialize DummyShardDescriptor."""
         self._sample_shape = [int(dim) for dim in sample_shape]
         self._target_shape = [int(dim) for dim in target_shape]
         self.size = size
 
-    def get_dataset(self, dataset_type) -> ShardDataset:
+    def get_dataset(self, dataset_type: str) -> ShardDataset:
         """Return a shard dataset by type."""
         return DummyShardDataset(
             size=self.size,
@@ -83,12 +89,12 @@ class DummyShardDescriptor(ShardDescriptor):
         )
 
     @property
-    def sample_shape(self):
+    def sample_shape(self) -> List[int]:
         """Return the sample shape info."""
         return self._sample_shape
 
     @property
-    def target_shape(self):
+    def target_shape(self) -> List[int]:
         """Return the target shape info."""
         return self._target_shape
 
