@@ -51,6 +51,18 @@ class GaNDLFTaskRunner(TaskRunner):
         """
         super().__init__(self, **kwargs)
 
+        # TODO: Double check this, but planning on no model saving to disk (execept for maybe when doing
+        # a crossfold trainval/test evaluation)
+
+        # TODO: Currently I get back end_epoch and best_loss from gandlf main_run, but do notthing
+        # with them. We need to find a DB solution to persist these.
+
+        # TODO: Complete the functionality of the crossfold trainval/test evaluation. Currently
+        # I cannot decide what would be appropriate to pass as data since we usually work
+        # on the FL level with train and val; but this set should ideally be such that it contains
+        # only unseen data (as the test portion that is randomly - by folds - used here
+        # should be unseen  to the model) - so either use an entirely new set (which would need)
+
         # record values for passing through to gandlf main_run
         self.data_csv       = data_csv
         self.config_file    = config_file
@@ -58,9 +70,6 @@ class GaNDLFTaskRunner(TaskRunner):
         self.train_mode     = train_mode
         self.device         = device
         self.reset_prev      = reset_prev
-
-        self.last_epoch = WORKING HERE do we start at 0 or will we maybe be getting from fiile
-        self.best_loss = np.inf
 
         # This is a map of all the required tensors for each of the public
         # functions in PyTorchTaskRunner
@@ -83,13 +92,25 @@ class GaNDLFTaskRunner(TaskRunner):
         # raise NotImplementedError("OpenFL doesn't yet support this amazing GaNDLF feature <feature>. Isn't Micah the worst? Sarthak, have a 666")
 
         # run a zero epoch "train" to create the model and optimizer objects
-        gandlf_results_dict = main_run(data_csv, config_file, output_dir, train_mode, device, reset_prev, epochs=0)
+        gandlf_results_dict = main_run(data_csv=self.data_csv, 
+                                       config_file=self.config_file, 
+                                       output_dir=self.output_dir, 
+                                       train_mode=self.train_mode, 
+                                       device=self.device, 
+                                       reset_prev=self.reset_prev, 
+                                       epochs=0)
 
-        self.model = gandlf_results_dict['model']
-        self.optimizer = gandlf_results_dict['optimizer']
+        self.model = gandlf_results_dict['state']['model']
+        self.optimizer = gandlf_results_dict['state']['optimizer']
 
-        # TODO: now, the issue is that the typical PyTorchTaskRunner uses "self" where we have "self.model"
-        # need to reconcile this for model rebuilding
+        best_loss = gandlf_results_dict['state']['best_loss']
+        end_epoch = gandlf_results_dict['state']['end_epoch']
+
+        # TODO: I would like to test best_loss against 1e7 and end_epoch against -1
+        # then raise an expectption against the use of grabbing a best model
+        # for initialization as initialization will be written
+        # over by the one coming from the aggregator. However, I don't want to rely on 1e7 
+        # staying the default. What is best here?
 
     def _check_config(self, parameters):
         """
@@ -100,6 +121,7 @@ class GaNDLFTaskRunner(TaskRunner):
         Returns:
             None
         """
+
         # TODO: Fill in unsupported params below
         unsupported_parameters = ["parallel_compute_command"]
         unsupported_parameters_found = []
@@ -110,7 +132,6 @@ class GaNDLFTaskRunner(TaskRunner):
         if len(unsupported_parameters_found) > 0:
             raise NotImplementedError(f'Parameters: {unsupported_parameters_found} are not currently supported in OpenFL.')
 
-    # rewrite as utility function OR use self.model inside set_tensor_dict/reset_opt_vars
     def rebuild_model(self, input_tensor_dict, validation=False):
         """
         Parse tensor names and update weights of model. Handles the optimizer treatment.
@@ -139,6 +160,7 @@ class GaNDLFTaskRunner(TaskRunner):
             round_num:           What round is it
             input_tensor_dict:   Required input tensors (for model)
             use_tqdm (bool):     Use tqdm to print a progress bar (Default=True)
+            kwargs:              Key word arguments passed to GaNDLF main_run
 
         Returns:
             global_output_dict:   Tensors to send back to the aggregator
@@ -146,26 +168,21 @@ class GaNDLFTaskRunner(TaskRunner):
 
         """
         self.rebuild_model(input_tensor_dict=input_tensor_dict, validation=True)
-        self.model.eval()
-        self.model.to(self.device)
-        val_score = 0
-        total_samples = 0
+        
+        gandlf_results_dict = main_run(data_csv=self.data_csv, 
+                                       config_file=self.config_file, 
+                                       output_dir=self.output_dir, 
+                                       train_mode=self.train_mode, 
+                                       device=self.device, 
+                                       epochs=1,
+                                       model=self.model,
+                                       optimizer=self.model.optimizer, 
+                                       do_train=False,
+                                       do_val=True,
+                                       do_test=False 
+                                       **kwargs
+                                       )
 
-        loader = self.data_loader.get_valid_loader()
-        if use_tqdm:
-            loader = tqdm.tqdm(loader, desc='validate')
-
-        with pt.no_grad():
-            for data, target in loader:
-                samples = target.shape[0]
-                total_samples += samples
-                data, target = pt.tensor(data).to(self.device), pt.tensor(
-                    target).to(self.device, dtype=pt.int64)
-                output = self.model(data)
-                # get the index of the max log-probability
-                pred = output.argmax(dim=1, keepdim=True)
-                target_categorical = target.argmax(dim=1, keepdim=True)
-                val_score += pred.eq(target_categorical).sum().cpu().numpy()
 
         origin = col_name
         suffix = 'validate'
@@ -178,54 +195,95 @@ class GaNDLFTaskRunner(TaskRunner):
         #  validate function
         output_tensor_dict = {
             TensorKey('acc', origin, round_num, True, tags):
-                np.array(val_score / total_samples)
+                np.array(gandlf_results_dict['scores']['epoch_valid_metric'])
         }
 
         # Empty list represents metrics that should only be stored locally
         return output_tensor_dict, {}
-
-    # TODO: Do we have to pass around last_epoch and feed start_epoch to train_batches?
-    # Note even though this is called train_batches, this version uses epochs only
-    # so this all makes sense.
-
-    def train_batches(self, col_name, round_num, input_tensor_dict,
-                      use_tqdm=False, epochs=1, **kwargs):
+    
+    def train_batches(self, 
+                      col_name, 
+                      round_num, 
+                      input_tensor_dict,
+                      use_tqdm=False, 
+                      epochs=1,
+                      crossfold_test=False,
+                      crossfold_test_data_csv=None,
+                      crossfold_test_config=None, 
+                      **kwargs):
         """Train batches. Here epochs are specified as apposed to batches.
 
         Args:
-            col_name:            Name of the collaborator
-            round_num:           What round is it
-            input_tensor_dict:   Required input tensors (for model)
-            use_tqdm (bool):     Use tqdm to print a progress bar (Default=True)
-            epochs:              The number of epochs to train
+            col_name                : Name of the collaborator
+            round_num               : What round is it
+            input_tensor_dict       : Required input tensors (for model)
+            use_tqdm (bool)         : Use tqdm to print a progress bar (Default=True)
+            epochs                  : The number of epochs to train
+            crossfold_test          : Whether or not to use cross fold trainval/test
+                                    to evaluate the quality of the model under fine tuning
+                                    (this uses a separate prameter to pass in the data and 
+                                    config used)
+            crossfold_test_data_csv : Data csv used to define data used in crossfold test.
+                                      This csv does not itself define the folds, just
+                                      defines the total data to be used.
+            crossfold_test_config   : config to use that defines crossfold test
+            kwargs                  : Key word arguments passed to GaNDLF main_run
 
         Returns:
-            global_output_dict:  Tensors to send back to the aggregator
-            local_output_dict:   Tensors to maintain in the local TensorDB
+            global_output_dict      : Tensors to send back to the aggregator
+            local_output_dict       : Tensors to maintain in the local TensorDB
         """
 
+        # TODO: Setting crossfold_tuning to True will require that the self.config be set to 
+        # communicate the k of k-fold
+        # Also, we do not want to pass model in this case as it will keep one fold of traininng and
+        # pass it as init for the next fold of training. So we'll want to use the file system (ie pass model=None) in this
+        # case to store all results and only at the end pick the best model and restore it to put in the return dict.
+        
         # invoke GaNDLF main run
-        gandlf_results_dict = main_run(data_csv=self.data_csv,
-                                       config_file=self.config_file,
-                                       output_dir=self.output_dir,
-                                       train_mode=self.train_mode,
-                                       device=self.device,
-                                       resert_prev=self.reset_prev,
-                                       epochs=epochs, 
-                                       model=self.model, 
-                                       start_epoch=self.last_epoch+1,
-                                       best_loss=self.best_loss)
+        if crossfold_test:
+            gandlf_results_dict = main_run(data_csv=crossfold_test_data_csv, 
+                                        config_file=crossfold_test_config, 
+                                        output_dir=self.output_dir, 
+                                        train_mode=self.train_mode, 
+                                        device=self.device, 
+                                        epochs=epochs,
+                                        model=self.model,
+                                        optimizer=self.model.optimizer, 
+                                        do_train=True,
+                                        do_val=True,
+                                        do_test=True, 
+                                        **kwargs
+                                        )
+        else:
+            gandlf_results_dict = main_run(data_csv=self.data_csv, 
+                                        config_file=self.config_file, 
+                                        output_dir=self.output_dir, 
+                                        train_mode=self.train_mode, 
+                                        device=self.device, 
+                                        epochs=epochs,
+                                        model=self.model,
+                                        optimizer=self.model.optimizer, 
+                                        do_train=True,
+                                        do_val=False,
+                                        do_test=False, 
+                                        **kwargs
+                                        )
+            self.model = gandlf_results_dict['state']['model']
+            self.optimizer = gandlf_results_dict['state']['optimizer']
 
-        # TODO: Make sure we do not need to update self.model and self.optimizer
+            # TODO: Here we are not using last_epoch or best_loss. Figure out how
+            # to persist this info so that the model can keep track of it even after crashing
+
+        # NOTE: The returned loss is only from the last epoch
+        #       Get average instead over the course of epochs?
 
         # now we can retrive the results from gandlf_results_dict and self.model
-        # TODO: How to get the results below?
-        output_metrics      = gandlf_results_dict['scores']
+        # TODO: Are you sure you only want loss?
+        output_metrics      = gandlf_results_dict['scores']['epoch_train_loss']
         output_model_dict   = gandlf_results_dict['state']['model'].get_tensor_dict()
 
-        what about epoch, start_epoch, and best_loss? All don't matter because we'er not saving to disk this info?
-        make sure these are modified according to return of training_loop
-
+        # TODO: Ask Micah about this below
         # FIXME: FROM HERE DOWN SHOULD BE COMMON BETWEEN TASK RUNNERS
 
         # Output metric tensors (scalar)
@@ -305,10 +363,10 @@ class GaNDLFTaskRunner(TaskRunner):
         # for now, state dict gives us names which is good
         # FIXME: do both and sanity check each time?
 
-        state = to_cpu_numpy(self.state_dict())
+        state = to_cpu_numpy(self.model.state_dict())
 
         if with_opt_vars:
-            opt_state = _get_optimizer_state(self.optimizer)
+            opt_state = _get_optimizer_state(self.model.optimizer)
             state = {**state, **opt_state}
 
         return state
@@ -320,10 +378,10 @@ class GaNDLFTaskRunner(TaskRunner):
         # for now, state dict gives us names which is good
         # FIXME: do both and sanity check each time?
 
-        state = self.state_dict().keys()
+        state = self.model.state_dict().keys()
 
         if with_opt_vars:
-            opt_state = _get_optimizer_state(self.optimizer)
+            opt_state = _get_optimizer_state(self.model.optimizer)
             state += opt_state.keys()
 
         return state

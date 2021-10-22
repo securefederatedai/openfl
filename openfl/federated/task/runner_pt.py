@@ -48,7 +48,7 @@ def set_tensor_dict(model, tensor_dict, with_opt_vars=False):
         if with_opt_vars:
             # see if there is state to restore first
             if tensor_dict.pop('__opt_state_needed') == 'true':
-                _set_optimizer_state(self.get_optimizer(), device, tensor_dict)
+                _set_optimizer_state(model.get_optimizer(), device, tensor_dict)
 
             # sanity check that we did not record any state that was not used
             assert len(tensor_dict) == 0
@@ -111,13 +111,13 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
             None
         """
         if self.opt_treatment == 'RESET':
-            self.reset_opt_vars()
-            self.set_tensor_dict(input_tensor_dict, with_opt_vars=False)
+            reset_opt_vars(self)
+            set_tensor_dict(self, input_tensor_dict, with_opt_vars=False)
         elif (self.training_round_completed
               and self.opt_treatment == 'CONTINUE_GLOBAL' and not validation):
-            self.set_tensor_dict(input_tensor_dict, with_opt_vars=True)
+            set_tensor_dict(self, input_tensor_dict, with_opt_vars=True)
         else:
-            self.set_tensor_dict(input_tensor_dict, with_opt_vars=False)
+            set_tensor_dict(self, input_tensor_dict, with_opt_vars=False)
 
     def validate(self, col_name, round_num, input_tensor_dict,
                  use_tqdm=False, **kwargs):
@@ -175,8 +175,13 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
         # Empty list represents metrics that should only be stored locally
         return output_tensor_dict, {}
 
-    def train_batches(self, col_name, round_num, input_tensor_dict,
-                      use_tqdm=False, epochs=1, **kwargs):
+    def train_batches(self, 
+                      col_name, 
+                      round_num, 
+                      input_tensor_dict,
+                      use_tqdm=False, 
+                      epochs=1, 
+                      **kwargs):
         """Train batches.
 
         Train the model on the requested number of batches.
@@ -192,6 +197,7 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
             global_output_dict:  Tensors to send back to the aggregator
             local_output_dict:   Tensors to maintain in the local TensorDB
         """
+        
         self.rebuild_model(round_num, input_tensor_dict)
         # set to "training" mode
         self.train()
