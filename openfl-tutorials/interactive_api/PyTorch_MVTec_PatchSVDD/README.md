@@ -18,7 +18,7 @@ The encoder has a hierarchical structure. The receptive field of the encoder is 
 [MVTec ad dataset download link](https://www.mydrive.ch/shares/38536/3830184030e49fe74747669442f0f282/download/420938113-1629952094/mvtec_anomaly_detection.tar.xz)
 
 
-### 4. How to run this tutorial (without TLC and locally as a simulation):
+### 4. How to run this tutorial (without TLS and locally as a simulation):
 
 Go to example folder:
 cd <openfl_folder>/openfl-tutorials/interactive_api/PyTorch_MVTec_PatchSVDD

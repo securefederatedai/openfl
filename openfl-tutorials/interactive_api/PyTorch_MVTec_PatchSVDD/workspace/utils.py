@@ -6,7 +6,6 @@ from contextlib import contextmanager
 import _pickle as p
 import numpy as np
 import torch
-from PIL import Image
 from torch.utils.data import Dataset
 
 
@@ -140,8 +139,3 @@ def distribute_score(score_mask, output_shape, k: int, s: int) -> np.ndarray:
     cnt[cnt == 0] = 1
 
     return mask / cnt
-
-
-def resize(image, shape=(256, 256)):
-    """Resize image."""
-    return np.array(Image.fromarray(image).resize(shape[::-1]))
