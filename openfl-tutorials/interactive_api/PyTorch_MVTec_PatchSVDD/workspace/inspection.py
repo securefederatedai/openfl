@@ -4,14 +4,14 @@ import os
 import shutil
 
 import ngtpy
-import numpy as np
 import matplotlib.pyplot as plt
-from PIL import Image
+import numpy as np
 from data_transf import bal_acc_score
+from PIL import Image
 from data_transf import detection_auroc
 from data_transf import segmentation_auroc
-from sklearn.neighbors import KDTree
 from skimage.segmentation import mark_boundaries
+from sklearn.neighbors import KDTree
 from utils import distribute_scores
 from utils import makedirpath
 
@@ -127,7 +127,6 @@ def measure_emb_nn(emb_te, emb_tr, method='kdt', nn=1):
 def save_maps(obj, maps, images, masks):
     """Save generated anomaly maps."""
     mshape = maps.shape[0]
-    # mean = images.astype(np.float32).mean(axis = 0)
     images = np.transpose(images, [0, 3, 2, 1])
     images = (images.astype(np.float32) * 255)
     pwd = os.getcwd()
