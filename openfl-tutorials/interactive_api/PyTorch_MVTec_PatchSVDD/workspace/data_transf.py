@@ -1,13 +1,9 @@
 """Data transform functions."""
 
 import numpy as np
-from PIL import Image
 from sklearn.metrics import roc_auc_score
-
-
-def resize(image, shape=(256, 256)):
-    """Resize image."""
-    return np.array(Image.fromarray(image).resize(shape[::-1]))
+from sklearn.metrics import balanced_accuracy_score
+from sklearn.metrics import precision_recall_curve
 
 
 def bilinears(images, shape) -> np.ndarray:
@@ -21,13 +17,14 @@ def bilinears(images, shape) -> np.ndarray:
     return ret
 
 
-def gray2rgb(images):
-    """Change gray to rgb images."""
-    tile_shape = tuple(np.ones(len(images.shape), dtype=int))
-    tile_shape += (3,)
-
-    images = np.tile(np.expand_dims(images, axis=-1), tile_shape)
-    return images
+def bal_acc_score(obj, predictions, labels):
+    """Calculate balanced accuracy score."""
+    precision, recall, thresholds = precision_recall_curve(labels.flatten(), predictions.flatten())
+    f1_score = (2 * precision * recall) / (precision + recall + 1e-10)
+    threshold = thresholds[np.argmax(f1_score)]
+    prediction_result = predictions > threshold
+    ba_score = balanced_accuracy_score(labels, prediction_result)
+    return ba_score
 
 
 def detection_auroc(obj, anomaly_scores, labels):
