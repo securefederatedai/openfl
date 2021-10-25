@@ -249,13 +249,8 @@ class DirectorGRPCServer(director_pb2_grpc.FederationDirectorServicer):
         caller = self.get_caller(context)
         experiments = self.director.get_experiments(caller)
         experiment_descriptions_list = [
-            director_pb2.ExperimentDescription(
-                name=exp['name'],
-                status=exp['status'],
-                collaborators_amount=exp['collaborators_amount'],
-                tasks_amount=exp['tasks_amount'],
-                progress=exp['progress'],
-            ) for exp in experiments
+            director_pb2.ExperimentDescription(**exp)
+            for exp in experiments
         ]
         return director_pb2.GetExperimentDescriptionsResponse(
             experiments=experiment_descriptions_list

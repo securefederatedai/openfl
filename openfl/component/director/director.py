@@ -15,6 +15,7 @@ from typing import Union
 from openfl.protocols import director_pb2
 from .experiment import Experiment
 from .experiment import ExperimentsRegistry
+from .experiment import Status
 
 logger = logging.getLogger(__name__)
 
@@ -209,18 +210,21 @@ class Director:
         experiments = self.experiments_registry.get_user_experiments(caller)
         result = []
         for exp in experiments:
-            tasks_amount = len({
-                task['function']
-                for task in exp.aggregator.assigner.tasks.values()
-            })
-            progress = _get_experiment_progress(exp)
-            result.append({
+            exp_data = {
                 'name': exp.name,
                 'status': exp.status,
                 'collaborators_amount': len(exp.collaborators),
-                'tasks_amount': tasks_amount,
-                'progress': progress,
-            })
+            }
+            progress = _get_experiment_progress(exp)
+            if progress is not None:
+                exp_data['progress'] = progress
+            if exp.aggregator:
+                tasks_amount = len({
+                    task['function']
+                    for task in exp.aggregator.assigner.tasks.values()
+                })
+                exp_data['tasks_amount'] = tasks_amount
+            result.append(exp_data)
 
         return result
 
@@ -233,10 +237,9 @@ class Director:
         model_statuses = _get_model_download_statuses(exp)
         tasks = _get_experiment_tasks(exp)
         collaborators = _get_experiment_collaborators(exp)
-        return {
+        result = {
             'name': name,
             'status': exp.status,
-            'progress': progress,
             'currentRound': exp.aggregator.round_number,
             'totalRounds': exp.aggregator.rounds_to_train,
             'downloadStatuses': {
@@ -247,8 +250,10 @@ class Director:
                 }],
             },
             'collaborators': collaborators,
-            'tasks': tasks
+            'tasks': tasks,
+            'progress': progress
         }
+        return result
 
     async def start_experiment_execution_loop(self):
         """Run task to monitor and run experiments."""
@@ -283,8 +288,9 @@ def _get_model_download_statuses(experiment) -> List[dict]:
     return model_statuses
 
 
-def _get_experiment_progress(experiment) -> float:
-    return experiment.aggregator.round_number / experiment.aggregator.rounds_to_train
+def _get_experiment_progress(experiment) -> Union[float, None]:
+    if experiment.status == Status.IN_PROGRESS:
+        return experiment.aggregator.round_number / experiment.aggregator.rounds_to_train
 
 
 def _get_experiment_tasks(experiment) -> List[dict]:

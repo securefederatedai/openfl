@@ -21,10 +21,10 @@ logger = logging.getLogger(__name__)
 class Status:
     """Experiment's statuses."""
 
-    PENDING = 'PENDING'
-    FINISHED = 'FINISHED'
-    IN_PROGRESS = 'IN_PROGRESS'
-    FAILED = 'FAILED'
+    PENDING = 'pending'
+    FINISHED = 'finished'
+    IN_PROGRESS = 'inProgress'
+    FAILED = 'failed'
 
 
 class Experiment:

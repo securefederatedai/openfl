@@ -6,1292 +6,1309 @@ from google.protobuf import descriptor as _descriptor
 from google.protobuf import message as _message
 from google.protobuf import reflection as _reflection
 from google.protobuf import symbol_database as _symbol_database
-
 # @@protoc_insertion_point(imports)
 
 _sym_db = _symbol_database.Default()
+
 
 from google.protobuf import timestamp_pb2 as google_dot_protobuf_dot_timestamp__pb2
 from google.protobuf import duration_pb2 as google_dot_protobuf_dot_duration__pb2
 import openfl.protocols.federation_pb2 as federation__pb2
 
 DESCRIPTOR = _descriptor.FileDescriptor(
-    name='director.proto',
-    package='',
-    syntax='proto3',
-    serialized_options=None,
-    create_key=_descriptor._internal_create_key,
-    serialized_pb=b'\n\x0e\x64irector.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x1egoogle/protobuf/duration.proto\x1a\x10\x66\x65\x64\x65ration.proto\"U\n\x08NodeInfo\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0e\n\x06\x61\x64ress\x18\x02 \x01(\t\x12\x16\n\x0e\x63uda_available\x18\x03 \x01(\x08\x12\x13\n\x0bmemory_size\x18\x04 \x01(\r\"\x83\x01\n\tShardInfo\x12\x1c\n\tnode_info\x18\x01 \x01(\x0b\x32\t.NodeInfo\x12\x19\n\x11shard_description\x18\x02 \x01(\t\x12\x11\n\tn_samples\x18\x03 \x01(\x04\x12\x14\n\x0csample_shape\x18\x04 \x03(\t\x12\x14\n\x0ctarget_shape\x18\x05 \x03(\t\"(\n\x14ShardAcknowledgement\x12\x10\n\x08\x61\x63\x63\x65pted\x18\x01 \x01(\x08\"2\n\x15WaitExperimentRequest\x12\x19\n\x11\x63ollaborator_name\x18\x01 \x01(\t\"1\n\x16WaitExperimentResponse\x12\x17\n\x0f\x65xperiment_name\x18\x01 \x01(\t\"N\n\x18GetExperimentDataRequest\x12\x17\n\x0f\x65xperiment_name\x18\x01 \x01(\t\x12\x19\n\x11\x63ollaborator_name\x18\x02 \x01(\t\"/\n\x0e\x45xperimentData\x12\x0c\n\x04size\x18\x01 \x01(\r\x12\x0f\n\x07npbytes\x18\x02 \x01(\x0c\"\x86\x01\n\x0e\x45xperimentInfo\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x1a\n\x12\x63ollaborator_names\x18\x02 \x03(\t\x12(\n\x0f\x65xperiment_data\x18\x03 \x01(\x0b\x32\x0f.ExperimentData\x12 \n\x0bmodel_proto\x18\x04 \x01(\x0b\x32\x0b.ModelProto\"\"\n GetExperimentDescriptionsRequest\"{\n\x15\x45xperimentDescription\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0e\n\x06status\x18\x02 \x01(\t\x12\x1c\n\x14\x63ollaborators_amount\x18\x03 \x01(\r\x12\x14\n\x0ctasks_amount\x18\x04 \x01(\r\x12\x10\n\x08progress\x18\x05 \x01(\x02\"P\n!GetExperimentDescriptionsResponse\x12+\n\x0b\x65xperiments\x18\x01 \x03(\x0b\x32\x16.ExperimentDescription\"/\n\x1fGetExperimentDescriptionRequest\x12\x0c\n\x04name\x18\x01 \x01(\t\"\x7f\n\x17\x43ollaboratorDescription\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0e\n\x06status\x18\x02 \x01(\t\x12\x10\n\x08progress\x18\x03 \x01(\x02\x12\r\n\x05round\x18\x04 \x01(\r\x12\x13\n\x0b\x63urrentTask\x18\x05 \x01(\t\x12\x10\n\x08nextTask\x18\x06 \x01(\t\"4\n\x0fTaskDescription\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x13\n\x0b\x64\x65scription\x18\x02 \x01(\t\".\n\x0e\x44ownloadStatus\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0e\n\x06status\x18\x02 \x01(\t\"R\n\x10\x44ownloadStatuses\x12\x1f\n\x06models\x18\x01 \x03(\x0b\x32\x0f.DownloadStatus\x12\x1d\n\x04logs\x18\x02 \x03(\x0b\x32\x0f.DownloadStatus\"\xfc\x01\n GetExperimentDescriptionResponse\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0e\n\x06status\x18\x02 \x01(\t\x12\x10\n\x08progress\x18\x03 \x01(\x02\x12\x13\n\x0btotalRounds\x18\x04 \x01(\r\x12\x14\n\x0c\x63urrentRound\x18\x05 \x01(\r\x12+\n\x10\x64ownloadStatuses\x18\x06 \x01(\x0b\x32\x11.DownloadStatuses\x12/\n\rcollaborators\x18\x07 \x03(\x0b\x32\x18.CollaboratorDescription\x12\x1f\n\x05tasks\x18\x08 \x03(\x0b\x32\x10.TaskDescription\"I\n\x18SetNewExperimentResponse\x12\x10\n\x08\x61\x63\x63\x65pted\x18\x01 \x01(\x08\x12\x1b\n\x13tensorboard_address\x18\x02 \x01(\t\"\x95\x01\n\x16GetTrainedModelRequest\x12\x17\n\x0f\x65xperiment_name\x18\x02 \x01(\t\x12\x35\n\nmodel_type\x18\x03 \x01(\x0e\x32!.GetTrainedModelRequest.ModelType\"+\n\tModelType\x12\x0e\n\nBEST_MODEL\x10\x00\x12\x0e\n\nLAST_MODEL\x10\x01\"8\n\x14TrainedModelResponse\x12 \n\x0bmodel_proto\x18\x01 \x01(\x0b\x32\x0b.ModelProto\"\x17\n\x15GetDatasetInfoRequest\"/\n\x14StreamMetricsRequest\x12\x17\n\x0f\x65xperiment_name\x18\x01 \x01(\t\"{\n\x15StreamMetricsResponse\x12\x15\n\rmetric_origin\x18\x01 \x01(\t\x12\x11\n\ttask_name\x18\x02 \x01(\t\x12\x13\n\x0bmetric_name\x18\x03 \x01(\t\x12\x14\n\x0cmetric_value\x18\x04 \x01(\x02\x12\r\n\x05round\x18\x05 \x01(\r\"2\n\x17RemoveExperimentRequest\x12\x17\n\x0f\x65xperiment_name\x18\x01 \x01(\t\"3\n\x18RemoveExperimentResponse\x12\x17\n\x0f\x61\x63knowledgement\x18\x01 \x01(\x08\"A\n\x12\x43ollaboratorStatus\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x1d\n\x15is_experiment_running\x18\x02 \x01(\x08\"Y\n\x1f\x43ollaboratorHealthCheckResponse\x12\x36\n\x13health_check_period\x18\x01 \x01(\x0b\x32\x19.google.protobuf.Duration\"\xdb\x01\n\tEnvoyInfo\x12\x1e\n\nshard_info\x18\x01 \x01(\x0b\x32\n.ShardInfo\x12\x11\n\tis_online\x18\x02 \x01(\x08\x12\x1d\n\x15is_experiment_running\x18\x03 \x01(\x08\x12\x30\n\x0clast_updated\x18\x04 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\x31\n\x0evalid_duration\x18\x05 \x01(\x0b\x32\x19.google.protobuf.Duration\x12\x17\n\x0f\x65xperiment_name\x18\x06 \x01(\t\"\x12\n\x10GetEnvoysRequest\"4\n\x11GetEnvoysResponse\x12\x1f\n\x0b\x65nvoy_infos\x18\x01 \x03(\x0b\x32\n.EnvoyInfo2\x82\x07\n\x12\x46\x65\x64\x65rationDirector\x12\x37\n\x10\x41\x63knowledgeShard\x12\n.ShardInfo\x1a\x15.ShardAcknowledgement\"\x00\x12G\n\x0eWaitExperiment\x12\x16.WaitExperimentRequest\x1a\x17.WaitExperimentResponse\"\x00(\x01\x30\x01\x12\x43\n\x11GetExperimentData\x12\x19.GetExperimentDataRequest\x1a\x0f.ExperimentData\"\x00\x30\x01\x12\x61\n\x18GetExperimentDescription\x12 .GetExperimentDescriptionRequest\x1a!.GetExperimentDescriptionResponse\"\x00\x12\x64\n\x19GetExperimentDescriptions\x12!.GetExperimentDescriptionsRequest\x1a\".GetExperimentDescriptionsResponse\"\x00\x12\x42\n\x10SetNewExperiment\x12\x0f.ExperimentInfo\x1a\x19.SetNewExperimentResponse\"\x00(\x01\x12\x36\n\x0eGetDatasetInfo\x12\x16.GetDatasetInfoRequest\x1a\n.ShardInfo\"\x00\x12\x43\n\x0fGetTrainedModel\x12\x17.GetTrainedModelRequest\x1a\x15.TrainedModelResponse\"\x00\x12\x42\n\rStreamMetrics\x12\x15.StreamMetricsRequest\x1a\x16.StreamMetricsResponse\"\x00\x30\x01\x12M\n\x14RemoveExperimentData\x12\x18.RemoveExperimentRequest\x1a\x19.RemoveExperimentResponse\"\x00\x12R\n\x17\x43ollaboratorHealthCheck\x12\x13.CollaboratorStatus\x1a .CollaboratorHealthCheckResponse\"\x00\x12\x34\n\tGetEnvoys\x12\x11.GetEnvoysRequest\x1a\x12.GetEnvoysResponse\"\x00\x62\x06proto3'
-    ,
-    dependencies=[google_dot_protobuf_dot_timestamp__pb2.DESCRIPTOR,
-                  google_dot_protobuf_dot_duration__pb2.DESCRIPTOR, federation__pb2.DESCRIPTOR, ])
+  name='director.proto',
+  package='',
+  syntax='proto3',
+  serialized_options=None,
+  create_key=_descriptor._internal_create_key,
+  serialized_pb=b'\n\x0e\x64irector.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x1egoogle/protobuf/duration.proto\x1a\x10\x66\x65\x64\x65ration.proto\"U\n\x08NodeInfo\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0e\n\x06\x61\x64ress\x18\x02 \x01(\t\x12\x16\n\x0e\x63uda_available\x18\x03 \x01(\x08\x12\x13\n\x0bmemory_size\x18\x04 \x01(\r\"\x83\x01\n\tShardInfo\x12\x1c\n\tnode_info\x18\x01 \x01(\x0b\x32\t.NodeInfo\x12\x19\n\x11shard_description\x18\x02 \x01(\t\x12\x11\n\tn_samples\x18\x03 \x01(\x04\x12\x14\n\x0csample_shape\x18\x04 \x03(\t\x12\x14\n\x0ctarget_shape\x18\x05 \x03(\t\"(\n\x14ShardAcknowledgement\x12\x10\n\x08\x61\x63\x63\x65pted\x18\x01 \x01(\x08\"2\n\x15WaitExperimentRequest\x12\x19\n\x11\x63ollaborator_name\x18\x01 \x01(\t\"1\n\x16WaitExperimentResponse\x12\x17\n\x0f\x65xperiment_name\x18\x01 \x01(\t\"N\n\x18GetExperimentDataRequest\x12\x17\n\x0f\x65xperiment_name\x18\x01 \x01(\t\x12\x19\n\x11\x63ollaborator_name\x18\x02 \x01(\t\"/\n\x0e\x45xperimentData\x12\x0c\n\x04size\x18\x01 \x01(\r\x12\x0f\n\x07npbytes\x18\x02 \x01(\x0c\"\x86\x01\n\x0e\x45xperimentInfo\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x1a\n\x12\x63ollaborator_names\x18\x02 \x03(\t\x12(\n\x0f\x65xperiment_data\x18\x03 \x01(\x0b\x32\x0f.ExperimentData\x12 \n\x0bmodel_proto\x18\x04 \x01(\x0b\x32\x0b.ModelProto\"\"\n GetExperimentDescriptionsRequest\"{\n\x15\x45xperimentDescription\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0e\n\x06status\x18\x02 \x01(\t\x12\x1c\n\x14\x63ollaborators_amount\x18\x03 \x01(\r\x12\x14\n\x0ctasks_amount\x18\x04 \x01(\r\x12\x10\n\x08progress\x18\x05 \x01(\x02\"P\n!GetExperimentDescriptionsResponse\x12+\n\x0b\x65xperiments\x18\x01 \x03(\x0b\x32\x16.ExperimentDescription\"/\n\x1fGetExperimentDescriptionRequest\x12\x0c\n\x04name\x18\x01 \x01(\t\"\x7f\n\x17\x43ollaboratorDescription\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0e\n\x06status\x18\x02 \x01(\t\x12\x10\n\x08progress\x18\x03 \x01(\x02\x12\r\n\x05round\x18\x04 \x01(\r\x12\x13\n\x0b\x63urrentTask\x18\x05 \x01(\t\x12\x10\n\x08nextTask\x18\x06 \x01(\t\"4\n\x0fTaskDescription\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x13\n\x0b\x64\x65scription\x18\x02 \x01(\t\".\n\x0e\x44ownloadStatus\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0e\n\x06status\x18\x02 \x01(\t\"R\n\x10\x44ownloadStatuses\x12\x1f\n\x06models\x18\x01 \x03(\x0b\x32\x0f.DownloadStatus\x12\x1d\n\x04logs\x18\x02 \x03(\x0b\x32\x0f.DownloadStatus\"\xfc\x01\n GetExperimentDescriptionResponse\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0e\n\x06status\x18\x02 \x01(\t\x12\x10\n\x08progress\x18\x03 \x01(\x02\x12\x13\n\x0btotalRounds\x18\x04 \x01(\r\x12\x14\n\x0c\x63urrentRound\x18\x05 \x01(\r\x12+\n\x10\x64ownloadStatuses\x18\x06 \x01(\x0b\x32\x11.DownloadStatuses\x12/\n\rcollaborators\x18\x07 \x03(\x0b\x32\x18.CollaboratorDescription\x12\x1f\n\x05tasks\x18\x08 \x03(\x0b\x32\x10.TaskDescription\"I\n\x18SetNewExperimentResponse\x12\x10\n\x08\x61\x63\x63\x65pted\x18\x01 \x01(\x08\x12\x1b\n\x13tensorboard_address\x18\x02 \x01(\t\"\x95\x01\n\x16GetTrainedModelRequest\x12\x17\n\x0f\x65xperiment_name\x18\x02 \x01(\t\x12\x35\n\nmodel_type\x18\x03 \x01(\x0e\x32!.GetTrainedModelRequest.ModelType\"+\n\tModelType\x12\x0e\n\nBEST_MODEL\x10\x00\x12\x0e\n\nLAST_MODEL\x10\x01\"8\n\x14TrainedModelResponse\x12 \n\x0bmodel_proto\x18\x01 \x01(\x0b\x32\x0b.ModelProto\"\x17\n\x15GetDatasetInfoRequest\"/\n\x14StreamMetricsRequest\x12\x17\n\x0f\x65xperiment_name\x18\x01 \x01(\t\"{\n\x15StreamMetricsResponse\x12\x15\n\rmetric_origin\x18\x01 \x01(\t\x12\x11\n\ttask_name\x18\x02 \x01(\t\x12\x13\n\x0bmetric_name\x18\x03 \x01(\t\x12\x14\n\x0cmetric_value\x18\x04 \x01(\x02\x12\r\n\x05round\x18\x05 \x01(\r\"2\n\x17RemoveExperimentRequest\x12\x17\n\x0f\x65xperiment_name\x18\x01 \x01(\t\"3\n\x18RemoveExperimentResponse\x12\x17\n\x0f\x61\x63knowledgement\x18\x01 \x01(\x08\"A\n\x12\x43ollaboratorStatus\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x1d\n\x15is_experiment_running\x18\x02 \x01(\x08\"Y\n\x1f\x43ollaboratorHealthCheckResponse\x12\x36\n\x13health_check_period\x18\x01 \x01(\x0b\x32\x19.google.protobuf.Duration\"\xdb\x01\n\tEnvoyInfo\x12\x1e\n\nshard_info\x18\x01 \x01(\x0b\x32\n.ShardInfo\x12\x11\n\tis_online\x18\x02 \x01(\x08\x12\x1d\n\x15is_experiment_running\x18\x03 \x01(\x08\x12\x30\n\x0clast_updated\x18\x04 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\x31\n\x0evalid_duration\x18\x05 \x01(\x0b\x32\x19.google.protobuf.Duration\x12\x17\n\x0f\x65xperiment_name\x18\x06 \x01(\t\"\x12\n\x10GetEnvoysRequest\"4\n\x11GetEnvoysResponse\x12\x1f\n\x0b\x65nvoy_infos\x18\x01 \x03(\x0b\x32\n.EnvoyInfo2\x82\x07\n\x12\x46\x65\x64\x65rationDirector\x12\x37\n\x10\x41\x63knowledgeShard\x12\n.ShardInfo\x1a\x15.ShardAcknowledgement\"\x00\x12G\n\x0eWaitExperiment\x12\x16.WaitExperimentRequest\x1a\x17.WaitExperimentResponse\"\x00(\x01\x30\x01\x12\x43\n\x11GetExperimentData\x12\x19.GetExperimentDataRequest\x1a\x0f.ExperimentData\"\x00\x30\x01\x12\x61\n\x18GetExperimentDescription\x12 .GetExperimentDescriptionRequest\x1a!.GetExperimentDescriptionResponse\"\x00\x12\x64\n\x19GetExperimentDescriptions\x12!.GetExperimentDescriptionsRequest\x1a\".GetExperimentDescriptionsResponse\"\x00\x12\x42\n\x10SetNewExperiment\x12\x0f.ExperimentInfo\x1a\x19.SetNewExperimentResponse\"\x00(\x01\x12\x36\n\x0eGetDatasetInfo\x12\x16.GetDatasetInfoRequest\x1a\n.ShardInfo\"\x00\x12\x43\n\x0fGetTrainedModel\x12\x17.GetTrainedModelRequest\x1a\x15.TrainedModelResponse\"\x00\x12\x42\n\rStreamMetrics\x12\x15.StreamMetricsRequest\x1a\x16.StreamMetricsResponse\"\x00\x30\x01\x12M\n\x14RemoveExperimentData\x12\x18.RemoveExperimentRequest\x1a\x19.RemoveExperimentResponse\"\x00\x12R\n\x17\x43ollaboratorHealthCheck\x12\x13.CollaboratorStatus\x1a .CollaboratorHealthCheckResponse\"\x00\x12\x34\n\tGetEnvoys\x12\x11.GetEnvoysRequest\x1a\x12.GetEnvoysResponse\"\x00\x62\x06proto3'
+  ,
+  dependencies=[google_dot_protobuf_dot_timestamp__pb2.DESCRIPTOR,google_dot_protobuf_dot_duration__pb2.DESCRIPTOR,federation__pb2.DESCRIPTOR,])
+
+
 
 _GETTRAINEDMODELREQUEST_MODELTYPE = _descriptor.EnumDescriptor(
-    name='ModelType',
-    full_name='GetTrainedModelRequest.ModelType',
-    filename=None,
-    file=DESCRIPTOR,
-    create_key=_descriptor._internal_create_key,
-    values=[
-        _descriptor.EnumValueDescriptor(
-            name='BEST_MODEL', index=0, number=0,
-            serialized_options=None,
-            type=None,
-            create_key=_descriptor._internal_create_key),
-        _descriptor.EnumValueDescriptor(
-            name='LAST_MODEL', index=1, number=1,
-            serialized_options=None,
-            type=None,
-            create_key=_descriptor._internal_create_key),
-    ],
-    containing_type=None,
-    serialized_options=None,
-    serialized_start=1777,
-    serialized_end=1820,
+  name='ModelType',
+  full_name='GetTrainedModelRequest.ModelType',
+  filename=None,
+  file=DESCRIPTOR,
+  create_key=_descriptor._internal_create_key,
+  values=[
+    _descriptor.EnumValueDescriptor(
+      name='BEST_MODEL', index=0, number=0,
+      serialized_options=None,
+      type=None,
+      create_key=_descriptor._internal_create_key),
+    _descriptor.EnumValueDescriptor(
+      name='LAST_MODEL', index=1, number=1,
+      serialized_options=None,
+      type=None,
+      create_key=_descriptor._internal_create_key),
+  ],
+  containing_type=None,
+  serialized_options=None,
+  serialized_start=1777,
+  serialized_end=1820,
 )
 _sym_db.RegisterEnumDescriptor(_GETTRAINEDMODELREQUEST_MODELTYPE)
 
+
 _NODEINFO = _descriptor.Descriptor(
-    name='NodeInfo',
-    full_name='NodeInfo',
-    filename=None,
-    file=DESCRIPTOR,
-    containing_type=None,
-    create_key=_descriptor._internal_create_key,
-    fields=[
-        _descriptor.FieldDescriptor(
-            name='name', full_name='NodeInfo.name', index=0,
-            number=1, type=9, cpp_type=9, label=1,
-            has_default_value=False, default_value=b"".decode('utf-8'),
-            message_type=None, enum_type=None, containing_type=None,
-            is_extension=False, extension_scope=None,
-            serialized_options=None, file=DESCRIPTOR, create_key=_descriptor._internal_create_key),
-        _descriptor.FieldDescriptor(
-            name='adress', full_name='NodeInfo.adress', index=1,
-            number=2, type=9, cpp_type=9, label=1,
-            has_default_value=False, default_value=b"".decode('utf-8'),
-            message_type=None, enum_type=None, containing_type=None,
-            is_extension=False, extension_scope=None,
-            serialized_options=None, file=DESCRIPTOR, create_key=_descriptor._internal_create_key),
-        _descriptor.FieldDescriptor(
-            name='cuda_available', full_name='NodeInfo.cuda_available', index=2,
-            number=3, type=8, cpp_type=7, label=1,
-            has_default_value=False, default_value=False,
-            message_type=None, enum_type=None, containing_type=None,
-            is_extension=False, extension_scope=None,
-            serialized_options=None, file=DESCRIPTOR, create_key=_descriptor._internal_create_key),
-        _descriptor.FieldDescriptor(
-            name='memory_size', full_name='NodeInfo.memory_size', index=3,
-            number=4, type=13, cpp_type=3, label=1,
-            has_default_value=False, default_value=0,
-            message_type=None, enum_type=None, containing_type=None,
-            is_extension=False, extension_scope=None,
-            serialized_options=None, file=DESCRIPTOR, create_key=_descriptor._internal_create_key),
-    ],
-    extensions=[
-    ],
-    nested_types=[],
-    enum_types=[
-    ],
-    serialized_options=None,
-    is_extendable=False,
-    syntax='proto3',
-    extension_ranges=[],
-    oneofs=[
-    ],
-    serialized_start=101,
-    serialized_end=186,
+  name='NodeInfo',
+  full_name='NodeInfo',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  create_key=_descriptor._internal_create_key,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='name', full_name='NodeInfo.name', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='adress', full_name='NodeInfo.adress', index=1,
+      number=2, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='cuda_available', full_name='NodeInfo.cuda_available', index=2,
+      number=3, type=8, cpp_type=7, label=1,
+      has_default_value=False, default_value=False,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='memory_size', full_name='NodeInfo.memory_size', index=3,
+      number=4, type=13, cpp_type=3, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=101,
+  serialized_end=186,
 )
+
 
 _SHARDINFO = _descriptor.Descriptor(
-    name='ShardInfo',
-    full_name='ShardInfo',
-    filename=None,
-    file=DESCRIPTOR,
-    containing_type=None,
-    create_key=_descriptor._internal_create_key,
-    fields=[
-        _descriptor.FieldDescriptor(
-            name='node_info', full_name='ShardInfo.node_info', index=0,
-            number=1, type=11, cpp_type=10, label=1,
-            has_default_value=False, default_value=None,
-            message_type=None, enum_type=None, containing_type=None,
-            is_extension=False, extension_scope=None,
-            serialized_options=None, file=DESCRIPTOR, create_key=_descriptor._internal_create_key),
-        _descriptor.FieldDescriptor(
-            name='shard_description', full_name='ShardInfo.shard_description', index=1,
-            number=2, type=9, cpp_type=9, label=1,
-            has_default_value=False, default_value=b"".decode('utf-8'),
-            message_type=None, enum_type=None, containing_type=None,
-            is_extension=False, extension_scope=None,
-            serialized_options=None, file=DESCRIPTOR, create_key=_descriptor._internal_create_key),
-        _descriptor.FieldDescriptor(
-            name='n_samples', full_name='ShardInfo.n_samples', index=2,
-            number=3, type=4, cpp_type=4, label=1,
-            has_default_value=False, default_value=0,
-            message_type=None, enum_type=None, containing_type=None,
-            is_extension=False, extension_scope=None,
-            serialized_options=None, file=DESCRIPTOR, create_key=_descriptor._internal_create_key),
-        _descriptor.FieldDescriptor(
-            name='sample_shape', full_name='ShardInfo.sample_shape', index=3,
-            number=4, type=9, cpp_type=9, label=3,
-            has_default_value=False, default_value=[],
-            message_type=None, enum_type=None, containing_type=None,
-            is_extension=False, extension_scope=None,
-            serialized_options=None, file=DESCRIPTOR, create_key=_descriptor._internal_create_key),
-        _descriptor.FieldDescriptor(
-            name='target_shape', full_name='ShardInfo.target_shape', index=4,
-            number=5, type=9, cpp_type=9, label=3,
-            has_default_value=False, default_value=[],
-            message_type=None, enum_type=None, containing_type=None,
-            is_extension=False, extension_scope=None,
-            serialized_options=None, file=DESCRIPTOR, create_key=_descriptor._internal_create_key),
-    ],
-    extensions=[
-    ],
-    nested_types=[],
-    enum_types=[
-    ],
-    serialized_options=None,
-    is_extendable=False,
-    syntax='proto3',
-    extension_ranges=[],
-    oneofs=[
-    ],
-    serialized_start=189,
-    serialized_end=320,
+  name='ShardInfo',
+  full_name='ShardInfo',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  create_key=_descriptor._internal_create_key,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='node_info', full_name='ShardInfo.node_info', index=0,
+      number=1, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='shard_description', full_name='ShardInfo.shard_description', index=1,
+      number=2, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='n_samples', full_name='ShardInfo.n_samples', index=2,
+      number=3, type=4, cpp_type=4, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='sample_shape', full_name='ShardInfo.sample_shape', index=3,
+      number=4, type=9, cpp_type=9, label=3,
+      has_default_value=False, default_value=[],
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='target_shape', full_name='ShardInfo.target_shape', index=4,
+      number=5, type=9, cpp_type=9, label=3,
+      has_default_value=False, default_value=[],
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=189,
+  serialized_end=320,
 )
+
 
 _SHARDACKNOWLEDGEMENT = _descriptor.Descriptor(
-    name='ShardAcknowledgement',
-    full_name='ShardAcknowledgement',
-    filename=None,
-    file=DESCRIPTOR,
-    containing_type=None,
-    create_key=_descriptor._internal_create_key,
-    fields=[
-        _descriptor.FieldDescriptor(
-            name='accepted', full_name='ShardAcknowledgement.accepted', index=0,
-            number=1, type=8, cpp_type=7, label=1,
-            has_default_value=False, default_value=False,
-            message_type=None, enum_type=None, containing_type=None,
-            is_extension=False, extension_scope=None,
-            serialized_options=None, file=DESCRIPTOR, create_key=_descriptor._internal_create_key),
-    ],
-    extensions=[
-    ],
-    nested_types=[],
-    enum_types=[
-    ],
-    serialized_options=None,
-    is_extendable=False,
-    syntax='proto3',
-    extension_ranges=[],
-    oneofs=[
-    ],
-    serialized_start=322,
-    serialized_end=362,
+  name='ShardAcknowledgement',
+  full_name='ShardAcknowledgement',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  create_key=_descriptor._internal_create_key,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='accepted', full_name='ShardAcknowledgement.accepted', index=0,
+      number=1, type=8, cpp_type=7, label=1,
+      has_default_value=False, default_value=False,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=322,
+  serialized_end=362,
 )
+
 
 _WAITEXPERIMENTREQUEST = _descriptor.Descriptor(
-    name='WaitExperimentRequest',
-    full_name='WaitExperimentRequest',
-    filename=None,
-    file=DESCRIPTOR,
-    containing_type=None,
-    create_key=_descriptor._internal_create_key,
-    fields=[
-        _descriptor.FieldDescriptor(
-            name='collaborator_name', full_name='WaitExperimentRequest.collaborator_name', index=0,
-            number=1, type=9, cpp_type=9, label=1,
-            has_default_value=False, default_value=b"".decode('utf-8'),
-            message_type=None, enum_type=None, containing_type=None,
-            is_extension=False, extension_scope=None,
-            serialized_options=None, file=DESCRIPTOR, create_key=_descriptor._internal_create_key),
-    ],
-    extensions=[
-    ],
-    nested_types=[],
-    enum_types=[
-    ],
-    serialized_options=None,
-    is_extendable=False,
-    syntax='proto3',
-    extension_ranges=[],
-    oneofs=[
-    ],
-    serialized_start=364,
-    serialized_end=414,
+  name='WaitExperimentRequest',
+  full_name='WaitExperimentRequest',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  create_key=_descriptor._internal_create_key,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='collaborator_name', full_name='WaitExperimentRequest.collaborator_name', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=364,
+  serialized_end=414,
 )
+
 
 _WAITEXPERIMENTRESPONSE = _descriptor.Descriptor(
-    name='WaitExperimentResponse',
-    full_name='WaitExperimentResponse',
-    filename=None,
-    file=DESCRIPTOR,
-    containing_type=None,
-    create_key=_descriptor._internal_create_key,
-    fields=[
-        _descriptor.FieldDescriptor(
-            name='experiment_name', full_name='WaitExperimentResponse.experiment_name', index=0,
-            number=1, type=9, cpp_type=9, label=1,
-            has_default_value=False, default_value=b"".decode('utf-8'),
-            message_type=None, enum_type=None, containing_type=None,
-            is_extension=False, extension_scope=None,
-            serialized_options=None, file=DESCRIPTOR, create_key=_descriptor._internal_create_key),
-    ],
-    extensions=[
-    ],
-    nested_types=[],
-    enum_types=[
-    ],
-    serialized_options=None,
-    is_extendable=False,
-    syntax='proto3',
-    extension_ranges=[],
-    oneofs=[
-    ],
-    serialized_start=416,
-    serialized_end=465,
+  name='WaitExperimentResponse',
+  full_name='WaitExperimentResponse',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  create_key=_descriptor._internal_create_key,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='experiment_name', full_name='WaitExperimentResponse.experiment_name', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=416,
+  serialized_end=465,
 )
+
 
 _GETEXPERIMENTDATAREQUEST = _descriptor.Descriptor(
-    name='GetExperimentDataRequest',
-    full_name='GetExperimentDataRequest',
-    filename=None,
-    file=DESCRIPTOR,
-    containing_type=None,
-    create_key=_descriptor._internal_create_key,
-    fields=[
-        _descriptor.FieldDescriptor(
-            name='experiment_name', full_name='GetExperimentDataRequest.experiment_name', index=0,
-            number=1, type=9, cpp_type=9, label=1,
-            has_default_value=False, default_value=b"".decode('utf-8'),
-            message_type=None, enum_type=None, containing_type=None,
-            is_extension=False, extension_scope=None,
-            serialized_options=None, file=DESCRIPTOR, create_key=_descriptor._internal_create_key),
-        _descriptor.FieldDescriptor(
-            name='collaborator_name', full_name='GetExperimentDataRequest.collaborator_name',
-            index=1,
-            number=2, type=9, cpp_type=9, label=1,
-            has_default_value=False, default_value=b"".decode('utf-8'),
-            message_type=None, enum_type=None, containing_type=None,
-            is_extension=False, extension_scope=None,
-            serialized_options=None, file=DESCRIPTOR, create_key=_descriptor._internal_create_key),
-    ],
-    extensions=[
-    ],
-    nested_types=[],
-    enum_types=[
-    ],
-    serialized_options=None,
-    is_extendable=False,
-    syntax='proto3',
-    extension_ranges=[],
-    oneofs=[
-    ],
-    serialized_start=467,
-    serialized_end=545,
+  name='GetExperimentDataRequest',
+  full_name='GetExperimentDataRequest',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  create_key=_descriptor._internal_create_key,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='experiment_name', full_name='GetExperimentDataRequest.experiment_name', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='collaborator_name', full_name='GetExperimentDataRequest.collaborator_name', index=1,
+      number=2, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=467,
+  serialized_end=545,
 )
+
 
 _EXPERIMENTDATA = _descriptor.Descriptor(
-    name='ExperimentData',
-    full_name='ExperimentData',
-    filename=None,
-    file=DESCRIPTOR,
-    containing_type=None,
-    create_key=_descriptor._internal_create_key,
-    fields=[
-        _descriptor.FieldDescriptor(
-            name='size', full_name='ExperimentData.size', index=0,
-            number=1, type=13, cpp_type=3, label=1,
-            has_default_value=False, default_value=0,
-            message_type=None, enum_type=None, containing_type=None,
-            is_extension=False, extension_scope=None,
-            serialized_options=None, file=DESCRIPTOR, create_key=_descriptor._internal_create_key),
-        _descriptor.FieldDescriptor(
-            name='npbytes', full_name='ExperimentData.npbytes', index=1,
-            number=2, type=12, cpp_type=9, label=1,
-            has_default_value=False, default_value=b"",
-            message_type=None, enum_type=None, containing_type=None,
-            is_extension=False, extension_scope=None,
-            serialized_options=None, file=DESCRIPTOR, create_key=_descriptor._internal_create_key),
-    ],
-    extensions=[
-    ],
-    nested_types=[],
-    enum_types=[
-    ],
-    serialized_options=None,
-    is_extendable=False,
-    syntax='proto3',
-    extension_ranges=[],
-    oneofs=[
-    ],
-    serialized_start=547,
-    serialized_end=594,
+  name='ExperimentData',
+  full_name='ExperimentData',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  create_key=_descriptor._internal_create_key,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='size', full_name='ExperimentData.size', index=0,
+      number=1, type=13, cpp_type=3, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='npbytes', full_name='ExperimentData.npbytes', index=1,
+      number=2, type=12, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"",
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=547,
+  serialized_end=594,
 )
+
 
 _EXPERIMENTINFO = _descriptor.Descriptor(
-    name='ExperimentInfo',
-    full_name='ExperimentInfo',
-    filename=None,
-    file=DESCRIPTOR,
-    containing_type=None,
-    create_key=_descriptor._internal_create_key,
-    fields=[
-        _descriptor.FieldDescriptor(
-            name='name', full_name='ExperimentInfo.name', index=0,
-            number=1, type=9, cpp_type=9, label=1,
-            has_default_value=False, default_value=b"".decode('utf-8'),
-            message_type=None, enum_type=None, containing_type=None,
-            is_extension=False, extension_scope=None,
-            serialized_options=None, file=DESCRIPTOR, create_key=_descriptor._internal_create_key),
-        _descriptor.FieldDescriptor(
-            name='collaborator_names', full_name='ExperimentInfo.collaborator_names', index=1,
-            number=2, type=9, cpp_type=9, label=3,
-            has_default_value=False, default_value=[],
-            message_type=None, enum_type=None, containing_type=None,
-            is_extension=False, extension_scope=None,
-            serialized_options=None, file=DESCRIPTOR, create_key=_descriptor._internal_create_key),
-        _descriptor.FieldDescriptor(
-            name='experiment_data', full_name='ExperimentInfo.experiment_data', index=2,
-            number=3, type=11, cpp_type=10, label=1,
-            has_default_value=False, default_value=None,
-            message_type=None, enum_type=None, containing_type=None,
-            is_extension=False, extension_scope=None,
-            serialized_options=None, file=DESCRIPTOR, create_key=_descriptor._internal_create_key),
-        _descriptor.FieldDescriptor(
-            name='model_proto', full_name='ExperimentInfo.model_proto', index=3,
-            number=4, type=11, cpp_type=10, label=1,
-            has_default_value=False, default_value=None,
-            message_type=None, enum_type=None, containing_type=None,
-            is_extension=False, extension_scope=None,
-            serialized_options=None, file=DESCRIPTOR, create_key=_descriptor._internal_create_key),
-    ],
-    extensions=[
-    ],
-    nested_types=[],
-    enum_types=[
-    ],
-    serialized_options=None,
-    is_extendable=False,
-    syntax='proto3',
-    extension_ranges=[],
-    oneofs=[
-    ],
-    serialized_start=597,
-    serialized_end=731,
+  name='ExperimentInfo',
+  full_name='ExperimentInfo',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  create_key=_descriptor._internal_create_key,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='name', full_name='ExperimentInfo.name', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='collaborator_names', full_name='ExperimentInfo.collaborator_names', index=1,
+      number=2, type=9, cpp_type=9, label=3,
+      has_default_value=False, default_value=[],
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='experiment_data', full_name='ExperimentInfo.experiment_data', index=2,
+      number=3, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='model_proto', full_name='ExperimentInfo.model_proto', index=3,
+      number=4, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=597,
+  serialized_end=731,
 )
+
 
 _GETEXPERIMENTDESCRIPTIONSREQUEST = _descriptor.Descriptor(
-    name='GetExperimentDescriptionsRequest',
-    full_name='GetExperimentDescriptionsRequest',
-    filename=None,
-    file=DESCRIPTOR,
-    containing_type=None,
-    create_key=_descriptor._internal_create_key,
-    fields=[
-    ],
-    extensions=[
-    ],
-    nested_types=[],
-    enum_types=[
-    ],
-    serialized_options=None,
-    is_extendable=False,
-    syntax='proto3',
-    extension_ranges=[],
-    oneofs=[
-    ],
-    serialized_start=733,
-    serialized_end=767,
+  name='GetExperimentDescriptionsRequest',
+  full_name='GetExperimentDescriptionsRequest',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  create_key=_descriptor._internal_create_key,
+  fields=[
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=733,
+  serialized_end=767,
 )
+
 
 _EXPERIMENTDESCRIPTION = _descriptor.Descriptor(
-    name='ExperimentDescription',
-    full_name='ExperimentDescription',
-    filename=None,
-    file=DESCRIPTOR,
-    containing_type=None,
-    create_key=_descriptor._internal_create_key,
-    fields=[
-        _descriptor.FieldDescriptor(
-            name='name', full_name='ExperimentDescription.name', index=0,
-            number=1, type=9, cpp_type=9, label=1,
-            has_default_value=False, default_value=b"".decode('utf-8'),
-            message_type=None, enum_type=None, containing_type=None,
-            is_extension=False, extension_scope=None,
-            serialized_options=None, file=DESCRIPTOR, create_key=_descriptor._internal_create_key),
-        _descriptor.FieldDescriptor(
-            name='status', full_name='ExperimentDescription.status', index=1,
-            number=2, type=9, cpp_type=9, label=1,
-            has_default_value=False, default_value=b"".decode('utf-8'),
-            message_type=None, enum_type=None, containing_type=None,
-            is_extension=False, extension_scope=None,
-            serialized_options=None, file=DESCRIPTOR, create_key=_descriptor._internal_create_key),
-        _descriptor.FieldDescriptor(
-            name='collaborators_amount', full_name='ExperimentDescription.collaborators_amount',
-            index=2,
-            number=3, type=13, cpp_type=3, label=1,
-            has_default_value=False, default_value=0,
-            message_type=None, enum_type=None, containing_type=None,
-            is_extension=False, extension_scope=None,
-            serialized_options=None, file=DESCRIPTOR, create_key=_descriptor._internal_create_key),
-        _descriptor.FieldDescriptor(
-            name='tasks_amount', full_name='ExperimentDescription.tasks_amount', index=3,
-            number=4, type=13, cpp_type=3, label=1,
-            has_default_value=False, default_value=0,
-            message_type=None, enum_type=None, containing_type=None,
-            is_extension=False, extension_scope=None,
-            serialized_options=None, file=DESCRIPTOR, create_key=_descriptor._internal_create_key),
-        _descriptor.FieldDescriptor(
-            name='progress', full_name='ExperimentDescription.progress', index=4,
-            number=5, type=2, cpp_type=6, label=1,
-            has_default_value=False, default_value=float(0),
-            message_type=None, enum_type=None, containing_type=None,
-            is_extension=False, extension_scope=None,
-            serialized_options=None, file=DESCRIPTOR, create_key=_descriptor._internal_create_key),
-    ],
-    extensions=[
-    ],
-    nested_types=[],
-    enum_types=[
-    ],
-    serialized_options=None,
-    is_extendable=False,
-    syntax='proto3',
-    extension_ranges=[],
-    oneofs=[
-    ],
-    serialized_start=769,
-    serialized_end=892,
+  name='ExperimentDescription',
+  full_name='ExperimentDescription',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  create_key=_descriptor._internal_create_key,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='name', full_name='ExperimentDescription.name', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='status', full_name='ExperimentDescription.status', index=1,
+      number=2, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='collaborators_amount', full_name='ExperimentDescription.collaborators_amount', index=2,
+      number=3, type=13, cpp_type=3, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='tasks_amount', full_name='ExperimentDescription.tasks_amount', index=3,
+      number=4, type=13, cpp_type=3, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='progress', full_name='ExperimentDescription.progress', index=4,
+      number=5, type=2, cpp_type=6, label=1,
+      has_default_value=False, default_value=float(0),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=769,
+  serialized_end=892,
 )
+
 
 _GETEXPERIMENTDESCRIPTIONSRESPONSE = _descriptor.Descriptor(
-    name='GetExperimentDescriptionsResponse',
-    full_name='GetExperimentDescriptionsResponse',
-    filename=None,
-    file=DESCRIPTOR,
-    containing_type=None,
-    create_key=_descriptor._internal_create_key,
-    fields=[
-        _descriptor.FieldDescriptor(
-            name='experiments', full_name='GetExperimentDescriptionsResponse.experiments', index=0,
-            number=1, type=11, cpp_type=10, label=3,
-            has_default_value=False, default_value=[],
-            message_type=None, enum_type=None, containing_type=None,
-            is_extension=False, extension_scope=None,
-            serialized_options=None, file=DESCRIPTOR, create_key=_descriptor._internal_create_key),
-    ],
-    extensions=[
-    ],
-    nested_types=[],
-    enum_types=[
-    ],
-    serialized_options=None,
-    is_extendable=False,
-    syntax='proto3',
-    extension_ranges=[],
-    oneofs=[
-    ],
-    serialized_start=894,
-    serialized_end=974,
+  name='GetExperimentDescriptionsResponse',
+  full_name='GetExperimentDescriptionsResponse',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  create_key=_descriptor._internal_create_key,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='experiments', full_name='GetExperimentDescriptionsResponse.experiments', index=0,
+      number=1, type=11, cpp_type=10, label=3,
+      has_default_value=False, default_value=[],
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=894,
+  serialized_end=974,
 )
+
 
 _GETEXPERIMENTDESCRIPTIONREQUEST = _descriptor.Descriptor(
-    name='GetExperimentDescriptionRequest',
-    full_name='GetExperimentDescriptionRequest',
-    filename=None,
-    file=DESCRIPTOR,
-    containing_type=None,
-    create_key=_descriptor._internal_create_key,
-    fields=[
-        _descriptor.FieldDescriptor(
-            name='name', full_name='GetExperimentDescriptionRequest.name', index=0,
-            number=1, type=9, cpp_type=9, label=1,
-            has_default_value=False, default_value=b"".decode('utf-8'),
-            message_type=None, enum_type=None, containing_type=None,
-            is_extension=False, extension_scope=None,
-            serialized_options=None, file=DESCRIPTOR, create_key=_descriptor._internal_create_key),
-    ],
-    extensions=[
-    ],
-    nested_types=[],
-    enum_types=[
-    ],
-    serialized_options=None,
-    is_extendable=False,
-    syntax='proto3',
-    extension_ranges=[],
-    oneofs=[
-    ],
-    serialized_start=976,
-    serialized_end=1023,
+  name='GetExperimentDescriptionRequest',
+  full_name='GetExperimentDescriptionRequest',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  create_key=_descriptor._internal_create_key,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='name', full_name='GetExperimentDescriptionRequest.name', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=976,
+  serialized_end=1023,
 )
+
 
 _COLLABORATORDESCRIPTION = _descriptor.Descriptor(
-    name='CollaboratorDescription',
-    full_name='CollaboratorDescription',
-    filename=None,
-    file=DESCRIPTOR,
-    containing_type=None,
-    create_key=_descriptor._internal_create_key,
-    fields=[
-        _descriptor.FieldDescriptor(
-            name='name', full_name='CollaboratorDescription.name', index=0,
-            number=1, type=9, cpp_type=9, label=1,
-            has_default_value=False, default_value=b"".decode('utf-8'),
-            message_type=None, enum_type=None, containing_type=None,
-            is_extension=False, extension_scope=None,
-            serialized_options=None, file=DESCRIPTOR, create_key=_descriptor._internal_create_key),
-        _descriptor.FieldDescriptor(
-            name='status', full_name='CollaboratorDescription.status', index=1,
-            number=2, type=9, cpp_type=9, label=1,
-            has_default_value=False, default_value=b"".decode('utf-8'),
-            message_type=None, enum_type=None, containing_type=None,
-            is_extension=False, extension_scope=None,
-            serialized_options=None, file=DESCRIPTOR, create_key=_descriptor._internal_create_key),
-        _descriptor.FieldDescriptor(
-            name='progress', full_name='CollaboratorDescription.progress', index=2,
-            number=3, type=2, cpp_type=6, label=1,
-            has_default_value=False, default_value=float(0),
-            message_type=None, enum_type=None, containing_type=None,
-            is_extension=False, extension_scope=None,
-            serialized_options=None, file=DESCRIPTOR, create_key=_descriptor._internal_create_key),
-        _descriptor.FieldDescriptor(
-            name='round', full_name='CollaboratorDescription.round', index=3,
-            number=4, type=13, cpp_type=3, label=1,
-            has_default_value=False, default_value=0,
-            message_type=None, enum_type=None, containing_type=None,
-            is_extension=False, extension_scope=None,
-            serialized_options=None, file=DESCRIPTOR, create_key=_descriptor._internal_create_key),
-        _descriptor.FieldDescriptor(
-            name='currentTask', full_name='CollaboratorDescription.currentTask', index=4,
-            number=5, type=9, cpp_type=9, label=1,
-            has_default_value=False, default_value=b"".decode('utf-8'),
-            message_type=None, enum_type=None, containing_type=None,
-            is_extension=False, extension_scope=None,
-            serialized_options=None, file=DESCRIPTOR, create_key=_descriptor._internal_create_key),
-        _descriptor.FieldDescriptor(
-            name='nextTask', full_name='CollaboratorDescription.nextTask', index=5,
-            number=6, type=9, cpp_type=9, label=1,
-            has_default_value=False, default_value=b"".decode('utf-8'),
-            message_type=None, enum_type=None, containing_type=None,
-            is_extension=False, extension_scope=None,
-            serialized_options=None, file=DESCRIPTOR, create_key=_descriptor._internal_create_key),
-    ],
-    extensions=[
-    ],
-    nested_types=[],
-    enum_types=[
-    ],
-    serialized_options=None,
-    is_extendable=False,
-    syntax='proto3',
-    extension_ranges=[],
-    oneofs=[
-    ],
-    serialized_start=1025,
-    serialized_end=1152,
+  name='CollaboratorDescription',
+  full_name='CollaboratorDescription',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  create_key=_descriptor._internal_create_key,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='name', full_name='CollaboratorDescription.name', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='status', full_name='CollaboratorDescription.status', index=1,
+      number=2, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='progress', full_name='CollaboratorDescription.progress', index=2,
+      number=3, type=2, cpp_type=6, label=1,
+      has_default_value=False, default_value=float(0),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='round', full_name='CollaboratorDescription.round', index=3,
+      number=4, type=13, cpp_type=3, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='currentTask', full_name='CollaboratorDescription.currentTask', index=4,
+      number=5, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='nextTask', full_name='CollaboratorDescription.nextTask', index=5,
+      number=6, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=1025,
+  serialized_end=1152,
 )
+
 
 _TASKDESCRIPTION = _descriptor.Descriptor(
-    name='TaskDescription',
-    full_name='TaskDescription',
-    filename=None,
-    file=DESCRIPTOR,
-    containing_type=None,
-    create_key=_descriptor._internal_create_key,
-    fields=[
-        _descriptor.FieldDescriptor(
-            name='name', full_name='TaskDescription.name', index=0,
-            number=1, type=9, cpp_type=9, label=1,
-            has_default_value=False, default_value=b"".decode('utf-8'),
-            message_type=None, enum_type=None, containing_type=None,
-            is_extension=False, extension_scope=None,
-            serialized_options=None, file=DESCRIPTOR, create_key=_descriptor._internal_create_key),
-        _descriptor.FieldDescriptor(
-            name='description', full_name='TaskDescription.description', index=1,
-            number=2, type=9, cpp_type=9, label=1,
-            has_default_value=False, default_value=b"".decode('utf-8'),
-            message_type=None, enum_type=None, containing_type=None,
-            is_extension=False, extension_scope=None,
-            serialized_options=None, file=DESCRIPTOR, create_key=_descriptor._internal_create_key),
-    ],
-    extensions=[
-    ],
-    nested_types=[],
-    enum_types=[
-    ],
-    serialized_options=None,
-    is_extendable=False,
-    syntax='proto3',
-    extension_ranges=[],
-    oneofs=[
-    ],
-    serialized_start=1154,
-    serialized_end=1206,
+  name='TaskDescription',
+  full_name='TaskDescription',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  create_key=_descriptor._internal_create_key,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='name', full_name='TaskDescription.name', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='description', full_name='TaskDescription.description', index=1,
+      number=2, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=1154,
+  serialized_end=1206,
 )
+
 
 _DOWNLOADSTATUS = _descriptor.Descriptor(
-    name='DownloadStatus',
-    full_name='DownloadStatus',
-    filename=None,
-    file=DESCRIPTOR,
-    containing_type=None,
-    create_key=_descriptor._internal_create_key,
-    fields=[
-        _descriptor.FieldDescriptor(
-            name='name', full_name='DownloadStatus.name', index=0,
-            number=1, type=9, cpp_type=9, label=1,
-            has_default_value=False, default_value=b"".decode('utf-8'),
-            message_type=None, enum_type=None, containing_type=None,
-            is_extension=False, extension_scope=None,
-            serialized_options=None, file=DESCRIPTOR, create_key=_descriptor._internal_create_key),
-        _descriptor.FieldDescriptor(
-            name='status', full_name='DownloadStatus.status', index=1,
-            number=2, type=9, cpp_type=9, label=1,
-            has_default_value=False, default_value=b"".decode('utf-8'),
-            message_type=None, enum_type=None, containing_type=None,
-            is_extension=False, extension_scope=None,
-            serialized_options=None, file=DESCRIPTOR, create_key=_descriptor._internal_create_key),
-    ],
-    extensions=[
-    ],
-    nested_types=[],
-    enum_types=[
-    ],
-    serialized_options=None,
-    is_extendable=False,
-    syntax='proto3',
-    extension_ranges=[],
-    oneofs=[
-    ],
-    serialized_start=1208,
-    serialized_end=1254,
+  name='DownloadStatus',
+  full_name='DownloadStatus',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  create_key=_descriptor._internal_create_key,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='name', full_name='DownloadStatus.name', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='status', full_name='DownloadStatus.status', index=1,
+      number=2, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=1208,
+  serialized_end=1254,
 )
+
 
 _DOWNLOADSTATUSES = _descriptor.Descriptor(
-    name='DownloadStatuses',
-    full_name='DownloadStatuses',
-    filename=None,
-    file=DESCRIPTOR,
-    containing_type=None,
-    create_key=_descriptor._internal_create_key,
-    fields=[
-        _descriptor.FieldDescriptor(
-            name='models', full_name='DownloadStatuses.models', index=0,
-            number=1, type=11, cpp_type=10, label=3,
-            has_default_value=False, default_value=[],
-            message_type=None, enum_type=None, containing_type=None,
-            is_extension=False, extension_scope=None,
-            serialized_options=None, file=DESCRIPTOR, create_key=_descriptor._internal_create_key),
-        _descriptor.FieldDescriptor(
-            name='logs', full_name='DownloadStatuses.logs', index=1,
-            number=2, type=11, cpp_type=10, label=3,
-            has_default_value=False, default_value=[],
-            message_type=None, enum_type=None, containing_type=None,
-            is_extension=False, extension_scope=None,
-            serialized_options=None, file=DESCRIPTOR, create_key=_descriptor._internal_create_key),
-    ],
-    extensions=[
-    ],
-    nested_types=[],
-    enum_types=[
-    ],
-    serialized_options=None,
-    is_extendable=False,
-    syntax='proto3',
-    extension_ranges=[],
-    oneofs=[
-    ],
-    serialized_start=1256,
-    serialized_end=1338,
+  name='DownloadStatuses',
+  full_name='DownloadStatuses',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  create_key=_descriptor._internal_create_key,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='models', full_name='DownloadStatuses.models', index=0,
+      number=1, type=11, cpp_type=10, label=3,
+      has_default_value=False, default_value=[],
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='logs', full_name='DownloadStatuses.logs', index=1,
+      number=2, type=11, cpp_type=10, label=3,
+      has_default_value=False, default_value=[],
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=1256,
+  serialized_end=1338,
 )
+
 
 _GETEXPERIMENTDESCRIPTIONRESPONSE = _descriptor.Descriptor(
-    name='GetExperimentDescriptionResponse',
-    full_name='GetExperimentDescriptionResponse',
-    filename=None,
-    file=DESCRIPTOR,
-    containing_type=None,
-    create_key=_descriptor._internal_create_key,
-    fields=[
-        _descriptor.FieldDescriptor(
-            name='name', full_name='GetExperimentDescriptionResponse.name', index=0,
-            number=1, type=9, cpp_type=9, label=1,
-            has_default_value=False, default_value=b"".decode('utf-8'),
-            message_type=None, enum_type=None, containing_type=None,
-            is_extension=False, extension_scope=None,
-            serialized_options=None, file=DESCRIPTOR, create_key=_descriptor._internal_create_key),
-        _descriptor.FieldDescriptor(
-            name='status', full_name='GetExperimentDescriptionResponse.status', index=1,
-            number=2, type=9, cpp_type=9, label=1,
-            has_default_value=False, default_value=b"".decode('utf-8'),
-            message_type=None, enum_type=None, containing_type=None,
-            is_extension=False, extension_scope=None,
-            serialized_options=None, file=DESCRIPTOR, create_key=_descriptor._internal_create_key),
-        _descriptor.FieldDescriptor(
-            name='progress', full_name='GetExperimentDescriptionResponse.progress', index=2,
-            number=3, type=2, cpp_type=6, label=1,
-            has_default_value=False, default_value=float(0),
-            message_type=None, enum_type=None, containing_type=None,
-            is_extension=False, extension_scope=None,
-            serialized_options=None, file=DESCRIPTOR, create_key=_descriptor._internal_create_key),
-        _descriptor.FieldDescriptor(
-            name='totalRounds', full_name='GetExperimentDescriptionResponse.totalRounds', index=3,
-            number=4, type=13, cpp_type=3, label=1,
-            has_default_value=False, default_value=0,
-            message_type=None, enum_type=None, containing_type=None,
-            is_extension=False, extension_scope=None,
-            serialized_options=None, file=DESCRIPTOR, create_key=_descriptor._internal_create_key),
-        _descriptor.FieldDescriptor(
-            name='currentRound', full_name='GetExperimentDescriptionResponse.currentRound',
-            index=4,
-            number=5, type=13, cpp_type=3, label=1,
-            has_default_value=False, default_value=0,
-            message_type=None, enum_type=None, containing_type=None,
-            is_extension=False, extension_scope=None,
-            serialized_options=None, file=DESCRIPTOR, create_key=_descriptor._internal_create_key),
-        _descriptor.FieldDescriptor(
-            name='downloadStatuses', full_name='GetExperimentDescriptionResponse.downloadStatuses',
-            index=5,
-            number=6, type=11, cpp_type=10, label=1,
-            has_default_value=False, default_value=None,
-            message_type=None, enum_type=None, containing_type=None,
-            is_extension=False, extension_scope=None,
-            serialized_options=None, file=DESCRIPTOR, create_key=_descriptor._internal_create_key),
-        _descriptor.FieldDescriptor(
-            name='collaborators', full_name='GetExperimentDescriptionResponse.collaborators',
-            index=6,
-            number=7, type=11, cpp_type=10, label=3,
-            has_default_value=False, default_value=[],
-            message_type=None, enum_type=None, containing_type=None,
-            is_extension=False, extension_scope=None,
-            serialized_options=None, file=DESCRIPTOR, create_key=_descriptor._internal_create_key),
-        _descriptor.FieldDescriptor(
-            name='tasks', full_name='GetExperimentDescriptionResponse.tasks', index=7,
-            number=8, type=11, cpp_type=10, label=3,
-            has_default_value=False, default_value=[],
-            message_type=None, enum_type=None, containing_type=None,
-            is_extension=False, extension_scope=None,
-            serialized_options=None, file=DESCRIPTOR, create_key=_descriptor._internal_create_key),
-    ],
-    extensions=[
-    ],
-    nested_types=[],
-    enum_types=[
-    ],
-    serialized_options=None,
-    is_extendable=False,
-    syntax='proto3',
-    extension_ranges=[],
-    oneofs=[
-    ],
-    serialized_start=1341,
-    serialized_end=1593,
+  name='GetExperimentDescriptionResponse',
+  full_name='GetExperimentDescriptionResponse',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  create_key=_descriptor._internal_create_key,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='name', full_name='GetExperimentDescriptionResponse.name', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='status', full_name='GetExperimentDescriptionResponse.status', index=1,
+      number=2, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='progress', full_name='GetExperimentDescriptionResponse.progress', index=2,
+      number=3, type=2, cpp_type=6, label=1,
+      has_default_value=False, default_value=float(0),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='totalRounds', full_name='GetExperimentDescriptionResponse.totalRounds', index=3,
+      number=4, type=13, cpp_type=3, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='currentRound', full_name='GetExperimentDescriptionResponse.currentRound', index=4,
+      number=5, type=13, cpp_type=3, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='downloadStatuses', full_name='GetExperimentDescriptionResponse.downloadStatuses', index=5,
+      number=6, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='collaborators', full_name='GetExperimentDescriptionResponse.collaborators', index=6,
+      number=7, type=11, cpp_type=10, label=3,
+      has_default_value=False, default_value=[],
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='tasks', full_name='GetExperimentDescriptionResponse.tasks', index=7,
+      number=8, type=11, cpp_type=10, label=3,
+      has_default_value=False, default_value=[],
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=1341,
+  serialized_end=1593,
 )
+
 
 _SETNEWEXPERIMENTRESPONSE = _descriptor.Descriptor(
-    name='SetNewExperimentResponse',
-    full_name='SetNewExperimentResponse',
-    filename=None,
-    file=DESCRIPTOR,
-    containing_type=None,
-    create_key=_descriptor._internal_create_key,
-    fields=[
-        _descriptor.FieldDescriptor(
-            name='accepted', full_name='SetNewExperimentResponse.accepted', index=0,
-            number=1, type=8, cpp_type=7, label=1,
-            has_default_value=False, default_value=False,
-            message_type=None, enum_type=None, containing_type=None,
-            is_extension=False, extension_scope=None,
-            serialized_options=None, file=DESCRIPTOR, create_key=_descriptor._internal_create_key),
-        _descriptor.FieldDescriptor(
-            name='tensorboard_address', full_name='SetNewExperimentResponse.tensorboard_address',
-            index=1,
-            number=2, type=9, cpp_type=9, label=1,
-            has_default_value=False, default_value=b"".decode('utf-8'),
-            message_type=None, enum_type=None, containing_type=None,
-            is_extension=False, extension_scope=None,
-            serialized_options=None, file=DESCRIPTOR, create_key=_descriptor._internal_create_key),
-    ],
-    extensions=[
-    ],
-    nested_types=[],
-    enum_types=[
-    ],
-    serialized_options=None,
-    is_extendable=False,
-    syntax='proto3',
-    extension_ranges=[],
-    oneofs=[
-    ],
-    serialized_start=1595,
-    serialized_end=1668,
+  name='SetNewExperimentResponse',
+  full_name='SetNewExperimentResponse',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  create_key=_descriptor._internal_create_key,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='accepted', full_name='SetNewExperimentResponse.accepted', index=0,
+      number=1, type=8, cpp_type=7, label=1,
+      has_default_value=False, default_value=False,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='tensorboard_address', full_name='SetNewExperimentResponse.tensorboard_address', index=1,
+      number=2, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=1595,
+  serialized_end=1668,
 )
+
 
 _GETTRAINEDMODELREQUEST = _descriptor.Descriptor(
-    name='GetTrainedModelRequest',
-    full_name='GetTrainedModelRequest',
-    filename=None,
-    file=DESCRIPTOR,
-    containing_type=None,
-    create_key=_descriptor._internal_create_key,
-    fields=[
-        _descriptor.FieldDescriptor(
-            name='experiment_name', full_name='GetTrainedModelRequest.experiment_name', index=0,
-            number=2, type=9, cpp_type=9, label=1,
-            has_default_value=False, default_value=b"".decode('utf-8'),
-            message_type=None, enum_type=None, containing_type=None,
-            is_extension=False, extension_scope=None,
-            serialized_options=None, file=DESCRIPTOR, create_key=_descriptor._internal_create_key),
-        _descriptor.FieldDescriptor(
-            name='model_type', full_name='GetTrainedModelRequest.model_type', index=1,
-            number=3, type=14, cpp_type=8, label=1,
-            has_default_value=False, default_value=0,
-            message_type=None, enum_type=None, containing_type=None,
-            is_extension=False, extension_scope=None,
-            serialized_options=None, file=DESCRIPTOR, create_key=_descriptor._internal_create_key),
-    ],
-    extensions=[
-    ],
-    nested_types=[],
-    enum_types=[
-        _GETTRAINEDMODELREQUEST_MODELTYPE,
-    ],
-    serialized_options=None,
-    is_extendable=False,
-    syntax='proto3',
-    extension_ranges=[],
-    oneofs=[
-    ],
-    serialized_start=1671,
-    serialized_end=1820,
+  name='GetTrainedModelRequest',
+  full_name='GetTrainedModelRequest',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  create_key=_descriptor._internal_create_key,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='experiment_name', full_name='GetTrainedModelRequest.experiment_name', index=0,
+      number=2, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='model_type', full_name='GetTrainedModelRequest.model_type', index=1,
+      number=3, type=14, cpp_type=8, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+    _GETTRAINEDMODELREQUEST_MODELTYPE,
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=1671,
+  serialized_end=1820,
 )
+
 
 _TRAINEDMODELRESPONSE = _descriptor.Descriptor(
-    name='TrainedModelResponse',
-    full_name='TrainedModelResponse',
-    filename=None,
-    file=DESCRIPTOR,
-    containing_type=None,
-    create_key=_descriptor._internal_create_key,
-    fields=[
-        _descriptor.FieldDescriptor(
-            name='model_proto', full_name='TrainedModelResponse.model_proto', index=0,
-            number=1, type=11, cpp_type=10, label=1,
-            has_default_value=False, default_value=None,
-            message_type=None, enum_type=None, containing_type=None,
-            is_extension=False, extension_scope=None,
-            serialized_options=None, file=DESCRIPTOR, create_key=_descriptor._internal_create_key),
-    ],
-    extensions=[
-    ],
-    nested_types=[],
-    enum_types=[
-    ],
-    serialized_options=None,
-    is_extendable=False,
-    syntax='proto3',
-    extension_ranges=[],
-    oneofs=[
-    ],
-    serialized_start=1822,
-    serialized_end=1878,
+  name='TrainedModelResponse',
+  full_name='TrainedModelResponse',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  create_key=_descriptor._internal_create_key,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='model_proto', full_name='TrainedModelResponse.model_proto', index=0,
+      number=1, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=1822,
+  serialized_end=1878,
 )
+
 
 _GETDATASETINFOREQUEST = _descriptor.Descriptor(
-    name='GetDatasetInfoRequest',
-    full_name='GetDatasetInfoRequest',
-    filename=None,
-    file=DESCRIPTOR,
-    containing_type=None,
-    create_key=_descriptor._internal_create_key,
-    fields=[
-    ],
-    extensions=[
-    ],
-    nested_types=[],
-    enum_types=[
-    ],
-    serialized_options=None,
-    is_extendable=False,
-    syntax='proto3',
-    extension_ranges=[],
-    oneofs=[
-    ],
-    serialized_start=1880,
-    serialized_end=1903,
+  name='GetDatasetInfoRequest',
+  full_name='GetDatasetInfoRequest',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  create_key=_descriptor._internal_create_key,
+  fields=[
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=1880,
+  serialized_end=1903,
 )
+
 
 _STREAMMETRICSREQUEST = _descriptor.Descriptor(
-    name='StreamMetricsRequest',
-    full_name='StreamMetricsRequest',
-    filename=None,
-    file=DESCRIPTOR,
-    containing_type=None,
-    create_key=_descriptor._internal_create_key,
-    fields=[
-        _descriptor.FieldDescriptor(
-            name='experiment_name', full_name='StreamMetricsRequest.experiment_name', index=0,
-            number=1, type=9, cpp_type=9, label=1,
-            has_default_value=False, default_value=b"".decode('utf-8'),
-            message_type=None, enum_type=None, containing_type=None,
-            is_extension=False, extension_scope=None,
-            serialized_options=None, file=DESCRIPTOR, create_key=_descriptor._internal_create_key),
-    ],
-    extensions=[
-    ],
-    nested_types=[],
-    enum_types=[
-    ],
-    serialized_options=None,
-    is_extendable=False,
-    syntax='proto3',
-    extension_ranges=[],
-    oneofs=[
-    ],
-    serialized_start=1905,
-    serialized_end=1952,
+  name='StreamMetricsRequest',
+  full_name='StreamMetricsRequest',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  create_key=_descriptor._internal_create_key,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='experiment_name', full_name='StreamMetricsRequest.experiment_name', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=1905,
+  serialized_end=1952,
 )
+
 
 _STREAMMETRICSRESPONSE = _descriptor.Descriptor(
-    name='StreamMetricsResponse',
-    full_name='StreamMetricsResponse',
-    filename=None,
-    file=DESCRIPTOR,
-    containing_type=None,
-    create_key=_descriptor._internal_create_key,
-    fields=[
-        _descriptor.FieldDescriptor(
-            name='metric_origin', full_name='StreamMetricsResponse.metric_origin', index=0,
-            number=1, type=9, cpp_type=9, label=1,
-            has_default_value=False, default_value=b"".decode('utf-8'),
-            message_type=None, enum_type=None, containing_type=None,
-            is_extension=False, extension_scope=None,
-            serialized_options=None, file=DESCRIPTOR, create_key=_descriptor._internal_create_key),
-        _descriptor.FieldDescriptor(
-            name='task_name', full_name='StreamMetricsResponse.task_name', index=1,
-            number=2, type=9, cpp_type=9, label=1,
-            has_default_value=False, default_value=b"".decode('utf-8'),
-            message_type=None, enum_type=None, containing_type=None,
-            is_extension=False, extension_scope=None,
-            serialized_options=None, file=DESCRIPTOR, create_key=_descriptor._internal_create_key),
-        _descriptor.FieldDescriptor(
-            name='metric_name', full_name='StreamMetricsResponse.metric_name', index=2,
-            number=3, type=9, cpp_type=9, label=1,
-            has_default_value=False, default_value=b"".decode('utf-8'),
-            message_type=None, enum_type=None, containing_type=None,
-            is_extension=False, extension_scope=None,
-            serialized_options=None, file=DESCRIPTOR, create_key=_descriptor._internal_create_key),
-        _descriptor.FieldDescriptor(
-            name='metric_value', full_name='StreamMetricsResponse.metric_value', index=3,
-            number=4, type=2, cpp_type=6, label=1,
-            has_default_value=False, default_value=float(0),
-            message_type=None, enum_type=None, containing_type=None,
-            is_extension=False, extension_scope=None,
-            serialized_options=None, file=DESCRIPTOR, create_key=_descriptor._internal_create_key),
-        _descriptor.FieldDescriptor(
-            name='round', full_name='StreamMetricsResponse.round', index=4,
-            number=5, type=13, cpp_type=3, label=1,
-            has_default_value=False, default_value=0,
-            message_type=None, enum_type=None, containing_type=None,
-            is_extension=False, extension_scope=None,
-            serialized_options=None, file=DESCRIPTOR, create_key=_descriptor._internal_create_key),
-    ],
-    extensions=[
-    ],
-    nested_types=[],
-    enum_types=[
-    ],
-    serialized_options=None,
-    is_extendable=False,
-    syntax='proto3',
-    extension_ranges=[],
-    oneofs=[
-    ],
-    serialized_start=1954,
-    serialized_end=2077,
+  name='StreamMetricsResponse',
+  full_name='StreamMetricsResponse',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  create_key=_descriptor._internal_create_key,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='metric_origin', full_name='StreamMetricsResponse.metric_origin', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='task_name', full_name='StreamMetricsResponse.task_name', index=1,
+      number=2, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='metric_name', full_name='StreamMetricsResponse.metric_name', index=2,
+      number=3, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='metric_value', full_name='StreamMetricsResponse.metric_value', index=3,
+      number=4, type=2, cpp_type=6, label=1,
+      has_default_value=False, default_value=float(0),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='round', full_name='StreamMetricsResponse.round', index=4,
+      number=5, type=13, cpp_type=3, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=1954,
+  serialized_end=2077,
 )
+
 
 _REMOVEEXPERIMENTREQUEST = _descriptor.Descriptor(
-    name='RemoveExperimentRequest',
-    full_name='RemoveExperimentRequest',
-    filename=None,
-    file=DESCRIPTOR,
-    containing_type=None,
-    create_key=_descriptor._internal_create_key,
-    fields=[
-        _descriptor.FieldDescriptor(
-            name='experiment_name', full_name='RemoveExperimentRequest.experiment_name', index=0,
-            number=1, type=9, cpp_type=9, label=1,
-            has_default_value=False, default_value=b"".decode('utf-8'),
-            message_type=None, enum_type=None, containing_type=None,
-            is_extension=False, extension_scope=None,
-            serialized_options=None, file=DESCRIPTOR, create_key=_descriptor._internal_create_key),
-    ],
-    extensions=[
-    ],
-    nested_types=[],
-    enum_types=[
-    ],
-    serialized_options=None,
-    is_extendable=False,
-    syntax='proto3',
-    extension_ranges=[],
-    oneofs=[
-    ],
-    serialized_start=2079,
-    serialized_end=2129,
+  name='RemoveExperimentRequest',
+  full_name='RemoveExperimentRequest',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  create_key=_descriptor._internal_create_key,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='experiment_name', full_name='RemoveExperimentRequest.experiment_name', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=2079,
+  serialized_end=2129,
 )
+
 
 _REMOVEEXPERIMENTRESPONSE = _descriptor.Descriptor(
-    name='RemoveExperimentResponse',
-    full_name='RemoveExperimentResponse',
-    filename=None,
-    file=DESCRIPTOR,
-    containing_type=None,
-    create_key=_descriptor._internal_create_key,
-    fields=[
-        _descriptor.FieldDescriptor(
-            name='acknowledgement', full_name='RemoveExperimentResponse.acknowledgement', index=0,
-            number=1, type=8, cpp_type=7, label=1,
-            has_default_value=False, default_value=False,
-            message_type=None, enum_type=None, containing_type=None,
-            is_extension=False, extension_scope=None,
-            serialized_options=None, file=DESCRIPTOR, create_key=_descriptor._internal_create_key),
-    ],
-    extensions=[
-    ],
-    nested_types=[],
-    enum_types=[
-    ],
-    serialized_options=None,
-    is_extendable=False,
-    syntax='proto3',
-    extension_ranges=[],
-    oneofs=[
-    ],
-    serialized_start=2131,
-    serialized_end=2182,
+  name='RemoveExperimentResponse',
+  full_name='RemoveExperimentResponse',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  create_key=_descriptor._internal_create_key,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='acknowledgement', full_name='RemoveExperimentResponse.acknowledgement', index=0,
+      number=1, type=8, cpp_type=7, label=1,
+      has_default_value=False, default_value=False,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=2131,
+  serialized_end=2182,
 )
+
 
 _COLLABORATORSTATUS = _descriptor.Descriptor(
-    name='CollaboratorStatus',
-    full_name='CollaboratorStatus',
-    filename=None,
-    file=DESCRIPTOR,
-    containing_type=None,
-    create_key=_descriptor._internal_create_key,
-    fields=[
-        _descriptor.FieldDescriptor(
-            name='name', full_name='CollaboratorStatus.name', index=0,
-            number=1, type=9, cpp_type=9, label=1,
-            has_default_value=False, default_value=b"".decode('utf-8'),
-            message_type=None, enum_type=None, containing_type=None,
-            is_extension=False, extension_scope=None,
-            serialized_options=None, file=DESCRIPTOR, create_key=_descriptor._internal_create_key),
-        _descriptor.FieldDescriptor(
-            name='is_experiment_running', full_name='CollaboratorStatus.is_experiment_running',
-            index=1,
-            number=2, type=8, cpp_type=7, label=1,
-            has_default_value=False, default_value=False,
-            message_type=None, enum_type=None, containing_type=None,
-            is_extension=False, extension_scope=None,
-            serialized_options=None, file=DESCRIPTOR, create_key=_descriptor._internal_create_key),
-    ],
-    extensions=[
-    ],
-    nested_types=[],
-    enum_types=[
-    ],
-    serialized_options=None,
-    is_extendable=False,
-    syntax='proto3',
-    extension_ranges=[],
-    oneofs=[
-    ],
-    serialized_start=2184,
-    serialized_end=2249,
+  name='CollaboratorStatus',
+  full_name='CollaboratorStatus',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  create_key=_descriptor._internal_create_key,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='name', full_name='CollaboratorStatus.name', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='is_experiment_running', full_name='CollaboratorStatus.is_experiment_running', index=1,
+      number=2, type=8, cpp_type=7, label=1,
+      has_default_value=False, default_value=False,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=2184,
+  serialized_end=2249,
 )
+
 
 _COLLABORATORHEALTHCHECKRESPONSE = _descriptor.Descriptor(
-    name='CollaboratorHealthCheckResponse',
-    full_name='CollaboratorHealthCheckResponse',
-    filename=None,
-    file=DESCRIPTOR,
-    containing_type=None,
-    create_key=_descriptor._internal_create_key,
-    fields=[
-        _descriptor.FieldDescriptor(
-            name='health_check_period',
-            full_name='CollaboratorHealthCheckResponse.health_check_period', index=0,
-            number=1, type=11, cpp_type=10, label=1,
-            has_default_value=False, default_value=None,
-            message_type=None, enum_type=None, containing_type=None,
-            is_extension=False, extension_scope=None,
-            serialized_options=None, file=DESCRIPTOR, create_key=_descriptor._internal_create_key),
-    ],
-    extensions=[
-    ],
-    nested_types=[],
-    enum_types=[
-    ],
-    serialized_options=None,
-    is_extendable=False,
-    syntax='proto3',
-    extension_ranges=[],
-    oneofs=[
-    ],
-    serialized_start=2251,
-    serialized_end=2340,
+  name='CollaboratorHealthCheckResponse',
+  full_name='CollaboratorHealthCheckResponse',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  create_key=_descriptor._internal_create_key,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='health_check_period', full_name='CollaboratorHealthCheckResponse.health_check_period', index=0,
+      number=1, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=2251,
+  serialized_end=2340,
 )
+
 
 _ENVOYINFO = _descriptor.Descriptor(
-    name='EnvoyInfo',
-    full_name='EnvoyInfo',
-    filename=None,
-    file=DESCRIPTOR,
-    containing_type=None,
-    create_key=_descriptor._internal_create_key,
-    fields=[
-        _descriptor.FieldDescriptor(
-            name='shard_info', full_name='EnvoyInfo.shard_info', index=0,
-            number=1, type=11, cpp_type=10, label=1,
-            has_default_value=False, default_value=None,
-            message_type=None, enum_type=None, containing_type=None,
-            is_extension=False, extension_scope=None,
-            serialized_options=None, file=DESCRIPTOR, create_key=_descriptor._internal_create_key),
-        _descriptor.FieldDescriptor(
-            name='is_online', full_name='EnvoyInfo.is_online', index=1,
-            number=2, type=8, cpp_type=7, label=1,
-            has_default_value=False, default_value=False,
-            message_type=None, enum_type=None, containing_type=None,
-            is_extension=False, extension_scope=None,
-            serialized_options=None, file=DESCRIPTOR, create_key=_descriptor._internal_create_key),
-        _descriptor.FieldDescriptor(
-            name='is_experiment_running', full_name='EnvoyInfo.is_experiment_running', index=2,
-            number=3, type=8, cpp_type=7, label=1,
-            has_default_value=False, default_value=False,
-            message_type=None, enum_type=None, containing_type=None,
-            is_extension=False, extension_scope=None,
-            serialized_options=None, file=DESCRIPTOR, create_key=_descriptor._internal_create_key),
-        _descriptor.FieldDescriptor(
-            name='last_updated', full_name='EnvoyInfo.last_updated', index=3,
-            number=4, type=11, cpp_type=10, label=1,
-            has_default_value=False, default_value=None,
-            message_type=None, enum_type=None, containing_type=None,
-            is_extension=False, extension_scope=None,
-            serialized_options=None, file=DESCRIPTOR, create_key=_descriptor._internal_create_key),
-        _descriptor.FieldDescriptor(
-            name='valid_duration', full_name='EnvoyInfo.valid_duration', index=4,
-            number=5, type=11, cpp_type=10, label=1,
-            has_default_value=False, default_value=None,
-            message_type=None, enum_type=None, containing_type=None,
-            is_extension=False, extension_scope=None,
-            serialized_options=None, file=DESCRIPTOR, create_key=_descriptor._internal_create_key),
-        _descriptor.FieldDescriptor(
-            name='experiment_name', full_name='EnvoyInfo.experiment_name', index=5,
-            number=6, type=9, cpp_type=9, label=1,
-            has_default_value=False, default_value=b"".decode('utf-8'),
-            message_type=None, enum_type=None, containing_type=None,
-            is_extension=False, extension_scope=None,
-            serialized_options=None, file=DESCRIPTOR, create_key=_descriptor._internal_create_key),
-    ],
-    extensions=[
-    ],
-    nested_types=[],
-    enum_types=[
-    ],
-    serialized_options=None,
-    is_extendable=False,
-    syntax='proto3',
-    extension_ranges=[],
-    oneofs=[
-    ],
-    serialized_start=2343,
-    serialized_end=2562,
+  name='EnvoyInfo',
+  full_name='EnvoyInfo',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  create_key=_descriptor._internal_create_key,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='shard_info', full_name='EnvoyInfo.shard_info', index=0,
+      number=1, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='is_online', full_name='EnvoyInfo.is_online', index=1,
+      number=2, type=8, cpp_type=7, label=1,
+      has_default_value=False, default_value=False,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='is_experiment_running', full_name='EnvoyInfo.is_experiment_running', index=2,
+      number=3, type=8, cpp_type=7, label=1,
+      has_default_value=False, default_value=False,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='last_updated', full_name='EnvoyInfo.last_updated', index=3,
+      number=4, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='valid_duration', full_name='EnvoyInfo.valid_duration', index=4,
+      number=5, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='experiment_name', full_name='EnvoyInfo.experiment_name', index=5,
+      number=6, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=2343,
+  serialized_end=2562,
 )
+
 
 _GETENVOYSREQUEST = _descriptor.Descriptor(
-    name='GetEnvoysRequest',
-    full_name='GetEnvoysRequest',
-    filename=None,
-    file=DESCRIPTOR,
-    containing_type=None,
-    create_key=_descriptor._internal_create_key,
-    fields=[
-    ],
-    extensions=[
-    ],
-    nested_types=[],
-    enum_types=[
-    ],
-    serialized_options=None,
-    is_extendable=False,
-    syntax='proto3',
-    extension_ranges=[],
-    oneofs=[
-    ],
-    serialized_start=2564,
-    serialized_end=2582,
+  name='GetEnvoysRequest',
+  full_name='GetEnvoysRequest',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  create_key=_descriptor._internal_create_key,
+  fields=[
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=2564,
+  serialized_end=2582,
 )
 
+
 _GETENVOYSRESPONSE = _descriptor.Descriptor(
-    name='GetEnvoysResponse',
-    full_name='GetEnvoysResponse',
-    filename=None,
-    file=DESCRIPTOR,
-    containing_type=None,
-    create_key=_descriptor._internal_create_key,
-    fields=[
-        _descriptor.FieldDescriptor(
-            name='envoy_infos', full_name='GetEnvoysResponse.envoy_infos', index=0,
-            number=1, type=11, cpp_type=10, label=3,
-            has_default_value=False, default_value=[],
-            message_type=None, enum_type=None, containing_type=None,
-            is_extension=False, extension_scope=None,
-            serialized_options=None, file=DESCRIPTOR, create_key=_descriptor._internal_create_key),
-    ],
-    extensions=[
-    ],
-    nested_types=[],
-    enum_types=[
-    ],
-    serialized_options=None,
-    is_extendable=False,
-    syntax='proto3',
-    extension_ranges=[],
-    oneofs=[
-    ],
-    serialized_start=2584,
-    serialized_end=2636,
+  name='GetEnvoysResponse',
+  full_name='GetEnvoysResponse',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  create_key=_descriptor._internal_create_key,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='envoy_infos', full_name='GetEnvoysResponse.envoy_infos', index=0,
+      number=1, type=11, cpp_type=10, label=3,
+      has_default_value=False, default_value=[],
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=2584,
+  serialized_end=2636,
 )
 
 _SHARDINFO.fields_by_name['node_info'].message_type = _NODEINFO
 _EXPERIMENTINFO.fields_by_name['experiment_data'].message_type = _EXPERIMENTDATA
 _EXPERIMENTINFO.fields_by_name['model_proto'].message_type = federation__pb2._MODELPROTO
-_GETEXPERIMENTDESCRIPTIONSRESPONSE.fields_by_name[
-    'experiments'].message_type = _EXPERIMENTDESCRIPTION
+_GETEXPERIMENTDESCRIPTIONSRESPONSE.fields_by_name['experiments'].message_type = _EXPERIMENTDESCRIPTION
 _DOWNLOADSTATUSES.fields_by_name['models'].message_type = _DOWNLOADSTATUS
 _DOWNLOADSTATUSES.fields_by_name['logs'].message_type = _DOWNLOADSTATUS
-_GETEXPERIMENTDESCRIPTIONRESPONSE.fields_by_name[
-    'downloadStatuses'].message_type = _DOWNLOADSTATUSES
-_GETEXPERIMENTDESCRIPTIONRESPONSE.fields_by_name[
-    'collaborators'].message_type = _COLLABORATORDESCRIPTION
+_GETEXPERIMENTDESCRIPTIONRESPONSE.fields_by_name['downloadStatuses'].message_type = _DOWNLOADSTATUSES
+_GETEXPERIMENTDESCRIPTIONRESPONSE.fields_by_name['collaborators'].message_type = _COLLABORATORDESCRIPTION
 _GETEXPERIMENTDESCRIPTIONRESPONSE.fields_by_name['tasks'].message_type = _TASKDESCRIPTION
 _GETTRAINEDMODELREQUEST.fields_by_name['model_type'].enum_type = _GETTRAINEDMODELREQUEST_MODELTYPE
 _GETTRAINEDMODELREQUEST_MODELTYPE.containing_type = _GETTRAINEDMODELREQUEST
 _TRAINEDMODELRESPONSE.fields_by_name['model_proto'].message_type = federation__pb2._MODELPROTO
-_COLLABORATORHEALTHCHECKRESPONSE.fields_by_name[
-    'health_check_period'].message_type = google_dot_protobuf_dot_duration__pb2._DURATION
+_COLLABORATORHEALTHCHECKRESPONSE.fields_by_name['health_check_period'].message_type = google_dot_protobuf_dot_duration__pb2._DURATION
 _ENVOYINFO.fields_by_name['shard_info'].message_type = _SHARDINFO
-_ENVOYINFO.fields_by_name[
-    'last_updated'].message_type = google_dot_protobuf_dot_timestamp__pb2._TIMESTAMP
-_ENVOYINFO.fields_by_name[
-    'valid_duration'].message_type = google_dot_protobuf_dot_duration__pb2._DURATION
+_ENVOYINFO.fields_by_name['last_updated'].message_type = google_dot_protobuf_dot_timestamp__pb2._TIMESTAMP
+_ENVOYINFO.fields_by_name['valid_duration'].message_type = google_dot_protobuf_dot_duration__pb2._DURATION
 _GETENVOYSRESPONSE.fields_by_name['envoy_infos'].message_type = _ENVOYINFO
 DESCRIPTOR.message_types_by_name['NodeInfo'] = _NODEINFO
 DESCRIPTOR.message_types_by_name['ShardInfo'] = _SHARDINFO
@@ -1301,19 +1318,15 @@ DESCRIPTOR.message_types_by_name['WaitExperimentResponse'] = _WAITEXPERIMENTRESP
 DESCRIPTOR.message_types_by_name['GetExperimentDataRequest'] = _GETEXPERIMENTDATAREQUEST
 DESCRIPTOR.message_types_by_name['ExperimentData'] = _EXPERIMENTDATA
 DESCRIPTOR.message_types_by_name['ExperimentInfo'] = _EXPERIMENTINFO
-DESCRIPTOR.message_types_by_name[
-    'GetExperimentDescriptionsRequest'] = _GETEXPERIMENTDESCRIPTIONSREQUEST
+DESCRIPTOR.message_types_by_name['GetExperimentDescriptionsRequest'] = _GETEXPERIMENTDESCRIPTIONSREQUEST
 DESCRIPTOR.message_types_by_name['ExperimentDescription'] = _EXPERIMENTDESCRIPTION
-DESCRIPTOR.message_types_by_name[
-    'GetExperimentDescriptionsResponse'] = _GETEXPERIMENTDESCRIPTIONSRESPONSE
-DESCRIPTOR.message_types_by_name[
-    'GetExperimentDescriptionRequest'] = _GETEXPERIMENTDESCRIPTIONREQUEST
+DESCRIPTOR.message_types_by_name['GetExperimentDescriptionsResponse'] = _GETEXPERIMENTDESCRIPTIONSRESPONSE
+DESCRIPTOR.message_types_by_name['GetExperimentDescriptionRequest'] = _GETEXPERIMENTDESCRIPTIONREQUEST
 DESCRIPTOR.message_types_by_name['CollaboratorDescription'] = _COLLABORATORDESCRIPTION
 DESCRIPTOR.message_types_by_name['TaskDescription'] = _TASKDESCRIPTION
 DESCRIPTOR.message_types_by_name['DownloadStatus'] = _DOWNLOADSTATUS
 DESCRIPTOR.message_types_by_name['DownloadStatuses'] = _DOWNLOADSTATUSES
-DESCRIPTOR.message_types_by_name[
-    'GetExperimentDescriptionResponse'] = _GETEXPERIMENTDESCRIPTIONRESPONSE
+DESCRIPTOR.message_types_by_name['GetExperimentDescriptionResponse'] = _GETEXPERIMENTDESCRIPTIONRESPONSE
 DESCRIPTOR.message_types_by_name['SetNewExperimentResponse'] = _SETNEWEXPERIMENTRESPONSE
 DESCRIPTOR.message_types_by_name['GetTrainedModelRequest'] = _GETTRAINEDMODELREQUEST
 DESCRIPTOR.message_types_by_name['TrainedModelResponse'] = _TRAINEDMODELRESPONSE
@@ -1323,378 +1336,355 @@ DESCRIPTOR.message_types_by_name['StreamMetricsResponse'] = _STREAMMETRICSRESPON
 DESCRIPTOR.message_types_by_name['RemoveExperimentRequest'] = _REMOVEEXPERIMENTREQUEST
 DESCRIPTOR.message_types_by_name['RemoveExperimentResponse'] = _REMOVEEXPERIMENTRESPONSE
 DESCRIPTOR.message_types_by_name['CollaboratorStatus'] = _COLLABORATORSTATUS
-DESCRIPTOR.message_types_by_name[
-    'CollaboratorHealthCheckResponse'] = _COLLABORATORHEALTHCHECKRESPONSE
+DESCRIPTOR.message_types_by_name['CollaboratorHealthCheckResponse'] = _COLLABORATORHEALTHCHECKRESPONSE
 DESCRIPTOR.message_types_by_name['EnvoyInfo'] = _ENVOYINFO
 DESCRIPTOR.message_types_by_name['GetEnvoysRequest'] = _GETENVOYSREQUEST
 DESCRIPTOR.message_types_by_name['GetEnvoysResponse'] = _GETENVOYSRESPONSE
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
 NodeInfo = _reflection.GeneratedProtocolMessageType('NodeInfo', (_message.Message,), {
-    'DESCRIPTOR': _NODEINFO,
-    '__module__': 'director_pb2'
-    # @@protoc_insertion_point(class_scope:NodeInfo)
-})
+  'DESCRIPTOR' : _NODEINFO,
+  '__module__' : 'director_pb2'
+  # @@protoc_insertion_point(class_scope:NodeInfo)
+  })
 _sym_db.RegisterMessage(NodeInfo)
 
 ShardInfo = _reflection.GeneratedProtocolMessageType('ShardInfo', (_message.Message,), {
-    'DESCRIPTOR': _SHARDINFO,
-    '__module__': 'director_pb2'
-    # @@protoc_insertion_point(class_scope:ShardInfo)
-})
+  'DESCRIPTOR' : _SHARDINFO,
+  '__module__' : 'director_pb2'
+  # @@protoc_insertion_point(class_scope:ShardInfo)
+  })
 _sym_db.RegisterMessage(ShardInfo)
 
-ShardAcknowledgement = _reflection.GeneratedProtocolMessageType('ShardAcknowledgement',
-                                                                (_message.Message,), {
-                                                                    'DESCRIPTOR': _SHARDACKNOWLEDGEMENT,
-                                                                    '__module__': 'director_pb2'
-                                                                    # @@protoc_insertion_point(class_scope:ShardAcknowledgement)
-                                                                })
+ShardAcknowledgement = _reflection.GeneratedProtocolMessageType('ShardAcknowledgement', (_message.Message,), {
+  'DESCRIPTOR' : _SHARDACKNOWLEDGEMENT,
+  '__module__' : 'director_pb2'
+  # @@protoc_insertion_point(class_scope:ShardAcknowledgement)
+  })
 _sym_db.RegisterMessage(ShardAcknowledgement)
 
-WaitExperimentRequest = _reflection.GeneratedProtocolMessageType('WaitExperimentRequest',
-                                                                 (_message.Message,), {
-                                                                     'DESCRIPTOR': _WAITEXPERIMENTREQUEST,
-                                                                     '__module__': 'director_pb2'
-                                                                     # @@protoc_insertion_point(class_scope:WaitExperimentRequest)
-                                                                 })
+WaitExperimentRequest = _reflection.GeneratedProtocolMessageType('WaitExperimentRequest', (_message.Message,), {
+  'DESCRIPTOR' : _WAITEXPERIMENTREQUEST,
+  '__module__' : 'director_pb2'
+  # @@protoc_insertion_point(class_scope:WaitExperimentRequest)
+  })
 _sym_db.RegisterMessage(WaitExperimentRequest)
 
-WaitExperimentResponse = _reflection.GeneratedProtocolMessageType('WaitExperimentResponse',
-                                                                  (_message.Message,), {
-                                                                      'DESCRIPTOR': _WAITEXPERIMENTRESPONSE,
-                                                                      '__module__': 'director_pb2'
-                                                                      # @@protoc_insertion_point(class_scope:WaitExperimentResponse)
-                                                                  })
+WaitExperimentResponse = _reflection.GeneratedProtocolMessageType('WaitExperimentResponse', (_message.Message,), {
+  'DESCRIPTOR' : _WAITEXPERIMENTRESPONSE,
+  '__module__' : 'director_pb2'
+  # @@protoc_insertion_point(class_scope:WaitExperimentResponse)
+  })
 _sym_db.RegisterMessage(WaitExperimentResponse)
 
-GetExperimentDataRequest = _reflection.GeneratedProtocolMessageType('GetExperimentDataRequest',
-                                                                    (_message.Message,), {
-                                                                        'DESCRIPTOR': _GETEXPERIMENTDATAREQUEST,
-                                                                        '__module__': 'director_pb2'
-                                                                        # @@protoc_insertion_point(class_scope:GetExperimentDataRequest)
-                                                                    })
+GetExperimentDataRequest = _reflection.GeneratedProtocolMessageType('GetExperimentDataRequest', (_message.Message,), {
+  'DESCRIPTOR' : _GETEXPERIMENTDATAREQUEST,
+  '__module__' : 'director_pb2'
+  # @@protoc_insertion_point(class_scope:GetExperimentDataRequest)
+  })
 _sym_db.RegisterMessage(GetExperimentDataRequest)
 
 ExperimentData = _reflection.GeneratedProtocolMessageType('ExperimentData', (_message.Message,), {
-    'DESCRIPTOR': _EXPERIMENTDATA,
-    '__module__': 'director_pb2'
-    # @@protoc_insertion_point(class_scope:ExperimentData)
-})
+  'DESCRIPTOR' : _EXPERIMENTDATA,
+  '__module__' : 'director_pb2'
+  # @@protoc_insertion_point(class_scope:ExperimentData)
+  })
 _sym_db.RegisterMessage(ExperimentData)
 
 ExperimentInfo = _reflection.GeneratedProtocolMessageType('ExperimentInfo', (_message.Message,), {
-    'DESCRIPTOR': _EXPERIMENTINFO,
-    '__module__': 'director_pb2'
-    # @@protoc_insertion_point(class_scope:ExperimentInfo)
-})
+  'DESCRIPTOR' : _EXPERIMENTINFO,
+  '__module__' : 'director_pb2'
+  # @@protoc_insertion_point(class_scope:ExperimentInfo)
+  })
 _sym_db.RegisterMessage(ExperimentInfo)
 
-GetExperimentDescriptionsRequest = _reflection.GeneratedProtocolMessageType(
-    'GetExperimentDescriptionsRequest', (_message.Message,), {
-        'DESCRIPTOR': _GETEXPERIMENTDESCRIPTIONSREQUEST,
-        '__module__': 'director_pb2'
-        # @@protoc_insertion_point(class_scope:GetExperimentDescriptionsRequest)
-    })
+GetExperimentDescriptionsRequest = _reflection.GeneratedProtocolMessageType('GetExperimentDescriptionsRequest', (_message.Message,), {
+  'DESCRIPTOR' : _GETEXPERIMENTDESCRIPTIONSREQUEST,
+  '__module__' : 'director_pb2'
+  # @@protoc_insertion_point(class_scope:GetExperimentDescriptionsRequest)
+  })
 _sym_db.RegisterMessage(GetExperimentDescriptionsRequest)
 
-ExperimentDescription = _reflection.GeneratedProtocolMessageType('ExperimentDescription',
-                                                                 (_message.Message,), {
-                                                                     'DESCRIPTOR': _EXPERIMENTDESCRIPTION,
-                                                                     '__module__': 'director_pb2'
-                                                                     # @@protoc_insertion_point(class_scope:ExperimentDescription)
-                                                                 })
+ExperimentDescription = _reflection.GeneratedProtocolMessageType('ExperimentDescription', (_message.Message,), {
+  'DESCRIPTOR' : _EXPERIMENTDESCRIPTION,
+  '__module__' : 'director_pb2'
+  # @@protoc_insertion_point(class_scope:ExperimentDescription)
+  })
 _sym_db.RegisterMessage(ExperimentDescription)
 
-GetExperimentDescriptionsResponse = _reflection.GeneratedProtocolMessageType(
-    'GetExperimentDescriptionsResponse', (_message.Message,), {
-        'DESCRIPTOR': _GETEXPERIMENTDESCRIPTIONSRESPONSE,
-        '__module__': 'director_pb2'
-        # @@protoc_insertion_point(class_scope:GetExperimentDescriptionsResponse)
-    })
+GetExperimentDescriptionsResponse = _reflection.GeneratedProtocolMessageType('GetExperimentDescriptionsResponse', (_message.Message,), {
+  'DESCRIPTOR' : _GETEXPERIMENTDESCRIPTIONSRESPONSE,
+  '__module__' : 'director_pb2'
+  # @@protoc_insertion_point(class_scope:GetExperimentDescriptionsResponse)
+  })
 _sym_db.RegisterMessage(GetExperimentDescriptionsResponse)
 
-GetExperimentDescriptionRequest = _reflection.GeneratedProtocolMessageType(
-    'GetExperimentDescriptionRequest', (_message.Message,), {
-        'DESCRIPTOR': _GETEXPERIMENTDESCRIPTIONREQUEST,
-        '__module__': 'director_pb2'
-        # @@protoc_insertion_point(class_scope:GetExperimentDescriptionRequest)
-    })
+GetExperimentDescriptionRequest = _reflection.GeneratedProtocolMessageType('GetExperimentDescriptionRequest', (_message.Message,), {
+  'DESCRIPTOR' : _GETEXPERIMENTDESCRIPTIONREQUEST,
+  '__module__' : 'director_pb2'
+  # @@protoc_insertion_point(class_scope:GetExperimentDescriptionRequest)
+  })
 _sym_db.RegisterMessage(GetExperimentDescriptionRequest)
 
-CollaboratorDescription = _reflection.GeneratedProtocolMessageType('CollaboratorDescription',
-                                                                   (_message.Message,), {
-                                                                       'DESCRIPTOR': _COLLABORATORDESCRIPTION,
-                                                                       '__module__': 'director_pb2'
-                                                                       # @@protoc_insertion_point(class_scope:CollaboratorDescription)
-                                                                   })
+CollaboratorDescription = _reflection.GeneratedProtocolMessageType('CollaboratorDescription', (_message.Message,), {
+  'DESCRIPTOR' : _COLLABORATORDESCRIPTION,
+  '__module__' : 'director_pb2'
+  # @@protoc_insertion_point(class_scope:CollaboratorDescription)
+  })
 _sym_db.RegisterMessage(CollaboratorDescription)
 
-TaskDescription = _reflection.GeneratedProtocolMessageType('TaskDescription', (_message.Message,),
-                                                           {
-                                                               'DESCRIPTOR': _TASKDESCRIPTION,
-                                                               '__module__': 'director_pb2'
-                                                               # @@protoc_insertion_point(class_scope:TaskDescription)
-                                                           })
+TaskDescription = _reflection.GeneratedProtocolMessageType('TaskDescription', (_message.Message,), {
+  'DESCRIPTOR' : _TASKDESCRIPTION,
+  '__module__' : 'director_pb2'
+  # @@protoc_insertion_point(class_scope:TaskDescription)
+  })
 _sym_db.RegisterMessage(TaskDescription)
 
 DownloadStatus = _reflection.GeneratedProtocolMessageType('DownloadStatus', (_message.Message,), {
-    'DESCRIPTOR': _DOWNLOADSTATUS,
-    '__module__': 'director_pb2'
-    # @@protoc_insertion_point(class_scope:DownloadStatus)
-})
+  'DESCRIPTOR' : _DOWNLOADSTATUS,
+  '__module__' : 'director_pb2'
+  # @@protoc_insertion_point(class_scope:DownloadStatus)
+  })
 _sym_db.RegisterMessage(DownloadStatus)
 
-DownloadStatuses = _reflection.GeneratedProtocolMessageType('DownloadStatuses',
-                                                            (_message.Message,), {
-                                                                'DESCRIPTOR': _DOWNLOADSTATUSES,
-                                                                '__module__': 'director_pb2'
-                                                                # @@protoc_insertion_point(class_scope:DownloadStatuses)
-                                                            })
+DownloadStatuses = _reflection.GeneratedProtocolMessageType('DownloadStatuses', (_message.Message,), {
+  'DESCRIPTOR' : _DOWNLOADSTATUSES,
+  '__module__' : 'director_pb2'
+  # @@protoc_insertion_point(class_scope:DownloadStatuses)
+  })
 _sym_db.RegisterMessage(DownloadStatuses)
 
-GetExperimentDescriptionResponse = _reflection.GeneratedProtocolMessageType(
-    'GetExperimentDescriptionResponse', (_message.Message,), {
-        'DESCRIPTOR': _GETEXPERIMENTDESCRIPTIONRESPONSE,
-        '__module__': 'director_pb2'
-        # @@protoc_insertion_point(class_scope:GetExperimentDescriptionResponse)
-    })
+GetExperimentDescriptionResponse = _reflection.GeneratedProtocolMessageType('GetExperimentDescriptionResponse', (_message.Message,), {
+  'DESCRIPTOR' : _GETEXPERIMENTDESCRIPTIONRESPONSE,
+  '__module__' : 'director_pb2'
+  # @@protoc_insertion_point(class_scope:GetExperimentDescriptionResponse)
+  })
 _sym_db.RegisterMessage(GetExperimentDescriptionResponse)
 
-SetNewExperimentResponse = _reflection.GeneratedProtocolMessageType('SetNewExperimentResponse',
-                                                                    (_message.Message,), {
-                                                                        'DESCRIPTOR': _SETNEWEXPERIMENTRESPONSE,
-                                                                        '__module__': 'director_pb2'
-                                                                        # @@protoc_insertion_point(class_scope:SetNewExperimentResponse)
-                                                                    })
+SetNewExperimentResponse = _reflection.GeneratedProtocolMessageType('SetNewExperimentResponse', (_message.Message,), {
+  'DESCRIPTOR' : _SETNEWEXPERIMENTRESPONSE,
+  '__module__' : 'director_pb2'
+  # @@protoc_insertion_point(class_scope:SetNewExperimentResponse)
+  })
 _sym_db.RegisterMessage(SetNewExperimentResponse)
 
-GetTrainedModelRequest = _reflection.GeneratedProtocolMessageType('GetTrainedModelRequest',
-                                                                  (_message.Message,), {
-                                                                      'DESCRIPTOR': _GETTRAINEDMODELREQUEST,
-                                                                      '__module__': 'director_pb2'
-                                                                      # @@protoc_insertion_point(class_scope:GetTrainedModelRequest)
-                                                                  })
+GetTrainedModelRequest = _reflection.GeneratedProtocolMessageType('GetTrainedModelRequest', (_message.Message,), {
+  'DESCRIPTOR' : _GETTRAINEDMODELREQUEST,
+  '__module__' : 'director_pb2'
+  # @@protoc_insertion_point(class_scope:GetTrainedModelRequest)
+  })
 _sym_db.RegisterMessage(GetTrainedModelRequest)
 
-TrainedModelResponse = _reflection.GeneratedProtocolMessageType('TrainedModelResponse',
-                                                                (_message.Message,), {
-                                                                    'DESCRIPTOR': _TRAINEDMODELRESPONSE,
-                                                                    '__module__': 'director_pb2'
-                                                                    # @@protoc_insertion_point(class_scope:TrainedModelResponse)
-                                                                })
+TrainedModelResponse = _reflection.GeneratedProtocolMessageType('TrainedModelResponse', (_message.Message,), {
+  'DESCRIPTOR' : _TRAINEDMODELRESPONSE,
+  '__module__' : 'director_pb2'
+  # @@protoc_insertion_point(class_scope:TrainedModelResponse)
+  })
 _sym_db.RegisterMessage(TrainedModelResponse)
 
-GetDatasetInfoRequest = _reflection.GeneratedProtocolMessageType('GetDatasetInfoRequest',
-                                                                 (_message.Message,), {
-                                                                     'DESCRIPTOR': _GETDATASETINFOREQUEST,
-                                                                     '__module__': 'director_pb2'
-                                                                     # @@protoc_insertion_point(class_scope:GetDatasetInfoRequest)
-                                                                 })
+GetDatasetInfoRequest = _reflection.GeneratedProtocolMessageType('GetDatasetInfoRequest', (_message.Message,), {
+  'DESCRIPTOR' : _GETDATASETINFOREQUEST,
+  '__module__' : 'director_pb2'
+  # @@protoc_insertion_point(class_scope:GetDatasetInfoRequest)
+  })
 _sym_db.RegisterMessage(GetDatasetInfoRequest)
 
-StreamMetricsRequest = _reflection.GeneratedProtocolMessageType('StreamMetricsRequest',
-                                                                (_message.Message,), {
-                                                                    'DESCRIPTOR': _STREAMMETRICSREQUEST,
-                                                                    '__module__': 'director_pb2'
-                                                                    # @@protoc_insertion_point(class_scope:StreamMetricsRequest)
-                                                                })
+StreamMetricsRequest = _reflection.GeneratedProtocolMessageType('StreamMetricsRequest', (_message.Message,), {
+  'DESCRIPTOR' : _STREAMMETRICSREQUEST,
+  '__module__' : 'director_pb2'
+  # @@protoc_insertion_point(class_scope:StreamMetricsRequest)
+  })
 _sym_db.RegisterMessage(StreamMetricsRequest)
 
-StreamMetricsResponse = _reflection.GeneratedProtocolMessageType('StreamMetricsResponse',
-                                                                 (_message.Message,), {
-                                                                     'DESCRIPTOR': _STREAMMETRICSRESPONSE,
-                                                                     '__module__': 'director_pb2'
-                                                                     # @@protoc_insertion_point(class_scope:StreamMetricsResponse)
-                                                                 })
+StreamMetricsResponse = _reflection.GeneratedProtocolMessageType('StreamMetricsResponse', (_message.Message,), {
+  'DESCRIPTOR' : _STREAMMETRICSRESPONSE,
+  '__module__' : 'director_pb2'
+  # @@protoc_insertion_point(class_scope:StreamMetricsResponse)
+  })
 _sym_db.RegisterMessage(StreamMetricsResponse)
 
-RemoveExperimentRequest = _reflection.GeneratedProtocolMessageType('RemoveExperimentRequest',
-                                                                   (_message.Message,), {
-                                                                       'DESCRIPTOR': _REMOVEEXPERIMENTREQUEST,
-                                                                       '__module__': 'director_pb2'
-                                                                       # @@protoc_insertion_point(class_scope:RemoveExperimentRequest)
-                                                                   })
+RemoveExperimentRequest = _reflection.GeneratedProtocolMessageType('RemoveExperimentRequest', (_message.Message,), {
+  'DESCRIPTOR' : _REMOVEEXPERIMENTREQUEST,
+  '__module__' : 'director_pb2'
+  # @@protoc_insertion_point(class_scope:RemoveExperimentRequest)
+  })
 _sym_db.RegisterMessage(RemoveExperimentRequest)
 
-RemoveExperimentResponse = _reflection.GeneratedProtocolMessageType('RemoveExperimentResponse',
-                                                                    (_message.Message,), {
-                                                                        'DESCRIPTOR': _REMOVEEXPERIMENTRESPONSE,
-                                                                        '__module__': 'director_pb2'
-                                                                        # @@protoc_insertion_point(class_scope:RemoveExperimentResponse)
-                                                                    })
+RemoveExperimentResponse = _reflection.GeneratedProtocolMessageType('RemoveExperimentResponse', (_message.Message,), {
+  'DESCRIPTOR' : _REMOVEEXPERIMENTRESPONSE,
+  '__module__' : 'director_pb2'
+  # @@protoc_insertion_point(class_scope:RemoveExperimentResponse)
+  })
 _sym_db.RegisterMessage(RemoveExperimentResponse)
 
-CollaboratorStatus = _reflection.GeneratedProtocolMessageType('CollaboratorStatus',
-                                                              (_message.Message,), {
-                                                                  'DESCRIPTOR': _COLLABORATORSTATUS,
-                                                                  '__module__': 'director_pb2'
-                                                                  # @@protoc_insertion_point(class_scope:CollaboratorStatus)
-                                                              })
+CollaboratorStatus = _reflection.GeneratedProtocolMessageType('CollaboratorStatus', (_message.Message,), {
+  'DESCRIPTOR' : _COLLABORATORSTATUS,
+  '__module__' : 'director_pb2'
+  # @@protoc_insertion_point(class_scope:CollaboratorStatus)
+  })
 _sym_db.RegisterMessage(CollaboratorStatus)
 
-CollaboratorHealthCheckResponse = _reflection.GeneratedProtocolMessageType(
-    'CollaboratorHealthCheckResponse', (_message.Message,), {
-        'DESCRIPTOR': _COLLABORATORHEALTHCHECKRESPONSE,
-        '__module__': 'director_pb2'
-        # @@protoc_insertion_point(class_scope:CollaboratorHealthCheckResponse)
-    })
+CollaboratorHealthCheckResponse = _reflection.GeneratedProtocolMessageType('CollaboratorHealthCheckResponse', (_message.Message,), {
+  'DESCRIPTOR' : _COLLABORATORHEALTHCHECKRESPONSE,
+  '__module__' : 'director_pb2'
+  # @@protoc_insertion_point(class_scope:CollaboratorHealthCheckResponse)
+  })
 _sym_db.RegisterMessage(CollaboratorHealthCheckResponse)
 
 EnvoyInfo = _reflection.GeneratedProtocolMessageType('EnvoyInfo', (_message.Message,), {
-    'DESCRIPTOR': _ENVOYINFO,
-    '__module__': 'director_pb2'
-    # @@protoc_insertion_point(class_scope:EnvoyInfo)
-})
+  'DESCRIPTOR' : _ENVOYINFO,
+  '__module__' : 'director_pb2'
+  # @@protoc_insertion_point(class_scope:EnvoyInfo)
+  })
 _sym_db.RegisterMessage(EnvoyInfo)
 
-GetEnvoysRequest = _reflection.GeneratedProtocolMessageType('GetEnvoysRequest',
-                                                            (_message.Message,), {
-                                                                'DESCRIPTOR': _GETENVOYSREQUEST,
-                                                                '__module__': 'director_pb2'
-                                                                # @@protoc_insertion_point(class_scope:GetEnvoysRequest)
-                                                            })
+GetEnvoysRequest = _reflection.GeneratedProtocolMessageType('GetEnvoysRequest', (_message.Message,), {
+  'DESCRIPTOR' : _GETENVOYSREQUEST,
+  '__module__' : 'director_pb2'
+  # @@protoc_insertion_point(class_scope:GetEnvoysRequest)
+  })
 _sym_db.RegisterMessage(GetEnvoysRequest)
 
-GetEnvoysResponse = _reflection.GeneratedProtocolMessageType('GetEnvoysResponse',
-                                                             (_message.Message,), {
-                                                                 'DESCRIPTOR': _GETENVOYSRESPONSE,
-                                                                 '__module__': 'director_pb2'
-                                                                 # @@protoc_insertion_point(class_scope:GetEnvoysResponse)
-                                                             })
+GetEnvoysResponse = _reflection.GeneratedProtocolMessageType('GetEnvoysResponse', (_message.Message,), {
+  'DESCRIPTOR' : _GETENVOYSRESPONSE,
+  '__module__' : 'director_pb2'
+  # @@protoc_insertion_point(class_scope:GetEnvoysResponse)
+  })
 _sym_db.RegisterMessage(GetEnvoysResponse)
 
+
+
 _FEDERATIONDIRECTOR = _descriptor.ServiceDescriptor(
-    name='FederationDirector',
-    full_name='FederationDirector',
-    file=DESCRIPTOR,
+  name='FederationDirector',
+  full_name='FederationDirector',
+  file=DESCRIPTOR,
+  index=0,
+  serialized_options=None,
+  create_key=_descriptor._internal_create_key,
+  serialized_start=2639,
+  serialized_end=3537,
+  methods=[
+  _descriptor.MethodDescriptor(
+    name='AcknowledgeShard',
+    full_name='FederationDirector.AcknowledgeShard',
     index=0,
+    containing_service=None,
+    input_type=_SHARDINFO,
+    output_type=_SHARDACKNOWLEDGEMENT,
     serialized_options=None,
     create_key=_descriptor._internal_create_key,
-    serialized_start=2639,
-    serialized_end=3537,
-    methods=[
-        _descriptor.MethodDescriptor(
-            name='AcknowledgeShard',
-            full_name='FederationDirector.AcknowledgeShard',
-            index=0,
-            containing_service=None,
-            input_type=_SHARDINFO,
-            output_type=_SHARDACKNOWLEDGEMENT,
-            serialized_options=None,
-            create_key=_descriptor._internal_create_key,
-        ),
-        _descriptor.MethodDescriptor(
-            name='WaitExperiment',
-            full_name='FederationDirector.WaitExperiment',
-            index=1,
-            containing_service=None,
-            input_type=_WAITEXPERIMENTREQUEST,
-            output_type=_WAITEXPERIMENTRESPONSE,
-            serialized_options=None,
-            create_key=_descriptor._internal_create_key,
-        ),
-        _descriptor.MethodDescriptor(
-            name='GetExperimentData',
-            full_name='FederationDirector.GetExperimentData',
-            index=2,
-            containing_service=None,
-            input_type=_GETEXPERIMENTDATAREQUEST,
-            output_type=_EXPERIMENTDATA,
-            serialized_options=None,
-            create_key=_descriptor._internal_create_key,
-        ),
-        _descriptor.MethodDescriptor(
-            name='GetExperimentDescription',
-            full_name='FederationDirector.GetExperimentDescription',
-            index=3,
-            containing_service=None,
-            input_type=_GETEXPERIMENTDESCRIPTIONREQUEST,
-            output_type=_GETEXPERIMENTDESCRIPTIONRESPONSE,
-            serialized_options=None,
-            create_key=_descriptor._internal_create_key,
-        ),
-        _descriptor.MethodDescriptor(
-            name='GetExperimentDescriptions',
-            full_name='FederationDirector.GetExperimentDescriptions',
-            index=4,
-            containing_service=None,
-            input_type=_GETEXPERIMENTDESCRIPTIONSREQUEST,
-            output_type=_GETEXPERIMENTDESCRIPTIONSRESPONSE,
-            serialized_options=None,
-            create_key=_descriptor._internal_create_key,
-        ),
-        _descriptor.MethodDescriptor(
-            name='SetNewExperiment',
-            full_name='FederationDirector.SetNewExperiment',
-            index=5,
-            containing_service=None,
-            input_type=_EXPERIMENTINFO,
-            output_type=_SETNEWEXPERIMENTRESPONSE,
-            serialized_options=None,
-            create_key=_descriptor._internal_create_key,
-        ),
-        _descriptor.MethodDescriptor(
-            name='GetDatasetInfo',
-            full_name='FederationDirector.GetDatasetInfo',
-            index=6,
-            containing_service=None,
-            input_type=_GETDATASETINFOREQUEST,
-            output_type=_SHARDINFO,
-            serialized_options=None,
-            create_key=_descriptor._internal_create_key,
-        ),
-        _descriptor.MethodDescriptor(
-            name='GetTrainedModel',
-            full_name='FederationDirector.GetTrainedModel',
-            index=7,
-            containing_service=None,
-            input_type=_GETTRAINEDMODELREQUEST,
-            output_type=_TRAINEDMODELRESPONSE,
-            serialized_options=None,
-            create_key=_descriptor._internal_create_key,
-        ),
-        _descriptor.MethodDescriptor(
-            name='StreamMetrics',
-            full_name='FederationDirector.StreamMetrics',
-            index=8,
-            containing_service=None,
-            input_type=_STREAMMETRICSREQUEST,
-            output_type=_STREAMMETRICSRESPONSE,
-            serialized_options=None,
-            create_key=_descriptor._internal_create_key,
-        ),
-        _descriptor.MethodDescriptor(
-            name='RemoveExperimentData',
-            full_name='FederationDirector.RemoveExperimentData',
-            index=9,
-            containing_service=None,
-            input_type=_REMOVEEXPERIMENTREQUEST,
-            output_type=_REMOVEEXPERIMENTRESPONSE,
-            serialized_options=None,
-            create_key=_descriptor._internal_create_key,
-        ),
-        _descriptor.MethodDescriptor(
-            name='CollaboratorHealthCheck',
-            full_name='FederationDirector.CollaboratorHealthCheck',
-            index=10,
-            containing_service=None,
-            input_type=_COLLABORATORSTATUS,
-            output_type=_COLLABORATORHEALTHCHECKRESPONSE,
-            serialized_options=None,
-            create_key=_descriptor._internal_create_key,
-        ),
-        _descriptor.MethodDescriptor(
-            name='GetEnvoys',
-            full_name='FederationDirector.GetEnvoys',
-            index=11,
-            containing_service=None,
-            input_type=_GETENVOYSREQUEST,
-            output_type=_GETENVOYSRESPONSE,
-            serialized_options=None,
-            create_key=_descriptor._internal_create_key,
-        ),
-    ])
+  ),
+  _descriptor.MethodDescriptor(
+    name='WaitExperiment',
+    full_name='FederationDirector.WaitExperiment',
+    index=1,
+    containing_service=None,
+    input_type=_WAITEXPERIMENTREQUEST,
+    output_type=_WAITEXPERIMENTRESPONSE,
+    serialized_options=None,
+    create_key=_descriptor._internal_create_key,
+  ),
+  _descriptor.MethodDescriptor(
+    name='GetExperimentData',
+    full_name='FederationDirector.GetExperimentData',
+    index=2,
+    containing_service=None,
+    input_type=_GETEXPERIMENTDATAREQUEST,
+    output_type=_EXPERIMENTDATA,
+    serialized_options=None,
+    create_key=_descriptor._internal_create_key,
+  ),
+  _descriptor.MethodDescriptor(
+    name='GetExperimentDescription',
+    full_name='FederationDirector.GetExperimentDescription',
+    index=3,
+    containing_service=None,
+    input_type=_GETEXPERIMENTDESCRIPTIONREQUEST,
+    output_type=_GETEXPERIMENTDESCRIPTIONRESPONSE,
+    serialized_options=None,
+    create_key=_descriptor._internal_create_key,
+  ),
+  _descriptor.MethodDescriptor(
+    name='GetExperimentDescriptions',
+    full_name='FederationDirector.GetExperimentDescriptions',
+    index=4,
+    containing_service=None,
+    input_type=_GETEXPERIMENTDESCRIPTIONSREQUEST,
+    output_type=_GETEXPERIMENTDESCRIPTIONSRESPONSE,
+    serialized_options=None,
+    create_key=_descriptor._internal_create_key,
+  ),
+  _descriptor.MethodDescriptor(
+    name='SetNewExperiment',
+    full_name='FederationDirector.SetNewExperiment',
+    index=5,
+    containing_service=None,
+    input_type=_EXPERIMENTINFO,
+    output_type=_SETNEWEXPERIMENTRESPONSE,
+    serialized_options=None,
+    create_key=_descriptor._internal_create_key,
+  ),
+  _descriptor.MethodDescriptor(
+    name='GetDatasetInfo',
+    full_name='FederationDirector.GetDatasetInfo',
+    index=6,
+    containing_service=None,
+    input_type=_GETDATASETINFOREQUEST,
+    output_type=_SHARDINFO,
+    serialized_options=None,
+    create_key=_descriptor._internal_create_key,
+  ),
+  _descriptor.MethodDescriptor(
+    name='GetTrainedModel',
+    full_name='FederationDirector.GetTrainedModel',
+    index=7,
+    containing_service=None,
+    input_type=_GETTRAINEDMODELREQUEST,
+    output_type=_TRAINEDMODELRESPONSE,
+    serialized_options=None,
+    create_key=_descriptor._internal_create_key,
+  ),
+  _descriptor.MethodDescriptor(
+    name='StreamMetrics',
+    full_name='FederationDirector.StreamMetrics',
+    index=8,
+    containing_service=None,
+    input_type=_STREAMMETRICSREQUEST,
+    output_type=_STREAMMETRICSRESPONSE,
+    serialized_options=None,
+    create_key=_descriptor._internal_create_key,
+  ),
+  _descriptor.MethodDescriptor(
+    name='RemoveExperimentData',
+    full_name='FederationDirector.RemoveExperimentData',
+    index=9,
+    containing_service=None,
+    input_type=_REMOVEEXPERIMENTREQUEST,
+    output_type=_REMOVEEXPERIMENTRESPONSE,
+    serialized_options=None,
+    create_key=_descriptor._internal_create_key,
+  ),
+  _descriptor.MethodDescriptor(
+    name='CollaboratorHealthCheck',
+    full_name='FederationDirector.CollaboratorHealthCheck',
+    index=10,
+    containing_service=None,
+    input_type=_COLLABORATORSTATUS,
+    output_type=_COLLABORATORHEALTHCHECKRESPONSE,
+    serialized_options=None,
+    create_key=_descriptor._internal_create_key,
+  ),
+  _descriptor.MethodDescriptor(
+    name='GetEnvoys',
+    full_name='FederationDirector.GetEnvoys',
+    index=11,
+    containing_service=None,
+    input_type=_GETENVOYSREQUEST,
+    output_type=_GETENVOYSRESPONSE,
+    serialized_options=None,
+    create_key=_descriptor._internal_create_key,
+  ),
+])
 _sym_db.RegisterServiceDescriptor(_FEDERATIONDIRECTOR)
 
 DESCRIPTOR.services_by_name['FederationDirector'] = _FEDERATIONDIRECTOR
