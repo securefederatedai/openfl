@@ -54,3 +54,8 @@ Each task subsection contains the following:
 - ``function``: function name to call.
   The function must be the one defined in :class:`TaskRunner <openfl.federated.TaskRunner>` class.
 - ``kwargs``: kwargs passed to the ``function``.
+
+.. note::
+    See an `example <https://github.com/intel/openfl/blob/develop/openfl/federated/task/runner.py>`_ of :class:`TaskRunner <openfl.federated.TaskRunner>` class for details.
+    
+    
