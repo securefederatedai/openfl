@@ -1,6 +1,6 @@
 # Copyright (C) 2020-2021 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-"""Proto utils."""
+
 
 from openfl.protocols import DataStream
 from openfl.protocols import MetadataProto
@@ -8,6 +8,8 @@ from openfl.protocols import ModelProto
 from openfl.protocols import NamedTensor
 from openfl.utilities import TensorKey
 from openfl.utilities import TensorKey
+
+"""Utils to be used in constructing keyed tensor dicts"""
 
 def augment_keys(raw_dict, origin, round_num, report, tags): 
     return {
@@ -38,6 +40,8 @@ def local_and_global_tensorkey_dicts(local_global_w_kwargs):
         global_tensorkey_dict.update(augment_keys(raw_dict=global_dict, **kwargs))
 
     return local_tensorkey_dict, global_tensorkey_dict
+
+"""Proto utils."""
 
 def model_proto_to_bytes_and_metadata(model_proto):
     """Convert the model protobuf to bytes and metadata.
