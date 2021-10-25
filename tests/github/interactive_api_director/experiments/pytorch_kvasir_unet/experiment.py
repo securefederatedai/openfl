@@ -17,24 +17,27 @@ from openfl.interface.interactive_api.experiment import ModelInterface
 from openfl.interface.interactive_api.federation import Federation
 
 
-federation = Federation(client_id='frontend', director_node_fqdn='localhost', director_port=50051, tls=False)
+federation = Federation(
+    client_id='frontend',
+    director_node_fqdn='localhost',
+    director_port=50051,
+    tls=False
+)
 
 shard_registry = federation.get_shard_registry()
-shard_registry
 
 dummy_shard_desc = federation.get_dummy_shard_descriptor(size=10)
 dummy_shard_dataset = dummy_shard_desc.get_dataset('')
 sample, target = dummy_shard_dataset[0]
 
 
-# Now you can implement you data loaders using dummy_shard_desc
-class KvasirSD(DataInterface, Dataset):
+# Register dataset
+# We extract User dataset class implementation. Is it convinient? What if the dataset is not a class?
+class KvasirShardDataset(Dataset):
 
-    def __init__(self, train_bs, valid_bs, validation_fraction=1/8, **kwargs):
-        super().__init__(**kwargs)
-        
-        self.validation_fraction = validation_fraction
-        
+    def __init__(self, dataset):
+        self._dataset = dataset
+
         # Prepare transforms
         self.img_trans = tsf.Compose([
             tsf.ToPILImage(),
@@ -45,13 +48,29 @@ class KvasirSD(DataInterface, Dataset):
             tsf.ToPILImage(),
             tsf.Resize((332, 332), interpolation=PIL.Image.NEAREST),
             tsf.ToTensor()])
-        self.train_bs = train_bs
-        self.valid_bs = valid_bs
-        
+
+    def __getitem__(self, index):
+        img, mask = self._dataset[index]
+        img = self.img_trans(img).numpy()
+        mask = self.mask_trans(mask).numpy()
+        return img, mask
+
+    def __len__(self):
+        return len(self._dataset)
+
+
+# Now you can implement you data loaders using dummy_shard_desc
+class KvasirSD(DataInterface):
+
+    def __init__(self, validation_fraction=1 / 8, **kwargs):
+        super().__init__(**kwargs)
+
+        self.validation_fraction = validation_fraction
+
     @property
     def shard_descriptor(self):
         return self._shard_descriptor
-        
+
     @shard_descriptor.setter
     def shard_descriptor(self, shard_descriptor):
         """
@@ -61,37 +80,36 @@ class KvasirSD(DataInterface, Dataset):
         Local shard_descriptor  will be set by Envoy.
         """
         self._shard_descriptor = shard_descriptor
-        
-        validation_size = max(1, int(len(self.shard_descriptor) * self.validation_fraction))
-        
-        self.train_indeces = np.arange(len(self.shard_descriptor) - validation_size)
-        self.val_indeces = np.arange(len(self.shard_descriptor) - validation_size, len(self.shard_descriptor))
+        self._shard_dataset = KvasirShardDataset(shard_descriptor.get_dataset('train'))
 
-    def __getitem__(self, index):
-        img, mask = self.shard_descriptor[index]
-        img = self.img_trans(img).numpy()
-        mask = self.mask_trans(mask).numpy()
-        return img, mask
+        validation_size = max(1, int(len(self._shard_dataset) * self.validation_fraction))
 
-    def __len__(self):
-        return len(self.shard_descriptor)
-    
-    
-    def get_train_loader(self):
+        self.train_indeces = np.arange(len(self._shard_dataset) - validation_size)
+        self.val_indeces = np.arange(len(self._shard_dataset) - validation_size, len(self._shard_dataset))
+
+    def get_train_loader(self, **kwargs):
         """
         Output of this method will be provided to tasks with optimizer in contract
         """
         train_sampler = SubsetRandomSampler(self.train_indeces)
         return DataLoader(
-            self, num_workers=8, batch_size=self.train_bs, sampler=train_sampler
-            )
+            self._shard_dataset,
+            num_workers=8,
+            batch_size=self.kwargs['train_bs'],
+            sampler=train_sampler
+        )
 
-    def get_valid_loader(self):
+    def get_valid_loader(self, **kwargs):
         """
         Output of this method will be provided to tasks without optimizer in contract
         """
         val_sampler = SubsetRandomSampler(self.val_indeces)
-        return DataLoader(self, num_workers=8, batch_size=self.valid_bs, sampler=val_sampler)
+        return DataLoader(
+            self._shard_dataset,
+            num_workers=8,
+            batch_size=self.kwargs['valid_bs'],
+            sampler=val_sampler
+        )
 
     def get_train_data_size(self):
         """
