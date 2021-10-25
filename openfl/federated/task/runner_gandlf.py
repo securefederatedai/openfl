@@ -13,7 +13,7 @@ import torch as pt
 import torch.nn as nn
 import tqdm
 
-from .runner_pt import set_tensor_dict, reset_opt_vars
+from .runner_pt import set_tensor_dict, get_tensor_dict, reset_opt_vars, process_metric_and_weights
 
 from openfl.utilities import Metric
 from openfl.utilities import split_tensor_dict_for_holdouts
@@ -57,6 +57,8 @@ class GaNDLFTaskRunner(TaskRunner):
         # TODO: Currently I get back end_epoch and best_loss from gandlf main_run, but do notthing
         # with them. We need to find a DB solution to persist these.
 
+        # TODO: After returning from main_run, always reset attributes (especially model, optmizer, but others...)
+
         # TODO: Complete the functionality of the crossfold trainval/test evaluation. Currently
         # I cannot decide what would be appropriate to pass as data since we usually work
         # on the FL level with train and val; but this set should ideally be such that it contains
@@ -98,18 +100,25 @@ class GaNDLFTaskRunner(TaskRunner):
                                        train_mode=self.train_mode, 
                                        device=self.device, 
                                        reset_prev=self.reset_prev, 
-                                       epochs=0)
+                                       epochs=0, 
+                                       start_epoch=0,
+                                       best_loss=np.inf,
+                                       do_train=False,
+                                       do_val=False,
+                                       do_test=False)
 
         self.model = gandlf_results_dict['state']['model']
         self.optimizer = gandlf_results_dict['state']['optimizer']
 
-        best_loss = gandlf_results_dict['state']['best_loss']
-        end_epoch = gandlf_results_dict['state']['end_epoch']
+        # TODO: For now we store some model state using class attributes but these are not
+        # currently persisted for crash recover. Changes needed in OpenFL for this.
+        self.best_loss = gandlf_results_dict['state']['best_loss']
+        self.end_epoch = gandlf_results_dict['state']['end_epoch']
 
         # TODO: I would like to test best_loss against 1e7 and end_epoch against -1
-        # then raise an expectption against the use of grabbing a best model
-        # for initialization as initialization will be written
-        # over by the one coming from the aggregator. However, I don't want to rely on 1e7 
+        # then raise an exception against the use of grabbing a best model other than
+        # ones with these values for initialization. Becuase this initialization will be written
+        # over by the aggregator innitial model. However, I don't want to rely on 1e7 
         # staying the default. What is best here?
 
     def _check_config(self, parameters):
@@ -129,6 +138,11 @@ class GaNDLFTaskRunner(TaskRunner):
             if key in unsupported_parameters:
                 unsupported_parameters_found.append(key)
 
+        if ("nested_training" in parameters) and \
+            (parameters["nested_training"]["validation"] > 1) or \
+                (parameters["nested_training"]["testing"] > 1):
+                raise ValueError(f'Cross fold validation config found in {self.__repr__()} self.config_file. Cross fold training is only supported via a train_batches call (see code for specifying config via parameters in that case.')
+
         if len(unsupported_parameters_found) > 0:
             raise NotImplementedError(f'Parameters: {unsupported_parameters_found} are not currently supported in OpenFL.')
 
@@ -141,7 +155,7 @@ class GaNDLFTaskRunner(TaskRunner):
         """
 
         if self.opt_treatment == 'RESET':
-            reset_opt_vars(self.model)
+            reset_opt_vars(model=self.model)
             set_tensor_dict(self.model, input_tensor_dict, with_opt_vars=False)
         elif (self.training_round_completed
               and self.opt_treatment == 'CONTINUE_GLOBAL' and not validation):
@@ -200,7 +214,7 @@ class GaNDLFTaskRunner(TaskRunner):
 
         # Empty list represents metrics that should only be stored locally
         return output_tensor_dict, {}
-    
+
     def train_batches(self, 
                       col_name, 
                       round_num, 
@@ -209,7 +223,8 @@ class GaNDLFTaskRunner(TaskRunner):
                       epochs=1,
                       crossfold_test=False,
                       crossfold_test_data_csv=None,
-                      crossfold_test_config=None, 
+                      crossfold_val_n=None,
+                      crossfold_test_n=None, 
                       **kwargs):
         """Train batches. Here epochs are specified as apposed to batches.
 
@@ -226,7 +241,8 @@ class GaNDLFTaskRunner(TaskRunner):
             crossfold_test_data_csv : Data csv used to define data used in crossfold test.
                                       This csv does not itself define the folds, just
                                       defines the total data to be used.
-            crossfold_test_config   : config to use that defines crossfold test
+            crossfold_val_n         : number of folds to use for the train,val level of the nested crossfold.
+            corssfold_test_n        : number of folds to use for the trainval,test level of the nested crossfold.
             kwargs                  : Key word arguments passed to GaNDLF main_run
 
         Returns:
@@ -241,20 +257,32 @@ class GaNDLFTaskRunner(TaskRunner):
         # case to store all results and only at the end pick the best model and restore it to put in the return dict.
         
         # invoke GaNDLF main run
+        # TODO: Here the values used for start_epoch and best_loss are taken from class attributes
+        # and not persisted for crash recover. We need to change this once we have a way for OpenFL to track this state. 
         if crossfold_test:
+            if (crossfold_val_n is None) or (crossfold_test_n is None) or (crossfold_test_data_csv is None):
+                raise ValueError('When crossfold_test is True, all of crossfold_test_data_csv, crossfold_val_n, and crossfold_test_n need to be provided.')
+        
+            #NOTE: Here the return is None, as all outputs go to disk (not even a model is returned)
+            
             gandlf_results_dict = main_run(data_csv=crossfold_test_data_csv, 
-                                        config_file=crossfold_test_config, 
+                                        config_file=self.config_file, 
                                         output_dir=self.output_dir, 
                                         train_mode=self.train_mode, 
                                         device=self.device, 
                                         epochs=epochs,
                                         model=self.model,
+                                        start_epoch=0,
+                                        best_loss=1e7,
                                         optimizer=self.model.optimizer, 
                                         do_train=True,
                                         do_val=True,
-                                        do_test=True, 
+                                        do_test=True,
+                                        crossfold_val_n=crossfold_val_n,
+                                        corssfold_test_n=crossfold_test_n, 
                                         **kwargs
                                         )
+            return
         else:
             gandlf_results_dict = main_run(data_csv=self.data_csv, 
                                         config_file=self.config_file, 
@@ -271,105 +299,39 @@ class GaNDLFTaskRunner(TaskRunner):
                                         )
             self.model = gandlf_results_dict['state']['model']
             self.optimizer = gandlf_results_dict['state']['optimizer']
+            self.end_epoch = gandlf_results_dict['state']['end_epoch']
+            self.best_loss = gandlf_results_dict['state']['best_loss']
+            
+            # NOTE: The returned loss is only from the last epoch. Changes to GaNDLF needed to change this.
+            metric = Metric(name='last_epoch_train_loss', value=np.array({'last_epoch_train_loss': gandlf_results_dict['scores']['epoch_train_loss']}))
+            
+            global_tensor_dict, local_tensor_dict =  process_metric_and_weights(model=self.model, 
+                                                                                metric=metric, 
+                                                                                col_name=col_name, 
+                                                                                round_num=round_num, 
+                                                                                logger=self.logger, 
+                                                                                tensor_dict_split_fn_kwargs=self.tensor_dict_split_fn_kwargs)
 
-            # TODO: Here we are not using last_epoch or best_loss. Figure out how
-            # to persist this info so that the model can keep track of it even after crashing
+            # Update the required tensors if they need to be pulled from the
+            # aggregator
+            # TODO this logic can break if different collaborators have different
+            # roles between rounds.
+            # For example, if a collaborator only performs validation in the first
+            # round but training in the second, it has no way of knowing the
+            # optimizer state tensor names to request from the aggregator because
+            # these are only created after training occurs. A work around could
+            # involve doing a single epoch of training on random data to get the
+            # optimizer names, and then throwing away the model.
+            if self.opt_treatment == 'CONTINUE_GLOBAL':
+                self.initialize_tensorkeys_for_functions(with_opt_vars=True)
 
-        # NOTE: The returned loss is only from the last epoch
-        #       Get average instead over the course of epochs?
+            # This will signal that the optimizer values are now present,
+            # and can be loaded when the model is rebuilt
+            self.train_round_completed = True
 
-        # now we can retrive the results from gandlf_results_dict and self.model
-        # TODO: Are you sure you only want loss?
-        output_metrics      = gandlf_results_dict['scores']['epoch_train_loss']
-        output_model_dict   = gandlf_results_dict['state']['model'].get_tensor_dict()
+            # Return global_tensor_dict, local_tensor_dict
+            return global_tensor_dict, local_tensor_dict
 
-        # TODO: Ask Micah about this below
-        # FIXME: FROM HERE DOWN SHOULD BE COMMON BETWEEN TASK RUNNERS
-
-        # Output metric tensors (scalar)
-        origin = col_name
-        output_metric_dict = {
-            TensorKey(k, origin, round_num, True, ('metric',)): v 
-            for k, v in output_metrics.items()
-        }
-
-        # turn output_model_dict into local and global keyed tensors 
-        tags = ('trained',)
-        global_model_dict, local_model_dict = split_tensor_dict_for_holdouts(
-            self.logger, output_model_dict,
-            **self.tensor_dict_split_fn_kwargs
-        )
-
-        # Create global tensorkeys
-        global_tensorkey_model_dict = {
-            TensorKey(tensor_name, origin, round_num, False, tags):
-                nparray for tensor_name, nparray in global_model_dict.items()
-        }
-        # Create tensorkeys that should stay local
-        local_tensorkey_model_dict = {
-            TensorKey(tensor_name, origin, round_num, False, tags):
-                nparray for tensor_name, nparray in local_model_dict.items()
-        }
-        # The train/validate aggregated function of the next round will look
-        # for the updated model parameters.
-        # This ensures they will be resolved locally
-        next_local_tensorkey_model_dict = {
-            TensorKey(tensor_name, origin, round_num + 1, False, ('model',)): nparray
-            for tensor_name, nparray in local_model_dict.items()}
-
-        global_tensor_dict = {
-            **output_metric_dict,
-            **global_tensorkey_model_dict
-        }
-        local_tensor_dict = {
-            **local_tensorkey_model_dict,
-            **next_local_tensorkey_model_dict
-        }
-
-        # Update the required tensors if they need to be pulled from the
-        # aggregator
-        # TODO this logic can break if different collaborators have different
-        # roles between rounds.
-        # For example, if a collaborator only performs validation in the first
-        # round but training in the second, it has no way of knowing the
-        # optimizer state tensor names to request from the aggregator because
-        # these are only created after training occurs. A work around could
-        # involve doing a single epoch of training on random data to get the
-        # optimizer names, and then throwing away the model.
-        if self.opt_treatment == 'CONTINUE_GLOBAL':
-            self.initialize_tensorkeys_for_functions(with_opt_vars=True)
-
-        # This will signal that the optimizer values are now present,
-        # and can be loaded when the model is rebuilt
-        self.train_round_completed = True
-
-        # Return global_tensor_dict, local_tensor_dict
-        return global_tensor_dict, local_tensor_dict
-
-    def get_tensor_dict(self, with_opt_vars=False):
-        """Return the tensor dictionary.
-
-        Args:
-            with_opt_vars (bool): Return the tensor dictionary including the
-                                  optimizer tensors (Default=False)
-
-        Returns:
-            dict: Tensor dictionary {**dict, **optimizer_dict}
-
-        """
-        # Gets information regarding tensor model layers and optimizer state.
-        # FIXME: self.parameters() instead? Unclear if load_state_dict() or
-        # simple assignment is better
-        # for now, state dict gives us names which is good
-        # FIXME: do both and sanity check each time?
-
-        state = to_cpu_numpy(self.model.state_dict())
-
-        if with_opt_vars:
-            opt_state = _get_optimizer_state(self.model.optimizer)
-            state = {**state, **opt_state}
-
-        return state
 
     def _get_weights_names(self, with_opt_vars=False):
         # Gets information regarding tensor model layers and optimizer state.
@@ -385,40 +347,6 @@ class GaNDLFTaskRunner(TaskRunner):
             state += opt_state.keys()
 
         return state
-    """
-    def set_tensor_dict(model, optimizer, tensor_dict, device, with_opt_vars=False):
-        -tripple quote was here- Set the tensor dictionary.
-
-        Args:
-            tensor_dict: The tensor dictionary
-            with_opt_vars (bool): Return the tensor dictionary including the
-                                    optimizer tensors (Default=False)
-
-        -tripple quote was here -
-        # Sets tensors for model layers and optimizer state.
-        # FIXME: self.parameters() instead? Unclear if load_state_dict() or
-        #  simple assignment is better
-        # for now, state dict gives us names, which is good
-        # FIXME: do both and sanity check each time?
-
-        new_state = {}
-        # Grabbing keys from model's state_dict helps to confirm we have
-        # everything
-        for k in model.state_dict():
-            new_state[k] = pt.from_numpy(tensor_dict.pop(k)).to(device)
-
-        # set model state
-        model.load_state_dict(new_state)
-
-        if with_opt_vars:
-            # see if there is state to restore first
-            if tensor_dict.pop('__opt_state_needed') == 'true':
-                _set_optimizer_state(optimizer, device, tensor_dict)
-
-            # sanity check that we did not record any state that was not used
-            assert len(tensor_dict) == 0
-
-        """
 
     def get_optimizer(self):
         """Get the optimizer of this instance."""
@@ -458,7 +386,7 @@ class GaNDLFTaskRunner(TaskRunner):
         #  all of the methods in the class and declare the tensors.
         # For now this is done manually
 
-        output_model_dict = self.get_tensor_dict(with_opt_vars=with_opt_vars)
+        output_model_dict = get_tensor_dict(model=self.model, with_opt_vars=with_opt_vars)
         global_model_dict, local_model_dict = split_tensor_dict_for_holdouts(
             self.logger, output_model_dict,
             **self.tensor_dict_split_fn_kwargs
@@ -467,7 +395,7 @@ class GaNDLFTaskRunner(TaskRunner):
             global_model_dict_val = global_model_dict
             local_model_dict_val = local_model_dict
         else:
-            output_model_dict = self.get_tensor_dict(with_opt_vars=False)
+            output_model_dict = get_tensor_dict(model=self.model, with_opt_vars=False)
             global_model_dict_val, local_model_dict_val = split_tensor_dict_for_holdouts(
                 self.logger,
                 output_model_dict,
@@ -531,8 +459,8 @@ class GaNDLFTaskRunner(TaskRunner):
             None
         """
         pickle_dict = pt.load(filepath)
-        self.load_state_dict(pickle_dict[model_state_dict_key])
-        self.optimizer.load_state_dict(pickle_dict[optimizer_state_dict_key])
+        self.model.load_state_dict(pickle_dict[model_state_dict_key])
+        self.model.optimizer.load_state_dict(pickle_dict[optimizer_state_dict_key])
 
     def save_native(self, filepath, model_state_dict_key='model_state_dict',
                     optimizer_state_dict_key='optimizer_state_dict', **kwargs):
@@ -554,35 +482,10 @@ class GaNDLFTaskRunner(TaskRunner):
             None
         """
         pickle_dict = {
-            model_state_dict_key: self.state_dict(),
-            optimizer_state_dict_key: self.optimizer.state_dict()
+            model_state_dict_key: self.model.state_dict(),
+            optimizer_state_dict_key: self.model.optimizer.state_dict()
         }
         pt.save(pickle_dict, filepath)
-
-    def train_epoch(self, batch_generator: Iterator[Tuple[np.ndarray, np.ndarray]]) -> Metric:
-        """Train single epoch.
-
-        Override this function in order to use custom training.
-
-        Args:
-            batch_generator: Train dataset batch generator. Yields (samples, targets) tuples of
-            size = `self.data_loader.batch_size`.
-        Returns:
-            Metric: An object containing name and np.ndarray value.
-        """
-        losses = []
-        for data, target in batch_generator:
-            data, target = pt.tensor(data).to(self.device), pt.tensor(
-                target).to(self.device)
-            self.optimizer.zero_grad()
-            output = self(data)
-            loss = self.loss_fn(output=output, target=target)
-            loss.backward()
-            self.optimizer.step()
-            losses.append(loss.detach().cpu().numpy())
-        loss = np.mean(losses)
-        return Metric(name=self.loss_fn.__name__, value=np.array(loss))
-
 
 def _derive_opt_state_dict(opt_state_dict):
     """Separate optimizer tensors from the tensor dictionary.

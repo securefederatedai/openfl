@@ -7,7 +7,37 @@ from openfl.protocols import MetadataProto
 from openfl.protocols import ModelProto
 from openfl.protocols import NamedTensor
 from openfl.utilities import TensorKey
+from openfl.utilities import TensorKey
 
+def augment_keys(raw_dict, origin, round_num, report, tags): 
+    return {
+            TensorKey(name, origin, round_num, report, tags):
+                array for name, array in raw_dict.items()
+           }
+
+    # ['tensor_name', 'origin', 'round_number', 'report', 'tags']
+
+
+def local_and_global_tensorkey_dicts(local_global_w_kwargs):
+    """
+    Takes a number of raw local and global tensor dicts and creates one local and one global specially 
+    keyed tensor dict.
+
+    Args:
+        local_global_w_kwargs:  List of 3-tuples, each consisting of (raw local tensor dict, raw global tensor dict, kwargs)
+                                where kwargs is used by aument keys to turn each of the first two raw dictionaries into 
+                                specially keyed ones that will be used to update the final output local and global specially 
+                                keyed dictionaries.
+    """
+    local_tensorkey_dict = {}
+    global_tensorkey_dict = {}
+
+
+    for local_dict, global_dict, kwargs in local_global_w_kwargs:
+        local_tensorkey_dict.update(augment_keys(raw_dict=local_dict, **kwargs))
+        global_tensorkey_dict.update(augment_keys(raw_dict=global_dict, **kwargs))
+
+    return local_tensorkey_dict, global_tensorkey_dict
 
 def model_proto_to_bytes_and_metadata(model_proto):
     """Convert the model protobuf to bytes and metadata.

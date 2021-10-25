@@ -16,6 +16,7 @@ from openfl.utilities import Metric
 from openfl.utilities import split_tensor_dict_for_holdouts
 from openfl.utilities import TensorKey
 from .runner import TaskRunner
+from .task_utils import local_and_global_tensorkey_dicts
 
 
 def set_tensor_dict(model, tensor_dict, with_opt_vars=False):
@@ -24,7 +25,7 @@ def set_tensor_dict(model, tensor_dict, with_opt_vars=False):
         Args:
             tensor_dict: The tensor dictionary
             with_opt_vars (bool): Return the tensor dictionary including the
-                                  optimizer tensors (Default=False)
+                                optimizer tensors (Default=False)
 
         """
         # Sets tensors for model layers and optimizer state.
@@ -53,16 +54,129 @@ def set_tensor_dict(model, tensor_dict, with_opt_vars=False):
             # sanity check that we did not record any state that was not used
             assert len(tensor_dict) == 0
 
+def get_tensor_dict(model, with_opt_vars=False):
+        """Return the tensor dictionary.
+
+        Args:
+            with_opt_vars (bool): Return the tensor dictionary including the
+                                optimizer tensors (Default=False)
+
+        Returns:
+            dict: Tensor dictionary {**dict, **optimizer_dict}
+
+        """
+        # Gets information regarding tensor model layers and optimizer state.
+        # FIXME: self.parameters() instead? Unclear if load_state_dict() or
+        # simple assignment is better
+        # for now, state dict gives us names which is good
+        # FIXME: do both and sanity check each time?
+
+        state = to_cpu_numpy(model.state_dict())
+
+        if with_opt_vars:
+            opt_state = _get_optimizer_state(model.optimizer)
+            state = {**state, **opt_state}
+
+        return state
+
+
+def train_results_tensorkey_dicts(output_model_dict, 
+                                  output_metric_dict, 
+                                  logger, 
+                                  tensor_dict_split_fn_kwargs, 
+                                  col_name, 
+                                  round_num):
+
+    local_global_w_kwargs = []
+              
+    global_model_dict, local_model_dict = split_tensor_dict_for_holdouts(
+        logger, output_model_dict,
+        **tensor_dict_split_fn_kwargs
+    )
+
+    local_and_global_w_kwargs.append(local_model_dict, global_model_dict, {'origin': col_name,
+                                                                           'round_num': round_num,
+                                                                           'report': False, 
+                                                                           'tags': ('trained',)})
+
+    local_global_w_kwargs.append(local_model_dict, {}, {'origin': col_name,
+                                                        'round_num': round_num + 1,
+                                                        'report': False, 
+                                                        'tags': ('model',)})
+
+    local_global_w_kwargs.append({}, output_metric_dict, {'origin': col_name,
+                                                          'round_num': round_num,
+                                                          'report': True, 
+                                                          'tags': ('metric',)})
+    
+    return local_and_global_tensorkey_dicts(local_global_w_kwargs)
+
+
 
 def reset_opt_vars(model):
-        """
-        Reset optimizer variables.
+            """
+            Reset optimizer variables.
 
-        Resets the optimizer variables
+            Resets the optimizer variables
 
-        """
-        # TODO: Why pass?
-        pass
+            """
+            # TODO: Why pass?
+            pass
+
+
+def construct_tensorkey_dicts(metric, 
+                              col_name, 
+                              round_num, 
+                              logger, 
+                              tensor_dict_split_fn_kwargs,  
+                              tags, 
+                              global_metric_dict={}, 
+                              local_metric_dict={}, 
+                              global_model_dict={}, 
+                              local_model_dict={}):
+        
+        # Output metric tensors (scalar)
+        origin = col_name
+        output_metric_dict = {
+            TensorKey(
+                k, origin, round_num, True, ('metric',)
+            ): v for k,v in 
+        }
+
+        # output model tensors (Doesn't include TensorKey)
+        output_model_dict = get_tensor_dict(model=model, with_opt_vars=True)
+        global_model_dict, local_model_dict = split_tensor_dict_for_holdouts(
+            logger, output_model_dict,
+            **tensor_dict_split_fn_kwargs
+        )
+
+        # Create global tensorkeys
+        global_tensorkey_model_dict = {
+            TensorKey(tensor_name, origin, round_num, False, tags):
+                nparray for tensor_name, nparray in global_model_dict.items()
+        }
+        # Create tensorkeys that should stay local
+        local_tensorkey_model_dict = {
+            TensorKey(tensor_name, origin, round_num, False, tags):
+                nparray for tensor_name, nparray in local_model_dict.items()
+        }
+        # The train/validate aggregated function of the next round will look
+        # for the updated model parameters.
+        # This ensures they will be resolved locally
+        next_local_tensorkey_model_dict = {
+            TensorKey(tensor_name, origin, round_num + 1, False, ('model',)): nparray
+            for tensor_name, nparray in local_model_dict.items()}
+
+        global_tensor_dict = {
+            **output_metric_dict,
+            **global_tensorkey_model_dict
+        }
+        local_tensor_dict = {
+            **local_tensorkey_model_dict,
+            **next_local_tensorkey_model_dict
+        }
+
+        return global_tensor_dict, local_tensor_dict
 
 
 class PyTorchTaskRunner(nn.Module, TaskRunner):
@@ -175,29 +289,22 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
         # Empty list represents metrics that should only be stored locally
         return output_tensor_dict, {}
 
-    def train_batches(self, 
-                      col_name, 
-                      round_num, 
-                      input_tensor_dict,
-                      use_tqdm=False, 
-                      epochs=1, 
-                      **kwargs):
+# TODO: WORKING HERE further split up the function below to keep peices common to gandlf and this runner
+
+    def train_batches(self, col_name, round_num, input_tensor_dict,
+                      use_tqdm=False, epochs=1, **kwargs):
         """Train batches.
-
         Train the model on the requested number of batches.
-
         Args:
             col_name:            Name of the collaborator
             round_num:           What round is it
             input_tensor_dict:   Required input tensors (for model)
             use_tqdm (bool):     Use tqdm to print a progress bar (Default=True)
             epochs:              The number of epochs to train
-
         Returns:
             global_output_dict:  Tensors to send back to the aggregator
             local_output_dict:   Tensors to maintain in the local TensorDB
         """
-        
         self.rebuild_model(round_num, input_tensor_dict)
         # set to "training" mode
         self.train()
@@ -208,27 +315,33 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
             if use_tqdm:
                 loader = tqdm.tqdm(loader, desc='train epoch')
             metric = self.train_epoch(loader)
+        
         # Output metric tensors (scalar)
-        origin = col_name
-        tags = ('trained',)
-        output_metric_dict = {
-            TensorKey(
-                metric.name, origin, round_num, True, ('metric',)
-            ): metric.value
-        }
-
+        output_metric_dict = {metric.name: metric.value}
+        
         # output model tensors (Doesn't include TensorKey)
         output_model_dict = self.get_tensor_dict(with_opt_vars=True)
+
+        return train_results_tensorkey_dicts(output_model_dict=output_model_dict, 
+                                             output_metric_dict=output_metric_dict, 
+                                             logger=self.logger, 
+                                             tensor_dict_split_fn_kwargs=self.tensor_dict_split_fn_kwargs, 
+                                             col_name, 
+                                             round_num)
+        
+        
+        
         global_model_dict, local_model_dict = split_tensor_dict_for_holdouts(
             self.logger, output_model_dict,
             **self.tensor_dict_split_fn_kwargs
         )
 
         # Create global tensorkeys
-        global_tensorkey_model_dict = {
-            TensorKey(tensor_name, origin, round_num, False, tags):
-                nparray for tensor_name, nparray in global_model_dict.items()
-        }
+        global_tensorkey_model_dict = augment_keys(raw_dict=global_model_dict, 
+                                                   origin=origin,
+                                                   round_num=round_num, 
+                                                   tags=tags)
+                                                   
         # Create tensorkeys that should stay local
         local_tensorkey_model_dict = {
             TensorKey(tensor_name, origin, round_num, False, tags):
@@ -270,30 +383,6 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
         # Return global_tensor_dict, local_tensor_dict
         return global_tensor_dict, local_tensor_dict
 
-    def get_tensor_dict(self, with_opt_vars=False):
-        """Return the tensor dictionary.
-
-        Args:
-            with_opt_vars (bool): Return the tensor dictionary including the
-                                  optimizer tensors (Default=False)
-
-        Returns:
-            dict: Tensor dictionary {**dict, **optimizer_dict}
-
-        """
-        # Gets information regarding tensor model layers and optimizer state.
-        # FIXME: self.parameters() instead? Unclear if load_state_dict() or
-        # simple assignment is better
-        # for now, state dict gives us names which is good
-        # FIXME: do both and sanity check each time?
-
-        state = to_cpu_numpy(self.state_dict())
-
-        if with_opt_vars:
-            opt_state = _get_optimizer_state(self.optimizer)
-            state = {**state, **opt_state}
-
-        return state
 
     def _get_weights_names(self, with_opt_vars=False):
         # Gets information regarding tensor model layers and optimizer state.
@@ -348,7 +437,7 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
         #  all of the methods in the class and declare the tensors.
         # For now this is done manually
 
-        output_model_dict = self.get_tensor_dict(with_opt_vars=with_opt_vars)
+        output_model_dict = get_tensor_dict(self, with_opt_vars=with_opt_vars)
         global_model_dict, local_model_dict = split_tensor_dict_for_holdouts(
             self.logger, output_model_dict,
             **self.tensor_dict_split_fn_kwargs
@@ -357,7 +446,7 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
             global_model_dict_val = global_model_dict
             local_model_dict_val = local_model_dict
         else:
-            output_model_dict = self.get_tensor_dict(with_opt_vars=False)
+            output_model_dict = get_tensor_dict(self, with_opt_vars=False)
             global_model_dict_val, local_model_dict_val = split_tensor_dict_for_holdouts(
                 self.logger,
                 output_model_dict,
