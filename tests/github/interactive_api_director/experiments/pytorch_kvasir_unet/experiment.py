@@ -23,7 +23,8 @@ shard_registry = federation.get_shard_registry()
 shard_registry
 
 dummy_shard_desc = federation.get_dummy_shard_descriptor(size=10)
-sample, target = dummy_shard_desc[0]
+dummy_shard_dataset = dummy_shard_desc.get_dataset('')
+sample, target = dummy_shard_dataset[0]
 
 
 # Now you can implement you data loaders using dummy_shard_desc
