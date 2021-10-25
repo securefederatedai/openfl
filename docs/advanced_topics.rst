@@ -21,12 +21,15 @@ Advanced Topics
     Reduce the amount of data transferred in a federation through compression pipelines available in |productName|:
 
     - :doc:`compression_settings`
+    
+    Customize the aggregation function for each task:
+    
+    - :doc:`overriding_agg_fn`
 
 **Director-Based Workflow**
 
-    Customize the functions in the federation:
+    Customize the logging function for each task:
 
-    - :doc:`overriding_agg_fn`
     - :doc:`log_metric_callback`
 
 
