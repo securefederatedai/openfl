@@ -13,18 +13,17 @@ import torch as pt
 import torch.nn as nn
 import tqdm
 
-from .runner_pt import set_tensor_dict, get_tensor_dict, reset_opt_vars, process_metric_and_weights
+from .runner_pt import set_tensor_dict, get_tensor_dict, reset_opt_vars, train_results_tensorkey_dicts
 
 from openfl.utilities import Metric
 from openfl.utilities import split_tensor_dict_for_holdouts
 from openfl.utilities import TensorKey
+
 from .runner import TaskRunner
+from openfl.protocols.utils import global_local_tensorkey_dicts
 
 from GANDLF.cli.main_run import main_run
 from GANDLF.parseConfig import parseConfig
-
-# Done with changinng the pt runner train and val, now write these ones using the
-# new utility functions created.
 
 
 class GaNDLFTaskRunner(TaskRunner):
@@ -54,21 +53,12 @@ class GaNDLFTaskRunner(TaskRunner):
         """
         super().__init__(self, **kwargs)
 
-        # TODO: Double check this, but planning on no model saving to disk (execept for maybe when doing
-        # a crossfold trainval/test evaluation)
-
-        # TODO: Currently I get back end_epoch and best_loss from gandlf main_run, but do notthing
+        # TODO: Currently I get back end_epoch and best_loss from gandlf main_run, but do nothing
         # with them. We need to find a DB solution to persist these.
 
-        # TODO: After returning from main_run, always reset attributes (especially model, optmizer, but others...)
-
         # TODO: Complete the functionality of the crossfold trainval/test evaluation. Currently
-        # I cannot decide what would be appropriate to pass as data since we usually work
-        # on the FL level with train and val; but this set should ideally be such that it contains
-        # only unseen data (as the test portion that is randomly - by folds - used here
-        # should be unseen  to the model) - so either use an entirely new set (which would need)
+        # Need to put starting model for training on disk before calling main_run.
 
-        # record values for passing through to gandlf main_run
         self.data_csv       = data_csv
         self.config_file    = config_file
         self.output_dir     = output_dir
@@ -118,11 +108,11 @@ class GaNDLFTaskRunner(TaskRunner):
         self.best_loss = gandlf_results_dict['state']['best_loss']
         self.end_epoch = gandlf_results_dict['state']['end_epoch']
 
-        # TODO: I would like to test best_loss against 1e7 and end_epoch against -1
-        # then raise an exception against the use of grabbing a best model other than
-        # ones with these values for initialization. Becuase this initialization will be written
-        # over by the aggregator innitial model. However, I don't want to rely on 1e7 
-        # staying the default. What is best here?
+        # TODO: I would like to test and ensure best_loss is 1e7 and end_epoch is -1
+        # then raise an exception otherwise that use of a best model other than
+        # ones with these values for initialization is not advised, since such an initialization 
+        # will be written over by the aggregator innitial model. However, I don't want 
+        # to rely on 1e7 staying the default. What is best here?
 
     def _check_config(self, parameters):
         """
@@ -134,7 +124,7 @@ class GaNDLFTaskRunner(TaskRunner):
             None
         """
 
-        # TODO: Fill in unsupported params below
+        # TODO: Fill in additional unsupported params below
         unsupported_parameters = ["parallel_compute_command"]
         unsupported_parameters_found = []
         for key in parameters:
@@ -201,22 +191,18 @@ class GaNDLFTaskRunner(TaskRunner):
                                        )
 
 
-        origin = col_name
         suffix = 'validate'
         if kwargs['apply'] == 'local':
             suffix += '_local'
         else:
             suffix += '_agg'
         tags = ('metric', suffix)
-        # TODO figure out a better way to pass in metric for this pytorch
-        #  validate function
-        output_tensor_dict = {
-            TensorKey('acc', origin, round_num, True, tags):
-                np.array(gandlf_results_dict['scores']['epoch_valid_metric'])
-        }
-
-        # Empty list represents metrics that should only be stored locally
-        return output_tensor_dict, {}
+        
+        global_local_w_kwargs = ({}, {'acc': np.array(gandlf_results_dict['scores']['epoch_valid_metric'])}, {'origin': col_name,
+                                                                                                              'round_num': round_num,
+                                                                                                              'report': True, 
+                                                                                                              'tags': tags})
+        return global_local_tensorkey_dicts(global_local_w_kwargs)
 
     def train_batches(self, 
                       col_name, 
@@ -229,7 +215,7 @@ class GaNDLFTaskRunner(TaskRunner):
                       crossfold_val_n=None,
                       crossfold_test_n=None, 
                       **kwargs):
-        """Train batches. Here epochs are specified as apposed to batches.
+        """Train batches. Here epochs are specified as opposed to batches.
 
         Args:
             col_name                : Name of the collaborator
@@ -253,16 +239,16 @@ class GaNDLFTaskRunner(TaskRunner):
             local_output_dict       : Tensors to maintain in the local TensorDB
         """
 
-        # TODO: Setting crossfold_tuning to True will require that the self.config be set to 
-        # communicate the k of k-fold
-        # Also, we do not want to pass model in this case as it will keep one fold of traininng and
-        # pass it as init for the next fold of training. So we'll want to use the file system (ie pass model=None) in this
-        # case to store all results and only at the end pick the best model and restore it to put in the return dict.
+        
         
         # invoke GaNDLF main run
         # TODO: Here the values used for start_epoch and best_loss are taken from class attributes
         # and not persisted for crash recover. We need to change this once we have a way for OpenFL to track this state. 
         if crossfold_test:
+            # TODO: We will need to use model checkpoints on disk here rather than passing model, as otherwise it will keep one fold of traininng and
+            # pass it as init for the next fold of training. So we'll want to use the file system (ie pass model=None) in this
+            # case: store all results to disk and return no model (user can collect results from file). However the first model
+            # will need to be manually put on disk before calling main_run?
             if (crossfold_val_n is None) or (crossfold_test_n is None) or (crossfold_test_data_csv is None):
                 raise ValueError('When crossfold_test is True, all of crossfold_test_data_csv, crossfold_val_n, and crossfold_test_n need to be provided.')
         
@@ -305,16 +291,18 @@ class GaNDLFTaskRunner(TaskRunner):
             self.end_epoch = gandlf_results_dict['state']['end_epoch']
             self.best_loss = gandlf_results_dict['state']['best_loss']
             
-            # NOTE: The returned loss is only from the last epoch. Changes to GaNDLF needed to change this.
-            metric = Metric(name='last_epoch_train_loss', value=np.array({'last_epoch_train_loss': gandlf_results_dict['scores']['epoch_train_loss']}))
+            # Output metric tensors (scalar)
+            output_metric_dict = {'last_epoch_train_loss': np.array(gandlf_results_dict['scores']['epoch_train_loss'])}
             
-            global_tensor_dict, local_tensor_dict =  process_metric_and_weights(model=self.model, 
-                                                                                metric=metric, 
-                                                                                col_name=col_name, 
-                                                                                round_num=round_num, 
-                                                                                logger=self.logger, 
-                                                                                tensor_dict_split_fn_kwargs=self.tensor_dict_split_fn_kwargs)
-
+            # output model tensors (Doesn't include TensorKey)
+            output_model_dict = self.model.get_tensor_dict(with_opt_vars=True)
+            
+            global_tensorkey_dict, local_tensorkey_dict = train_results_tensorkey_dicts(output_model_dict=output_model_dict, 
+                                                                                        output_metric_dict=output_metric_dict, 
+                                                                                        logger=self.logger, 
+                                                                                        tensor_dict_split_fn_kwargs=self.tensor_dict_split_fn_kwargs, 
+                                                                                        col_name=col_name, 
+                                                                                        round_num=round_num)
             # Update the required tensors if they need to be pulled from the
             # aggregator
             # TODO this logic can break if different collaborators have different
@@ -333,8 +321,7 @@ class GaNDLFTaskRunner(TaskRunner):
             self.train_round_completed = True
 
             # Return global_tensor_dict, local_tensor_dict
-            return global_tensor_dict, local_tensor_dict
-
+            return global_tensorkey_dict, local_tensorkey_dict
 
     def _get_weights_names(self, with_opt_vars=False):
         # Gets information regarding tensor model layers and optimizer state.

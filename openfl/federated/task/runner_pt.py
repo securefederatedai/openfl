@@ -16,7 +16,7 @@ from openfl.utilities import Metric
 from openfl.utilities import split_tensor_dict_for_holdouts
 from openfl.utilities import TensorKey
 from .runner import TaskRunner
-from .task_utils import local_and_global_tensorkey_dicts
+from openfl.protocols.utils import global_local_tensorkey_dicts
 
 
 def set_tensor_dict(model, tensor_dict, with_opt_vars=False):
@@ -87,34 +87,29 @@ def train_results_tensorkey_dicts(output_model_dict,
                                   col_name, 
                                   round_num):
 
-    local_global_w_kwargs = []
+    global_local_w_kwargs = []
               
     global_model_dict, local_model_dict = split_tensor_dict_for_holdouts(
         logger, output_model_dict,
         **tensor_dict_split_fn_kwargs
     )
 
-    local_and_global_w_kwargs.append(local_model_dict, global_model_dict, {'origin': col_name,
-                                                                           'round_num': round_num,
-                                                                           'report': False, 
-                                                                           'tags': ('trained',)})
+    global_local_w_kwargs.append(global_model_dict, local_model_dict,  {'origin': col_name,
+                                                                        'round_num': round_num,
+                                                                        'report': False, 
+                                                                        'tags': ('trained',)})
 
-    local_global_w_kwargs.append(local_model_dict, {}, {'origin': col_name,
+    global_local_w_kwargs.append(local_model_dict, {}, {'origin': col_name,
                                                         'round_num': round_num + 1,
                                                         'report': False, 
                                                         'tags': ('model',)})
 
-    local_global_w_kwargs.append({}, output_metric_dict, {'origin': col_name,
+    global_local_w_kwargs.append({}, output_metric_dict, {'origin': col_name,
                                                           'round_num': round_num,
                                                           'report': True, 
                                                           'tags': ('metric',)})
     
-    return local_and_global_tensorkey_dicts(local_global_w_kwargs)
-
-
-def val_results_tensorkey_dicts():
-
-
+    return global_local_tensorkey_dicts(global_local_w_kwargs)
 
 
 def reset_opt_vars(model):
@@ -222,7 +217,6 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
                 target_categorical = target.argmax(dim=1, keepdim=True)
                 val_score += pred.eq(target_categorical).sum().cpu().numpy()
 
-        origin = col_name
         suffix = 'validate'
         if kwargs['apply'] == 'local':
             suffix += '_local'
@@ -232,14 +226,11 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
         # TODO figure out a better way to pass in metric for this pytorch
         #  validate function
 
-        local_global_w_kwargs = ({}, {'acc': np.array(val_score / total_samples)}, {'origin': col_name,
+        global_local_w_kwargs = ({}, {'acc': np.array(val_score / total_samples)}, {'origin': col_name,
                                                                                     'round_num': round_num,
                                                                                     'report': True, 
                                                                                     'tags': tags})
-        return local_and_global_tensorkey_dicts(local_global_w_kwargs)
-
-
-# TODO: WORKING HERE further split up the function below to keep peices common to gandlf and this runner
+        return global_local_tensorkey_dicts(global_local_w_kwargs)
 
     def train_batches(self, col_name, round_num, input_tensor_dict,
                       use_tqdm=False, epochs=1, **kwargs):
@@ -272,12 +263,32 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
         # output model tensors (Doesn't include TensorKey)
         output_model_dict = self.get_tensor_dict(with_opt_vars=True)
 
-        return train_results_tensorkey_dicts(output_model_dict=output_model_dict, 
-                                             output_metric_dict=output_metric_dict, 
-                                             logger=self.logger, 
-                                             tensor_dict_split_fn_kwargs=self.tensor_dict_split_fn_kwargs, 
-                                             col_name, 
-                                             round_num)
+        global_tensorkey_dict, local_tensorkey_dict = train_results_tensorkey_dicts(output_model_dict=output_model_dict, 
+                                                                              output_metric_dict=output_metric_dict, 
+                                                                              logger=self.logger, 
+                                                                              tensor_dict_split_fn_kwargs=self.tensor_dict_split_fn_kwargs, 
+                                                                              col_name=col_name, 
+                                                                              round_num=round_num)
+
+        # Update the required tensors if they need to be pulled from the
+        # aggregator
+        # TODO this logic can break if different collaborators have different
+        # roles between rounds.
+        # For example, if a collaborator only performs validation in the first
+        # round but training in the second, it has no way of knowing the
+        # optimizer state tensor names to request from the aggregator because
+        # these are only created after training occurs. A work around could
+        # involve doing a single epoch of training on random data to get the
+        # optimizer names, and then throwing away the model.
+        if self.opt_treatment == 'CONTINUE_GLOBAL':
+            self.initialize_tensorkeys_for_functions(with_opt_vars=True)
+
+        # This will signal that the optimizer values are now present,
+        # and can be loaded when the model is rebuilt
+        self.train_round_completed = True
+
+        # Return global_tensor_dict, local_tensor_dict
+        return global_tensorkey_dict, local_tensorkey_dict
    
      
 
