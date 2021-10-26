@@ -83,7 +83,8 @@ class MarketShardDescriptor(ShardDescriptor):
     def get_dataset(self, dataset_type='train'):
         """Return a dataset by type."""
         if dataset_type not in self.path_by_type:
-            raise Exception(f'Wrong dataset type: {dataset_type}')
+            raise Exception(f'Wrong dataset type: {dataset_type}.'
+                            f'Choose from the list: {", ".join(self.path_by_type)}')
         return MarketShardDataset(
             dataset_dir=self.path_by_type[dataset_type],
             dataset_type=dataset_type,
