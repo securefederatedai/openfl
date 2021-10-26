@@ -56,9 +56,9 @@ message ExperimentInfo {
   ModelProto model_proto = 4;
 }
 
-message GetExperimentDescriptionsRequest {}
+message GetExperimentsListRequest {}
 
-message ExperimentDescription {
+message ExperimentListItem {
   string name = 1;
   string status = 2;
   uint32 collaborators_amount = 3;
@@ -66,8 +66,8 @@ message ExperimentDescription {
   float progress = 5;
 }
 
-message GetExperimentDescriptionsResponse {
-  repeated ExperimentDescription experiments = 1;
+message GetExperimentsListResponse {
+  repeated ExperimentListItem experiments = 1;
 }
 
 message GetExperimentDescriptionRequest {
@@ -79,8 +79,8 @@ message CollaboratorDescription {
   string status = 2;
   float progress = 3;
   uint32 round = 4;
-  string currentTask = 5;
-  string nextTask = 6;
+  string current_task = 5;
+  string next_task = 6;
 }
 
 message TaskDescription {
@@ -98,15 +98,19 @@ message DownloadStatuses {
   repeated DownloadStatus logs = 2;
 }
 
-message GetExperimentDescriptionResponse {
+message ExperimentDescription {
   string name = 1;
   string status = 2;
   float progress = 3;
-  uint32 totalRounds = 4;
-  uint32 currentRound = 5;
-  DownloadStatuses downloadStatuses = 6;
+  uint32 total_rounds = 4;
+  uint32 current_round = 5;
+  DownloadStatuses download_statuses = 6;
   repeated CollaboratorDescription collaborators = 7;
   repeated TaskDescription tasks = 8;
+}
+
+message GetExperimentDescriptionResponse {
+  ExperimentDescription experiment = 1;
 }
 
 message SetNewExperimentResponse{
@@ -182,7 +186,7 @@ service FederationDirector {
 
   // Experiments RPCs
   rpc GetExperimentDescription (GetExperimentDescriptionRequest)returns (GetExperimentDescriptionResponse) {}
-  rpc GetExperimentDescriptions (GetExperimentDescriptionsRequest) returns (GetExperimentDescriptionsResponse){}
+  rpc GetExperimentsList (GetExperimentsListRequest) returns (GetExperimentsListResponse){}
 
   // API RPCs
   rpc SetNewExperiment (stream ExperimentInfo) returns (SetNewExperimentResponse) {}

@@ -261,8 +261,8 @@ class DirectorClient:
 
     def get_experiments(self):
         """Get experiments list."""
-        response = self.stub.GetExperimentDescriptions(
-            director_pb2.GetExperimentDescriptionsRequest()
+        response = self.stub.GetExperimentsList(
+            director_pb2.GetExperimentsListRequest()
         )
         return response.experiments
 
@@ -271,4 +271,4 @@ class DirectorClient:
         response = self.stub.GetExperimentDescription(
             director_pb2.GetExperimentDescriptionRequest(name=name)
         )
-        return response
+        return response.experiment

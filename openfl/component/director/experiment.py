@@ -23,7 +23,7 @@ class Status:
 
     PENDING = 'pending'
     FINISHED = 'finished'
-    IN_PROGRESS = 'inProgress'
+    IN_PROGRESS = 'in_progress'
     FAILED = 'failed'
 
 

@@ -244,16 +244,16 @@ class DirectorGRPCServer(director_pb2_grpc.FederationDirectorServicer):
 
         return director_pb2.GetEnvoysResponse(envoy_infos=envoy_infos)
 
-    async def GetExperimentDescriptions(self, request, context):  # NOQA:N802
+    async def GetExperimentsList(self, request, context):  # NOQA:N802
         """Get list of experiments description."""
         caller = self.get_caller(context)
         experiments = self.director.get_experiments(caller)
-        experiment_descriptions_list = [
-            director_pb2.ExperimentDescription(**exp)
+        experiment_list = [
+            director_pb2.ExperimentListItem(**exp)
             for exp in experiments
         ]
-        return director_pb2.GetExperimentDescriptionsResponse(
-            experiments=experiment_descriptions_list
+        return director_pb2.GetExperimentsListResponse(
+            experiments=experiment_list
         )
 
     async def GetExperimentDescription(self, request, context):  # NOQA:N802
@@ -265,14 +265,14 @@ class DirectorGRPCServer(director_pb2_grpc.FederationDirectorServicer):
                 name=ms['name'],
                 status=ms['status']
             )
-            for ms in experiment['downloadStatuses']['models']
+            for ms in experiment['download_statuses']['models']
         ]
         logs_statuses = [
             director_pb2.DownloadStatus(
                 name=ls['name'],
                 status=ls['status']
             )
-            for ls in experiment['downloadStatuses']['logs']
+            for ls in experiment['download_statuses']['logs']
         ]
         download_statuses = director_pb2.DownloadStatuses(
             models=models_statuses,
@@ -284,8 +284,8 @@ class DirectorGRPCServer(director_pb2_grpc.FederationDirectorServicer):
                 status=col['status'],
                 progress=col['progress'],
                 round=col['round'],
-                currentTask=col['currentTask'],
-                nextTask=col['nextTask']
+                current_task=col['current_task'],
+                next_task=col['next_task']
             )
             for col in experiment['collaborators']
         ]
@@ -298,12 +298,14 @@ class DirectorGRPCServer(director_pb2_grpc.FederationDirectorServicer):
         ]
 
         return director_pb2.GetExperimentDescriptionResponse(
-            name=experiment['name'],
-            status=experiment['status'],
-            progress=experiment['progress'],
-            currentRound=experiment['currentRound'],
-            totalRounds=experiment['totalRounds'],
-            downloadStatuses=download_statuses,
-            collaborators=collaborators,
-            tasks=tasks,
+            experiment=director_pb2.ExperimentDescription(
+                name=experiment['name'],
+                status=experiment['status'],
+                progress=experiment['progress'],
+                current_round=experiment['current_round'],
+                total_rounds=experiment['total_rounds'],
+                download_statuses=download_statuses,
+                collaborators=collaborators,
+                tasks=tasks,
+            ),
         )

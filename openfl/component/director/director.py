@@ -240,9 +240,9 @@ class Director:
         result = {
             'name': name,
             'status': exp.status,
-            'currentRound': exp.aggregator.round_number,
-            'totalRounds': exp.aggregator.rounds_to_train,
-            'downloadStatuses': {
+            'current_round': exp.aggregator.round_number,
+            'total_rounds': exp.aggregator.rounds_to_train,
+            'download_statuses': {
                 'models': model_statuses,
                 'logs': [{
                     'name': 'aggregator',
@@ -306,6 +306,6 @@ def _get_experiment_collaborators(experiment) -> List[dict]:
         'status': 'pending_mock',
         'progress': 0.0,
         'round': 0,
-        'currentTask': 'Current Task Mock',
-        'nextTask': 'Next Task Mock'
+        'current_task': 'Current Task Mock',
+        'next_task': 'Next Task Mock'
     } for name in experiment.aggregator.authorized_cols]
