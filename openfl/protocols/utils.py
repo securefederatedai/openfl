@@ -20,26 +20,26 @@ def augment_keys(raw_dict, origin, round_num, report, tags):
     # ['tensor_name', 'origin', 'round_number', 'report', 'tags']
 
 
-def local_and_global_tensorkey_dicts(local_global_w_kwargs):
+def global_local_tensorkey_dicts(global_local_w_kwargs):
     """
-    Takes a number of raw local and global tensor dicts and creates one local and one global specially 
+    Takes a number of raw global and local tensor dicts and creates one global and one local specially 
     keyed tensor dict.
 
     Args:
-        local_global_w_kwargs:  List of 3-tuples, each consisting of (raw local tensor dict, raw global tensor dict, kwargs)
+        global_local_w_kwargs:  List of 3-tuples, each consisting of (raw global tensor dict, raw local tensor dict, kwargs)
                                 where kwargs is used by aument keys to turn each of the first two raw dictionaries into 
-                                specially keyed ones that will be used to update the final output local and global specially 
+                                specially keyed ones that will be used to update the final output global and local specially 
                                 keyed dictionaries.
     """
-    local_tensorkey_dict = {}
     global_tensorkey_dict = {}
+    local_tensorkey_dict = {}
 
 
-    for local_dict, global_dict, kwargs in local_global_w_kwargs:
-        local_tensorkey_dict.update(augment_keys(raw_dict=local_dict, **kwargs))
+    for global_dict, local_dict, kwargs in global_local_w_kwargs:
         global_tensorkey_dict.update(augment_keys(raw_dict=global_dict, **kwargs))
+        local_tensorkey_dict.update(augment_keys(raw_dict=local_dict, **kwargs))
 
-    return local_tensorkey_dict, global_tensorkey_dict
+    return global_tensorkey_dict, local_tensorkey_dict
 
 """Proto utils."""
 
