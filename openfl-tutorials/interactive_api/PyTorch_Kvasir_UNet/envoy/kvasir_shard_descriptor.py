@@ -110,7 +110,7 @@ class KvasirShardDescriptor(ShardDescriptor):
     @property
     def dataset_description(self) -> str:
         """Return the dataset description."""
-        return (f'Kvasir dataset, , shard number {self.rank} '
+        return (f'Kvasir dataset, shard number {self.rank} '
                 f'out of {self.worldsize}')
 
 
