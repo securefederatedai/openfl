@@ -130,4 +130,4 @@ class MarketShardDescriptor(ShardDescriptor):
             raise RuntimeError(f'{self.dataset_dir} does not exist')
         for dataset_path in self.path_by_type.values():
             if not dataset_path.exists():
-                raise RuntimeError(f'{dataset_path} is not exists')
+                raise RuntimeError(f'{dataset_path} does not exist')
