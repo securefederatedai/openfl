@@ -23,6 +23,9 @@ from .runner import TaskRunner
 from GANDLF.cli.main_run import main_run
 from GANDLF.parseConfig import parseConfig
 
+# Done with changinng the pt runner train and val, now write these ones using the
+# new utility functions created.
+
 
 class GaNDLFTaskRunner(TaskRunner):
     """GaNDLF OpenFL wrapper for Federated Learning."""

@@ -112,6 +112,10 @@ def train_results_tensorkey_dicts(output_model_dict,
     return local_and_global_tensorkey_dicts(local_global_w_kwargs)
 
 
+def val_results_tensorkey_dicts():
+
+
+
 
 def reset_opt_vars(model):
             """
@@ -123,60 +127,6 @@ def reset_opt_vars(model):
             # TODO: Why pass?
             pass
 
-
-def construct_tensorkey_dicts(metric, 
-                              col_name, 
-                              round_num, 
-                              logger, 
-                              tensor_dict_split_fn_kwargs,  
-                              tags, 
-                              global_metric_dict={}, 
-                              local_metric_dict={}, 
-                              global_model_dict={}, 
-                              local_model_dict={}):
-        
-        # Output metric tensors (scalar)
-        origin = col_name
-        output_metric_dict = {
-            TensorKey(
-                k, origin, round_num, True, ('metric',)
-            ): v for k,v in 
-        }
-
-        # output model tensors (Doesn't include TensorKey)
-        output_model_dict = get_tensor_dict(model=model, with_opt_vars=True)
-        global_model_dict, local_model_dict = split_tensor_dict_for_holdouts(
-            logger, output_model_dict,
-            **tensor_dict_split_fn_kwargs
-        )
-
-        # Create global tensorkeys
-        global_tensorkey_model_dict = {
-            TensorKey(tensor_name, origin, round_num, False, tags):
-                nparray for tensor_name, nparray in global_model_dict.items()
-        }
-        # Create tensorkeys that should stay local
-        local_tensorkey_model_dict = {
-            TensorKey(tensor_name, origin, round_num, False, tags):
-                nparray for tensor_name, nparray in local_model_dict.items()
-        }
-        # The train/validate aggregated function of the next round will look
-        # for the updated model parameters.
-        # This ensures they will be resolved locally
-        next_local_tensorkey_model_dict = {
-            TensorKey(tensor_name, origin, round_num + 1, False, ('model',)): nparray
-            for tensor_name, nparray in local_model_dict.items()}
-
-        global_tensor_dict = {
-            **output_metric_dict,
-            **global_tensorkey_model_dict
-        }
-        local_tensor_dict = {
-            **local_tensorkey_model_dict,
-            **next_local_tensorkey_model_dict
-        }
-
-        return global_tensor_dict, local_tensor_dict
 
 
 class PyTorchTaskRunner(nn.Module, TaskRunner):
@@ -281,13 +231,13 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
         tags = ('metric', suffix)
         # TODO figure out a better way to pass in metric for this pytorch
         #  validate function
-        output_tensor_dict = {
-            TensorKey('acc', origin, round_num, True, tags):
-                np.array(val_score / total_samples)
-        }
 
-        # Empty list represents metrics that should only be stored locally
-        return output_tensor_dict, {}
+        local_global_w_kwargs = ({}, {'acc': np.array(val_score / total_samples)}, {'origin': col_name,
+                                                                                    'round_num': round_num,
+                                                                                    'report': True, 
+                                                                                    'tags': tags})
+        return local_and_global_tensorkey_dicts(local_global_w_kwargs)
+
 
 # TODO: WORKING HERE further split up the function below to keep peices common to gandlf and this runner
 
@@ -328,60 +278,8 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
                                              tensor_dict_split_fn_kwargs=self.tensor_dict_split_fn_kwargs, 
                                              col_name, 
                                              round_num)
-        
-        
-        
-        global_model_dict, local_model_dict = split_tensor_dict_for_holdouts(
-            self.logger, output_model_dict,
-            **self.tensor_dict_split_fn_kwargs
-        )
-
-        # Create global tensorkeys
-        global_tensorkey_model_dict = augment_keys(raw_dict=global_model_dict, 
-                                                   origin=origin,
-                                                   round_num=round_num, 
-                                                   tags=tags)
-                                                   
-        # Create tensorkeys that should stay local
-        local_tensorkey_model_dict = {
-            TensorKey(tensor_name, origin, round_num, False, tags):
-                nparray for tensor_name, nparray in local_model_dict.items()
-        }
-        # The train/validate aggregated function of the next round will look
-        # for the updated model parameters.
-        # This ensures they will be resolved locally
-        next_local_tensorkey_model_dict = {
-            TensorKey(tensor_name, origin, round_num + 1, False, ('model',)): nparray
-            for tensor_name, nparray in local_model_dict.items()}
-
-        global_tensor_dict = {
-            **output_metric_dict,
-            **global_tensorkey_model_dict
-        }
-        local_tensor_dict = {
-            **local_tensorkey_model_dict,
-            **next_local_tensorkey_model_dict
-        }
-
-        # Update the required tensors if they need to be pulled from the
-        # aggregator
-        # TODO this logic can break if different collaborators have different
-        # roles between rounds.
-        # For example, if a collaborator only performs validation in the first
-        # round but training in the second, it has no way of knowing the
-        # optimizer state tensor names to request from the aggregator because
-        # these are only created after training occurs. A work around could
-        # involve doing a single epoch of training on random data to get the
-        # optimizer names, and then throwing away the model.
-        if self.opt_treatment == 'CONTINUE_GLOBAL':
-            self.initialize_tensorkeys_for_functions(with_opt_vars=True)
-
-        # This will signal that the optimizer values are now present,
-        # and can be loaded when the model is rebuilt
-        self.train_round_completed = True
-
-        # Return global_tensor_dict, local_tensor_dict
-        return global_tensor_dict, local_tensor_dict
+   
+     
 
 
     def _get_weights_names(self, with_opt_vars=False):
