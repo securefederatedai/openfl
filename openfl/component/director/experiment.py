@@ -81,9 +81,9 @@ class Experiment:
                 )
             self.status = Status.FINISHED
             logger.info(f'Experiment "{self.name}" was finished successfully.')
-        except Exception as e:
+        except Exception:
             self.status = Status.FAILED
-            logger.error(f'Experiment "{self.name}" was failed with error: {e}.')
+            logger.exception(f'Experiment "{self.name}" was failed.')
 
     def _create_aggregator_grpc_server(
             self, *,

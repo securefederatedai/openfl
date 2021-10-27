@@ -260,8 +260,12 @@ class Plan(object):
 
         defaults[SETTINGS]['authorized_cols'] = self.authorized_cols
         defaults[SETTINGS]['rounds_to_train'] = self.rounds_to_train
-        aggregation_functions_by_task = self.restore_object('aggregation_function_obj.pkl')
-        defaults[SETTINGS]['tasks'] = self.get_tasks(aggregation_functions_by_task)
+        try:
+            aggregation_functions_by_task = self.restore_object('aggregation_function_obj.pkl')
+            defaults[SETTINGS]['tasks'] = self.get_tasks(aggregation_functions_by_task)
+        except FileNotFoundError:
+            for child in Path.cwd().iterdir():
+                print(child)
 
         if self.assigner_ is None:
             self.assigner_ = Plan.build(**defaults)
