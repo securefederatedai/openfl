@@ -112,6 +112,9 @@ class FedCurv:
             if p.requires_grad:
                 u_global, v_global = (get_buffer(model, target) for target in (f'{n}_u', f'{n}_v'))
                 u_local, v_local = (getattr(self, name) for name in (f'{n}_u', f'{n}_v'))
+                print(f'{p.device=}')
+                print(f'{u_global.device=}')
+                print(f'{u_local.device=}')
                 u = (u_global.to(p.device) - u_local).detach()
                 v = (v_global.to(p.device) - v_local).detach()
                 _loss = p ** 2 * u - 2 * p * v
