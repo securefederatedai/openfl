@@ -85,6 +85,7 @@ class FedCurv:
         for sample, target in data_loader:
             model.zero_grad()
             sample = sample.to(device)
+            target = target.to(device)
             output = model(sample)
             loss = loss_fn(output, target)
             loss.backward()
