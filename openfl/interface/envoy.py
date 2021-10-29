@@ -39,23 +39,25 @@ def envoy(context):
         help='The federation director port', type=click.IntRange(1, 65535))
 @option('--tls/--disable-tls', default=True,
         is_flag=True, help='Use TLS or not (By default TLS is enabled)')
-@option('-sc', '--shard-config-path', default='shard_config.yaml',
-        help='The shard config path', type=ClickPath(exists=True))
+@option('-ec', '--envoy-config-path', default='envoy_config.yaml',
+        help='The envoy config path', type=ClickPath(exists=True))
 @option('-rc', '--root-cert-path', 'root_certificate', default=None,
         help='Path to a root CA cert', type=ClickPath(exists=True))
 @option('-pk', '--private-key-path', 'private_key', default=None,
         help='Path to a private key', type=ClickPath(exists=True))
 @option('-oc', '--public-cert-path', 'certificate', default=None,
         help='Path to a signed certificate', type=ClickPath(exists=True))
-def start_(shard_name, director_host, director_port, tls, shard_config_path,
+def start_(shard_name, director_host, director_port, tls, envoy_config_path,
            root_certificate, private_key, certificate):
     """Start the Envoy."""
     logger.info('🧿 Starting the Envoy.')
-    if is_directory_traversal(shard_config_path):
+    if is_directory_traversal(envoy_config_path):
         click.echo('The shard config path is out of the openfl workspace scope.')
         sys.exit(1)
+    # Read the Envoy config
+    with open(Path(envoy_config_path).absolute()) as stream:
+        envoy_config = safe_load(stream)
 
-    shard_config_path = Path(shard_config_path).absolute()
     if root_certificate:
         root_certificate = Path(root_certificate).absolute()
     if private_key:
@@ -63,7 +65,26 @@ def start_(shard_name, director_host, director_port, tls, shard_config_path,
     if certificate:
         certificate = Path(certificate).absolute()
 
-    shard_descriptor = shard_descriptor_from_config(shard_config_path)
+    # Parse envoy parameters
+    envoy_params = envoy_config.get('params', {})
+
+    # Build optional plugin components
+    optional_plugins_section = envoy_config.get('optional_plugin_components', None)
+    if optional_plugins_section is not None:
+        for plugin_name, plugin_settings in optional_plugins_section.items():
+            template = plugin_settings.get('template')
+            if not template:
+                raise Exception('You should put a template'
+                                f'for plugin {plugin_name}')
+            module_path, _, class_name = template.rpartition('.')
+            plugin_params = plugin_settings.get('params', {})
+
+            module = import_module(module_path)
+            instance = getattr(module, class_name)(**plugin_params)
+            envoy_params[plugin_name] = instance
+
+    # Instantiate Shard Descriptor
+    shard_descriptor = shard_descriptor_from_config(envoy_config.get('shard_descriptor', {}))
     envoy = Envoy(
         shard_name=shard_name,
         director_host=director_host,
@@ -72,7 +93,8 @@ def start_(shard_name, director_host, director_port, tls, shard_config_path,
         tls=tls,
         root_certificate=root_certificate,
         private_key=private_key,
-        certificate=certificate
+        certificate=certificate,
+        **envoy_params
     )
 
     envoy.start()
@@ -95,22 +117,20 @@ def create(envoy_path):
     (envoy_path / 'cert').mkdir(parents=True, exist_ok=True)
     (envoy_path / 'logs').mkdir(parents=True, exist_ok=True)
     (envoy_path / 'data').mkdir(parents=True, exist_ok=True)
-    shutil.copyfile(WORKSPACE / 'default/shard_config.yaml',
-                    envoy_path / 'shard_config.yaml')
+    shutil.copyfile(WORKSPACE / 'default/envoy_config.yaml',
+                    envoy_path / 'envoy_config.yaml')
     shutil.copyfile(WORKSPACE / 'default/shard_descriptor.py',
                     envoy_path / 'shard_descriptor.py')
     shutil.copyfile(WORKSPACE / 'default/requirements.txt',
                     envoy_path / 'requirements.txt')
 
 
-def shard_descriptor_from_config(shard_config_path: str):
+def shard_descriptor_from_config(shard_config: dict):
     """Build a shard descriptor from config."""
-    with open(shard_config_path) as stream:
-        shard_config = safe_load(stream)
     template = shard_config.get('template')
     if not template:
-        raise Exception(f'You should define a shard '
-                        f'descriptor template in {shard_config_path}')
+        raise Exception('You should define a shard '
+                        'descriptor template in the envoy config')
     class_name = template.split('.')[-1]
     module_path = '.'.join(template.split('.')[:-1])
     params = shard_config.get('params', {})
