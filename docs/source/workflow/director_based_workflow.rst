@@ -118,7 +118,7 @@ To start the Envoy without mTLS use the following CLI command:
     .. code-block:: console
 
         $ fx envoy start -n env_one --disable-tls \
-            --shard-config-path shard_config.yaml -d director_fqdn:port
+            --envoy-config-path envoy_config.yaml -d director_fqdn:port
 
 Alternatively, use the following command to establish a secured connection:
 
@@ -127,7 +127,7 @@ Alternatively, use the following command to establish a secured connection:
         $ ENVOY_NAME=envoy_example_name
 
         $ fx envoy start -n "$ENVOY_NAME" \
-            --shard-config-path shard_config.yaml \
+            --envoy-config-path envoy_config.yaml \
             -d director_fqdn:port -rc cert/root_ca.crt \
             -pk cert/"$ENVOY_NAME".key -oc cert/"$ENVOY_NAME".crt
 
