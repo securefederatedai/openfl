@@ -1,0 +1,11 @@
+# https://www.gutenberg.org/files/4357/4357-h/4357-h.htm
+params:
+  cuda_devices: []
+
+optional_plugin_components: {}
+
+shard_descriptor:
+  template: shard_descriptor.NextWordShardDescriptor
+  params:
+    title: American Fairy Tales
+    author: L. FRANK BAUM

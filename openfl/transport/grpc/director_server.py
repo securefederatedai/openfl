@@ -8,6 +8,8 @@ import logging
 import uuid
 from pathlib import Path
 
+from google.protobuf.json_format import MessageToDict
+from google.protobuf.json_format import ParseDict
 from grpc import aio
 from grpc import ssl_server_credentials
 
@@ -105,7 +107,8 @@ class DirectorGRPCServer(director_pb2_grpc.FederationDirectorServicer):
     async def AcknowledgeShard(self, shard_info, context):  # NOQA:N802
         """Receive acknowledge shard info."""
         logger.info(f'AcknowledgeShard request has got: {shard_info}')
-        is_accepted = self.director.acknowledge_shard(shard_info)
+        dict_shard_info = MessageToDict(shard_info, preserving_proto_field_name=True)
+        is_accepted = self.director.acknowledge_shard(dict_shard_info)
         reply = director_pb2.ShardAcknowledgement(accepted=is_accepted)
 
         return reply
@@ -226,14 +229,19 @@ class DirectorGRPCServer(director_pb2_grpc.FederationDirectorServicer):
         response.acknowledgement = True
         return response
 
-    async def CollaboratorHealthCheck(self, request, context):  # NOQA:N802
+    async def EnvoyHealthCheck(self, request, context):  # NOQA:N802
         """Accept health check from envoy."""
-        logger.debug(f'Request CollaboratorHealthCheck has got: {request}')
-        health_check_period = self.director.collaborator_health_check(
-            collaborator_name=request.name,
+        logger.debug(f'Request EnvoyHealthCheck has got: {request}')
+        cuda_devices_info = [
+            MessageToDict(message, preserving_proto_field_name=True)
+            for message in request.cuda_devices
+        ]
+        health_check_period = self.director.envoy_health_check(
+            envoy_name=request.name,
             is_experiment_running=request.is_experiment_running,
+            cuda_devices_status=cuda_devices_info
         )
-        resp = director_pb2.CollaboratorHealthCheckResponse()
+        resp = director_pb2.EnvoyHealthCheckResponse()
         resp.health_check_period.seconds = health_check_period
 
         return resp
@@ -241,8 +249,20 @@ class DirectorGRPCServer(director_pb2_grpc.FederationDirectorServicer):
     async def GetEnvoys(self, request, context):  # NOQA:N802
         """Get a status information about envoys."""
         envoy_infos = self.director.get_envoys()
+        envoy_statuses = []
+        for envoy_info in envoy_infos:
+            envoy_info_message = director_pb2.EnvoyInfo(
+                shard_info=ParseDict(
+                    envoy_info['shard_info'], director_pb2.ShardInfo(),
+                    ignore_unknown_fields=True),
+                is_online=envoy_info['is_online'],
+                is_experiment_running=envoy_info['is_experiment_running'])
+            envoy_info_message.valid_duration.seconds = envoy_info['valid_duration']
+            envoy_info_message.last_updated.seconds = int(envoy_info['last_updated'])
 
-        return director_pb2.GetEnvoysResponse(envoy_infos=envoy_infos)
+            envoy_statuses.append(envoy_info_message)
+
+        return director_pb2.GetEnvoysResponse(envoy_infos=envoy_statuses)
 
     async def GetExperimentsList(self, request, context):  # NOQA:N802
         """Get list of experiments description."""

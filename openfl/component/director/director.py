@@ -12,7 +12,6 @@ from typing import Iterable
 from typing import List
 from typing import Union
 
-from openfl.protocols import director_pb2
 from .experiment import Experiment
 from .experiment import ExperimentsRegistry
 from .experiment import Status
@@ -47,15 +46,15 @@ class Director:
         self.col_exp_queues = defaultdict(asyncio.Queue)
         self.col_exp = {}
 
-    def acknowledge_shard(self, shard_info: director_pb2.ShardInfo) -> bool:
+    def acknowledge_shard(self, shard_info: dict) -> bool:
         """Save shard info to shard registry if it's acceptable."""
         is_accepted = False
-        if (self.sample_shape != shard_info.sample_shape
-                or self.target_shape != shard_info.target_shape):
+        if (self.sample_shape != shard_info['sample_shape']
+                or self.target_shape != shard_info['target_shape']):
             logger.info('Request was not accepted')
             return is_accepted
         logger.info('Request was accepted')
-        self._shard_registry[shard_info.node_info.name] = {
+        self._shard_registry[shard_info['node_info']['name']] = {
             'shard_info': shard_info,
             'is_online': True,
             'is_experiment_running': False
@@ -121,7 +120,7 @@ class Director:
         """Get dataset info."""
         return self.sample_shape, self.target_shape
 
-    def get_registered_shards(self) -> list:
+    def get_registered_shards(self) -> list:  # Why is it here?
         """Get registered shard infos."""
         return [shard_status['shard_info'] for shard_status in self._shard_registry.values()]
 
@@ -171,13 +170,16 @@ class Director:
                 and caller in self.experiments_registry[experiment_name].users):
             self.experiments_registry.remove(experiment_name)
 
-    def collaborator_health_check(
-            self, *, collaborator_name: str, is_experiment_running: bool
+    def envoy_health_check(
+            self, *,
+            envoy_name: str,
+            is_experiment_running: bool,
+            cuda_devices_status: list = None,
     ) -> int:
         """Accept health check from envoy."""
-        shard_info = self._shard_registry.get(collaborator_name)
+        shard_info = self._shard_registry.get(envoy_name)
         if not shard_info:
-            raise Exception(f'Unknown shard {collaborator_name}')
+            raise Exception(f'Unknown shard {envoy_name}')
 
         hc_period = self.settings.get('envoy_health_check_period', ENVOY_HEALTH_CHECK_PERIOD)
         shard_info['is_online']: True
@@ -185,25 +187,23 @@ class Director:
         shard_info['valid_duration'] = 2 * hc_period
         shard_info['last_updated'] = time.time()
 
+        if cuda_devices_status is not None:
+            for i in range(len(cuda_devices_status)):
+                shard_info['shard_info']['node_info']['cuda_devices'][i] = cuda_devices_status[i]
+
         return hc_period
 
     def get_envoys(self) -> list:
         """Get a status information about envoys."""
         logger.info(f'Shard registry: {self._shard_registry}')
-        envoy_infos = []
-        for envoy in self._shard_registry.values():
-            envoy_info = director_pb2.EnvoyInfo(
-                shard_info=envoy['shard_info'],
-                is_online=time.time() < envoy['last_updated'] + envoy['valid_duration'],
-                is_experiment_running=envoy['is_experiment_running'],
-                experiment_name=self.col_exp[envoy['shard_info'].node_info.name],
+        for envoy_info in self._shard_registry.values():
+            envoy_info['is_online'] = (
+                time.time() < envoy_info['last_updated'] + envoy_info['valid_duration']
             )
-            envoy_info.valid_duration.seconds = envoy['valid_duration']
-            envoy_info.last_updated.seconds = int(envoy['last_updated'])
+            envoy_name = envoy_info['shard_info']['node_info']['name']
+            envoy_info['experiment_name'] = self.col_exp[envoy_name]
 
-            envoy_infos.append(envoy_info)
-
-        return envoy_infos
+        return self._shard_registry.values()
 
     def get_experiments(self, caller: str) -> list:
         """Get experiments list for specific user."""

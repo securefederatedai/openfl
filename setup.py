@@ -10,7 +10,7 @@ with open('README.md') as f:
 
 setup(
     name='openfl',
-    version='1.1',
+    version='1.2',
     author='Intel Corporation',
     description='Federated Learning for the Edge',
     long_description=long_description,
@@ -43,8 +43,9 @@ setup(
         'openfl.federated.task',
         'openfl.federated.data',
         'openfl.plugins',
-        'openfl.plugins.interface_serializer',
         'openfl.plugins.frameworks_adapters',
+        'openfl.plugins.interface_serializer',
+        'openfl.plugins.processing_units_monitor',
         'openfl-workspace',
         'openfl-docker',
         'openfl-tutorials',
