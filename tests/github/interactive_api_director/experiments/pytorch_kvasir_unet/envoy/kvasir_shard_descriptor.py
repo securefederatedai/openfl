@@ -69,6 +69,12 @@ class KvasirShardDescriptor(ShardDescriptor):
         self.data_folder = Path.cwd() / data_folder
         self.download_data(self.data_folder)
 
+        # Calculating data and target shapes
+        ds = self.get_dataset()
+        sample, target = ds[0]
+        self._sample_shape = [str(dim) for dim in sample.shape]
+        self._target_shape = [str(dim) for dim in target.shape]
+
         # Settings for resizing data
         self.enforce_image_hw = None
         if enforce_image_hw is not None:
@@ -100,12 +106,12 @@ class KvasirShardDescriptor(ShardDescriptor):
     @property
     def sample_shape(self):
         """Return the sample shape info."""
-        return ['300', '400', '3']
+        return self._sample_shape
 
     @property
     def target_shape(self):
         """Return the target shape info."""
-        return ['300', '400']
+        return self._target_shape
 
     @property
     def dataset_description(self) -> str:
