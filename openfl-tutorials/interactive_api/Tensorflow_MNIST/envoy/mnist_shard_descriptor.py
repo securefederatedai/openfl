@@ -5,13 +5,35 @@
 
 import logging
 import os
+from typing import List
 
 import numpy as np
 import requests
 
+from openfl.interface.interactive_api.shard_descriptor import ShardDataset
 from openfl.interface.interactive_api.shard_descriptor import ShardDescriptor
 
 logger = logging.getLogger(__name__)
+
+
+class MnistShardDataset(ShardDataset):
+    """Mnist Shard dataset class."""
+
+    def __init__(self, x, y, data_type, rank=1, worldsize=1):
+        """Initialize TinyImageNetDataset."""
+        self.data_type = data_type
+        self.rank = rank
+        self.worldsize = worldsize
+        self.x = x[self.rank - 1::self.worldsize]
+        self.y = y[self.rank - 1::self.worldsize]
+
+    def __getitem__(self, index: int):
+        """Return an item by the index."""
+        return self.x[index], self.y[index]
+
+    def __len__(self):
+        """Return the len of the dataset."""
+        return len(self.x)
 
 
 class MnistShardDescriptor(ShardDescriptor):
@@ -25,23 +47,41 @@ class MnistShardDescriptor(ShardDescriptor):
         """Initialize MnistShardDescriptor."""
         self.rank, self.worldsize = tuple(int(num) for num in rank_worldsize.split(','))
         (x_train, y_train), (x_test, y_test) = self.download_data()
-        self.x_train = x_train[self.rank - 1::self.worldsize]
-        self.y_train = y_train[self.rank - 1::self.worldsize]
-        self.x_test = x_test[self.rank - 1::self.worldsize]
-        self.y_test = y_test[self.rank - 1::self.worldsize]
-        self.dataset_mode = None
+        self.data_by_type = {
+            'train': (x_train, y_train),
+            'val': (x_test, y_test)
+        }
 
-    def set_dataset_type(self, mode='train'):
-        """Select training or testing mode."""
-        self.dataset_mode = mode
+    def get_shard_dataset_types(self) -> List[str]:
+        """Get available shard dataset types."""
+        return list(self.data_by_type)
 
-    def get_train_size(self):
-        """Return train dataset size."""
-        return len(self.x_train)
+    def get_dataset(self, dataset_type='train'):
+        """Return a shard dataset by type."""
+        if dataset_type not in self.data_by_type:
+            raise Exception(f'Wrong dataset type: {dataset_type}')
+        return MnistShardDataset(
+            *self.data_by_type[dataset_type],
+            data_type=dataset_type,
+            rank=self.rank,
+            worldsize=self.worldsize
+        )
 
-    def get_test_size(self):
-        """Return test dataset size."""
-        return len(self.x_test)
+    @property
+    def sample_shape(self):
+        """Return the sample shape info."""
+        return ['784']
+
+    @property
+    def target_shape(self):
+        """Return the target shape info."""
+        return ['1']
+
+    @property
+    def dataset_description(self) -> str:
+        """Return the dataset description."""
+        return (f'Mnist dataset, shard number {self.rank}'
+                f' out of {self.worldsize}')
 
     def download_data(self):
         """Download prepared dataset."""
@@ -60,36 +100,3 @@ class MnistShardDescriptor(ShardDescriptor):
         os.remove(local_file_path)  # remove mnist.npz
         print('Mnist data was loaded!')
         return (x_train, y_train), (x_test, y_test)
-
-    def __getitem__(self, index: int):
-        """Return an item by the index."""
-        if self.dataset_mode == 'train':
-            return self.x_train[index], self.y_train[index]
-        else:
-            return self.x_test[index], self.y_test[index]
-
-    @property
-    def sample_shape(self):
-        """Return the sample shape info."""
-        return ['784']
-
-    @property
-    def target_shape(self):
-        """Return the target shape info."""
-        return ['1']
-
-    @property
-    def dataset_description(self) -> str:
-        """Return the dataset description."""
-        return (f'Mnist dataset, shard number {self.rank}'
-                f' out of {self.worldsize}')
-
-    def __len__(self):
-        """Return the len of the dataset."""
-        if self.dataset_mode is None:
-            return 0
-
-        if self.dataset_mode == 'train':
-            return len(self.x_train)
-        else:
-            return len(self.x_test)
