@@ -34,7 +34,7 @@ Intel Internet of Things Group.
 
 ## Getting started
 
-Check out our [online documentation](https://openfl.readthedocs.io/en/latest/index.html) to launch your first federation.  The quickest way to test OpenFL is through our [Jupyter Notebook tutorials](https://openfl.readthedocs.io/en/latest/running_the_federation.notebook.html).
+Check out our [online documentation](https://openfl.readthedocs.io/en/latest/index.html) to launch your first federation.  The quickest way to test OpenFL is through our [Jupyter Notebook tutorials](https://github.com/intel/openfl/tree/develop/openfl-tutorials).
 
 For more questions, please consider joining our [Slack channel](https://join.slack.com/t/openfl/shared_invite/zt-ovzbohvn-T5fApk05~YS_iZhjJ5yaTw).
 

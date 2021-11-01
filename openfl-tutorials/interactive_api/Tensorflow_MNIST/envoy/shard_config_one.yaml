@@ -1,3 +1,0 @@
-template: mnist_shard_descriptor.MnistShardDescriptor
-params:
-  rank_worldsize: 1, 2

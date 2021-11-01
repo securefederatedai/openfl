@@ -8,6 +8,7 @@ from datetime import datetime
 
 import grpc
 
+from openfl.interface.interactive_api.shard_descriptor import ShardDescriptor
 from openfl.pipelines import NoCompressionPipeline
 from openfl.protocols import director_pb2
 from openfl.protocols import director_pb2_grpc
@@ -51,7 +52,7 @@ class ShardDirectorClient:
             channel = grpc.secure_channel(director_addr, credentials, options=options)
         self.stub = director_pb2_grpc.FederationDirectorStub(channel)
 
-    def report_shard_info(self, shard_descriptor) -> bool:
+    def report_shard_info(self, shard_descriptor: ShardDescriptor, cuda_devices: tuple) -> bool:
         """Report shard info to the director."""
         logger.info('Send report AcknowledgeShard')
         # True considered as successful registration
@@ -61,7 +62,11 @@ class ShardDirectorClient:
             target_shape=shard_descriptor.target_shape
         )
 
-        shard_info.node_info.CopyFrom(self._get_node_info())
+        shard_info.node_info.name = self.shard_name
+        shard_info.node_info.cuda_devices.extend(
+            director_pb2.CudaDeviceInfo(index=cuda_device)
+            for cuda_device in cuda_devices
+        )
 
         acknowledgement = self.stub.AcknowledgeShard(shard_info)
         return acknowledgement.accepted
@@ -93,19 +98,31 @@ class ShardDirectorClient:
         """Generate the experiment data request."""
         yield director_pb2.WaitExperimentRequest(collaborator_name=self.shard_name)
 
-    def _get_node_info(self):
-        """Generate a node info message."""
-        return director_pb2.NodeInfo(name=self.shard_name)
-
-    def send_health_check(self, *, collaborator_name: str, is_experiment_running: bool) -> int:
+    def send_health_check(self, *, envoy_name: str, is_experiment_running: bool,
+                          cuda_devices_info: dict = None,
+                          cuda_driver_version: str = None) -> int:
         """Send envoy health check."""
-        status = director_pb2.CollaboratorStatus(
-            name=collaborator_name,
+        status = director_pb2.EnvoyStatus(
+            name=envoy_name,
             is_experiment_running=is_experiment_running,
         )
+
+        cuda_messages = []
+        if cuda_devices_info is not None:
+            cuda_messages = [director_pb2.CudaDeviceInfo(
+                index=device_index,
+                memory_total=description_dict['memory_total'],
+                memory_utilized=description_dict['memory_used'],
+                device_utilization=description_dict['device_utilization'],
+                cuda_driver_version=cuda_driver_version
+            ) for device_index, description_dict in cuda_devices_info.items()
+            ]
+
+        status.cuda_devices.extend(cuda_messages)
+
         logger.debug(f'Sending health check status: {status}')
 
-        response = self.stub.CollaboratorHealthCheck(status)
+        response = self.stub.EnvoyHealthCheck(status)
         health_check_period = response.health_check_period.seconds
 
         return health_check_period
