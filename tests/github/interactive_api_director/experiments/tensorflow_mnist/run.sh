@@ -14,7 +14,7 @@ fi
 
 
 cd ../envoy
-fx envoy start -n env_one --disable-tls --shard-config-path shard_config_one.yaml -dh localhost -dp 50051 &
+bash start_envoy.sh &
 PID=$!
 sleep 3
 if ! ps -p $PID > /dev/null

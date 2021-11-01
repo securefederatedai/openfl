@@ -14,8 +14,8 @@ fi
 
 
 cd ../envoy
-pip install -r requirements.txt
-fx envoy start -n env_one --disable-tls --shard-config-path shard_config_one.yaml -dh localhost -dp 50051 &
+pip install -r sd_requirements.txt
+bash start_envoy.sh &
 PID=$!
 sleep 3
 if ! ps -p $PID > /dev/null
