@@ -92,27 +92,32 @@ class Envoy:
         logger.info('The health check sender is started.')
         while True:
             # Need a separate method 'Get self state' or smth
-            devices_status_kwargs = {}
-
+            cuda_devices_info = None
             if self.cuda_device_monitor is not None:
-                cuda_devices_info = {}
+                cuda_devices_info = []
+                cuda_driver_version = self.cuda_device_monitor.get_driver_version()
+                cuda_version = self.cuda_device_monitor.get_cuda_version()
                 for device_id in self.cuda_devices:
-                    cuda_devices_info[device_id] = {
-                        'memory_total':
-                        self.cuda_device_monitor.get_device_memory_total(device_id),
-                        'memory_used':
-                        self.cuda_device_monitor.get_device_memory_utilized(device_id),
-                        'device_utilization':
-                        self.cuda_device_monitor.get_device_utilization(device_id)}
-
-                devices_status_kwargs[
-                    'cuda_driver_version'] = self.cuda_device_monitor.get_driver_version()
-                devices_status_kwargs['cuda_devices_info'] = cuda_devices_info
+                    memory_total = self.cuda_device_monitor.get_device_memory_total(device_id)
+                    memory_utilized = self.cuda_device_monitor.get_device_memory_utilized(
+                        device_id
+                    )
+                    device_utilization = self.cuda_device_monitor.get_device_utilization(device_id)
+                    device_name = self.cuda_device_monitor.get_device_name(device_id)
+                    cuda_devices_info.append({
+                        'index': device_id,
+                        'memory_total': memory_total,
+                        'memory_utilized': memory_utilized,
+                        'device_utilization': device_utilization,
+                        'cuda_driver_version': cuda_driver_version,
+                        'cuda_version': cuda_version,
+                        'name': device_name,
+                    })
 
             timeout = self.director_client.send_health_check(
                 envoy_name=self.name,
                 is_experiment_running=self.is_experiment_running,
-                **devices_status_kwargs,
+                cuda_devices_info=cuda_devices_info,
             )
             time.sleep(timeout)
 
