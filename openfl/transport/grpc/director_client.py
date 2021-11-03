@@ -122,7 +122,6 @@ class ShardDirectorClient:
             except Exception as e:
                 logger.info(f'{e}')
 
-
         status.cuda_devices.extend(cuda_messages)
 
         logger.debug(f'Sending health check status: {status}')
