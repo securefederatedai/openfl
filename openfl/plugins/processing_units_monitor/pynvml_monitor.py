@@ -53,7 +53,14 @@ class PynvmlCUDADeviceMonitor(CUDADeviceMonitor):
         return device_name
 
     def get_cuda_version(self) -> str:
-        """Get CUDA driver version."""
+        """
+        Get CUDA driver version.
+
+        The CUDA version is specified as (1000 * major + 10 * minor),
+        so CUDA 11.2 should be specified as 11020.
+        https://docs.nvidia.com/cuda/cuda-driver-api/group__CUDA__DRIVER__ENTRY__POINT.html
+        """
         cuda_version = pynvml.nvmlSystemGetCudaDriverVersion()
-        cuda_version = '.'.join(str(cuda_version).split('0')).strip('.')
-        return cuda_version
+        major_version = int(cuda_version / 1000)
+        minor_version = int(cuda_version % 1000 / 10)
+        return f'{major_version}.{minor_version}'
