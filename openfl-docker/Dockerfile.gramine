@@ -1,13 +1,16 @@
 # Copyright (C) 2020-2021 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-FROM openfl_base:pre_sgx
+ARG BASE_IMAGE=openfl_base:pre_sgx
+FROM ${BASE_IMAGE}
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
     autoconf bison gawk libcurl4-openssl-dev libprotobuf-c-dev \
     ninja-build protobuf-c-compiler python3 python3-click python3-jinja2 \
-    build-essential python3-pip python3-protobuf wget git
+    build-essential python3-pip python3-protobuf wget \
+    git libunwind-dev
+    # libunwind-dev is needed by the hello-world sgx example
 
 WORKDIR /
 RUN git clone https://github.com/gramineproject/gramine.git
@@ -18,7 +21,7 @@ RUN openssl genrsa -3 -out Pal/src/host/Linux-SGX/signer/enclave-key.pem 3072
 
 RUN pip install 'meson>=0.55' 'toml>=0.10'
 
-# Variables for Graphene
+# Variables for Gramine
 ENV PYTHONPATH=/usr/local/lib/python3.8/dist-packages
 ENV LC_ALL=C.UTF-8
 ENV LANG=C.UTF-8

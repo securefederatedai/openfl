@@ -1,14 +1,16 @@
 # Copyright (C) 2020-2021 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-FROM openfl_base:pre_sgx
+ARG BASE_IMAGE=openfl_base:pre_sgx
+FROM ${BASE_IMAGE}
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
     autoconf bison build-essential gawk \
     libcurl4-openssl-dev libprotobuf-c-dev meson protobuf-c-compiler \
     python3-click python3-jinja2 python3-protobuf \
-    wget git
+    wget git libunwind-dev
+    # libunwind-dev is needed by the hello-world sgx example
 
 WORKDIR /
 RUN git clone https://github.com/oscarlab/graphene.git
