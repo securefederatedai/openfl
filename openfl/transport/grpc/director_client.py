@@ -279,14 +279,14 @@ class DirectorClient:
             }
         return result
 
-    def get_experiments(self):
+    def get_experiments_list(self):
         """Get experiments list."""
         response = self.stub.GetExperimentsList(
             director_pb2.GetExperimentsListRequest()
         )
         return response.experiments
 
-    def get_experiment(self, name):
+    def get_experiment_description(self, name):
         """Get experiment info."""
         response = self.stub.GetExperimentDescription(
             director_pb2.GetExperimentDescriptionRequest(name=name)

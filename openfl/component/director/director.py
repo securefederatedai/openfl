@@ -205,7 +205,7 @@ class Director:
 
         return self._shard_registry.values()
 
-    def get_experiments(self, caller: str) -> list:
+    def get_experiments_list(self, caller: str) -> list:
         """Get experiments list for specific user."""
         experiments = self.experiments_registry.get_user_experiments(caller)
         result = []
@@ -228,7 +228,7 @@ class Director:
 
         return result
 
-    def get_experiment(self, caller: str, name: str) -> dict:
+    def get_experiment_description(self, caller: str, name: str) -> dict:
         """Get a experiment information by name for specific user."""
         exp = self.experiments_registry.get(name)
         if not exp or caller not in exp.users:

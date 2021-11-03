@@ -267,7 +267,7 @@ class DirectorGRPCServer(director_pb2_grpc.FederationDirectorServicer):
     async def GetExperimentsList(self, request, context):  # NOQA:N802
         """Get list of experiments description."""
         caller = self.get_caller(context)
-        experiments = self.director.get_experiments(caller)
+        experiments = self.director.get_experiments_list(caller)
         experiment_list = [
             director_pb2.ExperimentListItem(**exp)
             for exp in experiments
@@ -279,7 +279,7 @@ class DirectorGRPCServer(director_pb2_grpc.FederationDirectorServicer):
     async def GetExperimentDescription(self, request, context):  # NOQA:N802
         """Get an experiment description."""
         caller = self.get_caller(context)
-        experiment = self.director.get_experiment(caller, request.name)
+        experiment = self.director.get_experiment_description(caller, request.name)
         models_statuses = [
             director_pb2.DownloadStatus(
                 name=ms['name'],
