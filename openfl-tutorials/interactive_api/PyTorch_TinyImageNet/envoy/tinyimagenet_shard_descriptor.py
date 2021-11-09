@@ -10,9 +10,10 @@ import shutil
 from pathlib import Path
 from typing import Tuple
 
-from base import ShardDataset
-from base import ShardDescriptor
 from PIL import Image
+
+from openfl.interface.interactive_api.shard_descriptor import ShardDataset
+from openfl.interface.interactive_api.shard_descriptor import ShardDescriptor
 
 logger = logging.getLogger(__name__)
 
@@ -103,19 +104,15 @@ class TinyImageNetShardDescriptor(ShardDescriptor):
     @property
     def sample_shape(self):
         """Return the sample shape info."""
-        return ['300', '400', '3']
+        return ['64', '64', '3']
 
     @property
     def target_shape(self):
         """Return the target shape info."""
-        return ['300', '400']
+        return ['64', '64']
 
     @property
     def dataset_description(self) -> str:
         """Return the shard dataset description."""
         return (f'TinyImageNetDataset dataset, shard number {self.rank}'
                 f' out of {self.worldsize}')
-
-    def __len__(self):
-        """Return the len of the shard dataset."""
-        return 0
