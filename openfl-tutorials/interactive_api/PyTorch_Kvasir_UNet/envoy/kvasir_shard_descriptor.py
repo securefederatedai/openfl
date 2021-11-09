@@ -80,7 +80,6 @@ class KvasirShardDescriptor(ShardDescriptor):
         self._sample_shape = [str(dim) for dim in sample.shape]
         self._target_shape = [str(dim) for dim in target.shape]
 
-
     def get_dataset(self, dataset_type='train'):
         """Return a shard dataset by type."""
         return KvasirShardDataset(

@@ -11,13 +11,15 @@ import gdown
 import numpy as np
 import pandas as pd
 
-from openfl.interface.interactive_api.shard_descriptor import ShardDataset, ShardDescriptor
+from openfl.interface.interactive_api.shard_descriptor import ShardDataset
+from openfl.interface.interactive_api.shard_descriptor import ShardDescriptor
 
 
 class NextWordShardDataset(ShardDataset):
     """Shard Dataset for text."""
 
     def __init__(self, X, y):
+        """Initialize NextWordShardDataset."""
         self.X = X
         self.y = y
 
