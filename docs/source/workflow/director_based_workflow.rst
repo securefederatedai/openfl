@@ -194,7 +194,7 @@ Federation API class should be initialized with the aggregator node FQDN and enc
         client_id: str, director_node_fqdn: str, director_port: str
         tls: bool, ca_cert_chain: str, cert: str, private_key: str)
 
-* Federation's :code:`get_dummy_shard_descriptor` method should be used to create a fummy Shard Descriptor that 
+* Federation's :code:`get_dummy_shard_descriptor` method should be used to create a dummy Shard Descriptor that 
   fakes access to real data. It may be used for debugging the user's experiment pipeline.
 * Federation's :code:`get_shard_registry` method returns information about the envoys connected to the Director 
   and their Shard Descriptors.
