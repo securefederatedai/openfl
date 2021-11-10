@@ -34,6 +34,16 @@ class FederationDirectorStub(object):
                 request_serializer=director__pb2.EnvoyStatus.SerializeToString,
                 response_deserializer=director__pb2.EnvoyHealthCheckResponse.FromString,
                 )
+        self.GetExperimentDescription = channel.unary_unary(
+                '/FederationDirector/GetExperimentDescription',
+                request_serializer=director__pb2.GetExperimentDescriptionRequest.SerializeToString,
+                response_deserializer=director__pb2.GetExperimentDescriptionResponse.FromString,
+                )
+        self.GetExperimentsList = channel.unary_unary(
+                '/FederationDirector/GetExperimentsList',
+                request_serializer=director__pb2.GetExperimentsListRequest.SerializeToString,
+                response_deserializer=director__pb2.GetExperimentsListResponse.FromString,
+                )
         self.SetNewExperiment = channel.stream_unary(
                 '/FederationDirector/SetNewExperiment',
                 request_serializer=director__pb2.ExperimentInfo.SerializeToString,
@@ -90,6 +100,19 @@ class FederationDirectorServicer(object):
         raise NotImplementedError('Method not implemented!')
 
     def EnvoyHealthCheck(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def GetExperimentDescription(self, request, context):
+        """Experiments RPCs
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def GetExperimentsList(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -154,6 +177,16 @@ def add_FederationDirectorServicer_to_server(servicer, server):
                     servicer.EnvoyHealthCheck,
                     request_deserializer=director__pb2.EnvoyStatus.FromString,
                     response_serializer=director__pb2.EnvoyHealthCheckResponse.SerializeToString,
+            ),
+            'GetExperimentDescription': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetExperimentDescription,
+                    request_deserializer=director__pb2.GetExperimentDescriptionRequest.FromString,
+                    response_serializer=director__pb2.GetExperimentDescriptionResponse.SerializeToString,
+            ),
+            'GetExperimentsList': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetExperimentsList,
+                    request_deserializer=director__pb2.GetExperimentsListRequest.FromString,
+                    response_serializer=director__pb2.GetExperimentsListResponse.SerializeToString,
             ),
             'SetNewExperiment': grpc.stream_unary_rpc_method_handler(
                     servicer.SetNewExperiment,
@@ -260,6 +293,40 @@ class FederationDirector(object):
         return grpc.experimental.unary_unary(request, target, '/FederationDirector/EnvoyHealthCheck',
             director__pb2.EnvoyStatus.SerializeToString,
             director__pb2.EnvoyHealthCheckResponse.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def GetExperimentDescription(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/FederationDirector/GetExperimentDescription',
+            director__pb2.GetExperimentDescriptionRequest.SerializeToString,
+            director__pb2.GetExperimentDescriptionResponse.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def GetExperimentsList(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/FederationDirector/GetExperimentsList',
+            director__pb2.GetExperimentsListRequest.SerializeToString,
+            director__pb2.GetExperimentsListResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 

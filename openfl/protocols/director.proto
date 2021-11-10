@@ -13,6 +13,8 @@ message CudaDeviceInfo {
     uint64 memory_utilized = 3;
     string device_utilization = 4;
     string cuda_driver_version = 5;
+    string cuda_version = 6;
+    string name = 7;
 }
 
 // Envoy Messages
@@ -50,7 +52,7 @@ message GetExperimentDataRequest {
 
 message ExperimentData {
     uint32 size = 1; // size, in bytes, of the data sent in npbytes
-	bytes npbytes = 2; //actual data
+    bytes npbytes = 2; //actual data
 }
 
 message EnvoyStatus {
@@ -66,10 +68,67 @@ message EnvoyHealthCheckResponse {
 // API Messages
 
 message ExperimentInfo {
-    string name = 2;
-    repeated string collaborator_names = 3;
-    ExperimentData experiment_data = 4;
-    ModelProto model_proto = 5;
+    string name = 1;
+    repeated string collaborator_names = 2;
+    ExperimentData experiment_data = 3;
+    ModelProto model_proto = 4;
+}
+
+message GetExperimentsListRequest {}
+
+message ExperimentListItem {
+    string name = 1;
+    string status = 2;
+    uint32 collaborators_amount = 3;
+    uint32 tasks_amount = 4;
+    float progress = 5;
+}
+
+message GetExperimentsListResponse {
+    repeated ExperimentListItem experiments = 1;
+}
+
+message GetExperimentDescriptionRequest {
+    string name = 1;
+}
+
+message CollaboratorDescription {
+    string name = 1;
+    string status = 2;
+    float progress = 3;
+    uint32 round = 4;
+    string current_task = 5;
+    string next_task = 6;
+}
+
+message TaskDescription {
+    string name = 1;
+    string description = 2;
+}
+
+message DownloadStatus {
+    string name = 1;
+    string status = 2;
+}
+
+message DownloadStatuses {
+    repeated DownloadStatus models = 1;
+    repeated DownloadStatus logs = 2;
+}
+
+message ExperimentDescription {
+    string name = 1;
+    string status = 2;
+    float progress = 3;
+    uint32 total_rounds = 4;
+    uint32 current_round = 5;
+    DownloadStatuses download_statuses = 6;
+    repeated CollaboratorDescription collaborators = 7;
+    repeated TaskDescription tasks = 8;
+}
+
+message GetExperimentDescriptionResponse {
+    ExperimentDescription experiment = 1;
 }
 
 message SetNewExperimentResponse{
@@ -92,7 +151,7 @@ message TrainedModelResponse {
 message GetDatasetInfoRequest {}
 
 message StreamMetricsRequest {
-    string experiment_name = 2;
+    string experiment_name = 1;
 }
 
 message StreamMetricsResponse {
@@ -104,7 +163,7 @@ message StreamMetricsResponse {
 }
 
 message RemoveExperimentRequest {
-    string experiment_name = 2;
+    string experiment_name = 1;
 }
 
 message RemoveExperimentResponse {
@@ -117,6 +176,7 @@ message EnvoyInfo {
     bool is_experiment_running = 3;
     google.protobuf.Timestamp last_updated = 4;
     google.protobuf.Duration valid_duration = 5;
+    string experiment_name = 6;
 }
 
 message GetEnvoysRequest {}
@@ -132,6 +192,10 @@ service FederationDirector {
     rpc WaitExperiment (stream WaitExperimentRequest) returns (stream WaitExperimentResponse) {}
     rpc GetExperimentData (GetExperimentDataRequest) returns (stream ExperimentData) {}
     rpc EnvoyHealthCheck (EnvoyStatus) returns (EnvoyHealthCheckResponse) {}
+
+    // Experiments RPCs
+    rpc GetExperimentDescription (GetExperimentDescriptionRequest)returns (GetExperimentDescriptionResponse) {}
+    rpc GetExperimentsList (GetExperimentsListRequest) returns (GetExperimentsListResponse){}
 
     // API RPCs
     rpc SetNewExperiment (stream ExperimentInfo) returns (SetNewExperimentResponse) {}

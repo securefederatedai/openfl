@@ -22,8 +22,16 @@ class CUDADeviceMonitor(DeviceMonitor):
 
     def get_device_utilization(self, index: int) -> str:
         """
-        Get device utilization method.
+        Get device utilization.
 
         It is just a general method that returns a string that may be shown to the frontend user.
         """
+        raise NotImplementedError
+
+    def get_device_name(self, index: int) -> str:
+        """Get device name."""
+        raise NotImplementedError
+
+    def get_cuda_version(self) -> str:
+        """Get CUDA driver version."""
         raise NotImplementedError
