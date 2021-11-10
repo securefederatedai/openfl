@@ -42,19 +42,19 @@ class NextWordShardDescriptor(ShardDescriptor):
         self.title = title
         self.author = author
 
-        self.dataset_dir = self.download_data(title)
-        self.data = self.load_data(self.dataset_dir)  # list of words
-        self.X, self.y = self.get_sequences(self.data)
+        dataset_dir = self.download_data(title)
+        data = self.load_data(dataset_dir)  # list of words
+        self.X, self.y = self.get_sequences(data)
 
     def get_dataset(self, dataset_type='train', train_val_split=0.8):
         """Return a dataset by type."""
-        train = round(len(self.X) * train_val_split)
+        train_size = round(len(self.X) * train_val_split)
         if dataset_type == 'train':
-            X = self.X[:train]
-            y = self.y[:train]
+            X = self.X[:train_size]
+            y = self.y[:train_size]
         elif dataset_type == 'val':
-            X = self.X[train:]
-            y = self.y[train:]
+            X = self.X[train_size:]
+            y = self.y[train_size:]
         else:
             raise Exception(f'Wrong dataset type: {dataset_type}.'
                             f'Choose from the list: [train, val]')
