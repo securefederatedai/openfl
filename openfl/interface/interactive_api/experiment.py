@@ -17,6 +17,7 @@ from openfl.federated import Plan
 from openfl.interface.cli import setup_logging
 from openfl.interface.cli_helper import WORKSPACE
 from openfl.utilities import split_tensor_dict_for_holdouts
+from openfl.utilities.utils import is_package_versioned
 
 
 class FLExperiment:
@@ -120,18 +121,8 @@ class FLExperiment:
 
         self.logger.info(log_message)
 
-    def prepare_workspace_distribution(
-            self, model_provider, task_keeper, data_loader,
-            rounds_to_train,
-            delta_updates=False, opt_treatment='RESET'):
+    def prepare_workspace_distribution(self, model_provider, task_keeper, data_loader):
         """Prepare an archive from a user workspace."""
-        self._prepare_plan(model_provider, task_keeper, data_loader,
-                           rounds_to_train,
-                           delta_updates=delta_updates, opt_treatment=opt_treatment,
-                           model_interface_file='model_obj.pkl',
-                           tasks_interface_file='tasks_obj.pkl',
-                           dataloader_interface_file='loader_obj.pkl')
-
         # Save serialized python objects to disc
         self._serialize_interface_objects(model_provider, task_keeper, data_loader)
         # Save the prepared plan
@@ -144,15 +135,22 @@ class FLExperiment:
         # Compress te workspace to restore it on collaborator
         self.arch_path = self._pack_the_workspace()
 
-        # DO CERTIFICATES exchange
-
     def start(self, *, model_provider, task_keeper, data_loader,
-              rounds_to_train, delta_updates=False, opt_treatment='RESET'):
+              rounds_to_train, delta_updates=False, opt_treatment='RESET',
+              device_assignment_policy='CPU_ONLY'):
         """Prepare experiment and run."""
+        self._prepare_plan(model_provider, task_keeper, data_loader,
+                           rounds_to_train,
+                           delta_updates=delta_updates, opt_treatment=opt_treatment,
+                           device_assignment_policy=device_assignment_policy,
+                           model_interface_file='model_obj.pkl',
+                           tasks_interface_file='tasks_obj.pkl',
+                           dataloader_interface_file='loader_obj.pkl')
+
         self.prepare_workspace_distribution(
-            model_provider, task_keeper, data_loader,
-            rounds_to_train, delta_updates=delta_updates, opt_treatment=opt_treatment
+            model_provider, task_keeper, data_loader
         )
+
         self.logger.info('Starting experiment!')
         self.plan.resolve()
         initial_tensor_dict = self._get_initial_tensor_dict(model_provider)
@@ -183,15 +181,9 @@ class FLExperiment:
         from pip._internal.operations import freeze
         requirements_generator = freeze.freeze()
 
-        def is_package_has_version(package: str) -> bool:
-            return ('==' in package
-                    and package not in ['pkg-resources==0.0.0', 'pkg_resources==0.0.0']
-                    and '-e ' not in package
-                    )
-
         with open('./requirements.txt', 'w') as f:
             for pack in requirements_generator:
-                if is_package_has_version(pack):
+                if is_package_versioned(pack):
                     f.write(pack + '\n')
 
     @staticmethod
@@ -240,7 +232,8 @@ class FLExperiment:
 
     def _prepare_plan(self, model_provider, task_keeper, data_loader,
                       rounds_to_train,
-                      delta_updates=False, opt_treatment='RESET',
+                      delta_updates, opt_treatment,
+                      device_assignment_policy,
                       model_interface_file='model_obj.pkl', tasks_interface_file='tasks_obj.pkl',
                       dataloader_interface_file='loader_obj.pkl',
                       aggregation_function_interface_file='aggregation_function_obj.pkl'):
@@ -276,6 +269,8 @@ class FLExperiment:
         # Collaborator part
         plan.config['collaborator']['settings']['delta_updates'] = delta_updates
         plan.config['collaborator']['settings']['opt_treatment'] = opt_treatment
+        plan.config['collaborator']['settings'][
+            'device_assignment_policy'] = device_assignment_policy
 
         # DataLoader part
         for setting, value in data_loader.kwargs.items():

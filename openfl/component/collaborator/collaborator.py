@@ -6,12 +6,21 @@
 from enum import Enum
 from logging import getLogger
 from time import sleep
+from typing import Tuple
 
 from openfl.databases import TensorDB
 from openfl.pipelines import NoCompressionPipeline
 from openfl.pipelines import TensorCodec
 from openfl.protocols import utils
 from openfl.utilities import TensorKey
+
+
+class DevicePolicy(Enum):
+    """Device assignment policy."""
+
+    CPU_ONLY = 1
+
+    CUDA_PREFERRED = 2
 
 
 class OptTreatment(Enum):
@@ -67,7 +76,8 @@ class Collaborator:
                  client,
                  task_runner,
                  task_config,
-                 opt_treatment=OptTreatment.RESET,
+                 opt_treatment='RESET',
+                 device_assignment_policy='CPU_ONLY',
                  delta_updates=False,
                  compression_pipeline=None,
                  db_store_rounds=1,
@@ -101,10 +111,27 @@ class Collaborator:
         if hasattr(OptTreatment, opt_treatment):
             self.opt_treatment = OptTreatment[opt_treatment]
         else:
-            self.logger.error(f'Unknown opt_treatment: {opt_treatment}.')
+            self.logger.error(f'Unknown opt_treatment: {opt_treatment.name}.')
             raise NotImplementedError(f'Unknown opt_treatment: {opt_treatment}.')
 
+        if hasattr(DevicePolicy, device_assignment_policy):
+            self.device_assignment_policy = DevicePolicy[device_assignment_policy]
+        else:
+            self.logger.error('Unknown device_assignment_policy: '
+                              f'{device_assignment_policy.name}.')
+            raise NotImplementedError(
+                f'Unknown device_assignment_policy: {device_assignment_policy}.'
+            )
+
         self.task_runner.set_optimizer_treatment(self.opt_treatment.name)
+
+    def set_available_devices(self, cuda: Tuple[str] = ()):
+        """
+        Set available CUDA devices.
+
+        Cuda tuple contains string indeces, ('1', '3').
+        """
+        self.cuda_devices = cuda
 
     def run(self):
         """Run the collaborator."""
@@ -196,6 +223,17 @@ class Collaborator:
             # New `Core` TaskRunner contains registry of tasks
             func = self.task_runner.TASK_REGISTRY[func_name]
             self.logger.info('Using Interactive Python API')
+
+            # So far 'kwargs' contained parameters read from the plan
+            # those are parameters that the eperiment owner registered for
+            # the task.
+            # There is another set of parameters that created on the
+            # collaborator side, for instance, local processing unit identifier:s
+            if (self.device_assignment_policy is DevicePolicy.CUDA_PREFERRED
+                    and len(self.cuda_devices) > 0):
+                kwargs['device'] = f'cuda:{self.cuda_devices[0]}'
+            else:
+                kwargs['device'] = 'cpu'
         else:
             # TaskRunner subclassing API
             # Tasks are defined as methods of TaskRunner

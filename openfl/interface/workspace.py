@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 """Workspace module."""
 
+import sys
 from pathlib import Path
 
 from click import Choice
@@ -11,6 +12,9 @@ from click import group
 from click import option
 from click import pass_context
 from click import Path as ClickPath
+
+from openfl.utilities.path_check import is_directory_traversal
+from openfl.utilities.utils import is_package_versioned
 
 
 @group()
@@ -65,6 +69,9 @@ def get_templates():
 @option('--template', required=True, type=Choice(get_templates()))
 def create_(prefix, template):
     """Create the workspace."""
+    if is_directory_traversal(prefix):
+        echo('Workspace name or path is out of the openfl workspace scope.')
+        sys.exit(1)
     create(prefix, template)
 
 
@@ -128,10 +135,8 @@ def export_():
     requirements_generator = freeze.freeze()
     with open('./requirements.txt', 'w') as f:
         for package in requirements_generator:
-            if '==' not in package:
-                # We do not export dependencies without version
-                continue
-            f.write(package + '\n')
+            if is_package_versioned(package):
+                f.write(package + '\n')
 
     archive_type = 'zip'
     archive_name = basename(getcwd())
@@ -384,22 +389,25 @@ def dockerize_(context, base_image, save):
     }
 
     client = docker.from_env(timeout=3600)
+    echo('Building the Docker image')
     try:
-        echo('Building the Docker image')
         client.images.build(
             path=str(workspace_path),
             tag=workspace_name,
             buildargs=build_args,
-            dockerfile=dockerfile_workspace)
-
-    except Exception as e:
+            dockerfile=dockerfile_workspace
+        )
+    except docker.errors.BuildError as e:
+        for log in e.build_log:
+            msg = log.get('stream')
+            if msg:
+                echo(msg)
         echo('Failed to build the image\n' + str(e) + '\n')
         sys.exit(1)
-    else:
-        echo('The workspace image has been built successfully!')
     finally:
         os.remove(workspace_archive)
         os.remove(dockerfile_workspace)
+    echo('The workspace image has been built successfully!')
 
     # Saving the image to a tarball
     if save:
