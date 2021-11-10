@@ -5,6 +5,7 @@
 
 import logging
 from datetime import datetime
+from typing import List
 
 import grpc
 
@@ -98,9 +99,12 @@ class ShardDirectorClient:
         """Generate the experiment data request."""
         yield director_pb2.WaitExperimentRequest(collaborator_name=self.shard_name)
 
-    def send_health_check(self, *, envoy_name: str, is_experiment_running: bool,
-                          cuda_devices_info: dict = None,
-                          cuda_driver_version: str = None) -> int:
+    def send_health_check(
+            self, *,
+            envoy_name: str,
+            is_experiment_running: bool,
+            cuda_devices_info: List[dict] = None,
+    ) -> int:
         """Send envoy health check."""
         status = director_pb2.EnvoyStatus(
             name=envoy_name,
@@ -109,14 +113,13 @@ class ShardDirectorClient:
 
         cuda_messages = []
         if cuda_devices_info is not None:
-            cuda_messages = [director_pb2.CudaDeviceInfo(
-                index=device_index,
-                memory_total=description_dict['memory_total'],
-                memory_utilized=description_dict['memory_used'],
-                device_utilization=description_dict['device_utilization'],
-                cuda_driver_version=cuda_driver_version
-            ) for device_index, description_dict in cuda_devices_info.items()
-            ]
+            try:
+                cuda_messages = [
+                    director_pb2.CudaDeviceInfo(**item)
+                    for item in cuda_devices_info
+                ]
+            except Exception as e:
+                logger.info(f'{e}')
 
         status.cuda_devices.extend(cuda_messages)
 
@@ -270,6 +273,21 @@ class DirectorClient:
                 'last_updated': datetime.fromtimestamp(
                     envoy.last_updated.seconds).strftime('%Y-%m-%d %H:%M:%S'),
                 'current_time': now,
-                'valid_duration': envoy.valid_duration
+                'valid_duration': envoy.valid_duration,
+                'experiment_name': 'ExperimentName Mock',
             }
         return result
+
+    def get_experiments_list(self):
+        """Get experiments list."""
+        response = self.stub.GetExperimentsList(
+            director_pb2.GetExperimentsListRequest()
+        )
+        return response.experiments
+
+    def get_experiment_description(self, name):
+        """Get experiment info."""
+        response = self.stub.GetExperimentDescription(
+            director_pb2.GetExperimentDescriptionRequest(name=name)
+        )
+        return response.experiment

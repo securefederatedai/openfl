@@ -263,3 +263,69 @@ class DirectorGRPCServer(director_pb2_grpc.FederationDirectorServicer):
             envoy_statuses.append(envoy_info_message)
 
         return director_pb2.GetEnvoysResponse(envoy_infos=envoy_statuses)
+
+    async def GetExperimentsList(self, request, context):  # NOQA:N802
+        """Get list of experiments description."""
+        caller = self.get_caller(context)
+        experiments = self.director.get_experiments_list(caller)
+        experiment_list = [
+            director_pb2.ExperimentListItem(**exp)
+            for exp in experiments
+        ]
+        return director_pb2.GetExperimentsListResponse(
+            experiments=experiment_list
+        )
+
+    async def GetExperimentDescription(self, request, context):  # NOQA:N802
+        """Get an experiment description."""
+        caller = self.get_caller(context)
+        experiment = self.director.get_experiment_description(caller, request.name)
+        models_statuses = [
+            director_pb2.DownloadStatus(
+                name=ms['name'],
+                status=ms['status']
+            )
+            for ms in experiment['download_statuses']['models']
+        ]
+        logs_statuses = [
+            director_pb2.DownloadStatus(
+                name=ls['name'],
+                status=ls['status']
+            )
+            for ls in experiment['download_statuses']['logs']
+        ]
+        download_statuses = director_pb2.DownloadStatuses(
+            models=models_statuses,
+            logs=logs_statuses,
+        )
+        collaborators = [
+            director_pb2.CollaboratorDescription(
+                name=col['name'],
+                status=col['status'],
+                progress=col['progress'],
+                round=col['round'],
+                current_task=col['current_task'],
+                next_task=col['next_task']
+            )
+            for col in experiment['collaborators']
+        ]
+        tasks = [
+            director_pb2.TaskDescription(
+                name=task['name'],
+                description=task['description']
+            )
+            for task in experiment['tasks']
+        ]
+
+        return director_pb2.GetExperimentDescriptionResponse(
+            experiment=director_pb2.ExperimentDescription(
+                name=experiment['name'],
+                status=experiment['status'],
+                progress=experiment['progress'],
+                current_round=experiment['current_round'],
+                total_rounds=experiment['total_rounds'],
+                download_statuses=download_statuses,
+                collaborators=collaborators,
+                tasks=tasks,
+            ),
+        )
