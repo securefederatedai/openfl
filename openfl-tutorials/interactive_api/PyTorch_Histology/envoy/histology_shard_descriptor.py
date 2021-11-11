@@ -5,7 +5,6 @@
 
 import logging
 import os
-from functools import partial
 from pathlib import Path
 from typing import Tuple
 from urllib.request import urlretrieve
@@ -13,10 +12,10 @@ from zipfile import ZipFile
 
 import numpy as np
 from PIL import Image
-from tqdm import tqdm
 
 from openfl.interface.interactive_api.shard_descriptor import ShardDataset
 from openfl.interface.interactive_api.shard_descriptor import ShardDescriptor
+from openfl.utilities import tqdm_report_hook
 from openfl.utilities import validate_file_hash
 
 
@@ -110,17 +109,10 @@ class HistologyShardDescriptor(ShardDescriptor):
 
     def download_data(self):
         """Download prepared shard dataset."""
-        def report_hook(pbar, count, block_size, total_size):
-            """Update progressbar."""
-            if pbar.total is None and total_size:
-                pbar.total = total_size
-            progress_bytes = count * block_size
-            pbar.update(progress_bytes - pbar.n)
         os.makedirs(self.data_folder, exist_ok=True)
         filepath = self.data_folder / HistologyShardDescriptor.FILENAME
         if not filepath.exists():
-            pbar = tqdm(total=None)
-            reporthook = partial(report_hook, pbar)
+            reporthook = tqdm_report_hook()
             urlretrieve(HistologyShardDescriptor.URL, filepath, reporthook)  # nosec
             validate_file_hash(filepath, HistologyShardDescriptor.ZIP_SHA384)
             with ZipFile(filepath, 'r') as f:
