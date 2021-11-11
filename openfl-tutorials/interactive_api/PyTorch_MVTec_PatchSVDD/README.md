@@ -25,20 +25,20 @@ cd <openfl_folder>/openfl-tutorials/interactive_api/PyTorch_MVTec_PatchSVDD
 
 1. Run director:
 ```sh
-cd director_folder
-./start_director.sh
+cd director
+bash start_director.sh
 ```
 
 2. Run envoy:
 ```sh
-cd envoy_folder
-./start_envoy.sh env_one shard_config.yaml
+cd envoy
+bash start_envoy.sh env_one envoy_config.yaml
 ```
 
 Optional: start second envoy:
- - Copy `envoy_folder` to another place and run from there:
+ - Copy `envoy` to another place and run from there:
 ```sh
-./start_envoy.sh env_two shard_config_two.yaml
+bash start_envoy.sh env_two envoy_config_two.yaml
 ```
 
 3. Run `PatchSVDD_with_Director.ipynb` jupyter notebook:
