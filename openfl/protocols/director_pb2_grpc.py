@@ -5,7 +5,7 @@ import grpc
 from . import director_pb2 as director__pb2
 
 
-class FederationDirectorStub(object):
+class FederationDirectorStub:
     """Missing associated documentation comment in .proto file."""
 
     def __init__(self, channel):
@@ -76,7 +76,7 @@ class FederationDirectorStub(object):
                 )
 
 
-class FederationDirectorServicer(object):
+class FederationDirectorServicer:
     """Missing associated documentation comment in .proto file."""
 
     def AcknowledgeShard(self, request, context):
@@ -225,7 +225,7 @@ def add_FederationDirectorServicer_to_server(servicer, server):
 
 
  # This class is part of an EXPERIMENTAL API.
-class FederationDirector(object):
+class FederationDirector:
     """Missing associated documentation comment in .proto file."""
 
     @staticmethod

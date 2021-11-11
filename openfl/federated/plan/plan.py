@@ -25,7 +25,7 @@ DEFAULTS = 'defaults'
 AUTO = 'auto'
 
 
-class Plan(object):
+class Plan:
     """Federated Learning plan."""
 
     logger = getLogger(__name__)
