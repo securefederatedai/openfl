@@ -4,16 +4,12 @@ import os
 import shutil
 
 import ngtpy
-import matplotlib.pyplot as plt
 import numpy as np
 from data_transf import bal_acc_score
-from PIL import Image
 from data_transf import detection_auroc
 from data_transf import segmentation_auroc
-from skimage.segmentation import mark_boundaries
 from sklearn.neighbors import KDTree
 from utils import distribute_scores
-from utils import makedirpath
 
 
 def search_nn(test_emb, train_emb_flat, nn=1, method='kdt'):
@@ -122,34 +118,3 @@ def measure_emb_nn(emb_te, emb_tr, method='kdt', nn=1):
     anomaly_maps = np.mean(l2_maps, axis=-1)
 
     return anomaly_maps
-
-
-def save_maps(obj, maps, images, masks):
-    """Save generated anomaly maps."""
-    mshape = maps.shape[0]
-    images = np.transpose(images, [0, 3, 2, 1])
-    images = (images.astype(np.float32) * 255)
-    pwd = os.getcwd()
-    os.chdir('../')
-
-    for n in range(mshape):
-        fig, axes = plt.subplots(ncols=2)
-        fig.set_size_inches(6, 3)
-
-        shape = (128, 128)
-        image = np.array(Image.fromarray((images[n] * 255).astype(np.uint8)).resize(shape[::-1]))
-        mask = np.array(Image.fromarray(masks[n]).resize(shape[::-1]))
-        image = mark_boundaries(image, mask, color=(1, 0, 0), mode='thick')
-
-        axes[0].imshow(image)
-        axes[0].set_axis_off()
-
-        axes[1].imshow(maps[n], vmax=maps[n].max(), cmap='Reds')
-        axes[1].set_axis_off()
-
-        plt.tight_layout()
-        fpath = f'anomaly_maps/{obj}/n{n:03d}.png'
-        makedirpath(fpath)
-        plt.savefig(fpath)
-        plt.close()
-    os.chdir(pwd)

@@ -85,17 +85,6 @@ def crop_image_chw(image, coord, k):
     return image[:, h: h + k, w: w + k]
 
 
-def nhwc2nchw_normalize(x):
-    """NHWC to NCHW and normalize."""
-    x = (x / 255.).astype(np.float32)
-    return np.transpose(x, [0, 3, 1, 2])
-
-
-def nhwc2nchw(x):
-    """NHWC to NCHW."""
-    return np.transpose(x, [0, 3, 1, 2])
-
-
 def load_binary(fpath, encoding='ASCII'):
     """Load binaries."""
     with open(fpath, 'rb') as f:

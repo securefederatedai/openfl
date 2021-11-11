@@ -1,0 +1,11 @@
+params:
+  cuda_devices: []
+
+optional_plugin_components: {}
+
+shard_descriptor:
+  template: mvtec_shard_descriptor.MVTecShardDescriptor
+  params:
+    data_folder: MVTec_data
+    rank_worldsize: 1,2
+    obj: bottle
