@@ -22,11 +22,14 @@ from openfl.utilities import validate_file_hash
 logger = logging.getLogger(__name__)
 
 
-class HistologyDataset:
-    """Colorectal Histology Dataset."""
+class HistologyShardDataset(ShardDataset):
+    """Histology shard dataset class."""
 
-    def __init__(self, data_folder: Path):
-        """Initialize HistologyDataset."""
+    TRAIN_SPLIT_RATIO = 0.8
+
+    def __init__(self, data_folder: Path, data_type='train', rank=1, worldsize=1):
+        """Histology shard dataset class."""
+        self.data_type = data_type
         root = Path(data_folder) / 'Kather_texture_2016_image_tiles_5000'
         classes = [d.name for d in os.scandir(root) if d.is_dir()]
         class_to_idx = {cls_name: i for i, cls_name in enumerate(classes)}
@@ -41,35 +44,7 @@ class HistologyDataset:
                     item = path, class_index
                     self.samples.append(item)
 
-    def load_pil(self, path):
-        """Load image."""
-        with open(path, 'rb') as f:
-            img = Image.open(f)
-            return img.convert('RGB')
-
-    def __getitem__(self, index: int):
-        """Get item by index."""
-        path, target = self.samples[index]
-        sample = self.load_pil(path)
-
-        return sample, target
-
-    def __len__(self):
-        """Get length."""
-        return len(self.samples)
-
-
-class HistologyShardDataset(ShardDataset):
-    """Histology shard dataset class."""
-
-    TRAIN_SPLIT_RATIO = 0.8
-
-    def __init__(self, data_folder: Path, data_type='train', rank=1, worldsize=1):
-        """Histology shard dataset class."""
-        self.data_type = data_type
-        self.dataset = HistologyDataset(data_folder)
-
-        idx_range = list(range(len(self.dataset)))
+        idx_range = list(range(len(self.samples)))
         idx_sep = int(len(idx_range) * HistologyShardDataset.TRAIN_SPLIT_RATIO)
         train_idx, test_idx = np.split(idx_range, [idx_sep])
         if data_type == 'train':
@@ -81,9 +56,17 @@ class HistologyShardDataset(ShardDataset):
         """Return the len of the shard dataset."""
         return len(self.idx)
 
+    def load_pil(self, path):
+        """Load image."""
+        with open(path, 'rb') as f:
+            img = Image.open(f)
+            return img.convert('RGB')
+
     def __getitem__(self, index: int) -> Tuple['Image', int]:
         """Return an item by the index."""
-        return self.dataset.__getitem__(self.idx[index])
+        path, target = self.samples[self.idx[index]]
+        sample = self.load_pil(path)
+        return sample, target
 
 
 class HistologyShardDescriptor(ShardDescriptor):
