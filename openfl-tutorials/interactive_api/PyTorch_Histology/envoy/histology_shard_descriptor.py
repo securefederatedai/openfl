@@ -12,10 +12,9 @@ from urllib.request import urlretrieve
 from zipfile import ZipFile
 
 import numpy as np
-from base import ShardDataset
-from base import ShardDescriptor
+from openfl.interface.interactive_api.shard_descriptor import ShardDataset
+from openfl.interface.interactive_api.shard_descriptor import ShardDescriptor
 from PIL import Image
-from torchvision.datasets import ImageFolder
 from tqdm import tqdm
 
 from openfl.utilities import validate_file_hash
@@ -23,21 +22,40 @@ from openfl.utilities import validate_file_hash
 logger = logging.getLogger(__name__)
 
 
-class HistologyDataset(ImageFolder):
+class HistologyDataset:
     """Colorectal Histology Dataset."""
 
-    URL = ('https://zenodo.org/record/53169/files/Kather_'
-           'texture_2016_image_tiles_5000.zip?download=1')
-    FILENAME = 'Kather_texture_2016_image_tiles_5000.zip'
-    FOLDER_NAME = 'Kather_texture_2016_image_tiles_5000'
-    ZIP_SHA384 = ('7d86abe1d04e68b77c055820c2a4c582a1d25d2983e38ab724e'
-                  'ac75affce8b7cb2cbf5ba68848dcfd9d84005d87d6790')
-    DEFAULT_PATH = Path.home() / '.openfl' / 'data'
-
-    def __init__(self, data_folder: Path = DEFAULT_PATH):
+    def __init__(self, data_folder: Path):
         """Initialize HistologyDataset."""
-        super(HistologyDataset, self).__init__(
-            Path(data_folder) / HistologyDataset.FOLDER_NAME)
+        root = Path(data_folder) / 'Kather_texture_2016_image_tiles_5000'
+        classes = [d.name for d in os.scandir(root) if d.is_dir()]
+        class_to_idx = {cls_name: i for i, cls_name in enumerate(classes)}
+        self.samples = []
+        root = root.expanduser()
+        for target_class in sorted(class_to_idx.keys()):
+            class_index = class_to_idx[target_class]
+            target_dir = os.path.join(root, target_class)
+            for root, _, fnames in sorted(os.walk(target_dir, followlinks=True)):
+                for fname in sorted(fnames):
+                    path = os.path.join(root, fname)
+                    item = path, class_index
+                    self.samples.append(item)
+
+    def load_pil(self, path):
+        with open(path, 'rb') as f:
+            img = Image.open(f)
+            return img.convert('RGB')
+
+    def __getitem__(self, index: int):
+        """Get item by index."""
+        path, target = self.samples[index]
+        sample = self.load_pil(path)
+
+        return sample, target
+
+    def __len__(self):
+        """Get length."""
+        return len(self.samples)
 
 
 class HistologyShardDataset(ShardDataset):
@@ -48,9 +66,9 @@ class HistologyShardDataset(ShardDataset):
     def __init__(self, data_folder: Path, data_type='train', rank=1, worldsize=1):
         """Histology shard dataset class."""
         self.data_type = data_type
-        dataset = HistologyDataset(data_folder)
+        self.dataset = HistologyDataset(data_folder)
 
-        idx_range = list(range(len(dataset)))
+        idx_range = list(range(len(self.dataset)))
         idx_sep = int(len(idx_range) * HistologyShardDataset.TRAIN_SPLIT_RATIO)
         train_idx, test_idx = np.split(idx_range, [idx_sep])
         if data_type == 'train':
@@ -60,19 +78,26 @@ class HistologyShardDataset(ShardDataset):
 
     def __len__(self) -> int:
         """Return the len of the shard dataset."""
-        return len(self.dataset)
+        return len(self.idx)
 
     def __getitem__(self, index: int) -> Tuple['Image', int]:
         """Return an item by the index."""
-        return super().__getitem__(self.idx[index])
+        return self.dataset.__getitem__(self.idx[index])
 
 
 class HistologyShardDescriptor(ShardDescriptor):
     """Shard descriptor class."""
 
+    URL = ('https://zenodo.org/record/53169/files/Kather_'
+           'texture_2016_image_tiles_5000.zip?download=1')
+    FILENAME = 'Kather_texture_2016_image_tiles_5000.zip'
+    ZIP_SHA384 = ('7d86abe1d04e68b77c055820c2a4c582a1d25d2983e38ab724e'
+                  'ac75affce8b7cb2cbf5ba68848dcfd9d84005d87d6790')
+    DEFAULT_PATH = Path.home() / '.openfl' / 'data'
+
     def __init__(
             self,
-            data_folder: str = 'data',
+            data_folder: Path = DEFAULT_PATH,
             rank_worldsize: str = '1,1',
             **kwargs
     ):
@@ -90,12 +115,12 @@ class HistologyShardDescriptor(ShardDescriptor):
             progress_bytes = count * block_size
             pbar.update(progress_bytes - pbar.n)
         os.makedirs(self.data_folder, exist_ok=True)
-        filepath = self.data_folder / HistologyDataset.FILENAME
+        filepath = self.data_folder / HistologyShardDescriptor.FILENAME
         if not filepath.exists():
             pbar = tqdm(total=None)
             reporthook = partial(report_hook, pbar)
-            urlretrieve(HistologyDataset.URL, filepath, reporthook)  # nosec
-            validate_file_hash(filepath, HistologyDataset.ZIP_SHA384)
+            urlretrieve(HistologyShardDescriptor.URL, filepath, reporthook)  # nosec
+            validate_file_hash(filepath, HistologyShardDescriptor.ZIP_SHA384)
             with ZipFile(filepath, 'r') as f:
                 f.extractall(self.data_folder)
 
@@ -119,6 +144,8 @@ class HistologyShardDescriptor(ShardDescriptor):
         """Return the target shape info."""
         target = self.get_dataset('train')[0][1]
         shape = np.array(target).shape
+        print(shape)
+        raise
         return [str(dim) for dim in shape]
 
     @property

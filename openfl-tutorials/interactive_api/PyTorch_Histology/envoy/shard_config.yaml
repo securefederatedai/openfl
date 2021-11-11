@@ -1,5 +1,0 @@
-template: histology_shard_descriptor.HistologyShardDescriptor
-params:
-  data_folder: histology_data
-  rank: 1
-  worldsize: 2
