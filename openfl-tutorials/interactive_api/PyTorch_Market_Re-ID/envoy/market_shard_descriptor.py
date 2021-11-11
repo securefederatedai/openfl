@@ -125,7 +125,7 @@ class MarketShardDescriptor(ShardDescriptor):
         with zipfile.ZipFile(output, 'r') as zip_ref:
             zip_ref.extractall(Path.cwd())
 
-        Path(filename).unlink()  # remove zip
+        Path(output).unlink()  # remove zip
 
     def _check_before_run(self):
         """Check if all files are available before going deeper."""
