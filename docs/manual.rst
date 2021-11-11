@@ -5,7 +5,7 @@
 Manual
 ******
 
-Learn what is Open Federated Learning (|productName|):
+What is Open Federated Learning (|productName|):
 
 - :doc:`overview`
 
