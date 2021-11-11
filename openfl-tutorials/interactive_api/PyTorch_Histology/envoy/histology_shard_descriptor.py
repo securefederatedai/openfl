@@ -12,12 +12,13 @@ from urllib.request import urlretrieve
 from zipfile import ZipFile
 
 import numpy as np
-from openfl.interface.interactive_api.shard_descriptor import ShardDataset
-from openfl.interface.interactive_api.shard_descriptor import ShardDescriptor
 from PIL import Image
 from tqdm import tqdm
 
+from openfl.interface.interactive_api.shard_descriptor import ShardDataset
+from openfl.interface.interactive_api.shard_descriptor import ShardDescriptor
 from openfl.utilities import validate_file_hash
+
 
 logger = logging.getLogger(__name__)
 
@@ -42,6 +43,7 @@ class HistologyDataset:
                     self.samples.append(item)
 
     def load_pil(self, path):
+        """Load image."""
         with open(path, 'rb') as f:
             img = Image.open(f)
             return img.convert('RGB')
