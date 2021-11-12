@@ -135,13 +135,11 @@ class MVTecShardDescriptor(ShardDescriptor):
     def sample_shape(self):
         """Return the sample shape info."""
         return ['256', '256', '3']
-        # return self._sample_shape
 
     @property
     def target_shape(self):
         """Return the target shape info."""
         return ['256', '256']
-        # return self._target_shape
 
     @property
     def dataset_description(self) -> str:

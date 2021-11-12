@@ -109,6 +109,20 @@ def eval_embeddings_nn_multik(obj, embs64, embs32, masks, labels, nn=1):
     }
 
 
+def eval_embeddings_nn_maps(obj, embs64, embs32, masks, labels, nn=1):
+    """Evaluate embeddings."""
+    emb_tr, emb_te = embs64
+    maps_64 = measure_emb_nn(emb_te, emb_tr, method='kdt', nn=nn)
+    maps_64 = distribute_scores(maps_64, (256, 256), k=64, s=16)
+
+    emb_tr, emb_te = embs32
+    maps_32 = measure_emb_nn(emb_te, emb_tr, method='ngt', nn=nn)
+    maps_32 = distribute_scores(maps_32, (256, 256), k=32, s=4)
+
+    maps_mult = maps_64 * maps_32
+    return maps_mult
+
+
 def measure_emb_nn(emb_te, emb_tr, method='kdt', nn=1):
     """Measure embeddings."""
     d = emb_tr.shape[-1]
