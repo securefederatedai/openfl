@@ -2,8 +2,8 @@
 
 import numpy as np
 from sklearn.metrics import balanced_accuracy_score
-from sklearn.metrics import roc_auc_score
 from sklearn.metrics import precision_recall_curve
+from sklearn.metrics import roc_auc_score
 
 
 def bilinears(images, shape) -> np.ndarray:
