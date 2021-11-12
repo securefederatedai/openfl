@@ -7,14 +7,22 @@ FROM ${BASE_IMAGE}
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
     autoconf bison gawk libcurl4-openssl-dev libprotobuf-c-dev \
-    ninja-build protobuf-c-compiler python3 python3-click python3-jinja2 \
-    build-essential python3-pip python3-protobuf wget \
-    git libunwind-dev
-    # libunwind-dev is needed by the hello-world sgx example
+    ninja-build protobuf-c-compiler python3-click python3-jinja2 \
+    build-essential python3-protobuf wget \
+    git pkg-config nano
+    # pkg-config  is needed by the python sgx example
 
-WORKDIR /
-RUN git clone https://github.com/gramineproject/gramine.git
+# trying to install linux headers
+WORKDIR /tmp/
+RUN wget -c https://kernel.ubuntu.com/~kernel-ppa/mainline/v5.11/amd64/linux-headers-5.11.0-051100_5.11.0-051100.202102142330_all.deb
+RUN dpkg -i *.deb
+RUN mv /usr/src/linux-headers-5.11.0-051100/ /usr/src/linux-headers-5.11.0-051100rc5-generic/
+
+WORKDIR /var
+RUN git clone https://github.com/igor-davidyuk/gramine.git
+# RUN git clone https://github.com/gramineproject/gramine.git
 WORKDIR gramine
+RUN git checkout fix-dist-packages-address
 
 # We probably want to keep this key outside the image
 RUN openssl genrsa -3 -out Pal/src/host/Linux-SGX/signer/enclave-key.pem 3072
@@ -26,7 +34,7 @@ ENV PYTHONPATH=/usr/local/lib/python3.8/dist-packages
 ENV LC_ALL=C.UTF-8
 ENV LANG=C.UTF-8
 
-RUN meson setup build/ --buildtype=release -Ddirect=enabled -Dsgx=enabled
+RUN meson setup build/ --buildtype=release -Ddirect=disabled -Dsgx=enabled
 RUN ninja -C build/
 RUN ninja -C build/ install
 
