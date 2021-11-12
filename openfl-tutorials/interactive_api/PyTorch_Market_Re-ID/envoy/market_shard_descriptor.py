@@ -9,7 +9,7 @@ import zipfile
 from pathlib import Path
 from typing import List
 
-import wget
+import gdown
 from PIL import Image
 
 from openfl.interface.interactive_api.shard_descriptor import ShardDataset
@@ -116,14 +116,16 @@ class MarketShardDescriptor(ShardDescriptor):
 
         logger.info('Try to download.')
         output = f'{self.data_folder_name}.zip'
-        url = (f'http://188.138.127.15:81/Datasets/{output}')
-        filename = wget.download(url)
+
+        if not Path(output).exists():
+            url = 'https://drive.google.com/u/1/uc?id=0B8-rUzbwVRk0c054eEozWG9COHM'
+            gdown.download(url, output, quiet=False)
         logger.info(f'{output} is downloaded.')
 
-        with zipfile.ZipFile(filename, 'r') as zip_ref:
+        with zipfile.ZipFile(output, 'r') as zip_ref:
             zip_ref.extractall(Path.cwd())
 
-        Path(filename).unlink()  # remove zip
+        Path(output).unlink()  # remove zip
 
     def _check_before_run(self):
         """Check if all files are available before going deeper."""
