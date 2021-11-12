@@ -60,6 +60,45 @@ def start_(plan, collaborator_name, data_config, secure):
     plan.get_collaborator(collaborator_name).run()
 
 
+@collaborator.command(name='shim')
+@option('-p', '--plan', required=False,
+        help='Federated learning plan [plan/plan.yaml]',
+        default='plan/plan.yaml',
+        type=ClickPath(exists=True))
+@option('-d', '--data_config', required=False,
+        help='The data set/shard configuration file [plan/data.yaml]',
+        default='plan/data.yaml', type=ClickPath(exists=True))
+@option('-n', '--collaborator_name', required=True,
+        help='The certified common name of the collaborator')
+@option('-s', '--secure', required=False,
+        help='Enable Intel SGX Enclave', is_flag=True, default=False)
+@option('--proto_path', required=False,
+        help='Path to directory containing serialized requests/responses', default='proto_path')
+def shim_(plan, collaborator_name, data_config, secure, proto_path):
+    """Start a collaborator shim."""
+    from pathlib import Path
+
+    from openfl.federated import Plan
+
+    if plan and is_directory_traversal(plan):
+        echo('Federated learning plan path is out of the openfl workspace scope.')
+        sys.exit(1)
+    if data_config and is_directory_traversal(data_config):
+        echo('The data set/shard configuration file path is out of the openfl workspace scope.')
+        sys.exit(1)
+
+    plan = Plan.parse(plan_config_path=Path(plan).absolute(),
+                      data_config_path=Path(data_config).absolute())
+
+    # TODO: Need to restructure data loader config file loader
+
+    echo(f'Data = {plan.cols_data_paths}')
+    logger.info('🧿 Starting a Collaborator Shim.')
+
+    collaborator = plan.get_collaborator(collaborator_name,shim=True)
+    collaborator.client.issue_requests()
+
+
 def register_data_path(collaborator_name, data_path=None, silent=False):
     """Register dataset path in the plan/data.yaml file.
 

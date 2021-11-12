@@ -56,6 +56,39 @@ def start_(plan, authorized_cols, secure):
 
     plan.get_server().serve()
 
+@aggregator.command(name='shim')
+@option('-p', '--plan', required=False,
+        help='Federated learning plan [plan/plan.yaml]',
+        default='plan/plan.yaml',
+        type=ClickPath(exists=True))
+@option('-c', '--authorized_cols', required=False,
+        help='Authorized collaborator list [plan/cols.yaml]',
+        default='plan/cols.yaml', type=ClickPath(exists=True))
+@option('-s', '--secure', required=False,
+        help='Enable Intel SGX Enclave', is_flag=True, default=False)
+@option('--proto_path', required=False,
+        help='Path to directory containing serialized requests/responses', default='proto_path')
+def shim_(plan, authorized_cols, secure, proto_path):
+    """Start the aggregator shim."""
+    from pathlib import Path
+
+    from openfl.federated import Plan
+
+    if is_directory_traversal(plan):
+        echo('Federated learning plan path is out of the openfl workspace scope.')
+        sys.exit(1)
+    if is_directory_traversal(authorized_cols):
+        echo('Authorized collaborator list file path is out of the openfl workspace scope.')
+        sys.exit(1)
+
+    plan = Plan.parse(plan_config_path=Path(plan).absolute(),
+                      cols_config_path=Path(authorized_cols).absolute())
+
+    logger.info('🧿 Starting the Aggregator Service.')
+
+    plan.get_server(shim=True).serve()
+
+
 
 @aggregator.command(name='generate-cert-request')
 @option('--fqdn', required=False, type=click_types.FQDN,

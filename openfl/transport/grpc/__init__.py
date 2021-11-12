@@ -4,11 +4,15 @@
 """openfl.transport.grpc package."""
 
 from .client import CollaboratorGRPCClient
+from .client_shim import CollaboratorGRPCClientShim
 from .director_server import DirectorGRPCServer
 from .server import AggregatorGRPCServer
+from .server_shim import AggregatorGRPCServerShim
 
 __all__ = [
     'AggregatorGRPCServer',
+    'AggregatorGRPCServerShim',
     'CollaboratorGRPCClient',
+    'CollaboratorGRPCClientShim',
     'DirectorGRPCServer',
 ]

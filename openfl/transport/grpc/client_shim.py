@@ -4,9 +4,12 @@
 """CollaboratorGRPCClient module."""
 
 import time
+from time import sleep
 from logging import getLogger
 from typing import Optional
 from typing import Tuple
+from glob import glob
+from pathlib import Path
 
 import grpc
 
@@ -88,7 +91,7 @@ def _atomic_connection(func):
     return wrapper
 
 
-class CollaboratorGRPCClient:
+class CollaboratorGRPCClientShim:
     """Collaboration over gRPC-TLS."""
 
     def __init__(self,
@@ -102,6 +105,7 @@ class CollaboratorGRPCClient:
                  aggregator_uuid=None,
                  federation_uuid=None,
                  single_col_cert_common_name=None,
+                 proto_path='proto_path',
                  **kwargs):
         """Initialize."""
         self.uri = f'{agg_addr}:{agg_port}'
@@ -110,6 +114,7 @@ class CollaboratorGRPCClient:
         self.root_certificate = root_certificate
         self.certificate = certificate
         self.private_key = private_key
+        self.proto_path = 'proto_path'
 
         self.channel_options = [
             ('grpc.max_metadata_size', 32 * 1024 * 1024),
@@ -260,7 +265,83 @@ class CollaboratorGRPCClient:
             grpc.intercept_channel(self.channel, *self.interceptors)
         )
 
-    #@_atomic_connection
+    def issue_requests(self):
+        """
+        Issue request for each file in directory
+        Requires keeping track of which requests have been sent to aggregator
+        """
+
+        self.completed_requests = {}
+        # Parse and issue requests from airgapped collaborator
+        while True:
+            for request_file in glob(f'{self.proto_path}/*request*.pbuf'):
+                if request_file in self.completed_requests:
+                    continue
+                # Each request to be unpacked, repacked to reuse existing functions
+                if 'get_tasks' in request_file:
+                    request = self._request_shim(request_file, 'get_tasks')
+                    self.logger.info(f'Sending get_tasks request')
+                    response = self.get_tasks(request.header.sender)
+                elif 'get_aggregated_tensor' in request_file:
+                    request = self._request_shim(request_file, 'get_aggregated_tensor')
+                    collaborator_name = request.header.sender
+                    tensor_name=request.tensor_name
+                    round_number=request.round_number
+                    report=request.report
+                    tags=request.tags
+                    require_lossless=request.require_lossless
+                    self.logger.info(f'Sending get_aggregated_tensor request')
+                    response = self.get_aggregated_tensor(collaborator_name, tensor_name, 
+                                   round_number, report, tags, require_lossless)
+
+                elif 'send_local_task_results' in request_file:
+                    request = self._request_shim(request_file, 'send_local_task_results')
+                    collaborator_name = request.header.sender
+                    round_number = request.round_number
+                    task_name = request.task_name
+                    data_size = request.data_size
+                    named_tensors = request.tensors
+                    self.logger.info(f'Sending send_local_task_results request')
+                    response = self.send_local_task_results(collaborator_name, round_number,
+                                                task_name, data_size, named_tensors)
+                else:
+                    raise RuntimeError('Unrecognized request found')
+
+                response_file = request_file.replace('request','response')
+                # Remove the request
+                Path(request_file).unlink()
+                self.completed_requests[request_file] = True
+
+                # Save response
+                self._save_response(response_file, response)
+            sleep(1)
+
+
+
+    def _request_shim(self, request_path, func_name):
+
+        if func_name == 'get_tasks':
+            request = TasksRequest()
+        elif func_name == 'get_aggregated_tensor':
+            request = TensorRequest()
+        elif func_name == 'send_local_task_results':
+            request = TaskResults()
+        else:
+            self.logger.error(f'Bad function name {func_name} provided') 
+
+        with open(request_path,'rb') as f:
+            request.ParseFromString(f.read()) 
+
+        return request
+
+    def _save_response(self, response_path, proto):
+
+        with open(response_path,'wb') as f:
+            f.write(proto.SerializeToString())
+
+
+
+    @_atomic_connection
     def get_tasks(self, collaborator_name):
         """Get tasks from the aggregator."""
         self._set_header(collaborator_name)
@@ -268,9 +349,9 @@ class CollaboratorGRPCClient:
         response = self.stub.GetTasks(request)
         self.validate_response(response, collaborator_name)
 
-        return response.tasks, response.round_number, response.sleep_time, response.quit
+        return response
 
-    #@_atomic_connection
+    @_atomic_connection
     def get_aggregated_tensor(self, collaborator_name, tensor_name, round_number,
                               report, tags, require_lossless):
         """Get aggregated tensor from the aggregator."""
@@ -287,9 +368,9 @@ class CollaboratorGRPCClient:
         # also do other validation, like on the round_number
         self.validate_response(response, collaborator_name)
 
-        return response.tensor
+        return response
 
-    #@_atomic_connection
+    @_atomic_connection
     def send_local_task_results(self, collaborator_name, round_number,
                                 task_name, data_size, named_tensors):
         """Send task results to the aggregator."""
@@ -309,3 +390,5 @@ class CollaboratorGRPCClient:
 
         # also do other validation, like on the round_number
         self.validate_response(response, collaborator_name)
+
+        return response
