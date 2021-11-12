@@ -4,7 +4,7 @@
 """DataLoader module."""
 
 
-class DataLoader(object):
+class DataLoader:
     """Federated Learning Data Loader Class."""
 
     def __init__(self, **kwargs):

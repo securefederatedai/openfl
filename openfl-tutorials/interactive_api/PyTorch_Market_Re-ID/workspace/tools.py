@@ -15,7 +15,7 @@ from torch.utils.data.sampler import Sampler
 logger = getLogger(__name__)
 
 
-class AverageMeter(object):
+class AverageMeter:
     """
     Computes and stores the average and current value.
 
