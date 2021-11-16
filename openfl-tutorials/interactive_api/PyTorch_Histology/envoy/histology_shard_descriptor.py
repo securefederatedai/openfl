@@ -38,9 +38,9 @@ class HistologyShardDataset(ShardDataset):
         for target_class in sorted(class_to_idx.keys()):
             class_index = class_to_idx[target_class]
             target_dir = os.path.join(root, target_class)
-            for root, _, fnames in sorted(os.walk(target_dir, followlinks=True)):
+            for class_root, _, fnames in sorted(os.walk(target_dir, followlinks=True)):
                 for fname in sorted(fnames):
-                    path = os.path.join(root, fname)
+                    path = os.path.join(class_root, fname)
                     item = path, class_index
                     self.samples.append(item)
 
@@ -120,9 +120,7 @@ class HistologyShardDescriptor(ShardDescriptor):
     def target_shape(self):
         """Return the target shape info."""
         target = self.get_dataset('train')[0][1]
-        shape = np.array(target).shape
-        print(shape)
-        raise
+        shape = np.array([target]).shape
         return [str(dim) for dim in shape]
 
     @property
