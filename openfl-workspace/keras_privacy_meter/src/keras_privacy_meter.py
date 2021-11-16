@@ -39,6 +39,18 @@ class KerasPrivacyMeter(KerasTaskRunner):
             self.logger.info(f'Train Set Size : {self.get_train_data_size()}')
             self.logger.info(f'Valid Set Size : {self.get_valid_data_size()}')
 
+        # Initialize ML Privacy Meter
+        self.priv_meter_obj = ml_privacy_meter.attack.federated_meminf.initialize(
+            target_train_model=self.model,
+            target_attack_model=self.model,
+            train_datahandler=self.data_loader.attack_data_handler,
+            attack_datahandler=self.data_loader.attack_data_handler,
+            layers_to_exploit=[5],
+            gradients_to_exploit=[2],
+            window_size=5,
+            device=None, epochs=epochs, model_name='fl_model'
+        )
+
     def add_tensorkey_dependencies_for_new_tasks(self):
         """
         This function adds the new dependencies for functions:
@@ -211,7 +223,7 @@ class KerasPrivacyMeter(KerasTaskRunner):
 
         return global_tensor_dict, local_tensor_dict
 
-    def train_attack_model(self, col_name, round_num, input_tensor_dict, epochs):
+    def train_privacy_meter_model(self, col_name, round_num, input_tensor_dict, epochs):
         """
         Train an attack model for N epochs.
         Returns
@@ -223,24 +235,13 @@ class KerasPrivacyMeter(KerasTaskRunner):
         # rebuild collaborator model with updated weights
         self.rebuild_model(round_num, input_tensor_dict)
         
-        # Attack object is reinitialized on each call of `train_attack model`
-        # This should happen once per round
-        self.attackobj = ml_privacy_meter.attack.meminf.initialize(
-           target_train_model=self.model,
-           target_attack_model=self.model,
-           train_datahandler=self.data_loader.attack_data_handler,
-           attack_datahandler=self.data_loader.attack_data_handler,
-           layers_to_exploit=[5],
-           gradients_to_exploit=[2],#This is just a guess
-           device=None, epochs=epochs, model_name='blackbox1') 
-        
-        self.attackobj.train_attack()
+        self.priv_meter_obj.train_privacy_meter_for_fl(round_num, self.model)
         
         global_tensorkey_dict = {}
         local_tensorkey_dict = {}
         return global_tensorkey_dict, local_tensorkey_dict
 
-    def validate_attack_model(self, col_name, round_num, input_tensor_dict):
+    def test_privacy_meter_model(self, col_name, round_num, input_tensor_dict):
         """
         Validates the previously trained attack model
         Returns
@@ -251,12 +252,8 @@ class KerasPrivacyMeter(KerasTaskRunner):
         """
         # rebuild collaborator model with updated weights
         self.rebuild_model(round_num, input_tensor_dict)
-        
-        # currently test attack generates a plot and 
-        # saves files to disk. It would make sense to add a new API
-        # that reports some metrics back for the purpose of deciding what to do with
-        # the results
-        self.attackobj.test_attack()
+
+        self.priv_meter_obj.test_privacy_meter_for_fl(round_num)
 
         #attack_metrics = self.attackobj.test_attack_new_api()
         
@@ -299,9 +296,9 @@ class KerasPrivacyMeter(KerasTaskRunner):
 
         if self.attack_metrics == model_is_vulnerable:
           # Send nothing or add noise to model
-          global_tensorkey_model_dict = 
-              {tensorkey: nparray + np.random.random(nparray.shape)
-                  for tensorkey, nparray in global_tensorkey_model_dict}
+          global_tensorkey_model_dict = {
+              tensorkey: nparray + np.random.random(nparray.shape) for tensorkey, nparray in global_tensorkey_model_dict
+          }
                
         return global_tensorkey_dict, local_tensorkey_model_dict 
 

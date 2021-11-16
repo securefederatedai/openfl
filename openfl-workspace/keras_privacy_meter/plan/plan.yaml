@@ -43,8 +43,8 @@ assigner :
           - aggregated_model_validation
           - train_collaborator_model
           - locally_tuned_model_validation
-          - train_attack_model
-          - validate_attack_model
+          - train_privacy_meter_model
+          - test_privacy_meter_model
           - filter_training_weights
 
 tasks :
@@ -69,12 +69,12 @@ tasks :
       epochs     : 1
       metrics    :
       - loss
-  train_attack_model:
-    function : train_attack_model
+  train_privacy_meter_model:
+    function : train_privacy_meter_model
     kwargs   :
       epochs     : 10
-  validate_attack_model:
-    function : validate_attack_model
+  test_privacy_meter_model:
+    function : test_privacy_meter_model
     kwargs   :
       batch_size : 32
       epochs     : 1
