@@ -31,7 +31,7 @@ class HistologyShardDataset(ShardDataset):
         """Histology shard dataset class."""
         self.data_type = data_type
         root = Path(data_folder) / 'Kather_texture_2016_image_tiles_5000'
-        classes = [d.name for d in os.scandir(root) if d.is_dir()]
+        classes = [d.name for d in root.iterdir() if d.is_dir()]
         class_to_idx = {cls_name: i for i, cls_name in enumerate(classes)}
         self.samples = []
         root = root.expanduser()
