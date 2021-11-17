@@ -1,0 +1,3 @@
+numpy
+pillow
+nvidia-ml-py3

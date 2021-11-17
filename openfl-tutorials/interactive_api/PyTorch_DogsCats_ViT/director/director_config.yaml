@@ -1,0 +1,6 @@
+settings:
+  listen_addr: nnlicv901.inn.intel.com
+  listen_port: 50051
+  sample_shape: ['300', '300', '3']
+  target_shape: ['1']
+  #envoy_health_check_period: 5  # in seconds
