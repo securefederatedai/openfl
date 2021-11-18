@@ -95,6 +95,7 @@ class MVTecShardDescriptor(ShardDescriptor):
             print('Downloaded MVTec dataset, untar-ring now')
             os.system(f'tar -xvf {zip_file_path.relative_to(Path.cwd())}'
                       f' -C {self.dataset_path.relative_to(Path.cwd())}')
+        os.chmod(self.dataset_path, 0o755)
 
     def get_dataset(self, dataset_type='train'):
         """Return a shard dataset by type."""
