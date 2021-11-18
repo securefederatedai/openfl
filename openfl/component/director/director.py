@@ -60,7 +60,7 @@ class Director:
             'is_online': True,
             'is_experiment_running': False,
             'valid_duration': 2 * hc_period,
-            'last_updated': time.time()
+            'last_updated': time.time(),
         }
         is_accepted = True
         return is_accepted
