@@ -54,10 +54,13 @@ class Director:
             logger.info('Request was not accepted')
             return is_accepted
         logger.info('Request was accepted')
+        hc_period = self.settings.get('envoy_health_check_period', ENVOY_HEALTH_CHECK_PERIOD)
         self._shard_registry[shard_info['node_info']['name']] = {
             'shard_info': shard_info,
             'is_online': True,
-            'is_experiment_running': False
+            'is_experiment_running': False,
+            'valid_duration': 2 * hc_period,
+            'last_updated': time.time()
         }
         is_accepted = True
         return is_accepted
@@ -198,7 +201,8 @@ class Director:
         logger.info(f'Shard registry: {self._shard_registry}')
         for envoy_info in self._shard_registry.values():
             envoy_info['is_online'] = (
-                time.time() < envoy_info['last_updated'] + envoy_info['valid_duration']
+                time.time() <
+                envoy_info.get('last_updated', 0) + envoy_info.get('valid_duration', 0)
             )
             envoy_name = envoy_info['shard_info']['node_info']['name']
             envoy_info['experiment_name'] = self.col_exp[envoy_name]
