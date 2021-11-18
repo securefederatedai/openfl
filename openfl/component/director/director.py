@@ -201,8 +201,8 @@ class Director:
         logger.info(f'Shard registry: {self._shard_registry}')
         for envoy_info in self._shard_registry.values():
             envoy_info['is_online'] = (
-                time.time() <
-                envoy_info.get('last_updated', 0) + envoy_info.get('valid_duration', 0)
+                time.time() < envoy_info.get('last_updated', 0)
+                + envoy_info.get('valid_duration', 0)
             )
             envoy_name = envoy_info['shard_info']['node_info']['name']
             envoy_info['experiment_name'] = self.col_exp[envoy_name]
