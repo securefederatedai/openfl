@@ -7,5 +7,4 @@ shard_descriptor:
   template: histology_shard_descriptor.HistologyShardDescriptor
   params:
     data_folder: histology_data
-    rank: 1
-    worldsize: 2
+    rank_worldsize: 1,2
