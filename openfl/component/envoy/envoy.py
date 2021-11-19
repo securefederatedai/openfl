@@ -93,27 +93,32 @@ class Envoy:
         while True:
             # Need a separate method 'Get self state' or smth
             cuda_devices_info = None
-            if self.cuda_device_monitor is not None:
-                cuda_devices_info = []
-                cuda_driver_version = self.cuda_device_monitor.get_driver_version()
-                cuda_version = self.cuda_device_monitor.get_cuda_version()
-                for device_id in self.cuda_devices:
-                    memory_total = self.cuda_device_monitor.get_device_memory_total(device_id)
-                    memory_utilized = self.cuda_device_monitor.get_device_memory_utilized(
-                        device_id
-                    )
-                    device_utilization = self.cuda_device_monitor.get_device_utilization(device_id)
-                    device_name = self.cuda_device_monitor.get_device_name(device_id)
-                    cuda_devices_info.append({
-                        'index': device_id,
-                        'memory_total': memory_total,
-                        'memory_utilized': memory_utilized,
-                        'device_utilization': device_utilization,
-                        'cuda_driver_version': cuda_driver_version,
-                        'cuda_version': cuda_version,
-                        'name': device_name,
-                    })
-
+            try:  # TODO: investigate problem, it's a quick workaround
+                if self.cuda_device_monitor is not None:
+                    cuda_devices_info = []
+                    cuda_driver_version = self.cuda_device_monitor.get_driver_version()
+                    try:
+                        cuda_version = self.cuda_device_monitor.get_cuda_version()
+                    except Exception as exc:
+                        logger.exception(exc)
+                    for device_id in self.cuda_devices:
+                        memory_total = self.cuda_device_monitor.get_device_memory_total(device_id)
+                        memory_utilized = self.cuda_device_monitor.get_device_memory_utilized(
+                            device_id
+                        )
+                        device_utilization = self.cuda_device_monitor.get_device_utilization(device_id)
+                        device_name = self.cuda_device_monitor.get_device_name(device_id)
+                        cuda_devices_info.append({
+                            'index': device_id,
+                            'memory_total': memory_total,
+                            'memory_utilized': memory_utilized,
+                            'device_utilization': device_utilization,
+                            'cuda_driver_version': cuda_driver_version,
+                            'cuda_version': cuda_version,
+                            'name': device_name,
+                        })
+            except Exception as exc:
+                logger.exception(exc)
             timeout = self.director_client.send_health_check(
                 envoy_name=self.name,
                 is_experiment_running=self.is_experiment_running,
