@@ -91,40 +91,40 @@ class Envoy:
         """Send health check to the director."""
         logger.info('The health check sender is started.')
         while True:
-            # Need a separate method 'Get self state' or smth
-            cuda_devices_info = None
-            try:  # TODO: investigate problem, it's a quick workaround
-                if self.cuda_device_monitor is not None:
-                    cuda_devices_info = []
-                    cuda_driver_version = self.cuda_device_monitor.get_driver_version()
-                    try:
-                        cuda_version = self.cuda_device_monitor.get_cuda_version()
-                    except Exception as exc:
-                        logger.exception(exc)
-                    for device_id in self.cuda_devices:
-                        memory_total = self.cuda_device_monitor.get_device_memory_total(device_id)
-                        memory_utilized = self.cuda_device_monitor.get_device_memory_utilized(
-                            device_id
-                        )
-                        device_utilization = self.cuda_device_monitor.get_device_utilization(device_id)
-                        device_name = self.cuda_device_monitor.get_device_name(device_id)
-                        cuda_devices_info.append({
-                            'index': device_id,
-                            'memory_total': memory_total,
-                            'memory_utilized': memory_utilized,
-                            'device_utilization': device_utilization,
-                            'cuda_driver_version': cuda_driver_version,
-                            'cuda_version': cuda_version,
-                            'name': device_name,
-                        })
-            except Exception as exc:
-                logger.exception(exc)
+            cuda_devices_info = self._get_cuda_device_info()
             timeout = self.director_client.send_health_check(
                 envoy_name=self.name,
                 is_experiment_running=self.is_experiment_running,
                 cuda_devices_info=cuda_devices_info,
             )
             time.sleep(timeout)
+
+    def _get_cuda_device_info(self):
+        cuda_devices_info = None
+        try:
+            if self.cuda_device_monitor is not None:
+                cuda_devices_info = []
+                cuda_driver_version = self.cuda_device_monitor.get_driver_version()
+                cuda_version = self.cuda_device_monitor.get_cuda_version()
+                for device_id in self.cuda_devices:
+                    memory_total = self.cuda_device_monitor.get_device_memory_total(device_id)
+                    memory_utilized = self.cuda_device_monitor.get_device_memory_utilized(
+                        device_id
+                    )
+                    device_utilization = self.cuda_device_monitor.get_device_utilization(device_id)
+                    device_name = self.cuda_device_monitor.get_device_name(device_id)
+                    cuda_devices_info.append({
+                        'index': device_id,
+                        'memory_total': memory_total,
+                        'memory_utilized': memory_utilized,
+                        'device_utilization': device_utilization,
+                        'cuda_driver_version': cuda_driver_version,
+                        'cuda_version': cuda_version,
+                        'name': device_name,
+                    })
+        except Exception as exc:
+            logger.exception(f'Failed to get cuda device info: {exc}. Check your cuda device monitor plugin.')
+        return cuda_devices_info
 
     def _run_collaborator(self, plan='plan/plan.yaml'):
         """Run the collaborator for the experiment running."""
