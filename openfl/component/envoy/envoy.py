@@ -123,7 +123,8 @@ class Envoy:
                         'name': device_name,
                     })
         except Exception as exc:
-            logger.exception(f'Failed to get cuda device info: {exc}. Check your cuda device monitor plugin.')
+            logger.exception(f'Failed to get cuda device info: {exc}. '
+                             f'Check your cuda device monitor plugin.')
         return cuda_devices_info
 
     def _run_collaborator(self, plan='plan/plan.yaml'):
