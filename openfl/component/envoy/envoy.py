@@ -91,8 +91,17 @@ class Envoy:
         """Send health check to the director."""
         logger.info('The health check sender is started.')
         while True:
-            # Need a separate method 'Get self state' or smth
-            cuda_devices_info = None
+            cuda_devices_info = self._get_cuda_device_info()
+            timeout = self.director_client.send_health_check(
+                envoy_name=self.name,
+                is_experiment_running=self.is_experiment_running,
+                cuda_devices_info=cuda_devices_info,
+            )
+            time.sleep(timeout)
+
+    def _get_cuda_device_info(self):
+        cuda_devices_info = None
+        try:
             if self.cuda_device_monitor is not None:
                 cuda_devices_info = []
                 cuda_driver_version = self.cuda_device_monitor.get_driver_version()
@@ -113,13 +122,10 @@ class Envoy:
                         'cuda_version': cuda_version,
                         'name': device_name,
                     })
-
-            timeout = self.director_client.send_health_check(
-                envoy_name=self.name,
-                is_experiment_running=self.is_experiment_running,
-                cuda_devices_info=cuda_devices_info,
-            )
-            time.sleep(timeout)
+        except Exception as exc:
+            logger.exception(f'Failed to get cuda device info: {exc}. '
+                             f'Check your cuda device monitor plugin.')
+        return cuda_devices_info
 
     def _run_collaborator(self, plan='plan/plan.yaml'):
         """Run the collaborator for the experiment running."""
