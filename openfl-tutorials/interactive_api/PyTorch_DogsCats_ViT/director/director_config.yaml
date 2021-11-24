@@ -1,5 +1,5 @@
 settings:
-  listen_addr: nnlicv901.inn.intel.com
+  listen_host: localhost
   listen_port: 50051
   sample_shape: ['300', '300', '3']
   target_shape: ['1']
