@@ -1,18 +1,24 @@
-""" Cats and dogs shard descriptor"""
+# Copyright (C) 2020-2021 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+"""Cats and dogs shard descriptor."""
 
 import os
 from pathlib import Path
 
 import numpy as np
 from PIL import Image
+from random import shuffle
 
 from openfl.interface.interactive_api.shard_descriptor import ShardDataset
 from openfl.interface.interactive_api.shard_descriptor import ShardDescriptor
 
+
 class DogsCatsShardDataset(ShardDataset):
     """Dogs and cats Shard dataset class."""
 
-    def __init__(self, data_type: str, dataset_dir: Path, rank=1, worldsize=1, enforce_image_hw=None):
+    def __init__(self, data_type: str, dataset_dir: Path, 
+                rank=1, worldsize=1, enforce_image_hw=None):
         """Initialize DogsCatsShardDataset."""
         self.rank = rank
         self.worldsize = worldsize
@@ -20,20 +26,24 @@ class DogsCatsShardDataset(ShardDataset):
         self.enforce_image_hw = enforce_image_hw
         self.img_path = self.dataset_dir / data_type
 
-        self.img_names = [img_name
-            for img_name in os.listdir(self.img_path)
-            if img_name[-3:] == 'jpg']
+        self.img_names = [
+            img_name
+            for img_name in sorted(os.listdir(self.img_path))
+            if img_name[-3:] == 'jpg'
+        ]
 
         # Sharding
         self.img_names = self.img_names[self.rank - 1::self.worldsize]
-
+        # Shuffling the results dataset after choose half pictures of each class
+        shuffle(self.img_names)
+        
     def __getitem__(self, index):
         """Return a item by the index."""
         name = self.img_names[index]
         # Reading data
         img = Image.open(self.img_path / name)
-        img_class = 1 if name[:3] == "dog" else 0
-        assert name[:3] in set(["cat", "dog"]), "Wrong object classification"
+        img_class = 1 if name[:3] == 'dog' else 0
+        assert name[:3] in set(['cat', 'dog']), 'Wrong object classification'
 
         if self.enforce_image_hw is not None:
             # If we need to resize data
@@ -49,6 +59,7 @@ class DogsCatsShardDataset(ShardDataset):
     def __len__(self):
         """Return the len of the dataset."""
         return len(self.img_names)
+
 
 class DogsCatsShardDescriptor(ShardDescriptor):
     """Shard descriptor class."""
@@ -71,14 +82,15 @@ class DogsCatsShardDescriptor(ShardDescriptor):
         # Calculating data and target shapes
         ds = self.get_dataset()
         sample, target = ds[0]
-
         self._sample_shape = [str(dim) for dim in sample.shape]
-        self._target_shape = [str(int(target[0] == 1))]
-        assert self._target_shape[0] == '1', "Target shape Error"
+        self._target_shape = [str(*target.shape)]
+
+        assert self._target_shape[0] == '1', 'Target shape Error'
 
     def get_dataset(self, dataset_type='train'):
         """Return a shard dataset by type."""
-        return DogsCatsShardDataset(data_type=dataset_type,
+        return DogsCatsShardDataset(
+            data_type=dataset_type,
             dataset_dir=self.data_folder,
             rank=self.rank,
             worldsize=self.worldsize,
