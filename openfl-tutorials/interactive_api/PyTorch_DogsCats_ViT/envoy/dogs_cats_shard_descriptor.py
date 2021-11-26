@@ -6,9 +6,9 @@
 import os
 from pathlib import Path
 
+import random
 import numpy as np
 from PIL import Image
-from random import shuffle
 
 from openfl.interface.interactive_api.shard_descriptor import ShardDataset
 from openfl.interface.interactive_api.shard_descriptor import ShardDescriptor
@@ -17,8 +17,8 @@ from openfl.interface.interactive_api.shard_descriptor import ShardDescriptor
 class DogsCatsShardDataset(ShardDataset):
     """Dogs and cats Shard dataset class."""
 
-    def __init__(self, data_type: str, dataset_dir: Path, 
-                rank=1, worldsize=1, enforce_image_hw=None):
+    def __init__(self, data_type: str, dataset_dir: Path,
+                 rank=1, worldsize=1, enforce_image_hw=None):
         """Initialize DogsCatsShardDataset."""
         self.rank = rank
         self.worldsize = worldsize
@@ -35,15 +35,15 @@ class DogsCatsShardDataset(ShardDataset):
         # Sharding
         self.img_names = self.img_names[self.rank - 1::self.worldsize]
         # Shuffling the results dataset after choose half pictures of each class
-        shuffle(self.img_names)
-        
+        random.shuffle(self.img_names)
+
     def __getitem__(self, index):
         """Return a item by the index."""
         name = self.img_names[index]
         # Reading data
         img = Image.open(self.img_path / name)
         img_class = 1 if name[:3] == 'dog' else 0
-        assert name[:3] in set(['cat', 'dog']), 'Wrong object classification'
+        assert name[:3] in {'cat', 'dog'}, 'Wrong object classification'
 
         if self.enforce_image_hw is not None:
             # If we need to resize data
@@ -71,7 +71,7 @@ class DogsCatsShardDescriptor(ShardDescriptor):
         super().__init__()
         # Settings for sharding the dataset
         self.rank, self.worldsize = map(lambda x: int(x), rank_worldsize.split(','))
-        
+
         self.data_folder = Path.cwd() / data_folder
 
         # Settings for resizing data
