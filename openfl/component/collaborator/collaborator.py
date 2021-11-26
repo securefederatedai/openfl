@@ -403,7 +403,7 @@ class Collaborator:
                 self.logger.metric(
                     f'Round {round_number}, collaborator {self.collaborator_name} '
                     f'is sending metric for task {task_name}:'
-                    f' {tensor_name}\t{tensor_dict[tensor]}')
+                    f' {tensor_name}\t{tensor_dict[tensor]:f}')
 
         self.client.send_local_task_results(
             self.collaborator_name, round_number, task_name, data_size, named_tensors)

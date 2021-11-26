@@ -93,7 +93,7 @@ class FLExperiment:
                 f'Round {metric_message_dict["round"]}, '
                 f'collaborator {metric_message_dict["metric_origin"]} '
                 f'{metric_message_dict["task_name"]} result '
-                f'{metric_message_dict["metric_name"]}:\t{metric_message_dict["metric_value"]}')
+                f'{metric_message_dict["metric_name"]}:\t{metric_message_dict["metric_value"]:f}')
 
             if tensorboard_logs:
                 self.write_tensorboard_metric(metric_message_dict)
