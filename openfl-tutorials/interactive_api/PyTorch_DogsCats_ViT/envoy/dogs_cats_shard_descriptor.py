@@ -5,8 +5,8 @@
 
 import os
 from pathlib import Path
+from random import shuffle
 
-import random
 import numpy as np
 from PIL import Image
 
@@ -35,7 +35,7 @@ class DogsCatsShardDataset(ShardDataset):
         # Sharding
         self.img_names = self.img_names[self.rank - 1::self.worldsize]
         # Shuffling the results dataset after choose half pictures of each class
-        random.shuffle(self.img_names)
+        shuffle(self.img_names)
 
     def __getitem__(self, index):
         """Return a item by the index."""
