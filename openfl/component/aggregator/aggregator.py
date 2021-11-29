@@ -513,8 +513,10 @@ class Aggregator:
                     'round': round_number}
                 self.log_metric(tensor_key.tags[-1], task_name,
                                 tensor_key.tensor_name, nparray, round_number)
-                self.logger.metric(f'Round {round_number}, collaborator {tensor_key.tags[-1]} '
-                                   f'{task_name} result {tensor_key.tensor_name}:\t{metric_value:f}')
+                self.logger.metric(f'Round {round_number}, '
+                                   f'collaborator {tensor_key.tags[-1]} '
+                                   f'{task_name} result '
+                                   f'{tensor_key.tensor_name}:\t{metric_value:f}')
                 self.metric_queue.put(metric_dict)
 
             task_results.append(tensor_key)
