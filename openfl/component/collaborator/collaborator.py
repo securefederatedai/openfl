@@ -24,21 +24,23 @@ class DevicePolicy(Enum):
 
 
 class OptTreatment(Enum):
-    """Optimizer Methods.
-
-    - RESET tells each collaborator to reset the optimizer state at the beginning
-    of each round.
-
-    - CONTINUE_LOCAL tells each collaborator to continue with the local optimizer
-    state from the previous round.
-
-    - CONTINUE_GLOBAL tells each collaborator to continue with the federally
-    averaged optimizer state from the previous round.
-    """
+    """Optimizer Methods."""
 
     RESET = 1
+    '''
+    RESET tells each collaborator to reset the optimizer state at the beginning
+    of each round.
+    '''
     CONTINUE_LOCAL = 2
+    '''
+    CONTINUE_LOCAL tells each collaborator to continue with the local optimizer
+    state from the previous round.
+    '''
     CONTINUE_GLOBAL = 3
+    '''
+    CONTINUE_GLOBAL tells each collaborator to continue with the federally
+    averaged optimizer state from the previous round.
+    '''
 
 
 class Collaborator:
