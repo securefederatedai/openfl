@@ -77,8 +77,6 @@ class PyTorchCNN(PyTorchTaskRunner):
                               fully-connected layer (Default = 500)
             **kwargs: Additional arguments to pass to the function
 
-        """
-        '''
         FIXME: We are tracking only side lengths (rather than
         length and width) as we are assuming square
         shapes for feature and kernels.
@@ -91,8 +89,7 @@ class PyTorchCNN(PyTorchTaskRunner):
         (Note this criterion held for the original input sizes considered
         for this model: 28x28 and 32x32 when used with the default values
         above)
-
-        '''
+        """
         self.pool_sqrkernel_size = pool_sqrkernel_size
         channel = self.data_loader.get_feature_shape()[0]  # (channel, dim1, dim2)
         self.conv1 = nn.Conv2d(channel, conv1_channels_out, conv_sqrkernel_size, 1)
