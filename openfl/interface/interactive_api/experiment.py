@@ -92,9 +92,7 @@ class FLExperiment:
 
         else:
             self.task_runner_stub.rebuild_model(tensor_dict, validation=True, device='cpu')
-            if not called_from_get_best_model:
-                # get_last_model was called
-                self.current_model_type = 'last'
+            self.current_model_type = 'best' if called_from_get_best_model else 'last'
 
         return self.task_runner_stub.model
 
