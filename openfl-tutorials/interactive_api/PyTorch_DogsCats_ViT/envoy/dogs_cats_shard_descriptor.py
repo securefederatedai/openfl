@@ -3,12 +3,17 @@
 
 """Cats and dogs shard descriptor."""
 
+import json
 import os
+import shutil
+from hashlib import md5
 from pathlib import Path
 from random import shuffle
+from zipfile import ZipFile
 
 import numpy as np
 from PIL import Image
+from kaggle.api.kaggle_api_extended import KaggleApi
 
 from openfl.interface.interactive_api.shard_descriptor import ShardDataset
 from openfl.interface.interactive_api.shard_descriptor import ShardDescriptor
@@ -27,9 +32,9 @@ class DogsCatsShardDataset(ShardDataset):
         self.img_path = self.dataset_dir / data_type
 
         self.img_names = [
-            img_name
-            for img_name in sorted(os.listdir(self.img_path))
-            if img_name[-3:] == 'jpg'
+            img.name
+            for img in sorted(self.img_path.iterdir())
+            if img.suffix == '.jpg'
         ]
 
         # Sharding
@@ -70,14 +75,46 @@ class DogsCatsShardDescriptor(ShardDescriptor):
         """Initialize DogsCatsShardDescriptor."""
         super().__init__()
         # Settings for sharding the dataset
-        self.rank, self.worldsize = map(lambda x: int(x), rank_worldsize.split(','))
+        self.rank, self.worldsize = map(int, rank_worldsize.split(','))
 
         self.data_folder = Path.cwd() / data_folder
+        if not os.path.exists(self.data_folder):
+            os.mkdir(self.data_folder)
+
+        if not DogsCatsShardDescriptor.check_dataset(self.data_folder):
+            print('Your dataset is absent or damaged. Downloading ... ')
+            api = KaggleApi()
+            api.authenticate()
+
+            if os.path.exists('data/train'):
+                shutil.rmtree('data/train')
+            if os.path.exists('data/test'):
+                shutil.rmtree('data/test')
+
+            api.competition_download_file(
+                'dogs-vs-cats-redux-kernels-edition',
+                'train.zip', path=self.data_folder
+                )
+            api.competition_download_file(
+                'dogs-vs-cats-redux-kernels-edition',
+                'test.zip', path=self.data_folder
+            )
+            with ZipFile(self.data_folder / 'train.zip', 'r') as zipobj:
+                zipobj.extractall(self.data_folder)
+
+            os.remove(self.data_folder / 'train.zip')
+
+            with ZipFile(self.data_folder / 'test.zip', 'r') as zipobj:
+                zipobj.extractall(self.data_folder)
+
+            os.remove(self.data_folder / 'test.zip')
+
+            DogsCatsShardDescriptor.save_all_md5(self.data_folder)
 
         # Settings for resizing data
         self.enforce_image_hw = None
         if enforce_image_hw is not None:
-            self.enforce_image_hw = tuple(map(lambda x: int(x), enforce_image_hw.split(',')))
+            self.enforce_image_hw = tuple(map(int, enforce_image_hw.split(',')))
 
         # Calculating data and target shapes
         ds = self.get_dataset()
@@ -96,6 +133,40 @@ class DogsCatsShardDescriptor(ShardDescriptor):
             worldsize=self.worldsize,
             enforce_image_hw=self.enforce_image_hw
         )
+
+    @staticmethod
+    def calc_all_md5(data_folder):
+        md5_dict = {}
+        for root, _, files in os.walk(data_folder):
+            for file in files:
+                if file == 'dataset.md5':
+                    continue
+                md5_calc = md5()
+                rel_dir = os.path.relpath(root, data_folder)
+                rel_file = os.path.join(rel_dir, file)
+
+                with open(data_folder / rel_file, 'rb') as f:
+                    for chunk in iter(lambda: f.read(4096), b''):
+                        md5_calc.update(chunk)
+                    md5_dict[rel_file] = md5_calc.hexdigest()
+        return md5_dict
+
+    @staticmethod
+    def save_all_md5(data_folder):
+        all_md5 = DogsCatsShardDescriptor.calc_all_md5(data_folder)
+        with open(os.path.join(data_folder, "dataset.md5"), "w") as f:
+            json.dump(all_md5, f)
+
+    @staticmethod
+    def check_dataset(data_folder):
+        new_md5 = DogsCatsShardDescriptor.calc_all_md5(data_folder)
+        try:
+            with open(os.path.join(data_folder, "dataset.md5"), "r") as f:
+                old_md5 = json.load(f)
+        except FileNotFoundError:
+            return False
+
+        return new_md5 == old_md5
 
     @property
     def sample_shape(self):

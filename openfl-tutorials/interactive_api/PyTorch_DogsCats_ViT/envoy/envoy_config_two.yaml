@@ -1,5 +1,5 @@
 params:
-  cuda_devices: [0,2]
+  cuda_devices: [1]
   
 optional_plugin_components:
  cuda_device_monitor:
