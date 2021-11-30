@@ -26,7 +26,7 @@ Install |productName| in a virtual Python\*\ environment. See :ref:`install_pack
 STEP 2: Create PKI Certificates Using Step-CA (Optional)
 --------------------------------------------------------
 
-The use of mTLS is recommended for deployments in untrusted environments to establish participant identity and to encrypt communication. You may either import certificates provided by your organization or use the :ref:`semi-automatic PKI certificate <semi_automatic_certification>` provided by |productName|.
+The use of mTLS is recommended for deployments in untrusted environments to establish participant identity and to encrypt communication. You may either import certificates provided by your organization or generate certificates with the :ref:`semi-automatic PKI <semi_automatic_certification>` provided by |productName|.
 
 .. _step3_start_the_director:
 
@@ -41,7 +41,7 @@ Start the Director on a node with at least two open ports. See :ref:`openfl_ll_c
 
         fx director create-workspace -p director_ws
         
- This workspace contains received experiments and supplementary files (Director config file and certificates).
+ This workspace will contain received experiments and supplementary files (Director config file and certificates).
 
 2. Modify the Director config file according to your federation setup.
 
