@@ -87,6 +87,14 @@
       "created_at": "2021-11-03T11:58:04Z",
       "repoId": 329117231,
       "pullRequestNo": 220
+    },
+    {
+      "name": "ViktoriiaRomanova",
+      "id": 92929046,
+      "comment_id": 978929847,
+      "created_at": "2021-11-25T08:08:08Z",
+      "repoId": 329117231,
+      "pullRequestNo": 247
     }
   ]
 }
