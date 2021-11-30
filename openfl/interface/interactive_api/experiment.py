@@ -252,6 +252,20 @@ class FLExperiment:
         # We also could change the aggregator logic so it will send tasks to aggregator
         # as soon as it connects. This change should be a part of a bigger PR
         # brining in fault tolerance changes
+
+        # Check tasks type
+        train_task_exist = False
+        for name in task_keeper.task_registry:
+            if task_keeper.task_contract[name]['optimizer'] is not None:
+                train_task_exist = True
+                break
+        if not train_task_exist:
+            # Since we have only validation task, we do not have to train it multiple times
+            if rounds_to_train != 1:
+                rounds_to_train = 1
+            self.logger.info('Variable rounds_to_train was changed to 1, '
+                             'because only validation task(s) were given')
+
         shard_registry = self.federation.get_shard_registry()
         plan.authorized_cols = [
             name for name, info in shard_registry.items() if info['is_online']
@@ -284,8 +298,12 @@ class FLExperiment:
                                               'kwargs': task_keeper.task_settings[name]}
             else:
                 # This is a validation type task (not altering the model state)
-                for name_prefix, apply_kwarg in zip(['localy_tuned_model_', 'aggregated_model_'],
-                                                    ['local', 'global']):
+                if train_task_exist:
+                    adapt_validation_task_dcit = zip(['localy_tuned_model_', 'aggregated_model_'],
+                                                     ['local', 'global'])
+                else:
+                    adapt_validation_task_dcit = zip(['aggregated_model_'], ['global'])
+                for name_prefix, apply_kwarg in adapt_validation_task_dcit:
                     # We add two entries for this task: for local and global models
                     task_kwargs = deepcopy(task_keeper.task_settings[name])
                     task_kwargs.update({'apply': apply_kwarg})
