@@ -12,6 +12,7 @@ A director-based workflow uses long-lived components in a federation. These comp
 - The *Director* is the central node of the federation. This component starts an *Aggregator* for each experiment, sends data to connected collaborator nodes, and provides updates on the status.
 - The *Envoy* runs on collaborator nodes connected to the *Director*. When the *Director* starts an experiment, the *Envoy* starts the *Collaborator* to train the global model.
 
+
 The director-based workflow comprises the following roles and their tasks:
 
     - :ref:`establishing_federation_director`
@@ -32,10 +33,10 @@ An overview of this workflow is shown below.
 .. centered:: Overview of the Director-Based Workflow
 
 
-
 .. toctree::
    :maxdepth: 2
    :hidden:
 
    director_based_workflow.roles
    director_based_workflow.interactive_api
+

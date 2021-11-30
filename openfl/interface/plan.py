@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 """Plan module."""
 
+import sys
 from logging import getLogger
 
 from click import echo
@@ -9,6 +10,8 @@ from click import group
 from click import option
 from click import pass_context
 from click import Path as ClickPath
+
+from openfl.utilities.path_check import is_directory_traversal
 
 logger = getLogger(__name__)
 
@@ -50,9 +53,18 @@ def initialize(context, plan_config, cols_config, data_config,
     from openfl.utilities import split_tensor_dict_for_holdouts
     from openfl.utilities.utils import getfqdn_env
 
-    plan = Plan.parse(plan_config_path=Path(plan_config),
-                      cols_config_path=Path(cols_config),
-                      data_config_path=Path(data_config))
+    for p in [plan_config, cols_config, data_config]:
+        if is_directory_traversal(p):
+            echo(f'{p} is out of the openfl workspace scope.')
+            sys.exit(1)
+
+    plan_config = Path(plan_config).absolute()
+    cols_config = Path(cols_config).absolute()
+    data_config = Path(data_config).absolute()
+
+    plan = Plan.parse(plan_config_path=plan_config,
+                      cols_config_path=cols_config,
+                      data_config_path=data_config)
 
     init_state_path = plan.config['aggregator']['settings']['init_state_path']
 
@@ -90,7 +102,7 @@ def initialize(context, plan_config, cols_config, data_config,
 
     utils.dump_proto(model_proto=model_snap, fpath=init_state_path)
 
-    plan_origin = Plan.parse(Path(plan_config), resolve=False).config
+    plan_origin = Plan.parse(plan_config, resolve=False).config
 
     if (plan_origin['network']['settings']['agg_addr'] == 'auto'
             or aggregator_address):
@@ -99,14 +111,14 @@ def initialize(context, plan_config, cols_config, data_config,
         logger.warn(f'Patching Aggregator Addr in Plan'
                     f" 🠆 {plan_origin['network']['settings']['agg_addr']}")
 
-        Plan.dump(Path(plan_config), plan_origin)
+        Plan.dump(plan_config, plan_origin)
 
     plan.config = plan_origin
 
     # Record that plan with this hash has been initialized
     if 'plans' not in context.obj:
         context.obj['plans'] = []
-    context.obj['plans'].append(f'{Path(plan_config).stem}_{plan.hash[:8]}')
+    context.obj['plans'].append(f'{plan_config.stem}_{plan.hash[:8]}')
     logger.info(f"{context.obj['plans']}")
 
 
@@ -131,17 +143,19 @@ def freeze_plan(plan_config):
 
 
 @plan.command(name='freeze')
-@pass_context
 @option('-p', '--plan_config', required=False,
         help='Federated learning plan [plan/plan.yaml]',
         default='plan/plan.yaml', type=ClickPath(exists=True))
-def freeze(context, plan_config):
+def freeze(plan_config):
     """
     Finalize the Data Science plan.
 
     Create a new plan file that embeds its hash in the file name
     (plan.yaml -> plan_{hash}.yaml) and changes the permissions to read only
     """
+    if is_directory_traversal(plan_config):
+        echo('Plan config path is out of the openfl workspace scope.')
+        sys.exit(1)
     freeze_plan(plan_config)
 
 
@@ -182,21 +196,19 @@ def switch_plan(name):
 
 
 @plan.command(name='switch')
-@pass_context
 @option('-n', '--name', required=False,
         help='Name of the Federated learning plan',
         default='default', type=str)
-def switch_(context, name):
+def switch_(name):
     """Switch the current plan to this plan."""
     switch_plan(name)
 
 
 @plan.command(name='save')
-@pass_context
 @option('-n', '--name', required=False,
         help='Name of the Federated learning plan',
         default='default', type=str)
-def save_(context, name):
+def save_(name):
     """Save the current plan to this plan and switch."""
     from os import makedirs
     from shutil import copyfile
@@ -212,11 +224,10 @@ def save_(context, name):
 
 
 @plan.command(name='remove')
-@pass_context
 @option('-n', '--name', required=False,
         help='Name of the Federated learning plan',
         default='default', type=str)
-def remove_(context, name):
+def remove_(name):
     """Remove this plan."""
     from shutil import rmtree
 

@@ -13,23 +13,23 @@ Dataset Splitters
 You may apply data splitters differently depending on the |productName| workflow that you follow. 
 
 
-STEP 1: Define How to Split the Data with Native Python API Functions
+OPTION 1: Define How to Split the Data with **Native Python API** (Aggregator-Based Workflow) Functions
 =====================================================================
 
 Predefined |productName| data splitters functions are as follows:
 
-- ``openfl.plugins.data_splitters.EqualNumPyDataSplitter`` (default)
-- ``openfl.plugins.data_splitters.RandomNumPyDataSplitter``
-- ``openfl.component.aggregation_functions.LogNormalNumPyDataSplitter`` , which assumes the ``data`` argument as ``np.ndarray`` of integers (labels)
-- ``openfl.component.aggregation_functions.DirichletNumPyDataSplitter`` , which assumes the ``data`` argument as ``np.ndarray`` of integers (labels)
+- ``openfl.utilities.data_splitters.EqualNumPyDataSplitter`` (default)
+- ``openfl.utilities.data_splitters.RandomNumPyDataSplitter``
+- ``openfl.component.aggregation_functions.LogNormalNumPyDataSplitter`` - assumes ``data`` argument as ``np.ndarray`` of integers (labels)
+- ``openfl.component.aggregation_functions.DirichletNumPyDataSplitter`` - assumes ``data`` argument as ``np.ndarray`` of integers (labels)
 
 Alternatively, you can create an `implementation <https://github.com/intel/openfl/blob/develop/openfl/utilities/data_splitters/numpy.py>`_ of :class:`openfl.plugins.data_splitters.NumPyDataSplitter` and pass it to the :code:`FederatedDataset` function as either ``train_splitter`` or ``valid_splitter`` keyword argument.
 
 
-STEP 2: Define the Shard Descriptor
+OPTION 2: Use Dataset Splitters in your Shard Descriptor
 ===================================
 
-Apply the splitting function on your data to perform a simulation. 
+Apply one of previously mentioned splitting function on your data to perform a simulation. 
 
 ``NumPyDataSplitter`` requires a single ``split`` function. The :code:`split` function returns a list of indices which represents the collaborator-wise indices groups.
 
@@ -51,4 +51,5 @@ This function receives ``data`` - NumPy array required to build the subsets of d
 
 .. note::
 
-    By default, the data is shuffled and split equally. See an `example <https://github.com/intel/openfl/blob/develop/openfl/utilities/data_splitters/numpy.py>`_ of :class:`openfl.plugins.data_splitters.EqualNumPyDataSplitter` for details.
+By default, the data is shuffled and split equally. See an `example <https://github.com/intel/openfl/blob/develop/openfl/utilities/data_splitters/numpy.py>`_ of :class:`openfl.utilities.data_splitters.EqualNumPyDataSplitter` for details.
+    

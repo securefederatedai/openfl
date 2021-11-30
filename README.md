@@ -4,6 +4,7 @@
 [![PyPI - Python Version](https://img.shields.io/badge/python-3.6%20%7C%203.7%20%7C%203.8-blue)](https://pypi.org/project/openfl/)
 [![Jenkins](https://img.shields.io/jenkins/build?jobUrl=http%3A%2F%2F213.221.44.203%2Fjob%2FFederated-Learning%2Fjob%2Fnightly%2F)](http://213.221.44.203/job/Federated-Learning/job/nightly/)
 [![Documentation Status](https://readthedocs.org/projects/openfl/badge/?version=latest)](https://openfl.readthedocs.io/en/latest/?badge=latest)
+[![Downloads](https://pepy.tech/badge/openfl)](https://pepy.tech/project/openfl)
 [![PyPI version](https://img.shields.io/pypi/v/openfl)](https://pypi.org/project/openfl/)
 [<img src="https://img.shields.io/badge/slack-@openfl-blue.svg?logo=slack">](https://join.slack.com/t/openfl/shared_invite/zt-ovzbohvn-T5fApk05~YS_iZhjJ5yaTw) 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
@@ -38,6 +39,8 @@ OpenFL is a Python 3 project developed by Intel Labs and Intel Internet of Thing
 
 Check out the [online documentation](https://openfl.readthedocs.io/en/latest/index.html) to launch your first federation. The quickest way to test OpenFL is to follow our [tutorials](https://openfl.readthedocs.io/en/docs_correction/source/workflow/running_the_federation.tutorial.html).
 
+Consider joining our [Slack workspace](https://join.slack.com/t/openfl/shared_invite/zt-ovzbohvn-T5fApk05~YS_iZhjJ5yaTw).
+
 
 ## Requirements
 
@@ -70,7 +73,7 @@ This project is licensed under [Apache License Version 2.0](LICENSE). By contrib
 We welcome questions, issue reports, and suggestions:
 
 * [GitHub* Issues](https://github.com/intel/openfl/issues)
-* [Slack channel](https://openfl.slack.com)
+* [Slack channel](https://join.slack.com/t/openfl/shared_invite/zt-ovzbohvn-T5fApk05~YS_iZhjJ5yaTw)
 
 
 ## Background

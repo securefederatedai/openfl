@@ -135,8 +135,8 @@ def certify(name, cert_path: Path, token_with_cert, ca_path: Path):
 
     with open(f'{cert_path}/root_ca.crt', mode='wb') as file:
         file.write(root_certificate)
-    call(f'./{step_path} ca certificate {name} {cert_path}/{name}.crt '
-         f'{cert_path}/{name}.key -f --token {token}', shell=True)
+    call(f'{step_path} ca certificate {name} {cert_path}/{name}.crt '
+         f'{cert_path}/{name}.key --kty EC --curve P-384 -f --token {token}', shell=True)
 
 
 def remove_ca(ca_path):
@@ -205,6 +205,7 @@ def _check_kill_process(pstring, confirmation=False):
 
 def _create_ca(ca_path: Path, ca_url: str, password: str):
     """Create a ca workspace."""
+    import os
     pki_dir = ca_path / CA_PKI_DIR
     step_config_dir = ca_path / CA_STEP_CONFIG_DIR
 
@@ -213,6 +214,7 @@ def _create_ca(ca_path: Path, ca_url: str, password: str):
 
     with open(f'{pki_dir}/pass_file', 'w') as f:
         f.write(password)
+    os.chmod(f'{pki_dir}/pass_file', 0o600)
     step_path, step_ca_path = get_ca_bin_paths(ca_path)
     assert (step_path and step_ca_path and step_path.exists() and step_ca_path.exists())
 

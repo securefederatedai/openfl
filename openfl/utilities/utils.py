@@ -3,11 +3,15 @@
 """Utilities module."""
 
 import hashlib
+import ipaddress
 import logging
 import os
+import re
+from functools import partial
 from socket import getfqdn
 
 import numpy as np
+from tqdm import tqdm
 
 
 def getfqdn_env(name: str = '') -> str:
@@ -24,6 +28,36 @@ def getfqdn_env(name: str = '') -> str:
     if fqdn is not None:
         return fqdn
     return getfqdn(name)
+
+
+def is_fqdn(hostname: str) -> bool:
+    """https://en.m.wikipedia.org/wiki/Fully_qualified_domain_name."""
+    if not 1 < len(hostname) < 253:
+        return False
+
+    # Remove trailing dot
+    hostname.rstrip('.')
+
+    #  Split hostname into list of DNS labels
+    labels = hostname.split('.')
+
+    #  Define pattern of DNS label
+    #  Can begin and end with a number or letter only
+    #  Can contain hyphens, a-z, A-Z, 0-9
+    #  1 - 63 chars allowed
+    fqdn = re.compile(r'^[a-z0-9]([a-z-0-9-]{0,61}[a-z0-9])?$', re.IGNORECASE) # noqa FS003
+
+    # Check that all labels match that pattern.
+    return all(fqdn.match(label) for label in labels)
+
+
+def is_api_adress(address: str) -> bool:
+    """Validate ip address value."""
+    try:
+        ipaddress.ip_address(address)
+        return True
+    except ValueError:
+        return False
 
 
 def add_log_level(level_name, level_num, method_name=None):
@@ -164,3 +198,23 @@ def validate_file_hash(file_path, expected_hash, chunk_size=8192):
 
     if h.hexdigest() != expected_hash:
         raise SystemError('ZIP File hash doesn\'t match expected file hash.')
+
+
+def is_package_versioned(package: str) -> bool:
+    """Check if the package has a version."""
+    return ('==' in package
+            and package not in ['pkg-resources==0.0.0', 'pkg_resources==0.0.0']
+            and '-e ' not in package
+            )
+
+
+def tqdm_report_hook():
+    """Visualize downloading."""
+    def report_hook(pbar, count, block_size, total_size):
+        """Update progressbar."""
+        if pbar.total is None and total_size:
+            pbar.total = total_size
+        progress_bytes = count * block_size
+        pbar.update(progress_bytes - pbar.n)
+    pbar = tqdm(total=None)
+    return partial(report_hook, pbar)

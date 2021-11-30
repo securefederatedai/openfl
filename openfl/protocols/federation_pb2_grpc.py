@@ -5,7 +5,7 @@ import grpc
 from . import federation_pb2 as federation__pb2
 
 
-class AggregatorStub(object):
+class AggregatorStub:
     """Missing associated documentation comment in .proto file."""
 
     def __init__(self, channel):
@@ -31,7 +31,7 @@ class AggregatorStub(object):
                 )
 
 
-class AggregatorServicer(object):
+class AggregatorServicer:
     """Missing associated documentation comment in .proto file."""
 
     def GetTasks(self, request, context):
@@ -77,7 +77,7 @@ def add_AggregatorServicer_to_server(servicer, server):
 
 
  # This class is part of an EXPERIMENTAL API.
-class Aggregator(object):
+class Aggregator:
     """Missing associated documentation comment in .proto file."""
 
     @staticmethod

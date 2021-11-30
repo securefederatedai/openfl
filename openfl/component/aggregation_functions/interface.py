@@ -13,13 +13,12 @@ from openfl.utilities import LocalTensor
 from openfl.utilities import SingletonABCMeta
 
 
-class AggregationFunctionInterface(metaclass=SingletonABCMeta):
+class AggregationFunction(metaclass=SingletonABCMeta):
     """Interface for specifying aggregation function."""
 
     @abstractmethod
     def call(self,
              local_tensors: List[LocalTensor],
-             weights: np.ndarray,
              db_iterator: Iterator[pd.Series],
              tensor_name: str,
              fl_round: int,

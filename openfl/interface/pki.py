@@ -40,7 +40,7 @@ def pki(context):
         help='The ca path', type=ClickPath())
 def run(ca_path):
     """Run CA server."""
-    ca_path = Path(ca_path)
+    ca_path = Path(ca_path).absolute()
     step_config_dir = ca_path / CA_STEP_CONFIG_DIR
     pki_dir = ca_path / CA_PKI_DIR
     password_file = pki_dir / CA_PASSWORD_FILE
@@ -61,6 +61,7 @@ def run(ca_path):
 @option('--ca-url', required=False, default=CA_URL)
 def install_(ca_path, password, ca_url):
     """Create a ca workspace."""
+    ca_path = Path(ca_path).absolute()
     install(ca_path, ca_url, password)
 
 
@@ -69,6 +70,7 @@ def install_(ca_path, password, ca_url):
         help='The CA path', type=ClickPath())
 def uninstall(ca_path):
     """Remove step-CA."""
+    ca_path = Path(ca_path).absolute()
     remove_ca(ca_path)
 
 
@@ -76,7 +78,7 @@ def uninstall(ca_path):
 @option('-n', '--name', required=True)
 @option('--ca-url', required=False, default=CA_URL)
 @option('-p', '--ca-path', default='.',
-        help='The CA path', type=ClickPath())
+        help='The CA path', type=ClickPath(exists=True))
 def get_token_(name, ca_url, ca_path):
     """
     Create authentication token.
@@ -87,6 +89,7 @@ def get_token_(name, ca_url, ca_path):
         ca_url: full url of CA server
         ca_path: the path to CA binaries
     """
+    ca_path = Path(ca_path).absolute()
     token = get_token(name, ca_url, ca_path)
     print('Token:')
     print(token)
@@ -98,10 +101,10 @@ def get_token_(name, ca_url, ca_path):
 @option('-c', '--certs-path', required=False, default=Path('.') / 'cert',
         help='The path where certificates will be stored', type=ClickPath())
 @option('-p', '--ca-path', default='.', help='The path to CA client',
-        type=ClickPath(), required=False)
+        type=ClickPath(exists=True), required=False)
 def certify_(name, token_with_cert, certs_path, ca_path):
     """Create an envoy workspace."""
-    certs_path = Path(certs_path)
-    ca_path = Path(ca_path)
+    certs_path = Path(certs_path).absolute()
+    ca_path = Path(ca_path).absolute()
     certs_path.mkdir(parents=True, exist_ok=True)
     certify(name, certs_path, token_with_cert, ca_path)

@@ -72,7 +72,7 @@ def create_director(director_path, recreate, config):
     shutil.copy(config, director_path)
 
 
-def create_envoy(col_path, recreate, shard_config, shard_descriptor):
+def create_envoy(col_path, recreate, envoy_config, shard_descriptor):
     logger.info(f'Creating the envoy in {col_path}!')
     if os.path.exists(col_path):
         if not recreate:
@@ -82,7 +82,7 @@ def create_envoy(col_path, recreate, shard_config, shard_descriptor):
         f'fx envoy create-workspace -p {col_path}',
         shell=True
     ).wait()
-    shutil.copy(shard_config, col_path)
+    shutil.copy(envoy_config, col_path)
     shutil.copy(shard_descriptor, col_path)
 
 
@@ -90,14 +90,14 @@ def create_federation(
     director_path: str,
     collaborator_paths: typing.Iterable[str],
     director_config,
-    shard_config,
+    envoy_config,
     shard_descriptor,
     recreate=False
 ):
     logger.info('Creating the federation!')
     create_director(director_path, recreate, director_config)
     for col_path in collaborator_paths:
-        create_envoy(col_path, recreate, shard_config, shard_descriptor)
+        create_envoy(col_path, recreate, envoy_config, shard_descriptor)
     # TODO: create mTLS
     logger.info('Federation was created')
 

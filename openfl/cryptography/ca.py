@@ -51,7 +51,7 @@ def generate_root_cert(days_to_expiration=365):
 
     # Sign the CSR
     certificate = builder.sign(
-        private_key=root_private_key, algorithm=hashes.SHA256(),
+        private_key=root_private_key, algorithm=hashes.SHA384(),
         backend=default_backend()
     )
 
@@ -82,7 +82,7 @@ def generate_signing_csr():
 
     # Sign the CSR
     csr = builder.sign(
-        private_key=signing_private_key, algorithm=hashes.SHA256(),
+        private_key=signing_private_key, algorithm=hashes.SHA384(),
         backend=default_backend()
     )
 
@@ -124,6 +124,6 @@ def sign_certificate(csr, issuer_private_key, issuer_name, days_to_expiration=36
         pass  # Might not have alternative name
 
     signed_cert = builder.sign(
-        private_key=issuer_private_key, algorithm=hashes.SHA256(), backend=default_backend()
+        private_key=issuer_private_key, algorithm=hashes.SHA384(), backend=default_backend()
     )
     return signed_cert

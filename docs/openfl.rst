@@ -19,5 +19,5 @@ Learn about the plugin framework that makes |productName| flexible and extensibl
    :hidden:
 
    source/openfl/components
-   .. source/openfl/communication
+   source/openfl/communication
    source/openfl/plugins
