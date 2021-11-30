@@ -5,6 +5,7 @@
 
 import logging
 import time
+import traceback
 import uuid
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
@@ -73,6 +74,11 @@ class Envoy:
                     self._run_collaborator()
             except Exception as exc:
                 logger.exception(f'Collaborator failed with error: {exc}:')
+                self.director_client.set_experiment_failed(
+                    experiment_name,
+                    error_code=1,
+                    error_description=traceback.format_exc()
+                )
             finally:
                 self.is_experiment_running = False
 

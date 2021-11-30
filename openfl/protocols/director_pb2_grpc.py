@@ -5,7 +5,7 @@ import grpc
 from . import director_pb2 as director__pb2
 
 
-class FederationDirectorStub:
+class FederationDirectorStub(object):
     """Missing associated documentation comment in .proto file."""
 
     def __init__(self, channel):
@@ -33,6 +33,11 @@ class FederationDirectorStub:
                 '/FederationDirector/EnvoyHealthCheck',
                 request_serializer=director__pb2.EnvoyStatus.SerializeToString,
                 response_deserializer=director__pb2.EnvoyHealthCheckResponse.FromString,
+                )
+        self.SetExperimentFailed = channel.unary_unary(
+                '/FederationDirector/SetExperimentFailed',
+                request_serializer=director__pb2.SetExperimentFailedRequest.SerializeToString,
+                response_deserializer=director__pb2.SetExperimentFailedResponse.FromString,
                 )
         self.GetExperimentDescription = channel.unary_unary(
                 '/FederationDirector/GetExperimentDescription',
@@ -76,7 +81,7 @@ class FederationDirectorStub:
                 )
 
 
-class FederationDirectorServicer:
+class FederationDirectorServicer(object):
     """Missing associated documentation comment in .proto file."""
 
     def AcknowledgeShard(self, request, context):
@@ -100,6 +105,12 @@ class FederationDirectorServicer:
         raise NotImplementedError('Method not implemented!')
 
     def EnvoyHealthCheck(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def SetExperimentFailed(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -178,6 +189,11 @@ def add_FederationDirectorServicer_to_server(servicer, server):
                     request_deserializer=director__pb2.EnvoyStatus.FromString,
                     response_serializer=director__pb2.EnvoyHealthCheckResponse.SerializeToString,
             ),
+            'SetExperimentFailed': grpc.unary_unary_rpc_method_handler(
+                    servicer.SetExperimentFailed,
+                    request_deserializer=director__pb2.SetExperimentFailedRequest.FromString,
+                    response_serializer=director__pb2.SetExperimentFailedResponse.SerializeToString,
+            ),
             'GetExperimentDescription': grpc.unary_unary_rpc_method_handler(
                     servicer.GetExperimentDescription,
                     request_deserializer=director__pb2.GetExperimentDescriptionRequest.FromString,
@@ -225,7 +241,7 @@ def add_FederationDirectorServicer_to_server(servicer, server):
 
 
  # This class is part of an EXPERIMENTAL API.
-class FederationDirector:
+class FederationDirector(object):
     """Missing associated documentation comment in .proto file."""
 
     @staticmethod
@@ -293,6 +309,23 @@ class FederationDirector:
         return grpc.experimental.unary_unary(request, target, '/FederationDirector/EnvoyHealthCheck',
             director__pb2.EnvoyStatus.SerializeToString,
             director__pb2.EnvoyHealthCheckResponse.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def SetExperimentFailed(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/FederationDirector/SetExperimentFailed',
+            director__pb2.SetExperimentFailedRequest.SerializeToString,
+            director__pb2.SetExperimentFailedResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 

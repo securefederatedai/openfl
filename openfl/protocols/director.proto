@@ -185,6 +185,17 @@ message GetEnvoysResponse {
     repeated EnvoyInfo envoy_infos = 1;
 }
 
+message SetExperimentFailedRequest {
+    string experiment_name = 1;
+    string collaborator_name = 2;
+    uint32 error_code = 3;
+    string error_description = 4;
+}
+
+message
+
+ SetExperimentFailedResponse {}
+
 service FederationDirector {
     // Envoy RPCs
     rpc AcknowledgeShard (ShardInfo) returns (ShardAcknowledgement) {}
@@ -192,6 +203,7 @@ service FederationDirector {
     rpc WaitExperiment (stream WaitExperimentRequest) returns (stream WaitExperimentResponse) {}
     rpc GetExperimentData (GetExperimentDataRequest) returns (stream ExperimentData) {}
     rpc EnvoyHealthCheck (EnvoyStatus) returns (EnvoyHealthCheckResponse) {}
+    rpc SetExperimentFailed (SetExperimentFailedRequest) returns (SetExperimentFailedResponse) {}
 
     // Experiments RPCs
     rpc GetExperimentDescription (GetExperimentDescriptionRequest)returns (GetExperimentDescriptionResponse) {}

@@ -45,6 +45,7 @@ class Director:
         self.settings = settings or {}
         self.col_exp_queues = defaultdict(asyncio.Queue)
         self.col_exp = {}
+        self.run_aggregator_future = None
 
     def acknowledge_shard(self, shard_info: dict) -> bool:
         """Save shard info to shard registry if it's acceptable."""
@@ -173,6 +174,12 @@ class Director:
                 and caller in self.experiments_registry[experiment_name].users):
             self.experiments_registry.remove(experiment_name)
 
+    def set_experiment_failed(self, *, experiment_name: str, collaborator_name: str):
+        """Set experiment failed."""
+        if experiment_name in self.experiments_registry:
+            aggregator = self.experiments_registry[experiment_name].aggregator
+            aggregator.stop(failed_collaborator=collaborator_name)
+
     def envoy_health_check(
             self, *,
             envoy_name: str,
@@ -264,7 +271,7 @@ class Director:
         while True:
             async with self.experiments_registry.get_next_experiment() as experiment:
                 loop = asyncio.get_event_loop()
-                run_aggregator_future = loop.create_task(experiment.start(
+                self.run_aggregator_future = loop.create_task(experiment.start(
                     root_certificate=self.root_certificate,
                     certificate=self.certificate,
                     private_key=self.private_key,
@@ -273,7 +280,7 @@ class Director:
                 for col_name in experiment.collaborators:
                     queue = self.col_exp_queues[col_name]
                     await queue.put(experiment.name)
-                await run_aggregator_future
+                await self.run_aggregator_future
 
 
 def _get_model_download_statuses(experiment) -> List[dict]:
