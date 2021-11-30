@@ -43,6 +43,10 @@ class FLExperiment:
 
         self.experiment_accepted = False
 
+        self.current_model_type = 'initial'  # used for warning_msg variable in self._rebuild_model
+        self.train_task_exist = False
+        self.validation_task_exist = False
+
         self.logger = getLogger(__name__)
         setup_logging()
 
@@ -61,7 +65,7 @@ class FLExperiment:
         tensor_dict = self.federation.dir_client.get_best_model(
             experiment_name=self.experiment_name)
 
-        return self._rebuild_model(tensor_dict)
+        return self._rebuild_model(tensor_dict, called_from_get_best_model=True)
 
     def get_last_model(self):
         """Retrieve the aggregated model after the last round."""
@@ -71,17 +75,26 @@ class FLExperiment:
 
         return self._rebuild_model(tensor_dict)
 
-    def _rebuild_model(self, tensor_dict):
+    def _rebuild_model(self, tensor_dict, called_from_get_best_model=False):
         """Use tensor dict to update model weights."""
         if len(tensor_dict) == 0:
-            self.logger.error('No tensors received from director')
-            self.logger.error(
-                'Possible reasons:\n'
-                '1. Aggregated model is not ready \n'
-                '2. Experiment data removed from director'
-            )
+            warning_msg = ('No tensors received from director\n'
+                           'Possible reasons:\n'
+                           '\t1. Aggregated model is not ready\n'
+                           '\t2. Experiment data removed from director')
+
+            if called_from_get_best_model and not self.validation_task_exist:
+                warning_msg += '\n\t3. No validation tasks are provided'
+
+            warning_msg += f'\nReturn {self.current_model_type} model'
+
+            self.logger.warning(warning_msg)
+
         else:
             self.task_runner_stub.rebuild_model(tensor_dict, validation=True, device='cpu')
+            if not called_from_get_best_model:
+                # get_last_model was called
+                self.current_model_type = 'last'
 
         return self.task_runner_stub.model
 
@@ -173,6 +186,7 @@ class FLExperiment:
     def restore_experiment_state(self, model_provider):
         """Restore accepted experimnet object."""
         self.task_runner_stub = self.plan.get_core_task_runner(model_provider=model_provider)
+        self.current_model_type = 'restored experiment state'
         self.experiment_accepted = True
 
     @staticmethod
@@ -254,12 +268,13 @@ class FLExperiment:
         # brining in fault tolerance changes
 
         # Check tasks type
-        train_task_exist = False
         for name in task_keeper.task_registry:
             if task_keeper.task_contract[name]['optimizer'] is not None:
-                train_task_exist = True
-                break
-        if not train_task_exist:
+                self.train_task_exist = True
+            else:
+                self.validation_task_exist = True
+
+        if not self.train_task_exist:
             # Since we have only validation task, we do not have to train it multiple times
             if rounds_to_train != 1:
                 rounds_to_train = 1
@@ -298,7 +313,7 @@ class FLExperiment:
                                               'kwargs': task_keeper.task_settings[name]}
             else:
                 # This is a validation type task (not altering the model state)
-                if train_task_exist:
+                if self.train_task_exist:
                     adapt_validation_task_dcit = zip(['localy_tuned_model_', 'aggregated_model_'],
                                                      ['local', 'global'])
                 else:
