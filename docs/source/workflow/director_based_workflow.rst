@@ -32,7 +32,6 @@ An overview of this workflow is shown below.
 .. centered:: Overview of the Director-Based Workflow
 
 
-
 .. toctree::
    :maxdepth: 2
    :hidden:
