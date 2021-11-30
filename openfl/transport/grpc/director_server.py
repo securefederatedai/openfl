@@ -8,6 +8,8 @@ import logging
 import uuid
 from pathlib import Path
 
+from google.protobuf.json_format import MessageToDict
+from google.protobuf.json_format import ParseDict
 from grpc import aio
 from grpc import ssl_server_credentials
 
@@ -40,6 +42,7 @@ class DirectorGRPCServer(director_pb2_grpc.FederationDirectorServicer):
         self.certificate = None
         self._fill_certs(root_certificate, private_key, certificate)
         self.server = None
+        self.root_dir = Path.cwd()
         self.director = director_cls(
             tls=self.tls,
             root_certificate=self.root_certificate,
@@ -72,9 +75,11 @@ class DirectorGRPCServer(director_pb2_grpc.FederationDirectorServicer):
 
     def start(self):
         """Launch the director GRPC server."""
-        asyncio.run(self._run())
+        loop = asyncio.get_event_loop()  # TODO: refactor after end of support for python3.6
+        loop.create_task(self.director.start_experiment_execution_loop())
+        loop.run_until_complete(self._run_server())
 
-    async def _run(self):
+    async def _run_server(self):
         channel_opt = [('grpc.max_send_message_length', 512 * 1024 * 1024),
                        ('grpc.max_receive_message_length', 512 * 1024 * 1024)]
         self.server = aio.server(options=channel_opt)
@@ -102,7 +107,8 @@ class DirectorGRPCServer(director_pb2_grpc.FederationDirectorServicer):
     async def AcknowledgeShard(self, shard_info, context):  # NOQA:N802
         """Receive acknowledge shard info."""
         logger.info(f'AcknowledgeShard request has got: {shard_info}')
-        is_accepted = self.director.acknowledge_shard(shard_info)
+        dict_shard_info = MessageToDict(shard_info, preserving_proto_field_name=True)
+        is_accepted = self.director.acknowledge_shard(dict_shard_info)
         reply = director_pb2.ShardAcknowledgement(accepted=is_accepted)
 
         return reply
@@ -111,7 +117,7 @@ class DirectorGRPCServer(director_pb2_grpc.FederationDirectorServicer):
         """Request to set new experiment."""
         logger.info(f'SetNewExperiment request has got {stream}')
         # TODO: add streaming reader
-        data_file_path = Path(str(uuid.uuid4())).absolute()
+        data_file_path = self.root_dir / str(uuid.uuid4())
         with open(data_file_path, 'wb') as data_file:
             async for request in stream:
                 if request.experiment_data.size == len(request.experiment_data.npbytes):
@@ -130,7 +136,7 @@ class DirectorGRPCServer(director_pb2_grpc.FederationDirectorServicer):
             sender_name=caller,
             tensor_dict=tensor_dict,
             collaborator_names=request.collaborator_names,
-            data_file_path=data_file_path
+            experiment_archive_path=data_file_path
         )
 
         logger.info('Send response')
@@ -203,11 +209,11 @@ class DirectorGRPCServer(director_pb2_grpc.FederationDirectorServicer):
         logger.info(f'Request StreamMetrics for {request.experiment_name} experiment has got!')
 
         caller = self.get_caller(context)
-        for metric_dict in self.director.stream_metrics(
+        async for metric_dict in self.director.stream_metrics(
                 experiment_name=request.experiment_name, caller=caller
         ):
             if metric_dict is None:
-                await asyncio.sleep(5)
+                await asyncio.sleep(1)
                 continue
             yield director_pb2.StreamMetricsResponse(**metric_dict)
 
@@ -223,14 +229,19 @@ class DirectorGRPCServer(director_pb2_grpc.FederationDirectorServicer):
         response.acknowledgement = True
         return response
 
-    async def CollaboratorHealthCheck(self, request, context):  # NOQA:N802
+    async def EnvoyHealthCheck(self, request, context):  # NOQA:N802
         """Accept health check from envoy."""
-        logger.debug(f'Request CollaboratorHealthCheck has got: {request}')
-        health_check_period = self.director.collaborator_health_check(
-            collaborator_name=request.name,
+        logger.debug(f'Request EnvoyHealthCheck has got: {request}')
+        cuda_devices_info = [
+            MessageToDict(message, preserving_proto_field_name=True)
+            for message in request.cuda_devices
+        ]
+        health_check_period = self.director.envoy_health_check(
+            envoy_name=request.name,
             is_experiment_running=request.is_experiment_running,
+            cuda_devices_status=cuda_devices_info
         )
-        resp = director_pb2.CollaboratorHealthCheckResponse()
+        resp = director_pb2.EnvoyHealthCheckResponse()
         resp.health_check_period.seconds = health_check_period
 
         return resp
@@ -238,5 +249,83 @@ class DirectorGRPCServer(director_pb2_grpc.FederationDirectorServicer):
     async def GetEnvoys(self, request, context):  # NOQA:N802
         """Get a status information about envoys."""
         envoy_infos = self.director.get_envoys()
+        envoy_statuses = []
+        for envoy_info in envoy_infos:
+            envoy_info_message = director_pb2.EnvoyInfo(
+                shard_info=ParseDict(
+                    envoy_info['shard_info'], director_pb2.ShardInfo(),
+                    ignore_unknown_fields=True),
+                is_online=envoy_info['is_online'],
+                is_experiment_running=envoy_info['is_experiment_running'])
+            envoy_info_message.valid_duration.seconds = envoy_info['valid_duration']
+            envoy_info_message.last_updated.seconds = int(envoy_info['last_updated'])
 
-        return director_pb2.GetEnvoysResponse(envoy_infos=envoy_infos)
+            envoy_statuses.append(envoy_info_message)
+
+        return director_pb2.GetEnvoysResponse(envoy_infos=envoy_statuses)
+
+    async def GetExperimentsList(self, request, context):  # NOQA:N802
+        """Get list of experiments description."""
+        caller = self.get_caller(context)
+        experiments = self.director.get_experiments_list(caller)
+        experiment_list = [
+            director_pb2.ExperimentListItem(**exp)
+            for exp in experiments
+        ]
+        return director_pb2.GetExperimentsListResponse(
+            experiments=experiment_list
+        )
+
+    async def GetExperimentDescription(self, request, context):  # NOQA:N802
+        """Get an experiment description."""
+        caller = self.get_caller(context)
+        experiment = self.director.get_experiment_description(caller, request.name)
+        models_statuses = [
+            director_pb2.DownloadStatus(
+                name=ms['name'],
+                status=ms['status']
+            )
+            for ms in experiment['download_statuses']['models']
+        ]
+        logs_statuses = [
+            director_pb2.DownloadStatus(
+                name=ls['name'],
+                status=ls['status']
+            )
+            for ls in experiment['download_statuses']['logs']
+        ]
+        download_statuses = director_pb2.DownloadStatuses(
+            models=models_statuses,
+            logs=logs_statuses,
+        )
+        collaborators = [
+            director_pb2.CollaboratorDescription(
+                name=col['name'],
+                status=col['status'],
+                progress=col['progress'],
+                round=col['round'],
+                current_task=col['current_task'],
+                next_task=col['next_task']
+            )
+            for col in experiment['collaborators']
+        ]
+        tasks = [
+            director_pb2.TaskDescription(
+                name=task['name'],
+                description=task['description']
+            )
+            for task in experiment['tasks']
+        ]
+
+        return director_pb2.GetExperimentDescriptionResponse(
+            experiment=director_pb2.ExperimentDescription(
+                name=experiment['name'],
+                status=experiment['status'],
+                progress=experiment['progress'],
+                current_round=experiment['current_round'],
+                total_rounds=experiment['total_rounds'],
+                download_statuses=download_statuses,
+                collaborators=collaborators,
+                tasks=tasks,
+            ),
+        )

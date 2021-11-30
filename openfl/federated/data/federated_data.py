@@ -5,8 +5,8 @@
 
 import numpy as np
 
-from openfl.plugins.data_splitters import EqualNumPyDataSplitter
-from openfl.plugins.data_splitters import NumPyDataSplitter
+from openfl.utilities.data_splitters import EqualNumPyDataSplitter
+from openfl.utilities.data_splitters import NumPyDataSplitter
 from .loader_pt import PyTorchDataLoader
 
 

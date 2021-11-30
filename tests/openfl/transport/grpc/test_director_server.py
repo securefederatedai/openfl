@@ -24,9 +24,9 @@ def secure_director():
     """Initialize a secure director mock."""
     director = DirectorGRPCServer(
         director_cls=Director,
-        root_certificate='./cert/root_ca.crt',
-        private_key='./cert/localhost.key',
-        certificate='./cert/localhost.crt'
+        root_certificate=Path('./cert/root_ca.crt').absolute(),
+        private_key=Path('./cert/localhost.key').absolute(),
+        certificate=Path('./cert/localhost.crt').absolute()
     )
     return director
 
@@ -40,11 +40,12 @@ def test_fill_certs(insecure_director, secure_director):
     assert isinstance(secure_director.private_key, Path)
     assert isinstance(secure_director.certificate, Path)
     with pytest.raises(Exception):
-        secure_director.test_fill_certs('.', '.', None)
+        secure_director._fill_certs('.', '.', None)
     with pytest.raises(Exception):
-        secure_director.test_fill_certs('.', None, '.')
+        secure_director._fill_certs('.', None, '.')
     with pytest.raises(Exception):
-        secure_director.test_fill_certs(None, '.', '.')
+        secure_director._fill_certs(None, '.', '.')
+    secure_director._fill_certs('.', '.', '.')
 
 
 def test_get_caller_tls(insecure_director):

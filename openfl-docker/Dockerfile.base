@@ -8,8 +8,7 @@ FROM ubuntu:18.04
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 WORKDIR /tmp
 
-RUN apt-get update && \
-    dpkg --get-selections | grep -v deinstall | awk '{print $1}' > base_packages.txt  && \
+RUN dpkg --get-selections | grep -v deinstall | awk '{print $1}' > base_packages.txt  && \
     rm -rf /var/lib/apt/lists/*
 
 RUN apt-get update && \
@@ -44,5 +43,8 @@ COPY . .
 RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.8 1
 RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py && python get-pip.py && rm -rf get-pip.py
 RUN pip install --no-cache-dir  .
+
+HEALTHCHECK  --interval=30m --timeout=3s \
+  CMD echo "Container works" || exit 1
 
 CMD [ "/bin/bash" ]

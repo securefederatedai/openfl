@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 """Derector Envoy's client tests module."""
 
+import sys
 from unittest import mock
 
 import pytest
@@ -40,10 +41,14 @@ def test_report_shard_info(director_client):
     shard_descriptor.sample_shape = [str(dim) for dim in (1, 2)]
     shard_descriptor.target_shape = [str(dim) for dim in (10,)]
 
-    director_client.report_shard_info(shard_descriptor)
+    cuda_devices = ()
+
+    director_client.report_shard_info(shard_descriptor, cuda_devices)
 
     director_client.stub.AcknowledgeShard.assert_called_once()
-    shard_info = director_client.stub.AcknowledgeShard.call_args.args[0]
+    if sys.version_info < (3, 8):
+        shard_info = director_client.stub.AcknowledgeShard.call_args[0][0]
+    else:
+        shard_info = director_client.stub.AcknowledgeShard.call_args.args[0]
     assert shard_info.shard_description == shard_descriptor.dataset_description
-    assert shard_info.n_samples == 10
     assert shard_info.sample_shape == shard_descriptor.sample_shape

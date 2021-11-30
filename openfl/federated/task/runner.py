@@ -14,7 +14,7 @@ port your own models.
 from logging import getLogger
 
 
-class TaskRunner(object):
+class TaskRunner:
     """Federated Learning Task Runner Class."""
 
     def __init__(self, data_loader, tensor_dict_split_fn_kwargs: dict = None, **kwargs):

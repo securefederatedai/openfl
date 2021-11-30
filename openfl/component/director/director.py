@@ -6,13 +6,15 @@
 import asyncio
 import logging
 import time
-import typing
 from collections import defaultdict
 from pathlib import Path
+from typing import Iterable
+from typing import List
+from typing import Union
 
-from openfl.federated import Plan
-from openfl.protocols import director_pb2
-from openfl.utilities.workspace import ExperimentWorkspace
+from .experiment import Experiment
+from .experiment import ExperimentsRegistry
+from .experiment import Status
 
 logger = logging.getLogger(__name__)
 
@@ -23,87 +25,74 @@ class Director:
     """Director class."""
 
     def __init__(
-            self,
-            *,
+            self, *,
             tls: bool = True,
-            root_certificate: Path = None,
-            private_key: Path = None,
-            certificate: Path = None,
+            root_certificate: Union[Path, str] = None,
+            private_key: Union[Path, str] = None,
+            certificate: Union[Path, str] = None,
             sample_shape: list = None,
             target_shape: list = None,
             settings: dict = None
     ) -> None:
         """Initialize a director object."""
-        # TODO: add working directory
-        super().__init__()
         self.sample_shape, self.target_shape = sample_shape, target_shape
         self._shard_registry = {}
-        self.col_exp_queues = defaultdict(asyncio.Queue)
-
-        self.experiment_data = {}  # {Experiment name : archive bytes}
-        # What if two experiments come with the same name from different users?
-        self.experiments_queue = asyncio.Queue()  # experiments waiting to be executed
-        self.experiment_stash = defaultdict(dict)  # Running of finished experiments
-        # {API name : {experiment name : aggregator}}
-
         self.tls = tls
         self.root_certificate = root_certificate
         self.private_key = private_key
         self.certificate = certificate
+        self.experiments_registry = ExperimentsRegistry()
         self.settings = settings or {}
+        self.col_exp_queues = defaultdict(asyncio.Queue)
+        self.col_exp = {}
 
-    def acknowledge_shard(self, shard_info: director_pb2.ShardInfo) -> bool:
+    def acknowledge_shard(self, shard_info: dict) -> bool:
         """Save shard info to shard registry if it's acceptable."""
         is_accepted = False
-        if (self.sample_shape != shard_info.sample_shape
-                or self.target_shape != shard_info.target_shape):
+        if (self.sample_shape != shard_info['sample_shape']
+                or self.target_shape != shard_info['target_shape']):
             logger.info('Request was not accepted')
             return is_accepted
         logger.info('Request was accepted')
-        self._shard_registry[shard_info.node_info.name] = {
+        hc_period = self.settings.get('envoy_health_check_period', ENVOY_HEALTH_CHECK_PERIOD)
+        self._shard_registry[shard_info['node_info']['name']] = {
             'shard_info': shard_info,
             'is_online': True,
-            'is_experiment_running': False
+            'is_experiment_running': False,
+            'valid_duration': 2 * hc_period,
+            'last_updated': time.time(),
         }
         is_accepted = True
         return is_accepted
 
     async def set_new_experiment(
-            self,
-            *,
+            self, *,
             experiment_name: str,
             sender_name: str,
             tensor_dict: dict,
-            collaborator_names: typing.Iterable[str],
-            data_file_path: Path
+            collaborator_names: Iterable[str],
+            experiment_archive_path: Path,
     ) -> bool:
         """Set new experiment."""
-        # TODO: save to file
-        self.experiment_data[experiment_name] = data_file_path
-
-        asyncio.create_task(self._run_aggregator_in_workspace(
-            experiment_name=experiment_name,
-            data_file_name=data_file_path,
-            experiment_sender=sender_name,
-            initial_tensor_dict=tensor_dict,
-            collaborator_names=collaborator_names,
-        ))
-
-        logger.info(f'New experiment {experiment_name} for '
-                    f'collaborators {collaborator_names}')
-        for col_name in collaborator_names:
-            queue = self.col_exp_queues[col_name]
-            await queue.put(experiment_name)
-
+        experiment = Experiment(
+            name=experiment_name,
+            archive_path=experiment_archive_path,
+            collaborators=list(collaborator_names),
+            users=[sender_name],
+            sender=sender_name,
+            init_tensor_dict=tensor_dict,
+        )
+        self.experiments_registry.add(experiment)
         return True
 
     def get_trained_model(self, experiment_name: str, caller: str, model_type: str):
         """Get trained model."""
-        if experiment_name not in self.experiment_stash[caller]:
+        if (experiment_name not in self.experiments_registry
+                or caller not in self.experiments_registry[experiment_name].users):
             logger.error('No experiment data in the stash')
             return None
 
-        aggregator = self.experiment_stash[caller][experiment_name].aggregator
+        aggregator = self.experiments_registry[experiment_name].aggregator
 
         if aggregator.last_tensor_dict is None:
             logger.error('Aggregator have no aggregated model to return')
@@ -117,14 +106,16 @@ class Director:
             logger.error('Unknown model type required.')
             return None
 
-    def get_experiment_data(self, experiment_name: str) -> bytes:
+    def get_experiment_data(self, experiment_name: str) -> Path:
         """Get experiment data."""
-        return self.experiment_data.get(experiment_name, b'')
+        return self.experiments_registry[experiment_name].archive_path
 
-    async def wait_experiment(self, collaborator_name: str) -> str:
+    async def wait_experiment(self, envoy_name: str) -> str:
         """Wait an experiment."""
-        queue = self.col_exp_queues[collaborator_name]
+        self.col_exp[envoy_name] = None
+        queue = self.col_exp_queues[envoy_name]
         experiment_name = await queue.get()
+        self.col_exp[envoy_name] = experiment_name
 
         return experiment_name
 
@@ -132,11 +123,11 @@ class Director:
         """Get dataset info."""
         return self.sample_shape, self.target_shape
 
-    def get_registered_shards(self) -> list:
+    def get_registered_shards(self) -> list:  # Why is it here?
         """Get registered shard infos."""
         return [shard_status['shard_info'] for shard_status in self._shard_registry.values()]
 
-    def stream_metrics(self, experiment_name: str, caller: str):
+    async def stream_metrics(self, experiment_name: str, caller: str):
         """
         Stream metrics from the aggregator.
 
@@ -155,7 +146,17 @@ class Director:
         Raises:
             StopIteration - if the experiment is finished and there is no more metrics to report
         """
-        aggregator = self.experiment_stash[caller][experiment_name].aggregator
+        if (experiment_name not in self.experiments_registry
+                or caller not in self.experiments_registry[experiment_name].users):
+            raise Exception(
+                f'No experiment name "{experiment_name}" in experiments list, or caller "{caller}"'
+                f' does not have access to this experiment'
+            )
+
+        while not self.experiments_registry[experiment_name].aggregator:
+            await asyncio.sleep(1)
+        aggregator = self.experiments_registry[experiment_name].aggregator
+
         while True:
             if not aggregator.metric_queue.empty():
                 yield aggregator.metric_queue.get()
@@ -168,16 +169,20 @@ class Director:
 
     def remove_experiment_data(self, experiment_name: str, caller: str):
         """Remove experiment data from stash."""
-        if experiment_name in self.experiment_stash.get(caller, {}):
-            del self.experiment_stash[caller][experiment_name]
+        if (experiment_name in self.experiments_registry
+                and caller in self.experiments_registry[experiment_name].users):
+            self.experiments_registry.remove(experiment_name)
 
-    def collaborator_health_check(
-            self, *, collaborator_name: str, is_experiment_running: bool
+    def envoy_health_check(
+            self, *,
+            envoy_name: str,
+            is_experiment_running: bool,
+            cuda_devices_status: list = None,
     ) -> int:
         """Accept health check from envoy."""
-        shard_info = self._shard_registry.get(collaborator_name)
+        shard_info = self._shard_registry.get(envoy_name)
         if not shard_info:
-            raise Exception(f'Unknown shard {collaborator_name}')
+            raise Exception(f'Unknown shard {envoy_name}')
 
         hc_period = self.settings.get('envoy_health_check_period', ENVOY_HEALTH_CHECK_PERIOD)
         shard_info['is_online']: True
@@ -185,70 +190,126 @@ class Director:
         shard_info['valid_duration'] = 2 * hc_period
         shard_info['last_updated'] = time.time()
 
+        if cuda_devices_status is not None:
+            for i in range(len(cuda_devices_status)):
+                shard_info['shard_info']['node_info']['cuda_devices'][i] = cuda_devices_status[i]
+
         return hc_period
 
     def get_envoys(self) -> list:
         """Get a status information about envoys."""
         logger.info(f'Shard registry: {self._shard_registry}')
-        envoy_infos = []
-        for envoy in self._shard_registry.values():
-            envoy_info = director_pb2.EnvoyInfo(
-                shard_info=envoy['shard_info'],
-                is_online=time.time() < envoy['last_updated'] + envoy['valid_duration'],
-                is_experiment_running=envoy['is_experiment_running']
+        for envoy_info in self._shard_registry.values():
+            envoy_info['is_online'] = (
+                time.time() < envoy_info.get('last_updated', 0)
+                + envoy_info.get('valid_duration', 0)
             )
-            envoy_info.valid_duration.seconds = envoy['valid_duration']
-            envoy_info.last_updated.seconds = int(envoy['last_updated'])
+            envoy_name = envoy_info['shard_info']['node_info']['name']
+            envoy_info['experiment_name'] = self.col_exp[envoy_name]
 
-            envoy_infos.append(envoy_info)
+        return self._shard_registry.values()
 
-        return envoy_infos
+    def get_experiments_list(self, caller: str) -> list:
+        """Get experiments list for specific user."""
+        experiments = self.experiments_registry.get_user_experiments(caller)
+        result = []
+        for exp in experiments:
+            exp_data = {
+                'name': exp.name,
+                'status': exp.status,
+                'collaborators_amount': len(exp.collaborators),
+            }
+            progress = _get_experiment_progress(exp)
+            if progress is not None:
+                exp_data['progress'] = progress
+            if exp.aggregator:
+                tasks_amount = len({
+                    task['function']
+                    for task in exp.aggregator.assigner.tasks.values()
+                })
+                exp_data['tasks_amount'] = tasks_amount
+            result.append(exp_data)
 
-    async def _run_aggregator_in_workspace(
-            self,
-            *,
-            experiment_name: str,
-            data_file_name: Path,
-            **kwargs
-    ) -> None:
-        """Run aggregator in a workspace."""
-        with ExperimentWorkspace(experiment_name, data_file_name):
-            await self._run_aggregator(experiment_name=experiment_name, **kwargs)
+        return result
 
-    async def _run_aggregator(
-            self,
-            *,
-            experiment_sender,
-            initial_tensor_dict,
-            experiment_name,
-            collaborator_names,
-            plan_path='plan/plan.yaml'
-    ) -> None:
-        """Run aggregator."""
-        plan = Plan.parse(plan_config_path=Path(plan_path))
-        plan.authorized_cols = list(collaborator_names)
+    def get_experiment_description(self, caller: str, name: str) -> dict:
+        """Get a experiment information by name for specific user."""
+        exp = self.experiments_registry.get(name)
+        if not exp or caller not in exp.users:
+            return {}
+        progress = _get_experiment_progress(exp)
+        model_statuses = _get_model_download_statuses(exp)
+        tasks = _get_experiment_tasks(exp)
+        collaborators = _get_experiment_collaborators(exp)
+        result = {
+            'name': name,
+            'status': exp.status,
+            'current_round': exp.aggregator.round_number,
+            'total_rounds': exp.aggregator.rounds_to_train,
+            'download_statuses': {
+                'models': model_statuses,
+                'logs': [{
+                    'name': 'aggregator',
+                    'status': 'ready'
+                }],
+            },
+            'collaborators': collaborators,
+            'tasks': tasks,
+            'progress': progress
+        }
+        return result
 
-        logger.info('🧿 Starting the Aggregator Service.')
-        aggregator_server = plan.interactive_api_get_server(
-            tensor_dict=initial_tensor_dict,
-            root_certificate=self.root_certificate,
-            certificate=self.certificate,
-            private_key=self.private_key,
-            tls=self.tls,
-        )
-        self.experiment_stash[experiment_sender][experiment_name] = aggregator_server
+    async def start_experiment_execution_loop(self):
+        """Run task to monitor and run experiments."""
+        while True:
+            async with self.experiments_registry.get_next_experiment() as experiment:
+                loop = asyncio.get_event_loop()
+                run_aggregator_future = loop.create_task(experiment.start(
+                    root_certificate=self.root_certificate,
+                    certificate=self.certificate,
+                    private_key=self.private_key,
+                    tls=self.tls,
+                ))
+                for col_name in experiment.collaborators:
+                    queue = self.col_exp_queues[col_name]
+                    await queue.put(experiment.name)
+                await run_aggregator_future
 
-        grpc_server = aggregator_server.get_server()
-        grpc_server.start()
-        logger.info('Starting Aggregator gRPC Server')
 
-        try:
-            while not aggregator_server.aggregator.all_quit_jobs_sent():
-                # Awaiting quit job sent to collaborators
-                await asyncio.sleep(10)
-        except KeyboardInterrupt:
-            pass
-        finally:
-            grpc_server.stop(0)
-            # Temporary solution to free RAM used by TensorDB
-            aggregator_server.aggregator.tensor_db.clean_up(0)
+def _get_model_download_statuses(experiment) -> List[dict]:
+    best_model_status = 'ready' if experiment.aggregator.best_tensor_dict else 'pending'
+    last_model_status = 'ready' if experiment.aggregator.last_tensor_dict else 'pending'
+    model_statuses = [{
+        'name': 'best',
+        'status': best_model_status,
+    }, {
+        'name': 'last',
+        'status': last_model_status,
+    }, {
+        'name': 'init',
+        'status': 'ready'
+    }]
+    return model_statuses
+
+
+def _get_experiment_progress(experiment) -> Union[float, None]:
+    if experiment.status == Status.IN_PROGRESS:
+        return experiment.aggregator.round_number / experiment.aggregator.rounds_to_train
+
+
+def _get_experiment_tasks(experiment) -> List[dict]:
+    return [{
+        'name': task['function'],
+        'description': 'Task description Mock',
+    } for task in experiment.aggregator.assigner.tasks.values()]
+
+
+def _get_experiment_collaborators(experiment) -> List[dict]:
+    return [{
+        'name': name,
+        'status': 'pending_mock',
+        'progress': 0.0,
+        'round': 0,
+        'current_task': 'Current Task Mock',
+        'next_task': 'Next Task Mock'
+    } for name in experiment.aggregator.authorized_cols]

@@ -1,0 +1,10 @@
+params:
+  cuda_devices: []
+
+optional_plugin_components: {}
+
+shard_descriptor:
+  template: market_shard_descriptor.MarketShardDescriptor
+  params:
+    data_folder_name: Market-1501-v15.09.15
+    rank_worldsize: 2,2

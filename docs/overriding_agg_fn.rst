@@ -13,13 +13,13 @@ You can use custom aggregation functions for each task via Python\*\  API or com
 Python API
 ==========
 
-1. Create an implementation of :class:`openfl.component.aggregation_functions.AggregationFunctionInterface`. See `example <https://github.com/intel/openfl/blob/develop/openfl/component/aggregation_functions/interface.py>`_ for details.
+1. Create an implementation of :class:`openfl.component.aggregation_functions.AggregationFunction`. See `example <https://github.com/intel/openfl/blob/develop/openfl/component/aggregation_functions/interface.py>`_ for details.
 
 2. In the ``override_config`` keyword argument of the :func:`openfl.native.run_experiment` native function, pass the implementation as a ``tasks.{task_name}.aggregation_type`` parameter.
 
 .. note::
     See `Federated PyTorch MNIST Tutorial <https://github.com/intel/openfl/blob/develop/openfl-tutorials/Federated_Pytorch_MNIST_custom_aggregation_Tutorial.ipynb>`_ for an example of the :func:`openfl.native.run_experiment` native function.
-
+    
 
 Command Line Interface
 ======================
@@ -37,7 +37,7 @@ Choose from the following predefined aggregation functions:
 Custom Aggregation Functions
 ----------------------------
 
-You can also create your own implementation of :class:`openfl.component.aggregation_functions.AggregationFunctionInterface`. See `example <https://github.com/intel/openfl/blob/develop/openfl/component/aggregation_functions/interface.py>`_ for details.
+You can also create your own implementation of :class:`openfl.component.aggregation_functions.AggregationFunction`. See `example <https://github.com/intel/openfl/blob/develop/openfl/component/aggregation_functions/interface.py>`_ for details.
 
 1. Define the behavior of the aggregation.
 
@@ -75,8 +75,30 @@ The following is an example of a **plan.yaml** with a modified aggregation funct
         metrics:
         - loss
 
-The ``AggregationFunctionInterface`` requires a single ``call`` function.
-This function receives tensors for a single parameter from multiple collaborators with additional metadata and returns a single tensor that represents the result of aggregation.
+
+Interactive API
+================
+You can override aggregation function that will be used for the task this function corresponds to.
+In order to do this, call the ``set_aggregation_function`` decorator method of ``TaskInterface`` and pass ``AggregationFunction`` subclass instance as a parameter.
+For example, you can try:
+
+.. code-block:: python
+
+    from openfl.component.aggregation_functions import Median
+    TI = TaskInterface()
+    agg_fn = Median()
+    @TI.register_fl_task(model='model', data_loader='train_loader', \
+                         device='device', optimizer='optimizer')
+    @TI.set_aggregation_function(agg_fn)
+
+.. warning::
+    All tasks with the same type of aggregation use the same class instance.
+    If ``AggregationFunction`` implementation has its own state, then this state will be shared across tasks.
+
+
+``AggregationFunction`` requires a single ``call`` function.
+This function receives tensors for a single parameter from multiple collaborators with additional metadata (see definition of :meth:`openfl.component.aggregation_functions.AggregationFunction.call`) and returns a single tensor that represents the result of aggregation.
+
 
 .. note::
     See the `definition <https://github.com/intel/openfl/blob/develop/openfl/component/aggregation_functions/interface.py>`_ of :class:`openfl.component.aggregation_functions.AggregationFunctionInterface.call` for details.
@@ -89,10 +111,10 @@ This is an example of a custom tensor clipping aggregation function that multipl
 
 .. code-block:: python
 
-    from openfl.component.aggregation_functions import AggregationFunctionInterface
+    from openfl.component.aggregation_functions import AggregationFunction
     import numpy as np
 
-    class ClippedAveraging(AggregationFunctionInterface):
+    class ClippedAveraging(AggregationFunction):
         def __init__(self, ratio):
             self.ratio = ratio
             

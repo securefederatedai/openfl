@@ -1,0 +1,8 @@
+@misc{reina2021openfl,
+      title={OpenFL: An open-source framework for Federated Learning}, 
+      author={G Anthony Reina and Alexey Gruzdev and Patrick Foley and Olga Perepelkina and Mansi Sharma and Igor Davidyuk and Ilya Trushkin and Maksim Radionov and Aleksandr Mokrov and Dmitry Agapov and Jason Martin and Brandon Edwards and Micah J. Sheller and Sarthak Pati and Prakash Narayana Moorthy and Shih-han Wang and Prashant Shah and Spyridon Bakas},
+      year={2021},
+      eprint={2105.06413},
+      archivePrefix={arXiv},
+      primaryClass={cs.LG}
+}

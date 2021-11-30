@@ -61,7 +61,7 @@ def generate_csr(common_name, server=False):
 
     # Sign the CSR
     csr = builder.sign(
-        private_key=private_key, algorithm=hashes.SHA256(),
+        private_key=private_key, algorithm=hashes.SHA384(),
         backend=default_backend()
     )
 
