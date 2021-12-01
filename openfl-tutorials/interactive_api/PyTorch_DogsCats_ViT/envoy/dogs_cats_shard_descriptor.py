@@ -11,8 +11,8 @@ from pathlib import Path
 from random import shuffle
 from zipfile import ZipFile
 
-from kaggle.api.kaggle_api_extended import KaggleApi
 import numpy as np
+from kaggle.api.kaggle_api_extended import KaggleApi
 from PIL import Image
 
 from openfl.interface.interactive_api.shard_descriptor import ShardDataset
