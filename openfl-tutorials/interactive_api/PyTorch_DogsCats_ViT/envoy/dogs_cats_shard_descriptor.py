@@ -11,9 +11,9 @@ from pathlib import Path
 from random import shuffle
 from zipfile import ZipFile
 
+from kaggle.api.kaggle_api_extended import KaggleApi
 import numpy as np
 from PIL import Image
-from kaggle.api.kaggle_api_extended import KaggleApi
 
 from openfl.interface.interactive_api.shard_descriptor import ShardDataset
 from openfl.interface.interactive_api.shard_descriptor import ShardDescriptor
@@ -94,7 +94,7 @@ class DogsCatsShardDescriptor(ShardDescriptor):
             api.competition_download_file(
                 'dogs-vs-cats-redux-kernels-edition',
                 'train.zip', path=self.data_folder
-                )
+            )
             api.competition_download_file(
                 'dogs-vs-cats-redux-kernels-edition',
                 'test.zip', path=self.data_folder
@@ -136,6 +136,7 @@ class DogsCatsShardDescriptor(ShardDescriptor):
 
     @staticmethod
     def calc_all_md5(data_folder):
+        """Calculate hash of all dataset."""
         md5_dict = {}
         for root, _, files in os.walk(data_folder):
             for file in files:
@@ -153,15 +154,17 @@ class DogsCatsShardDescriptor(ShardDescriptor):
 
     @staticmethod
     def save_all_md5(data_folder):
+        """Save dataset hash."""
         all_md5 = DogsCatsShardDescriptor.calc_all_md5(data_folder)
-        with open(os.path.join(data_folder, "dataset.md5"), "w") as f:
+        with open(os.path.join(data_folder, 'dataset.md5'), 'w') as f:
             json.dump(all_md5, f)
 
     @staticmethod
     def check_dataset(data_folder):
+        """Check dataset integrity."""
         new_md5 = DogsCatsShardDescriptor.calc_all_md5(data_folder)
         try:
-            with open(os.path.join(data_folder, "dataset.md5"), "r") as f:
+            with open(os.path.join(data_folder, 'dataset.md5'), 'r') as f:
                 old_md5 = json.load(f)
         except FileNotFoundError:
             return False
