@@ -283,10 +283,10 @@ class FLExperiment:
                 self.validation_task_exist = True
 
         if not self.train_task_exist:
-            # Since we have only validation task, we do not have to train it multiple times
+            # Since we have only validation tasks, we do not have to train it multiple times
             if rounds_to_train != 1:
                 raise Exception('Variable rounds_to_train must be equal 1, '
-                                'because only validation task(s) were given')
+                                'because only validation tasks were given')
 
         shard_registry = self.federation.get_shard_registry()
         plan.authorized_cols = [
