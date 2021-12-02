@@ -10,6 +10,8 @@ from hashlib import md5
 from pathlib import Path
 from random import shuffle
 from zipfile import ZipFile
+from logging import getLogger
+from typing import Optional
 
 import numpy as np
 from kaggle.api.kaggle_api_extended import KaggleApi
@@ -18,12 +20,14 @@ from PIL import Image
 from openfl.interface.interactive_api.shard_descriptor import ShardDataset
 from openfl.interface.interactive_api.shard_descriptor import ShardDescriptor
 
+logger = getLogger(__name__)
+
 
 class DogsCatsShardDataset(ShardDataset):
     """Dogs and cats Shard dataset class."""
 
     def __init__(self, data_type: str, dataset_dir: Path,
-                 rank=1, worldsize=1, enforce_image_hw=None):
+                 rank: int = 1, worldsize: int = 1, enforce_image_hw=None):
         """Initialize DogsCatsShardDataset."""
         self.rank = rank
         self.worldsize = worldsize
@@ -71,45 +75,14 @@ class DogsCatsShardDescriptor(ShardDescriptor):
 
     def __init__(self, data_folder: str = 'data',
                  rank_worldsize: str = '1,3',
-                 enforce_image_hw: str = None) -> None:
+                 enforce_image_hw: Optional[str] = None) -> None:
         """Initialize DogsCatsShardDescriptor."""
         super().__init__()
         # Settings for sharding the dataset
         self.rank, self.worldsize = map(int, rank_worldsize.split(','))
 
         self.data_folder = Path.cwd() / data_folder
-        if not os.path.exists(self.data_folder):
-            os.mkdir(self.data_folder)
-
-        if not DogsCatsShardDescriptor.check_dataset(self.data_folder):
-            print('Your dataset is absent or damaged. Downloading ... ')
-            api = KaggleApi()
-            api.authenticate()
-
-            if os.path.exists('data/train'):
-                shutil.rmtree('data/train')
-            if os.path.exists('data/test'):
-                shutil.rmtree('data/test')
-
-            api.competition_download_file(
-                'dogs-vs-cats-redux-kernels-edition',
-                'train.zip', path=self.data_folder
-            )
-            api.competition_download_file(
-                'dogs-vs-cats-redux-kernels-edition',
-                'test.zip', path=self.data_folder
-            )
-            with ZipFile(self.data_folder / 'train.zip', 'r') as zipobj:
-                zipobj.extractall(self.data_folder)
-
-            os.remove(self.data_folder / 'train.zip')
-
-            with ZipFile(self.data_folder / 'test.zip', 'r') as zipobj:
-                zipobj.extractall(self.data_folder)
-
-            os.remove(self.data_folder / 'test.zip')
-
-            DogsCatsShardDescriptor.save_all_md5(self.data_folder)
+        self.download_dataset()
 
         # Settings for resizing data
         self.enforce_image_hw = None
@@ -124,6 +97,31 @@ class DogsCatsShardDescriptor(ShardDescriptor):
 
         assert self._target_shape[0] == '1', 'Target shape Error'
 
+    def download_dataset(self):
+        """Downloads dataset from Kaggle."""
+        if not os.path.exists(self.data_folder):
+            os.mkdir(self.data_folder)
+
+        if not self.is_dataset_complete():
+            logger.info('Your dataset is absent or damaged. Downloading ... ')
+            api = KaggleApi()
+            api.authenticate()
+
+            if os.path.exists('data/train'):
+                shutil.rmtree('data/train')
+
+            api.competition_download_file(
+                'dogs-vs-cats-redux-kernels-edition',
+                'train.zip', path=self.data_folder
+            )
+
+            with ZipFile(self.data_folder / 'train.zip', 'r') as zipobj:
+                zipobj.extractall(self.data_folder)
+
+            os.remove(self.data_folder / 'train.zip')
+
+            self.save_all_md5()
+
     def get_dataset(self, dataset_type='train'):
         """Return a shard dataset by type."""
         return DogsCatsShardDataset(
@@ -134,37 +132,34 @@ class DogsCatsShardDescriptor(ShardDescriptor):
             enforce_image_hw=self.enforce_image_hw
         )
 
-    @staticmethod
-    def calc_all_md5(data_folder):
+    def calc_all_md5(self):
         """Calculate hash of all dataset."""
         md5_dict = {}
-        for root, _, files in os.walk(data_folder):
+        for root, _, files in os.walk(self.data_folder):
             for file in files:
-                if file == 'dataset.md5':
+                if file == 'dataset.json':
                     continue
                 md5_calc = md5()
-                rel_dir = os.path.relpath(root, data_folder)
+                rel_dir = os.path.relpath(root, self.data_folder)
                 rel_file = os.path.join(rel_dir, file)
 
-                with open(data_folder / rel_file, 'rb') as f:
+                with open(self.data_folder / rel_file, 'rb') as f:
                     for chunk in iter(lambda: f.read(4096), b''):
                         md5_calc.update(chunk)
                     md5_dict[rel_file] = md5_calc.hexdigest()
         return md5_dict
 
-    @staticmethod
-    def save_all_md5(data_folder):
+    def save_all_md5(self):
         """Save dataset hash."""
-        all_md5 = DogsCatsShardDescriptor.calc_all_md5(data_folder)
-        with open(os.path.join(data_folder, 'dataset.md5'), 'w') as f:
+        all_md5 = self.calc_all_md5()
+        with open(os.path.join(self.data_folder, 'dataset.json'), 'w') as f:
             json.dump(all_md5, f)
 
-    @staticmethod
-    def check_dataset(data_folder):
+    def is_dataset_complete(self):
         """Check dataset integrity."""
-        new_md5 = DogsCatsShardDescriptor.calc_all_md5(data_folder)
+        new_md5 = self.calc_all_md5()
         try:
-            with open(os.path.join(data_folder, 'dataset.md5'), 'r') as f:
+            with open(os.path.join(self.data_folder, 'dataset.json'), 'r') as f:
                 old_md5 = json.load(f)
         except FileNotFoundError:
             return False

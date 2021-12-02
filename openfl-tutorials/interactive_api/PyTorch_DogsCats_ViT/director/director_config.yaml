@@ -3,4 +3,3 @@ settings:
   listen_port: 50051
   sample_shape: ['300', '300', '3']
   target_shape: ['1']
- 

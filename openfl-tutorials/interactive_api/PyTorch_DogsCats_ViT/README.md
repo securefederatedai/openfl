@@ -1,6 +1,8 @@
-# Dogs vs. Cats tutorial based on vit_pytorch library
+# Dogs vs. Cats tutorial based on [vit_pytorch](https://github.com/lucidrains/vit-pytorch) library
 ***Note: Please pay attention that this task uses the dataset from Kaggle. 
 To get the dataset you will need a Kaggle account and accept "Dogs vs. Cats" competition rules.***
+
+Visual Transformers are gaining popularity among the Data Science community, so this tutorial is intended to examine Visual Transformer behavior in Federated Learning setup.
 
 ## Installation of Kaggle API credentials
 
@@ -27,32 +29,36 @@ All information about the dataset you may find on https://www.kaggle.com/c/dogs-
 ### Run experiment
 
 1. Create a folder for each `envoy`.
-2. Put a relevant envoy_config in each of the n folders (n - number of envoys which you would like to use, in this tutorial there is two of them, but you may use any number of envoys) and copy other files from `envoy` there as well.
+2. Put a relevant envoy_config in each of the n folders (n - number of envoys which you would like to use, in this tutorial there is two of them, but you may use any number of envoys) and copy other files from `envoy` folder there as well.
 3. Modify each `envoy` accordingly:
 
     - At `start_envoy.sh` change env_one to env_two (or any unique `envoy` names you like)
 
     - Put a relevant envoy_config `envoy_config_one.yaml` or `envoy_config_two.yaml` (or any other config file name consistent to the configuration file that is called in `start_envoy.sh`).
 4. Make sure that you installed requirements for each `envoy` in your virtual environment: `pip install -r sd_requirements.txt`
-5. Run the `director`: execute `start_director.sh` in director
+5. Run the `director`: execute `start_director.sh` in director folder
 6. Run the `envoys`: execute `start_envoy.sh` in each envoy folder. If kaggle-API setting are correct the download of the dataset will be started. If this is not the first `envoy` launch then the dataset will be redownloaded only if some part of the data are missing.
-7. Run the notebook in a prepared virtual environment. For more information about preparation virtual environment look **Preparation virtual environment**.
-8. Congratulations! You've started your first federated learning with OpenFL.
+7. Run the notebook in a prepared virtual environment. For more information about preparation virtual environment look [**Preparation virtual environment**](#preparation-virtual-environment).
+8. Congratulations! You've started your federated learning of Visual Transformer with OpenFL.
 
 ### Preparation virtual environment
 
 * Install virtualenvwrapper (if you haven't)
-
-    `pip install virtualenvwrapper`
+```sh
+    pip install virtualenvwrapper
+```
 
 * Create virtual environment
-
-    `mkvirtualenv --python=python3.8 name_virtual_environment`
+```sh
+    mkvirtualenv --python=python3.8 name_virtual_environment
+```
 
 * To activate virtual environment
-
-    `workon name_virtual_environment`
+```sh
+    workon name_virtual_environment
+```
 
 * To deactivate virtual environment
-
-    `deactivate`
+```sh
+    deactivate
+```
