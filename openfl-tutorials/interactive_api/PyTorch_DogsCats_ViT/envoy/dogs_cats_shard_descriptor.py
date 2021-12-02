@@ -9,8 +9,8 @@ import shutil
 from hashlib import md5
 from pathlib import Path
 from random import shuffle
-from zipfile import ZipFile
 from logging import getLogger
+from zipfile import ZipFile
 from typing import Optional
 
 import numpy as np
@@ -98,7 +98,7 @@ class DogsCatsShardDescriptor(ShardDescriptor):
         assert self._target_shape[0] == '1', 'Target shape Error'
 
     def download_dataset(self):
-        """Downloads dataset from Kaggle."""
+        """Download dataset from Kaggle."""
         if not os.path.exists(self.data_folder):
             os.mkdir(self.data_folder)
 
