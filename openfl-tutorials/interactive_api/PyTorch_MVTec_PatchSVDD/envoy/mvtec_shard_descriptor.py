@@ -95,7 +95,16 @@ class MVTecShardDescriptor(ShardDescriptor):
             print('Downloaded MVTec dataset, untar-ring now')
             os.system(f'tar -xvf {zip_file_path.relative_to(Path.cwd())}'
                       f' -C {self.dataset_path.relative_to(Path.cwd())}')
-        os.chmod(self.dataset_path, 0o755)
+            # change to write permissions
+            self.change_permissions(self.dataset_path, 0o764)
+
+    def change_permissions(self, folder, code):
+        """Change permissions after data is downloaded."""
+        for root, dirs, files in os.walk(folder):
+            for d in dirs:
+                os.chmod(os.path.join(root, d), code)
+            for f in files:
+                os.chmod(os.path.join(root, f), code)
 
     def get_dataset(self, dataset_type='train'):
         """Return a shard dataset by type."""
