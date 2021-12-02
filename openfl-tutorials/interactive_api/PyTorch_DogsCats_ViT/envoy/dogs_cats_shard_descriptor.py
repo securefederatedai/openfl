@@ -7,11 +7,11 @@ import json
 import os
 import shutil
 from hashlib import md5
+from logging import getLogger
 from pathlib import Path
 from random import shuffle
-from logging import getLogger
-from zipfile import ZipFile
 from typing import Optional
+from zipfile import ZipFile
 
 import numpy as np
 from kaggle.api.kaggle_api_extended import KaggleApi
