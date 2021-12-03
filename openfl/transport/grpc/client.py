@@ -110,6 +110,7 @@ class CollaboratorGRPCClient:
         self.root_certificate = root_certificate
         self.certificate = certificate
         self.private_key = private_key
+        self.notified_about_insecure = False
 
         self.channel_options = [
             ('grpc.max_metadata_size', 32 * 1024 * 1024),
@@ -162,8 +163,10 @@ class CollaboratorGRPCClient:
             An insecure gRPC channel object
 
         """
-        self.logger.warn(
-            'gRPC is running on insecure channel with TLS disabled.')
+        if not self.notified_about_insecure:
+            self.logger.warn(
+                'gRPC is running on insecure channel with TLS disabled.')
+            self.notified_about_insecure = True
 
         return grpc.insecure_channel(uri, options=self.channel_options)
 
