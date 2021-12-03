@@ -61,7 +61,7 @@ class FLExperiment:
     def _assert_experiment_accepted(self):
         """Assure experiment is sent to director."""
         if not self.experiment_accepted:
-            self.logger.error('The experimnet has not been accepted by director')
+            self.logger.error('The experiment has not been accepted by director')
             self.logger.error(
                 'Report the experiment first: '
                 'use the Experiment.start() method.')
@@ -190,7 +190,7 @@ class FLExperiment:
             self.logger.info('Experiment was not accepted or failed.')
 
     def restore_experiment_state(self, model_provider):
-        """Restore accepted experimnet object."""
+        """Restore accepted experiment object."""
         self.task_runner_stub = self.plan.get_core_task_runner(model_provider=model_provider)
         self.current_model_status = ModelStatus.RESTORED
         self.experiment_accepted = True
