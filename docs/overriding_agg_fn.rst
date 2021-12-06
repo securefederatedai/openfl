@@ -7,13 +7,13 @@
 Override Aggregation Function
 *****************************
 
-You can use custom aggregation functions for each task via Python\*\  API or command line interface.
+With the aggregator-based workflow, you can use custom aggregation functions for each task via Python\*\  API or command line interface.
 
 
 Python API
 ==========
 
-1. Create an implementation of :class:`openfl.component.aggregation_functions.AggregationFunction`. See `example <https://github.com/intel/openfl/blob/develop/openfl/component/aggregation_functions/interface.py>`_ for details.
+1. Create an implementation of :class:`openfl.component.aggregation_functions.AggregationFunction`. See this `example <https://github.com/intel/openfl/blob/develop/openfl/component/aggregation_functions/interface.py>`_ for details.
 
 2. In the ``override_config`` keyword argument of the :func:`openfl.native.run_experiment` native function, pass the implementation as a ``tasks.{task_name}.aggregation_type`` parameter.
 
