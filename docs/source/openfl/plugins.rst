@@ -61,17 +61,17 @@ implement the :code:`serialization_setup` method to prepare the model object for
 Experiment Serializer
 ######################
 
-Serializer plugins are used on the Frontend API to serialize the Experiment components and then on Envoys to deserialize them back.
+Serializer plugins are used on the frontend Python API to serialize the Experiment components and then on Envoys to deserialize them.
 Currently, the default serializer is based on pickling. It is a **required** plugin.
 
-A serializer plugin must implement :code:`serialize` method that creates a Python object representation on disk.
+A serializer plugin must implement the :code:`serialize` method that creates a Python object representation on disk.
 
 .. code-block:: python
 
    @staticmethod
    def serialize(object_, filename: str) -> None:
 
-As well as :code:`restore_object` that will load previously serialized object from disk.
+As well as the :code:`restore_object` method that will load previously serialized object from disk.
 
 .. code-block:: python
 
