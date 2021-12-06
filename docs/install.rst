@@ -13,7 +13,7 @@ Depending on how you want to set up Open Federated Learning (|productName|), cho
     Follow this procedure to prepare the environment and install the |productName| package.
 
 :doc:`install.docker`
-    Follow this procedure to build a Docker\*\ image of |productName|, which you can use use to run your federation in an isolated environment. 
+    Follow this procedure to build a Docker\*\  image of |productName|, which you can use use to run your federation in an isolated environment. 
 
 .. toctree::
    :maxdepth: 1
