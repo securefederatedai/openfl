@@ -82,7 +82,7 @@ The *Collaborator manager* sets up the *Envoys*, which are long-lived components
 STEP 1: Install |productName| 
 -----------------------------
 
-Install |productName| in a virtual Python\*\ environment. See :ref:`install_package` for details.
+Install |productName| in a virtual Python\*\  environment. See :ref:`install_package` for details.
 
 .. _step2_sign_pki_envoy:
 
@@ -97,7 +97,7 @@ The use of mTLS is recommended for deployments in untrusted environments to esta
 STEP 3: Start the Envoy
 -----------------------
 
-1. Create an Envoy workspace with a default config file and shard descriptor Python\*\ script.
+1. Create an Envoy workspace with a default config file and shard descriptor Python\*\  script.
 
     .. code-block:: console
 
