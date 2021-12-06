@@ -13,8 +13,8 @@ Dataset Splitters
 You may apply data splitters differently depending on the |productName| workflow that you follow. 
 
 
-OPTION 1: Define How to Split the Data with **Native Python API** (Aggregator-Based Workflow) Functions
-=====================================================================
+OPTION 1: Use **Native Python API** (Aggregator-Based Workflow) Functions to Split the Data
+===========================================================================================
 
 Predefined |productName| data splitters functions are as follows:
 
@@ -27,7 +27,7 @@ Alternatively, you can create an `implementation <https://github.com/intel/openf
 
 
 OPTION 2: Use Dataset Splitters in your Shard Descriptor
-===================================
+========================================================
 
 Apply one of previously mentioned splitting function on your data to perform a simulation. 
 
