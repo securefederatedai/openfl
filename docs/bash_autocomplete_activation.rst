@@ -33,7 +33,7 @@ STEP 2: Create the fx-autocomplete.sh Script
 
       cat ~/.fx-autocomplete.sh
 
- The output should look like the example below (Click==8.0.1), but could be different depend on `Click https://click.palletsprojects.com/en/8.0.x/`_ version:
+ The output should look like the example below (Click==8.0.1), but could be different depend on `Click <https://click.palletsprojects.com/en/8.0.x/>`_ version:
    
    .. code-block:: console
 

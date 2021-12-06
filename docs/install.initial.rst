@@ -9,22 +9,21 @@ Install the Package
 
 Perform this procedure on every node in the federation.
 
-1. Install a Python\* \  3.6 (or higher) virtual environment. Conda\* \  (version 4.9 or above) is preferred, but other virtual environments should work as well.
-   Conda can either be installed via the `Anaconda <https://www.anaconda.com/products/individual>`_\* \  or `Miniconda <https://docs.conda.io/en/latest/miniconda.html>`_\* \  distributions. 
+1. Install a Python\* \  3.6 (or higher) virtual environment. 
    
- See the `conda installation guide <https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html>`_ for details.
+ See the `Virtualenv installation guide <https://virtualenv.pypa.io/en/latest/installation.html>`_ for details.
 
-2. Create a new conda environment for the project.
+2. Create a new Virtualenv environment for the project.
 
    .. code-block:: console
 
-      conda create -n env_name pip python=3.6
+      python3 -m virtualenv env_name
 
 3. Activate the virtual environment.
 
    .. code-block:: console
 
-      conda activate env_name
+      source env_name/bin/activate
 
 4. Install the Open Federated Learning (|productName|) package.
 

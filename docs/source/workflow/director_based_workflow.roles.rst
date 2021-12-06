@@ -140,10 +140,7 @@ STEP 3: Start the Envoy
 Experiment Manager: Describe an Experiment
 ==========================================
 
-The Experiment manager (or data scientist) registers experiments into the federation in the following manner:
-
-    - frontend Director client
-    - :ref:`Interactive Python API <interactive_api>`
-
-The process of defining an experiment is decoupled from the process of establishing a federation. Everything that a data scientist needs to prepare an experiment is a Python interpreter and access to the Director.
-
+The process of defining an experiment is decoupled from the process of establishing a federation. 
+The Experiment manager (or data scientist) is able to prepare an experiment in a Python environment. 
+Then the Experiment manager registers experiments into the federation using :ref:`Interactive Python API <interactive_api>` 
+that is equiped with a gRPC client for communication with Director.

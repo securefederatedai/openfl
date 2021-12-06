@@ -45,10 +45,8 @@ Consider joining our [Slack workspace](https://join.slack.com/t/openfl/shared_in
 ## Requirements
 
 - Tested on Ubuntu* Linux 16.04 and 18.04.
-- Python* 3.6+ with a Python virtual environment (recommendation is [conda](https://docs.conda.io/en/latest/) version 4.9 and above).
+- Python* 3.6+ with a Python virtual environment (recommendation is [Virtualenv](https://virtualenv.pypa.io/en/latest/)).
 - TensorFlow* 2+ or PyTorch* 1.6+ (depending on your training requirements). OpenFL is designed to support other frameworks as well.
-
-![fx commandline interface](https://raw.githubusercontent.com/intel/openfl/master/docs/images/fx_help.png)
 
 
 ## License
