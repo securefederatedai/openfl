@@ -39,7 +39,7 @@ The aggregation to create the global training model is framework-agnostic, while
    :caption: Contents:
 
    manual
-   `OpenFL Structure <openfl_structure>`_
+   openfl
    troubleshooting
    notices_and_disclaimers
 
