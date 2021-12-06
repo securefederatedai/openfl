@@ -32,10 +32,10 @@ Parameter Server
 	A parameter server sends a global model to the collaborators. Parameter servers are often combined with aggregators on the same compute node.
 
 Aggregator
-	An aggregator receives locally tuned models from collaborators and combines the locally tuned models into a new global model. Typically, `federated averaging <https://arxiv.org/abs/1602.05629>`_, a weighted average, is the algorithm used to combine the locally tuned models. 
+	An aggregator receives locally tuned models from collaborators and combines the locally tuned models into a new global model. Typically, `federated averaging <https://arxiv.org/abs/1602.05629>`_, (a weighted average) is the algorithm used to combine the locally tuned models. 
 
 Round
 	A federation round is defined as the interval (typically defined in terms of training steps) where an aggregation is performed. In theory, collaborators may perform local training on the model for multiple epochs (or even partial epochs) within a single training round.
 
-FL Plan
-	A *federated learning (FL) plan* defines the address of the aggregator, the workload (model) to send to the collaborators, and other parameters about the federation, such as, the number of federation rounds and the encryption to use for the network connections.
+Federated Learning Plan (FL Plan)
+	An FL plan defines the address of the aggregator, the workload (model) to send to the collaborators, and other parameters about the federation, such as, the number of federation rounds and the encryption to use for the network connections.
