@@ -19,7 +19,7 @@ The *Director manager* sets up the *Director*, which is the central node of the 
 STEP 1: Install Open Federated Learning (|productName|) 
 -------------------------------------------------------
 
-Install |productName| in a virtual Python\*\ environment. See :ref:`install_package` for details.
+Install |productName| in a virtual Python\*\  environment. See :ref:`install_package` for details.
 
 .. _step2_create_pki_using_step_ca:
 
