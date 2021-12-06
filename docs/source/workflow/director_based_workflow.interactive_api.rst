@@ -278,7 +278,7 @@ The following are parameters of the :code:`start()` method in FLExperiment:
 :code:`data_loader`
     This parameter is defined earlier by the :code:`DataInterface` object.
 
-:code:`rounds_to_train` - 
+:code:`rounds_to_train`
     This parameter defines the number of aggregation rounds needed to be conducted before the experiment is considered finished.
     
 :code:`delta_updates`
@@ -286,12 +286,14 @@ The following are parameters of the :code:`start()` method in FLExperiment:
 
 :code:`opt_treatment` 
     This parameter defines the optimizer state treatment in the federation. The following are available values:
+    
     - **RESET**: the optimizer state is initialized each round from noise
     - **CONTINUE_LOCAL**: the optimizer state will be reused locally by every collaborator
     - **CONTINUE_GLOBAL**: the optimizer's state will be aggregated
     
 :code:`device_assignment_policy`
     The following are available values:
+    
     - **CPU_ONLY**: the :code:`device` parameter (which is a part of a task contract) that is passed to an FL task each round will be **cpu**
     - **CUDA_PREFFERED**: the :code:`device` parameter will be **cuda:{index}** if CUDA devices are enabled in the Envoy config and **cpu** otherwise.
 
