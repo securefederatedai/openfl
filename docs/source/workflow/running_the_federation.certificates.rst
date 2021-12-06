@@ -125,7 +125,7 @@ On the Collaborator Nodes
    
 3. For each test machine you want to run as collaborator nodes, create a collaborator certificate request to be signed by the certificate authority. 
 
- Replace :code:`COL.LABEL` with the label you assigned to the collaborator. This label does not have to be the FQDN; It can be any unique alphanumeric label.
+ Replace :code:`COL.LABEL` with the label you assigned to the collaborator. This label does not have to be the FQDN; it can be any unique alphanumeric label.
 
     .. code-block:: console
     
