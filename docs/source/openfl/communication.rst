@@ -3,9 +3,9 @@
 
 .. _director_communications:
 
-*****************************************************
-|productName| Director Service Communication Diagrams
-*****************************************************
+***************************************
+Director Service Communication Diagrams
+***************************************
 
 The following diagrams depict existing procedure calls to the Director service. Included are interactions with the Director's inner representations to better understand their signatures.
 
