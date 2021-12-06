@@ -3,22 +3,118 @@
 
 .. _install_software_root:
 
-********************
+=====================
 Install the Software
-********************
+=====================
 
 Depending on how you want to set up Open Federated Learning (|productName|), choose one of the following installation procedure.
 
-:doc:`install.initial`
+:doc:`install_package`
     Follow this procedure to prepare the environment and install the |productName| package.
 
-:doc:`install.docker`
+:doc:`install_docker`
     Follow this procedure to build a Docker\*\  image of |productName|, which you can use use to run your federation in an isolated environment. 
 
 .. toctree::
    :maxdepth: 1
    :hidden:
 
-   install.initial
-   install.docker
+   `install_package`_
+   `install_docker`_
 
+.. _install_package:
+
+*********************************
+Install the Package
+*********************************
+
+Perform this procedure on every node in the federation.
+
+1. Install a Python\* \  3.6 (or higher) virtual environment. 
+   
+ See the `Virtualenv installation guide <https://virtualenv.pypa.io/en/latest/installation.html>`_ for details.
+
+2. Create a new Virtualenv environment for the project.
+
+   .. code-block:: console
+
+      python3 -m virtualenv env_name
+
+3. Activate the virtual environment.
+
+   .. code-block:: console
+
+      source env_name/bin/activate
+
+4. Install the Open Federated Learning (|productName|) package.
+
+    A. Installation from PyPI: 
+    
+        .. parsed-literal::
+        
+            pip install \ |productWheel|\
+   
+    B. Installation from source:
+
+        #. Clone the |productName| repository:
+        
+            .. code-block:: console
+            
+                git clone https://github.com/intel/openfl.git 
+
+
+        #. From inside the Python environment, call :code:`pip install`: 
+
+            .. code-block:: console
+            
+                cd openfl/
+                pip install .
+
+
+
+5. Run the :code:`fx` command in the virtual environment to confirm |productName| is installed.
+
+   .. figure:: images/fx_help.png
+    ..   :scale: 70 %
+
+.. centered:: Output of the fx Command
+
+
+.. _install_docker:
+
+****************************************
+Use |productName| inside Docker\* \  Image
+****************************************
+
+.. note::
+
+   The Docker\* \  version of Open Federated Learning (|productName|) is to provide an isolated environment complete with the prerequisites to run a federation. When the execution is over, the container can be destroyed and the results of the computation will be available on a directory on the local host.
+
+1. Install Docker on all nodes in the federation.
+
+ See the `Docker installation guide <https://docs.docker.com/engine/install/>`_ for details. 
+
+2. Check that Docker is running properly with the *Hello World* command:
+
+    .. code-block:: console
+
+      $ docker run hello-world
+      Hello from Docker!
+      This message shows that your installation appears to be working correctly.
+      ...
+      ...
+      ...
+      
+3. Build an image from the latest official |productName| release:
+
+	.. parsed-literal::
+
+	   docker pull intel/\ |productWheel|\
+   
+	If you prefer to build an image from a specific commit or branch, perform the following commands:
+
+	.. parsed-literal::
+
+	   git clone https://github.com/intel/openfl.git
+	   cd \ |productWheel|
+	   ./scripts/build_base_docker_image.sh
