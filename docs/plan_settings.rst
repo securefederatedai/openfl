@@ -16,9 +16,9 @@ The FL plan is described by the **plan.yaml** file located in the **plan** direc
 
 Each YAML top-level section contains the following subsections:
 
-- ``template``: name of the class including top-level packages names. An instance of this class is created when plan gets initialized.
-- ``settings``: arguments that are passed to the class constructor
-- ``defaults``: file that contains default settings for this subsection.
+- ``template``: The name of the class including top-level packages names. An instance of this class is created when plan gets initialized.
+- ``settings``: The arguments that are passed to the class constructor.
+- ``defaults``: The file that contains default settings for this subsection.
   Any setting from defaults file can be overriden in the **plan.yaml** file.
 
 The following is an example of a **plan.yaml**:
@@ -51,11 +51,11 @@ Tasks
 
 Each task subsection contains the following:
 
-- ``function``: function name to call.
+- ``function``: The function name to call.
   The function must be the one defined in :class:`TaskRunner <openfl.federated.TaskRunner>` class.
 - ``kwargs``: kwargs passed to the ``function``.
 
 .. note::
-    See an `example <https://github.com/intel/openfl/blob/develop/openfl/federated/task/runner.py>`_ of :class:`TaskRunner <openfl.federated.TaskRunner>` class for details.
+    See an `example <https://github.com/intel/openfl/blob/develop/openfl/federated/task/runner.py>`_ of the :class:`TaskRunner <openfl.federated.TaskRunner>` class for details.
     
     
