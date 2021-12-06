@@ -9,11 +9,14 @@ Installation
 
 Depending on how you want to set up Open Federated Learning (|productName|), choose one of the following installation procedure.
 
+
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
+   :hidden:
 
    `install_package`_
    `install_docker`_
+
 
 .. _install_package:
 
