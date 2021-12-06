@@ -9,6 +9,10 @@ Learn about the short-lived and long-lived components that compose Open Federate
 
 - :doc:`source/openfl/components`
 
+Understand the procedure calls to the Director service.
+
+- :doc:`source/openfl/communication`
+
 Learn about the plugin framework that makes |productName| flexible and extensible for your use:
 
 - :doc:`source/openfl/plugins`
