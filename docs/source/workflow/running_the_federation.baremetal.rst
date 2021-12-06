@@ -23,13 +23,13 @@ STEP 1: Create a Workspace on the Aggregator
         export WORKSPACE_TEMPLATE=keras_cnn_mnist
         export WORKSPACE_PATH=${HOME}/my_federation
 
-3.	Decide a workspace template, which are end-to-end federated learning training demonstrations. The following is a sampleb of available templates:
+3.	Decide a workspace template, which are end-to-end federated learning training demonstrations. The following is a sample of available templates:
 
- - :code:`keras_cnn_mnist`: workspace with a simple `Keras <http://keras.io/>`_ CNN model that will download the `MNIST <http://yann.lecun.com/exdb/mnist/>`_ dataset and train in a federation.
- - :code:`tf_2dunet`: workspace with a simple `TensorFlow <http://tensorflow.org>`_ CNN model that will use the `BraTS <https://www.med.upenn.edu/sbia/brats2017/data.html>`_ dataset and train in a federation.
- - :code:`tf_cnn_histology`: workspace with a simple `TensorFlow <http://tensorflow.org>`_ CNN model that will download the `Colorectal Histology <https://zenodo.org/record/53169#.XGZemKwzbmG>`_ dataset and train in a federation.
- - :code:`torch_cnn_histology`: workspace with a simple `PyTorch <http://pytorch.org/>`_ CNN model that will download the `Colorectal Histology <https://zenodo.org/record/53169#.XGZemKwzbmG>`_ dataset and train in a federation.
- - :code:`torch_cnn_mnist`: workspace with a simple `PyTorch <http://pytorch.org>`_ CNN model that will download the `MNIST <http://yann.lecun.com/exdb/mnist/>`_ dataset and train in a federation.
+ - :code:`keras_cnn_mnist`: a workspace with a simple `Keras <http://keras.io/>`_ CNN model that will download the `MNIST <http://yann.lecun.com/exdb/mnist/>`_ dataset and train in a federation.
+ - :code:`tf_2dunet`: a workspace with a simple `TensorFlow <http://tensorflow.org>`_ CNN model that will use the `BraTS <https://www.med.upenn.edu/sbia/brats2017/data.html>`_ dataset and train in a federation.
+ - :code:`tf_cnn_histology`: a workspace with a simple `TensorFlow <http://tensorflow.org>`_ CNN model that will download the `Colorectal Histology <https://zenodo.org/record/53169#.XGZemKwzbmG>`_ dataset and train in a federation.
+ - :code:`torch_cnn_histology`: a workspace with a simple `PyTorch <http://pytorch.org/>`_ CNN model that will download the `Colorectal Histology <https://zenodo.org/record/53169#.XGZemKwzbmG>`_ dataset and train in a federation.
+ - :code:`torch_cnn_mnist`: a workspace with a simple `PyTorch <http://pytorch.org>`_ CNN model that will download the `MNIST <http://yann.lecun.com/exdb/mnist/>`_ dataset and train in a federation.
  
   See the complete list of available templates.
 
@@ -76,7 +76,7 @@ STEP 1: Create a Workspace on the Aggregator
 		fx plan initialize
 	
 
-    This command initializes the FL plan and autopopulates the `fully qualified domain name (FQDN) <https://en.wikipedia.org/wiki/Fully_qualified_domain_name>`_ of the aggregator node. This FQDN is embedded within the FL plan so the collaborator nodes know address of the externally accessible aggregator server to connect to.
+    This command initializes the FL plan and autopopulates the `fully qualified domain name (FQDN) <https://en.wikipedia.org/wiki/Fully_qualified_domain_name>`_ of the aggregator node. This FQDN is embedded within the FL plan so the collaborator nodes know the address of the externally accessible aggregator server to connect to.
     
     If you have connection issues with the autopopulated FQDN in the FL plan, you can do **one of the following**:
     
