@@ -7,7 +7,7 @@
 Metric Logging Callback
 ***********************
 
-You can use custom metric logging function for each task via Python\*\  API or command line interface. This function calls on the aggregator node.
+With the director-based workflow, you can use custom metric logging function for each task via Python\*\  API or command line interface. This function calls on the aggregator node.
 
 
 Python API
