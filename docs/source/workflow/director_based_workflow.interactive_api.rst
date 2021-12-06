@@ -7,7 +7,7 @@
 Interactive Python API (Beta)
 *******************************************
 
-The Open Federated Learning (|productName|) interactive Python API enables the Experiment manager (data scientists) to define and start a federated learning experiment from a single entry point: a Jupyter\*\ notebook or a Python script. 
+The Open Federated Learning (|productName|) interactive Python API enables the Experiment manager (data scientists) to define and start a federated learning experiment from a single entry point: a Jupyter\*\  notebook or a Python script. 
 
     - :ref:`federation_api_prerequisites`
     - :ref:`federation_api_define_fl_experiment`
@@ -23,7 +23,7 @@ Prerequisites
 The Experiment manager requires the following:
 
 Access to the Director.
-    Initialize a workspace by creating an empty directory and placing inside the workspace a Jupyter\*\ notebook or a Python script.
+    Initialize a workspace by creating an empty directory and placing inside the workspace a Jupyter\*\  notebook or a Python script.
     
     Items in the workspace may include:
     
@@ -98,7 +98,7 @@ The *Federation* entity registers and keeps the following information:
 .. note::
     Methods available in the Federation API:
         
-        - :code:`get_dummy_shard_descriptor`: creates a dummy shard descriptor for debugging the  the experiment pipeline
+        - :code:`get_dummy_shard_descriptor`: creates a dummy shard descriptor for debugging the experiment pipeline
         - :code:`get_shard_registry`: returns information about the Envoys connected to the Director and their shard descriptors
 
 .. _experiment_api:
@@ -106,7 +106,7 @@ The *Federation* entity registers and keeps the following information:
 Experiment API
 ----------------
 
-The *Experiment* entity registers training-related objects, FL tasks, and settings.
+The *Experiment* entity registers training-related objects, federated learning (FL) tasks, and settings.
 
 1. Set up a federated learning experiment.
 
@@ -139,7 +139,7 @@ Instantiate and initialize a model and optimizer in your preferred deep learning
         from openfl.interface.interactive_api.experiment import ModelInterface
         MI = ModelInterface(model, optimizer, framework_plugin: str)
     
-The initialized model and optimizer objects should be passed to the :code:`ModelInterface` along with the path to correct Framework Adapter plugin inside |productName| package.
+The initialized model and optimizer objects should be passed to the :code:`ModelInterface` along with the path to correct Framework Adapter plugin inside the |productName| package.
 
 .. note::
     The |productName| interactive API supports *Keras* and *PyTorch* models via existing plugins. You can implement other deep learning models via the plugin interface and point the :code:`framework_plugin` to your implementation. 
@@ -264,21 +264,36 @@ Use the Experiment API to prepare a workspace archive to transfer to the *Direct
         - Compresses the whole workspace to an archive.
         - Sends the experiment archive to the *Director* so it may distribute the archive across the federation and start the *Aggregator*.
 
-FLExperiment's :code:`start()` method parameters
--------------------------------------------------
+FLExperiment :code:`start()` Method Parameters
+----------------------------------------------
 
-* :code:`model_provider` - defined earlier :code:`ModelInterface` object
-* :code:`task_keeper` - defined earlier :code:`TaskInterface` object 
-* :code:`data_loader` - defined earlier :code:`DataInterface` object
-* :code:`rounds_to_train` - number of aggregation rounds needed to be conducted before the experiment is considered finished
-* :code:`delta_updates` - use calculated gradients instead of model checkpoints for aggregation
-* :code:`opt_treatment` - optimizer state treatment in federation. Possible values: 'RESET' means the optimizer state 
-is initialized each round from noise, if 'CONTINUE_LOCAL' is used the optimizer state will be reused locally by every collaborator, 
-in case the parameter is set to 'CONTINUE_GLOBAL' the optimizer's state will be aggregated.
-* :code:`device_assignment_policy` - this setting may be 'CPU_ONLY' or 'CUDA_PREFFERED'. In the first case, the :code:`device` 
-parameter (which is a part of a task contract) that is passed to an FL task each round will be 'cpu'. In case 
-:code:`device_assignment_policy='CUDA_PREFFERED'`, the :code:`device` parameter will be 'cuda:{index}' if cuda devices 
-enabled in Envoy config and 'cpu' otherwise.
+The following are parameters of the :code:`start()` method in FLExperiment:
+
+:code:`model_provider`
+    This parameter is defined earlier by the :code:`ModelInterface` object.
+
+:code:`task_keeper`
+    This parameter is defined earlier by the :code:`TaskInterface` object.
+
+:code:`data_loader`
+    This parameter is defined earlier by the :code:`DataInterface` object.
+
+:code:`rounds_to_train` - 
+    This parameter defines the number of aggregation rounds needed to be conducted before the experiment is considered finished.
+    
+:code:`delta_updates`
+    This parameter sets up the aggregation to use calculated gradients instead of model checkpoints.
+
+:code:`opt_treatment` 
+    This parameter defines the optimizer state treatment in the federation. The following are available values:
+    - **RESET**: the optimizer state is initialized each round from noise
+    - **CONTINUE_LOCAL**: the optimizer state will be reused locally by every collaborator
+    - **CONTINUE_GLOBAL**: the optimizer's state will be aggregated
+    
+:code:`device_assignment_policy`
+    The following are available values:
+    - **CPU_ONLY**: the :code:`device` parameter (which is a part of a task contract) that is passed to an FL task each round will be **cpu**
+    - **CUDA_PREFFERED**: the :code:`device` parameter will be **cuda:{index}** if CUDA devices are enabled in the Envoy config and **cpu** otherwise.
 
 
 .. _federation_api_observe_fl_experiment:
