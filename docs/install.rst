@@ -4,20 +4,13 @@
 .. _install_software_root:
 
 =====================
-Install the Software
+Installation
 =====================
 
 Depending on how you want to set up Open Federated Learning (|productName|), choose one of the following installation procedure.
 
-:doc:`install_package`
-    Follow this procedure to prepare the environment and install the |productName| package.
-
-:doc:`install_docker`
-    Follow this procedure to build a Docker\*\  image of |productName|, which you can use use to run your federation in an isolated environment. 
-
 .. toctree::
    :maxdepth: 1
-   :hidden:
 
    `install_package`_
    `install_docker`_
@@ -28,6 +21,7 @@ Depending on how you want to set up Open Federated Learning (|productName|), cho
 Install the Package
 *********************************
 
+Follow this procedure to prepare the environment and install the |productName| package.
 Perform this procedure on every node in the federation.
 
 1. Install a Python\* \  3.6 (or higher) virtual environment. 
@@ -75,7 +69,7 @@ Perform this procedure on every node in the federation.
 5. Run the :code:`fx` command in the virtual environment to confirm |productName| is installed.
 
    .. figure:: images/fx_help.png
-    ..   :scale: 70 %
+      :scale: 70 %
 
 .. centered:: Output of the fx Command
 
@@ -83,8 +77,10 @@ Perform this procedure on every node in the federation.
 .. _install_docker:
 
 ****************************************
-Use |productName| inside Docker\* \  Image
+|productName| with Docker\* \ 
 ****************************************
+
+Follow this procedure to download or build a Docker\*\  image of |productName|, which you can use use to run your federation in an isolated environment.
 
 .. note::
 
