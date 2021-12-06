@@ -26,7 +26,7 @@ Install |productName| in a virtual Python\*\  environment. See :ref:`install_pac
 STEP 2: Create PKI Certificates Using Step-CA (Optional)
 --------------------------------------------------------
 
-The use of mTLS is recommended for deployments in untrusted environments to establish participant identity and to encrypt communication. You may either import certificates provided by your organization or generate certificates with the :ref:`semi-automatic PKI <semi_automatic_certification>` provided by |productName|.
+The use of mutual Transport Layer Security (mTLS) is recommended for deployments in untrusted environments to establish participant identity and to encrypt communication. You may either import certificates provided by your organization or generate certificates with the :ref:`semi-automatic PKI <semi_automatic_certification>` provided by |productName|.
 
 .. _step3_start_the_director:
 
