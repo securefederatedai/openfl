@@ -13,7 +13,7 @@ Plugin Components
    device_monitor_plugin_
 
 Open Federated Learning (|productName|) is designed to be a flexible and extensible framework. Plugins are interchangeable parts of |productName| components. Different plugins support varying usage scenarios.
-A plugin may be **required** or **optional**. |productName| can run without optional plugins. 
+A plugin may be **required** or **optional**. 
 
 You can provide your implementations of |productName| plugins to achieve a desired behavior. Technically, a plugin is just a class that implements some interface. You may enable a plugin by putting its 
 import path and initialization parameters to the config file of a corresponding |productName| component or to the frontend Python API. Please refer to openfl-tutorials for more information.
@@ -23,7 +23,7 @@ import path and initialization parameters to the config file of a corresponding 
 Framework Adapter
 ######################
 
-Framework Adapter plugins enable |productName| support for Deep Learning frameworks usage in FL experiments. 
+The Framework Adapter plugin enables |productName| support for Deep Learning frameworks usage in FL experiments. 
 It is a **required** plugin for the frontend API component and Envoy.
 All the framework-specific operations on model weights are isolated in this plugin so |productName| can be framework-agnostic.
 
@@ -61,17 +61,17 @@ implement the :code:`serialization_setup` method to prepare the model object for
 Experiment Serializer
 ######################
 
-Serializer plugins are used on the frontend Python API to serialize the Experiment components and then on Envoys to deserialize them.
-Currently, the default serializer is based on pickling. It is a **required** plugin.
+The Serializer plugin is used on the frontend Python API to serialize the Experiment components and then on Envoys to deserialize them.
+Currently, the default serializer plugin is based on pickling. It is a **required** plugin.
 
-A serializer plugin must implement the :code:`serialize` method that creates a Python object representation on disk.
+The serializer plugin must implement the :code:`serialize` method that creates a Python object representation on disk.
 
 .. code-block:: python
 
    @staticmethod
    def serialize(object_, filename: str) -> None:
 
-As well as the :code:`restore_object` method that will load previously serialized object from disk.
+The plugin must also implement the :code:`restore_object` method that will load previously serialized object from disk.
 
 .. code-block:: python
 
