@@ -142,7 +142,8 @@ Instantiate and initialize a model and optimizer in your preferred deep learning
 The initialized model and optimizer objects should be passed to the :code:`ModelInterface` along with the path to correct Framework Adapter plugin inside the |productName| package.
 
 .. note::
-    The |productName| interactive API supports *Keras* and *PyTorch* models via existing plugins. You can implement other deep learning models via the plugin interface and point the :code:`framework_plugin` to your implementation. 
+    The |productName| interactive API supports *TensorFlow* and *PyTorch* frameworks via existing plugins. 
+    User can add support for other deep learning frameworks via the plugin interface and point to your implementation of a :code:`framework_plugin` in :code:`ModelInterface`. 
 
 
 .. _experiment_api_taskinterface:
