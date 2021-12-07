@@ -89,7 +89,7 @@ The *Federation* entity registers and keeps the following information:
 
         federation = Federation(
             client_id: str, director_node_fqdn: str, director_port: str
-            tls: bool, ca_cert_chain: str, cert: str, private_key: str)
+            tls: bool, cert_chain: str, api_cert: str, api_private_key: str)
 
     .. note::
         You may disable mTLS in trusted environments or enable mTLS by providing paths to the certificate chain of the certificate authority, aggregator certificate, and private key.

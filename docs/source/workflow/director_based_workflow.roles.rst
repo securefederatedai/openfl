@@ -120,7 +120,7 @@ STEP 3: Start the Envoy
     .. code-block:: console
 
         fx envoy start -n env_one --disable-tls \
-            --envoy-config-path envoy_config.yaml -d director_fqdn:port
+            --envoy-config-path envoy_config.yaml -dh director_fqdn -dp port
 
  If you have a federation with PKI certificates, run this command.
  
@@ -130,7 +130,7 @@ STEP 3: Start the Envoy
 
         fx envoy start -n "$ENVOY_NAME" \
             --envoy-config-path envoy_config.yaml \
-            -d director_fqdn:port -rc cert/root_ca.crt \
+            -dh director_fqdn -dp port -rc cert/root_ca.crt \
             -pk cert/"$ENVOY_NAME".key -oc cert/"$ENVOY_NAME".crt
             
 
