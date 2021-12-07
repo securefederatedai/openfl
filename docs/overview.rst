@@ -9,11 +9,6 @@ Overview
 
    `definitions_and_conventions`_
    `definitions_and_conventions`_
-   
-.. .. only:: Intel
-
-   .. toctree::
-
      
 
 .. note::
@@ -68,6 +63,6 @@ Federated Learning Plan (FL Plan)
 	An FL plan defines the address of the aggregator, the workload (model) to send to the collaborators, and other parameters about the federation, such as, the number of federation rounds and the encryption to use for the network connections.
 
 
-.. toctree::
-   overview.how_can_intel_protect_federated_learning
-   overview.what_is_intel_federated_learning
+.. toctree
+..    overview.how_can_intel_protect_federated_learning
+..    overview.what_is_intel_federated_learning

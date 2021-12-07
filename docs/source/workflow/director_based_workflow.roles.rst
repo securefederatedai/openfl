@@ -109,7 +109,13 @@ STEP 3: Start the Envoy
     - Complete the shard descriptor template field with the address of the local shard descriptor class.
 
     .. note::
-        The shard descriptor is a scriptable object to provide a unified data interface for FL experiments. The shard descriptor implements :code:`__getitem__()` and :code:`len()` methods as well as several additional methods to access **sample shape**, **target shape**, and **shard description** that may be used to identify participants during experiment definition and execution.
+        The shard descriptor is an object to provide a unified data interface for FL experiments. 
+        The shard descriptor implements :code:`get_dataset()` method as well as several additional 
+        methods to access **sample shape**, **target shape**, and **shard description** that may be used to identify 
+        participants during experiment definition and execution.
+
+        :code:`get_dataset()` method accepts the dataset_type (for instance train, validation, query, gallery) and returns 
+        an iterable object with samples and targets.
         
         Abstract shard descriptor should be subclassed and all its methods should be implemented to describe the way data samples and labels will be loaded from disk during training. 
         

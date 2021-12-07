@@ -22,7 +22,10 @@ Prerequisites
 
 The Experiment manager requires the following:
 
-Access to the Director.
+Python Intepreter
+    Create a virtual Python environment with packages required for conducting the experiment. The Python environment is replicated on collaborator nodes.
+
+A Local Experiment Workspace
     Initialize a workspace by creating an empty directory and placing inside the workspace a Jupyter\*\  notebook or a Python script.
     
     Items in the workspace may include:
@@ -34,10 +37,7 @@ Access to the Director.
     .. note::
     
         This workspace will be archived and transferred to collaborator nodes. Ensure only relevant source code or resources are stored in the workspace.
-
-
-Python Intepreter
-    Create a virtual Python environment with packages required for conducting the experiment. The Python environment is replicated on collaborator nodes.
+         **data** and **cert** directories will not be included in the archive.
 
 
 .. _federation_api_define_fl_experiment:
@@ -58,8 +58,8 @@ The following are the interactive Python API to define an experiment:
     
 
 .. note::
-    Each federation is bound to some Machine Learning problem in a sense that all collaborators dataset shards should follow the same annotation format for all samples. \
-
+    Each federation is bound to some Machine Learning problem in a sense that all collaborators dataset shards should allow to solve the same data science problem. 
+    For example object detection and semantic segmentation problems should be solved in different federations. \
 
 
 .. _federation_api:
@@ -67,23 +67,17 @@ The following are the interactive Python API to define an experiment:
 Federation API
 --------------
 
-The *Federation* entity registers and keeps the following information:
+The *Federation* entity is designed to be a bridge between a notebook and *Director*.
 
-    - Collaborator settings and local data
-    - Network settings
 
-1. Set up a federation.
+1. Import the Federation class from openfl package
 
     .. code-block:: python
 
         from openfl.interface.interactive_api.federation import Federation
 
 
-    .. note::
-        Once a federation is created, you may use the federation for subsequent experiments.
-
-
-2. Initialize the API class with the aggregator node FQDN and encryption settings.
+2. Initialize the Federation object with the Director node network address and encryption settings.
 
     .. code-block:: python
 
@@ -92,7 +86,7 @@ The *Federation* entity registers and keeps the following information:
             tls: bool, cert_chain: str, api_cert: str, api_private_key: str)
 
     .. note::
-        You may disable mTLS in trusted environments or enable mTLS by providing paths to the certificate chain of the certificate authority, aggregator certificate, and private key.
+        You may disable mTLS in trusted environments or enable mTLS by providing paths to the certificate chain of the API authority, aggregator certificate, and a private key.
 
 
 .. note::
@@ -108,19 +102,19 @@ Experiment API
 
 The *Experiment* entity registers training-related objects, federated learning (FL) tasks, and settings.
 
-1. Set up a federated learning experiment.
+1. Import the FLExperiment class from openfl package
 
     .. code-block:: python
 
         from openfl.interface.interactive_api.experiment import FLExperiment
 
-2. Initialize the experiment with the following parameters: a federation object and an experiment name.
+2. Initialize the experiment with the following parameters: a federation object and a unique experiment name.
 
     .. code-block:: python
 
         fl_experiment = FLExperiment(federation: Federation, experiment_name: str)
 
-3. Register these supplementary interface classes: :code:`TaskInterface`, :code:`DataInterface`, and :code:`ModelInterface`.
+3. Import these supplementary interface classes: :code:`TaskInterface`, :code:`DataInterface`, and :code:`ModelInterface`.
 
     .. code-block:: python
 
@@ -139,7 +133,8 @@ Instantiate and initialize a model and optimizer in your preferred deep learning
         from openfl.interface.interactive_api.experiment import ModelInterface
         MI = ModelInterface(model, optimizer, framework_plugin: str)
     
-The initialized model and optimizer objects should be passed to the :code:`ModelInterface` along with the path to correct Framework Adapter plugin inside the |productName| package.
+The initialized model and optimizer objects should be passed to the :code:`ModelInterface` along with the path to correct Framework Adapter plugin inside the |productName| package 
+or from local workspace.
 
 .. note::
     The |productName| interactive API supports *TensorFlow* and *PyTorch* frameworks via existing plugins. 
@@ -171,7 +166,8 @@ Register an FL task and accompanying information.
         @TI.add_kwargs(**task_settings)
         @TI.register_fl_task(model='my_model', data_loader='train_loader',
                 device='device', optimizer='my_Adam_opt')
-        def foo(my_model, train_loader, my_Adam_opt, device, batch_size, some_arg=356)
+        def foo(my_model, train_loader, my_Adam_opt, device, batch_size, some_arg=356):
+            # training or validation logic
         ...
 
 FL tasks return a dictionary object with metrics: :code:`{metric name: metric value for this task}`.
@@ -304,7 +300,7 @@ The following are parameters of the :code:`start()` method in FLExperiment:
 Observe the Experiment Execution
 ================================
 
-If the experiment was accepted by the *Director*, you can oversee its execution with the :code:`FLexperiment.stream_metrics()` method. This method prints metrics from the FL tasks (and saved TensorBoard logs).
+If the experiment was accepted by the *Director*, you can oversee its execution with the :code:`FLexperiment.stream_metrics()` method. This method prints metrics from the FL tasks (and saves TensorBoard logs).
 
 
 .. _federation_api_complete_fl_experiment:
