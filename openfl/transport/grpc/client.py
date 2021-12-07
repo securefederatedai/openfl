@@ -164,7 +164,6 @@ class CollaboratorGRPCClient:
             An insecure gRPC channel object
 
         """
-
         return grpc.insecure_channel(uri, options=self.channel_options)
 
     def create_tls_channel(self, uri, root_certificate, disable_client_auth,
