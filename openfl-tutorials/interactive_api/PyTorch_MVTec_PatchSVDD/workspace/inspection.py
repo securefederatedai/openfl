@@ -98,9 +98,11 @@ def eval_embeddings_nn_multik(obj, embs64, embs32, masks, labels, nn=1):
 
         'det_sum': det_sum,
         'seg_sum': seg_sum,
+        'bal_acc_sum': ba_sum,
 
         'det_mult': det_mult,
         'seg_mult': seg_mult,
+        'bal_acc_mult': ba_mult,
 
         'maps_64': maps_64,
         'maps_32': maps_32,

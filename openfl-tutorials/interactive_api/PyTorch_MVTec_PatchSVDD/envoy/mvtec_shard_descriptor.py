@@ -25,7 +25,7 @@ class MVTecShardDataset(ShardDataset):
         self.rank = rank
         self.worldsize = worldsize
         self.images_path = images_path[self.rank - 1::self.worldsize]
-        self.mask_path = mask_path
+        self.mask_path = mask_path[self.rank - 1::self.worldsize]
         self.labels = labels[self.rank - 1::self.worldsize]
 
     def __getitem__(self, index):
@@ -36,13 +36,14 @@ class MVTecShardDataset(ShardDataset):
 
         img = self.resize(img)
         img = np.asarray(img)
+        label = self.labels[index]
         if self.mask_path[index]:
             mask = np.asarray(imread(self.mask_path[index]))
             mask = self.resize(mask)
             mask = np.asarray(mask)
         else:
-            mask = np.full(img.shape, None)
-        label = self.labels[index]
+            mask = np.zeros(img.shape)[:,:,0]
+        
 
         return img, mask, label
 
@@ -114,6 +115,8 @@ class MVTecShardDescriptor(ShardDescriptor):
             fpaths = sorted(glob(fpattern))
             self.images_path = list(fpaths)
             self.labels = np.zeros(len(fpaths), dtype=np.int32)
+            # Masks
+            self.mask_path = np.full(self.labels.shape, None)
         # Test dataset
         elif dataset_type == 'test':
             fpattern = os.path.join(self.dataset_path, f'{self.obj}/test/*/*.png')
@@ -126,12 +129,12 @@ class MVTecShardDescriptor(ShardDescriptor):
             self.images_path = fpaths
             self.labels = np.zeros(len(fpaths_anom) + len(fpaths_good), dtype=np.int32)
             self.labels[:len(fpaths_anom)] = 1   # anomalies
+            # Masks
+            fpattern_mask = os.path.join(self.dataset_path, f'{self.obj}/ground_truth/*/*.png')
+            self.mask_path = sorted(glob(fpattern_mask)) + [None]*len(fpaths_good)
         else:
             raise Exception(f'Wrong dataset type: {dataset_type}.'
                             f'Choose from the list: [train, test]')
-        # Masks
-        fpattern_mask = os.path.join(self.dataset_path, f'{self.obj}/ground_truth/*/*.png')
-        self.mask_path = sorted(glob(fpattern_mask))
 
         return MVTecShardDataset(
             images_path=self.images_path,

@@ -20,7 +20,7 @@ def bilinears(images, shape) -> np.ndarray:
 def bal_acc_score(obj, predictions, labels):
     """Calculate balanced accuracy score."""
     precision, recall, thresholds = precision_recall_curve(labels.flatten(), predictions.flatten())
-    f1_score = (2 * precision * recall) / (precision + recall + 1e-10)
+    f1_score = (2 * precision * recall) / (precision + recall)
     threshold = thresholds[np.argmax(f1_score)]
     prediction_result = predictions > threshold
     ba_score = balanced_accuracy_score(labels, prediction_result)
