@@ -42,9 +42,7 @@ class MVTecShardDataset(ShardDataset):
             mask = self.resize(mask)
             mask = np.asarray(mask)
         else:
-            mask = np.zeros(img.shape)[:,:,0]
-        
-
+            mask = np.zeros(img.shape)[:, :, 0]
         return img, mask, label
 
     def __len__(self):
@@ -131,7 +129,7 @@ class MVTecShardDescriptor(ShardDescriptor):
             self.labels[:len(fpaths_anom)] = 1   # anomalies
             # Masks
             fpattern_mask = os.path.join(self.dataset_path, f'{self.obj}/ground_truth/*/*.png')
-            self.mask_path = sorted(glob(fpattern_mask)) + [None]*len(fpaths_good)
+            self.mask_path = sorted(glob(fpattern_mask)) + [None] * len(fpaths_good)
         else:
             raise Exception(f'Wrong dataset type: {dataset_type}.'
                             f'Choose from the list: [train, test]')
