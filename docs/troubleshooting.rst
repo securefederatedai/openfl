@@ -4,7 +4,7 @@
 .. _troubleshooting:
 
 *******************************************************
-Open Federated Learning (|productName|) Troubleshooting
+|productName| Troubleshooting
 *******************************************************
 
 The following is a list of commonly reported issues in Open Federated Learning (|productName|). If you don't see your issue reported here, please submit a `Github issue

@@ -47,7 +47,7 @@ Perform this procedure on every node in the federation.
 
     A. Installation from PyPI: 
     
-        .. parsed-literal::
+        .. code-block:: console
         
             pip install \ |productWheel|\
    
@@ -106,13 +106,13 @@ Follow this procedure to download or build a Docker\*\  image of |productName|, 
       
 3. Build an image from the latest official |productName| release:
 
-	.. parsed-literal::
+	.. code-block:: console
 
 	   docker pull intel/\ |productWheel|\
    
 	If you prefer to build an image from a specific commit or branch, perform the following commands:
 
-	.. parsed-literal::
+	.. code-block:: console
 
 	   git clone https://github.com/intel/openfl.git
 	   cd \ |productWheel|

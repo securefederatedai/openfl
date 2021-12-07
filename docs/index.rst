@@ -13,7 +13,7 @@ Welcome to the Open Federated Learning (|productName|) Documentation!
 
 Open Federated Learning (|productName|) is a Python\* \ 3 library for federated learning that enables organizations to collaboratively train a model without sharing sensitive information.
 
-pen Federated Learning (|productName|) is Deep Learning framework-agnostic. 
+Open Federated Learning (|productName|) is Deep Learning framework-agnostic. 
 Training of statistical models may be done with any deep learning framework, such as 
 `TensorFlow <https://www.tensorflow.org/>`_\* \ or `PyTorch <https://pytorch.org/>`_\*\, via a plugin mechanism.
 

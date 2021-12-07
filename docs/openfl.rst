@@ -2,7 +2,7 @@
 .. # SPDX-License-Identifier: Apache-2.0
 
 *************************************************
-Open Federated Learning (|productName|) Structure
+|productName| Structure
 *************************************************
 
 Learn about the short-lived and long-lived components that compose Open Federated Learning (|productName|):
