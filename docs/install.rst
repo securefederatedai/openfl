@@ -49,7 +49,7 @@ Perform this procedure on every node in the federation.
     
         .. code-block:: console
         
-            pip install \ |productWheel|\
+            pip install openfl
    
     B. Installation from source:
 
@@ -108,12 +108,12 @@ Follow this procedure to download or build a Docker\*\  image of |productName|, 
 
 	.. code-block:: console
 
-	   docker pull intel/\ |productWheel|\
+	   docker pull intel/openfl
    
 	If you prefer to build an image from a specific commit or branch, perform the following commands:
 
 	.. code-block:: console
 
 	   git clone https://github.com/intel/openfl.git
-	   cd \ |productWheel|
+	   cd openfl
 	   ./scripts/build_base_docker_image.sh

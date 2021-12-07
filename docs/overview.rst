@@ -9,13 +9,14 @@ Overview
 
    `definitions_and_conventions`_
    `definitions_and_conventions`_
+   overview.how_can_intel_protect_federated_learning
+   overview.what_is_intel_federated_learning
    
-.. only:: Intel
+.. .. only:: Intel
 
-  .. toctree::
+   .. toctree::
 
-     overview.how_can_intel_protect_federated_learning
-     overview.what_is_intel_federated_learning
+     
 
 .. note::
 
