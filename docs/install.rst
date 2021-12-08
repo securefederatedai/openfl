@@ -27,21 +27,21 @@ Install the Package
 Follow this procedure to prepare the environment and install the |productName| package.
 Perform this procedure on every node in the federation.
 
-1. Install a Python\* \  3.6 (or higher) virtual environment. 
+1. Install a Python 3.8 (or higher) virtual environment using venv.
    
- See the `Virtualenv installation guide <https://virtualenv.pypa.io/en/latest/installation.html>`_ for details.
+ See the `Venv installation guide <https://docs.python.org/3/library/venv.html>`_ for details.
 
 2. Create a new Virtualenv environment for the project.
 
    .. code-block:: console
 
-      python3 -m virtualenv env_name
+      python3 -m venv venv
 
 3. Activate the virtual environment.
 
    .. code-block:: console
 
-      source env_name/bin/activate
+      source venv/bin/activate
 
 4. Install the Open Federated Learning (|productName|) package.
 
@@ -72,7 +72,6 @@ Perform this procedure on every node in the federation.
 5. Run the :code:`fx` command in the virtual environment to confirm |productName| is installed.
 
    .. figure:: images/fx_help.png
-      :scale: 70 %
 
 .. centered:: Output of the fx Command
 
@@ -91,20 +90,9 @@ Follow this procedure to download or build a Docker\*\  image of |productName|, 
 
 1. Install Docker on all nodes in the federation.
 
- See the `Docker installation guide <https://docs.docker.com/engine/install/>`_ for details. 
-
-2. Check that Docker is running properly with the *Hello World* command:
-
-    .. code-block:: console
-
-      $ docker run hello-world
-      Hello from Docker!
-      This message shows that your installation appears to be working correctly.
-      ...
-      ...
-      ...
+ See the `Docker installation guide <https://docs.docker.com/engine/install/>`_ for details.
       
-3. Build an image from the latest official |productName| release:
+2. Build an image from the latest official |productName| release:
 
 	.. code-block:: console
 
@@ -116,4 +104,4 @@ Follow this procedure to download or build a Docker\*\  image of |productName|, 
 
 	   git clone https://github.com/intel/openfl.git
 	   cd openfl
-	   ./scripts/build_base_docker_image.sh
+	   docker build -f openfl-docker/Dockerfile.base .
