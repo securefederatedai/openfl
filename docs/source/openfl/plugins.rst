@@ -51,9 +51,9 @@ to the model in place. Tensor names in the dictionary match corresponding names 
 If your new framework model cannot be directly serialized with pickle-type libraries, you can optionally 
 implement the :code:`serialization_setup` method to prepare the model object for serialization.
 
-.. code-block:: python
+    .. code-block:: python
 
-   def serialization_setup(): 
+        def serialization_setup():
 
 
 .. _serializer_plugin:
@@ -66,17 +66,17 @@ Currently, the default serializer plugin is based on pickling. It is a **require
 
 The serializer plugin must implement the :code:`serialize` method that creates a Python object representation on disk.
 
-.. code-block:: python
+    .. code-block:: python
 
-   @staticmethod
-   def serialize(object_, filename: str) -> None:
+       @staticmethod
+       def serialize(object_, filename: str) -> None:
 
 The plugin must also implement the :code:`restore_object` method that will load previously serialized object from disk.
 
-.. code-block:: python
+    .. code-block:: python
 
-   @staticmethod
-   def restore_object(filename: str):
+       @staticmethod
+       def restore_object(filename: str):
 
 
 .. _device_monitor_plugin:
@@ -90,21 +90,21 @@ Therefore, you can query this Envoy Registry information from the Director to de
 
 CUDA Device Monitor plugin must implement the following interface:
 
-.. code-block:: python
+    .. code-block:: python
 
-   class CUDADeviceMonitor:
-   
-      def get_driver_version(self) -> str:
-         ...
+       class CUDADeviceMonitor:
 
-      def get_device_memory_total(self, index: int) -> int:
-         ...
+          def get_driver_version(self) -> str:
+             ...
 
-      def get_device_memory_utilized(self, index: int) -> int:
-         ...
+          def get_device_memory_total(self, index: int) -> int:
+             ...
 
-      def get_device_utilization(self, index: int) -> str:
-         """It is just a general method that returns a string that may be shown to the frontend user."""
-         ...
+          def get_device_memory_utilized(self, index: int) -> int:
+             ...
+
+          def get_device_utilization(self, index: int) -> str:
+             """It is just a general method that returns a string that may be shown to the frontend user."""
+             ...
 
 

@@ -23,17 +23,17 @@ sequenceDiagram
 
     E->>+D: Get Experiment Data
     D->>ER: Gets experiment archive (by name)
-    D->>ER: Sets status to Active ?
+    D->>ER: Sets status to In Progress
     D->>-E: Experiment Data
   end
 
   rect rgb(255, 225, 225)
   note over ER,E: The Experiment execution
     D-->D: Starts an aggregator that orchestrates experiment
-    D->>ER: Removes experiment archive ?
+    D->>ER: Removes experiment archive
     D-->D: Finishes the experiment and releases involved Envoys
     D->>+ER: Puts training artifacts
-    D->>ER: Sets status to Finished ?
+    D->>ER: Sets status to Finished
   end
 
   rect rgb(225, 225, 255)
