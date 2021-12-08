@@ -60,7 +60,7 @@ The Collaborator is created by the :ref:`Envoy <openfl_ll_components_envoy>` whe
 in the :ref:`Director-based workflow <director_workflow>`. The Collaborator should be started from CLI if a user follows the 
 :ref:`Aggregator-based workflow <running_the_federation_aggregator_based>`
 
-Every Collaborator is a unique service. The model is loaded with a local *shard descriptor* to perform tasks 
+Every Collaborator is a unique service. The data loader is loaded with a local *shard descriptor* to perform tasks 
 included in an FL experiment. At the end of the training task, weights are extracted and sent to the central node 
 and aggregated.
 
