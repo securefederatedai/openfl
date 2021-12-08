@@ -68,6 +68,8 @@ class ExperimentWorkspace:
         # This is needed for python module finder
         sys.path.append(self.experiment_work_dir)
 
+        return self.experiment_work_dir
+
     def __exit__(self, exc_type, exc_value, traceback):
         """Remove the workspace."""
         os.chdir(self.cwd)

@@ -197,7 +197,7 @@ class FLExperiment:
         from os import makedirs
         from os.path import basename
 
-        archive_type = 'zip'
+        archive_type = 'tar'
         archive_name = basename(getcwd())
 
         tmp_dir = 'temp_' + archive_name

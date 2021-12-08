@@ -2,10 +2,16 @@
 # SPDX-License-Identifier: Apache-2.0
 
 """Envoy module."""
-
+import asyncio
 import logging
+import shutil
+from io import BytesIO
+
+import aiodocker
+from aiodocker import utils
 import time
 import uuid
+import yaml
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
@@ -24,6 +30,7 @@ class Envoy:
     """Envoy class."""
 
     def __init__(self, *, shard_name, director_host, director_port, shard_descriptor,
+                 shard_descriptor_config,
                  root_certificate: str = None, private_key: str = None, certificate: str = None,
                  tls: bool = True, cuda_devices=(), cuda_device_monitor=None) -> None:
         """Initialize a envoy object."""
@@ -43,6 +50,7 @@ class Envoy:
         )
 
         self.shard_descriptor = shard_descriptor
+        self.shard_descriptor_config = shard_descriptor_config
         self.cuda_devices = tuple(cuda_devices)
 
         # Optional plugins
@@ -53,7 +61,7 @@ class Envoy:
         self.is_experiment_running = False
         self._health_check_future = None
 
-    def run(self):
+    async def run(self):
         """Run of the envoy working cycle."""
         while True:
             try:
@@ -67,10 +75,65 @@ class Envoy:
             data_file_path = self._save_data_stream_to_file(data_stream)
             self.is_experiment_running = True
             try:
-                with ExperimentWorkspace(
-                        experiment_name, data_file_path, is_install_requirements=True
-                ):
-                    self._run_collaborator()
+                from tarfile import TarFile, TarInfo
+                import os
+                docker = aiodocker.Docker()
+                with TarFile(name=data_file_path, mode='a') as tar_file:
+                    docker_file_path = Path(
+                        __file__).parent.parent.parent.parent.absolute() / 'openfl-docker' / 'Dockerfile.collaborator'
+                    run_collaborator_path = Path(
+                        __file__).parent.absolute() / 'run_collaborator.py'
+                    with open('shard_descriptor_config.yaml', 'w') as f:
+                        yaml.dump(self.shard_descriptor_config, f)
+                    tar_file.add(docker_file_path, 'Dockerfile')
+                    tar_file.add(run_collaborator_path, 'run.py')
+                    tar_file.add('shard_descriptor_config.yaml', 'shard_descriptor_config.yaml')
+                    # os.remove('shard_descriptor_config.yaml')
+
+                with open(data_file_path, 'rb') as f:
+                    fileobj = BytesIO(f.read())
+                    build_image_iter = docker.images.build(
+                        fileobj=fileobj,
+                        encoding='gzip',
+                        tag=experiment_name,
+                        stream=True,
+                    )
+                async for l in build_image_iter:
+                    print(l)
+                cmd = (
+                    f'python run.py --name {self.name} '
+                    f'--plan_path plan/plan.yaml '
+                    f'--root_certificate {self.root_certificate} '
+                    f'--private_key {self.private_key} '
+                    f'--certificate {self.certificate} '
+                    f'--shard_config shard_descriptor_config.yaml '
+                    f'--cuda_devices cpu'
+                )
+                container = await docker.containers.create_or_replace(
+                    config={
+                        'Cmd': ['/bin/bash', '-c', cmd],
+                        'Image': f'{experiment_name}:latest',
+                    },
+                    name=experiment_name,
+                )
+                subscriber = docker.events.subscribe()
+                await container.start()
+                while True:
+                    event = await subscriber.get()
+                    if event is None:
+                        break
+
+                    for key, value in event.items():
+                        print(key, ":", value)
+
+                    if event["Actor"]["ID"] == container._id:
+                        if event["Action"] == "stop":
+                            await container.delete(force=True)
+                            print(f"=> deleted {container._id[:12]}")
+                        elif event["Action"] == "destroy":
+                            print("=> done with this container!")
+                            break
+
             except Exception as exc:
                 logger.exception(f'Collaborator failed with error: {exc}:')
             finally:
@@ -147,7 +210,7 @@ class Envoy:
                 # Shard accepted for participation in the federation
                 logger.info('Shard accepted')
                 self._health_check_future = self.executor.submit(self.send_health_check)
-                self.run()
+                asyncio.run(self.run())
             else:
                 # Shut down
                 logger.error('Report shard info was not accepted')
