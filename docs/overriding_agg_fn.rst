@@ -13,12 +13,12 @@ With the aggregator-based workflow, you can use custom aggregation functions for
 Python API
 ==========
 
-1. Create an implementation of :class:`openfl.component.aggregation_functions.AggregationFunction`. See this `example <https://github.com/intel/openfl/blob/develop/openfl/component/aggregation_functions/interface.py>`_ for details.
+1. Create an implementation of :class:`openfl.component.aggregation_functions.AggregationFunction`.
 
 2. In the ``override_config`` keyword argument of the :func:`openfl.native.run_experiment` native function, pass the implementation as a ``tasks.{task_name}.aggregation_type`` parameter.
 
 .. note::
-    See `Federated PyTorch MNIST Tutorial <https://github.com/intel/openfl/blob/develop/openfl-tutorials/Federated_Pytorch_MNIST_custom_aggregation_Tutorial.ipynb>`_ for an example of the :func:`openfl.native.run_experiment` native function.
+    See `Federated PyTorch MNIST Tutorial <https://github.com/intel/openfl/blob/develop/openfl-tutorials/Federated_Pytorch_MNIST_custom_aggregation_Tutorial.ipynb>`_ for an example of the custom aggregation function.
     
 
 Command Line Interface
@@ -37,7 +37,7 @@ Choose from the following predefined aggregation functions:
 Custom Aggregation Functions
 ----------------------------
 
-You can also create your own implementation of :class:`openfl.component.aggregation_functions.AggregationFunction`. See `example <https://github.com/intel/openfl/blob/develop/openfl/component/aggregation_functions/interface.py>`_ for details.
+You can also create your own implementation of :class:`openfl.component.aggregation_functions.AggregationFunction`. See `example <https://github.com/intel/openfl/blob/develop/openfl-tutorials/Federated_Pytorch_MNIST_custom_aggregation_Tutorial.ipynb>`_ for details.
 
 1. Define the behavior of the aggregation.
 
@@ -101,7 +101,7 @@ This function receives tensors for a single parameter from multiple collaborator
 
 
 .. note::
-    See the `definition <https://github.com/intel/openfl/blob/develop/openfl/component/aggregation_functions/interface.py>`_ of :class:`openfl.component.aggregation_functions.AggregationFunctionInterface.call` for details.
+    See the `definition <https://github.com/intel/openfl/blob/develop/openfl/component/aggregation_functions/interface.py>`_ of :class:`openfl.component.aggregation_functions.AggregationFunction.call` for details.
 
 
 Example of a Custom Aggregation Function
@@ -171,5 +171,3 @@ This is an example of a custom tensor clipping aggregation function that multipl
             return np.average(clipped_tensors, weights=weights, axis=0)
 
 A full implementation can be found at `Federated_Pytorch_MNIST_custom_aggregation_Tutorial.ipynb <https://github.com/intel/openfl/blob/develop/openfl-tutorials/Federated_Pytorch_MNIST_custom_aggregation_Tutorial.ipynb>`_
-
-

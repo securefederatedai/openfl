@@ -22,6 +22,8 @@ Start the Tutorials
 	.. code-block:: python
 
 		fx
+    
+    You should see a list of available commands
 
 2. Start a Jupyter server. This returns a URL to access available tutorials.
 
@@ -35,6 +37,8 @@ Start the Tutorials
 
  - :code:`Federated Keras MNIST Tutorial`: workspace with a simple `Keras <http://keras.io/>`_ CNN model that will download the `MNIST <http://yann.lecun.com/exdb/mnist/>`_ dataset and train in a federation.
  - :code:`Federated Pytorch MNIST Tutorial`: workspace with a simple `PyTorch <https://pytorch.org/>`_ CNN model that will download the `MNIST <http://yann.lecun.com/exdb/mnist/>`_ dataset and train in a federation.
+ - :code:`Federated PyTorch UNET Tutorial`: workspace with a UNET `PyTorch <https://pytorch.org/>`_ model that will download the `Hyper-Kvasir <https://datasets.simula.no/hyper-kvasir/>`_ dataset and train in a federation.
+ - :code:`Federated PyTorch TinyImageNet`: workspace with a MobileNet-V2 `PyTorch <https://pytorch.org/>`_ model that will download the `Tiny-ImageNet <https://www.kaggle.com/c/tiny-imagenet/>`_ dataset and train in a federation.
 
 
 Familiarize with the API Concepts in an Aggregator-Based Worklow
@@ -48,7 +52,7 @@ Add the following lines to your Python script.
     .. code-block:: python
 
      import openfl.native as fx
-     from openfl.federated import FederatedModel,FederatedDataSet
+     from openfl.federated import FederatedModel, FederatedDataSet
 
 This loads the |productName| package and import wrappers that adapt your existing data and models to a (simulated) federated context.
 
@@ -69,7 +73,7 @@ For an experiment with more collaborators, run the following command.
     .. code-block:: python
 
      collaborator_list = [str(i) for i in range(NUM_COLLABORATORS)]
-     fx.init('keras_cnn_mnist',col_names=collaborator_list)
+     fx.init('keras_cnn_mnist', col_names=collaborator_list)
 
 
 .. note::
@@ -112,7 +116,7 @@ Set the value at **runtime** with the :code:`override-config` parameter of :code
     .. code-block:: python
 
      #set values at experiment runtime
-     fx.run_experiment(experiment_collaborators,override_config={"aggregator.settings.rounds_to_train": 20})
+     fx.run_experiment(experiment_collaborators, override_config={"aggregator.settings.rounds_to_train": 20})
 
 
 Set the value **ahead of time** with :code:`fx.update_plan()`.
@@ -130,7 +134,7 @@ Use the :code:`FederatedDataSet` function to wrap in-memory numpy datasets and s
 
     .. code-block:: python
 
-     fl_data = FederatedDataSet(train_images,train_labels,valid_images,valid_labels,batch_size=32,num_classes=classes)
+     fl_data = FederatedDataSet(train_images, train_labels, valid_images, valid_labels, batch_size=32, num_classes=classes)
 
 Similarly, the :code:`FederatedModel` function takes as an argument your model definition. For the first example, you can wrap a Keras model in a function that outputs the compiled model.
 
@@ -145,10 +149,10 @@ Similarly, the :code:`FederatedModel` function takes as an argument your model d
          model.add(Dense(64, activation='relu'))
          model.add(Dense(classes, activation='softmax'))
          
-         model.compile(optimizer='adam',loss='categorical_crossentropy',metrics=['accuracy'],)
+         model.compile(optimizer='adam', loss='categorical_crossentropy',metrics=['accuracy'],)
          return model 
 
-     fl_model = FederatedModel(build_model,data_loader=fl_data)
+     fl_model = FederatedModel(build_model, data_loader=fl_data)
 
 For the second example with a PyTorch model, the :code:`FederatedModel` function takes the following parameters: 
 
@@ -186,7 +190,7 @@ For the second example with a PyTorch model, the :code:`FederatedModel` function
          """
          return F.binary_cross_entropy_with_logits(input=output,target=target)
 
-     fl_model = FederatedModel(build_model=Net,optimizer=optimizer,loss_fn=cross_entropy,data_loader=fl_data)
+     fl_model = FederatedModel(build_model=Net, optimizer=optimizer, loss_fn=cross_entropy, data_loader=fl_data)
 
 
 Step 5: Define the Collaborators
@@ -196,8 +200,8 @@ Define the collaborators taking part in the experiment. The example below uses t
 
     .. code-block:: python
 
-     experiment_collaborators = {col_name:col_model for col_name,col_model \
-                                      in zip(collaborator_list,fl_model.setup(len(collaborator_list)))}
+     experiment_collaborators = {col_name:col_model for col_name, col_model \
+                                      in zip(collaborator_list, fl_model.setup(len(collaborator_list)))}
 
 This command creates a model for each collaborator with their data shard.
 
@@ -212,6 +216,4 @@ Run the experiment for five rounds and return the final model once completed.
 
     .. code-block:: python
 
-     final_fl_model = fx.run_experiment(experiment_collaborators,override_config={"aggregator.settings.rounds_to_train": 5})
-
-
+     final_fl_model = fx.run_experiment(experiment_collaborators, override_config={"aggregator.settings.rounds_to_train": 5})
