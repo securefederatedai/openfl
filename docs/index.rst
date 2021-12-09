@@ -7,9 +7,9 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-***************************************
+*******************************************
 Welcome to the |productName| documentation!
-***************************************
+*******************************************
 
 Intel\ :sup:`®` \ Federated Learning (|productName|) is a Python3 library for federated learning.
 It enables organizations to collaborately train a
@@ -33,8 +33,6 @@ can use any deep learning frameworks, such as `Tensorflow <https://www.tensorflo
 
    manual
    openfl
-   models
-   data
    troubleshooting
 
 

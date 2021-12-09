@@ -3,9 +3,9 @@
 
 .. _running_the_federation_aggregator_based:
 
-**********************
+**************************
 Aggregator-based workflow.
-**********************
+**************************
 
 First make sure you've installed the software :ref:`using these instructions <install_initial_steps>`
 

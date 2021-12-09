@@ -2,6 +2,7 @@
 .. # SPDX-License-Identifier: Apache-2.0
 
 .. _log_metric_callback:
+
 ===============================
 Metric logging callback
 ===============================
@@ -30,6 +31,7 @@ Define function with follow signature:
             round_number (int): Round number
         """
         your code 
+
 CLI
 ====
 

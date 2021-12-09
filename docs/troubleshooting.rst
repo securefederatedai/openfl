@@ -4,7 +4,7 @@
 .. _troubleshooting:
 
 |productName| Troubleshooting
-#######################
+#############################
 
 The following is a list of commonly reported issues. If you don't see your issue reported here, please submit a `Github issue
 <https://github.com/intel/openfl/issues>`_ or contact us directly on `Slack <https://join.slack.com/t/openfl/shared_invite/zt-ovzbohvn-T5fApk05~YS_iZhjJ5yaTw>`_.
@@ -24,4 +24,3 @@ The following is a list of commonly reported issues. If you don't see your issue
 4. **I am seeing some other error while running the experiment. Is there more verbose logging available so I can investigate this on my own?**
 
    Yes! You can turn on verbose logging with :code:`fx -l DEBUG collaborator start` or :code:`fx -l DEBUG aggregator start`. This will give verbose information related to gRPC, bidirectional tensor transfer, and compression related information.  
-

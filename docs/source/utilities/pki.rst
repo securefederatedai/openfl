@@ -5,17 +5,11 @@
 |productName| PKI solutions
 ============================
 
-.. toctree::
-   :maxdepth: 2
-
-   semi_automatic_certification_
-   manual_certification_
-
 .. _semi_automatic_certification:
 
 
 Certification of Actors in Federation with Semi-automatic PKI
-******************************************
+*************************************************************
 
 If you have trusted workspace and connection should not be encrypted you can use :code:`disable_tls` option while starting experiment.
 Otherwise it is necessary to certify each node participating in the federation. Certificates allow to use mutual tls connection between nodes.
@@ -33,8 +27,10 @@ Token must be copied to each node by some secure way. Each step is considered in
       .. code-block:: console
 
          $ fx pki install -p </path/to/ca/dir> --ca-url <host:port>
+
       | :code:`-p` - path to folder, which will contain ca files.
       | :code:`--ca-url` - host and port which ca server will listen
+
       When executing this command, you will be prompted for a password and password confirmation. The password will encrypt some ca files.
       This command will also download `step-ca <https://github.com/smallstep/certificates>`_ and `step <https://github.com/smallstep/cli>`_ binaries from github.
 
@@ -42,6 +38,7 @@ Token must be copied to each node by some secure way. Each step is considered in
       .. code-block:: console
 
          $ fx pki run -p </path/to/ca/dir>
+
       | :code:`-p` - path to folder, which will contain ca files.
 
 3. Get token for some node.
@@ -49,6 +46,7 @@ Token must be copied to each node by some secure way. Each step is considered in
       .. code-block:: console
 
          $ fx pki get-token -n <subject>
+
       | :code:`-n` - subject name, fqdn for director, collaborator name for envoy or api name for api-layer node
 
       Run this command on ca side, from ca folder. Output is a token which contains JWT (json web token) from CA server and CA
@@ -58,8 +56,10 @@ Token must be copied to each node by some secure way. Each step is considered in
       .. code-block:: console
 
          $ fx pki certify -n <subject> -t <token>
+
       | :code:`-n` - subject name, fqdn for director, collaborator name for envoy or api name for api-layer node
       | :code:`-t` - output token from previous command
+
       This command call step client, to connect to CA server over https.
       Https is provided by root certificate which was copy with JWT.
       Server authenticates client by JWT and client authenticates server by root certificate.

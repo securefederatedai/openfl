@@ -1,16 +1,9 @@
 .. # Copyright (C) 2020-2021 Intel Corporation
 .. # SPDX-License-Identifier: Apache-2.0
 
-******
+*******************************
 |productName| Plugin Components
-******
-
-.. toctree::
-   :maxdepth: 2
-
-   framework_adapter_
-   serializer_plugin_
-   device_monitor_plugin_
+*******************************
 
 
 |productName| is designed to be a flexible and extensible framework. Plugins are interchangeable parts of 
@@ -107,5 +100,3 @@ CUDA Device Monitor plugin must implement the following interface:
       def get_device_utilization(self, index: int) -> str:
          """It is just a general method that returns a string that may be shown to the frontend user."""
          ...
-
-

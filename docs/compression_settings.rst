@@ -3,9 +3,9 @@
 
 .. _compression_settings:
 
-***************
+********************
 Compression Settings
-***************
+********************
 
 Federated Learning can enable tens to thousands of participants to work together on the same model, but with this scaling comes increased communication cost. Furthermore, large models exacerbate this problem. For this reason we make compression is a core capability of |productName|, and our framework supports several lossless and lossy compression pipelines out of the box. In general, the weights of a model are typically not robust to information loss, so no compression is applied by default to the model weights sent bidirectionally; however, the deltas between the model weights for each round are inherently more sparse and better suited for lossy compression. The following is the list of compression pipelines that |productName| currently supports:
 
@@ -24,4 +24,3 @@ We provide an example template, **keras_cnn_with_compression**, that utilizes th
          template : openfl.pipelines.KCPipeline
          settings :
            n_clusters : 6
-

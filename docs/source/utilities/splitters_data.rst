@@ -21,12 +21,13 @@ Choose from predefined |productName| data splitters functions:
 - ``openfl.utilities.data_splitters.RandomNumPyDataSplitter``
 - ``openfl.component.aggregation_functions.LogNormalNumPyDataSplitter`` - assumes ``data`` argument as ``np.ndarray`` of integers (labels)
 - ``openfl.component.aggregation_functions.DirichletNumPyDataSplitter`` - assumes ``data`` argument as ``np.ndarray`` of integers (labels)
+
 Or create an implementation of :class:`openfl.utilities.data_splitters.NumPyDataSplitter`
 and pass it to FederatedDataset constructor as either ``train_splitter`` or ``valid_splitter`` keyword argument.
 
 
 Using in Shard Descriptor
-==================
+=========================
 
 Choose from predefined |productName| data splitters functions:
 
@@ -34,6 +35,7 @@ Choose from predefined |productName| data splitters functions:
 - ``openfl.utilities.data_splitters.RandomNumPyDataSplitter``
 - ``openfl.component.aggregation_functions.LogNormalNumPyDataSplitter`` - assumes ``data`` argument as np.ndarray of integers (labels)
 - ``openfl.component.aggregation_functions.DirichletNumPyDataSplitter`` - assumes ``data`` argument as np.ndarray of integers (labels)
+
 Or create your own implementation of :class:`openfl.component.aggregation_functions.AggregationFunction`.
 After defining the splitting behavior, you need to use it on your data to perform a simulation. 
 

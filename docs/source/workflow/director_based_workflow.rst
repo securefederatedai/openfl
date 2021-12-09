@@ -7,26 +7,19 @@
 Director-based workflow
 ************************
 
-.. toctree::
-    :maxdepth: 2
- 
-    establishing_federation_director_
-    interactive_api_
-
-
 .. _establishing_federation_director:
 
 Establishing a long-living Federation with Director
-#######################################
+###################################################
 
 1. Install |productName| 
-==================
+========================
 
 Make sure that you installed |productName| in your virtual Python environment.
 If not, use the instruction :ref:`install_initial_steps`.
 
 2. Implement Shard Descriptors
-==================
+==============================
 
 Then the data owners need to implement `Shard Descriptors` Python classes. 
 
@@ -38,7 +31,7 @@ as well as several additional methods to access ‘sample shape’, ‘target sh
 that may be used to identify participants during experiment definition and execution.
 
 3. (Optional) Create certificates using Step-CA 
-==================
+================================================
 
 The use of mTLS is strongly recommended for deployments in untrusted environments to establish participant identity and 
 to encrypt communication. Users may either import certificates provided by their organization or utilize 
@@ -51,7 +44,7 @@ Director is a central component in the Federation. It should be started on a nod
 Learn more about the Director component here: :ref:`openfl_ll_components`
 
 Create Director workspace
--------------------
+-------------------------
 
 Director requires a folder to operate in. Recieved experiments will be deployed in this folder. 
 Moreover, supplementary files like Director's config files and certificates may be stored in this folder. 
@@ -62,14 +55,14 @@ One may use CLI command to create a structured workspace for Director with a def
         $ fx director create-workspace -p director_ws
 
 Tune Director config
--------------------
+--------------------
 
 Director should be started from a config file. Basic config file should contain the Director's node FQDN, an open port, 
 and :code:`sample_shape` and :code:`target_shape` fields with string representation of the unified data interface in the Federation. 
 But it also may contain paths to certificates. 
 
 Use CLI to start Director
--------------------
+-------------------------
 
 When the Director's config has been set up, one may use CLI to start the Director. Without mTLS protection:
 
@@ -94,7 +87,7 @@ access to local data.
 When started Envoy will try to connect to the Director.
 
 Create Envoy workspace
--------------------
+----------------------
 
 The Envoy component also requires a folder to operate in. Use the following CLI command to create a workspace 
 with convenient folder structure and default Envoy's config and Shard Descriptor Python script:
@@ -104,14 +97,14 @@ with convenient folder structure and default Envoy's config and Shard Descriptor
         $ fx envoy create-workspace -p envoy_ws
 
 Setup Envoy's config
--------------------
+--------------------
 
 Unlike Director’s config, the one for Envoy should contain settings for the local Shard Descriptor. 
 The template field must be filled with the address of the local Shard Descriptor class, and settings filed 
 should list arbitrary settings required to initialize the Shard Descriptor.
 
 Use CLI to start Envoy
--------------------
+----------------------
 
 To start the Envoy without mTLS use the following CLI command: 
 
@@ -133,7 +126,7 @@ Alternatively, use the following command to establish a secured connection:
 
 
 6. Describing an FL experimnet using Interactive Python API
-====================================
+===========================================================
 
 At this point, data scientists may register their experiments to be executed in the federation. 
 |productName| provides a separate frontend Director’s client and :ref:`Interactive Python API <interactive_api>` 
@@ -143,7 +136,7 @@ to register experiments.
 .. _interactive_api:
 
 Beta: |productName| Interactive Python API
-#######################################
+##########################################
 
 The |productName| Python Interactive API should help data scientists to adapt single node training code for 
 running in the FL manner. The process of defining an FL experimnent is fully decoupled from the establishing 
@@ -354,6 +347,7 @@ FLExperiment's code:`start()` method parameters
 * code:`rounds_to_train` - number of aggregation rounds needed to be conducted before the experiment is considered finished
 * code:`delta_updates` - use calculated gradients instead of model checkpoints for aggregation
 * code:`opt_treatment` - optimizer state treatment in federation. Possible values: 'RESET' means the optimizer state 
+
 is initialized each round from noise, if 'CONTINUE_LOCAL' is used the optimizer state will be reused locally by every collaborator, 
 in case the parameter is set to 'CONTINUE_GLOBAL' the optimizer's state will be aggregated.
 * code:`device_assignment_policy` - this setting may be 'CPU_ONLY' or 'CUDA_PREFFERED'. In the first case, the code:`device` 

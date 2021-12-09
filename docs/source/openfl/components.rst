@@ -3,22 +3,14 @@
 
 .. _openfl_components:
 
-******
+*****************************
 |productName| core components
-******
-
-.. toctree::
-   :maxdepth: 2
-
-   `Spawning components`_
-   `Long-living components`_
-   `Static Diagram`_
-
+*****************************
 
 .. _openfl_spawning_components:
 
 Spawning components
-##########
+###################
 
 Aggregator
 ===========
@@ -44,7 +36,7 @@ Every *Collaborator* is a unique service as it is loaded with a local *Shard Des
 .. _openfl_ll_components:
 
 Long-living components
-#############
+######################
 
 Director
 ==========
@@ -69,6 +61,6 @@ When the *Director* starts an experiment, *Envoy* will accept the experiment wor
 
 
 Static Diagram
-#############
+##############
 
 .. figure:: static_diagram.svg

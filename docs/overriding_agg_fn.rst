@@ -2,6 +2,7 @@
 .. # SPDX-License-Identifier: Apache-2.0
 
 .. _overriding_agg_fn:
+
 ===============================
 Overriding aggregation function
 ===============================
@@ -26,6 +27,7 @@ Choose from predefined |productName| aggregation functions:
 - ``openfl.component.aggregation_functions.WeightedAverage`` (default)
 - ``openfl.component.aggregation_functions.Median``
 - ``openfl.component.aggregation_functions.GeometricMedian``
+
 Or create your own implementation of :class:`openfl.component.aggregation_functions.AggregationFunction`.
 After defining the aggregation behavior, you need to include it in ``plan/plan.yaml`` file of your workspace.
 Inside ``tasks`` section pick a task for which you want to change the aggregation

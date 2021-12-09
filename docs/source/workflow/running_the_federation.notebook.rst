@@ -4,13 +4,13 @@
 .. _running_notebook:
 
 Learning to fly: |productName| tutorials
-#######################
+########################################
 
 New to |productName|? Get familiar with our native Python API using the built-in tutorials. After installing the |productName| package in your virtual environment, simply run :code:`fx tutorial start` from the command line. This will start a Jupyter notebook server and return a URL you can use to access each of our tutorials. We provide several jupyter notebooks for Pytorch and Tensorflow that simulate a federation on a local machine.  These tutorials provide a convient entrypoint for learning about |productName| :ref:`conventions <definitions_and_conventions>`  like FL Plans, aggregators, collaborators and more. 
 
 
 Starting the tutorials
-~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~
 
 1. Make sure you have initialized the virtual environment and can run the :code:`fx` command.
 
@@ -24,7 +24,7 @@ Starting the tutorials
  - :code:`Federated Pytorch MNIST Tutorial`: workspace with a simple `PyTorch <https://pytorch.org/>`_ CNN model that will download the `MNIST <http://yann.lecun.com/exdb/mnist/>`_ dataset and train in a federation.
 
 |productName| Python API Concepts
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 As a first step to using the |productName| Python API, add the following lines to your python script:
 

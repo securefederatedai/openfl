@@ -3,15 +3,15 @@
 
 .. _director_communications:
 
-******
+*****************************************************
 |productName| Director service communication diagrams
-******
+*****************************************************
 
 Following diagrams depict existing procedure calls to the Director service.
 Interactions with Director's inner representations created to better understand their signatures.
 
 Director-Envoy communication
-##########
+############################
 
 The following diagram depicts a typical process of establishing a Federation and registering an experiment.  
 
@@ -21,7 +21,7 @@ The following diagram depicts a typical process of establishing a Federation and
     :type: mermaid
 
 Director's Envoy representation and related RPCs
-##########
+################################################
 
 This diagram shows possible interactions with Envoy handles on the Director side.
 
@@ -31,7 +31,7 @@ This diagram shows possible interactions with Envoy handles on the Director side
     :type: mermaid
 
 Director's Experiment representation and related RPCs
-##########
+#####################################################
 
 This diagram shows possible interactions with Experiment handles on the Director side.
 

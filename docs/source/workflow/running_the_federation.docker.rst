@@ -4,7 +4,7 @@
 .. _running_the_federation_docker:
 
 Running |productName| with Docker
-#################
+#################################
 
 There are two ways one can use OpenFL in a docker container.
 If you do not want to install OpenFL localy you can pull an image from Docker Hub and conduct experiments inside a container.
@@ -53,4 +53,3 @@ Keep in mind that plan should be initialized with the FQDN of the node where the
 3. Generate PKI certificates for all collaborators and the aggregator.
 
 4. Start the Federation.
-
