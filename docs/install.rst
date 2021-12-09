@@ -43,7 +43,7 @@ Perform this procedure on every node in the federation.
 
       source env_name/bin/activate
 
-4. Install the Open Federated Learning (|productName|) package.
+4. Install the |productName| package.
 
     A. Installation from PyPI: 
     
