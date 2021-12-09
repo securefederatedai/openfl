@@ -67,7 +67,7 @@ and aggregated.
 Converting tensor objects is handled by :ref:`framework adapter <framework_adapter>` plugins. 
 Included in |productName| are framework adapters for PyTorch and TensorFlow 2.x. 
 The list of framework adapters is extensible. User can contribute new framework adapters for deep learning frameworks 
-you would like see supported in |productName|. 
+they would like see supported in |productName|. 
 
 
 .. _openfl_ll_components:
@@ -90,7 +90,7 @@ Director
 The Director is a long-lived entity and is the central node of the federation. It accepts connections from: 
 
     - Frontend clients (data scientists using :ref:`interactive_api`)
-    - Envoys, if their Shar Descriptors are complient to the same data interface
+    - Envoys, if their Shard Descriptors are complient to the same data interface
 
 The Director supports concurrent frontend connections. 
 While the Director may take in several experiments, the experiments are executed in series.
@@ -111,8 +111,8 @@ Every Envoy is matched to one `shard descriptor <https://github.com/intel/openfl
 in order to run. When the Director starts an experiment, the Envoy accepts the experiment workspace, 
 prepares the environment, and starts a Collaborator.
 
-Envoy is also responsible for sending heartbeat messages to the Director, this messages may include information 
-regarding the collaborator machine resources utilization. 
+Envoy is also responsible for sending heartbeat messages to the Director. These messages may also include information 
+regarding the collaborator machine resources utilization. Refer to `device_monitor_plugin`_ for details.
 
 
 Static Diagram
