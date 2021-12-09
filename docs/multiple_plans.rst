@@ -36,7 +36,7 @@ When you are working on an FL plan, you can save it for future use.
       
  
     where :code:`NEW.PLAN.NAME` is the new FL plan for your workspace. 
-    Also, after this command, there is a switch to the :code:`NEW.PLAN.NAME` plan.
+    This command also combines switching to the :code:`NEW.PLAN.NAME` plan.
     
 .. _switching_plans:
 

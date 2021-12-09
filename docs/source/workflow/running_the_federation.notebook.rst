@@ -149,7 +149,7 @@ Similarly, the :code:`FederatedModel` function takes as an argument your model d
          model.add(Dense(64, activation='relu'))
          model.add(Dense(classes, activation='softmax'))
          
-         model.compile(optimizer='adam', loss='categorical_crossentropy',metrics=['accuracy'],)
+         model.compile(optimizer='adam', loss='categorical_crossentropy',metrics=['accuracy'])
          return model 
 
      fl_model = FederatedModel(build_model, data_loader=fl_data)
