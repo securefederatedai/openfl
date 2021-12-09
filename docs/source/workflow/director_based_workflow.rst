@@ -21,9 +21,9 @@ The director-based workflow comprises the following roles and their tasks:
 
 Follow the procedure in the director-based workflow to become familiar with the setup required and APIs provided for each role in the federation: *Experiment manager (Data scientist)*, *Director manager*, and *Collaborator manager*. 
 
-*Experiment manager* (or Data scientist) is a person or group of people using OpenFL.
-*Director Manager* is ML model creator's representative controlling Director.
-*Collaborator manager* is Data onwer's representative controlling Envoy.
+- *Experiment manager* (or Data scientist) is a person or group of people using OpenFL.
+- *Director Manager* is ML model creator's representative controlling Director.
+- *Collaborator manager* is Data onwer's representative controlling Envoy.
 
 
 .. note::
