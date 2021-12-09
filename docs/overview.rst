@@ -50,18 +50,12 @@ Federated learning brings in a few more components to the traditional data scien
 Collaborator
 	A collaborator is a client in the federation that has access to the local training, validation, and test datasets. By design, the collaborator is the only component of the federation with access to the local data. The local dataset should never leave the collaborator.
 	
-Parameter Server
-	A parameter server sends a global model to the collaborators. Parameter servers are often combined with aggregators on the same compute node.
-
 Aggregator
+	A parameter server sends a global model to the collaborators. Parameter servers are often combined with aggregators on the same compute node.
 	An aggregator receives locally tuned models from collaborators and combines the locally tuned models into a new global model. Typically, `federated averaging <https://arxiv.org/abs/1602.05629>`_, (a weighted average) is the algorithm used to combine the locally tuned models. 
 
 Round
-	A federation round is defined as the interval (typically defined in terms of training steps) where an aggregation is performed. In theory, collaborators may perform local training on the model for multiple epochs (or even partial epochs) within a single training round.
-
-Federated Learning Plan (FL Plan)
-	An FL plan defines the address of the aggregator, the workload (model) to send to the collaborators, and other parameters about the federation, such as, the number of federation rounds and the encryption to use for the network connections.
-
+	A federation round is defined as the interval (typically defined in terms of training steps) where an aggregation is performed. Collaborators may perform local training on the model for multiple epochs (or even partial epochs) within a single training round.
 
 .. toctree
 ..    overview.how_can_intel_protect_federated_learning
