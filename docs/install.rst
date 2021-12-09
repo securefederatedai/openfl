@@ -83,7 +83,7 @@ Perform this procedure on every node in the federation.
 |productName| with Docker\* \ 
 ****************************************
 
-Follow this procedure to download or build a Docker\*\  image of |productName|, which you can use use to run your federation in an isolated environment.
+Follow this procedure to download or build a Docker\*\  image of |productName|, which you can use to run your federation in an isolated environment.
 
 .. note::
 
