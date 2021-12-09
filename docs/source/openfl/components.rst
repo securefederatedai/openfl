@@ -112,7 +112,7 @@ in order to run. When the Director starts an experiment, the Envoy accepts the e
 prepares the environment, and starts a Collaborator.
 
 The envoy is also responsible for sending heartbeat messages to the Director. These messages may also include information 
-regarding the collaborator machine resources utilization. Refer to `device_monitor_plugin`_ for details.
+regarding collaborator machine resource utilization. Refer to `device_monitor_plugin`_ for details.
 
 
 Static Diagram
