@@ -7,7 +7,7 @@
 Installation
 =====================
 
-Depending on how you want to set up Open Federated Learning (|productName|), choose one of the following installation procedure.
+Depending on how you want to set up |productName|, choose one of the following installation procedure.
 
 
 .. toctree::
