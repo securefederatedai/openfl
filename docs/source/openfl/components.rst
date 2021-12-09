@@ -40,7 +40,7 @@ Aggregator
 
 The Aggregator is a short-lived entity, which means that its lifespan is limited by the experiment execution time. 
 It orchestrates Collaborators according to the FL plan, performs model aggregation at the end of each round, 
-and acts as parametr server for collaborators. 
+and acts as a parameter server for collaborators. 
 
 Model weights aggregation logic may be customized via :ref:`plugin mechanism <overriding_agg_fn>`.
 
