@@ -61,7 +61,7 @@ in the :ref:`Director-based workflow <director_workflow>`. The Collaborator shou
 :ref:`Aggregator-based workflow <running_the_federation_aggregator_based>`
 
 Every Collaborator is a unique service. The data loader is loaded with a local *shard descriptor* to perform tasks 
-included in an FL experiment. At the end of the training task, weights are extracted and sent to the central node 
+included in an FL experiment. At the end of the training task, weight tensors are extracted and sent to the central node 
 and aggregated.
 
 Converting tensor objects is handled by :ref:`framework adapter <framework_adapter>` plugins. 
