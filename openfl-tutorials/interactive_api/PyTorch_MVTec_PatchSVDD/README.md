@@ -1,4 +1,4 @@
-# Anomaly detection and segmentation
+# Anomaly Detection with PatchSVDD for MVTec Dataset
 
 ![MVTec AD objects](https://www.mvtec.com/fileadmin/Redaktion/mvtec.com/company/research/datasets/dataset_overview_large.png "MVTec AD objects")
 
@@ -13,9 +13,9 @@ Two neural networks are used: an encoder and a classifier. The encoder is compos
 The encoder has a hierarchical structure. The receptive field of the encoder is K = 64, and that of the embedded smaller encoder is K = 32. Patch SVDD divides the images into patches with a size K and a stride S. The values for the strides are S = 16 and S = 4 for the encoders with K = 64 and K = 32, respectively.
 
 ### 3. Links
-[Original paper](https://arxiv.org/abs/2006.16067)
-[Original Github code](https://github.com/nuclearboy95/Anomaly-Detection-PatchSVDD-PyTorch/tree/934d6238e5e0ad511e2a0e7fc4f4899010e7d892)
-[MVTec ad dataset download link](https://www.mydrive.ch/shares/38536/3830184030e49fe74747669442f0f282/download/420938113-1629952094/mvtec_anomaly_detection.tar.xz)
+* [Original paper](https://arxiv.org/abs/2006.16067)
+* [Original Github code](https://github.com/nuclearboy95/Anomaly-Detection-PatchSVDD-PyTorch/tree/934d6238e5e0ad511e2a0e7fc4f4899010e7d892)
+* [MVTec ad dataset download link](https://www.mydrive.ch/shares/38536/3830184030e49fe74747669442f0f282/download/420938113-1629952094/mvtec_anomaly_detection.tar.xz)
 
 
 ### 4. How to run this tutorial (without TLS and locally as a simulation):
