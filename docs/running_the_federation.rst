@@ -1058,12 +1058,3 @@ Procedure
 
 4. `STEP 3: Start the Federation`_.
 
-
-
-.. toctree::
-   :maxdepth: 2
-   :hidden:
-
-   source/workflow/running_the_federation.agg_based
-   source/workflow/director_based_workflow
-
