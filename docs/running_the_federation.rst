@@ -161,7 +161,7 @@ STEP 2: Start the Envoy
         :code:`get_dataset()` method accepts the dataset_type (for instance train, validation, query, gallery) and returns
         an iterable object with samples and targets.
 
-        MyShardDescriptor should be inherent from :code:`openfl.interface.interactive_api.shard_descriptor.ShardDescriptor`. It should implements :code:`get_dataset`, :code:`sample_shape` and :code:`target_shape` methods o describe the way data samples and labels will be loaded from disk during training.
+        User's implementation of ShardDescriptor should be inherent from :code:`openfl.interface.interactive_api.shard_descriptor.ShardDescriptor`. It should implements :code:`get_dataset`, :code:`sample_shape` and :code:`target_shape` methods o describe the way data samples and labels will be loaded from disk during training.
 
 3. Start the Envoy.
 
