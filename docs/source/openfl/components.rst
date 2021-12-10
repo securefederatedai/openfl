@@ -102,4 +102,4 @@ Every Envoy is matched to one `shard descriptor <https://github.com/intel/openfl
 Static Diagram
 ==============
 
-.. figure:: static_diagram.svg
+.. figure:: director_workflow.svg
