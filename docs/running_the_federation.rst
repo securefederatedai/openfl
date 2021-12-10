@@ -45,7 +45,7 @@ Follow the procedure in the director-based workflow to become familiar with the 
 
 An overview of this workflow is shown below.
 
-.. figure:: ../openfl/static_diagram.svg
+.. figure:: ./source/openfl/static_diagram.svg
 
 .. centered:: Overview of the Director-Based Workflow
 
