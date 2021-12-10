@@ -20,9 +20,9 @@ The following are workflows you can consider when creating a federated learning 
 
 .. _director_workflow:
 
-************************
+
 Director-Based Workflow
-************************
+=======================
 
 A director-based workflow uses long-lived components in a federation. These components continue to be available to distribute more experiments in the federation.
 
@@ -57,32 +57,28 @@ An overview of this workflow is shown below.
 .. _establishing_federation_director:
 
 Director Manager: Set Up the Director
-=====================================
+-------------------------------------
 
 The *Director manager* sets up the *Director*, which is the central node of the federation.
 
-    - :ref:`optional_step_create_pki_using_step_ca`
-    - :ref:`step0_install_director_prerequisites`
-    - :ref:`step1_start_the_director`
-
 .. _optional_step_create_pki_using_step_ca:
 
-OPTIONAL STEP: Create PKI Certificates Using Step-CA (Optional)
---------------------------------------------------------
+OPTIONAL STEP: Create PKI Certificates Using Step-CA
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The use of mutual Transport Layer Security (mTLS) is recommended for deployments in untrusted environments to establish participant identity and to encrypt communication. You may either import certificates provided by your organization or generate certificates with the :ref:`semi-automatic PKI <semi_automatic_certification>` provided by |productName|.
 
 .. _step0_install_director_prerequisites:
 
-STEP 0: Install Open Federated Learning (|productName|)
--------------------------------------------------------
+STEP 1: Install Open Federated Learning (|productName|)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Install |productName| in a virtual Python\*\  environment. See :ref:`install_package` for details.
 
 .. _step1_start_the_director:
 
-STEP 1: Start the Director
---------------------------
+STEP 2: Start the Director
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Start the Director on a node with at least two open ports. See :ref:`openfl_ll_components` to learn more about the Director entity.
 
@@ -117,7 +113,7 @@ Start the Director on a node with at least two open ports. See :ref:`openfl_ll_c
 .. _establishing_federation_envoy:
 
 Collaborator Manager: Set Up the Envoy
-======================================
+--------------------------------------
 
 The *Collaborator manager* sets up the *Envoys*, which are long-lived components on collaborator nodes. When started, Envoys will try to connect to the Director. Envoys receive an experiment archive and provide access to local data.
 
@@ -128,23 +124,23 @@ The *Collaborator manager* sets up the *Envoys*, which are long-lived components
 .. _optional_step_sign_pki_envoy:
 
 OPTIONAL STEP: Sign PKI Certificates (Optional)
---------------------------------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The use of mTLS is recommended for deployments in untrusted environments to establish participant identity and to encrypt communication. You may either import certificates provided by your organization or use the :ref:`semi-automatic PKI certificate <semi_automatic_certification>` provided by |productName|.
 
 
 .. _step0_install_envoy_prerequisites:
 
-STEP 0: Install |productName|
------------------------------
+STEP 1: Install |productName|
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Install |productName| in a Python\*\ virtual environment. See :ref:`install_package` for details.
 
 
 .. _step1_start_the_envoy:
 
-STEP 3: Start the Envoy
------------------------
+STEP 2: Start the Envoy
+^^^^^^^^^^^^^^^^^^^^^^^
 
 1. Create an Envoy workspace with a default config file and shard descriptor Python\*\  script.
 
@@ -199,7 +195,7 @@ STEP 3: Start the Envoy
 .. _establishing_federation_experiment_manager:
 
 Experiment Manager: Describe an Experiment
-==========================================
+------------------------------------------
 
 The process of defining an experiment is decoupled from the process of establishing a federation.
 The Experiment manager (or data scientist) is able to prepare an experiment in a Python environment.
@@ -208,9 +204,8 @@ that is allow to communicate with Director using a gRPC client.
 
 .. _running_the_federation_aggregator_based:
 
-*************************
 Aggregator-Based Workflow
-*************************
+=========================
 
 An overview of this workflow is shown below.
 
@@ -235,9 +230,9 @@ For this workflow, you modify the federation workspace to your requirements by e
 
 .. _plan_settings:
 
-******************************************
+
 Federated Learning Plan (FL Plan) Settings
-******************************************
+------------------------------------------
 
 .. note::
     Use the Federated Learning plan (FL plan) to modify the federation workspace to your requirements in an **aggregator-based workflow**.
@@ -260,7 +255,7 @@ The following is an example of a **plan.yaml**:
 
 
 Configurable Settings
-=====================
+^^^^^^^^^^^^^^^^^^^^^
 
 - :class:`Aggregator <openfl.component.Aggregator>`
     `openfl.component.Aggregator <https://github.com/intel/openfl/blob/develop/openfl/component/aggregator/aggregator.py>`_
@@ -279,7 +274,7 @@ Configurable Settings
 
 
 Tasks
------
+^^^^^
 
 Each task subsection contains the following:
 
@@ -293,9 +288,9 @@ Each task subsection contains the following:
 
 .. _running_the_federation_manual:
 
-*******************
+
 Bare Metal Approach
-*******************
+-------------------
 
 .. note::
 
@@ -327,9 +322,9 @@ However, continue with the following procedure for details in creating a federat
 
 .. _creating_workspaces:
 
-********************************************
+
 STEP 1: Create a Workspace on the Aggregator
-********************************************
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 1.	Start a Python 3.8 (>=3.6, <3.9) virtual environment and confirm |productName| is available.
 
@@ -441,9 +436,9 @@ STEP 1: Create a Workspace on the Aggregator
 
 .. _instruction_manual_certs:
 
-********************************
+
 STEP 2: Configure the Federation
-********************************
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The objectives in this step:
 
@@ -454,10 +449,9 @@ The objectives in this step:
 .. _install_certs_agg:
 
 On the Aggregator Node
-======================
+""""""""""""""""""""""
 
 Setting Up the Certificate Authority
-------------------------------------
 
 1. Change to the path of your workspace:
 
@@ -533,7 +527,7 @@ Setting Up the Certificate Authority
 .. _workspace_export:
 
 Exporting the Workspace
------------------------
+
 
 1. Export the workspace so that it can be imported to the collaborator nodes.
 
@@ -547,9 +541,10 @@ Exporting the Workspace
 
 
 .. _install_certs_colab:
+On the Collaborator Node
+""""""""""""""""""""""""
 
-On the Collaborator Nodes
-=========================
+Importing the Workspace
 
 1. Copy the :ref:`workspace archive <workspace_export>` from the aggregator node to the collaborator nodes.
 
@@ -611,12 +606,12 @@ On the Collaborator Nodes
 
 .. _running_the_federation.start_nodes:
 
-****************************
+
 STEP 3: Start the Federation
-****************************
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 On the Aggregator Node
-======================
+""""""""""""""""""""""
 
 1. Start the Aggregator.
 
@@ -629,7 +624,7 @@ On the Aggregator Node
 .. _running_collaborators:
 
 On the Collaborator Nodes
-=========================
+"""""""""""""""""""""""""
 
 1. Open a new terminal, change the directory to the workspace, and activate the virtual environment.
 
@@ -664,9 +659,9 @@ On the Collaborator Nodes
 
 .. _running_the_federation_docker:
 
-********************
+
 Docker\* \  Approach
-********************
+--------------------
 
 There are two ways you can run |productName| with Docker\*\.
 
@@ -677,15 +672,15 @@ There are two ways you can run |productName| with Docker\*\.
 .. _running_the_federation_docker_base_image:
 
 Option 1: Deploy a Federation in a Docker Container
-===================================================
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Prerequisites
--------------
+"""""""""""""
 
 You have already built an |productName| image. See :doc:`../../install.docker` for details.
 
 Procedure
----------
+"""""""""""""
 
 1. Run the |productName| image.
 
@@ -702,15 +697,15 @@ You can now experiment with |productName| in the container. For example, you can
 .. _running_the_federation_docker_workspace:
 
 Option 2: Deploy Your Workspace in a Docker Container
-=====================================================
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Prerequisites
--------------
+"""""""""""""
 
 You have already set up a TaskRunner and run :code:`fx plan initialize` in the workspace directory. See :ref:`Create a Workspace on the Aggregator <creating_workspaces>` for details.
 
 Procedure
----------
+"""""""""
 
 1. Build an image with the workspace you created.
 
