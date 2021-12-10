@@ -165,7 +165,7 @@ STEP 2: Start the Envoy
         :code:`get_dataset()` method accepts the dataset_type (for instance train, validation, query, gallery) and returns
         an iterable object with samples and targets.
 
-        User's implementation of ShardDescriptor should be inherent from :code:`openfl.interface.interactive_api.shard_descriptor.ShardDescriptor`. It should implements :code:`get_dataset`, :code:`sample_shape` and :code:`target_shape` methods o describe the way data samples and labels will be loaded from disk during training.
+        User's implementation of ShardDescriptor should be inherented from :code:`openfl.interface.interactive_api.shard_descriptor.ShardDescriptor`. It should implement :code:`get_dataset`, :code:`sample_shape` and :code:`target_shape` methods to describe the way data samples and labels will be loaded from disk during training.
 
 3. Start the Envoy.
 
@@ -205,14 +205,14 @@ Experiment Manager: Describe an Experiment
 
 The process of defining an experiment is decoupled from the process of establishing a federation.
 The Experiment manager (or data scientist) is able to prepare an experiment in a Python environment.
-Then the Experiment manager registers experiments into the federation using `Interactive Python API`_
+Then the Experiment manager registers experiments into the federation using `Interactive Python API (Beta)`_
 that is allow to communicate with the Director using a gRPC client.
 
 
 .. _interactive_python_api:
 
-Interactive Python API
-----------------------
+Interactive Python API (Beta)
+-----------------------------
 
 The Open Federated Learning (|productName|) interactive Python API enables the Experiment manager (data scientists) to define and start a federated learning experiment from a single entry point: a Jupyter\*\  notebook or a Python script.
 
@@ -221,6 +221,7 @@ The Open Federated Learning (|productName|) interactive Python API enables the E
     - `Federation API`_
     - `Experiment API`_
     - `Start an FL Experiment`_
+
 
 .. _federation_api_prerequisites:
 
@@ -532,8 +533,8 @@ An overview of this workflow is shown below.
 
 There are two ways to run federation without Director:
 
-- :ref:`Bare metal approach <running_the_federation_manual>`
-- :ref:`Docker approach <running_the_federation_docker>`
+- `Bare Metal Approach`_
+- `Docker Approach`_
 
 
 This workflow uses short-lived components in a federation, which is terminated when the experiment is finished. The components are as follows:
@@ -981,13 +982,13 @@ On the Collaborator Nodes
 .. _running_the_federation_docker:
 
 
-Docker\* \  Approach
---------------------
+Docker Approach
+---------------
 
 There are two ways you can run |productName| with Docker\*\.
 
-- :ref:`Deploy a federation in a Docker container <running_the_federation_docker_base_image>`
-- :ref:`Deploy the workspace in a Docker container <running_the_federation_docker_workspace>`
+- `Option 1: Deploy a Federation in a Docker Container`_
+- `Option 2: Deploy Your Workspace in a Docker Container`_
 
 
 .. _running_the_federation_docker_base_image:
@@ -1011,8 +1012,6 @@ Procedure
 
 
 You can now experiment with |productName| in the container. For example, you can test the project pipeline with the `"Hello Federation" bash script <https://github.com/intel/openfl/blob/develop/tests/github/test_hello_federation.sh>`_.
-
-
 
 
 .. _running_the_federation_docker_workspace:
