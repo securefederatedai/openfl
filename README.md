@@ -27,8 +27,7 @@ to meet the model. Therefore, the minimum data movement needed
 across the federation is solely the model parameters and their updates.
 
 
-Open Federated Learning (OpenFL) is a Python 3 project developed by Intel Labs and 
-Intel Internet of Things Group. 
+Open Federated Learning (OpenFL) is a Python 3 project developed by Intel Internet of Things Group (IOTG) and Intel Labs. 
 
 ![Federated Learning](https://raw.githubusercontent.com/intel/openfl/master/docs/images/diagram_fl.png)
 
