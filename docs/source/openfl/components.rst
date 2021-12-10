@@ -118,4 +118,4 @@ regarding collaborator machine resource utilization. Refer to `device_monitor_pl
 Static Diagram
 ==============
 
-.. figure:: static_diagram.svg
+.. figure:: director_workflow.svg
