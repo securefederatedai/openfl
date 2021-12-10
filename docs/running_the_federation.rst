@@ -7,7 +7,7 @@
 Run the Federation
 ******************
 
-The following are workflows you can consider when creating a federated learning setup.
+OpenFL currently supports two types of workflow for how to set up and run a federation: Director-based workflow (preferrable) and Aggregator-based workflow (old workflow, will not be supported soon). Director-based workflow introduces a new and more convenient way to set up a federation and brings "long-lived" components in a federation ("Director" and "Envoy").
 
 `Director-Based Workflow`_
     A federation created with this workflow continues to be available to distribute more experiments in series.
@@ -36,7 +36,11 @@ The director-based workflow comprises the following roles and their tasks:
     - `Collaborator Manager: Set Up the Envoy`_
     - `Experiment Manager: Describe an Experiment`_
 
-Follow the procedure in the director-based workflow to become familiar with the setup required and APIs provided for each role in the federation: *Director manager*, *Collaborator manager*, and *Experiment manager (data scientist)*.
+Follow the procedure in the director-based workflow to become familiar with the setup required and APIs provided for each role in the federation: *Experiment manager (Data scientist)*, *Director manager*, and *Collaborator manager*.
+
+- *Experiment manager* (or Data scientist) is a person or group of people using OpenFL.
+- *Director Manager* is ML model creator's representative controlling Director.
+- *Collaborator manager* is Data onwer's representative controlling Envoy.
 
 .. note::
     The Open Federated Learning (|productName|) interactive Python API enables the Experiment manager (data scientists) to define and start a federated learning experiment from a single entry point: a Jupyter\*\  notebook or a Python\*\  script.
@@ -45,7 +49,7 @@ Follow the procedure in the director-based workflow to become familiar with the 
 
 An overview of this workflow is shown below.
 
-.. figure:: ./source/openfl/static_diagram.svg
+.. figure:: ./source/openfl/director_workflow.svg
 
 .. centered:: Overview of the Director-Based Workflow
 
@@ -223,7 +227,7 @@ The Open Federated Learning (|productName|) interactive Python API enables the E
     - `Start an FL Experiment`_
 
 
-.. _federation_api_prerequisites:
+.. _prerequisites:
 
 Prerequisites
 ^^^^^^^^^^^^^
@@ -628,18 +632,18 @@ You can use the `"Hello Federation" bash script <https://github.com/intel/openfl
 
 However, continue with the following procedure for details in creating a federation with an aggregator-based workflow.
 
-    :doc:`STEP 1: Create a Workspace on the Aggregator <running_the_federation.baremetal>`
+    `STEP 1: Create a Workspace on the Aggregator`_
 
         - Creates a federated learning workspace on one of the nodes.
 
 
-    :doc:`STEP 2: Configure the Federation <running_the_federation.certificates>`
+    `STEP 2: Configure the Federation`_
 
         - Ensures each node in the federation has a valid public key infrastructure (PKI) certificate.
         - Distributes the workspace from the aggregator node to the other collaborator nodes.
 
 
-    :doc:`STEP 3: Start the Federation <running_the_federation.start_nodes>`
+    `STEP 3: Start the Federation`_
 
 
 .. _creating_workspaces:
@@ -863,6 +867,7 @@ Exporting the Workspace
 
 
 .. _install_certs_colab:
+
 On the Collaborator Node
 """"""""""""""""""""""""
 
@@ -999,7 +1004,7 @@ Option 1: Deploy a Federation in a Docker Container
 Prerequisites
 """""""""""""
 
-You have already built an |productName| image. See :doc:`../../install.docker` for details.
+You have already built an |productName| image. See :ref:`install_docker` for details.
 
 Procedure
 """""""""""""
@@ -1022,7 +1027,7 @@ Option 2: Deploy Your Workspace in a Docker Container
 Prerequisites
 """""""""""""
 
-You have already set up a TaskRunner and run :code:`fx plan initialize` in the workspace directory. See :ref:`Create a Workspace on the Aggregator <creating_workspaces>` for details.
+You have already set up a TaskRunner and run :code:`fx plan initialize` in the workspace directory. See `STEP 1: Create a Workspace on the Aggregator`_ for details.
 
 Procedure
 """""""""
@@ -1053,7 +1058,7 @@ Procedure
 
 3. Generate public key infrastructure (PKI) certificates for all collaborators and the aggregator. See :doc:`/source/utilities/pki` for details.
 
-4. :doc:`Start the federation <running_the_federation.start_nodes>`.
+4. `STEP 3: Start the Federation`_.
 
 
 

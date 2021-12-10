@@ -21,7 +21,7 @@ Option 1: Deploy a Federation in a Docker Container
 Prerequisites
 -------------
 
-You have already built an |productName| image. See :doc:`../../install.docker` for details.
+You have already built an |productName| image. See :ref:`install_docker` for details.
 
 Procedure
 ---------
