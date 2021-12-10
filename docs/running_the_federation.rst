@@ -15,8 +15,6 @@ OpenFL currently supports two types of workflow for how to set up and run a fede
 `Aggregator-Based Workflow`_
     With this workflow, the federation is terminated when the experiment is finished.
 
-.. # Copyright (C) 2020-2021 Intel Corporation
-.. # SPDX-License-Identifier: Apache-2.0
 
 .. _director_workflow:
 

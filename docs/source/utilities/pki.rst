@@ -30,7 +30,7 @@ Otherwise, you can certify nodes with your own PKI solution or use the PKI solut
 
 .. note::
 
-    The |productName| PKI solution is based on `step-ca <https://github.com/smallstep/certificates>`_ as a server and `step <https://github.com/smallstep/cli>`_ as a client utilities. They are downloaded from the repository during the workspace setup.
+    The |productName| PKI solution is based on `step-ca <https://github.com/smallstep/certificates>`_ as a server and `step <https://github.com/smallstep/cli>`_ as a client utilities. They are downloaded during the workspace setup.
 
 .. note::
 
@@ -62,9 +62,9 @@ The |productName| PKI pipeline involves creating a local certificate authority (
          fx pki install -p </path/to/ca/dir> --ca-url <host:port>
       | where
       | :code:`-p` defines the path to the directory that contains CA files, and
-      | :code:`--ca-url` defines the host and port that the CA server will listen.
+      | :code:`--ca-url` defines the host and port that the CA server will listen, if not specified, :code:`--ca-url` will be "localhost:9123"
       When executing this command, you will be prompted for a password and password confirmation. The password will encrypt some CA files.
-      This command will also download `step-ca <https://github.com/smallstep/certificates>`_ and `step <https://github.com/smallstep/cli>`_ binaries from the repository.
+      This command will also download `step-ca <https://github.com/smallstep/certificates>`_ and `step <https://github.com/smallstep/cli>`_ binaries.
 
 2. Run the CA server.
 
@@ -78,9 +78,11 @@ The |productName| PKI pipeline involves creating a local certificate authority (
 
       .. code-block:: console
 
-         fx pki get-token -n <subject>
+         fx pki get-token -n <subject> --ca-path </path/to/ca/dir> --ca-url <host:port>
       | where
       | :code:`-n` defines the subject name, FQDN for director, collaborator name for envoy, or API name for the API-layer node.
+      | :code:`--ca-path` defines the path to the directory that contains CA files.
+      | :code:`--ca-url` defines the host and port that the CA server will listen, if not specified, :code:`--ca-url` will be "localhost:9123"
 
       Run this command from the CA directory on the CA server. The output is a token which contains a JWT (JSON web token) from the CA server and the CA root certificate concatenated together. This JWT is valid for 24 hours.
 
@@ -88,7 +90,8 @@ The |productName| PKI pipeline involves creating a local certificate authority (
 
       .. code-block:: console
 
-         fx pki certify -n <subject> -t <token>
+         cd <path/to/subject/folder>
+         fx pki certify -n <subject> -t <generated token for subject>
       | where
       | :code:`-n` defines the subject name, FQDN for director, collaborator name for envoy, or API name for the API-layer node.
       | :code:`-t` defines the output token from the previous command.

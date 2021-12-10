@@ -72,6 +72,7 @@ Perform this procedure on every node in the federation.
 5. Run the :code:`fx` command in the virtual environment to confirm |productName| is installed.
 
    .. figure:: images/fx_help.png
+      :scale: 70 %
 
 .. centered:: Output of the fx Command
 
@@ -83,15 +84,27 @@ Perform this procedure on every node in the federation.
 ****************************************
 
 Follow this procedure to download or build a Docker\*\  image of |productName|, which you can use to run your federation in an isolated environment.
+
 .. note::
 
    The Docker\* \  version of |productName| is to provide an isolated environment complete with the prerequisites to run a federation. When the execution is over, the container can be destroyed and the results of the computation will be available on a directory on the local host.
 
 1. Install Docker on all nodes in the federation.
 
- See the `Docker installation guide <https://docs.docker.com/engine/install/>`_ for details.
+ See the `Docker installation guide <https://docs.docker.com/engine/install/>`_ for details. 
+
+2. Check that Docker is running properly with the *Hello World* command:
+
+    .. code-block:: console
+
+      $ docker run hello-world
+      Hello from Docker!
+      This message shows that your installation appears to be working correctly.
+      ...
+      ...
+      ...
       
-2. Build an image from the latest official |productName| release:
+3. Build an image from the latest official |productName| release:
 
 	.. code-block:: console
 
