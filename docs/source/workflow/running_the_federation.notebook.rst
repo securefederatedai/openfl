@@ -17,9 +17,9 @@ You will start a Jupyter\* \  notebook server and receive a URL you can use to a
 Start the Tutorials
 ===================
 
-1. Start a Python\* \  3.6 (or higher) virtual environment and confirm |productName| is available.
+1. Start a Python\* \  3.8 (>=3.6, <3.9) virtual environment and confirm |productName| is available.
 
-	.. code-block:: python
+    .. code-block:: python
 
 		fx
     
