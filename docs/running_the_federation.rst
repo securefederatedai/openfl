@@ -205,15 +205,14 @@ Experiment Manager: Describe an Experiment
 
 The process of defining an experiment is decoupled from the process of establishing a federation.
 The Experiment manager (or data scientist) is able to prepare an experiment in a Python environment.
-Then the Experiment manager registers experiments into the federation using `Interactive Python API (Beta)`_
+Then the Experiment manager registers experiments into the federation using `Interactive Python API`_
 that is allow to communicate with the Director using a gRPC client.
 
 
 .. _interactive_python_api:
 
-Interactive Python API (Beta)
-_____________________________
-
+Interactive Python API
+----------------------
 
 The Open Federated Learning (|productName|) interactive Python API enables the Experiment manager (data scientists) to define and start a federated learning experiment from a single entry point: a Jupyter\*\  notebook or a Python script.
 
