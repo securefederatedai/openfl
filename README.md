@@ -22,6 +22,7 @@ For more installation options check out the [online documentation](https://openf
 
 ## Getting Started
 
+
 OpenFL enables data scientists to set up a federated learning experiment following one of the workflows:
 
 - [Director-based Workflow](https://openfl.readthedocs.io/en/latest/source/workflow/director_based_workflow.html) [preferred]:

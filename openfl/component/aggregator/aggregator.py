@@ -504,16 +504,19 @@ class Aggregator:
                 named_tensor, collaborator_name
             )
             if 'metric' in tensor_key.tags:
+                metric_value = nparray.item()
                 metric_dict = {
                     'metric_origin': tensor_key.tags[-1],
                     'task_name': task_name,
                     'metric_name': tensor_key.tensor_name,
-                    'metric_value': nparray,
+                    'metric_value': metric_value,
                     'round': round_number}
                 self.log_metric(tensor_key.tags[-1], task_name,
                                 tensor_key.tensor_name, nparray, round_number)
-                self.logger.metric(f'Round {round_number}, collaborator {tensor_key.tags[-1]} '
-                                   f'{task_name} result {tensor_key.tensor_name}:\t{nparray}')
+                self.logger.metric(f'Round {round_number}, '
+                                   f'collaborator {tensor_key.tags[-1]} '
+                                   f'{task_name} result '
+                                   f'{tensor_key.tensor_name}:\t{metric_value:f}')
                 self.metric_queue.put(metric_dict)
 
             task_results.append(tensor_key)
@@ -784,7 +787,7 @@ class Aggregator:
                     'metric_origin': 'Aggregator',
                     'task_name': task_name,
                     'metric_name': tensor_key.tensor_name,
-                    'metric_value': agg_results,
+                    'metric_value': agg_results.item(),
                     'round': round_number}
 
                 if agg_results is None:
@@ -793,10 +796,10 @@ class Aggregator:
                         f'for round {self.round_number}. Skipping reporting for this round')
                 if agg_function:
                     self.logger.metric(f'Round {round_number}, aggregator: {task_name} '
-                                       f'{agg_function} {agg_tensor_name}:\t{agg_results:.4f}')
+                                       f'{agg_function} {agg_tensor_name}:\t{agg_results:f}')
                 else:
                     self.logger.metric(f'Round {round_number}, aggregator: {task_name} '
-                                       f'{agg_tensor_name}:\t{agg_results:.4f}')
+                                       f'{agg_tensor_name}:\t{agg_results:f}')
                 self.log_metric('Aggregator', task_name, tensor_key.tensor_name,
                                 agg_results, round_number)
                 self.metric_queue.put(metric_dict)
