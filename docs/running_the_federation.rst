@@ -209,9 +209,11 @@ Then the Experiment manager registers experiments into the federation using `Int
 that is allow to communicate with the Director using a gRPC client.
 
 
+.. _interactive_python_api:
 
 Interactive Python API (Beta)
 _____________________________
+
 
 The Open Federated Learning (|productName|) interactive Python API enables the Experiment manager (data scientists) to define and start a federated learning experiment from a single entry point: a Jupyter\*\  notebook or a Python script.
 
@@ -537,7 +539,7 @@ There are two ways to run federation without Director:
 
 This workflow uses short-lived components in a federation, which is terminated when the experiment is finished. The components are as follows:
 
-- The *Collaborator* uses a local dataset to train a global model and the *Aggregator* receives model updates from *Collaborators* and aggregate them to create the new global model.
+- The *Collaborator* uses a local dataset to train a global model and the *Aggregator* receives model updates from *Collaborators* and aggregates them to create the new global model.
 - The *Aggregator* is framework-agnostic, while the *Collaborator* can use any deep learning frameworks, such as `TensorFlow <https://www.tensorflow.org/>`_\* \  or `PyTorch <https://pytorch.org/>`_\*\.
 
 
@@ -559,10 +561,10 @@ The FL plan is described by the **plan.yaml** file located in the **plan** direc
 
 Each YAML top-level section contains the following subsections:
 
-- ``template``: The name of the class including top-level packages names. An instance of this class is created when plan gets initialized.
+- ``template``: The name of the class including top-level packages names. An instance of this class is created when the plan gets initialized.
 - ``settings``: The arguments that are passed to the class constructor.
 - ``defaults``: The file that contains default settings for this subsection.
-  Any setting from defaults file can be overriden in the **plan.yaml** file.
+  Any setting from defaults file can be overridden in the **plan.yaml** file.
 
 The following is an example of a **plan.yaml**:
 
@@ -715,11 +717,11 @@ STEP 1: Create a Workspace on the Aggregator
 		fx plan initialize
 
 
-    This command initializes the FL plan and autopopulates the `fully qualified domain name (FQDN) <https://en.wikipedia.org/wiki/Fully_qualified_domain_name>`_ of the aggregator node. This FQDN is embedded within the FL plan so the collaborator nodes know the address of the externally accessible aggregator server to connect to.
+    This command initializes the FL plan and auto populates the `fully qualified domain name (FQDN) <https://en.wikipedia.org/wiki/Fully_qualified_domain_name>`_ of the aggregator node. This FQDN is embedded within the FL plan so the collaborator nodes know the address of the externally accessible aggregator server to connect to.
 
-    If you have connection issues with the autopopulated FQDN in the FL plan, you can do **one of the following**:
+    If you have connection issues with the auto populated FQDN in the FL plan, you can do **one of the following**:
 
-	- OPTION 1: override the autopopulated FQDN value with the :code:`-a` flag.
+	- OPTION 1: override the auto populated FQDN value with the :code:`-a` flag.
 
 		.. code-block:: console
 
