@@ -206,7 +206,7 @@ Experiment Manager: Describe an Experiment
 The process of defining an experiment is decoupled from the process of establishing a federation.
 The Experiment manager (or data scientist) is able to prepare an experiment in a Python environment.
 Then the Experiment manager registers experiments into the federation using `Interactive Python API (Beta)`_
-that is allow to communicate with Director using a gRPC client.
+that is allow to communicate with the Director using a gRPC client.
 
 
 
