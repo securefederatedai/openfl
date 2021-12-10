@@ -760,7 +760,7 @@ STEP 1: Create a Workspace on the Aggregator
 
 
 
-.. _instruction_manual_certs:
+.. _configure_the_federation:
 
 
 STEP 2: Configure the Federation

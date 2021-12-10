@@ -84,8 +84,9 @@ When an experiment is reported, the Director starts an Aggregator and sends the 
 
 .. note::
     
-    Learn more about the :ref:`interactive_api`.
+    Learn more about the :ref:`interactive_python_api`.
     
+
 
 
 .. _openfl_ll_components_envoy:
