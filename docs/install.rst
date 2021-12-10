@@ -27,21 +27,21 @@ Install the Package
 Follow this procedure to prepare the environment and install the |productName| package.
 Perform this procedure on every node in the federation.
 
-1. Install a Python\* \  3.6 (or higher) virtual environment. 
+1. Install a Python 3.8 (>=3.6, <3.9) virtual environment using venv.
    
- See the `Virtualenv installation guide <https://virtualenv.pypa.io/en/latest/installation.html>`_ for details.
+ See the `Venv installation guide <https://docs.python.org/3/library/venv.html>`_ for details.
 
 2. Create a new Virtualenv environment for the project.
 
    .. code-block:: console
 
-      python3 -m virtualenv env_name
+      python3 -m venv venv
 
 3. Activate the virtual environment.
 
    .. code-block:: console
 
-      source env_name/bin/activate
+      source venv/bin/activate
 
 4. Install the |productName| package.
 
@@ -116,4 +116,4 @@ Follow this procedure to download or build a Docker\*\  image of |productName|, 
 
 	   git clone https://github.com/intel/openfl.git
 	   cd openfl
-	   ./scripts/build_base_docker_image.sh
+	   docker build -f openfl-docker/Dockerfile.base .

@@ -107,4 +107,4 @@ The signed certificate and private key are stored on each node in the federation
 Manual PKI Workflow 
 ===================
 
-This solution is embedded into the aggregator-based workflow. See :ref:`Configure the Federation <instruction_manual_certs>` for details.
+This solution is embedded into the aggregator-based workflow. See :ref:`Configure the Federation <configure_the_federation>` for details.
