@@ -9,7 +9,7 @@
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Citation](https://img.shields.io/badge/cite-citation-blue)](https://arxiv.org/abs/2105.06413)
 
-OpenFL is a Python 3 framework for Federated Learning. OpenFL is designed to be a _flexible_, _extensible_ and _easily learnable_ tool for data scientists. OpenFL was developed by Intel Labs and Intel Internet of Things Group. 
+OpenFL is a Python 3 framework for Federated Learning. OpenFL is designed to be a _flexible_, _extensible_ and _easily learnable_ tool for data scientists. OpenFL is developed by Intel Internet of Things Group (IOTG) and Intel Labs. 
 
 ## Installation
 
@@ -46,7 +46,7 @@ OpenFL supports training with TensorFlow 2+ or PyTorch 1.3+ which should be inst
 
 [Federated learning](https://en.wikipedia.org/wiki/Federated_learning) is a distributed machine learning approach that enables collaboration on machine learning projects without having to share sensitive data, such as, patient records, financial data, or classified information. The minimum data movement needed across the federation is solely the model parameters and their updates.
 
-![Federated Learning](https://raw.githubusercontent.com/intel/openfl/master/docs/images/diagram_fl.png)
+![Federated Learning](https://github.com/intel/openfl/blob/docs_correction/docs/images/diagram_fl_new.png?raw=true)
 
 
 ### Background
