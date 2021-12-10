@@ -41,7 +41,7 @@ Follow the procedure in the director-based workflow to become familiar with the 
 .. note::
     The Open Federated Learning (|productName|) interactive Python API enables the Experiment manager (data scientists) to define and start a federated learning experiment from a single entry point: a Jupyter\*\  notebook or a Python\*\  script.
 
-    See :doc:`director_based_workflow.interactive_api` for details.
+    See `Interactive Python API (Beta)`_ for details.
 
 An overview of this workflow is shown below.
 
@@ -85,6 +85,7 @@ Start the Director on a node with at least two open ports. See :ref:`openfl_ll_c
 1. Create a Director workspace with a default config file.
 
     .. code-block:: console
+
         fx director create-workspace -p path/to/director_workspace_dir
 
  This workspace will contain received experiments and supplementary files (Director config file and certificates).
@@ -98,11 +99,13 @@ Start the Director on a node with at least two open ports. See :ref:`openfl_ll_c
  If mTLS protection is not set up, run this command.
 
     .. code-block:: console
+
        fx director start --disable-tls -c director_config.yaml
 
  If you have a federation with PKI certificates, run this command.
 
     .. code-block:: console
+
        fx director start -c director_config.yaml \
             -rc cert/root_ca.crt \
             -pk cert/priv.key \
@@ -145,6 +148,7 @@ STEP 2: Start the Envoy
 1. Create an Envoy workspace with a default config file and shard descriptor Python\*\  script.
 
     .. code-block:: console
+
         fx envoy create-workspace -p path/to/envoy_workspace_dir
 
 2. Modify the Envoy config file and local shard descriptor template.
@@ -168,6 +172,7 @@ STEP 2: Start the Envoy
  If mTLS protection is not set up, run this command.
 
     .. code-block:: console
+
         ENVOY_NAME=envoy_example_name
 
         fx envoy start \
@@ -180,6 +185,7 @@ STEP 2: Start the Envoy
  If you have a federation with PKI certificates, run this command.
 
     .. code-block:: console
+
         ENVOY_NAME=envoy_example_name
 
         fx envoy start \
@@ -199,97 +205,9 @@ Experiment Manager: Describe an Experiment
 
 The process of defining an experiment is decoupled from the process of establishing a federation.
 The Experiment manager (or data scientist) is able to prepare an experiment in a Python environment.
-Then the Experiment manager registers experiments into the federation using :ref:`Interactive Python API <interactive_api>`
+Then the Experiment manager registers experiments into the federation using `Interactive Python API (Beta)`_
 that is allow to communicate with Director using a gRPC client.
 
-.. _running_the_federation_aggregator_based:
-
-Aggregator-Based Workflow
-=========================
-
-An overview of this workflow is shown below.
-
-.. figure:: /images/openfl_flow.png
-
-.. centered:: Overview of the Aggregator-Based Workflow
-
-There are two ways to run federation without Director:
-
-- :ref:`Bare metal approach <running_the_federation_manual>`
-- :ref:`Docker approach <running_the_federation_docker>`
-
-
-This workflow uses short-lived components in a federation, which is terminated when the experiment is finished. The components are as follows:
-
-- The *Collaborator* uses a local dataset to train a global model and the *Aggregator* receives model updates from *Collaborators* and aggregate them to create the new global model.
-- The *Aggregator* is framework-agnostic, while the *Collaborator* can use any deep learning frameworks, such as `TensorFlow <https://www.tensorflow.org/>`_\* \  or `PyTorch <https://pytorch.org/>`_\*\.
-
-
-For this workflow, you modify the federation workspace to your requirements by editing the Federated Learning plan (FL plan) along with the Python\*\  code that defines the model and the data loader. The FL plan is a `YAML <https://en.wikipedia.org/wiki/YAML>`_ file that defines the collaborators, aggregator, connections, models, data, and any other parameters that describe the training.
-
-
-.. _plan_settings:
-
-
-Federated Learning Plan (FL Plan) Settings
-------------------------------------------
-
-.. note::
-    Use the Federated Learning plan (FL plan) to modify the federation workspace to your requirements in an **aggregator-based workflow**.
-
-
-The FL plan is described by the **plan.yaml** file located in the **plan** directory of the workspace.
-
-
-Each YAML top-level section contains the following subsections:
-
-- ``template``: The name of the class including top-level packages names. An instance of this class is created when plan gets initialized.
-- ``settings``: The arguments that are passed to the class constructor.
-- ``defaults``: The file that contains default settings for this subsection.
-  Any setting from defaults file can be overriden in the **plan.yaml** file.
-
-The following is an example of a **plan.yaml**:
-
-.. literalinclude:: ../openfl-workspace/torch_cnn_mnist/plan/plan.yaml
-  :language: yaml
-
-
-Configurable Settings
-^^^^^^^^^^^^^^^^^^^^^
-
-- :class:`Aggregator <openfl.component.Aggregator>`
-    `openfl.component.Aggregator <https://github.com/intel/openfl/blob/develop/openfl/component/aggregator/aggregator.py>`_
-
-- :class:`Collaborator <openfl.component.Collaborator>`
-    `openfl.component.Collaborator <https://github.com/intel/openfl/blob/develop/openfl/component/collaborator/collaborator.py>`_
-
-- :class:`Data Loader <openfl.federated.data.loader.DataLoader>`
-    `openfl.federated.data.loader.DataLoader <https://github.com/intel/openfl/blob/develop/openfl/federated/data/loader.py>`_
-
-- :class:`Task Runner <openfl.federated.task.runner.TaskRunner>`
-    `openfl.federated.task.runner.TaskRunner <https://github.com/intel/openfl/blob/develop/openfl/federated/task/runner.py>`_
-
-- :class:`Assigner <openfl.component.Assigner>`
-    `openfl.component.Assigner <https://github.com/intel/openfl/blob/develop/openfl/component/assigner/assigner.py>`_
-
-
-Tasks
-^^^^^
-
-Each task subsection contains the following:
-
-- ``function``: The function name to call.
-  The function must be the one defined in :class:`TaskRunner <openfl.federated.TaskRunner>` class.
-- ``kwargs``: kwargs passed to the ``function``.
-
-.. note::
-    See an `example <https://github.com/intel/openfl/blob/develop/openfl/federated/task/runner.py>`_ of the :class:`TaskRunner <openfl.federated.TaskRunner>` class for details.
-
-
-.. _running_the_federation_manual:
-
-
-.. _interactive_api:
 
 
 Interactive Python API (Beta)
@@ -297,11 +215,11 @@ _____________________________
 
 The Open Federated Learning (|productName|) interactive Python API enables the Experiment manager (data scientists) to define and start a federated learning experiment from a single entry point: a Jupyter\*\  notebook or a Python script.
 
-    - :ref:`federation_api_prerequisites`
-    - :ref:`federation_api_define_fl_experiment`
-    - :ref:`federation_api_start_fl_experiment`
-    - :ref:`federation_api_observe_fl_experiment`
-    - :ref:`federation_api_complete_fl_experiment`
+    - `Prerequisites`_
+    - `Define a Federated Learning Experiment`_
+    - `Federation API`_
+    - `Experiment API`_
+    - `Start an FL Experiment`_
 
 .. _federation_api_prerequisites:
 
@@ -337,13 +255,10 @@ The definition process of a federated learning experiment uses the interactive P
 
 The following are the interactive Python API to define an experiment:
 
-    - :ref:`federation_api`
-    - :ref:`experiment_api`
-
-        - :ref:`experiment_api_modelinterface`
-        - :ref:`experiment_api_taskinterface`
-        - :ref:`experiment_api_datainterface`
-
+    - `Federation API`_
+    - `Experiment API`_
+    - `Start an FL Experiment`_
+    - `Observe the Experiment Execution`_
 
 .. note::
     Each federation is bound to some Machine Learning problem in a sense that all collaborators dataset shards should allow to solve the same data science problem.
@@ -412,7 +327,6 @@ The *Experiment* entity registers training-related objects, federated learning (
 .. _experiment_api_modelinterface:
 
 Register the Model and Optimizer ( :code:`ModelInterface` )
-"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
 Instantiate and initialize a model and optimizer in your preferred deep learning framework.
 
@@ -432,7 +346,6 @@ or from local workspace.
 .. _experiment_api_taskinterface:
 
 Register FL Tasks ( :code:`TaskInterface` )
-"""""""""""""""""""""""""""""""""""""""""""
 
 An FL task accepts the following objects:
 
@@ -472,7 +385,6 @@ FL tasks return a dictionary object with metrics: :code:`{metric name: metric va
 .. _experiment_api_datainterface:
 
 Register Federated Data Loader ( :code:`DataInterface` )
-""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
 A *shard descriptor* defines how to read and format the local data. Therefore, the *data loader* contains the batching and augmenting data logic, which are common for all collaborators.
 
@@ -603,6 +515,97 @@ When the experiment has completed:
 
 
 You may use the same federation object to report another experiment or even schedule several experiments that will be executed in series.
+
+
+
+.. _running_the_federation_aggregator_based:
+
+Aggregator-Based Workflow
+=========================
+
+An overview of this workflow is shown below.
+
+.. figure:: /images/openfl_flow.png
+
+.. centered:: Overview of the Aggregator-Based Workflow
+
+There are two ways to run federation without Director:
+
+- :ref:`Bare metal approach <running_the_federation_manual>`
+- :ref:`Docker approach <running_the_federation_docker>`
+
+
+This workflow uses short-lived components in a federation, which is terminated when the experiment is finished. The components are as follows:
+
+- The *Collaborator* uses a local dataset to train a global model and the *Aggregator* receives model updates from *Collaborators* and aggregate them to create the new global model.
+- The *Aggregator* is framework-agnostic, while the *Collaborator* can use any deep learning frameworks, such as `TensorFlow <https://www.tensorflow.org/>`_\* \  or `PyTorch <https://pytorch.org/>`_\*\.
+
+
+For this workflow, you modify the federation workspace to your requirements by editing the Federated Learning plan (FL plan) along with the Python\*\  code that defines the model and the data loader. The FL plan is a `YAML <https://en.wikipedia.org/wiki/YAML>`_ file that defines the collaborators, aggregator, connections, models, data, and any other parameters that describe the training.
+
+
+.. _plan_settings:
+
+
+Federated Learning Plan (FL Plan) Settings
+------------------------------------------
+
+.. note::
+    Use the Federated Learning plan (FL plan) to modify the federation workspace to your requirements in an **aggregator-based workflow**.
+
+
+The FL plan is described by the **plan.yaml** file located in the **plan** directory of the workspace.
+
+
+Each YAML top-level section contains the following subsections:
+
+- ``template``: The name of the class including top-level packages names. An instance of this class is created when plan gets initialized.
+- ``settings``: The arguments that are passed to the class constructor.
+- ``defaults``: The file that contains default settings for this subsection.
+  Any setting from defaults file can be overriden in the **plan.yaml** file.
+
+The following is an example of a **plan.yaml**:
+
+.. literalinclude:: ../openfl-workspace/torch_cnn_mnist/plan/plan.yaml
+  :language: yaml
+
+
+Configurable Settings
+^^^^^^^^^^^^^^^^^^^^^
+
+- :class:`Aggregator <openfl.component.Aggregator>`
+    `openfl.component.Aggregator <https://github.com/intel/openfl/blob/develop/openfl/component/aggregator/aggregator.py>`_
+
+- :class:`Collaborator <openfl.component.Collaborator>`
+    `openfl.component.Collaborator <https://github.com/intel/openfl/blob/develop/openfl/component/collaborator/collaborator.py>`_
+
+- :class:`Data Loader <openfl.federated.data.loader.DataLoader>`
+    `openfl.federated.data.loader.DataLoader <https://github.com/intel/openfl/blob/develop/openfl/federated/data/loader.py>`_
+
+- :class:`Task Runner <openfl.federated.task.runner.TaskRunner>`
+    `openfl.federated.task.runner.TaskRunner <https://github.com/intel/openfl/blob/develop/openfl/federated/task/runner.py>`_
+
+- :class:`Assigner <openfl.component.Assigner>`
+    `openfl.component.Assigner <https://github.com/intel/openfl/blob/develop/openfl/component/assigner/assigner.py>`_
+
+
+Tasks
+^^^^^
+
+Each task subsection contains the following:
+
+- ``function``: The function name to call.
+  The function must be the one defined in :class:`TaskRunner <openfl.federated.TaskRunner>` class.
+- ``kwargs``: kwargs passed to the ``function``.
+
+.. note::
+    See an `example <https://github.com/intel/openfl/blob/develop/openfl/federated/task/runner.py>`_ of the :class:`TaskRunner <openfl.federated.TaskRunner>` class for details.
+
+
+.. _running_the_federation_manual:
+
+
+.. _interactive_api:
 
 
 
