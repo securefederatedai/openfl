@@ -47,7 +47,7 @@ OpenFL supports training with TensorFlow 2+ or PyTorch 1.3+ which should be inst
 
 [Federated learning](https://en.wikipedia.org/wiki/Federated_learning) is a distributed machine learning approach that enables collaboration on machine learning projects without having to share sensitive data, such as, patient records, financial data, or classified information. The minimum data movement needed across the federation is solely the model parameters and their updates.
 
-![Federated Learning](docs/images/diagram_fl_new.png)
+![Federated Learning](https://raw.githubusercontent.com/intel/openfl/develop/docs/images/diagram_fl_new.png)
 
 
 ### Background
