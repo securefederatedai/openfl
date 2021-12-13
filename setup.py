@@ -10,7 +10,7 @@ with open('README.md') as f:
 
 setup(
     name='openfl',
-    version='1.2',
+    version='1.2.1',
     author='Intel Corporation',
     description='Federated Learning for the Edge',
     long_description=long_description,
@@ -83,7 +83,7 @@ setup(
         'Environment :: Console',
         # How mature is this project? Common values are
         #   3 - Alpha, 4 - Beta, 5 - Production/Stable
-        'Development Status :: 5 - Production/Stable',
+        'Development Status :: 4 - Beta',
         # Indicate who your project is intended for
         'Intended Audience :: Developers',
         'Topic :: Scientific/Engineering :: Artificial Intelligence',
