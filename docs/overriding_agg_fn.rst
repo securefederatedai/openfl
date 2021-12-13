@@ -2,36 +2,50 @@
 .. # SPDX-License-Identifier: Apache-2.0
 
 .. _overriding_agg_fn:
-===============================
-Overriding aggregation function
-===============================
 
--------------------------------
-Usage
--------------------------------
-|productName| allows developers to use custom aggregation functions per task.
-In order to do this, you should:
+*****************************
+Override Aggregation Function
+*****************************
+
+With the aggregator-based workflow, you can use custom aggregation functions for each task via Python\*\  API or command line interface.
+
 
 Python API
 ==========
 
-Create an implementation of :class:`openfl.component.aggregation_functions.AggregationFunction`
-and pass it as ``tasks.{task_name}.aggregation_type`` parameter of ``override_config`` keyword argument of :func:`openfl.native.run_experiment` native function.
+1. Create an implementation of :class:`openfl.component.aggregation_functions.AggregationFunction`.
 
-CLI
-====
+2. In the ``override_config`` keyword argument of the :func:`openfl.native.run_experiment` native function, pass the implementation as a ``tasks.{task_name}.aggregation_type`` parameter.
 
-Choose from predefined |productName| aggregation functions:
+.. note::
+    See `Federated PyTorch MNIST Tutorial <https://github.com/intel/openfl/blob/develop/openfl-tutorials/Federated_Pytorch_MNIST_custom_aggregation_Tutorial.ipynb>`_ for an example of the custom aggregation function.
+    
+
+Command Line Interface
+======================
+
+Predefined Aggregation Functions
+--------------------------------
+
+Choose from the following predefined aggregation functions:
 
 - ``openfl.component.aggregation_functions.WeightedAverage`` (default)
 - ``openfl.component.aggregation_functions.Median``
 - ``openfl.component.aggregation_functions.GeometricMedian``
-Or create your own implementation of :class:`openfl.component.aggregation_functions.AggregationFunction`.
-After defining the aggregation behavior, you need to include it in ``plan/plan.yaml`` file of your workspace.
-Inside ``tasks`` section pick a task for which you want to change the aggregation
-and insert ``aggregation_type`` section with a single ``template`` key that defines a module path to your class.
 
-Example of ``plan/plan.yaml`` with modified aggregation function:
+
+Custom Aggregation Functions
+----------------------------
+
+You can also create your own implementation of :class:`openfl.component.aggregation_functions.AggregationFunction`. See `example <https://github.com/intel/openfl/blob/develop/openfl-tutorials/Federated_Pytorch_MNIST_custom_aggregation_Tutorial.ipynb>`_ for details.
+
+1. Define the behavior of the aggregation.
+
+2. Include the implementation in the **plan.yaml** file in the **plan** directory of your workspace.
+
+3. In the **tasks** section,  pick a task for which you want to change the aggregation and insert ``aggregation_type`` section with a single ``template`` key that defines a module path to your class.
+
+The following is an example of a **plan.yaml** with a modified aggregation function:
   
 .. code-block:: yaml
 
@@ -61,6 +75,7 @@ Example of ``plan/plan.yaml`` with modified aggregation function:
         metrics:
         - loss
 
+
 Interactive API
 ================
 You can override aggregation function that will be used for the task this function corresponds to.
@@ -84,13 +99,15 @@ For example, you can try:
 ``AggregationFunction`` requires a single ``call`` function.
 This function receives tensors for a single parameter from multiple collaborators with additional metadata (see definition of :meth:`openfl.component.aggregation_functions.AggregationFunction.call`) and returns a single tensor that represents the result of aggregation.
 
+
 .. note::
-    By default, we use weighted averaging with weights equal to data parts (FedAvg).
+    See the `definition <https://github.com/intel/openfl/blob/develop/openfl/component/aggregation_functions/interface.py>`_ of :class:`openfl.component.aggregation_functions.AggregationFunction.call` for details.
 
-Example
-=======================
 
-Below is an example of a custom tensor clipping aggregation function that multiplies all local tensors by 0.3 and averages them according to weights equal to data parts to produce the resulting global tensor.
+Example of a Custom Aggregation Function
+========================================
+
+This is an example of a custom tensor clipping aggregation function that multiplies all local tensors by 0.3 and averages them according to weights equal to data parts to produce the resulting global tensor.
 
 .. code-block:: python
 
@@ -153,4 +170,4 @@ Below is an example of a custom tensor clipping aggregation function that multip
 
             return np.average(clipped_tensors, weights=weights, axis=0)
 
-Full implementation can be found at ``openfl-tutorials/Federated_Pytorch_MNIST_custom_aggregation_Tutorial.ipynb``
+A full implementation can be found at `Federated_Pytorch_MNIST_custom_aggregation_Tutorial.ipynb <https://github.com/intel/openfl/blob/develop/openfl-tutorials/Federated_Pytorch_MNIST_custom_aggregation_Tutorial.ipynb>`_

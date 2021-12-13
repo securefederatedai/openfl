@@ -3,54 +3,79 @@
 
 .. _running_the_federation_docker:
 
-Running |productName| with Docker
-#################
+********************
+Docker\* \  Approach
+********************
 
-There are two ways one can use OpenFL in a docker container.
-If you do not want to install OpenFL localy you can pull an image from Docker Hub and conduct experiments inside a container.
-The other option is to set up a workspace on your machine and use the :code:`fx workspace dockerize` command, that 
-can build an image from it.
+There are two ways you can run |productName| with Docker\*\.
 
-Option #1: Run the base container
-=================================
+- :ref:`Deploy a federation in a Docker container <running_the_federation_docker_base_image>`
+- :ref:`Deploy the workspace in a Docker container <running_the_federation_docker_workspace>`
 
-Pull |productName| image and run it:
 
-.. code-block:: console
+.. _running_the_federation_docker_base_image:
 
-   $ docker run -it --network host openfl
+Option 1: Deploy a Federation in a Docker Container
+===================================================
+
+Prerequisites
+-------------
+
+You have already built an |productName| image. See :ref:`install_docker` for details.
+
+Procedure
+---------
+
+1. Run the |productName| image.
+
+    .. code-block:: console
+
+       docker run -it --network host openfl
    
-Now one is free to experiment with OpenFL in the container, for instance run the :ref:`one-node Hello Federation script <running_the_federation.baremetal>`
+
+You can now experiment with |productName| in the container. For example, you can test the project pipeline with the `"Hello Federation" bash script <https://github.com/intel/openfl/blob/develop/tests/github/test_hello_federation.sh>`_.
 
 
-Option #2: Deploying your workspace in Docker
-=============================================
 
-These steps assume that user have already set up a TaskRunner and run `fx plan initialize` in the workspace directory. 
-One can do it following steps in the :ref:`Hello Federation <running_the_federation.baremetal>` script
 
-1. Dockerize the workspace:
+.. _running_the_federation_docker_workspace:
 
-.. code-block:: console
+Option 2: Deploy Your Workspace in a Docker Container
+=====================================================
 
-   $ fx workspace dockerize 
+Prerequisites
+-------------
 
-This command will build an image with OpenFL installed and the workspace imported.
-By default, it saves the image to a tarball named `WORKSPACE_NAME_image.tar` under the workspace directory.
+You have already set up a TaskRunner and run :code:`fx plan initialize` in the workspace directory. See :ref:`Create a Workspace on the Aggregator <creating_workspaces>` for details.
 
-2. The image then can be distributed and run on other machines without any environment prepartion.
+Procedure
+---------
 
-.. code-block:: console
+1. Build an image with the workspace you created.
 
-   $ docker run -it --rm \
-        --network host \
-        -v user_data_folder:/home/user/workspace/data \
-        ${WORSPACE_IMAGE_NAME} \
-        bash
+    .. code-block:: console
 
-Keep in mind that plan should be initialized with the FQDN of the node where the aggregator container will be running.
+       fx workspace dockerize 
 
-3. Generate PKI certificates for all collaborators and the aggregator.
 
-4. Start the Federation.
+    By default, the image is saved as **WORKSPACE_NAME_image.tar** in the workspace directory.
+
+2. The image can be distributed and run on other nodes without any environment preparation.
+
+    .. parsed-literal::
+
+        docker run -it --rm \\
+            --network host \\
+            -v user_data_folder:/home/user/workspace/data \\
+            ${WORKSPACE_IMAGE_NAME} \\
+            bash
+
+
+    .. note::
+    
+        The FL plan should be initialized with the FQDN of the node where the aggregator container will be running.
+
+3. Generate public key infrastructure (PKI) certificates for all collaborators and the aggregator. See :doc:`/source/utilities/pki` for details.
+
+4. :doc:`Start the federation <running_the_federation.start_nodes>`.
 

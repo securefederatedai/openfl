@@ -1,33 +1,39 @@
-.. # Copyright (C) 2021 Intel Corporation
-.. # Licensed subject to the terms of the separately executed evaluation license agreement between Intel Corporation and you.
+.. # Copyright (C) 2020-2021 Intel Corporation
+.. # SPDX-License-Identifier: Apache-2.0
 
-Bash Autocomplete Activation
-############################
+**************************
+Activate Bash Autocomplete
+**************************
 
-|productName| allows to activate bash completion in CLI mode to give faster access to all available commands.
+Get faster access to available commands by activating bash completion in CLI mode.
 
-Preparation
-~~~~~~~~~~~
+STEP 1: Preparation
+===================
 
-Make sure that you inside virtual environment with installed |productName|.
-If not use the instruction :ref:`install_initial_steps`.
+Make sure you are inside a virtual environment with Open Federated Learning (|productName|) installed. See :ref:`install_package` for details.
 
-Create ~/.fx-autocomplete.sh script
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-   This step need to be done only one time when you don't have `~/.fx-autocomplete.sh` or `~/.fx-autocomplete.sh` have corrupted content.
+STEP 2: Create the fx-autocomplete.sh Script
+============================================
+
+.. note::
+
+    Perform this procedure if you don't have a **~/.fx-autocomplete.sh** script or if the existing **~/.fx-autocomplete.sh** script is corrupted.
+
+1. Create the script.
    
    .. code-block:: console
 
-      $ _FX_COMPLETE=bash_source fx > ~/.fx-autocomplete.sh
+      _FX_COMPLETE=bash_source fx > ~/.fx-autocomplete.sh
 
-   Check that command was executed correctly.
+   
+2. Check that the script was created properly.
 
    .. code-block:: console
 
-      $ cat ~/.fx-autocomplete.sh
+      cat ~/.fx-autocomplete.sh
 
-   Console output should look like example below (Click==8.0.1), but could be different depend on `Click https://click.palletsprojects.com/en/8.0.x/`_ version:
+ The output should look like the example below (Click==8.0.1), but could be different depend on `Click <https://click.palletsprojects.com/en/8.0.x/>`_ version:
    
    .. code-block:: console
 
@@ -60,22 +66,32 @@ Create ~/.fx-autocomplete.sh script
 
       _fx_completion_setup;
 
-Activate autocomplete feature
-~~~~~~~~~~~~~~~~~~~~~
 
-   This step should be done every time when you open a new terminal window.
+STEP 3: Activate the Autocomplete Feature
+=========================================
+
+Perform this command every time you open a new terminal window.
 
    .. code-block:: console
 
-      $ source ~/.fx-autocomplete.sh
+      source ~/.fx-autocomplete.sh
 
-Auto activation autocomplete
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-   To save your time you can add autocomplete activation step to `~/.bashrc`.
-   
+To save time, add the script into **.bashrc** so the script is activated when you log in.
+
+1. Edit the **.bashrc** file. The **nano** command line editor is used in this example.
+
+   .. code-block:: console
+
+      nano ~/.bashrc
+
+2. Add the script.
+
    .. code-block:: bash
+   
       . ~/.fx-autocomplete.sh
 
-   Save `~/.bashrc`.
-   Open new terminal to use updated `~/.bashrc`.
+3. Save your changes.
+
+4. Open a new terminal to use the updated bash shell.
+
