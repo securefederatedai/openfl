@@ -403,13 +403,13 @@ class TaskInterface:
         # Mapping 'task name' -> callable
         self.aggregation_functions = defaultdict(WeightedAverage)
 
-    def register_fl_task(self, model, data_loader, device, optimizer=None):
+    def register_fl_task(self, model, data_loader, device, optimizer=None, scheduler=None):
         """
         Register FL tasks.
 
         The task contract should be set up by providing variable names:
         [model, data_loader, device] - necessarily
-        and optimizer - optionally
+        and optimizer, scheduler - optionally
 
         All tasks should accept contract entities to be run on collaborator node.
         Moreover we ask users return dict{'metric':value} in every task
@@ -439,7 +439,8 @@ class TaskInterface:
             # Saving the task and the contract for later serialization
             self.task_registry[training_method.__name__] = wrapper_decorator
             contract = {'model': model, 'data_loader': data_loader,
-                        'device': device, 'optimizer': optimizer}
+                        'device': device, 'optimizer': optimizer,
+                        'scheduler': scheduler}
             self.task_contract[training_method.__name__] = contract
             # We do not alter user environment
             return training_method
@@ -505,7 +506,7 @@ class ModelInterface:
     There is no support for several models / optimizers yet.
     """
 
-    def __init__(self, model, optimizer, framework_plugin) -> None:
+    def __init__(self, model, optimizer, framework_plugin, scheduler=None) -> None:
         """
         Initialize model keeper.
 
@@ -519,6 +520,7 @@ class ModelInterface:
         self.model = model
         self.optimizer = optimizer
         self.framework_plugin = framework_plugin
+        self.scheduler = scheduler
 
     def provide_model(self):
         """Retrieve model."""
@@ -527,6 +529,10 @@ class ModelInterface:
     def provide_optimizer(self):
         """Retrieve optimizer."""
         return self.optimizer
+
+    def provide_scheduler(self):
+        """Retrieve scheduler."""
+        return self.scheduler
 
 
 class DataInterface:

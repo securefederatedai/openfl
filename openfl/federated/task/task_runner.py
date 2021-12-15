@@ -117,6 +117,8 @@ class CoreTaskRunner:
                     loader = self.data_loader.get_train_loader()
                     # If train task we also pass optimizer
                     task_kwargs[task_contract['optimizer']] = self.optimizer
+                    if self.scheduler is not None:
+                        task_kwargs[task_contract['scheduler']] = self.scheduler
 
                 for en_name, entity in zip(['model', 'data_loader', 'device'],
                                            [self.model, loader, device]):
@@ -186,6 +188,7 @@ class CoreTaskRunner:
         self.model_provider = model_provider
         self.model = self.model_provider.provide_model()
         self.optimizer = self.model_provider.provide_optimizer()
+        self.scheduler = self.model_provider.provide_scheduler()
 
     def set_framework_adapter(self, framework_adapter):
         """
@@ -315,6 +318,7 @@ class CoreTaskRunner:
 
         """
         self.optimizer = self.model_provider.provide_optimizer()
+        self.scheduler = self.model_provider.provide_scheduler()
 
     def get_train_data_size(self):
         """
