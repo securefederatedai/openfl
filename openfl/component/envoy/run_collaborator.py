@@ -8,14 +8,18 @@ from openfl.federated import Plan
 from click import echo
 import argparse
 
+from openfl.interface.cli import setup_logging
+
 logger = logging.getLogger(__name__)
+
+setup_logging()
 
 PLAN_PATH_DEFAULT = 'plan/plan.yaml'
 
 
 def _parse_args():
     parser = argparse.ArgumentParser(description='Process some integers.')
-    parser.add_argument('--name', type=str, nargs=1)
+    parser.add_argument('--name', type=str)
     parser.add_argument('--plan_path', type=str, nargs='?', default=PLAN_PATH_DEFAULT)
     parser.add_argument('--root_certificate', type=str, nargs='?', default=None)
     parser.add_argument('--private_key', type=str, nargs='?', default=None)
@@ -40,7 +44,7 @@ def _run_collaborator(
 
     col = plan.get_collaborator(name, root_certificate, private_key,
                                 certificate, shard_descriptor=shard_descriptor)
-    col.set_available_devices(cuda=cuda_devices)
+    col.set_available_devices(cuda=['0'])
     col.run()
 
 
@@ -61,6 +65,7 @@ def _shard_descriptor_from_config(shard_config: dict):
 
 if __name__ == '__main__':
     args = _parse_args()
+    print(args.name)
     with open(args.shard_config) as f:
         shard_descriptor_config = yaml.safe_load(f)
     shard_descriptor = _shard_descriptor_from_config(shard_descriptor_config)

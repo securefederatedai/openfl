@@ -88,7 +88,12 @@ class Envoy:
                     tar_file.add(docker_file_path, 'Dockerfile')
                     tar_file.add(run_collaborator_path, 'run.py')
                     tar_file.add('shard_descriptor_config.yaml', 'shard_descriptor_config.yaml')
-                    # os.remove('shard_descriptor_config.yaml')
+                    os.remove('shard_descriptor_config.yaml')
+                    template = self.shard_descriptor_config['template']
+                    module_path = template.split('.')[:-1]
+                    module_path[-1] = f'{module_path[-1]}.py'
+                    shar_descriptor_path = str(Path.joinpath(Path('.'), *module_path))
+                    tar_file.add(shar_descriptor_path, shar_descriptor_path)
 
                 with open(data_file_path, 'rb') as f:
                     fileobj = BytesIO(f.read())
@@ -113,6 +118,19 @@ class Envoy:
                     config={
                         'Cmd': ['/bin/bash', '-c', cmd],
                         'Image': f'{experiment_name}:latest',
+                        # 'Env': [
+                        #     'GRPC_VERBOSITY=debug',
+                        #     'GRPC_TRACE=http,tcp',
+                        # ],
+                        'HostConfig': {
+                            'NetworkMode': 'host',
+                            'DeviceRequests': [{
+                                'Driver': 'nvidia',
+                                'Count': -1,
+                                'Capabilities': [['gpu', 'compute', 'utility']],
+                            }],
+                            "ShmSize": 30 * 1024 * 1024 * 1024,
+                        },
                     },
                     name=experiment_name,
                 )
@@ -127,11 +145,15 @@ class Envoy:
                         print(key, ":", value)
 
                     if event["Actor"]["ID"] == container._id:
+                        print('DOCKER EVENT ACTION', event["Action"])
                         if event["Action"] == "stop":
                             await container.delete(force=True)
                             print(f"=> deleted {container._id[:12]}")
                         elif event["Action"] == "destroy":
                             print("=> done with this container!")
+                            break
+                        elif event['Action'] == 'die':
+                            print("=> container is died")
                             break
 
             except Exception as exc:

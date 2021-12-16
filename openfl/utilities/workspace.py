@@ -58,7 +58,7 @@ class ExperimentWorkspace:
             shutil.rmtree(self.experiment_work_dir)
         os.makedirs(self.experiment_work_dir)
 
-        shutil.unpack_archive(self.data_file_path, self.experiment_work_dir, format='zip')
+        shutil.unpack_archive(self.data_file_path, self.experiment_work_dir, format='tar')
 
         if self.is_install_requirements:
             self._install_requirements()
