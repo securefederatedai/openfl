@@ -31,7 +31,7 @@ a federation created with this workflow continues to be available to distribute 
 - [Aggregator-based Workflow](https://openfl.readthedocs.io/en/latest/source/workflow/running_the_federation.agg_based.html):
 with this workflow, the federation is terminated when the experiment is finished.
 
-The quickest way to test OpenFL is to follow our [tutorials](https://github.com/intel/openfl/tree/docs_correction/openfl-tutorials). </br>
+The quickest way to test OpenFL is to follow our [tutorials](https://github.com/intel/openfl/tree/develop/openfl-tutorials). </br>
 Read the [blog post](https://towardsdatascience.com/go-federated-with-openfl-8bc145a5ead1) explaining steps to train a model with OpenFL. </br>
 Check out the [online documentation](https://openfl.readthedocs.io/en/latest/index.html) to launch your first federation.
 
