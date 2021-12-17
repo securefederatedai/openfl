@@ -341,9 +341,11 @@ class Aggregator:
         #  The returned tensor will
         # be recompressed anyway.
         if 'compressed' in tags:
-            list(tags).remove('compressed')
+            tags = list(tags)
+            tags.remove('compressed')
         if 'lossy_compressed' in tags:
-            list(tags).remove('lossy_compressed')
+            tags = list(tags)
+            tags.remove('lossy_compressed')
 
         tensor_key = TensorKey(
             tensor_name, self.uuid, round_number, report, tuple(tags)
