@@ -4,22 +4,20 @@
 """Envoy module."""
 import asyncio
 import logging
-import shutil
-from io import BytesIO
-
-import aiodocker
-from aiodocker import utils
+import os
 import time
 import uuid
-import yaml
 from concurrent.futures import ThreadPoolExecutor
+from io import BytesIO
 from pathlib import Path
+from tarfile import TarFile
 
-from click import echo
+import aiodocker
+import yaml
+from aiodocker import Docker
+from aiodocker.containers import DockerContainer
 
-from openfl.federated import Plan
 from openfl.transport.grpc.director_client import ShardDirectorClient
-from openfl.utilities.workspace import ExperimentWorkspace
 
 logger = logging.getLogger(__name__)
 
@@ -75,86 +73,10 @@ class Envoy:
             data_file_path = self._save_data_stream_to_file(data_stream)
             self.is_experiment_running = True
             try:
-                from tarfile import TarFile, TarInfo
-                import os
-                docker = aiodocker.Docker()
-                with TarFile(name=data_file_path, mode='a') as tar_file:
-                    docker_file_path = Path(
-                        __file__).parent.parent.parent.parent.absolute() / 'openfl-docker' / 'Dockerfile.collaborator'
-                    run_collaborator_path = Path(
-                        __file__).parent.absolute() / 'run_collaborator.py'
-                    with open('shard_descriptor_config.yaml', 'w') as f:
-                        yaml.dump(self.shard_descriptor_config, f)
-                    tar_file.add(docker_file_path, 'Dockerfile')
-                    tar_file.add(run_collaborator_path, 'run.py')
-                    tar_file.add('shard_descriptor_config.yaml', 'shard_descriptor_config.yaml')
-                    os.remove('shard_descriptor_config.yaml')
-                    template = self.shard_descriptor_config['template']
-                    module_path = template.split('.')[:-1]
-                    module_path[-1] = f'{module_path[-1]}.py'
-                    shar_descriptor_path = str(Path.joinpath(Path('.'), *module_path))
-                    tar_file.add(shar_descriptor_path, shar_descriptor_path)
-
-                with open(data_file_path, 'rb') as f:
-                    fileobj = BytesIO(f.read())
-                    build_image_iter = docker.images.build(
-                        fileobj=fileobj,
-                        encoding='gzip',
-                        tag=experiment_name,
-                        stream=True,
-                    )
-                async for l in build_image_iter:
-                    print(l)
-                cmd = (
-                    f'python run.py --name {self.name} '
-                    f'--plan_path plan/plan.yaml '
-                    f'--root_certificate {self.root_certificate} '
-                    f'--private_key {self.private_key} '
-                    f'--certificate {self.certificate} '
-                    f'--shard_config shard_descriptor_config.yaml '
-                    f'--cuda_devices cpu'
+                await self._run_collaborator(
+                    experiment_name=experiment_name,
+                    data_file_path=data_file_path,
                 )
-                container = await docker.containers.create_or_replace(
-                    config={
-                        'Cmd': ['/bin/bash', '-c', cmd],
-                        'Image': f'{experiment_name}:latest',
-                        # 'Env': [
-                        #     'GRPC_VERBOSITY=debug',
-                        #     'GRPC_TRACE=http,tcp',
-                        # ],
-                        'HostConfig': {
-                            'NetworkMode': 'host',
-                            'DeviceRequests': [{
-                                'Driver': 'nvidia',
-                                'Count': -1,
-                                'Capabilities': [['gpu', 'compute', 'utility']],
-                            }],
-                            "ShmSize": 30 * 1024 * 1024 * 1024,
-                        },
-                    },
-                    name=experiment_name,
-                )
-                subscriber = docker.events.subscribe()
-                await container.start()
-                while True:
-                    event = await subscriber.get()
-                    if event is None:
-                        break
-
-                    for key, value in event.items():
-                        print(key, ":", value)
-
-                    if event["Actor"]["ID"] == container._id:
-                        print('DOCKER EVENT ACTION', event["Action"])
-                        if event["Action"] == "stop":
-                            await container.delete(force=True)
-                            print(f"=> deleted {container._id[:12]}")
-                        elif event["Action"] == "destroy":
-                            print("=> done with this container!")
-                            break
-                        elif event['Action'] == 'die':
-                            print("=> container is died")
-                            break
 
             except Exception as exc:
                 logger.exception(f'Collaborator failed with error: {exc}:')
@@ -206,18 +128,39 @@ class Envoy:
             )
             time.sleep(timeout)
 
-    def _run_collaborator(self, plan='plan/plan.yaml'):
+    async def _run_collaborator(self, experiment_name: str, data_file_path: Path):
         """Run the collaborator for the experiment running."""
-        plan = Plan.parse(plan_config_path=Path(plan))
+        docker = aiodocker.Docker()
+        docker_context_path = _create_docker_context(
+            data_file_path=data_file_path,
+            shard_descriptor_config=self.shard_descriptor_config,
+        )
+        await _build_docker_image(
+            docker=docker,
+            docker_context_path=docker_context_path,
+            tag=experiment_name,
+        )
 
-        # TODO: Need to restructure data loader config file loader
-        echo(f'Data = {plan.cols_data_paths}')
-        logger.info('🧿 Starting a Collaborator Service.')
+        cmd = (
+            f'python run.py --name {self.name} '
+            f'--plan_path plan/plan.yaml '
+            f'--root_certificate {self.root_certificate} '
+            f'--private_key {self.private_key} '
+            f'--certificate {self.certificate} '
+            f'--shard_config shard_descriptor_config.yaml '
+            f'--cuda_devices cpu'
+        )
 
-        col = plan.get_collaborator(self.name, self.root_certificate, self.private_key,
-                                    self.certificate, shard_descriptor=self.shard_descriptor)
-        col.set_available_devices(cuda=self.cuda_devices)
-        col.run()
+        container = await _create_docker_container(
+            docker=docker,
+            name=experiment_name,
+            cmd=cmd,
+        )
+
+        await _start_and_monitor_docker_container(
+            docker=docker,
+            container=container
+        )
 
     def start(self):
         """Start the envoy."""
@@ -236,3 +179,81 @@ class Envoy:
             else:
                 # Shut down
                 logger.error('Report shard info was not accepted')
+
+
+def _create_docker_context(data_file_path: Path, shard_descriptor_config) -> Path:
+    with TarFile(name=data_file_path, mode='a') as tar_file:
+        envoy_module_path = Path(__file__)
+        openfl_root_path = envoy_module_path.parent.parent.parent.parent.absolute()
+        docker_file_path = openfl_root_path / 'openfl-docker' / 'Dockerfile.collaborator'
+        run_collaborator_path = envoy_module_path.parent.absolute() / 'run_collaborator.py'
+
+        with open('shard_descriptor_config.yaml', 'w') as f:
+            yaml.dump(shard_descriptor_config, f)
+        tar_file.add(docker_file_path, 'Dockerfile')
+        tar_file.add(run_collaborator_path, 'run.py')
+
+        tar_file.add('shard_descriptor_config.yaml', 'shard_descriptor_config.yaml')
+        os.remove('shard_descriptor_config.yaml')
+
+        template = shard_descriptor_config['template']
+        module_path = template.split('.')[:-1]
+        module_path[-1] = f'{module_path[-1]}.py'
+        shar_descriptor_path = str(Path.joinpath(Path('.'), *module_path))
+        tar_file.add(shar_descriptor_path, shar_descriptor_path)
+    return data_file_path
+
+
+async def _build_docker_image(docker: Docker, docker_context_path: Path, tag: str):
+    with open(docker_context_path, 'rb') as f:
+        fileobj = BytesIO(f.read())
+        build_image_iter = docker.images.build(
+            fileobj=fileobj,
+            encoding='gzip',
+            tag=tag,
+            stream=True,
+        )
+    async for message in build_image_iter:
+        logger.info('DOCKER BUILD', message)
+
+
+async def _create_docker_container(docker: Docker, name: str, cmd: str) -> DockerContainer:
+    return await docker.containers.create_or_replace(
+        config={
+            'Cmd': ['/bin/bash', '-c', cmd],
+            'Image': f'{name}:latest',
+            'HostConfig': {
+                'NetworkMode': 'host',
+                'DeviceRequests': [{
+                    'Driver': 'nvidia',
+                    'Count': -1,
+                    'Capabilities': [['gpu', 'compute', 'utility']],
+                }],
+                'ShmSize': 30 * 1024 * 1024 * 1024,
+            },
+        },
+        name=name,
+    )
+
+
+async def _start_and_monitor_docker_container(docker: Docker, container: DockerContainer):
+    subscriber = docker.events.subscribe()
+    await container.start()
+    while True:
+        event = await subscriber.get()
+        if event is None:
+            break
+
+        if event['Actor']['ID'] == container._id:
+            logger.info('DOCKER EVENT ACTION', event['Action'])
+            for key, value in event.items():
+                logger.info(key, ':', value)
+            if event['Action'] == 'stop':
+                await container.delete(force=True)
+                logger.info(f'=> deleted {container._id[:12]}')
+            elif event['Action'] == 'destroy':
+                logger.info('=> done with this container!')
+                break
+            elif event['Action'] == 'die':
+                logger.info('=> container is died')
+                break

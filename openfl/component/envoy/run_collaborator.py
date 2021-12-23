@@ -1,13 +1,13 @@
+"""Run collaborator in docker module."""
+import argparse
+import logging
 from importlib import import_module
 from pathlib import Path
-import logging
 
 import yaml
+from click import echo
 
 from openfl.federated import Plan
-from click import echo
-import argparse
-
 from openfl.interface.cli import setup_logging
 
 logger = logging.getLogger(__name__)
