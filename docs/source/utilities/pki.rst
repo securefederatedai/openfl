@@ -60,9 +60,11 @@ The |productName| PKI pipeline involves creating a local certificate authority (
       .. code-block:: console
 
          fx pki install -p </path/to/ca/dir> --ca-url <host:port>
+
       | where
       | :code:`-p` defines the path to the directory that contains CA files, and
       | :code:`--ca-url` defines the host and port that the CA server will listen, if not specified, :code:`--ca-url` will be "localhost:9123"
+
       When executing this command, you will be prompted for a password and password confirmation. The password will encrypt some CA files.
       This command will also download `step-ca <https://github.com/smallstep/certificates>`_ and `step <https://github.com/smallstep/cli>`_ binaries.
 
@@ -71,6 +73,7 @@ The |productName| PKI pipeline involves creating a local certificate authority (
       .. code-block:: console
 
          fx pki run -p </path/to/ca/dir>
+
       | where
       | :code:`-p` defines the path to the directory that contains CA files.
 
@@ -79,6 +82,7 @@ The |productName| PKI pipeline involves creating a local certificate authority (
       .. code-block:: console
 
          fx pki get-token -n <subject> --ca-path </path/to/ca/dir> --ca-url <host:port>
+
       | where
       | :code:`-n` defines the subject name, FQDN for director, collaborator name for envoy, or API name for the API-layer node.
       | :code:`--ca-path` defines the path to the directory that contains CA files.
@@ -92,9 +96,11 @@ The |productName| PKI pipeline involves creating a local certificate authority (
 
          cd <path/to/subject/folder>
          fx pki certify -n <subject> -t <generated token for subject>
+
       | where
       | :code:`-n` defines the subject name, FQDN for director, collaborator name for envoy, or API name for the API-layer node.
       | :code:`-t` defines the output token from the previous command.
+
       With this command, the client connects to the CA server over \HTTPS\, which is provided by the root certificate which was copied together with the JWT. The CA server authenticates the client via the JWT, and the client authenticates the server via the root certificate.
 
 The signed certificate and private key are stored on each node in the federation. The signed certificate is valid for one year. You should certify all nodes that will participate in the federation director, which includes all envoys and API-layer nodes.

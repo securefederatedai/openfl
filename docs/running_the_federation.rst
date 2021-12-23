@@ -841,9 +841,9 @@ Setting Up the Certificate Authority
     +===========================+==================================================+
     | Certificate chain         | WORKSPACE.PATH/cert/cert_chain.crt               |
     +---------------------------+--------------------------------------------------+
-    | Aggregator certificate    | WORKSPACE.PATH/cert/server/agg_{AFQDN}.crt         |
+    | Aggregator certificate    | WORKSPACE.PATH/cert/server/agg_{AFQDN}.crt       |
     +---------------------------+--------------------------------------------------+
-    | Aggregator key            | WORKSPACE.PATH/cert/server/agg_{AFQDN}.key         |
+    | Aggregator key            | WORKSPACE.PATH/cert/server/agg_{AFQDN}.key       |
     +---------------------------+--------------------------------------------------+
 
     where **AFQDN** is the fully-qualified domain name of the aggregator node.
@@ -1057,4 +1057,3 @@ Procedure
 3. Generate public key infrastructure (PKI) certificates for all collaborators and the aggregator. See :doc:`/source/utilities/pki` for details.
 
 4. `STEP 3: Start the Federation`_.
-
