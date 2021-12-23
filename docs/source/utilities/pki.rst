@@ -5,14 +5,6 @@
 |productName| Public Key Infrastructure (PKI) Solutions
 *******************************************************
 
-.. toctree::
-   :maxdepth: 2
-
-   pki_overview_
-   semi_automatic_certification_
-   manual_certification_
-
-
 .. _pki_overview:
 
 Overview
