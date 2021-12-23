@@ -4,7 +4,7 @@
 .. _install_singularity:
 
 Singularity Installation
-###################
+########################
 
 .. note::
 
