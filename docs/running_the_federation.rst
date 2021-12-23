@@ -772,8 +772,7 @@ The objectives in this step:
 
 .. _install_certs_agg:
 
-On the Aggregator Node
-""""""""""""""""""""""
+**On the Aggregator Node:**
 
 Setting Up the Certificate Authority
 
@@ -866,8 +865,7 @@ Exporting the Workspace
 
 .. _install_certs_colab:
 
-On the Collaborator Node
-""""""""""""""""""""""""
+**On the Collaborator Node**:
 
 Importing the Workspace
 
@@ -935,8 +933,7 @@ Importing the Workspace
 STEP 3: Start the Federation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-On the Aggregator Node
-""""""""""""""""""""""
+**On the Aggregator Node:**
 
 1. Start the Aggregator.
 
@@ -948,8 +945,7 @@ On the Aggregator Node
 
 .. _running_collaborators:
 
-On the Collaborator Nodes
-"""""""""""""""""""""""""
+**On the Collaborator Nodes:**
 
 1. Open a new terminal, change the directory to the workspace, and activate the virtual environment.
 
@@ -999,13 +995,9 @@ There are two ways you can run |productName| with Docker\*\.
 Option 1: Deploy a Federation in a Docker Container
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Prerequisites
-"""""""""""""
+.. note::
+    You have to built an |productName| image. See :ref:`install_docker` for details.
 
-You have already built an |productName| image. See :ref:`install_docker` for details.
-
-Procedure
-"""""""""""""
 
 1. Run the |productName| image.
 
@@ -1022,13 +1014,9 @@ You can now experiment with |productName| in the container. For example, you can
 Option 2: Deploy Your Workspace in a Docker Container
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Prerequisites
-"""""""""""""
+.. note::
+    You have to set up a TaskRunner and run :code:`fx plan initialize` in the workspace directory. See `STEP 1: Create a Workspace on the Aggregator`_ for details.
 
-You have already set up a TaskRunner and run :code:`fx plan initialize` in the workspace directory. See `STEP 1: Create a Workspace on the Aggregator`_ for details.
-
-Procedure
-"""""""""
 
 1. Build an image with the workspace you created.
 
