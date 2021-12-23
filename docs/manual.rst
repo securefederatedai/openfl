@@ -31,6 +31,7 @@ Familiarize with the APIs:
    overview
    install
    running_the_federation
-   source/workflow/running_the_federation.tutorial
+   plan_settings
    source/utilities/utilities
    advanced_topics
+   source/workflow/running_the_federation.tutorial

@@ -94,6 +94,11 @@ templates_path = ['_templates']
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store', 'tutorials/*', 'graveyard/*']
+exclude_patterns.extend(['overview.what_is_intel_federated_learning.rst',
+                         'install.singularity.rst',
+                         'modules.rst',
+                         'overview.how_can_intel_protect_federated_learning.rst',
+                         'source/workflow/running_the_federation.singularity.rst'])
 
 # -- Options for HTML output -------------------------------------------------
 
