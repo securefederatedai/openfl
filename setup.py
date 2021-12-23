@@ -53,6 +53,7 @@ setup(
     ],
     include_package_data=True,
     install_requires=[
+        'aiodocker==0.21.0',
         'Click==8.0.1',
         'PyYAML>=5.4.1',
         'numpy',
