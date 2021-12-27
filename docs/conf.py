@@ -45,45 +45,22 @@ extensions = [
 # This will replace the |variables| within the rST documents automatically
 
 PRODUCT_VERSION = 'Intel'
-# PRODUCT_VERSION = "OFL" # NOQA:E800
 
-# tags.add(PRODUCT_VERSION) # NOQA:E800
+project = 'OpenFL'
+copyright = f'{datetime.now().year}, Intel' # NOQA
+author = 'Intel Corporation'
+version = f'{datetime.now().year}.{datetime.now().month}'
+release = version
+master_doc = 'index'
 
-if PRODUCT_VERSION == 'Intel':
+# Global variables for rST
+rst_prolog = '''
+.. |productName| replace:: OpenFL
+.. |productZip| replace:: openfl.zip
+.. |productDir| replace:: openfl
+.. |productWheel| replace:: openfl
 
-    project = 'OpenFL'
-    copyright = f'{datetime.now().year}, Intel' # NOQA
-    author = 'Intel Corporation'
-    version = f'{datetime.now().year}.{datetime.now().month}'
-    release = version
-    master_doc = 'index'
-
-    # Global variables for rST
-    rst_prolog = '''
-    .. |productName| replace:: OpenFL
-    .. |productZip| replace:: openfl.zip
-    .. |productDir| replace:: openfl
-    .. |productWheel| replace:: openfl
-
-    '''
-
-else:
-
-    project = 'Open Federated Learning'
-    author = 'FeTS'
-    master_doc = 'index'
-    version = f'{datetime.now().year}.{datetime.now().month}'
-    release = version
-
-    # Global variables for rST
-    rst_prolog = '''
-    .. |productName| replace:: Open Federated Learning
-    .. |productZip| replace:: OpenFederatedLearning.zip
-    .. |productDir| replace:: OpenFederatedLearning
-    .. |productWheel| replace:: openfl
-
-    .. _Makefile: https://github.com/IntelLabs/OpenFederatedLearning/blob/master/Makefile
-    '''
+'''
 
 napoleon_google_docstring = True
 
