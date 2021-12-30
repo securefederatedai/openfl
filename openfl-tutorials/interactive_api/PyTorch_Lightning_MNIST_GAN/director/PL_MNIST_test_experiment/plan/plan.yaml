@@ -1,0 +1,57 @@
+aggregator:
+  settings:
+    best_state_path: save/best.pbuf
+    db_store_rounds: 1
+    init_state_path: save/init.pbuf
+    last_state_path: save/last.pbuf
+    rounds_to_train: 5
+  template: openfl.component.Aggregator
+api_layer:
+  required_plugin_components:
+    serializer_plugin: openfl.plugins.interface_serializer.cloudpickle_serializer.CloudpickleSerializer
+  settings:
+    aggregation_function_interface_file: aggregation_function_obj.pkl
+    dataloader_interface_file: loader_obj.pkl
+    model_interface_file: model_obj.pkl
+    tasks_interface_file: tasks_obj.pkl
+assigner:
+  settings:
+    task_groups:
+    - name: train_and_validate
+      percentage: 1.0
+      tasks:
+      - train
+  template: openfl.component.RandomGroupedAssigner
+collaborator:
+  settings:
+    db_store_rounds: 1
+    delta_updates: false
+    device_assignment_policy: CUDA_PREFERRED
+    opt_treatment: CONTINUE_GLOBAL
+  template: openfl.component.Collaborator
+data_loader:
+  settings:
+    train_bs: 256
+    valid_bs: 64
+  template: openfl.federated.DataLoader
+network:
+  settings:
+    agg_addr: localhost
+    agg_port: auto
+    cert_folder: cert
+    client_reconnect_interval: 5
+    disable_client_auth: false
+    hash_salt: auto
+    tls: false
+  template: openfl.federation.Network
+task_runner:
+  required_plugin_components:
+    framework_adapters: openfl.plugins.frameworks_adapters.pytorch_adapter_with_multiple_opt.FrameworkAdapterPlugin
+  settings: {}
+  template: openfl.federated.task.task_runner.CoreTaskRunner
+tasks:
+  settings: {}
+  train:
+    function: train
+    kwargs:
+      some_parameter: 42
