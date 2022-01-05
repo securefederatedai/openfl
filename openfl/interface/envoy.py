@@ -18,7 +18,7 @@ from yaml import safe_load
 from openfl.component.envoy.envoy import Envoy
 from openfl.interface.cli_helper import WORKSPACE
 from openfl.utilities import click_types
-
+from openfl.utilities.path_check import is_directory_traversal
 
 logger = logging.getLogger(__name__)
 
@@ -51,6 +51,17 @@ def start_(shard_name, director_host, director_port, tls, shard_config_path,
            root_certificate, private_key, certificate):
     """Start the Envoy."""
     logger.info('🧿 Starting the Envoy.')
+    if is_directory_traversal(shard_config_path):
+        click.echo('The shard config path is out of the openfl workspace scope.')
+        sys.exit(1)
+
+    shard_config_path = Path(shard_config_path).absolute()
+    if root_certificate:
+        root_certificate = Path(root_certificate).absolute()
+    if private_key:
+        private_key = Path(private_key).absolute()
+    if certificate:
+        certificate = Path(certificate).absolute()
 
     shard_descriptor = shard_descriptor_from_config(shard_config_path)
     envoy = Envoy(
@@ -72,7 +83,10 @@ def start_(shard_name, director_host, director_port, tls, shard_config_path,
         help='The Envoy path', type=ClickPath())
 def create(envoy_path):
     """Create an envoy workspace."""
-    envoy_path = Path(envoy_path)
+    if is_directory_traversal(envoy_path):
+        click.echo('The Envoy path is out of the openfl workspace scope.')
+        sys.exit(1)
+    envoy_path = Path(envoy_path).absolute()
     if envoy_path.exists():
         if not click.confirm('Envoy workspace already exists. Recreate?',
                              default=True):

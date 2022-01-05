@@ -13,7 +13,7 @@ from openfl.utilities import LocalTensor
 from openfl.utilities import SingletonABCMeta
 
 
-class AggregationFunctionInterface(metaclass=SingletonABCMeta):
+class AggregationFunction(metaclass=SingletonABCMeta):
     """Interface for specifying aggregation function."""
 
     @abstractmethod

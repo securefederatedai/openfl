@@ -2,6 +2,9 @@
 # SPDX-License-Identifier: Apache-2.0
 """Workspace module."""
 
+import sys
+from pathlib import Path
+
 from click import Choice
 from click import confirm
 from click import echo
@@ -9,6 +12,9 @@ from click import group
 from click import option
 from click import pass_context
 from click import Path as ClickPath
+
+from openfl.utilities.path_check import is_directory_traversal
+from openfl.utilities.utils import is_package_versioned
 
 
 @group()
@@ -63,13 +69,15 @@ def get_templates():
 @option('--template', required=True, type=Choice(get_templates()))
 def create_(prefix, template):
     """Create the workspace."""
+    if is_directory_traversal(prefix):
+        echo('Workspace name or path is out of the openfl workspace scope.')
+        sys.exit(1)
     create(prefix, template)
 
 
 def create(prefix, template):
     """Create federated learning workspace."""
     from os.path import isfile
-    from pathlib import Path
     from subprocess import check_call
     from sys import executable
 
@@ -79,8 +87,7 @@ def create(prefix, template):
     if not OPENFL_USERDIR.exists():
         OPENFL_USERDIR.mkdir()
 
-    prefix = Path(prefix)
-    template = Path(template)
+    prefix = Path(prefix).absolute()
 
     create_dirs(prefix)
     create_temp(prefix, template)
@@ -118,7 +125,7 @@ def export_():
     from openfl.interface.cli_helper import WORKSPACE
 
     # TODO: Does this need to freeze all plans?
-    plan_file = 'plan/plan.yaml'
+    plan_file = Path('plan/plan.yaml').absolute()
     try:
         freeze_plan(plan_file)
     except Exception:
@@ -128,10 +135,8 @@ def export_():
     requirements_generator = freeze.freeze()
     with open('./requirements.txt', 'w') as f:
         for package in requirements_generator:
-            if '==' not in package:
-                # We do not export dependencies without version
-                continue
-            f.write(package + '\n')
+            if is_package_versioned(package):
+                f.write(package + '\n')
 
     archive_type = 'zip'
     archive_name = basename(getcwd())
@@ -180,6 +185,8 @@ def import_(archive):
     from shutil import unpack_archive
     from subprocess import check_call
     from sys import executable
+
+    archive = Path(archive).absolute()
 
     dir_path = basename(archive).split('.')[0]
     unpack_archive(archive, extract_dir=dir_path)
@@ -382,22 +389,25 @@ def dockerize_(context, base_image, save):
     }
 
     client = docker.from_env(timeout=3600)
+    echo('Building the Docker image')
     try:
-        echo('Building the Docker image')
         client.images.build(
             path=str(workspace_path),
             tag=workspace_name,
             buildargs=build_args,
-            dockerfile=dockerfile_workspace)
-
-    except Exception as e:
+            dockerfile=dockerfile_workspace
+        )
+    except docker.errors.BuildError as e:
+        for log in e.build_log:
+            msg = log.get('stream')
+            if msg:
+                echo(msg)
         echo('Failed to build the image\n' + str(e) + '\n')
         sys.exit(1)
-    else:
-        echo('The workspace image has been built successfully!')
     finally:
         os.remove(workspace_archive)
         os.remove(dockerfile_workspace)
+    echo('The workspace image has been built successfully!')
 
     # Saving the image to a tarball
     if save:
