@@ -141,6 +141,8 @@ class Envoy:
             tag=experiment_name,
         )
 
+        cuda_devices = ','.join(self.cuda_devices)
+
         cmd = (
             f'python run.py --name {self.name} '
             f'--plan_path plan/plan.yaml '
@@ -148,7 +150,7 @@ class Envoy:
             f'--private_key {self.private_key} '
             f'--certificate {self.certificate} '
             f'--shard_config shard_descriptor_config.yaml '
-            f'--cuda_devices cpu'
+            f'--cuda_devices {cuda_devices}'
         )
 
         container = await _create_docker_container(
@@ -190,11 +192,11 @@ def _create_docker_context(data_file_path: Path, shard_descriptor_config) -> Pat
 
         with open('shard_descriptor_config.yaml', 'w') as f:
             yaml.dump(shard_descriptor_config, f)
-        tar_file.add(docker_file_path, 'Dockerfile')
-        tar_file.add(run_collaborator_path, 'run.py')
-
         tar_file.add('shard_descriptor_config.yaml', 'shard_descriptor_config.yaml')
         os.remove('shard_descriptor_config.yaml')
+
+        tar_file.add(docker_file_path, 'Dockerfile')
+        tar_file.add(run_collaborator_path, 'run.py')
 
         template = shard_descriptor_config['template']
         module_path = template.split('.')[:-1]

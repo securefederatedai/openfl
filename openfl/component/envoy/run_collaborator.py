@@ -3,6 +3,8 @@ import argparse
 import logging
 from importlib import import_module
 from pathlib import Path
+from typing import Optional
+from typing import Tuple
 
 import yaml
 from click import echo
@@ -25,7 +27,7 @@ def _parse_args():
     parser.add_argument('--private_key', type=str, nargs='?', default=None)
     parser.add_argument('--certificate', type=str, nargs='?', default=None)
     parser.add_argument('--shard_config', type=str, nargs='?', default=None)
-    parser.add_argument('--cuda_devices', type=str, nargs='?', default='cpu')
+    parser.add_argument('--cuda_devices', type=str, nargs='?', default=None)
     return parser.parse_args()
 
 
@@ -36,7 +38,7 @@ def _run_collaborator(
         private_key: str,
         certificate: str,
         shard_descriptor: str,
-        cuda_devices: str,
+        cuda_devices: Optional[Tuple[str]],
 ) -> None:
     plan = Plan.parse(plan_config_path=Path(plan_path))
     echo(f'Data = {plan.cols_data_paths}')
@@ -44,7 +46,8 @@ def _run_collaborator(
 
     col = plan.get_collaborator(name, root_certificate, private_key,
                                 certificate, shard_descriptor=shard_descriptor)
-    col.set_available_devices(cuda=['0'])
+    if cuda_devices is not None:
+        col.set_available_devices(cuda=cuda_devices)
     col.run()
 
 
@@ -69,6 +72,7 @@ if __name__ == '__main__':
     with open(args.shard_config) as f:
         shard_descriptor_config = yaml.safe_load(f)
     shard_descriptor = _shard_descriptor_from_config(shard_descriptor_config)
+    cuda_devices = tuple(args.cuda_devices.split(','))
     _run_collaborator(
         plan_path=args.plan_path,
         name=args.name,
@@ -76,5 +80,5 @@ if __name__ == '__main__':
         private_key=args.private_key,
         certificate=args.certificate,
         shard_descriptor=shard_descriptor,
-        cuda_devices=args.cuda_devices,
+        cuda_devices=cuda_devices,
     )
