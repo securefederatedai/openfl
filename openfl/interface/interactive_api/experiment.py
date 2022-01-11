@@ -102,7 +102,7 @@ class FLExperiment:
             self.task_runner_stub.rebuild_model(tensor_dict, validation=True, device='cpu')
             self.current_model_status = upcoming_model_status
 
-        return self.task_runner_stub.model
+        return deepcopy(self.task_runner_stub.model)
 
     def stream_metrics(self, tensorboard_logs: bool = True) -> None:
         """Stream metrics."""
@@ -425,12 +425,30 @@ class TaskInterface:
                 device='device', optimizer='my_Adam_opt')
         def foo_task(my_model, train_loader, my_Adam_opt, device, batch_size, some_arg=356)
             ...
+            return {'metric_name': metric, 'metric_name_2': metric_2,}
         `
         """
         # The highest level wrapper for allowing arguments for the decorator
         def decorator_with_args(training_method):
             # We could pass hooks to the decorator
             # @functools.wraps(training_method)
+
+            def wrapper_decorator(**task_keywords):
+                metric_dict = training_method(**task_keywords)
+                return metric_dict
+
+            # Saving the task and the contract for later serialization
+            self.task_registry[training_method.__name__] = wrapper_decorator
+            contract = {'model': model, 'data_loader': data_loader,
+                        'device': device, 'optimizer': optimizer}
+            self.task_contract[training_method.__name__] = contract
+            # We do not alter user environment
+            return training_method
+
+        return decorator_with_args
+
+    def main_metric(name, less_better=False):
+        def decorator_with_args(training_method):
 
             def wrapper_decorator(**task_keywords):
                 metric_dict = training_method(**task_keywords)
