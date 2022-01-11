@@ -51,16 +51,19 @@ class EqualNumPyDataSplitter(NumPyDataSplitter):
 class RandomNumPyDataSplitter(NumPyDataSplitter):
     """Splits the data randomly."""
 
-    def __init__(self, shuffle=True):
+    def __init__(self, shuffle=True, seed=0):
         """Initialize.
 
         Args:
             shuffle(bool): Flag determining whether to shuffle the dataset before splitting.
+            seed(int): Random numbers generator seed.
         """
         self.shuffle = shuffle
+        self.seed = seed
 
     def split(self, data, num_collaborators):
         """Split the data."""
+        np.random.seed(self.seed)
         idx = range(len(data))
         if self.shuffle:
             idx = np.random.permutation(idx)
@@ -76,7 +79,8 @@ class LogNormalNumPyDataSplitter(NumPyDataSplitter):
                  sigma,
                  num_classes,
                  classes_per_col,
-                 min_samples_per_class):
+                 min_samples_per_class,
+                 seed=0):
         """Initialize.
 
         Args:
@@ -84,15 +88,18 @@ class LogNormalNumPyDataSplitter(NumPyDataSplitter):
             sigma(float): Distribution hyperparameter.
             classes_per_col(int): Number of classes assigned to each collaborator.
             min_samples_per_class(int): Minimum number of collaborator samples of each class.
+            seed(int): Random numbers generator seed.
         """
         self.mu = mu
         self.sigma = sigma
         self.num_classes = num_classes
         self.classes_per_col = classes_per_col
         self.min_samples_per_class = min_samples_per_class
+        self.seed = seed
 
     def split(self, data, num_collaborators):
         """Split the data."""
+        np.random.seed(self.seed)
         idx = [[] for _ in range(num_collaborators)]
         samples_per_col = self.classes_per_col * self.min_samples_per_class
         for col in range(num_collaborators):
@@ -133,13 +140,15 @@ but distribution is {[len(i) for i in idx]}'''
 class DirichletNumPyDataSplitter(NumPyDataSplitter):
     """Numpy splitter according to dirichlet distribution."""
 
-    def __init__(self, alpha=0.5, min_samples_per_col=10):
+    def __init__(self, alpha=0.5, min_samples_per_col=10, seed=0):
         """Initialize."""
         self.alpha = alpha
         self.min_samples_per_col = min_samples_per_col
+        self.seed = seed
 
     def split(self, data, num_collaborators):
         """Split the data."""
+        np.random.seed(self.seed)
         classes = len(np.unique(data))
         min_size = 0
 
