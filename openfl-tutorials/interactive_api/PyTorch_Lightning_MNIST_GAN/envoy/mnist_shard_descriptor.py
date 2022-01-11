@@ -4,11 +4,8 @@
 """Mnist Shard Descriptor."""
 
 import logging
-import os
 from typing import List
 
-import numpy as np
-import requests
 from torchvision import datasets
 import torchvision.transforms as transforms
 
@@ -97,7 +94,7 @@ class MnistShardDescriptor(ShardDescriptor):
         )
         x_train, y_train = train_data.train_data, train_data.train_labels
         x_val, y_val = val_data.test_data, val_data.test_labels
-        print("shape of x_train",x_train.shape)
+        print("shape of x_train", x_train.shape)
         print("shape of y_train", y_train.shape)
 
         print('Mnist data was loaded!')
