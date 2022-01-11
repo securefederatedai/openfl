@@ -246,16 +246,17 @@ async def _start_and_monitor_docker_container(docker: Docker, container: DockerC
         if event is None:
             break
 
+        action = event.get('Action')
+
         if event['Actor']['ID'] == container._id:
-            logger.info('DOCKER EVENT ACTION', event['Action'])
             for key, value in event.items():
                 logger.info(key, ':', value)
-            if event['Action'] == 'stop':
+            if action == 'stop':
                 await container.delete(force=True)
                 logger.info(f'=> deleted {container._id[:12]}')
-            elif event['Action'] == 'destroy':
+            elif action == 'destroy':
                 logger.info('=> done with this container!')
                 break
-            elif event['Action'] == 'die':
+            elif action == 'die':
                 logger.info('=> container is died')
                 break
