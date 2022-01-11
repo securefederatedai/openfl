@@ -447,23 +447,6 @@ class TaskInterface:
 
         return decorator_with_args
 
-    def main_metric(name, less_better=False):
-        def decorator_with_args(training_method):
-
-            def wrapper_decorator(**task_keywords):
-                metric_dict = training_method(**task_keywords)
-                return metric_dict
-
-            # Saving the task and the contract for later serialization
-            self.task_registry[training_method.__name__] = wrapper_decorator
-            contract = {'model': model, 'data_loader': data_loader,
-                        'device': device, 'optimizer': optimizer}
-            self.task_contract[training_method.__name__] = contract
-            # We do not alter user environment
-            return training_method
-
-        return decorator_with_args
-
     def add_kwargs(self, **task_kwargs):
         """
         Register tasks settings.
