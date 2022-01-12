@@ -2,19 +2,18 @@
 .. # SPDX-License-Identifier: Apache-2.0
 
 .. _log_metric_callback:
-===============================
-Metric logging callback
-===============================
 
--------------------------------
-Usage
--------------------------------
-|productName| allows developers to use custom metric logging functions. This function will call on aggregator node.
-In order to define such function, you should:
+***********************
+Metric Logging Callback
+***********************
+
+With the director-based workflow, you can use custom metric logging function for each task via Python\*\  API or command line interface. This function calls on the aggregator node.
+
 
 Python API
 ==========
-Define function with follow signature:
+
+Define the function with the follow signature:
 
 .. code-block:: python
 
@@ -30,10 +29,13 @@ Define function with follow signature:
             round_number (int): Round number
         """
         your code 
-CLI
-====
 
-Define callback function similar way like in python api in ``src`` folder of your workspace. And provide a way to your function in ``aggregator`` part of ``plan/plan.yaml`` file in your workspace, use ``log_metric_callback`` key: 
+Command Line Interface
+======================
+
+1. Define the callback function, like how you defined in Python API, in the **src** directory in your workspace.
+
+2. Provide a way to your function with the ``log_metric_callback`` key in the ``aggregator`` section of the **plan.yaml** file in your workspace. 
 
 .. code-block:: yaml
 
@@ -50,10 +52,10 @@ Define callback function similar way like in python api in ``src`` folder of you
 
 
 
-Example
-=======================
+Example of a Metric Callback
+============================
 
-Below is an example of a log metric callback, which writes metric values to tensorboard
+The following is an example of a log metric callback, which writes metric values to the TensorBoard.
 
 .. code-block:: python
 
@@ -66,4 +68,5 @@ Below is an example of a log metric callback, which writes metric values to tens
         writer.add_scalar("{}/{}/{}".format(node_name, task_name, metric_name),
                         metric, round_number) 
 
-Full implementation can be found in ``openfl-tutorials/Federated_Pytorch_MNIST_Tutorial.ipynb`` and in ``torch_cnn_mnist`` workspace
+
+A full implementation can be found at `Federated_Pytorch_MNIST_Tutorial.ipynb <https://github.com/intel/openfl/blob/develop/openfl-tutorials/Federated_Pytorch_MNIST_Tutorial.ipynb>`_ and in the **torch_cnn_mnist** workspace.

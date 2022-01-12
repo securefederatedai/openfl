@@ -24,23 +24,21 @@ class DevicePolicy(Enum):
 
 
 class OptTreatment(Enum):
-    """Optimizer Methods."""
+    """Optimizer Methods.
+
+    - RESET tells each collaborator to reset the optimizer state at the beginning
+    of each round.
+
+    - CONTINUE_LOCAL tells each collaborator to continue with the local optimizer
+    state from the previous round.
+
+    - CONTINUE_GLOBAL tells each collaborator to continue with the federally
+    averaged optimizer state from the previous round.
+    """
 
     RESET = 1
-    '''
-    RESET tells each collaborator to reset the optimizer state at the beginning
-    of each round.
-    '''
     CONTINUE_LOCAL = 2
-    '''
-    CONTINUE_LOCAL tells each collaborator to continue with the local optimizer
-    state from the previous round.
-    '''
     CONTINUE_GLOBAL = 3
-    '''
-    CONTINUE_GLOBAL tells each collaborator to continue with the federally
-    averaged optimizer state from the previous round.
-    '''
 
 
 class Collaborator:
@@ -403,7 +401,7 @@ class Collaborator:
                 self.logger.metric(
                     f'Round {round_number}, collaborator {self.collaborator_name} '
                     f'is sending metric for task {task_name}:'
-                    f' {tensor_name}\t{tensor_dict[tensor]}')
+                    f' {tensor_name}\t{tensor_dict[tensor]:f}')
 
         self.client.send_local_task_results(
             self.collaborator_name, round_number, task_name, data_size, named_tensors)

@@ -3,43 +3,38 @@
 
 .. _data_splitting:
 
-************************************
+*****************
 Dataset Splitters
-************************************
+*****************
 
 
-|productName| allows developers to use specify custom data splits **for simulation runs on a single dataset**.
+|productName| allows you to specify custom data splits **for simulation runs on a single dataset**.
 
-You may apply data splitters differently depending on |productName| workflow that you follow. 
-
-Native Python API
-==================
-
-Choose from predefined |productName| data splitters functions:
-
-- ``openfl.utilities.data_splitters.EqualNumPyDataSplitter`` (default)
-- ``openfl.utilities.data_splitters.RandomNumPyDataSplitter``
-- ``openfl.component.aggregation_functions.LogNormalNumPyDataSplitter`` - assumes ``data`` argument as ``np.ndarray`` of integers (labels)
-- ``openfl.component.aggregation_functions.DirichletNumPyDataSplitter`` - assumes ``data`` argument as ``np.ndarray`` of integers (labels)
-Or create an implementation of :class:`openfl.utilities.data_splitters.NumPyDataSplitter`
-and pass it to FederatedDataset constructor as either ``train_splitter`` or ``valid_splitter`` keyword argument.
+You may apply data splitters differently depending on the |productName| workflow that you follow. 
 
 
-Using in Shard Descriptor
-==================
+OPTION 1: Use **Native Python API** (Aggregator-Based Workflow) Functions to Split the Data
+===========================================================================================
 
-Choose from predefined |productName| data splitters functions:
+Predefined |productName| data splitters functions are as follows:
 
 - ``openfl.utilities.data_splitters.EqualNumPyDataSplitter`` (default)
 - ``openfl.utilities.data_splitters.RandomNumPyDataSplitter``
-- ``openfl.component.aggregation_functions.LogNormalNumPyDataSplitter`` - assumes ``data`` argument as np.ndarray of integers (labels)
-- ``openfl.component.aggregation_functions.DirichletNumPyDataSplitter`` - assumes ``data`` argument as np.ndarray of integers (labels)
-Or create your own implementation of :class:`openfl.component.aggregation_functions.AggregationFunction`.
-After defining the splitting behavior, you need to use it on your data to perform a simulation. 
+- ``openfl.component.aggregation_functions.LogNormalNumPyDataSplitter``, which assumes the ``data`` argument as ``np.ndarray`` of integers (labels)
+- ``openfl.component.aggregation_functions.DirichletNumPyDataSplitter``, which assumes the ``data`` argument as ``np.ndarray`` of integers (labels)
 
-``NumPyDataSplitter`` requires a single ``split`` function.
-This function receives ``data`` - NumPy array required to build the subsets of data indices (see definition of :meth:`openfl.utilities.data_splitters.NumPyDataSplitter.split`). It could be the whole dataset, or labels only, or anything else.
-``split`` function returns a list of lists of indices which represent the collaborator-wise indices groups.
+Alternatively, you can create an `implementation <https://github.com/intel/openfl/blob/develop/openfl/utilities/data_splitters/numpy.py>`_ of :class:`openfl.plugins.data_splitters.NumPyDataSplitter` and pass it to the :code:`FederatedDataset` function as either ``train_splitter`` or ``valid_splitter`` keyword argument.
+
+
+OPTION 2: Use Dataset Splitters in your Shard Descriptor
+========================================================
+
+Apply one of previously mentioned splitting function on your data to perform a simulation. 
+
+``NumPyDataSplitter`` requires a single ``split`` function. The :code:`split` function returns a list of indices which represents the collaborator-wise indices groups.
+
+This function receives ``data`` - NumPy array required to build the subsets of data indices. It could be the whole dataset, or labels only, or anything else.
+
 
 .. code-block:: python
 
@@ -56,4 +51,5 @@ This function receives ``data`` - NumPy array required to build the subsets of d
 
 .. note::
 
-    By default, we shuffle the data and perform equal split (see :class:`openfl.utilities.data_splitters.EqualNumPyDataSplitter`).
+By default, the data is shuffled and split equally. See an `example <https://github.com/intel/openfl/blob/develop/openfl/utilities/data_splitters/numpy.py>`_ of :class:`openfl.utilities.data_splitters.EqualNumPyDataSplitter` for details.
+    

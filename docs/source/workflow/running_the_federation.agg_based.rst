@@ -3,23 +3,44 @@
 
 .. _running_the_federation_aggregator_based:
 
-**********************
-Aggregator-based workflow.
-**********************
+*************************
+Aggregator-Based Workflow
+*************************
 
-First make sure you've installed the software :ref:`using these instructions <install_initial_steps>`
+There are two ways to run this workflow:
 
-.. figure:: images/openfl_flow.png
+- :ref:`Bare metal approach <running_the_federation_manual>`
+- :ref:`Docker approach <running_the_federation_docker>`
 
-.. centered:: 100K foot view of OpenFL workflow
+
+
+This workflow uses short-lived components in a federation, which is terminated when the experiment is finished. The components are as follows:
+
+- The *Collaborator* uses a local dataset to train a global model and the *Aggregator* receives model updates from *Collaborators* and combines them to form the global model.
+- The *Aggregator* is framework-agnostic, while the *Collaborator* can use any deep learning frameworks, such as `TensorFlow <https://www.tensorflow.org/>`_\* \  or `PyTorch <https://pytorch.org/>`_\*\.
+
+.. note::
+    For this workflow, you modify the federation workspace to your requirements by editing the Federated Learning plan (FL plan) along with the Python\*\  code that defines the model and the data loader. The FL plan is a `YAML <https://en.wikipedia.org/wiki/YAML>`_ file that defines the collaborators, aggregator, connections, models, data, and any other parameters that describe the training.
     
-The high-level workflow is shown in the figure above. Note that once OpenFL is installed on all nodes of the federation and every member of the federation has a valid PKI certificate, all that is needed to run an instance of a federated workload is to distribute the workspace to all federation members and then run the command to start the node (e.g. :code:`fx aggregator start`/:code:`fx collaborator start`). In other words, most of the work is setting up an initial environment on all of the federation nodes that can be used across new instantiations of federations.
+    See :doc:`../../plan_settings` for details.
+
+An overview of this workflow is shown below.
+
+.. figure:: /images/openfl_flow.png
+
+.. centered:: Overview of the Aggregator-Based Workflow
+
+
+
+
+
+
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
+   :hidden:
 
-   running_the_federation.notebook
-   running_the_federation.baremetal
+   running_the_federation.manual
    running_the_federation.docker
-   running_the_federation.certificates
-   running_the_federation.start_nodes.rst
+   ../../plan_settings
+   

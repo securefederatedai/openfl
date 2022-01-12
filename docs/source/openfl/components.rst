@@ -3,72 +3,119 @@
 
 .. _openfl_components:
 
-******
-|productName| core components
-******
+*****************************
+Core Components
+*****************************
 
 .. toctree::
    :maxdepth: 2
 
-   `Spawning components`_
-   `Long-living components`_
+   `Short-Lived Components`_
+   `Long-Lived Components`_
    `Static Diagram`_
 
 
-.. _openfl_spawning_components:
+Open Federated Learning (|productName|) has the following components:
 
-Spawning components
-##########
+    - :ref:`openfl_short_lived_components`
+    - :ref:`openfl_ll_components`
+
+
+.. _openfl_short_lived_components:
+
+Short-Lived Components
+======================
+
+These components are terminated when the experiment is finished.
+	
+    - The *Aggregator* which receives model updates from *Collaborators* and combines them to form the global model.
+    - The *Collaborator* which uses local dataset to train a global model.
+
+The *Aggregator* is framework-agnostic, as it operates tensors in OpenFL inner representation,
+while the *Collaborator* can use deep learning frameworks as computational backend, such as `TensorFlow* <https://www.tensorflow.org/>`_ or `PyTorch* <https://pytorch.org/>`_.
+
 
 Aggregator
-===========
+----------
 
-The *Aggregator* is a short-living entity, which means that its lifespan is limited by experiment execution time. 
-It orchestrates *Collaborators* according to the FL plan and performs model aggregation at the end of each round.
-The *Aggregator* is spawned by the *Director* (described below) when a new experiment is submitted.
+The Aggregator is a short-lived entity, which means that its lifespan is limited by the experiment execution time.
+It orchestrates Collaborators according to the FL plan, performs model aggregation at the end of each round,
+and acts as a parameter server for collaborators.
+
+Model weight aggregation logic may be customized via :ref:`plugin mechanism <overriding_agg_fn>`.
+
+The Aggregator is spawned by the :ref:`Director <openfl_ll_components_director>` when a new experiment is submitted.
 
 
 Collaborator
-=============
+------------
 
-*Collaborator* is also a short living entity, it manages training the model on local data: executes assigned tasks, 
-converts DL framework-specific tensor objects to |productName| inner representation, and exchanges model parameters with the aggregator.
-Converting tensors is done by :ref:`Framework adapter <framework_adapter>` plugins. |productName| ships with Pytorch and Tensorflow 2.x framework adapters. 
-These framework adapters are intended to be extensible, 
-and we encourage users to contribute new adapters for DL frameworks they would like to see supported in |productName|. 
+The Collaborator is a short-lived entity that manages training the model on local data, which includes
 
-Model is loaded with relevant weights before every task and at the end of the training task, weights are extracted to be sent to the central node and aggregated.
-*Collaborator* instance is created by *Envoy* (described below) when a new experiment is submitted. 
-Every *Collaborator* is a unique service as it is loaded with a local *Shard Descriptor* to perform tasks included in an FL experiment.
+    - executing assigned tasks,
+    - converting deep learning framework-specific tensor objects to |productName| inner representation, and
+    - exchanging model parameters with the Aggregator.
+
+The Collaborator is created by the :ref:`Envoy <openfl_ll_components_envoy>` when a new experiment is submitted
+in the :ref:`Director-based workflow <director_workflow>`. The Collaborator should be started from CLI if a user follows the
+:ref:`Aggregator-based workflow <running_the_federation_aggregator_based>`
+
+Every Collaborator is a unique service. The data loader is loaded with a local *shard descriptor* to perform tasks
+included in an FL experiment. At the end of the training task, weight tensors are extracted and sent to the central node
+and aggregated.
+
+Converting tensor objects is handled by :ref:`framework adapter <framework_adapter>` plugins.
+Included in |productName| are framework adapters for PyTorch and TensorFlow 2.x.
+The list of framework adapters is extensible. User can contribute new framework adapters for deep learning frameworks
+they would like see supported in |productName|.
+
 
 .. _openfl_ll_components:
 
-Long-living components
-#############
+Long-Lived Components
+======================
+
+These components were introduced to support the :ref:`Director-based workflow <director_workflow>`.
+	
+    - The *Director* is the central node of the federation. This component starts an *Aggregator* for each experiment, broadcasts experiment archive to connected collaborator nodes, and provides updates on the status.
+    - The *Envoy* runs on collaborator nodes and is always connected to the *Director*. When the *Director* starts an experiment, the *Envoy* starts the *Collaborator* to train the global model.
+
+These components stay available to distribute several of experiments in the federation.
+
+.. _openfl_ll_components_director:
 
 Director
-==========
+--------
 
-*Director* is a long-living entity; it is a central node of the federation and may take in several experiments 
-(with the same data interface). When an experiment is reported director starts an aggregator and sends 
-the experiment data to involved envoys; during the experiment, Director oversees the aggregator and updates 
-the user on the status of the experiment.
-*Director* runs two services: one for frontend users and another one for envoys. It can distribute an experiment 
-reported with the frontend API across the federation and communicate back a trained model snapshot and metrics.
-*Director* supports several concurrent frontend connections (yet experiments are run one by one).
-To learn more about using the |productName| frontend Python API, please refer to :ref:`interactive_api`
+The Director is a long-lived entity and is the central node of the federation. It accepts connections from:
 
+    - Frontend clients (data scientists using :ref:`interactive_python_api`)
+    - Envoys, if their Shard Descriptors are complient to the same data interface
+
+The Director supports concurrent frontend connections.
+While the Director may take in several experiments, the experiments are executed in series.
+
+When an experiment is reported, the Director starts an Aggregator and sends the experiment data to involved Envoys.
+While an experiment is running, the Director oversees the Aggregator and delivers updates on the status of
+the experiment, which includes trained model snapshots and metrics by request.
+
+
+.. _openfl_ll_components_envoy:
 
 Envoy
-=========
+-----
 
-|productName| comes with another long-existing actor called *Envoy*. It runs on collaborator machines connected to a *Director*. 
-There is one to one mapping between *Envoys* and Dataset shards: every *Envoy* needs exactly one 
-`Shard Descriptor <https://github.com/intel/openfl/blob/develop/openfl/interface/interactive_api/shard_descriptor.py>`_ to run. 
-When the *Director* starts an experiment, *Envoy* will accept the experiment workspace, prepare the environment and start a *Collaborator*.
+The Envoy is a long-lived entity that runs on collaborator nodes connected to the Director. 
+
+Every Envoy is matched to one `shard descriptor <https://github.com/intel/openfl/blob/develop/openfl/interface/interactive_api/shard_descriptor.py>`_
+in order to run. When the Director starts an experiment, the Envoy accepts the experiment workspace,
+prepares the environment, and starts a Collaborator.
+
+The envoy is also responsible for sending heartbeat messages to the Director. These messages may also include information
+regarding collaborator machine resource utilization. Refer to :ref:`device monitor plugin <device_monitor_plugin>` for details.
 
 
 Static Diagram
-#############
+==============
 
-.. figure:: static_diagram.svg
+.. figure:: director_workflow.svg
