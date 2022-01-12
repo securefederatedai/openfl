@@ -249,8 +249,6 @@ async def _start_and_monitor_docker_container(docker: Docker, container: DockerC
         action = event.get('Action')
 
         if event['Actor']['ID'] == container._id:
-            for key, value in event.items():
-                logger.info(key, ':', value)
             if action == 'stop':
                 await container.delete(force=True)
                 logger.info(f'=> deleted {container._id[:12]}')
