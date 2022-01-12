@@ -3,6 +3,7 @@
 from copy import deepcopy
 
 import torch
+import torch.nn.functional as F
 
 
 def register_buffer(module: torch.nn.Module, name: str, value: torch.Tensor):
@@ -74,7 +75,7 @@ class FedCurv:
     def _update_params(self, model):
         self._params = deepcopy({n: p for n, p in model.named_parameters() if p.requires_grad})
 
-    def _diag_fisher(self, model, data_loader, device, loss_fn):
+    def _diag_fisher(self, model, data_loader, device):
         precision_matrices = {}
         for n, p in self._params.items():
             p.data.zero_()
@@ -87,7 +88,7 @@ class FedCurv:
             sample = sample.to(device)
             target = target.to(device)
             output = model(sample)
-            loss = loss_fn(output, target)
+            loss = F.nll_loss(F.log_softmax(output, dim=1), target)
             loss.backward()
 
             for n, p in model.named_parameters():
@@ -127,7 +128,7 @@ class FedCurv:
         """
         self._update_params(model)
 
-    def on_train_end(self, model, data_loader, device, loss_fn):
+    def on_train_end(self, model, data_loader, device):
         """Post-train steps.
 
         Args:
@@ -136,7 +137,7 @@ class FedCurv:
             device(str): Model device.
             loss_fn(Callable): Train loss function.
         """
-        precision_matrices = self._diag_fisher(model, data_loader, device, loss_fn)
+        precision_matrices = self._diag_fisher(model, data_loader, device)
         for n, m in precision_matrices.items():
             u = torch.tensor(m).to(device)
             v = torch.tensor(m) * model.get_parameter(n)
