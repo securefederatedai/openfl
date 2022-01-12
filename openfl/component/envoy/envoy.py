@@ -74,7 +74,7 @@ class Envoy:
             self.is_experiment_running = True
             try:
                 await self._run_collaborator(
-                    experiment_name=experiment_name,
+                    experiment_name=experiment_name.lower(),
                     data_file_path=data_file_path,
                 )
 
@@ -147,7 +147,7 @@ class Envoy:
             tag=experiment_name,
         )
 
-        cuda_devices = ','.join(self.cuda_devices)
+        cuda_devices = ','.join(map(str, self.cuda_devices))
 
         cmd = (
             f'python run.py --name {self.name} '
@@ -222,7 +222,9 @@ async def _build_docker_image(docker: Docker, docker_context_path: Path, tag: st
             stream=True,
         )
     async for message in build_image_iter:
-        logger.info('DOCKER BUILD', message)
+        if 'stream' not in message or len(message) > 1:
+            print(message)
+        logger.info(f'DOCKER BUILD {message.get("stream")}')
 
 
 async def _create_docker_container(docker: Docker, name: str, cmd: str) -> DockerContainer:
@@ -247,6 +249,9 @@ async def _create_docker_container(docker: Docker, name: str, cmd: str) -> Docke
 async def _start_and_monitor_docker_container(docker: Docker, container: DockerContainer) -> None:
     subscriber = docker.events.subscribe()
     await container.start()
+    logs_stream = container.log(stdout=True, stderr=True, follow=True)
+    async for log in logs_stream:
+        logger.info(f'CONTAINER {log}')
     while True:
         event = await subscriber.get()
         if event is None:

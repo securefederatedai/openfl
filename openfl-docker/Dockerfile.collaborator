@@ -2,5 +2,6 @@ FROM python:3.8
 
 COPY . ./code
 WORKDIR code
+RUN pip install --upgrade pip
 RUN pip install git+https://github.com/intel/openfl.git@develop
 RUN pip install --no-cache-dir -r requirements.txt
