@@ -206,7 +206,7 @@ def _create_docker_context(data_file_path: Path, shard_descriptor_config) -> Pat
     return data_file_path
 
 
-async def _build_docker_image(docker: Docker, docker_context_path: Path, tag: str):
+async def _build_docker_image(docker: Docker, docker_context_path: Path, tag: str) -> None:
     with open(docker_context_path, 'rb') as f:
         fileobj = BytesIO(f.read())
         build_image_iter = docker.images.build(
@@ -238,7 +238,7 @@ async def _create_docker_container(docker: Docker, name: str, cmd: str) -> Docke
     )
 
 
-async def _start_and_monitor_docker_container(docker: Docker, container: DockerContainer):
+async def _start_and_monitor_docker_container(docker: Docker, container: DockerContainer) -> None:
     subscriber = docker.events.subscribe()
     await container.start()
     while True:
