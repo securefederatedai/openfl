@@ -45,7 +45,6 @@ class Aggregator:
                  assigner,
 
                  rounds_to_train=256,
-                 log_metric_callback=None,  # is it used somewhere?
                  single_col_cert_common_name=None,
                  compression_pipeline=None,
                  db_store_rounds=1,
@@ -82,7 +81,6 @@ class Aggregator:
             self.log_metric = write_metric
         self.logger = getLogger(__name__)
         self.best_model_score = None
-        self.log_dir = f'logs/{self.uuid}_{self.federation_uuid}'  # <- is it used somewhere?
         self.metric_queue = queue.Queue()
 
         self.compression_pipeline = compression_pipeline or NoCompressionPipeline()
