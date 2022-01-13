@@ -887,8 +887,7 @@ class Aggregator:
     def stop(self, failed_collaborator: str = None) -> None:
         """Stop aggregator execution."""
         self.logger.info('Force stopping the aggregator execution.')
-        self.authorized_cols.remove(failed_collaborator)
-        for collaborator_name in self.authorized_cols:
+        for collaborator_name in filter(lambda c: c != failed_collaborator, self.authorized_cols):
             self.logger.info(f'Sending signal to collaborator {collaborator_name} to shutdown...')
             self.quit_job_sent_to.append(collaborator_name)
 
