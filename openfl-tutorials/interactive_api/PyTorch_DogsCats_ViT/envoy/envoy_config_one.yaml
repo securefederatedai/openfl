@@ -1,0 +1,14 @@
+params:
+  cuda_devices: [0]
+  
+optional_plugin_components:
+ cuda_device_monitor:
+   template: openfl.plugins.processing_units_monitor.pynvml_monitor.PynvmlCUDADeviceMonitor
+   settings: []
+
+shard_descriptor:
+  template: dogs_cats_shard_descriptor.DogsCatsShardDescriptor
+  params:
+    data_folder: data
+    rank_worldsize: 1,2
+    enforce_image_hw: '300,300'

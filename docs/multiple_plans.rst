@@ -3,51 +3,67 @@
 
 .. _multiple_plans:
 
-Managing Multiple Plans
-#######################
+***********************
+Manage Multiple Plans
+***********************
 
-|productName| allows developers to use multiple Federation Plans for the same workspace. All federation plans are contained within the :code:`WORKSPACE.FOLDER/plan/plans` directory. The following :code:`fx` commands allow developers to manage these plans.
+With aggregator-based workflow, you can use multiple Federated Learning plans (FL plan) for the same workspace. All FL plans are located in the **WORKSPACE.FOLDER/plan/plans** directory. 
 
+The following are the :code:`fx` commands to manage your FL plans:
+
+    - :ref:`creating_new_plans`
+    - :ref:`saving_new_plans`
+    - :ref:`switching_plans`
+    - :ref:`removing_plans`
+    
 .. _creating_new_plans:
 
-Creating & Saving a New Plan
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Create a New FL Plan
+====================
 
-All workspaces begin with a :code:`default` Federation Plan. If you are working on a plan, you can save it for future use by running the following command:
+All workspaces begin with a :code:`default` FL plan. See :ref:`Create a Workspace on the Aggregator <creating_workspaces>` for details.
+
+.. _saving_new_plans:
+
+Save a New FL Plan
+==================
+
+When you are working on an FL plan, you can save it for future use.
 
     .. code-block:: console
     
-       $ fx plan save -n NEW.PLAN.NAME
+       fx plan save -n NEW.PLAN.NAME
       
  
-    where **NEW.PLAN.NAME** is the new plan for your workspace. 
+    where :code:`NEW.PLAN.NAME` is the new FL plan for your workspace. 
+    This command also combines switching to the :code:`NEW.PLAN.NAME` plan.
     
 .. _switching_plans:
 
-Switcing Plans
-~~~~~~~~~~~~~~
+Switch FL Plans
+===============
 
-To switch to a different plan, run the following command from the workspace directory.
+To switch to a different FL plan, run the following command from the workspace directory.
 
     .. code-block:: console
     
-       $ fx plan switch -n NEW.PLAN.NAME
+       fx plan switch -n PLAN.NAME
 
-    where **NEW.PLAN.NAME** is the new plan for your workspace. 
+    where :code:`PLAN.NAME` is the FL plan to which you want to switch. 
 
     .. note::
 
-       If you have changed the :code:`plan` file, you should first :ref:`save the plan <creating_new_plans>` before switching. Otherwise, any changes will be lost.
+       If you have changed the **plan.yaml** file, you should :ref:`save the FL plan <creating_new_plans>` before switching. Otherwise, any changes will be lost.
        
 .. _removing_plans:
 
-Removing Plans
-~~~~~~~~~~~~~~
+Remove FL Plans
+===============
 
-To remove an existing plan, run the following command from the workspace directory.
+To remove an FL plan, run the following command from the workspace directory.
 
     .. code-block:: console
     
-        $ fx plan remove -n NEW.PLAN.NAME
+        fx plan remove -n PLAN.NAME
 
-    where **NEW.PLAN.NAME** is the new plan for your workspace. 
+    where :code:`PLAN.NAME` is the FL plan you wish to remove. 

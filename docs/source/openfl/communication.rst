@@ -3,39 +3,38 @@
 
 .. _director_communications:
 
-******
-|productName| Director service communication diagrams
-******
+***************************************
+Director Service Communication Diagrams
+***************************************
 
-Following diagrams depict existing procedure calls to the Director service.
-Interactions with Director's inner representations created to better understand their signatures.
+The following diagrams depict existing procedure calls to the Director service. Included are interactions with the Director's inner representations to better understand their signatures.
 
-Director-Envoy communication
-##########
+Director-Envoy Communication
+============================
 
 The following diagram depicts a typical process of establishing a Federation and registering an experiment.  
 
 .. kroki:: director_envoy.mmd
-    :caption: Basic scenario of Director-Envoy communication
+    :caption: Basic Scenario of Director-Envoy Communication
     :align: center
     :type: mermaid
 
-Director's Envoy representation and related RPCs
-##########
+Director Side Envoy Representation and Related Remote Procedure Calls
+=====================================================================
 
 This diagram shows possible interactions with Envoy handles on the Director side.
 
 .. kroki:: envoy_representation_and_RPCs.mmd
-    :caption: Communications altering / requesting Envoy-related information
+    :caption: Communications Altering or Requesting Envoy-Related Information
     :align: center
     :type: mermaid
 
-Director's Experiment representation and related RPCs
-##########
+Director Side Experiment Representation and Related Remote Procedure Calls
+==========================================================================
 
 This diagram shows possible interactions with Experiment handles on the Director side.
 
 .. kroki:: experiment_representation_and_RPCs.mmd
-    :caption: Communications altering / requesting Experiment-related information
+    :caption: Communications Altering or Requesting Experiment-Related Information
     :align: center
     :type: mermaid

@@ -7,4 +7,4 @@ shard_descriptor:
   template: tinyimagenet_shard_descriptor.TinyImageNetShardDescriptor
   params:
     data_folder: tinyimagenet_data
-    rank_worldsize: 1,2
+    rank_worldsize: 1,1

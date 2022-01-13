@@ -120,6 +120,8 @@ class CollaboratorGRPCClient:
         self.logger = getLogger(__name__)
 
         if not self.tls:
+            self.logger.warn(
+                'gRPC is running on insecure channel with TLS disabled.')
             self.channel = self.create_insecure_channel(self.uri)
         else:
             self.channel = self.create_tls_channel(
@@ -162,9 +164,6 @@ class CollaboratorGRPCClient:
             An insecure gRPC channel object
 
         """
-        self.logger.warn(
-            'gRPC is running on insecure channel with TLS disabled.')
-
         return grpc.insecure_channel(uri, options=self.channel_options)
 
     def create_tls_channel(self, uri, root_certificate, disable_client_auth,

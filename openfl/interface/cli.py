@@ -117,7 +117,7 @@ class CLI(Group):
                 formatter.write('─' * 80 + '\n')
             if level == 1:
                 formatter.write(
-                    f'  {style("⮞", fg="green")}'
+                    f'  {style("*", fg="green")}'
                     f' {style(name, fg="cyan"):<21} {help_str}' + '\n')
 
 
@@ -175,7 +175,7 @@ def error_handler(error):
 
 def show_header():
     """Show header."""
-    banner = 'Intel OpenFL - Secure Federated Learning at the Edge™'
+    banner = 'OpenFL - Open Federated Learning'
     echo(style(f'{banner:<80}', bold=True, bg='bright_blue'))
     echo()
 
