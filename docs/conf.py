@@ -45,45 +45,22 @@ extensions = [
 # This will replace the |variables| within the rST documents automatically
 
 PRODUCT_VERSION = 'Intel'
-# PRODUCT_VERSION = "OFL" # NOQA:E800
 
-# tags.add(PRODUCT_VERSION) # NOQA:E800
+project = 'OpenFL'
+copyright = f'{datetime.now().year}, Intel' # NOQA
+author = 'Intel Corporation'
+version = f'{datetime.now().year}.{datetime.now().month}'
+release = version
+master_doc = 'index'
 
-if PRODUCT_VERSION == 'Intel':
+# Global variables for rST
+rst_prolog = '''
+.. |productName| replace:: OpenFL
+.. |productZip| replace:: openfl.zip
+.. |productDir| replace:: openfl
+.. |productWheel| replace:: openfl
 
-    project = 'OpenFL'
-    copyright = f'{datetime.now().year}, Intel' # NOQA
-    author = 'Intel Corporation'
-    version = f'{datetime.now().year}.{datetime.now().month}'
-    release = version
-    master_doc = 'index'
-
-    # Global variables for rST
-    rst_prolog = '''
-    .. |productName| replace:: OpenFL
-    .. |productZip| replace:: openfl.zip
-    .. |productDir| replace:: openfl
-    .. |productWheel| replace:: openfl
-
-    '''
-
-else:
-
-    project = 'Open Federated Learning'
-    author = 'FeTS'
-    master_doc = 'index'
-    version = f'{datetime.now().year}.{datetime.now().month}'
-    release = version
-
-    # Global variables for rST
-    rst_prolog = '''
-    .. |productName| replace:: Open Federated Learning
-    .. |productZip| replace:: OpenFederatedLearning.zip
-    .. |productDir| replace:: OpenFederatedLearning
-    .. |productWheel| replace:: openfl
-
-    .. _Makefile: https://github.com/IntelLabs/OpenFederatedLearning/blob/master/Makefile
-    '''
+'''
 
 napoleon_google_docstring = True
 
@@ -94,6 +71,12 @@ templates_path = ['_templates']
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store', 'tutorials/*', 'graveyard/*']
+# add temporary unused files
+exclude_patterns.extend(['modules.rst',
+                         'install.singularity.rst',
+                         'overview.what_is_intel_federated_learning.rst',
+                         'overview.how_can_intel_protect_federated_learning.rst',
+                         'source/workflow/running_the_federation.singularity.rst'])
 
 # -- Options for HTML output -------------------------------------------------
 
@@ -105,6 +88,6 @@ html_theme = 'sphinx_rtd_theme'
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['_static']
+html_static_path = []
 
 autosectionlabel_prefix_document = True
