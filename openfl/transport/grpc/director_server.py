@@ -229,6 +229,21 @@ class DirectorGRPCServer(director_pb2_grpc.FederationDirectorServicer):
         response.acknowledgement = True
         return response
 
+    async def SetExperimentFailed(self, request, context):  # NOQA:N802
+        """Set the experiment failed."""
+        response = director_pb2.SetExperimentFailedResponse()
+        if self.get_caller(context) != CLIENT_ID_DEFAULT:
+            return response
+        logger.error(f'Collaborator {request.collaborator_name} was failed with error code:'
+                     f' {request.error_code}, error_description: {request.error_description}'
+                     f'Stopping experiment.')
+        self.director.set_experiment_failed(
+            experiment_name=request.experiment_name,
+            collaborator_name=request.collaborator_name
+        )
+
+        return response
+
     async def EnvoyHealthCheck(self, request, context):  # NOQA:N802
         """Accept health check from envoy."""
         logger.debug(f'Request EnvoyHealthCheck has got: {request}')
