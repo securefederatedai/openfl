@@ -1,5 +1,11 @@
+# Copyright (C) 2020-2021 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+"""Noisy-Sin Shard Descriptor."""
+
 from typing import List
+
 import numpy as np
+
 from openfl.interface.interactive_api.shard_descriptor import ShardDescriptor
 
 
@@ -7,7 +13,13 @@ class LinRegSD(ShardDescriptor):
     """Shard descriptor class."""
 
     def __init__(self, rank: int, n_samples: int = 10, noise: float = 0.15) -> None:
-        """Initialize LinReg Shard Descriptor."""
+        """
+        Initialize LinReg Shard Descriptor.
+
+        This Shard Descriptor generate random data. Sample features are
+        floats between pi/3 and 5*pi/3, and targets are calculated
+        calculated as sin(feature) + normal_noise.
+        """
         np.random.seed(rank)  # Setting seed for reproducibility
         self.n_samples = max(n_samples, 5)
         self.interval = 240
