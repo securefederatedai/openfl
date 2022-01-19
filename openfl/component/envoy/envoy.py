@@ -4,19 +4,12 @@
 """Envoy module."""
 import asyncio
 import logging
-import os
 import time
 import uuid
 from concurrent.futures import ThreadPoolExecutor
-from io import BytesIO
 from pathlib import Path
-from tarfile import TarFile
 
-import aiodocker
-import yaml
-from aiodocker import Docker
-from aiodocker.containers import DockerContainer
-
+from openfl.docker import docker
 from openfl.transport.grpc.director_client import ShardDirectorClient
 
 logger = logging.getLogger(__name__)
@@ -136,17 +129,15 @@ class Envoy:
 
     async def _run_collaborator(self, experiment_name: str, data_file_path: Path):
         """Run the collaborator for the experiment running."""
-        docker = aiodocker.Docker()
-        docker_context_path = _create_docker_context(
+        docker_client = docker.Docker()
+        docker_context_path = docker.create_collaborator_context(
             data_file_path=data_file_path,
             shard_descriptor_config=self.shard_descriptor_config,
         )
-        await _build_docker_image(
-            docker=docker,
-            docker_context_path=docker_context_path,
+        image_tag = await docker_client.build_image(
+            context_path=docker_context_path,
             tag=experiment_name,
         )
-
         cuda_devices = ','.join(map(str, self.cuda_devices))
 
         cmd = (
@@ -158,17 +149,14 @@ class Envoy:
             f'--shard_config shard_descriptor_config.yaml '
             f'--cuda_devices {cuda_devices}'
         )
-
-        container = await _create_docker_container(
-            docker=docker,
+        container = await docker_client.create_container(
             name=experiment_name,
+            image_tag=image_tag,
             cmd=cmd,
+            volumes=self.shard_descriptor_config['volumes'],
+            gpu_allowed=True,
         )
-
-        await _start_and_monitor_docker_container(
-            docker=docker,
-            container=container
-        )
+        await docker_client.start_and_monitor_container(container=container)
 
     def start(self):
         """Start the envoy."""
@@ -187,85 +175,3 @@ class Envoy:
             else:
                 # Shut down
                 logger.error('Report shard info was not accepted')
-
-
-def _create_docker_context(data_file_path: Path, shard_descriptor_config) -> Path:
-    with TarFile(name=data_file_path, mode='a') as tar_file:
-        envoy_module_path = Path(__file__)
-        openfl_root_path = envoy_module_path.parent.parent.parent.parent.absolute()
-        docker_file_path = openfl_root_path / 'openfl-docker' / 'Dockerfile.collaborator'
-        run_collaborator_path = envoy_module_path.parent.absolute() / 'run_collaborator.py'
-
-        with open('shard_descriptor_config.yaml', 'w') as f:
-            yaml.dump(shard_descriptor_config, f)
-        tar_file.add('shard_descriptor_config.yaml', 'shard_descriptor_config.yaml')
-        os.remove('shard_descriptor_config.yaml')
-
-        tar_file.add(docker_file_path, 'Dockerfile')
-        tar_file.add(run_collaborator_path, 'run.py')
-
-        template = shard_descriptor_config['template']
-        module_path = template.split('.')[:-1]
-        module_path[-1] = f'{module_path[-1]}.py'
-        shar_descriptor_path = str(Path.joinpath(Path('.'), *module_path))
-        tar_file.add(shar_descriptor_path, shar_descriptor_path)
-    return data_file_path
-
-
-async def _build_docker_image(docker: Docker, docker_context_path: Path, tag: str) -> None:
-    with open(docker_context_path, 'rb') as f:
-        fileobj = BytesIO(f.read())
-        build_image_iter = docker.images.build(
-            fileobj=fileobj,
-            encoding='gzip',
-            tag=tag,
-            stream=True,
-        )
-    async for message in build_image_iter:
-        if 'stream' not in message or len(message) > 1:
-            print(message)
-        logger.info(f'DOCKER BUILD {message.get("stream")}')
-
-
-async def _create_docker_container(docker: Docker, name: str, cmd: str) -> DockerContainer:
-    return await docker.containers.create_or_replace(
-        config={
-            'Cmd': ['/bin/bash', '-c', cmd],
-            'Image': f'{name}:latest',
-            'HostConfig': {
-                'NetworkMode': 'host',
-                'DeviceRequests': [{
-                    'Driver': 'nvidia',
-                    'Count': -1,
-                    'Capabilities': [['gpu', 'compute', 'utility']],
-                }],
-                'ShmSize': 30 * 1024 * 1024 * 1024,
-            },
-        },
-        name=name,
-    )
-
-
-async def _start_and_monitor_docker_container(docker: Docker, container: DockerContainer) -> None:
-    subscriber = docker.events.subscribe()
-    await container.start()
-    logs_stream = container.log(stdout=True, stderr=True, follow=True)
-    async for log in logs_stream:
-        logger.info(f'CONTAINER {log}')
-    while True:
-        event = await subscriber.get()
-        if event is None:
-            break
-
-        action = event.get('Action')
-
-        if event['Actor']['ID'] == container._id:
-            if action == 'stop':
-                await container.delete(force=True)
-                logger.info(f'=> deleted {container._id[:12]}')
-            elif action == 'destroy':
-                logger.info('=> done with this container!')
-                break
-            elif action == 'die':
-                logger.info('=> container is died')
-                break
