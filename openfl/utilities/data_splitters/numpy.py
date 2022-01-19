@@ -31,16 +31,21 @@ class NumPyDataSplitter(DataSplitter):
 class EqualNumPyDataSplitter(NumPyDataSplitter):
     """Splits the data evenly."""
 
-    def __init__(self, shuffle=True):
+    def __init__(self, shuffle=True, seed=0):
         """Initialize.
 
         Args:
             shuffle(bool): Flag determining whether to shuffle the dataset before splitting.
+            seed(int): Random numbers generator seed.
+                For different splits on envoys, try setting different values for this parameter
+                on each shard descriptor.
         """
         self.shuffle = shuffle
+        self.seed = seed
 
     def split(self, data, num_collaborators):
         """Split the data."""
+        np.random.seed(0)
         idx = range(len(data))
         if self.shuffle:
             idx = np.random.permutation(idx)
@@ -57,6 +62,8 @@ class RandomNumPyDataSplitter(NumPyDataSplitter):
         Args:
             shuffle(bool): Flag determining whether to shuffle the dataset before splitting.
             seed(int): Random numbers generator seed.
+                For different splits on envoys, try setting different values for this parameter
+                on each shard descriptor.
         """
         self.shuffle = shuffle
         self.seed = seed
@@ -89,6 +96,8 @@ class LogNormalNumPyDataSplitter(NumPyDataSplitter):
             classes_per_col(int): Number of classes assigned to each collaborator.
             min_samples_per_class(int): Minimum number of collaborator samples of each class.
             seed(int): Random numbers generator seed.
+                For different splits on envoys, try setting different values for this parameter
+                on each shard descriptor.
         """
         self.mu = mu
         self.sigma = sigma
@@ -141,7 +150,15 @@ class DirichletNumPyDataSplitter(NumPyDataSplitter):
     """Numpy splitter according to dirichlet distribution."""
 
     def __init__(self, alpha=0.5, min_samples_per_col=10, seed=0):
-        """Initialize."""
+        """Initialize.
+
+        Args:
+            alpha(float): Dirichlet distribution parameter.
+            min_samples_per_col(int): Minimal amount of samples per collaborator.
+            seed(int): Random numbers generator seed.
+                For different splits on envoys, try setting different values for this parameter
+                on each shard descriptor.
+        """
         self.alpha = alpha
         self.min_samples_per_col = min_samples_per_col
         self.seed = seed
