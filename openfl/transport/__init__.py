@@ -3,8 +3,8 @@
 
 """openfl.transport package."""
 
-from .grpc import AggregatorGRPCServer
 from .grpc import AggregatorGRPCClient
+from .grpc import AggregatorGRPCServer
 from .grpc import DirectorGRPCServer
 
 __all__ = [

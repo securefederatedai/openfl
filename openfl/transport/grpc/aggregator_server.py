@@ -11,7 +11,6 @@ from time import sleep
 from grpc import server
 from grpc import ssl_server_credentials
 
-from openfl.pipelines import NoCompressionPipeline
 from openfl.protocols import aggregator_pb2
 from openfl.protocols import aggregator_pb2_grpc
 from openfl.protocols import utils

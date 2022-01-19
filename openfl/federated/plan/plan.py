@@ -15,8 +15,8 @@ from yaml import SafeDumper
 from openfl.component.aggregation_functions import AggregationFunction
 from openfl.component.aggregation_functions import WeightedAverage
 from openfl.interface.cli_helper import WORKSPACE
-from openfl.transport import AggregatorGRPCServer
 from openfl.transport import AggregatorGRPCClient
+from openfl.transport import AggregatorGRPCServer
 from openfl.utilities.utils import getfqdn_env
 
 SETTINGS = 'settings'
