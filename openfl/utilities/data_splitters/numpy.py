@@ -45,7 +45,7 @@ class EqualNumPyDataSplitter(NumPyDataSplitter):
 
     def split(self, data, num_collaborators):
         """Split the data."""
-        np.random.seed(0)
+        np.random.seed(self.seed)
         idx = range(len(data))
         if self.shuffle:
             idx = np.random.permutation(idx)
