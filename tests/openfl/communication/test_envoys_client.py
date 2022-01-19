@@ -47,8 +47,8 @@ def test_report_shard_info(director_client):
 
     director_client.stub.UpdateShardInfo.assert_called_once()
     if sys.version_info < (3, 8):
-        shard_info = director_client.stub.UpdateShardInfo.call_args[0][0]
+        resp = director_client.stub.UpdateShardInfo.call_args[0][0]
     else:
-        shard_info = director_client.stub.UpdateShardInfo.call_args.args[0]
-    assert shard_info.shard_description == shard_descriptor.dataset_description
-    assert shard_info.sample_shape == shard_descriptor.sample_shape
+        resp = director_client.stub.UpdateShardInfo.call_args.args[0]
+    assert resp.shard_info.shard_description == shard_descriptor.dataset_description
+    assert resp.shard_info.sample_shape == shard_descriptor.sample_shape
