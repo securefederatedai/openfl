@@ -8,14 +8,14 @@ import pytest
 from openfl.component.aggregation_functions import AggregationFunction
 from openfl.component.aggregation_functions import WeightedAverage
 from openfl.databases.tensor_db import TensorDB
-from openfl.protocols import NamedTensor
+from  openfl.protocols import base_pb2
 from openfl.utilities.types import TensorKey
 
 
 @pytest.fixture
 def named_tensor():
     """Initialize the named_tensor mock."""
-    tensor = NamedTensor(
+    tensor = base_pb2.NamedTensor(
         name='tensor_name',
         round_number=0,
         lossless=False,

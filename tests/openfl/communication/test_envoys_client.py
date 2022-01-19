@@ -14,7 +14,7 @@ from openfl.transport.grpc.director_client import ShardDirectorClient
 @mock.patch('openfl.transport.grpc.director_client.director_pb2_grpc')
 def director_client(director_pb2_grpc):
     """Director client fixture."""
-    director_pb2_grpc.FederationDirectorStub.return_value = mock.Mock()
+    director_pb2_grpc.DirectorStub.return_value = mock.Mock()
 
     director_host = 'fqdn'
     director_port = 50051
@@ -45,10 +45,10 @@ def test_report_shard_info(director_client):
 
     director_client.report_shard_info(shard_descriptor, cuda_devices)
 
-    director_client.stub.AcknowledgeShard.assert_called_once()
+    director_client.stub.UpdateShardInfo.assert_called_once()
     if sys.version_info < (3, 8):
-        shard_info = director_client.stub.AcknowledgeShard.call_args[0][0]
+        shard_info = director_client.stub.UpdateShardInfo.call_args[0][0]
     else:
-        shard_info = director_client.stub.AcknowledgeShard.call_args.args[0]
+        shard_info = director_client.stub.UpdateShardInfo.call_args.args[0]
     assert shard_info.shard_description == shard_descriptor.dataset_description
     assert shard_info.sample_shape == shard_descriptor.sample_shape

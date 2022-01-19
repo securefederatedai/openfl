@@ -8,14 +8,14 @@ import pytest
 
 from openfl.component import aggregator
 from openfl.component.assigner import Assigner
-from openfl.protocols import ModelProto
+from openfl.protocols import base_pb2
 from openfl.utilities import TaskResultKey
 
 
 @pytest.fixture
 def model():
     """Initialize the model."""
-    model = ModelProto()
+    model = base_pb2.ModelProto()
     tensor = model.tensors.add()
     tensor.name = 'test-tensor-name'
     tensor.round_number = 0

@@ -173,7 +173,7 @@ class Director:
                 and caller in self.experiments_registry[experiment_name].users):
             self.experiments_registry.remove(experiment_name)
 
-    def envoy_health_check(
+    def update_envoy_status(
             self, *,
             envoy_name: str,
             is_experiment_running: bool,

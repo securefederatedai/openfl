@@ -15,7 +15,7 @@ from openfl.transport.grpc.director_client import DirectorClient
 @mock.patch('openfl.transport.grpc.director_client.director_pb2_grpc')
 def director_client(director_pb2_grpc):
     """Director client fixture."""
-    director_pb2_grpc.FederationDirectorStub.return_value = mock.Mock()
+    director_pb2_grpc.DirectorStub.return_value = mock.Mock()
 
     client_id = 'one'
     director_host = 'localhost'
