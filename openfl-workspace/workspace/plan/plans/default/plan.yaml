@@ -5,9 +5,9 @@ aggregator :
   defaults : plan/defaults/aggregator.yaml
   template : openfl.component.Aggregator
   settings :
-    init_state_path : save/keras_cnn_mnist_init.pbuf
-    best_state_path : save/keras_cnn_mnist_best.pbuf
-    last_state_path : save/keras_cnn_mnist_last.pbuf
+    init_state_path : save/init.pbuf
+    best_state_path : save/best.pbuf
+    last_state_path : save/last.pbuf
     rounds_to_train : 10
 
 collaborator :

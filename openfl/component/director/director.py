@@ -173,6 +173,12 @@ class Director:
                 and caller in self.experiments_registry[experiment_name].users):
             self.experiments_registry.remove(experiment_name)
 
+    def set_experiment_failed(self, *, experiment_name: str, collaborator_name: str):
+        """Set experiment failed."""
+        if experiment_name in self.experiments_registry:
+            aggregator = self.experiments_registry[experiment_name].aggregator
+            aggregator.stop(failed_collaborator=collaborator_name)
+
     def update_envoy_status(
             self, *,
             envoy_name: str,

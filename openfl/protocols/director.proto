@@ -16,6 +16,7 @@ service Director {
   rpc WaitExperiment(stream WaitExperimentRequest) returns (stream WaitExperimentResponse) {}
   rpc GetExperimentData(GetExperimentDataRequest) returns (stream ExperimentData) {}
   rpc UpdateEnvoyStatus(UpdateEnvoyStatusRequest) returns (UpdateEnvoyStatusResponse) {}
+  rpc SetExperimentFailed (SetExperimentFailedRequest) returns (SetExperimentFailedResponse) {}
 
   // Experiments RPCs
   rpc GetExperimentDescription(GetExperimentDescriptionRequest)
@@ -92,6 +93,15 @@ message UpdateEnvoyStatusRequest {
 message UpdateEnvoyStatusResponse {
   google.protobuf.Duration health_check_period = 1;
 }
+
+message SetExperimentFailedRequest {
+  string experiment_name = 1;
+  string collaborator_name = 2;
+  uint32 error_code = 3;
+  string error_description = 4;
+}
+
+message SetExperimentFailedResponse {}
 
 // API Messages
 

@@ -45,11 +45,10 @@ class Aggregator:
                  assigner,
 
                  rounds_to_train=256,
-                 log_metric_callback=None,
                  single_col_cert_common_name=None,
                  compression_pipeline=None,
                  db_store_rounds=1,
-
+                 write_logs=False,
                  **kwargs):
         """Initialize."""
         self.round_number = 0
@@ -75,9 +74,17 @@ class Aggregator:
         # FIXME: I think next line generates an error on the second round
         # if it is set to 1 for the aggregator.
         self.db_store_rounds = db_store_rounds
+
+        # Gathered together logging-related objects
+        self.write_logs = write_logs
+        if self.write_logs:
+            self.log_metric = write_metric
+        self.logger = getLogger(__name__)
+        self.best_model_score = None
+        self.metric_queue = queue.Queue()
+
         self.compression_pipeline = compression_pipeline or NoCompressionPipeline()
         self.tensor_codec = TensorCodec(self.compression_pipeline)
-        self.logger = getLogger(__name__)
 
         self.init_state_path = init_state_path
         self.best_state_path = best_state_path
@@ -85,9 +92,6 @@ class Aggregator:
 
         self.best_tensor_dict: dict = {}
         self.last_tensor_dict: dict = {}
-
-        self.metric_queue = queue.Queue()
-        self.best_model_score = None
 
         if kwargs.get('initial_tensor_dict', None) is not None:
             self._load_initial_tensors_from_dict(kwargs['initial_tensor_dict'])
@@ -99,17 +103,12 @@ class Aggregator:
             self.model: base_pb2.ModelProto = utils.load_proto(self.init_state_path)
             self._load_initial_tensors()  # keys are TensorKeys
 
-        self.log_dir = f'logs/{self.uuid}_{self.federation_uuid}'
-
         self.collaborator_tensor_results = {}  # {TensorKey: nparray}}
 
         # these enable getting all tensors for a task
-
         self.collaborator_tasks_results = {}  # {TaskResultKey: list of TensorKeys}
 
         self.collaborator_task_weight = {}  # {TaskResultKey: data_size}
-
-        self.log_metric = write_metric
 
     def _load_initial_tensors(self):
         """
@@ -511,8 +510,9 @@ class Aggregator:
                     'metric_name': tensor_key.tensor_name,
                     'metric_value': metric_value,
                     'round': round_number}
-                self.log_metric(tensor_key.tags[-1], task_name,
-                                tensor_key.tensor_name, nparray, round_number)
+                if self.write_logs:
+                    self.log_metric(tensor_key.tags[-1], task_name,
+                                    tensor_key.tensor_name, nparray, round_number)
                 self.logger.metric(f'Round {round_number}, '
                                    f'collaborator {tensor_key.tags[-1]} '
                                    f'{task_name} result '
@@ -800,8 +800,10 @@ class Aggregator:
                 else:
                     self.logger.metric(f'Round {round_number}, aggregator: {task_name} '
                                        f'{agg_tensor_name}:\t{agg_results:f}')
-                self.log_metric('Aggregator', task_name, tensor_key.tensor_name,
-                                agg_results, round_number)
+                if self.write_logs:
+                    self.log_metric('Aggregator', task_name,
+                                    tensor_key.tensor_name,
+                                    agg_results, round_number)
                 self.metric_queue.put(metric_dict)
                 # TODO Add all of the logic for saving the model based
                 #  on best accuracy, lowest loss, etc.
@@ -883,6 +885,13 @@ class Aggregator:
             f'SHOULD ONLY BE USED IN DEVELOPMENT SETTINGS!!!! YE HAVE BEEN'
             f' WARNED!!!'
         )
+
+    def stop(self, failed_collaborator: str = None) -> None:
+        """Stop aggregator execution."""
+        self.logger.info('Force stopping the aggregator execution.')
+        for collaborator_name in filter(lambda c: c != failed_collaborator, self.authorized_cols):
+            self.logger.info(f'Sending signal to collaborator {collaborator_name} to shutdown...')
+            self.quit_job_sent_to.append(collaborator_name)
 
 
 the_dragon = '''

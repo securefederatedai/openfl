@@ -96,6 +96,21 @@ class ShardDirectorClient:
 
         return data_stream
 
+    def set_experiment_failed(
+            self,
+            experiment_name: str,
+            error_code: int = 1,
+            error_description: str = ''
+    ):
+        """Set the experiment failed."""
+        request = director_pb2.SetExperimentFailedRequest(
+            experiment_name=experiment_name,
+            collaborator_name=self.shard_name,
+            error_code=error_code,
+            error_description=error_description
+        )
+        self.stub.SetExperimentFailed(request)
+
     def _get_experiment_data(self):
         """Generate the experiment data request."""
         yield director_pb2.WaitExperimentRequest(collaborator_name=self.shard_name)

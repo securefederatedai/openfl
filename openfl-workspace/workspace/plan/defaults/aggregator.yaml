@@ -1,4 +1,5 @@
 template : openfl.component.Aggregator
 settings :
     db_store_rounds   : 1
+    write_logs : false
     
