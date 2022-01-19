@@ -22,7 +22,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   syntax='proto3',
   serialized_options=None,
   create_key=_descriptor._internal_create_key,
-  serialized_pb=b'\n\x1fopenfl/protocols/director.proto\x12\x0fopenfl.director\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x1egoogle/protobuf/duration.proto\x1a\x1bopenfl/protocols/base.proto\"\xab\x01\n\x0e\x43udaDeviceInfo\x12\r\n\x05index\x18\x01 \x01(\x04\x12\x14\n\x0cmemory_total\x18\x02 \x01(\x04\x12\x17\n\x0fmemory_utilized\x18\x03 \x01(\x04\x12\x1a\n\x12\x64\x65vice_utilization\x18\x04 \x01(\t\x12\x1b\n\x13\x63uda_driver_version\x18\x05 \x01(\t\x12\x14\n\x0c\x63uda_version\x18\x06 \x01(\t\x12\x0c\n\x04name\x18\x07 \x01(\t\"O\n\x08NodeInfo\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x35\n\x0c\x63uda_devices\x18\x02 \x03(\x0b\x32\x1f.openfl.director.CudaDeviceInfo\"\x93\x01\n\tShardInfo\x12,\n\tnode_info\x18\x01 \x01(\x0b\x32\x19.openfl.director.NodeInfo\x12\x19\n\x11shard_description\x18\x02 \x01(\t\x12\x11\n\tn_samples\x18\x03 \x01(\x04\x12\x14\n\x0csample_shape\x18\x04 \x03(\t\x12\x14\n\x0ctarget_shape\x18\x05 \x03(\t\"H\n\x16UpdateShardInfoRequest\x12.\n\nshard_info\x18\x01 \x01(\x0b\x32\x1a.openfl.director.ShardInfo\"+\n\x17UpdateShardInfoResponse\x12\x10\n\x08\x61\x63\x63\x65pted\x18\x01 \x01(\x08\"2\n\x15WaitExperimentRequest\x12\x19\n\x11\x63ollaborator_name\x18\x01 \x01(\t\"1\n\x16WaitExperimentResponse\x12\x17\n\x0f\x65xperiment_name\x18\x01 \x01(\t\"N\n\x18GetExperimentDataRequest\x12\x17\n\x0f\x65xperiment_name\x18\x01 \x01(\t\x12\x19\n\x11\x63ollaborator_name\x18\x02 \x01(\t\"/\n\x0e\x45xperimentData\x12\x0c\n\x04size\x18\x01 \x01(\r\x12\x0f\n\x07npbytes\x18\x02 \x01(\x0c\"~\n\x18UpdateEnvoyStatusRequest\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x1d\n\x15is_experiment_running\x18\x02 \x01(\x08\x12\x35\n\x0c\x63uda_devices\x18\x03 \x03(\x0b\x32\x1f.openfl.director.CudaDeviceInfo\"S\n\x19UpdateEnvoyStatusResponse\x12\x36\n\x13health_check_period\x18\x01 \x01(\x0b\x32\x19.google.protobuf.Duration\"\x96\x01\n\x0e\x45xperimentInfo\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x1a\n\x12\x63ollaborator_names\x18\x02 \x03(\t\x12\x38\n\x0f\x65xperiment_data\x18\x03 \x01(\x0b\x32\x1f.openfl.director.ExperimentData\x12 \n\x0bmodel_proto\x18\x04 \x01(\x0b\x32\x0b.ModelProto\"\x1b\n\x19GetExperimentsListRequest\"x\n\x12\x45xperimentListItem\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0e\n\x06status\x18\x02 \x01(\t\x12\x1c\n\x14\x63ollaborators_amount\x18\x03 \x01(\r\x12\x14\n\x0ctasks_amount\x18\x04 \x01(\r\x12\x10\n\x08progress\x18\x05 \x01(\x02\"V\n\x1aGetExperimentsListResponse\x12\x38\n\x0b\x65xperiments\x18\x01 \x03(\x0b\x32#.openfl.director.ExperimentListItem\"/\n\x1fGetExperimentDescriptionRequest\x12\x0c\n\x04name\x18\x01 \x01(\t\"N\n GetExperimentDescriptionResponse\x12*\n\nexperiment\x18\x01 \x01(\x0b\x32\x16.ExperimentDescription\",\n\x18SetNewExperimentResponse\x12\x10\n\x08\x61\x63\x63\x65pted\x18\x01 \x01(\x08\"\xa5\x01\n\x16GetTrainedModelRequest\x12\x17\n\x0f\x65xperiment_name\x18\x02 \x01(\t\x12\x45\n\nmodel_type\x18\x03 \x01(\x0e\x32\x31.openfl.director.GetTrainedModelRequest.ModelType\"+\n\tModelType\x12\x0e\n\nBEST_MODEL\x10\x00\x12\x0e\n\nLAST_MODEL\x10\x01\"8\n\x14TrainedModelResponse\x12 \n\x0bmodel_proto\x18\x01 \x01(\x0b\x32\x0b.ModelProto\"\x17\n\x15GetDatasetInfoRequest\"H\n\x16GetDatasetInfoResponse\x12.\n\nshard_info\x18\x01 \x01(\x0b\x32\x1a.openfl.director.ShardInfo\"1\n\x16GetMetricStreamRequest\x12\x17\n\x0f\x65xperiment_name\x18\x01 \x01(\t\"}\n\x17GetMetricStreamResponse\x12\x15\n\rmetric_origin\x18\x01 \x01(\t\x12\x11\n\ttask_name\x18\x02 \x01(\t\x12\x13\n\x0bmetric_name\x18\x03 \x01(\t\x12\x14\n\x0cmetric_value\x18\x04 \x01(\x02\x12\r\n\x05round\x18\x05 \x01(\r\"2\n\x17RemoveExperimentRequest\x12\x17\n\x0f\x65xperiment_name\x18\x01 \x01(\t\"3\n\x18RemoveExperimentResponse\x12\x17\n\x0f\x61\x63knowledgement\x18\x01 \x01(\x08\"\xeb\x01\n\tEnvoyInfo\x12.\n\nshard_info\x18\x01 \x01(\x0b\x32\x1a.openfl.director.ShardInfo\x12\x11\n\tis_online\x18\x02 \x01(\x08\x12\x1d\n\x15is_experiment_running\x18\x03 \x01(\x08\x12\x30\n\x0clast_updated\x18\x04 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\x31\n\x0evalid_duration\x18\x05 \x01(\x0b\x32\x19.google.protobuf.Duration\x12\x17\n\x0f\x65xperiment_name\x18\x06 \x01(\t\"\x12\n\x10GetEnvoysRequest\"D\n\x11GetEnvoysResponse\x12/\n\x0b\x65nvoy_infos\x18\x01 \x03(\x0b\x32\x1a.openfl.director.EnvoyInfo2\x80\n\n\x08\x44irector\x12\x66\n\x0fUpdateShardInfo\x12\'.openfl.director.UpdateShardInfoRequest\x1a(.openfl.director.UpdateShardInfoResponse\"\x00\x12g\n\x0eWaitExperiment\x12&.openfl.director.WaitExperimentRequest\x1a\'.openfl.director.WaitExperimentResponse\"\x00(\x01\x30\x01\x12\x63\n\x11GetExperimentData\x12).openfl.director.GetExperimentDataRequest\x1a\x1f.openfl.director.ExperimentData\"\x00\x30\x01\x12l\n\x11UpdateEnvoyStatus\x12).openfl.director.UpdateEnvoyStatusRequest\x1a*.openfl.director.UpdateEnvoyStatusResponse\"\x00\x12\x81\x01\n\x18GetExperimentDescription\x12\x30.openfl.director.GetExperimentDescriptionRequest\x1a\x31.openfl.director.GetExperimentDescriptionResponse\"\x00\x12o\n\x12GetExperimentsList\x12*.openfl.director.GetExperimentsListRequest\x1a+.openfl.director.GetExperimentsListResponse\"\x00\x12\x62\n\x10SetNewExperiment\x12\x1f.openfl.director.ExperimentInfo\x1a).openfl.director.SetNewExperimentResponse\"\x00(\x01\x12\x63\n\x0eGetDatasetInfo\x12&.openfl.director.GetDatasetInfoRequest\x1a\'.openfl.director.GetDatasetInfoResponse\"\x00\x12\x63\n\x0fGetTrainedModel\x12\'.openfl.director.GetTrainedModelRequest\x1a%.openfl.director.TrainedModelResponse\"\x00\x12h\n\x0fGetMetricStream\x12\'.openfl.director.GetMetricStreamRequest\x1a(.openfl.director.GetMetricStreamResponse\"\x00\x30\x01\x12m\n\x14RemoveExperimentData\x12(.openfl.director.RemoveExperimentRequest\x1a).openfl.director.RemoveExperimentResponse\"\x00\x12T\n\tGetEnvoys\x12!.openfl.director.GetEnvoysRequest\x1a\".openfl.director.GetEnvoysResponse\"\x00\x62\x06proto3'
+  serialized_pb=b'\n\x1fopenfl/protocols/director.proto\x12\x0fopenfl.director\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x1egoogle/protobuf/duration.proto\x1a\x1bopenfl/protocols/base.proto\"\xab\x01\n\x0e\x43udaDeviceInfo\x12\r\n\x05index\x18\x01 \x01(\x04\x12\x14\n\x0cmemory_total\x18\x02 \x01(\x04\x12\x17\n\x0fmemory_utilized\x18\x03 \x01(\x04\x12\x1a\n\x12\x64\x65vice_utilization\x18\x04 \x01(\t\x12\x1b\n\x13\x63uda_driver_version\x18\x05 \x01(\t\x12\x14\n\x0c\x63uda_version\x18\x06 \x01(\t\x12\x0c\n\x04name\x18\x07 \x01(\t\"O\n\x08NodeInfo\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x35\n\x0c\x63uda_devices\x18\x02 \x03(\x0b\x32\x1f.openfl.director.CudaDeviceInfo\"\x93\x01\n\tShardInfo\x12,\n\tnode_info\x18\x01 \x01(\x0b\x32\x19.openfl.director.NodeInfo\x12\x19\n\x11shard_description\x18\x02 \x01(\t\x12\x11\n\tn_samples\x18\x03 \x01(\x04\x12\x14\n\x0csample_shape\x18\x04 \x03(\t\x12\x14\n\x0ctarget_shape\x18\x05 \x03(\t\"H\n\x16UpdateShardInfoRequest\x12.\n\nshard_info\x18\x01 \x01(\x0b\x32\x1a.openfl.director.ShardInfo\"+\n\x17UpdateShardInfoResponse\x12\x10\n\x08\x61\x63\x63\x65pted\x18\x01 \x01(\x08\"2\n\x15WaitExperimentRequest\x12\x19\n\x11\x63ollaborator_name\x18\x01 \x01(\t\"1\n\x16WaitExperimentResponse\x12\x17\n\x0f\x65xperiment_name\x18\x01 \x01(\t\"N\n\x18GetExperimentDataRequest\x12\x17\n\x0f\x65xperiment_name\x18\x01 \x01(\t\x12\x19\n\x11\x63ollaborator_name\x18\x02 \x01(\t\"/\n\x0e\x45xperimentData\x12\x0c\n\x04size\x18\x01 \x01(\r\x12\x0f\n\x07npbytes\x18\x02 \x01(\x0c\"~\n\x18UpdateEnvoyStatusRequest\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x1d\n\x15is_experiment_running\x18\x02 \x01(\x08\x12\x35\n\x0c\x63uda_devices\x18\x03 \x03(\x0b\x32\x1f.openfl.director.CudaDeviceInfo\"S\n\x19UpdateEnvoyStatusResponse\x12\x36\n\x13health_check_period\x18\x01 \x01(\x0b\x32\x19.google.protobuf.Duration\"\x7f\n\x1aSetExperimentFailedRequest\x12\x17\n\x0f\x65xperiment_name\x18\x01 \x01(\t\x12\x19\n\x11\x63ollaborator_name\x18\x02 \x01(\t\x12\x12\n\nerror_code\x18\x03 \x01(\r\x12\x19\n\x11\x65rror_description\x18\x04 \x01(\t\"\x1d\n\x1bSetExperimentFailedResponse\"\x96\x01\n\x0e\x45xperimentInfo\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x1a\n\x12\x63ollaborator_names\x18\x02 \x03(\t\x12\x38\n\x0f\x65xperiment_data\x18\x03 \x01(\x0b\x32\x1f.openfl.director.ExperimentData\x12 \n\x0bmodel_proto\x18\x04 \x01(\x0b\x32\x0b.ModelProto\"\x1b\n\x19GetExperimentsListRequest\"x\n\x12\x45xperimentListItem\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0e\n\x06status\x18\x02 \x01(\t\x12\x1c\n\x14\x63ollaborators_amount\x18\x03 \x01(\r\x12\x14\n\x0ctasks_amount\x18\x04 \x01(\r\x12\x10\n\x08progress\x18\x05 \x01(\x02\"V\n\x1aGetExperimentsListResponse\x12\x38\n\x0b\x65xperiments\x18\x01 \x03(\x0b\x32#.openfl.director.ExperimentListItem\"/\n\x1fGetExperimentDescriptionRequest\x12\x0c\n\x04name\x18\x01 \x01(\t\"N\n GetExperimentDescriptionResponse\x12*\n\nexperiment\x18\x01 \x01(\x0b\x32\x16.ExperimentDescription\",\n\x18SetNewExperimentResponse\x12\x10\n\x08\x61\x63\x63\x65pted\x18\x01 \x01(\x08\"\xa5\x01\n\x16GetTrainedModelRequest\x12\x17\n\x0f\x65xperiment_name\x18\x02 \x01(\t\x12\x45\n\nmodel_type\x18\x03 \x01(\x0e\x32\x31.openfl.director.GetTrainedModelRequest.ModelType\"+\n\tModelType\x12\x0e\n\nBEST_MODEL\x10\x00\x12\x0e\n\nLAST_MODEL\x10\x01\"8\n\x14TrainedModelResponse\x12 \n\x0bmodel_proto\x18\x01 \x01(\x0b\x32\x0b.ModelProto\"\x17\n\x15GetDatasetInfoRequest\"H\n\x16GetDatasetInfoResponse\x12.\n\nshard_info\x18\x01 \x01(\x0b\x32\x1a.openfl.director.ShardInfo\"1\n\x16GetMetricStreamRequest\x12\x17\n\x0f\x65xperiment_name\x18\x01 \x01(\t\"}\n\x17GetMetricStreamResponse\x12\x15\n\rmetric_origin\x18\x01 \x01(\t\x12\x11\n\ttask_name\x18\x02 \x01(\t\x12\x13\n\x0bmetric_name\x18\x03 \x01(\t\x12\x14\n\x0cmetric_value\x18\x04 \x01(\x02\x12\r\n\x05round\x18\x05 \x01(\r\"2\n\x17RemoveExperimentRequest\x12\x17\n\x0f\x65xperiment_name\x18\x01 \x01(\t\"3\n\x18RemoveExperimentResponse\x12\x17\n\x0f\x61\x63knowledgement\x18\x01 \x01(\x08\"\xeb\x01\n\tEnvoyInfo\x12.\n\nshard_info\x18\x01 \x01(\x0b\x32\x1a.openfl.director.ShardInfo\x12\x11\n\tis_online\x18\x02 \x01(\x08\x12\x1d\n\x15is_experiment_running\x18\x03 \x01(\x08\x12\x30\n\x0clast_updated\x18\x04 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\x31\n\x0evalid_duration\x18\x05 \x01(\x0b\x32\x19.google.protobuf.Duration\x12\x17\n\x0f\x65xperiment_name\x18\x06 \x01(\t\"\x12\n\x10GetEnvoysRequest\"D\n\x11GetEnvoysResponse\x12/\n\x0b\x65nvoy_infos\x18\x01 \x03(\x0b\x32\x1a.openfl.director.EnvoyInfo2\xf4\n\n\x08\x44irector\x12\x66\n\x0fUpdateShardInfo\x12\'.openfl.director.UpdateShardInfoRequest\x1a(.openfl.director.UpdateShardInfoResponse\"\x00\x12g\n\x0eWaitExperiment\x12&.openfl.director.WaitExperimentRequest\x1a\'.openfl.director.WaitExperimentResponse\"\x00(\x01\x30\x01\x12\x63\n\x11GetExperimentData\x12).openfl.director.GetExperimentDataRequest\x1a\x1f.openfl.director.ExperimentData\"\x00\x30\x01\x12l\n\x11UpdateEnvoyStatus\x12).openfl.director.UpdateEnvoyStatusRequest\x1a*.openfl.director.UpdateEnvoyStatusResponse\"\x00\x12r\n\x13SetExperimentFailed\x12+.openfl.director.SetExperimentFailedRequest\x1a,.openfl.director.SetExperimentFailedResponse\"\x00\x12\x81\x01\n\x18GetExperimentDescription\x12\x30.openfl.director.GetExperimentDescriptionRequest\x1a\x31.openfl.director.GetExperimentDescriptionResponse\"\x00\x12o\n\x12GetExperimentsList\x12*.openfl.director.GetExperimentsListRequest\x1a+.openfl.director.GetExperimentsListResponse\"\x00\x12\x62\n\x10SetNewExperiment\x12\x1f.openfl.director.ExperimentInfo\x1a).openfl.director.SetNewExperimentResponse\"\x00(\x01\x12\x63\n\x0eGetDatasetInfo\x12&.openfl.director.GetDatasetInfoRequest\x1a\'.openfl.director.GetDatasetInfoResponse\"\x00\x12\x63\n\x0fGetTrainedModel\x12\'.openfl.director.GetTrainedModelRequest\x1a%.openfl.director.TrainedModelResponse\"\x00\x12h\n\x0fGetMetricStream\x12\'.openfl.director.GetMetricStreamRequest\x1a(.openfl.director.GetMetricStreamResponse\"\x00\x30\x01\x12m\n\x14RemoveExperimentData\x12(.openfl.director.RemoveExperimentRequest\x1a).openfl.director.RemoveExperimentResponse\"\x00\x12T\n\tGetEnvoys\x12!.openfl.director.GetEnvoysRequest\x1a\".openfl.director.GetEnvoysResponse\"\x00\x62\x06proto3'
   ,
   dependencies=[google_dot_protobuf_dot_timestamp__pb2.DESCRIPTOR,google_dot_protobuf_dot_duration__pb2.DESCRIPTOR,openfl_dot_protocols_dot_base__pb2.DESCRIPTOR,])
 
@@ -48,8 +48,8 @@ _GETTRAINEDMODELREQUEST_MODELTYPE = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   serialized_options=None,
-  serialized_start=1805,
-  serialized_end=1848,
+  serialized_start=1965,
+  serialized_end=2008,
 )
 _sym_db.RegisterEnumDescriptor(_GETTRAINEDMODELREQUEST_MODELTYPE)
 
@@ -511,6 +511,84 @@ _UPDATEENVOYSTATUSRESPONSE = _descriptor.Descriptor(
 )
 
 
+_SETEXPERIMENTFAILEDREQUEST = _descriptor.Descriptor(
+  name='SetExperimentFailedRequest',
+  full_name='openfl.director.SetExperimentFailedRequest',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  create_key=_descriptor._internal_create_key,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='experiment_name', full_name='openfl.director.SetExperimentFailedRequest.experiment_name', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='collaborator_name', full_name='openfl.director.SetExperimentFailedRequest.collaborator_name', index=1,
+      number=2, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='error_code', full_name='openfl.director.SetExperimentFailedRequest.error_code', index=2,
+      number=3, type=13, cpp_type=3, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='error_description', full_name='openfl.director.SetExperimentFailedRequest.error_description', index=3,
+      number=4, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=1115,
+  serialized_end=1242,
+)
+
+
+_SETEXPERIMENTFAILEDRESPONSE = _descriptor.Descriptor(
+  name='SetExperimentFailedResponse',
+  full_name='openfl.director.SetExperimentFailedResponse',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  create_key=_descriptor._internal_create_key,
+  fields=[
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=1244,
+  serialized_end=1273,
+)
+
+
 _EXPERIMENTINFO = _descriptor.Descriptor(
   name='ExperimentInfo',
   full_name='openfl.director.ExperimentInfo',
@@ -559,8 +637,8 @@ _EXPERIMENTINFO = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1116,
-  serialized_end=1266,
+  serialized_start=1276,
+  serialized_end=1426,
 )
 
 
@@ -584,8 +662,8 @@ _GETEXPERIMENTSLISTREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1268,
-  serialized_end=1295,
+  serialized_start=1428,
+  serialized_end=1455,
 )
 
 
@@ -644,8 +722,8 @@ _EXPERIMENTLISTITEM = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1297,
-  serialized_end=1417,
+  serialized_start=1457,
+  serialized_end=1577,
 )
 
 
@@ -676,8 +754,8 @@ _GETEXPERIMENTSLISTRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1419,
-  serialized_end=1505,
+  serialized_start=1579,
+  serialized_end=1665,
 )
 
 
@@ -708,8 +786,8 @@ _GETEXPERIMENTDESCRIPTIONREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1507,
-  serialized_end=1554,
+  serialized_start=1667,
+  serialized_end=1714,
 )
 
 
@@ -740,8 +818,8 @@ _GETEXPERIMENTDESCRIPTIONRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1556,
-  serialized_end=1634,
+  serialized_start=1716,
+  serialized_end=1794,
 )
 
 
@@ -772,8 +850,8 @@ _SETNEWEXPERIMENTRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1636,
-  serialized_end=1680,
+  serialized_start=1796,
+  serialized_end=1840,
 )
 
 
@@ -812,8 +890,8 @@ _GETTRAINEDMODELREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1683,
-  serialized_end=1848,
+  serialized_start=1843,
+  serialized_end=2008,
 )
 
 
@@ -844,8 +922,8 @@ _TRAINEDMODELRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1850,
-  serialized_end=1906,
+  serialized_start=2010,
+  serialized_end=2066,
 )
 
 
@@ -869,8 +947,8 @@ _GETDATASETINFOREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1908,
-  serialized_end=1931,
+  serialized_start=2068,
+  serialized_end=2091,
 )
 
 
@@ -901,8 +979,8 @@ _GETDATASETINFORESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1933,
-  serialized_end=2005,
+  serialized_start=2093,
+  serialized_end=2165,
 )
 
 
@@ -933,8 +1011,8 @@ _GETMETRICSTREAMREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=2007,
-  serialized_end=2056,
+  serialized_start=2167,
+  serialized_end=2216,
 )
 
 
@@ -993,8 +1071,8 @@ _GETMETRICSTREAMRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=2058,
-  serialized_end=2183,
+  serialized_start=2218,
+  serialized_end=2343,
 )
 
 
@@ -1025,8 +1103,8 @@ _REMOVEEXPERIMENTREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=2185,
-  serialized_end=2235,
+  serialized_start=2345,
+  serialized_end=2395,
 )
 
 
@@ -1057,8 +1135,8 @@ _REMOVEEXPERIMENTRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=2237,
-  serialized_end=2288,
+  serialized_start=2397,
+  serialized_end=2448,
 )
 
 
@@ -1124,8 +1202,8 @@ _ENVOYINFO = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=2291,
-  serialized_end=2526,
+  serialized_start=2451,
+  serialized_end=2686,
 )
 
 
@@ -1149,8 +1227,8 @@ _GETENVOYSREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=2528,
-  serialized_end=2546,
+  serialized_start=2688,
+  serialized_end=2706,
 )
 
 
@@ -1181,8 +1259,8 @@ _GETENVOYSRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=2548,
-  serialized_end=2616,
+  serialized_start=2708,
+  serialized_end=2776,
 )
 
 _NODEINFO.fields_by_name['cuda_devices'].message_type = _CUDADEVICEINFO
@@ -1213,6 +1291,8 @@ DESCRIPTOR.message_types_by_name['GetExperimentDataRequest'] = _GETEXPERIMENTDAT
 DESCRIPTOR.message_types_by_name['ExperimentData'] = _EXPERIMENTDATA
 DESCRIPTOR.message_types_by_name['UpdateEnvoyStatusRequest'] = _UPDATEENVOYSTATUSREQUEST
 DESCRIPTOR.message_types_by_name['UpdateEnvoyStatusResponse'] = _UPDATEENVOYSTATUSRESPONSE
+DESCRIPTOR.message_types_by_name['SetExperimentFailedRequest'] = _SETEXPERIMENTFAILEDREQUEST
+DESCRIPTOR.message_types_by_name['SetExperimentFailedResponse'] = _SETEXPERIMENTFAILEDRESPONSE
 DESCRIPTOR.message_types_by_name['ExperimentInfo'] = _EXPERIMENTINFO
 DESCRIPTOR.message_types_by_name['GetExperimentsListRequest'] = _GETEXPERIMENTSLISTREQUEST
 DESCRIPTOR.message_types_by_name['ExperimentListItem'] = _EXPERIMENTLISTITEM
@@ -1309,6 +1389,20 @@ UpdateEnvoyStatusResponse = _reflection.GeneratedProtocolMessageType('UpdateEnvo
   # @@protoc_insertion_point(class_scope:openfl.director.UpdateEnvoyStatusResponse)
   })
 _sym_db.RegisterMessage(UpdateEnvoyStatusResponse)
+
+SetExperimentFailedRequest = _reflection.GeneratedProtocolMessageType('SetExperimentFailedRequest', (_message.Message,), {
+  'DESCRIPTOR' : _SETEXPERIMENTFAILEDREQUEST,
+  '__module__' : 'openfl.protocols.director_pb2'
+  # @@protoc_insertion_point(class_scope:openfl.director.SetExperimentFailedRequest)
+  })
+_sym_db.RegisterMessage(SetExperimentFailedRequest)
+
+SetExperimentFailedResponse = _reflection.GeneratedProtocolMessageType('SetExperimentFailedResponse', (_message.Message,), {
+  'DESCRIPTOR' : _SETEXPERIMENTFAILEDRESPONSE,
+  '__module__' : 'openfl.protocols.director_pb2'
+  # @@protoc_insertion_point(class_scope:openfl.director.SetExperimentFailedResponse)
+  })
+_sym_db.RegisterMessage(SetExperimentFailedResponse)
 
 ExperimentInfo = _reflection.GeneratedProtocolMessageType('ExperimentInfo', (_message.Message,), {
   'DESCRIPTOR' : _EXPERIMENTINFO,
@@ -1445,8 +1539,8 @@ _DIRECTOR = _descriptor.ServiceDescriptor(
   index=0,
   serialized_options=None,
   create_key=_descriptor._internal_create_key,
-  serialized_start=2619,
-  serialized_end=3899,
+  serialized_start=2779,
+  serialized_end=4175,
   methods=[
   _descriptor.MethodDescriptor(
     name='UpdateShardInfo',
@@ -1489,9 +1583,19 @@ _DIRECTOR = _descriptor.ServiceDescriptor(
     create_key=_descriptor._internal_create_key,
   ),
   _descriptor.MethodDescriptor(
+    name='SetExperimentFailed',
+    full_name='openfl.director.Director.SetExperimentFailed',
+    index=4,
+    containing_service=None,
+    input_type=_SETEXPERIMENTFAILEDREQUEST,
+    output_type=_SETEXPERIMENTFAILEDRESPONSE,
+    serialized_options=None,
+    create_key=_descriptor._internal_create_key,
+  ),
+  _descriptor.MethodDescriptor(
     name='GetExperimentDescription',
     full_name='openfl.director.Director.GetExperimentDescription',
-    index=4,
+    index=5,
     containing_service=None,
     input_type=_GETEXPERIMENTDESCRIPTIONREQUEST,
     output_type=_GETEXPERIMENTDESCRIPTIONRESPONSE,
@@ -1501,7 +1605,7 @@ _DIRECTOR = _descriptor.ServiceDescriptor(
   _descriptor.MethodDescriptor(
     name='GetExperimentsList',
     full_name='openfl.director.Director.GetExperimentsList',
-    index=5,
+    index=6,
     containing_service=None,
     input_type=_GETEXPERIMENTSLISTREQUEST,
     output_type=_GETEXPERIMENTSLISTRESPONSE,
@@ -1511,7 +1615,7 @@ _DIRECTOR = _descriptor.ServiceDescriptor(
   _descriptor.MethodDescriptor(
     name='SetNewExperiment',
     full_name='openfl.director.Director.SetNewExperiment',
-    index=6,
+    index=7,
     containing_service=None,
     input_type=_EXPERIMENTINFO,
     output_type=_SETNEWEXPERIMENTRESPONSE,
@@ -1521,7 +1625,7 @@ _DIRECTOR = _descriptor.ServiceDescriptor(
   _descriptor.MethodDescriptor(
     name='GetDatasetInfo',
     full_name='openfl.director.Director.GetDatasetInfo',
-    index=7,
+    index=8,
     containing_service=None,
     input_type=_GETDATASETINFOREQUEST,
     output_type=_GETDATASETINFORESPONSE,
@@ -1531,7 +1635,7 @@ _DIRECTOR = _descriptor.ServiceDescriptor(
   _descriptor.MethodDescriptor(
     name='GetTrainedModel',
     full_name='openfl.director.Director.GetTrainedModel',
-    index=8,
+    index=9,
     containing_service=None,
     input_type=_GETTRAINEDMODELREQUEST,
     output_type=_TRAINEDMODELRESPONSE,
@@ -1541,7 +1645,7 @@ _DIRECTOR = _descriptor.ServiceDescriptor(
   _descriptor.MethodDescriptor(
     name='GetMetricStream',
     full_name='openfl.director.Director.GetMetricStream',
-    index=9,
+    index=10,
     containing_service=None,
     input_type=_GETMETRICSTREAMREQUEST,
     output_type=_GETMETRICSTREAMRESPONSE,
@@ -1551,7 +1655,7 @@ _DIRECTOR = _descriptor.ServiceDescriptor(
   _descriptor.MethodDescriptor(
     name='RemoveExperimentData',
     full_name='openfl.director.Director.RemoveExperimentData',
-    index=10,
+    index=11,
     containing_service=None,
     input_type=_REMOVEEXPERIMENTREQUEST,
     output_type=_REMOVEEXPERIMENTRESPONSE,
@@ -1561,7 +1665,7 @@ _DIRECTOR = _descriptor.ServiceDescriptor(
   _descriptor.MethodDescriptor(
     name='GetEnvoys',
     full_name='openfl.director.Director.GetEnvoys',
-    index=11,
+    index=12,
     containing_service=None,
     input_type=_GETENVOYSREQUEST,
     output_type=_GETENVOYSRESPONSE,
