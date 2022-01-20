@@ -19,6 +19,6 @@ Users may use the same path or benefit from the start_federation notebook in the
 2. Submit an experiment
 Follow LinReg jupyter notebook.
 
-### Google Colab
+### Google Colab:
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/igor-davidyuk/openfl/blob/linear-regression-numpy-tutorial/openfl-tutorials/interactive_api/linear_regression/workspace/SingleNotebook.ipynb)
