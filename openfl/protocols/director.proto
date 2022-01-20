@@ -1,4 +1,4 @@
-// Copyright (C) 2020 Intel Corporation
+// Copyright (C) 2020-2021 Intel Corporation
 // Licensed subject to the terms of the separately executed evaluation license agreement between Intel Corporation and you.
 syntax = "proto3";
 
@@ -7,13 +7,21 @@ import "google/protobuf/duration.proto";
 import "federation.proto";
 
 
+message CudaDeviceInfo {
+    uint64 index = 1;
+    uint64 memory_total = 2;
+    uint64 memory_utilized = 3;
+    string device_utilization = 4;
+    string cuda_driver_version = 5;
+    string cuda_version = 6;
+    string name = 7;
+}
+
 // Envoy Messages
 
 message NodeInfo {
     string name = 1;
-    string adress = 2;
-    bool cuda_available = 3;
-    uint32 memory_size = 4;
+    repeated CudaDeviceInfo cuda_devices = 2;
 }
 
 message ShardInfo {
@@ -44,21 +52,87 @@ message GetExperimentDataRequest {
 
 message ExperimentData {
     uint32 size = 1; // size, in bytes, of the data sent in npbytes
-	bytes npbytes = 2; //actual data
+    bytes npbytes = 2; //actual data
+}
+
+message EnvoyStatus {
+    string name = 1;
+    bool is_experiment_running = 2;
+    repeated CudaDeviceInfo cuda_devices = 3;
+}
+
+message EnvoyHealthCheckResponse {
+    google.protobuf.Duration health_check_period = 1;
 }
 
 // API Messages
 
 message ExperimentInfo {
-    string name = 2;
-    repeated string collaborator_names = 3;
-    ExperimentData experiment_data = 4;
-    ModelProto model_proto = 5;
+    string name = 1;
+    repeated string collaborator_names = 2;
+    ExperimentData experiment_data = 3;
+    ModelProto model_proto = 4;
+}
+
+message GetExperimentsListRequest {}
+
+message ExperimentListItem {
+    string name = 1;
+    string status = 2;
+    uint32 collaborators_amount = 3;
+    uint32 tasks_amount = 4;
+    float progress = 5;
+}
+
+message GetExperimentsListResponse {
+    repeated ExperimentListItem experiments = 1;
+}
+
+message GetExperimentDescriptionRequest {
+    string name = 1;
+}
+
+message CollaboratorDescription {
+    string name = 1;
+    string status = 2;
+    float progress = 3;
+    uint32 round = 4;
+    string current_task = 5;
+    string next_task = 6;
+}
+
+message TaskDescription {
+    string name = 1;
+    string description = 2;
+}
+
+message DownloadStatus {
+    string name = 1;
+    string status = 2;
+}
+
+message DownloadStatuses {
+    repeated DownloadStatus models = 1;
+    repeated DownloadStatus logs = 2;
+}
+
+message ExperimentDescription {
+    string name = 1;
+    string status = 2;
+    float progress = 3;
+    uint32 total_rounds = 4;
+    uint32 current_round = 5;
+    DownloadStatuses download_statuses = 6;
+    repeated CollaboratorDescription collaborators = 7;
+    repeated TaskDescription tasks = 8;
+}
+
+message GetExperimentDescriptionResponse {
+    ExperimentDescription experiment = 1;
 }
 
 message SetNewExperimentResponse{
     bool accepted = 1;
-    string tensorboard_address = 2;
 }
 
 message GetTrainedModelRequest {
@@ -77,7 +151,7 @@ message TrainedModelResponse {
 message GetDatasetInfoRequest {}
 
 message StreamMetricsRequest {
-    string experiment_name = 2;
+    string experiment_name = 1;
 }
 
 message StreamMetricsResponse {
@@ -89,20 +163,11 @@ message StreamMetricsResponse {
 }
 
 message RemoveExperimentRequest {
-    string experiment_name = 2;
+    string experiment_name = 1;
 }
 
 message RemoveExperimentResponse {
     bool acknowledgement = 1;
-}
-
-message CollaboratorStatus {
-    string name = 1;
-    bool is_experiment_running = 2;
-}
-
-message CollaboratorHealthCheckResponse {
-    google.protobuf.Duration health_check_period = 1;
 }
 
 message EnvoyInfo {
@@ -111,6 +176,7 @@ message EnvoyInfo {
     bool is_experiment_running = 3;
     google.protobuf.Timestamp last_updated = 4;
     google.protobuf.Duration valid_duration = 5;
+    string experiment_name = 6;
 }
 
 message GetEnvoysRequest {}
@@ -119,12 +185,29 @@ message GetEnvoysResponse {
     repeated EnvoyInfo envoy_infos = 1;
 }
 
+message SetExperimentFailedRequest {
+    string experiment_name = 1;
+    string collaborator_name = 2;
+    uint32 error_code = 3;
+    string error_description = 4;
+}
+
+message
+
+ SetExperimentFailedResponse {}
+
 service FederationDirector {
     // Envoy RPCs
     rpc AcknowledgeShard (ShardInfo) returns (ShardAcknowledgement) {}
     // Shard owner could also provide some public data for tests
     rpc WaitExperiment (stream WaitExperimentRequest) returns (stream WaitExperimentResponse) {}
     rpc GetExperimentData (GetExperimentDataRequest) returns (stream ExperimentData) {}
+    rpc EnvoyHealthCheck (EnvoyStatus) returns (EnvoyHealthCheckResponse) {}
+    rpc SetExperimentFailed (SetExperimentFailedRequest) returns (SetExperimentFailedResponse) {}
+
+    // Experiments RPCs
+    rpc GetExperimentDescription (GetExperimentDescriptionRequest)returns (GetExperimentDescriptionResponse) {}
+    rpc GetExperimentsList (GetExperimentsListRequest) returns (GetExperimentsListResponse){}
 
     // API RPCs
     rpc SetNewExperiment (stream ExperimentInfo) returns (SetNewExperimentResponse) {}
@@ -132,6 +215,5 @@ service FederationDirector {
     rpc GetTrainedModel (GetTrainedModelRequest) returns (TrainedModelResponse) {}
     rpc StreamMetrics (StreamMetricsRequest) returns (stream StreamMetricsResponse) {}
     rpc RemoveExperimentData (RemoveExperimentRequest) returns (RemoveExperimentResponse) {}
-    rpc CollaboratorHealthCheck (CollaboratorStatus) returns (CollaboratorHealthCheckResponse) {}
     rpc GetEnvoys (GetEnvoysRequest) returns (GetEnvoysResponse) {}
 }

@@ -3,47 +3,98 @@
 
 .. _running_notebook:
 
-Learning to fly: |productName| tutorials
-#######################
+**********************************
+Aggregator-Based Workflow Tutorial
+**********************************
 
-New to |productName|? Get familiar with our native Python API using the built-in tutorials. After installing the |productName| package in your virtual environment, simply run :code:`fx tutorial start` from the command line. This will start a Jupyter notebook server and return a URL you can use to access each of our tutorials. We provide several jupyter notebooks for Pytorch and Tensorflow that simulate a federation on a local machine.  These tutorials provide a convient entrypoint for learning about |productName| :ref:`conventions <definitions_and_conventions>`  like FL Plans, aggregators, collaborators and more. 
+You will start a Jupyter\* \  notebook server and receive a URL you can use to access the tutorials. Jupyter notebooks are provided for PyTorch\* \  and TensorFlow\* \  that simulate a federation on a local machine.
 
+.. note::
 
-Starting the tutorials
-~~~~~~~~~~~~~~~~~
+	Follow the procedure to become familiar with the APIs used in aggregator-based workflow and conventions such as *FL Plans*, *Aggregators*, and *Collaborators*. 
+	
 
-1. Make sure you have initialized the virtual environment and can run the :code:`fx` command.
+Start the Tutorials
+===================
 
-2. Run :code:`fx tutorial start`. This will start a jupyter server on your machine. 
+1. Start a Python\* \  3.8 (>=3.6, <3.9) virtual environment and confirm |productName| is available.
 
-3. Copy the URL (including token) to your browser
+    .. code-block:: python
 
-4. Choose a tutorial from which to start. Each of these represent simulated federated learning training demos. The existing tutorials are:
+		fx
+    
+    You should see a list of available commands
+
+2. Start a Jupyter server. This returns a URL to access available tutorials.
+
+	.. code-block:: python
+
+		fx tutorial start
+
+3. Open the URL (including the token) in your browser.
+
+4. Choose a tutorial from which to start. Each tutorial is a demonstration of a simulated federated learning. The following are examples of available tutorials:
 
  - :code:`Federated Keras MNIST Tutorial`: workspace with a simple `Keras <http://keras.io/>`_ CNN model that will download the `MNIST <http://yann.lecun.com/exdb/mnist/>`_ dataset and train in a federation.
  - :code:`Federated Pytorch MNIST Tutorial`: workspace with a simple `PyTorch <https://pytorch.org/>`_ CNN model that will download the `MNIST <http://yann.lecun.com/exdb/mnist/>`_ dataset and train in a federation.
+ - :code:`Federated PyTorch UNET Tutorial`: workspace with a UNET `PyTorch <https://pytorch.org/>`_ model that will download the `Hyper-Kvasir <https://datasets.simula.no/hyper-kvasir/>`_ dataset and train in a federation.
+ - :code:`Federated PyTorch TinyImageNet`: workspace with a MobileNet-V2 `PyTorch <https://pytorch.org/>`_ model that will download the `Tiny-ImageNet <https://www.kaggle.com/c/tiny-imagenet/>`_ dataset and train in a federation.
 
-|productName| Python API Concepts
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-As a first step to using the |productName| Python API, add the following lines to your python script:
+Familiarize with the API Concepts in an Aggregator-Based Worklow
+================================================================
+
+Step 1: Enable the |productName| Python API
+-------------------------------------------
+
+Add the following lines to your Python script.
 
     .. code-block:: python
 
      import openfl.native as fx
-     from openfl.federated import FederatedModel,FederatedDataSet
+     from openfl.federated import FederatedModel, FederatedDataSet
 
-This will load the |productName| package and import wrappers that adapt your existing data and models to a (simulated) federated context. To setup |productName| for a basic experiment, just run :code:`fx.init()`. This command will create a new workspace directory containing default plan values for your experiments, and setup a two collaborator experiment (the collaborators are creatively named 'one' and 'two'). If you want to create an experiment with a large number of collaborators, this can be done programmatically as follows:
+This loads the |productName| package and import wrappers that adapt your existing data and models to a (simulated) federated context.
+
+Step 2: Set Up the Experiment
+-----------------------------
+
+For a basic experiment, run the following command.
+
+    .. code-block:: python
+
+     fx.init()
+	 
+	 
+This creates a workspace directory containing default FL plan values for your experiments, and sets up a an experiment with two collaborators (the collaborators are creatively named **one** and **two**).
+
+For an experiment with more collaborators, run the following command.
 
     .. code-block:: python
 
      collaborator_list = [str(i) for i in range(NUM_COLLABORATORS)]
-     fx.init('keras_cnn_mnist',col_names=collaborator_list)
+     fx.init('keras_cnn_mnist', col_names=collaborator_list)
 
 
-One last point about :code:`fx.init()`. For Keras models, we recommend starting with the :code:`keras_cnn_mnist` template (by running :code:`fx.init("keras_cnn_mnist")`, and for pytorch models `torch_cnn_mnist` (by running :code:`fx.init("torch_cnn_mnist")`)
+.. note::
 
-At this point you may be wondering what goes into a FL.Plan, and how you can customize it. To see what is part of the FL.Plan that was created with the :code:`fx.init` command, run :code:`fx.get_plan()`:
+	The following are template recommendations for training models:
+	
+	- For Keras models, run :code:`fx.init('keras_cnn_mnist')` to start with the *keras_cnn_mnist* template.
+	- For PyTorch models, run :code:`fx.init('torch_cnn_mnist')` to start with the *torch_cnn_mnist* template.
+	
+
+Step 3: Customize the Federated Learning Plan (FL Plan)
+-------------------------------------------------------
+
+For this example, the experiment is set up with the *keras_cnn_mnist* template.	
+
+   .. code-block:: python
+
+		fx.init('keras_cnn_mnist')
+	 
+
+See the FL plan values that can be set with the :code:`fx.get_plan()` command.
 
     .. code-block:: python
 
@@ -58,24 +109,36 @@ At this point you may be wondering what goes into a FL.Plan, and how you can cus
        ...
      }
 
-The :code:`fx.get_plan()` command returns all of the plan values that can be set. If you wish to change any of them, these can be provided at experiment runtime in the :code:`override-config` parameter of :code:`fx.run_experiment`, or ahead of time with :code:`fx.update_plan()`. Based on the plan returned above, we see that this experiment will run for 10 rounds. If we wanted to train for 20 rounds instead, we could provide that overriden key value pair as follows:
+Based on this plan values, the experiment will run for 10 rounds. You can customize the experiment to run for 20 rounds either at runtime or ahead of time.
+
+Set the value at **runtime** with the :code:`override-config` parameter of :code:`fx.run_experiment`.
+
+    .. code-block:: python
+
+     #set values at experiment runtime
+     fx.run_experiment(experiment_collaborators, override_config={"aggregator.settings.rounds_to_train": 20})
+
+
+Set the value **ahead of time** with :code:`fx.update_plan()`.
 
     .. code-block:: python
 
      #Set values ahead of time with fx.update_plan() 
      fx.update_plan({"aggregator.settings.rounds_to_train": 20})
 
-     #Or set values at experiment runtime
-     fx.run_experiment(experiment_collaborators,override_config={"aggregator.settings.rounds_to_train": 20})
 
+Step 4: Wrap the Data and Model
+-------------------------------
 
-Now that our workspace has been created and know the plan for the experiment, we can actually wrap the data and model. :code:`FederatedDataSet` wraps in-memory numpy datasets and includes a setup function that will split the data into N mutually-exclusive chunks for each collaborator participating in the experiment. 
+Use the :code:`FederatedDataSet` function to wrap in-memory numpy datasets and split the data into N mutually-exclusive chunks for each collaborator participating in the experiment.
 
     .. code-block:: python
 
-     fl_data = FederatedDataSet(train_images,train_labels,valid_images,valid_labels,batch_size=32,num_classes=classes)
+     fl_data = FederatedDataSet(train_images, train_labels, valid_images, valid_labels, batch_size=32, num_classes=classes)
 
-Similarly, the :code:`FederatedModel` wrapper takes as an argument your model definition. If you have a Tensorflow/Keras model, wrap it in a function that outputs the fully compiled model (as in the example below):
+Similarly, the :code:`FederatedModel` function takes as an argument your model definition. For the first example, you can wrap a Keras model in a function that outputs the compiled model.
+
+**Example 1:**
 
     .. code-block:: python
 
@@ -86,12 +149,18 @@ Similarly, the :code:`FederatedModel` wrapper takes as an argument your model de
          model.add(Dense(64, activation='relu'))
          model.add(Dense(classes, activation='softmax'))
          
-         model.compile(optimizer='adam',loss='categorical_crossentropy',metrics=['accuracy'],)
+         model.compile(optimizer='adam', loss='categorical_crossentropy',metrics=['accuracy'])
          return model 
 
-     fl_model = FederatedModel(build_model,data_loader=fl_data)
+     fl_model = FederatedModel(build_model, data_loader=fl_data)
 
-If you have a Pytorch model, there are three parameters that should be passed to the :code:`FederatedModel`: The class that defines the network definition and associated forward function, lambda optimizer method that can be set to a newly instantiated network, and finally the loss function. See below for an example:
+For the second example with a PyTorch model, the :code:`FederatedModel` function takes the following parameters: 
+
+- The class that defines the network definition and associated forward function
+- The lambda optimizer method that can be set to a newly instantiated network
+- The loss function
+
+**Example 2:**
 
     .. code-block:: python
 
@@ -121,22 +190,30 @@ If you have a Pytorch model, there are three parameters that should be passed to
          """
          return F.binary_cross_entropy_with_logits(input=output,target=target)
 
-     fl_model = FederatedModel(build_model=Net,optimizer=optimizer,loss_fn=cross_entropy,data_loader=fl_data)
+     fl_model = FederatedModel(build_model=Net, optimizer=optimizer, loss_fn=cross_entropy, data_loader=fl_data)
 
 
-Now we just need to define which collaborators (that were created with :code:`fx.init()`) will take part in the experiment. If you want to use the same collaborator list, this can be done in a single line with a dictionary comprehension:
+Step 5: Define the Collaborators
+--------------------------------
 
-    .. code-block:: python
-
-     experiment_collaborators = {col_name:col_model for col_name,col_model \
-                                      in zip(collaborator_list,fl_model.setup(len(collaborator_list)))}
-
-This command will create a model for each collaborator each their data slice. In production deployments of |productName|, each collaborator will have the data on premise, and the splitting of data into shards is not necessary.
-
-We are now ready to run our experiment!
+Define the collaborators taking part in the experiment. The example below uses the collaborator list, created earlier with the the :code:`fx.init()` command.
 
     .. code-block:: python
 
-     final_fl_model = fx.run_experiment(experiment_collaborators,override_config={"aggregator.settings.rounds_to_train": 5})
+     experiment_collaborators = {col_name:col_model for col_name, col_model \
+                                      in zip(collaborator_list, fl_model.setup(len(collaborator_list)))}
 
-This will run the experiment for five rounds, and return the final model once it has completed. 
+This command creates a model for each collaborator with their data shard.
+
+.. note::
+
+	In production deployments of |productName|, each collaborator will have the data on premise. Splitting data into shards is not necessary.
+
+Step 6: Run the Experiment
+--------------------------
+
+Run the experiment for five rounds and return the final model once completed.
+
+    .. code-block:: python
+
+     final_fl_model = fx.run_experiment(experiment_collaborators, override_config={"aggregator.settings.rounds_to_train": 5})

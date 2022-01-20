@@ -1,0 +1,3 @@
+linformer==0.2.1
+torchvision==0.8.1
+vit-pytorch==0.22.0

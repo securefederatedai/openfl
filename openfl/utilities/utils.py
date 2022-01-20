@@ -7,9 +7,11 @@ import ipaddress
 import logging
 import os
 import re
+from functools import partial
 from socket import getfqdn
 
 import numpy as np
+from tqdm import tqdm
 
 
 def getfqdn_env(name: str = '') -> str:
@@ -196,3 +198,23 @@ def validate_file_hash(file_path, expected_hash, chunk_size=8192):
 
     if h.hexdigest() != expected_hash:
         raise SystemError('ZIP File hash doesn\'t match expected file hash.')
+
+
+def is_package_versioned(package: str) -> bool:
+    """Check if the package has a version."""
+    return ('==' in package
+            and package not in ['pkg-resources==0.0.0', 'pkg_resources==0.0.0']
+            and '-e ' not in package
+            )
+
+
+def tqdm_report_hook():
+    """Visualize downloading."""
+    def report_hook(pbar, count, block_size, total_size):
+        """Update progressbar."""
+        if pbar.total is None and total_size:
+            pbar.total = total_size
+        progress_bytes = count * block_size
+        pbar.update(progress_bytes - pbar.n)
+    pbar = tqdm(total=None)
+    return partial(report_hook, pbar)

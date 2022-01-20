@@ -10,7 +10,7 @@ from openfl.utilities import split_tensor_dict_for_holdouts
 from openfl.utilities import TensorKey
 
 
-class CoreTaskRunner(object):
+class CoreTaskRunner:
     """Federated Learning Task Runner Class."""
 
     def _prepare_tensorkeys_for_agggregation(self, metric_dict, validation_flag,

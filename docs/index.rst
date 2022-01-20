@@ -7,23 +7,16 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-***************************************
-Welcome to the |productName| documentation!
-***************************************
+*********************************************************************
+Welcome to the Open Federated Learning (|productName|) Documentation!
+*********************************************************************
 
-Intel\ :sup:`®` \ Federated Learning (|productName|) is a Python3 library for federated learning.
-It enables organizations to collaborately train a
-model without sharing sensitive information with each other.
+Open Federated Learning (|productName|) is a Python\* \ 3 library for federated learning that enables organizations to collaboratively train a model without sharing sensitive information.
 
-There are basically two components in the library:
-the *collaborator* which uses local dataset to train
-a global model and the *aggregator* which receives
-model updates from collaborators and combines them to form 
-the global model.
+Open Federated Learning (|productName|) is Deep Learning framework-agnostic. 
+Training of statistical models may be done with any deep learning framework, such as 
+`TensorFlow <https://www.tensorflow.org/>`_\* \ or `PyTorch <https://pytorch.org/>`_\*\, via a plugin mechanism.
 
-The *aggregator* is framework-agnostic, while the *collaborator*
-can use any deep learning frameworks, such as `Tensorflow <https://www.tensorflow.org/>`_ or
-`PyTorch <https://pytorch.org/>`_.
 
 |productName| is developed by Intel Labs and Intel Internet of Things Group.
 
@@ -33,14 +26,13 @@ can use any deep learning frameworks, such as `Tensorflow <https://www.tensorflo
 
    manual
    openfl
-   models
-   data
    troubleshooting
+   notices_and_disclaimers
 
 
-Indices and tables
-==================
+.. Indices and tables
+.. ==================
 
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+.. * :ref:`genindex`
+.. * :ref:`modindex`
+.. * :ref:`search`

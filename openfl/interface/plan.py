@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 """Plan module."""
 
+import sys
 from logging import getLogger
 
 from click import echo
@@ -9,6 +10,8 @@ from click import group
 from click import option
 from click import pass_context
 from click import Path as ClickPath
+
+from openfl.utilities.path_check import is_directory_traversal
 
 logger = getLogger(__name__)
 
@@ -49,6 +52,11 @@ def initialize(context, plan_config, cols_config, data_config,
     from openfl.protocols import utils
     from openfl.utilities import split_tensor_dict_for_holdouts
     from openfl.utilities.utils import getfqdn_env
+
+    for p in [plan_config, cols_config, data_config]:
+        if is_directory_traversal(p):
+            echo(f'{p} is out of the openfl workspace scope.')
+            sys.exit(1)
 
     plan_config = Path(plan_config).absolute()
     cols_config = Path(cols_config).absolute()
@@ -145,6 +153,9 @@ def freeze(plan_config):
     Create a new plan file that embeds its hash in the file name
     (plan.yaml -> plan_{hash}.yaml) and changes the permissions to read only
     """
+    if is_directory_traversal(plan_config):
+        echo('Plan config path is out of the openfl workspace scope.')
+        sys.exit(1)
     freeze_plan(plan_config)
 
 

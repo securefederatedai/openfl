@@ -6,15 +6,42 @@
 import logging
 import re
 import zipfile
-from copy import deepcopy
 from pathlib import Path
+from typing import List
 
 import gdown
 from PIL import Image
 
+from openfl.interface.interactive_api.shard_descriptor import ShardDataset
 from openfl.interface.interactive_api.shard_descriptor import ShardDescriptor
 
 logger = logging.getLogger(__name__)
+
+
+class MarketShardDataset(ShardDataset):
+    """Market shard dataset."""
+
+    def __init__(self, dataset_dir: Path, dataset_type: str, rank=1, worldsize=1):
+        """Initialize MarketShardDataset."""
+        self.dataset_dir = dataset_dir
+        self.dataset_type = dataset_type
+        self.rank = rank
+        self.worldsize = worldsize
+
+        self.imgs_path = list(dataset_dir.glob('*.jpg'))[self.rank - 1::self.worldsize]
+        self.pattern = re.compile(r'([-\d]+)_c(\d)')
+
+    def __len__(self):
+        """Length of shard."""
+        return len(self.imgs_path)
+
+    def __getitem__(self, index: int):
+        """Return an item by the index."""
+        img_path = self.imgs_path[index]
+        pid, camid = map(int, self.pattern.search(img_path.name).groups())
+
+        img = Image.open(img_path)
+        return img, (pid, camid)
 
 
 class MarketShardDescriptor(ShardDescriptor):
@@ -30,7 +57,7 @@ class MarketShardDescriptor(ShardDescriptor):
         images: 12936 (train) + 3368 (query) + 15913 (gallery)
     """
 
-    def __init__(self, datafolder: str = 'Market-1501-v15.09.15',
+    def __init__(self, data_folder_name: str = 'Market-1501-v15.09.15',
                  rank_worldsize: str = '1,1') -> None:
         """Initialize MarketShardDescriptor."""
         super().__init__()
@@ -38,51 +65,32 @@ class MarketShardDescriptor(ShardDescriptor):
         # Settings for sharding the dataset
         self.rank, self.worldsize = tuple(int(num) for num in rank_worldsize.split(','))
 
+        self.data_folder_name = data_folder_name
+        self.dataset_dir = Path.cwd() / data_folder_name
         self.download()
-        self.pattern = re.compile(r'([-\d]+)_c(\d)')
-        self.dataset_dir = Path.cwd() / datafolder
-        self.train_dir = self.dataset_dir / 'bounding_box_train'
-        self.query_dir = self.dataset_dir / 'query'
-        self.gal_dir = self.dataset_dir / 'bounding_box_test'
+
+        self.path_by_type = {
+            'train': self.dataset_dir / 'bounding_box_train',
+            'query': self.dataset_dir / 'query',
+            'gallery': self.dataset_dir / 'bounding_box_test'
+        }
         self._check_before_run()
 
-        self.train_path = list(self.train_dir.glob('*.jpg'))[self.rank - 1::self.worldsize]
-        self.query_path = list(self.query_dir.glob('*.jpg'))[self.rank - 1::self.worldsize]
-        self.gal_path = list(self.gal_dir.glob('*.jpg'))[self.rank - 1::self.worldsize]
+    def get_shard_dataset_types(self) -> List[str]:
+        """Get available shard dataset types."""
+        return list(self.path_by_type)
 
-        self.mode = 'train'
-        self.imgs_path = self.train_path
-
-    def set_mode(self, mode='train'):
-        """Set mode for getitem."""
-        self.mode = mode
-        if self.mode == 'train':
-            self.imgs_path = self.train_path
-        elif self.mode == 'query':
-            self.imgs_path = self.query_path
-        elif self.mode == 'gallery':
-            self.imgs_path = self.gal_path
-        else:
-            raise Exception(f'Wrong mode: {mode}')
-
-    def __len__(self):
-        """Length of shard."""
-        return len(self.imgs_path)
-
-    def __getitem__(self, index: int):
-        """Return an item by the index."""
-        img_path = self.imgs_path[index]
-        pid, camid = map(int, self.pattern.search(img_path.name).groups())
-
-        img = Image.open(img_path)
-        return img, (pid, camid)
-
-    def get_dataset(self, dataset_type):
+    def get_dataset(self, dataset_type='train'):
         """Return a dataset by type."""
-        ds = deepcopy(self)
-        ds.set_mode(dataset_type)
-
-        return ds
+        if dataset_type not in self.path_by_type:
+            raise Exception(f'Wrong dataset type: {dataset_type}.'
+                            f'Choose from the list: {", ".join(self.path_by_type)}')
+        return MarketShardDataset(
+            dataset_dir=self.path_by_type[dataset_type],
+            dataset_type=dataset_type,
+            rank=self.rank,
+            worldsize=self.worldsize
+        )
 
     @property
     def sample_shape(self):
@@ -100,28 +108,17 @@ class MarketShardDescriptor(ShardDescriptor):
         return (f'Market dataset, shard number {self.rank} '
                 f'out of {self.worldsize}')
 
-    def _check_before_run(self):
-        """Check if all files are available before going deeper."""
-        if not self.dataset_dir.exists():
-            raise RuntimeError(f'{self.dataset_dir} is not available')
-        if not self.train_dir.exists():
-            raise RuntimeError(f'{self.train_dir} is not available')
-        if not self.query_dir.exists():
-            raise RuntimeError(f'{self.query_dir} is not available')
-        if not self.gal_dir.exists():
-            raise RuntimeError(f'{self.gal_dir} is not available')
-
-    @staticmethod
-    def download():
+    def download(self):
         """Download Market1501 dataset."""
         logger.info('Download Market1501 dataset.')
-        if Path('Market-1501-v15.09.15').exists():
+        if self.dataset_dir.exists():
             return None
 
-        output = 'Market-1501-v15.09.15.zip'
+        logger.info('Try to download.')
+        output = f'{self.data_folder_name}.zip'
+
         if not Path(output).exists():
-            logger.info('Try to download.')
-            url = 'https://drive.google.com/uc?id=0B8-rUzbwVRk0c054eEozWG9COHM'
+            url = 'https://drive.google.com/u/1/uc?id=0B8-rUzbwVRk0c054eEozWG9COHM'
             gdown.download(url, output, quiet=False)
         logger.info(f'{output} is downloaded.')
 
@@ -130,6 +127,10 @@ class MarketShardDescriptor(ShardDescriptor):
 
         Path(output).unlink()  # remove zip
 
-
-if __name__ == '__main__':
-    MarketShardDescriptor.download()
+    def _check_before_run(self):
+        """Check if all files are available before going deeper."""
+        if not self.dataset_dir.exists():
+            raise RuntimeError(f'{self.dataset_dir} does not exist')
+        for dataset_path in self.path_by_type.values():
+            if not dataset_path.exists():
+                raise RuntimeError(f'{dataset_path} does not exist')

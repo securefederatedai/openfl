@@ -10,7 +10,7 @@ with open('README.md') as f:
 
 setup(
     name='openfl',
-    version='1.1',
+    version='1.2.1',
     author='Intel Corporation',
     description='Federated Learning for the Edge',
     long_description=long_description,
@@ -45,8 +45,9 @@ setup(
         'openfl.federated.task',
         'openfl.federated.data',
         'openfl.plugins',
-        'openfl.plugins.interface_serializer',
         'openfl.plugins.frameworks_adapters',
+        'openfl.plugins.interface_serializer',
+        'openfl.plugins.processing_units_monitor',
         'openfl-workspace',
         'openfl-docker',
         'openfl-tutorials',
@@ -84,7 +85,7 @@ setup(
         'Environment :: Console',
         # How mature is this project? Common values are
         #   3 - Alpha, 4 - Beta, 5 - Production/Stable
-        'Development Status :: 5 - Production/Stable',
+        'Development Status :: 4 - Beta',
         # Indicate who your project is intended for
         'Intended Audience :: Developers',
         'Topic :: Scientific/Engineering :: Artificial Intelligence',
