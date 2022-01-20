@@ -69,7 +69,9 @@ class Envoy:
             self.is_experiment_running = True
             try:
                 with ExperimentWorkspace(
-                        experiment_name, data_file_path, is_install_requirements=True
+                        self.name + ' ' + experiment_name,
+                        data_file_path,
+                        is_install_requirements=True
                 ):
                     self._run_collaborator()
             except Exception as exc:

@@ -102,7 +102,7 @@ class FLExperiment:
             self.task_runner_stub.rebuild_model(tensor_dict, validation=True, device='cpu')
             self.current_model_status = upcoming_model_status
 
-        return self.task_runner_stub.model
+        return deepcopy(self.task_runner_stub.model)
 
     def stream_metrics(self, tensorboard_logs: bool = True) -> None:
         """Stream metrics."""
@@ -425,6 +425,7 @@ class TaskInterface:
                 device='device', optimizer='my_Adam_opt')
         def foo_task(my_model, train_loader, my_Adam_opt, device, batch_size, some_arg=356)
             ...
+            return {'metric_name': metric, 'metric_name_2': metric_2,}
         `
         """
         # The highest level wrapper for allowing arguments for the decorator
