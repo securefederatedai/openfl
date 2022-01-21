@@ -6,8 +6,8 @@
 import logging
 from typing import List
 
-from torchvision import datasets
 import torchvision.transforms as transforms
+from torchvision import datasets
 
 from openfl.interface.interactive_api.shard_descriptor import ShardDataset
 from openfl.interface.interactive_api.shard_descriptor import ShardDescriptor
