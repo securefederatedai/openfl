@@ -6,6 +6,7 @@
 import base64
 import json
 import os
+import platform
 import shutil
 import signal
 import subprocess
@@ -25,6 +26,25 @@ CA_STEP_CONFIG_DIR = Path('step_config')
 CA_PKI_DIR = Path('cert')
 CA_PASSWORD_FILE = Path('pass_file')
 CA_CONFIG_JSON = Path('config/ca.json')
+
+
+def get_system_and_architecture():
+    """Get system and architecture of machine."""
+    uname_res = platform.uname()
+    system = uname_res.system.lower()
+
+    architecture_aliases = {
+        ('x86_64', ): 'amd64',
+        ('armv6l', ): 'armv6',
+        ('aarch64', ): 'arm64'
+    }
+    architecture = uname_res.machine
+    for aliases in architecture_aliases:
+        if architecture in aliases:
+            architecture = architecture_aliases[aliases]
+            break
+
+    return system, architecture
 
 
 def download_step_bin(url, grep_name, architecture, prefix='.', confirmation=True):
@@ -128,7 +148,8 @@ def certify(name, cert_path: Path, token_with_cert, ca_path: Path):
     step_path, _ = get_ca_bin_paths(ca_path)
     if not step_path:
         url = 'http://api.github.com/repos/smallstep/cli/releases/latest'
-        download_step_bin(url, 'step_linux', 'amd', prefix=ca_path)
+        system, arch = get_system_and_architecture()
+        download_step_bin(url, f'step_{system}', arch, prefix=ca_path)
         step_path, _ = get_ca_bin_paths(ca_path)
     if not step_path:
         raise Exception('Step-CA is not installed!\nRun `fx pki install` first')
