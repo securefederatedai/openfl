@@ -2,8 +2,8 @@
 
 
 from openfl.plugins.frameworks_adapters.pytorch_adapter import _get_optimizer_state
-from openfl.plugins.frameworks_adapters.pytorch_adapter import to_cpu_numpy
 from openfl.plugins.frameworks_adapters.pytorch_adapter import FrameworkAdapterPlugin
+from openfl.plugins.frameworks_adapters.pytorch_adapter import to_cpu_numpy
 
 
 class FrameworkAdapterPluginforMultipleOpt(FrameworkAdapterPlugin):
