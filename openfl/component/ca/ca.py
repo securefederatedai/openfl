@@ -186,10 +186,11 @@ def install(ca_path, ca_url, password):
 
     if not (step_path and step_ca_path and step_path.exists() and step_ca_path.exists()):
         confirm('CA binaries from github will be downloaded now', default=True, abort=True)
+        system, arch = get_system_and_architecture()
         url = 'http://api.github.com/repos/smallstep/certificates/releases/latest'
-        download_step_bin(url, 'step-ca_linux', 'amd', prefix=ca_path, confirmation=False)
+        download_step_bin(url, f'step-ca_{system}', arch, prefix=ca_path, confirmation=False)
         url = 'http://api.github.com/repos/smallstep/cli/releases/latest'
-        download_step_bin(url, 'step_linux', 'amd', prefix=ca_path, confirmation=False)
+        download_step_bin(url, f'step_{system}', arch, prefix=ca_path, confirmation=False)
     step_config_dir = ca_path / CA_STEP_CONFIG_DIR
     if (not step_config_dir.exists()
             or confirm('CA exists, do you want to recreate it?', default=True)):
