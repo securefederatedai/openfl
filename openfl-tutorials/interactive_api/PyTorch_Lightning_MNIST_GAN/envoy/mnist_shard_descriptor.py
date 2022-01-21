@@ -87,15 +87,13 @@ class MnistShardDescriptor(ShardDescriptor):
         """Download prepared dataset."""
         transform = transforms.Compose(
             [transforms.ToTensor(),
-            transforms.Normalize((0.1307,), (0.3081,)),])
+             transforms.Normalize((0.1307, ), (0.3081, )), ])
         train_data, val_data = (
             datasets.MNIST('data', train=train, download=True, transform=transform)
             for train in (True, False)
         )
         x_train, y_train = train_data.train_data, train_data.train_labels
         x_val, y_val = val_data.test_data, val_data.test_labels
-        print("shape of x_train", x_train.shape)
-        print("shape of y_train", y_train.shape)
 
         print('Mnist data was loaded!')
         return (x_train, y_train), (x_val, y_val)
