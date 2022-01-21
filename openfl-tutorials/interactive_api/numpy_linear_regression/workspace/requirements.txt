@@ -1,0 +1,4 @@
+openfl
+numpy
+jupyterlab
+matplotlib
