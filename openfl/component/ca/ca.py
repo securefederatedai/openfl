@@ -36,6 +36,7 @@ def get_system_and_architecture():
     architecture_aliases = {
         ('x86_64', ): 'amd64',
         ('armv6l', ): 'armv6',
+        ('armv7l', ): 'armv7',
         ('aarch64', ): 'arm64'
     }
     architecture = uname_res.machine
