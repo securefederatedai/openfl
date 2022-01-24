@@ -73,6 +73,9 @@ def download_step_bin(url, grep_name, architecture, prefix='.', confirmation=Tru
         if (grep_name in a['name'] and architecture in a['name']
             and 'application/gzip' in a['content_type'])
     ]
+    if len(archive_urls) == 0:
+        raise Exception('Applicable CA binaries from github were not found '
+                        f'(name: {grep_name}, architecture: {architecture})')
     archive_url = archive_urls[-1]
     archive_url = archive_url.replace('https', 'http')
     name = archive_url.split('/')[-1]
