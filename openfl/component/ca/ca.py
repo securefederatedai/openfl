@@ -6,6 +6,7 @@
 import base64
 import json
 import os
+import platform
 import shutil
 import signal
 import subprocess
@@ -25,6 +26,26 @@ CA_STEP_CONFIG_DIR = Path('step_config')
 CA_PKI_DIR = Path('cert')
 CA_PASSWORD_FILE = Path('pass_file')
 CA_CONFIG_JSON = Path('config/ca.json')
+
+
+def get_system_and_architecture():
+    """Get system and architecture of machine."""
+    uname_res = platform.uname()
+    system = uname_res.system.lower()
+
+    architecture_aliases = {
+        'x86_64': 'amd64',
+        'armv6l': 'armv6',
+        'armv7l': 'armv7',
+        'aarch64': 'arm64'
+    }
+    architecture = uname_res.machine.lower()
+    for alias in architecture_aliases:
+        if architecture == alias:
+            architecture = architecture_aliases[alias]
+            break
+
+    return system, architecture
 
 
 def download_step_bin(url, grep_name, architecture, prefix='.', confirmation=True):
@@ -52,6 +73,9 @@ def download_step_bin(url, grep_name, architecture, prefix='.', confirmation=Tru
         if (grep_name in a['name'] and architecture in a['name']
             and 'application/gzip' in a['content_type'])
     ]
+    if len(archive_urls) == 0:
+        raise Exception('Applicable CA binaries from github were not found '
+                        f'(name: {grep_name}, architecture: {architecture})')
     archive_url = archive_urls[-1]
     archive_url = archive_url.replace('https', 'http')
     name = archive_url.split('/')[-1]
@@ -128,7 +152,8 @@ def certify(name, cert_path: Path, token_with_cert, ca_path: Path):
     step_path, _ = get_ca_bin_paths(ca_path)
     if not step_path:
         url = 'http://api.github.com/repos/smallstep/cli/releases/latest'
-        download_step_bin(url, 'step_linux', 'amd', prefix=ca_path)
+        system, arch = get_system_and_architecture()
+        download_step_bin(url, f'step_{system}', arch, prefix=ca_path)
         step_path, _ = get_ca_bin_paths(ca_path)
     if not step_path:
         raise Exception('Step-CA is not installed!\nRun `fx pki install` first')
@@ -165,10 +190,11 @@ def install(ca_path, ca_url, password):
 
     if not (step_path and step_ca_path and step_path.exists() and step_ca_path.exists()):
         confirm('CA binaries from github will be downloaded now', default=True, abort=True)
+        system, arch = get_system_and_architecture()
         url = 'http://api.github.com/repos/smallstep/certificates/releases/latest'
-        download_step_bin(url, 'step-ca_linux', 'amd', prefix=ca_path, confirmation=False)
+        download_step_bin(url, f'step-ca_{system}', arch, prefix=ca_path, confirmation=False)
         url = 'http://api.github.com/repos/smallstep/cli/releases/latest'
-        download_step_bin(url, 'step_linux', 'amd', prefix=ca_path, confirmation=False)
+        download_step_bin(url, f'step_{system}', arch, prefix=ca_path, confirmation=False)
     step_config_dir = ca_path / CA_STEP_CONFIG_DIR
     if (not step_config_dir.exists()
             or confirm('CA exists, do you want to recreate it?', default=True)):
