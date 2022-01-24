@@ -34,15 +34,15 @@ def get_system_and_architecture():
     system = uname_res.system.lower()
 
     architecture_aliases = {
-        ('x86_64', ): 'amd64',
-        ('armv6l', ): 'armv6',
-        ('armv7l', ): 'armv7',
-        ('aarch64', ): 'arm64'
+        'x86_64': 'amd64',
+        'armv6l': 'armv6',
+        'armv7l': 'armv7',
+        'aarch64': 'arm64'
     }
-    architecture = uname_res.machine
-    for aliases in architecture_aliases:
-        if architecture in aliases:
-            architecture = architecture_aliases[aliases]
+    architecture = uname_res.machine.lower()
+    for alias in architecture_aliases:
+        if architecture == alias:
+            architecture = architecture_aliases[alias]
             break
 
     return system, architecture
