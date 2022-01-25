@@ -12,6 +12,9 @@
 ### 4. Using multiple optimizers
 The example uses two different optimizers: one for discriminator and one for generator. The plugin to support multiple optimizers with OpenFL has been added. Note that in order to use PyTorch Lightning framework with a single optimizer, this plugin is not required.
 
+### 5. Training Generator and Discriminator models separately
+Cuurently, the tutorial shows how to train both the generator and the discriminator models parallely. Individual models can be trained as well. To train only the generator, the flag 'train_gen_only' should be set to 1 and to train only the discriminator, 'train_disc_only' should be set to 1.
+
 ### 5. Links
 * [Original paper](https://arxiv.org/abs/1406.2661)
 * [Original Github code](https://pytorch-lightning.readthedocs.io/en/stable/notebooks/lightning_examples/basic-gan.html)
