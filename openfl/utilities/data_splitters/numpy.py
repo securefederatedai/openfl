@@ -81,15 +81,16 @@ class RandomNumPyDataSplitter(NumPyDataSplitter):
 
 class LogNormalNumPyDataSplitter(NumPyDataSplitter):
     """Unbalanced (LogNormal) dataset split.
-    
+
     This split assumes only several classes are assigned to each collaborator.
     Firstly, it assigns classes_per_col * min_samples_per_class items of dataset
     to each collaborator so all of collaborators will have some data after the split.
     Then, it generates positive integer numbers by log-normal (power) law.
-    These numbers correspond to numbers of dataset items picked each time from dataset and assigned to a collaborator.
+    These numbers correspond to numbers of dataset items picked each time from dataset
+    and assigned to a collaborator.
     Generation is repeated for each class assigned to a collaborator.
     This is a parametrized version of non-i.i.d. data split in FedProx algorithm.
-    Origin source: https://github.com/litian96/FedProx/blob/d2a4501f319f1594b732d88315c5ca1a72855f50/data/mnist/generate_niid.py#L30
+    Origin source: https://github.com/litian96/FedProx/blob/master/data/mnist/generate_niid.py#L30
 
     NOTE: This split always drops out some part of the dataset!
     Non-deterministic behavior selects only random subpart of class items.
@@ -121,7 +122,7 @@ class LogNormalNumPyDataSplitter(NumPyDataSplitter):
 
     def split(self, data, num_collaborators):
         """Split the data.
-        
+
         Args:
             data(np.ndarray): numpy-like label array.
             num_collaborators(int): number of collaborators to split data across.
@@ -171,7 +172,7 @@ class DirichletNumPyDataSplitter(NumPyDataSplitter):
     Generates the random sample of integer numbers from dirichlet distribution
     until minimum subset length exceeds the specified threshold.
     This behavior is a parametrized version of non-i.i.d. split in FedMA algorithm.
-    Origin source: https://github.com/IBM/FedMA/blob/4b586a5a22002dc955d025b890bc632daa3c01c7/utils.py#L96
+    Origin source: https://github.com/IBM/FedMA/blob/master/utils.py#L96
     """
 
     def __init__(self, alpha=0.5, min_samples_per_col=10, seed=0):
