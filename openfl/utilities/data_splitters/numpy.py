@@ -80,7 +80,20 @@ class RandomNumPyDataSplitter(NumPyDataSplitter):
 
 
 class LogNormalNumPyDataSplitter(NumPyDataSplitter):
-    """Unbalanced (LogNormal) dataset split."""
+    """Unbalanced (LogNormal) dataset split.
+    
+    This split assumes only several classes are assigned to each collaborator.
+    Firstly, it assigns classes_per_col * min_samples_per_class items of dataset
+    to each collaborator so all of collaborators will have some data after the split.
+    Then, it generates positive integer numbers by log-normal (power) law.
+    These numbers correspond to numbers of dataset items picked each time from dataset and assigned to a collaborator.
+    Generation is repeated for each class assigned to a collaborator.
+    This is a parametrized version of non-i.i.d. data split in FedProx algorithm.
+    Origin source: https://github.com/litian96/FedProx/blob/d2a4501f319f1594b732d88315c5ca1a72855f50/data/mnist/generate_niid.py#L30
+
+    NOTE: This split always drops out some part of the dataset!
+    Non-deterministic behavior selects only random subpart of class items.
+    """
 
     def __init__(self, mu,
                  sigma,
@@ -88,7 +101,7 @@ class LogNormalNumPyDataSplitter(NumPyDataSplitter):
                  classes_per_col,
                  min_samples_per_class,
                  seed=0):
-        """Initialize.
+        """Initialize the generator.
 
         Args:
             mu(float): Distribution hyperparameter.
@@ -107,7 +120,13 @@ class LogNormalNumPyDataSplitter(NumPyDataSplitter):
         self.seed = seed
 
     def split(self, data, num_collaborators):
-        """Split the data."""
+        """Split the data.
+        
+        Args:
+            data(np.ndarray): numpy-like label array.
+            num_collaborators(int): number of collaborators to split data across.
+                Should be divisible by number of classes in ``data``.
+        """
         np.random.seed(self.seed)
         idx = [[] for _ in range(num_collaborators)]
         samples_per_col = self.classes_per_col * self.min_samples_per_class
@@ -120,9 +139,9 @@ class LogNormalNumPyDataSplitter(NumPyDataSplitter):
                 slice_end = slice_start + self.min_samples_per_class
                 print(f'Assigning {slice_start}:{slice_end} of {label} class to {col} col...')
                 idx[col] += list(label_idx[slice_start:slice_end])
-        assert all([len(i) == samples_per_col for i in idx]), f'''
-All collaborators should have {samples_per_col} elements
-but distribution is {[len(i) for i in idx]}'''
+        if any([len(i) != samples_per_col for i in idx]):
+            raise SystemError(f'''All collaborators should have {samples_per_col} elements
+but distribution is {[len(i) for i in idx]}''')
 
         props_shape = (self.num_classes, num_collaborators // 10, self.classes_per_col)
         props = np.random.lognormal(self.mu, self.sigma, props_shape)
@@ -147,7 +166,13 @@ but distribution is {[len(i) for i in idx]}'''
 
 
 class DirichletNumPyDataSplitter(NumPyDataSplitter):
-    """Numpy splitter according to dirichlet distribution."""
+    """Numpy splitter according to dirichlet distribution.
+
+    Generates the random sample of integer numbers from dirichlet distribution
+    until minimum subset length exceeds the specified threshold.
+    This behavior is a parametrized version of non-i.i.d. split in FedMA algorithm.
+    Origin source: https://github.com/IBM/FedMA/blob/4b586a5a22002dc955d025b890bc632daa3c01c7/utils.py#L96
+    """
 
     def __init__(self, alpha=0.5, min_samples_per_col=10, seed=0):
         """Initialize.
