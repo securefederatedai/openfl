@@ -6,7 +6,6 @@
 import logging
 from typing import List
 
-import torchvision.transforms as transforms
 from torchvision import datasets
 
 from openfl.interface.interactive_api.shard_descriptor import ShardDataset
@@ -85,11 +84,8 @@ class MnistShardDescriptor(ShardDescriptor):
 
     def download_data(self):
         """Download prepared dataset."""
-        transform = transforms.Compose(
-            [transforms.ToTensor(),
-             transforms.Normalize((0.1307, ), (0.3081, )), ])
         train_data, val_data = (
-            datasets.MNIST('data', train=train, download=True, transform=transform)
+            datasets.MNIST('data', train=train, download=True)
             for train in (True, False)
         )
         x_train, y_train = train_data.train_data, train_data.train_labels

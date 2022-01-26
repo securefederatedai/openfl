@@ -10,7 +10,7 @@
 [MNIST](http://yann.lecun.com/exdb/mnist/) database is a database of handwritten digits that has a training set of 60,000 examples, and a test set of 10,000 examples. It is a subset of a larger set available from NIST. The digits have been size-normalized and centered in a fixed-size image.
 
 ### 4. Using multiple optimizers
-The example uses two different optimizers: one for discriminator and one for generator. The plugin to support multiple optimizers with OpenFL has been added. Note that in order to use PyTorch Lightning framework with a single optimizer, this plugin is not required.
+The example uses two different optimizers: one for discriminator and one for generator. The plugin to support multiple optimizers with OpenFL has been added (workspace/plugin_for_multiple_optimizers.py). Note that in order to use PyTorch Lightning framework with a single optimizer, this plugin is not required.
 
 ### 5. Training Generator and Discriminator models separately
 Cuurently, the tutorial shows how to train both the generator and the discriminator models parallely. Individual models can be trained as well. To train only the generator, the flag 'train_gen_only' should be set to 1 and to train only the discriminator, 'train_disc_only' should be set to 1.
@@ -37,9 +37,9 @@ bash start_envoy.sh
 ```
 
 Optional: start second envoy:
- - Copy `envoy` to another place and run from there:
+ - Copy `envoy` to another folder, change the config and run from there:
 ```sh
-bash start_envoy_two.sh
+bash start_envoy.sh
 ```
 
 3. Run `PyTorch_Lightning_GAN.ipynb` jupyter notebook:

@@ -5,3 +5,4 @@ torch==1.9.1
 torchvision==0.10.1
 torchmetrics>=0.3
 tensorflow==2.7.0
+pynvml==11.4.1
