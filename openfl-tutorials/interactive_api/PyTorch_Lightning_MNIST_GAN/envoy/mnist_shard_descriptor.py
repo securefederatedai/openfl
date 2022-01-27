@@ -4,12 +4,12 @@
 """Mnist Shard Descriptor."""
 
 import logging
-from typing import List
-
-from torchvision import datasets
 from typing import Any
 from typing import Dict
+from typing import List
 from typing import Tuple
+
+from torchvision import datasets
 
 from openfl.interface.interactive_api.shard_descriptor import ShardDataset
 from openfl.interface.interactive_api.shard_descriptor import ShardDescriptor
