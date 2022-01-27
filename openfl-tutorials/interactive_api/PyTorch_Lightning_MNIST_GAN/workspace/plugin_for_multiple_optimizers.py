@@ -14,7 +14,7 @@ class FrameworkAdapterPluginforMultipleOpt(FrameworkAdapterPlugin):
         super().__init__()
 
     @staticmethod
-    def get_tensor_dict(model, optimizer=None):
+    def get_tensor_dict(model, optimizers=None):
         """
         Extract tensor dict from a model and a list of optimizers.
 
@@ -22,8 +22,8 @@ class FrameworkAdapterPluginforMultipleOpt(FrameworkAdapterPlugin):
         dict {weight name: numpy ndarray}
         """
         state = to_cpu_numpy(model.state_dict())
-        if optimizer is not None:
-            for opt in optimizer:
+        if optimizers is not None:
+            for opt in optimizers:
                 if isinstance(opt, dict):
                     opt_state = _get_optimizer_state(opt['optimizer'])
                 else:
