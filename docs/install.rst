@@ -10,14 +10,6 @@ Installation
 Depending on how you want to set up |productName|, choose one of the following installation procedure.
 
 
-.. toctree::
-   :maxdepth: 2
-   :hidden:
-
-   `install_package`_
-   `install_docker`_
-
-
 .. _install_package:
 
 *********************************

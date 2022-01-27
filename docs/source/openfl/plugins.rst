@@ -5,13 +5,6 @@
 Plugin Components
 *****************
 
-.. toctree::
-   :maxdepth: 2
-
-   framework_adapter_
-   serializer_plugin_
-   device_monitor_plugin_
-
 Open Federated Learning (|productName|) is designed to be a flexible and extensible framework. Plugins are interchangeable parts of |productName| components. Different plugins support varying usage scenarios.
 A plugin may be **required** or **optional**. 
 
@@ -106,5 +99,3 @@ CUDA Device Monitor plugin must implement the following interface:
           def get_device_utilization(self, index: int) -> str:
              """It is just a general method that returns a string that may be shown to the frontend user."""
              ...
-
-

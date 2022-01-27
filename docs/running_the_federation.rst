@@ -668,11 +668,11 @@ STEP 1: Create a Workspace on the Aggregator
 
 3.	Decide a workspace template, which are end-to-end federated learning training demonstrations. The following is a sample of available templates:
 
- - :code:`keras_cnn_mnist`: a workspace with a simple `Keras <http://keras.io/>`_ CNN model that will download the `MNIST <http://yann.lecun.com/exdb/mnist/>`_ dataset and train in a federation.
- - :code:`tf_2dunet`: a workspace with a simple `TensorFlow <http://tensorflow.org>`_ CNN model that will use the `BraTS <https://www.med.upenn.edu/sbia/brats2017/data.html>`_ dataset and train in a federation.
- - :code:`tf_cnn_histology`: a workspace with a simple `TensorFlow <http://tensorflow.org>`_ CNN model that will download the `Colorectal Histology <https://zenodo.org/record/53169#.XGZemKwzbmG>`_ dataset and train in a federation.
- - :code:`torch_cnn_histology`: a workspace with a simple `PyTorch <http://pytorch.org/>`_ CNN model that will download the `Colorectal Histology <https://zenodo.org/record/53169#.XGZemKwzbmG>`_ dataset and train in a federation.
- - :code:`torch_cnn_mnist`: a workspace with a simple `PyTorch <http://pytorch.org>`_ CNN model that will download the `MNIST <http://yann.lecun.com/exdb/mnist/>`_ dataset and train in a federation.
+ - :code:`keras_cnn_mnist`: a workspace with a simple `Keras <http://keras.io/>`__ CNN model that will download the `MNIST <http://yann.lecun.com/exdb/mnist/>`_ dataset and train in a federation.
+ - :code:`tf_2dunet`: a workspace with a simple `TensorFlow <http://tensorflow.org>`__ CNN model that will use the `BraTS <https://www.med.upenn.edu/sbia/brats2017/data.html>`_ dataset and train in a federation.
+ - :code:`tf_cnn_histology`: a workspace with a simple `TensorFlow <http://tensorflow.org>`__ CNN model that will download the `Colorectal Histology <https://zenodo.org/record/53169#.XGZemKwzbmG>`_ dataset and train in a federation.
+ - :code:`torch_cnn_histology`: a workspace with a simple `PyTorch <http://pytorch.org/>`__ CNN model that will download the `Colorectal Histology <https://zenodo.org/record/53169#.XGZemKwzbmG>`_ dataset and train in a federation.
+ - :code:`torch_cnn_mnist`: a workspace with a simple `PyTorch <http://pytorch.org>`__ CNN model that will download the `MNIST <http://yann.lecun.com/exdb/mnist/>`_ dataset and train in a federation.
 
   See the complete list of available templates.
 
@@ -772,8 +772,7 @@ The objectives in this step:
 
 .. _install_certs_agg:
 
-On the Aggregator Node
-""""""""""""""""""""""
+**On the Aggregator Node:**
 
 Setting Up the Certificate Authority
 
@@ -841,9 +840,9 @@ Setting Up the Certificate Authority
     +===========================+==================================================+
     | Certificate chain         | WORKSPACE.PATH/cert/cert_chain.crt               |
     +---------------------------+--------------------------------------------------+
-    | Aggregator certificate    | WORKSPACE.PATH/cert/server/agg_{AFQDN}.crt         |
+    | Aggregator certificate    | WORKSPACE.PATH/cert/server/agg_{AFQDN}.crt       |
     +---------------------------+--------------------------------------------------+
-    | Aggregator key            | WORKSPACE.PATH/cert/server/agg_{AFQDN}.key         |
+    | Aggregator key            | WORKSPACE.PATH/cert/server/agg_{AFQDN}.key       |
     +---------------------------+--------------------------------------------------+
 
     where **AFQDN** is the fully-qualified domain name of the aggregator node.
@@ -866,8 +865,7 @@ Exporting the Workspace
 
 .. _install_certs_colab:
 
-On the Collaborator Node
-""""""""""""""""""""""""
+**On the Collaborator Node**:
 
 Importing the Workspace
 
@@ -935,8 +933,7 @@ Importing the Workspace
 STEP 3: Start the Federation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-On the Aggregator Node
-""""""""""""""""""""""
+**On the Aggregator Node:**
 
 1. Start the Aggregator.
 
@@ -948,8 +945,7 @@ On the Aggregator Node
 
 .. _running_collaborators:
 
-On the Collaborator Nodes
-"""""""""""""""""""""""""
+**On the Collaborator Nodes:**
 
 1. Open a new terminal, change the directory to the workspace, and activate the virtual environment.
 
@@ -999,13 +995,9 @@ There are two ways you can run |productName| with Docker\*\.
 Option 1: Deploy a Federation in a Docker Container
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Prerequisites
-"""""""""""""
+.. note::
+    You have to built an |productName| image. See :ref:`install_docker` for details.
 
-You have already built an |productName| image. See :ref:`install_docker` for details.
-
-Procedure
-"""""""""""""
 
 1. Run the |productName| image.
 
@@ -1022,13 +1014,9 @@ You can now experiment with |productName| in the container. For example, you can
 Option 2: Deploy Your Workspace in a Docker Container
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Prerequisites
-"""""""""""""
+.. note::
+    You have to set up a TaskRunner and run :code:`fx plan initialize` in the workspace directory. See `STEP 1: Create a Workspace on the Aggregator`_ for details.
 
-You have already set up a TaskRunner and run :code:`fx plan initialize` in the workspace directory. See `STEP 1: Create a Workspace on the Aggregator`_ for details.
-
-Procedure
-"""""""""
 
 1. Build an image with the workspace you created.
 
@@ -1057,4 +1045,3 @@ Procedure
 3. Generate public key infrastructure (PKI) certificates for all collaborators and the aggregator. See :doc:`/source/utilities/pki` for details.
 
 4. `STEP 3: Start the Federation`_.
-
