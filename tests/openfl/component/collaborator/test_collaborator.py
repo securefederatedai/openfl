@@ -8,7 +8,7 @@ import numpy
 import pytest
 
 from openfl.component.collaborator import Collaborator
-from openfl.protocols import NamedTensor
+from openfl.protocols import base_pb2
 from openfl.utilities.types import TensorKey
 
 
@@ -25,7 +25,7 @@ def collaborator_mock():
 @pytest.fixture
 def named_tensor():
     """Initialize the named_tensor mock."""
-    tensor = NamedTensor(
+    tensor = base_pb2.NamedTensor(
         name='tensor_name',
         round_number=0,
         lossless=False,

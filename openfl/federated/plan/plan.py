@@ -15,8 +15,8 @@ from yaml import SafeDumper
 from openfl.component.aggregation_functions import AggregationFunction
 from openfl.component.aggregation_functions import WeightedAverage
 from openfl.interface.cli_helper import WORKSPACE
+from openfl.transport import AggregatorGRPCClient
 from openfl.transport import AggregatorGRPCServer
-from openfl.transport import CollaboratorGRPCClient
 from openfl.utilities.utils import getfqdn_env
 
 SETTINGS = 'settings'
@@ -483,7 +483,7 @@ openfl.component.aggregation_functions.AggregationFunction
         client_args['federation_uuid'] = federation_uuid
 
         if self.client_ is None:
-            self.client_ = CollaboratorGRPCClient(**client_args)
+            self.client_ = AggregatorGRPCClient(**client_args)
 
         return self.client_
 
