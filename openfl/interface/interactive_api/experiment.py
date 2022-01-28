@@ -403,7 +403,7 @@ class TaskInterface:
         # Mapping 'task name' -> callable
         self.aggregation_functions = defaultdict(WeightedAverage)
 
-    def register_fl_task(self, model, data_loader, device, optimizer=None):
+    def register_fl_task(self, model, data_loader, device, optimizer=None, round_num=None):
         """
         Register FL tasks.
 
@@ -440,7 +440,7 @@ class TaskInterface:
             # Saving the task and the contract for later serialization
             self.task_registry[training_method.__name__] = wrapper_decorator
             contract = {'model': model, 'data_loader': data_loader,
-                        'device': device, 'optimizer': optimizer}
+                        'device': device, 'optimizer': optimizer, 'round_num': round_num}
             self.task_contract[training_method.__name__] = contract
             # We do not alter user environment
             return training_method
