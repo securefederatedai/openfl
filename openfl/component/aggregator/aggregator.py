@@ -336,6 +336,8 @@ class Aggregator:
         else:
             compress_lossless = False
 
+        tags = list(tags)
+
         # TODO the TensorDB doesn't support compressed data yet.
         #  The returned tensor will
         # be recompressed anyway.
