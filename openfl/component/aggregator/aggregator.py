@@ -336,14 +336,14 @@ class Aggregator:
         else:
             compress_lossless = False
 
+        tags = list(tags)
+
         # TODO the TensorDB doesn't support compressed data yet.
         #  The returned tensor will
         # be recompressed anyway.
         if 'compressed' in tags:
-            tags = list(tags)
             tags.remove('compressed')
         if 'lossy_compressed' in tags:
-            tags = list(tags)
             tags.remove('lossy_compressed')
 
         tensor_key = TensorKey(
