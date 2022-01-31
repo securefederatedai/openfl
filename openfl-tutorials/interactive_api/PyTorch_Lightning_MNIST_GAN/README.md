@@ -35,6 +35,7 @@ bash start_director.sh
 2. Run envoy:
 ```sh
 cd $PYTORCH_LIGHTNING_MNIST_GAN/envoy
+pip install -r sd_requirements.txt
 bash start_envoy.sh
 ```
 
