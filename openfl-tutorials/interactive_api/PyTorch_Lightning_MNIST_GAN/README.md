@@ -1,7 +1,7 @@
 # PyTorch Lightining tutorial for Generative Adverserial Network (GAN) Dataset
 
 ### 1. About model: Generative Adverserial Networks (GANs)
-[Generative Adverserial Networks](https://arxiv.org/abs/1406.2661) or GANs were introduced to the machine learning community by Ian J. Goodfellow in 2014. The idea is to generate real-looking samples or images that resemble the training data. A GAN has three primary components: a generator model for generating new data, a discriminator model for classifying whether generated data are real faces, or fake, and the adversarial network that pits them against each other. The fundamental nature of these dual networks is to outplay each other. One generates images to fool the other while the other tries not to be fooled. Given enough time, the network becomes so good that it ends up making fake images as realistic as possible.
+[Generative Adverserial Networks](https://arxiv.org/abs/1406.2661) or GANs were introduced to the machine learning community by Ian J. Goodfellow in 2014. The idea is to generate real-looking samples or images that resemble the training data. A GAN has three primary components: a Generator model for generating new data from random data (noise), a discriminator model for classifying whether generated data is real or fake, and the adversarial network that pits them against each other. The fundamental nature of these dual networks is to outplay each other until the generator starts generating real looking samples that the discriminator fails to differentiate.
 
 ### 2. About framework: PyTorch Lightning
 [Pytorch Lightning](https://www.pytorchlightning.ai/) is a framework built on top of PyTorch that allows the models to be scaled without the boilerplate.
