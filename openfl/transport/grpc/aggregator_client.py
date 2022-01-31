@@ -425,12 +425,12 @@ class AsyncAggregatorGRPCClient(BaseAggregatorGRPCClient):
         interceptors = (
             AsyncRetryOnRpcErrorUnaryUnaryClientInterceptor(
                 reconnect_interval=int(self.kwargs.get('client_reconnect_interval', 1)),
-                connect_timeout=int(self.kwargs.get('client_connect_timeout', 30)),
+                connect_timeout=int(self.kwargs.get('client_connect_timeout', 300)),
                 status_for_retry=(grpc.StatusCode.UNAVAILABLE,),
             ),
             AsyncRetryOnRpcErrorUnaryStreamClientInterceptor(
                 reconnect_interval=int(self.kwargs.get('client_reconnect_interval', 1)),
-                connect_timeout=int(self.kwargs.get('client_connect_timeout', 30)),
+                connect_timeout=int(self.kwargs.get('client_connect_timeout', 300)),
                 status_for_retry=(grpc.StatusCode.UNAVAILABLE,),
             ),
         )
