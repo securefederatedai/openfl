@@ -111,6 +111,9 @@ class Director:
                 or caller not in self.experiments_registry[experiment_name].users):
             logger.error('No experiment data in the stash')
             return None
+        exp = self.experiments_registry[experiment_name]
+        if exp.status != Status.IN_PROGRESS:
+            return None
 
         aggregator_client = self.get_aggregator_client(experiment_name)
         trained_model = await aggregator_client.get_trained_model(
