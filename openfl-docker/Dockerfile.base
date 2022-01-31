@@ -45,7 +45,7 @@ RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py && python get-pip.py
 RUN pip install --no-cache-dir . pip-licenses
 WORKDIR /thirdparty
 RUN if [ "$INSTALL_SOURCES" = "yes" ]; then \
-    pip-licenses | awk '{for(i=1;i<=NF-1;i++) if(i!=2) printf $i" "; print ""}' | tee -a all_dependencies.txt; \
+    pip-licenses | awk '{for(i=1;i<=NF;i++) if(i!=2) printf $i" "; print ""}' | tee -a all_dependencies.txt; \
     pip-licenses | grep GPL\|MPL\|EPL | awk '{OFS="=="} {print $1,$2}' | xargs pip download --no-binary :all:; \
 fi
 WORKDIR /openfl
