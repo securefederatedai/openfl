@@ -5,6 +5,7 @@
 import time
 import queue
 from logging import getLogger
+from typing import List
 
 from openfl.interface.aggregation_functions import WeightedAverage
 from openfl.component.straggler_handling_functions import CutoffTimeBasedStragglerHandling
@@ -572,6 +573,55 @@ class Aggregator:
         self.collaborator_tasks_results[task_key] = task_results
 
         self._end_of_task_check(task_name)
+
+    def get_experiment_description(self) -> dict:
+        """Get a experiment information by name for specific user."""
+        progress = self.round_number / self.rounds_to_train
+        model_statuses = self.model_download_statuses
+        tasks = [{
+            'name': task['function'],
+            'description': 'Task description Mock',
+        } for task in self.assigner.tasks.values()]
+        collaborators = [{
+            'name': name,
+            'status': 'pending_mock',
+            'progress': 0.0,
+            'round': 0,
+            'current_task': 'Current Task Mock',
+            'next_task': 'Next Task Mock'
+        } for name in self.authorized_cols]
+        result = {
+            'current_round': self.round_number,
+            'total_rounds': self.rounds_to_train,
+            'download_statuses': {
+                'models': model_statuses,
+                'logs': [{
+                    'name': 'aggregator',
+                    'status': 'ready'
+                }],
+            },
+            'collaborators': collaborators,
+            'tasks': tasks,
+            'progress': progress
+        }
+        return result
+
+    @property
+    def model_download_statuses(self) -> List[dict]:
+        """Return model download statuses representation."""
+        best_model_status = 'ready' if self.best_tensor_dict else 'pending'
+        last_model_status = 'ready' if self.last_tensor_dict else 'pending'
+        model_statuses = [{
+            'name': 'best',
+            'status': best_model_status,
+        }, {
+            'name': 'last',
+            'status': last_model_status,
+        }, {
+            'name': 'init',
+            'status': 'ready'
+        }]
+        return model_statuses
 
     def _process_named_tensor(self, named_tensor, collaborator_name):
         """
