@@ -67,9 +67,7 @@ message SendLocalTaskResultsResponse {
   MessageHeader header = 1;
 }
 
-// The same with director.proto
 message GetMetricStreamRequest {
-  string experiment_name = 1;
 }
 
 // The same with director.proto
@@ -97,9 +95,7 @@ message TrainedModelResponse {
 }
 
 // The same with director.proto
-message GetExperimentDescriptionRequest {
-  string name = 1;
-}
+message GetExperimentDescriptionRequest {}
 
 // The same with director.proto
 message GetExperimentDescriptionResponse {

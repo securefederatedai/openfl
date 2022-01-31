@@ -224,6 +224,8 @@ class Plan:
         self.hash_ = None
         self.name_ = None
         self.serializer_ = None
+        self.agg_addr = None
+        self.agg_port = None
 
     @property
     def hash(self):  # NOQA
@@ -233,6 +235,12 @@ class Plan:
                          extra={'markup': True})
 
         return self.hash_.hexdigest()
+
+    def get_agg_port(self):
+        """Generate an aggregator port by plan hash."""
+        return int(
+            self.hash[:8], 16
+        ) % (60999 - 49152) + 49152
 
     def resolve(self):
         """Resolve the federation settings."""
@@ -244,11 +252,11 @@ class Plan:
 
         if self.config['network'][SETTINGS]['agg_addr'] == AUTO:
             self.config['network'][SETTINGS]['agg_addr'] = getfqdn_env()
+        self.agg_addr = self.config['network'][SETTINGS]['agg_addr']
 
         if self.config['network'][SETTINGS]['agg_port'] == AUTO:
-            self.config['network'][SETTINGS]['agg_port'] = int(
-                self.hash[:8], 16
-            ) % (60999 - 49152) + 49152
+            self.config['network'][SETTINGS]['agg_port'] = self.get_agg_port()
+        self.agg_port = self.config['network'][SETTINGS]['agg_port']
 
     def get_assigner(self):
         """Get the plan task assigner."""

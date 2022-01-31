@@ -9,9 +9,11 @@ import time
 from collections import defaultdict
 from pathlib import Path
 from typing import Iterable
-from typing import List
 from typing import Union
+from typing import ValuesView
 
+from openfl.protocols import base_pb2
+from openfl.transport import AsyncAggregatorGRPCClient
 from .experiment import Experiment
 from .experiment import ExperimentsRegistry
 from .experiment import Status
@@ -85,26 +87,38 @@ class Director:
         self.experiments_registry.add(experiment)
         return True
 
-    def get_trained_model(self, experiment_name: str, caller: str, model_type: str):
+    def get_aggregator_client(self, experiment_name):
+        """Return an aggregator client for the experiment."""
+        exp = self.experiments_registry[experiment_name]
+        agg_port = exp.plan.agg_port
+        agg_addr = exp.plan.agg_addr
+        logger.info(f'Aggregator uri: {agg_addr}:{agg_port}')
+
+        aggregator_client = AsyncAggregatorGRPCClient(
+            agg_addr,
+            agg_port,
+            tls=False,
+            disable_client_auth=True,
+            root_certificate=None,
+            certificate=None,
+            private_key=None
+        )
+        return aggregator_client
+
+    async def get_trained_model(self, experiment_name: str, caller: str, model_type: str):
         """Get trained model."""
         if (experiment_name not in self.experiments_registry
                 or caller not in self.experiments_registry[experiment_name].users):
             logger.error('No experiment data in the stash')
             return None
 
-        aggregator = self.experiments_registry[experiment_name].aggregator
+        aggregator_client = self.get_aggregator_client(experiment_name)
+        trained_model = await aggregator_client.get_trained_model(
+            experiment_name,
+            model_type
+        )
 
-        if aggregator.last_tensor_dict is None:
-            logger.error('Aggregator have no aggregated model to return')
-            return None
-
-        if model_type == 'best':
-            return aggregator.best_tensor_dict
-        elif model_type == 'last':
-            return aggregator.last_tensor_dict
-        else:
-            logger.error('Unknown model type required.')
-            return None
+        return trained_model
 
     def get_experiment_data(self, experiment_name: str) -> Path:
         """Get experiment data."""
@@ -155,17 +169,10 @@ class Director:
 
         while not self.experiments_registry[experiment_name].aggregator:
             await asyncio.sleep(1)
-        aggregator = self.experiments_registry[experiment_name].aggregator
 
-        while True:
-            if not aggregator.metric_queue.empty():
-                yield aggregator.metric_queue.get()
-                continue
-
-            if aggregator.all_quit_jobs_sent() and aggregator.metric_queue.empty():
-                return
-
-            yield None
+        aggregator_client = self.get_aggregator_client(experiment_name)
+        async for metric_dict in aggregator_client.get_metric_stream():
+            yield metric_dict
 
     def remove_experiment_data(self, experiment_name: str, caller: str):
         """Remove experiment data from stash."""
@@ -202,7 +209,7 @@ class Director:
 
         return hc_period
 
-    def get_envoys(self) -> list:
+    def get_envoys(self) -> ValuesView:
         """Get a status information about envoys."""
         logger.info(f'Shard registry: {self._shard_registry}')
         for envoy_info in self._shard_registry.values():
@@ -215,7 +222,7 @@ class Director:
 
         return self._shard_registry.values()
 
-    def get_experiments_list(self, caller: str) -> list:
+    async def get_experiments_list(self, caller: str) -> list:
         """Get experiments list for specific user."""
         experiments = self.experiments_registry.get_user_experiments(caller)
         result = []
@@ -225,9 +232,12 @@ class Director:
                 'status': exp.status,
                 'collaborators_amount': len(exp.collaborators),
             }
-            progress = _get_experiment_progress(exp)
-            if progress is not None:
-                exp_data['progress'] = progress
+            if exp.status == Status.IN_PROGRESS:
+                aggregator_client = self.get_aggregator_client(exp.name)
+                experiment_pb2 = await aggregator_client.get_experiment_description()
+                progress = experiment_pb2.progress
+                if progress is not None:
+                    exp_data['progress'] = progress
             if exp.aggregator:
                 tasks_amount = len({
                     task['function']
@@ -238,32 +248,20 @@ class Director:
 
         return result
 
-    def get_experiment_description(self, caller: str, name: str) -> dict:
+    async def get_experiment_description(self, caller: str, experiment_name: str) -> dict:
         """Get a experiment information by name for specific user."""
-        exp = self.experiments_registry.get(name)
+        exp = self.experiments_registry.get(experiment_name)
         if not exp or caller not in exp.users:
+            logger.info(f'Experiment {experiment_name} for user {caller} does not exist.')
             return {}
-        progress = _get_experiment_progress(exp)
-        model_statuses = _get_model_download_statuses(exp)
-        tasks = _get_experiment_tasks(exp)
-        collaborators = _get_experiment_collaborators(exp)
-        result = {
-            'name': name,
-            'status': exp.status,
-            'current_round': exp.aggregator.round_number,
-            'total_rounds': exp.aggregator.rounds_to_train,
-            'download_statuses': {
-                'models': model_statuses,
-                'logs': [{
-                    'name': 'aggregator',
-                    'status': 'ready'
-                }],
-            },
-            'collaborators': collaborators,
-            'tasks': tasks,
-            'progress': progress
-        }
-        return result
+        if exp.status != Status.IN_PROGRESS:
+            return base_pb2.ExperimentDescription(status=exp.status)
+        aggregator_client = self.get_aggregator_client(experiment_name)
+        experiment_pb2 = await aggregator_client.get_experiment_description()
+        experiment_pb2.name = experiment_name
+        experiment_pb2.status = exp.status
+
+        return experiment_pb2
 
     async def start_experiment_execution_loop(self):
         """Run task to monitor and run experiments."""
@@ -280,42 +278,3 @@ class Director:
                     queue = self.col_exp_queues[col_name]
                     await queue.put(experiment.name)
                 await run_aggregator_future
-
-
-def _get_model_download_statuses(experiment) -> List[dict]:
-    best_model_status = 'ready' if experiment.aggregator.best_tensor_dict else 'pending'
-    last_model_status = 'ready' if experiment.aggregator.last_tensor_dict else 'pending'
-    model_statuses = [{
-        'name': 'best',
-        'status': best_model_status,
-    }, {
-        'name': 'last',
-        'status': last_model_status,
-    }, {
-        'name': 'init',
-        'status': 'ready'
-    }]
-    return model_statuses
-
-
-def _get_experiment_progress(experiment) -> Union[float, None]:
-    if experiment.status == Status.IN_PROGRESS:
-        return experiment.aggregator.round_number / experiment.aggregator.rounds_to_train
-
-
-def _get_experiment_tasks(experiment) -> List[dict]:
-    return [{
-        'name': task['function'],
-        'description': 'Task description Mock',
-    } for task in experiment.aggregator.assigner.tasks.values()]
-
-
-def _get_experiment_collaborators(experiment) -> List[dict]:
-    return [{
-        'name': name,
-        'status': 'pending_mock',
-        'progress': 0.0,
-        'round': 0,
-        'current_task': 'Current Task Mock',
-        'next_task': 'Next Task Mock'
-    } for name in experiment.aggregator.authorized_cols]
