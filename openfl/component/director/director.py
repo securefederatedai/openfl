@@ -221,7 +221,7 @@ class Director:
                 + envoy_info.get('valid_duration', 0)
             )
             envoy_name = envoy_info['shard_info']['node_info']['name']
-            envoy_info['experiment_name'] = self.col_exp[envoy_name]
+            envoy_info['experiment_name'] = self.col_exp.get(envoy_name)
 
         return self._shard_registry.values()
 
