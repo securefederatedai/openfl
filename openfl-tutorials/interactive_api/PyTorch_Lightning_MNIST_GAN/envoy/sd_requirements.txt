@@ -1,0 +1,5 @@
+numpy
+pillow
+pynvml==11.4.1
+torch==1.9.1
+torchvision==0.10.1
