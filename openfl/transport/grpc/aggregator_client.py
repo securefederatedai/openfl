@@ -143,13 +143,7 @@ class AsyncRetryOnRpcErrorUnaryStreamClientInterceptor(
                         and error.details() == 'Socket closed'
                 ):
                     return
-                # await self.handle_error_for_retry(error, started_time)
-                logger.info(f'Response code: {error.code()}. Try to reconnect to the Aggregator.')
-                if self.status_for_retry and error.code() not in self.status_for_retry:
-                    raise error
-                if (time.time() - started_time) > self.connect_timeout:
-                    return
-                await asyncio.sleep(self.reconnect_interval)
+                await self.handle_error_for_retry(error, started_time)
 
     async def intercept_unary_stream(
             self, continuation, client_call_details, request_iterator
