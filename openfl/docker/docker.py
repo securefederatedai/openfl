@@ -12,6 +12,8 @@ from aiodocker.containers import DockerContainer
 
 logger = logging.getLogger(__name__)
 
+OPENFL_ROOT_PATH = Path(__file__).parent.parent.parent.absolute()
+
 
 class Docker:
 
@@ -42,36 +44,19 @@ class Docker:
             name: str,
             image_tag: str,
             cmd: str,
-            volumes: Optional[List[str]],
             gpu_allowed: bool = False,
+            volumes: Optional[List[str]] = None,
     ) -> DockerContainer:
         if volumes is None:
             volumes = []
 
         binds = volumes_to_binds(volumes)
-
-        # volumes = [
-        #     f'{target}:{bind}'
-        #     for target, bind in map(lambda x: x.split(':'), volumes)
-        # ]
         config = {
             'Cmd': ['/bin/bash', '-c', cmd],
             'Image': image_tag,
-            # 'Volumes': {
-            #     target: {
-            #         'bind': bind,
-            #         'mode': 'r',
-            #     } for target, bind in map(lambda x: x.split(':'), volumes)
-            # },
             'HostConfig': {
                 'NetworkMode': 'host',
                 'Binds': binds,
-                # 'Mounts': [{
-                #     "Target": "path/in/the/container",
-                #     "Source": "volumeName",
-                #     "Type": "volume",
-                #     "ReadOnly": False,
-                # }]
             },
         }
         if gpu_allowed:
@@ -117,15 +102,25 @@ class Docker:
                     break
 
 
+def create_aggregator_context(data_file_path: Path, init_tensor_dict_path: Path):
+    with TarFile(name=data_file_path, mode='a') as tar_file:
+        docker_file_path = OPENFL_ROOT_PATH / 'openfl-docker' / 'Dockerfile.aggregator'
+        run_aggregator_path = (OPENFL_ROOT_PATH / 'openfl' / 'component' / 'director'
+                               / 'run_aggregator.py')
+        tar_file.add(docker_file_path, 'Dockerfile')
+        tar_file.add(run_aggregator_path, 'run.py')
+        tar_file.add(init_tensor_dict_path, 'init_tensor_dict.pickle')
+    return data_file_path
+
+
 def create_collaborator_context(
         data_file_path: Path,
         shard_descriptor_config
 ) -> Path:
     with TarFile(name=data_file_path, mode='a') as tar_file:
-        docker_module_path = Path(__file__)
-        openfl_root_path = docker_module_path.parent.parent.parent.absolute()
-        docker_file_path = openfl_root_path / 'openfl-docker' / 'Dockerfile.collaborator'
-        run_collaborator_path = openfl_root_path / 'openfl' / 'component' / 'envoy' / 'run_collaborator.py'
+        docker_file_path = OPENFL_ROOT_PATH / 'openfl-docker' / 'Dockerfile.collaborator'
+        run_collaborator_path = (OPENFL_ROOT_PATH / 'openfl' / 'component' / 'envoy'
+                                 / 'run_collaborator.py')
 
         with open('shard_descriptor_config.yaml', 'w') as f:
             yaml.dump(shard_descriptor_config, f)

@@ -20,7 +20,7 @@ PLAN_PATH_DEFAULT = 'plan/plan.yaml'
 
 
 def _parse_args():
-    parser = argparse.ArgumentParser(description='Process some integers.')
+    parser = argparse.ArgumentParser(description='Run collaborator.')
     parser.add_argument('--name', type=str)
     parser.add_argument('--plan_path', type=str, nargs='?', default=PLAN_PATH_DEFAULT)
     parser.add_argument('--root_certificate', type=str, nargs='?', default=None)

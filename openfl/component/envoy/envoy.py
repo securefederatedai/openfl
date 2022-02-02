@@ -141,7 +141,8 @@ class Envoy:
         cuda_devices = ','.join(map(str, self.cuda_devices))
 
         cmd = (
-            f'python run.py --name {self.name} '
+            f'python run.py '
+            f'--name {self.name} '
             f'--plan_path plan/plan.yaml '
             f'--root_certificate {self.root_certificate} '
             f'--private_key {self.private_key} '
@@ -153,7 +154,7 @@ class Envoy:
             name=experiment_name,
             image_tag=image_tag,
             cmd=cmd,
-            volumes=self.shard_descriptor_config['volumes'],
+            volumes=self.shard_descriptor_config.get('volumes'),
             gpu_allowed=True,
         )
         await docker_client.start_and_monitor_container(container=container)

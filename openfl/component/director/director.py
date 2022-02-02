@@ -5,6 +5,8 @@
 
 import asyncio
 import logging
+
+import pickle
 import time
 from collections import defaultdict
 from pathlib import Path
@@ -74,13 +76,17 @@ class Director:
             experiment_archive_path: Path,
     ) -> bool:
         """Set new experiment."""
+        tensor_dict_path = f'{experiment_name}.pickle'
+        with open(tensor_dict_path, 'wb') as f:
+            pickle.dump(tensor_dict, f)
+
         experiment = Experiment(
             name=experiment_name,
             archive_path=experiment_archive_path,
             collaborators=list(collaborator_names),
             users=[sender_name],
             sender=sender_name,
-            init_tensor_dict=tensor_dict,
+            init_tensor_dict_path=tensor_dict_path,
         )
         self.experiments_registry.add(experiment)
         return True
@@ -201,8 +207,8 @@ class Director:
         logger.info(f'Shard registry: {self._shard_registry}')
         for envoy_info in self._shard_registry.values():
             envoy_info['is_online'] = (
-                time.time() < envoy_info.get('last_updated', 0)
-                + envoy_info.get('valid_duration', 0)
+                    time.time() < envoy_info.get('last_updated', 0)
+                    + envoy_info.get('valid_duration', 0)
             )
             envoy_name = envoy_info['shard_info']['node_info']['name']
             envoy_info['experiment_name'] = self.col_exp[envoy_name]
