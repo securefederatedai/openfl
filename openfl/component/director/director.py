@@ -87,9 +87,11 @@ class Director:
         self.experiments_registry.add(experiment)
         return True
 
-    def get_aggregator_client(self, experiment_name):
+    async def get_aggregator_client(self, experiment_name):
         """Return an aggregator client for the experiment."""
         exp = self.experiments_registry[experiment_name]
+        while exp.status != Status.IN_PROGRESS:
+            await asyncio.sleep(1)
         agg_port = exp.plan.agg_port
         agg_addr = exp.plan.agg_addr
         logger.info(f'Aggregator uri: {agg_addr}:{agg_port}')
@@ -115,7 +117,7 @@ class Director:
         if exp.status != Status.IN_PROGRESS:
             return None
 
-        aggregator_client = self.get_aggregator_client(experiment_name)
+        aggregator_client = await self.get_aggregator_client(experiment_name)
         trained_model = await aggregator_client.get_trained_model(
             experiment_name,
             model_type
@@ -170,7 +172,7 @@ class Director:
                 f' does not have access to this experiment'
             )
 
-        aggregator_client = self.get_aggregator_client(experiment_name)
+        aggregator_client = await self.get_aggregator_client(experiment_name)
         async for metric_dict in aggregator_client.get_metric_stream():
             yield metric_dict
 
@@ -233,7 +235,7 @@ class Director:
                 'collaborators_amount': len(exp.collaborators),
             }
             if exp.status == Status.IN_PROGRESS:
-                aggregator_client = self.get_aggregator_client(exp.name)
+                aggregator_client = await self.get_aggregator_client(exp.name)
                 experiment_pb2 = await aggregator_client.get_experiment_description()
                 exp_data['progress'] = experiment_pb2.progress
                 exp_data['tasks_amount'] = len(experiment_pb2.tasks)
@@ -252,7 +254,7 @@ class Director:
                 name=exp.name,
                 status=exp.status,
             )
-        aggregator_client = self.get_aggregator_client(experiment_name)
+        aggregator_client = await self.get_aggregator_client(experiment_name)
         experiment_pb2 = await aggregator_client.get_experiment_description()
         experiment_pb2.name = experiment_name
         experiment_pb2.status = exp.status
