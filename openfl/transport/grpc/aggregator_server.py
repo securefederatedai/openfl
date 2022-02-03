@@ -19,6 +19,7 @@ from openfl.protocols import base_pb2
 from openfl.protocols import utils
 from openfl.utilities import check_equal
 from openfl.utilities import check_is_in
+from openfl.utilities.utils import getfqdn_env
 
 logger = logging.getLogger(__name__)
 
@@ -209,8 +210,17 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
             header=self.get_header(collaborator_name)
         )
 
+    def validate_director_request(self, context):
+        """Validate if the request has got from the Director."""
+        if self.tls:
+            auth_subject = context.auth_context()['x509_common_name'][0].decode('utf-8')
+            if auth_subject != getfqdn_env():
+                raise Exception(f'Request has got from {auth_subject},'
+                                f'but the Director FQDN is {getfqdn_env()}.')
+
     def GetMetricStream(self, request, context):  # NOQA:N802
         """Get metric stream."""
+        self.validate_director_request(context)
         while True:
             try:
                 logger.debug('Try to get metric dict')
@@ -224,7 +234,8 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
 
     def GetTrainedModel(self, request, context):  # NOQA:N802
         """RPC for retrieving trained models."""
-        logger.info('Request GetTrainedModel has got!')
+        logger.info('Request GetTrainedModel has got.')
+        self.validate_director_request(context)
 
         if request.model_type == aggregator_pb2.GetTrainedModelRequest.BEST_MODEL:
             model_type = 'best'
@@ -253,6 +264,8 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
 
     def GetExperimentDescription(self, request, context):  # NOQA:N802
         """Get an experiment description."""
+        logger.info('GetExperimentDescription request has got.')
+        self.validate_director_request(context)
         experiment = self.aggregator.get_experiment_description()
         models_statuses = [
             base_pb2.DownloadStatus(

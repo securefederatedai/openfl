@@ -99,11 +99,11 @@ class Director:
         aggregator_client = AsyncAggregatorGRPCClient(
             agg_addr,
             agg_port,
-            tls=False,
-            disable_client_auth=True,
-            root_certificate=None,
-            certificate=None,
-            private_key=None
+            tls=self.tls,
+            disable_client_auth=not self.tls,
+            root_certificate=self.root_certificate,
+            certificate=self.certificate,
+            private_key=self.private_key
         )
         return aggregator_client
 
