@@ -55,7 +55,6 @@ class Experiment:
         self.users = set() if users is None else set(users)
         self.status = Status.PENDING
         self.aggregator = None
-        self.aggregator_server = None
 
     async def start(
             self, *,
@@ -78,7 +77,6 @@ class Experiment:
                     certificate=certificate,
                 )
                 self.aggregator = aggregator_grpc_server.aggregator
-                self.aggregator_server = aggregator_grpc_server
                 await self._run_aggregator_grpc_server(
                     aggregator_grpc_server=aggregator_grpc_server,
                 )

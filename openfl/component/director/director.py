@@ -170,9 +170,6 @@ class Director:
                 f' does not have access to this experiment'
             )
 
-        while not self.experiments_registry[experiment_name].aggregator:
-            await asyncio.sleep(1)
-
         aggregator_client = self.get_aggregator_client(experiment_name)
         async for metric_dict in aggregator_client.get_metric_stream():
             yield metric_dict
@@ -238,15 +235,8 @@ class Director:
             if exp.status == Status.IN_PROGRESS:
                 aggregator_client = self.get_aggregator_client(exp.name)
                 experiment_pb2 = await aggregator_client.get_experiment_description()
-                progress = experiment_pb2.progress
-                if progress is not None:
-                    exp_data['progress'] = progress
-            if exp.aggregator:
-                tasks_amount = len({
-                    task['function']
-                    for task in exp.aggregator.assigner.tasks.values()
-                })
-                exp_data['tasks_amount'] = tasks_amount
+                exp_data['progress'] = experiment_pb2.progress
+                exp_data['tasks_amount'] = len(experiment_pb2.tasks)
             result.append(exp_data)
 
         return result
@@ -258,7 +248,10 @@ class Director:
             logger.info(f'Experiment {experiment_name} for user {caller} does not exist.')
             return {}
         if exp.status != Status.IN_PROGRESS:
-            return base_pb2.ExperimentDescription(status=exp.status)
+            return base_pb2.ExperimentDescription(
+                name=exp.name,
+                status=exp.status,
+            )
         aggregator_client = self.get_aggregator_client(experiment_name)
         experiment_pb2 = await aggregator_client.get_experiment_description()
         experiment_pb2.name = experiment_name
