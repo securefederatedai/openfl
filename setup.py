@@ -64,7 +64,7 @@ setup(
         'tqdm',
         'scikit-learn',
         'docker',
-        'jupyter',
+        'jupyterlab',
         'ipykernel',
         'flatten_json',
         'cryptography>=3.4.6',
