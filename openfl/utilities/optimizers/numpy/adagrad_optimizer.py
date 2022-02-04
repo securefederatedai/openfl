@@ -47,8 +47,10 @@ class Adagrad(Optimizer):
         """
         for grad_name in gradients:
             grad = gradients[grad_name]
+
             if grad_name not in self.grads_squared:
                 raise KeyError(f"Key {grad_name} doesn't exist in optimized parameters")
+
             self.grads_squared[grad_name] = self.grads_squared[grad_name] + grad**2
 
             self.params[grad_name] = (self.params[grad_name] - self.learning_rate * grad

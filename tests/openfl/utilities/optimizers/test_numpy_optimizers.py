@@ -7,6 +7,8 @@ import numpy as np
 import pytest
 
 from openfl.utilities.optimizers.numpy.adagrad_optimizer import Adagrad
+from openfl.utilities.optimizers.numpy.adam_optimizer import Adam
+from openfl.utilities.optimizers.numpy.yogi_optimizer import Yogi
 
 EPS = 5e-5
 
@@ -38,11 +40,19 @@ rosenbrock_func.true_answer = {'x': np.array([1.0]), 'y': np.array([1.0])}
          Adagrad(params={'x': np.array([0]), 'y': np.array([0])},
                  learning_rate=0.08),
          5000),
+        (rosenbrock_func,
+         Adam(params={'x': np.array([0]), 'y': np.array([0])},
+              learning_rate=0.01),
+         1000),
+        (rosenbrock_func,
+         Yogi(params={'x': np.array([0]), 'y': np.array([0])},
+              learning_rate=0.01),
+         1000)
     ])
 def test_opt(func, optim, num_iter):
     """Test optimizer by performing gradient descent iterations."""
     for i in range(num_iter):
-        if i % 250 == 0:
+        if i % 125 == 0:
             print(f'Iter: {i}', '\t',
                   f'current point: {optim.params}',
                   '\t', f'func value={func(optim.params)}')
