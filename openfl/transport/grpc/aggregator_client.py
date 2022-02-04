@@ -356,6 +356,7 @@ class AggregatorGRPCClient(BaseAggregatorGRPCClient):
 
     @property
     def interceptors(self):
+        """Get interceptors."""
         interceptors = (
             RetryOnRpcErrorClientInterceptor(
                 sleeping_policy=ConstantBackoff(
