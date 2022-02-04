@@ -19,6 +19,9 @@ from openfl.utilities import check_equal
 
 logger = logging.getLogger()
 
+CLIENT_RECONNECT_INTERVAL = 1  # in seconds
+CLIENT_CONNECT_TIMEOUT = 30  # in seconds
+
 
 class ConstantBackoff:
     """Constant Backoff policy."""
@@ -232,7 +235,8 @@ class BaseAggregatorGRPCClient:
         """
         return grpc.insecure_channel(uri, options=self.channel_options)
 
-    def get_credentials(self, root_certificate, disable_client_auth,
+    @staticmethod
+    def get_credentials(root_certificate, disable_client_auth,
                         certificate, private_key):
         """
         Prepare credentials for an secure gRPC channel (i.e. TLS).
@@ -350,17 +354,23 @@ class BaseAggregatorGRPCClient:
 class AggregatorGRPCClient(BaseAggregatorGRPCClient):
     """Client to the aggregator over gRPC-TLS."""
 
-    def _create_stub(self, **kwargs):
-        """Create a server stub."""
-        # Adding an interceptor for RPC Errors
-        self.interceptors = (
+    @property
+    def interceptors(self):
+        interceptors = (
             RetryOnRpcErrorClientInterceptor(
                 sleeping_policy=ConstantBackoff(
-                    reconnect_interval=int(kwargs.get('client_reconnect_interval', 1)),
+                    reconnect_interval=int(self.kwargs.get(
+                        'client_reconnect_interval', CLIENT_RECONNECT_INTERVAL
+                    )),
                     uri=self.uri),
                 status_for_retry=(grpc.StatusCode.UNAVAILABLE,),
             ),
         )
+        return interceptors
+
+    def _create_stub(self, **kwargs):
+        """Create a server stub."""
+        # Adding an interceptor for RPC Errors
         self.stub = aggregator_pb2_grpc.AggregatorStub(
             grpc.intercept_channel(self.channel, *self.interceptors)
         )
@@ -424,13 +434,21 @@ class AsyncAggregatorGRPCClient(BaseAggregatorGRPCClient):
         """Get interceptors."""
         interceptors = (
             AsyncRetryOnRpcErrorUnaryUnaryClientInterceptor(
-                reconnect_interval=int(self.kwargs.get('client_reconnect_interval', 1)),
-                connect_timeout=int(self.kwargs.get('client_connect_timeout', 30)),
+                reconnect_interval=int(self.kwargs.get(
+                    'client_reconnect_interval', CLIENT_RECONNECT_INTERVAL
+                )),
+                connect_timeout=int(self.kwargs.get(
+                    'client_connect_timeout', CLIENT_CONNECT_TIMEOUT
+                )),
                 status_for_retry=(grpc.StatusCode.UNAVAILABLE,),
             ),
             AsyncRetryOnRpcErrorUnaryStreamClientInterceptor(
-                reconnect_interval=int(self.kwargs.get('client_reconnect_interval', 1)),
-                connect_timeout=int(self.kwargs.get('client_connect_timeout', 30)),
+                reconnect_interval=int(self.kwargs.get(
+                    'client_reconnect_interval', CLIENT_RECONNECT_INTERVAL
+                )),
+                connect_timeout=int(self.kwargs.get(
+                    'client_connect_timeout', CLIENT_CONNECT_TIMEOUT
+                )),
                 status_for_retry=(grpc.StatusCode.UNAVAILABLE,),
             ),
         )
