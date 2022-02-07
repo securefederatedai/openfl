@@ -26,8 +26,8 @@ RUN apt-get update && \
         grep -v -f base_packages.txt all_packages.txt | while read -r line; do \
             package=$line; \
             name=("${package//:/ }"); \
-            echo $name >> all_dependencies.txt; \
-            echo "$name" >> licenses.txt;\
+            echo "${name[0]}" >> all_dependencies.txt; \
+            echo "${name[0]}" >> licenses.txt;\
             cat /usr/share/doc/"${name[0]}"/copyright >> licenses.txt; \
             grep -lE 'GPL|MPL|EPL' /usr/share/doc/"${name[0]}"/copyright; \
             exit_status=$?; \
