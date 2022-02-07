@@ -8,7 +8,10 @@ from .base_optimizer import Optimizer
 
 
 class Adagrad(Optimizer):
-    """Adagrad optimizer implementation."""
+    """Adagrad optimizer implementation.
+
+    Original paper: http://jmlr.org/papers/v12/duchi11a.html
+    """
 
     def __init__(self,
                  params: tp.Dict[str, np.ndarray],
@@ -16,7 +19,15 @@ class Adagrad(Optimizer):
                  initial_accumulator_value: float = 0.1,
                  epsilon: float = 1e-10,
                  ) -> None:
-        """Initialize."""
+        """Initialize.
+
+        Args:
+            params: Parameters to be stored for optimization.
+            learning_rate: Tuning parameter that determines
+                the step size at each iteration.
+            initial_accumulator_value: Initial value for squared gradients.
+            epsilon: Value for computational stability.
+        """
         super().__init__()
 
         if learning_rate < 0:
@@ -43,7 +54,9 @@ class Adagrad(Optimizer):
         Perform a single step for parameter update.
 
         Implement Adagrad optimizer weights update rule.
-        TODO: math latex symbols
+
+        Args:
+            gradients: Partial derivatives with respect to optimized parameters.
         """
         for grad_name in gradients:
             grad = gradients[grad_name]
@@ -53,5 +66,6 @@ class Adagrad(Optimizer):
 
             self.grads_squared[grad_name] = self.grads_squared[grad_name] + grad**2
 
+            # Make an update for a group of parameters
             self.params[grad_name] = (self.params[grad_name] - self.learning_rate * grad
                                       / (np.sqrt(self.grads_squared[grad_name]) + self.epsilon))

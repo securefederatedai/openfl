@@ -10,5 +10,9 @@ class Optimizer(abc.ABC):
 
     @abc.abstractmethod
     def step(self, gradients: Dict[str, ndarray]) -> None:
-        """Perform a single step for parameter update."""
+        """Perform a single step for parameter update.
+
+        Args:
+            gradients: Partial derivatives with respect to optimized parameters.
+        """
         pass

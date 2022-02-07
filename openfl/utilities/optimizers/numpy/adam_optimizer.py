@@ -8,7 +8,10 @@ from .base_optimizer import Optimizer
 
 
 class Adam(Optimizer):
-    """Adagrad optimizer implementation."""
+    """Adagrad optimizer implementation.
+
+    Original paper: https://openreview.net/forum?id=ryQu7f-RZ
+    """
 
     def __init__(self,
                  params: tp.Dict[str, np.ndarray],
@@ -17,7 +20,18 @@ class Adam(Optimizer):
                  initial_accumulator_value: float = 0.0,
                  epsilon: float = 1e-8,
                  ) -> None:
-        """Initialize."""
+        """Initialize.
+
+        Args:
+            params: Parameters to be stored for optimization.
+            learning_rate: Tuning parameter that determines
+                the step size at each iteration.
+            betas: Coefficients used for computing running
+                averages of gradient and its square.
+            initial_accumulator_value: Initial value for gradients
+                and squared gradients.
+            epsilon: Value for computational stability.
+        """
         super().__init__()
 
         if learning_rate < 0:
@@ -50,11 +64,26 @@ class Adam(Optimizer):
             self.grads_second_moment[param_name] = np.full_like(self.params[param_name],
                                                                 self.initial_accumulator_value)
 
+    def _update_first_moment(self, grad_name: str, grad: np.ndarray) -> None:
+        """Update gradients first moment."""
+        self.grads_first_moment[grad_name] = (self.beta_1
+                                              * self.grads_first_moment[grad_name]
+                                              + (1.0 - self.beta_1) * grad)
+
+    def _update_second_moment(self, grad_name: str, grad: np.ndarray) -> None:
+        """Update gradients second moment."""
+        self.grads_second_moment[grad_name] = (self.beta_2
+                                               * self.grads_second_moment[grad_name]
+                                               + (1.0 - self.beta_2) * grad**2)
+
     def step(self, gradients: tp.Dict[str, np.ndarray]) -> None:
         """
         Perform a single step for parameter update.
 
         Implement Adam optimizer weights update rule.
+
+        Args:
+            gradients: Partial derivatives with respect to optimized parameters.
         """
         for grad_name in gradients:
             grad = gradients[grad_name]
@@ -62,18 +91,15 @@ class Adam(Optimizer):
             if grad_name not in self.grads_first_moment:
                 raise KeyError(f"Key {grad_name} doesn't exist in optimized parameters")
 
-            self.grads_first_moment[grad_name] = (self.beta_1
-                                                  * self.grads_first_moment[grad_name]
-                                                  + (1.0 - self.beta_1) * grad)
-            self.grads_second_moment[grad_name] = (self.beta_2
-                                                   * self.grads_second_moment[grad_name]
-                                                   + (1.0 - self.beta_2) * grad**2)
+            self._update_first_moment(grad_name, grad)
+            self._update_second_moment(grad_name, grad)
 
             grads_first_moment_normalized = (self.grads_first_moment[grad_name]
                                              / (1. - self.beta_1**(self.current_step + 1)))
             grads_second_moment_normalized = (self.grads_second_moment[grad_name]
                                               / (1. - self.beta_2**(self.current_step + 1)))
 
+            # Make an update for a group of parameters
             self.params[grad_name] = (self.params[grad_name]
                                       - self.learning_rate
                                       * grads_first_moment_normalized
