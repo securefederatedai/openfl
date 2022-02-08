@@ -15,7 +15,7 @@ PREFIXES = ('-u test',)
 
 @pytest.fixture
 def requirements_file():
-    "Prepare test requirements file."
+    """Prepare test requirements file."""
     path = Path('./test_requirements.txt').absolute()
     with open(path, 'w') as f:
         f.writelines(LINES)
@@ -32,6 +32,7 @@ def requirements_file():
 ])
 def test_dump(requirements_file, monkeypatch,
               keep_original_prefixes, prefixes, expected_lines):
+    """Test dump_requirements_file function."""
     def mock_pip_freeze():
         return [line.replace('\n', '') for line in LINES if line[0] != '-']
     monkeypatch.setattr(freeze, 'freeze', mock_pip_freeze)

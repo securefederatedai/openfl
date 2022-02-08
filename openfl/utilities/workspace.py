@@ -8,11 +8,11 @@ import os
 import shutil
 import sys
 import time
+from subprocess import check_call
 from pathlib import Path
 from typing import Optional
 from typing import Tuple
 from typing import Union
-from subprocess import check_call
 from sys import executable
 
 logger = logging.getLogger(__name__)
