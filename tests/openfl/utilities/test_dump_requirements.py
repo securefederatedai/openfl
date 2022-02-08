@@ -11,6 +11,7 @@ from openfl.utilities.workspace import dump_requirements_file
 
 LINES = ['-o option\n', 'package==0.0.1\n']
 PREFIXES = ('-u test',)
+PREFIXES_OVERLAP = ('-u test', '-o option')
 
 
 @pytest.fixture
@@ -29,6 +30,8 @@ def requirements_file():
     (False, PREFIXES, [p + '\n' for p in PREFIXES] + [li for li in LINES if li[0] != '-']),
     (True, PREFIXES, [li for li in LINES if li[0] == '-'
                       ] + [p + '\n' for p in PREFIXES] + [li for li in LINES if li[0] != '-']),
+    (True, PREFIXES_OVERLAP, [p + '\n' for p in PREFIXES_OVERLAP
+                              ] + [li for li in LINES if li[0] != '-']),
 ])
 def test_dump(requirements_file, monkeypatch,
               keep_original_prefixes, prefixes, expected_lines):
@@ -43,5 +46,24 @@ def test_dump(requirements_file, monkeypatch,
 
     with open(requirements_file) as f:
         read_lines = f.readlines()
-    for line, expected in zip(read_lines, expected_lines):
-        assert line == expected
+
+    read_options = []
+    for li in read_lines:
+        if li[0] == '-':
+            read_options.append(li)
+        else:
+            break
+    read_packages = read_lines[len(read_options):]
+
+    expected_options = []
+    for li in expected_lines:
+        if li[0] == '-':
+            expected_options.append(li)
+        else:
+            break
+    expected_packages = expected_lines[len(expected_options):]
+
+    assert len(read_options) == len(expected_options)
+    assert len(read_packages) == len(expected_packages)
+    assert set(read_options) == set(expected_options)
+    assert set(read_packages) == set(expected_packages)
