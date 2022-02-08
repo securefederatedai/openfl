@@ -158,10 +158,35 @@ class FLExperiment:
         self.arch_path = self._pack_the_workspace()
 
     def start(self, *, model_provider, task_keeper, data_loader,
-              rounds_to_train, delta_updates=False, opt_treatment='RESET',
-              device_assignment_policy='CPU_ONLY',
-              pip_install_options: Tuple[str] = ()):
-        """Prepare experiment and run."""
+              rounds_to_train: int, delta_updates: bool = False,
+              opt_treatment: str = 'RESET',
+              device_assignment_policy: str = 'CPU_ONLY',
+              pip_install_options: Tuple[str] = ()) -> None:
+        """
+        Prepare workspace distribution and send to Director.
+
+        A successful call of this function will result in sending the experiment workspace
+        to the Director service and experiment start.
+
+        Parameters:
+        model_provider - Model Interface instance.
+        task_keeper - Task Interface instance.
+        data_loader - Data Interface instance.
+        rounds_to_train - required number of training rounds for the experiment.
+        delta_updates - [bool] Tells if collaborators should send delta updates
+            for the locally tuned models. If set to False, whole checkpoints will be sent.
+        opt_treatment - Optimizer state treatment policy.
+            Valid options: 'RESET' - reinitialize optimizer for every round,
+            'CONTINUE_LOCAL' - keep local optimizer state,
+            'CONTINUE_GLOBAL' - aggregate optimizer state.
+        device_assignment_policy - device assignment policy.
+            Valid options: 'CPU_ONLY' - device parameter passed to tasks
+            will always be 'cpu',
+            'CUDA_PREFERRED' - enable passing CUDA device identifiers to tasks
+            by collaborators, works with cuda-device-monitor plugin equipped Envoys.
+        pip_install_options - list of options for the remote `pip install` calls,
+            example: ('-f some.website', '--no-index')
+        """
         self._prepare_plan(model_provider, task_keeper, data_loader,
                            rounds_to_train,
                            delta_updates=delta_updates, opt_treatment=opt_treatment,

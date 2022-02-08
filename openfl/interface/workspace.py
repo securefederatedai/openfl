@@ -2,7 +2,6 @@
 # SPDX-License-Identifier: Apache-2.0
 """Workspace module."""
 
-from email.policy import default
 import sys
 from pathlib import Path
 from typing import Tuple

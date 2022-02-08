@@ -8,10 +8,10 @@ import os
 import shutil
 import sys
 import time
-from typing import Tuple
-from typing import Optional
-from typing import Union
 from pathlib import Path
+from typing import Optional
+from typing import Tuple
+from typing import Union
 from subprocess import check_call
 from sys import executable
 
@@ -83,7 +83,7 @@ class ExperimentWorkspace:
 def dump_requirements_file(
         path: Union[str, Path] = './requirements.txt',
         keep_original_prefixes: bool = True,
-        prefixes: Optional[Tuple[str]] = None,
+        prefixes: Optional[Union[Tuple[str], str]] = None,
 ) -> None:
     """Prepare and save requirements.txt."""
     from pip._internal.operations import freeze
@@ -92,13 +92,15 @@ def dump_requirements_file(
     # Prepare user provided prefixes for merge with original ones
     if prefixes is None:
         prefixes = set()
+    elif type(prefixes) is str:
+        prefixes = set(prefixes,)
     else:
         prefixes = set(prefixes)
 
     # Merge prefixes:
     # We expect that all the prefixes in a requirement file
     # are placed at the top
-    if keep_original_prefixes:
+    if keep_original_prefixes and path.is_file():
         with open(path) as f:
             while True:
                 line = f.readline()
