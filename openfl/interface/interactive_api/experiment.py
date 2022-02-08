@@ -8,6 +8,7 @@ from collections import defaultdict
 from copy import deepcopy
 from logging import getLogger
 from pathlib import Path
+from typing import Tuple
 
 from tensorboardX import SummaryWriter
 
@@ -17,7 +18,7 @@ from openfl.federated import Plan
 from openfl.interface.cli import setup_logging
 from openfl.interface.cli_helper import WORKSPACE
 from openfl.utilities import split_tensor_dict_for_holdouts
-from openfl.utilities.utils import is_package_versioned
+from openfl.utilities.workspace import dump_requirements_file
 
 
 class ModelStatus:
@@ -140,7 +141,8 @@ class FLExperiment:
 
         self.logger.info(log_message)
 
-    def prepare_workspace_distribution(self, model_provider, task_keeper, data_loader):
+    def prepare_workspace_distribution(self, model_provider, task_keeper, data_loader,
+                                       pip_install_options: Tuple[str] = ()):
         """Prepare an archive from a user workspace."""
         # Save serialized python objects to disc
         self._serialize_interface_objects(model_provider, task_keeper, data_loader)
@@ -149,14 +151,16 @@ class FLExperiment:
 
         # PACK the WORKSPACE!
         # Prepare requirements file to restore python env
-        self._export_python_env()
+        dump_requirements_file(keep_original_prefixes=True,
+                               prefixes=pip_install_options)
 
         # Compress te workspace to restore it on collaborator
         self.arch_path = self._pack_the_workspace()
 
     def start(self, *, model_provider, task_keeper, data_loader,
               rounds_to_train, delta_updates=False, opt_treatment='RESET',
-              device_assignment_policy='CPU_ONLY'):
+              device_assignment_policy='CPU_ONLY',
+              pip_install_options: Tuple[str] = ()):
         """Prepare experiment and run."""
         self._prepare_plan(model_provider, task_keeper, data_loader,
                            rounds_to_train,
@@ -167,7 +171,8 @@ class FLExperiment:
                            dataloader_interface_file='loader_obj.pkl')
 
         self.prepare_workspace_distribution(
-            model_provider, task_keeper, data_loader
+            model_provider, task_keeper, data_loader,
+            pip_install_options
         )
 
         self.logger.info('Starting experiment!')
@@ -194,17 +199,6 @@ class FLExperiment:
         self.task_runner_stub = self.plan.get_core_task_runner(model_provider=model_provider)
         self.current_model_status = ModelStatus.RESTORED
         self.experiment_accepted = True
-
-    @staticmethod
-    def _export_python_env():
-        """Prepare requirements.txt."""
-        from pip._internal.operations import freeze
-        requirements_generator = freeze.freeze()
-
-        with open('./requirements.txt', 'w') as f:
-            for pack in requirements_generator:
-                if is_package_versioned(pack):
-                    f.write(pack + '\n')
 
     @staticmethod
     def _pack_the_workspace():

@@ -8,6 +8,9 @@ import os
 import shutil
 import sys
 import time
+from typing import Tuple
+from typing import Optional
+from typing import Union
 from pathlib import Path
 from subprocess import check_call
 from sys import executable
@@ -75,3 +78,50 @@ class ExperimentWorkspace:
         if self.experiment_work_dir in sys.path:
             sys.path.remove(self.experiment_work_dir)
         os.remove(self.data_file_path)
+
+
+def dump_requirements_file(
+        path: Union[str, Path] = './requirements.txt',
+        keep_original_prefixes: bool = True,
+        prefixes: Optional[Tuple[str]] = None,
+) -> None:
+    """Prepare and save requirements.txt."""
+    from pip._internal.operations import freeze
+    path = Path(path).absolute()
+
+    # Prepare user provided prefixes for merge with original ones
+    if prefixes is None:
+        prefixes = set()
+    else:
+        prefixes = set(prefixes)
+
+    # Merge prefixes:
+    # We expect that all the prefixes in a requirement file
+    # are placed at the top
+    if keep_original_prefixes:
+        with open(path) as f:
+            while True:
+                line = f.readline()
+                if line == '':
+                    continue
+                if line[0] == '-':
+                    prefixes |= {line.replace('\n', '')}
+                else:
+                    break
+
+    requirements_generator = freeze.freeze()
+    with open(path, 'w') as f:
+        for prefix in prefixes:
+            f.write(prefix + '\n')
+
+        for package in requirements_generator:
+            if _is_package_versioned(package):
+                f.write(package + '\n')
+
+
+def _is_package_versioned(package: str) -> bool:
+    """Check if the package has a version."""
+    return ('==' in package
+            and package not in ['pkg-resources==0.0.0', 'pkg_resources==0.0.0']
+            and '-e ' not in package
+            )

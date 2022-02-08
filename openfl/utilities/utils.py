@@ -200,14 +200,6 @@ def validate_file_hash(file_path, expected_hash, chunk_size=8192):
         raise SystemError('ZIP File hash doesn\'t match expected file hash.')
 
 
-def is_package_versioned(package: str) -> bool:
-    """Check if the package has a version."""
-    return ('==' in package
-            and package not in ['pkg-resources==0.0.0', 'pkg_resources==0.0.0']
-            and '-e ' not in package
-            )
-
-
 def tqdm_report_hook():
     """Visualize downloading."""
     def report_hook(pbar, count, block_size, total_size):
