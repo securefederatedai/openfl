@@ -236,7 +236,7 @@ class Plan:
 
         return self.hash_.hexdigest()
 
-    def get_agg_port(self):
+    def generate_agg_port(self):
         """Generate an aggregator port by plan hash."""
         return int(
             self.hash[:8], 16
