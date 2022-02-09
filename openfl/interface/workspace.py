@@ -113,8 +113,8 @@ def create(prefix, template):
 @option('-o', '--pip-install-options', required=False,
         type=str, multiple=True, default=tuple,
         help='Options for remote pip install. '
-        'You may pass several options in quotation marks alongside with arguments, '
-        'e.g. -o "--find-links source.site"')
+          'You may pass several options in quotation marks alongside with arguments, '
+          'e.g. -o "--find-links source.site"')
 def export_(pip_install_options: Tuple[str]):
     """Export federated learning workspace."""
     from os import getcwd
