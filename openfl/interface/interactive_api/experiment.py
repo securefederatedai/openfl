@@ -184,7 +184,7 @@ class FLExperiment:
             will always be 'cpu',
             'CUDA_PREFERRED' - enable passing CUDA device identifiers to tasks
             by collaborators, works with cuda-device-monitor plugin equipped Envoys.
-        pip_install_options - list of options for the remote `pip install` calls,
+        pip_install_options - tuple of options for the remote `pip install` calls,
             example: ('-f some.website', '--no-index')
         """
         self._prepare_plan(model_provider, task_keeper, data_loader,
