@@ -236,7 +236,7 @@ class Plan:
 
         return self.hash_.hexdigest()
 
-    def get_agg_port(self):
+    def generate_agg_port(self):
         """Generate an aggregator port by plan hash."""
         return int(
             self.hash[:8], 16
@@ -255,7 +255,7 @@ class Plan:
         self.agg_addr = self.config['network'][SETTINGS]['agg_addr']
 
         if self.config['network'][SETTINGS]['agg_port'] == AUTO:
-            self.config['network'][SETTINGS]['agg_port'] = self.get_agg_port()
+            self.config['network'][SETTINGS]['agg_port'] = self.generate_agg_port()
         self.agg_port = self.config['network'][SETTINGS]['agg_port']
 
     def get_assigner(self):
