@@ -535,7 +535,7 @@ class Aggregator:
 
     def get_experiment_description(self) -> dict:
         """Get a experiment information by name for specific user."""
-        progress = self.experiment_progress
+        progress = self.round_number / self.rounds_to_train
         model_statuses = self.model_download_statuses
         tasks = [{
             'name': task['function'],
@@ -564,11 +564,6 @@ class Aggregator:
             'progress': progress
         }
         return result
-
-    @property
-    def experiment_progress(self):
-        """Return experiment progress."""
-        return self.round_number / self.rounds_to_train
 
     @property
     def model_download_statuses(self) -> List[dict]:
