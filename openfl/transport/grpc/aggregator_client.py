@@ -135,16 +135,19 @@ class AsyncRetryOnRpcErrorUnaryStreamClientInterceptor(
     async def _intercept_call(self, continuation, client_call_details, request_or_iterator):
         """Intercept the async call to the gRPC server."""
         started_time = time.time()
+        is_connected = False
         while True:
             try:
                 async_iter = await continuation(client_call_details, request_or_iterator)
                 async for response in async_iter:
                     yield response
+                    is_connected = True
             except grpc.aio.AioRpcError as error:
                 if (
                         error.code() == grpc.StatusCode.UNAVAILABLE
                         and error.details() == 'Socket closed'
-                ):
+                ) or is_connected:
+                    logger.info(f'Rpc error: {error.code()}, details: {error.details()}.')
                     return
                 await self.handle_error_for_retry(error, started_time)
 
