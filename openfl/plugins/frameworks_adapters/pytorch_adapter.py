@@ -70,14 +70,13 @@ def _set_optimizer_state(optimizer, device, derived_opt_state_dict):
     temp_state_dict = expand_derived_opt_state_dict(
         derived_opt_state_dict, device)
 
-    # FIXME: Figure out whether or not this breaks learning rate
-    #  scheduling and the like.
-    # Setting default values.
-    # All optimizer.defaults are considered as not changing over course of
-    # training.
-    for group in temp_state_dict['param_groups']:
-        for k, v in optimizer.defaults.items():
-            group[k] = v
+    # Setting other items from the param_groups
+    # getting them from the local optimizer
+    # (expand_derived_opt_state_dict sets only 'params')
+    for i, group in enumerate(optimizer.param_groups):
+        for k, v in group.items():
+            if k not in temp_state_dict['param_groups'][i]:
+                temp_state_dict['param_groups'][i][k] = v
 
     optimizer.load_state_dict(temp_state_dict)
 

@@ -10,7 +10,7 @@ import "google/protobuf/duration.proto";
 import "openfl/protocols/base.proto";
 
 service Director {
-  // Envoy RPCs
+  // 1. Envoy RPCs
   rpc UpdateShardInfo(UpdateShardInfoRequest) returns (UpdateShardInfoResponse) {}
   // Shard owner could also provide some public data for tests
   rpc WaitExperiment(stream WaitExperimentRequest) returns (stream WaitExperimentResponse) {}
@@ -18,12 +18,13 @@ service Director {
   rpc UpdateEnvoyStatus(UpdateEnvoyStatusRequest) returns (UpdateEnvoyStatusResponse) {}
   rpc SetExperimentFailed (SetExperimentFailedRequest) returns (SetExperimentFailedResponse) {}
 
-  // Experiments RPCs
+  // 2. Frontend RPCs
+  // 2.1 Extension RPCs
   rpc GetExperimentDescription(GetExperimentDescriptionRequest)
     returns (GetExperimentDescriptionResponse) {}
   rpc GetExperimentsList(GetExperimentsListRequest) returns (GetExperimentsListResponse){}
 
-  // API RPCs
+  // 2.2 API RPCs
   rpc SetNewExperiment(stream ExperimentInfo) returns (SetNewExperimentResponse) {}
   rpc GetDatasetInfo(GetDatasetInfoRequest) returns (GetDatasetInfoResponse) {}
   rpc GetTrainedModel(GetTrainedModelRequest) returns (TrainedModelResponse) {}
@@ -103,14 +104,7 @@ message SetExperimentFailedRequest {
 
 message SetExperimentFailedResponse {}
 
-// API Messages
-
-message ExperimentInfo {
-  string name = 1;
-  repeated string collaborator_names = 2;
-  ExperimentData experiment_data = 3;
-  ModelProto model_proto = 4;
-}
+// Frontend. Extension Messages.
 
 message GetExperimentsListRequest {}
 
@@ -132,6 +126,15 @@ message GetExperimentDescriptionRequest {
 
 message GetExperimentDescriptionResponse {
   ExperimentDescription experiment = 1;
+}
+
+// Frontend. API Messages
+
+message ExperimentInfo {
+  string name = 1;
+  repeated string collaborator_names = 2;
+  ExperimentData experiment_data = 3;
+  ModelProto model_proto = 4;
 }
 
 message SetNewExperimentResponse{

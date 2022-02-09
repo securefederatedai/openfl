@@ -118,6 +118,9 @@ class CoreTaskRunner:
                     # If train task we also pass optimizer
                     task_kwargs[task_contract['optimizer']] = self.optimizer
 
+                if task_contract['round_num'] is not None:
+                    task_kwargs[task_contract['round_num']] = round_num
+
                 for en_name, entity in zip(['model', 'data_loader', 'device'],
                                            [self.model, loader, device]):
                     task_kwargs[task_contract[en_name]] = entity
