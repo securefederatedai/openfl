@@ -102,8 +102,7 @@ def dump_requirements_file(
     # are placed at the top
     if keep_original_prefixes and path.is_file():
         with open(path) as f:
-            while True:
-                line = f.readline()
+            for line in f:
                 if line == '':
                     continue
                 if line[0] == '-':
