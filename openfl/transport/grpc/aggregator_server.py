@@ -4,6 +4,7 @@
 """AggregatorGRPCServer module."""
 
 import logging
+import queue
 from concurrent.futures import ThreadPoolExecutor
 from multiprocessing import cpu_count
 from time import sleep
@@ -11,11 +12,14 @@ from time import sleep
 from grpc import server
 from grpc import ssl_server_credentials
 
+from openfl.pipelines import NoCompressionPipeline
 from openfl.protocols import aggregator_pb2
 from openfl.protocols import aggregator_pb2_grpc
+from openfl.protocols import base_pb2
 from openfl.protocols import utils
 from openfl.utilities import check_equal
 from openfl.utilities import check_is_in
+from openfl.utilities.utils import getfqdn_env
 
 logger = logging.getLogger(__name__)
 
@@ -206,9 +210,114 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
             header=self.get_header(collaborator_name)
         )
 
+    def validate_director_request(self, context):
+        """Validate if the request has got from the Director."""
+        if self.tls:
+            auth_subject = context.auth_context()['x509_common_name'][0].decode('utf-8')
+            if auth_subject != getfqdn_env():
+                raise Exception(f'Request has got from {auth_subject},'
+                                f'but the Director FQDN is {getfqdn_env()}.')
+
+    def GetMetricStream(self, request, context):  # NOQA:N802
+        """Get metric stream."""
+        self.validate_director_request(context)
+        while True:
+            try:
+                logger.debug('Try to get metric dict')
+                metric_dict = self.aggregator.metric_queue.get(timeout=1)
+            except queue.Empty:
+                if self.aggregator.all_quit_jobs_sent() and self.aggregator.metric_queue.empty():
+                    return
+                continue
+            logger.debug('Metric dict has got. Yield it')
+            yield aggregator_pb2.GetMetricStreamResponse(**metric_dict)
+
+    def GetTrainedModel(self, request, context):  # NOQA:N802
+        """RPC for retrieving trained models."""
+        logger.info('Request GetTrainedModel has got.')
+        self.validate_director_request(context)
+
+        if request.model_type == aggregator_pb2.GetTrainedModelRequest.BEST_MODEL:
+            model_type = 'best'
+        elif request.model_type == aggregator_pb2.GetTrainedModelRequest.LAST_MODEL:
+            model_type = 'last'
+        else:
+            logger.error('Incorrect model type')
+            return aggregator_pb2.TrainedModelResponse()
+
+        trained_model_dict = None
+        if self.aggregator.last_tensor_dict is None:
+            logger.error('Aggregator have no aggregated model to return')
+        elif model_type == 'best':
+            trained_model_dict = self.aggregator.best_tensor_dict
+        elif model_type == 'last':
+            trained_model_dict = self.aggregator.last_tensor_dict
+
+        if trained_model_dict is None:
+            return aggregator_pb2.TrainedModelResponse()
+
+        model_proto = utils.construct_model_proto(
+            trained_model_dict, 0, NoCompressionPipeline()
+        )
+
+        return aggregator_pb2.TrainedModelResponse(model_proto=model_proto)
+
+    def GetExperimentDescription(self, request, context):  # NOQA:N802
+        """Get an experiment description."""
+        logger.info('GetExperimentDescription request has got.')
+        self.validate_director_request(context)
+        experiment = self.aggregator.get_experiment_description()
+        models_statuses = [
+            base_pb2.DownloadStatus(
+                name=ms['name'],
+                status=ms['status']
+            )
+            for ms in experiment['download_statuses']['models']
+        ]
+        logs_statuses = [
+            base_pb2.DownloadStatus(
+                name=ls['name'],
+                status=ls['status']
+            )
+            for ls in experiment['download_statuses']['logs']
+        ]
+        download_statuses = base_pb2.DownloadStatuses(
+            models=models_statuses,
+            logs=logs_statuses,
+        )
+        collaborators = [
+            base_pb2.CollaboratorDescription(
+                name=col['name'],
+                status=col['status'],
+                progress=col['progress'],
+                round=col['round'],
+                current_task=col['current_task'],
+                next_task=col['next_task']
+            )
+            for col in experiment['collaborators']
+        ]
+        tasks = [
+            base_pb2.TaskDescription(
+                name=task['name'],
+                description=task['description']
+            )
+            for task in experiment['tasks']
+        ]
+
+        return aggregator_pb2.GetExperimentDescriptionResponse(
+            experiment=base_pb2.ExperimentDescription(
+                progress=experiment['progress'],
+                current_round=experiment['current_round'],
+                total_rounds=experiment['total_rounds'],
+                download_statuses=download_statuses,
+                collaborators=collaborators,
+                tasks=tasks,
+            ),
+        )
+
     def get_server(self):
         """Return gRPC server."""
-        self.server = server(ThreadPoolExecutor(max_workers=cpu_count()),
+        self.server = server(ThreadPoolExecutor(max_workers=cpu_count() + 1),
                              options=self.channel_options)
 
         aggregator_pb2_grpc.add_AggregatorServicer_to_server(self, self.server)

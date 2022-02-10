@@ -51,6 +51,7 @@ class Experiment:
         if isinstance(plan_path, str):
             plan_path = Path(plan_path)
         self.plan_path = plan_path
+        self.plan = None
         self.users = set() if users is None else set(users)
         self.status = Status.PENDING
         self.aggregator = None
@@ -92,11 +93,11 @@ class Experiment:
             private_key: Union[Path, str] = None,
             certificate: Union[Path, str] = None,
     ) -> AggregatorGRPCServer:
-        plan = Plan.parse(plan_config_path=Path(self.plan_path))
-        plan.authorized_cols = list(self.collaborators)
+        self.plan = Plan.parse(plan_config_path=Path(self.plan_path))
+        self.plan.authorized_cols = list(self.collaborators)
 
         logger.info('🧿 Starting the Aggregator Service.')
-        aggregator_grpc_server = plan.interactive_api_get_server(
+        aggregator_grpc_server = self.plan.interactive_api_get_server(
             tensor_dict=self.init_tensor_dict,
             root_certificate=root_certificate,
             certificate=certificate,

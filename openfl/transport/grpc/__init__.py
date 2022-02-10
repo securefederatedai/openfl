@@ -4,11 +4,13 @@
 """openfl.transport.grpc package."""
 
 from .aggregator_client import AggregatorGRPCClient
+from .aggregator_client import AsyncAggregatorGRPCClient
 from .aggregator_server import AggregatorGRPCServer
 from .director_server import DirectorGRPCServer
 
 __all__ = [
     'AggregatorGRPCServer',
     'AggregatorGRPCClient',
+    'AsyncAggregatorGRPCClient',
     'DirectorGRPCServer',
 ]

@@ -8,4 +8,4 @@ shard_descriptor:
   params:
     data_folder: kvasir_data
     rank_worldsize: 1,90
-    enforce_image_hw: [300, 400]
+    enforce_image_hw: '300, 400'
