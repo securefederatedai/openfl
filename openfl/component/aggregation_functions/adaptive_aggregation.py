@@ -63,7 +63,7 @@ class AdaptiveAggregation(AggregationFunction):
         """
         base_model_nparray = None
         for record in db_iterator:
-            search_tag = 'aggregated' if fl_round != 0 else 'model' 
+            search_tag = 'aggregated' if fl_round != 0 else 'model'
             if (
                 record['round'] == fl_round
                 and record['tensor_name'] == tensor_name
@@ -81,9 +81,6 @@ class AdaptiveAggregation(AggregationFunction):
         else:
             assert base_model_nparray is not None, (
                 f'There is no current global model in TensorDB for tensor name: {tensor_name}')
-
-
-
 
         gradient = self._make_gradient(base_model_nparray, local_tensors)
         gradients = {tensor_name: gradient}

@@ -3,11 +3,11 @@
 
 """Aggregation functions package."""
 
+from .adaptive_aggregation import AdaptiveAggregation
 from .geometric_median import GeometricMedian
 from .interface import AggregationFunction
 from .median import Median
 from .weighted_average import WeightedAverage
-from .adaptive_aggregation import AdaptiveAggregation
 
 __all__ = ['Median',
            'WeightedAverage',
