@@ -1,0 +1,91 @@
+# Copyright (C) 2021-2022 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+"""Apartive aggregation module."""
+
+from typing import List
+
+import numpy as np
+
+from openfl.utilities.optimizers.numpy.base_optimizer import Optimizer
+from openfl.utilities.types import LocalTensor
+from .interface import AggregationFunction
+from .weighted_average import WeightedAverage
+
+
+class AdaptiveAggregation(AggregationFunction):
+    """Weighted average aggregation."""
+
+    def __init__(self, optimizer: Optimizer):
+        """Initialize."""
+        self.optimizer = optimizer
+        self.default_agg_func = WeightedAverage()
+
+    def _make_gradient(
+        self, base_model_nparray: np.ndarray,
+        local_tensors: List[LocalTensor]
+    ) -> np.ndarray:
+        """Make gradient."""
+        return sum([local_tensor.weight * (base_model_nparray - local_tensor.tensor)
+                    for local_tensor in local_tensors])
+
+    def call(self,
+             local_tensors,
+             db_iterator,
+             tensor_name,
+             fl_round,
+             tags):
+        """Aggregate tensors.
+
+        Args:
+            local_tensors(list[openfl.utilities.LocalTensor]): List of local tensors to aggregate.
+            db_iterator: iterator over history of all tensors. Columns:
+                - 'tensor_name': name of the tensor.
+                    Examples for `torch.nn.Module`s: 'conv1.weight', 'fc2.bias'.
+                - 'fl_round': 0-based number of round corresponding to this tensor.
+                - 'tags': tuple of tensor tags. Tags that can appear:
+                    - 'model' indicates that the tensor is a model parameter.
+                    - 'trained' indicates that tensor is a part of a training result.
+                        These tensors are passed to the aggregator node after local learning.
+                    - 'aggregated' indicates that tensor is a result of aggregation.
+                        These tensors are sent to collaborators for the next round.
+                    - 'delta' indicates that value is a difference between rounds
+                        for a specific tensor.
+                    also one of the tags is a collaborator name
+                    if it corresponds to a result of a local task.
+
+                - 'nparray': value of the tensor.
+            tensor_name: name of the tensor
+            fl_round: round number
+            tags: tuple of tags for this tensor
+        Returns:
+            np.ndarray: aggregated tensor
+        """
+        base_model_nparray = None
+        for record in db_iterator:
+            search_tag = 'aggregated' if fl_round != 0 else 'model' 
+            if (
+                record['round'] == fl_round
+                and record['tensor_name'] == tensor_name
+                and search_tag in record['tags']
+                and 'delta' not in record['tags']
+            ):
+                base_model_nparray = record['nparray']
+
+        if tensor_name not in self.optimizer.params:
+            return self.default_agg_func(local_tensors,
+                                         db_iterator,
+                                         tensor_name,
+                                         fl_round,
+                                         tags)
+        else:
+            assert base_model_nparray is not None, (
+                f'There is no current global model in TensorDB for tensor name: {tensor_name}')
+
+
+
+
+        gradient = self._make_gradient(base_model_nparray, local_tensors)
+        gradients = {tensor_name: gradient}
+        self.optimizer.step(gradients)
+        return self.optimizer.params[tensor_name]

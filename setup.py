@@ -30,6 +30,7 @@ setup(
         'openfl.component.director',
         'openfl.component.ca',
         'openfl.utilities',
+        'openfl.utilities.optimizers.numpy',
         'openfl.utilities.optimizers.torch',
         'openfl.utilities.optimizers.keras',
         'openfl.utilities.data_splitters',
