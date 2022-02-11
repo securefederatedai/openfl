@@ -99,8 +99,6 @@ class LogNormalNumPyDataSplitter(NumPyDataSplitter):
             for c in range(self.classes_per_col):
                 label = (col + c) % self.num_classes
                 label_idx = np.nonzero(data == label)[0]
-                print(f'{data}=')
-                print(f'{label_idx=}')
                 slice_start = col // self.num_classes * samples_per_col
                 slice_start += self.min_samples_per_class * c
                 slice_end = slice_start + self.min_samples_per_class
