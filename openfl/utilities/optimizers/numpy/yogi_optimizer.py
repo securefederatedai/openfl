@@ -1,6 +1,8 @@
 """Adam optimizer module."""
 
-import typing as tp
+from typing import Dict
+from typing import Optional
+from typing import Tuple
 
 import numpy as np
 
@@ -14,17 +16,21 @@ class Yogi(Adam):
     https://papers.nips.cc/paper/8186-adaptive-methods-for-nonconvex-optimization
     """
 
-    def __init__(self,
-                 params: tp.Dict[str, np.ndarray],
-                 learning_rate: float = 0.01,
-                 betas: tp.Tuple[float, float] = (0.9, 0.999),
-                 initial_accumulator_value: float = 0.0,
-                 epsilon: float = 1e-8,
-                 ) -> None:
+    def __init__(
+        self,
+        params: Optional[Dict[str, np.ndarray]] = None,
+        *,
+        model_interface=None,
+        learning_rate: float = 0.01,
+        betas: Tuple[float, float] = (0.9, 0.999),
+        initial_accumulator_value: float = 0.0,
+        epsilon: float = 1e-8,
+    ) -> None:
         """Initialize.
 
         Args:
             params: Parameters to be stored for optimization.
+            model_interface: Model interface instance to provide parameters.
             learning_rate: Tuning parameter that determines
                 the step size at each iteration.
             betas: Coefficients used for computing running
@@ -34,10 +40,11 @@ class Yogi(Adam):
             epsilon: Value for computational stability.
         """
         super().__init__(params,
-                         learning_rate,
-                         betas,
-                         initial_accumulator_value,
-                         epsilon)
+                         model_interface=model_interface,
+                         learning_rate=learning_rate,
+                         betas=betas,
+                         initial_accumulator_value=initial_accumulator_value,
+                         epsilon=epsilon)
 
     def _update_second_moment(self, grad_name: str, grad: np.ndarray) -> None:
         """Override second moment update rule for Yogi optimization updates."""
@@ -46,7 +53,7 @@ class Yogi(Adam):
                                                * self.grads_second_moment[grad_name]
                                                + (1.0 - self.beta_2) * sign * grad**2)
 
-    def step(self, gradients: tp.Dict[str, np.ndarray]) -> None:
+    def step(self, gradients: Dict[str, np.ndarray]) -> None:
         """
         Perform a single step for parameter update.
 

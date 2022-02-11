@@ -14,27 +14,33 @@ from .weighted_average import WeightedAverage
 
 
 class AdaptiveAggregation(AggregationFunction):
-    """Weighted average aggregation."""
+    """Adaptive Federated Aggregation funtcion.
+
+    According to https://arxiv.org/abs/2003.00295
+    """
 
     def __init__(self, optimizer: Optimizer):
         """Initialize."""
         self.optimizer = optimizer
         self.default_agg_func = WeightedAverage()
 
+    @staticmethod
     def _make_gradient(
-        self, base_model_nparray: np.ndarray,
+        base_model_nparray: np.ndarray,
         local_tensors: List[LocalTensor]
     ) -> np.ndarray:
         """Make gradient."""
         return sum([local_tensor.weight * (base_model_nparray - local_tensor.tensor)
                     for local_tensor in local_tensors])
 
-    def call(self,
-             local_tensors,
-             db_iterator,
-             tensor_name,
-             fl_round,
-             tags):
+    def call(
+        self,
+        local_tensors,
+        db_iterator,
+        tensor_name,
+        fl_round,
+        tags
+    ) -> np.ndarray:
         """Aggregate tensors.
 
         Args:
@@ -62,8 +68,8 @@ class AdaptiveAggregation(AggregationFunction):
             np.ndarray: aggregated tensor
         """
         base_model_nparray = None
+        search_tag = 'aggregated' if fl_round != 0 else 'model'
         for record in db_iterator:
-            search_tag = 'aggregated' if fl_round != 0 else 'model'
             if (
                 record['round'] == fl_round
                 and record['tensor_name'] == tensor_name

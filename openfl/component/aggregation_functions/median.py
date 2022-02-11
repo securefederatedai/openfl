@@ -11,7 +11,7 @@ from .interface import AggregationFunction
 class Median(AggregationFunction):
     """Median aggregation."""
 
-    def call(self, local_tensors, *_):
+    def call(self, local_tensors, *_) -> np.ndarray:
         """Aggregate tensors.
 
         Args:

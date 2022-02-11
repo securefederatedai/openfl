@@ -506,7 +506,7 @@ class ModelInterface:
     There is no support for several models / optimizers yet.
     """
 
-    def __init__(self, model, optimizer, framework_plugin) -> None:
+    def __init__(self, model, optimizer, framework_plugin: str) -> None:
         """
         Initialize model keeper.
 
