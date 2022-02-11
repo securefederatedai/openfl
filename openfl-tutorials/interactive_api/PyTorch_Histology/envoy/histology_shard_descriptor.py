@@ -17,6 +17,7 @@ from openfl.interface.interactive_api.shard_descriptor import ShardDataset
 from openfl.interface.interactive_api.shard_descriptor import ShardDescriptor
 from openfl.utilities import tqdm_report_hook
 from openfl.utilities import validate_file_hash
+from openfl.utilities.data_splitters.numpy import LogNormalNumPyDataSplitter
 
 
 logger = logging.getLogger(__name__)
@@ -43,14 +44,22 @@ class HistologyShardDataset(ShardDataset):
                     path = os.path.join(class_root, fname)
                     item = path, class_index
                     self.samples.append(item)
+        np.random.shuffle(self.samples)
 
         idx_range = list(range(len(self.samples)))
         idx_sep = int(len(idx_range) * HistologyShardDataset.TRAIN_SPLIT_RATIO)
         train_idx, test_idx = np.split(idx_range, [idx_sep])
+        data_splitter = LogNormalNumPyDataSplitter(
+            mu=0,
+            sigma=2,
+            num_classes=8,
+            classes_per_col=2,
+            min_samples_per_class=5)
         if data_type == 'train':
-            self.idx = train_idx[rank - 1::worldsize]
+            labels = np.array(self.samples)[train_idx][:,1].astype(int)
+            self.idx = data_splitter.split(labels, worldsize)[rank-1]
         else:
-            self.idx = test_idx[rank - 1::worldsize]
+            self.idx = data_splitter.split(test_idx, worldsize)[rank-1]
 
     def __len__(self) -> int:
         """Return the len of the shard dataset."""
