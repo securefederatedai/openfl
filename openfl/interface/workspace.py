@@ -2,6 +2,8 @@
 # SPDX-License-Identifier: Apache-2.0
 """Workspace module."""
 
+import os
+import subprocess
 import sys
 from pathlib import Path
 from typing import Tuple
@@ -197,6 +199,9 @@ def import_(archive):
 
     if isfile(requirements_filename):
         check_call([
+            executable, '-m', 'pip', 'install', '--upgrade', 'pip'],
+            shell=False)
+        check_call([
             executable, '-m', 'pip', 'install', '-r', 'requirements.txt'],
             shell=False)
     else:
@@ -364,7 +369,6 @@ def dockerize_(context, base_image, save):
     If your machine is behind a proxy, make sure you set it up in ~/.docker/config.json.
     """
     import docker
-    import os
     import sys
     from shutil import copyfile
 
@@ -420,6 +424,72 @@ def dockerize_(context, base_image, save):
             for chunk in resp:
                 f.write(chunk)
         echo(f'{workspace_name} image saved to {workspace_path}/{workspace_image_tar}')
+
+
+@workspace.command(name='graminize')
+@option('-s', '--signing-key', required=False,
+        help='A 3072-bit RSA private key (PEM format) is required for signing the manifest.',
+        type=ClickPath(exists=True), default=None)
+@option('-o', '--pip-install-options', required=False,
+        type=str, multiple=True, default=tuple,
+        help='Options for remote pip install. '
+             'You may pass several options in quotation marks alongside with arguments, '
+             'e.g. -o "--find-links source.site"')
+@pass_context
+def graminize_(context, signing_key, pip_install_options: Tuple[str]) -> None:
+    """
+    Build gramine app inside a docker image.
+
+    This command is the alternative to `workspace export`.
+    It should be called after `fx plan initialize` inside the workspace dir.
+
+    User is expected to be in docker group.
+    If your machine is behind a proxy, make sure you set it up in ~/.docker/config.json.
+
+    TODO:
+    1. gramine-direct, check if a key is provided
+    2. make a standalone function with `export` parametr
+    """
+    from openfl.interface.cli_helper import SITEPACKS
+
+    os.environ["DOCKER_BUILDKIT"] = 1
+
+    echo('Building base gramine-openfl image...')
+    base_dockerfile = SITEPACKS / 'openfl-gramine' / 'Dockerfile.gramine'
+    base_build_command = f'docker build -t gramine_openfl -f {base_dockerfile} .'
+    subprocess.run(
+        base_build_command,
+        shell=True, stderr=subprocess.STDOUT, timeout=100,
+        check=True, stdout=subprocess.PIPE)
+    echo('DONE: Building base gramine-openfl image')
+
+    echo('Building graminized workspace image...')
+    workspace_path = Path.cwd()
+    workspace_name = workspace_path.name
+
+    context.invoke(export_, pip_install_options=pip_install_options)
+    workspace_archive = workspace_path / f'{workspace_name}.zip'
+
+    grainized_ws_dockerfile = SITEPACKS / 'openfl-gramine' / 'Dockerfile.graminized.workspace'
+
+    graminized_build_command = f'docker build -t {workspace_name} ' + \
+        f'--build-arg WORKSPACE_ARCHIVE={workspace_archive} ' + \
+        '--build-arg BASE_IMAGE=gramine_openfl ' + \
+        f'--secret id=signer-key,src=.{signing_key} ' + \
+        f'-f {grainized_ws_dockerfile} {workspace_path}'
+    subprocess.run(
+        graminized_build_command,
+        shell=True, stderr=subprocess.STDOUT, timeout=240,
+        check=True, stdout=subprocess.PIPE)
+    echo('DONE: Building graminized workspace image')
+
+    echo('Saving the graminized workspace image...')
+    save_image_command = f'docker save {workspace_name} | gzip > ${workspace_name}.tar.gz'
+    subprocess.run(
+        save_image_command,
+        shell=True, stderr=subprocess.STDOUT, timeout=240,
+        check=True, stdout=subprocess.PIPE)
+    echo(f'The image saved to file: {workspace_name}.tar.gz')
 
 
 def apply_template_plan(prefix, template):
