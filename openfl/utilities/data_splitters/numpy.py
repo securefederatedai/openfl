@@ -99,6 +99,8 @@ class LogNormalNumPyDataSplitter(NumPyDataSplitter):
             for c in range(self.classes_per_col):
                 label = (col + c) % self.num_classes
                 label_idx = np.nonzero(data == label)[0]
+                print(f'{data}=')
+                print(f'{label_idx=}')
                 slice_start = col // self.num_classes * samples_per_col
                 slice_start += self.min_samples_per_class * c
                 slice_end = slice_start + self.min_samples_per_class
@@ -108,7 +110,7 @@ class LogNormalNumPyDataSplitter(NumPyDataSplitter):
 All collaborators should have {samples_per_col} elements
 but distribution is {[len(i) for i in idx]}'''
 
-        props_shape = (self.num_classes, num_collaborators // 10, self.classes_per_col)
+        props_shape = (self.num_classes, num_collaborators // self.num_classes, self.classes_per_col)
         props = np.random.lognormal(self.mu, self.sigma, props_shape)
         num_samples_per_class = [[[get_label_count(data, label) - self.min_samples_per_class]]
                                  for label in range(self.num_classes)]
@@ -117,7 +119,7 @@ but distribution is {[len(i) for i in idx]}'''
         for col in trange(num_collaborators):
             for j in range(self.classes_per_col):
                 label = (col + j) % self.num_classes
-                num_samples = int(props[label, col // 10, j])
+                num_samples = int(props[label, col // self.num_classes, j])
 
                 print(f'Trying to append {num_samples} of {label} class to {col} col...')
                 slice_start = np.count_nonzero(data[np.hstack(idx)] == label)
