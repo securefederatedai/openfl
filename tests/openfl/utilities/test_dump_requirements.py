@@ -95,13 +95,15 @@ def test_dump_empty_original_list(
     requirements_file = Path('./test_requirements_2.txt').absolute()
     if touch_file:
         requirements_file.touch()
-    dump_requirements_file(path=requirements_file,
-                           keep_original_prefixes=keep_original_prefixes,
-                           prefixes=prefixes)
+    try:
+        dump_requirements_file(path=requirements_file,
+                               keep_original_prefixes=keep_original_prefixes,
+                               prefixes=prefixes)
 
-    with open(requirements_file) as f:
-        read_lines = f.readlines()
-    requirements_file.unlink()
+        with open(requirements_file) as f:
+            read_lines = f.readlines()
+    finally:
+        requirements_file.unlink(missing_ok=True)
 
     read_options = []
     for li in read_lines:

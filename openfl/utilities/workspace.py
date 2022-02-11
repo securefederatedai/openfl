@@ -103,7 +103,7 @@ def dump_requirements_file(
     if keep_original_prefixes and path.is_file():
         with open(path) as f:
             for line in f:
-                if line == '':
+                if line == '\n':
                     continue
                 if line[0] == '-':
                     prefixes |= {line.replace('\n', '')}
