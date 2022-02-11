@@ -108,7 +108,11 @@ class LogNormalNumPyDataSplitter(NumPyDataSplitter):
 All collaborators should have {samples_per_col} elements
 but distribution is {[len(i) for i in idx]}'''
 
-        props_shape = (self.num_classes, num_collaborators // self.num_classes, self.classes_per_col)
+        props_shape = (
+            self.num_classes,
+            num_collaborators // self.num_classes,
+            self.classes_per_col
+        )
         props = np.random.lognormal(self.mu, self.sigma, props_shape)
         num_samples_per_class = [[[get_label_count(data, label) - self.min_samples_per_class]]
                                  for label in range(self.num_classes)]
