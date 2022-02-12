@@ -67,9 +67,9 @@ class Adam(Optimizer):
 
         self.learning_rate = learning_rate
         self.beta_1, self.beta_2 = betas
-        self.epsilon = epsilon
         self.initial_accumulator_value = initial_accumulator_value
-        self.current_step = 0
+        self.epsilon = epsilon
+        self.current_step: Dict[str, int] = {param_name: 0 for param_name in self.params}
 
         self.grads_first_moment, self.grads_second_moment = {}, {}
 
@@ -83,13 +83,13 @@ class Adam(Optimizer):
         """Update gradients first moment."""
         self.grads_first_moment[grad_name] = (self.beta_1
                                               * self.grads_first_moment[grad_name]
-                                              + (1.0 - self.beta_1) * grad)
+                                              + ((1.0 - self.beta_1) * grad))
 
     def _update_second_moment(self, grad_name: str, grad: np.ndarray) -> None:
         """Update gradients second moment."""
         self.grads_second_moment[grad_name] = (self.beta_2
                                                * self.grads_second_moment[grad_name]
-                                               + (1.0 - self.beta_2) * grad**2)
+                                               + ((1.0 - self.beta_2) * grad**2))
 
     def step(self, gradients: Dict[str, np.ndarray]) -> None:
         """
@@ -110,9 +110,9 @@ class Adam(Optimizer):
             self._update_second_moment(grad_name, grad)
 
             grads_first_moment_normalized = (self.grads_first_moment[grad_name]
-                                             / (1. - self.beta_1**(self.current_step + 1)))
+                                             / (1. - self.beta_1**(self.current_step[grad_name] + 1)))
             grads_second_moment_normalized = (self.grads_second_moment[grad_name]
-                                              / (1. - self.beta_2**(self.current_step + 1)))
+                                              / (1. - self.beta_2**(self.current_step[grad_name] + 1)))
 
             # Make an update for a group of parameters
             self.params[grad_name] = (self.params[grad_name]
@@ -120,4 +120,4 @@ class Adam(Optimizer):
                                       * grads_first_moment_normalized
                                       / (np.sqrt(grads_second_moment_normalized) + self.epsilon))
 
-        self.current_step += 1
+            self.current_step[grad_name] += 1
