@@ -110,9 +110,11 @@ class Adam(Optimizer):
             self._update_second_moment(grad_name, grad)
 
             grads_first_moment_normalized = (self.grads_first_moment[grad_name]
-                                             / (1. - self.beta_1**(self.current_step[grad_name] + 1)))
+                                             / (1. - self.beta_1
+                                             ** (self.current_step[grad_name] + 1)))
             grads_second_moment_normalized = (self.grads_second_moment[grad_name]
-                                              / (1. - self.beta_2**(self.current_step[grad_name] + 1)))
+                                              / (1. - self.beta_2
+                                              ** (self.current_step[grad_name] + 1)))
 
             # Make an update for a group of parameters
             self.params[grad_name] = (self.params[grad_name]
