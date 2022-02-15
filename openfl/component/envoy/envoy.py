@@ -4,15 +4,14 @@
 """Envoy module."""
 
 import logging
-from typing import Optional
-from typing import Type
-from typing import Union
-
 import time
 import traceback
 import uuid
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
+from typing import Optional
+from typing import Type
+from typing import Union
 
 from click import echo
 
