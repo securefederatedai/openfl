@@ -1,8 +1,8 @@
 # OpenFL + Gramine
-This manual will help you run OpenFL with Aggregator-based workflow under Gramine SGX.
+This manual will help you run OpenFL with Aggregator-based workflow inside SGX enclave with Gramine.
 ## TO-DO:
-- import manifest and makefile from dist-package openfl 
-- pass wheel repository to pip (for cpu versions of pytorch for example)
+- [X] import manifest and makefile from dist-package openfl 
+- [X] pass wheel repository to pip (for cpu versions of pytorch for example)
 - get rid of command line args (insecure)
 ## Known issues:
 - Kvasir experiment: aggregation takes really long, debug log-level does not show the reason
@@ -13,6 +13,7 @@ During cert sign request generation cols.yaml on collaborators remain empty, dat
 ## Prerquisites
 Building machine:
 - OpenFL
+- Docker should be installed, user included into Docker group
 
 Machines that will run an Aggregator and Collaborator containers should have the following:
 - SGX enebled in BIOS
@@ -22,58 +23,76 @@ Machines that will run an Aggregator and Collaborator containers should have the
 This is a short list, see more in Gramine docs.
 
 ## Workflow
-1. Build the base image with openfl installed from pip and gramine from apt:
+The user will mainly interact with OpenFL CLI, docker CLI and other commandline tools. But the user is also expected to modify plan.yaml file and Python code under workspace/src folder to set up an FL Experiment.
+### On the building machine (Data Scientist's node):
+1. As usual, **create a workspace**: 
 ```
-DOCKER_BUILDKIT=1 docker build -t gramine_openfl -f openfl-gramine/Dockerfile.gramine .
+fx workspace create --prefix WORKSPACE_NAME --template TEMPLATE_NAME
+cd WORKSPACE_NAME
 ```
-
-2. Create a workspace. Modify code and the plan.yaml.
+Modify the code and the plan.yaml, set up your training procedure. </br>
+Pay attention to the following: 
 - make sure data loading code reads data from ./data folder inside the workspace
+- if you download data (developement scenario) make sure your code first checks if data exists, as connecting to the internet from an enclave may be problematic.
 - make sure you do not use any CUDA driver-dependent packages
-- Find out the FQDN of the aggregator machine and use during plan initialization
 
-3. Do `fx plan initialize -a ${FQDN}`
+2. **Initialize the experiment plan** </br> 
+Find out the FQDN of the aggregator machine and use for plan initialization.
+```
+fx plan initialize -a ${FQDN}
+```
+To find out FQDN (Unix-like OS) try `hostname --all-fqdns | awk '{print $1}'` command.
 
-4. Do `fx workspace export`
+3. (Optional) **Generate a signing key** on building machine if you do not have one.</br>
+It will be used to calculate hashes of trusted files. If you plan to test the application without SGX (gramine-direct) you also do not need a signer key.
+```
+openssl genrsa -3 -out KEY_LOCATION/key.pem 3072
+```
+This key will not be packed to the final Docker image.
 
-4.5 cd one folder up
+4. **Build the Experiment Docker image**
 
-5. Generate a signer key on building machine to hash trusted files
 ```
-openssl genrsa -3 -out ./key.pem 3072
+fx workspace dockerize -s KEY_LOCATION/key.pem --sgx-target/--no-sgx-target
 ```
-6. Build dockerized workspace and gramine app
-```
-EXP_NAME=kvasir
-FEDERATION=fed_work12345alpha81671
-DOCKER_BUILDKIT=1
-docker build -t ${EXP_NAME} \
---build-arg WORKSPACE_ARCHIVE=${FEDERATION}/${FEDERATION}.zip \
---secret id=signer-key,src=./key.pem \
--f ./openfl-gramine/Dockerfile.graminized.workspace . 
-```
+This command will build and save a Docker image with you Experiment. The saved image will contain all the required files to start a process in an enclave.</br>
+If `--no-sgx-target` option passed to the command, the image will run processes under gramine-direct, in this case it is not necessary to pass signing key.
 
-7. Transfer the image to the aggregator an collaborator machines
-```
-EXP_NAME=kvasir
-docker save ${EXP_NAME} | gzip > ${EXP_NAME}.tar.gz
-```
 
-transfer file:
+### Image distribution:
+Data scientist now must transfer the Docker image to the aggregator and collaborator machines. Aggregator will also need initial model weights.
+
+5. **Transfer files** to the aggregator an collaborator machines.
+If there is a connaction between machines, you may use `scp`. In other case use the transfer channel that suits your situation.</br>
+Send files to the aggregator machine:
 ```
-scp idavidyu@nnlicv674.inn.intel.com:/home/idavidyu/openfl/kvasir.tar.gz .
+scp DATA_SCIENTIST_MACHINE:WORKSPACE_PATH/WORKSPACE_NAME.tar.gz AGGREGATOR_MACHINE:SOME_PATH
+scp DATA_SCIENTIST_MACHINE:WORKSPACE_PATH/save/WORKSPACE_NAME_init.pbuf AGGREGATOR_MACHINE:SOME_PATH
 ```
 
-on the running machines:
+Send the image archive to collaborator machines:
 ```
-EXP_NAME=kvasir
-docker load < ${EXP_NAME}.tar.gz
+scp DATA_SCIENTIST_MACHINE:WORKSPACE_PATH/WORKSPACE_NAME.tar.gz COLLABORATOR_MACHINE:SOME_PATH
 ```
-8. Transfer initial model weights from save/ directory to aggregator machine.
+### On the running machines (Aggregator and Collaborator nodes):
+6. **Load the image.**
+Execute the following command on all running machines:
+```
+docker load < WORKSPACE_NAME.tar.gz
+```
 
-9. Register collaborators. Signing requests process is coupled with modifying cols.yaml on the aggregator machine and data.yaml files in collaborator machines
-In the end of this step you should have signed certificates on all the machines, cols.yaml file on aggregator 
-and data.yaml files on collaborators.
+7. **Prepare certificates**
+Certificates exchange is a big separate topic. To run an experiment following OpenFL Aggregator-based workflow, user must follow the established procedure, please refer to [the docs](https://openfl.readthedocs.io/en/latest/running_the_federation.html#bare-metal-approach).
+Following the above-mentioned procedure, running machines will acquire certificates. Moreover, as the result of this procedure, the aggregator machine will also obtain a `cols.yaml` file (required to start an experiment) with registered collaborators names, and the collaborator machines will obtain `data.yaml` files.
+
+We recoment replicate the OpenFL workspace folder structure on all the machines and follow the usual certifying procedure. Finally, on aggregator you should have the following folder structure:
+```
+workspace/
+--save/WORKSPACE_NAME_init.pbuf
+--logs/
+--plan/cols.yaml
+--cert
+```
 
 10. Run aggregator
 ```

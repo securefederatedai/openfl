@@ -1,6 +1,6 @@
 ARCH_LIBDIR ?= /lib/$(shell $(CC) -dumpmachine)
 
-# This is a signer key on a BUILDING machine
+# This is a signer key on the BUILDING machine
 SGX_SIGNER_KEY ?= /key.pem
 
 ifeq ($(DEBUG),1)
@@ -16,6 +16,7 @@ all: openfl.manifest.sgx openfl.sig openfl.token
 endif
 
 openfl.manifest: openfl.manifest.template
+	@echo "Making openfl.manifest file"
 	gramine-manifest \
 		-Dlog_level=$(GRAMINE_LOG_LEVEL) \
 		-Darch_libdir=$(ARCH_LIBDIR) \
@@ -25,6 +26,7 @@ openfl.manifest: openfl.manifest.template
 		$< >$@
 
 openfl.manifest.sgx: openfl.manifest
+	@echo "Making openfl.manifest.sgx file"
 	@test -s $(SGX_SIGNER_KEY) || \
 	    { echo "SGX signer private key was not found, please specify SGX_SIGNER_KEY!"; exit 1; }
 	gramine-sgx-sign \
@@ -35,6 +37,7 @@ openfl.manifest.sgx: openfl.manifest
 openfl.sig: openfl.manifest.sgx
 
 openfl.token: openfl.sig
+	@echo "Making openfl.sig file"
 	gramine-sgx-get-token --output $@ --sig $<
 
 

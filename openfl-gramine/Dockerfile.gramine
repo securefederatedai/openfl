@@ -7,7 +7,7 @@ FROM ${BASE_IMAGE}
 #     pip install openfl
 
 # for now install from source (branch with logs_writer turned off)
-RUN git clone https://github.com/igor-davidyuk/openfl.git --branch gramine
+RUN git clone https://github.com/igor-davidyuk/openfl.git --branch gramine-rebased
 WORKDIR /openfl
 RUN --mount=type=cache,target=/root/.cache/ \
     pip install --upgrade pip && \

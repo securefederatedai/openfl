@@ -171,9 +171,10 @@ def export_(pip_install_options: Tuple[str]):
             raise
 
     # Create Zip archive of directory
+    echo('\n 🗜️ Preparing workspace distribution zip file')
     make_archive(archive_name, archive_type, tmp_dir)
 
-    echo(f'Workspace exported to archive: {archive_file_name}')
+    echo(f'\n ✔️ Workspace exported to archive: {archive_file_name}')
 
 
 @workspace.command(name='import')
@@ -427,16 +428,24 @@ def dockerize_(context, base_image, save):
 
 
 @workspace.command(name='graminize')
+@option('--sgx-target/--no-sgx-target',
+        required=False,
+        help='If "--no-sgx-target" target is passed, container entrypoint '
+             'will be set to gramine-direct to allow testing '
+             'gramine app outside enclave.',
+        default=True)
 @option('-s', '--signing-key', required=False,
-        help='A 3072-bit RSA private key (PEM format) is required for signing the manifest.',
-        type=ClickPath(exists=True), default=None)
+        type=lambda p: Path(p).absolute(), default='/',
+        help='A 3072-bit RSA private key (PEM format) is required for signing the manifest.\n'
+             'If a key is passed the gramine-sgx manifest fill be prepared.',
+        )
 @option('-o', '--pip-install-options', required=False,
         type=str, multiple=True, default=tuple,
         help='Options for remote pip install. '
              'You may pass several options in quotation marks alongside with arguments, '
              'e.g. -o "--find-links source.site"')
 @pass_context
-def graminize_(context, signing_key, pip_install_options: Tuple[str]) -> None:
+def graminize_(context, sgx_target, signing_key, pip_install_options: Tuple[str]) -> None:
     """
     Build gramine app inside a docker image.
 
@@ -450,46 +459,57 @@ def graminize_(context, signing_key, pip_install_options: Tuple[str]) -> None:
     1. gramine-direct, check if a key is provided
     2. make a standalone function with `export` parametr
     """
+    def open_pipe(command: str):
+        echo(f'\n 📦 Executing command:\n{command}\n')
+        process = subprocess.Popen(
+            command,
+            shell=True, stderr=subprocess.STDOUT,
+            stdout=subprocess.PIPE)
+        for line in process.stdout:
+            echo(line)
+        _ = process.communicate()  # pipe is already empty, used to get `returncode`
+        if process.returncode != 0:
+            raise Exception('\n ❌ Execution failed\n')
+
     from openfl.interface.cli_helper import SITEPACKS
 
-    os.environ["DOCKER_BUILDKIT"] = 1
+    # We can build for gramine-sgx and run with gramine-direct,
+    # but not vice versa.
+    SGX_BUILD = 1 if signing_key.is_file() else 0
+    SGX_EXE = 'gramine-sgx' if sgx_target else 'gramine-direct'
+    if sgx_target and not SGX_BUILD:
+        echo('\n ❌ Can not prepare SGX-ready application without a signing key.')
+        raise Exception('Provide a signing key or pass "--no-sgx-target"')
 
-    echo('Building base gramine-openfl image...')
+    os.environ["DOCKER_BUILDKIT"] = '1'
+
+    echo('\n 🐋 Building base gramine-openfl image...')
     base_dockerfile = SITEPACKS / 'openfl-gramine' / 'Dockerfile.gramine'
     base_build_command = f'docker build -t gramine_openfl -f {base_dockerfile} .'
-    subprocess.run(
-        base_build_command,
-        shell=True, stderr=subprocess.STDOUT, timeout=100,
-        check=True, stdout=subprocess.PIPE)
-    echo('DONE: Building base gramine-openfl image')
+    open_pipe(base_build_command)
+    echo('\n ✔️ DONE: Building base gramine-openfl image')
 
-    echo('Building graminized workspace image...')
     workspace_path = Path.cwd()
     workspace_name = workspace_path.name
-
     context.invoke(export_, pip_install_options=pip_install_options)
     workspace_archive = workspace_path / f'{workspace_name}.zip'
 
     grainized_ws_dockerfile = SITEPACKS / 'openfl-gramine' / 'Dockerfile.graminized.workspace'
 
+    echo('\n 🐋 Building graminized workspace image...')
     graminized_build_command = f'docker build -t {workspace_name} ' + \
-        f'--build-arg WORKSPACE_ARCHIVE={workspace_archive} ' + \
         '--build-arg BASE_IMAGE=gramine_openfl ' + \
-        f'--secret id=signer-key,src=.{signing_key} ' + \
+        f'--build-arg WORKSPACE_ARCHIVE={workspace_archive.relative_to(workspace_path)} ' + \
+        f'--build-arg SGX_BUILD={SGX_BUILD} --build-arg SGX_EXE={SGX_EXE} ' + \
+        f'--secret id=signer-key,src={signing_key} ' if SGX_BUILD else '' + \
         f'-f {grainized_ws_dockerfile} {workspace_path}'
-    subprocess.run(
-        graminized_build_command,
-        shell=True, stderr=subprocess.STDOUT, timeout=240,
-        check=True, stdout=subprocess.PIPE)
-    echo('DONE: Building graminized workspace image')
+    open_pipe(graminized_build_command)
+    echo('\n ✔️ DONE: Building graminized workspace image')
 
-    echo('Saving the graminized workspace image...')
+    echo('\n 💾 Saving the graminized workspace image...')
     save_image_command = f'docker save {workspace_name} | gzip > ${workspace_name}.tar.gz'
-    subprocess.run(
-        save_image_command,
-        shell=True, stderr=subprocess.STDOUT, timeout=240,
-        check=True, stdout=subprocess.PIPE)
-    echo(f'The image saved to file: {workspace_name}.tar.gz')
+    open_pipe(save_image_command)
+    echo(f'\n ✔️ The image saved to file: {workspace_name}.tar.gz')
 
 
 def apply_template_plan(prefix, template):

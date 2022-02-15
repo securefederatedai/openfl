@@ -1,9 +1,5 @@
 ARG BASE_IMAGE=gramine_openfl
-FROM ${BASE_IMAGE}
-
-
-# RUN --mount=type=cache,target=/root/.cache/ \
-#     pip install torch==1.7.1+cpu torchvision==0.8.2+cpu -f https://download.pytorch.org/whl/cpu/torch_stable.html
+FROM ${BASE_IMAGE} as builder
 
 ARG WORKSPACE_ARCHIVE
 ADD ${WORKSPACE_ARCHIVE} /workspace.zip
@@ -13,11 +9,25 @@ RUN --mount=type=cache,target=/root/.cache/ \
 WORKDIR /workspace
 
 # TODO: Find a way to remove the hardcoded paths
-RUN cp /usr/local/lib/python3.8/site-packages/openfl-gramine/template . && \
+RUN cp /usr/local/lib/python3.8/site-packages/openfl-gramine/openfl.manifest.template . && \
     cp /usr/local/lib/python3.8/site-packages/openfl-gramine/Makefile .
 
+ARG SGX_BUILD=1
 RUN --mount=type=secret,id=signer-key,dst=/key.pem \
-    make clean && make SGX=1 SGX_SIGNER_KEY=/key.pem
+    make clean && make SGX=${SGX} SGX_SIGNER_KEY=/key.pem
 
-ENTRYPOINT [ "gramine-sgx", "./openfl", "/usr/local/bin/fx"]
-CMD ["aggregator", "start"]
+ARG GRAMINE_EXE=gramine-sgx
+ENV GRAMINE_EXE=GRAMINE_EXE
+ENTRYPOINT [ ${GRAMINE_EXE}, "./openfl", "/usr/local/bin/fx"]
+
+# FROM builder as runner-sgx-1
+# ENTRYPOINT [ "gramine-sgx", "./openfl", "/usr/local/bin/fx"]
+
+
+# FROM builder as runner-sgx-0
+# ENTRYPOINT [ "gramine-direct", "./openfl", "/usr/local/bin/fx"]
+
+
+# ARG SGX_RUN=1
+# FROM runner-sgx-${SGX_RUN}
+# CMD ["aggregator", "start"]
