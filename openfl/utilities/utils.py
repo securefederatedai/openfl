@@ -224,7 +224,7 @@ def merge_configs(
     settings = Dynaconf(**kwargs)
     if overwrite_dict:
         for key, value in overwrite_dict.items():
-            if value is not None:
+            if value is not None or settings.get(key) is None:
                 settings.set(key, value)
     settings.validators.validate()
     return settings
