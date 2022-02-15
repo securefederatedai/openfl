@@ -30,7 +30,7 @@ class SuperbShardDataset(ShardDataset):
 
     def __getitem__(self, index: int) -> Tuple[Any, Any]:
         """Return an item by the index."""
-        return self.x[index]["array"], self.y[index]
+        return self.x[index]['array'], self.y[index]
 
     def __len__(self) -> int:
         """Return the len of the dataset."""
@@ -87,16 +87,16 @@ class SuperbShardDescriptor(ShardDescriptor):
 
     def download_data(self) -> Tuple[Tuple[Dict, List], Tuple[Dict, List], Tuple[Dict, List]]:
         """Download dataset."""
-        dataset = load_dataset("superb", "ks")
+        dataset = load_dataset('superb', 'ks')
 
         # Train data
-        train_set = dataset["train"]
+        train_set = dataset['train']
 
         # Validation data
-        val_set = dataset["validation"]
+        val_set = dataset['validation']
 
         # Test data
-        test_set = dataset["test"]
+        test_set = dataset['test']
 
         print('Superb data was loaded!')
         return train_set, val_set, test_set
