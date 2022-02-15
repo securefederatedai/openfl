@@ -67,7 +67,10 @@ def start(director_config_path, tls, root_certificate, private_key, certificate)
         ],
     )
 
-    logger.info(f'Sample shape: {config.sample_shape}, target shape: {config.target_shape}')
+    logger.info(
+        f'Sample shape: {config.settings.sample_shape}, '
+        f'target shape: {config.settings.target_shape}'
+    )
 
     if config.root_certificate:
         config.root_certificate = Path(config.root_certificate).absolute()
