@@ -1,4 +1,4 @@
-# Hugging face [:hugs:] transformers tutorial for audio classification using PyTorch
+# Hugging face :hugs: transformers tutorial for audio classification using PyTorch
 
 Transformers have been a driving point for breakthrough developments in the Audio and Speech processing domain. Recently, Hugging Face dropped the State-of-the-art Natural Language Processing library Transformers v4.30 and extended its reach to Speech Recognition by adding one of the leading Automatic Speech Recognition models by Facebook called the Wav2Vec2.
 
