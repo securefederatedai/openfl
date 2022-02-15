@@ -61,8 +61,8 @@ def start(director_config_path, tls, root_certificate, private_key, certificate)
         validators=[
             Validator('settings.listen_host', default='localhost'),
             Validator('settings.listen_port', default=50051, gte=1024, lte=65535),
-            Validator('settings.sample_shape', default=''),
-            Validator('settings.target_shape', default=''),
+            Validator('settings.sample_shape', default=[]),
+            Validator('settings.target_shape', default=[]),
             Validator('settings.envoy_health_check_period', gte=1, lte=24 * 60 * 60),
         ],
     )
