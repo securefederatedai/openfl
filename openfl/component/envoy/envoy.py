@@ -4,6 +4,10 @@
 """Envoy module."""
 
 import logging
+from typing import Optional
+from typing import Type
+from typing import Union
+
 import time
 import traceback
 import uuid
@@ -13,6 +17,8 @@ from pathlib import Path
 from click import echo
 
 from openfl.federated import Plan
+from openfl.interface.interactive_api.shard_descriptor import ShardDescriptor
+from openfl.plugins.processing_units_monitor.cuda_device_monitor import CUDADeviceMonitor
 from openfl.transport.grpc.director_client import ShardDirectorClient
 from openfl.utilities.workspace import ExperimentWorkspace
 
@@ -24,9 +30,19 @@ DEFAULT_RETRY_TIMEOUT_IN_SECONDS = 5
 class Envoy:
     """Envoy class."""
 
-    def __init__(self, *, shard_name, director_host, director_port, shard_descriptor,
-                 root_certificate: str = None, private_key: str = None, certificate: str = None,
-                 tls: bool = True, cuda_devices=(), cuda_device_monitor=None) -> None:
+    def __init__(
+            self, *,
+            shard_name: str,
+            director_host: str,
+            director_port: int,
+            shard_descriptor: Type[ShardDescriptor],
+            root_certificate: Optional[Union[Path, str]],
+            private_key: Optional[Union[Path, str]],
+            certificate: Optional[Union[Path, str]],
+            tls: bool = True,
+            cuda_devices: Union[tuple, list] = (),
+            cuda_device_monitor: Optional[Type[CUDADeviceMonitor]],
+    ) -> None:
         """Initialize a envoy object."""
         self.name = shard_name
         self.root_certificate = Path(

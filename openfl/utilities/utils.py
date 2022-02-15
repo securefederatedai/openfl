@@ -9,8 +9,11 @@ import os
 import re
 from functools import partial
 from socket import getfqdn
+from typing import Optional
 
 import numpy as np
+from dynaconf import Dynaconf
+from dynaconf import LazySettings
 from tqdm import tqdm
 
 
@@ -45,7 +48,7 @@ def is_fqdn(hostname: str) -> bool:
     #  Can begin and end with a number or letter only
     #  Can contain hyphens, a-z, A-Z, 0-9
     #  1 - 63 chars allowed
-    fqdn = re.compile(r'^[a-z0-9]([a-z-0-9-]{0,61}[a-z0-9])?$', re.IGNORECASE) # noqa FS003
+    fqdn = re.compile(r'^[a-z0-9]([a-z-0-9-]{0,61}[a-z0-9])?$', re.IGNORECASE)  # noqa FS003
 
     # Check that all labels match that pattern.
     return all(fqdn.match(label) for label in labels)
@@ -202,11 +205,26 @@ def validate_file_hash(file_path, expected_hash, chunk_size=8192):
 
 def tqdm_report_hook():
     """Visualize downloading."""
+
     def report_hook(pbar, count, block_size, total_size):
         """Update progressbar."""
         if pbar.total is None and total_size:
             pbar.total = total_size
         progress_bytes = count * block_size
         pbar.update(progress_bytes - pbar.n)
+
     pbar = tqdm(total=None)
     return partial(report_hook, pbar)
+
+
+def merge_configs(
+        overwrite_dict: Optional[dict],
+        **kwargs,
+) -> Dynaconf:
+    settings = Dynaconf(**kwargs)
+    if overwrite_dict:
+        for key, value in overwrite_dict.items():
+            if value is not None:
+                settings.set(key, value)
+    settings.validators.validate()
+    return settings

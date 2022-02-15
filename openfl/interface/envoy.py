@@ -13,11 +13,12 @@ from click import group
 from click import option
 from click import pass_context
 from click import Path as ClickPath
-from yaml import safe_load
+from dynaconf import Validator
 
 from openfl.component.envoy.envoy import Envoy
 from openfl.interface.cli_helper import WORKSPACE
 from openfl.utilities import click_types
+from openfl.utilities import merge_configs
 from openfl.utilities.path_check import is_directory_traversal
 
 logger = logging.getLogger(__name__)
@@ -54,22 +55,32 @@ def start_(shard_name, director_host, director_port, tls, envoy_config_path,
     if is_directory_traversal(envoy_config_path):
         click.echo('The shard config path is out of the openfl workspace scope.')
         sys.exit(1)
-    # Read the Envoy config
-    with open(Path(envoy_config_path).absolute()) as stream:
-        envoy_config = safe_load(stream)
 
-    if root_certificate:
-        root_certificate = Path(root_certificate).absolute()
-    if private_key:
-        private_key = Path(private_key).absolute()
-    if certificate:
-        certificate = Path(certificate).absolute()
+    config = merge_configs(
+        settings_files=envoy_config_path,
+        overwrite_dict={
+            'root_certificate': root_certificate,
+            'private_key': private_key,
+            'certificate': certificate,
+        },
+        validators=[
+            Validator('shard_descriptor.template', required=True),
+            Validator('params.cuda_devices', default=[]),
+        ],
+    )
+
+    if config.root_certificate:
+        config.root_certificate = Path(config.root_certificate).absolute()
+    if config.private_key:
+        config.private_key = Path(config.private_key).absolute()
+    if config.certificate:
+        config.certificate = Path(config.certificate).absolute()
 
     # Parse envoy parameters
-    envoy_params = envoy_config.get('params', {})
+    envoy_params = config.get('params', {})
 
     # Build optional plugin components
-    optional_plugins_section = envoy_config.get('optional_plugin_components', None)
+    optional_plugins_section = config.get('optional_plugin_components')
     if optional_plugins_section is not None:
         for plugin_name, plugin_settings in optional_plugins_section.items():
             template = plugin_settings.get('template')
@@ -84,16 +95,16 @@ def start_(shard_name, director_host, director_port, tls, envoy_config_path,
             envoy_params[plugin_name] = instance
 
     # Instantiate Shard Descriptor
-    shard_descriptor = shard_descriptor_from_config(envoy_config.get('shard_descriptor', {}))
+    shard_descriptor = shard_descriptor_from_config(config.get('shard_descriptor', {}))
     envoy = Envoy(
         shard_name=shard_name,
         director_host=director_host,
         director_port=director_port,
-        shard_descriptor=shard_descriptor,
         tls=tls,
-        root_certificate=root_certificate,
-        private_key=private_key,
-        certificate=certificate,
+        shard_descriptor=shard_descriptor,
+        root_certificate=config.root_certificate,
+        private_key=config.private_key,
+        certificate=config.certificate,
         **envoy_params
     )
 
