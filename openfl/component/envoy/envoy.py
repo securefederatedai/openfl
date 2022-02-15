@@ -35,12 +35,12 @@ class Envoy:
             director_host: str,
             director_port: int,
             shard_descriptor: Type[ShardDescriptor],
-            root_certificate: Optional[Union[Path, str]],
-            private_key: Optional[Union[Path, str]],
-            certificate: Optional[Union[Path, str]],
+            root_certificate: Optional[Union[Path, str]] = None,
+            private_key: Optional[Union[Path, str]] = None,
+            certificate: Optional[Union[Path, str]] = None,
             tls: bool = True,
             cuda_devices: Union[tuple, list] = (),
-            cuda_device_monitor: Optional[Type[CUDADeviceMonitor]],
+            cuda_device_monitor: Optional[Type[CUDADeviceMonitor]] = None,
     ) -> None:
         """Initialize a envoy object."""
         self.name = shard_name

@@ -217,7 +217,7 @@ def tqdm_report_hook():
 
 
 def merge_configs(
-        overwrite_dict: Optional[dict],
+        overwrite_dict: Optional[dict] = None,
         **kwargs,
 ) -> Dynaconf:
     """Create Dynaconf settings, merge its with `overwrite_dict` and validate result."""
