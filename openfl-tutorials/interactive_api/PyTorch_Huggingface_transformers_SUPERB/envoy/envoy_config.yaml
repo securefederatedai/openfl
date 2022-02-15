@@ -1,5 +1,5 @@
 params:
-  cuda_devices: [2,4]
+  cuda_devices: [0]
 
 optional_plugin_components:
  cuda_device_monitor:
@@ -9,4 +9,4 @@ optional_plugin_components:
 shard_descriptor:
   template: superb_shard_descriptor.SuperbShardDescriptor
   params:
-    rank_worldsize: 1, 10
+    rank_worldsize: 1, 100
