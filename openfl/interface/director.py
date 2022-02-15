@@ -72,14 +72,14 @@ def start(director_config_path, tls, root_certificate, private_key, certificate)
         f'target shape: {config.settings.target_shape}'
     )
 
-    if config.root_certificate:
-        config.root_certificate = Path(config.root_certificate).absolute()
+    if config.settings.root_certificate:
+        config.settings.root_certificate = Path(config.settings.root_certificate).absolute()
 
-    if config.private_key:
-        config.private_key = Path(config.private_key).absolute()
+    if config.settings.private_key:
+        config.settings.private_key = Path(config.settings.private_key).absolute()
 
-    if config.certificate:
-        config.certificate = Path(config.certificate).absolute()
+    if config.settings.certificate:
+        config.settings.certificate = Path(config.settings.certificate).absolute()
 
     director_server = DirectorGRPCServer(
         director_cls=Director,
