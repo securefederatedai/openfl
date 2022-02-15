@@ -9,7 +9,7 @@ import numpy as np
 from .base_optimizer import Optimizer
 
 
-class Adam(Optimizer):
+class NumpyAdam(Optimizer):
     """Adagrad optimizer implementation.
 
     Original paper: https://openreview.net/forum?id=ryQu7f-RZ

@@ -5,9 +5,9 @@
 import numpy as np
 import pytest
 
-from openfl.utilities.optimizers.numpy.adagrad_optimizer import Adagrad
-from openfl.utilities.optimizers.numpy.adam_optimizer import Adam
-from openfl.utilities.optimizers.numpy.yogi_optimizer import Yogi
+from openfl.utilities.optimizers.numpy.adagrad_optimizer import NumpyAdagrad
+from openfl.utilities.optimizers.numpy.adam_optimizer import NumpyAdam
+from openfl.utilities.optimizers.numpy.yogi_optimizer import NumpyYogi
 from.func_for_optimization import mc_cormick_func
 from.func_for_optimization import rosenbrock_func
 
@@ -17,27 +17,27 @@ EPS = 5e-5
 @pytest.mark.parametrize(
     'func,optim,num_iter', [
         (rosenbrock_func,
-         Adagrad(params={'x': np.array([0]), 'y': np.array([0])},
+         NumpyAdagrad(params={'x': np.array([0]), 'y': np.array([0])},
                  learning_rate=0.08),
          5000),
         (rosenbrock_func,
-         Adam(params={'x': np.array([0]), 'y': np.array([0])},
+         NumpyAdam(params={'x': np.array([0]), 'y': np.array([0])},
               learning_rate=0.01),
          1000),
         (rosenbrock_func,
-         Yogi(params={'x': np.array([0]), 'y': np.array([0])},
+         NumpyYogi(params={'x': np.array([0]), 'y': np.array([0])},
               learning_rate=0.01),
          1000),
         (mc_cormick_func,
-         Adagrad(params={'x': np.array([0]), 'y': np.array([0])},
+         NumpyAdagrad(params={'x': np.array([0]), 'y': np.array([0])},
                  learning_rate=0.03),
          5000),
         (mc_cormick_func,
-         Adam(params={'x': np.array([0]), 'y': np.array([0])},
+         NumpyAdam(params={'x': np.array([0]), 'y': np.array([0])},
               learning_rate=0.01),
          1000),
         (mc_cormick_func,
-         Yogi(params={'x': np.array([0]), 'y': np.array([0])},
+         NumpyYogi(params={'x': np.array([0]), 'y': np.array([0])},
               learning_rate=0.01),
          1000),
     ])

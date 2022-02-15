@@ -6,10 +6,10 @@ from typing import Tuple
 
 import numpy as np
 
-from .adam_optimizer import Adam
+from .adam_optimizer import NumpyAdam
 
 
-class Yogi(Adam):
+class NumpyYogi(NumpyAdam):
     """Yogi optimizer implementation.
 
     Original paper:

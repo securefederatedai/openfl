@@ -8,7 +8,7 @@ import numpy as np
 from .base_optimizer import Optimizer
 
 
-class Adagrad(Optimizer):
+class NumpyAdagrad(Optimizer):
     """Adagrad optimizer implementation.
 
     Original paper: http://jmlr.org/papers/v12/duchi11a.html
