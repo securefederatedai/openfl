@@ -220,7 +220,7 @@ def merge_configs(
         overwrite_dict: Optional[dict],
         **kwargs,
 ) -> Dynaconf:
-    """Create Dynaconf settings, merge its with `owerwrite_dict` and validate result."""
+    """Create Dynaconf settings, merge its with `overwrite_dict` and validate result."""
     settings = Dynaconf(**kwargs)
     if overwrite_dict:
         for key, value in overwrite_dict.items():
