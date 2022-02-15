@@ -50,8 +50,7 @@ setup(
         'openfl.utilities.data_splitters',
         'openfl.utilities.optimizers.keras',
         'openfl.utilities.optimizers.torch',
-    ]
-    ,
+    ],
     include_package_data=True,
     install_requires=[
         'Click==8.0.1',
@@ -74,8 +73,7 @@ setup(
         'tensorboard',
         'tensorboardX',
         'tqdm',
-    ]
-    ,
+    ],
     python_requires='>=3.6, <3.9',
     project_urls={
         'Bug Tracker': 'https://github.com/intel/openfl/issues',
