@@ -9,7 +9,7 @@ from openfl.component.aggregation_functions import WeightedAverage
 from openfl.databases import TensorDB
 from openfl.pipelines import NoCompressionPipeline
 from openfl.pipelines import TensorCodec
-from openfl.protocols import ModelProto
+from openfl.protocols import base_pb2
 from openfl.protocols import utils
 from openfl.utilities import TaskResultKey
 from openfl.utilities import TensorKey
@@ -100,7 +100,7 @@ class Aggregator:
                 round_number=0,
                 tensor_pipe=self.compression_pipeline)
         else:
-            self.model: ModelProto = utils.load_proto(self.init_state_path)
+            self.model: base_pb2.ModelProto = utils.load_proto(self.init_state_path)
             self._load_initial_tensors()  # keys are TensorKeys
 
         self.collaborator_tensor_results = {}  # {TensorKey: nparray}}
@@ -335,6 +335,8 @@ class Aggregator:
             compress_lossless = True
         else:
             compress_lossless = False
+
+        tags = list(tags)
 
         # TODO the TensorDB doesn't support compressed data yet.
         #  The returned tensor will

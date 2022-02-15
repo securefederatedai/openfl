@@ -9,7 +9,6 @@ from click import IntRange
 from click import option
 from click import pass_context
 
-
 from openfl.utilities import click_types
 
 logger = getLogger(__name__)
@@ -24,11 +23,11 @@ def tutorial(context):
 
 @tutorial.command()
 @option('-ip', '--ip', required=False, type=click_types.IP_ADDRESS,
-        help='IP address the notebook that should start')
+        help='IP address the Jupyter Lab that should start')
 @option('-port', '--port', required=False, type=IntRange(1, 65535),
-        help='The port the notebook server will listen on')
+        help='The port the Jupyter Lab server will listen on')
 def start(ip, port):
-    """Start the Jupyter notebook from the tutorials directory."""
+    """Start the Jupyter Lab from the tutorials directory."""
     from os import environ
     from subprocess import check_call
     from sys import executable
@@ -42,7 +41,7 @@ def start(ip, port):
             '--user', '--name', f'{venv}'
         ], shell=False)
 
-    jupyter_command = ['jupyter', 'notebook', '--notebook-dir', f'{TUTORIALS}']
+    jupyter_command = ['jupyter', 'lab', '--notebook-dir', f'{TUTORIALS}']
 
     if ip is not None:
         jupyter_command += ['--ip', f'{ip}']

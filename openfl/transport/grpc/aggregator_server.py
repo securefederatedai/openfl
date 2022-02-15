@@ -3,27 +3,24 @@
 
 """AggregatorGRPCServer module."""
 
+import logging
 from concurrent.futures import ThreadPoolExecutor
-from logging import getLogger
 from multiprocessing import cpu_count
 from time import sleep
 
 from grpc import server
 from grpc import ssl_server_credentials
 
-from openfl.protocols import Acknowledgement
-from openfl.protocols import add_AggregatorServicer_to_server
-from openfl.protocols import AggregatorServicer
-from openfl.protocols import MessageHeader
-from openfl.protocols import TaskResults
-from openfl.protocols import TasksResponse
-from openfl.protocols import TensorResponse
+from openfl.protocols import aggregator_pb2
+from openfl.protocols import aggregator_pb2_grpc
 from openfl.protocols import utils
 from openfl.utilities import check_equal
 from openfl.utilities import check_is_in
 
+logger = logging.getLogger(__name__)
 
-class AggregatorGRPCServer(AggregatorServicer):
+
+class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
     """gRPC server class for the Aggregator."""
 
     def __init__(self,
@@ -65,7 +62,7 @@ class AggregatorGRPCServer(AggregatorServicer):
         self.server = None
         self.server_credentials = None
 
-        self.logger = getLogger(__name__)
+        self.logger = logging.getLogger(__name__)
 
     def validate_collaborator(self, request, context):
         """
@@ -98,7 +95,7 @@ class AggregatorGRPCServer(AggregatorServicer):
             collaborator_name : str
                 The collaborator the message is intended for
         """
-        return MessageHeader(
+        return aggregator_pb2.MessageHeader(
             sender=self.aggregator.uuid,
             receiver=collaborator_name,
             federation_uuid=self.aggregator.federation_uuid,
@@ -145,7 +142,7 @@ class AggregatorGRPCServer(AggregatorServicer):
         tasks, round_number, sleep_time, time_to_quit = self.aggregator.get_tasks(
             request.header.sender)
 
-        return TasksResponse(
+        return aggregator_pb2.GetTasksResponse(
             header=self.get_header(collaborator_name),
             round_number=round_number,
             tasks=tasks,
@@ -174,9 +171,11 @@ class AggregatorGRPCServer(AggregatorServicer):
         named_tensor = self.aggregator.get_aggregated_tensor(
             collaborator_name, tensor_name, round_number, report, tags, require_lossless)
 
-        return TensorResponse(header=self.get_header(collaborator_name),
-                              round_number=round_number,
-                              tensor=named_tensor)
+        return aggregator_pb2.GetAggregatedTensorResponse(
+            header=self.get_header(collaborator_name),
+            round_number=round_number,
+            tensor=named_tensor
+        )
 
     def SendLocalTaskResults(self, request, context):  # NOQA:N802
         """
@@ -187,7 +186,7 @@ class AggregatorGRPCServer(AggregatorServicer):
             context: The gRPC context
 
         """
-        proto = TaskResults()
+        proto = aggregator_pb2.TaskResults()
         proto = utils.datastream_to_proto(proto, request)
 
         self.validate_collaborator(proto, context)
@@ -203,14 +202,16 @@ class AggregatorGRPCServer(AggregatorServicer):
         self.aggregator.send_local_task_results(
             collaborator_name, round_number, task_name, data_size, named_tensors)
         # turn data stream into local model update
-        return Acknowledgement(header=self.get_header(collaborator_name))
+        return aggregator_pb2.SendLocalTaskResultsResponse(
+            header=self.get_header(collaborator_name)
+        )
 
     def get_server(self):
         """Return gRPC server."""
         self.server = server(ThreadPoolExecutor(max_workers=cpu_count()),
                              options=self.channel_options)
 
-        add_AggregatorServicer_to_server(self, self.server)
+        aggregator_pb2_grpc.add_AggregatorServicer_to_server(self, self.server)
 
         if not self.tls:
 

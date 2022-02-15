@@ -179,7 +179,7 @@ class Director:
             aggregator = self.experiments_registry[experiment_name].aggregator
             aggregator.stop(failed_collaborator=collaborator_name)
 
-    def envoy_health_check(
+    def update_envoy_status(
             self, *,
             envoy_name: str,
             is_experiment_running: bool,
