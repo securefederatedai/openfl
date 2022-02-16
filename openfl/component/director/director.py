@@ -1,11 +1,10 @@
-# Copyright (C) 2020-2021 Intel Corporation
+# Copyright (C) 2020-2022 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Director module."""
 
 import asyncio
 import logging
-
 import pickle
 import time
 from collections import defaultdict
@@ -221,10 +220,9 @@ class Director:
         """Get a status information about envoys."""
         logger.info(f'Shard registry: {self._shard_registry}')
         for envoy_info in self._shard_registry.values():
-            envoy_info['is_online'] = (
-                    time.time() < envoy_info.get('last_updated', 0)
-                    + envoy_info.get('valid_duration', 0)
-            )
+            last_updated = envoy_info.get('last_updated', 0)
+            valid_duration = envoy_info.get('valid_duration', 0)
+            envoy_info['is_online'] = time.time() < last_updated + valid_duration
             envoy_name = envoy_info['shard_info']['node_info']['name']
             envoy_info['experiment_name'] = self.col_exp.get(envoy_name)
 

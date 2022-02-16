@@ -1,3 +1,8 @@
+# Copyright (C) 2022 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+"""Docker module."""
+
 import logging
 import os
 from io import BytesIO
@@ -16,8 +21,10 @@ OPENFL_ROOT_PATH = Path(__file__).parent.parent.parent.absolute()
 
 
 class Docker:
+    """Docker class."""
 
     def __init__(self):
+        """Initialize an docker object."""
         self.docker = aiodocker.Docker()
 
     async def build_image(
@@ -25,6 +32,7 @@ class Docker:
             context_path: Path,
             tag: str,
     ) -> str:
+        """Build docker image."""
         with open(context_path, 'rb') as f:
             fileobj = BytesIO(f.read())
             build_image_iter = self.docker.images.build(
@@ -47,6 +55,7 @@ class Docker:
             gpu_allowed: bool = False,
             volumes: Optional[List[str]] = None,
     ) -> DockerContainer:
+        """Create docker container."""
         if volumes is None:
             volumes = []
 
@@ -78,6 +87,7 @@ class Docker:
             self, *,
             container: DockerContainer,
     ) -> None:
+        """Start and monitor docker container."""
         subscriber = self.docker.events.subscribe()
         await container.start()
         logs_stream = container.log(stdout=True, stderr=True, follow=True)
@@ -103,6 +113,7 @@ class Docker:
 
 
 def create_aggregator_context(data_file_path: Path, init_tensor_dict_path: Path):
+    """Create context for aggregator service."""
     with TarFile(name=data_file_path, mode='a') as tar_file:
         docker_file_path = OPENFL_ROOT_PATH / 'openfl-docker' / 'Dockerfile.aggregator'
         run_aggregator_path = (OPENFL_ROOT_PATH / 'openfl' / 'component' / 'director'
@@ -117,6 +128,7 @@ def create_collaborator_context(
         data_file_path: Path,
         shard_descriptor_config
 ) -> Path:
+    """Create context for collaborator service."""
     with TarFile(name=data_file_path, mode='a') as tar_file:
         docker_file_path = OPENFL_ROOT_PATH / 'openfl-docker' / 'Dockerfile.collaborator'
         run_collaborator_path = (OPENFL_ROOT_PATH / 'openfl' / 'component' / 'envoy'
@@ -139,6 +151,7 @@ def create_collaborator_context(
 
 
 def volumes_to_binds(volumes: List[str]) -> List[str]:
+    """Convert docker volumes to binds."""
     binds = []
     for volume in map(lambda x: x.split(':'), volumes):
         target = volume[0]

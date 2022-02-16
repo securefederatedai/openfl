@@ -1,4 +1,4 @@
-# Copyright (C) 2020-2021 Intel Corporation
+# Copyright (C) 2021-2022 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Experiment module."""
@@ -175,6 +175,7 @@ class Experiment:
             grpc_server.stop(0)
             # Temporary solution to free RAM used by TensorDB
             aggregator_grpc_server.aggregator.tensor_db.clean_up(0)
+
 
 class ExperimentsRegistry:
     """ExperimentsList class."""

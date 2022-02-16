@@ -1,3 +1,6 @@
+# Copyright (C) 2022 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Run collaborator in docker module."""
 import argparse
 import logging

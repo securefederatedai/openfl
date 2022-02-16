@@ -96,7 +96,6 @@ class Envoy:
                     ):
                         self._run_collaborator()
 
-
             except Exception as exc:
                 logger.exception(f'Collaborator failed with error: {exc}:')
                 self.director_client.set_experiment_failed(

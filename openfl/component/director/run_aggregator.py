@@ -1,3 +1,8 @@
+# Copyright (C) 2022 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+"""Script to run aggregator in docker."""
+
 import argparse
 import asyncio
 import logging
@@ -26,7 +31,7 @@ def _parse_args():
     parser.add_argument('--tls', dest='tls', action='store_true')
     parser.add_argument('--no-tls', dest='tls', action='store_false')
     parser.set_defaults(tls=True)
-    
+
     return parser.parse_args()
 
 
@@ -39,6 +44,7 @@ async def main(
         private_key,
         tls,
 ):
+    """Run main function."""
     plan = Plan.parse(plan_config_path=Path(plan_path))
     plan.authorized_cols = list(collaborators)
 
