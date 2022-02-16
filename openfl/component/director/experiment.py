@@ -11,6 +11,8 @@ from typing import Iterable
 from typing import List
 from typing import Union
 
+import numpy as np
+
 from openfl.docker import docker
 from openfl.federated import Plan
 from openfl.transport import AggregatorGRPCServer
@@ -40,6 +42,7 @@ class Experiment:
             init_tensor_dict_path: Union[Path, str],
             plan_path: Union[Path, str] = 'plan/plan.yaml',
             users: Iterable[str] = None,
+            use_docker: bool = False,
     ) -> None:
         """Initialize an experiment object."""
         self.name = name
@@ -52,9 +55,11 @@ class Experiment:
         if isinstance(plan_path, str):
             plan_path = Path(plan_path)
         self.plan_path = plan_path
+        self.plan = None
         self.users = set() if users is None else set(users)
         self.status = Status.PENDING
         self.aggregator = None
+        self._use_docker = use_docker
 
     async def start(
             self, *,
@@ -69,31 +74,34 @@ class Experiment:
             logger.info(f'New experiment {self.name} for '
                         f'collaborators {self.collaborators}')
 
-            # with ExperimentWorkspace(self.name, self.archive_path):
-            #     aggregator_grpc_server = self._create_aggregator_grpc_server(
-            #         tls=tls,
-            #         root_certificate=root_certificate,
-            #         private_key=private_key,
-            #         certificate=certificate,
-            #     )
-            #     self.aggregator = aggregator_grpc_server.aggregator
-            #     await self._run_aggregator_grpc_server(
-            #         aggregator_grpc_server=aggregator_grpc_server,
-            #     )
-            await self._run_aggregator(
-                data_file_path=self.archive_path,
-                tls=tls,
-                root_certificate=root_certificate,
-                private_key=private_key,
-                certificate=certificate,
-            )
+            if self._use_docker:
+                await self._run_aggregator_in_docker(
+                    data_file_path=self.archive_path,
+                    tls=tls,
+                    root_certificate=root_certificate,
+                    private_key=private_key,
+                    certificate=certificate,
+                )
+            else:
+                with ExperimentWorkspace(self.name, self.archive_path):
+                    aggregator_grpc_server = self._create_aggregator_grpc_server(
+                        tls=tls,
+                        root_certificate=root_certificate,
+                        private_key=private_key,
+                        certificate=certificate,
+                    )
+                    self.aggregator = aggregator_grpc_server.aggregator
+                    await self._run_aggregator_grpc_server(
+                        aggregator_grpc_server=aggregator_grpc_server,
+                    )
+
             self.status = Status.FINISHED
             logger.info(f'Experiment "{self.name}" was finished successfully.')
         except Exception as e:
             self.status = Status.FAILED
             logger.error(f'Experiment "{self.name}" was failed with error: {e}.')
 
-    async def _run_aggregator(
+    async def _run_aggregator_in_docker(
             self, *,
             data_file_path: Path,
             tls: bool = False,
@@ -128,45 +136,45 @@ class Experiment:
 
         await docker_client.start_and_monitor_container(container=container)
 
-    # def _create_aggregator_grpc_server(
-    #         self, *,
-    #         tls: bool = True,
-    #         root_certificate: Union[Path, str] = None,
-    #         private_key: Union[Path, str] = None,
-    #         certificate: Union[Path, str] = None,
-    # ) -> AggregatorGRPCServer:
-    #     plan = Plan.parse(plan_config_path=Path(self.plan_path))
-    #     plan.authorized_cols = list(self.collaborators)
-    #
-    #     logger.info('🧿 Starting the Aggregator Service.')
-    #     aggregator_grpc_server = plan.interactive_api_get_server(
-    #         tensor_dict=self.init_tensor_dict,
-    #         root_certificate=root_certificate,
-    #         certificate=certificate,
-    #         private_key=private_key,
-    #         tls=tls,
-    #     )
-    #     return aggregator_grpc_server
-    #
-    # @staticmethod
-    # async def _run_aggregator_grpc_server(aggregator_grpc_server: AggregatorGRPCServer) -> None:
-    #     """Run aggregator."""
-    #     logger.info('🧿 Starting the Aggregator Service.')
-    #     grpc_server = aggregator_grpc_server.get_server()
-    #     grpc_server.start()
-    #     logger.info('Starting Aggregator gRPC Server')
-    #
-    #     try:
-    #         while not aggregator_grpc_server.aggregator.all_quit_jobs_sent():
-    #             # Awaiting quit job sent to collaborators
-    #             await asyncio.sleep(10)
-    #     except KeyboardInterrupt:
-    #         pass
-    #     finally:
-    #         grpc_server.stop(0)
-    #         # Temporary solution to free RAM used by TensorDB
-    #         aggregator_grpc_server.aggregator.tensor_db.clean_up(0)
+    def _create_aggregator_grpc_server(
+            self, *,
+            tls: bool = True,
+            root_certificate: Union[Path, str] = None,
+            private_key: Union[Path, str] = None,
+            certificate: Union[Path, str] = None,
+    ) -> AggregatorGRPCServer:
+        plan = Plan.parse(plan_config_path=Path(self.plan_path))
+        plan.authorized_cols = list(self.collaborators)
 
+        logger.info('🧿 Starting the Aggregator Service.')
+        init_tensor_dict = np.load(str(self.init_tensor_dict_path), allow_pickle=True)
+        aggregator_grpc_server = plan.interactive_api_get_server(
+            tensor_dict=init_tensor_dict,
+            root_certificate=root_certificate,
+            certificate=certificate,
+            private_key=private_key,
+            tls=tls,
+        )
+        return aggregator_grpc_server
+
+    @staticmethod
+    async def _run_aggregator_grpc_server(aggregator_grpc_server: AggregatorGRPCServer) -> None:
+        """Run aggregator."""
+        logger.info('🧿 Starting the Aggregator Service.')
+        grpc_server = aggregator_grpc_server.get_server()
+        grpc_server.start()
+        logger.info('Starting Aggregator gRPC Server')
+
+        try:
+            while not aggregator_grpc_server.aggregator.all_quit_jobs_sent():
+                # Awaiting quit job sent to collaborators
+                await asyncio.sleep(10)
+        except KeyboardInterrupt:
+            pass
+        finally:
+            grpc_server.stop(0)
+            # Temporary solution to free RAM used by TensorDB
+            aggregator_grpc_server.aggregator.tensor_db.clean_up(0)
 
 class ExperimentsRegistry:
     """ExperimentsList class."""
