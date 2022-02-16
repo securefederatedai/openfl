@@ -47,8 +47,10 @@ def envoy(context):
         help='Path to a private key', type=ClickPath(exists=True))
 @option('-oc', '--public-cert-path', 'certificate', default=None,
         help='Path to a signed certificate', type=ClickPath(exists=True))
+@option('--use-docker/--no-use-docker', default=False, is_flag=True,
+        help='Use docker to run collaborator.')
 def start_(shard_name, director_host, director_port, tls, envoy_config_path,
-           root_certificate, private_key, certificate):
+           root_certificate, private_key, certificate, use_docker):
     """Start the Envoy."""
     logger.info('🧿 Starting the Envoy.')
     if is_directory_traversal(envoy_config_path):
@@ -95,6 +97,7 @@ def start_(shard_name, director_host, director_port, tls, envoy_config_path,
         root_certificate=root_certificate,
         private_key=private_key,
         certificate=certificate,
+        use_docker=use_docker,
         **envoy_params
     )
 
