@@ -221,10 +221,10 @@ def merge_configs(
         **kwargs,
 ) -> Dynaconf:
     """Create Dynaconf settings, merge its with `overwrite_dict` and validate result."""
-    settings = Dynaconf(**kwargs)
+    settings = Dynaconf(**kwargs, YAML_LOADER='safe_load')
     if overwrite_dict:
         for key, value in overwrite_dict.items():
             if value is not None or settings.get(key) is None:
-                settings.set(key, value)
+                settings.set(key, value, merge=True)
     settings.validators.validate()
     return settings

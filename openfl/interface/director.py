@@ -66,6 +66,8 @@ def start(director_config_path, tls, root_certificate, private_key, certificate)
             Validator('settings.envoy_health_check_period', gte=1, lte=24 * 60 * 60),
         ],
     )
+    config.settings.sample_shape = list(map(str, config.settings.sample_shape))
+    config.settings.target_shape = list(map(str, config.settings.target_shape))
 
     logger.info(
         f'Sample shape: {config.settings.sample_shape}, '
