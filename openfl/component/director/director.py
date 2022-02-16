@@ -77,8 +77,9 @@ class Director:
             experiment_archive_path: Path,
     ) -> bool:
         """Set new experiment."""
-        tensor_dict_path = f'{experiment_name}.pickle'
-        with open(tensor_dict_path, 'wb') as f:
+        tensor_dict_path = Path(f'{experiment_name}.pickle').absolute()
+
+        with tensor_dict_path.open('wb') as f:
             pickle.dump(tensor_dict, f)
 
         experiment = Experiment(
