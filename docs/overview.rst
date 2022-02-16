@@ -5,11 +5,6 @@
 Overview
 ==========
 
-.. toctree::
-
-   `definitions_and_conventions`_
-   `definitions_and_conventions`_
-     
 
 .. note::
 

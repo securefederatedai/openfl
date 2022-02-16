@@ -1,7 +1,7 @@
 # Copyright (C) 2020-2021 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""CollaboratorGRPCClient module."""
+"""AggregatorGRPCClient module."""
 
 import time
 from logging import getLogger
@@ -10,11 +10,9 @@ from typing import Tuple
 
 import grpc
 
-from openfl.protocols import AggregatorStub
-from openfl.protocols import MessageHeader
-from openfl.protocols import TaskResults
-from openfl.protocols import TasksRequest
-from openfl.protocols import TensorRequest
+from openfl.pipelines import NoCompressionPipeline
+from openfl.protocols import aggregator_pb2
+from openfl.protocols import aggregator_pb2_grpc
 from openfl.protocols import utils
 from openfl.utilities import check_equal
 
@@ -88,8 +86,8 @@ def _atomic_connection(func):
     return wrapper
 
 
-class CollaboratorGRPCClient:
-    """Collaboration over gRPC-TLS."""
+class AggregatorGRPCClient:
+    """Client to the aggregator over gRPC-TLS."""
 
     def __init__(self,
                  agg_addr,
@@ -147,7 +145,7 @@ class CollaboratorGRPCClient:
                 status_for_retry=(grpc.StatusCode.UNAVAILABLE,),
             ),
         )
-        self.stub = AggregatorStub(
+        self.stub = aggregator_pb2_grpc.AggregatorStub(
             grpc.intercept_channel(self.channel, *self.interceptors)
         )
 
@@ -205,7 +203,7 @@ class CollaboratorGRPCClient:
             uri, credentials, options=self.channel_options)
 
     def _set_header(self, collaborator_name):
-        self.header = MessageHeader(
+        self.header = aggregator_pb2.MessageHeader(
             sender=collaborator_name,
             receiver=self.aggregator_uuid,
             federation_uuid=self.federation_uuid,
@@ -255,7 +253,7 @@ class CollaboratorGRPCClient:
 
         self.logger.debug(f'Connecting to gRPC at {self.uri}')
 
-        self.stub = AggregatorStub(
+        self.stub = aggregator_pb2_grpc.AggregatorStub(
             grpc.intercept_channel(self.channel, *self.interceptors)
         )
 
@@ -263,7 +261,7 @@ class CollaboratorGRPCClient:
     def get_tasks(self, collaborator_name):
         """Get tasks from the aggregator."""
         self._set_header(collaborator_name)
-        request = TasksRequest(header=self.header)
+        request = aggregator_pb2.GetTasksRequest(header=self.header)
         response = self.stub.GetTasks(request)
         self.validate_response(response, collaborator_name)
 
@@ -274,7 +272,7 @@ class CollaboratorGRPCClient:
                               report, tags, require_lossless):
         """Get aggregated tensor from the aggregator."""
         self._set_header(collaborator_name)
-        request = TensorRequest(
+        request = aggregator_pb2.GetAggregatedTensorRequest(
             header=self.header,
             tensor_name=tensor_name,
             round_number=round_number,
@@ -293,7 +291,7 @@ class CollaboratorGRPCClient:
                                 task_name, data_size, named_tensors):
         """Send task results to the aggregator."""
         self._set_header(collaborator_name)
-        request = TaskResults(
+        request = aggregator_pb2.TaskResults(
             header=self.header,
             round_number=round_number,
             task_name=task_name,
@@ -308,3 +306,16 @@ class CollaboratorGRPCClient:
 
         # also do other validation, like on the round_number
         self.validate_response(response, collaborator_name)
+
+    def _get_trained_model(self, experiment_name, model_type):
+        """Get trained model RPC."""
+        get_model_request = self.stub.GetTrainedModelRequest(
+            experiment_name=experiment_name,
+            model_type=model_type,
+        )
+        model_proto_response = self.stub.GetTrainedModel(get_model_request)
+        tensor_dict, _ = utils.deconstruct_model_proto(
+            model_proto_response.model_proto,
+            NoCompressionPipeline(),
+        )
+        return tensor_dict

@@ -5,12 +5,17 @@
 import asyncio
 import logging
 import time
+import traceback
 import uuid
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
+from click import echo
+
 from openfl.docker import docker
+from openfl.federated import Plan
 from openfl.transport.grpc.director_client import ShardDirectorClient
+from openfl.utilities.workspace import ExperimentWorkspace
 
 logger = logging.getLogger(__name__)
 
@@ -20,10 +25,21 @@ DEFAULT_RETRY_TIMEOUT_IN_SECONDS = 5
 class Envoy:
     """Envoy class."""
 
-    def __init__(self, *, shard_name, director_host, director_port, shard_descriptor,
-                 shard_descriptor_config,
-                 root_certificate: str = None, private_key: str = None, certificate: str = None,
-                 tls: bool = True, cuda_devices=(), cuda_device_monitor=None) -> None:
+    def __init__(
+            self, *,
+            shard_name,
+            director_host,
+            director_port,
+            shard_descriptor,
+            shard_descriptor_config,
+            root_certificate: str = None,
+            private_key: str = None,
+            certificate: str = None,
+            tls: bool = True,
+            cuda_devices=(),
+            cuda_device_monitor=None,
+            use_docker: bool = False,
+    ) -> None:
         """Initialize a envoy object."""
         self.name = shard_name
         self.root_certificate = Path(
@@ -51,6 +67,7 @@ class Envoy:
         self.running_experiments = {}
         self.is_experiment_running = False
         self._health_check_future = None
+        self._use_docker = use_docker
 
     async def run(self):
         """Run of the envoy working cycle."""
@@ -66,13 +83,27 @@ class Envoy:
             data_file_path = self._save_data_stream_to_file(data_stream)
             self.is_experiment_running = True
             try:
-                await self._run_collaborator(
-                    experiment_name=experiment_name.lower(),
-                    data_file_path=data_file_path,
-                )
+                if self._use_docker:
+                    await self._run_collaborator_in_docker(
+                        experiment_name=experiment_name.lower(),
+                        data_file_path=data_file_path,
+                    )
+                else:
+                    with ExperimentWorkspace(
+                            self.name + ' ' + experiment_name,
+                            data_file_path,
+                            is_install_requirements=True
+                    ):
+                        self._run_collaborator()
+
 
             except Exception as exc:
                 logger.exception(f'Collaborator failed with error: {exc}:')
+                self.director_client.set_experiment_failed(
+                    experiment_name,
+                    error_code=1,
+                    error_description=traceback.format_exc()
+                )
             finally:
                 self.is_experiment_running = False
 
@@ -127,7 +158,20 @@ class Envoy:
                              f'Check your cuda device monitor plugin.')
         return cuda_devices_info
 
-    async def _run_collaborator(self, experiment_name: str, data_file_path: Path):
+    def _run_collaborator(self, plan='plan/plan.yaml'):
+        """Run the collaborator for the experiment running."""
+        plan = Plan.parse(plan_config_path=Path(plan))
+
+        # TODO: Need to restructure data loader config file loader
+        echo(f'Data = {plan.cols_data_paths}')
+        logger.info('🧿 Starting a Collaborator Service.')
+
+        col = plan.get_collaborator(self.name, self.root_certificate, self.private_key,
+                                    self.certificate, shard_descriptor=self.shard_descriptor)
+        col.set_available_devices(cuda=self.cuda_devices)
+        col.run()
+
+    async def _run_collaborator_in_docker(self, experiment_name: str, data_file_path: Path):
         """Run the collaborator for the experiment running."""
         docker_client = docker.Docker()
         docker_context_path = docker.create_collaborator_context(

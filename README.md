@@ -8,6 +8,7 @@
 [<img src="https://img.shields.io/badge/slack-@openfl-blue.svg?logo=slack">](https://join.slack.com/t/openfl/shared_invite/zt-ovzbohvn-T5fApk05~YS_iZhjJ5yaTw) 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Citation](https://img.shields.io/badge/cite-citation-blue)](https://arxiv.org/abs/2105.06413)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/intel/openfl/blob/develop/openfl-tutorials/interactive_api/numpy_linear_regression/workspace/SingleNotebook.ipynb)
 
 OpenFL is a Python 3 framework for Federated Learning. OpenFL is designed to be a _flexible_, _extensible_ and _easily learnable_ tool for data scientists. OpenFL is developed by Intel Internet of Things Group (IOTG) and Intel Labs. 
 
@@ -25,15 +26,16 @@ For more installation options check out the [online documentation](https://openf
 
 OpenFL enables data scientists to set up a federated learning experiment following one of the workflows:
 
-- [Director-based Workflow](https://openfl.readthedocs.io/en/latest/source/workflow/director_based_workflow.html) [preferred]:
+- [Director-based Workflow](https://openfl.readthedocs.io/en/latest/running_the_federation.html#director-based-workflow) [preferred]:
 a federation created with this workflow continues to be available to distribute more experiments in series.
 
-- [Aggregator-based Workflow](https://openfl.readthedocs.io/en/latest/source/workflow/running_the_federation.agg_based.html):
+- [Aggregator-based Workflow](https://openfl.readthedocs.io/en/latest/running_the_federation.html#aggregator-based-workflow):
 with this workflow, the federation is terminated when the experiment is finished.
 
 The quickest way to test OpenFL is to follow our [tutorials](https://github.com/intel/openfl/tree/develop/openfl-tutorials). </br>
 Read the [blog post](https://towardsdatascience.com/go-federated-with-openfl-8bc145a5ead1) explaining steps to train a model with OpenFL. </br>
 Check out the [online documentation](https://openfl.readthedocs.io/en/latest/index.html) to launch your first federation.
+
 
 ## Requirements
 

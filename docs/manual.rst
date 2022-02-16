@@ -16,7 +16,6 @@ Establish a federation with |productName|:
 
 Customize the federation:
 
-- :doc:`plan_settings`
 - :doc:`source/utilities/utilities`
 - :doc:`advanced_topics`
 
@@ -31,6 +30,6 @@ Familiarize with the APIs:
    overview
    install
    running_the_federation
-   source/workflow/running_the_federation.tutorial
    source/utilities/utilities
    advanced_topics
+   source/workflow/running_the_federation.tutorial

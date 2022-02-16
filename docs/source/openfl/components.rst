@@ -7,14 +7,6 @@
 Core Components
 *****************************
 
-.. toctree::
-   :maxdepth: 2
-
-   `Short-Lived Components`_
-   `Long-Lived Components`_
-   `Static Diagram`_
-
-
 Open Federated Learning (|productName|) has the following components:
 
     - :ref:`openfl_short_lived_components`

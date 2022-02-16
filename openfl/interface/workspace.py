@@ -4,6 +4,7 @@
 
 import sys
 from pathlib import Path
+from typing import Tuple
 
 from click import Choice
 from click import confirm
@@ -14,7 +15,7 @@ from click import pass_context
 from click import Path as ClickPath
 
 from openfl.utilities.path_check import is_directory_traversal
-from openfl.utilities.utils import is_package_versioned
+from openfl.utilities.workspace import dump_requirements_file
 
 
 @group()
@@ -109,7 +110,12 @@ def create(prefix, template):
 
 
 @workspace.command(name='export')
-def export_():
+@option('-o', '--pip-install-options', required=False,
+        type=str, multiple=True, default=tuple,
+        help='Options for remote pip install. '
+             'You may pass several options in quotation marks alongside with arguments, '
+             'e.g. -o "--find-links source.site"')
+def export_(pip_install_options: Tuple[str]):
     """Export federated learning workspace."""
     from os import getcwd
     from os import makedirs
@@ -124,19 +130,14 @@ def export_():
     from plan import freeze_plan
     from openfl.interface.cli_helper import WORKSPACE
 
-    # TODO: Does this need to freeze all plans?
     plan_file = Path('plan/plan.yaml').absolute()
     try:
         freeze_plan(plan_file)
     except Exception:
         echo(f'Plan file "{plan_file}" not found. No freeze performed.')
 
-    from pip._internal.operations import freeze
-    requirements_generator = freeze.freeze()
-    with open('./requirements.txt', 'w') as f:
-        for package in requirements_generator:
-            if is_package_versioned(package):
-                f.write(package + '\n')
+    # Dump requirements.txt
+    dump_requirements_file(prefixes=pip_install_options, keep_original_prefixes=True)
 
     archive_type = 'zip'
     archive_name = basename(getcwd())

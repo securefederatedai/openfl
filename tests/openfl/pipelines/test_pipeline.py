@@ -8,13 +8,13 @@ import pytest
 from openfl.pipelines.pipeline import Float32NumpyArrayToBytes
 from openfl.pipelines.pipeline import TransformationPipeline
 from openfl.pipelines.pipeline import Transformer
-from openfl.protocols import NamedTensor
+from openfl.protocols import base_pb2
 
 
 @pytest.fixture
 def named_tensor():
     """Initialize the named_tensor mock."""
-    tensor = NamedTensor(
+    tensor = base_pb2.NamedTensor(
         name='tensor_name',
         round_number=0,
         lossless=False,
