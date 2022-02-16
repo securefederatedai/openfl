@@ -23,6 +23,7 @@ setup(
         'openfl.component',
         'openfl.cryptography',
         'openfl.native',
+        'openfl.docker',
         'openfl.component.assigner',
         'openfl.component.aggregator',
         'openfl.component.collaborator',
