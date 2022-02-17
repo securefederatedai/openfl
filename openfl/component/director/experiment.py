@@ -143,12 +143,12 @@ class Experiment:
             private_key: Union[Path, str] = None,
             certificate: Union[Path, str] = None,
     ) -> AggregatorGRPCServer:
-        plan = Plan.parse(plan_config_path=Path(self.plan_path))
-        plan.authorized_cols = list(self.collaborators)
+        self.plan = Plan.parse(plan_config_path=Path(self.plan_path))
+        self.plan.authorized_cols = list(self.collaborators)
 
         logger.info('🧿 Starting the Aggregator Service.')
         init_tensor_dict = np.load(str(self.init_tensor_dict_path), allow_pickle=True)
-        aggregator_grpc_server = plan.interactive_api_get_server(
+        aggregator_grpc_server = self.plan.interactive_api_get_server(
             tensor_dict=init_tensor_dict,
             root_certificate=root_certificate,
             certificate=certificate,
