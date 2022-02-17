@@ -17,8 +17,8 @@ RUN --mount=type=secret,id=signer-key,dst=/key.pem \
     make clean && make SGX=${SGX} SGX_SIGNER_KEY=/key.pem
 
 ARG GRAMINE_EXE=gramine-sgx
-ENV GRAMINE_EXE=GRAMINE_EXE
-ENTRYPOINT [ ${GRAMINE_EXE}, "./openfl", "/usr/local/bin/fx"]
+ENV GRAMINE=GRAMINE_EXE
+ENTRYPOINT [ $GRAMINE, "./openfl", "/usr/local/bin/fx"]
 
 # FROM builder as runner-sgx-1
 # ENTRYPOINT [ "gramine-sgx", "./openfl", "/usr/local/bin/fx"]

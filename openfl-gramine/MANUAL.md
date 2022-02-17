@@ -85,19 +85,34 @@ docker load < WORKSPACE_NAME.tar.gz
 Certificates exchange is a big separate topic. To run an experiment following OpenFL Aggregator-based workflow, user must follow the established procedure, please refer to [the docs](https://openfl.readthedocs.io/en/latest/running_the_federation.html#bare-metal-approach).
 Following the above-mentioned procedure, running machines will acquire certificates. Moreover, as the result of this procedure, the aggregator machine will also obtain a `cols.yaml` file (required to start an experiment) with registered collaborators names, and the collaborator machines will obtain `data.yaml` files.
 
-We recoment replicate the OpenFL workspace folder structure on all the machines and follow the usual certifying procedure. Finally, on aggregator you should have the following folder structure:
+We recoment replicate the OpenFL workspace folder structure on all the machines and follow the usual certifying procedure. Finally, on the aggregator node you should have the following folder structure:
 ```
 workspace/
 --save/WORKSPACE_NAME_init.pbuf
 --logs/
 --plan/cols.yaml
---cert
+--cert/
+  --client/*col.crt
+  --server/
+    --agg_FQDN.crt
+    --agg_FQDN.key
+```
+
+On collaborator nodes:
+```
+workspace/
+--data/*dataset*
+--plan/data.yaml
+--cert/
+  --client/
+    --col_name.crt
+    --col_name.key
 ```
 
 10. Run aggregator
 ```
-EXP_NAME=kvasir
-FEDERATION_PATH=/home/idavidyu/openfl-rebased-gramine/openfl/fed_work12345alpha81671
+EXP_NAME=federation
+FEDERATION_PATH=/home/idavidyu/openfl/federation
 docker run -it --rm --device=/dev/sgx_enclave --volume=/var/run/aesmd/aesm.socket:/var/run/aesmd/aesm.socket \
 --network=host \
 --volume=${FEDERATION_PATH}/cert:/workspace/cert \
@@ -110,13 +125,14 @@ ${EXP_NAME} aggregator start
 No SGX (gramine-direct):
 
 ```
-EXP_NAME=kvasir
-FEDERATION=fed_work12345alpha81671
+EXP_NAME=federation
+FEDERATION_PATH=/home/idavidyu/openfl/fed_work12345alpha81671
 docker run -it --rm --security-opt seccomp=unconfined \
 --network=host \
---volume=/home/idavidyu/openfl/${FEDERATION}/cert:/workspace/cert \
---volume=/home/idavidyu/openfl/${FEDERATION}/logs:/workspace/logs \
---mount type=bind,src=/home/idavidyu/openfl/${FEDERATION}/save,dst=/workspace/save,readonly=0 \
+--volume=${FEDERATION_PATH}/cert:/workspace/cert \
+--volume=${FEDERATION_PATH}/logs:/workspace/logs \
+--volume=${FEDERATION_PATH}/plan/cols.yaml:/workspace/plan/cols.yaml \
+--mount type=bind,src=${FEDERATION_PATH}/save,dst=/workspace/save,readonly=0 \
 ${EXP_NAME} aggregator start
 ```
 11. Run collaborator

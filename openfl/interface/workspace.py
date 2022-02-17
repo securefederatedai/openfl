@@ -497,11 +497,12 @@ def graminize_(context, sgx_target, signing_key, pip_install_options: Tuple[str]
     grainized_ws_dockerfile = SITEPACKS / 'openfl-gramine' / 'Dockerfile.graminized.workspace'
 
     echo('\n 🐋 Building graminized workspace image...')
+    signing_key = f'--secret id=signer-key,src={signing_key} ' if SGX_BUILD else ''
     graminized_build_command = f'docker build -t {workspace_name} ' + \
         '--build-arg BASE_IMAGE=gramine_openfl ' + \
         f'--build-arg WORKSPACE_ARCHIVE={workspace_archive.relative_to(workspace_path)} ' + \
         f'--build-arg SGX_BUILD={SGX_BUILD} --build-arg SGX_EXE={SGX_EXE} ' + \
-        f'--secret id=signer-key,src={signing_key} ' if SGX_BUILD else '' + \
+        signing_key + \
         f'-f {grainized_ws_dockerfile} {workspace_path}'
     open_pipe(graminized_build_command)
     echo('\n ✔️ DONE: Building graminized workspace image')
