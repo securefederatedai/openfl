@@ -14,8 +14,6 @@ from datasets import load_dataset
 from openfl.interface.interactive_api.shard_descriptor import ShardDataset
 from openfl.interface.interactive_api.shard_descriptor import ShardDescriptor
 
-logger = logging.getLogger(__name__)
-
 
 class SuperbShardDataset(ShardDataset):
     """SUPERB Shard dataset class."""

@@ -1,4 +1,5 @@
 datasets==1.14
+librosa
 numpy
 pillow
 pynvml

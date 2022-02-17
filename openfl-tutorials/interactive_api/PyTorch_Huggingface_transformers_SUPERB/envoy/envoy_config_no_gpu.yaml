@@ -1,7 +1,0 @@
-params:
-  cuda_devices: []
-
-shard_descriptor:
-  template: superb_shard_descriptor.SuperbShardDescriptor
-  params:
-    rank_worldsize: 1,2
