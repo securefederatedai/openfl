@@ -35,7 +35,8 @@ class Director:
             certificate: Union[Path, str] = None,
             sample_shape: list = None,
             target_shape: list = None,
-            settings: dict = None
+            settings: dict = None,
+            use_docker: bool = False,
     ) -> None:
         """Initialize a director object."""
         self.sample_shape, self.target_shape = sample_shape, target_shape
@@ -48,6 +49,7 @@ class Director:
         self.settings = settings or {}
         self.col_exp_queues = defaultdict(asyncio.Queue)
         self.col_exp = {}
+        self._use_docker = use_docker
 
     def acknowledge_shard(self, shard_info: dict) -> bool:
         """Save shard info to shard registry if it's acceptable."""
@@ -89,6 +91,7 @@ class Director:
             users=[sender_name],
             sender=sender_name,
             init_tensor_dict_path=tensor_dict_path,
+            use_docker=self._use_docker,
         )
         self.experiments_registry.add(experiment)
         return True

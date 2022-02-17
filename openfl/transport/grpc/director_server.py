@@ -30,7 +30,8 @@ class DirectorGRPCServer(director_pb2_grpc.DirectorServicer):
 
     def __init__(self, *, director_cls, tls: bool = True,
                  root_certificate: str = None, private_key: str = None, certificate: str = None,
-                 listen_host='[::]', listen_port=50051, **kwargs) -> None:
+                 listen_host='[::]', listen_port=50051, use_docker: bool = False,
+                 **kwargs) -> None:
         """Initialize a director object."""
         # TODO: add working directory
         super().__init__()
@@ -48,6 +49,7 @@ class DirectorGRPCServer(director_pb2_grpc.DirectorServicer):
             root_certificate=self.root_certificate,
             private_key=self.private_key,
             certificate=self.certificate,
+            use_docker=use_docker,
             **kwargs
         )
 

@@ -1,4 +1,4 @@
 #!/bin/bash
 set -e
 
-fx director start --disable-tls -c director_config.yaml
+fx director start --disable-tls -c director_config.yaml --use-docker

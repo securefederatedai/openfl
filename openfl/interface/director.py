@@ -43,7 +43,9 @@ def director(context):
 @option('-oc', '--public-cert-path', 'certificate', required=False,
         type=ClickPath(exists=True), default=None,
         help='Path to a signed certificate')
-def start(director_config_path, tls, root_certificate, private_key, certificate):
+@option('--use-docker/--no-use-docker', default=False, is_flag=True,
+        help='Use docker to run aggregator.')
+def start(director_config_path, tls, root_certificate, private_key, certificate, use_docker):
     """Start the director service."""
     director_config_path = Path(director_config_path).absolute()
     logger.info('🧿 Starting the Director Service.')
@@ -85,6 +87,7 @@ def start(director_config_path, tls, root_certificate, private_key, certificate)
         private_key=private_key,
         certificate=certificate,
         settings=settings,
+        use_docker=use_docker,
         **kwargs
     )
     director_server.start()
@@ -106,3 +109,12 @@ def create(director_path):
     (director_path / 'cert').mkdir(parents=True, exist_ok=True)
     (director_path / 'logs').mkdir(parents=True, exist_ok=True)
     shutil.copyfile(WORKSPACE / 'default/director.yaml', director_path / 'director.yaml')
+
+# if __name__ == '__main__':
+#     start(
+#         director_config_path='director_config.yaml',
+#         tls=False,
+#         root_certificate=None,
+#         private_key=None,
+#         certificate=None,
+#     )
