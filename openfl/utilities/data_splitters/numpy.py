@@ -129,7 +129,6 @@ class LogNormalNumPyDataSplitter(NumPyDataSplitter):
                 Should be divisible by number of classes in ``data``.
         """
         np.random.seed(self.seed)
-        np.random.shuffle(data)
         idx = [[] for _ in range(num_collaborators)]
         samples_per_col = self.classes_per_col * self.min_samples_per_class
         for col in range(num_collaborators):
