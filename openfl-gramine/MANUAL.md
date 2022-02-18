@@ -53,7 +53,7 @@ This key will not be packed to the final Docker image.
 4. **Build the Experiment Docker image**
 
 ```
-fx workspace dockerize -s KEY_LOCATION/key.pem --sgx-target/--no-sgx-target
+fx workspace graminize -s KEY_LOCATION/key.pem --sgx-target/--no-sgx-target
 ```
 This command will build and save a Docker image with you Experiment. The saved image will contain all the required files to start a process in an enclave.</br>
 If `--no-sgx-target` option passed to the command, the image will run processes under gramine-direct, in this case it is not necessary to pass signing key.
@@ -66,13 +66,13 @@ Data scientist now must transfer the Docker image to the aggregator and collabor
 If there is a connaction between machines, you may use `scp`. In other case use the transfer channel that suits your situation.</br>
 Send files to the aggregator machine:
 ```
-scp DATA_SCIENTIST_MACHINE:WORKSPACE_PATH/WORKSPACE_NAME.tar.gz AGGREGATOR_MACHINE:SOME_PATH
-scp DATA_SCIENTIST_MACHINE:WORKSPACE_PATH/save/WORKSPACE_NAME_init.pbuf AGGREGATOR_MACHINE:SOME_PATH
+scp BUILDING_MACHINE:WORKSPACE_PATH/WORKSPACE_NAME.tar.gz AGGREGATOR_MACHINE:SOME_PATH
+scp BUILDING_MACHINE:WORKSPACE_PATH/save/WORKSPACE_NAME_init.pbuf AGGREGATOR_MACHINE:SOME_PATH
 ```
 
 Send the image archive to collaborator machines:
 ```
-scp DATA_SCIENTIST_MACHINE:WORKSPACE_PATH/WORKSPACE_NAME.tar.gz COLLABORATOR_MACHINE:SOME_PATH
+scp BUILDING_MACHINE:WORKSPACE_PATH/WORKSPACE_NAME.tar.gz COLLABORATOR_MACHINE:SOME_PATH
 ```
 ### On the running machines (Aggregator and Collaborator nodes):
 6. **Load the image.**
@@ -109,42 +109,45 @@ workspace/
     --col_name.key
 ```
 
-10. Run aggregator
+To speed up the certification process for one-node test runs, it makes sense to utilize the [OpenFL integration test script](https://github.com/intel/openfl/blob/develop/tests/github/test_hello_federation.sh) (comment out last 9 lines) that will create required folders and certify an aggregator and two collaborators.
+
+8. **Run the Aggregator**
 ```
-EXP_NAME=federation
-FEDERATION_PATH=/home/idavidyu/openfl/federation
+export WORKSPACE_NAME=your_workspace_name
+export WORKSPACE_PATH=path_to_workspace
 docker run -it --rm --device=/dev/sgx_enclave --volume=/var/run/aesmd/aesm.socket:/var/run/aesmd/aesm.socket \
 --network=host \
---volume=${FEDERATION_PATH}/cert:/workspace/cert \
---volume=${FEDERATION_PATH}/logs:/workspace/logs \
---volume=${FEDERATION_PATH}/plan/cols.yaml:/workspace/plan/cols.yaml \
---mount type=bind,src=${FEDERATION_PATH}/save,dst=/workspace/save,readonly=0 \
-${EXP_NAME} aggregator start
+--volume=${WORKSPACE_PATH}/cert:/workspace/cert \
+--volume=${WORKSPACE_PATH}/logs:/workspace/logs \
+--volume=${WORKSPACE_PATH}/plan/cols.yaml:/workspace/plan/cols.yaml \
+--mount type=bind,src=${WORKSPACE_PATH}/save,dst=/workspace/save,readonly=0 \
+${WORKSPACE_NAME} aggregator start
 ```
 
+If the image was built with
 No SGX (gramine-direct):
 
 ```
-EXP_NAME=federation
-FEDERATION_PATH=/home/idavidyu/openfl/fed_work12345alpha81671
+export WORKSPACE_NAME=your_workspace_name
+export WORKSPACE_PATH=path_to_workspace
 docker run -it --rm --security-opt seccomp=unconfined \
 --network=host \
---volume=${FEDERATION_PATH}/cert:/workspace/cert \
---volume=${FEDERATION_PATH}/logs:/workspace/logs \
---volume=${FEDERATION_PATH}/plan/cols.yaml:/workspace/plan/cols.yaml \
---mount type=bind,src=${FEDERATION_PATH}/save,dst=/workspace/save,readonly=0 \
-${EXP_NAME} aggregator start
+--volume=${WORKSPACE_PATH}/cert:/workspace/cert \
+--volume=${WORKSPACE_PATH}/logs:/workspace/logs \
+--volume=${WORKSPACE_PATH}/plan/cols.yaml:/workspace/plan/cols.yaml \
+--mount type=bind,src=${WORKSPACE_PATH}/save,dst=/workspace/save,readonly=0 \
+${WORKSPACE_NAME} aggregator start
 ```
-11. Run collaborator
+
+9. **Run the Collaborator**
 ```
-EXP_NAME=kvasir
-FEDERATION=fed_work12345alpha81671
-COL_NAME=two
-COL_NAME=one
+export WORKSPACE_NAME=your_workspace_name
+export WORKSPACE_PATH=path_to_workspace
+export COL_NAME=col_name
 docker run -it --rm --device=/dev/sgx_enclave --volume=/var/run/aesmd/aesm.socket:/var/run/aesmd/aesm.socket \
 --network=host \
---volume=/home/idavidyu/openfl-rebased-gramine/openfl/${FEDERATION}/${COL_NAME}/${FEDERATION}/cert:/workspace/cert \
---volume=/home/idavidyu/openfl-rebased-gramine/openfl/${FEDERATION}/${COL_NAME}/${FEDERATION}/plan/data.yaml:/workspace/plan/data.yaml \
---volume=/home/idavidyu/openfl-rebased-gramine/openfl/${FEDERATION}/data:/workspace/data \
+--volume=${WORKSPACE_PATH}/cert:/workspace/cert \
+--volume=${WORKSPACE_PATH}/plan/data.yaml:/workspace/plan/data.yaml \
+--volume=${WORKSPACE_PATH}/data:/workspace/data \
 ${EXP_NAME} collaborator start -n ${COL_NAME}
 ```

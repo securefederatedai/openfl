@@ -475,13 +475,13 @@ def graminize_(context, sgx_target, signing_key, pip_install_options: Tuple[str]
 
     # We can build for gramine-sgx and run with gramine-direct,
     # but not vice versa.
-    SGX_BUILD = 1 if signing_key.is_file() else 0
-    SGX_EXE = 'gramine-sgx' if sgx_target else 'gramine-direct'
-    if sgx_target and not SGX_BUILD:
+    sgx_build = 1 if signing_key.is_file() else 0
+    sgx_exe = 'gramine-sgx' if sgx_target else 'gramine-direct'
+    if sgx_target and not sgx_build:
         echo('\n ❌ Can not prepare SGX-ready application without a signing key.')
         raise Exception('Provide a signing key or pass "--no-sgx-target"')
 
-    os.environ["DOCKER_BUILDKIT"] = '1'
+    os.environ['DOCKER_BUILDKIT'] = '1'
 
     echo('\n 🐋 Building base gramine-openfl image...')
     base_dockerfile = SITEPACKS / 'openfl-gramine' / 'Dockerfile.gramine'
@@ -497,13 +497,14 @@ def graminize_(context, sgx_target, signing_key, pip_install_options: Tuple[str]
     grainized_ws_dockerfile = SITEPACKS / 'openfl-gramine' / 'Dockerfile.graminized.workspace'
 
     echo('\n 🐋 Building graminized workspace image...')
-    signing_key = f'--secret id=signer-key,src={signing_key} ' if SGX_BUILD else ''
-    graminized_build_command = f'docker build -t {workspace_name} ' + \
-        '--build-arg BASE_IMAGE=gramine_openfl ' + \
-        f'--build-arg WORKSPACE_ARCHIVE={workspace_archive.relative_to(workspace_path)} ' + \
-        f'--build-arg SGX_BUILD={SGX_BUILD} --build-arg SGX_EXE={SGX_EXE} ' + \
-        signing_key + \
-        f'-f {grainized_ws_dockerfile} {workspace_path}'
+    signing_key = f'--secret id=signer-key,src={signing_key} ' if sgx_build else ''
+    graminized_build_command = (
+        f'docker build -t {workspace_name} '
+        '--build-arg BASE_IMAGE=gramine_openfl '
+        f'--build-arg WORKSPACE_ARCHIVE={workspace_archive.relative_to(workspace_path)} '
+        f'--build-arg SGX_BUILD={sgx_build} --build-arg SGX_EXE={sgx_exe} '
+        f'{signing_key}'
+        f'-f {grainized_ws_dockerfile} {workspace_path}')
     open_pipe(graminized_build_command)
     echo('\n ✔️ DONE: Building graminized workspace image')
 
