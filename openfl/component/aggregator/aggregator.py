@@ -276,9 +276,7 @@ class Aggregator:
         time_to_quit = False
 
         # otherwise, get the tasks from our task assigner
-        tasks = self.assigner.get_tasks_for_collaborator(
-            collaborator_name,
-            self.round_number)  # fancy task assigners may want aggregator state
+        tasks = self.assigner.get_tasks_for_collaborator(collaborator_name)
 
         # if no tasks, tell the collaborator to sleep
         if len(tasks) == 0:
@@ -290,7 +288,7 @@ class Aggregator:
         # if we do have tasks, remove any that we already have results for
         tasks = [
             t for t in tasks if not self._collaborator_task_completed(
-                collaborator_name, t, self.round_number)
+                collaborator_name, t.name, self.round_number)
         ]
 
         # Do the check again because it's possible that all tasks have
@@ -738,7 +736,7 @@ class Aggregator:
         # Finally, cache the updated model tensor
         self.tensor_db.cache_tensor({final_model_tk: new_model_nparray})
 
-    def _compute_validation_related_task_metrics(self, task_name):
+    def _compute_validation_related_task_metrics(self, task):
         """
         Compute all validation related metrics.
 
@@ -750,11 +748,10 @@ class Aggregator:
         # task sent
         # This handles getting the subset of collaborators that may be
         # part of the validation task
-        collaborators_for_task = self.assigner.get_collaborators_for_task(
-            task_name, self.round_number)
+        collaborators_for_task = self.assigner.get_collaborators_for_task(task.name)
         # The collaborator data sizes for that task
         collaborator_weights_unnormalized = {
-            c: self.collaborator_task_weight[TaskResultKey(task_name, c, self.round_number)]
+            c: self.collaborator_task_weight[TaskResultKey(task.name, c, self.round_number)]
             for c in collaborators_for_task}
         weight_total = sum(collaborator_weights_unnormalized.values())
         collaborator_weight_dict = {
@@ -768,12 +765,12 @@ class Aggregator:
         # collaborator in our subset, and apply the correct
         # transformations to the tensorkey to resolve the aggregated
         # tensor for that round
-        task_agg_function = self.assigner.get_aggregation_type_for_task(task_name)
-        task_key = TaskResultKey(task_name, collaborators_for_task[0], self.round_number)
+        task_agg_function = self.assigner.get_aggregation_type_for_task(task.function_name)
+        task_key = TaskResultKey(task.name, collaborators_for_task[0], self.round_number)
         for tensor_key in self.collaborator_tasks_results[task_key]:
             tensor_name, origin, round_number, report, tags = tensor_key
             assert (tags[-1] == collaborators_for_task[0]), (
-                f'Tensor {tensor_key} in task {task_name} has not been processed correctly'
+                f'Tensor {tensor_key} in task {task.name} has not been processed correctly'
             )
 
             # Strip the collaborator label, and lookup aggregated tensor
@@ -787,7 +784,7 @@ class Aggregator:
                 # Print the aggregated metric
                 metric_dict = {
                     'metric_origin': 'Aggregator',
-                    'task_name': task_name,
+                    'task_name': task.name,
                     'metric_name': tensor_key.tensor_name,
                     'metric_value': agg_results.item(),
                     'round': round_number}
@@ -797,13 +794,13 @@ class Aggregator:
                         f'Aggregated metric {agg_tensor_name} could not be collected '
                         f'for round {self.round_number}. Skipping reporting for this round')
                 if agg_function:
-                    self.logger.metric(f'Round {round_number}, aggregator: {task_name} '
+                    self.logger.metric(f'Round {round_number}, aggregator: {task.name} '
                                        f'{agg_function} {agg_tensor_name}:\t{agg_results:f}')
                 else:
-                    self.logger.metric(f'Round {round_number}, aggregator: {task_name} '
+                    self.logger.metric(f'Round {round_number}, aggregator: {task.name} '
                                        f'{agg_tensor_name}:\t{agg_results:f}')
                 if self.write_logs:
-                    self.log_metric('Aggregator', task_name,
+                    self.log_metric('Aggregator', task.name,
                                     tensor_key.tensor_name,
                                     agg_results, round_number)
                 self.metric_queue.put(metric_dict)
@@ -838,13 +835,11 @@ class Aggregator:
             return
 
         # Compute all validation related metrics
-        all_tasks = self.assigner.get_all_tasks_for_round(self.round_number)
-        for task_name in all_tasks:
-            self._compute_validation_related_task_metrics(task_name)
+        all_tasks = self.assigner.get_all_tasks_for_round()
+        for task in all_tasks:
+            self._compute_validation_related_task_metrics(task)
 
         # Once all of the task results have been processed
-        # Increment the round number
-        self.round_number += 1
 
         # Save the latest model
         self.logger.info(f'Saving round {self.round_number} model...')
@@ -854,7 +849,9 @@ class Aggregator:
         if self._time_to_quit():
             self.logger.info('Experiment Completed. Cleaning up...')
         else:
+            self.round_number += 1
             self.logger.info(f'Starting round {self.round_number}...')
+            self.assigner.define_task_assignments_for_round(self.round_number)
 
         # Cleaning tensor db
         self.tensor_db.clean_up(self.db_store_rounds)
@@ -862,7 +859,7 @@ class Aggregator:
     def _is_task_done(self, task_name):
         """Check that task is done."""
         collaborators_needed = self.assigner.get_collaborators_for_task(
-            task_name, self.round_number
+            task_name
         )
 
         return all([
@@ -873,11 +870,9 @@ class Aggregator:
 
     def _is_round_done(self):
         """Check that round is done."""
-        tasks_for_round = self.assigner.get_all_tasks_for_round(
-            self.round_number
-        )
+        tasks_for_round = self.assigner.get_all_tasks_for_round()
 
-        return all([self._is_task_done(t) for t in tasks_for_round])
+        return all([self._is_task_done(t.name) for t in tasks_for_round])
 
     def _log_big_warning(self):
         """Warn user about single collaborator cert mode."""

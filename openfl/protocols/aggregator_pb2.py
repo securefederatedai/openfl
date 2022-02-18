@@ -20,7 +20,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   syntax='proto3',
   serialized_options=None,
   create_key=_descriptor._internal_create_key,
-  serialized_pb=b'\n!openfl/protocols/aggregator.proto\x12\x11openfl.aggregator\x1a\x1bopenfl/protocols/base.proto\"o\n\rMessageHeader\x12\x0e\n\x06sender\x18\x01 \x01(\t\x12\x10\n\x08receiver\x18\x02 \x01(\t\x12\x17\n\x0f\x66\x65\x64\x65ration_uuid\x18\x03 \x01(\t\x12#\n\x1bsingle_col_cert_common_name\x18\x04 \x01(\t\"C\n\x0fGetTasksRequest\x12\x30\n\x06header\x18\x01 \x01(\x0b\x32 .openfl.aggregator.MessageHeader\"\x8b\x01\n\x10GetTasksResponse\x12\x30\n\x06header\x18\x01 \x01(\x0b\x32 .openfl.aggregator.MessageHeader\x12\x14\n\x0cround_number\x18\x02 \x01(\x05\x12\r\n\x05tasks\x18\x03 \x03(\t\x12\x12\n\nsleep_time\x18\x04 \x01(\x05\x12\x0c\n\x04quit\x18\x05 \x01(\x08\"\xb1\x01\n\x1aGetAggregatedTensorRequest\x12\x30\n\x06header\x18\x01 \x01(\x0b\x32 .openfl.aggregator.MessageHeader\x12\x13\n\x0btensor_name\x18\x02 \x01(\t\x12\x14\n\x0cround_number\x18\x03 \x01(\x05\x12\x0e\n\x06report\x18\x04 \x01(\x08\x12\x0c\n\x04tags\x18\x05 \x03(\t\x12\x18\n\x10require_lossless\x18\x06 \x01(\x08\"\x83\x01\n\x1bGetAggregatedTensorResponse\x12\x30\n\x06header\x18\x01 \x01(\x0b\x32 .openfl.aggregator.MessageHeader\x12\x14\n\x0cround_number\x18\x02 \x01(\x05\x12\x1c\n\x06tensor\x18\x03 \x01(\x0b\x32\x0c.NamedTensor\"\x9a\x01\n\x0bTaskResults\x12\x30\n\x06header\x18\x01 \x01(\x0b\x32 .openfl.aggregator.MessageHeader\x12\x14\n\x0cround_number\x18\x02 \x01(\x05\x12\x11\n\ttask_name\x18\x03 \x01(\t\x12\x11\n\tdata_size\x18\x04 \x01(\x05\x12\x1d\n\x07tensors\x18\x05 \x03(\x0b\x32\x0c.NamedTensor\"P\n\x1cSendLocalTaskResultsResponse\x12\x30\n\x06header\x18\x01 \x01(\x0b\x32 .openfl.aggregator.MessageHeader\"1\n\x16GetMetricStreamRequest\x12\x17\n\x0f\x65xperiment_name\x18\x01 \x01(\t\"}\n\x17GetMetricStreamResponse\x12\x15\n\rmetric_origin\x18\x01 \x01(\t\x12\x11\n\ttask_name\x18\x02 \x01(\t\x12\x13\n\x0bmetric_name\x18\x03 \x01(\t\x12\x14\n\x0cmetric_value\x18\x04 \x01(\x02\x12\r\n\x05round\x18\x05 \x01(\r\"\xa7\x01\n\x16GetTrainedModelRequest\x12\x17\n\x0f\x65xperiment_name\x18\x02 \x01(\t\x12G\n\nmodel_type\x18\x03 \x01(\x0e\x32\x33.openfl.aggregator.GetTrainedModelRequest.ModelType\"+\n\tModelType\x12\x0e\n\nBEST_MODEL\x10\x00\x12\x0e\n\nLAST_MODEL\x10\x01\"8\n\x14TrainedModelResponse\x12 \n\x0bmodel_proto\x18\x01 \x01(\x0b\x32\x0b.ModelProto\"/\n\x1fGetExperimentDescriptionRequest\x12\x0c\n\x04name\x18\x01 \x01(\t\"N\n GetExperimentDescriptionResponse\x12*\n\nexperiment\x18\x01 \x01(\x0b\x32\x16.ExperimentDescription2\x94\x05\n\nAggregator\x12U\n\x08GetTasks\x12\".openfl.aggregator.GetTasksRequest\x1a#.openfl.aggregator.GetTasksResponse\"\x00\x12v\n\x13GetAggregatedTensor\x12-.openfl.aggregator.GetAggregatedTensorRequest\x1a..openfl.aggregator.GetAggregatedTensorResponse\"\x00\x12X\n\x14SendLocalTaskResults\x12\x0b.DataStream\x1a/.openfl.aggregator.SendLocalTaskResultsResponse\"\x00(\x01\x12l\n\x0fGetMetricStream\x12).openfl.aggregator.GetMetricStreamRequest\x1a*.openfl.aggregator.GetMetricStreamResponse\"\x00\x30\x01\x12g\n\x0fGetTrainedModel\x12).openfl.aggregator.GetTrainedModelRequest\x1a\'.openfl.aggregator.TrainedModelResponse\"\x00\x12\x85\x01\n\x18GetExperimentDescription\x12\x32.openfl.aggregator.GetExperimentDescriptionRequest\x1a\x33.openfl.aggregator.GetExperimentDescriptionResponse\"\x00\x62\x06proto3'
+  serialized_pb=b'\n!openfl/protocols/aggregator.proto\x12\x11openfl.aggregator\x1a\x1bopenfl/protocols/base.proto\"o\n\rMessageHeader\x12\x0e\n\x06sender\x18\x01 \x01(\t\x12\x10\n\x08receiver\x18\x02 \x01(\t\x12\x17\n\x0f\x66\x65\x64\x65ration_uuid\x18\x03 \x01(\t\x12#\n\x1bsingle_col_cert_common_name\x18\x04 \x01(\t\"C\n\x0fGetTasksRequest\x12\x30\n\x06header\x18\x01 \x01(\x0b\x32 .openfl.aggregator.MessageHeader\"=\n\x04Task\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x15\n\rfunction_name\x18\x02 \x01(\t\x12\x10\n\x08is_local\x18\x03 \x01(\x08\"\xa4\x01\n\x10GetTasksResponse\x12\x30\n\x06header\x18\x01 \x01(\x0b\x32 .openfl.aggregator.MessageHeader\x12\x14\n\x0cround_number\x18\x02 \x01(\x05\x12&\n\x05tasks\x18\x03 \x03(\x0b\x32\x17.openfl.aggregator.Task\x12\x12\n\nsleep_time\x18\x04 \x01(\x05\x12\x0c\n\x04quit\x18\x05 \x01(\x08\"\xb1\x01\n\x1aGetAggregatedTensorRequest\x12\x30\n\x06header\x18\x01 \x01(\x0b\x32 .openfl.aggregator.MessageHeader\x12\x13\n\x0btensor_name\x18\x02 \x01(\t\x12\x14\n\x0cround_number\x18\x03 \x01(\x05\x12\x0e\n\x06report\x18\x04 \x01(\x08\x12\x0c\n\x04tags\x18\x05 \x03(\t\x12\x18\n\x10require_lossless\x18\x06 \x01(\x08\"\x83\x01\n\x1bGetAggregatedTensorResponse\x12\x30\n\x06header\x18\x01 \x01(\x0b\x32 .openfl.aggregator.MessageHeader\x12\x14\n\x0cround_number\x18\x02 \x01(\x05\x12\x1c\n\x06tensor\x18\x03 \x01(\x0b\x32\x0c.NamedTensor\"\x9a\x01\n\x0bTaskResults\x12\x30\n\x06header\x18\x01 \x01(\x0b\x32 .openfl.aggregator.MessageHeader\x12\x14\n\x0cround_number\x18\x02 \x01(\x05\x12\x11\n\ttask_name\x18\x03 \x01(\t\x12\x11\n\tdata_size\x18\x04 \x01(\x05\x12\x1d\n\x07tensors\x18\x05 \x03(\x0b\x32\x0c.NamedTensor\"P\n\x1cSendLocalTaskResultsResponse\x12\x30\n\x06header\x18\x01 \x01(\x0b\x32 .openfl.aggregator.MessageHeader\"1\n\x16GetMetricStreamRequest\x12\x17\n\x0f\x65xperiment_name\x18\x01 \x01(\t\"}\n\x17GetMetricStreamResponse\x12\x15\n\rmetric_origin\x18\x01 \x01(\t\x12\x11\n\ttask_name\x18\x02 \x01(\t\x12\x13\n\x0bmetric_name\x18\x03 \x01(\t\x12\x14\n\x0cmetric_value\x18\x04 \x01(\x02\x12\r\n\x05round\x18\x05 \x01(\r\"\xa7\x01\n\x16GetTrainedModelRequest\x12\x17\n\x0f\x65xperiment_name\x18\x02 \x01(\t\x12G\n\nmodel_type\x18\x03 \x01(\x0e\x32\x33.openfl.aggregator.GetTrainedModelRequest.ModelType\"+\n\tModelType\x12\x0e\n\nBEST_MODEL\x10\x00\x12\x0e\n\nLAST_MODEL\x10\x01\"8\n\x14TrainedModelResponse\x12 \n\x0bmodel_proto\x18\x01 \x01(\x0b\x32\x0b.ModelProto\"/\n\x1fGetExperimentDescriptionRequest\x12\x0c\n\x04name\x18\x01 \x01(\t\"N\n GetExperimentDescriptionResponse\x12*\n\nexperiment\x18\x01 \x01(\x0b\x32\x16.ExperimentDescription2\x94\x05\n\nAggregator\x12U\n\x08GetTasks\x12\".openfl.aggregator.GetTasksRequest\x1a#.openfl.aggregator.GetTasksResponse\"\x00\x12v\n\x13GetAggregatedTensor\x12-.openfl.aggregator.GetAggregatedTensorRequest\x1a..openfl.aggregator.GetAggregatedTensorResponse\"\x00\x12X\n\x14SendLocalTaskResults\x12\x0b.DataStream\x1a/.openfl.aggregator.SendLocalTaskResultsResponse\"\x00(\x01\x12l\n\x0fGetMetricStream\x12).openfl.aggregator.GetMetricStreamRequest\x1a*.openfl.aggregator.GetMetricStreamResponse\"\x00\x30\x01\x12g\n\x0fGetTrainedModel\x12).openfl.aggregator.GetTrainedModelRequest\x1a\'.openfl.aggregator.TrainedModelResponse\"\x00\x12\x85\x01\n\x18GetExperimentDescription\x12\x32.openfl.aggregator.GetExperimentDescriptionRequest\x1a\x33.openfl.aggregator.GetExperimentDescriptionResponse\"\x00\x62\x06proto3'
   ,
   dependencies=[openfl_dot_protocols_dot_base__pb2.DESCRIPTOR,])
 
@@ -46,8 +46,8 @@ _GETTRAINEDMODELREQUEST_MODELTYPE = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   serialized_options=None,
-  serialized_start=1265,
-  serialized_end=1308,
+  serialized_start=1353,
+  serialized_end=1396,
 )
 _sym_db.RegisterEnumDescriptor(_GETTRAINEDMODELREQUEST_MODELTYPE)
 
@@ -137,6 +137,52 @@ _GETTASKSREQUEST = _descriptor.Descriptor(
 )
 
 
+_TASK = _descriptor.Descriptor(
+  name='Task',
+  full_name='openfl.aggregator.Task',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  create_key=_descriptor._internal_create_key,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='name', full_name='openfl.aggregator.Task.name', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='function_name', full_name='openfl.aggregator.Task.function_name', index=1,
+      number=2, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='is_local', full_name='openfl.aggregator.Task.is_local', index=2,
+      number=3, type=8, cpp_type=7, label=1,
+      has_default_value=False, default_value=False,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=267,
+  serialized_end=328,
+)
+
+
 _GETTASKSRESPONSE = _descriptor.Descriptor(
   name='GetTasksResponse',
   full_name='openfl.aggregator.GetTasksResponse',
@@ -161,7 +207,7 @@ _GETTASKSRESPONSE = _descriptor.Descriptor(
       serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
     _descriptor.FieldDescriptor(
       name='tasks', full_name='openfl.aggregator.GetTasksResponse.tasks', index=2,
-      number=3, type=9, cpp_type=9, label=3,
+      number=3, type=11, cpp_type=10, label=3,
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
@@ -192,8 +238,8 @@ _GETTASKSRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=268,
-  serialized_end=407,
+  serialized_start=331,
+  serialized_end=495,
 )
 
 
@@ -259,8 +305,8 @@ _GETAGGREGATEDTENSORREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=410,
-  serialized_end=587,
+  serialized_start=498,
+  serialized_end=675,
 )
 
 
@@ -305,8 +351,8 @@ _GETAGGREGATEDTENSORRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=590,
-  serialized_end=721,
+  serialized_start=678,
+  serialized_end=809,
 )
 
 
@@ -365,8 +411,8 @@ _TASKRESULTS = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=724,
-  serialized_end=878,
+  serialized_start=812,
+  serialized_end=966,
 )
 
 
@@ -397,8 +443,8 @@ _SENDLOCALTASKRESULTSRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=880,
-  serialized_end=960,
+  serialized_start=968,
+  serialized_end=1048,
 )
 
 
@@ -429,8 +475,8 @@ _GETMETRICSTREAMREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=962,
-  serialized_end=1011,
+  serialized_start=1050,
+  serialized_end=1099,
 )
 
 
@@ -489,8 +535,8 @@ _GETMETRICSTREAMRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1013,
-  serialized_end=1138,
+  serialized_start=1101,
+  serialized_end=1226,
 )
 
 
@@ -529,8 +575,8 @@ _GETTRAINEDMODELREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1141,
-  serialized_end=1308,
+  serialized_start=1229,
+  serialized_end=1396,
 )
 
 
@@ -561,8 +607,8 @@ _TRAINEDMODELRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1310,
-  serialized_end=1366,
+  serialized_start=1398,
+  serialized_end=1454,
 )
 
 
@@ -593,8 +639,8 @@ _GETEXPERIMENTDESCRIPTIONREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1368,
-  serialized_end=1415,
+  serialized_start=1456,
+  serialized_end=1503,
 )
 
 
@@ -625,12 +671,13 @@ _GETEXPERIMENTDESCRIPTIONRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1417,
-  serialized_end=1495,
+  serialized_start=1505,
+  serialized_end=1583,
 )
 
 _GETTASKSREQUEST.fields_by_name['header'].message_type = _MESSAGEHEADER
 _GETTASKSRESPONSE.fields_by_name['header'].message_type = _MESSAGEHEADER
+_GETTASKSRESPONSE.fields_by_name['tasks'].message_type = _TASK
 _GETAGGREGATEDTENSORREQUEST.fields_by_name['header'].message_type = _MESSAGEHEADER
 _GETAGGREGATEDTENSORRESPONSE.fields_by_name['header'].message_type = _MESSAGEHEADER
 _GETAGGREGATEDTENSORRESPONSE.fields_by_name['tensor'].message_type = openfl_dot_protocols_dot_base__pb2._NAMEDTENSOR
@@ -643,6 +690,7 @@ _TRAINEDMODELRESPONSE.fields_by_name['model_proto'].message_type = openfl_dot_pr
 _GETEXPERIMENTDESCRIPTIONRESPONSE.fields_by_name['experiment'].message_type = openfl_dot_protocols_dot_base__pb2._EXPERIMENTDESCRIPTION
 DESCRIPTOR.message_types_by_name['MessageHeader'] = _MESSAGEHEADER
 DESCRIPTOR.message_types_by_name['GetTasksRequest'] = _GETTASKSREQUEST
+DESCRIPTOR.message_types_by_name['Task'] = _TASK
 DESCRIPTOR.message_types_by_name['GetTasksResponse'] = _GETTASKSRESPONSE
 DESCRIPTOR.message_types_by_name['GetAggregatedTensorRequest'] = _GETAGGREGATEDTENSORREQUEST
 DESCRIPTOR.message_types_by_name['GetAggregatedTensorResponse'] = _GETAGGREGATEDTENSORRESPONSE
@@ -669,6 +717,13 @@ GetTasksRequest = _reflection.GeneratedProtocolMessageType('GetTasksRequest', (_
   # @@protoc_insertion_point(class_scope:openfl.aggregator.GetTasksRequest)
   })
 _sym_db.RegisterMessage(GetTasksRequest)
+
+Task = _reflection.GeneratedProtocolMessageType('Task', (_message.Message,), {
+  'DESCRIPTOR' : _TASK,
+  '__module__' : 'openfl.protocols.aggregator_pb2'
+  # @@protoc_insertion_point(class_scope:openfl.aggregator.Task)
+  })
+_sym_db.RegisterMessage(Task)
 
 GetTasksResponse = _reflection.GeneratedProtocolMessageType('GetTasksResponse', (_message.Message,), {
   'DESCRIPTOR' : _GETTASKSRESPONSE,
@@ -756,8 +811,8 @@ _AGGREGATOR = _descriptor.ServiceDescriptor(
   index=0,
   serialized_options=None,
   create_key=_descriptor._internal_create_key,
-  serialized_start=1498,
-  serialized_end=2158,
+  serialized_start=1586,
+  serialized_end=2246,
   methods=[
   _descriptor.MethodDescriptor(
     name='GetTasks',

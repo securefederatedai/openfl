@@ -141,11 +141,21 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
         collaborator_name = request.header.sender
         tasks, round_number, sleep_time, time_to_quit = self.aggregator.get_tasks(
             request.header.sender)
+        if tasks:
+            tasks_proto = [
+                aggregator_pb2.Task(
+                    name=task.name,
+                    function_name=task.function_name,
+                    is_local=task.is_local
+                ) for task in tasks
+            ]
+        else:
+            tasks_proto = []
 
         return aggregator_pb2.GetTasksResponse(
             header=self.get_header(collaborator_name),
             round_number=round_number,
-            tasks=tasks,
+            tasks=tasks_proto,
             sleep_time=sleep_time,
             quit=time_to_quit
         )

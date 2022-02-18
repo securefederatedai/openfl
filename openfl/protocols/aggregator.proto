@@ -29,11 +29,17 @@ message GetTasksRequest {
   MessageHeader header = 1;
 }
 
+message Task {
+  string name = 1;
+  string function_name = 2;
+  bool is_local = 3;
+}
+
 message GetTasksResponse {
   MessageHeader header = 1;
   int32 round_number = 2;
   // these next three are exclusive. Oneof is probably a good idea
-  repeated string tasks = 3;  // these three are exclusive
+  repeated Task tasks = 3;  // these three are exclusive
   int32 sleep_time = 4;  // these three are exclusive
   bool quit = 5;  // these three are exclusive
 }

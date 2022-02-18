@@ -14,6 +14,8 @@ from tensorboardX import SummaryWriter
 
 from openfl.component.aggregation_functions import AggregationFunction
 from openfl.component.aggregation_functions import WeightedAverage
+from openfl.component.assigner.tasks import train_and_validate_assigner
+from openfl.component.assigner.tasks import validate_assigner
 from openfl.federated import Plan
 from openfl.interface.cli import setup_logging
 from openfl.interface.cli_helper import WORKSPACE
@@ -142,10 +144,11 @@ class FLExperiment:
         self.logger.info(log_message)
 
     def prepare_workspace_distribution(self, model_provider, task_keeper, data_loader,
+                                       task_assigner,
                                        pip_install_options: Tuple[str] = ()):
         """Prepare an archive from a user workspace."""
         # Save serialized python objects to disc
-        self._serialize_interface_objects(model_provider, task_keeper, data_loader)
+        self._serialize_interface_objects(model_provider, task_keeper, data_loader, task_assigner)
         # Save the prepared plan
         Plan.dump(Path(f'./plan/{self.plan.name}'), self.plan.config, freeze=False)
 
@@ -158,7 +161,9 @@ class FLExperiment:
         self.arch_path = self._pack_the_workspace()
 
     def start(self, *, model_provider, task_keeper, data_loader,
-              rounds_to_train: int, delta_updates: bool = False,
+              rounds_to_train: int,
+              task_assigner=None,
+              delta_updates: bool = False,
               opt_treatment: str = 'RESET',
               device_assignment_policy: str = 'CPU_ONLY',
               pip_install_options: Tuple[str] = ()) -> None:
@@ -187,7 +192,10 @@ class FLExperiment:
         pip_install_options - tuple of options for the remote `pip install` calls,
             example: ('-f some.website', '--no-index')
         """
-        self._prepare_plan(model_provider, task_keeper, data_loader,
+        if not task_assigner:
+            task_assigner = self.define_task_assigner(task_keeper, rounds_to_train)
+
+        self._prepare_plan(model_provider, data_loader,
                            rounds_to_train,
                            delta_updates=delta_updates, opt_treatment=opt_treatment,
                            device_assignment_policy=device_assignment_policy,
@@ -197,6 +205,7 @@ class FLExperiment:
 
         self.prepare_workspace_distribution(
             model_provider, task_keeper, data_loader,
+            task_assigner,
             pip_install_options
         )
 
@@ -218,6 +227,29 @@ class FLExperiment:
             self.experiment_accepted = True
         else:
             self.logger.info('Experiment was not accepted or failed.')
+
+    def define_task_assigner(self, task_keeper, rounds_to_train):
+        # Check tasks type
+        # NOTE We have an implicit division of tasks into two types: training and validation.
+        # It depends on the presence of an optimizer parameter
+        for name in task_keeper.task_registry:
+            if task_keeper.task_contract[name]['optimizer'] is not None:
+                self.train_task_exist = True
+            else:
+                self.validation_task_exist = True
+
+        if not self.train_task_exist and rounds_to_train != 1:
+            # Since we have only validation tasks, we do not have to train it multiple times
+            raise Exception('Variable rounds_to_train must be equal 1, '
+                            'because only validation tasks were given')
+        if self.train_task_exist and self.validation_task_exist:
+            return train_and_validate_assigner
+        elif not self.train_task_exist and self.validation_task_exist:
+            return validate_assigner
+        elif self.train_task_exist and not self.validation_task_exist:
+            raise Exception('You should define validate task!')
+        else:
+            raise Exception('You should define train and validate tasks!')
 
     def restore_experiment_state(self, model_provider):
         """Restore accepted experiment object."""
@@ -270,13 +302,14 @@ class FLExperiment:
         )
         return tensor_dict
 
-    def _prepare_plan(self, model_provider, task_keeper, data_loader,
+    def _prepare_plan(self, model_provider, data_loader,
                       rounds_to_train,
                       delta_updates, opt_treatment,
                       device_assignment_policy,
                       model_interface_file='model_obj.pkl', tasks_interface_file='tasks_obj.pkl',
                       dataloader_interface_file='loader_obj.pkl',
-                      aggregation_function_interface_file='aggregation_function_obj.pkl'):
+                      aggregation_function_interface_file='aggregation_function_obj.pkl',
+                      task_assigner_file='task_assigner_obj.pkl'):
         """Fill plan.yaml file using provided setting."""
         # Create a folder to store plans
         os.makedirs('./plan', exist_ok=True)
@@ -293,19 +326,7 @@ class FLExperiment:
         # as soon as it connects. This change should be a part of a bigger PR
         # brining in fault tolerance changes
 
-        # Check tasks type
-        # NOTE We have an implicit division of tasks into two types: training and validation.
-        # It depends on the presence of an optimizer parameter
-        for name in task_keeper.task_registry:
-            if task_keeper.task_contract[name]['optimizer'] is not None:
-                self.train_task_exist = True
-            else:
-                self.validation_task_exist = True
 
-        if not self.train_task_exist and rounds_to_train != 1:
-            # Since we have only validation tasks, we do not have to train it multiple times
-            raise Exception('Variable rounds_to_train must be equal 1, '
-                            'because only validation tasks were given')
 
         shard_registry = self.federation.get_shard_registry()
         plan.authorized_cols = [
@@ -331,25 +352,25 @@ class FLExperiment:
         for setting, value in data_loader.kwargs.items():
             plan.config['data_loader']['settings'][setting] = value
 
-        # Tasks part
-        for name in task_keeper.task_registry:
-            if task_keeper.task_contract[name]['optimizer'] is not None:
-                # This is training task
-                plan.config['tasks'][name] = {'function': name,
-                                              'kwargs': task_keeper.task_settings[name]}
-            else:
-                # This is a validation type task (not altering the model state)
-                validation_task_types = [('aggregated_model_', 'global')]
-                if self.train_task_exist:
-                    validation_task_types.insert(0, ('localy_tuned_model_', 'local'))
-
-                for name_prefix, apply_kwarg in validation_task_types:
-                    # We add two entries for this task: for local and global models
-                    task_kwargs = deepcopy(task_keeper.task_settings[name])
-                    task_kwargs.update({'apply': apply_kwarg})
-                    plan.config['tasks'][name_prefix + name] = {
-                        'function': name,
-                        'kwargs': task_kwargs}
+        # # Tasks part
+        # for name in task_keeper.task_registry:
+        #     if task_keeper.task_contract[name]['optimizer'] is not None:
+        #         # This is training task
+        #         plan.config['tasks'][name] = {'function': name,
+        #                                       'kwargs': task_keeper.task_settings[name]}
+        #     else:
+        #         # This is a validation type task (not altering the model state)
+        #         validation_task_types = [('aggregated_model_', 'global')]
+        #         if self.train_task_exist:
+        #             validation_task_types.insert(0, ('localy_tuned_model_', 'local'))
+        #
+        #         for name_prefix, apply_kwarg in validation_task_types:
+        #             # We add two entries for this task: for local and global models
+        #             task_kwargs = deepcopy(task_keeper.task_settings[name])
+        #             task_kwargs.update({'apply': apply_kwarg})
+        #             plan.config['tasks'][name_prefix + name] = {
+        #                 'function': name,
+        #                 'kwargs': task_kwargs}
 
         # TaskRunner framework plugin
         # ['required_plugin_components'] should be already in the default plan with all the fields
@@ -367,19 +388,21 @@ class FLExperiment:
                 'model_interface_file': model_interface_file,
                 'tasks_interface_file': tasks_interface_file,
                 'dataloader_interface_file': dataloader_interface_file,
-                'aggregation_function_interface_file': aggregation_function_interface_file
+                'aggregation_function_interface_file': aggregation_function_interface_file,
+                'task_assigner_file': task_assigner_file
             }
         }
-
-        plan.config['assigner']['settings']['task_groups'][0]['tasks'] = [
-            entry
-            for entry in plan.config['tasks']
-            if (type(plan.config['tasks'][entry]) is dict
-                and 'function' in plan.config['tasks'][entry])
-        ]
+        # print(f'{plan.config["assigner"]=}')
+        # plan.config['assigner']['settings']['task_groups'][0]['tasks'] = [
+        #     entry
+        #     for entry in plan.config['tasks']
+        #     if (type(plan.config['tasks'][entry]) is dict
+        #         and 'function' in plan.config['tasks'][entry])
+        # ]
+        # print(f'{plan.config["assigner"]=}')
         self.plan = deepcopy(plan)
 
-    def _serialize_interface_objects(self, model_provider, task_keeper, data_loader):
+    def _serialize_interface_objects(self, model_provider, task_keeper, data_loader, task_assigner):
         """Save python objects to be restored on collaborators."""
         serializer = self.plan.build(
             self.plan.config['api_layer']['required_plugin_components']['serializer_plugin'], {})
@@ -391,7 +414,8 @@ class FLExperiment:
             'model_interface_file': model_provider,
             'tasks_interface_file': task_keeper,
             'dataloader_interface_file': data_loader,
-            'aggregation_function_interface_file': task_keeper.aggregation_functions
+            'aggregation_function_interface_file': task_keeper.aggregation_functions,
+            'task_assigner_file': task_assigner
         }
 
         for filename, object_ in obj_dict.items():

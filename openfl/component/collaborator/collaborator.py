@@ -184,8 +184,16 @@ class Collaborator:
     def do_task(self, task, round_number):
         """Do the specified task."""
         # map this task to an actual function name and kwargs
-        func_name = self.task_config[task]['function']
-        kwargs = self.task_config[task]['kwargs']
+        func_name = task.function_name
+
+        # There no enough information to understand that it's train or validate task
+        # Looks like we should provide task type.
+        kwargs = {}
+        if func_name == 'validate':
+            if task.is_local:
+                kwargs['apply'] = 'local'
+            else:
+                kwargs['apply'] = 'global'
 
         # this would return a list of what tensors we require as TensorKeys
         required_tensorkeys_relative = self.task_runner.get_required_tensorkeys_for_function(
@@ -250,7 +258,7 @@ class Collaborator:
 
         # send the results for this tasks; delta and compression will occur in
         # this function
-        self.send_task_results(global_output_tensor_dict, round_number, task)
+        self.send_task_results(global_output_tensor_dict, round_number, task.name)
 
     def get_numpy_dict_for_tensorkeys(self, tensor_keys):
         """Get tensor dictionary for specified tensorkey set."""
