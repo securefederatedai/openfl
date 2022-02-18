@@ -89,13 +89,14 @@ class FedCurv:
             target = target.to(device)
             output = model(sample)
             loss = F.nll_loss(F.log_softmax(output, dim=1), target)
-            loss.backward()
+            gradients = torch.autograd.grad(loss, model.parameters())
 
-            for n, p in model.named_parameters():
+            for (n, p), grad in zip(model.named_parameters(), gradients):
                 if p.requires_grad:
-                    precision_matrices[n].data += p.grad.data ** 2 / len(data_loader)
+                    with torch.no_grad():
+                        precision_matrices[n].data += grad.detach() ** 2 / len(data_loader)
 
-        precision_matrices = {n: p for n, p in precision_matrices.items()}
+        precision_matrices = {n: p.detach() for n, p in precision_matrices.items()}
         return precision_matrices
 
     def get_penalty(self, model):
