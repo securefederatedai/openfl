@@ -5,9 +5,9 @@
 import numpy as np
 import pytest
 
-from openfl.utilities.optimizers.numpy.adagrad_optimizer import NumpyAdagrad
-from openfl.utilities.optimizers.numpy.adam_optimizer import NumpyAdam
-from openfl.utilities.optimizers.numpy.yogi_optimizer import NumpyYogi
+from openfl.utilities.optimizers.numpy.adagrad_optimizer import NumPyAdagrad
+from openfl.utilities.optimizers.numpy.adam_optimizer import NumPyAdam
+from openfl.utilities.optimizers.numpy.yogi_optimizer import NumPyYogi
 from.func_for_optimization import mc_cormick_func
 from.func_for_optimization import rosenbrock_func
 
@@ -17,27 +17,27 @@ EPS = 5e-5
 @pytest.mark.parametrize(
     'func,optim,num_iter', [
         (rosenbrock_func,
-         NumpyAdagrad(params={'x': np.array([0]), 'y': np.array([0])},
+         NumPyAdagrad(params={'x': np.array([0.0]), 'y': np.array([0.0])},
                       learning_rate=0.08),
          5000),
         (rosenbrock_func,
-         NumpyAdam(params={'x': np.array([0]), 'y': np.array([0])},
+         NumPyAdam(params={'x': np.array([0.0]), 'y': np.array([0.0])},
                    learning_rate=0.01),
          1000),
         (rosenbrock_func,
-         NumpyYogi(params={'x': np.array([0]), 'y': np.array([0])},
+         NumPyYogi(params={'x': np.array([0.0]), 'y': np.array([0.0])},
                    learning_rate=0.01),
          1000),
         (mc_cormick_func,
-         NumpyAdagrad(params={'x': np.array([0]), 'y': np.array([0])},
+         NumPyAdagrad(params={'x': np.array([0.0]), 'y': np.array([0.0])},
                       learning_rate=0.03),
          5000),
         (mc_cormick_func,
-         NumpyAdam(params={'x': np.array([0]), 'y': np.array([0])},
+         NumPyAdam(params={'x': np.array([0.0]), 'y': np.array([0.0])},
                    learning_rate=0.01),
          1000),
         (mc_cormick_func,
-         NumpyYogi(params={'x': np.array([0]), 'y': np.array([0])},
+         NumPyYogi(params={'x': np.array([0.0]), 'y': np.array([0.0])},
                    learning_rate=0.01),
          1000),
     ])

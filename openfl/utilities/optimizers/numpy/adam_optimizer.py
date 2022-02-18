@@ -9,8 +9,8 @@ import numpy as np
 from .base_optimizer import Optimizer
 
 
-class NumpyAdam(Optimizer):
-    """Adagrad optimizer implementation.
+class NumPyAdam(Optimizer):
+    """Adam optimizer implementation.
 
     Original paper: https://openreview.net/forum?id=ryQu7f-RZ
     """
@@ -40,8 +40,8 @@ class NumpyAdam(Optimizer):
         """
         super().__init__()
 
-        assert model_interface is not None or params, (
-            'Should provide one of the params or model_interface')
+        if model_interface is None and params is None:
+            raise ValueError('Should provide one of the params or model_interface')
 
         if learning_rate < 0:
             raise ValueError(
@@ -117,9 +117,7 @@ class NumpyAdam(Optimizer):
                                               ** (self.current_step[grad_name] + 1)))
 
             # Make an update for a group of parameters
-            self.params[grad_name] = (self.params[grad_name]
-                                      - self.learning_rate
-                                      * grads_first_moment_normalized
-                                      / (np.sqrt(grads_second_moment_normalized) + self.epsilon))
+            self.params[grad_name] -= (self.learning_rate * grads_first_moment_normalized
+                                       / (np.sqrt(grads_second_moment_normalized) + self.epsilon))
 
             self.current_step[grad_name] += 1

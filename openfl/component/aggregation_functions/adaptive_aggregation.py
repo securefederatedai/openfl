@@ -1,7 +1,7 @@
 # Copyright (C) 2021-2022 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Apartive aggregation module."""
+"""Adaptive aggregation module."""
 
 from typing import List
 
@@ -13,16 +13,29 @@ from .interface import AggregationFunction
 from .weighted_average import WeightedAverage
 
 
+DEFAULT_AGG_FUNC = WeightedAverage()
+
+
 class AdaptiveAggregation(AggregationFunction):
     """Adaptive Federated Aggregation funtcion.
 
     According to https://arxiv.org/abs/2003.00295
     """
 
-    def __init__(self, optimizer: Optimizer):
-        """Initialize."""
+    def __init__(
+        self,
+        optimizer: Optimizer,
+        default_agg_func: AggregationFunction = DEFAULT_AGG_FUNC
+    ) -> None:
+        """Initialize.
+
+        Args:
+            optimizer: One of numpy optimizer class instance.
+            default_agg_func: Aggregate function for aggregating
+                parameters that are not inside the optimizer (default: WeightedAverage()).
+        """
         self.optimizer = optimizer
-        self.default_agg_func = WeightedAverage()
+        self.default_agg_func = default_agg_func
 
     @staticmethod
     def _make_gradient(
@@ -67,6 +80,13 @@ class AdaptiveAggregation(AggregationFunction):
         Returns:
             np.ndarray: aggregated tensor
         """
+        if tensor_name not in self.optimizer.params:
+            return self.default_agg_func(local_tensors,
+                                         db_iterator,
+                                         tensor_name,
+                                         fl_round,
+                                         tags)
+
         base_model_nparray = None
         search_tag = 'aggregated' if fl_round != 0 else 'model'
         for record in db_iterator:
@@ -78,14 +98,8 @@ class AdaptiveAggregation(AggregationFunction):
             ):
                 base_model_nparray = record['nparray']
 
-        if tensor_name not in self.optimizer.params:
-            return self.default_agg_func(local_tensors,
-                                         db_iterator,
-                                         tensor_name,
-                                         fl_round,
-                                         tags)
-        else:
-            assert base_model_nparray is not None, (
+        if base_model_nparray is None:
+            raise KeyError(
                 f'There is no current global model in TensorDB for tensor name: {tensor_name}')
 
         gradient = self._make_gradient(base_model_nparray, local_tensors)

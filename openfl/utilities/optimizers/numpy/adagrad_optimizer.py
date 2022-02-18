@@ -8,7 +8,7 @@ import numpy as np
 from .base_optimizer import Optimizer
 
 
-class NumpyAdagrad(Optimizer):
+class NumPyAdagrad(Optimizer):
     """Adagrad optimizer implementation.
 
     Original paper: http://jmlr.org/papers/v12/duchi11a.html
@@ -35,16 +35,16 @@ class NumpyAdagrad(Optimizer):
         """
         super().__init__()
 
-        assert model_interface is not None or params, (
-            'Should provide one of the params or model_interface')
+        if model_interface is None and params is None:
+            raise ValueError('Should provide one of the params or model_interface')
 
         if learning_rate < 0:
             raise ValueError(
                 f'Invalid learning rate: {learning_rate}. Learning rate must be >= 0.')
         if initial_accumulator_value < 0:
             raise ValueError(
-                f'Invalid initial_accumulator_value value: {initial_accumulator_value}. \
-                Initial accumulator value must be >= 0.')
+                f'Invalid initial_accumulator_value value: {initial_accumulator_value}.'
+                'Initial accumulator value must be >= 0.')
         if epsilon <= 0:
             raise ValueError(
                 f'Invalid epsilon value: {epsilon}. Epsilon avalue must be > 0.')
@@ -65,8 +65,8 @@ class NumpyAdagrad(Optimizer):
 
     def _update_param(self, grad_name: str, grad: np.ndarray) -> None:
         """Update papams by given gradients."""
-        self.params[grad_name] = (self.params[grad_name] - self.learning_rate * grad
-                                  / (np.sqrt(self.grads_squared[grad_name]) + self.epsilon))
+        self.params[grad_name] -= (self.learning_rate * grad
+                                   / (np.sqrt(self.grads_squared[grad_name]) + self.epsilon))
 
     def step(self, gradients: Dict[str, np.ndarray]) -> None:
         """
