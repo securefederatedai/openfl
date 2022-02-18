@@ -138,7 +138,7 @@ class LogNormalNumPyDataSplitter(NumPyDataSplitter):
                 slice_start = col // self.num_classes * samples_per_col
                 slice_start += self.min_samples_per_class * c
                 slice_end = slice_start + self.min_samples_per_class
-                print(f'Assigning {slice_start}:{slice_end} of {len(label_idx)} class {label} to {col} col...')
+                print(f'Assigning {slice_start}:{slice_end} of class {label} to {col} col...')
                 idx[col] += list(label_idx[slice_start:slice_end])
         if any([len(i) != samples_per_col for i in idx]):
             raise SystemError(f'''All collaborators should have {samples_per_col} elements
@@ -168,8 +168,9 @@ but distribution is {[len(i) for i in idx]}''')
                     idx_to_append = label_subset[slice_start:slice_end]
                     idx[col] = np.append(idx[col], idx_to_append)
                 else:
-                    print(f'Index {slice_end}is out of bounds '
+                    print(f'Index {slice_end} is out of bounds '
                           f'of array of length {label_count}. Skipping...')
+        print(f'Split result: {[len(i) for i in idx]}.')
         return idx
 
 
