@@ -221,7 +221,7 @@ def tqdm_report_hook():
 
 def merge_configs(
         overwrite_dict: Optional[dict] = None,
-        data_preparation: Optional[List[Tuple[str, Callable]]] = None,
+        value_transform: Optional[List[Tuple[str, Callable]]] = None,
         **kwargs,
 ) -> Dynaconf:
     """Create Dynaconf settings, merge its with `overwrite_dict` and validate result."""
@@ -230,8 +230,8 @@ def merge_configs(
         for key, value in overwrite_dict.items():
             if value is not None or settings.get(key) is None:
                 settings.set(key, value, merge=True)
-    if data_preparation:
-        for key, operation in data_preparation:
+    if value_transform:
+        for key, operation in value_transform:
             value = settings.get(key)
             settings.set(key, operation(value))
     settings.validators.validate()
