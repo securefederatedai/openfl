@@ -89,12 +89,17 @@ class FedCurv:
             target = target.to(device)
             output = model(sample)
             loss = F.nll_loss(F.log_softmax(output, dim=1), target)
-            gradients = torch.autograd.grad(loss, model.parameters())
+            loss.backward()
 
-            for (n, p), grad in zip(model.named_parameters(), gradients):
+            for (n, p) in model.named_parameters():
                 if p.requires_grad:
                     with torch.no_grad():
-                        precision_matrices[n].data += grad.detach() ** 2 / len(data_loader)
+                        x = p.grad.data
+                        prec = [a * a for a in x]
+                        prec = [sum(a) * 1.0 for a in prec]
+                        prec = [a / len(data_loader) for a in prec]
+                    
+                    precision_matrices[n] = prec
 
         precision_matrices = {n: p.detach() for n, p in precision_matrices.items()}
         return precision_matrices
@@ -108,22 +113,28 @@ class FedCurv:
         Returns:
             float: Penalty term.
         """
-        loss = 0
+        penalty = 0
         if not self._params:
-            return loss
-        for n, p in model.named_parameters():
-            if p.requires_grad:
-                u_global, v_global = (get_buffer(model, target) for target in (f'{n}_u', f'{n}_v'))
-                u_local, v_local = (getattr(self, name) for name in (f'{n}_u', f'{n}_v'))
+            return penalty
+        for name, param in model.named_parameters():
+            if param.requires_grad:
+                u_global, v_global = (
+                    get_buffer(model, target)
+                    for target in (f'{name}_u', f'{name}_v')
+                )
+                u_local, v_local = (
+                    getattr(self, name)
+                    for name in (f'{name}_u', f'{name}_v')
+                )
                 u = u_global - u_local
                 v = v_global - v_local
                 with open('fedcurv.txt', 'w') as f:
                     f.write(f'FedCurv u={u}\n')
                     f.write(f'FedCurv v={v}\n\n')
-                _loss = p ** 2 * u - 2 * p * v
-                loss += _loss.sum()
-        print(f'FedCurv penalty = {loss}')
-        return self.importance * loss
+                _penalty = param ** 2 * u - 2 * param * v
+                penalty += _penalty.sum()
+        penalty = self.importance * penalty
+        return penalty.float()
 
     def on_train_begin(self, model):
         """Pre-train steps.
@@ -133,7 +144,7 @@ class FedCurv:
         """
         self._update_params(model)
 
-    def on_train_end(self, model, data_loader, device):
+    def on_train_end(self, model:torch.nn.Module, data_loader, device):
         """Post-train steps.
 
         Args:
@@ -151,3 +162,4 @@ class FedCurv:
             register_buffer(model, f'{n}_v', v)
             setattr(self, f'{n}_u', u)
             setattr(self, f'{n}_v', v)
+        model.zero_grad()
