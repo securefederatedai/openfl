@@ -3,7 +3,10 @@ This manual will help you run OpenFL with Aggregator-based workflow inside SGX e
 ## TO-DO:
 - [X] import manifest and makefile from OpenFL dist-package 
 - [X] pass wheel repository to pip (for CPU versions of PyTorch for example)
-- get rid of command line args (insecure)
+- [ ] get rid of command line args (insecure)
+- [ ] introduce `fx workspace create --prefix WORKSPACE_NAME` command without --template option to the OpenFL CLI, that will create just an empty workspace with the right folder structure.
+- [ ] introduce `fx *actor* start --from image`
+
 ## Known issues:
 - Kvasir experiment: aggregation takes really long, debug log-level does not show the reason
 - We need workspace zip to import it and create certs. We need to know the number of collaborators prior to zipping the workspace. SOLUTOIN: mount cols.yaml and data.yaml
@@ -120,7 +123,7 @@ workspace/
 
 To speed up the certification process for one-node test runs, it makes sense to utilize the [OpenFL integration test script](https://github.com/intel/openfl/blob/develop/tests/github/test_hello_federation.sh) (comment out last 9 lines) that will create required folders and certify an aggregator and two collaborators.
 
-### **Run the Federation in an enclave**
+### **Run the Federation in enclaves**
 #### On the Aggregator machine run:
 ```
 export WORKSPACE_NAME=your_workspace_name
