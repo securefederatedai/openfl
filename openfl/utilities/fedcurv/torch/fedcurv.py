@@ -117,6 +117,9 @@ class FedCurv:
                 u_local, v_local = (getattr(self, name) for name in (f'{n}_u', f'{n}_v'))
                 u = u_global - u_local
                 v = v_global - v_local
+                with open('fedcurv.txt', 'w') as f:
+                    f.write(f'FedCurv u={u}\n')
+                    f.write(f'FedCurv v={v}\n\n')
                 _loss = p ** 2 * u - 2 * p * v
                 loss += _loss.sum()
         print(f'FedCurv penalty = {loss}')
