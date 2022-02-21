@@ -144,7 +144,7 @@ docker run -it --rm --device=/dev/sgx_enclave --volume=/var/run/aesmd/aesm.socke
 --volume=${WORKSPACE_PATH}/cert:/workspace/cert \
 --volume=${WORKSPACE_PATH}/plan/data.yaml:/workspace/plan/data.yaml \
 --volume=${WORKSPACE_PATH}/data:/workspace/data \
-${EXP_NAME} collaborator start -n ${COL_NAME}
+${WORKSPACE_NAME} collaborator start -n ${COL_NAME}
 ```
 
 ### **No SGX run (`gramine-direct`)**:
@@ -174,5 +174,5 @@ docker run -it --rm --security-opt seccomp=unconfined \
 --volume=${WORKSPACE_PATH}/cert:/workspace/cert \
 --volume=${WORKSPACE_PATH}/plan/data.yaml:/workspace/plan/data.yaml \
 --volume=${WORKSPACE_PATH}/data:/workspace/data \
-${EXP_NAME} collaborator start -n ${COL_NAME}
+${WORKSPACE_NAME} collaborator start -n ${COL_NAME}
 ```
