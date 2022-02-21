@@ -27,8 +27,11 @@ The user will mainly interact with OpenFL CLI, docker CLI, and other command-lin
 ### On the building machine (Data Scientist's node):
 1. As usual, **create a workspace**: 
 ```
-fx workspace create --prefix WORKSPACE_NAME --template TEMPLATE_NAME
-cd WORKSPACE_NAME
+export WORKSPACE_NAME=my_sgx_federation_workspace
+export TEMPLATE_NAME=torch_cnn_histology
+
+fx workspace create --prefix $WORKSPACE_NAME --template $TEMPLATE_NAME
+cd $WORKSPACE_NAME
 ```
 Modify the code and the plan.yaml, set up your training procedure. </br>
 Pay attention to the following: 
@@ -38,22 +41,28 @@ Pay attention to the following:
 
 2. **Initialize the experiment plan** </br> 
 Find out the FQDN of the aggregator machine and use it for plan initialization.
+For example, on Unix-like OS try the following command:
 ```
-fx plan initialize -a ${FQDN}
+hostname --all-fqdns | awk '{print $1}'
 ```
-To find out FQDN (Unix-like OS) try `hostname --all-fqdns | awk '{print $1}'` command.
+Then pass the result as `AGG_FQDN` parameter to:
+```
+fx plan initialize -a $AGG_FQDN
+```
 
 3. (Optional) **Generate a signing key** on the building machine if you do not have one.</br>
 It will be used to calculate hashes of trusted files. If you plan to test the application without SGX (gramine-direct) you also do not need a signer key.
 ```
-openssl genrsa -3 -out KEY_LOCATION/key.pem 3072
+export KEY_LOCATION=.
+
+openssl genrsa -3 -out $KEY_LOCATION/key.pem 3072
 ```
 This key will not be packed into the final Docker image.
 
 4. **Build the Experiment Docker image**
 
 ```
-fx workspace graminize -s KEY_LOCATION/key.pem --sgx-target/--no-sgx-target
+fx workspace graminize -s $KEY_LOCATION/key.pem --sgx-target/--no-sgx-target
 ```
 This command will build and save a Docker image with your Experiment. The saved image will contain all the required files to start a process in an enclave.</br>
 If `--no-sgx-target` option is passed to the command, the image will run processes under gramine-direct, in this case, it is not necessary to pass the signing key.

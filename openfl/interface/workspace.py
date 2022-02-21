@@ -437,7 +437,9 @@ def dockerize_(context, base_image, save):
 @option('-s', '--signing-key', required=False,
         type=lambda p: Path(p).absolute(), default='/',
         help='A 3072-bit RSA private key (PEM format) is required for signing the manifest.\n'
-             'If a key is passed the gramine-sgx manifest fill be prepared.',
+             'If a key is passed the gramine-sgx manifest fill be prepared.\n'
+             'In option is ignored this command will build an image that can only run '
+             'with gramine-direct (not in enclave).',
         )
 @option('-o', '--pip-install-options', required=False,
         type=str, multiple=True, default=tuple,
@@ -477,6 +479,7 @@ def graminize_(context, sgx_target, signing_key, pip_install_options: Tuple[str]
     # but not vice versa.
     sgx_build = 1 if signing_key.is_file() else 0
     sgx_exe = 'gramine-sgx' if sgx_target else 'gramine-direct'
+    sgx_target = 1 if sgx_target else 0
     if sgx_target and not sgx_build:
         echo('\n ❌ Can not prepare SGX-ready application without a signing key.')
         raise Exception('Provide a signing key or pass "--no-sgx-target"')
@@ -502,14 +505,15 @@ def graminize_(context, sgx_target, signing_key, pip_install_options: Tuple[str]
         f'docker build -t {workspace_name} '
         '--build-arg BASE_IMAGE=gramine_openfl '
         f'--build-arg WORKSPACE_ARCHIVE={workspace_archive.relative_to(workspace_path)} '
-        f'--build-arg SGX_BUILD={sgx_build} --build-arg SGX_EXE={sgx_exe} '
+        f'--build-arg SGX_BUILD={sgx_build} --build-arg GRAMINE_EXE={sgx_exe} '
+        f'--build-arg SGX_TARGET={sgx_target} '
         f'{signing_key}'
         f'-f {grainized_ws_dockerfile} {workspace_path}')
     open_pipe(graminized_build_command)
     echo('\n ✔️ DONE: Building graminized workspace image')
 
     echo('\n 💾 Saving the graminized workspace image...')
-    save_image_command = f'docker save {workspace_name} | gzip > ${workspace_name}.tar.gz'
+    save_image_command = f'docker save {workspace_name} | gzip > {workspace_name}.tar.gz'
     open_pipe(save_image_command)
     echo(f'\n ✔️ The image saved to file: {workspace_name}.tar.gz')
 
