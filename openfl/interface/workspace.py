@@ -428,12 +428,6 @@ def dockerize_(context, base_image, save):
 
 
 @workspace.command(name='graminize')
-@option('--sgx-target/--no-sgx-target',
-        required=False,
-        help='If "--no-sgx-target" target is passed, container entrypoint '
-             'will be set to gramine-direct to allow testing '
-             'gramine app outside enclave.',
-        default=True)
 @option('-s', '--signing-key', required=False,
         type=lambda p: Path(p).absolute(), default='/',
         help='A 3072-bit RSA private key (PEM format) is required for signing the manifest.\n'
@@ -447,7 +441,7 @@ def dockerize_(context, base_image, save):
              'You may pass several options in quotation marks alongside with arguments, '
              'e.g. -o "--find-links source.site"')
 @pass_context
-def graminize_(context, sgx_target, signing_key, pip_install_options: Tuple[str]) -> None:
+def graminize_(context, signing_key, pip_install_options: Tuple[str]) -> None:
     """
     Build gramine app inside a docker image.
 
@@ -478,11 +472,10 @@ def graminize_(context, sgx_target, signing_key, pip_install_options: Tuple[str]
     # We can build for gramine-sgx and run with gramine-direct,
     # but not vice versa.
     sgx_build = 1 if signing_key.is_file() else 0
-    sgx_exe = 'gramine-sgx' if sgx_target else 'gramine-direct'
-    sgx_target = 1 if sgx_target else 0
-    if sgx_target and not sgx_build:
-        echo('\n ❌ Can not prepare SGX-ready application without a signing key.')
-        raise Exception('Provide a signing key or pass "--no-sgx-target"')
+    if sgx_build:
+        echo('\n Building SGX-ready applecation')
+    else:
+        echo('\n Building gramine-direct applecation')
 
     os.environ['DOCKER_BUILDKIT'] = '1'
 
@@ -505,8 +498,7 @@ def graminize_(context, sgx_target, signing_key, pip_install_options: Tuple[str]
         f'docker build -t {workspace_name} '
         '--build-arg BASE_IMAGE=gramine_openfl '
         f'--build-arg WORKSPACE_ARCHIVE={workspace_archive.relative_to(workspace_path)} '
-        f'--build-arg SGX_BUILD={sgx_build} --build-arg GRAMINE_EXE={sgx_exe} '
-        f'--build-arg SGX_TARGET={sgx_target} '
+        f'--build-arg SGX_BUILD={sgx_build} '
         f'{signing_key}'
         f'-f {grainized_ws_dockerfile} {workspace_path}')
     open_pipe(graminized_build_command)

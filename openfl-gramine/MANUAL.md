@@ -62,10 +62,10 @@ This key will not be packed into the final Docker image.
 4. **Build the Experiment Docker image**
 
 ```
-fx workspace graminize -s $KEY_LOCATION/key.pem --sgx-target/--no-sgx-target
+fx workspace graminize -s $KEY_LOCATION/key.pem
 ```
 This command will build and save a Docker image with your Experiment. The saved image will contain all the required files to start a process in an enclave.</br>
-If `--no-sgx-target` option is passed to the command, the image will run processes under gramine-direct, in this case, it is not necessary to pass the signing key.
+If a signing key is not provided, the application will be built without SGX support, but it still can be started with gramine-direct executable.
 
 
 ### Image distribution:
@@ -120,7 +120,8 @@ workspace/
 
 To speed up the certification process for one-node test runs, it makes sense to utilize the [OpenFL integration test script](https://github.com/intel/openfl/blob/develop/tests/github/test_hello_federation.sh) (comment out last 9 lines) that will create required folders and certify an aggregator and two collaborators.
 
-8. **Run the Aggregator**
+### **Run the Federation in an enclave**
+#### On the Aggregator machine run:
 ```
 export WORKSPACE_NAME=your_workspace_name
 export WORKSPACE_PATH=path_to_workspace
@@ -133,22 +134,7 @@ docker run -it --rm --device=/dev/sgx_enclave --volume=/var/run/aesmd/aesm.socke
 ${WORKSPACE_NAME} aggregator start
 ```
 
-**No SGX run (`gramine-direct`)**:
-If the image was built with `fx workspace graminize --no-sgx-target` you may run an experiment under gramine without SGX. Note how we do not mount `sgx_enclave` device and pass a `--security-opt` instead that allows syscalls required by `gramine-direct`
-
-```
-export WORKSPACE_NAME=your_workspace_name
-export WORKSPACE_PATH=path_to_workspace
-docker run -it --rm --security-opt seccomp=unconfined \
---network=host \
---volume=${WORKSPACE_PATH}/cert:/workspace/cert \
---volume=${WORKSPACE_PATH}/logs:/workspace/logs \
---volume=${WORKSPACE_PATH}/plan/cols.yaml:/workspace/plan/cols.yaml \
---mount type=bind,src=${WORKSPACE_PATH}/save,dst=/workspace/save,readonly=0 \
-${WORKSPACE_NAME} aggregator start
-```
-
-9. **Run the Collaborator**
+#### On the Collaborator machines run:
 ```
 export WORKSPACE_NAME=your_workspace_name
 export WORKSPACE_PATH=path_to_workspace
@@ -161,14 +147,30 @@ docker run -it --rm --device=/dev/sgx_enclave --volume=/var/run/aesmd/aesm.socke
 ${EXP_NAME} collaborator start -n ${COL_NAME}
 ```
 
-**No SGX run (`gramine-direct`)**:
-If the image was built with `fx workspace graminize --no-sgx-target` you may run an experiment under gramine without SGX.
+### **No SGX run (`gramine-direct`)**:
+The user may run an experiment under gramine without SGX. Note how we do not mount `sgx_enclave` device and pass a `--security-opt` instead that allows syscalls required by `gramine-direct`
+
+#### On the Aggregator machine run:
+```
+export WORKSPACE_NAME=your_workspace_name
+export WORKSPACE_PATH=path_to_workspace
+docker run -it --rm --security-opt seccomp=unconfined \
+--network=host -e GRAMINE_EXECUTABLE=gramine-direct \
+--volume=${WORKSPACE_PATH}/cert:/workspace/cert \
+--volume=${WORKSPACE_PATH}/logs:/workspace/logs \
+--volume=${WORKSPACE_PATH}/plan/cols.yaml:/workspace/plan/cols.yaml \
+--mount type=bind,src=${WORKSPACE_PATH}/save,dst=/workspace/save,readonly=0 \
+${WORKSPACE_NAME} aggregator start
+```
+
+#### On the Collaborator machines run:
+
 ```
 export WORKSPACE_NAME=your_workspace_name
 export WORKSPACE_PATH=path_to_workspace
 export COL_NAME=col_name
 docker run -it --rm --security-opt seccomp=unconfined \
---network=host \
+--network=host -e GRAMINE_EXECUTABLE=gramine-direct \
 --volume=${WORKSPACE_PATH}/cert:/workspace/cert \
 --volume=${WORKSPACE_PATH}/plan/data.yaml:/workspace/plan/data.yaml \
 --volume=${WORKSPACE_PATH}/data:/workspace/data \

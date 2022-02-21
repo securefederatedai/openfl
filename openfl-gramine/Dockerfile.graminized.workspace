@@ -17,9 +17,6 @@ ARG SGX_BUILD=1
 RUN --mount=type=secret,id=signer-key,dst=/key.pem \
     make clean && make SGX=${SGX_BUILD} SGX_SIGNER_KEY=/key.pem
 
-# ARG GRAMINE_EXE=gramine-sgx
-# ENV GRAMINE=$GRAMINE_EXE
-# RUN echo $GRAMINE
-# CMD ["aggregator", "start"]
 ENV GRAMINE_EXECUTABLE=gramine-sgx
 ENTRYPOINT ["/bin/bash", "start_process.sh"]
+CMD [ "aggregator", "start"]
