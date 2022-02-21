@@ -89,15 +89,13 @@ class FedCurv:
             target = target.to(device)
             output = model(sample)
             loss = F.nll_loss(F.log_softmax(output, dim=1), target)
-            loss.backward()
+            gradients = torch.autograd.grad(loss, model.parameters())
 
-            for (n, p) in model.named_parameters():
+            for g, (n, p) in zip(gradients, model.named_parameters()):
                 if p.requires_grad:
                     with torch.no_grad():
-                        x = p.grad.data
-                        prec = [a * a for a in x]
-                        prec = [sum(a) * 1.0 for a in prec]
-                        prec = [a / len(data_loader) for a in prec]
+                        prec = g.detach()
+                        prec = prec ** 2 * 1.0 / len(data_loader)
                     
                     precision_matrices[n] = prec
 
@@ -153,6 +151,7 @@ class FedCurv:
             device(str): Model device.
             loss_fn(Callable): Train loss function.
         """
+        model.zero_grad()
         precision_matrices = self._diag_fisher(model, data_loader, device)
         for n, m in precision_matrices.items():
             u = torch.tensor(m).to(device)
@@ -162,4 +161,3 @@ class FedCurv:
             register_buffer(model, f'{n}_v', v)
             setattr(self, f'{n}_u', u)
             setattr(self, f'{n}_v', v)
-        model.zero_grad()
