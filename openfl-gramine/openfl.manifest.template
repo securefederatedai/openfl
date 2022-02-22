@@ -52,7 +52,7 @@ sgx.debug = false
 sgx.nonpie_binary = true
 sgx.enclave_size = "16G"
 sys.stack.size = "4M"
-sgx.thread_num = 128
+sgx.thread_num = 256
 #sys.brk.max_size = "1M"
 
 sgx.trusted_files = [
