@@ -1,6 +1,7 @@
 """Implementation of FedCurv algorithm."""
 
 from copy import deepcopy
+from pathlib import Path
 
 import torch
 import torch.nn.functional as F
@@ -121,9 +122,12 @@ class FedCurv:
                 )
                 u = u_global - u_local
                 v = v_global - v_local
-                with open('fedcurv.txt', 'w') as f:
-                    f.write(f'FedCurv u={u}\n')
-                    f.write(f'FedCurv v={v}\n\n')
+
+                with open(Path('~').expanduser() / 'fedcurv_log.txt', 'w') as f:
+                    f.write(f'{u_global=}\n')
+                    f.write(f'{u_local=}\n')
+                    f.write(f'{v_global=}\n')
+                    f.write(f'{v_local=}\n')
                 _penalty = param ** 2 * u - 2 * param * v
                 penalty += _penalty.sum()
         penalty = self.importance * penalty
