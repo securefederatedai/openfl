@@ -38,7 +38,7 @@ Choose from the following predefined aggregation functions:
 .. note::
     To define the numpy based optimizer for adaptive aggregation, you must pass one of the arguments: model parameters directly (a dictionary with named model parameters in the form of numpy arrays), or pass an instance of the ``ModelInterface`` class.
 
-    See the `NumpyAdagrad <https://github.com/intel/openfl/blob/develop/openfl/utilities/optimizers/numpy/adagrad_optimizer.py>`_ and `AdaptiveAggregation <https://github.com/intel/openfl/blob/develop/openfl/component/aggregation_functions/adaptive_aggregation.py>`_ definitions for details.
+    See the `NumPyAdagrad <https://github.com/intel/openfl/blob/develop/openfl/utilities/optimizers/numpy/adagrad_optimizer.py>`_ and `AdaptiveAggregation <https://github.com/intel/openfl/blob/develop/openfl/component/aggregation_functions/adaptive_aggregation.py>`_ definitions for details.
 
     `Adaptive federated optimization <https://arxiv.org/pdf/2003.00295.pdf>`_ original paper.
 
@@ -47,10 +47,10 @@ Choose from the following predefined aggregation functions:
 .. code-block:: python
 
     from openfl.component.aggregation_functions import AdaptiveAggregation
-    from openfl.utilities.optimizers.numpy import NumpyAdagrad
+    from openfl.utilities.optimizers.numpy import NumPyAdagrad
 
     # Creating aggregation function
-    agg_fn = AdaptiveAggregation(optimizer=NumpyAdagrad(model_interface=MI, learning_rate=0.4))
+    agg_fn = AdaptiveAggregation(optimizer=NumPyAdagrad(model_interface=MI, learning_rate=0.4))
 
     @TI.register_fl_task(model='model', data_loader='train_loader', \
                             device='device', optimizer='optimizer')
