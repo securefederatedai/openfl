@@ -86,6 +86,9 @@ Send the image archive to collaborator machines:
 ```
 scp BUILDING_MACHINE:WORKSPACE_PATH/WORKSPACE_NAME.tar.gz COLLABORATOR_MACHINE:SOME_PATH
 ```
+
+Please, keep in mind, if you run a test Federation, with data downloaded from the internet, you should also transfer/download data to collaborator machines.
+
 ### On the running machines (Aggregator and Collaborator nodes):
 6. **Load the image.**
 Execute the following command on all running machines:
