@@ -112,11 +112,11 @@ class FedCurv:
         for name, param in model.named_parameters():
             if param.requires_grad:
                 u_global, v_global = (
-                    get_buffer(model, target)
+                    get_buffer(model, target).detach()
                     for target in (f'{name}_u', f'{name}_v')
                 )
                 u_local, v_local = (
-                    getattr(self, name)
+                    getattr(self, name).detach()
                     for name in (f'{name}_u', f'{name}_v')
                 )
                 u = u_global - u_local
