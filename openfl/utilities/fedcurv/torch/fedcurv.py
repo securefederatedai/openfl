@@ -89,14 +89,11 @@ class FedCurv:
             target = target.to(device)
             output = model(sample)
             loss = F.nll_loss(F.log_softmax(output, dim=1), target)
-            gradients = torch.autograd.grad(loss, model.parameters())
+            loss.backward()
 
-            for g, (n, p) in zip(gradients, model.named_parameters()):
+            for n, p in model.named_parameters():
                 if p.requires_grad:
-                    with torch.no_grad():
-                        prec = g.data ** 2 / len(data_loader)
-
-                    precision_matrices[n] = prec
+                    precision_matrices[n] = p.grad.data ** 2 / len(data_loader)
 
         return precision_matrices
 
