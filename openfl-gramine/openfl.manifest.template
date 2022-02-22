@@ -69,7 +69,7 @@ sgx.trusted_files = [
 ]
 
 sgx.allowed_files = [
-  "file:/tmp"
+  "file:/tmp",
   "file:/etc",
   "file:/workspace/save",
   "file:/workspace/logs",
