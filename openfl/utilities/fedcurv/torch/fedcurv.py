@@ -93,7 +93,7 @@ class FedCurv:
 
             for n, p in model.named_parameters():
                 if p.requires_grad:
-                    precision_matrices[n] = p.grad.data ** 2 / len(data_loader)
+                    precision_matrices[n].data = p.grad.data ** 2 / len(data_loader)
 
         return precision_matrices
 
