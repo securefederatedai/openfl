@@ -42,6 +42,11 @@ Pay attention to the following:
 - if you download data (development scenario) make sure your code first checks if data exists, as connecting to the internet from an enclave may be problematic.
 - make sure you do not use any CUDA driver-dependent packages
 
+Default workspaces (templates) in OpenFL differ in their data downloading procedures. Workspaces with data loading flow that do not require changes to run with Gramine include:
+- torch_unet_kvasir
+- torch_cnn_histology
+- keras_nlp
+
 2. **Initialize the experiment plan** </br> 
 Find out the FQDN of the aggregator machine and use it for plan initialization.
 For example, on Unix-like OS try the following command:
