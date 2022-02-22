@@ -124,7 +124,7 @@ class FedCurv:
                 u = u_global - u_local
                 v = v_global - v_local
 
-                with open(Path('~').expanduser() / 'fedcurv_log.txt', 'wa') as f:
+                with open(Path('~').expanduser() / 'fedcurv_log.txt', 'a') as f:
                     f.write(f'{u_global=}\n')
                     f.write(f'{u_local=}\n')
                     f.write(f'{v_global=}\n')
