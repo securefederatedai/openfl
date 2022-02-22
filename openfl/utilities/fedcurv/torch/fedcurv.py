@@ -89,7 +89,7 @@ class FedCurv:
             target = target.to(device)
             output = model(sample)
             loss = F.nll_loss(F.log_softmax(output, dim=1), target)
-            gradients = torch.autograd.grad(loss, model.parameters())
+            gradients = torch.autograd.grad(loss, model.parameters(), retain_graph=True)
 
             for g, (n, p) in zip(gradients, model.named_parameters()):
                 if p.requires_grad:
