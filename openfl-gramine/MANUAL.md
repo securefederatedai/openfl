@@ -4,12 +4,12 @@ This manual will help you run OpenFL with Aggregator-based workflow inside SGX e
 - [X] import manifest and makefile from OpenFL dist-package 
 - [X] pass wheel repository to pip (for CPU versions of PyTorch for example)
 - [ ] get rid of command line args (insecure)
-- [ ] introduce `fx workspace create --prefix WORKSPACE_NAME` command without --template option to the OpenFL CLI, that will create just an empty workspace with the right folder structure.
+- [ ] introduce `fx workspace create --prefix WORKSPACE_NAME` command without --template option to the OpenFL CLI, which will create just an empty workspace with the right folder structure.
 - [ ] introduce `fx *actor* start --from image`
 
 ## Known issues:
 - Kvasir experiment: aggregation takes really long, debug log-level does not show the reason
-- We need workspace zip to import it and create certs. We need to know the number of collaborators prior to zipping the workspace. SOLUTOIN: mount cols.yaml and data.yaml
+- We need workspace zip to import it and create certs. We need to know the number of collaborators prior to zipping the workspace. SOLUTION: mount cols.yaml and data.yaml
 - During plan initialization we need data to initialize the model. so at least one collaborator should be in data.yaml and its data should be available. cols.yaml may be empty at first
 During cert sign request generation cols.yaml on collaborators remain empty, data.yaml is extended if needed. On aggregator, cols.yaml are updated during signing procedure, data.yaml remains unmodified
 - `error: Disallowing access to file '/usr/local/lib/python3.8/__pycache__/signal.cpython-38.pyc.3423950304'; file is not protected, trusted or allowed.`
@@ -74,7 +74,7 @@ If a signing key is not provided, the application will be built without SGX supp
 ### Image distribution:
 Data scientist (builder) now must transfer the Docker image to the aggregator and collaborator machines. The Aggregator will also need initial model weights.
 
-5. **Transfer files** to the aggregator an collaborator machines.
+5. **Transfer files** to the aggregator and collaborator machines.
 If there is a connection between machines, you may use `scp`. In other cases use the transfer channel that suits your situation.</br>
 Send files to the aggregator machine:
 ```

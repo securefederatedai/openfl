@@ -6,7 +6,7 @@
 from collections.abc import Iterable
 from logging import getLogger
 from os import makedirs
-from os import path
+from pathlib import Path
 from urllib.request import urlretrieve
 from zipfile import ZipFile
 
@@ -31,21 +31,20 @@ class HistologyDataset(ImageFolder):
     FOLDER_NAME = 'Kather_texture_2016_image_tiles_5000'
     ZIP_SHA384 = ('7d86abe1d04e68b77c055820c2a4c582a1d25d2983e38ab724e'
                   'ac75affce8b7cb2cbf5ba68848dcfd9d84005d87d6790')
-    DEFAULT_PATH = path.join(path.expanduser('~'), '.openfl', 'data')
+    DEFAULT_PATH = Path.cwd().absolute() / 'data'
 
-    def __init__(self, root: str = DEFAULT_PATH, **kwargs) -> None:
+    def __init__(self, root: Path = DEFAULT_PATH, **kwargs) -> None:
         """Initialize."""
         makedirs(root, exist_ok=True)
-        filepath = path.join(root, HistologyDataset.FILENAME)
-        if not path.exists(filepath):
+        filepath = root / HistologyDataset.FILENAME
+        if not filepath.is_file():
             self.pbar = tqdm(total=None)
             urlretrieve(HistologyDataset.URL, filepath, self.report_hook)  # nosec
             validate_file_hash(filepath, HistologyDataset.ZIP_SHA384)
             with ZipFile(filepath, 'r') as f:
                 f.extractall(root)
 
-        super(HistologyDataset, self).__init__(
-            path.join(root, HistologyDataset.FOLDER_NAME), **kwargs)
+        super(HistologyDataset, self).__init__(root / HistologyDataset.FOLDER_NAME, **kwargs)
 
     def report_hook(self, count, block_size, total_size):
         """Update progressbar."""
