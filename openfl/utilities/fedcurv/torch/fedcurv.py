@@ -85,7 +85,7 @@ class FedCurv:
         model.to(device)
         for sample, target in data_loader:
             model.zero_grad()
-            sample = sample.to(device)
+            sample = torch.autograd.Variable(sample.to(device))
             target = target.to(device)
             output = model(sample)
             loss = F.nll_loss(F.log_softmax(output, dim=1), target)
