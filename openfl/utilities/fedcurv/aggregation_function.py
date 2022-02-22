@@ -2,6 +2,7 @@
 import numpy as np
 
 from openfl.component.aggregation_functions import WeightedAverage
+from pathlib import Path
 
 
 class FedCurvWeightedAverage(WeightedAverage):
@@ -21,5 +22,13 @@ class FedCurvWeightedAverage(WeightedAverage):
             or tensor_name.endswith('_v')
         ):
             tensors = [local_tensor.tensor for local_tensor in local_tensors]
-            return np.sum(tensors, axis=0)
+            agg_result = np.sum(tensors, axis=0)
+            with open(Path('~').expanduser() / 'fedcurv_log.txt') as f:
+                f. write(f'''{tensor_name} aggregation:
+            Tensors:
+            {tensors}
+            Result:
+            {agg_result}
+            ''')
+            return agg_result
         return super().call(local_tensors)

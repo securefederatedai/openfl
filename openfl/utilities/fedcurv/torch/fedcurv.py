@@ -111,6 +111,7 @@ class FedCurv:
         if not self._params:
             return penalty
         for name, param in model.named_parameters():
+            
             if param.requires_grad:
                 u_global, v_global = (
                     get_buffer(model, target).detach()
@@ -123,11 +124,11 @@ class FedCurv:
                 u = u_global - u_local
                 v = v_global - v_local
 
-                with open(Path('~').expanduser() / 'fedcurv_log.txt', 'w') as f:
+                with open(Path('~').expanduser() / 'fedcurv_log.txt', 'wa') as f:
                     f.write(f'{u_global=}\n')
                     f.write(f'{u_local=}\n')
                     f.write(f'{v_global=}\n')
-                    f.write(f'{v_local=}\n')
+                    f.write(f'{v_local=}\n\n')
                 _penalty = param ** 2 * u - 2 * param * v
                 penalty += _penalty.sum()
         penalty = self.importance * penalty
@@ -150,7 +151,6 @@ class FedCurv:
             device(str): Model device.
             loss_fn(Callable): Train loss function.
         """
-        model.zero_grad()
         precision_matrices = self._diag_fisher(model, data_loader, device)
         for n, m in precision_matrices.items():
             u = torch.tensor(m).to(device)
