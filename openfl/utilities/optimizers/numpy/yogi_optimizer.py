@@ -18,8 +18,8 @@ class NumPyYogi(NumPyAdam):
 
     def __init__(
         self,
-        params: Optional[Dict[str, np.ndarray]] = None,
         *,
+        params: Optional[Dict[str, np.ndarray]] = None,
         model_interface=None,
         learning_rate: float = 0.01,
         betas: Tuple[float, float] = (0.9, 0.999),
@@ -39,7 +39,7 @@ class NumPyYogi(NumPyAdam):
                 and squared gradients.
             epsilon: Value for computational stability.
         """
-        super().__init__(params,
+        super().__init__(params=params,
                          model_interface=model_interface,
                          learning_rate=learning_rate,
                          betas=betas,

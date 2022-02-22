@@ -16,8 +16,8 @@ class NumPyAdagrad(Optimizer):
 
     def __init__(
         self,
-        params: Optional[Dict[str, np.ndarray]] = None,
         *,
+        params: Optional[Dict[str, np.ndarray]] = None,
         model_interface=None,
         learning_rate: float = 0.01,
         initial_accumulator_value: float = 0.1,

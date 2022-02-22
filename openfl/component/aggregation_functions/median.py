@@ -5,7 +5,7 @@
 
 import numpy as np
 
-from .interface import AggregationFunction
+from .core import AggregationFunction
 
 
 class Median(AggregationFunction):

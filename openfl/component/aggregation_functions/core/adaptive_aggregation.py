@@ -10,10 +10,6 @@ import numpy as np
 from openfl.utilities.optimizers.numpy.base_optimizer import Optimizer
 from openfl.utilities.types import LocalTensor
 from .interface import AggregationFunction
-from .weighted_average import WeightedAverage
-
-
-DEFAULT_AGG_FUNC = WeightedAverage()
 
 
 class AdaptiveAggregation(AggregationFunction):
@@ -25,14 +21,14 @@ class AdaptiveAggregation(AggregationFunction):
     def __init__(
         self,
         optimizer: Optimizer,
-        default_agg_func: AggregationFunction = DEFAULT_AGG_FUNC
+        default_agg_func: AggregationFunction,
     ) -> None:
         """Initialize.
 
         Args:
             optimizer: One of numpy optimizer class instance.
             default_agg_func: Aggregate function for aggregating
-                parameters that are not inside the optimizer (default: WeightedAverage()).
+                parameters that are not inside the optimizer.
         """
         self.optimizer = optimizer
         self.default_agg_func = default_agg_func

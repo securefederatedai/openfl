@@ -5,7 +5,7 @@
 
 import numpy as np
 
-from .interface import AggregationFunction
+from .core import AggregationFunction
 
 
 def weighted_average(tensors, weights):

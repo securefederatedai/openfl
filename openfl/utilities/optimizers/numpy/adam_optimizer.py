@@ -17,8 +17,8 @@ class NumPyAdam(Optimizer):
 
     def __init__(
         self,
-        params: Optional[Dict[str, np.ndarray]] = None,
         *,
+        params: Optional[Dict[str, np.ndarray]] = None,
         model_interface=None,
         learning_rate: float = 0.01,
         betas: Tuple[float, float] = (0.9, 0.999),
