@@ -21,17 +21,17 @@ class AdaptiveAggregation(AggregationFunction):
     def __init__(
         self,
         optimizer: Optimizer,
-        default_agg_func: AggregationFunction,
+        agg_func: AggregationFunction,
     ) -> None:
         """Initialize.
 
         Args:
             optimizer: One of numpy optimizer class instance.
-            default_agg_func: Aggregate function for aggregating
+            agg_func: Aggregate function for aggregating
                 parameters that are not inside the optimizer.
         """
         self.optimizer = optimizer
-        self.default_agg_func = default_agg_func
+        self.default_agg_func = agg_func
 
     @staticmethod
     def _make_gradient(
