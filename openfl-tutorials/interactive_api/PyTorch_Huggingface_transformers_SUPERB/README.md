@@ -17,6 +17,10 @@ Keyword spotting subset from [SUPERB](https://huggingface.co/datasets/superb) da
 
 ### How to run this tutorial (without TLS and locally as a simulation):
 
+Using hugging face models requires you to setup a [cache directory](https://huggingface.co/transformers/v4.0.1/installation.html#caching-models) at every node where the experiment is run, like XDG_CACHE_HOME.
+
+In addition to this, the Trainer class in huggingface transformers is desgined to use all available GPUs on a node. Hence, to avoid [cuda runtime error](https://forums.developer.nvidia.com/t/cuda-peer-resources-error-when-running-on-more-than-8-k80s-aws-p2-16xlarge/45351/5) on nodes that have more than 8 GPUs, setting up CUDA_VISIBLE_DEVICES limits the number of GPUs participating in the experiment.
+
 Go to example [folder](./)
 
 ```sh
@@ -35,7 +39,8 @@ bash start_director.sh
 ```sh
 cd $PYTORCH_HUGGINGFACE_TRANSFORMERS_SUPERB/envoy
 pip install -r sd_requirements.txt
-bash start_envoy.sh
+export XDG_CACHE_HOME=<cache_dir>
+CUDA_VISIBLE_DEVICES=<device_ids> bash start_envoy.sh
 ```
 
 Optional: start second envoy:
@@ -45,12 +50,14 @@ Optional: start second envoy:
 
 ```sh
 cd $PYTORCH_HUGGINGFACE_TRANSFORMERS_SUPERB/envoy_two
-bash start_envoy.sh
+export XDG_CACHE_HOME=<cache_dir>
+CUDA_VISIBLE_DEVICES=<device_ids> bash start_envoy.sh
 ```
 
 3. Run `PyTorch_Huggingface_transformers_SUPERB.ipynb` jupyter notebook:
 
 ```sh
 cd $PYTORCH_HUGGINGFACE_TRANSFORMERS_SUPERB/workspace
-jupyter lab PyTorch_Huggingface_transformers_SUPERB.ipynb
+export XDG_CACHE_HOME=<cache_dir>
+CUDA_VISIBLE_DEVICES=<device_ids> jupyter lab PyTorch_Huggingface_transformers_SUPERB.ipynb
 ```

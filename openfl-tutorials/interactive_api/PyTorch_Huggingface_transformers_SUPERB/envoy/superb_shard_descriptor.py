@@ -8,7 +8,7 @@ from typing import Dict
 from typing import List
 from typing import Tuple
 
-from datasets import load_dataset
+from datasets import load_dataset, load_metric
 
 from openfl.interface.interactive_api.shard_descriptor import ShardDataset
 from openfl.interface.interactive_api.shard_descriptor import ShardDescriptor
@@ -85,6 +85,7 @@ class SuperbShardDescriptor(ShardDescriptor):
     def download_data(self) -> Tuple[Tuple[Dict, List], Tuple[Dict, List], Tuple[Dict, List]]:
         """Download dataset."""
         dataset = load_dataset('superb', 'ks')
+        metric = load_metric('accuracy')
 
         # Train data
         train_set = dataset['train']
