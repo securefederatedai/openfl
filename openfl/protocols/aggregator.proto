@@ -32,7 +32,8 @@ message GetTasksRequest {
 message Task {
   string name = 1;
   string function_name = 2;
-  bool is_local = 3;
+  string task_type = 3;
+  bool apply_local = 4;
 }
 
 message GetTasksResponse {

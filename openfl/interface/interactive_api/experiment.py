@@ -8,14 +8,16 @@ from collections import defaultdict
 from copy import deepcopy
 from logging import getLogger
 from pathlib import Path
+from typing import Dict
 from typing import Tuple
 
 from tensorboardX import SummaryWriter
 
 from openfl.component.aggregation_functions import AggregationFunction
 from openfl.component.aggregation_functions import WeightedAverage
-from openfl.component.assigner.tasks import train_and_validate_assigner
-from openfl.component.assigner.tasks import validate_assigner
+from openfl.component.assigner.tasks import Task
+from openfl.component.assigner.tasks import TrainTask
+from openfl.component.assigner.tasks import ValidateTask
 from openfl.federated import Plan
 from openfl.interface.cli import setup_logging
 from openfl.interface.cli_helper import WORKSPACE
@@ -229,13 +231,14 @@ class FLExperiment:
             self.logger.info('Experiment was not accepted or failed.')
 
     def define_task_assigner(self, task_keeper, rounds_to_train):
-        # Check tasks type
-        # NOTE We have an implicit division of tasks into two types: training and validation.
-        # It depends on the presence of an optimizer parameter
-        for name in task_keeper.task_registry:
-            if task_keeper.task_contract[name]['optimizer'] is not None:
+        """Define task assigner by registered tasks."""
+        tasks = task_keeper.get_registered_tasks()
+        self.train_task_exist = False
+        self.validation_task_exist = False
+        for task in tasks.values():
+            if task.task_type == 'train':
                 self.train_task_exist = True
-            else:
+            if task.task_type == 'validate':
                 self.validation_task_exist = True
 
         if not self.train_task_exist and rounds_to_train != 1:
@@ -243,9 +246,25 @@ class FLExperiment:
             raise Exception('Variable rounds_to_train must be equal 1, '
                             'because only validation tasks were given')
         if self.train_task_exist and self.validation_task_exist:
-            return train_and_validate_assigner
+            def assigner(collaborators, round_number, **kwargs):
+                tasks_by_collaborator = {}
+                for collaborator in collaborators:
+                    tasks_by_collaborator[collaborator] = [
+                        tasks['train'],
+                        tasks['locally_tuned_model_validate'],
+                        tasks['aggregated_model_validate'],
+                    ]
+                return tasks_by_collaborator
+            return assigner
         elif not self.train_task_exist and self.validation_task_exist:
-            return validate_assigner
+            def assigner(collaborators, round_number, **kwargs):
+                tasks_by_collaborator = {}
+                for collaborator in collaborators:
+                    tasks_by_collaborator[collaborator] = [
+                        tasks['aggregated_model_validate'],
+                    ]
+                return tasks_by_collaborator
+            return assigner
         elif self.train_task_exist and not self.validation_task_exist:
             raise Exception('You should define validate task!')
         else:
@@ -326,8 +345,6 @@ class FLExperiment:
         # as soon as it connects. This change should be a part of a bigger PR
         # brining in fault tolerance changes
 
-
-
         shard_registry = self.federation.get_shard_registry()
         plan.authorized_cols = [
             name for name, info in shard_registry.items() if info['is_online']
@@ -352,26 +369,6 @@ class FLExperiment:
         for setting, value in data_loader.kwargs.items():
             plan.config['data_loader']['settings'][setting] = value
 
-        # # Tasks part
-        # for name in task_keeper.task_registry:
-        #     if task_keeper.task_contract[name]['optimizer'] is not None:
-        #         # This is training task
-        #         plan.config['tasks'][name] = {'function': name,
-        #                                       'kwargs': task_keeper.task_settings[name]}
-        #     else:
-        #         # This is a validation type task (not altering the model state)
-        #         validation_task_types = [('aggregated_model_', 'global')]
-        #         if self.train_task_exist:
-        #             validation_task_types.insert(0, ('localy_tuned_model_', 'local'))
-        #
-        #         for name_prefix, apply_kwarg in validation_task_types:
-        #             # We add two entries for this task: for local and global models
-        #             task_kwargs = deepcopy(task_keeper.task_settings[name])
-        #             task_kwargs.update({'apply': apply_kwarg})
-        #             plan.config['tasks'][name_prefix + name] = {
-        #                 'function': name,
-        #                 'kwargs': task_kwargs}
-
         # TaskRunner framework plugin
         # ['required_plugin_components'] should be already in the default plan with all the fields
         # filled with the default values
@@ -392,17 +389,16 @@ class FLExperiment:
                 'task_assigner_file': task_assigner_file
             }
         }
-        # print(f'{plan.config["assigner"]=}')
-        # plan.config['assigner']['settings']['task_groups'][0]['tasks'] = [
-        #     entry
-        #     for entry in plan.config['tasks']
-        #     if (type(plan.config['tasks'][entry]) is dict
-        #         and 'function' in plan.config['tasks'][entry])
-        # ]
-        # print(f'{plan.config["assigner"]=}')
+
         self.plan = deepcopy(plan)
 
-    def _serialize_interface_objects(self, model_provider, task_keeper, data_loader, task_assigner):
+    def _serialize_interface_objects(
+            self,
+            model_provider,
+            task_keeper,
+            data_loader,
+            task_assigner
+    ):
         """Save python objects to be restored on collaborators."""
         serializer = self.plan.build(
             self.plan.config['api_layer']['required_plugin_components']['serializer_plugin'], {})
@@ -422,7 +418,7 @@ class FLExperiment:
             serializer.serialize(object_, self.plan.config['api_layer']['settings'][filename])
 
 
-class TaskInterface:
+class TaskKeeper:
     """
     Task keeper class.
 
@@ -445,6 +441,8 @@ class TaskInterface:
         self.task_settings = defaultdict(dict)
         # Mapping 'task name' -> callable
         self.aggregation_functions = defaultdict(WeightedAverage)
+        # Mapping 'task_alias' -> Task
+        self._tasks: Dict[str, Task] = {}
 
     def register_fl_task(self, model, data_loader, device, optimizer=None, round_num=None):
         """
@@ -481,11 +479,29 @@ class TaskInterface:
                 return metric_dict
 
             # Saving the task and the contract for later serialization
-            self.task_registry[training_method.__name__] = wrapper_decorator
+            function_name = training_method.__name__
+            self.task_registry[function_name] = wrapper_decorator
             contract = {'model': model, 'data_loader': data_loader,
                         'device': device, 'optimizer': optimizer, 'round_num': round_num}
-            self.task_contract[training_method.__name__] = contract
+            self.task_contract[function_name] = contract
+            # define tasks
+            if optimizer:
+                self._tasks['train'] = TrainTask(
+                    name='train',
+                    function_name=function_name,
+                )
+            else:
+                self._tasks['locally_tuned_model_validate'] = ValidateTask(
+                    name='locally_tuned_model_validate',
+                    function_name=function_name,
+                    apply_local=True,
+                )
+                self._tasks['aggregated_model_validate'] = ValidateTask(
+                    name='aggregated_model_validate',
+                    function_name=function_name,
+                )
             # We do not alter user environment
+
             return training_method
 
         return decorator_with_args
@@ -535,6 +551,14 @@ class TaskInterface:
             self.aggregation_functions[training_method.__name__] = aggregation_function
             return training_method
         return decorator_with_args
+
+    def get_registered_tasks(self) -> Dict[str, Task]:
+        """Return registered tasks."""
+        return self._tasks
+
+
+# Backward compatibility
+TaskInterface = TaskKeeper
 
 
 class ModelInterface:

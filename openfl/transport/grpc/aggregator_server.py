@@ -146,7 +146,8 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
                 aggregator_pb2.Task(
                     name=task.name,
                     function_name=task.function_name,
-                    is_local=task.is_local
+                    task_type=task.task_type,
+                    apply_local=task.apply_local
                 ) for task in tasks
             ]
         else:
@@ -208,7 +209,8 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
         round_number = proto.round_number
         data_size = proto.data_size
         named_tensors = proto.tensors
-
+        for i in [collaborator_name, round_number, task_name, data_size]:
+            logger.info(f'{i}')
         self.aggregator.send_local_task_results(
             collaborator_name, round_number, task_name, data_size, named_tensors)
         # turn data stream into local model update

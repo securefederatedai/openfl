@@ -772,7 +772,6 @@ class Aggregator:
             assert (tags[-1] == collaborators_for_task[0]), (
                 f'Tensor {tensor_key} in task {task.name} has not been processed correctly'
             )
-
             # Strip the collaborator label, and lookup aggregated tensor
             new_tags = tuple(tags[:-1])
             agg_tensor_key = TensorKey(tensor_name, origin, round_number, report, new_tags)

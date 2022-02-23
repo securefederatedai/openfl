@@ -12,8 +12,6 @@ from yaml import dump
 from yaml import safe_load
 from yaml import SafeDumper
 
-from openfl.component.aggregation_functions import AggregationFunction
-from openfl.component.aggregation_functions import WeightedAverage
 from openfl.component.assigner.custom_assigner import Assigner
 from openfl.interface.cli_helper import WORKSPACE
 from openfl.transport import AggregatorGRPCClient
@@ -172,9 +170,9 @@ class Plan:
                          f'from [red]{module_path}[/] Module.',
                          extra={'markup': True})
         Plan.logger.debug(f'Settings [red]🡆[/] {settings}',
-                         extra={'markup': True})
+                          extra={'markup': True})
         Plan.logger.debug(f'Override [red]🡆[/] {override}',
-                         extra={'markup': True})
+                          extra={'markup': True})
 
         settings.update(**override)
 
@@ -254,7 +252,6 @@ class Plan:
     def get_assigner(self):
         """Get the plan task assigner."""
         aggregation_functions_by_task = self.restore_object('aggregation_function_obj.pkl')
-        # tasks = self.get_tasks(aggregation_functions_by_task)
         assigner_function = self.restore_object('task_assigner_obj.pkl')
         self.assigner_ = Assigner(
             assigner_function=assigner_function,
@@ -291,35 +288,6 @@ class Plan:
             self.aggregator_ = Plan.build(**defaults, initial_tensor_dict=tensor_dict)
 
         return self.aggregator_
-
-#     def get_tasks(self, aggregation_functions_by_task=None):
-#         """Get federation tasks."""
-#         self.logger.info(f'{aggregation_functions_by_task=}')
-#         tasks = self.config.get('tasks', {})
-#         self.logger.info(f'{tasks=}')
-#         tasks.pop(DEFAULTS, None)
-#         tasks.pop(SETTINGS, None)
-#         if aggregation_functions_by_task:
-#             for task in tasks:
-#                 function_name = tasks[task]['function']
-#                 agg_fn = aggregation_functions_by_task[function_name]
-#                 tasks[task]['aggregation_type'] = agg_fn
-#             return tasks
-#         self.logger.info(f'{tasks=}')
-#         for task in tasks:
-#             aggregation_type = tasks[task].get('aggregation_type')
-#             if aggregation_type is None:
-#                 aggregation_type = WeightedAverage()
-#             elif isinstance(aggregation_type, dict):
-#                 if SETTINGS not in aggregation_type:
-#                     aggregation_type[SETTINGS] = {}
-#                 aggregation_type = Plan.build(**aggregation_type)
-#                 if not isinstance(aggregation_type, AggregationFunction):
-#                     raise NotImplementedError(f'''{task} task aggregation type does not implement an interface:
-# openfl.component.aggregation_functions.AggregationFunction
-# ''')
-#             tasks[task]['aggregation_type'] = aggregation_type
-#         return tasks
 
     def get_tensor_pipe(self):
         """Get data tensor pipeline."""

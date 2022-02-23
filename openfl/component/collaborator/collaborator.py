@@ -186,14 +186,16 @@ class Collaborator:
         # map this task to an actual function name and kwargs
         func_name = task.function_name
 
-        # There no enough information to understand that it's train or validate task
-        # Looks like we should provide task type.
-        kwargs = {}
-        if func_name == 'validate':
-            if task.is_local:
-                kwargs['apply'] = 'local'
-            else:
-                kwargs['apply'] = 'global'
+        if hasattr(self.task_runner, 'TASK_REGISTRY'):
+            kwargs = {}
+            if task.task_type == 'validate':
+                if task.apply_local:
+                    kwargs['apply'] = 'local'
+                else:
+                    kwargs['apply'] = 'global'
+        else:
+            func_name = self.task_config[task]['function']
+            kwargs = self.task_config[task]['kwargs']
 
         # this would return a list of what tensors we require as TensorKeys
         required_tensorkeys_relative = self.task_runner.get_required_tensorkeys_for_function(
