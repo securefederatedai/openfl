@@ -85,7 +85,7 @@ class SuperbShardDescriptor(ShardDescriptor):
     def download_data(self) -> Tuple[Tuple[Dict, List], Tuple[Dict, List], Tuple[Dict, List]]:
         """Download dataset."""
         dataset = load_dataset('superb', 'ks')
-        metric = load_metric('accuracy')
+        metric = load_metric('accuracy') # noqa
 
         # Train data
         train_set = dataset['train']
