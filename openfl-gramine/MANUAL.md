@@ -165,8 +165,8 @@ The user may run an experiment under gramine without SGX. Note how we do not mou
 ```
 export WORKSPACE_NAME=your_workspace_name
 export WORKSPACE_PATH=path_to_workspace
-docker run -it --rm --security-opt seccomp=unconfined \
---network=host -e GRAMINE_EXECUTABLE=gramine-direct \
+docker run -it --rm --security-opt seccomp=unconfined -e GRAMINE_EXECUTABLE=gramine-direct \
+--network=host \
 --volume=${WORKSPACE_PATH}/cert:/workspace/cert \
 --volume=${WORKSPACE_PATH}/logs:/workspace/logs \
 --volume=${WORKSPACE_PATH}/plan/cols.yaml:/workspace/plan/cols.yaml \
@@ -180,8 +180,8 @@ ${WORKSPACE_NAME} aggregator start
 export WORKSPACE_NAME=your_workspace_name
 export WORKSPACE_PATH=path_to_workspace
 export COL_NAME=col_name
-docker run -it --rm --security-opt seccomp=unconfined \
---network=host -e GRAMINE_EXECUTABLE=gramine-direct \
+docker run -it --rm --security-opt seccomp=unconfined -e GRAMINE_EXECUTABLE=gramine-direct \
+--network=host \
 --volume=${WORKSPACE_PATH}/cert:/workspace/cert \
 --volume=${WORKSPACE_PATH}/plan/data.yaml:/workspace/plan/data.yaml \
 --volume=${WORKSPACE_PATH}/data:/workspace/data \
