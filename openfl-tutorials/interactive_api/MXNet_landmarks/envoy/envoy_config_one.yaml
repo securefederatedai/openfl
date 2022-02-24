@@ -1,0 +1,9 @@
+params:
+  cuda_devices: [0]
+
+optional_plugin_components: {}
+
+shard_descriptor:
+  template: landmark_shard_descriptor.LandmarkShardDescriptor
+  params:
+    rank_worldsize: 1, 2

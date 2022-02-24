@@ -1,0 +1,2 @@
+mxnet-cu112==1.9.0
+kaggle
