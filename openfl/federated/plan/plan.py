@@ -12,6 +12,8 @@ from yaml import dump
 from yaml import safe_load
 from yaml import SafeDumper
 
+from openfl.component.aggregation_functions import AggregationFunction
+from openfl.component.aggregation_functions import WeightedAverage
 from openfl.component.assigner.custom_assigner import Assigner
 from openfl.interface.cli_helper import WORKSPACE
 from openfl.transport import AggregatorGRPCClient
@@ -251,15 +253,58 @@ class Plan:
 
     def get_assigner(self):
         """Get the plan task assigner."""
-        aggregation_functions_by_task = self.restore_object('aggregation_function_obj.pkl')
-        assigner_function = self.restore_object('task_assigner_obj.pkl')
-        self.assigner_ = Assigner(
-            assigner_function=assigner_function,
-            aggregation_functions_by_task=aggregation_functions_by_task,
-            authorized_cols=self.authorized_cols
-        )
+        is_task_runner_api_flow = False
+        try:
+            aggregation_functions_by_task = self.restore_object('aggregation_function_obj.pkl')
+            assigner_function = self.restore_object('task_assigner_obj.pkl')
+        except Exception as exc:
+            self.logger.error(f'Failed to load aggregation and assigner functions: {exc}')
+            self.logger.info('Using Task Runner API workflow')
+            is_task_runner_api_flow = True
+        else:
+            self.assigner_ = Assigner(
+                assigner_function=assigner_function,
+                aggregation_functions_by_task=aggregation_functions_by_task,
+                authorized_cols=self.authorized_cols,
+                rounds_to_train=self.rounds_to_train,
+            )
+
+        if is_task_runner_api_flow:
+            # Backward compatibility
+            defaults = self.config.get('assigner',
+                                       {
+                                           TEMPLATE: 'openfl.component.Assigner',
+                                           SETTINGS: {}
+                                       })
+
+            defaults[SETTINGS]['authorized_cols'] = self.authorized_cols
+            defaults[SETTINGS]['rounds_to_train'] = self.rounds_to_train
+            defaults[SETTINGS]['tasks'] = self.get_tasks()
+
+            if self.assigner_ is None:
+                self.assigner_ = Plan.build(**defaults)
 
         return self.assigner_
+
+    def get_tasks(self):
+        """Get federation tasks."""
+        tasks = self.config.get('tasks', {})
+        tasks.pop(DEFAULTS, None)
+        tasks.pop(SETTINGS, None)
+        for task in tasks:
+            aggregation_type = tasks[task].get('aggregation_type')
+            if aggregation_type is None:
+                aggregation_type = WeightedAverage()
+            elif isinstance(aggregation_type, dict):
+                if SETTINGS not in aggregation_type:
+                    aggregation_type[SETTINGS] = {}
+                aggregation_type = Plan.build(**aggregation_type)
+                if not isinstance(aggregation_type, AggregationFunction):
+                    raise NotImplementedError(f'''{task} task aggregation type does not implement an interface:
+    openfl.component.aggregation_functions.AggregationFunction
+    ''')
+            tasks[task]['aggregation_type'] = aggregation_type
+        return tasks
 
     def get_aggregator(self, tensor_dict=None):
         """Get federation aggregator."""

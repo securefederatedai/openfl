@@ -123,6 +123,21 @@ def test_time_to_quit(agg, round_number, rounds_to_train, expected):
     agg.rounds_to_train = rtt
 
 
+@pytest.mark.parametrize(
+    'col_name,tasks,time_to_quit,exp_tasks,exp_sleep_time,exp_time_to_quit', [
+        ('col1', ['task_name'], True, None, 0, True),
+        ('col1', [], False, None, 10, False),
+        ('col1', ['task_name'], False, ['task_name'], 0, False),
+    ])
+def test_get_tasks(agg, col_name, tasks, time_to_quit,
+                   exp_tasks, exp_sleep_time, exp_time_to_quit):
+    """Test that test_get_tasks works correctly."""
+    agg.assigner.get_tasks_for_collaborator = mock.Mock(return_value=tasks)
+    agg._time_to_quit = mock.Mock(return_value=time_to_quit)
+    tasks, round_number, sleep_time, time_to_quit = agg.get_tasks('col1')
+    assert (tasks, sleep_time, time_to_quit) == (exp_tasks, exp_sleep_time, exp_time_to_quit)
+
+
 def test_get_aggregated_tensor(agg):
     """Test that test_get_tasks is failed without a correspond data."""
     collaborator_name = 'col1'
@@ -197,6 +212,39 @@ def test_is_task_done_done(agg):
 def test_is_round_done_no_tasks(agg):
     """Test that is_round_done returns True in the corresponded case."""
     agg.assigner.get_all_tasks_for_round = mock.Mock(return_value=[])
+    is_round_done = agg._is_round_done()
+
+    assert is_round_done is True
+
+
+def test_is_round_done_not_done(agg):
+    """Test that is_round_done returns False in the corresponded case."""
+    round_num = 0
+    task_name = 'test_task_name'
+    col1 = 'one'
+    col2 = 'two'
+    agg.assigner.get_all_tasks_for_round = mock.Mock(return_value=[task_name])
+    agg.assigner.get_collaborators_for_task = mock.Mock(return_value=[col1, col2])
+    agg.collaborator_tasks_results = {
+        TaskResultKey(task_name, col1, round_num): 1,
+    }
+    is_round_done = agg._is_round_done()
+
+    assert is_round_done is False
+
+
+def test_is_round_done_done(agg):
+    """Test that is_round_done returns True in the corresponded case."""
+    round_num = 0
+    task_name = 'test_task_name'
+    col1 = 'one'
+    col2 = 'two'
+    agg.assigner.get_all_tasks_for_round = mock.Mock(return_value=[task_name])
+    agg.assigner.get_collaborators_for_task = mock.Mock(return_value=[col1, col2])
+    agg.collaborator_tasks_results = {
+        TaskResultKey(task_name, col1, round_num): 1,
+        TaskResultKey(task_name, col2, round_num): 1
+    }
     is_round_done = agg._is_round_done()
 
     assert is_round_done is True

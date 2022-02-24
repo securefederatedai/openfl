@@ -142,14 +142,22 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
         tasks, round_number, sleep_time, time_to_quit = self.aggregator.get_tasks(
             request.header.sender)
         if tasks:
-            tasks_proto = [
-                aggregator_pb2.Task(
-                    name=task.name,
-                    function_name=task.function_name,
-                    task_type=task.task_type,
-                    apply_local=task.apply_local
-                ) for task in tasks
-            ]
+            if isinstance(tasks[0], str):
+                # backward compatibility
+                tasks_proto = [
+                    aggregator_pb2.Task(
+                        name=task,
+                    ) for task in tasks
+                ]
+            else:
+                tasks_proto = [
+                    aggregator_pb2.Task(
+                        name=task.name,
+                        function_name=task.function_name,
+                        task_type=task.task_type,
+                        apply_local=task.apply_local
+                    ) for task in tasks
+                ]
         else:
             tasks_proto = []
 

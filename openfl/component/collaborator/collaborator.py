@@ -184,9 +184,8 @@ class Collaborator:
     def do_task(self, task, round_number):
         """Do the specified task."""
         # map this task to an actual function name and kwargs
-        func_name = task.function_name
-
         if hasattr(self.task_runner, 'TASK_REGISTRY'):
+            func_name = task.function_name
             kwargs = {}
             if task.task_type == 'validate':
                 if task.apply_local:
