@@ -123,7 +123,7 @@ class FedCurv:
                 )
                 if name == 'fc2.bias':
                     with open(Path('~').expanduser() / 'fedcurv_log.txt', 'a') as f:
-                        f.write(f'{name}_u after aggregation: {u_global}\n')
+                        f.write(f'{name}_u after aggregation: {u_local}\n')
                 u = u_global - u_local
                 v = v_global - v_local
                 _penalty = param ** 2 * u - 2 * param * v
