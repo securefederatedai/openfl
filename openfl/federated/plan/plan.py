@@ -280,18 +280,25 @@ class Plan:
 
             defaults[SETTINGS]['authorized_cols'] = self.authorized_cols
             defaults[SETTINGS]['rounds_to_train'] = self.rounds_to_train
-            defaults[SETTINGS]['tasks'] = self.get_tasks()
+            aggregation_functions_by_task = self.restore_object('aggregation_function_obj.pkl')
+            defaults[SETTINGS]['tasks'] = self.get_tasks(aggregation_functions_by_task)
 
             if self.assigner_ is None:
                 self.assigner_ = Plan.build(**defaults)
 
         return self.assigner_
 
-    def get_tasks(self):
+    def get_tasks(self, aggregation_functions_by_task=None):
         """Get federation tasks."""
         tasks = self.config.get('tasks', {})
         tasks.pop(DEFAULTS, None)
         tasks.pop(SETTINGS, None)
+        if aggregation_functions_by_task:
+            for task in tasks:
+                function_name = tasks[task]['function']
+                agg_fn = aggregation_functions_by_task[function_name]
+                tasks[task]['aggregation_type'] = agg_fn
+            return tasks
         for task in tasks:
             aggregation_type = tasks[task].get('aggregation_type')
             if aggregation_type is None:
@@ -301,9 +308,10 @@ class Plan:
                     aggregation_type[SETTINGS] = {}
                 aggregation_type = Plan.build(**aggregation_type)
                 if not isinstance(aggregation_type, AggregationFunction):
-                    raise NotImplementedError(f'''{task} task aggregation type does not implement an interface:
-    openfl.component.aggregation_functions.AggregationFunction
-    ''')
+                    raise NotImplementedError(
+                        f'''{task} task aggregation type does not implement an interface:
+                        openfl.component.aggregation_functions.AggregationFunction
+                        ''')
             tasks[task]['aggregation_type'] = aggregation_type
         return tasks
 
