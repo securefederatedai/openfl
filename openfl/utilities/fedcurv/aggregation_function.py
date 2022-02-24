@@ -24,10 +24,7 @@ class FedCurvWeightedAverage(WeightedAverage):
             tensors = [local_tensor.tensor for local_tensor in local_tensors]
             agg_result = np.sum(tensors, axis=0)
             with open(Path('~').expanduser() / 'fedcurv_log.txt', 'a') as f:
-                f. write(f'''{tensor_name} aggregation:
-            Tensors:
-            {tensors}
-            Result:
+                f. write(f'''{tensor_name} aggregation Result:
             {agg_result}
             ''')
             return agg_result

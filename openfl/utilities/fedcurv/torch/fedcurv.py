@@ -125,10 +125,10 @@ class FedCurv:
                 v = v_global - v_local
 
                 with open(Path('~').expanduser() / 'fedcurv_log.txt', 'a') as f:
-                    f.write(f'{u_global=}\n')
-                    f.write(f'{u_local=}\n')
-                    f.write(f'{v_global=}\n')
-                    f.write(f'{v_local=}\n\n')
+                    f.write(f'{name}.{u_global=}\n')
+                    f.write(f'{name}.{u_local=}\n')
+                    f.write(f'{name}.{v_global=}\n')
+                    f.write(f'{name}.{v_local=}\n\n')
                 _penalty = param ** 2 * u - 2 * param * v
                 penalty += _penalty.sum()
         penalty = self.importance * penalty
