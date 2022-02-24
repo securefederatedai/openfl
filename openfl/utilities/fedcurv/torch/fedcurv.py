@@ -121,7 +121,7 @@ class FedCurv:
                     getattr(self, name).detach()
                     for name in (f'{name}_u', f'{name}_v')
                 )
-                if name == 'fc2.bias_u':
+                if name == 'fc2.bias':
                     with open(Path('~').expanduser() / 'fedcurv_log.txt', 'a') as f:
                         f.write(f'{name}_u after aggregation: {u_global}\n')
                 u = u_global - u_local
@@ -157,6 +157,6 @@ class FedCurv:
             register_buffer(model, f'{n}_v', v)
             setattr(self, f'{n}_u', u)
             setattr(self, f'{n}_v', v)
-            if n == 'fc2.bias_u':
+            if n == 'fc2.bias':
                 with open(Path('~').expanduser() / 'fedcurv_log.txt', 'a') as f:
                     f.write(f'{n}_u before aggregation: {u}\n')
