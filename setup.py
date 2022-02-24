@@ -30,6 +30,7 @@ setup(
         'openfl.component.director',
         'openfl.component.ca',
         'openfl.utilities',
+        'openfl.utilities.optimizers.numpy',
         'openfl.utilities.optimizers.torch',
         'openfl.utilities.optimizers.keras',
         'openfl.utilities.data_splitters',
@@ -49,7 +50,8 @@ setup(
         'openfl-workspace',
         'openfl-docker',
         'openfl-tutorials',
-        'openfl.component.aggregation_functions'
+        'openfl.component.aggregation_functions',
+        'openfl.component.aggregation_functions.core'
     ],
     include_package_data=True,
     install_requires=[
