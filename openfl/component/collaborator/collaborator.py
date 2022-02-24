@@ -193,8 +193,8 @@ class Collaborator:
                 else:
                     kwargs['apply'] = 'global'
         else:
-            func_name = self.task_config[task]['function']
-            kwargs = self.task_config[task]['kwargs']
+            func_name = self.task_config[task.name]['function']
+            kwargs = self.task_config[task.name]['kwargs']
 
         # this would return a list of what tensors we require as TensorKeys
         required_tensorkeys_relative = self.task_runner.get_required_tensorkeys_for_function(
