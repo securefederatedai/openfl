@@ -133,8 +133,8 @@ which will be used for global model aggreagation:
 
     # Creating aggregation function
     agg_fn = AdaptiveAggregation(optimizer=my_own_optimizer,
-                                 default_agg_func=WeightedAverage()) # WeightedAverage() is used for aggregating
-                                                                     # parameters that are not inside the given optimizer.
+                                 agg_func=WeightedAverage()) # WeightedAverage() is used for aggregating
+                                                             # parameters that are not inside the given optimizer.
 
     # Define training task
     @TI.register_fl_task(model='model', data_loader='train_loader', \
