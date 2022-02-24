@@ -47,9 +47,10 @@ class Assigner:
                 for task in tasks:
                     self.all_tasks_for_round[round_number][task.name] = task
                     self.collaborators_for_task[round_number][task.name].append(collaborator_name)
-                    self.agg_functions_by_task_name[
-                        task.name
-                    ] = self.agg_functions_by_task.get(task.function_name, WeightedAverage())
+                    if self.agg_functions_by_task:
+                        self.agg_functions_by_task_name[
+                            task.name
+                        ] = self.agg_functions_by_task.get(task.function_name, WeightedAverage())
 
     def get_tasks_for_collaborator(self, collaborator_name, round_number):
         """Abstract method."""
