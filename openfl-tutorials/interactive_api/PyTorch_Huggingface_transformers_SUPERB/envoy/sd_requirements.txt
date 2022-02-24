@@ -1,6 +1,4 @@
 datasets==1.14
 librosa
-pillow
 pynvml
-torch
 numpy==1.21.5
