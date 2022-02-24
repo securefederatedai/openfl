@@ -253,29 +253,30 @@ class Plan:
 
     def get_assigner(self):
         """Get the plan task assigner."""
-        is_task_runner_api_flow = False
+        aggregation_functions_by_task = None
+        assigner_function = None
         try:
             aggregation_functions_by_task = self.restore_object('aggregation_function_obj.pkl')
             assigner_function = self.restore_object('task_assigner_obj.pkl')
         except Exception as exc:
             self.logger.error(f'Failed to load aggregation and assigner functions: {exc}')
             self.logger.info('Using Task Runner API workflow')
-            is_task_runner_api_flow = True
-        else:
+        if aggregation_functions_by_task and assigner_function:
             self.assigner_ = Assigner(
                 assigner_function=assigner_function,
                 aggregation_functions_by_task=aggregation_functions_by_task,
                 authorized_cols=self.authorized_cols,
                 rounds_to_train=self.rounds_to_train,
             )
-
-        if is_task_runner_api_flow:
+        else:
             # Backward compatibility
-            defaults = self.config.get('assigner',
-                                       {
-                                           TEMPLATE: 'openfl.component.Assigner',
-                                           SETTINGS: {}
-                                       })
+            defaults = self.config.get(
+                'assigner',
+                {
+                   TEMPLATE: 'openfl.component.Assigner',
+                   SETTINGS: {}
+                }
+            )
 
             defaults[SETTINGS]['authorized_cols'] = self.authorized_cols
             defaults[SETTINGS]['rounds_to_train'] = self.rounds_to_train
