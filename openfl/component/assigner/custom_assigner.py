@@ -17,6 +17,7 @@ class Assigner:
     def __init__(self, *, assigner_function, aggregation_functions_by_task, authorized_cols):
         """Initialize."""
         self.aggregation_functions_by_task = aggregation_functions_by_task
+        self.aggregation_functions_by_task_name = {}
         self.authorized_cols = authorized_cols
         self.all_tasks_for_round = {}
         self.collaborators_for_task = defaultdict(list)
@@ -40,6 +41,9 @@ class Assigner:
             for task in tasks:
                 self.all_tasks_for_round[task.name] = task
                 self.collaborators_for_task[task.name].append(collaborator_name)
+                self.aggregation_functions_by_task_name[
+                    task.name
+                ] = self.aggregation_functions_by_task.get(task.function_name, WeightedAverage())
 
     def get_tasks_for_collaborator(self, collaborator_name):
         """Abstract method."""
@@ -58,7 +62,7 @@ class Assigner:
         """
         return self.all_tasks_for_round.values()
 
-    def get_aggregation_type_for_task(self, function_name):
+    def get_aggregation_type_for_task(self, task_name):
         """Extract aggregation type from self.tasks."""
-        agg_fn = self.aggregation_functions_by_task.get(function_name, WeightedAverage())
+        agg_fn = self.aggregation_functions_by_task_name.get(task_name, WeightedAverage())
         return agg_fn
