@@ -273,8 +273,8 @@ class Plan:
             defaults = self.config.get(
                 'assigner',
                 {
-                   TEMPLATE: 'openfl.component.Assigner',
-                   SETTINGS: {}
+                    TEMPLATE: 'openfl.component.Assigner',
+                    SETTINGS: {}
                 }
             )
 
