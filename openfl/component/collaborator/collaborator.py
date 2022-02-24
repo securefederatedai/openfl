@@ -186,6 +186,7 @@ class Collaborator:
         # map this task to an actual function name and kwargs
         if hasattr(self.task_runner, 'TASK_REGISTRY'):
             func_name = task.function_name
+            task_name = task.name
             kwargs = {}
             if task.task_type == 'validate':
                 if task.apply_local:
@@ -193,8 +194,12 @@ class Collaborator:
                 else:
                     kwargs['apply'] = 'global'
         else:
-            func_name = self.task_config[task.name]['function']
-            kwargs = self.task_config[task.name]['kwargs']
+            if isinstance(task, str):
+                task_name = task
+            else:
+                task_name = task.name
+            func_name = self.task_config[task_name]['function']
+            kwargs = self.task_config[task_name]['kwargs']
 
         # this would return a list of what tensors we require as TensorKeys
         required_tensorkeys_relative = self.task_runner.get_required_tensorkeys_for_function(
@@ -259,7 +264,7 @@ class Collaborator:
 
         # send the results for this tasks; delta and compression will occur in
         # this function
-        self.send_task_results(global_output_tensor_dict, round_number, task.name)
+        self.send_task_results(global_output_tensor_dict, round_number, task_name)
 
     def get_numpy_dict_for_tensorkeys(self, tensor_keys):
         """Get tensor dictionary for specified tensorkey set."""
