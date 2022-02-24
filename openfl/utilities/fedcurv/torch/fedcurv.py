@@ -121,14 +121,11 @@ class FedCurv:
                     getattr(self, name).detach()
                     for name in (f'{name}_u', f'{name}_v')
                 )
+                if name == 'fc2.bias_u':
+                    with open(Path('~').expanduser() / 'fedcurv_log.txt', 'a') as f:
+                        f.write(f'{name}_u after aggregation: {u_global}\n')
                 u = u_global - u_local
                 v = v_global - v_local
-
-                with open(Path('~').expanduser() / 'fedcurv_log.txt', 'a') as f:
-                    f.write(f'{name}.{u_global=}\n')
-                    f.write(f'{name}.{u_local=}\n')
-                    f.write(f'{name}.{v_global=}\n')
-                    f.write(f'{name}.{v_local=}\n\n')
                 _penalty = param ** 2 * u - 2 * param * v
                 penalty += _penalty.sum()
         penalty = self.importance * penalty
@@ -142,7 +139,7 @@ class FedCurv:
         """
         self._update_params(model)
 
-    def on_train_end(self, model:torch.nn.Module, data_loader, device):
+    def on_train_end(self, model: torch.nn.Module, data_loader, device):
         """Post-train steps.
 
         Args:
@@ -160,3 +157,6 @@ class FedCurv:
             register_buffer(model, f'{n}_v', v)
             setattr(self, f'{n}_u', u)
             setattr(self, f'{n}_v', v)
+            if n == 'fc2.bias_u':
+                with open(Path('~').expanduser() / 'fedcurv_log.txt', 'a') as f:
+                    f.write(f'{n}_u before aggregation: {u}\n')
