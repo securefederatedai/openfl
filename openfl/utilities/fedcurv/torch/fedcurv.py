@@ -153,8 +153,8 @@ class FedCurv:
             u = m.data.to(device)
             v = m.data * model.get_parameter(n)
             v = v.to(device)
-            register_buffer(model, f'{n}_u', u)
-            register_buffer(model, f'{n}_v', v)
+            register_buffer(model, f'{n}_u', u.clone().detach())
+            register_buffer(model, f'{n}_v', v.clone().detach())
             setattr(self, f'{n}_u', u.clone().detach())
             setattr(self, f'{n}_v', v.clone().detach())
             if n == 'fc2.bias':
