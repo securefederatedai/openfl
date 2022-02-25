@@ -150,8 +150,8 @@ class FedCurv:
         """
         precision_matrices = self._diag_fisher(model, data_loader, device)
         for n, m in precision_matrices.items():
-            u = torch.tensor(m).to(device)
-            v = torch.tensor(m) * model.get_parameter(n)
+            u = m.data.to(device)
+            v = m.data * model.get_parameter(n)
             v = v.to(device)
             register_buffer(model, f'{n}_u', u)
             register_buffer(model, f'{n}_v', v)
