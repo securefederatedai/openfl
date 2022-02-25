@@ -4,7 +4,6 @@
 """Landmarks Shard Descriptor."""
 
 import json
-import os
 import shutil
 from hashlib import md5
 from logging import getLogger
@@ -70,7 +69,8 @@ class LandmarkShardDescriptor(ShardDescriptor):
         self._sample_shape = [str(dim) for dim in sample.shape]
         self._target_shape = str(len(target.shape))
 
-        assert self._target_shape == '1', 'Target shape Error'
+        if self._target_shape != '1':
+            raise ValueError('Target has a wrong shape')
 
     def process_data(self, name_csv_file):
         """Process data from csv to numpy format and save it in the same folder."""
@@ -88,16 +88,15 @@ class LandmarkShardDescriptor(ShardDescriptor):
 
     def download_data(self):
         """Download dataset from Kaggle."""
-        if not os.path.exists(self.data_folder):
-            os.mkdir(self.data_folder)
+        self.data_folder.mkdir(parents=True, exist_ok=True)
 
         if not self.is_dataset_complete():
             logger.info('Your dataset is absent or damaged. Downloading ... ')
             api = KaggleApi()
             api.authenticate()
 
-            if os.path.exists('data/train'):
-                shutil.rmtree('data/train')
+            if Path('data').exists():
+                shutil.rmtree('data')
 
             api.competition_download_file(
                 'facial-keypoints-detection',
@@ -107,10 +106,10 @@ class LandmarkShardDescriptor(ShardDescriptor):
             with ZipFile(self.data_folder / 'training.zip', 'r') as zipobj:
                 zipobj.extractall(self.data_folder)
 
-            os.remove(self.data_folder / 'training.zip')
+            (self.data_folder / 'training.zip').unlink()
 
             self.process_data('training.csv')
-            os.remove(self.data_folder / 'training.csv')
+            (self.data_folder / 'training.csv').unlink()
             self.save_all_md5()
 
     def get_dataset(self, dataset_type='train'):
@@ -124,33 +123,29 @@ class LandmarkShardDescriptor(ShardDescriptor):
     def calc_all_md5(self):
         """Calculate hash of all dataset."""
         md5_dict = {}
-        for root, _, files in os.walk(self.data_folder):
-            for file in files:
-                if file == 'dataset.json':
-                    continue
-                md5_calc = md5()
-                rel_dir = os.path.relpath(root, self.data_folder)
-                rel_file = os.path.join(rel_dir, file)
+        for root in self.data_folder.glob('*.npy'):
+            md5_calc = md5()
+            rel_file = root.relative_to(self.data_folder)
 
-                with open(self.data_folder / rel_file, 'rb') as f:
-                    for chunk in iter(lambda: f.read(4096), b''):
-                        md5_calc.update(chunk)
-                    md5_dict[rel_file] = md5_calc.hexdigest()
+            with open(self.data_folder / rel_file, 'rb') as f:
+                for chunk in iter(lambda: f.read(4096), b''):
+                    md5_calc.update(chunk)
+                md5_dict[str(rel_file)] = md5_calc.hexdigest()
         return md5_dict
 
     def save_all_md5(self):
         """Save dataset hash."""
         all_md5 = self.calc_all_md5()
-        with open(os.path.join(self.data_folder, 'dataset.json'), 'w') as f:
+        with open(self.data_folder / 'dataset.json', 'w') as f:
             json.dump(all_md5, f)
 
     def is_dataset_complete(self):
         """Check dataset integrity."""
         new_md5 = self.calc_all_md5()
-        try:
-            with open(os.path.join(self.data_folder, 'dataset.json'), 'r') as f:
+        if (self.data_folder / 'dataset.json').exists():
+            with open(self.data_folder / 'dataset.json', 'r') as f:
                 old_md5 = json.load(f)
-        except FileNotFoundError:
+        else:
             return False
 
         return new_md5 == old_md5
