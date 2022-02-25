@@ -3,7 +3,7 @@ set -e
 # =========== SET SGX_RUN variable to 0 or 1 ============
 
 SGX_RUN=${1:-1}
-TEMPLATE=${2:-'keras_nlp_gramine_ready'}  # ['torch_cnn_histology_gramine_ready', 'torch_unet_kvasir_gramine_ready']
+TEMPLATE=${2:-'torch_unet_kvasir_gramine_ready'}  # ['torch_cnn_histology_gramine_ready', 'keras_nlp_gramine_ready']
 FED_WORKSPACE=${3:-'fed_gramine'}   # This can be whatever unique directory name you want
 COL1=${4:-'one'}  # This can be any unique label (lowercase)
 COL2=${5:-'two'} # This can be any unique label (lowercase)

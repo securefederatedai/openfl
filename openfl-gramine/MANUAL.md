@@ -131,7 +131,7 @@ workspace/
     --col_name.key
 ```
 
-To speed up the certification process for one-node test runs, it makes sense to utilize the [OpenFL integration test script](https://github.com/intel/openfl/blob/develop/tests/github/test_hello_federation.sh) (comment out last 9 lines) that will create required folders and certify an aggregator and two collaborators.
+To speed up the certification process for one-node test runs, it makes sense to utilize the OpenFL integration test script [make this a link after merge]  openfl/tests/github/test_graminize.sh, that will create required folders and certify an aggregator and two collaborators.
 
 ### **Run the Federation in enclaves**
 #### On the Aggregator machine run:
