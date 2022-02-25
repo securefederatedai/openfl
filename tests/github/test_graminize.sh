@@ -3,12 +3,13 @@ set -e
 # =========== SET SGX_RUN variable to 0 or 1 ============
 
 SGX_RUN=${1:-1}
-TEMPLATE=${2:-'torch_unet_kvasir_gramine_ready'}  # ['torch_cnn_histology_gramine_ready', 'keras_nlp_gramine_ready']
+TEMPLATE=${2:-'keras_nlp_gramine_ready'}  # ['torch_cnn_histology_gramine_ready', 'torch_unet_kvasir_gramine_ready']
 FED_WORKSPACE=${3:-'fed_gramine'}   # This can be whatever unique directory name you want
 COL1=${4:-'one'}  # This can be any unique label (lowercase)
 COL2=${5:-'two'} # This can be any unique label (lowercase)
 
-FQDN=${6:-$(hostname --all-fqdns | awk '{print $1}')}
+FQDN=localhost
+# FQDN=${6:-$(hostname --all-fqdns | awk '{print $1}')}
 
 COL1_DATA_PATH=1
 COL2_DATA_PATH=2
@@ -120,41 +121,47 @@ create_collaborator ${FED_WORKSPACE} ${FED_DIRECTORY} ${COL2} ${COL2_DIRECTORY} 
 # # Run the federation
 cd ${FED_DIRECTORY}
 
+RUN_START="docker run --rm --detach "
 if [ $SGX_RUN -gt 0 ]
 then
-RUN_START="docker run -it --rm --device=/dev/sgx_enclave --volume=/var/run/aesmd/aesm.socket:/var/run/aesmd/aesm.socket"
+RUN_START=${RUN_START}"--device=/dev/sgx_enclave --volume=/var/run/aesmd/aesm.socket:/var/run/aesmd/aesm.socket"
 else
-RUN_START="docker run -it --rm --security-opt seccomp=unconfined -e GRAMINE_EXECUTABLE=gramine-direct"
+RUN_START=${RUN_START}"--security-opt seccomp=unconfined -e GRAMINE_EXECUTABLE=gramine-direct"
 fi
 
 # fx aggregator start & 
 $RUN_START \
---network=host \
+--network=host --name Aggregator \
 --volume=${FED_DIRECTORY}/cert:/workspace/cert \
 --volume=${FED_DIRECTORY}/logs:/workspace/logs \
 --volume=${FED_DIRECTORY}/plan/cols.yaml:/workspace/plan/cols.yaml \
 --mount type=bind,src=${FED_DIRECTORY}/save,dst=/workspace/save,readonly=0 \
-${FED_WORKSPACE} aggregator start &
+${FED_WORKSPACE} aggregator start
 
 sleep 5 
 
 # cd ${COL1_DIRECTORY}/${FED_WORKSPACE}
 # fx collaborator start -n ${COL1} & 
 $RUN_START \
---network=host \
+--network=host --name ${COL1} \
 --volume=${COL1_DIRECTORY}/${FED_WORKSPACE}/cert:/workspace/cert \
 --volume=${COL1_DIRECTORY}/${FED_WORKSPACE}/plan/data.yaml:/workspace/plan/data.yaml \
 --volume=${COL1_DIRECTORY}/${FED_WORKSPACE}/data:/workspace/data \
-${FED_WORKSPACE} collaborator start -n ${COL1} &
+${FED_WORKSPACE} collaborator start -n ${COL1}
 
 # cd ${COL2_DIRECTORY}/${FED_WORKSPACE}
 # fx collaborator start -n ${COL2}
 $RUN_START \
---network=host \
+--network=host --name ${COL2} \
 --volume=${COL2_DIRECTORY}/${FED_WORKSPACE}/cert:/workspace/cert \
 --volume=${COL2_DIRECTORY}/${FED_WORKSPACE}/plan/data.yaml:/workspace/plan/data.yaml \
 --volume=${COL2_DIRECTORY}/${FED_WORKSPACE}/data:/workspace/data \
 ${FED_WORKSPACE} collaborator start -n ${COL2}
+
+# tail -f `docker inspect --format='{{.LogPath}}' Aggregator`
+docker logs --follow Aggregator &
+docker logs --follow ${COL1} &
+docker logs --follow ${COL2}
 
 wait
 # rm -rf ${FED_DIRECTORY}

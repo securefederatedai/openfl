@@ -13,6 +13,7 @@ This manual will help you run OpenFL with Aggregator-based workflow inside SGX e
 - During plan initialization we need data to initialize the model. so at least one collaborator should be in data.yaml and its data should be available. cols.yaml may be empty at first
 During cert sign request generation cols.yaml on collaborators remain empty, data.yaml is extended if needed. On aggregator, cols.yaml are updated during signing procedure, data.yaml remains unmodified
 - `error: Disallowing access to file '/usr/local/lib/python3.8/__pycache__/signal.cpython-38.pyc.3423950304'; file is not protected, trusted or allowed.`
+
 ## Prerquisites
 Building machine:
 - OpenFL
@@ -53,6 +54,7 @@ For example, on Unix-like OS try the following command:
 ```
 hostname --all-fqdns | awk '{print $1}'
 ```
+(In case this FQDN does not work for your federation, try putting the machine IP instead)
 Then pass the result as `AGG_FQDN` parameter to:
 ```
 fx plan initialize -a $AGG_FQDN
