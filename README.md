@@ -26,10 +26,10 @@ For more installation options check out the [online documentation](https://openf
 
 OpenFL enables data scientists to set up a federated learning experiment following one of the workflows:
 
-- [Director-based Workflow](https://openfl.readthedocs.io/en/latest/source/workflow/director_based_workflow.html) [preferred]:
+- [Director-based Workflow](https://openfl.readthedocs.io/en/latest/running_the_federation.html#director-based-workflow) [preferred]:
 a federation created with this workflow continues to be available to distribute more experiments in series.
 
-- [Aggregator-based Workflow](https://openfl.readthedocs.io/en/latest/source/workflow/running_the_federation.agg_based.html):
+- [Aggregator-based Workflow](https://openfl.readthedocs.io/en/latest/running_the_federation.html#aggregator-based-workflow):
 with this workflow, the federation is terminated when the experiment is finished.
 
 The quickest way to test OpenFL is to follow our [tutorials](https://github.com/intel/openfl/tree/develop/openfl-tutorials). </br>
