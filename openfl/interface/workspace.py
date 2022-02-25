@@ -440,8 +440,11 @@ def dockerize_(context, base_image, save):
         help='Options for remote pip install. '
              'You may pass several options in quotation marks alongside with arguments, '
              'e.g. -o "--find-links source.site"')
+@option('--save/--no-save', required=False,
+        default=True, type=bool,
+        help='Dump the Docker image to an archive')
 @pass_context
-def graminize_(context, signing_key, pip_install_options: Tuple[str]) -> None:
+def graminize_(context, signing_key: Path, pip_install_options: Tuple[str], save: bool) -> None:
     """
     Build gramine app inside a docker image.
 
@@ -504,10 +507,11 @@ def graminize_(context, signing_key, pip_install_options: Tuple[str]) -> None:
     open_pipe(graminized_build_command)
     echo('\n ✔️ DONE: Building graminized workspace image')
 
-    echo('\n 💾 Saving the graminized workspace image...')
-    save_image_command = f'docker save {workspace_name} | gzip > {workspace_name}.tar.gz'
-    open_pipe(save_image_command)
-    echo(f'\n ✔️ The image saved to file: {workspace_name}.tar.gz')
+    if save:
+        echo('\n 💾 Saving the graminized workspace image...')
+        save_image_command = f'docker save {workspace_name} | gzip > {workspace_name}.tar.gz'
+        open_pipe(save_image_command)
+        echo(f'\n ✔️ The image saved to file: {workspace_name}.tar.gz')
 
 
 def apply_template_plan(prefix, template):

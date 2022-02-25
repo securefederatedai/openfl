@@ -63,7 +63,7 @@ fi
 
 openssl genrsa -3 -out ${FED_DIRECTORY}/key.pem 3072
 # Build graminized app image
-fx workspace graminize -s ${FED_DIRECTORY}/key.pem
+fx workspace graminize -s ${FED_DIRECTORY}/key.pem --no-save
 
 # CERTIFICATION PART------------------------------
 # ================================================

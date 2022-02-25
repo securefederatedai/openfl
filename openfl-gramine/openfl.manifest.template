@@ -30,10 +30,6 @@ fs.mount.usr.type = "chroot"
 fs.mount.usr.path = "/usr"
 fs.mount.usr.uri = "file:/usr"
 
-fs.mount.tmp.type = "chroot"
-fs.mount.tmp.path = "/tmp"
-fs.mount.tmp.uri = "file:/tmp"
-
 fs.mount.etc.type = "chroot"
 fs.mount.etc.path = "/etc"
 fs.mount.etc.uri = "file:/etc"
