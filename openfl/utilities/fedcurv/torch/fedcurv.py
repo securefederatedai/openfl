@@ -155,8 +155,8 @@ class FedCurv:
             v = v.to(device)
             register_buffer(model, f'{n}_u', u)
             register_buffer(model, f'{n}_v', v)
-            setattr(self, f'{n}_u', u)
-            setattr(self, f'{n}_v', v)
+            setattr(self, f'{n}_u', u.clone().detach())
+            setattr(self, f'{n}_v', v.clone().detach())
             if n == 'fc2.bias':
                 with open(Path('~').expanduser() / 'fedcurv_log.txt', 'a') as f:
                     f.write(f'{n}_u before aggregation: {u}\n')
