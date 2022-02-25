@@ -14,7 +14,7 @@ This manual will help you run OpenFL with Aggregator-based workflow inside SGX e
 During cert sign request generation cols.yaml on collaborators remain empty, data.yaml is extended if needed. On aggregator, cols.yaml are updated during signing procedure, data.yaml remains unmodified
 - `error: Disallowing access to file '/usr/local/lib/python3.8/__pycache__/signal.cpython-38.pyc.3423950304'; file is not protected, trusted or allowed.`
 
-## Prerquisites
+## Prerequisites
 Building machine:
 - OpenFL
 - Docker should be installed, user included in Docker group
