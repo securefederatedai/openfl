@@ -848,6 +848,7 @@ class Aggregator:
             self._compute_validation_related_task_metrics(task_name)
 
         # Once all of the task results have been processed
+        self.round_number += 1
 
         # Save the latest model
         self.logger.info(f'Saving round {self.round_number} model...')
@@ -857,7 +858,6 @@ class Aggregator:
         if self._time_to_quit():
             self.logger.info('Experiment Completed. Cleaning up...')
         else:
-            self.round_number += 1
             self.logger.info(f'Starting round {self.round_number}...')
 
         # Cleaning tensor db
