@@ -1,7 +1,10 @@
 params:
   cuda_devices: [1]
 
-optional_plugin_components: {}
+optional_plugin_components:
+ cuda_device_monitor:
+   template: openfl.plugins.processing_units_monitor.pynvml_monitor.PynvmlCUDADeviceMonitor
+   settings: []
 
 shard_descriptor:
   template: landmark_shard_descriptor.LandmarkShardDescriptor

@@ -1,6 +1,11 @@
 # MXNet Facial Keypoints Detection tutorial
-***Note: Please pay attention that this task uses the dataset from Kaggle. To get the dataset you
-will need a Kaggle account and accept "Facial Keypoints Detection" competition rules.***
+---
+**Note:**
+
+Please pay attention that this task uses the dataset from Kaggle. To get the dataset you
+will need a Kaggle account and accept "Facial Keypoints Detection" competition rules.
+
+---
 
 This tutorial shows how to use any other framework, different from already supported PyTorch and TensorFlow, together with OpenFl.
 
@@ -15,8 +20,12 @@ profile `(https://www.kaggle.com/<username>/account)` and select `'Create API To
 trigger the download of `kaggle.json`, a file containing your API credentials. Place this file in
 the location `cd ~/.kaggle/kaggle.json`
 
-**Note: you will need to accept competition rules
-at** https://www.kaggle.com/c/facial-keypoints-detection/rules
+---
+**Note:**
+
+You will need to accept [competition rules](https://www.kaggle.com/c/facial-keypoints-detection/rules).
+
+---
 
 For your security, ensure that other users of your computer do not have read access to your
 credentials. On Unix-based systems you can do this with the following command:
@@ -26,10 +35,9 @@ credentials. On Unix-based systems you can do this with the following command:
 If you need proxy add "proxy": `"http://<ip_addr:port>" in kaggle.json`. It should looks like
 that: `{"username":"your_username","key":"token", "proxy": "ip_addr:port"}`
 
-*Information about Kaggle API settings has been taken from kagge-api readme. For more information
-visit:* https://github.com/Kaggle/kaggle-api
+*Information about Kaggle API settings has been taken from kagge-api [readme](https://github.com/Kaggle/kaggle-api).*
 
-*Useful link for a problem with proxy settings:* https://github.com/Kaggle/kaggle-api/issues/6
+*Useful [link](https://github.com/Kaggle/kaggle-api/issues/6) for a problem with proxy settings.*
 
 ### 1. About dataset
 
@@ -38,11 +46,11 @@ on [link](https://www.kaggle.com/c/facial-keypoints-detection/data)
 
 ### 2. Adding support for a third-party framework
 
-You need to write your own adapter class which is based on `FrameworkAdapterPluginInterface` class (located at openfl/plugins/frameworks_adapters/framework_adapter_interface.py). This class should contain at least two methods:
+You need to write your own adapter class which is based on `FrameworkAdapterPluginInterface` [class](https://github.com/intel/openfl/blob/develop/openfl/plugins/frameworks_adapters/framework_adapter_interface.py). This class should contain at least two methods:
 
  - `get_tensor_dict(model, optimizer=None)` - extracts tensor dict from a model and optionally[^1] an optimizer. The resulting tensors must be converted to **dict{str: numpy.array}** for forwarding and aggregation.
 
-  - `set_tensor_dict(model, tensor_dict, optimizer=None, device=None)` - sets aggregated tensor into the model or model and optimizer. To do so it gets tensor as **dict{str: numpy.array}** and should restore it into suitable for your model or model and optimizer tensor. After that, it must load the prepared parameters into the model/model and optimizer. 
+  - `set_tensor_dict(model, tensor_dict, optimizer=None, device=None)` - sets aggregated numpy arrays into the model or model and optimizer. To do so it gets `tensor_dict` variable as **dict{str: numpy.array}** and should convert it into suitable for your model or model and optimizer tensors. After that, it must load the prepared parameters into the model/model and optimizer. 
 
  Your adapter should be placed in workspace directory. When you create `ModelInterface` class object at the `'***.ipunb'`, place the name of your adapter to the input parameter `framework_plugin`. Example: 
  ```py
@@ -52,7 +60,7 @@ You need to write your own adapter class which is based on `FrameworkAdapterPlug
                     framework_plugin=framework_adapter)
 ```
 
-[^1]: Whether or not to forward the optimizer parameters is set in the `start` method (class object FLExperiment, parameter `opt_treatment`).
+[^1]: Whether or not to forward the optimizer parameters is set in the `start` method (FLExperiment [class](https://github.com/intel/openfl/blob/develop/openfl/interface/interactive_api/experiment.py) object, parameter `opt_treatment`).
 
 ### Run experiment
 
@@ -85,8 +93,8 @@ You need to write your own adapter class which is based on `FrameworkAdapterPlug
 
 7. Run the [MXNet_landmarks.ipynb](workspace/MXNet_landmarks.ipynb) notebook using
    Jupyter lab in a prepared virtual environment. For more information about preparation virtual
-   environment look [**
-   Preparation virtual environment**](#preparation-virtual-environment)
+   environment look **[
+   Preparation virtual environment](#preparation-virtual-environment)**
    .
 
 ### Preparation virtual environment

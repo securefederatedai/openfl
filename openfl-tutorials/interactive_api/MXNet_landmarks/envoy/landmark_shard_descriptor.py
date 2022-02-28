@@ -9,6 +9,8 @@ from hashlib import md5
 from logging import getLogger
 from pathlib import Path
 from random import shuffle
+from typing import Dict
+from typing import List
 from zipfile import ZipFile
 
 import numpy as np
@@ -25,7 +27,7 @@ class LandmarkShardDataset(ShardDataset):
     """Landmark Shard dataset class."""
 
     def __init__(self, dataset_dir: Path,
-                 rank: int = 1, worldsize: int = 1):
+                 rank: int = 1, worldsize: int = 1) -> None:
         """Initialize LandmarkShardDataset."""
         self.rank = rank
         self.worldsize = worldsize
@@ -37,14 +39,14 @@ class LandmarkShardDataset(ShardDataset):
         # Shuffling the results dataset after choose half pictures of each class
         shuffle(self.img_names)
 
-    def __getitem__(self, index):
+    def __getitem__(self, index) -> np.ndarray:
         """Return a item by the index."""
         # Get name key points file
         # f.e. image name:  'img_123.npy, corresponding name of the key points: 'keypoints_123.npy'
         kp_name = str(self.img_names[index]).replace('img', 'keypoints')
         return np.load(self.img_names[index]), np.load(self.dataset_dir / kp_name)
 
-    def __len__(self):
+    def __len__(self) -> int:
         """Return the len of the dataset."""
         return len(self.img_names)
 
@@ -54,7 +56,7 @@ class LandmarkShardDescriptor(ShardDescriptor):
 
     def __init__(self, data_folder: str = 'data',
                  rank_worldsize: str = '1, 1',
-                 **kwargs):
+                 **kwargs) -> None:
         """Initialize LandmarkShardDescriptor."""
         super().__init__()
         # Settings for sharding the dataset
@@ -67,26 +69,26 @@ class LandmarkShardDescriptor(ShardDescriptor):
         ds = self.get_dataset()
         sample, target = ds[0]
         self._sample_shape = [str(dim) for dim in sample.shape]
-        self._target_shape = str(len(target.shape))
+        self._target_shape = [str(len(target.shape))]
 
-        if self._target_shape != '1':
+        if self._target_shape[0] != '1':
             raise ValueError('Target has a wrong shape')
 
-    def process_data(self, name_csv_file):
+    def process_data(self, name_csv_file) -> None:
         """Process data from csv to numpy format and save it in the same folder."""
         data_df = pd.read_csv(self.data_folder / name_csv_file)
         data_df.fillna(method='ffill', inplace=True)
         keypoints = data_df.drop('Image', axis=1)
-        cur_folder = str(self.data_folder.relative_to(Path.cwd())) + '/'
+        cur_folder = self.data_folder.relative_to(Path.cwd())
 
         for i in range(data_df.shape[0]):
             img = data_df['Image'][i].split(' ')
             img = np.array(['0' if x == '' else x for x in img], dtype='float32').reshape(96, 96)
-            np.save(cur_folder + 'img_' + str(i) + '.npy', img)
+            np.save(str(cur_folder / f'img_{i}.npy'), img)
             y = np.array(keypoints.iloc[i, :], dtype='float32')
-            np.save(cur_folder + 'keypoints_' + str(i) + '.npy', y)
+            np.save(str(cur_folder / f'keypoints_{i}.npy'), y)
 
-    def download_data(self):
+    def download_data(self) -> None:
         """Download dataset from Kaggle."""
         self.data_folder.mkdir(parents=True, exist_ok=True)
 
@@ -112,7 +114,7 @@ class LandmarkShardDescriptor(ShardDescriptor):
             (self.data_folder / 'training.csv').unlink()
             self.save_all_md5()
 
-    def get_dataset(self, dataset_type='train'):
+    def get_dataset(self, dataset_type='train') -> LandmarkShardDataset:
         """Return a shard dataset by type."""
         return LandmarkShardDataset(
             dataset_dir=self.data_folder,
@@ -120,7 +122,7 @@ class LandmarkShardDescriptor(ShardDescriptor):
             worldsize=self.worldsize
         )
 
-    def calc_all_md5(self):
+    def calc_all_md5(self) -> Dict[str, str]:
         """Calculate hash of all dataset."""
         md5_dict = {}
         for root in self.data_folder.glob('*.npy'):
@@ -133,13 +135,13 @@ class LandmarkShardDescriptor(ShardDescriptor):
                 md5_dict[str(rel_file)] = md5_calc.hexdigest()
         return md5_dict
 
-    def save_all_md5(self):
+    def save_all_md5(self) -> None:
         """Save dataset hash."""
         all_md5 = self.calc_all_md5()
         with open(self.data_folder / 'dataset.json', 'w') as f:
             json.dump(all_md5, f)
 
-    def is_dataset_complete(self):
+    def is_dataset_complete(self) -> bool:
         """Check dataset integrity."""
         new_md5 = self.calc_all_md5()
         if (self.data_folder / 'dataset.json').exists():
@@ -151,12 +153,12 @@ class LandmarkShardDescriptor(ShardDescriptor):
         return new_md5 == old_md5
 
     @property
-    def sample_shape(self):
+    def sample_shape(self) -> List[str]:
         """Return the sample shape info."""
         return self._sample_shape
 
     @property
-    def target_shape(self):
+    def target_shape(self) -> List[str]:
         """Return the target shape info."""
         return self._target_shape
 

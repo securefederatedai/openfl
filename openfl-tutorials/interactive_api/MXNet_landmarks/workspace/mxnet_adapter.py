@@ -1,7 +1,7 @@
 # Copyright (C) 2020-2021 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 """MXNet Framework Adapter plugin."""
-import os
+
 from pickle import dumps
 from pickle import loads
 
@@ -68,12 +68,9 @@ def _get_optimizer_state(optimizer):
     Args:
         optimizer
     """
-    optimizer.save_states('get_opt_states')
-    with open('get_opt_states', 'rb') as sfile:
-        states = loads(sfile.read())
-    os.remove('get_opt_states')
+    states = loads(optimizer._updaters[0].get_states(dump_optimizer=False))
     result_states = {}
-    for state_key, state_tuple in states[0].items():
+    for state_key, state_tuple in states.items():
         for state_ind, state in enumerate(state_tuple):
             result_states[f'opt_state__{state_key}__{state_ind}'] = state.asnumpy()
 
@@ -104,8 +101,4 @@ def _set_optimizer_state(optimizer, device, opt_state_dict):
             state_vals.append(nd.array(opt_state_dict.pop(f'opt_state__{key}__{i}'), ctx=device))
         out_state[key] = tuple(state_vals)
 
-    with open('set_opt_states', 'wb') as sfile:
-        sfile.write(dumps(out_state))
-
-    optimizer.load_states('set_opt_states')
-    os.remove('set_opt_states')
+    optimizer._updaters[0].set_states(dumps(out_state))
