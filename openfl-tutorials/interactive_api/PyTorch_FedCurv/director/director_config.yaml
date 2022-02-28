@@ -1,5 +1,0 @@
-settings:
-  listen_addr: localhost
-  listen_port: 50051
-  sample_shape: ['300', '400', '3']
-  target_shape: ['300', '400']
