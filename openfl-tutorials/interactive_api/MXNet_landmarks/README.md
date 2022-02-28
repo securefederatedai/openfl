@@ -57,8 +57,6 @@ You need to write your own adapter class which is based on `FrameworkAdapterPlug
 
 ### Run experiment
 
-0. **Install [MXNet 1.9.0](https://pypi.org/project/mxnet/1.9.0/) package with CPU or GPU (preferred) support and [verify](https://mxnet.apache.org/versions/1.4.1/install/validate_mxnet.html) it.**
-
 1. Create a folder for each `envoy`.
 2. Put a relevant envoy_config in each of the n folders (n - number of envoys which you would like
    to use, in this tutorial there is two of them, but you may use any number of envoys) and copy
@@ -91,6 +89,17 @@ You need to write your own adapter class which is based on `FrameworkAdapterPlug
    environment look **[
    Preparation virtual environment](#preparation-virtual-environment)**
    .
+   
+    * Install [MXNet 1.9.0](https://pypi.org/project/mxnet/1.9.0/) framework with CPU or GPU (preferred) support and [verify](https://mxnet.apache.org/versions/1.4.1/install/validate_mxnet.html) it:
+    ```bash
+    pip install mxnet-cuXXX==1.9.0
+    ```
+
+    * Run jupyter-lab:
+    ```bash
+    cd workspare
+    jupyter-lab
+    ```
 
 ### Preparation virtual environment
 
