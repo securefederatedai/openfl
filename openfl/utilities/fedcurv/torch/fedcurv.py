@@ -111,22 +111,22 @@ class FedCurv:
         if not self._params:
             return penalty
         for name, param in model.named_parameters():
-            
             if param.requires_grad:
-                u_global, v_global = (
+                u_global, v_global, w_global = (
                     get_buffer(model, target).detach()
-                    for target in (f'{name}_u', f'{name}_v')
+                    for target in (f'{name}_u', f'{name}_v', f'{name}_w')
                 )
-                u_local, v_local = (
+                u_local, v_local, w_local = (
                     getattr(self, name).detach()
-                    for name in (f'{name}_u', f'{name}_v')
+                    for name in (f'{name}_u', f'{name}_v', f'{name}_w')
                 )
                 if name == 'fc2.bias':
                     with open(Path('~').expanduser() / 'fedcurv_log.txt', 'a') as f:
                         f.write(f'{name}_u after aggregation: {u_local}\n')
                 u = u_global - u_local
                 v = v_global - v_local
-                _penalty = param ** 2 * u - 2 * param * v
+                w = w_global - w_local
+                _penalty = param ** 2 * u - 2 * param * v + w
                 penalty += _penalty.sum()
         penalty = self.importance * penalty
         return penalty.float()
@@ -153,10 +153,14 @@ class FedCurv:
             u = m.data.to(device)
             v = m.data * model.get_parameter(n)
             v = v.to(device)
+            w = m.data * model.get_parameter(n) ** 2
+            w = w.to(device)
             register_buffer(model, f'{n}_u', u.clone().detach())
             register_buffer(model, f'{n}_v', v.clone().detach())
+            register_buffer(model, f'{n}_w', w.clone().detach())
             setattr(self, f'{n}_u', u.clone().detach())
             setattr(self, f'{n}_v', v.clone().detach())
+            setattr(self, f'{n}_w', w.clone().detach())
             if n == 'fc2.bias':
                 with open(Path('~').expanduser() / 'fedcurv_log.txt', 'a') as f:
                     f.write(f'{n}_u before aggregation: {u}\n')
