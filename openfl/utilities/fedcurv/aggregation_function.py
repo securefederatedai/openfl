@@ -2,7 +2,6 @@
 import numpy as np
 
 from openfl.component.aggregation_functions import WeightedAverage
-from pathlib import Path
 
 
 class FedCurvWeightedAverage(WeightedAverage):
