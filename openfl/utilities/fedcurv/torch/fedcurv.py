@@ -64,14 +64,17 @@ class FedCurv:
         for n, p in params:
             u = torch.zeros_like(p, requires_grad=False)
             v = torch.zeros_like(p, requires_grad=False)
+            w = torch.zeros_like(p, requires_grad=False)
 
             # Add buffers to model for aggregation
             register_buffer(model, f'{n}_u', u)
             register_buffer(model, f'{n}_v', v)
+            register_buffer(model, f'{n}_w', w)
 
             # Store buffers locally for subtraction in loss function
             setattr(self, f'{n}_u', u)
             setattr(self, f'{n}_v', v)
+            setattr(self, f'{n}_w', w)
 
     def _update_params(self, model):
         self._params = deepcopy({n: p for n, p in model.named_parameters() if p.requires_grad})
