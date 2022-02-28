@@ -1,11 +1,13 @@
-# Copyright (C) 2020-2021 Intel Corporation
+# Copyright (C) 2021-2022 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 """MXNet Framework Adapter plugin."""
 
 from pickle import dumps
 from pickle import loads
+from typing import Dict
 
 import mxnet as mx
+import numpy as np
 from mxnet import nd
 
 from openfl.plugins.frameworks_adapters.framework_adapter_interface import (
@@ -20,7 +22,7 @@ class FrameworkAdapterPlugin(FrameworkAdapterPluginInterface):
         """Initialize framework adapter."""
 
     @staticmethod
-    def get_tensor_dict(model, optimizer=None) -> dict:
+    def get_tensor_dict(model, optimizer=None) -> Dict[str, np.ndarray]:
         """
         Extract tensor dict from a model and an optimizer.
 
@@ -40,7 +42,8 @@ class FrameworkAdapterPlugin(FrameworkAdapterPluginInterface):
         return state
 
     @staticmethod
-    def set_tensor_dict(model, tensor_dict, optimizer=None, device=None):
+    def set_tensor_dict(model, tensor_dict: Dict[str, np.ndarray],
+                        optimizer=None, device=None) -> None:
         """
         Set tensor dict from a model and an optimizer.
 

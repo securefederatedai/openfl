@@ -3,7 +3,7 @@
 **Note:**
 
 Please pay attention that this task uses the dataset from Kaggle. To get the dataset you
-will need a Kaggle account and accept "Facial Keypoints Detection" competition rules.
+will need a Kaggle account and accept "Facial Keypoints Detection" [competition rules](https://www.kaggle.com/c/facial-keypoints-detection/rules).
 
 ---
 
@@ -19,13 +19,6 @@ a [Kaggle account](https://www.kaggle.com). Then go to the `'Account'` tab of yo
 profile `(https://www.kaggle.com/<username>/account)` and select `'Create API Token'`. This will
 trigger the download of `kaggle.json`, a file containing your API credentials. Place this file in
 the location `cd ~/.kaggle/kaggle.json`
-
----
-**Note:**
-
-You will need to accept [competition rules](https://www.kaggle.com/c/facial-keypoints-detection/rules).
-
----
 
 For your security, ensure that other users of your computer do not have read access to your
 credentials. On Unix-based systems you can do this with the following command:
@@ -63,6 +56,8 @@ You need to write your own adapter class which is based on `FrameworkAdapterPlug
 [^1]: Whether or not to forward the optimizer parameters is set in the `start` method (FLExperiment [class](https://github.com/intel/openfl/blob/develop/openfl/interface/interactive_api/experiment.py) object, parameter `opt_treatment`).
 
 ### Run experiment
+
+0. **Install [MXNet 1.9.0](https://pypi.org/project/mxnet/1.9.0/) package with CPU or GPU (preferred) support and [verify](https://mxnet.apache.org/versions/1.4.1/install/validate_mxnet.html) it.**
 
 1. Create a folder for each `envoy`.
 2. Put a relevant envoy_config in each of the n folders (n - number of envoys which you would like
