@@ -141,11 +141,30 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
         collaborator_name = request.header.sender
         tasks, round_number, sleep_time, time_to_quit = self.aggregator.get_tasks(
             request.header.sender)
+        if tasks:
+            if isinstance(tasks[0], str):
+                # backward compatibility
+                tasks_proto = [
+                    aggregator_pb2.Task(
+                        name=task,
+                    ) for task in tasks
+                ]
+            else:
+                tasks_proto = [
+                    aggregator_pb2.Task(
+                        name=task.name,
+                        function_name=task.function_name,
+                        task_type=task.task_type,
+                        apply_local=task.apply_local
+                    ) for task in tasks
+                ]
+        else:
+            tasks_proto = []
 
         return aggregator_pb2.GetTasksResponse(
             header=self.get_header(collaborator_name),
             round_number=round_number,
-            tasks=tasks,
+            tasks=tasks_proto,
             sleep_time=sleep_time,
             quit=time_to_quit
         )
@@ -198,7 +217,6 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
         round_number = proto.round_number
         data_size = proto.data_size
         named_tensors = proto.tensors
-
         self.aggregator.send_local_task_results(
             collaborator_name, round_number, task_name, data_size, named_tensors)
         # turn data stream into local model update
