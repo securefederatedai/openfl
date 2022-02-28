@@ -49,6 +49,7 @@ setup(
         'openfl.plugins.processing_units_monitor',
         'openfl-workspace',
         'openfl-docker',
+        'openfl-gramine',
         'openfl-tutorials',
         'openfl.component.aggregation_functions',
         'openfl.component.aggregation_functions.core'
