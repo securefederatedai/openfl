@@ -443,8 +443,10 @@ def dockerize_(context, base_image, save):
 @option('--save/--no-save', required=False,
         default=True, type=bool,
         help='Dump the Docker image to an archive')
+@option('--rebuild', help='Build images with `--no-cache`', is_flag=True)
 @pass_context
-def graminize_(context, signing_key: Path, pip_install_options: Tuple[str], save: bool) -> None:
+def graminize_(context, signing_key: Path, pip_install_options: Tuple[str],
+               save: bool, rebuild: bool) -> None:
     """
     Build gramine app inside a docker image.
 
@@ -474,17 +476,18 @@ def graminize_(context, signing_key: Path, pip_install_options: Tuple[str], save
 
     # We can build for gramine-sgx and run with gramine-direct,
     # but not vice versa.
-    sgx_build = 1 if signing_key.is_file() else 0
+    sgx_build = signing_key.is_file()
     if sgx_build:
         echo('\n Building SGX-ready applecation')
     else:
         echo('\n Building gramine-direct applecation')
+    rebuild_option = '--no-cache' if rebuild else ''
 
     os.environ['DOCKER_BUILDKIT'] = '1'
 
     echo('\n 🐋 Building base gramine-openfl image...')
     base_dockerfile = SITEPACKS / 'openfl-gramine' / 'Dockerfile.gramine'
-    base_build_command = f'docker build -t gramine_openfl -f {base_dockerfile} .'
+    base_build_command = f'docker build {rebuild_option} -t gramine_openfl -f {base_dockerfile} .'
     open_pipe(base_build_command)
     echo('\n ✔️ DONE: Building base gramine-openfl image')
 
@@ -498,10 +501,10 @@ def graminize_(context, signing_key: Path, pip_install_options: Tuple[str], save
     echo('\n 🐋 Building graminized workspace image...')
     signing_key = f'--secret id=signer-key,src={signing_key} ' if sgx_build else ''
     graminized_build_command = (
-        f'docker build -t {workspace_name} '
+        f'docker build -t {workspace_name} {rebuild_option} '
         '--build-arg BASE_IMAGE=gramine_openfl '
         f'--build-arg WORKSPACE_ARCHIVE={workspace_archive.relative_to(workspace_path)} '
-        f'--build-arg SGX_BUILD={sgx_build} '
+        f'--build-arg SGX_BUILD={int(sgx_build)} '
         f'{signing_key}'
         f'-f {grainized_ws_dockerfile} {workspace_path}')
     open_pipe(graminized_build_command)

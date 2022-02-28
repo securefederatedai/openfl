@@ -1,18 +1,5 @@
 # OpenFL + Gramine
 This manual will help you run OpenFL with Aggregator-based workflow inside SGX enclave with Gramine.
-## TO-DO:
-- [X] import manifest and makefile from OpenFL dist-package 
-- [X] pass wheel repository to pip (for CPU versions of PyTorch for example)
-- [ ] get rid of command line args (insecure)
-- [ ] introduce `fx workspace create --prefix WORKSPACE_NAME` command without --template option to the OpenFL CLI, which will create just an empty workspace with the right folder structure.
-- [ ] introduce `fx *actor* start --from image`
-
-## Known issues:
-- Kvasir experiment: aggregation takes really long, debug log-level does not show the reason
-- We need workspace zip to import it and create certs. We need to know the number of collaborators prior to zipping the workspace. SOLUTION: mount cols.yaml and data.yaml
-- During plan initialization we need data to initialize the model. so at least one collaborator should be in data.yaml and its data should be available. cols.yaml may be empty at first
-During cert sign request generation cols.yaml on collaborators remain empty, data.yaml is extended if needed. On aggregator, cols.yaml are updated during signing procedure, data.yaml remains unmodified
-- `error: Disallowing access to file '/usr/local/lib/python3.8/__pycache__/signal.cpython-38.pyc.3423950304'; file is not protected, trusted or allowed.`
 
 ## Prerequisites
 Building machine:
@@ -20,11 +7,11 @@ Building machine:
 - Docker should be installed, user included in Docker group
 
 Machines that will run an Aggregator and Collaborator containers should have the following:
-- SGX enebled in BIOS
+- SGX enabled in BIOS
 - Ubuntu with Linux kernel 5.11+
 - ? SGX drivers, it is built in kernel: `/dev/sgx_enclave`
 - [aesmd service](https://github.com/intel/linux-sgx) (`/var/run/aesmd/aesm.socket`)
-This is a short list, see more in Gramine docs.
+This is a short list, see more in [Gramine docs](https://gramine.readthedocs.io/en/latest/devel/building.html).
 
 ## Workflow
 The user will mainly interact with OpenFL CLI, docker CLI, and other command-line tools. But the user is also expected to modify plan.yaml file and Python code under workspace/src folder to set up an FL Experiment.
@@ -189,3 +176,45 @@ docker run -it --rm --security-opt seccomp=unconfined -e GRAMINE_EXECUTABLE=gram
 --volume=${WORKSPACE_PATH}/data:/workspace/data \
 ${WORKSPACE_NAME} collaborator start -n ${COL_NAME}
 ```
+
+## The Routine
+Gramine+OpenFL PR brings in `openfl-gramine` folder, that contains the following files:
+ - MANUAL.md - this manual
+ - Dockerfile.gamine - the base image Dockerfile for all experiments, it starts from Python3.8 image and installs OpenFL and Gramine packages.
+ - Dockerfile.graminized.workspace - this one is for building the final experiment image. It starts from the previous image and imports the experiment archive (executes 'fx workspace import') inside an image. At this stage, we have an experiment workspace and all the requirements installed inside the image. Then it runs a unified Makefile that uses the openfl.manifest.template to prepare required files to run OpenFL under gramine inside an SGX enclave.
+ - Makefile - follows regular gramine workflow, please refer to (gramine docs)[] for more info
+ - openfl.manifest.template - gramine manifest template, it is the same for all the experiments
+ - start_process.sh - bash script used to start an OpenFL actor in a container.
+
+There is a files access peculiarity that should be kept in mind during debugging and development.
+Both Dockerfiles are read from the bare-metal OpenFL installation, i.e. from an OpenFL package on a building machine.
+While the gramine manifest template and the Makefile are read in image build time from the local (in-image) OpenFL package. </br>
+Thus, if one wants to make changes to the gramine manifest template or the Makefile, they should change the OpenFL installation procedure in Dockerfile.gramine, so their changes may be pulled to the base image. One option is to push the changes to a GitHub fork and install OpenFL from this fork. 
+```
+*Dockerfile.gramine:*
+
+RUN git clone https://github.com/your-username/openfl.git --branch some_branch
+WORKDIR /openfl
+RUN --mount=type=cache,target=/root/.cache/ \
+    pip install --upgrade pip && \
+    pip install .
+WORKDIR /
+```
+In this case, to rebuild the image, use `fx workspace dockerize --rebuild` with `--rebuild` flag that will pass '--no-cache' to docker build command.
+
+Another option is to copy OpenFL source files from an on-disk cloned repo, but it would mean that the user must build the graminized image from the repo directory using Docker CLI.
+
+
+## Known issues:
+- Kvasir experiment: aggregation takes really long, debug log-level does not show the reason
+- We need workspace zip to import it and create certs. We need to know the number of collaborators prior to zipping the workspace. SOLUTION: mount cols.yaml and data.yaml
+- During plan initialization we need data to initialize the model. so at least one collaborator should be in data.yaml and its data should be available. cols.yaml may be empty at first
+During cert sign request generation cols.yaml on collaborators remain empty, data.yaml is extended if needed. On aggregator, cols.yaml are updated during signing procedure, data.yaml remains unmodified
+- `error: Disallowing access to file '/usr/local/lib/python3.8/__pycache__/signal.cpython-38.pyc.3423950304'; file is not protected, trusted or allowed.`
+
+ ## TO-DO:
+- [X] import manifest and makefile from OpenFL dist-package 
+- [X] pass wheel repository to pip (for CPU versions of PyTorch for example)
+- [ ] get rid of command line args (insecure)
+- [ ] introduce `fx workspace create --prefix WORKSPACE_NAME` command without --template option to the OpenFL CLI, which will create just an empty workspace with the right folder structure.
+- [ ] introduce `fx *actor* start --from image`

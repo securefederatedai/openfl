@@ -1,12 +1,13 @@
 set -e
 # Test the pipeline
-# =========== SET SGX_RUN variable to 0 or 1 ============
+# =========== Set SGX_RUN variable to 0 or 1 ============
 
-SGX_RUN=${1:-1}
-TEMPLATE=${2:-'torch_unet_kvasir_gramine_ready'}  # ['torch_cnn_histology_gramine_ready', 'keras_nlp_gramine_ready']
-FED_WORKSPACE=${3:-'fed_gramine'}   # This can be whatever unique directory name you want
-COL1=${4:-'one'}  # This can be any unique label (lowercase)
-COL2=${5:-'two'} # This can be any unique label (lowercase)
+SGX_RUN=${1:-1} # Pass 0 for no-sgx run (gramine-direct)
+REBUILD_IMAGES=${2:-0} # Pass 1 to build images with `--no-cache` option
+TEMPLATE=${3:-'torch_unet_kvasir_gramine_ready'}  # ['torch_cnn_histology_gramine_ready', 'keras_nlp_gramine_ready']
+FED_WORKSPACE=${4:-'fed_gramine'}   # This can be whatever unique directory name you want
+COL1=${5:-'one'}  # This can be any unique label (lowercase)
+COL2=${6:-'two'} # This can be any unique label (lowercase)
 
 FQDN=localhost
 # FQDN=${6:-$(hostname --all-fqdns | awk '{print $1}')}
@@ -14,32 +15,10 @@ FQDN=localhost
 COL1_DATA_PATH=1
 COL2_DATA_PATH=2
 
-help() {
-    echo "Usage: test_hello_federation.sh TEMPLATE FED_WORKSPACE COL1 COL2 [OPTIONS]"
-    echo
-    echo "Options:"
-    echo "--rounds-to-train     rounds to train"
-    echo "--col1-data-path      data path for collaborator 1"
-    echo "--col2-data-path      data path for collaborator 2"
-    echo "-h, --help            display this help and exit"
-}
-
-# Getting additional options
-ADD_OPTS=$(getopt -o "h" -l "rounds-to-train:,col1-data-path:,
-col2-data-path:,help" -n test_hello_federation.sh -- "$@")
-eval set -- "$ADD_OPTS"
-while (($#)); do
-    case "${1:-}" in
-    (--rounds-to-train) ROUNDS_TO_TRAIN="$2" ; shift 2 ;;
-    (--col1-data-path) COL1_DATA_PATH="$2" ; shift 2 ;;
-    (--col2-data-path) COL2_DATA_PATH="$2" ; shift 2 ;;
-    (-h|--help) help ; exit 0 ;;
-
-    (--)        shift ; break ;;
-    (*)         echo "Invalid option: ${1:-}"; exit 1 ;;
-    esac
-done
-
+if [ $REBUILD_IMAGES -gt 0 ]
+then
+REBUILD_OPTION="--rebuild"
+fi
 
 # START
 # =====
@@ -54,16 +33,9 @@ FED_DIRECTORY=`pwd`  # Get the absolute directory path for the workspace
 # Initialize FL plan
 fx plan initialize -a ${FQDN}
 
-# Set rounds to train if given
-if [[ ! -z "$ROUNDS_TO_TRAIN" ]]
-then
-    sed -i "/rounds_to_train/c\    rounds_to_train: $ROUNDS_TO_TRAIN" plan/plan.yaml
-fi
-
-
 openssl genrsa -3 -out ${FED_DIRECTORY}/key.pem 3072
 # Build graminized app image
-fx workspace graminize -s ${FED_DIRECTORY}/key.pem --no-save
+fx workspace graminize -s ${FED_DIRECTORY}/key.pem --no-save $REBUILD_OPTION
 
 # CERTIFICATION PART------------------------------
 # ================================================
