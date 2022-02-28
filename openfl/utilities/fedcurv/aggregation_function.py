@@ -19,6 +19,7 @@ class FedCurvWeightedAverage(WeightedAverage):
         if (
             tensor_name.endswith('_u')
             or tensor_name.endswith('_v')
+            or tensor_name.endswith('_w')
         ):
             tensors = [local_tensor.tensor for local_tensor in local_tensors]
             agg_result = np.sum(tensors, axis=0)
