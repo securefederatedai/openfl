@@ -56,11 +56,11 @@ class HistologyShardDataset(ShardDataset):
             classes_per_col=2,
             min_samples_per_class=5)
         if data_type == 'train':
-            labels = np.array(self.samples)[train_idx][:,1].astype(int)
-            self.idx = data_splitter.split(labels, worldsize)[rank-1]
+            labels = np.array(self.samples)[train_idx][:, 1].astype(int)
+            self.idx = data_splitter.split(labels, worldsize)[rank - 1]
         else:
-            labels = np.array(self.samples)[test_idx][:,1].astype(int)
-            self.idx = data_splitter.split(labels, worldsize)[rank-1]
+            labels = np.array(self.samples)[test_idx][:, 1].astype(int)
+            self.idx = data_splitter.split(labels, worldsize)[rank - 1]
 
     def __len__(self) -> int:
         """Return the len of the shard dataset."""
