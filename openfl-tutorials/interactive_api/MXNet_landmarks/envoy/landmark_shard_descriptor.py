@@ -90,29 +90,31 @@ class LandmarkShardDescriptor(ShardDescriptor):
 
     def download_data(self) -> None:
         """Download dataset from Kaggle."""
+        if self.is_dataset_complete():
+            return
+
         self.data_folder.mkdir(parents=True, exist_ok=True)
 
-        if not self.is_dataset_complete():
-            logger.info('Your dataset is absent or damaged. Downloading ... ')
-            api = KaggleApi()
-            api.authenticate()
+        logger.info('Your dataset is absent or damaged. Downloading ... ')
+        api = KaggleApi()
+        api.authenticate()
 
-            if Path('data').exists():
-                shutil.rmtree('data')
+        if Path('data').exists():
+            shutil.rmtree('data')
 
-            api.competition_download_file(
-                'facial-keypoints-detection',
-                'training.zip', path=self.data_folder
-            )
+        api.competition_download_file(
+            'facial-keypoints-detection',
+            'training.zip', path=self.data_folder
+        )
 
-            with ZipFile(self.data_folder / 'training.zip', 'r') as zipobj:
-                zipobj.extractall(self.data_folder)
+        with ZipFile(self.data_folder / 'training.zip', 'r') as zipobj:
+            zipobj.extractall(self.data_folder)
 
-            (self.data_folder / 'training.zip').unlink()
+        (self.data_folder / 'training.zip').unlink()
 
-            self.process_data('training.csv')
-            (self.data_folder / 'training.csv').unlink()
-            self.save_all_md5()
+        self.process_data('training.csv')
+        (self.data_folder / 'training.csv').unlink()
+        self.save_all_md5()
 
     def get_dataset(self, dataset_type='train') -> LandmarkShardDataset:
         """Return a shard dataset by type."""
@@ -143,14 +145,13 @@ class LandmarkShardDescriptor(ShardDescriptor):
 
     def is_dataset_complete(self) -> bool:
         """Check dataset integrity."""
-        new_md5 = self.calc_all_md5()
-        if (self.data_folder / 'dataset.json').exists():
-            with open(self.data_folder / 'dataset.json', 'r') as f:
+        dataset_md5_path = self.data_folder / 'dataset.json'
+        if dataset_md5_path.exists():
+            with open(dataset_md5_path, 'r') as f:
                 old_md5 = json.load(f)
-        else:
-            return False
-
-        return new_md5 == old_md5
+            new_md5 = self.calc_all_md5()
+            return new_md5 == old_md5
+        return False
 
     @property
     def sample_shape(self) -> List[str]:
