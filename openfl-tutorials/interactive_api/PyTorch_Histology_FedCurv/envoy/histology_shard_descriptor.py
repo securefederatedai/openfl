@@ -35,7 +35,7 @@ class HistologyShardDataset(ShardDataset):
         classes = [d.name for d in root.iterdir() if d.is_dir()]
         class_to_idx = {cls_name: i for i, cls_name in enumerate(classes)}
         self.samples = []
-        root = root.expanduser()
+        root = root.absolute()
         for target_class in sorted(class_to_idx.keys()):
             class_index = class_to_idx[target_class]
             target_dir = os.path.join(root, target_class)
