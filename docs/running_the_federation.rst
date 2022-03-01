@@ -479,6 +479,9 @@ The following are parameters of the :code:`start()` method in FLExperiment:
 :code:`data_loader`
     This parameter is defined earlier by the :code:`DataInterface` object.
 
+:code:`task_assigner`
+    This parameter is optional. You can pass a `Custom task assigner function`_.
+
 :code:`rounds_to_train`
     This parameter defines the number of aggregation rounds needed to be conducted before the experiment is considered finished.
 
@@ -520,6 +523,137 @@ When the experiment has completed:
 
 You may use the same federation object to report another experiment or even schedule several experiments that will be executed in series.
 
+Custom task assigner function
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+OpenFL has an entity named Task Assigner, that responsible for aggregator task assigning to collaborators.
+There are three default tasks that are used: :code:`train`, :code:`locally_tuned_model_validate`,
+:code:`aggregated_model_validate`.
+When you register a train function and pass optimizer it generates a train task:
+
+    .. code-block:: python
+
+        task_keeper = TaskInterface()
+
+
+        @task_keeper.register_fl_task(model='net_model', data_loader='train_loader',
+                                      device='device', optimizer='optimizer')
+        def train(net_model, train_loader, optimizer, device, loss_fn=cross_entropy, some_parameter=None):
+            torch.manual_seed(0)
+            ...
+
+When you register a validate function, it generates two tasks: :code:`locally_tuned_model_validate` and
+:code:`aggregated_model_validate`.
+:code:`locally_tuned_model_validate` is applied by collaborator to locally trained model,
+:code:`aggregated_model_validate` - to a globally aggregated model.
+If there not a train task only aggregated_model_validate are generated.
+
+Since 1.3 version it is possible to create a custom task assigner function to implement your own task assigning logic.
+You can get registered task from :code:`task_keeper` calling method :code:`get_registered_tasks`:
+
+    .. code-block:: python
+
+        tasks = task_keeper.get_registered_tasks()
+
+
+And  then implement your own assigner function:
+
+    .. code-block:: python
+
+        def random_assigner(collaborators, round_number, **kwargs):
+            """Assigning task groups randomly while ensuring target distribution"""
+            import random
+            random.shuffle(collaborators)
+            collaborator_task_map = {}
+            for idx, col in enumerate(collaborators):
+                # select only 70% collaborators for training and validation, 30% for validation
+                if (idx+1)/len(collaborators) <= 0.7:
+                    collaborator_task_map[col] = tasks.values()  # all three tasks
+                else:
+                    collaborator_task_map[col] = [tasks['aggregated_model_validate']]
+            return collaborator_task_map
+
+And then pass that function to fl_experiment start method:
+    .. code-block:: python
+
+        fl_experiment.start(
+            model_provider=model_interface,
+            task_keeper=task_keeper,
+            data_loader=fed_dataset,
+            task_assigner=random_assigner,
+            rounds_to_train=50,
+            opt_treatment='CONTINUE_GLOBAL',
+            device_assignment_policy='CUDA_PREFERRED'
+        )
+
+
+It will be passed to assigner and tasks will be assigned to collaborators by using this function.
+
+Another example.
+If you want only exclude some collaborators from experiment, you can define next assigner function:
+
+    .. code-block:: python
+
+        def filter_assigner(collaborators, round_number, **kwargs):
+            collaborator_task_map = {}
+            exclude_collaborators = ['env_two', 'env_three']
+            for collaborator_name in collaborators:
+                if collaborator_name in exclude_collaborators:
+                    continue
+                collaborator_task_map[collaborator_name] = [
+                    tasks['train'],
+                    tasks['locally_tuned_model_validate'],
+                    tasks['aggregated_model_validate']
+                ]
+            return collaborator_task_map
+
+
+Also you can use static shard information to exclude any collaborators without cuda devices from training:
+
+    .. code-block:: python
+
+        shard_registry = federation.get_shard_registry()
+        def filter_by_shard_registry_assigner(collaborators, round_number, **kwargs):
+            collaborator_task_map = {}
+            for collaborator in collaborators:
+                col_status = shard_registry.get(collaborator)
+                if not col_status or not col_status['is_online']:
+                    continue
+                node_info = col_status['shard_info'].node_info
+                # Assign train task if collaborator has GPU with total memory more that 8 GB
+                if len(node_info.cuda_devices) > 0 and node_info.cuda_devices[0].memory_total > 8 * 1024**3:
+                    collaborator_task_map[collaborator] = [
+                        tasks['train'],
+                        tasks['locally_tuned_model_validate'],
+                        tasks['aggregated_model_validate'],
+                    ]
+                else:
+                    collaborator_task_map[collaborator] = [
+                        tasks['aggregated_model_validate'],
+                    ]
+            return collaborator_task_map
+
+
+Assigner with additional validation round:
+
+    .. code-block:: python
+
+        rounds_to_train = 3
+        total_rounds = rounds_to_train + 1 # use fl_experiment.start(..., rounds_to_train=total_rounds,...)
+
+        def assigner_with_last_round_validation(collaborators, round_number, **kwargs):
+            collaborator_task_map = {}
+            for collaborator in collaborators:
+                if round_number == total_rounds - 1:
+                    collaborator_task_map[collaborator] = [
+                        tasks['aggregated_model_validate'],
+                    ]
+                else:
+                    collaborator_task_map[collaborator] = [
+                        tasks['train'],
+                        tasks['locally_tuned_model_validate'],
+                        tasks['aggregated_model_validate']
+                    ]
+            return collaborator_task_map
 
 
 .. _running_the_federation_aggregator_based:

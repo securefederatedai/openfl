@@ -99,7 +99,7 @@ class Experiment:
             logger.info(f'Experiment "{self.name}" was finished successfully.')
         except Exception as e:
             self.status = Status.FAILED
-            logger.error(f'Experiment "{self.name}" was failed with error: {e}.')
+            logger.exception(f'Experiment "{self.name}" was failed with error: {e}.')
 
     async def _run_aggregator_in_docker(
             self, *,

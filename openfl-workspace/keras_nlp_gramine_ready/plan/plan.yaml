@@ -1,0 +1,47 @@
+# Copyright (C) 2020-2021 Intel Corporation
+# Licensed subject to the terms of the separately executed evaluation license agreement between Intel Corporation and you.
+
+aggregator :
+  defaults : plan/defaults/aggregator.yaml
+  template : openfl.component.Aggregator
+  settings :
+    init_state_path : save/keras_nlp_init.pbuf
+    best_state_path : save/keras_nlp_best.pbuf
+    last_state_path : save/keras_nlp_last.pbuf
+    rounds_to_train : 10
+
+collaborator :
+  defaults : plan/defaults/collaborator.yaml
+  template : openfl.component.Collaborator
+  settings :
+    epochs_per_round : 10
+    polling_interval : 4
+    delta_updates    : false
+    opt_treatment    : RESET
+
+data_loader :
+  defaults : plan/defaults/data_loader.yaml
+  template : src.nlp_dataloader.NLPDataLoader
+  settings :
+    collaborator_count : 2
+    batch_size         : 64
+    split_ratio: 0.2
+    num_samples: 10000
+
+task_runner :
+  defaults : plan/defaults/task_runner.yaml
+  template : src.nlp_taskrunner.KerasNLP
+  settings :
+    latent_dim : 256
+
+network :
+  defaults : plan/defaults/network.yaml
+
+assigner :
+  defaults : plan/defaults/assigner.yaml
+
+tasks :
+  defaults : plan/defaults/tasks_keras.yaml
+
+compression_pipeline :
+  defaults : plan/defaults/compression_pipeline.yaml
