@@ -87,7 +87,7 @@ class HistologyShardDescriptor(ShardDescriptor):
     FILENAME = 'Kather_texture_2016_image_tiles_5000.zip'
     ZIP_SHA384 = ('7d86abe1d04e68b77c055820c2a4c582a1d25d2983e38ab724e'
                   'ac75affce8b7cb2cbf5ba68848dcfd9d84005d87d6790')
-    DEFAULT_PATH = Path.home() / '.openfl' / 'data'
+    DEFAULT_PATH = Path('.') / 'data'
 
     def __init__(
             self,
