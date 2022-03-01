@@ -69,16 +69,16 @@ class KvasirShardDescriptor(ShardDescriptor):
         self.data_folder = Path.cwd() / data_folder
         self.download_data(self.data_folder)
 
+        # Settings for resizing data
+        self.enforce_image_hw = None
+        if enforce_image_hw is not None:
+            self.enforce_image_hw = tuple(int(size) for size in enforce_image_hw.split(','))
+
         # Calculating data and target shapes
         ds = self.get_dataset()
         sample, target = ds[0]
         self._sample_shape = [str(dim) for dim in sample.shape]
         self._target_shape = [str(dim) for dim in target.shape]
-
-        # Settings for resizing data
-        self.enforce_image_hw = None
-        if enforce_image_hw is not None:
-            self.enforce_image_hw = tuple(int(size) for size in enforce_image_hw.split(','))
 
     def get_dataset(self, dataset_type='train'):
         """Return a shard dataset by type."""
