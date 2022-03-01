@@ -46,6 +46,8 @@ setup(
         'openfl.transport.grpc',
         'openfl.utilities',
         'openfl.utilities.data_splitters',
+        'openfl.utilities.fedcurv',
+        'openfl.utilities.fedcurv.torch',
         'openfl.utilities.optimizers.keras',
         'openfl.utilities.optimizers.numpy',
         'openfl.utilities.optimizers.torch',
