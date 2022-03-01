@@ -85,7 +85,7 @@ class DirectorServicer(object):
     """Missing associated documentation comment in .proto file."""
 
     def UpdateShardInfo(self, request, context):
-        """Envoy RPCs
+        """1. Envoy RPCs
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -117,7 +117,8 @@ class DirectorServicer(object):
         raise NotImplementedError('Method not implemented!')
 
     def GetExperimentDescription(self, request, context):
-        """Experiments RPCs
+        """2. Frontend RPCs
+        2.1 Extension RPCs
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -130,7 +131,7 @@ class DirectorServicer(object):
         raise NotImplementedError('Method not implemented!')
 
     def SetNewExperiment(self, request_iterator, context):
-        """API RPCs
+        """2.2 API RPCs
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
