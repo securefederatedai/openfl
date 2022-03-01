@@ -38,7 +38,7 @@ class HistologyShardDataset(ShardDataset):
         root = root.absolute()
         for target_class in sorted(class_to_idx.keys()):
             class_index = class_to_idx[target_class]
-            target_dir = os.path.join(root, target_class)
+            target_dir = root / target_class
             for class_root, _, fnames in sorted(os.walk(target_dir, followlinks=True)):
                 for fname in sorted(fnames):
                     path = os.path.join(class_root, fname)
