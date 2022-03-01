@@ -18,12 +18,12 @@ pip install -r requirements.txt
 bash start_envoys.sh # This launches all envoy instances 
 ```
 
-3. In a separate terminal, launch a Jupyter Notebook:
+3. In a separate terminal, launch a Jupyter Lab:
 ```
 cd workspace
-jupyter notebook
+jupyter lab
 ```
 
-4. Open your browser at corresponding port and open `pytorch_histology.ipynb` frow Jupyter web interface. 
+4. Open your browser at corresponding port and open `pytorch_histology.ipynb` from Jupyter web interface. 
 
 5. Execute all cells in order.
