@@ -14,7 +14,6 @@ bash start_director.sh
 ```
 cd envoy
 bash populate_envoys.sh # This creates all envoys folders in current directory
-pip install -r requirements.txt
 bash start_envoys.sh # This launches all envoy instances 
 ```
 
