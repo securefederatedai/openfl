@@ -39,11 +39,9 @@ class HistologyShardDataset(ShardDataset):
         for target_class in sorted(class_to_idx.keys()):
             class_index = class_to_idx[target_class]
             target_dir = root / target_class
-            for class_root, _, fnames in sorted(os.walk(target_dir, followlinks=True)):
-                for fname in sorted(fnames):
-                    path = os.path.join(class_root, fname)
-                    item = path, class_index
-                    self.samples.append(item)
+            for path in sorted(target_dir.glob('*')):
+                item = path, class_index
+                self.samples.append(item)
         np.random.seed(0)
         np.random.shuffle(self.samples)
         idx_range = list(range(len(self.samples)))
