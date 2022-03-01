@@ -30,6 +30,7 @@ setup(
         'openfl.component.director',
         'openfl.component.ca',
         'openfl.utilities',
+        'openfl.utilities.optimizers.numpy',
         'openfl.utilities.optimizers.torch',
         'openfl.utilities.optimizers.keras',
         'openfl.utilities.fedcurv',
@@ -50,8 +51,10 @@ setup(
         'openfl.plugins.processing_units_monitor',
         'openfl-workspace',
         'openfl-docker',
+        'openfl-gramine',
         'openfl-tutorials',
-        'openfl.component.aggregation_functions'
+        'openfl.component.aggregation_functions',
+        'openfl.component.aggregation_functions.core'
     ],
     include_package_data=True,
     install_requires=[
