@@ -1,4 +1,6 @@
 #!/bin/bash
+DIRECTOR_HOST=${1:-'localhost'}
+DIRECTOR_PORT=${2:-'50051'}
 
 for i in {1..8}
 do
@@ -9,7 +11,7 @@ do
         data_folder: histology_data
         rank_worldsize: $i,8
 " > $i/envoy_config.yaml
-    echo "fx envoy start -n env_$i --disable-tls --envoy-config-path envoy_config.yaml -dh nnlicv431.inn.intel.com -dp 50053" > $i/start_envoy.sh
+    echo "fx envoy start -n env_$i --disable-tls --envoy-config-path envoy_config.yaml -dh ${DIRECTOR_HOST} -dp ${DIRECTOR_PORT}" > $i/start_envoy.sh
     cp requirements.txt $i
     cp histology_shard_descriptor.py $i
 done
