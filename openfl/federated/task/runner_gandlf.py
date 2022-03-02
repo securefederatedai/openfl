@@ -3,7 +3,6 @@
 
 """GaNDLFTaskRunner module."""
 
-from functools import partialmethod
 from copy import deepcopy
 from typing import Iterator
 from typing import Tuple
@@ -17,50 +16,115 @@ from openfl.utilities import Metric
 from openfl.utilities import split_tensor_dict_for_holdouts
 from openfl.utilities import TensorKey
 from .runner import TaskRunner
+from openfl.federated.data.loader_gandlf import GaNDLFDataLoaderWrapper
 
-from GANDLF.cli.main_run import main_run
-
+from GANDLF.parseConfig import parseConfig
+from GANDLF.models      import get_model
+from GANDLF.schedulers  import get_scheduler
+from GANDLF.optimizers  import get_optimizer
+from GANDLF.data        import get_train_loader, get_validation_loader, get_penalty_loader
+from GANDLF.utils       import parseTrainingCSV, populate_header_in_parameters, populate_channel_keys_in_params, get_class_imbalance_weights
+from GANDLF.data.ImagesFromDataFrame    import ImagesFromDataFrame
+from GANDLF.compute.training_loop       import train_network
+from GANDLF.compute.forward_pass        import validate_network
+# FIXME: switch to single init call when supported
+# from GANDLF.??? import <create_pytorch_objects>, <final_init>
 
 class GaNDLFTaskRunner(TaskRunner):
-    """GaNDLF OpenFL wrapper for Federated Learning."""
+    """GaNDLF Model class for Federated Learning."""
 
     def __init__(
             self,
-            data_csv: str = None,
-            config_file: str = None,
-            output_dir: str = None,
-            train_mode: bool = None,
+            train_csv: str = None,
+            val_csv: str = None,
+            gandlf_config_dict: dict = None,
             device: str = None,
-            reset_prev: bool = None,
             **kwargs
     ):
         """Initialize.
 
         Args:
-
-            data_csv (str): The CSV file of the training data.
-            config_file (str): The YAML file of the training configuration.
-            output_dir (str): The output directory.
-            train_mode (bool): Whether to train or infer.
-            device (str): The device type.
-            reset_prev (bool): Whether the previous run will be reset or not.
+            device (string): Compute device (default="cpu")
             **kwargs: Additional parameters to pass to the functions
         """
-        super().__init__(self, **kwargs)
+        super().__init__(**kwargs)
 
-        # record values for passing through to gandlf main_run
-        self.data_csv       = data_csv
-        self.config_file    = config_file
-        self.output_dir     = output_dir
-        self.train_mode     = train_mode
-        self.device         = device
-        self.reset_prev      = reset_prev
+        if device:
+            self.device = device
+        else:
+            self.device = pt.device('cuda' if pt.cuda.is_available() else 'cpu')
 
         # This is a map of all the required tensors for each of the public
         # functions in PyTorchTaskRunner
-        self.required_tensorkeys_for_function = {}
+
+
+        # FIXME: once single call is supported, uncomment this and then:
+        # model, optimizer, train_dataloader, val_dataloader, scheduler = gandlf.<create_pytorch_objects>(gandlf_config_dict, train_csv, val_csv)
+        # self.model              = model
+        # self.optimizer          = optimizer
+        # self.train_dataloader   = train_dataloader
+        # self.val_dataloader     = val_dataloader
+        # self.scheduler          = scheduler
+        # remove from BEGIN_REMOVING:
+
+        # FIXME: the runner should not ever be dependent on the structure of 'params' or any other object.
+        #   Ideally, we only get stuff and pass it back, never have to configure it ourselves.
+        self.params = parseConfig(gandlf_config_dict)
+        self.params['device'] = self.device
+
+        # populate the params for the training data
+        data_train, headers_train   = parseTrainingCSV(train_csv, train=True)
+        data_validation, _          = parseTrainingCSV(val_csv, train=True)
+
+        self.params['training_data']    = data_train
+        self.params['validation_data']  = data_validation
+        self.params                     = populate_header_in_parameters(self.params, headers_train)
+
+        validation_data_for_torch = ImagesFromDataFrame(
+            data_validation, self.params, train=False, loader_type="validation"
+        )
+        self.params = populate_channel_keys_in_params(validation_data_for_torch, self.params)
+
+        self.model                      = get_model(self.params)
+        self.params["model_parameters"] = self.model.parameters()
+
+        self.optimizer                  = get_optimizer(self.params)
+        self.params["optimizer_object"] = self.optimizer
+
+        train_dataloader    = get_train_loader(self.params)
+        val_dataloader      = get_validation_loader(self.params)
+
+        self.params["training_samples_size"] = len(train_dataloader.dataset)
+        if not ("step_size" in self.params["scheduler"]):
+            self.params["scheduler"]["step_size"] = (
+                self.params["training_samples_size"] / self.params["learning_rate"]
+            )
+        self.scheduler      = get_scheduler(self.params)
+
+        # FIXME: to END_REMOVING
+
+        # pass the actual dataloaders to the wrapper loader
+        self.data_loader.set_dataloaders(train_dataloader, val_dataloader)
+
+        # FIXME: needs to be in a "final init" call within GaNDLF
+        # e.g. gandlf.finish_setup(params)
+        if self.params["weighted_loss"]:
+            self.logger.info("Calculating weights for loss")
+            penalty_loader = get_penalty_loader(self.params)
+
+            self.params["weights"], self.params["class_weights"] = get_class_imbalance_weights(
+                penalty_loader, self.params
+            )
+            del penalty_loader
+        else:
+            self.params["weights"], self.params["class_weights"] = None, None
 
         self.training_round_completed = False
+
+        self.required_tensorkeys_for_function = {}
+
+        # FIXME: why isn't this initial call in runner_pt?
+        self.initialize_tensorkeys_for_functions(with_opt_vars=False)
 
         # overwrite attribute to account for one optimizer param (in every
         # child model that does not overwrite get and set tensordict) that is
@@ -69,25 +133,7 @@ class GaNDLFTaskRunner(TaskRunner):
             'holdout_tensor_names': ['__opt_state_needed']
         })
 
-        # parse config
-        parameters = parseConfig(config_file)
-
-        # check config for unsupported parameters
-        self._check_config(parameters)
-        # raise NotImplementedError("OpenFL doesn't yet support this amazing GaNDLF feature <feature>. Isn't Micah the worst? Sarthak, have a 666")
-
-        # run a zero epoch "train" to create the model and optimizer objects
-        gandlf_results_dict = main_run(data_csv, config_file, output_dir, train_mode, device, reset_prev, epochs=0)
-
-        self.model = gandlf_results_dict['model']
-        self.optimizer = gandlf_results_dict['optimizer']
-
-        # now, the issue is that the typical PyTorchTaskRunner uses "self" where we have "self.model"
-        # need to reconcile this for model rebuilding
-
-
-    # rewrite as utility function OR use self.model inside set_tensor_dict/reset_opt_vars
-    def rebuild_model(self, input_tensor_dict, validation=False):
+    def rebuild_model(self, round_num, input_tensor_dict, validation=False):
         """
         Parse tensor names and update weights of model. Handles the optimizer treatment.
 
@@ -121,26 +167,18 @@ class GaNDLFTaskRunner(TaskRunner):
 
         """
         self.rebuild_model(round_num, input_tensor_dict, validation=True)
-        self.eval()
-        self.to(self.device)
-        val_score = 0
-        total_samples = 0
+        self.model.eval()
+        self.model.to(self.device)
 
-        loader = self.data_loader.get_valid_loader()
-        if use_tqdm:
-            loader = tqdm.tqdm(loader, desc='validate')
+        epoch_valid_loss, epoch_valid_metric = validate_network(self.model,
+                                                                self.data_loader.val_dataloader,
+                                                                self.scheduler,
+                                                                self.params,
+                                                                round_num,
+                                                                mode="validation")
 
-        with pt.no_grad():
-            for data, target in loader:
-                samples = target.shape[0]
-                total_samples += samples
-                data, target = pt.tensor(data).to(self.device), pt.tensor(
-                    target).to(self.device, dtype=pt.int64)
-                output = self(data)
-                # get the index of the max log-probability
-                pred = output.argmax(dim=1, keepdim=True)
-                target_categorical = target.argmax(dim=1, keepdim=True)
-                val_score += pred.eq(target_categorical).sum().cpu().numpy()
+        self.logger.info(epoch_valid_loss)
+        self.logger.info(epoch_valid_metric)
 
         origin = col_name
         suffix = 'validate'
@@ -149,18 +187,16 @@ class GaNDLFTaskRunner(TaskRunner):
         else:
             suffix += '_agg'
         tags = ('metric', suffix)
-        # TODO figure out a better way to pass in metric for this pytorch
-        #  validate function
-        output_tensor_dict = {
-            TensorKey('acc', origin, round_num, True, tags):
-                np.array(val_score / total_samples)
-        }
+
+        output_tensor_dict = {}
+        output_tensor_dict[TensorKey('valid_loss', origin, round_num, True, tags)] = np.array(epoch_valid_loss)
+        for k, v in epoch_valid_metric.items():
+            output_tensor_dict[TensorKey(f'valid_{k}', origin, round_num, True, tags)] = np.array(v)
 
         # Empty list represents metrics that should only be stored locally
         return output_tensor_dict, {}
 
-    def train_batches(self, col_name, round_num, input_tensor_dict,
-                      use_tqdm=False, epochs=1, **kwargs):
+    def train(self, col_name, round_num, input_tensor_dict, use_tqdm=False, epochs=1, **kwargs):
         """Train batches.
 
         Train the model on the requested number of batches.
@@ -176,71 +212,33 @@ class GaNDLFTaskRunner(TaskRunner):
             global_output_dict:  Tensors to send back to the aggregator
             local_output_dict:   Tensors to maintain in the local TensorDB
         """
+        self.rebuild_model(round_num, input_tensor_dict)
+        # set to "training" mode
+        self.model.train()
+        self.model.to(self.device)
+        for epoch in range(epochs):
+            self.logger.info(f'Run {epoch} epoch of {round_num} round')
+            # FIXME: do we want to capture these in an array rather than simply taking the last value?
+            epoch_train_loss, epoch_train_metric = train_network(self.model,
+                                                                 self.data_loader.train_dataloader,
+                                                                 self.optimizer,
+                                                                 self.params)
 
-        # we create a dict in this scope that will be edited by the callback.
-        output_dict = {'output_metrics':{}, 'output_model_dict': {}}
+        # output model tensors (Doesn't include TensorKey)
+        tensor_dict = self.get_tensor_dict(with_opt_vars=True)
 
-        # construct our callbacks
-        callbacks = {
-            'model_construction': partialmethod(self.model_construction_callback, input_tensor_dict, False),
-            'train_complete': partialmethod(self.train_complete_callback, output_dict)
-        }
+        metric_dict = {'loss': epoch_train_loss}
+        for k, v in epoch_train_metric.items():
+            metric_dict[f'train_{k}'] = v
 
-        # invoke GaNDLF main run
-        main_run(self.data_csv,
-                 self.config_file,
-                 self.output_dir,
-                 self.train_mode,
-                 self.device,
-                 self.reset_prev,
-                 callbacks,
-                 epochs)
-
-        # now we can retrive the results from the output_dict
-        output_metrics      = output_dict['output_metrics']
-        output_model_dict   = output_dict['output_model_dict']
-
-        # FIXME: FROM HERE DOWN SHOULD BE COMMON BETWEEN TASK RUNNERS
-
-        # Output metric tensors (scalar)
-        origin = col_name
-        output_metric_dict = {
-            TensorKey(k, origin, round_num, True, ('metric',)): v 
-            for k, v in output_metrics.items()
-        }
-
-        # turn output_model_dict into local and global keyed tensors 
-        tags = ('trained',)
-        global_model_dict, local_model_dict = split_tensor_dict_for_holdouts(
-            self.logger, output_model_dict,
-            **self.tensor_dict_split_fn_kwargs
-        )
-
-        # Create global tensorkeys
-        global_tensorkey_model_dict = {
-            TensorKey(tensor_name, origin, round_num, False, tags):
-                nparray for tensor_name, nparray in global_model_dict.items()
-        }
-        # Create tensorkeys that should stay local
-        local_tensorkey_model_dict = {
-            TensorKey(tensor_name, origin, round_num, False, tags):
-                nparray for tensor_name, nparray in local_model_dict.items()
-        }
-        # The train/validate aggregated function of the next round will look
-        # for the updated model parameters.
-        # This ensures they will be resolved locally
-        next_local_tensorkey_model_dict = {
-            TensorKey(tensor_name, origin, round_num + 1, False, ('model',)): nparray
-            for tensor_name, nparray in local_model_dict.items()}
-
-        global_tensor_dict = {
-            **output_metric_dict,
-            **global_tensorkey_model_dict
-        }
-        local_tensor_dict = {
-            **local_tensorkey_model_dict,
-            **next_local_tensorkey_model_dict
-        }
+        # Return global_tensor_dict, local_tensor_dict
+        # is this even pt-specific really?
+        global_tensor_dict, local_tensor_dict = create_tensorkey_dicts(tensor_dict,
+                                                                       metric_dict,
+                                                                       col_name,
+                                                                       round_num,
+                                                                       self.logger,
+                                                                       self.tensor_dict_split_fn_kwargs)
 
         # Update the required tensors if they need to be pulled from the
         # aggregator
@@ -279,7 +277,7 @@ class GaNDLFTaskRunner(TaskRunner):
         # for now, state dict gives us names which is good
         # FIXME: do both and sanity check each time?
 
-        state = to_cpu_numpy(self.state_dict())
+        state = to_cpu_numpy(self.model.state_dict())
 
         if with_opt_vars:
             opt_state = _get_optimizer_state(self.optimizer)
@@ -294,7 +292,7 @@ class GaNDLFTaskRunner(TaskRunner):
         # for now, state dict gives us names which is good
         # FIXME: do both and sanity check each time?
 
-        state = self.state_dict().keys()
+        state = self.model.state_dict().keys()
 
         if with_opt_vars:
             opt_state = _get_optimizer_state(self.optimizer)
@@ -302,37 +300,16 @@ class GaNDLFTaskRunner(TaskRunner):
 
         return state
 
-def set_tensor_dict(model, optimizer, tensor_dict, device, with_opt_vars=False):
-    """Set the tensor dictionary.
+    def set_tensor_dict(self, tensor_dict, with_opt_vars=False):
+        """Set the tensor dictionary.
 
-    Args:
-        tensor_dict: The tensor dictionary
-        with_opt_vars (bool): Return the tensor dictionary including the
-                                optimizer tensors (Default=False)
+        Args:
+            tensor_dict: The tensor dictionary
+            with_opt_vars (bool): Return the tensor dictionary including the
+                                  optimizer tensors (Default=False)
 
-    """
-    # Sets tensors for model layers and optimizer state.
-    # FIXME: self.parameters() instead? Unclear if load_state_dict() or
-    #  simple assignment is better
-    # for now, state dict gives us names, which is good
-    # FIXME: do both and sanity check each time?
-
-    new_state = {}
-    # Grabbing keys from model's state_dict helps to confirm we have
-    # everything
-    for k in model.state_dict():
-        new_state[k] = pt.from_numpy(tensor_dict.pop(k)).to(device)
-
-    # set model state
-    model.load_state_dict(new_state)
-
-    if with_opt_vars:
-        # see if there is state to restore first
-        if tensor_dict.pop('__opt_state_needed') == 'true':
-            _set_optimizer_state(optimizer, device, tensor_dict)
-
-        # sanity check that we did not record any state that was not used
-        assert len(tensor_dict) == 0
+        """
+        set_pt_model_from_tensor_dict(self.model, tensor_dict, self.device, with_opt_vars)
 
     def get_optimizer(self):
         """Get the optimizer of this instance."""
@@ -388,13 +365,6 @@ def set_tensor_dict(model, optimizer, tensor_dict, device, with_opt_vars=False):
                 **self.tensor_dict_split_fn_kwargs
             )
 
-        self.required_tensorkeys_for_function['train_batches'] = [
-            TensorKey(tensor_name, 'GLOBAL', 0, False, ('model',))
-            for tensor_name in global_model_dict]
-        self.required_tensorkeys_for_function['train_batches'] += [
-            TensorKey(tensor_name, 'LOCAL', 0, False, ('model',))
-            for tensor_name in local_model_dict]
-
         self.required_tensorkeys_for_function['train'] = [
             TensorKey(
                 tensor_name, 'GLOBAL', 0, False, ('model',)
@@ -445,7 +415,7 @@ def set_tensor_dict(model, optimizer, tensor_dict, device, with_opt_vars=False):
             None
         """
         pickle_dict = pt.load(filepath)
-        self.load_state_dict(pickle_dict[model_state_dict_key])
+        self.model.load_state_dict(pickle_dict[model_state_dict_key])
         self.optimizer.load_state_dict(pickle_dict[optimizer_state_dict_key])
 
     def save_native(self, filepath, model_state_dict_key='model_state_dict',
@@ -468,7 +438,7 @@ def set_tensor_dict(model, optimizer, tensor_dict, device, with_opt_vars=False):
             None
         """
         pickle_dict = {
-            model_state_dict_key: self.state_dict(),
+            model_state_dict_key: self.model.state_dict(),
             optimizer_state_dict_key: self.optimizer.state_dict()
         }
         pt.save(pickle_dict, filepath)
@@ -482,30 +452,81 @@ def set_tensor_dict(model, optimizer, tensor_dict, device, with_opt_vars=False):
         """
         pass
 
-    def train_epoch(self, batch_generator: Iterator[Tuple[np.ndarray, np.ndarray]]) -> Metric:
-        """Train single epoch.
 
-        Override this function in order to use custom training.
+def create_tensorkey_dicts(tensor_dict, metric_dict, col_name, round_num, logger, tensor_dict_split_fn_kwargs):
+    origin = col_name
+    tags = ('trained',)
+    output_metric_dict = {}
+    for k, v in metric_dict.items():
+        tk = TensorKey(k, origin, round_num, True, ('metric',))
+        output_metric_dict[tk] = np.array(v)
 
-        Args:
-            batch_generator: Train dataset batch generator. Yields (samples, targets) tuples of
-            size = `self.data_loader.batch_size`.
-        Returns:
-            Metric: An object containing name and np.ndarray value.
-        """
-        losses = []
-        for data, target in batch_generator:
-            data, target = pt.tensor(data).to(self.device), pt.tensor(
-                target).to(self.device)
-            self.optimizer.zero_grad()
-            output = self(data)
-            loss = self.loss_fn(output=output, target=target)
-            loss.backward()
-            self.optimizer.step()
-            losses.append(loss.detach().cpu().numpy())
-        loss = np.mean(losses)
-        return Metric(name=self.loss_fn.__name__, value=np.array(loss))
+    global_model_dict, local_model_dict = split_tensor_dict_for_holdouts(
+        logger, tensor_dict, **tensor_dict_split_fn_kwargs
+    )
 
+    # Create global tensorkeys
+    global_tensorkey_model_dict = {
+        TensorKey(tensor_name, origin, round_num, False, tags):
+            nparray for tensor_name, nparray in global_model_dict.items()
+    }
+    # Create tensorkeys that should stay local
+    local_tensorkey_model_dict = {
+        TensorKey(tensor_name, origin, round_num, False, tags):
+            nparray for tensor_name, nparray in local_model_dict.items()
+    }
+    # The train/validate aggregated function of the next round will look
+    # for the updated model parameters.
+    # This ensures they will be resolved locally
+    next_local_tensorkey_model_dict = {
+        TensorKey(tensor_name, origin, round_num + 1, False, ('model',)): nparray
+        for tensor_name, nparray in local_model_dict.items()}
+
+    global_tensor_dict = {
+        **output_metric_dict,
+        **global_tensorkey_model_dict
+    }
+    local_tensor_dict = {
+        **local_tensorkey_model_dict,
+        **next_local_tensorkey_model_dict
+    }
+
+    return global_tensor_dict, local_tensor_dict
+
+
+def set_pt_model_from_tensor_dict(model, tensor_dict, device, with_opt_vars=False):
+    """Set the tensor dictionary.
+
+    Args:
+        model: the pytorch nn.module object
+        tensor_dict: The tensor dictionary
+        device: the device where the tensor values need to be sent
+        with_opt_vars (bool): Return the tensor dictionary including the
+                                optimizer tensors (Default=False)
+
+    """
+    # Sets tensors for model layers and optimizer state.
+    # FIXME: model.parameters() instead? Unclear if load_state_dict() or
+    #  simple assignment is better
+    # for now, state dict gives us names, which is good
+    # FIXME: do both and sanity check each time?
+
+    new_state = {}
+    # Grabbing keys from model's state_dict helps to confirm we have
+    # everything
+    for k in model.state_dict():
+        new_state[k] = pt.from_numpy(tensor_dict.pop(k)).to(device)
+
+    # set model state
+    model.load_state_dict(new_state)
+
+    if with_opt_vars:
+        # see if there is state to restore first
+        if tensor_dict.pop('__opt_state_needed') == 'true':
+            _set_optimizer_state(model.get_optimizer(), device, tensor_dict)
+
+        # sanity check that we did not record any state that was not used
+        assert len(tensor_dict) == 0
 
 def _derive_opt_state_dict(opt_state_dict):
     """Separate optimizer tensors from the tensor dictionary.
