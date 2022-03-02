@@ -86,6 +86,7 @@ def test_get_aggregation_type_for_task(assigner):
 
 
 def test_get_aggregation_type_for_task_by_default():
+    """Test get_aggregation_type_for_task working without assigned agg functions."""
     assigner = Assigner(
         assigner_function=assigner_function,
         aggregation_functions_by_task={},
