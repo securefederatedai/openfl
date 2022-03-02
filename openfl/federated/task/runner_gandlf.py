@@ -143,13 +143,13 @@ class GaNDLFTaskRunner(TaskRunner):
         """
 
         if self.opt_treatment == 'RESET':
-            reset_opt_vars(model=self.model)
-            set_tensor_dict(self.model, input_tensor_dict, with_opt_vars=False)
+            self.reset_opt_vars(model=self.model)
+            self.set_tensor_dict(input_tensor_dict, with_opt_vars=False)
         elif (self.training_round_completed
               and self.opt_treatment == 'CONTINUE_GLOBAL' and not validation):
-            set_tensor_dict(self.model, input_tensor_dict, with_opt_vars=True)
+            self.set_tensor_dict(input_tensor_dict, with_opt_vars=True)
         else:
-            set_tensor_dict(self.model, input_tensor_dict, with_opt_vars=False)
+            self.set_tensor_dict(input_tensor_dict, with_opt_vars=False)
 
     def validate(self, col_name, round_num, input_tensor_dict,
                  use_tqdm=False, **kwargs):
