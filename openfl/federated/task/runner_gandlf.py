@@ -12,9 +12,12 @@ import torch as pt
 import torch.nn as nn
 import tqdm
 
+from .runner_pt import set_tensor_dict, get_tensor_dict, reset_opt_vars, train_results_tensorkey_dicts
+
 from openfl.utilities import Metric
 from openfl.utilities import split_tensor_dict_for_holdouts
 from openfl.utilities import TensorKey
+
 from .runner import TaskRunner
 from openfl.federated.data.loader_gandlf import GaNDLFDataLoaderWrapper
 
@@ -140,14 +143,15 @@ class GaNDLFTaskRunner(TaskRunner):
         Returns:
             None
         """
+
         if self.opt_treatment == 'RESET':
-            self.reset_opt_vars()
-            self.set_tensor_dict(input_tensor_dict, with_opt_vars=False)
+            reset_opt_vars(model=self.model)
+            set_tensor_dict(self.model, input_tensor_dict, with_opt_vars=False)
         elif (self.training_round_completed
               and self.opt_treatment == 'CONTINUE_GLOBAL' and not validation):
-            self.set_tensor_dict(input_tensor_dict, with_opt_vars=True)
+            set_tensor_dict(self.model, input_tensor_dict, with_opt_vars=True)
         else:
-            self.set_tensor_dict(input_tensor_dict, with_opt_vars=False)
+            set_tensor_dict(self.model, input_tensor_dict, with_opt_vars=False)
 
     def validate(self, col_name, round_num, input_tensor_dict,
                  use_tqdm=False, **kwargs):
@@ -160,9 +164,10 @@ class GaNDLFTaskRunner(TaskRunner):
             round_num:           What round is it
             input_tensor_dict:   Required input tensors (for model)
             use_tqdm (bool):     Use tqdm to print a progress bar (Default=True)
+            kwargs:              Key word arguments passed to GaNDLF main_run
 
         Returns:
-            global_output_dict:  Tensors to send back to the aggregator
+            global_output_dict:   Tensors to send back to the aggregator
             local_output_dict:   Tensors to maintain in the local TensorDB
 
         """
@@ -202,15 +207,25 @@ class GaNDLFTaskRunner(TaskRunner):
         Train the model on the requested number of batches.
 
         Args:
-            col_name:            Name of the collaborator
-            round_num:           What round is it
-            input_tensor_dict:   Required input tensors (for model)
-            use_tqdm (bool):     Use tqdm to print a progress bar (Default=True)
-            epochs:              The number of epochs to train
+            col_name                : Name of the collaborator
+            round_num               : What round is it
+            input_tensor_dict       : Required input tensors (for model)
+            use_tqdm (bool)         : Use tqdm to print a progress bar (Default=True)
+            epochs                  : The number of epochs to train
+            crossfold_test          : Whether or not to use cross fold trainval/test
+                                    to evaluate the quality of the model under fine tuning
+                                    (this uses a separate prameter to pass in the data and 
+                                    config used)
+            crossfold_test_data_csv : Data csv used to define data used in crossfold test.
+                                      This csv does not itself define the folds, just
+                                      defines the total data to be used.
+            crossfold_val_n         : number of folds to use for the train,val level of the nested crossfold.
+            corssfold_test_n        : number of folds to use for the trainval,test level of the nested crossfold.
+            kwargs                  : Key word arguments passed to GaNDLF main_run
 
         Returns:
-            global_output_dict:  Tensors to send back to the aggregator
-            local_output_dict:   Tensors to maintain in the local TensorDB
+            global_output_dict      : Tensors to send back to the aggregator
+            local_output_dict       : Tensors to maintain in the local TensorDB
         """
         self.rebuild_model(round_num, input_tensor_dict)
         # set to "training" mode
@@ -295,7 +310,7 @@ class GaNDLFTaskRunner(TaskRunner):
         state = self.model.state_dict().keys()
 
         if with_opt_vars:
-            opt_state = _get_optimizer_state(self.optimizer)
+            opt_state = _get_optimizer_state(self.model.optimizer)
             state += opt_state.keys()
 
         return state
@@ -349,7 +364,7 @@ class GaNDLFTaskRunner(TaskRunner):
         #  all of the methods in the class and declare the tensors.
         # For now this is done manually
 
-        output_model_dict = self.get_tensor_dict(with_opt_vars=with_opt_vars)
+        output_model_dict = get_tensor_dict(model=self.model, with_opt_vars=with_opt_vars)
         global_model_dict, local_model_dict = split_tensor_dict_for_holdouts(
             self.logger, output_model_dict,
             **self.tensor_dict_split_fn_kwargs
@@ -358,7 +373,7 @@ class GaNDLFTaskRunner(TaskRunner):
             global_model_dict_val = global_model_dict
             local_model_dict_val = local_model_dict
         else:
-            output_model_dict = self.get_tensor_dict(with_opt_vars=False)
+            output_model_dict = get_tensor_dict(model=self.model, with_opt_vars=False)
             global_model_dict_val, local_model_dict_val = split_tensor_dict_for_holdouts(
                 self.logger,
                 output_model_dict,
