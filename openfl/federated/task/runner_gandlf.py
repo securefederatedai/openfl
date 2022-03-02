@@ -12,8 +12,6 @@ import torch as pt
 import torch.nn as nn
 import tqdm
 
-from .runner_pt import set_tensor_dict, get_tensor_dict, reset_opt_vars, train_results_tensorkey_dicts
-
 from openfl.utilities import Metric
 from openfl.utilities import split_tensor_dict_for_holdouts
 from openfl.utilities import TensorKey
@@ -364,7 +362,7 @@ class GaNDLFTaskRunner(TaskRunner):
         #  all of the methods in the class and declare the tensors.
         # For now this is done manually
 
-        output_model_dict = get_tensor_dict(model=self.model, with_opt_vars=with_opt_vars)
+        output_model_dict = self.get_tensor_dict(with_opt_vars=with_opt_vars)
         global_model_dict, local_model_dict = split_tensor_dict_for_holdouts(
             self.logger, output_model_dict,
             **self.tensor_dict_split_fn_kwargs
@@ -373,7 +371,7 @@ class GaNDLFTaskRunner(TaskRunner):
             global_model_dict_val = global_model_dict
             local_model_dict_val = local_model_dict
         else:
-            output_model_dict = get_tensor_dict(model=self.model, with_opt_vars=False)
+            output_model_dict = self.get_tensor_dict(with_opt_vars=False)
             global_model_dict_val, local_model_dict_val = split_tensor_dict_for_holdouts(
                 self.logger,
                 output_model_dict,

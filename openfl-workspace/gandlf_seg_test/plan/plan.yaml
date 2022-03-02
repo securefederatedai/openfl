@@ -46,7 +46,8 @@ task_runner :
       - dice
       model:
         amp: true
-        architecture: unet        base_filters: 32
+        architecture: unet        
+        base_filters: 32
         batch_norm: false
         class_list:
         - 0
