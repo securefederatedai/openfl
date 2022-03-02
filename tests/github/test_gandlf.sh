@@ -104,21 +104,29 @@ fx aggregator certify --fqdn ${FQDN} --silent # Remove '--silent' if you run thi
 COL1_DIRECTORY=${FED_DIRECTORY}/${COL1}
 create_collaborator ${FED_WORKSPACE} ${FED_DIRECTORY} ${COL1} ${COL1_DIRECTORY} ${COL1_DATA_PATH}
 
-cp ${FED_DIRECTORY}/seg_test*.csv ${COL1_DIRECTORY}/${FED_WORKSPACE}
-
 # Create collaborator #2
 COL2_DIRECTORY=${FED_DIRECTORY}/${COL2}
 create_collaborator ${FED_WORKSPACE} ${FED_DIRECTORY} ${COL2} ${COL2_DIRECTORY} ${COL2_DATA_PATH}
 
+# UJJWAL: Uncomment these:
+# cp /media/ujjwal/SSD4TB/sbutil/DatasetForTraining_Horizontal/Site1_*.csv ${COL1_DIRECTORY}/${FED_WORKSPACE}
+# cp /media/ujjwal/SSD4TB/sbutil/DatasetForTraining_Horizontal/Site2_*.csv ${COL2_DIRECTORY}/${FED_WORKSPACE}
+
+# UJJWAL: Comment out these:
+cp ${FED_DIRECTORY}/seg_test*.csv ${COL1_DIRECTORY}/${FED_WORKSPACE}
 cp ${FED_DIRECTORY}/seg_test*.csv ${COL2_DIRECTORY}/${FED_WORKSPACE}
 
 # # Run the federation
 cd ${FED_DIRECTORY}
 fx aggregator start & 
 sleep 5 
+
+# FIXME: why can't we set CUDA devices here?
 cd ${COL1_DIRECTORY}/${FED_WORKSPACE}
-fx collaborator start -n ${COL1} & 
+fx collaborator start -n ${COL1} &
+
 cd ${COL2_DIRECTORY}/${FED_WORKSPACE}
 fx collaborator start -n ${COL2}
+
 wait
 rm -rf ${FED_DIRECTORY}

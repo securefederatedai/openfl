@@ -4,32 +4,18 @@
 """GaNDLFTaskRunner module."""
 
 from copy import deepcopy
-from typing import Iterator
-from typing import Tuple
 
 import numpy as np
 import torch as pt
-import torch.nn as nn
-import tqdm
 
-from openfl.utilities import Metric
 from openfl.utilities import split_tensor_dict_for_holdouts
 from openfl.utilities import TensorKey
 
 from .runner import TaskRunner
-from openfl.federated.data.loader_gandlf import GaNDLFDataLoaderWrapper
 
-from GANDLF.parseConfig import parseConfig
-from GANDLF.models      import get_model
-from GANDLF.schedulers  import get_scheduler
-from GANDLF.optimizers  import get_optimizer
-from GANDLF.data        import get_train_loader, get_validation_loader, get_penalty_loader
-from GANDLF.utils       import parseTrainingCSV, populate_header_in_parameters, populate_channel_keys_in_params, get_class_imbalance_weights
-from GANDLF.data.ImagesFromDataFrame    import ImagesFromDataFrame
+from GANDLF.compute.generic import create_pytorch_objects
 from GANDLF.compute.training_loop       import train_network
 from GANDLF.compute.forward_pass        import validate_network
-# FIXME: switch to single init call when supported
-# from GANDLF.??? import <create_pytorch_objects>, <final_init>
 
 class GaNDLFTaskRunner(TaskRunner):
     """GaNDLF Model class for Federated Learning."""
@@ -50,75 +36,20 @@ class GaNDLFTaskRunner(TaskRunner):
         """
         super().__init__(**kwargs)
 
-        if device:
-            self.device = device
-        else:
-            self.device = pt.device('cuda' if pt.cuda.is_available() else 'cpu')
+        # if device:
+        #     self.device = device
+        # else:
+        #     self.device = pt.device('cuda' if pt.cuda.is_available() else 'cpu')
 
-        # This is a map of all the required tensors for each of the public
-        # functions in PyTorchTaskRunner
-
-
-        # FIXME: once single call is supported, uncomment this and then:
-        # model, optimizer, train_dataloader, val_dataloader, scheduler = gandlf.<create_pytorch_objects>(gandlf_config_dict, train_csv, val_csv)
-        # self.model              = model
-        # self.optimizer          = optimizer
-        # self.train_dataloader   = train_dataloader
-        # self.val_dataloader     = val_dataloader
-        # self.scheduler          = scheduler
-        # remove from BEGIN_REMOVING:
-
-        # FIXME: the runner should not ever be dependent on the structure of 'params' or any other object.
-        #   Ideally, we only get stuff and pass it back, never have to configure it ourselves.
-        self.params = parseConfig(gandlf_config_dict)
-        self.params['device'] = self.device
-
-        # populate the params for the training data
-        data_train, headers_train   = parseTrainingCSV(train_csv, train=True)
-        data_validation, _          = parseTrainingCSV(val_csv, train=True)
-
-        self.params['training_data']    = data_train
-        self.params['validation_data']  = data_validation
-        self.params                     = populate_header_in_parameters(self.params, headers_train)
-
-        validation_data_for_torch = ImagesFromDataFrame(
-            data_validation, self.params, train=False, loader_type="validation"
-        )
-        self.params = populate_channel_keys_in_params(validation_data_for_torch, self.params)
-
-        self.model                      = get_model(self.params)
-        self.params["model_parameters"] = self.model.parameters()
-
-        self.optimizer                  = get_optimizer(self.params)
-        self.params["optimizer_object"] = self.optimizer
-
-        train_dataloader    = get_train_loader(self.params)
-        val_dataloader      = get_validation_loader(self.params)
-
-        self.params["training_samples_size"] = len(train_dataloader.dataset)
-        if not ("step_size" in self.params["scheduler"]):
-            self.params["scheduler"]["step_size"] = (
-                self.params["training_samples_size"] / self.params["learning_rate"]
-            )
-        self.scheduler      = get_scheduler(self.params)
-
-        # FIXME: to END_REMOVING
-
+        model, optimizer, train_loader, val_loader, scheduler, params = create_pytorch_objects(gandlf_config_dict, train_csv=train_csv, val_csv=val_csv, device=device)
+        self.model      = model
+        self.optimizer  = optimizer
+        self.scheduler  = scheduler
+        self.params     = params
+        self.device     = device
+        
         # pass the actual dataloaders to the wrapper loader
-        self.data_loader.set_dataloaders(train_dataloader, val_dataloader)
-
-        # FIXME: needs to be in a "final init" call within GaNDLF
-        # e.g. gandlf.finish_setup(params)
-        if self.params["weighted_loss"]:
-            self.logger.info("Calculating weights for loss")
-            penalty_loader = get_penalty_loader(self.params)
-
-            self.params["weights"], self.params["class_weights"] = get_class_imbalance_weights(
-                penalty_loader, self.params
-            )
-            del penalty_loader
-        else:
-            self.params["weights"], self.params["class_weights"] = None, None
+        self.data_loader.set_dataloaders(train_loader, val_loader)
 
         self.training_round_completed = False
 
@@ -171,7 +102,7 @@ class GaNDLFTaskRunner(TaskRunner):
         """
         self.rebuild_model(round_num, input_tensor_dict, validation=True)
         self.model.eval()
-        self.model.to(self.device)
+        # self.model.to(self.device)
 
         epoch_valid_loss, epoch_valid_metric = validate_network(self.model,
                                                                 self.data_loader.val_dataloader,
@@ -228,7 +159,7 @@ class GaNDLFTaskRunner(TaskRunner):
         self.rebuild_model(round_num, input_tensor_dict)
         # set to "training" mode
         self.model.train()
-        self.model.to(self.device)
+        # self.model.to(self.device)
         for epoch in range(epochs):
             self.logger.info(f'Run {epoch} epoch of {round_num} round')
             # FIXME: do we want to capture these in an array rather than simply taking the last value?
