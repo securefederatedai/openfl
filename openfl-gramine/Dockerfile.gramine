@@ -1,6 +1,8 @@
 ARG BASE_IMAGE=python:3.8
 FROM ${BASE_IMAGE}
 
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
 # until these changes are not in pip, install from repo
 RUN git clone https://github.com/intel/openfl.git
 WORKDIR /openfl
