@@ -307,3 +307,22 @@ class DirectorClient:
             director_pb2.GetExperimentDescriptionRequest(name=name)
         )
         return response.experiment
+
+    def upload_experiment_model(self, experiment_name: str, model_proto, model_type: str = 'last'):
+        if model_type == 'best':
+            model_type = director_pb2.UploadExperimentModelRequest.LAST_BEST_MODEL
+        elif model_type == 'last':
+            model_type = director_pb2.UploadExperimentModelRequest.LAST_MODEL
+        else:
+            raise ValueError(
+                f'Invalid {model_type=} for upload_experiment_model function. '
+                f'Allowed values: "last", "best"'
+            )
+        response = self.stub.UploadExperimentModel(
+            director_pb2.UploadExperimentModelRequest(
+                model_proto=model_proto,
+                model_type=model_type,
+                experiment_name=experiment_name,
+            )
+        )
+        return response

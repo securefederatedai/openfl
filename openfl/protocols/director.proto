@@ -10,7 +10,8 @@ import "google/protobuf/duration.proto";
 import "openfl/protocols/base.proto";
 
 service Director {
-  // 1. Envoy RPCs
+  // 1. Services RPCs
+  // 1.1 Envoy RPCs
   rpc UpdateShardInfo(UpdateShardInfoRequest) returns (UpdateShardInfoResponse) {}
   // Shard owner could also provide some public data for tests
   rpc WaitExperiment(stream WaitExperimentRequest) returns (stream WaitExperimentResponse) {}
@@ -18,10 +19,13 @@ service Director {
   rpc UpdateEnvoyStatus(UpdateEnvoyStatusRequest) returns (UpdateEnvoyStatusResponse) {}
   rpc SetExperimentFailed (SetExperimentFailedRequest) returns (SetExperimentFailedResponse) {}
 
+  // 1.2 Aggregator RPCs
+  rpc UploadExperimentModel(UploadExperimentModelRequest) returns (UploadExperimentModelResponse) {}
+
   // 2. Frontend RPCs
   // 2.1 Extension RPCs
   rpc GetExperimentDescription(GetExperimentDescriptionRequest)
-    returns (GetExperimentDescriptionResponse) {}
+      returns (GetExperimentDescriptionResponse) {}
   rpc GetExperimentsList(GetExperimentsListRequest) returns (GetExperimentsListResponse){}
 
   // 2.2 API RPCs
@@ -43,7 +47,7 @@ message CudaDeviceInfo {
   string name = 7;
 }
 
-// Envoy Messages
+// Services. Envoy Messages
 
 message NodeInfo {
   string name = 1;
@@ -103,6 +107,20 @@ message SetExperimentFailedRequest {
 }
 
 message SetExperimentFailedResponse {}
+
+// Services. Aggregator messages.
+
+message UploadExperimentModelRequest {
+  enum ModelType {
+    LAST_BEST_MODEL = 0;
+    LAST_MODEL = 1;
+  }
+  ModelProto model_proto = 1;
+  ModelType model_type = 2;
+  string experiment_name = 3;
+}
+
+message UploadExperimentModelResponse {}
 
 // Frontend. Extension Messages.
 

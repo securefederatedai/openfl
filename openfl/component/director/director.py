@@ -29,6 +29,8 @@ class Director:
 
     def __init__(
             self, *,
+            director_host,
+            director_port,
             tls: bool = True,
             root_certificate: Union[Path, str] = None,
             private_key: Union[Path, str] = None,
@@ -50,6 +52,8 @@ class Director:
         self.col_exp_queues = defaultdict(asyncio.Queue)
         self.col_exp = {}
         self._use_docker = use_docker
+        self.director_host = director_host
+        self.director_port = director_port
 
     def acknowledge_shard(self, shard_info: dict) -> bool:
         """Save shard info to shard registry if it's acceptable."""
@@ -92,6 +96,8 @@ class Director:
             sender=sender_name,
             init_tensor_dict_path=tensor_dict_path,
             use_docker=self._use_docker,
+            director_host=self.director_host,
+            director_port=self.director_port,
         )
         self.experiments_registry.add(experiment)
         return True
@@ -123,16 +129,23 @@ class Director:
             logger.error('No experiment data in the stash')
             return None
         exp = self.experiments_registry[experiment_name]
-        if exp.status != Status.IN_PROGRESS:
-            return None
+        # if exp.status != Status.IN_PROGRESS:
+        #     return None
 
-        aggregator_client = await self.get_aggregator_client(experiment_name)
-        trained_model = await aggregator_client.get_trained_model(
-            experiment_name,
-            model_type
-        )
-
-        return trained_model
+        # aggregator_client = await self.get_aggregator_client(experiment_name)
+        # trained_model = await aggregator_client.get_trained_model(
+        #     experiment_name,
+        #     model_type
+        # )
+        if model_type == 'last':
+            return exp.last_tensor_dict
+        elif model_type == 'best':
+            return exp.best_tensor_dict
+        else:
+            raise ValueError(
+                f'Invalid value {model_type=} in function get_trained_model. '
+                f'Allowed values: "last", "best"'
+            )
 
     def get_experiment_data(self, experiment_name: str) -> Path:
         """Get experiment data."""
@@ -180,7 +193,7 @@ class Director:
                 f'No experiment name "{experiment_name}" in experiments list, or caller "{caller}"'
                 f' does not have access to this experiment'
             )
-
+        
         aggregator_client = await self.get_aggregator_client(experiment_name)
         async for metric_dict in aggregator_client.get_metric_stream():
             yield metric_dict
@@ -284,3 +297,20 @@ class Director:
                     queue = self.col_exp_queues[col_name]
                     await queue.put(experiment.name)
                 await run_aggregator_future
+
+    async def upload_experiment_model(
+            self,
+            experiment_name: str,
+            tensor_dict: dict,
+            model_type: str,
+    ) -> None:
+        exp = self.experiments_registry[experiment_name]
+        if model_type == 'last':
+            exp.last_tensor_dict = tensor_dict
+        elif model_type == 'best':
+            exp.best_tensor_dict = tensor_dict
+        else:
+            raise ValueError(
+                f'Invalid {model_type=} in upload_experiment_model function. '
+                f'Allowed values "last", "best"'
+            )

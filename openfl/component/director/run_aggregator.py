@@ -23,6 +23,11 @@ PLAN_PATH_DEFAULT = 'plan/plan.yaml'
 def _parse_args():
     parser = argparse.ArgumentParser(description='Run aggregator.')
     parser.add_argument('--plan_path', type=str, nargs='?', default=PLAN_PATH_DEFAULT)
+
+    parser.add_argument('--experiment_name', type=str)
+    parser.add_argument('--director_host', type=str)
+    parser.add_argument('--director_port', type=int)
+
     parser.add_argument('--collaborators', type=str, nargs='+')
     parser.add_argument('--init_tensor_dict_path', type=str)
     parser.add_argument('--root_certificate', type=str, nargs='?', default=None)
@@ -37,6 +42,9 @@ def _parse_args():
 
 async def main(
         plan_path,
+        experiment_name,
+        director_host,
+        director_port,
         collaborators,
         init_tensor_dict_path,
         root_certificate,
@@ -51,6 +59,9 @@ async def main(
     logger.info('🧿 Starting the Aggregator Service.')
     init_tensor_dict = np.load(init_tensor_dict_path, allow_pickle=True)
     aggregator_grpc_server = plan.interactive_api_get_server(
+        experiment_name=experiment_name,
+        director_host=director_host,
+        director_port=director_port,
         tensor_dict=init_tensor_dict,
         root_certificate=root_certificate,
         certificate=certificate,
@@ -79,6 +90,9 @@ if __name__ == '__main__':
     args = _parse_args()
     asyncio.run(main(
         plan_path=args.plan_path,
+        experiment_name=args.experiment_name,
+        director_host=args.director_host,
+        director_port=args.director_port,
         collaborators=args.collaborators,
         init_tensor_dict_path=args.init_tensor_dict_path,
         root_certificate=args.root_certificate,

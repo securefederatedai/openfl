@@ -16,6 +16,7 @@ from grpc import ssl_server_credentials
 from openfl.pipelines import NoCompressionPipeline
 from openfl.protocols import director_pb2
 from openfl.protocols import director_pb2_grpc
+from openfl.protocols import utils
 from openfl.protocols.utils import construct_model_proto
 from openfl.protocols.utils import deconstruct_model_proto
 from openfl.protocols.utils import get_headers
@@ -50,6 +51,8 @@ class DirectorGRPCServer(director_pb2_grpc.DirectorServicer):
             private_key=self.private_key,
             certificate=self.certificate,
             use_docker=use_docker,
+            director_host=listen_host,
+            director_port=listen_port,
             **kwargs
         )
 
@@ -152,11 +155,18 @@ class DirectorGRPCServer(director_pb2_grpc.DirectorServicer):
         logger.info('Request GetTrainedModel has got!')
 
         caller = self.get_caller(context)
+        model_type_enum = director_pb2.UploadExperimentModelRequest.ModelType
+        if request.model_type == model_type_enum.LAST_MODEL:
+            model_type = 'last'
+        elif request.model_type == model_type_enum.LAST_BEST_MODEL:
+            model_type = 'best'
+        else:
+            raise Exception(f'Invalid {request.model_type=} in GetTrainedModel function.')
 
         trained_model_dict = await self.director.get_trained_model(
             experiment_name=request.experiment_name,
             caller=caller,
-            model_type=request.model_type
+            model_type=model_type
         )
 
         if trained_model_dict is None:
@@ -295,3 +305,21 @@ class DirectorGRPCServer(director_pb2_grpc.DirectorServicer):
         experiment = await self.director.get_experiment_description(caller, request.name)
 
         return director_pb2.GetExperimentDescriptionResponse(experiment=experiment)
+
+    async def UploadExperimentModel(self, request, context):  # NOQA:N802
+        """Upload an experiment model from aggregator."""
+        model_type_enum = director_pb2.UploadExperimentModelRequest.ModelType
+        if request.model_type == model_type_enum.LAST_MODEL:
+            model_type = 'last'
+        elif request.model_type == model_type_enum.LAST_BEST_MODEL:
+            model_type = 'best'
+        else:
+            raise Exception('Invalid model_type value in UploadExperimentModel function.')
+        tensor_dict, _ = utils.deconstruct_model_proto(
+            request.model_proto, compression_pipeline=NoCompressionPipeline())
+        await self.director.upload_experiment_model(
+            experiment_name=request.experiment_name,
+            tensor_dict=tensor_dict,
+            model_type=model_type,
+        )
+        return director_pb2.UploadExperimentModelResponse()

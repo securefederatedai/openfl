@@ -7,6 +7,7 @@ import asyncio
 import logging
 from contextlib import asynccontextmanager
 from pathlib import Path
+from tarfile import TarFile
 from typing import Iterable
 from typing import List
 from typing import Union
@@ -40,9 +41,12 @@ class Experiment:
             collaborators: List[str],
             sender: str,
             init_tensor_dict_path: Union[Path, str],
+            director_host: str,
+            director_port: str,
             plan_path: Union[Path, str] = 'plan/plan.yaml',
             users: Iterable[str] = None,
             use_docker: bool = False,
+
     ) -> None:
         """Initialize an experiment object."""
         self.name = name
@@ -60,6 +64,10 @@ class Experiment:
         self.status = Status.PENDING
         self.aggregator = None
         self._use_docker = use_docker
+        self.director_host = director_host
+        self.director_port = director_port
+        self.last_tensor_dict = {}
+        self.best_tensor_dict = {}
 
     async def start(
             self, *,
@@ -75,6 +83,17 @@ class Experiment:
                         f'collaborators {self.collaborators}')
 
             if self._use_docker:
+                with TarFile(name=self.archive_path, mode='r') as tar_file:
+                    plan_buffer = tar_file.extractfile(f'./{self.plan_path}')
+                    if plan_buffer is None:
+                        raise Exception(f'No {self.plan_path} in workspace.')
+                    plan_data = plan_buffer.read()
+                local_plan_path = Path(self.name) / self.plan_path
+                local_plan_path.parent.mkdir(parents=True, exist_ok=True)
+                with local_plan_path.open('wb') as plan_f:
+                    plan_f.write(plan_data)
+
+                self.plan = Plan.parse(plan_config_path=local_plan_path)
                 await self._run_aggregator_in_docker(
                     data_file_path=self.archive_path,
                     tls=tls,
@@ -85,6 +104,8 @@ class Experiment:
             else:
                 with ExperimentWorkspace(self.name, self.archive_path):
                     aggregator_grpc_server = self._create_aggregator_grpc_server(
+                        director_host=self.director_host,
+                        director_port=self.director_port,
                         tls=tls,
                         root_certificate=root_certificate,
                         private_key=private_key,
@@ -120,6 +141,9 @@ class Experiment:
         )
         cmd = (
             f'python run.py '
+            f'--experiment_name {self.name} '
+            f'--director_host {self.director_host} '
+            f'--director_port {self.director_port} '
             f'--init_tensor_dict_path init_tensor_dict.pickle '
             f'--collaborators {" ".join(self.collaborators)} '
             f'--root_certificate {root_certificate} '
@@ -138,6 +162,8 @@ class Experiment:
 
     def _create_aggregator_grpc_server(
             self, *,
+            director_host,
+            director_port,
             tls: bool = True,
             root_certificate: Union[Path, str] = None,
             private_key: Union[Path, str] = None,
@@ -149,6 +175,9 @@ class Experiment:
         logger.info('🧿 Starting the Aggregator Service.')
         init_tensor_dict = np.load(str(self.init_tensor_dict_path), allow_pickle=True)
         aggregator_grpc_server = self.plan.interactive_api_get_server(
+            experiment_name=self.name,
+            director_host=director_host,
+            director_port=director_port,
             tensor_dict=init_tensor_dict,
             root_certificate=root_certificate,
             certificate=certificate,
@@ -186,6 +215,8 @@ class ExperimentsRegistry:
         self.__pending_experiments = []
         self.__archived_experiments = []
         self.__dict = {}
+        self.last_tensor_dict = {}
+        self.best_tensor_dict = {}
 
     @property
     def active_experiment(self) -> Union[Experiment, None]:

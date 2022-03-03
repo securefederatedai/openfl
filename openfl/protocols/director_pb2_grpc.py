@@ -39,6 +39,11 @@ class DirectorStub(object):
                 request_serializer=openfl_dot_protocols_dot_director__pb2.SetExperimentFailedRequest.SerializeToString,
                 response_deserializer=openfl_dot_protocols_dot_director__pb2.SetExperimentFailedResponse.FromString,
                 )
+        self.UploadExperimentModel = channel.unary_unary(
+                '/openfl.director.Director/UploadExperimentModel',
+                request_serializer=openfl_dot_protocols_dot_director__pb2.UploadExperimentModelRequest.SerializeToString,
+                response_deserializer=openfl_dot_protocols_dot_director__pb2.UploadExperimentModelResponse.FromString,
+                )
         self.GetExperimentDescription = channel.unary_unary(
                 '/openfl.director.Director/GetExperimentDescription',
                 request_serializer=openfl_dot_protocols_dot_director__pb2.GetExperimentDescriptionRequest.SerializeToString,
@@ -85,7 +90,8 @@ class DirectorServicer(object):
     """Missing associated documentation comment in .proto file."""
 
     def UpdateShardInfo(self, request, context):
-        """1. Envoy RPCs
+        """1. Services RPCs
+        1.1 Envoy RPCs
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -112,6 +118,13 @@ class DirectorServicer(object):
 
     def SetExperimentFailed(self, request, context):
         """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def UploadExperimentModel(self, request, context):
+        """1.2 Aggregator RPCs
+        """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
@@ -194,6 +207,11 @@ def add_DirectorServicer_to_server(servicer, server):
                     servicer.SetExperimentFailed,
                     request_deserializer=openfl_dot_protocols_dot_director__pb2.SetExperimentFailedRequest.FromString,
                     response_serializer=openfl_dot_protocols_dot_director__pb2.SetExperimentFailedResponse.SerializeToString,
+            ),
+            'UploadExperimentModel': grpc.unary_unary_rpc_method_handler(
+                    servicer.UploadExperimentModel,
+                    request_deserializer=openfl_dot_protocols_dot_director__pb2.UploadExperimentModelRequest.FromString,
+                    response_serializer=openfl_dot_protocols_dot_director__pb2.UploadExperimentModelResponse.SerializeToString,
             ),
             'GetExperimentDescription': grpc.unary_unary_rpc_method_handler(
                     servicer.GetExperimentDescription,
@@ -327,6 +345,23 @@ class Director(object):
         return grpc.experimental.unary_unary(request, target, '/openfl.director.Director/SetExperimentFailed',
             openfl_dot_protocols_dot_director__pb2.SetExperimentFailedRequest.SerializeToString,
             openfl_dot_protocols_dot_director__pb2.SetExperimentFailedResponse.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def UploadExperimentModel(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/openfl.director.Director/UploadExperimentModel',
+            openfl_dot_protocols_dot_director__pb2.UploadExperimentModelRequest.SerializeToString,
+            openfl_dot_protocols_dot_director__pb2.UploadExperimentModelResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
