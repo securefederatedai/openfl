@@ -3,7 +3,30 @@
 
 """This package includes dependencies of the openfl project."""
 
+from subprocess import check_call
+
 from setuptools import setup
+from setuptools.command.install import install
+
+
+class CompiledProtoInstall(install):
+    """Wrapper for custom commands to run before package installation."""
+
+    uninstall = False
+
+    def install(self):
+        """Compiles protobuf files after installation."""
+        install.install(self)
+        check_call('''python -m grpc_tools.protoc -I . --python_out=. --grpc_python_out=.
+  openfl/protocols/aggregator.proto
+  openfl/protocols/director.proto
+'''.split())
+        check_call('''python -m grpc_tools.protoc
+  -I .
+  --python_out=.
+  openfl/protocols/base.proto
+'''.split())
+
 
 with open('README.md') as f:
     long_description = f.read()
@@ -106,5 +129,8 @@ setup(
     ],
     entry_points={
         'console_scripts': ['fx=openfl.interface.cli:entry']
-    }
+    },
+    cmdclass={
+        'install': CompiledProtoInstall,
+    },
 )
