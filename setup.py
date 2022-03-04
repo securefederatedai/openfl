@@ -14,9 +14,8 @@ class CompiledProtoInstall(install):
 
     uninstall = False
 
-    def install(self):
+    def run(self):
         """Compiles protobuf files after installation."""
-        install.install(self)
         check_call('''python -m grpc_tools.protoc -I . --python_out=. --grpc_python_out=.
   openfl/protocols/aggregator.proto
   openfl/protocols/director.proto
@@ -26,6 +25,7 @@ class CompiledProtoInstall(install):
   --python_out=.
   openfl/protocols/base.proto
 '''.split())
+        install.run(self)
 
 
 with open('README.md') as f:
