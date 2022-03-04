@@ -57,7 +57,7 @@ class ExperimentWorkspace:
             logger.error('No ' + requirements_filename + ' file found.')
 
     def _rm_readonly_dir(self, func, path, _):
-        "Error handler for ``shutil.rmtree``for clearing the readonly bit."
+        """Error handler for shutil.rmtree for clearing the readonly bit."""
         os.chmod(path, stat.S_IWRITE)
         func(path)
 
