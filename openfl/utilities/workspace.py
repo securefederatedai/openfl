@@ -6,6 +6,7 @@
 import logging
 import os
 import shutil
+import stat
 import sys
 import time
 from pathlib import Path
@@ -55,10 +56,15 @@ class ExperimentWorkspace:
         else:
             logger.error('No ' + requirements_filename + ' file found.')
 
+    def _rm_readonly_dir(self, func, path, _):
+        "Error handler for ``shutil.rmtree``for clearing the readonly bit."
+        os.chmod(path, stat.S_IWRITE)
+        func(path)
+
     def __enter__(self):
         """Create a collaborator workspace for the experiment."""
         if os.path.exists(self.experiment_work_dir):
-            shutil.rmtree(self.experiment_work_dir)
+            shutil.rmtree(self.experiment_work_dir, onerror=self._rm_readonly_dir)
         os.makedirs(self.experiment_work_dir)
 
         shutil.unpack_archive(self.data_file_path, self.experiment_work_dir, format='zip')
