@@ -7,7 +7,7 @@ package openfl.director;
 
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/duration.proto";
-import "openfl/protocols/base.proto";
+import "base.proto";
 
 service Director {
   // 1. Envoy RPCs

@@ -7,6 +7,9 @@ __pycache__
 .ipynb_checkpoints
 venv/*
 .idea
+.eggs
+*_pb2.py
+*_pb2_grpc.py
 
 *.jpg
 *.crt

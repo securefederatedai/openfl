@@ -3,29 +3,40 @@
 
 """This package includes dependencies of the openfl project."""
 
-from subprocess import check_call
+import os
+import re
 
+from setuptools.command.build_py import build_py
 from setuptools import setup
-from setuptools.command.install import install
 
-
-class CompiledProtoInstall(install):
-    """Wrapper for custom commands to run before package installation."""
-
-    uninstall = False
+class grpc_build_py(build_py):
+    """Command to generate project *_pb2.py modules from proto files
+    before building the Python package."""
 
     def run(self):
-        """Compiles protobuf files after installation."""
-        check_call('''python -m grpc_tools.protoc -I . --python_out=. --grpc_python_out=.
-  openfl/protocols/aggregator.proto
-  openfl/protocols/director.proto
-'''.split())
-        check_call('''python -m grpc_tools.protoc
-  -I .
-  --python_out=.
-  openfl/protocols/base.proto
-'''.split())
-        install.run(self)
+        from grpc_tools.command import build_package_protos
+        super().run()
+        protos_root = 'openfl/protocols'
+        build_package_protos(protos_root)
+
+        # Postprocess imports in generated code
+        for root, _, files in os.walk(protos_root):
+            for filename in files:
+                if filename.endswith("_pb2.py") or filename.endswith("_pb2_grpc.py"):
+                    path = os.path.join(root, filename)
+                    with open(path, "r", encoding="utf-8") as f:
+                        code = f.read()
+
+                    # All protos are in openfl.protocols
+                    code = re.sub(r"^from ", r"from openfl.protocols.", code, flags=re.MULTILINE)
+                    code = re.sub(r"^import (.*__pb2)", r"import openfl.protocols.\g<1>", code, flags=re.MULTILINE)
+                    # Except for the core google.protobuf protos
+                    code = re.sub(
+                        r"^from openfl.protocols.google.protobuf", r"from google.protobuf", code, flags=re.MULTILINE
+                    )
+
+                    with open(path, "w", encoding="utf-8") as f:
+                        f.write(code)
 
 
 with open('README.md') as f:
@@ -88,7 +99,6 @@ setup(
         'docker',
         'dynaconf==3.1.7',
         'flatten_json',
-        'grpcio-tools~=1.34.0',
         'grpcio~=1.34.0',
         'ipykernel',
         'jupyterlab',
@@ -102,6 +112,7 @@ setup(
         'tensorboardX',
         'tqdm',
     ],
+    setup_requires=["grpcio-tools~=1.34.0"],
     python_requires='>=3.6, <3.9',
     project_urls={
         'Bug Tracker': 'https://github.com/intel/openfl/issues',
@@ -131,6 +142,6 @@ setup(
         'console_scripts': ['fx=openfl.interface.cli:entry']
     },
     cmdclass={
-        'install': CompiledProtoInstall,
+        'build_py': grpc_build_py
     },
 )
