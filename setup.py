@@ -6,15 +6,17 @@
 import os
 import re
 
-from setuptools.command.build_py import build_py
 from setuptools import setup
+from setuptools.command.build_py import build_py
 
-class grpc_build_py(build_py):
-    """Command to generate project *_pb2.py modules from proto files
-    before building the Python package."""
+
+class GRPCBuildPyCommand(build_py):
+    """Command to generate project *_pb2.py modules from proto files."""
 
     def run(self):
+        """Build Python and GRPC modules."""
         from grpc_tools.command import build_package_protos
+
         super().run()
         protos_root = 'openfl/protocols'
         build_package_protos(protos_root)
@@ -22,20 +24,30 @@ class grpc_build_py(build_py):
         # Postprocess imports in generated code
         for root, _, files in os.walk(protos_root):
             for filename in files:
-                if filename.endswith("_pb2.py") or filename.endswith("_pb2_grpc.py"):
+                if filename.endswith('_pb2.py') or filename.endswith('_pb2_grpc.py'):
                     path = os.path.join(root, filename)
-                    with open(path, "r", encoding="utf-8") as f:
+                    with open(path, 'r', encoding='utf-8') as f:
                         code = f.read()
 
                     # All protos are in openfl.protocols
-                    code = re.sub(r"^from ", r"from openfl.protocols.", code, flags=re.MULTILINE)
-                    code = re.sub(r"^import (.*__pb2)", r"import openfl.protocols.\g<1>", code, flags=re.MULTILINE)
+                    code = re.sub(
+                        r'^from ', r'from openfl.protocols.', code, flags=re.MULTILINE
+                    )
+                    code = re.sub(
+                        r'^import (.*__pb2)',
+                        r'import openfl.protocols.\g<1>',
+                        code,
+                        flags=re.MULTILINE,
+                    )
                     # Except for the core google.protobuf protos
                     code = re.sub(
-                        r"^from openfl.protocols.google.protobuf", r"from google.protobuf", code, flags=re.MULTILINE
+                        r'^from openfl.protocols.google.protobuf',
+                        r'from google.protobuf',
+                        code,
+                        flags=re.MULTILINE,
                     )
 
-                    with open(path, "w", encoding="utf-8") as f:
+                    with open(path, 'w', encoding='utf-8') as f:
                         f.write(code)
 
 
@@ -112,7 +124,7 @@ setup(
         'tensorboardX',
         'tqdm',
     ],
-    setup_requires=["grpcio-tools~=1.34.0"],
+    setup_requires=['grpcio-tools~=1.34.0'],
     python_requires='>=3.6, <3.9',
     project_urls={
         'Bug Tracker': 'https://github.com/intel/openfl/issues',
@@ -138,10 +150,6 @@ setup(
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
     ],
-    entry_points={
-        'console_scripts': ['fx=openfl.interface.cli:entry']
-    },
-    cmdclass={
-        'build_py': grpc_build_py
-    },
+    entry_points={'console_scripts': ['fx=openfl.interface.cli:entry']},
+    cmdclass={'build_py': GRPCBuildPyCommand},
 )
