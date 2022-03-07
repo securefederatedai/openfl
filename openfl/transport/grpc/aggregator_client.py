@@ -277,7 +277,7 @@ class AggregatorGRPCClient:
             tensor_name=tensor_name,
             round_number=round_number,
             report=report,
-            tags=tags,
+            tags=tuple(tags),
             require_lossless=require_lossless
         )
         response = self.stub.GetAggregatedTensor(request)

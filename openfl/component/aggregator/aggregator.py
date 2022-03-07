@@ -328,7 +328,7 @@ class Aggregator:
             require_lossless: bool
             round_number: int
             report: bool
-            tags: list[str]
+            tags: tuple[str]
         Returns:
             named_tensor : protobuf NamedTensor
                 the tensor requested by the collaborator
