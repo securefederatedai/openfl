@@ -35,7 +35,7 @@ class GRPCBuildPyCommand(build_py):
                     )
                     code = re.sub(
                         r'^import (.*__pb2)',
-                        r'import openfl.protocols.\g<1>',
+                        r'from openfl.protocols import \g<1>',
                         code,
                         flags=re.MULTILINE,
                     )
