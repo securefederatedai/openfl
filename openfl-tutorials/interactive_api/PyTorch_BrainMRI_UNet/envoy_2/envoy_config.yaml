@@ -1,0 +1,10 @@
+params:
+  cuda_devices: []
+
+shard_descriptor:
+  template: shard_descriptor.brainMRIShardDescriptor
+  params:
+    train_csv_path: "./train_data.csv"
+    valid_csv_path: "./valid_data.csv"
+    rank_worldsize: "2,2"
+    crop_dims: 128

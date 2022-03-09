@@ -1,0 +1,12 @@
+Task01_BrainTumour.tar
+processed_data
+envoy_1/processed_data/
+envoy_2/processed_data/
+envoy_1/train_data.csv
+envoy_1/valid_data.csv
+envoy_2/train_data.csv
+envoy_2/valid_data.csv
+workspace/plan
+workspace/save
+workspace/requirements.txt
+./*.csv
