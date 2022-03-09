@@ -30,7 +30,7 @@ def _parse_args():
     parser.add_argument('--private_key', type=str, nargs='?', default=None)
     parser.add_argument('--certificate', type=str, nargs='?', default=None)
     parser.add_argument('--shard_config', type=str, nargs='?', default=None)
-    parser.add_argument('--cuda_devices', type=str, nargs='?', default=None)
+    parser.add_argument('--cuda_devices', type=str, nargs='?', default='')
     return parser.parse_args()
 
 
