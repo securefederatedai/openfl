@@ -14,6 +14,8 @@ import nibabel as nib
 from tqdm import tqdm
 import sys
 
+
+# The parser will read the path where the folder is
 parser = argparse.ArgumentParser("args")
 parser.add_argument('path', help='Path to the tar file for medical decathlon Brain MRI dataset', type=str)
 args = parser.parse_args()
@@ -36,6 +38,7 @@ num_train = int(np.floor(num_images*.80))
 train_image_list = image_list[:num_train]
 valid_image_list = image_list[num_train:]
 
+# The processed images are saved in ./processed_data/ folder
 save_folder = './processed_data/'
 if os.path.exists(save_folder):
     print("processed_data/ already exists, do you want to proceed? press y/Y to proceed and n/N to cancel")
@@ -72,6 +75,7 @@ else:
     os.mkdir(msk_path_new)
 
 
+# Two CSV files 'train_data.csv' and 'valid_data.csv' are created which will have the maps
 train_data_csv = save_folder + 'train_data.csv'
 valid_data_csv = save_folder + 'valid_data.csv'
 with open(train_data_csv,'w') as f:
@@ -79,7 +83,7 @@ with open(train_data_csv,'w') as f:
 with open(valid_data_csv,'w') as f:
     f.write('name,img_path,msk_path\n')
 
-
+# process the train images
 for t in tqdm(train_image_list):
     img_name = t['image'][t['image'].rfind('/')+1:t['image'].rfind('.nii')]
     img_path = os.path.join(data_folder, t['image'])
@@ -97,6 +101,7 @@ for t in tqdm(train_image_list):
         with open(train_data_csv,'a') as f:
             f.write(f'{img_name},{img_slice_name},{msk_slice_name}\n')
 
+# process the validation images
 for v in tqdm(valid_image_list):
     img_name = v['image'][v['image'].rfind('/')+1:v['image'].rfind('.nii')]
     img_path = os.path.join(data_folder, v['image'])
