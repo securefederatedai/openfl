@@ -6,6 +6,7 @@
 import logging
 from datetime import datetime
 from typing import List
+from typing import Type
 
 import grpc
 
@@ -53,7 +54,8 @@ class ShardDirectorClient:
             channel = grpc.secure_channel(director_addr, credentials, options=options)
         self.stub = director_pb2_grpc.DirectorStub(channel)
 
-    def report_shard_info(self, shard_descriptor: ShardDescriptor, cuda_devices: tuple) -> bool:
+    def report_shard_info(self, shard_descriptor: Type[ShardDescriptor],
+                          cuda_devices: tuple) -> bool:
         """Report shard info to the director."""
         logger.info('Send report UpdateShardInfo')
         # True considered as successful registration

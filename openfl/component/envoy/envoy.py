@@ -9,11 +9,16 @@ import traceback
 import uuid
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
+from typing import Optional
+from typing import Type
+from typing import Union
 
 from click import echo
 
 from openfl.docker import docker
 from openfl.federated import Plan
+from openfl.interface.interactive_api.shard_descriptor import ShardDescriptor
+from openfl.plugins.processing_units_monitor.cuda_device_monitor import CUDADeviceMonitor
 from openfl.transport.grpc.director_client import ShardDirectorClient
 from openfl.utilities.workspace import ExperimentWorkspace
 
@@ -27,17 +32,17 @@ class Envoy:
 
     def __init__(
             self, *,
-            shard_name,
-            director_host,
-            director_port,
-            shard_descriptor,
-            shard_descriptor_config,
-            root_certificate: str = None,
-            private_key: str = None,
-            certificate: str = None,
+            shard_name: str,
+            director_host: str,
+            director_port: int,
+            shard_descriptor: Type[ShardDescriptor],
+            root_certificate: Optional[Union[Path, str]] = None,
+            private_key: Optional[Union[Path, str]] = None,
+            certificate: Optional[Union[Path, str]] = None,
             tls: bool = True,
-            cuda_devices=(),
-            cuda_device_monitor=None,
+            cuda_devices: Union[tuple, list] = (),
+            cuda_device_monitor: Optional[Type[CUDADeviceMonitor]] = None,
+            shard_descriptor_config,
             use_docker: bool = False,
     ) -> None:
         """Initialize a envoy object."""

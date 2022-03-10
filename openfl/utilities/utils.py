@@ -7,10 +7,15 @@ import ipaddress
 import logging
 import os
 import re
+from collections import Callable
 from functools import partial
 from socket import getfqdn
+from typing import List
+from typing import Optional
+from typing import Tuple
 
 import numpy as np
+from dynaconf import Dynaconf
 from tqdm import tqdm
 
 
@@ -45,7 +50,7 @@ def is_fqdn(hostname: str) -> bool:
     #  Can begin and end with a number or letter only
     #  Can contain hyphens, a-z, A-Z, 0-9
     #  1 - 63 chars allowed
-    fqdn = re.compile(r'^[a-z0-9]([a-z-0-9-]{0,61}[a-z0-9])?$', re.IGNORECASE) # noqa FS003
+    fqdn = re.compile(r'^[a-z0-9]([a-z-0-9-]{0,61}[a-z0-9])?$', re.IGNORECASE)  # noqa FS003
 
     # Check that all labels match that pattern.
     return all(fqdn.match(label) for label in labels)
@@ -202,11 +207,32 @@ def validate_file_hash(file_path, expected_hash, chunk_size=8192):
 
 def tqdm_report_hook():
     """Visualize downloading."""
+
     def report_hook(pbar, count, block_size, total_size):
         """Update progressbar."""
         if pbar.total is None and total_size:
             pbar.total = total_size
         progress_bytes = count * block_size
         pbar.update(progress_bytes - pbar.n)
+
     pbar = tqdm(total=None)
     return partial(report_hook, pbar)
+
+
+def merge_configs(
+        overwrite_dict: Optional[dict] = None,
+        value_transform: Optional[List[Tuple[str, Callable]]] = None,
+        **kwargs,
+) -> Dynaconf:
+    """Create Dynaconf settings, merge its with `overwrite_dict` and validate result."""
+    settings = Dynaconf(**kwargs, YAML_LOADER='safe_load')
+    if overwrite_dict:
+        for key, value in overwrite_dict.items():
+            if value is not None or settings.get(key) is None:
+                settings.set(key, value, merge=True)
+    if value_transform:
+        for key, operation in value_transform:
+            value = settings.get(key)
+            settings.set(key, operation(value))
+    settings.validators.validate()
+    return settings

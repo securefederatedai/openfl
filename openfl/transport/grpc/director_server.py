@@ -7,6 +7,8 @@ import asyncio
 import logging
 import uuid
 from pathlib import Path
+from typing import Optional
+from typing import Union
 
 from google.protobuf.json_format import MessageToDict
 from google.protobuf.json_format import ParseDict
@@ -29,10 +31,18 @@ CLIENT_ID_DEFAULT = '__default__'
 class DirectorGRPCServer(director_pb2_grpc.DirectorServicer):
     """Director transport class."""
 
-    def __init__(self, *, director_cls, tls: bool = True,
-                 root_certificate: str = None, private_key: str = None, certificate: str = None,
-                 listen_host='[::]', listen_port=50051, use_docker: bool = False,
-                 **kwargs) -> None:
+    def __init__(
+            self, *,
+            director_cls,
+            tls: bool = True,
+            root_certificate: Optional[Union[Path, str]] = None,
+            private_key: Optional[Union[Path, str]] = None,
+            certificate: Optional[Union[Path, str]] = None,
+            listen_host: str = '[::]',
+            listen_port: int = 50051,
+            use_docker: bool = False,
+            **kwargs,
+    ) -> None:
         """Initialize a director object."""
         # TODO: add working directory
         super().__init__()

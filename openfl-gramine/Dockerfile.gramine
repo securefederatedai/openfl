@@ -1,13 +1,8 @@
 ARG BASE_IMAGE=python:3.8
 FROM ${BASE_IMAGE}
 
-# install openfl
-# RUN --mount=type=cache,target=/root/.cache/ \
-#     pip install --upgrade pip && \
-#     pip install openfl
-
-# for now install from source (branch with logs_writer turned off)
-RUN git clone https://github.com/igor-davidyuk/openfl.git --branch gramine-rebased
+# until these changes are not in pip, install from repo
+RUN git clone https://github.com/intel/openfl.git
 WORKDIR /openfl
 RUN --mount=type=cache,target=/root/.cache/ \
     pip install --upgrade pip && \
