@@ -2,10 +2,6 @@
 # SPDX-License-Identifier: Apache-2.0
 
 """This package includes dependencies of the openfl project."""
-
-import os
-import re
-
 from setuptools import setup
 from setuptools.command.build_py import build_py
 
@@ -15,39 +11,28 @@ class GRPCBuildPyCommand(build_py):
 
     def run(self):
         """Build Python and GRPC modules."""
-        from grpc_tools.command import build_package_protos
+        from subprocess import check_call
+        from sys import executable
 
-        protos_root = 'openfl/protocols'
-        build_package_protos(protos_root)
+        check_call([
+            executable,
+            '-m',
+            'grpc_tools.protoc',
+            '-I.',
+            '--python_out=.',
+            '--grpc_python_out=.', 
+            'openfl/protocols/aggregator.proto',
+            'openfl/protocols/director.proto'
+        ])
+        check_call([
+            executable,
+            '-m',
+            'grpc_tools.protoc',
+            '-I.',
+            '--python_out=.',
+            'openfl/protocols/base.proto'
+        ])
 
-        # Postprocess imports in generated code
-        for root, _, files in os.walk(protos_root):
-            for filename in files:
-                if filename.endswith('_pb2.py') or filename.endswith('_pb2_grpc.py'):
-                    path = os.path.join(root, filename)
-                    with open(path, 'r', encoding='utf-8') as f:
-                        code = f.read()
-
-                    # All protos are in openfl.protocols
-                    code = re.sub(
-                        r'^from ', r'from openfl.protocols.', code, flags=re.MULTILINE
-                    )
-                    code = re.sub(
-                        r'^import (.*__pb2)',
-                        r'from openfl.protocols import \g<1>',
-                        code,
-                        flags=re.MULTILINE,
-                    )
-                    # Except for the core google.protobuf protos
-                    code = re.sub(
-                        r'^from openfl.protocols.google.protobuf',
-                        r'from google.protobuf',
-                        code,
-                        flags=re.MULTILINE,
-                    )
-
-                    with open(path, 'w', encoding='utf-8') as f:
-                        f.write(code)
         super().run()
 
 

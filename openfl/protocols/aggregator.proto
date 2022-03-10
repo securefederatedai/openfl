@@ -5,7 +5,7 @@ syntax = "proto3";
 
 package openfl.aggregator;
 
-import "base.proto";
+import "openfl/protocols/base.proto";
 
 
 service Aggregator {
