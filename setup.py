@@ -22,7 +22,7 @@ class GRPCBuildPyCommand(build_py):
             'grpc_tools.protoc',
             '-I.',
             '--python_out=.',
-            '--grpc_python_out=.', 
+            '--grpc_python_out=.',
             'openfl/protocols/aggregator.proto',
             'openfl/protocols/director.proto'
         ])
