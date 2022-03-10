@@ -7,8 +7,11 @@ from typing import List
 import numpy as np
 
 from openfl.interface.interactive_api.shard_descriptor import ShardDescriptor
+from openfl.utilities.dataset_spoilers import corrupt_shard
+from openfl.utilities.dataset_spoilers import spoil_targets_random_choice
 
 
+@corrupt_shard(spoil_targets_random_choice)
 class LinRegSD(ShardDescriptor):
     """Shard descriptor class."""
 
@@ -31,7 +34,7 @@ class LinRegSD(ShardDescriptor):
 
     def get_dataset(self, dataset_type: str) -> np.ndarray:
         """
-        Return a shard dataset by type.
+        Get a shard dataset.
 
         A simple list with elements (x, y) implemets the Shard Dataset interface.
         """
