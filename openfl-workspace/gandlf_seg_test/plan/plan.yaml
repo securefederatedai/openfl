@@ -9,6 +9,8 @@ aggregator :
     best_state_path : save/gandlf_seg_test_best.pbuf
     last_state_path : save/gandlf_seg_test_last.pbuf
     rounds_to_train : 3
+    write_logs : true
+
 
 collaborator :
   defaults : plan/defaults/collaborator.yaml
