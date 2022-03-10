@@ -6,12 +6,21 @@
 from enum import Enum
 from logging import getLogger
 from time import sleep
+from typing import Any
+from typing import Dict
+from typing import List
+from typing import NamedTuple
 from typing import Tuple
+from typing import Union
 
+from numpy import ndarray
+
+from openfl.component.assigner.tasks import Task
 from openfl.databases import TensorDB
 from openfl.pipelines import NoCompressionPipeline
 from openfl.pipelines import TensorCodec
 from openfl.protocols import utils
+from openfl.protocols.base_pb2 import NamedTensor
 from openfl.utilities import TensorKey
 
 
@@ -68,18 +77,18 @@ class Collaborator:
     """
 
     def __init__(self,
-                 collaborator_name,
-                 aggregator_uuid,
-                 federation_uuid,
-                 client,
-                 task_runner,
-                 task_config,
-                 opt_treatment='RESET',
-                 device_assignment_policy='CPU_ONLY',
-                 delta_updates=False,
-                 compression_pipeline=None,
-                 db_store_rounds=1,
-                 **kwargs):
+                 collaborator_name: str,
+                 aggregator_uuid: str,
+                 federation_uuid: str,
+                 client: Any,
+                 task_runner: Any,
+                 task_config: Any,
+                 opt_treatment: Union[OptTreatment, str] = 'RESET',
+                 device_assignment_policy: str = 'CPU_ONLY',
+                 delta_updates: bool = False,
+                 compression_pipeline: Any = None,
+                 db_store_rounds: int = 1,
+                 **kwargs) -> None:
         """Initialize."""
         self.single_col_cert_common_name = None
 
@@ -123,7 +132,7 @@ class Collaborator:
 
         self.task_runner.set_optimizer_treatment(self.opt_treatment.name)
 
-    def set_available_devices(self, cuda: Tuple[str] = ()):
+    def set_available_devices(self, cuda: Union[Tuple[()], Tuple[str]] = ()) -> None:
         """
         Set available CUDA devices.
 
@@ -131,7 +140,7 @@ class Collaborator:
         """
         self.cuda_devices = cuda
 
-    def run(self):
+    def run(self) -> None:
         """Run the collaborator."""
         while True:
             tasks, round_number, sleep_time, time_to_quit = self.get_tasks()
@@ -149,7 +158,7 @@ class Collaborator:
 
         self.logger.info('End of Federation reached. Exiting...')
 
-    def run_simulation(self):
+    def run_simulation(self) -> None:
         """
         Specific function for the simulation.
 
@@ -172,7 +181,7 @@ class Collaborator:
                                  f'for round {round_number}...')
                 break
 
-    def get_tasks(self):
+    def get_tasks(self) -> Tuple[List[str], int, int, bool]:
         """Get tasks from the aggregator."""
         # logging wait time to analyze training process
         self.logger.info('Waiting for tasks...')
@@ -181,7 +190,7 @@ class Collaborator:
 
         return tasks, round_number, sleep_time, time_to_quit
 
-    def do_task(self, task, round_number):
+    def do_task(self, task: Union[Task, str], round_number: int) -> None:
         """Do the specified task."""
         # map this task to an actual function name and kwargs
         if hasattr(self.task_runner, 'TASK_REGISTRY'):
@@ -266,11 +275,11 @@ class Collaborator:
         # this function
         self.send_task_results(global_output_tensor_dict, round_number, task_name)
 
-    def get_numpy_dict_for_tensorkeys(self, tensor_keys):
+    def get_numpy_dict_for_tensorkeys(self, tensor_keys: NamedTuple) -> Dict[str, ndarray]:
         """Get tensor dictionary for specified tensorkey set."""
         return {k.tensor_name: self.get_data_for_tensorkey(k) for k in tensor_keys}
 
-    def get_data_for_tensorkey(self, tensor_key):
+    def get_data_for_tensorkey(self, tensor_key: NamedTuple) -> ndarray:
         """
         Resolve the tensor corresponding to the requested tensorkey.
 
@@ -349,8 +358,8 @@ class Collaborator:
 
         return nparray
 
-    def get_aggregated_tensor_from_aggregator(self, tensor_key,
-                                              require_lossless=False):
+    def get_aggregated_tensor_from_aggregator(self, tensor_key: NamedTuple,
+                                              require_lossless: bool = False) -> ndarray:
         """
         Return the decompressed tensor associated with the requested tensor key.
 
@@ -389,7 +398,8 @@ class Collaborator:
 
         return nparray
 
-    def send_task_results(self, tensor_dict, round_number, task_name):
+    def send_task_results(self, tensor_dict: Dict[str, ndarray],
+                          round_number: int, task_name: str) -> None:
         """Send task results to the aggregator."""
         named_tensors = [
             self.nparray_to_named_tensor(k, v) for k, v in tensor_dict.items()
@@ -420,7 +430,7 @@ class Collaborator:
         self.client.send_local_task_results(
             self.collaborator_name, round_number, task_name, data_size, named_tensors)
 
-    def nparray_to_named_tensor(self, tensor_key, nparray):
+    def nparray_to_named_tensor(self, tensor_key: NamedTuple, nparray: ndarray) -> NamedTensor:
         """
         Construct the NamedTensor Protobuf.
 
@@ -478,7 +488,7 @@ class Collaborator:
 
         return named_tensor
 
-    def named_tensor_to_nparray(self, named_tensor):
+    def named_tensor_to_nparray(self, named_tensor: NamedTensor) -> ndarray:
         """Convert named tensor to a numpy array."""
         # do the stuff we do now for decompression and frombuffer and stuff
         # This should probably be moved back to protoutils

@@ -9,6 +9,8 @@ import traceback
 import uuid
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
+from typing import Any
+from typing import List
 from typing import Optional
 from typing import Type
 from typing import Union
@@ -69,7 +71,7 @@ class Envoy:
         self.is_experiment_running = False
         self._health_check_future = None
 
-    def run(self):
+    def run(self) -> None:
         """Run of the envoy working cycle."""
         while True:
             try:
@@ -100,7 +102,7 @@ class Envoy:
                 self.is_experiment_running = False
 
     @staticmethod
-    def _save_data_stream_to_file(data_stream):
+    def _save_data_stream_to_file(data_stream: Any) -> Path:
         data_file_path = Path(str(uuid.uuid4())).absolute()
         with open(data_file_path, 'wb') as data_file:
             for response in data_stream:
@@ -110,7 +112,7 @@ class Envoy:
                     raise Exception('Broken archive')
         return data_file_path
 
-    def send_health_check(self):
+    def send_health_check(self) -> None:
         """Send health check to the director."""
         logger.info('The health check sender is started.')
         while True:
@@ -122,7 +124,7 @@ class Envoy:
             )
             time.sleep(timeout)
 
-    def _get_cuda_device_info(self):
+    def _get_cuda_device_info(self) -> Optional[List]:
         cuda_devices_info = None
         try:
             if self.cuda_device_monitor is not None:
@@ -150,7 +152,7 @@ class Envoy:
                              f'Check your cuda device monitor plugin.')
         return cuda_devices_info
 
-    def _run_collaborator(self, plan='plan/plan.yaml'):
+    def _run_collaborator(self, plan: str = 'plan/plan.yaml') -> None:
         """Run the collaborator for the experiment running."""
         plan = Plan.parse(plan_config_path=Path(plan))
 
@@ -163,7 +165,7 @@ class Envoy:
         col.set_available_devices(cuda=self.cuda_devices)
         col.run()
 
-    def start(self):
+    def start(self) -> None:
         """Start the envoy."""
         try:
             is_accepted = self.director_client.report_shard_info(

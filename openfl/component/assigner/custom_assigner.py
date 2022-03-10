@@ -2,11 +2,15 @@
 # SPDX-License-Identifier: Apache-2.0
 """Custom Assigner module."""
 
-
 import logging
 from collections import defaultdict
+from typing import Any
+from typing import Callable
+from typing import Dict
+from typing import List
 
 from openfl.component.aggregation_functions import WeightedAverage
+from openfl.component.aggregation_functions.core import AggregationFunction
 
 logger = logging.getLogger(__name__)
 
@@ -17,11 +21,11 @@ class Assigner:
     def __init__(
             self,
             *,
-            assigner_function,
-            aggregation_functions_by_task,
-            authorized_cols,
-            rounds_to_train
-    ):
+            assigner_function: Callable[[object, int, int], object],
+            aggregation_functions_by_task: Dict[str, AggregationFunction],
+            authorized_cols: List,
+            rounds_to_train: int
+    ) -> None:
         """Initialize."""
         self.agg_functions_by_task = aggregation_functions_by_task
         self.agg_functions_by_task_name = {}
@@ -34,7 +38,7 @@ class Assigner:
 
         self.define_task_assignments()
 
-    def define_task_assignments(self):
+    def define_task_assignments(self) -> None:
         """Abstract method."""
         for round_number in range(self.rounds_to_train):
             tasks_by_collaborator = self.assigner_function(
@@ -52,15 +56,17 @@ class Assigner:
                             task.name
                         ] = self.agg_functions_by_task.get(task.function_name, WeightedAverage())
 
-    def get_tasks_for_collaborator(self, collaborator_name, round_number):
+    def get_tasks_for_collaborator(self, collaborator_name: str,
+                                   round_number: int) -> List[Any]:
         """Abstract method."""
         return self.collaborator_tasks[round_number][collaborator_name]
 
-    def get_collaborators_for_task(self, task_name, round_number):
+    def get_collaborators_for_task(self, task_name: str,
+                                   round_number: int) -> List[Any]:
         """Abstract method."""
         return self.collaborators_for_task[round_number][task_name]
 
-    def get_all_tasks_for_round(self, round_number):
+    def get_all_tasks_for_round(self, round_number: int) -> List:
         """
         Return tasks for the current round.
 
@@ -69,7 +75,7 @@ class Assigner:
         """
         return [task.name for task in self.all_tasks_for_round[round_number].values()]
 
-    def get_aggregation_type_for_task(self, task_name):
+    def get_aggregation_type_for_task(self, task_name: str) -> AggregationFunction:
         """Extract aggregation type from self.tasks."""
         agg_fn = self.agg_functions_by_task_name.get(task_name, WeightedAverage())
         return agg_fn

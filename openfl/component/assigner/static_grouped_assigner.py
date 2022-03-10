@@ -2,6 +2,8 @@
 # SPDX-License-Identifier: Apache-2.0
 
 """Static grouped assigner module."""
+from typing import Dict
+from typing import List
 
 from .assigner import Assigner
 
@@ -32,12 +34,12 @@ class StaticGroupedAssigner(Assigner):
         \* - Plan setting.
     """
 
-    def __init__(self, task_groups, **kwargs):
+    def __init__(self, task_groups: List[object], **kwargs) -> None:
         """Initialize."""
         self.task_groups = task_groups
         super().__init__(**kwargs)
 
-    def define_task_assignments(self):
+    def define_task_assignments(self) -> None:
         """All of the logic to set up the map of tasks to collaborators is done here."""
         cols_amount = sum([
             len(group['collaborators']) for group in self.task_groups
@@ -85,10 +87,10 @@ class StaticGroupedAssigner(Assigner):
                     # that task
                     self.collaborators_for_task[task][round_] += group_col_list
 
-    def get_tasks_for_collaborator(self, collaborator_name, round_number):
+    def get_tasks_for_collaborator(self, collaborator_name: str, round_number: int) -> Dict:
         """Get tasks for the collaborator specified."""
         return self.collaborator_tasks[collaborator_name][round_number]
 
-    def get_collaborators_for_task(self, task_name, round_number):
+    def get_collaborators_for_task(self, task_name: str, round_number: int) -> Dict:
         """Get collaborators for the task specified."""
         return self.collaborators_for_task[task_name][round_number]

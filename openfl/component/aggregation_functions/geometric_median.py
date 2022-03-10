@@ -2,6 +2,8 @@
 # SPDX-License-Identifier: Apache-2.0
 
 """Geometric median module."""
+from typing import Any
+from typing import List
 
 import numpy as np
 
@@ -9,12 +11,14 @@ from .core import AggregationFunction
 from .weighted_average import weighted_average
 
 
-def _geometric_median_objective(median, tensors, weights):
+def _geometric_median_objective(median: np.ndarray, tensors: np.ndarray,
+                                weights: np.ndarray) -> np.ndarray:
     """Compute geometric median objective."""
     return sum([w * _l2dist(median, x) for w, x in zip(weights, tensors)])
 
 
-def geometric_median(tensors, weights, maxiter=4, eps=1e-5, ftol=1e-6):
+def geometric_median(tensors: np.ndarray, weights: np.ndarray, maxiter: int = 4,
+                     eps: float = 1e-5, ftol: float = 1e-6) -> np.ndarray:
     """Compute geometric median of tensors with weights using Weiszfeld's Algorithm."""
     weights = np.asarray(weights) / sum(weights)
     median = weighted_average(tensors, weights)
@@ -34,7 +38,7 @@ def geometric_median(tensors, weights, maxiter=4, eps=1e-5, ftol=1e-6):
     return median
 
 
-def _l2dist(p1, p2):
+def _l2dist(p1: np.ndarray, p2: np.ndarray) -> float:
     """L2 distance between p1, p2, each of which is a list of nd-arrays."""
     if p1.ndim != p2.ndim:
         raise RuntimeError('Tensor shapes should be equal')
@@ -46,7 +50,7 @@ def _l2dist(p1, p2):
 class GeometricMedian(AggregationFunction):
     """Geometric median aggregation."""
 
-    def call(self, local_tensors, *_) -> np.ndarray:
+    def call(self, local_tensors: List, *_: Any) -> np.ndarray:
         """Aggregate tensors.
 
         Args:

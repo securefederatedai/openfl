@@ -7,6 +7,8 @@ import asyncio
 import logging
 from contextlib import asynccontextmanager
 from pathlib import Path
+from typing import Any
+from typing import AsyncGenerator
 from typing import Iterable
 from typing import List
 from typing import Union
@@ -61,7 +63,7 @@ class Experiment:
             root_certificate: Union[Path, str] = None,
             private_key: Union[Path, str] = None,
             certificate: Union[Path, str] = None,
-    ):
+    ) -> None:
         """Run experiment."""
         self.status = Status.IN_PROGRESS
         try:
@@ -167,7 +169,7 @@ class ExperimentsRegistry:
         """Get experiment by name."""
         return self.__dict[key]
 
-    def get(self, key: str, default=None) -> Experiment:
+    def get(self, key: str, default: Any = None) -> Experiment:
         """Get experiment by name."""
         return self.__dict.get(key, default)
 
@@ -189,7 +191,7 @@ class ExperimentsRegistry:
         self.__active_experiment_name = None
 
     @asynccontextmanager
-    async def get_next_experiment(self):
+    async def get_next_experiment(self) -> AsyncGenerator[Experiment, Any]:
         """Context manager.
 
         On enter get experiment from pending_experiments.

@@ -3,9 +3,12 @@
 
 """Adaptive aggregation module."""
 
+from typing import Iterable
 from typing import List
+from typing import Tuple
 
 import numpy as np
+import pandas as pd
 
 from openfl.utilities.optimizers.numpy.base_optimizer import Optimizer
 from openfl.utilities.types import LocalTensor
@@ -44,11 +47,11 @@ class AdaptiveAggregation(AggregationFunction):
 
     def call(
         self,
-        local_tensors,
-        db_iterator,
-        tensor_name,
-        fl_round,
-        tags
+        local_tensors: List,
+        db_iterator: Iterable[pd.Series],
+        tensor_name: str,
+        fl_round: int,
+        tags: Tuple[str]
     ) -> np.ndarray:
         """Aggregate tensors.
 

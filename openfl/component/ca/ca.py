@@ -15,6 +15,10 @@ import urllib.request
 from logging import getLogger
 from pathlib import Path
 from subprocess import call
+from typing import NoReturn
+from typing import Optional
+from typing import Tuple
+from typing import Union
 
 import requests
 from click import confirm
@@ -28,7 +32,7 @@ CA_PASSWORD_FILE = Path('pass_file')
 CA_CONFIG_JSON = Path('config/ca.json')
 
 
-def get_system_and_architecture():
+def get_system_and_architecture() -> Tuple[str, str]:
     """Get system and architecture of machine."""
     uname_res = platform.uname()
     system = uname_res.system.lower()
@@ -48,7 +52,8 @@ def get_system_and_architecture():
     return system, architecture
 
 
-def download_step_bin(url, grep_name, architecture, prefix='.', confirmation=True):
+def download_step_bin(url: str, grep_name: str, architecture: str,
+                      prefix: Union[str, Path] = '.', confirmation: bool = True) -> None:
     """
     Donwload step binaries from github.
 
@@ -84,7 +89,8 @@ def download_step_bin(url, grep_name, architecture, prefix='.', confirmation=Tru
     shutil.unpack_archive(f'{prefix}/{name}', f'{prefix}/step')
 
 
-def get_token(name, ca_url, ca_path='.'):
+def get_token(name: str, ca_url: str,
+              ca_path: Union[Path, str] = '.') -> Union[str, None, NoReturn]:
     """
     Create authentication token.
 
@@ -126,7 +132,7 @@ def get_token(name, ca_url, ca_path='.'):
     ])
 
 
-def get_ca_bin_paths(ca_path):
+def get_ca_bin_paths(ca_path: Path) -> Tuple[Optional[Path], Optional[Path]]:
     """Get paths of step binaries."""
     ca_path = Path(ca_path)
     step = None
@@ -141,7 +147,8 @@ def get_ca_bin_paths(ca_path):
     return step, step_ca
 
 
-def certify(name, cert_path: Path, token_with_cert, ca_path: Path):
+def certify(name: str, cert_path: Path, token_with_cert: str,
+            ca_path: Path) -> Union[None, NoReturn]:
     """Create an envoy workspace."""
     os.makedirs(cert_path, exist_ok=True)
 
@@ -164,13 +171,13 @@ def certify(name, cert_path: Path, token_with_cert, ca_path: Path):
          f'{cert_path}/{name}.key --kty EC --curve P-384 -f --token {token}', shell=True)
 
 
-def remove_ca(ca_path):
+def remove_ca(ca_path: str) -> None:
     """Kill step-ca process and rm ca directory."""
     _check_kill_process('step-ca')
     shutil.rmtree(ca_path, ignore_errors=True)
 
 
-def install(ca_path, ca_url, password):
+def install(ca_path: str, ca_url: str, password: str) -> None:
     """
     Create certificate authority for federation.
 
@@ -202,14 +209,14 @@ def install(ca_path, ca_url, password):
     _configure(step_config_dir)
 
 
-def run_ca(step_ca, pass_file, ca_json):
+def run_ca(step_ca: Optional[Path], pass_file: Path, ca_json: Path) -> None:
     """Run CA server."""
     if _check_kill_process('step-ca', confirmation=True):
         logger.info('Up CA server')
         call(f'{step_ca} --password-file {pass_file} {ca_json}', shell=True)
 
 
-def _check_kill_process(pstring, confirmation=False):
+def _check_kill_process(pstring: str, confirmation: bool = False) -> bool:
     """Kill process by name."""
     pids = []
     proc = subprocess.Popen(f'ps ax | grep {pstring} | grep -v grep',
@@ -229,7 +236,7 @@ def _check_kill_process(pstring, confirmation=False):
     return True
 
 
-def _create_ca(ca_path: Path, ca_url: str, password: str):
+def _create_ca(ca_path: Path, ca_url: str, password: str) -> None:
     """Create a ca workspace."""
     import os
     pki_dir = ca_path / CA_PKI_DIR
@@ -261,7 +268,7 @@ def _create_ca(ca_path: Path, ca_url: str, password: str):
     )
 
 
-def _configure(step_config_dir):
+def _configure(step_config_dir: Path) -> None:
     conf_file = step_config_dir / CA_CONFIG_JSON
     with open(conf_file, 'r+') as f:
         data = json.load(f)

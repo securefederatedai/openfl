@@ -2,6 +2,10 @@
 # SPDX-License-Identifier: Apache-2.0
 """Assigner module."""
 
+from typing import List
+from typing import NoReturn
+from typing import Optional
+
 
 class Assigner:
     r"""
@@ -30,8 +34,8 @@ class Assigner:
         \* - ``tasks`` argument is taken from ``tasks`` section of FL plan YAML file.
     """
 
-    def __init__(self, tasks, authorized_cols,
-                 rounds_to_train, **kwargs):
+    def __init__(self, tasks: List[object], authorized_cols: List[str],
+                 rounds_to_train: int, **kwargs) -> None:
         """Initialize."""
         self.tasks = tasks
         self.authorized_cols = authorized_cols
@@ -44,19 +48,19 @@ class Assigner:
 
         self.define_task_assignments()
 
-    def define_task_assignments(self):
+    def define_task_assignments(self) -> NoReturn:
         """Abstract method."""
         raise NotImplementedError
 
-    def get_tasks_for_collaborator(self, collaborator_name, round_number):
+    def get_tasks_for_collaborator(self, collaborator_name: str, round_number: int) -> NoReturn:
         """Abstract method."""
         raise NotImplementedError
 
-    def get_collaborators_for_task(self, task_name, round_number):
+    def get_collaborators_for_task(self, task_name: str, round_number: int) -> NoReturn:
         """Abstract method."""
         raise NotImplementedError
 
-    def get_all_tasks_for_round(self, round_number):
+    def get_all_tasks_for_round(self, round_number: int) -> List:
         """
         Return tasks for the current round.
 
@@ -65,7 +69,7 @@ class Assigner:
         """
         return self.all_tasks_in_groups
 
-    def get_aggregation_type_for_task(self, task_name):
+    def get_aggregation_type_for_task(self, task_name: str) -> Optional[str]:
         """Extract aggregation type from self.tasks."""
         if 'aggregation_type' not in self.tasks[task_name]:
             return None

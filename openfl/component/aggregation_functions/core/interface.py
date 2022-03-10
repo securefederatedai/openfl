@@ -51,10 +51,10 @@ class AggregationFunction(metaclass=SingletonABCMeta):
         """
         raise NotImplementedError
 
-    def __call__(self, local_tensors,
-                 db_iterator,
-                 tensor_name,
-                 fl_round,
-                 tags):
+    def __call__(self, local_tensors: List,
+                 db_iterator: Iterator[pd.Series],
+                 tensor_name: str,
+                 fl_round: int,
+                 tags: Tuple[str]) -> np.ndarray:
         """Use magic function for ease."""
         return self.call(local_tensors, db_iterator, tensor_name, fl_round, tags)

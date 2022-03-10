@@ -8,8 +8,13 @@ import logging
 import time
 from collections import defaultdict
 from pathlib import Path
+from typing import Any
+from typing import AsyncGenerator
+from typing import Dict
 from typing import Iterable
 from typing import List
+from typing import Optional
+from typing import Tuple
 from typing import Union
 
 from .experiment import Experiment
@@ -85,7 +90,8 @@ class Director:
         self.experiments_registry.add(experiment)
         return True
 
-    def get_trained_model(self, experiment_name: str, caller: str, model_type: str):
+    def get_trained_model(self, experiment_name: str, caller: str,
+                          model_type: str) -> Union[Dict, None]:
         """Get trained model."""
         if (experiment_name not in self.experiments_registry
                 or caller not in self.experiments_registry[experiment_name].users):
@@ -119,7 +125,7 @@ class Director:
 
         return experiment_name
 
-    def get_dataset_info(self):
+    def get_dataset_info(self) -> Tuple[List, List]:
         """Get dataset info."""
         return self.sample_shape, self.target_shape
 
@@ -127,7 +133,8 @@ class Director:
         """Get registered shard infos."""
         return [shard_status['shard_info'] for shard_status in self._shard_registry.values()]
 
-    async def stream_metrics(self, experiment_name: str, caller: str):
+    async def stream_metrics(self, experiment_name: str,
+                             caller: str) -> AsyncGenerator[Optional[Union[Dict, None]], Any]:
         """
         Stream metrics from the aggregator.
 
@@ -167,13 +174,13 @@ class Director:
 
             yield None
 
-    def remove_experiment_data(self, experiment_name: str, caller: str):
+    def remove_experiment_data(self, experiment_name: str, caller: str) -> None:
         """Remove experiment data from stash."""
         if (experiment_name in self.experiments_registry
                 and caller in self.experiments_registry[experiment_name].users):
             self.experiments_registry.remove(experiment_name)
 
-    def set_experiment_failed(self, *, experiment_name: str, collaborator_name: str):
+    def set_experiment_failed(self, *, experiment_name: str, collaborator_name: str) -> None:
         """Set experiment failed."""
         if experiment_name in self.experiments_registry:
             aggregator = self.experiments_registry[experiment_name].aggregator
@@ -183,7 +190,7 @@ class Director:
             self, *,
             envoy_name: str,
             is_experiment_running: bool,
-            cuda_devices_status: list = None,
+            cuda_devices_status: Optional[List] = None,
     ) -> int:
         """Accept health check from envoy."""
         shard_info = self._shard_registry.get(envoy_name)
@@ -265,7 +272,7 @@ class Director:
         }
         return result
 
-    async def start_experiment_execution_loop(self):
+    async def start_experiment_execution_loop(self) -> None:
         """Run task to monitor and run experiments."""
         while True:
             async with self.experiments_registry.get_next_experiment() as experiment:
@@ -282,7 +289,7 @@ class Director:
                 await run_aggregator_future
 
 
-def _get_model_download_statuses(experiment) -> List[dict]:
+def _get_model_download_statuses(experiment: Experiment) -> List[dict]:
     best_model_status = 'ready' if experiment.aggregator.best_tensor_dict else 'pending'
     last_model_status = 'ready' if experiment.aggregator.last_tensor_dict else 'pending'
     model_statuses = [{
@@ -298,19 +305,19 @@ def _get_model_download_statuses(experiment) -> List[dict]:
     return model_statuses
 
 
-def _get_experiment_progress(experiment) -> Union[float, None]:
+def _get_experiment_progress(experiment: Experiment) -> Union[float, None]:
     if experiment.status == Status.IN_PROGRESS:
         return experiment.aggregator.round_number / experiment.aggregator.rounds_to_train
 
 
-def _get_experiment_tasks(experiment) -> List[dict]:
+def _get_experiment_tasks(experiment: Experiment) -> List[dict]:
     return [{
         'name': task['function'],
         'description': 'Task description Mock',
     } for task in experiment.aggregator.assigner.tasks.values()]
 
 
-def _get_experiment_collaborators(experiment) -> List[dict]:
+def _get_experiment_collaborators(experiment: Experiment) -> List[dict]:
     return [{
         'name': name,
         'status': 'pending_mock',

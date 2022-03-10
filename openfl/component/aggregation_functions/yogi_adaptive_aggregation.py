@@ -26,7 +26,7 @@ class YogiAdaptiveAggregation(AdaptiveAggregation):
         *,
         agg_func: AggregationFunction = DEFAULT_AGG_FUNC,
         params: Optional[Dict[str, np.ndarray]] = None,
-        model_interface=None,
+        model_interface: 'ModelInterface' = None, # NOQA
         learning_rate: float = 0.01,
         betas: Tuple[float, float] = (0.9, 0.999),
         initial_accumulator_value: float = 0.0,
@@ -52,5 +52,5 @@ class YogiAdaptiveAggregation(AdaptiveAggregation):
                         learning_rate=learning_rate,
                         betas=betas,
                         initial_accumulator_value=initial_accumulator_value,
-                        epsilo=epsilon)
+                        epsilon=epsilon)
         super().__init__(opt, agg_func)

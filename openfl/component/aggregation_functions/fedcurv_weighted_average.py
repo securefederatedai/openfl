@@ -1,6 +1,9 @@
 # Copyright (C) 2020-2021 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 """FedCurv Aggregation function module."""
+from typing import Any
+from typing import List
+
 import numpy as np
 
 from .weighted_average import WeightedAverage
@@ -16,7 +19,8 @@ class FedCurvWeightedAverage(WeightedAverage):
     FedCurv paper: https://arxiv.org/pdf/1910.07796.pdf
     """
 
-    def call(self, local_tensors, db_iterator, tensor_name, fl_round, tags):
+    def call(self, local_tensors: List, db_iterator: Any,
+             tensor_name: str, fl_round: Any, tags: Any) -> np.ndarray:
         """Apply aggregation."""
         if (
             tensor_name.endswith('_u')

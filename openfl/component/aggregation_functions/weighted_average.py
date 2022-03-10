@@ -2,13 +2,15 @@
 # SPDX-License-Identifier: Apache-2.0
 
 """Federated averaging module."""
+from typing import Any
+from typing import List
 
 import numpy as np
 
 from .core import AggregationFunction
 
 
-def weighted_average(tensors, weights):
+def weighted_average(tensors: np.ndarray, weights: np.ndarray) -> np.ndarray:
     """Compute average."""
     return np.average(tensors, weights=weights, axis=0)
 
@@ -16,7 +18,7 @@ def weighted_average(tensors, weights):
 class WeightedAverage(AggregationFunction):
     """Weighted average aggregation."""
 
-    def call(self, local_tensors, *_) -> np.ndarray:
+    def call(self, local_tensors: List, *_: Any) -> np.ndarray:
         """Aggregate tensors.
 
         Args:

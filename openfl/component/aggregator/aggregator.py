@@ -4,6 +4,15 @@
 """Aggregator module."""
 import queue
 from logging import getLogger
+from typing import Any
+from typing import Dict
+from typing import List
+from typing import NoReturn
+from typing import Optional
+from typing import Tuple
+from typing import Union
+
+from numpy import ndarray
 
 from openfl.component.aggregation_functions import WeightedAverage
 from openfl.databases import TensorDB
@@ -34,22 +43,22 @@ class Aggregator:
 
     def __init__(self,
 
-                 aggregator_uuid,
-                 federation_uuid,
-                 authorized_cols,
+                 aggregator_uuid: str,
+                 federation_uuid: str,
+                 authorized_cols: Union[list, str],
 
-                 init_state_path,
-                 best_state_path,
-                 last_state_path,
+                 init_state_path: str,
+                 best_state_path: str,
+                 last_state_path: str,
 
-                 assigner,
+                 assigner: Any,
 
-                 rounds_to_train=256,
-                 single_col_cert_common_name=None,
-                 compression_pipeline=None,
-                 db_store_rounds=1,
-                 write_logs=False,
-                 **kwargs):
+                 rounds_to_train: int = 256,
+                 single_col_cert_common_name: Optional[str] = None,
+                 compression_pipeline: Any = None,
+                 db_store_rounds: int = 1,
+                 write_logs: bool = False,
+                 **kwargs) -> None:
         """Initialize."""
         self.round_number = 0
         self.single_col_cert_common_name = single_col_cert_common_name
@@ -110,7 +119,7 @@ class Aggregator:
 
         self.collaborator_task_weight = {}  # {TaskResultKey: data_size}
 
-    def _load_initial_tensors(self):
+    def _load_initial_tensors(self) -> None:
         """
         Load all of the tensors required to begin federated learning.
 
@@ -136,7 +145,7 @@ class Aggregator:
         self.tensor_db.cache_tensor(tensor_key_dict)
         self.logger.debug(f'This is the initial tensor_db: {self.tensor_db}')
 
-    def _load_initial_tensors_from_dict(self, tensor_dict):
+    def _load_initial_tensors_from_dict(self, tensor_dict: Dict[str, ndarray]) -> None:
         """
         Load all of the tensors required to begin federated learning.
 
@@ -154,7 +163,7 @@ class Aggregator:
         self.tensor_db.cache_tensor(tensor_key_dict)
         self.logger.debug(f'This is the initial tensor_db: {self.tensor_db}')
 
-    def _save_model(self, round_number, file_path):
+    def _save_model(self, round_number: int, file_path: str) -> None:
         """
         Save the best or latest model.
 
@@ -190,8 +199,8 @@ class Aggregator:
             tensor_dict, round_number, self.compression_pipeline)
         utils.dump_proto(self.model, file_path)
 
-    def valid_collaborator_cn_and_id(self, cert_common_name,
-                                     collaborator_common_name):
+    def valid_collaborator_cn_and_id(self, cert_common_name: str,
+                                     collaborator_common_name: str) -> bool:
         """
         Determine if the collaborator certificate and ID are valid for this federation.
 
@@ -217,12 +226,12 @@ class Aggregator:
             return (cert_common_name == self.single_col_cert_common_name
                     and collaborator_common_name in self.authorized_cols)
 
-    def all_quit_jobs_sent(self):
+    def all_quit_jobs_sent(self) -> bool:
         """Assert all quit jobs are sent to collaborators."""
         return set(self.quit_job_sent_to) == set(self.authorized_cols)
 
     @staticmethod
-    def _get_sleep_time():
+    def _get_sleep_time() -> int:
         """
         Sleep 10 seconds.
 
@@ -232,7 +241,7 @@ class Aggregator:
         # Decrease sleep period for finer discretezation
         return 10
 
-    def _time_to_quit(self):
+    def _time_to_quit(self) -> bool:
         """
         If all rounds are complete, it's time to quit.
 
@@ -243,7 +252,8 @@ class Aggregator:
             return True
         return False
 
-    def get_tasks(self, collaborator_name):
+    def get_tasks(self,
+                  collaborator_name: str) -> Tuple[Optional[List[str]], Optional[int], int, bool]:
         """
         RPC called by a collaborator to determine which tasks to perform.
 
@@ -313,8 +323,9 @@ class Aggregator:
 
         return tasks, self.round_number, sleep_time, time_to_quit
 
-    def get_aggregated_tensor(self, collaborator_name, tensor_name,
-                              round_number, report, tags, require_lossless):
+    def get_aggregated_tensor(self, collaborator_name: str, tensor_name: str,
+                              round_number: int, report: bool, tags: List[str],
+                              require_lossless: bool) -> Any:
         """
         RPC called by collaborator.
 
@@ -380,8 +391,9 @@ class Aggregator:
 
         return named_tensor
 
-    def _nparray_to_named_tensor(self, tensor_key, nparray, send_model_deltas,
-                                 compress_lossless):
+    def _nparray_to_named_tensor(self, tensor_key: TensorKey, nparray: ndarray,
+                                 send_model_deltas: bool,
+                                 compress_lossless: bool) -> Any:
         """
         Construct the NamedTensor Protobuf.
 
@@ -436,7 +448,8 @@ class Aggregator:
 
         return named_tensor
 
-    def _collaborator_task_completed(self, collaborator, task_name, round_num):
+    def _collaborator_task_completed(self, collaborator: str, task_name: str,
+                                     round_num: int) -> bool:
         """
         Check if the collaborator has completed the task for the round.
 
@@ -458,8 +471,8 @@ class Aggregator:
         task_key = TaskResultKey(task_name, collaborator, round_num)
         return task_key in self.collaborator_tasks_results
 
-    def send_local_task_results(self, collaborator_name, round_number, task_name,
-                                data_size, named_tensors):
+    def send_local_task_results(self, collaborator_name: str, round_number: int, task_name: str,
+                                data_size: int, named_tensors: Any) -> None:
         """
         RPC called by collaborator.
 
@@ -537,7 +550,8 @@ class Aggregator:
 
         self._end_of_task_check(task_name)
 
-    def _process_named_tensor(self, named_tensor, collaborator_name):
+    def _process_named_tensor(self, named_tensor: Any,
+                              collaborator_name: str) -> Union[Tuple[Tuple, ndarray], NoReturn]:
         """
         Extract the named tensor fields.
 
@@ -631,7 +645,7 @@ class Aggregator:
 
         return final_tensor_key, final_nparray
 
-    def _end_of_task_check(self, task_name):
+    def _end_of_task_check(self, task_name: str) -> bool:
         """
         Check whether all collaborators who are supposed to perform the task complete.
 
@@ -647,7 +661,9 @@ class Aggregator:
             # now check for the end of the round
             self._end_of_round_check()
 
-    def _prepare_trained(self, tensor_name, origin, round_number, report, agg_results):
+    def _prepare_trained(self, tensor_name: str, origin: Any,
+                         round_number: int, report: bool,
+                         agg_results: ndarray) -> None:
         """
         Prepare aggregated tensorkey tags.
 
@@ -743,7 +759,7 @@ class Aggregator:
         # Finally, cache the updated model tensor
         self.tensor_db.cache_tensor({final_model_tk: new_model_nparray})
 
-    def _compute_validation_related_task_metrics(self, task_name):
+    def _compute_validation_related_task_metrics(self, task_name: str) -> Union[None, NoReturn]:
         """
         Compute all validation related metrics.
 
@@ -825,7 +841,7 @@ class Aggregator:
             if 'trained' in tags:
                 self._prepare_trained(tensor_name, origin, round_number, report, agg_results)
 
-    def _end_of_round_check(self):
+    def _end_of_round_check(self) -> None:
         """
         Check if the round complete.
 
@@ -863,7 +879,7 @@ class Aggregator:
         # Cleaning tensor db
         self.tensor_db.clean_up(self.db_store_rounds)
 
-    def _is_task_done(self, task_name):
+    def _is_task_done(self, task_name: str) -> bool:
         """Check that task is done."""
         collaborators_needed = self.assigner.get_collaborators_for_task(
             task_name, self.round_number
@@ -875,13 +891,13 @@ class Aggregator:
             ) for c in collaborators_needed
         ])
 
-    def _is_round_done(self):
+    def _is_round_done(self) -> bool:
         """Check that round is done."""
         tasks_for_round = self.assigner.get_all_tasks_for_round(self.round_number)
 
         return all([self._is_task_done(task_name) for task_name in tasks_for_round])
 
-    def _log_big_warning(self):
+    def _log_big_warning(self) -> None:
         """Warn user about single collaborator cert mode."""
         self.logger.warning(
             f'\n{the_dragon}\nYOU ARE RUNNING IN SINGLE COLLABORATOR CERT MODE! THIS IS'
