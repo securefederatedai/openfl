@@ -12,11 +12,12 @@ from click import group
 from click import option
 from click import pass_context
 from click import Path as ClickPath
-from yaml import safe_load
+from dynaconf import Validator
 
 from openfl.component.director import Director
 from openfl.interface.cli_helper import WORKSPACE
 from openfl.transport import DirectorGRPCServer
+from openfl.utilities import merge_configs
 from openfl.utilities.path_check import is_directory_traversal
 
 logger = logging.getLogger(__name__)
@@ -50,42 +51,51 @@ def start(director_config_path, tls, root_certificate, private_key, certificate)
     if is_directory_traversal(director_config_path):
         click.echo('The director config file path is out of the openfl workspace scope.')
         sys.exit(1)
-    with open(director_config_path) as stream:
-        director_config = safe_load(stream)
-    settings = director_config.get('settings', {})
-    sample_shape = settings.get('sample_shape', '')
-    target_shape = settings.get('target_shape', '')
-    logger.info(f'Sample shape: {sample_shape}, target shape: {target_shape}')
-    listen_host = settings.get('listen_host')
-    listen_port = settings.get('listen_port')
+    config = merge_configs(
+        settings_files=director_config_path,
+        overwrite_dict={
+            'root_certificate': root_certificate,
+            'private_key': private_key,
+            'certificate': certificate,
+        },
+        validators=[
+            Validator('settings.listen_host', default='localhost'),
+            Validator('settings.listen_port', default=50051, gte=1024, lte=65535),
+            Validator('settings.sample_shape', default=[]),
+            Validator('settings.target_shape', default=[]),
+            Validator('settings.envoy_health_check_period', gte=1, lte=24 * 60 * 60),
+        ],
+        value_transform=[
+            ('settings.sample_shape', lambda x: list(map(str, x))),
+            ('settings.target_shape', lambda x: list(map(str, x))),
+        ],
+    )
 
-    root_certificate = root_certificate or settings.get('root_certificate')
-    if root_certificate:
-        root_certificate = Path(root_certificate).absolute()
+    logger.info(
+        f'Sample shape: {config.settings.sample_shape}, '
+        f'target shape: {config.settings.target_shape}'
+    )
 
-    private_key = private_key or settings.get('private_key')
-    if private_key:
-        private_key = Path(private_key).absolute()
+    if config.root_certificate:
+        config.root_certificate = Path(config.root_certificate).absolute()
 
-    certificate = certificate or settings.get('certificate')
-    if certificate:
-        certificate = Path(certificate).absolute()
+    if config.private_key:
+        config.private_key = Path(config.private_key).absolute()
 
-    kwargs = {}
-    if listen_host:
-        kwargs['listen_host'] = listen_host
-    if listen_port:
-        kwargs['listen_port'] = listen_port
+    if config.certificate:
+        config.certificate = Path(config.certificate).absolute()
+
     director_server = DirectorGRPCServer(
         director_cls=Director,
         tls=tls,
-        sample_shape=sample_shape,
-        target_shape=target_shape,
-        root_certificate=root_certificate,
-        private_key=private_key,
-        certificate=certificate,
-        settings=settings,
-        **kwargs
+        sample_shape=config.settings.sample_shape,
+        target_shape=config.settings.target_shape,
+        root_certificate=config.root_certificate,
+        private_key=config.private_key,
+        certificate=config.certificate,
+        settings=config.settings,
+        listen_host=config.settings.listen_host,
+        listen_port=config.settings.listen_port,
     )
     director_server.start()
 

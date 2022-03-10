@@ -11,6 +11,7 @@ Machines that will run an Aggregator and Collaborator containers should have the
 - Ubuntu with Linux kernel 5.11+
 - ? SGX drivers, it is built in kernel: `/dev/sgx_enclave`
 - [aesmd service](https://github.com/intel/linux-sgx) (`/var/run/aesmd/aesm.socket`)
+</br>
 This is a short list, see more in [Gramine docs](https://gramine.readthedocs.io/en/latest/devel/building.html).
 
 ## Workflow
@@ -118,7 +119,7 @@ workspace/
     --col_name.key
 ```
 
-To speed up the certification process for one-node test runs, it makes sense to utilize the OpenFL integration test script [make this a link after merge]  openfl/tests/github/test_graminize.sh, that will create required folders and certify an aggregator and two collaborators.
+To speed up the certification process for one-node test runs, it makes sense to utilize the OpenFL [integration test script](https://github.com/intel/openfl/blob/develop/tests/github/test_graminize.sh), that will create required folders and certify an aggregator and two collaborators.
 
 ### **Run the Federation in enclaves**
 #### On the Aggregator machine run:
@@ -182,8 +183,8 @@ Gramine+OpenFL PR brings in `openfl-gramine` folder, that contains the following
  - MANUAL.md - this manual
  - Dockerfile.gamine - the base image Dockerfile for all experiments, it starts from Python3.8 image and installs OpenFL and Gramine packages.
  - Dockerfile.graminized.workspace - this one is for building the final experiment image. It starts from the previous image and imports the experiment archive (executes 'fx workspace import') inside an image. At this stage, we have an experiment workspace and all the requirements installed inside the image. Then it runs a unified Makefile that uses the openfl.manifest.template to prepare required files to run OpenFL under gramine inside an SGX enclave.
- - Makefile - follows regular gramine workflow, please refer to (gramine docs)[] for more info
- - openfl.manifest.template - gramine manifest template, it is the same for all the experiments
+ - Makefile - follows regular gramine app building workflow, please refer to [gramine examples](https://github.com/gramineproject/examples) for details
+ - openfl.manifest.template - universal FL experiment [gramine manifest template](https://gramine.readthedocs.io/en/latest/manifest-syntax.html)
  - start_process.sh - bash script used to start an OpenFL actor in a container.
 
 There is a files access peculiarity that should be kept in mind during debugging and development.

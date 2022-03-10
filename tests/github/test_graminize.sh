@@ -136,4 +136,6 @@ docker logs --follow ${COL1} &
 docker logs --follow ${COL2}
 
 wait
+
+docker stop Aggregator ${COL1} ${COL2}
 # rm -rf ${FED_DIRECTORY}
