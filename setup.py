@@ -14,6 +14,8 @@ class GRPCBuildPyCommand(build_py):
         from subprocess import check_call
         from sys import executable
 
+        check_call([executable, '-m', 'pip', 'install', 'grpcio-tools~=1.34.0'])
+
         check_call([
             executable,
             '-m',
@@ -24,6 +26,7 @@ class GRPCBuildPyCommand(build_py):
             'openfl/protocols/aggregator.proto',
             'openfl/protocols/director.proto'
         ])
+        
         check_call([
             executable,
             '-m',
@@ -109,7 +112,6 @@ setup(
         'tensorboardX',
         'tqdm',
     ],
-    setup_requires=['grpcio-tools~=1.34.0'],
     python_requires='>=3.6, <3.9',
     project_urls={
         'Bug Tracker': 'https://github.com/intel/openfl/issues',
