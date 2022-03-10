@@ -9,7 +9,7 @@ import random
 from PIL import Image
 
 
-class ResizeRandomCropping(object):
+class ResizeRandomCropping:
     """
     With a probability, first increase image size to (1 + 1/8), and then perform random crop.
 
@@ -49,7 +49,7 @@ class ResizeRandomCropping(object):
         return cropped_img
 
 
-class RandomErasing(object):
+class RandomErasing:
     """
     Randomly selects a rectangle region in an image and erases its pixels.
 

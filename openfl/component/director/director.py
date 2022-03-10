@@ -9,11 +9,12 @@ import time
 from collections import defaultdict
 from pathlib import Path
 from typing import Iterable
+from typing import List
 from typing import Union
 
-from openfl.protocols import director_pb2
 from .experiment import Experiment
 from .experiment import ExperimentsRegistry
+from .experiment import Status
 
 logger = logging.getLogger(__name__)
 
@@ -24,8 +25,7 @@ class Director:
     """Director class."""
 
     def __init__(
-            self,
-            *,
+            self, *,
             tls: bool = True,
             root_certificate: Union[Path, str] = None,
             private_key: Union[Path, str] = None,
@@ -44,26 +44,29 @@ class Director:
         self.experiments_registry = ExperimentsRegistry()
         self.settings = settings or {}
         self.col_exp_queues = defaultdict(asyncio.Queue)
+        self.col_exp = {}
 
-    def acknowledge_shard(self, shard_info: director_pb2.ShardInfo) -> bool:
+    def acknowledge_shard(self, shard_info: dict) -> bool:
         """Save shard info to shard registry if it's acceptable."""
         is_accepted = False
-        if (self.sample_shape != shard_info.sample_shape
-                or self.target_shape != shard_info.target_shape):
+        if (self.sample_shape != shard_info['sample_shape']
+                or self.target_shape != shard_info['target_shape']):
             logger.info('Request was not accepted')
             return is_accepted
         logger.info('Request was accepted')
-        self._shard_registry[shard_info.node_info.name] = {
+        hc_period = self.settings.get('envoy_health_check_period', ENVOY_HEALTH_CHECK_PERIOD)
+        self._shard_registry[shard_info['node_info']['name']] = {
             'shard_info': shard_info,
             'is_online': True,
-            'is_experiment_running': False
+            'is_experiment_running': False,
+            'valid_duration': 2 * hc_period,
+            'last_updated': time.time(),
         }
         is_accepted = True
         return is_accepted
 
     async def set_new_experiment(
-            self,
-            *,
+            self, *,
             experiment_name: str,
             sender_name: str,
             tensor_dict: dict,
@@ -109,15 +112,18 @@ class Director:
 
     async def wait_experiment(self, envoy_name: str) -> str:
         """Wait an experiment."""
+        self.col_exp[envoy_name] = None
         queue = self.col_exp_queues[envoy_name]
         experiment_name = await queue.get()
+        self.col_exp[envoy_name] = experiment_name
+
         return experiment_name
 
     def get_dataset_info(self):
         """Get dataset info."""
         return self.sample_shape, self.target_shape
 
-    def get_registered_shards(self) -> list:
+    def get_registered_shards(self) -> list:  # Why is it here?
         """Get registered shard infos."""
         return [shard_status['shard_info'] for shard_status in self._shard_registry.values()]
 
@@ -167,13 +173,22 @@ class Director:
                 and caller in self.experiments_registry[experiment_name].users):
             self.experiments_registry.remove(experiment_name)
 
-    def collaborator_health_check(
-            self, *, collaborator_name: str, is_experiment_running: bool
+    def set_experiment_failed(self, *, experiment_name: str, collaborator_name: str):
+        """Set experiment failed."""
+        if experiment_name in self.experiments_registry:
+            aggregator = self.experiments_registry[experiment_name].aggregator
+            aggregator.stop(failed_collaborator=collaborator_name)
+
+    def update_envoy_status(
+            self, *,
+            envoy_name: str,
+            is_experiment_running: bool,
+            cuda_devices_status: list = None,
     ) -> int:
         """Accept health check from envoy."""
-        shard_info = self._shard_registry.get(collaborator_name)
+        shard_info = self._shard_registry.get(envoy_name)
         if not shard_info:
-            raise Exception(f'Unknown shard {collaborator_name}')
+            raise Exception(f'Unknown shard {envoy_name}')
 
         hc_period = self.settings.get('envoy_health_check_period', ENVOY_HEALTH_CHECK_PERIOD)
         shard_info['is_online']: True
@@ -181,24 +196,74 @@ class Director:
         shard_info['valid_duration'] = 2 * hc_period
         shard_info['last_updated'] = time.time()
 
+        if cuda_devices_status is not None:
+            for i in range(len(cuda_devices_status)):
+                shard_info['shard_info']['node_info']['cuda_devices'][i] = cuda_devices_status[i]
+
         return hc_period
 
     def get_envoys(self) -> list:
         """Get a status information about envoys."""
         logger.info(f'Shard registry: {self._shard_registry}')
-        envoy_infos = []
-        for envoy in self._shard_registry.values():
-            envoy_info = director_pb2.EnvoyInfo(
-                shard_info=envoy['shard_info'],
-                is_online=time.time() < envoy['last_updated'] + envoy['valid_duration'],
-                is_experiment_running=envoy['is_experiment_running']
+        for envoy_info in self._shard_registry.values():
+            envoy_info['is_online'] = (
+                time.time() < envoy_info.get('last_updated', 0)
+                + envoy_info.get('valid_duration', 0)
             )
-            envoy_info.valid_duration.seconds = envoy['valid_duration']
-            envoy_info.last_updated.seconds = int(envoy['last_updated'])
+            envoy_name = envoy_info['shard_info']['node_info']['name']
+            envoy_info['experiment_name'] = self.col_exp[envoy_name]
 
-            envoy_infos.append(envoy_info)
+        return self._shard_registry.values()
 
-        return envoy_infos
+    def get_experiments_list(self, caller: str) -> list:
+        """Get experiments list for specific user."""
+        experiments = self.experiments_registry.get_user_experiments(caller)
+        result = []
+        for exp in experiments:
+            exp_data = {
+                'name': exp.name,
+                'status': exp.status,
+                'collaborators_amount': len(exp.collaborators),
+            }
+            progress = _get_experiment_progress(exp)
+            if progress is not None:
+                exp_data['progress'] = progress
+            if exp.aggregator:
+                tasks_amount = len({
+                    task['function']
+                    for task in exp.aggregator.assigner.tasks.values()
+                })
+                exp_data['tasks_amount'] = tasks_amount
+            result.append(exp_data)
+
+        return result
+
+    def get_experiment_description(self, caller: str, name: str) -> dict:
+        """Get a experiment information by name for specific user."""
+        exp = self.experiments_registry.get(name)
+        if not exp or caller not in exp.users:
+            return {}
+        progress = _get_experiment_progress(exp)
+        model_statuses = _get_model_download_statuses(exp)
+        tasks = _get_experiment_tasks(exp)
+        collaborators = _get_experiment_collaborators(exp)
+        result = {
+            'name': name,
+            'status': exp.status,
+            'current_round': exp.aggregator.round_number,
+            'total_rounds': exp.aggregator.rounds_to_train,
+            'download_statuses': {
+                'models': model_statuses,
+                'logs': [{
+                    'name': 'aggregator',
+                    'status': 'ready'
+                }],
+            },
+            'collaborators': collaborators,
+            'tasks': tasks,
+            'progress': progress
+        }
+        return result
 
     async def start_experiment_execution_loop(self):
         """Run task to monitor and run experiments."""
@@ -215,3 +280,42 @@ class Director:
                     queue = self.col_exp_queues[col_name]
                     await queue.put(experiment.name)
                 await run_aggregator_future
+
+
+def _get_model_download_statuses(experiment) -> List[dict]:
+    best_model_status = 'ready' if experiment.aggregator.best_tensor_dict else 'pending'
+    last_model_status = 'ready' if experiment.aggregator.last_tensor_dict else 'pending'
+    model_statuses = [{
+        'name': 'best',
+        'status': best_model_status,
+    }, {
+        'name': 'last',
+        'status': last_model_status,
+    }, {
+        'name': 'init',
+        'status': 'ready'
+    }]
+    return model_statuses
+
+
+def _get_experiment_progress(experiment) -> Union[float, None]:
+    if experiment.status == Status.IN_PROGRESS:
+        return experiment.aggregator.round_number / experiment.aggregator.rounds_to_train
+
+
+def _get_experiment_tasks(experiment) -> List[dict]:
+    return [{
+        'name': task['function'],
+        'description': 'Task description Mock',
+    } for task in experiment.aggregator.assigner.tasks.values()]
+
+
+def _get_experiment_collaborators(experiment) -> List[dict]:
+    return [{
+        'name': name,
+        'status': 'pending_mock',
+        'progress': 0.0,
+        'round': 0,
+        'current_task': 'Current Task Mock',
+        'next_task': 'Next Task Mock'
+    } for name in experiment.aggregator.authorized_cols]

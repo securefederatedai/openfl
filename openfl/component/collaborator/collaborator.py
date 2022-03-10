@@ -6,6 +6,7 @@
 from enum import Enum
 from logging import getLogger
 from time import sleep
+from typing import Tuple
 
 from openfl.databases import TensorDB
 from openfl.pipelines import NoCompressionPipeline
@@ -14,24 +15,30 @@ from openfl.protocols import utils
 from openfl.utilities import TensorKey
 
 
+class DevicePolicy(Enum):
+    """Device assignment policy."""
+
+    CPU_ONLY = 1
+
+    CUDA_PREFERRED = 2
+
+
 class OptTreatment(Enum):
-    """Optimizer Methods."""
+    """Optimizer Methods.
+
+    - RESET tells each collaborator to reset the optimizer state at the beginning
+    of each round.
+
+    - CONTINUE_LOCAL tells each collaborator to continue with the local optimizer
+    state from the previous round.
+
+    - CONTINUE_GLOBAL tells each collaborator to continue with the federally
+    averaged optimizer state from the previous round.
+    """
 
     RESET = 1
-    '''
-    RESET tells each collaborator to reset the optimizer state at the beginning
-    of each round.
-    '''
     CONTINUE_LOCAL = 2
-    '''
-    CONTINUE_LOCAL tells each collaborator to continue with the local optimizer
-    state from the previous round.
-    '''
     CONTINUE_GLOBAL = 3
-    '''
-    CONTINUE_GLOBAL tells each collaborator to continue with the federally
-    averaged optimizer state from the previous round.
-    '''
 
 
 class Collaborator:
@@ -67,7 +74,8 @@ class Collaborator:
                  client,
                  task_runner,
                  task_config,
-                 opt_treatment=OptTreatment.RESET,
+                 opt_treatment='RESET',
+                 device_assignment_policy='CPU_ONLY',
                  delta_updates=False,
                  compression_pipeline=None,
                  db_store_rounds=1,
@@ -101,10 +109,27 @@ class Collaborator:
         if hasattr(OptTreatment, opt_treatment):
             self.opt_treatment = OptTreatment[opt_treatment]
         else:
-            self.logger.error(f'Unknown opt_treatment: {opt_treatment}.')
+            self.logger.error(f'Unknown opt_treatment: {opt_treatment.name}.')
             raise NotImplementedError(f'Unknown opt_treatment: {opt_treatment}.')
 
+        if hasattr(DevicePolicy, device_assignment_policy):
+            self.device_assignment_policy = DevicePolicy[device_assignment_policy]
+        else:
+            self.logger.error('Unknown device_assignment_policy: '
+                              f'{device_assignment_policy.name}.')
+            raise NotImplementedError(
+                f'Unknown device_assignment_policy: {device_assignment_policy}.'
+            )
+
         self.task_runner.set_optimizer_treatment(self.opt_treatment.name)
+
+    def set_available_devices(self, cuda: Tuple[str] = ()):
+        """
+        Set available CUDA devices.
+
+        Cuda tuple contains string indeces, ('1', '3').
+        """
+        self.cuda_devices = cuda
 
     def run(self):
         """Run the collaborator."""
@@ -159,8 +184,22 @@ class Collaborator:
     def do_task(self, task, round_number):
         """Do the specified task."""
         # map this task to an actual function name and kwargs
-        func_name = self.task_config[task]['function']
-        kwargs = self.task_config[task]['kwargs']
+        if hasattr(self.task_runner, 'TASK_REGISTRY'):
+            func_name = task.function_name
+            task_name = task.name
+            kwargs = {}
+            if task.task_type == 'validate':
+                if task.apply_local:
+                    kwargs['apply'] = 'local'
+                else:
+                    kwargs['apply'] = 'global'
+        else:
+            if isinstance(task, str):
+                task_name = task
+            else:
+                task_name = task.name
+            func_name = self.task_config[task_name]['function']
+            kwargs = self.task_config[task_name]['kwargs']
 
         # this would return a list of what tensors we require as TensorKeys
         required_tensorkeys_relative = self.task_runner.get_required_tensorkeys_for_function(
@@ -196,6 +235,17 @@ class Collaborator:
             # New `Core` TaskRunner contains registry of tasks
             func = self.task_runner.TASK_REGISTRY[func_name]
             self.logger.info('Using Interactive Python API')
+
+            # So far 'kwargs' contained parameters read from the plan
+            # those are parameters that the eperiment owner registered for
+            # the task.
+            # There is another set of parameters that created on the
+            # collaborator side, for instance, local processing unit identifier:s
+            if (self.device_assignment_policy is DevicePolicy.CUDA_PREFERRED
+                    and len(self.cuda_devices) > 0):
+                kwargs['device'] = f'cuda:{self.cuda_devices[0]}'
+            else:
+                kwargs['device'] = 'cpu'
         else:
             # TaskRunner subclassing API
             # Tasks are defined as methods of TaskRunner
@@ -214,7 +264,7 @@ class Collaborator:
 
         # send the results for this tasks; delta and compression will occur in
         # this function
-        self.send_task_results(global_output_tensor_dict, round_number, task)
+        self.send_task_results(global_output_tensor_dict, round_number, task_name)
 
     def get_numpy_dict_for_tensorkeys(self, tensor_keys):
         """Get tensor dictionary for specified tensorkey set."""
@@ -365,7 +415,7 @@ class Collaborator:
                 self.logger.metric(
                     f'Round {round_number}, collaborator {self.collaborator_name} '
                     f'is sending metric for task {task_name}:'
-                    f' {tensor_name}\t{tensor_dict[tensor]}')
+                    f' {tensor_name}\t{tensor_dict[tensor]:f}')
 
         self.client.send_local_task_results(
             self.collaborator_name, round_number, task_name, data_size, named_tensors)

@@ -7,11 +7,16 @@ import asyncio
 import logging
 import uuid
 from pathlib import Path
+from typing import Optional
+from typing import Union
 
+from google.protobuf.json_format import MessageToDict
+from google.protobuf.json_format import ParseDict
 from grpc import aio
 from grpc import ssl_server_credentials
 
 from openfl.pipelines import NoCompressionPipeline
+from openfl.protocols import base_pb2
 from openfl.protocols import director_pb2
 from openfl.protocols import director_pb2_grpc
 from openfl.protocols.utils import construct_model_proto
@@ -23,12 +28,20 @@ logger = logging.getLogger(__name__)
 CLIENT_ID_DEFAULT = '__default__'
 
 
-class DirectorGRPCServer(director_pb2_grpc.FederationDirectorServicer):
+class DirectorGRPCServer(director_pb2_grpc.DirectorServicer):
     """Director transport class."""
 
-    def __init__(self, *, director_cls, tls: bool = True,
-                 root_certificate: str = None, private_key: str = None, certificate: str = None,
-                 listen_host='[::]', listen_port=50051, **kwargs) -> None:
+    def __init__(
+            self, *,
+            director_cls,
+            tls: bool = True,
+            root_certificate: Optional[Union[Path, str]] = None,
+            private_key: Optional[Union[Path, str]] = None,
+            certificate: Optional[Union[Path, str]] = None,
+            listen_host: str = '[::]',
+            listen_port: int = 50051,
+            **kwargs,
+    ) -> None:
         """Initialize a director object."""
         # TODO: add working directory
         super().__init__()
@@ -81,7 +94,7 @@ class DirectorGRPCServer(director_pb2_grpc.FederationDirectorServicer):
         channel_opt = [('grpc.max_send_message_length', 512 * 1024 * 1024),
                        ('grpc.max_receive_message_length', 512 * 1024 * 1024)]
         self.server = aio.server(options=channel_opt)
-        director_pb2_grpc.add_FederationDirectorServicer_to_server(self, self.server)
+        director_pb2_grpc.add_DirectorServicer_to_server(self, self.server)
 
         if not self.tls:
             self.server.add_insecure_port(self.listen_uri)
@@ -102,11 +115,15 @@ class DirectorGRPCServer(director_pb2_grpc.FederationDirectorServicer):
         await self.server.start()
         await self.server.wait_for_termination()
 
-    async def AcknowledgeShard(self, shard_info, context):  # NOQA:N802
+    async def UpdateShardInfo(self, request, context):  # NOQA:N802
         """Receive acknowledge shard info."""
-        logger.info(f'AcknowledgeShard request has got: {shard_info}')
-        is_accepted = self.director.acknowledge_shard(shard_info)
-        reply = director_pb2.ShardAcknowledgement(accepted=is_accepted)
+        logger.info(f'UpdateShardInfo request has got: {request.shard_info}')
+        dict_shard_info = MessageToDict(
+            request.shard_info,
+            preserving_proto_field_name=True
+        )
+        is_accepted = self.director.acknowledge_shard(dict_shard_info)
+        reply = director_pb2.UpdateShardInfoResponse(accepted=is_accepted)
 
         return reply
 
@@ -195,15 +212,16 @@ class DirectorGRPCServer(director_pb2_grpc.FederationDirectorServicer):
         logger.info('Request GetDatasetInfo has got!')
 
         sample_shape, target_shape = self.director.get_dataset_info()
-        resp = director_pb2.ShardInfo(
+        shard_info = director_pb2.ShardInfo(
             sample_shape=sample_shape,
             target_shape=target_shape
         )
+        resp = director_pb2.GetDatasetInfoResponse(shard_info=shard_info)
         return resp
 
-    async def StreamMetrics(self, request, context):  # NOQA:N802
+    async def GetMetricStream(self, request, context):  # NOQA:N802
         """Request to stream metrics from the aggregator to frontend."""
-        logger.info(f'Request StreamMetrics for {request.experiment_name} experiment has got!')
+        logger.info(f'Request GetMetricStream for {request.experiment_name} experiment has got!')
 
         caller = self.get_caller(context)
         async for metric_dict in self.director.stream_metrics(
@@ -212,7 +230,7 @@ class DirectorGRPCServer(director_pb2_grpc.FederationDirectorServicer):
             if metric_dict is None:
                 await asyncio.sleep(1)
                 continue
-            yield director_pb2.StreamMetricsResponse(**metric_dict)
+            yield director_pb2.GetMetricStreamResponse(**metric_dict)
 
     async def RemoveExperimentData(self, request, context):  # NOQA:N802
         """Remove experiment data RPC."""
@@ -226,14 +244,34 @@ class DirectorGRPCServer(director_pb2_grpc.FederationDirectorServicer):
         response.acknowledgement = True
         return response
 
-    async def CollaboratorHealthCheck(self, request, context):  # NOQA:N802
-        """Accept health check from envoy."""
-        logger.debug(f'Request CollaboratorHealthCheck has got: {request}')
-        health_check_period = self.director.collaborator_health_check(
-            collaborator_name=request.name,
-            is_experiment_running=request.is_experiment_running,
+    async def SetExperimentFailed(self, request, context):  # NOQA:N802
+        """Set the experiment failed."""
+        response = director_pb2.SetExperimentFailedResponse()
+        if self.get_caller(context) != CLIENT_ID_DEFAULT:
+            return response
+        logger.error(f'Collaborator {request.collaborator_name} was failed with error code:'
+                     f' {request.error_code}, error_description: {request.error_description}'
+                     f'Stopping experiment.')
+        self.director.set_experiment_failed(
+            experiment_name=request.experiment_name,
+            collaborator_name=request.collaborator_name
         )
-        resp = director_pb2.CollaboratorHealthCheckResponse()
+
+        return response
+
+    async def UpdateEnvoyStatus(self, request, context):  # NOQA:N802
+        """Accept health check from envoy."""
+        logger.debug(f'Request UpdateEnvoyStatus has got: {request}')
+        cuda_devices_info = [
+            MessageToDict(message, preserving_proto_field_name=True)
+            for message in request.cuda_devices
+        ]
+        health_check_period = self.director.update_envoy_status(
+            envoy_name=request.name,
+            is_experiment_running=request.is_experiment_running,
+            cuda_devices_status=cuda_devices_info
+        )
+        resp = director_pb2.UpdateEnvoyStatusResponse()
         resp.health_check_period.seconds = health_check_period
 
         return resp
@@ -241,5 +279,83 @@ class DirectorGRPCServer(director_pb2_grpc.FederationDirectorServicer):
     async def GetEnvoys(self, request, context):  # NOQA:N802
         """Get a status information about envoys."""
         envoy_infos = self.director.get_envoys()
+        envoy_statuses = []
+        for envoy_info in envoy_infos:
+            envoy_info_message = director_pb2.EnvoyInfo(
+                shard_info=ParseDict(
+                    envoy_info['shard_info'], director_pb2.ShardInfo(),
+                    ignore_unknown_fields=True),
+                is_online=envoy_info['is_online'],
+                is_experiment_running=envoy_info['is_experiment_running'])
+            envoy_info_message.valid_duration.seconds = envoy_info['valid_duration']
+            envoy_info_message.last_updated.seconds = int(envoy_info['last_updated'])
 
-        return director_pb2.GetEnvoysResponse(envoy_infos=envoy_infos)
+            envoy_statuses.append(envoy_info_message)
+
+        return director_pb2.GetEnvoysResponse(envoy_infos=envoy_statuses)
+
+    async def GetExperimentsList(self, request, context):  # NOQA:N802
+        """Get list of experiments description."""
+        caller = self.get_caller(context)
+        experiments = self.director.get_experiments_list(caller)
+        experiment_list = [
+            director_pb2.ExperimentListItem(**exp)
+            for exp in experiments
+        ]
+        return director_pb2.GetExperimentsListResponse(
+            experiments=experiment_list
+        )
+
+    async def GetExperimentDescription(self, request, context):  # NOQA:N802
+        """Get an experiment description."""
+        caller = self.get_caller(context)
+        experiment = self.director.get_experiment_description(caller, request.name)
+        models_statuses = [
+            base_pb2.DownloadStatus(
+                name=ms['name'],
+                status=ms['status']
+            )
+            for ms in experiment['download_statuses']['models']
+        ]
+        logs_statuses = [
+            base_pb2.DownloadStatus(
+                name=ls['name'],
+                status=ls['status']
+            )
+            for ls in experiment['download_statuses']['logs']
+        ]
+        download_statuses = base_pb2.DownloadStatuses(
+            models=models_statuses,
+            logs=logs_statuses,
+        )
+        collaborators = [
+            base_pb2.CollaboratorDescription(
+                name=col['name'],
+                status=col['status'],
+                progress=col['progress'],
+                round=col['round'],
+                current_task=col['current_task'],
+                next_task=col['next_task']
+            )
+            for col in experiment['collaborators']
+        ]
+        tasks = [
+            base_pb2.TaskDescription(
+                name=task['name'],
+                description=task['description']
+            )
+            for task in experiment['tasks']
+        ]
+
+        return director_pb2.GetExperimentDescriptionResponse(
+            experiment=base_pb2.ExperimentDescription(
+                name=experiment['name'],
+                status=experiment['status'],
+                progress=experiment['progress'],
+                current_round=experiment['current_round'],
+                total_rounds=experiment['total_rounds'],
+                download_statuses=download_statuses,
+                collaborators=collaborators,
+                tasks=tasks,
+            ),
+        )

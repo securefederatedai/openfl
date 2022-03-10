@@ -32,8 +32,8 @@ def test_federation_initialization(federation_object):
 
 def test_dummy_shard_descriptor(federation_object):
     """Test dummy shard descriptor object."""
-    dummy_sd = federation_object.get_dummy_shard_descriptor(10)
-    assert len(dummy_sd) == 10
-    sample, target = dummy_sd[0]
+    dummy_shard_desc = federation_object.get_dummy_shard_descriptor(10)
+    dummy_shard_dataset = dummy_shard_desc.get_dataset('')
+    sample, target = dummy_shard_dataset[0]
     assert sample.shape == SAMPLE_SHAPE
     assert target.shape == TARGET_SHAPE

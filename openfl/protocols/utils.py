@@ -2,10 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 
-from openfl.protocols import DataStream
-from openfl.protocols import MetadataProto
-from openfl.protocols import ModelProto
-from openfl.protocols import NamedTensor
+from openfl.protocols import base_pb2
 from openfl.utilities import TensorKey
 from openfl.utilities import TensorKey
 
@@ -99,7 +96,7 @@ def bytes_and_metadata_to_model_proto(bytes_dict, model_id, model_version,
                 bool_list = metadata.get('bool_list')
             else:
                 bool_list = []
-            metadata_protos.append(MetadataProto(
+            metadata_protos.append(base_pb2.MetadataProto(
                 int_to_float=int_to_float,
                 int_list=int_list,
                 bool_list=bool_list,
@@ -107,7 +104,7 @@ def bytes_and_metadata_to_model_proto(bytes_dict, model_id, model_version,
         tensor_protos.append(TensorProto(name=key,  # NOQA:F821
                                          data_bytes=data_bytes,
                                          transformer_metadata=metadata_protos))
-    return ModelProto(header=model_header, tensors=tensor_protos)
+    return base_pb2.ModelProto(header=model_header, tensors=tensor_protos)
 
 
 def construct_named_tensor(tensor_key, nparray, transformer_metadata, lossless):
@@ -128,7 +125,7 @@ def construct_named_tensor(tensor_key, nparray, transformer_metadata, lossless):
             bool_list = metadata.get('bool_list')
         else:
             bool_list = []
-        metadata_protos.append(MetadataProto(
+        metadata_protos.append(base_pb2.MetadataProto(
             int_to_float=int_to_float,
             int_list=int_list,
             bool_list=bool_list,
@@ -136,7 +133,7 @@ def construct_named_tensor(tensor_key, nparray, transformer_metadata, lossless):
 
     tensor_name, origin, round_number, report, tags = tensor_key
 
-    return NamedTensor(
+    return base_pb2.NamedTensor(
         name=tensor_name,
         round_number=round_number,
         lossless=lossless,
@@ -180,7 +177,7 @@ def construct_model_proto(tensor_dict, round_number, tensor_pipe):
             lossless=True,
         ))
 
-    return ModelProto(tensors=named_tensors)
+    return base_pb2.ModelProto(tensors=named_tensors)
 
 
 def deconstruct_model_proto(model_proto, compression_pipeline):
@@ -232,7 +229,7 @@ def load_proto(fpath):
     """
     with open(fpath, 'rb') as f:
         loaded = f.read()
-        model = ModelProto().FromString(loaded)
+        model = base_pb2.ModelProto().FromString(loaded)
         return model
 
 
@@ -290,7 +287,7 @@ def proto_to_datastream(proto, logger, max_buffer_size=(2 * 1024 * 1024)):
 
     for i in range(0, data_size, buffer_size):
         chunk = npbytes[i: i + buffer_size]
-        reply = DataStream(npbytes=chunk, size=len(chunk))
+        reply = base_pb2.DataStream(npbytes=chunk, size=len(chunk))
         yield reply
 
 

@@ -1,0 +1,76 @@
+loader.preload = "file:{{ gramine.libos }}"
+libos.entrypoint = "/usr/local/bin/python3.8"
+loader.log_level = "{{ log_level }}"
+
+loader.env.LD_LIBRARY_PATH = "{{ python.stdlib }}/lib:/lib:{{ arch_libdir }}:/usr/lib:/usr/{{ arch_libdir }}"
+loader.env.no_proxy = "{{ no_proxy }}"
+loader.env.https_proxy = "{{ https_proxy }}"
+loader.env.http_proxy = "{{ http_proxy }}"
+loader.env.SSL_CERT_DIR = "/etc/ssl/certs"
+
+loader.insecure__use_cmdline_argv = true
+
+sys.enable_sigterm_injection = true
+
+fs.start_dir="/workspace"
+
+
+# .URI - path on host
+# .PATH - pointer inside gramine
+
+fs.mount.lib.type = "chroot"
+fs.mount.lib.path = "/lib"
+fs.mount.lib.uri = "file:{{ gramine.runtimedir() }}"
+
+fs.mount.lib2.type = "chroot"
+fs.mount.lib2.path = "{{ arch_libdir }}"
+fs.mount.lib2.uri = "file:{{ arch_libdir }}"
+
+fs.mount.usr.type = "chroot"
+fs.mount.usr.path = "/usr"
+fs.mount.usr.uri = "file:/usr"
+
+fs.mount.etc.type = "chroot"
+fs.mount.etc.path = "/etc"
+fs.mount.etc.uri = "file:/etc"
+
+fs.mount.workspace.type = "chroot"
+fs.mount.workspace.path = "/workspace"
+fs.mount.workspace.uri = "file:/workspace"
+
+sgx.preheat_enclave = false
+
+# Detected a huge manifest, preallocating 64MB of internal memory.
+# error: Too small `loader.pal_internal_mem_size`, need at least 64MB because the manifest is large
+loader.pal_internal_mem_size = "256M"
+
+sgx.debug = false
+sgx.nonpie_binary = true
+sgx.enclave_size = "16G"
+sys.stack.size = "4M"
+sgx.thread_num = 512
+#sys.brk.max_size = "1M"
+
+sgx.trusted_files = [
+  "file:/usr/local/bin/python3.8",
+  "file:{{ gramine.runtimedir() }}/",
+  "file:{{ arch_libdir }}/",
+  "file:/usr/{{ arch_libdir }}/",
+  "file:/usr/local/lib/python3.8/",
+  "file:/usr/local/lib/libpython3.8.so.1.0",
+  "file:/usr/lib/python3/dist-packages/",
+  "file:/workspace/src/",
+  "file:/workspace/plan/plan.yaml",
+  "file:/usr/local/bin/fx",
+]
+
+sgx.allowed_files = [
+  "file:/tmp",
+  "file:/etc",
+  "file:/workspace/save",
+  "file:/workspace/logs",
+  "file:/workspace/cert",
+  "file:/workspace/data",
+  "file:/workspace/plan/cols.yaml",
+  "file:/workspace/plan/data.yaml",
+]

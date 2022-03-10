@@ -2,36 +2,163 @@
 .. # SPDX-License-Identifier: Apache-2.0
 
 .. _overriding_agg_fn:
-===============================
-Overriding aggregation function
-===============================
 
--------------------------------
-Usage
--------------------------------
-|productName| allows developers to use custom aggregation functions per task.
-In order to do this, you should:
+*****************************
+Override Aggregation Function
+*****************************
+
+With the aggregator-based workflow, you can use custom aggregation functions for each task via Python\*\  API or command line interface.
+
 
 Python API
 ==========
 
-Create an implementation of :class:`openfl.component.aggregation_functions.AggregationFunction`
-and pass it as ``tasks.{task_name}.aggregation_type`` parameter of ``override_config`` keyword argument of :func:`openfl.native.run_experiment` native function.
+1. Create an implementation of :class:`openfl.component.aggregation_functions.core.AggregationFunction`.
 
-CLI
-====
+2. In the ``override_config`` keyword argument of the :func:`openfl.native.run_experiment` native function, pass the implementation as a ``tasks.{task_name}.aggregation_type`` parameter.
 
-Choose from predefined |productName| aggregation functions:
+.. note::
+    See `Federated PyTorch MNIST Tutorial <https://github.com/intel/openfl/blob/develop/openfl-tutorials/Federated_Pytorch_MNIST_custom_aggregation_Tutorial.ipynb>`_ for an example of the custom aggregation function.
+    
+
+Command Line Interface
+======================
+
+Predefined Aggregation Functions
+--------------------------------
+
+Choose from the following predefined aggregation functions:
 
 - ``openfl.component.aggregation_functions.WeightedAverage`` (default)
 - ``openfl.component.aggregation_functions.Median``
 - ``openfl.component.aggregation_functions.GeometricMedian``
-Or create your own implementation of :class:`openfl.component.aggregation_functions.AggregationFunction`.
-After defining the aggregation behavior, you need to include it in ``plan/plan.yaml`` file of your workspace.
-Inside ``tasks`` section pick a task for which you want to change the aggregation
-and insert ``aggregation_type`` section with a single ``template`` key that defines a module path to your class.
+- ``openfl.component.aggregation_functions.AdagradAdaptiveAggregation``
+- ``openfl.component.aggregation_functions.AdamAdaptiveAggregation``
+- ``openfl.component.aggregation_functions.YogiAdaptiveAggregation``
 
-Example of ``plan/plan.yaml`` with modified aggregation function:
+
+.. note::
+    To create adaptive aggregation functions,
+    the user must specify parameters for the aggregation optimizer
+    (``NumPyAdagrad``, ``NumPyAdam`` or ``NumPyYogi``) that will aggregate
+    the global model. Theese parameters parameters are passed via **keywords**.
+
+    Also, user must pass one of the arguments: ``params``
+    - model parameters (a dictionary with named model parameters
+    in the form of numpy arrays), or pass ``model_interface``
+    - an instance of the `ModelInterface <https://github.com/intel/openfl/blob/develop/openfl/interface/interactive_api/experiment.py>`_ class.
+    If user pass both ``params`` and ``model_interface``,
+    then the optimizer parameters are initialized via
+    ``params``, ignoring ``model_interface`` argument.
+
+    See the `AdagradAdaptiveAggregation
+    <https://github.com/intel/openfl/blob/develop/openfl/component/aggregation_functions/adagrad_adaptive_aggregation.py>`_
+    definitions for details.
+
+    `Adaptive federated optimization <https://arxiv.org/pdf/2003.00295.pdf>`_ original paper.
+
+``AdagradAdaptiveAggregation`` usage example:
+
+.. code-block:: python
+
+    from openfl.interface.interactive_api.experiment import TaskInterface, ModelInterface
+    from openfl.component.aggregation_functions import AdagradAdaptiveAggregation
+
+    TI = TaskInterface()
+    MI = ModelInterface(model=model,
+                        optimizer=optimizer,
+                        framework_plugin=framework_adapter)
+    ...
+
+    # Creating aggregation function
+    agg_fn = AdagradAdaptiveAggregation(model_interface=MI,
+                                        learning_rate=0.4)
+
+    # Define training task
+    @TI.register_fl_task(model='model', data_loader='train_loader', \
+                            device='device', optimizer='optimizer')
+    @TI.set_aggregation_function(agg_fn)
+    def train(...):
+    ...
+
+You can define your own numpy based optimizer,
+which will be used for global model aggreagation:
+
+.. code-block:: python
+
+    from openfl.utilities.optimizers.numpy.base_optimizer import Optimizer
+
+    class MyOpt(Optimizer):
+        """My optimizer implementation."""
+
+        def __init__(
+            self,
+            *,
+            params: Optional[Dict[str, np.ndarray]] = None,
+            model_interface=None,
+            learning_rate: float = 0.001,
+            param1: Any = None,
+            param2: Any = None
+        ) -> None:
+            """Initialize.
+
+            Args:
+                params: Parameters to be stored for optimization.
+                model_interface: Model interface instance to provide parameters.
+                learning_rate: Tuning parameter that determines
+                    the step size at each iteration.
+                param1: My own defined parameter.
+                param2: My own defined parameter.
+            """
+            super().__init__()
+            pass # Your code here!
+
+        def step(self, gradients: Dict[str, np.ndarray]) -> None:
+            """
+            Perform a single step for parameter update.
+
+            Implement your own optimizer weights update rule.
+
+            Args:
+                gradients: Partial derivatives with respect to optimized parameters.
+            """
+            pass # Your code here!
+    ...
+
+    from openfl.component.aggregation_functions import WeightedAverage
+    from openfl.component.aggregation_functions.core import AdaptiveAggregation
+
+    # Creating your implemented optimizer instance based on numpy:
+    my_own_optimizer = MyOpt(model_interface=MI, learning_rate=0.01)
+
+    # Creating aggregation function
+    agg_fn = AdaptiveAggregation(optimizer=my_own_optimizer,
+                                 agg_func=WeightedAverage()) # WeightedAverage() is used for aggregating
+                                                             # parameters that are not inside the given optimizer.
+
+    # Define training task
+    @TI.register_fl_task(model='model', data_loader='train_loader', \
+                            device='device', optimizer='optimizer')
+    @TI.set_aggregation_function(agg_fn)
+    def train(...):
+    ...
+
+.. note::
+    If you do not understand how to write your own numpy based optimizer, please see the `NumPyAdagrad <https://github.com/intel/openfl/blob/develop/openfl/utilities/optimizers/numpy/adagrad_optimizer.py>`_ and
+    `AdaptiveAggregation <https://github.com/intel/openfl/blob/develop/openfl/component/aggregation_functions/core/adaptive_aggregation.py>`_ definitions for details.
+
+Custom Aggregation Functions
+----------------------------
+
+You can also create your own implementation of :class:`openfl.component.aggregation_functions.core.AggregationFunction`. See `example <https://github.com/intel/openfl/blob/develop/openfl-tutorials/Federated_Pytorch_MNIST_custom_aggregation_Tutorial.ipynb>`_ for details.
+
+1. Define the behavior of the aggregation.
+
+2. Include the implementation in the **plan.yaml** file in the **plan** directory of your workspace.
+
+3. In the **tasks** section,  pick a task for which you want to change the aggregation and insert ``aggregation_type`` section with a single ``template`` key that defines a module path to your class.
+
+The following is an example of a **plan.yaml** with a modified aggregation function:
   
 .. code-block:: yaml
 
@@ -61,6 +188,7 @@ Example of ``plan/plan.yaml`` with modified aggregation function:
         metrics:
         - loss
 
+
 Interactive API
 ================
 You can override aggregation function that will be used for the task this function corresponds to.
@@ -82,15 +210,17 @@ For example, you can try:
 
 
 ``AggregationFunction`` requires a single ``call`` function.
-This function receives tensors for a single parameter from multiple collaborators with additional metadata (see definition of :meth:`openfl.component.aggregation_functions.AggregationFunction.call`) and returns a single tensor that represents the result of aggregation.
+This function receives tensors for a single parameter from multiple collaborators with additional metadata (see definition of :meth:`openfl.component.aggregation_functions.core.AggregationFunction.call`) and returns a single tensor that represents the result of aggregation.
+
 
 .. note::
-    By default, we use weighted averaging with weights equal to data parts (FedAvg).
+    See the `definition <https://github.com/intel/openfl/blob/develop/openfl/component/aggregation_functions/core/interface.py>`_ of :class:`openfl.component.aggregation_functions.core.AggregationFunction.call` for details.
 
-Example
-=======================
 
-Below is an example of a custom tensor clipping aggregation function that multiplies all local tensors by 0.3 and averages them according to weights equal to data parts to produce the resulting global tensor.
+Example of a Custom Aggregation Function
+========================================
+
+This is an example of a custom tensor clipping aggregation function that multiplies all local tensors by 0.3 and averages them according to weights equal to data parts to produce the resulting global tensor.
 
 .. code-block:: python
 
@@ -153,4 +283,4 @@ Below is an example of a custom tensor clipping aggregation function that multip
 
             return np.average(clipped_tensors, weights=weights, axis=0)
 
-Full implementation can be found at ``openfl-tutorials/Federated_Pytorch_MNIST_custom_aggregation_Tutorial.ipynb``
+A full implementation can be found at `Federated_Pytorch_MNIST_custom_aggregation_Tutorial.ipynb <https://github.com/intel/openfl/blob/develop/openfl-tutorials/Federated_Pytorch_MNIST_custom_aggregation_Tutorial.ipynb>`_

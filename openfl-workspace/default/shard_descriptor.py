@@ -16,6 +16,7 @@ class LocalShardDescriptor(ShardDescriptor):
         """
         Initialize local Shard Descriptor.
 
-        Parameters are arbitrary, set up a shard_config.yaml as you need.
+        Parameters are arbitrary, set up the ShardDescriptor-related part
+        of the envoy_config.yaml as you need.
         """
         super().__init__()

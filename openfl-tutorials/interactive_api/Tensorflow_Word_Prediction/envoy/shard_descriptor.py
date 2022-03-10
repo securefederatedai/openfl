@@ -11,7 +11,25 @@ import gdown
 import numpy as np
 import pandas as pd
 
+from openfl.interface.interactive_api.shard_descriptor import ShardDataset
 from openfl.interface.interactive_api.shard_descriptor import ShardDescriptor
+
+
+class NextWordShardDataset(ShardDataset):
+    """Shard Dataset for text."""
+
+    def __init__(self, X, y):
+        """Initialize NextWordShardDataset."""
+        self.X = X
+        self.y = y
+
+    def __len__(self):
+        """Count number of sequences."""
+        return len(self.X)
+
+    def __getitem__(self, index: int):
+        """Return an item by the index."""
+        return self.X[index], self.y[index]
 
 
 class NextWordShardDescriptor(ShardDescriptor):
@@ -24,17 +42,23 @@ class NextWordShardDescriptor(ShardDescriptor):
         self.title = title
         self.author = author
 
-        self.dataset_dir = self.download_data(title)
-        self.data = self.load_data(self.dataset_dir)  # list of words
-        self.X, self.y = self.get_sequences(self.data)
+        dataset_dir = self.download_data(title)
+        data = self.load_data(dataset_dir)  # list of words
+        self.X, self.y = self.get_sequences(data)
 
-    def __len__(self):
-        """Count number of sequences."""
-        return len(self.X)
-
-    def __getitem__(self, index: int):
-        """Return an item by the index."""
-        return self.X[index], self.y[index]
+    def get_dataset(self, dataset_type='train', train_val_split=0.8):
+        """Return a dataset by type."""
+        train_size = round(len(self.X) * train_val_split)
+        if dataset_type == 'train':
+            X = self.X[:train_size]
+            y = self.y[:train_size]
+        elif dataset_type == 'val':
+            X = self.X[train_size:]
+            y = self.y[train_size:]
+        else:
+            raise Exception(f'Wrong dataset type: {dataset_type}.'
+                            f'Choose from the list: [train, val]')
+        return NextWordShardDataset(X, y)
 
     @property
     def sample_shape(self):

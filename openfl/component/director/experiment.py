@@ -21,10 +21,10 @@ logger = logging.getLogger(__name__)
 class Status:
     """Experiment's statuses."""
 
-    PENDING = 'PENDING'
-    FINISHED = 'FINISHED'
-    IN_PROGRESS = 'IN_PROGRESS'
-    FAILED = 'FAILED'
+    PENDING = 'pending'
+    FINISHED = 'finished'
+    IN_PROGRESS = 'in_progress'
+    FAILED = 'failed'
 
 
 class Experiment:
@@ -83,7 +83,7 @@ class Experiment:
             logger.info(f'Experiment "{self.name}" was finished successfully.')
         except Exception as e:
             self.status = Status.FAILED
-            logger.error(f'Experiment "{self.name}" was failed with error: {e}.')
+            logger.exception(f'Experiment "{self.name}" was failed with error: {e}.')
 
     def _create_aggregator_grpc_server(
             self, *,
@@ -170,6 +170,14 @@ class ExperimentsRegistry:
     def get(self, key: str, default=None) -> Experiment:
         """Get experiment by name."""
         return self.__dict.get(key, default)
+
+    def get_user_experiments(self, user: str) -> List[Experiment]:
+        """Get list of experiments for specific user."""
+        return [
+            exp
+            for exp in self.__dict.values()
+            if user in exp.users
+        ]
 
     def __contains__(self, key: str) -> bool:
         """Check if experiment exists."""

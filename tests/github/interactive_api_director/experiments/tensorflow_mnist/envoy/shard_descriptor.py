@@ -14,7 +14,7 @@ class MNISTShardDescriptor(ShardDescriptor):
     def __init__(self, rank_worldsize: str = '1,1') -> None:
         """Initialize KvasirShardDescriptor."""
         super().__init__()
-        
+
         (x_train, y_train), (x_test, y_test) = keras.datasets.mnist.load_data()
         x_train = np.reshape(x_train, (-1, 784))
         x_test = np.reshape(x_test, (-1, 784))
@@ -28,11 +28,11 @@ class MNISTShardDescriptor(ShardDescriptor):
 
 
         # Calculating data and target shapes
-        sample, target = self[0]
+        sample, _ = self[0]
         self._sample_shape = [str(dim) for dim in sample.shape]
-        self._target_shape = [str(dim) for dim in target.shape]
+        self._target_shape = ['0']
 
-    
+
     def __getitem__(self, index):
         """Return a item by the index."""
         if index < len(self.X_train):

@@ -5,9 +5,12 @@
 
 import logging
 from datetime import datetime
+from typing import List
+from typing import Type
 
 import grpc
 
+from openfl.interface.interactive_api.shard_descriptor import ShardDescriptor
 from openfl.pipelines import NoCompressionPipeline
 from openfl.protocols import director_pb2
 from openfl.protocols import director_pb2_grpc
@@ -49,22 +52,27 @@ class ShardDirectorClient:
                 certificate_chain=certificate_b
             )
             channel = grpc.secure_channel(director_addr, credentials, options=options)
-        self.stub = director_pb2_grpc.FederationDirectorStub(channel)
+        self.stub = director_pb2_grpc.DirectorStub(channel)
 
-    def report_shard_info(self, shard_descriptor) -> bool:
+    def report_shard_info(self, shard_descriptor: Type[ShardDescriptor],
+                          cuda_devices: tuple) -> bool:
         """Report shard info to the director."""
-        logger.info('Send report AcknowledgeShard')
+        logger.info('Send report UpdateShardInfo')
         # True considered as successful registration
         shard_info = director_pb2.ShardInfo(
             shard_description=shard_descriptor.dataset_description,
-            n_samples=len(shard_descriptor),
             sample_shape=shard_descriptor.sample_shape,
             target_shape=shard_descriptor.target_shape
         )
 
-        shard_info.node_info.CopyFrom(self._get_node_info())
+        shard_info.node_info.name = self.shard_name
+        shard_info.node_info.cuda_devices.extend(
+            director_pb2.CudaDeviceInfo(index=cuda_device)
+            for cuda_device in cuda_devices
+        )
 
-        acknowledgement = self.stub.AcknowledgeShard(shard_info)
+        request = director_pb2.UpdateShardInfoRequest(shard_info=shard_info)
+        acknowledgement = self.stub.UpdateShardInfo(request)
         return acknowledgement.accepted
 
     def wait_experiment(self):
@@ -90,23 +98,52 @@ class ShardDirectorClient:
 
         return data_stream
 
+    def set_experiment_failed(
+            self,
+            experiment_name: str,
+            error_code: int = 1,
+            error_description: str = ''
+    ):
+        """Set the experiment failed."""
+        request = director_pb2.SetExperimentFailedRequest(
+            experiment_name=experiment_name,
+            collaborator_name=self.shard_name,
+            error_code=error_code,
+            error_description=error_description
+        )
+        self.stub.SetExperimentFailed(request)
+
     def _get_experiment_data(self):
         """Generate the experiment data request."""
         yield director_pb2.WaitExperimentRequest(collaborator_name=self.shard_name)
 
-    def _get_node_info(self):
-        """Generate a node info message."""
-        return director_pb2.NodeInfo(name=self.shard_name)
-
-    def send_health_check(self, *, collaborator_name: str, is_experiment_running: bool) -> int:
+    def send_health_check(
+            self, *,
+            envoy_name: str,
+            is_experiment_running: bool,
+            cuda_devices_info: List[dict] = None,
+    ) -> int:
         """Send envoy health check."""
-        status = director_pb2.CollaboratorStatus(
-            name=collaborator_name,
+        status = director_pb2.UpdateEnvoyStatusRequest(
+            name=envoy_name,
             is_experiment_running=is_experiment_running,
         )
+
+        cuda_messages = []
+        if cuda_devices_info is not None:
+            try:
+                cuda_messages = [
+                    director_pb2.CudaDeviceInfo(**item)
+                    for item in cuda_devices_info
+                ]
+            except Exception as e:
+                logger.info(f'{e}')
+
+        status.cuda_devices.extend(cuda_messages)
+
         logger.debug(f'Sending health check status: {status}')
 
-        response = self.stub.CollaboratorHealthCheck(status)
+        response = self.stub.UpdateEnvoyStatus(status)
         health_check_period = response.health_check_period.seconds
 
         return health_check_period
@@ -158,7 +195,7 @@ class DirectorClient:
             )
 
             channel = grpc.secure_channel(director_addr, credentials, options=channel_opt)
-        self.stub = director_pb2_grpc.FederationDirectorStub(channel)
+        self.stub = director_pb2_grpc.DirectorStub(channel)
 
     def set_new_experiment(self, name, col_names, arch_path,
                            initial_tensor_dict=None):
@@ -196,7 +233,7 @@ class DirectorClient:
     def get_dataset_info(self):
         """Request the dataset info from the director."""
         resp = self.stub.GetDatasetInfo(director_pb2.GetDatasetInfoRequest())
-        return resp.sample_shape, resp.target_shape
+        return resp.shard_info.sample_shape, resp.shard_info.target_shape
 
     def _get_trained_model(self, experiment_name, model_type):
         """Get trained model RPC."""
@@ -223,8 +260,8 @@ class DirectorClient:
 
     def stream_metrics(self, experiment_name):
         """Stream metrics RPC."""
-        request = director_pb2.StreamMetricsRequest(experiment_name=experiment_name)
-        for metric_message in self.stub.StreamMetrics(request):
+        request = director_pb2.GetMetricStreamRequest(experiment_name=experiment_name)
+        for metric_message in self.stub.GetMetricStream(request):
             yield {
                 'metric_origin': metric_message.metric_origin,
                 'task_name': metric_message.task_name,
@@ -254,6 +291,21 @@ class DirectorClient:
                 'last_updated': datetime.fromtimestamp(
                     envoy.last_updated.seconds).strftime('%Y-%m-%d %H:%M:%S'),
                 'current_time': now,
-                'valid_duration': envoy.valid_duration
+                'valid_duration': envoy.valid_duration,
+                'experiment_name': 'ExperimentName Mock',
             }
         return result
+
+    def get_experiments_list(self):
+        """Get experiments list."""
+        response = self.stub.GetExperimentsList(
+            director_pb2.GetExperimentsListRequest()
+        )
+        return response.experiments
+
+    def get_experiment_description(self, name):
+        """Get experiment info."""
+        response = self.stub.GetExperimentDescription(
+            director_pb2.GetExperimentDescriptionRequest(name=name)
+        )
+        return response.experiment

@@ -8,16 +8,30 @@ from collections import defaultdict
 from copy import deepcopy
 from logging import getLogger
 from pathlib import Path
+from typing import Dict
+from typing import Tuple
 
 from tensorboardX import SummaryWriter
 
 from openfl.component.aggregation_functions import AggregationFunction
 from openfl.component.aggregation_functions import WeightedAverage
+from openfl.component.assigner.tasks import Task
+from openfl.component.assigner.tasks import TrainTask
+from openfl.component.assigner.tasks import ValidateTask
 from openfl.federated import Plan
 from openfl.interface.cli import setup_logging
 from openfl.interface.cli_helper import WORKSPACE
 from openfl.utilities import split_tensor_dict_for_holdouts
-from openfl.utilities.utils import is_package_versioned
+from openfl.utilities.workspace import dump_requirements_file
+
+
+class ModelStatus:
+    """Model statuses."""
+
+    INITIAL = 'initial'
+    BEST = 'best'
+    LAST = 'last'
+    RESTORED = 'restored'
 
 
 class FLExperiment:
@@ -43,13 +57,16 @@ class FLExperiment:
 
         self.experiment_accepted = False
 
+        self.train_task_exist = False
+        self.validation_task_exist = False
+
         self.logger = getLogger(__name__)
         setup_logging()
 
     def _assert_experiment_accepted(self):
         """Assure experiment is sent to director."""
         if not self.experiment_accepted:
-            self.logger.error('The experimnet has not been accepted by director')
+            self.logger.error('The experiment has not been accepted by director')
             self.logger.error(
                 'Report the experiment first: '
                 'use the Experiment.start() method.')
@@ -61,7 +78,7 @@ class FLExperiment:
         tensor_dict = self.federation.dir_client.get_best_model(
             experiment_name=self.experiment_name)
 
-        return self._rebuild_model(tensor_dict)
+        return self._rebuild_model(tensor_dict, upcoming_model_status=ModelStatus.BEST)
 
     def get_last_model(self):
         """Retrieve the aggregated model after the last round."""
@@ -69,21 +86,28 @@ class FLExperiment:
         tensor_dict = self.federation.dir_client.get_last_model(
             experiment_name=self.experiment_name)
 
-        return self._rebuild_model(tensor_dict)
+        return self._rebuild_model(tensor_dict, upcoming_model_status=ModelStatus.LAST)
 
-    def _rebuild_model(self, tensor_dict):
+    def _rebuild_model(self, tensor_dict, upcoming_model_status=ModelStatus.BEST):
         """Use tensor dict to update model weights."""
         if len(tensor_dict) == 0:
-            self.logger.error('No tensors received from director')
-            self.logger.error(
-                'Possible reasons:\n'
-                '1. Aggregated model is not ready \n'
-                '2. Experiment data removed from director'
-            )
+            warning_msg = ('No tensors received from director\n'
+                           'Possible reasons:\n'
+                           '\t1. Aggregated model is not ready\n'
+                           '\t2. Experiment data removed from director')
+
+            if upcoming_model_status == ModelStatus.BEST and not self.validation_task_exist:
+                warning_msg += '\n\t3. No validation tasks are provided'
+
+            warning_msg += f'\nReturn {self.current_model_status} model'
+
+            self.logger.warning(warning_msg)
+
         else:
             self.task_runner_stub.rebuild_model(tensor_dict, validation=True, device='cpu')
+            self.current_model_status = upcoming_model_status
 
-        return self.task_runner_stub.model
+        return deepcopy(self.task_runner_stub.model)
 
     def stream_metrics(self, tensorboard_logs: bool = True) -> None:
         """Stream metrics."""
@@ -93,7 +117,7 @@ class FLExperiment:
                 f'Round {metric_message_dict["round"]}, '
                 f'collaborator {metric_message_dict["metric_origin"]} '
                 f'{metric_message_dict["task_name"]} result '
-                f'{metric_message_dict["metric_name"]}:\t{metric_message_dict["metric_value"]}')
+                f'{metric_message_dict["metric_name"]}:\t{metric_message_dict["metric_value"]:f}')
 
             if tensorboard_logs:
                 self.write_tensorboard_metric(metric_message_dict)
@@ -121,39 +145,72 @@ class FLExperiment:
 
         self.logger.info(log_message)
 
-    def prepare_workspace_distribution(
-            self, model_provider, task_keeper, data_loader,
-            rounds_to_train,
-            delta_updates=False, opt_treatment='RESET'):
+    def prepare_workspace_distribution(self, model_provider, task_keeper, data_loader,
+                                       task_assigner,
+                                       pip_install_options: Tuple[str] = ()):
         """Prepare an archive from a user workspace."""
-        self._prepare_plan(model_provider, task_keeper, data_loader,
-                           rounds_to_train,
-                           delta_updates=delta_updates, opt_treatment=opt_treatment,
-                           model_interface_file='model_obj.pkl',
-                           tasks_interface_file='tasks_obj.pkl',
-                           dataloader_interface_file='loader_obj.pkl')
-
         # Save serialized python objects to disc
-        self._serialize_interface_objects(model_provider, task_keeper, data_loader)
+        self._serialize_interface_objects(model_provider, task_keeper, data_loader, task_assigner)
         # Save the prepared plan
         Plan.dump(Path(f'./plan/{self.plan.name}'), self.plan.config, freeze=False)
 
         # PACK the WORKSPACE!
         # Prepare requirements file to restore python env
-        self._export_python_env()
+        dump_requirements_file(keep_original_prefixes=True,
+                               prefixes=pip_install_options)
 
         # Compress te workspace to restore it on collaborator
         self.arch_path = self._pack_the_workspace()
 
-        # DO CERTIFICATES exchange
-
     def start(self, *, model_provider, task_keeper, data_loader,
-              rounds_to_train, delta_updates=False, opt_treatment='RESET'):
-        """Prepare experiment and run."""
+              rounds_to_train: int,
+              task_assigner=None,
+              delta_updates: bool = False,
+              opt_treatment: str = 'RESET',
+              device_assignment_policy: str = 'CPU_ONLY',
+              pip_install_options: Tuple[str] = ()) -> None:
+        """
+        Prepare workspace distribution and send to Director.
+
+        A successful call of this function will result in sending the experiment workspace
+        to the Director service and experiment start.
+
+        Parameters:
+        model_provider - Model Interface instance.
+        task_keeper - Task Interface instance.
+        data_loader - Data Interface instance.
+        rounds_to_train - required number of training rounds for the experiment.
+        delta_updates - [bool] Tells if collaborators should send delta updates
+            for the locally tuned models. If set to False, whole checkpoints will be sent.
+        opt_treatment - Optimizer state treatment policy.
+            Valid options: 'RESET' - reinitialize optimizer for every round,
+            'CONTINUE_LOCAL' - keep local optimizer state,
+            'CONTINUE_GLOBAL' - aggregate optimizer state.
+        device_assignment_policy - device assignment policy.
+            Valid options: 'CPU_ONLY' - device parameter passed to tasks
+            will always be 'cpu',
+            'CUDA_PREFERRED' - enable passing CUDA device identifiers to tasks
+            by collaborators, works with cuda-device-monitor plugin equipped Envoys.
+        pip_install_options - tuple of options for the remote `pip install` calls,
+            example: ('-f some.website', '--no-index')
+        """
+        if not task_assigner:
+            task_assigner = self.define_task_assigner(task_keeper, rounds_to_train)
+
+        self._prepare_plan(model_provider, data_loader,
+                           rounds_to_train,
+                           delta_updates=delta_updates, opt_treatment=opt_treatment,
+                           device_assignment_policy=device_assignment_policy,
+                           model_interface_file='model_obj.pkl',
+                           tasks_interface_file='tasks_obj.pkl',
+                           dataloader_interface_file='loader_obj.pkl')
+
         self.prepare_workspace_distribution(
             model_provider, task_keeper, data_loader,
-            rounds_to_train, delta_updates=delta_updates, opt_treatment=opt_treatment
+            task_assigner,
+            pip_install_options
         )
+
         self.logger.info('Starting experiment!')
         self.plan.resolve()
         initial_tensor_dict = self._get_initial_tensor_dict(model_provider)
@@ -173,21 +230,51 @@ class FLExperiment:
         else:
             self.logger.info('Experiment was not accepted or failed.')
 
+    def define_task_assigner(self, task_keeper, rounds_to_train):
+        """Define task assigner by registered tasks."""
+        tasks = task_keeper.get_registered_tasks()
+        self.train_task_exist = False
+        self.validation_task_exist = False
+        for task in tasks.values():
+            if task.task_type == 'train':
+                self.train_task_exist = True
+            if task.task_type == 'validate':
+                self.validation_task_exist = True
+
+        if not self.train_task_exist and rounds_to_train != 1:
+            # Since we have only validation tasks, we do not have to train it multiple times
+            raise Exception('Variable rounds_to_train must be equal 1, '
+                            'because only validation tasks were given')
+        if self.train_task_exist and self.validation_task_exist:
+            def assigner(collaborators, round_number, **kwargs):
+                tasks_by_collaborator = {}
+                for collaborator in collaborators:
+                    tasks_by_collaborator[collaborator] = [
+                        tasks['train'],
+                        tasks['locally_tuned_model_validate'],
+                        tasks['aggregated_model_validate'],
+                    ]
+                return tasks_by_collaborator
+            return assigner
+        elif not self.train_task_exist and self.validation_task_exist:
+            def assigner(collaborators, round_number, **kwargs):
+                tasks_by_collaborator = {}
+                for collaborator in collaborators:
+                    tasks_by_collaborator[collaborator] = [
+                        tasks['aggregated_model_validate'],
+                    ]
+                return tasks_by_collaborator
+            return assigner
+        elif self.train_task_exist and not self.validation_task_exist:
+            raise Exception('You should define validate task!')
+        else:
+            raise Exception('You should define train and validate tasks!')
+
     def restore_experiment_state(self, model_provider):
-        """Restore accepted experimnet object."""
+        """Restore accepted experiment object."""
         self.task_runner_stub = self.plan.get_core_task_runner(model_provider=model_provider)
+        self.current_model_status = ModelStatus.RESTORED
         self.experiment_accepted = True
-
-    @staticmethod
-    def _export_python_env():
-        """Prepare requirements.txt."""
-        from pip._internal.operations import freeze
-        requirements_generator = freeze.freeze()
-
-        with open('./requirements.txt', 'w') as f:
-            for pack in requirements_generator:
-                if is_package_versioned(pack):
-                    f.write(pack + '\n')
 
     @staticmethod
     def _pack_the_workspace():
@@ -226,6 +313,7 @@ class FLExperiment:
     def _get_initial_tensor_dict(self, model_provider):
         """Extract initial weights from the model."""
         self.task_runner_stub = self.plan.get_core_task_runner(model_provider=model_provider)
+        self.current_model_status = ModelStatus.INITIAL
         tensor_dict, _ = split_tensor_dict_for_holdouts(
             self.logger,
             self.task_runner_stub.get_tensor_dict(False),
@@ -233,12 +321,14 @@ class FLExperiment:
         )
         return tensor_dict
 
-    def _prepare_plan(self, model_provider, task_keeper, data_loader,
+    def _prepare_plan(self, model_provider, data_loader,
                       rounds_to_train,
-                      delta_updates=False, opt_treatment='RESET',
+                      delta_updates, opt_treatment,
+                      device_assignment_policy,
                       model_interface_file='model_obj.pkl', tasks_interface_file='tasks_obj.pkl',
                       dataloader_interface_file='loader_obj.pkl',
-                      aggregation_function_interface_file='aggregation_function_obj.pkl'):
+                      aggregation_function_interface_file='aggregation_function_obj.pkl',
+                      task_assigner_file='task_assigner_obj.pkl'):
         """Fill plan.yaml file using provided setting."""
         # Create a folder to store plans
         os.makedirs('./plan', exist_ok=True)
@@ -254,6 +344,7 @@ class FLExperiment:
         # We also could change the aggregator logic so it will send tasks to aggregator
         # as soon as it connects. This change should be a part of a bigger PR
         # brining in fault tolerance changes
+
         shard_registry = self.federation.get_shard_registry()
         plan.authorized_cols = [
             name for name, info in shard_registry.items() if info['is_online']
@@ -271,27 +362,12 @@ class FLExperiment:
         # Collaborator part
         plan.config['collaborator']['settings']['delta_updates'] = delta_updates
         plan.config['collaborator']['settings']['opt_treatment'] = opt_treatment
+        plan.config['collaborator']['settings'][
+            'device_assignment_policy'] = device_assignment_policy
 
         # DataLoader part
         for setting, value in data_loader.kwargs.items():
             plan.config['data_loader']['settings'][setting] = value
-
-        # Tasks part
-        for name in task_keeper.task_registry:
-            if task_keeper.task_contract[name]['optimizer'] is not None:
-                # This is training task
-                plan.config['tasks'][name] = {'function': name,
-                                              'kwargs': task_keeper.task_settings[name]}
-            else:
-                # This is a validation type task (not altering the model state)
-                for name_prefix, apply_kwarg in zip(['localy_tuned_model_', 'aggregated_model_'],
-                                                    ['local', 'global']):
-                    # We add two entries for this task: for local and global models
-                    task_kwargs = deepcopy(task_keeper.task_settings[name])
-                    task_kwargs.update({'apply': apply_kwarg})
-                    plan.config['tasks'][name_prefix + name] = {
-                        'function': name,
-                        'kwargs': task_kwargs}
 
         # TaskRunner framework plugin
         # ['required_plugin_components'] should be already in the default plan with all the fields
@@ -309,19 +385,20 @@ class FLExperiment:
                 'model_interface_file': model_interface_file,
                 'tasks_interface_file': tasks_interface_file,
                 'dataloader_interface_file': dataloader_interface_file,
-                'aggregation_function_interface_file': aggregation_function_interface_file
+                'aggregation_function_interface_file': aggregation_function_interface_file,
+                'task_assigner_file': task_assigner_file
             }
         }
 
-        plan.config['assigner']['settings']['task_groups'][0]['tasks'] = [
-            entry
-            for entry in plan.config['tasks']
-            if (type(plan.config['tasks'][entry]) is dict
-                and 'function' in plan.config['tasks'][entry])
-        ]
         self.plan = deepcopy(plan)
 
-    def _serialize_interface_objects(self, model_provider, task_keeper, data_loader):
+    def _serialize_interface_objects(
+            self,
+            model_provider,
+            task_keeper,
+            data_loader,
+            task_assigner
+    ):
         """Save python objects to be restored on collaborators."""
         serializer = self.plan.build(
             self.plan.config['api_layer']['required_plugin_components']['serializer_plugin'], {})
@@ -333,14 +410,15 @@ class FLExperiment:
             'model_interface_file': model_provider,
             'tasks_interface_file': task_keeper,
             'dataloader_interface_file': data_loader,
-            'aggregation_function_interface_file': task_keeper.aggregation_functions
+            'aggregation_function_interface_file': task_keeper.aggregation_functions,
+            'task_assigner_file': task_assigner
         }
 
         for filename, object_ in obj_dict.items():
             serializer.serialize(object_, self.plan.config['api_layer']['settings'][filename])
 
 
-class TaskInterface:
+class TaskKeeper:
     """
     Task keeper class.
 
@@ -363,8 +441,10 @@ class TaskInterface:
         self.task_settings = defaultdict(dict)
         # Mapping 'task name' -> callable
         self.aggregation_functions = defaultdict(WeightedAverage)
+        # Mapping 'task_alias' -> Task
+        self._tasks: Dict[str, Task] = {}
 
-    def register_fl_task(self, model, data_loader, device, optimizer=None):
+    def register_fl_task(self, model, data_loader, device, optimizer=None, round_num=None):
         """
         Register FL tasks.
 
@@ -386,6 +466,7 @@ class TaskInterface:
                 device='device', optimizer='my_Adam_opt')
         def foo_task(my_model, train_loader, my_Adam_opt, device, batch_size, some_arg=356)
             ...
+            return {'metric_name': metric, 'metric_name_2': metric_2,}
         `
         """
         # The highest level wrapper for allowing arguments for the decorator
@@ -398,11 +479,29 @@ class TaskInterface:
                 return metric_dict
 
             # Saving the task and the contract for later serialization
-            self.task_registry[training_method.__name__] = wrapper_decorator
+            function_name = training_method.__name__
+            self.task_registry[function_name] = wrapper_decorator
             contract = {'model': model, 'data_loader': data_loader,
-                        'device': device, 'optimizer': optimizer}
-            self.task_contract[training_method.__name__] = contract
+                        'device': device, 'optimizer': optimizer, 'round_num': round_num}
+            self.task_contract[function_name] = contract
+            # define tasks
+            if optimizer:
+                self._tasks['train'] = TrainTask(
+                    name='train',
+                    function_name=function_name,
+                )
+            else:
+                self._tasks['locally_tuned_model_validate'] = ValidateTask(
+                    name='locally_tuned_model_validate',
+                    function_name=function_name,
+                    apply_local=True,
+                )
+                self._tasks['aggregated_model_validate'] = ValidateTask(
+                    name='aggregated_model_validate',
+                    function_name=function_name,
+                )
             # We do not alter user environment
+
             return training_method
 
         return decorator_with_args
@@ -452,6 +551,14 @@ class TaskInterface:
             self.aggregation_functions[training_method.__name__] = aggregation_function
             return training_method
         return decorator_with_args
+
+    def get_registered_tasks(self) -> Dict[str, Task]:
+        """Return registered tasks."""
+        return self._tasks
+
+
+# Backward compatibility
+TaskInterface = TaskKeeper
 
 
 class ModelInterface:

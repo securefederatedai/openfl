@@ -10,7 +10,7 @@ from openfl.utilities import split_tensor_dict_for_holdouts
 from openfl.utilities import TensorKey
 
 
-class CoreTaskRunner(object):
+class CoreTaskRunner:
     """Federated Learning Task Runner Class."""
 
     def _prepare_tensorkeys_for_agggregation(self, metric_dict, validation_flag,
@@ -117,6 +117,9 @@ class CoreTaskRunner(object):
                     loader = self.data_loader.get_train_loader()
                     # If train task we also pass optimizer
                     task_kwargs[task_contract['optimizer']] = self.optimizer
+
+                if task_contract['round_num'] is not None:
+                    task_kwargs[task_contract['round_num']] = round_num
 
                 for en_name, entity in zip(['model', 'data_loader', 'device'],
                                            [self.model, loader, device]):
