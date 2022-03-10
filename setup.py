@@ -17,7 +17,6 @@ class GRPCBuildPyCommand(build_py):
         """Build Python and GRPC modules."""
         from grpc_tools.command import build_package_protos
 
-        super().run()
         protos_root = 'openfl/protocols'
         build_package_protos(protos_root)
 
@@ -49,6 +48,7 @@ class GRPCBuildPyCommand(build_py):
 
                     with open(path, 'w', encoding='utf-8') as f:
                         f.write(code)
+        super().run()
 
 
 with open('README.md') as f:
