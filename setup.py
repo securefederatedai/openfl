@@ -26,7 +26,7 @@ class GRPCBuildPyCommand(build_py):
             'openfl/protocols/aggregator.proto',
             'openfl/protocols/director.proto'
         ])
-        
+
         check_call([
             executable,
             '-m',
