@@ -19,7 +19,6 @@ class DevicePolicy(Enum):
     """Device assignment policy."""
 
     CPU_ONLY = 1
-
     CUDA_PREFERRED = 2
 
 
@@ -74,8 +73,8 @@ class Collaborator:
                  client,
                  task_runner,
                  task_config,
-                 opt_treatment='RESET',
-                 device_assignment_policy='CPU_ONLY',
+                 opt_treatment=OptTreatment.RESET,
+                 device_assignment_policy=DevicePolicy.CPU_ONLY,
                  delta_updates=False,
                  compression_pipeline=None,
                  db_store_rounds=1,

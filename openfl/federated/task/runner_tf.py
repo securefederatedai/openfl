@@ -7,6 +7,7 @@ import numpy as np
 import tensorflow.compat.v1 as tf
 from tqdm import tqdm
 
+from openfl.component.collaborator.collaborator import OptTreatment
 from openfl.utilities import split_tensor_dict_for_holdouts
 from openfl.utilities import TensorKey
 from .runner import TaskRunner
@@ -74,10 +75,10 @@ class TensorFlowTaskRunner(TaskRunner):
         Returns:
             None
         """
-        if self.opt_treatment == 'RESET':
+        if self.opt_treatment == OptTreatment.RESET:
             self.reset_opt_vars()
             self.set_tensor_dict(input_tensor_dict, with_opt_vars=False)
-        elif (round_num > 0 and self.opt_treatment == 'CONTINUE_GLOBAL'
+        elif (round_num > 0 and self.opt_treatment == OptTreatment.CONTINUE_GLOBAL
               and not validation):
             self.set_tensor_dict(input_tensor_dict, with_opt_vars=True)
         else:
@@ -172,7 +173,7 @@ class TensorFlowTaskRunner(TaskRunner):
         # these are only created after training occurs. A work around could
         # involve doing a single epoch of training on random data to get the
         # optimizer names, and then throwing away the model.
-        if self.opt_treatment == 'CONTINUE_GLOBAL':
+        if self.opt_treatment == OptTreatment.CONTINUE_GLOBAL:
             self.initialize_tensorkeys_for_functions(with_opt_vars=True)
 
         return global_tensor_dict, local_tensor_dict

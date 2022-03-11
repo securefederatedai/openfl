@@ -18,6 +18,8 @@ from openfl.component.aggregation_functions import WeightedAverage
 from openfl.component.assigner.tasks import Task
 from openfl.component.assigner.tasks import TrainTask
 from openfl.component.assigner.tasks import ValidateTask
+from openfl.component.collaborator.collaborator import DevicePolicy
+from openfl.component.collaborator.collaborator import OptTreatment
 from openfl.federated import Plan
 from openfl.interface.cli import setup_logging
 from openfl.interface.cli_helper import WORKSPACE
@@ -104,7 +106,8 @@ class FLExperiment:
             self.logger.warning(warning_msg)
 
         else:
-            self.task_runner_stub.rebuild_model(tensor_dict, validation=True, device='cpu')
+            self.task_runner_stub.rebuild_model(
+                tensor_dict, validation=True, device=DevicePolicy.CPU_ONLY)
             self.current_model_status = upcoming_model_status
 
         return deepcopy(self.task_runner_stub.model)
@@ -166,8 +169,8 @@ class FLExperiment:
               rounds_to_train: int,
               task_assigner=None,
               delta_updates: bool = False,
-              opt_treatment: str = 'RESET',
-              device_assignment_policy: str = 'CPU_ONLY',
+              opt_treatment: str = OptTreatment.RESET,
+              device_assignment_policy: str = DevicePolicy.CPU_ONLY,
               pip_install_options: Tuple[str] = ()) -> None:
         """
         Prepare workspace distribution and send to Director.
@@ -199,8 +202,8 @@ class FLExperiment:
 
         self._prepare_plan(model_provider, data_loader,
                            rounds_to_train,
-                           delta_updates=delta_updates, opt_treatment=opt_treatment,
-                           device_assignment_policy=device_assignment_policy,
+                           delta_updates=delta_updates, opt_treatment=opt_treatment.name,
+                           device_assignment_policy=device_assignment_policy.name,
                            model_interface_file='model_obj.pkl',
                            tasks_interface_file='tasks_obj.pkl',
                            dataloader_interface_file='loader_obj.pkl')

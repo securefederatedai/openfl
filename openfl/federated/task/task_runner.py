@@ -6,6 +6,8 @@ from logging import getLogger
 
 import numpy as np
 
+from openfl.component.collaborator.collaborator import DevicePolicy
+from openfl.component.collaborator.collaborator import OptTreatment
 from openfl.utilities import split_tensor_dict_for_holdouts
 from openfl.utilities import TensorKey
 
@@ -63,7 +65,7 @@ class CoreTaskRunner:
             # A work around could involve doing a single epoch of training
             # on random data to get the optimizer names,
             # and then throwing away the model.
-            if self.opt_treatment == 'CONTINUE_GLOBAL':
+            if self.opt_treatment == OptTreatment.CONTINUE_GLOBAL:
                 self.initialize_tensorkeys_for_functions(with_opt_vars=True)
 
             # This will signal that the optimizer values are now present,
@@ -103,7 +105,7 @@ class CoreTaskRunner:
                 validation_flag = True if task_contract['optimizer'] is None else False
                 task_settings = self.task_provider.task_settings[task_name]
 
-                device = kwargs.get('device', 'cpu')
+                device = kwargs.get('device', DevicePolicy.CPU_ONLY)
 
                 self.rebuild_model(input_tensor_dict, validation=validation_flag, device=device)
                 task_kwargs = {}
@@ -154,7 +156,7 @@ class CoreTaskRunner:
         self.TASK_REGISTRY = {}
 
         # Why is it here
-        self.opt_treatment = 'RESET'
+        self.opt_treatment = OptTreatment.RESET
         self.tensor_dict_split_fn_kwargs = {}
         self.required_tensorkeys_for_function = {}
 
@@ -198,7 +200,7 @@ class CoreTaskRunner:
         of the model with the purpose to make a list of parameters to be aggregated.
         """
         self.framework_adapter = framework_adapter
-        if self.opt_treatment == 'CONTINUE_GLOBAL':
+        if self.opt_treatment == OptTreatment.CONTINUE_GLOBAL:
             aggregate_optimizer_parameters = True
         else:
             aggregate_optimizer_parameters = False
@@ -214,18 +216,18 @@ class CoreTaskRunner:
         """Change the treatment of current instance optimizer."""
         self.opt_treatment = opt_treatment
 
-    def rebuild_model(self, input_tensor_dict, validation=False, device='cpu'):
+    def rebuild_model(self, input_tensor_dict, validation=False, device=DevicePolicy.CPU_ONLY):
         """
         Parse tensor names and update weights of model. Handles the optimizer treatment.
 
         Returns:
             None
         """
-        if self.opt_treatment == 'RESET':
+        if self.opt_treatment == OptTreatment.RESET:
             self.reset_opt_vars()
             self.set_tensor_dict(input_tensor_dict, with_opt_vars=False, device=device)
         elif (self.training_round_completed
-              and self.opt_treatment == 'CONTINUE_GLOBAL' and not validation):
+              and self.opt_treatment == OptTreatment.CONTINUE_GLOBAL and not validation):
             self.set_tensor_dict(input_tensor_dict, with_opt_vars=True, device=device)
         else:
             self.set_tensor_dict(input_tensor_dict, with_opt_vars=False, device=device)
@@ -358,7 +360,7 @@ class CoreTaskRunner:
 
         return self.framework_adapter.get_tensor_dict(*args)
 
-    def set_tensor_dict(self, tensor_dict, with_opt_vars=False, device='cpu'):
+    def set_tensor_dict(self, tensor_dict, with_opt_vars=False, device=DevicePolicy.CPU_ONLY):
         """Set the tensor dictionary.
 
         Args:
