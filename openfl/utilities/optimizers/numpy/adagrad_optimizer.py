@@ -5,6 +5,7 @@ from typing import Optional
 
 import numpy as np
 
+from openfl.interface.interactive_api.experiment import ModelInterface
 from .base_optimizer import Optimizer
 
 
@@ -18,7 +19,7 @@ class NumPyAdagrad(Optimizer):
         self,
         *,
         params: Optional[Dict[str, np.ndarray]] = None,
-        model_interface=None,
+        model_interface: Optional[ModelInterface] = None,
         learning_rate: float = 0.01,
         initial_accumulator_value: float = 0.1,
         epsilon: float = 1e-10,
