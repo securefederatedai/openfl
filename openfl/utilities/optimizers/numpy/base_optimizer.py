@@ -1,3 +1,6 @@
+# Copyright (C) 2021-2022 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """Base abstract optimizer class module."""
 import abc
 from importlib import import_module
