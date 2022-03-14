@@ -11,6 +11,7 @@ from openfl.pipelines import NoCompressionPipeline
 from openfl.pipelines import TensorCodec
 from openfl.protocols import base_pb2
 from openfl.protocols import utils
+from openfl.utilities import change_tags
 from openfl.utilities import TaskResultKey
 from openfl.utilities import TensorKey
 from openfl.utilities.logs import write_metric
@@ -341,18 +342,16 @@ class Aggregator:
         else:
             compress_lossless = False
 
-        tags = list(tags)
-
         # TODO the TensorDB doesn't support compressed data yet.
         #  The returned tensor will
         # be recompressed anyway.
         if 'compressed' in tags:
-            tags.remove('compressed')
+            tags = change_tags(tags, remove_field='compressed')
         if 'lossy_compressed' in tags:
-            tags.remove('lossy_compressed')
+            tags = change_tags(tags, remove_field='lossy_compressed')
 
         tensor_key = TensorKey(
-            tensor_name, self.uuid, round_number, report, tuple(tags)
+            tensor_name, self.uuid, round_number, report, tags
         )
         tensor_name, origin, round_number, report, tags = tensor_key
 
@@ -568,7 +567,7 @@ class Aggregator:
             self.uuid,
             named_tensor.round_number,
             named_tensor.report,
-            tuple(named_tensor.tags)
+            change_tags(named_tensor.tags)
         )
         tensor_name, origin, round_number, report, tags = tensor_key
         assert ('compressed' in tags or 'lossy_compressed' in tags), (
@@ -583,10 +582,8 @@ class Aggregator:
             )
             dec_name, dec_origin, dec_round_num, dec_report, dec_tags = dec_tk
             # Need to add the collaborator tag to the resulting tensor
-            if type(dec_tags) == str:
-                new_tags = tuple([dec_tags] + [collaborator_name])
-            else:
-                new_tags = tuple(list(dec_tags) + [collaborator_name])
+            new_tags = change_tags(dec_tags, add_field=collaborator_name)
+
             # layer.agg.n.trained.delta.col_i
             decompressed_tensor_key = TensorKey(
                 dec_name, dec_origin, dec_round_num, dec_report, new_tags
@@ -599,10 +596,7 @@ class Aggregator:
                 require_lossless=False
             )
             dec_name, dec_origin, dec_round_num, dec_report, dec_tags = dec_tk
-            if type(dec_tags) == str:
-                new_tags = tuple([dec_tags] + [collaborator_name])
-            else:
-                new_tags = tuple(list(dec_tags) + [collaborator_name])
+            new_tags = change_tags(dec_tags, add_field=collaborator_name)
             # layer.agg.n.trained.delta.lossy_decompressed.col_i
             decompressed_tensor_key = TensorKey(
                 dec_name, dec_origin, dec_round_num, dec_report, new_tags
@@ -782,7 +776,7 @@ class Aggregator:
                 f'Tensor {tensor_key} in task {task_name} has not been processed correctly'
             )
             # Strip the collaborator label, and lookup aggregated tensor
-            new_tags = tuple(tags[:-1])
+            new_tags = change_tags(tags[:-1])
             agg_tensor_key = TensorKey(tensor_name, origin, round_number, report, new_tags)
             agg_tensor_name, agg_origin, agg_round_number, agg_report, agg_tags = agg_tensor_key
             agg_function = WeightedAverage() if 'metric' in tags else task_agg_function

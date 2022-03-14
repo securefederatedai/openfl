@@ -12,6 +12,7 @@ import torch as pt
 import torch.nn as nn
 import tqdm
 
+from openfl.utilities import change_tags
 from openfl.utilities import Metric
 from openfl.utilities import split_tensor_dict_for_holdouts
 from openfl.utilities import TensorKey
@@ -117,7 +118,7 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
             suffix += '_local'
         else:
             suffix += '_agg'
-        tags = ('metric', suffix)
+        tags = change_tags(suffix, add_field='metric')
         # TODO figure out a better way to pass in metric for this pytorch
         #  validate function
         output_tensor_dict = {

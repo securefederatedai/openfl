@@ -4,6 +4,7 @@
 
 import numpy as np
 
+from openfl.utilities import change_tags
 from openfl.utilities import split_tensor_dict_for_holdouts
 from openfl.utilities import TensorKey
 from .runner import TaskRunner
@@ -181,7 +182,7 @@ class FastEstimatorTaskRunner(TaskRunner):
             suffix += '_local'
         else:
             suffix += '_agg'
-        tags = ('metric', suffix)
+        tags = change_tags(suffix, add_field='metric')
         output_tensor_dict = {
             TensorKey(
                 metric, origin, round_num, True, tags
