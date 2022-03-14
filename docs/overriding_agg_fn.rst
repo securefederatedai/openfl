@@ -36,6 +36,8 @@ Choose from the following predefined aggregation functions:
 - ``openfl.component.aggregation_functions.AdamAdaptiveAggregation``
 - ``openfl.component.aggregation_functions.YogiAdaptiveAggregation``
 
+Adaptive Aggregation Functions
+^^^^^^^^^^^^^^^
 
 .. note::
     To create adaptive aggregation functions,
