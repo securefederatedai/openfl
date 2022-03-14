@@ -70,28 +70,12 @@ You can find more details in the following articles:
 
 
 ### Supported Aggregation Algorithms
- - [x] FedAvg ([McMahan et al., 2017](https://arxiv.org/pdf/1602.05629.pdf))
-
-    Usage:
-    
-    Default aggregation algorithm. No action required.
- - [x] FedProx ([Li et al., 2020](https://arxiv.org/pdf/1812.06127.pdf))
-
-   Usage: 
-    - PyTorch: replace your optimizer with SGD-based `openfl.utilities.optimizers.torch.FedProxOptimizer` or Adam-based `openfl.utilities.optimizers.torch.FedProxAdam`.
-    - TensorFlow/Keras: replace your optimizer with SGD-based `openfl.utilities.optimizers.keras.FedProxOptimizer`.
- - [x] FedOpt ([Reddi et al., 2020]())
-
-      Usage:
-
-      See [How to use adaptive aggregation functions](http://openfl.readthedocs.io/en/latest/overriding_agg_fn.html#adaptive-aggregation-functions) documentation page for more details.
- - [x] FedCurv ([Shoham et al., 2019](https://arxiv.org/pdf/1910.07796.pdf))
-   Usage:
-     - PyTorch: use `openfl.utilities.fedcurv.torch.FedCurv` to override train function using `.get_penalty()`, `.on_train_begin()`, and `.on_train_end()` methods. In addition, you should override default `AggregationFunction` of the experiment with `openfl.component.aggregation_functions.FedCurvWeightedAverage`. See `PyTorch_Histology_FedCurv` tutorial in `openfl-tutorials/interactive_api` directory for more details.
-
-
-
-
+| Algorithm Name | Paper | PyTorch implementation | TensorFlow implementation | Other frameworks compatibility | How to use | 
+| -------------- | ----- | :--------------------: | :-----------------------: | :----------------------------: | ---------- |
+| FedAvg | [McMahan et al., 2017](https://arxiv.org/pdf/1602.05629.pdf) | ✅ | ✅ | ✅ | Default aggregation algorithm. No action required. |
+| FedProx | [Li et al., 2020](https://arxiv.org/pdf/1812.06127.pdf) | ✅ | ✅ | ❌ | PyTorch: replace your optimizer with SGD-based `openfl.utilities.optimizers.torch.FedProxOptimizer` or Adam-based `openfl.utilities.optimizers.torch.FedProxAdam`. TensorFlow/Keras: replace your optimizer with SGD-based `openfl.utilities.optimizers.keras.FedProxOptimizer`. |
+| FedOpt | [Reddi et al., 2020](https://arxiv.org/abs/2003.00295) | ✅ | ✅ | ✅ | See [How to use adaptive aggregation functions](http://openfl.readthedocs.io/en/latest/overriding_agg_fn.html#adaptive-aggregation-functions) documentation page for more details. |
+| FedCurv | [Shoham et al., 2019](https://arxiv.org/pdf/1910.07796.pdf) | ✅ | ❌ | ❌ | Use `openfl.utilities.fedcurv.torch.FedCurv` to override train function using `.get_penalty()`, `.on_train_begin()`, and `.on_train_end()` methods. In addition, you should override default `AggregationFunction` of the experiment with `openfl.component.aggregation_functions.FedCurvWeightedAverage`. See `PyTorch_Histology_FedCurv` tutorial in `openfl-tutorials/interactive_api` directory for more details. |
 
 ## Support
 We welcome questions, issue reports, and suggestions:
