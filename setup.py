@@ -137,6 +137,8 @@ setup(
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
     ],
-    entry_points={'console_scripts': ['fx=openfl.interface.cli:entry']},
+    entry_points={
+        'console_scripts': ['fx=openfl.interface.cli:entry']
+    },
     cmdclass={'build_py': GRPCBuildPyCommand},
 )
