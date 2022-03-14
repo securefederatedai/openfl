@@ -4,6 +4,8 @@
 """This package includes dependencies of the openfl project."""
 from setuptools import setup
 from setuptools.command.build_py import build_py
+from subprocess import check_call
+from sys import executable
 
 
 class GRPCBuildPyCommand(build_py):
@@ -11,8 +13,6 @@ class GRPCBuildPyCommand(build_py):
 
     def run(self):
         """Build Python and GRPC modules."""
-        from subprocess import check_call
-        from sys import executable
 
         check_call([executable, '-m', 'pip', 'install', 'grpcio-tools~=1.34.0'])
 
