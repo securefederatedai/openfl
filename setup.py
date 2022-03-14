@@ -2,10 +2,12 @@
 # SPDX-License-Identifier: Apache-2.0
 
 """This package includes dependencies of the openfl project."""
-from setuptools import setup
-from setuptools.command.build_py import build_py
+
 from subprocess import check_call
 from sys import executable
+
+from setuptools import setup
+from setuptools.command.build_py import build_py
 
 
 class GRPCBuildPyCommand(build_py):
@@ -13,7 +15,6 @@ class GRPCBuildPyCommand(build_py):
 
     def run(self):
         """Build Python and GRPC modules."""
-
         check_call([executable, '-m', 'pip', 'install', 'grpcio-tools~=1.34.0'])
 
         check_call([
