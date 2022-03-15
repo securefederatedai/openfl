@@ -9,7 +9,9 @@ import pickle
 import time
 from collections import defaultdict
 from pathlib import Path
+from typing import Dict
 from typing import Iterable
+from typing import Optional
 from typing import Union
 from typing import ValuesView
 
@@ -39,6 +41,7 @@ class Director:
             target_shape: list = None,
             settings: dict = None,
             use_docker: bool = False,
+            docker_env: Optional[Dict[str, str]] = None,
     ) -> None:
         """Initialize a director object."""
         self.sample_shape, self.target_shape = sample_shape, target_shape
@@ -54,6 +57,7 @@ class Director:
         self._use_docker = use_docker
         self.director_host = director_host
         self.director_port = director_port
+        self.docker_env = docker_env
 
     def acknowledge_shard(self, shard_info: dict) -> bool:
         """Save shard info to shard registry if it's acceptable."""
@@ -96,6 +100,7 @@ class Director:
             sender=sender_name,
             init_tensor_dict_path=tensor_dict_path,
             use_docker=self._use_docker,
+            docker_env=self.docker_env,
             director_host=self.director_host,
             director_port=self.director_port,
         )
@@ -193,7 +198,7 @@ class Director:
                 f'No experiment name "{experiment_name}" in experiments list, or caller "{caller}"'
                 f' does not have access to this experiment'
             )
-        
+
         aggregator_client = await self.get_aggregator_client(experiment_name)
         async for metric_dict in aggregator_client.get_metric_stream():
             yield metric_dict

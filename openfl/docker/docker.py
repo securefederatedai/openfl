@@ -8,6 +8,7 @@ import os
 from io import BytesIO
 from pathlib import Path
 from tarfile import TarFile
+from typing import Dict
 from typing import List
 from typing import Optional
 
@@ -54,14 +55,16 @@ class Docker:
             cmd: str,
             gpu_allowed: bool = False,
             volumes: Optional[List[str]] = None,
+            env: Optional[Dict[str, str]] = None,
     ) -> DockerContainer:
         """Create docker container."""
         if volumes is None:
             volumes = []
-
         binds = volumes_to_binds(volumes)
+        env = dict_to_env(env)
         config = {
             'Cmd': ['/bin/bash', '-c', cmd],
+            'Env': env,
             'Image': image_tag,
             'HostConfig': {
                 'NetworkMode': 'host',
@@ -77,6 +80,8 @@ class Docker:
                 }],
                 'ShmSize': 30 * 1024 * 1024 * 1024,
             })
+
+        logger.info(f'{config=}')
 
         return await self.docker.containers.create_or_replace(
             config=config,
@@ -169,3 +174,12 @@ def volumes_to_binds(volumes: List[str]) -> List[str]:
         binds.append(f'{target}:{bind}')
 
     return binds
+
+
+def dict_to_env(dct: Optional[Dict[str, str]] = None) -> List[str]:
+    env_lst = []
+    if dct is None:
+        dct = {}
+    for k, v in dct.items():
+        env_lst.append(f'{k}={v}')
+    return env_lst

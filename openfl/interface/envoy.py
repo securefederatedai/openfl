@@ -79,7 +79,7 @@ def start_(shard_name, director_host, director_port, tls, envoy_config_path,
         config.certificate = Path(config.certificate).absolute()
 
     # Parse envoy parameters
-    envoy_params = config.get('params', {})
+    envoy_params = config.as_dict().get('params', {})
 
     # Build optional plugin components
     optional_plugins_section = config.get('optional_plugin_components')
@@ -95,20 +95,21 @@ def start_(shard_name, director_host, director_port, tls, envoy_config_path,
             module = import_module(module_path)
             instance = getattr(module, class_name)(**plugin_params)
             envoy_params[plugin_name] = instance
-
     # Instantiate Shard Descriptor
-    shard_descriptor = shard_descriptor_from_config(config.get('shard_descriptor', {}))
+    shard_descriptor_config = config.as_dict().get('SHARD_DESCRIPTOR', {})
+    shard_descriptor = shard_descriptor_from_config(shard_descriptor_config)
     envoy = Envoy(
         shard_name=shard_name,
         director_host=director_host,
         director_port=director_port,
         tls=tls,
         shard_descriptor=shard_descriptor,
-        shard_descriptor_config=config.get('shard_descriptor', {}),
+        shard_descriptor_config=shard_descriptor_config,
         root_certificate=config.root_certificate,
         private_key=config.private_key,
         certificate=config.certificate,
         use_docker=use_docker,
+        docker_env=config.params.docker_env.as_dict(),
         **envoy_params
     )
 
@@ -154,3 +155,16 @@ def shard_descriptor_from_config(shard_config: dict):
     instance = getattr(module, class_name)(**params)
 
     return instance
+
+# if __name__ == '__main__':
+#     start_(
+#         shard_name='env_one',
+#         director_host='localhost',
+#         director_port=50050,
+#         tls=False,
+#         envoy_config_path='envoy_config.yaml',
+#         root_certificate=None,
+#         private_key=None,
+#         certificate=None,
+#         use_docker=True,
+#     )

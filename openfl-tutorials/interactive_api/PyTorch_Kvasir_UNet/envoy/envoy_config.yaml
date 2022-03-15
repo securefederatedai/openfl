@@ -1,10 +1,14 @@
 params:
-  cuda_devices: [0,2]
-  
+  cuda_devices: [ 0,2 ]
+  docker_env:
+    HTTP_PROXY: localhost:12312
+    HTTPS_PROXY: localhost:12312
+    NO_PROXY: localhost:12312
+
 optional_plugin_components:
- cuda_device_monitor:
-   template: openfl.plugins.processing_units_monitor.pynvml_monitor.PynvmlCUDADeviceMonitor
-   settings: []
+  cuda_device_monitor:
+    template: openfl.plugins.processing_units_monitor.pynvml_monitor.PynvmlCUDADeviceMonitor
+    settings: [ ]
 
 shard_descriptor:
   template: kvasir_shard_descriptor.KvasirShardDescriptor

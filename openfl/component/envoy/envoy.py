@@ -9,6 +9,7 @@ import traceback
 import uuid
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
+from typing import Dict
 from typing import Optional
 from typing import Type
 from typing import Union
@@ -44,6 +45,7 @@ class Envoy:
             cuda_device_monitor: Optional[Type[CUDADeviceMonitor]] = None,
             shard_descriptor_config,
             use_docker: bool = False,
+            docker_env: Optional[Dict[str, str]] = None,
     ) -> None:
         """Initialize a envoy object."""
         self.name = shard_name
@@ -64,7 +66,8 @@ class Envoy:
         self.shard_descriptor = shard_descriptor
         self.shard_descriptor_config = shard_descriptor_config
         self.cuda_devices = tuple(cuda_devices)
-
+        print(f'{cuda_devices=}')
+        logger.info(f'{cuda_devices=}')
         # Optional plugins
         self.cuda_device_monitor = cuda_device_monitor
 
@@ -73,6 +76,7 @@ class Envoy:
         self.is_experiment_running = False
         self._health_check_future = None
         self._use_docker = use_docker
+        self.docker_env = docker_env
 
     async def run(self):
         """Run of the envoy working cycle."""
@@ -187,6 +191,7 @@ class Envoy:
             tag=experiment_name,
         )
         cuda_devices = ','.join(map(str, self.cuda_devices))
+        gpu_allowed = bool(cuda_devices)
 
         cmd = (
             f'python run.py '
@@ -196,14 +201,17 @@ class Envoy:
             f'--private_key {self.private_key} '
             f'--certificate {self.certificate} '
             f'--shard_config shard_descriptor_config.yaml '
-            f'--cuda_devices {cuda_devices}'
         )
+        if gpu_allowed:
+            cmd += f'--cuda_devices {cuda_devices} '
+
         container = await docker_client.create_container(
             name=experiment_name,
             image_tag=image_tag,
             cmd=cmd,
             volumes=self.shard_descriptor_config.get('volumes'),
-            gpu_allowed=True,
+            env=self.docker_env,
+            gpu_allowed=gpu_allowed,
         )
         await docker_client.start_and_monitor_container(container=container)
 

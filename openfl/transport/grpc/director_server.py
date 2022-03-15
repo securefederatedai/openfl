@@ -7,6 +7,7 @@ import asyncio
 import logging
 import uuid
 from pathlib import Path
+from typing import Dict
 from typing import Optional
 from typing import Union
 
@@ -41,6 +42,7 @@ class DirectorGRPCServer(director_pb2_grpc.DirectorServicer):
             listen_host: str = '[::]',
             listen_port: int = 50051,
             use_docker: bool = False,
+            docker_env: Optional[Dict[str, str]] = None,
             **kwargs,
     ) -> None:
         """Initialize a director object."""
@@ -63,6 +65,7 @@ class DirectorGRPCServer(director_pb2_grpc.DirectorServicer):
             use_docker=use_docker,
             director_host=listen_host,
             director_port=listen_port,
+            docker_env=docker_env,
             **kwargs
         )
 

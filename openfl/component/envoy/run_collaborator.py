@@ -75,7 +75,10 @@ if __name__ == '__main__':
     with open(args.shard_config) as f:
         shard_descriptor_config = yaml.safe_load(f)
     shard_descriptor = _shard_descriptor_from_config(shard_descriptor_config)
-    cuda_devices = tuple(args.cuda_devices.split(','))
+    if args.cuda_devices != '':
+        cuda_devices = tuple(args.cuda_devices.split(','))
+    else:
+        cuda_devices = ()
     _run_collaborator(
         plan_path=args.plan_path,
         name=args.name,

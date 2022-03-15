@@ -8,8 +8,10 @@ import logging
 from contextlib import asynccontextmanager
 from pathlib import Path
 from tarfile import TarFile
+from typing import Dict
 from typing import Iterable
 from typing import List
+from typing import Optional
 from typing import Union
 
 import numpy as np
@@ -46,6 +48,7 @@ class Experiment:
             plan_path: Union[Path, str] = 'plan/plan.yaml',
             users: Iterable[str] = None,
             use_docker: bool = False,
+            docker_env: Optional[Dict[str, str]] = None,
 
     ) -> None:
         """Initialize an experiment object."""
@@ -63,7 +66,9 @@ class Experiment:
         self.users = set() if users is None else set(users)
         self.status = Status.PENDING
         self.aggregator = None
+        self.aggregator_container = None
         self._use_docker = use_docker
+        self.env = docker_env
         self.director_host = director_host
         self.director_port = director_port
         self.last_tensor_dict = {}
@@ -122,6 +127,10 @@ class Experiment:
             self.status = Status.FAILED
             logger.exception(f'Experiment "{self.name}" was failed with error: {e}.')
 
+    # async def stop(self):
+    #     docker_client = docker.Docker()
+    #     docker_client.
+
     async def _run_aggregator_in_docker(
             self, *,
             data_file_path: Path,
@@ -152,13 +161,14 @@ class Experiment:
             f'{"--tls " if tls else "--no-tls "}'
         )
 
-        container = await docker_client.create_container(
+        self.container = await docker_client.create_container(
             name=f'{self.name.lower()}_aggregator',
             image_tag=image_tag,
             cmd=cmd,
+            env=self.env,
         )
 
-        await docker_client.start_and_monitor_container(container=container)
+        await docker_client.start_and_monitor_container(container=self.container)
 
     def _create_aggregator_grpc_server(
             self, *,
