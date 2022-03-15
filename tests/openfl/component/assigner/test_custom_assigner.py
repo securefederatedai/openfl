@@ -13,25 +13,28 @@ from openfl.component.assigner.tasks import TrainTask
 from openfl.component.assigner.tasks import ValidateTask
 
 
+default_tasks = [
+    TrainTask(
+        name='train',
+        function_name='train_func',
+    ),
+    ValidateTask(
+        name='locally_tuned_model_validate',
+        function_name='validate',
+        apply_local=True,
+    ),
+    ValidateTask(
+        name='aggregated_model_validate',
+        function_name='validate',
+    ),
+]
+
+
 def assigner_function(collaborators, round_number, **kwargs):
     """Return tasks by collaborator."""
     tasks_by_collaborator = {}
     for collaborator in collaborators:
-        tasks_by_collaborator[collaborator] = [
-            TrainTask(
-                name='train',
-                function_name='train_func',
-            ),
-            ValidateTask(
-                name='locally_tuned_model_validate',
-                function_name='validate',
-                apply_local=True,
-            ),
-            ValidateTask(
-                name='aggregated_model_validate',
-                function_name='validate',
-            ),
-        ]
+        tasks_by_collaborator[collaborator] = default_tasks
     return tasks_by_collaborator
 
 
@@ -59,6 +62,7 @@ def test_get_tasks_for_collaborator(assigner):
     """Test `get_tasks_for_collaborator` base working."""
     tasks = assigner.get_tasks_for_collaborator('one', 2)
 
+    assert tasks == default_tasks
     assert len(tasks) == 3
     assert isinstance(tasks[0], TrainTask)
     assert isinstance(tasks[1], ValidateTask)
@@ -75,7 +79,7 @@ def test_get_all_tasks_for_round(assigner):
     """Test `get_all_tasks_for_round` base working."""
     all_tasks = assigner.get_all_tasks_for_round(2)
 
-    assert len(all_tasks) == 3
+    assert all_tasks == [task.name for task in default_tasks]
 
 
 def test_get_aggregation_type_for_task(assigner):
