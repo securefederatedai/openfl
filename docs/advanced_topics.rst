@@ -45,5 +45,6 @@ Advanced Topics
    compression_settings
    overriding_agg_fn
    log_metric_callback
+   supported_aggregation_algorithms
    
    
