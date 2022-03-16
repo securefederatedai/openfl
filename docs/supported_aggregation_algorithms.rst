@@ -21,10 +21,14 @@ FedProx in OpenFL is implemented as custom optimizer for PyTorch/TensorFlow. In 
 
   - replace your optimizer with SGD-based :class:`openfl.utilities.optimizers.torch.FedProxOptimizer` 
     or Adam-based :class:`openfl.utilities.optimizers.torch.FedProxAdam`.
+    Also, you should save model weights for the next round via calling `.set_old_weights()` method of the optimizer
+    before the training epoch.
 
 2. TensorFlow:
 
   - replace your optimizer with SGD-based :py:class:`openfl.utilities.optimizers.keras.FedProxOptimizer`.
+
+For more details, see :code:`openfl-tutorials/Federated_FedProx_*_MNIST_Tutorial.ipynb` where * is the framework name.
 
 =========
 FedOpt
