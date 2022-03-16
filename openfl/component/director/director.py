@@ -92,7 +92,7 @@ class Director:
         return True
 
     def get_trained_model(self, experiment_name: str, caller: str,
-                          model_type: str) -> Optional[Dict['str', ndarray]]:
+                          model_type: str) -> Optional[Dict[str, ndarray]]:
         """Get trained model."""
         if (experiment_name not in self.experiments_registry
                 or caller not in self.experiments_registry[experiment_name].users):
