@@ -4,13 +4,15 @@
 """TensorDB Module."""
 
 from threading import Lock
-from typing import Any
-from typing import Iterable
+from typing import Dict
+from typing import Iterator
 from typing import Optional
+from typing import Type
 
 import numpy as np
 import pandas as pd
 
+from openfl.component.aggregation_functions import AggregationFunction
 from openfl.utilities import LocalTensor
 from openfl.utilities import TensorKey
 
@@ -51,7 +53,7 @@ class TensorDB:
             self.tensor_db['round'] > current_round - remove_older_than
         ].reset_index(drop=True)
 
-    def cache_tensor(self, tensor_key_dict: dict) -> None:
+    def cache_tensor(self, tensor_key_dict: Dict[TensorKey, np.ndarray]) -> None:
         """Insert tensor into TensorDB (dataframe).
 
         Args:
@@ -103,7 +105,8 @@ class TensorDB:
         return np.array(df['nparray'].iloc[0])
 
     def get_aggregated_tensor(self, tensor_key: TensorKey, collaborator_weight_dict: dict,
-                              aggregation_function: Any) -> Optional[np.ndarray]:
+                              aggregation_function: Type[AggregationFunction]
+                              ) -> Optional[np.ndarray]:
         """
         Determine whether all of the collaborator tensors are present for a given tensor key.
 
@@ -175,7 +178,7 @@ class TensorDB:
 
         return np.array(agg_nparray)
 
-    def _iterate(self, order_by: str = 'round', ascending: bool = False) -> Iterable:
+    def _iterate(self, order_by: str = 'round', ascending: bool = False) -> Iterator[pd.Series]:
         columns = ['round', 'nparray', 'tensor_name', 'tags']
         rows = self.tensor_db[columns].sort_values(by=order_by, ascending=ascending).iterrows()
         for _, row in rows:
