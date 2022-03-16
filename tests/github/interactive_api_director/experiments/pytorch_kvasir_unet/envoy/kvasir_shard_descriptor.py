@@ -95,7 +95,7 @@ class KvasirShardDescriptor(ShardDescriptor):
         zip_file_path = data_folder / 'kvasir.zip'
         os.makedirs(data_folder, exist_ok=True)
         os.system('wget -nc'
-                  " 'https://datasets.simula.no/hyper-kvasir/hyper-kvasir-segmented-images.zip'"
+                  " 'https://datasets.simula.no/downloads/hyper-kvasir/hyper-kvasir-segmented-images.zip'"
                   f' -O {zip_file_path.relative_to(Path.cwd())}')
         zip_sha384 = ('e30d18a772c6520476e55b610a4db457237f151e'
                       '19182849d54b49ae24699881c1e18e0961f77642be900450ef8b22e7')
