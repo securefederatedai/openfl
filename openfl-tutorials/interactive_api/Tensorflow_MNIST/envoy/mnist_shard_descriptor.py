@@ -6,6 +6,7 @@
 import logging
 import os
 from typing import List
+from typing import Tuple
 
 import numpy as np
 import requests
@@ -19,7 +20,8 @@ logger = logging.getLogger(__name__)
 class MnistShardDataset(ShardDataset):
     """Mnist Shard dataset class."""
 
-    def __init__(self, x, y, data_type, rank=1, worldsize=1):
+    def __init__(self, x: np.ndarray, y: np.ndarray,
+                 data_type: str, rank: int = 1, worldsize: int = 1) -> None:
         """Initialize TinyImageNetDataset."""
         self.data_type = data_type
         self.rank = rank
@@ -27,11 +29,11 @@ class MnistShardDataset(ShardDataset):
         self.x = x[self.rank - 1::self.worldsize]
         self.y = y[self.rank - 1::self.worldsize]
 
-    def __getitem__(self, index: int):
+    def __getitem__(self, index: int) -> Tuple[np.ndarray, np.ndarray]:
         """Return an item by the index."""
         return self.x[index], self.y[index]
 
-    def __len__(self):
+    def __len__(self) -> int:
         """Return the len of the dataset."""
         return len(self.x)
 
@@ -43,7 +45,7 @@ class MnistShardDescriptor(ShardDescriptor):
             self,
             rank_worldsize: str = '1, 1',
             **kwargs
-    ):
+    ) -> None:
         """Initialize MnistShardDescriptor."""
         self.rank, self.worldsize = tuple(int(num) for num in rank_worldsize.split(','))
         (x_train, y_train), (x_test, y_test) = self.download_data()
@@ -56,7 +58,7 @@ class MnistShardDescriptor(ShardDescriptor):
         """Get available shard dataset types."""
         return list(self.data_by_type)
 
-    def get_dataset(self, dataset_type='train'):
+    def get_dataset(self, dataset_type: str = 'train') -> MnistShardDataset:
         """Return a shard dataset by type."""
         if dataset_type not in self.data_by_type:
             raise Exception(f'Wrong dataset type: {dataset_type}')
@@ -68,12 +70,12 @@ class MnistShardDescriptor(ShardDescriptor):
         )
 
     @property
-    def sample_shape(self):
+    def sample_shape(self) -> List[str]:
         """Return the sample shape info."""
         return ['784']
 
     @property
-    def target_shape(self):
+    def target_shape(self) -> List[str]:
         """Return the target shape info."""
         return ['1']
 
@@ -83,7 +85,7 @@ class MnistShardDescriptor(ShardDescriptor):
         return (f'Mnist dataset, shard number {self.rank}'
                 f' out of {self.worldsize}')
 
-    def download_data(self):
+    def download_data(self) -> Tuple[Tuple, Tuple]:
         """Download prepared dataset."""
         local_file_path = 'mnist.npz'
         mnist_url = 'https://storage.googleapis.com/tensorflow/tf-keras-datasets/mnist.npz'

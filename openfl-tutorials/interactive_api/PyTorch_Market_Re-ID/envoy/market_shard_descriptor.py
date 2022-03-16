@@ -8,6 +8,7 @@ import re
 import zipfile
 from pathlib import Path
 from typing import List
+from typing import Tuple
 
 import gdown
 from PIL import Image
@@ -21,7 +22,8 @@ logger = logging.getLogger(__name__)
 class MarketShardDataset(ShardDataset):
     """Market shard dataset."""
 
-    def __init__(self, dataset_dir: Path, dataset_type: str, rank=1, worldsize=1):
+    def __init__(self, dataset_dir: Path, dataset_type: str,
+                 rank: int = 1, worldsize: int = 1) -> None:
         """Initialize MarketShardDataset."""
         self.dataset_dir = dataset_dir
         self.dataset_type = dataset_type
@@ -31,11 +33,11 @@ class MarketShardDataset(ShardDataset):
         self.imgs_path = list(dataset_dir.glob('*.jpg'))[self.rank - 1::self.worldsize]
         self.pattern = re.compile(r'([-\d]+)_c(\d)')
 
-    def __len__(self):
+    def __len__(self) -> int:
         """Length of shard."""
         return len(self.imgs_path)
 
-    def __getitem__(self, index: int):
+    def __getitem__(self, index: int) -> Tuple['Image', Tuple[int, int]]:
         """Return an item by the index."""
         img_path = self.imgs_path[index]
         pid, camid = map(int, self.pattern.search(img_path.name).groups())
@@ -80,7 +82,7 @@ class MarketShardDescriptor(ShardDescriptor):
         """Get available shard dataset types."""
         return list(self.path_by_type)
 
-    def get_dataset(self, dataset_type='train'):
+    def get_dataset(self, dataset_type: str = 'train') -> MarketShardDataset:
         """Return a dataset by type."""
         if dataset_type not in self.path_by_type:
             raise Exception(f'Wrong dataset type: {dataset_type}.'
@@ -93,12 +95,12 @@ class MarketShardDescriptor(ShardDescriptor):
         )
 
     @property
-    def sample_shape(self):
+    def sample_shape(self) -> List[str, str, str]:
         """Return the sample shape info."""
         return ['64', '128', '3']
 
     @property
-    def target_shape(self):
+    def target_shape(self) -> List[str]:
         """Return the target shape info."""
         return ['2']
 
@@ -108,7 +110,7 @@ class MarketShardDescriptor(ShardDescriptor):
         return (f'Market dataset, shard number {self.rank} '
                 f'out of {self.worldsize}')
 
-    def download(self):
+    def download(self) -> None:
         """Download Market1501 dataset."""
         logger.info('Download Market1501 dataset.')
         if self.dataset_dir.exists():
@@ -127,7 +129,7 @@ class MarketShardDescriptor(ShardDescriptor):
 
         Path(output).unlink()  # remove zip
 
-    def _check_before_run(self):
+    def _check_before_run(self) -> None:
         """Check if all files are available before going deeper."""
         if not self.dataset_dir.exists():
             raise RuntimeError(f'{self.dataset_dir} does not exist')

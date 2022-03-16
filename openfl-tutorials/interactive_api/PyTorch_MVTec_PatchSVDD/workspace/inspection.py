@@ -2,6 +2,10 @@
 
 import os
 import shutil
+from typing import Any
+from typing import Dict
+from typing import Tuple
+from typing import Union
 
 import ngtpy
 import numpy as np
@@ -12,7 +16,8 @@ from sklearn.neighbors import KDTree
 from utils import distribute_scores
 
 
-def search_nn(test_emb, train_emb_flat, nn=1, method='kdt'):
+def search_nn(test_emb: np.ndarray, train_emb_flat: np.ndarray, nn: int = 1,
+              method: str = 'kdt') -> Tuple[np.ndarray, np.ndarray]:
     """Seach nearest neighbors."""
     if method == 'ngt':
         return search_nn_ngt(test_emb, train_emb_flat, nn=nn)
@@ -32,7 +37,8 @@ def search_nn(test_emb, train_emb_flat, nn=1, method='kdt'):
     return l2_maps, closest_inds
 
 
-def search_nn_ngt(test_emb, train_emb_flat, nn=1):
+def search_nn_ngt(test_emb: np.ndarray, train_emb_flat: np.ndarray,
+                  nn: int = 1) -> Tuple[np.ndarray, np.ndarray]:
     """Search nearest neighbors."""
     ntest, i, j, d = test_emb.shape
     closest_inds = np.empty((ntest, i, j, nn), dtype=np.int32)
@@ -59,7 +65,8 @@ def search_nn_ngt(test_emb, train_emb_flat, nn=1):
     return l2_maps, closest_inds
 
 
-def assess_anomaly_maps(obj, anomaly_maps, masks, labels):
+def assess_anomaly_maps(obj: Any, anomaly_maps: np.ndarray, masks: np.ndarray,
+                        labels: np.ndarray) -> Tuple[np.ndarray, np.ndarray, float]:
     """Assess anomaly maps."""
     auroc_seg = segmentation_auroc(obj, anomaly_maps, masks)
 
@@ -69,7 +76,10 @@ def assess_anomaly_maps(obj, anomaly_maps, masks, labels):
     return auroc_det, auroc_seg, ba_score
 
 
-def eval_embeddings_nn_multik(obj, embs64, embs32, masks, labels, nn=1):
+def eval_embeddings_nn_multik(obj: Any, embs64: Tuple[np.ndarray, np.ndarray],
+                              embs32: Tuple[np.ndarray, np.ndarray],
+                              masks: np.ndarray, labels: np.ndarray,
+                              nn: int = 1) -> Dict[str, Union[np.ndarray, float]]:
     """Evaluate embeddings."""
     emb_tr, emb_te = embs64
     maps_64 = measure_emb_nn(emb_te, emb_tr, method='kdt', nn=nn)
@@ -111,7 +121,9 @@ def eval_embeddings_nn_multik(obj, embs64, embs32, masks, labels, nn=1):
     }
 
 
-def eval_embeddings_nn_maps(obj, embs64, embs32, masks, labels, nn=1):
+def eval_embeddings_nn_maps(obj: Any, embs64: Tuple[np.ndarray, np.ndarray],
+                            embs32: Tuple[np.ndarray, np.ndarray],
+                            masks: Any, labels: Any, nn: int = 1) -> np.ndarray:
     """Evaluate embeddings."""
     emb_tr, emb_te = embs64
     maps_64 = measure_emb_nn(emb_te, emb_tr, method='kdt', nn=nn)
@@ -125,7 +137,8 @@ def eval_embeddings_nn_maps(obj, embs64, embs32, masks, labels, nn=1):
     return maps_mult
 
 
-def measure_emb_nn(emb_te, emb_tr, method='kdt', nn=1):
+def measure_emb_nn(emb_te: np.ndarray, emb_tr: np.ndarray,
+                   method: str = 'kdt', nn: int = 1) -> np.ndarray:
     """Measure embeddings."""
     d = emb_tr.shape[-1]
     train_emb_all = emb_tr.reshape(-1, d)

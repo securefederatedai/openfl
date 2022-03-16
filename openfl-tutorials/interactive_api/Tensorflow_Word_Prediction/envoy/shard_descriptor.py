@@ -6,6 +6,7 @@ import re
 import urllib.request
 import zipfile
 from pathlib import Path
+from typing import Any
 
 import gdown
 import numpy as np
@@ -18,16 +19,16 @@ from openfl.interface.interactive_api.shard_descriptor import ShardDescriptor
 class NextWordShardDataset(ShardDataset):
     """Shard Dataset for text."""
 
-    def __init__(self, X, y):
+    def __init__(self, X: np.ndarray, y: np.ndarray) -> None:
         """Initialize NextWordShardDataset."""
         self.X = X
         self.y = y
 
-    def __len__(self):
+    def __len__(self) -> int:
         """Count number of sequences."""
         return len(self.X)
 
-    def __getitem__(self, index: int):
+    def __getitem__(self, index: int) -> tuple:
         """Return an item by the index."""
         return self.X[index], self.y[index]
 
@@ -46,7 +47,8 @@ class NextWordShardDescriptor(ShardDescriptor):
         data = self.load_data(dataset_dir)  # list of words
         self.X, self.y = self.get_sequences(data)
 
-    def get_dataset(self, dataset_type='train', train_val_split=0.8):
+    def get_dataset(self, dataset_type: str = 'train',
+                    train_val_split: float = 0.8) -> NextWordShardDataset:
         """Return a dataset by type."""
         train_size = round(len(self.X) * train_val_split)
         if dataset_type == 'train':
@@ -61,13 +63,13 @@ class NextWordShardDescriptor(ShardDescriptor):
         return NextWordShardDataset(X, y)
 
     @property
-    def sample_shape(self):
+    def sample_shape(self) -> list:
         """Return the sample shape info."""
         length, n_gram, vector_size = self.X.shape
         return [str(n_gram), str(vector_size)]  # three vectors
 
     @property
-    def target_shape(self):
+    def target_shape(self) -> list:
         """Return the target shape info."""
         length, vocab_size = self.y.shape
         return [str(vocab_size)]  # row at one-hot matrix with n = vocab_size
@@ -78,14 +80,14 @@ class NextWordShardDescriptor(ShardDescriptor):
         return f'Dataset from {self.title} by {self.author}'
 
     @staticmethod
-    def load_data(path):
+    def load_data(path: Any) -> list:
         """Load text file, return list of words."""
         file = open(path, 'r', encoding='utf8').read()
         data = re.findall(r'[a-z]+', file.lower())
         return data
 
     @staticmethod
-    def get_sequences(data):
+    def get_sequences(data: list) -> tuple:
         """Transform words to sequences, for X transform to vectors as well."""
         # spacy en_core_web_sm vocab_size = 10719, vector_size = 96
         x_seq = []
@@ -112,7 +114,7 @@ class NextWordShardDescriptor(ShardDescriptor):
         return x_seq, y
 
     @staticmethod
-    def download_data(title):
+    def download_data(title: str) -> Path:
         """Download text by title form Github Gist."""
         url = ('https://gist.githubusercontent.com/katerina-merkulova/e351b11c67832034b49652835b'
                '14adb0/raw/5b6667c3a2e1266f3d9125510069d23d8f24dc73/' + title.replace(' ', '_')
@@ -126,7 +128,7 @@ class NextWordShardDescriptor(ShardDescriptor):
         return filepath
 
     @staticmethod
-    def download_vectors():
+    def download_vectors() -> None:
         """Download vectors."""
         if Path('keyed_vectors.feather').exists():
             return None

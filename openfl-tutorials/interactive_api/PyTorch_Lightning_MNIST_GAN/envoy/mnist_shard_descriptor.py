@@ -20,7 +20,8 @@ logger = logging.getLogger(__name__)
 class MnistShardDataset(ShardDataset):
     """Mnist Shard dataset class."""
 
-    def __init__(self, x, y, data_type, rank: int = 1, worldsize: int = 1) -> None:
+    def __init__(self, x: Any, y: Any, data_type: str,
+                 rank: int = 1, worldsize: int = 1) -> None:
         """Initialize Mnist shard Dataset."""
         self.data_type = data_type
         self.rank = rank

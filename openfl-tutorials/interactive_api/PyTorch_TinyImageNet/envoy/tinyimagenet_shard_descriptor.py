@@ -8,6 +8,7 @@ import logging
 import os
 import shutil
 from pathlib import Path
+from typing import List
 from typing import Tuple
 
 from PIL import Image
@@ -23,7 +24,8 @@ class TinyImageNetDataset(ShardDataset):
 
     NUM_IMAGES_PER_CLASS = 500
 
-    def __init__(self, data_folder: Path, data_type='train', rank=1, worldsize=1):
+    def __init__(self, data_folder: Path, data_type: str = 'train',
+                 rank: int = 1, worldsize: int = 1) -> None:
         """Initialize TinyImageNetDataset."""
         self.data_type = data_type
         self._common_data_folder = data_folder
@@ -77,14 +79,14 @@ class TinyImageNetShardDescriptor(ShardDescriptor):
             data_folder: str = 'data',
             rank_worldsize: str = '1,1',
             **kwargs
-    ):
+    ) -> None:
         """Initialize TinyImageNetShardDescriptor."""
         self.common_data_folder = Path.cwd() / data_folder
         self.data_folder = Path.cwd() / data_folder / 'tiny-imagenet-200'
         self.download_data()
         self.rank, self.worldsize = tuple(int(num) for num in rank_worldsize.split(','))
 
-    def download_data(self):
+    def download_data(self) -> None:
         """Download prepared shard dataset."""
         zip_file_path = self.common_data_folder / 'tiny-imagenet-200.zip'
         os.makedirs(self.common_data_folder, exist_ok=True)
@@ -92,7 +94,7 @@ class TinyImageNetShardDescriptor(ShardDescriptor):
                   f' -O {zip_file_path}')
         shutil.unpack_archive(str(zip_file_path), str(self.common_data_folder))
 
-    def get_dataset(self, dataset_type):
+    def get_dataset(self, dataset_type: str) -> TinyImageNetDataset:
         """Return a shard dataset by type."""
         return TinyImageNetDataset(
             data_folder=self.data_folder,
@@ -102,12 +104,12 @@ class TinyImageNetShardDescriptor(ShardDescriptor):
         )
 
     @property
-    def sample_shape(self):
+    def sample_shape(self) -> List[str, str, str]:
         """Return the sample shape info."""
         return ['64', '64', '3']
 
     @property
-    def target_shape(self):
+    def target_shape(self) -> List[str, str]:
         """Return the target shape info."""
         return ['64', '64']
 

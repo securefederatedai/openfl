@@ -7,6 +7,9 @@ import copy
 import random
 from collections import defaultdict
 from logging import getLogger
+from typing import Any
+from typing import Iterable
+from typing import Tuple
 
 import numpy as np
 import torch
@@ -22,18 +25,18 @@ class AverageMeter:
     Code imported from https://github.com/pytorch/examples/blob/master/imagenet/main.py#L247-L262
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize Average Meter."""
         self.reset()
 
-    def reset(self):
+    def reset(self) -> None:
         """Reset values."""
         self.val = 0
         self.avg = 0
         self.sum = 0
         self.count = 0
 
-    def update(self, val, n=1):
+    def update(self, val: Any, n: Any = 1) -> None:
         """Update values."""
         self.val = val
         self.sum += val * n
@@ -41,7 +44,7 @@ class AverageMeter:
         self.avg = self.sum / self.count
 
 
-def compute_ap_cmc(index, good_index, junk_index):
+def compute_ap_cmc(index: int, good_index: Any, junk_index: Any) -> Tuple:
     """Compute validation metrics."""
     ap = 0
     cmc = np.zeros(len(index))
@@ -65,7 +68,9 @@ def compute_ap_cmc(index, good_index, junk_index):
     return ap, cmc
 
 
-def evaluate(distmat, q_pids, g_pids, q_camids, g_camids):
+def evaluate(distmat: np.ndarray, q_pids: torch.tensor,
+             g_pids: torch.tensor, q_camids: torch.tensor,
+             g_camids: torch.tensor) -> Tuple[np.ndarray, float]:
     """Evaluate model."""
     num_q, num_g = distmat.shape
     index = np.argsort(distmat, axis=1)  # from small to large
@@ -102,7 +107,8 @@ def evaluate(distmat, q_pids, g_pids, q_camids, g_camids):
 
 
 @torch.no_grad()
-def extract_feature(model, dataloader):
+def extract_feature(model: Any,
+                    dataloader: Any) -> Tuple[torch.tensor, torch.tensor, torch.tensor]:
     """Extract features for validation."""
     features, pids, camids = [], [], []
     for imgs, (batch_pids, batch_camids) in dataloader:
@@ -122,7 +128,7 @@ def extract_feature(model, dataloader):
     return features, pids, camids
 
 
-def fliplr(img):
+def fliplr(img: torch.tensor) -> torch.tensor:
     """Flip horizontal."""
     inv_idx = torch.arange(img.size(3) - 1, -1, -1).long()  # N x C x H x W
     img_flip = img.index_select(3, inv_idx)
@@ -142,7 +148,7 @@ class RandomIdentitySampler(Sampler):
     - num_instances (int): number of instances per identity.
     """
 
-    def __init__(self, data_source, num_instances=4):
+    def __init__(self, data_source: tuple, num_instances: int = 4) -> None:
         """Initialize Sampler."""
         self.data_source = data_source
         self.num_instances = num_instances
@@ -161,7 +167,7 @@ class RandomIdentitySampler(Sampler):
                 num = self.num_instances
             self.length += num - num % self.num_instances
 
-    def __iter__(self):
+    def __iter__(self) -> Iterable:
         """Iterate over Sampler."""
         list_container = []
 
@@ -185,6 +191,6 @@ class RandomIdentitySampler(Sampler):
 
         return iter(ret)
 
-    def __len__(self):
+    def __len__(self) -> int:
         """Return number of examples in an epoch."""
         return self.length

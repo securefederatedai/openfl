@@ -5,7 +5,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
-def soft_dice_loss(output, target):
+def soft_dice_loss(output: torch.tensor, target: torch.tensor) -> torch.tensor:
     """Calculate loss."""
     num = target.size(0)
     m1 = output.view(num, -1)
@@ -16,7 +16,7 @@ def soft_dice_loss(output, target):
     return score
 
 
-def soft_dice_coef(output, target):
+def soft_dice_coef(output: torch.tensor, target: torch.tensor) -> torch.tensor:
     """Calculate soft DICE coefficient."""
     num = target.size(0)
     m1 = output.view(num, -1)
@@ -29,7 +29,7 @@ def soft_dice_coef(output, target):
 class DoubleConv(nn.Module):
     """Pytorch double conv class."""
 
-    def __init__(self, in_ch, out_ch):
+    def __init__(self, in_ch: int, out_ch: int) -> None:
         """Initialize layer."""
         super(DoubleConv, self).__init__()
         self.in_ch = in_ch
@@ -43,7 +43,7 @@ class DoubleConv(nn.Module):
             nn.ReLU(inplace=True),
         )
 
-    def forward(self, x):
+    def forward(self, x: torch.tensor) -> torch.tensor:
         """Do forward pass."""
         x = self.conv(x)
         return x
@@ -52,7 +52,7 @@ class DoubleConv(nn.Module):
 class Down(nn.Module):
     """Pytorch nn module subclass."""
 
-    def __init__(self, in_ch, out_ch):
+    def __init__(self, in_ch: int, out_ch: int) -> None:
         """Initialize layer."""
         super(Down, self).__init__()
         self.mpconv = nn.Sequential(
@@ -60,7 +60,7 @@ class Down(nn.Module):
             DoubleConv(in_ch, out_ch)
         )
 
-    def forward(self, x):
+    def forward(self, x: torch.tensor) -> torch.tensor:
         """Do forward pass."""
         x = self.mpconv(x)
         return x
@@ -69,7 +69,7 @@ class Down(nn.Module):
 class Up(nn.Module):
     """Pytorch nn module subclass."""
 
-    def __init__(self, in_ch, out_ch, bilinear=False):
+    def __init__(self, in_ch: int, out_ch: int, bilinear: bool = False) -> None:
         """Initialize layer."""
         super(Up, self).__init__()
         self.in_ch = in_ch
@@ -84,7 +84,7 @@ class Up(nn.Module):
             self.up = nn.ConvTranspose2d(in_ch, in_ch // 2, 2, stride=2)
         self.conv = DoubleConv(in_ch, out_ch)
 
-    def forward(self, x1, x2):
+    def forward(self, x1: torch.tensor, x2: torch.tensor) -> torch.tensor:
         """Do forward pass."""
         x1 = self.up(x1)
         diff_y = x2.size()[2] - x1.size()[2]

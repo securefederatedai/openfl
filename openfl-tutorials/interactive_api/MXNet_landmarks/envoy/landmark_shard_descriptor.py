@@ -39,7 +39,7 @@ class LandmarkShardDataset(ShardDataset):
         # Shuffling the results dataset after choose half pictures of each class
         shuffle(self.img_names)
 
-    def __getitem__(self, index) -> np.ndarray:
+    def __getitem__(self, index: int) -> np.ndarray:
         """Return a item by the index."""
         # Get name key points file
         # f.e. image name:  'img_123.npy, corresponding name of the key points: 'keypoints_123.npy'
@@ -74,7 +74,7 @@ class LandmarkShardDescriptor(ShardDescriptor):
         if self._target_shape[0] != '1':
             raise ValueError('Target has a wrong shape')
 
-    def process_data(self, name_csv_file) -> None:
+    def process_data(self, name_csv_file: str) -> None:
         """Process data from csv to numpy format and save it in the same folder."""
         data_df = pd.read_csv(self.data_folder / name_csv_file)
         data_df.fillna(method='ffill', inplace=True)
@@ -116,7 +116,7 @@ class LandmarkShardDescriptor(ShardDescriptor):
         (self.data_folder / 'training.csv').unlink()
         self.save_all_md5()
 
-    def get_dataset(self, dataset_type='train') -> LandmarkShardDataset:
+    def get_dataset(self, dataset_type: str = 'train') -> LandmarkShardDataset:
         """Return a shard dataset by type."""
         return LandmarkShardDataset(
             dataset_dir=self.data_folder,

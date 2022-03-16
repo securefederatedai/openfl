@@ -2,9 +2,12 @@
 # SPDX-License-Identifier: Apache-2.0
 
 """Image transform tools."""
-
 import math
 import random
+from typing import Any
+from typing import List
+from typing import Optional
+from typing import Union
 
 from PIL import Image
 
@@ -19,14 +22,15 @@ class ResizeRandomCropping:
         p (float): probability of performing this transformation. Default: 0.5.
     """
 
-    def __init__(self, height, width, p=0.5, interpolation=Image.BILINEAR):
+    def __init__(self, height: Union[float, int], width: Union[float, int],
+                 p: float = 0.5, interpolation: Any = Image.BILINEAR) -> None:
         """Initialize cropping."""
         self.height = height
         self.width = width
         self.p = p
         self.interpolation = interpolation
 
-    def __call__(self, img):
+    def __call__(self, img: Image) -> Image:
         """
         Call of cropping.
 
@@ -64,7 +68,9 @@ class RandomErasing:
          mean: Erasing value.
     """
 
-    def __init__(self, probability=0.5, sl=0.02, sh=0.4, r1=0.3, mean=None):
+    def __init__(self, probability: float = 0.5,
+                 sl: float = 0.02, sh: float = 0.4, r1: float = 0.3,
+                 mean: Optional[List] = None) -> None:
         """Initialize Erasing."""
         if not mean:
             mean = [0.4914, 0.4822, 0.4465]
@@ -75,7 +81,7 @@ class RandomErasing:
         self.sh = sh
         self.r1 = r1
 
-    def __call__(self, img):
+    def __call__(self, img: Image) -> Image:
         """Call of Erasing."""
         if random.uniform(0, 1) >= self.probability:
             return img

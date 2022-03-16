@@ -6,6 +6,8 @@
 import logging
 import os
 from pathlib import Path
+from typing import Any
+from typing import List
 from typing import Tuple
 from urllib.request import urlretrieve
 from zipfile import ZipFile
@@ -27,7 +29,8 @@ class HistologyShardDataset(ShardDataset):
 
     TRAIN_SPLIT_RATIO = 0.8
 
-    def __init__(self, data_folder: Path, data_type='train', rank=1, worldsize=1):
+    def __init__(self, data_folder: Path, data_type: str = 'train',
+                 rank: int = 1, worldsize: int = 1) -> None:
         """Histology shard dataset class."""
         self.data_type = data_type
         root = Path(data_folder) / 'Kather_texture_2016_image_tiles_5000'
@@ -56,7 +59,7 @@ class HistologyShardDataset(ShardDataset):
         """Return the len of the shard dataset."""
         return len(self.idx)
 
-    def load_pil(self, path):
+    def load_pil(self, path: Any) -> Image:
         """Load image."""
         with open(path, 'rb') as f:
             img = Image.open(f)
@@ -84,13 +87,13 @@ class HistologyShardDescriptor(ShardDescriptor):
             data_folder: Path = DEFAULT_PATH,
             rank_worldsize: str = '1,1',
             **kwargs
-    ):
+    ) -> None:
         """Initialize HistologyShardDescriptor."""
         self.data_folder = Path.cwd() / data_folder
         self.download_data()
         self.rank, self.worldsize = tuple(int(num) for num in rank_worldsize.split(','))
 
-    def download_data(self):
+    def download_data(self) -> None:
         """Download prepared shard dataset."""
         os.makedirs(self.data_folder, exist_ok=True)
         filepath = self.data_folder / HistologyShardDescriptor.FILENAME
@@ -101,7 +104,7 @@ class HistologyShardDescriptor(ShardDescriptor):
             with ZipFile(filepath, 'r') as f:
                 f.extractall(self.data_folder)
 
-    def get_dataset(self, dataset_type):
+    def get_dataset(self, dataset_type: str) -> HistologyShardDataset:
         """Return a shard dataset by type."""
         return HistologyShardDataset(
             data_folder=self.data_folder,
@@ -111,13 +114,13 @@ class HistologyShardDescriptor(ShardDescriptor):
         )
 
     @property
-    def sample_shape(self):
+    def sample_shape(self) -> List:
         """Return the sample shape info."""
         shape = self.get_dataset('train')[0][0].size
         return [str(dim) for dim in shape]
 
     @property
-    def target_shape(self):
+    def target_shape(self) -> List:
         """Return the target shape info."""
         target = self.get_dataset('train')[0][1]
         shape = np.array([target]).shape

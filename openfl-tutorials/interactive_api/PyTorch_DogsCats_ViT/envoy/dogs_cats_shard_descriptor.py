@@ -10,7 +10,10 @@ from hashlib import md5
 from logging import getLogger
 from pathlib import Path
 from random import shuffle
+from typing import Dict
+from typing import List
 from typing import Optional
+from typing import Tuple
 from zipfile import ZipFile
 
 import numpy as np
@@ -27,7 +30,8 @@ class DogsCatsShardDataset(ShardDataset):
     """Dogs and cats Shard dataset class."""
 
     def __init__(self, data_type: str, dataset_dir: Path,
-                 rank: int = 1, worldsize: int = 1, enforce_image_hw=None):
+                 rank: int = 1, worldsize: int = 1,
+                 enforce_image_hw: Optional[Tuple[int, int]] = None) -> None:
         """Initialize DogsCatsShardDataset."""
         self.rank = rank
         self.worldsize = worldsize
@@ -46,7 +50,7 @@ class DogsCatsShardDataset(ShardDataset):
         # Shuffling the results dataset after choose half pictures of each class
         shuffle(self.img_names)
 
-    def __getitem__(self, index):
+    def __getitem__(self, index: int) -> Tuple[np.ndarray, np.ndarray]:
         """Return a item by the index."""
         name = self.img_names[index]
         # Reading data
@@ -65,7 +69,7 @@ class DogsCatsShardDataset(ShardDataset):
 
         return img, np.asarray([img_class], dtype=np.uint8)
 
-    def __len__(self):
+    def __len__(self) -> int:
         """Return the len of the dataset."""
         return len(self.img_names)
 
@@ -97,7 +101,7 @@ class DogsCatsShardDescriptor(ShardDescriptor):
 
         assert self._target_shape[0] == '1', 'Target shape Error'
 
-    def download_dataset(self):
+    def download_dataset(self) -> None:
         """Download dataset from Kaggle."""
         if not os.path.exists(self.data_folder):
             os.mkdir(self.data_folder)
@@ -122,7 +126,7 @@ class DogsCatsShardDescriptor(ShardDescriptor):
 
             self.save_all_md5()
 
-    def get_dataset(self, dataset_type='train'):
+    def get_dataset(self, dataset_type: str = 'train') -> DogsCatsShardDataset:
         """Return a shard dataset by type."""
         return DogsCatsShardDataset(
             data_type=dataset_type,
@@ -132,7 +136,7 @@ class DogsCatsShardDescriptor(ShardDescriptor):
             enforce_image_hw=self.enforce_image_hw
         )
 
-    def calc_all_md5(self):
+    def calc_all_md5(self) -> Dict:
         """Calculate hash of all dataset."""
         md5_dict = {}
         for root, _, files in os.walk(self.data_folder):
@@ -149,13 +153,13 @@ class DogsCatsShardDescriptor(ShardDescriptor):
                     md5_dict[rel_file] = md5_calc.hexdigest()
         return md5_dict
 
-    def save_all_md5(self):
+    def save_all_md5(self) -> None:
         """Save dataset hash."""
         all_md5 = self.calc_all_md5()
         with open(os.path.join(self.data_folder, 'dataset.json'), 'w') as f:
             json.dump(all_md5, f)
 
-    def is_dataset_complete(self):
+    def is_dataset_complete(self) -> bool:
         """Check dataset integrity."""
         new_md5 = self.calc_all_md5()
         try:
@@ -167,12 +171,12 @@ class DogsCatsShardDescriptor(ShardDescriptor):
         return new_md5 == old_md5
 
     @property
-    def sample_shape(self):
+    def sample_shape(self) -> List[str]:
         """Return the sample shape info."""
         return self._sample_shape
 
     @property
-    def target_shape(self):
+    def target_shape(self) -> List[str]:
         """Return the target shape info."""
         return self._target_shape
 

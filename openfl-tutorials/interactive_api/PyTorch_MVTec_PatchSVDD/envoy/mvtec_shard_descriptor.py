@@ -5,6 +5,11 @@
 import os
 from glob import glob
 from pathlib import Path
+from typing import List
+from typing import NoReturn
+from typing import Tuple
+from typing import Union
+
 
 import numpy as np
 from imageio import imread
@@ -17,10 +22,10 @@ from openfl.interface.interactive_api.shard_descriptor import ShardDescriptor
 class MVTecShardDataset(ShardDataset):
     """MVTec Shard dataset class."""
 
-    def __init__(self, images_path,
-                 mask_path, labels,
-                 rank=1,
-                 worldsize=1):
+    def __init__(self, images_path: List[str],
+                 mask_path: List[str], labels: np.ndarray,
+                 rank: int = 1,
+                 worldsize: int = 1) -> None:
         """Initialize MVTecShardDataset."""
         self.rank = rank
         self.worldsize = worldsize
@@ -28,7 +33,7 @@ class MVTecShardDataset(ShardDataset):
         self.mask_path = mask_path[self.rank - 1::self.worldsize]
         self.labels = labels[self.rank - 1::self.worldsize]
 
-    def __getitem__(self, index):
+    def __getitem__(self, index: int) -> Tuple[np.ndarray, np.ndarray, np.int32]:
         """Return a item by the index."""
         img = np.asarray(imread(self.images_path[index]))
         if img.shape[-1] != 3:
@@ -45,15 +50,15 @@ class MVTecShardDataset(ShardDataset):
             mask = np.zeros(img.shape)[:, :, 0]
         return img, mask, label
 
-    def __len__(self):
+    def __len__(self) -> int:
         """Return the len of the dataset."""
         return len(self.images_path)
 
-    def resize(self, image, shape=(256, 256)):
+    def resize(self, image: np.ndarray, shape: Tuple[int, int] = (256, 256)) -> np.ndarray:
         """Resize image."""
         return np.array(Image.fromarray(image).resize(shape))
 
-    def gray2rgb(self, images):
+    def gray2rgb(self, images: np.ndarray) -> np.ndarray:
         """Change image from gray to rgb."""
         tile_shape = tuple(np.ones(len(images.shape), dtype=int))
         tile_shape += (3,)
@@ -67,7 +72,7 @@ class MVTecShardDescriptor(ShardDescriptor):
 
     def __init__(self, data_folder: str = 'MVTec_data',
                  rank_worldsize: str = '1,1',
-                 obj: str = 'bottle'):
+                 obj: str = 'bottle') -> None:
         """Initialize MVTecShardDescriptor."""
         super().__init__()
 
@@ -82,7 +87,7 @@ class MVTecShardDescriptor(ShardDescriptor):
         self._sample_shape = [str(dim) for dim in sample.shape]
         self._target_shape = [str(dim) for dim in target.shape]
 
-    def download_data(self):
+    def download_data(self) -> None:
         """Download data."""
         zip_file_path = self.dataset_path / 'mvtec_anomaly_detection.tar.xz'
         if not Path(zip_file_path).exists():
@@ -97,7 +102,7 @@ class MVTecShardDescriptor(ShardDescriptor):
             # change to write permissions
             self.change_permissions(self.dataset_path, 0o764)
 
-    def change_permissions(self, folder, code):
+    def change_permissions(self, folder: Path, code: int) -> None:
         """Change permissions after data is downloaded."""
         for root, dirs, files in os.walk(folder):
             for d in dirs:
@@ -105,7 +110,7 @@ class MVTecShardDescriptor(ShardDescriptor):
             for f in files:
                 os.chmod(os.path.join(root, f), code)
 
-    def get_dataset(self, dataset_type='train'):
+    def get_dataset(self, dataset_type: str = 'train') -> Union[MVTecShardDataset, NoReturn]:
         """Return a shard dataset by type."""
         # Train dataset
         if dataset_type == 'train':
@@ -143,12 +148,12 @@ class MVTecShardDescriptor(ShardDescriptor):
         )
 
     @property
-    def sample_shape(self):
+    def sample_shape(self) -> List[str, str, str]:
         """Return the sample shape info."""
         return ['256', '256', '3']
 
     @property
-    def target_shape(self):
+    def target_shape(self) -> List[str, str]:
         """Return the target shape info."""
         return ['256', '256']
 

@@ -5,6 +5,8 @@
 
 import os
 from pathlib import Path
+from typing import List
+from typing import Optional
 
 import numpy as np
 from PIL import Image
@@ -18,7 +20,8 @@ from openfl.utilities.data_splitters import RandomNumPyDataSplitter
 class KvasirShardDataset(ShardDataset):
     """Kvasir Shard dataset class."""
 
-    def __init__(self, dataset_dir: Path, rank=1, worldsize=1, enforce_image_hw=None):
+    def __init__(self, dataset_dir: Path, rank: int = 1, worldsize: int = 1,
+                 enforce_image_hw: Optional[str] = None) -> None:
         """Initialize KvasirShardDataset."""
         self.rank = rank
         self.worldsize = worldsize
@@ -38,7 +41,7 @@ class KvasirShardDataset(ShardDataset):
         shard_idx = data_splitter.split(self.images_names, self.worldsize)[self.rank]
         self.images_names = [self.images_names[i] for i in shard_idx]
 
-    def __getitem__(self, index):
+    def __getitem__(self, index: int) -> tuple:
         """Return a item by the index."""
         name = self.images_names[index]
         # Reading data
@@ -55,7 +58,7 @@ class KvasirShardDataset(ShardDataset):
 
         return img, mask[:, :, 0].astype(np.uint8)
 
-    def __len__(self):
+    def __len__(self) -> int:
         """Return the len of the dataset."""
         return len(self.images_names)
 
@@ -65,7 +68,7 @@ class KvasirShardDescriptor(ShardDescriptor):
 
     def __init__(self, data_folder: str = 'kvasir_data',
                  rank_worldsize: str = '1,1',
-                 enforce_image_hw: str = None) -> None:
+                 enforce_image_hw: Optional[str] = None) -> None:
         """Initialize KvasirShardDescriptor."""
         super().__init__()
         # Settings for sharding the dataset
@@ -79,7 +82,7 @@ class KvasirShardDescriptor(ShardDescriptor):
         if enforce_image_hw is not None:
             self.enforce_image_hw = tuple(int(size) for size in enforce_image_hw.split(','))
 
-    def get_dataset(self, dataset_type='train'):
+    def get_dataset(self, dataset_type: str = 'train') -> KvasirShardDataset:
         """Return a shard dataset by type."""
         return KvasirShardDataset(
             dataset_dir=self.data_folder,
@@ -89,7 +92,7 @@ class KvasirShardDescriptor(ShardDescriptor):
         )
 
     @staticmethod
-    def download_data(data_folder):
+    def download_data(data_folder: Path) -> None:
         """Download data."""
         zip_file_path = data_folder / 'kvasir.zip'
         os.makedirs(data_folder, exist_ok=True)
@@ -103,12 +106,12 @@ class KvasirShardDescriptor(ShardDescriptor):
                   f' -d {data_folder.relative_to(Path.cwd())}')
 
     @property
-    def sample_shape(self):
+    def sample_shape(self) -> List[str]:
         """Return the sample shape info."""
         return ['300', '400', '3']
 
     @property
-    def target_shape(self):
+    def target_shape(self) -> List[str]:
         """Return the target shape info."""
         return ['300', '400']
 

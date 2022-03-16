@@ -13,14 +13,15 @@ from torch import nn
 class ArcFaceLoss(nn.Module):
     """ArcFace loss."""
 
-    def __init__(self, margin=0.1, scale=16, easy_margin=False):
+    def __init__(self, margin: float = 0.1, scale: float = 16,
+                 easy_margin: bool = False) -> None:
         """Initialize ArcFace loss."""
         super(ArcFaceLoss, self).__init__()
         self.m = margin
         self.s = scale
         self.easy_margin = easy_margin
 
-    def forward(self, pred, target):
+    def forward(self, pred: torch.tensor, target: torch.tensor) -> torch.tensor:
         """Compute forward."""
         # make a one-hot index
         index = pred.data * 0.0  # size = (B, Classnum)
@@ -60,7 +61,7 @@ class TripletLoss(nn.Module):
         distance (str): distance for triplet.
     """
 
-    def __init__(self, margin=0.3, distance='cosine'):
+    def __init__(self, margin: float = 0.3, distance: str = 'cosine') -> None:
         """Initialize Triplet loss."""
         super(TripletLoss, self).__init__()
 
@@ -68,7 +69,7 @@ class TripletLoss(nn.Module):
         self.margin = margin
         self.ranking_loss = nn.MarginRankingLoss(margin=margin)
 
-    def forward(self, inputs, targets):
+    def forward(self, inputs: torch.tensor, targets: torch.tensor) -> torch.tensor:
         """
         Compute forward.
 

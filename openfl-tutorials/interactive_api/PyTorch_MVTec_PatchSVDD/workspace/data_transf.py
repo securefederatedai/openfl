@@ -1,12 +1,15 @@
 """Data transform functions."""
 
+from typing import Any
+from typing import Tuple
+
 import numpy as np
 from sklearn.metrics import balanced_accuracy_score
 from sklearn.metrics import precision_recall_curve
 from sklearn.metrics import roc_auc_score
 
 
-def bilinears(images, shape) -> np.ndarray:
+def bilinears(images: np.ndarray, shape: Tuple[int, int]) -> np.ndarray:
     """Generate binlinears."""
     import cv2
     n = images.shape[0]
@@ -17,7 +20,7 @@ def bilinears(images, shape) -> np.ndarray:
     return ret
 
 
-def bal_acc_score(obj, predictions, labels):
+def bal_acc_score(obj: Any, predictions: np.ndarray, labels: np.ndarray) -> float:
     """Calculate balanced accuracy score."""
     precision, recall, thresholds = precision_recall_curve(labels.flatten(), predictions.flatten())
     f1_score = (2 * precision * recall) / (precision + recall)
@@ -27,14 +30,14 @@ def bal_acc_score(obj, predictions, labels):
     return ba_score
 
 
-def detection_auroc(obj, anomaly_scores, labels):
+def detection_auroc(obj: Any, anomaly_scores: np.ndarray, labels: np.ndarray) -> float:
     """Calculate detection auroc."""
     # 1: anomaly 0: normal
     auroc = roc_auc_score(labels, anomaly_scores)
     return auroc
 
 
-def segmentation_auroc(obj, anomaly_maps, masks):
+def segmentation_auroc(obj: Any, anomaly_maps: np.ndarray, masks: np.ndarray) -> float:
     """Calculate segmentation auroc."""
     gt = masks
     gt = gt.astype(np.int32)

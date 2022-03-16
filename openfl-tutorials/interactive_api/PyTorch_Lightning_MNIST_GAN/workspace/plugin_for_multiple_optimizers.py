@@ -1,5 +1,7 @@
 """Pytorch Framework Adapter plugin for multiple optimizers."""
 
+from typing import Any
+from typing import Dict
 
 from openfl.plugins.frameworks_adapters.pytorch_adapter import _get_optimizer_state
 from openfl.plugins.frameworks_adapters.pytorch_adapter import FrameworkAdapterPlugin
@@ -9,12 +11,12 @@ from openfl.plugins.frameworks_adapters.pytorch_adapter import to_cpu_numpy
 class FrameworkAdapterPluginforMultipleOpt(FrameworkAdapterPlugin):
     """Framework adapter plugin class for multiple optimizers."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize framework adapter."""
         super().__init__()
 
     @staticmethod
-    def get_tensor_dict(model, optimizers=None):
+    def get_tensor_dict(model: Any, optimizers: Any = None) -> Dict:
         """
         Extract tensor dict from a model and a list of optimizers.
 

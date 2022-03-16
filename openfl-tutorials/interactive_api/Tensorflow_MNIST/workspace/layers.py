@@ -2,11 +2,13 @@
 # SPDX-License-Identifier: Apache-2.0
 
 """Useful keras functions."""
+from typing import Any
+
 from tensorflow import keras
 from tensorflow.keras import layers
 
 
-def create_model():
+def create_model() -> Any:
     """Create keras model."""
     inputs = keras.Input(shape=(784,), name='digits')
     x1 = layers.Dense(64, activation='relu')(inputs)

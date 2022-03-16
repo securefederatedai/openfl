@@ -4,7 +4,9 @@
 
 from pickle import dumps
 from pickle import loads
+from typing import Any
 from typing import Dict
+from typing import Optional
 
 import mxnet as mx
 import numpy as np
@@ -22,7 +24,8 @@ class FrameworkAdapterPlugin(FrameworkAdapterPluginInterface):
         """Initialize framework adapter."""
 
     @staticmethod
-    def get_tensor_dict(model, optimizer=None) -> Dict[str, np.ndarray]:
+    def get_tensor_dict(model: Any,
+                        optimizer: Optional[mx.gluon.Trainer] = None) -> Dict[str, np.ndarray]:
         """
         Extract tensor dict from a model and an optimizer.
 
@@ -42,8 +45,9 @@ class FrameworkAdapterPlugin(FrameworkAdapterPluginInterface):
         return state
 
     @staticmethod
-    def set_tensor_dict(model, tensor_dict: Dict[str, np.ndarray],
-                        optimizer=None, device=None) -> None:
+    def set_tensor_dict(model: Any, tensor_dict: Dict[str, np.ndarray],
+                        optimizer: Optional[mx.gluon.Trainer] = None,
+                        device: Optional[mx.context] = None) -> None:
         """
         Set tensor dict from a model and an optimizer.
 
@@ -65,7 +69,7 @@ class FrameworkAdapterPlugin(FrameworkAdapterPluginInterface):
             model_params[param_name].set_data(nd.array(tensor_dict.pop(param_name), ctx=device))
 
 
-def _get_optimizer_state(optimizer):
+def _get_optimizer_state(optimizer: Optional[mx.gluon.Trainer]) -> Dict:
     """Return the optimizer state.
 
     Args:
@@ -80,7 +84,8 @@ def _get_optimizer_state(optimizer):
     return result_states
 
 
-def _set_optimizer_state(optimizer, device, opt_state_dict):
+def _set_optimizer_state(optimizer: Optional[mx.gluon.Trainer],
+                         device: Optional[mx.context], opt_state_dict: Dict) -> None:
     """Set the optimizer state.
 
     Args:

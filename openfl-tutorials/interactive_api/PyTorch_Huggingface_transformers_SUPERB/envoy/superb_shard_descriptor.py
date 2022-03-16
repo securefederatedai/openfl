@@ -18,7 +18,7 @@ from openfl.interface.interactive_api.shard_descriptor import ShardDescriptor
 class SuperbShardDataset(ShardDataset):
     """SUPERB Shard dataset class."""
 
-    def __init__(self, dataset, rank: int = 1, worldsize: int = 1) -> None:
+    def __init__(self, dataset: Tuple[Dict, List], rank: int = 1, worldsize: int = 1) -> None:
         """Initialize Superb shard Dataset."""
         self.rank = rank
         self.worldsize = worldsize
