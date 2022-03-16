@@ -23,7 +23,7 @@ class Assigner:
             *,
             assigner_function: Callable[[object, int, int], object],
             aggregation_functions_by_task: Dict[str, AggregationFunction],
-            authorized_cols: List,
+            authorized_cols: List[str],
             rounds_to_train: int
     ) -> None:
         """Initialize."""
@@ -66,7 +66,7 @@ class Assigner:
         """Abstract method."""
         return self.collaborators_for_task[round_number][task_name]
 
-    def get_all_tasks_for_round(self, round_number: int) -> List:
+    def get_all_tasks_for_round(self, round_number: int) -> List[str]:
         """
         Return tasks for the current round.
 

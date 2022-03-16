@@ -51,7 +51,7 @@ class AggregationFunction(metaclass=SingletonABCMeta):
         """
         raise NotImplementedError
 
-    def __call__(self, local_tensors: List,
+    def __call__(self, local_tensors: List[LocalTensor],
                  db_iterator: Iterator[pd.Series],
                  tensor_name: str,
                  fl_round: int,

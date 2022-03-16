@@ -4,10 +4,8 @@
 """Aggregator module."""
 import queue
 from logging import getLogger
-from typing import Any
 from typing import Dict
 from typing import List
-from typing import NoReturn
 from typing import Optional
 from typing import Tuple
 from typing import Union
@@ -15,11 +13,15 @@ from typing import Union
 from numpy import ndarray
 
 from openfl.component.aggregation_functions import WeightedAverage
+from openfl.component.assigner import Assigner
+from openfl.component.assigner.tasks import Task
 from openfl.databases import TensorDB
 from openfl.pipelines import NoCompressionPipeline
 from openfl.pipelines import TensorCodec
+from openfl.pipelines.pipeline import Transformer
 from openfl.protocols import base_pb2
 from openfl.protocols import utils
+from openfl.protocols.base_pb2 import NamedTensor
 from openfl.utilities import TaskResultKey
 from openfl.utilities import TensorKey
 from openfl.utilities.logs import write_metric
@@ -51,11 +53,11 @@ class Aggregator:
                  best_state_path: str,
                  last_state_path: str,
 
-                 assigner: Any,
+                 assigner: Assigner,
 
                  rounds_to_train: int = 256,
                  single_col_cert_common_name: Optional[str] = None,
-                 compression_pipeline: Any = None,
+                 compression_pipeline: Optional[Transformer] = None,
                  db_store_rounds: int = 1,
                  write_logs: bool = False,
                  **kwargs) -> None:
@@ -253,7 +255,8 @@ class Aggregator:
         return False
 
     def get_tasks(self,
-                  collaborator_name: str) -> Tuple[Optional[List[str]], Optional[int], int, bool]:
+                  collaborator_name: str
+                  ) -> Tuple[Optional[List[Union[str, Task]]], int, int, bool]:
         """
         RPC called by a collaborator to determine which tasks to perform.
 
@@ -325,7 +328,7 @@ class Aggregator:
 
     def get_aggregated_tensor(self, collaborator_name: str, tensor_name: str,
                               round_number: int, report: bool, tags: List[str],
-                              require_lossless: bool) -> Any:
+                              require_lossless: bool) -> NamedTensor:
         """
         RPC called by collaborator.
 
@@ -393,7 +396,7 @@ class Aggregator:
 
     def _nparray_to_named_tensor(self, tensor_key: TensorKey, nparray: ndarray,
                                  send_model_deltas: bool,
-                                 compress_lossless: bool) -> Any:
+                                 compress_lossless: bool) -> NamedTensor:
         """
         Construct the NamedTensor Protobuf.
 
@@ -472,7 +475,7 @@ class Aggregator:
         return task_key in self.collaborator_tasks_results
 
     def send_local_task_results(self, collaborator_name: str, round_number: int, task_name: str,
-                                data_size: int, named_tensors: Any) -> None:
+                                data_size: int, named_tensors: NamedTensor) -> None:
         """
         RPC called by collaborator.
 
@@ -550,8 +553,8 @@ class Aggregator:
 
         self._end_of_task_check(task_name)
 
-    def _process_named_tensor(self, named_tensor: Any,
-                              collaborator_name: str) -> Union[Tuple[Tuple, ndarray], NoReturn]:
+    def _process_named_tensor(self, named_tensor: NamedTensor,
+                              collaborator_name: str) -> Tuple[TensorKey, ndarray]:
         """
         Extract the named tensor fields.
 
@@ -661,7 +664,7 @@ class Aggregator:
             # now check for the end of the round
             self._end_of_round_check()
 
-    def _prepare_trained(self, tensor_name: str, origin: Any,
+    def _prepare_trained(self, tensor_name: str, origin: str,
                          round_number: int, report: bool,
                          agg_results: ndarray) -> None:
         """
@@ -759,7 +762,7 @@ class Aggregator:
         # Finally, cache the updated model tensor
         self.tensor_db.cache_tensor({final_model_tk: new_model_nparray})
 
-    def _compute_validation_related_task_metrics(self, task_name: str) -> Union[None, NoReturn]:
+    def _compute_validation_related_task_metrics(self, task_name: str) -> None:
         """
         Compute all validation related metrics.
 

@@ -10,6 +10,7 @@ from typing import Any
 from typing import Dict
 from typing import List
 from typing import NamedTuple
+from typing import Optional
 from typing import Tuple
 from typing import Union
 
@@ -17,10 +18,13 @@ from numpy import ndarray
 
 from openfl.component.assigner.tasks import Task
 from openfl.databases import TensorDB
+from openfl.federated.task.task_runner import CoreTaskRunner
 from openfl.pipelines import NoCompressionPipeline
 from openfl.pipelines import TensorCodec
+from openfl.pipelines.pipeline import Transformer
 from openfl.protocols import utils
 from openfl.protocols.base_pb2 import NamedTensor
+from openfl.transport import AggregatorGRPCClient
 from openfl.utilities import TensorKey
 
 
@@ -80,13 +84,13 @@ class Collaborator:
                  collaborator_name: str,
                  aggregator_uuid: str,
                  federation_uuid: str,
-                 client: Any,
-                 task_runner: Any,
+                 client: AggregatorGRPCClient,
+                 task_runner: CoreTaskRunner,
                  task_config: Any,
                  opt_treatment: Union[OptTreatment, str] = 'RESET',
                  device_assignment_policy: str = 'CPU_ONLY',
                  delta_updates: bool = False,
-                 compression_pipeline: Any = None,
+                 compression_pipeline: Optional[Transformer] = None,
                  db_store_rounds: int = 1,
                  **kwargs) -> None:
         """Initialize."""

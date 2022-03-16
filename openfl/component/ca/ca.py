@@ -15,7 +15,6 @@ import urllib.request
 from logging import getLogger
 from pathlib import Path
 from subprocess import call
-from typing import NoReturn
 from typing import Optional
 from typing import Tuple
 from typing import Union
@@ -90,7 +89,7 @@ def download_step_bin(url: str, grep_name: str, architecture: str,
 
 
 def get_token(name: str, ca_url: str,
-              ca_path: Union[Path, str] = '.') -> Union[str, None, NoReturn]:
+              ca_path: Union[Path, str] = '.') -> Optional[str]:
     """
     Create authentication token.
 
@@ -148,7 +147,7 @@ def get_ca_bin_paths(ca_path: Path) -> Tuple[Optional[Path], Optional[Path]]:
 
 
 def certify(name: str, cert_path: Path, token_with_cert: str,
-            ca_path: Path) -> Union[None, NoReturn]:
+            ca_path: Path) -> None:
     """Create an envoy workspace."""
     os.makedirs(cert_path, exist_ok=True)
 

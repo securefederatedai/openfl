@@ -3,6 +3,7 @@
 
 """Median module."""
 
+from typing import Any
 from typing import List
 
 import numpy as np
@@ -13,7 +14,7 @@ from .core import AggregationFunction
 class Median(AggregationFunction):
     """Median aggregation."""
 
-    def call(self, local_tensors: List, *_) -> np.ndarray:
+    def call(self, local_tensors: List, *_: Any) -> np.ndarray:
         """Aggregate tensors.
 
         Args:

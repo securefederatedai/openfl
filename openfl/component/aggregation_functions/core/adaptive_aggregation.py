@@ -47,7 +47,7 @@ class AdaptiveAggregation(AggregationFunction):
 
     def call(
         self,
-        local_tensors: List,
+        local_tensors: List[LocalTensor],
         db_iterator: Iterable[pd.Series],
         tensor_name: str,
         fl_round: int,

@@ -191,7 +191,7 @@ class ExperimentsRegistry:
         self.__active_experiment_name = None
 
     @asynccontextmanager
-    async def get_next_experiment(self) -> AsyncGenerator[Experiment, Any]:
+    async def get_next_experiment(self) -> AsyncGenerator[Experiment, None]:
         """Context manager.
 
         On enter get experiment from pending_experiments.

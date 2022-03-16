@@ -8,7 +8,6 @@ import logging
 import time
 from collections import defaultdict
 from pathlib import Path
-from typing import Any
 from typing import AsyncGenerator
 from typing import Dict
 from typing import Iterable
@@ -16,6 +15,8 @@ from typing import List
 from typing import Optional
 from typing import Tuple
 from typing import Union
+
+from numpy import ndarray
 
 from .experiment import Experiment
 from .experiment import ExperimentsRegistry
@@ -35,8 +36,8 @@ class Director:
             root_certificate: Union[Path, str] = None,
             private_key: Union[Path, str] = None,
             certificate: Union[Path, str] = None,
-            sample_shape: list = None,
-            target_shape: list = None,
+            sample_shape: Optional[List[str]] = None,
+            target_shape: Optional[List[str]] = None,
             settings: dict = None
     ) -> None:
         """Initialize a director object."""
@@ -91,7 +92,7 @@ class Director:
         return True
 
     def get_trained_model(self, experiment_name: str, caller: str,
-                          model_type: str) -> Union[Dict, None]:
+                          model_type: str) -> Optional[Dict['str', ndarray]]:
         """Get trained model."""
         if (experiment_name not in self.experiments_registry
                 or caller not in self.experiments_registry[experiment_name].users):
@@ -125,7 +126,7 @@ class Director:
 
         return experiment_name
 
-    def get_dataset_info(self) -> Tuple[List, List]:
+    def get_dataset_info(self) -> Tuple[List[str], List[str]]:
         """Get dataset info."""
         return self.sample_shape, self.target_shape
 
@@ -134,7 +135,7 @@ class Director:
         return [shard_status['shard_info'] for shard_status in self._shard_registry.values()]
 
     async def stream_metrics(self, experiment_name: str,
-                             caller: str) -> AsyncGenerator[Optional[Union[Dict, None]], Any]:
+                             caller: str) -> AsyncGenerator[Optional[Dict], None]:
         """
         Stream metrics from the aggregator.
 
@@ -305,7 +306,7 @@ def _get_model_download_statuses(experiment: Experiment) -> List[dict]:
     return model_statuses
 
 
-def _get_experiment_progress(experiment: Experiment) -> Union[float, None]:
+def _get_experiment_progress(experiment: Experiment) -> Optional[float]:
     if experiment.status == Status.IN_PROGRESS:
         return experiment.aggregator.round_number / experiment.aggregator.rounds_to_train
 

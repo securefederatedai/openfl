@@ -3,10 +3,8 @@
 
 """Random grouped assigner module."""
 
-from typing import Dict
+from typing import Any
 from typing import List
-from typing import NoReturn
-from typing import Union
 
 import numpy as np
 
@@ -39,12 +37,12 @@ class RandomGroupedAssigner(Assigner):
         \* - Plan setting.
     """
 
-    def __init__(self, task_groups: List[object], **kwargs) -> None:
+    def __init__(self, task_groups: List[Any], **kwargs) -> None:
         """Initialize."""
         self.task_groups = task_groups
         super().__init__(**kwargs)
 
-    def define_task_assignments(self) -> Union[None, NoReturn]:
+    def define_task_assignments(self) -> None:
         """All of the logic to set up the map of tasks to collaborators is done here."""
         assert (np.abs(1.0 - np.sum([group['percentage']
                                      for group in self.task_groups])) < 0.01), (
@@ -91,10 +89,10 @@ class RandomGroupedAssigner(Assigner):
                 col_idx += num_col_in_group
             assert (col_idx == col_list_size), 'Task groups were not divided properly'
 
-    def get_tasks_for_collaborator(self, collaborator_name: str, round_number: int) -> Dict:
+    def get_tasks_for_collaborator(self, collaborator_name: str, round_number: int) -> List[str]:
         """Get tasks for the collaborator specified."""
         return self.collaborator_tasks[collaborator_name][round_number]
 
-    def get_collaborators_for_task(self, task_name: str, round_number: int) -> Dict:
+    def get_collaborators_for_task(self, task_name: str, round_number: int) -> List[Any]:
         """Get collaborators for the task specified."""
         return self.collaborators_for_task[task_name][round_number]

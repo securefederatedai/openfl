@@ -10,6 +10,7 @@ import uuid
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Any
+from typing import Dict
 from typing import List
 from typing import Optional
 from typing import Type
@@ -124,7 +125,7 @@ class Envoy:
             )
             time.sleep(timeout)
 
-    def _get_cuda_device_info(self) -> Optional[List]:
+    def _get_cuda_device_info(self) -> Optional[List[Dict[str, Union[int, str]]]]:
         cuda_devices_info = None
         try:
             if self.cuda_device_monitor is not None:
