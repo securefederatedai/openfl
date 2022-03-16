@@ -6,15 +6,45 @@
 from subprocess import check_call
 from sys import executable
 
+from setuptools import Command
 from setuptools import setup
 from setuptools.command.build_py import build_py
 
 
-class GRPCBuildPyCommand(build_py):
+class BuildGRPC(Command):
     """Command to generate project *_pb2.py modules from proto files."""
 
+    user_options = []
+
+    def initialize_options(self):
+        """Set default values for all the options that this command supports.
+
+        Note that these defaults may be overridden by other
+        commands, by the setup script, by config files, or by the
+        command-line.  Thus, this is not the place to code dependencies
+        between options; generally, 'initialize_options()' implementations
+        are just a bunch of "self.foo = None" assignments.
+
+        This method must be implemented by all command classes.
+        """
+        pass
+
+    def finalize_options(self):
+        """Set final values for all the options that this command supports.
+
+        This is always called as late as possible, ie.  after any option
+        assignments from the command-line or from other commands have been
+        done.  Thus, this is the place to code option dependencies: if
+        'foo' depends on 'bar', then it is safe to set 'foo' from 'bar' as
+        long as 'foo' still has the same value it was assigned in
+        'initialize_options()'.
+
+        This method must be implemented by all command classes.
+        """
+        pass
+
     def run(self):
-        """Build Python and GRPC modules."""
+        """Build gRPC modules."""
         check_call([executable, '-m', 'pip', 'install', 'grpcio-tools~=1.34.0'])
 
         check_call([
@@ -37,6 +67,18 @@ class GRPCBuildPyCommand(build_py):
             'openfl/protocols/base.proto'
         ])
 
+
+class BuildPyGRPC(build_py):
+    """Command for Python modules build."""
+
+    def __init__(self, dist):
+        """Create a sub-command to execute."""
+        self.subcommand = BuildGRPC(dist)
+        super().__init__(dist)
+
+    def run(self):
+        """Build Python and GRPC modules."""
+        self.subcommand.run()
         super().run()
 
 
@@ -141,5 +183,8 @@ setup(
     entry_points={
         'console_scripts': ['fx=openfl.interface.cli:entry']
     },
-    cmdclass={'build_py': GRPCBuildPyCommand},
+    cmdclass={
+        'build_py': BuildPyGRPC,
+        'build_grpc': BuildGRPC
+    },
 )
