@@ -105,14 +105,19 @@ class Collaborator:
         self.logger = getLogger(__name__)
 
         # RESET/CONTINUE_LOCAL/CONTINUE_GLOBAL
-        if hasattr(OptTreatment, opt_treatment):
+        if isinstance(opt_treatment, str) and hasattr(OptTreatment, opt_treatment):
             self.opt_treatment = OptTreatment[opt_treatment]
+        elif isinstance(opt_treatment, Enum):
+            self.opt_treatment = opt_treatment
         else:
             self.logger.error(f'Unknown opt_treatment: {opt_treatment.name}.')
             raise NotImplementedError(f'Unknown opt_treatment: {opt_treatment}.')
 
-        if hasattr(DevicePolicy, device_assignment_policy):
+        if isinstance(device_assignment_policy, str) and hasattr(
+                DevicePolicy, device_assignment_policy):
             self.device_assignment_policy = DevicePolicy[device_assignment_policy]
+        elif isinstance(device_assignment_policy, Enum):
+            self.device_assignment_policy = device_assignment_policy
         else:
             self.logger.error('Unknown device_assignment_policy: '
                               f'{device_assignment_policy.name}.')
