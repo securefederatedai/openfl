@@ -1,12 +1,11 @@
 # Copyright (C) 2020-2021 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-"""Kvasir shard descriptor."""
+"""BrainMRI Shard Descriptor"""
 
-import csv
+import logging
+from typing import Any, Dict, List, Tuple
 import os
-
 import numpy as np
-
 from openfl.interface.interactive_api.shard_descriptor import ShardDataset
 from openfl.interface.interactive_api.shard_descriptor import ShardDescriptor
 import pandas as pd
@@ -15,23 +14,22 @@ from torch.utils import data
 from torch.utils.data import Dataset, DataLoader
 
 
+logger = logging.getLogger(__name__)
+
 class brainMRIShard(ShardDataset):
-    """Kvasir Shard dataset class."""
+    """brainMRI Shard dataset class."""
 
     def __init__(self, csv_path, rank=1, worldsize=1,
-                crop_dims=None, dataset_dir = '/home/saransh/brainMRIData/',
-                augment=True, device='cpu', set='train'):
-        """Initialize KvasirShardDataset."""
+                crop_dims=None, dataset_dir=None,
+                augment=True, device='cpu', set='train') -> None:
+        """Initialize brainMRIShardDataset."""
         self.rank = rank
         self.worldsize = worldsize
         self.csv = pd.read_csv(csv_path)
-        # print(f'\n\n\n\nlen(self.csv) = {len(self.csv)}\n\n\n\n')
         self.crop_dim = crop_dims
         self.dataset_dir = dataset_dir
         # Shard Dataset
         if set=='train':
-            # self.csv = self.csv.loc[self.rank - 1::self.worldsize,:]
-            # Changing the logic --> Will be taking continuous elements
             if self.rank==self.worldsize:
                 self.csv = self.csv.loc[(self.rank-1)*(len(self.csv)//self.worldsize):,:].reset_index(drop=True)
             else:
@@ -39,7 +37,8 @@ class brainMRIShard(ShardDataset):
         self.device = device
         self.augment = augment
 
-    def __getitem__(self, idx):
+
+    def __getitem__(self, idx) -> Tuple[Any, Any]:
         """Return a item by the index."""
         img_path = os.path.join(self.dataset_dir,self.csv.loc[idx,'img_path'])
         msk_path = os.path.join(self.dataset_dir,self.csv.loc[idx,'msk_path'])
@@ -58,11 +57,13 @@ class brainMRIShard(ShardDataset):
         msk = torch.tensor(msk).to(self.device).int()
         return img,msk
 
-    def __len__(self):
+
+    def __len__(self) -> int:
         """Return the len of the dataset."""
         return len(self.csv)
 
-    def crop_input(self, img, msk):
+
+    def crop_input(self, img, msk) -> Tuple[Any, Any]:
         """
         Randomly crop the image and mask
         """
@@ -100,7 +101,7 @@ class brainMRIShard(ShardDataset):
 
         return img[tuple(slices)], msk[tuple(slices)]
 
-    def augment_data(self, img, msk):
+    def augment_data(self, img, msk) -> Tuple[Any, Any]:
         if np.random.rand() > 0.5:
             ax = np.random.choice([0,1])
             img = np.flip(img, ax)
@@ -114,24 +115,21 @@ class brainMRIShard(ShardDataset):
 
         return img, msk
 
-    def preprocess_img(self, img):
+    def preprocess_img(self, img) -> Any:
         EPSILON = 1e-8
         return (img - img.mean()) / (img.std() + EPSILON)
     
 
-    def preprocess_label(self, label):
+    def preprocess_label(self, label) -> Any:
         label[label> 0] = 1.0
         return label
-
 
 
 
 class brainMRIShardDescriptor(ShardDescriptor):
     """Shard descriptor class."""
 
-    def __init__(self, train_csv_path: str = '/home/saransh/brain-tumor-PT-FL/train_data.csv',
-                 valid_csv_path: str = '/home/saransh/brain-tumor-PT-FL/valid_data.csv',
-                 rank_worldsize: str = '1,1',
+    def __init__(self, train_csv_path: str, valid_csv_path: str, rank_worldsize: str = '1,1',
                  crop_dims: str = None) -> None:
         """Initialize brainMRIShardDescriptor."""
         super().__init__()
@@ -155,10 +153,9 @@ class brainMRIShardDescriptor(ShardDescriptor):
         self._target_shape = [str(dim) for dim in target.shape]
 
 
-    def get_dataset(self, dataset_type='train'):
+    def get_dataset(self, dataset_type='train') -> brainMRIShard:
         # """Return a shard dataset by type."""
         if dataset_type=='train':
-            print(f'\n\n\n\\n\nCSV_PATH = {self.train_csv}\n\n\n\n')
             return brainMRIShard(
                 csv_path=self.train_csv,
                 rank=self.rank,
@@ -166,7 +163,6 @@ class brainMRIShardDescriptor(ShardDescriptor):
                 crop_dims=self.crop_dims
             )
         elif dataset_type=='valid':
-            print(f'\n\n\n\\n\nCSV_PATH = {self.valid_csv}\n\n\n\n')
             return brainMRIShard(
                 csv_path=self.valid_csv,
                 rank=-1,
