@@ -57,8 +57,7 @@ class FLExperiment:
 
         self.experiment_accepted = False
 
-        self.train_task_exist = False
-        self.validation_task_exist = False
+        self.is_validate_task_exist = False
 
         self.logger = getLogger(__name__)
         setup_logging()
@@ -96,7 +95,7 @@ class FLExperiment:
                            '\t1. Aggregated model is not ready\n'
                            '\t2. Experiment data removed from director')
 
-            if upcoming_model_status == ModelStatus.BEST and not self.validation_task_exist:
+            if upcoming_model_status == ModelStatus.BEST and not self.is_validate_task_exist:
                 warning_msg += '\n\t3. No validation tasks are provided'
 
             warning_msg += f'\nReturn {self.current_model_status} model'
@@ -233,19 +232,19 @@ class FLExperiment:
     def define_task_assigner(self, task_keeper, rounds_to_train):
         """Define task assigner by registered tasks."""
         tasks = task_keeper.get_registered_tasks()
-        self.train_task_exist = False
-        self.validation_task_exist = False
+        is_train_task_exist = False
+        self.is_validate_task_exist = False
         for task in tasks.values():
             if task.task_type == 'train':
-                self.train_task_exist = True
+                is_train_task_exist = True
             if task.task_type == 'validate':
-                self.validation_task_exist = True
+                self.is_validate_task_exist = True
 
-        if not self.train_task_exist and rounds_to_train != 1:
+        if not is_train_task_exist and rounds_to_train != 1:
             # Since we have only validation tasks, we do not have to train it multiple times
             raise Exception('Variable rounds_to_train must be equal 1, '
                             'because only validation tasks were given')
-        if self.train_task_exist and self.validation_task_exist:
+        if is_train_task_exist and self.is_validate_task_exist:
             def assigner(collaborators, round_number, **kwargs):
                 tasks_by_collaborator = {}
                 for collaborator in collaborators:
@@ -256,7 +255,7 @@ class FLExperiment:
                     ]
                 return tasks_by_collaborator
             return assigner
-        elif not self.train_task_exist and self.validation_task_exist:
+        elif not is_train_task_exist and self.is_validate_task_exist:
             def assigner(collaborators, round_number, **kwargs):
                 tasks_by_collaborator = {}
                 for collaborator in collaborators:
@@ -265,7 +264,7 @@ class FLExperiment:
                     ]
                 return tasks_by_collaborator
             return assigner
-        elif self.train_task_exist and not self.validation_task_exist:
+        elif is_train_task_exist and not self.is_validate_task_exist:
             raise Exception('You should define validate task!')
         else:
             raise Exception('You should define train and validate tasks!')
