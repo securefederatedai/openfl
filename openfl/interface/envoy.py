@@ -79,7 +79,7 @@ def start_(shard_name, director_host, director_port, tls, envoy_config_path,
         config.certificate = Path(config.certificate).absolute()
 
     # Parse envoy parameters
-    envoy_params = config.as_dict().get('params', {})
+    envoy_params = config.as_dict().get('PARAMS', {})
 
     # Build optional plugin components
     optional_plugins_section = config.get('optional_plugin_components')
@@ -98,6 +98,8 @@ def start_(shard_name, director_host, director_port, tls, envoy_config_path,
     # Instantiate Shard Descriptor
     shard_descriptor_config = config.as_dict().get('SHARD_DESCRIPTOR', {})
     shard_descriptor = shard_descriptor_from_config(shard_descriptor_config)
+    docker_env = envoy_params.pop('docker_env', {})
+
     envoy = Envoy(
         shard_name=shard_name,
         director_host=director_host,
@@ -109,7 +111,7 @@ def start_(shard_name, director_host, director_port, tls, envoy_config_path,
         private_key=config.private_key,
         certificate=config.certificate,
         use_docker=use_docker,
-        docker_env=config.params.docker_env.as_dict(),
+        docker_env=docker_env,
         **envoy_params
     )
 

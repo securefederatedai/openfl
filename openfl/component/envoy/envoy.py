@@ -214,6 +214,7 @@ class Envoy:
             gpu_allowed=gpu_allowed,
         )
         await docker_client.start_and_monitor_container(container=container)
+        await container.delete(force=True)
 
     def start(self):
         """Start the envoy."""

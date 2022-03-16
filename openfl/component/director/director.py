@@ -7,8 +7,10 @@ import asyncio
 import logging
 import pickle
 import time
+import uuid
 from collections import defaultdict
 from pathlib import Path
+from tarfile import TarFile
 from typing import Dict
 from typing import Iterable
 from typing import Optional
@@ -20,6 +22,7 @@ from openfl.transport import AsyncAggregatorGRPCClient
 from .experiment import Experiment
 from .experiment import ExperimentsRegistry
 from .experiment import Status
+from ...federated import Plan
 
 logger = logging.getLogger(__name__)
 
@@ -91,7 +94,16 @@ class Director:
 
         with tensor_dict_path.open('wb') as f:
             pickle.dump(tensor_dict, f)
-
+        plan = self._parse_plan(experiment_archive_path)
+        aggregator_client = AsyncAggregatorGRPCClient(
+            agg_addr=plan.agg_addr,
+            agg_port=plan.agg_port,
+            tls=self.tls,
+            disable_client_auth=not self.tls,
+            root_certificate=self.root_certificate,
+            certificate=self.certificate,
+            private_key=self.private_key
+        )
         experiment = Experiment(
             name=experiment_name,
             archive_path=experiment_archive_path,
@@ -103,6 +115,8 @@ class Director:
             docker_env=self.docker_env,
             director_host=self.director_host,
             director_port=self.director_port,
+            plan=plan,
+            aggregator_client=aggregator_client,
         )
         self.experiments_registry.add(experiment)
         return True
@@ -110,8 +124,8 @@ class Director:
     async def get_aggregator_client(self, experiment_name):
         """Return an aggregator client for the experiment."""
         exp = self.experiments_registry[experiment_name]
-        while exp.status != Status.IN_PROGRESS:
-            await asyncio.sleep(1)
+        # while exp.status != Status.IN_PROGRESS:
+        #     await asyncio.sleep(1)
         agg_port = exp.plan.agg_port
         agg_addr = exp.plan.agg_addr
         logger.info(f'Aggregator uri: {agg_addr}:{agg_port}')
@@ -211,9 +225,9 @@ class Director:
 
     def set_experiment_failed(self, *, experiment_name: str, collaborator_name: str):
         """Set experiment failed."""
-        if experiment_name in self.experiments_registry:
-            aggregator = self.experiments_registry[experiment_name].aggregator
-            aggregator.stop(failed_collaborator=collaborator_name)
+        exp = self.experiments_registry.get(experiment_name)
+        if exp is not None:
+            exp.stop(collaborator_name)
 
     def update_envoy_status(
             self, *,
@@ -319,3 +333,19 @@ class Director:
                 f'Invalid {model_type=} in upload_experiment_model function. '
                 f'Allowed values "last", "best"'
             )
+
+    @staticmethod
+    def _parse_plan(archive_path):
+        plan_path = Path('plan/plan.yaml')
+        with TarFile(name=archive_path, mode='r') as tar_file:
+            plan_buffer = tar_file.extractfile(f'./{plan_path}')
+            if plan_buffer is None:
+                raise Exception(f'No {plan_path} in workspace.')
+            plan_data = plan_buffer.read()
+        tmp_plan_path = Path('tmp') / f'{uuid.uuid4()}.yaml'
+        tmp_plan_path.parent.mkdir(parents=True, exist_ok=True)
+        with tmp_plan_path.open('wb') as plan_f:
+            plan_f.write(plan_data)
+        plan = Plan.parse(plan_config_path=tmp_plan_path)
+        tmp_plan_path.unlink(missing_ok=True)
+        return plan

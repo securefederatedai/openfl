@@ -537,3 +537,8 @@ class AsyncAggregatorGRPCClient(BaseAggregatorGRPCClient):
         request = aggregator_pb2.GetExperimentDescriptionRequest()
         response = await self.stub.GetExperimentDescription(request)
         return response.experiment
+
+    async def stop(self, failed_collaborator: str = None):
+        request = aggregator_pb2.StopRequest(failed_collaborator=failed_collaborator)
+        response = await self.stub.Stop(request)
+        return response

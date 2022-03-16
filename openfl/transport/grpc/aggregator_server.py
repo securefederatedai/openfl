@@ -333,6 +333,9 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
             ),
         )
 
+    def Stop(self, request, context):  # NOQA:N802
+        self.aggregator.stop(failed_collaborator=request.failed_collaborator)
+
     def get_server(self):
         """Return gRPC server."""
         self.server = server(ThreadPoolExecutor(max_workers=cpu_count() + 1),

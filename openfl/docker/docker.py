@@ -41,6 +41,7 @@ class Docker:
                 encoding='gzip',
                 tag=tag,
                 stream=True,
+                buildargs={},  # Here could be defined build proxy
             )
         async for message in build_image_iter:
             if 'stream' not in message or len(message) > 1:
@@ -69,6 +70,7 @@ class Docker:
             'HostConfig': {
                 'NetworkMode': 'host',
                 'Binds': binds,
+                'ShmSize': 30 * 1024 * 1024 * 1024,
             },
         }
         if gpu_allowed:
@@ -78,7 +80,6 @@ class Docker:
                     'Count': -1,
                     'Capabilities': [['gpu', 'compute', 'utility']],
                 }],
-                'ShmSize': 30 * 1024 * 1024 * 1024,
             })
 
         logger.info(f'{config=}')
@@ -107,8 +108,8 @@ class Docker:
 
             if event['Actor']['ID'] == container._id:
                 if action == 'stop':
-                    await container.delete(force=True)
                     logger.info(f'=> deleted {container._id[:12]}')
+                    break
                 elif action == 'destroy':
                     logger.info('=> done with this container!')
                     break

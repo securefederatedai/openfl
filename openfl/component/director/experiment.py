@@ -19,6 +19,7 @@ import numpy as np
 from openfl.docker import docker
 from openfl.federated import Plan
 from openfl.transport import AggregatorGRPCServer
+from openfl.transport import AsyncAggregatorGRPCClient
 from openfl.utilities.workspace import ExperimentWorkspace
 
 logger = logging.getLogger(__name__)
@@ -31,6 +32,9 @@ class Status:
     FINISHED = 'finished'
     IN_PROGRESS = 'in_progress'
     FAILED = 'failed'
+    DOCKER_BUILD_IN_PROGRESS = 'docker_build_in_progress'
+    DOCKER_CREATE_CONTAINER = 'docker_create_container'
+    DOCKER_RUN_CONTAINER = 'docker_run_container'
 
 
 class Experiment:
@@ -45,11 +49,12 @@ class Experiment:
             init_tensor_dict_path: Union[Path, str],
             director_host: str,
             director_port: str,
+            aggregator_client: AsyncAggregatorGRPCClient,
+            plan: Plan,
             plan_path: Union[Path, str] = 'plan/plan.yaml',
             users: Iterable[str] = None,
             use_docker: bool = False,
             docker_env: Optional[Dict[str, str]] = None,
-
     ) -> None:
         """Initialize an experiment object."""
         self.name = name
@@ -62,11 +67,11 @@ class Experiment:
         if isinstance(plan_path, str):
             plan_path = Path(plan_path)
         self.plan_path = plan_path
-        self.plan = None
+        self.plan = plan
         self.users = set() if users is None else set(users)
         self.status = Status.PENDING
-        self.aggregator = None
-        self.aggregator_container = None
+        self.aggregator_container = None  # ???
+        self.aggregator_client = aggregator_client
         self._use_docker = use_docker
         self.env = docker_env
         self.director_host = director_host
@@ -88,17 +93,6 @@ class Experiment:
                         f'collaborators {self.collaborators}')
 
             if self._use_docker:
-                with TarFile(name=self.archive_path, mode='r') as tar_file:
-                    plan_buffer = tar_file.extractfile(f'./{self.plan_path}')
-                    if plan_buffer is None:
-                        raise Exception(f'No {self.plan_path} in workspace.')
-                    plan_data = plan_buffer.read()
-                local_plan_path = Path(self.name) / self.plan_path
-                local_plan_path.parent.mkdir(parents=True, exist_ok=True)
-                with local_plan_path.open('wb') as plan_f:
-                    plan_f.write(plan_data)
-
-                self.plan = Plan.parse(plan_config_path=local_plan_path)
                 await self._run_aggregator_in_docker(
                     data_file_path=self.archive_path,
                     tls=tls,
@@ -116,7 +110,6 @@ class Experiment:
                         private_key=private_key,
                         certificate=certificate,
                     )
-                    self.aggregator = aggregator_grpc_server.aggregator
                     await self._run_aggregator_grpc_server(
                         aggregator_grpc_server=aggregator_grpc_server,
                     )
@@ -127,9 +120,8 @@ class Experiment:
             self.status = Status.FAILED
             logger.exception(f'Experiment "{self.name}" was failed with error: {e}.')
 
-    # async def stop(self):
-    #     docker_client = docker.Docker()
-    #     docker_client.
+    async def stop(self, failed_collaborator: str = None):
+        await self.aggregator_client.stop(failed_collaborator=failed_collaborator)
 
     async def _run_aggregator_in_docker(
             self, *,
@@ -144,6 +136,7 @@ class Experiment:
             data_file_path=data_file_path,
             init_tensor_dict_path=self.init_tensor_dict_path,
         )
+        self.status = Status.DOCKER_BUILD_IN_PROGRESS
         image_tag = await docker_client.build_image(
             context_path=docker_context_path,
             tag='aggregator',
@@ -160,15 +153,16 @@ class Experiment:
             f'--certificate {certificate} '
             f'{"--tls " if tls else "--no-tls "}'
         )
-
+        self.status = Status.DOCKER_CREATE_CONTAINER
         self.container = await docker_client.create_container(
             name=f'{self.name.lower()}_aggregator',
             image_tag=image_tag,
             cmd=cmd,
             env=self.env,
         )
-
+        self.status = Status.DOCKER_RUN_CONTAINER
         await docker_client.start_and_monitor_container(container=self.container)
+        await self.container.delete(force=True)
 
     def _create_aggregator_grpc_server(
             self, *,
@@ -179,7 +173,6 @@ class Experiment:
             private_key: Union[Path, str] = None,
             certificate: Union[Path, str] = None,
     ) -> AggregatorGRPCServer:
-        self.plan = Plan.parse(plan_config_path=Path(self.plan_path))
         self.plan.authorized_cols = list(self.collaborators)
 
         logger.info('🧿 Starting the Aggregator Service.')
@@ -195,6 +188,19 @@ class Experiment:
             tls=tls,
         )
         return aggregator_grpc_server
+
+    def _parse_plan(self):
+        with TarFile(name=self.archive_path, mode='r') as tar_file:
+            plan_buffer = tar_file.extractfile(f'./{self.plan_path}')
+            if plan_buffer is None:
+                raise Exception(f'No {self.plan_path} in workspace.')
+            plan_data = plan_buffer.read()
+        local_plan_path = Path(self.name) / self.plan_path
+        local_plan_path.parent.mkdir(parents=True, exist_ok=True)
+        with local_plan_path.open('wb') as plan_f:
+            plan_f.write(plan_data)
+        plan = Plan.parse(plan_config_path=local_plan_path)
+        return plan
 
     @staticmethod
     async def _run_aggregator_grpc_server(aggregator_grpc_server: AggregatorGRPCServer) -> None:

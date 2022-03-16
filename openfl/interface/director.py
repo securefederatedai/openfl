@@ -87,6 +87,7 @@ def start(director_config_path, tls, root_certificate, private_key, certificate,
     if config.certificate:
         config.certificate = Path(config.certificate).absolute()
 
+    docker_env = config.as_dict().get('settings', {}).get('docker_env')
     director_server = DirectorGRPCServer(
         director_cls=Director,
         tls=tls,
@@ -99,7 +100,7 @@ def start(director_config_path, tls, root_certificate, private_key, certificate,
         listen_host=config.settings.listen_host,
         listen_port=config.settings.listen_port,
         use_docker=use_docker,
-        docker_env=config.settings.docker_env.as_dict(),
+        docker_env=docker_env,
     )
     director_server.start()
 
@@ -120,14 +121,3 @@ def create(director_path):
     (director_path / 'cert').mkdir(parents=True, exist_ok=True)
     (director_path / 'logs').mkdir(parents=True, exist_ok=True)
     shutil.copyfile(WORKSPACE / 'default/director.yaml', director_path / 'director.yaml')
-
-#
-# if __name__ == '__main__':
-#     start(
-#         director_config_path='director_config.yaml',
-#         tls=False,
-#         root_certificate=None,
-#         private_key=None,
-#         certificate=None,
-#         use_docker=False,
-#     )
