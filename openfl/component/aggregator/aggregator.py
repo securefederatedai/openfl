@@ -847,12 +847,13 @@ class Aggregator:
         for task_name in all_tasks:
             self._compute_validation_related_task_metrics(task_name)
 
-        # Once all of the task results have been processed
-        self.round_number += 1
 
         # Save the latest model
         self.logger.info(f'Saving round {self.round_number} model...')
-        self._save_model(self.round_number, self.last_state_path)
+        self._save_model(self.round_number + 1, self.last_state_path)
+
+        # Once all of the task results have been processed and model saved
+        self.round_number += 1
 
         # TODO This needs to be fixed!
         if self._time_to_quit():
