@@ -847,7 +847,6 @@ class Aggregator:
         for task_name in all_tasks:
             self._compute_validation_related_task_metrics(task_name)
 
-
         # Save the latest model
         self.logger.info(f'Saving round {self.round_number} model...')
         self._save_model(self.round_number + 1, self.last_state_path)
