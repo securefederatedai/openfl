@@ -136,7 +136,7 @@ class Collaborator:
 
         self.task_runner.set_optimizer_treatment(self.opt_treatment.name)
 
-    def set_available_devices(self, cuda: Union[Tuple[()], Tuple[str]] = ()) -> None:
+    def set_available_devices(self, cuda: Tuple[str, ...]) -> None:
         """
         Set available CUDA devices.
 

@@ -55,6 +55,6 @@ class AggregationFunction(metaclass=SingletonABCMeta):
                  db_iterator: Iterator[pd.Series],
                  tensor_name: str,
                  fl_round: int,
-                 tags: Tuple[str]) -> np.ndarray:
+                 tags: Tuple[str, ...]) -> np.ndarray:
         """Use magic function for ease."""
         return self.call(local_tensors, db_iterator, tensor_name, fl_round, tags)

@@ -24,7 +24,7 @@ class FedCurvWeightedAverage(WeightedAverage):
     """
 
     def call(self, local_tensors: List[LocalTensor], db_iterator: Iterator[pd.Series],
-             tensor_name: str, fl_round: int, tags: Tuple[str]) -> np.ndarray:
+             tensor_name: str, fl_round: int, tags: Tuple[str, ...]) -> np.ndarray:
         """Apply aggregation."""
         if (
             tensor_name.endswith('_u')

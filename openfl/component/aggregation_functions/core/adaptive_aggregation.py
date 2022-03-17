@@ -51,7 +51,7 @@ class AdaptiveAggregation(AggregationFunction):
         db_iterator: Iterable[pd.Series],
         tensor_name: str,
         fl_round: int,
-        tags: Tuple[str]
+        tags: Tuple[str, ...]
     ) -> np.ndarray:
         """Aggregate tensors.
 
