@@ -107,7 +107,7 @@ class FLExperiment:
 
         else:
             self.task_runner_stub.rebuild_model(
-                tensor_dict, validation=True, device=DevicePolicy.CPU_ONLY)
+                tensor_dict, validation=True, device='cpu')
             self.current_model_status = upcoming_model_status
 
         return deepcopy(self.task_runner_stub.model)
@@ -202,8 +202,8 @@ class FLExperiment:
 
         self._prepare_plan(model_provider, data_loader,
                            rounds_to_train,
-                           delta_updates=delta_updates, opt_treatment=opt_treatment.name,
-                           device_assignment_policy=device_assignment_policy.name,
+                           delta_updates=delta_updates, opt_treatment=opt_treatment,
+                           device_assignment_policy=device_assignment_policy,
                            model_interface_file='model_obj.pkl',
                            tasks_interface_file='tasks_obj.pkl',
                            dataloader_interface_file='loader_obj.pkl')
@@ -364,9 +364,9 @@ class FLExperiment:
 
         # Collaborator part
         plan.config['collaborator']['settings']['delta_updates'] = delta_updates
-        plan.config['collaborator']['settings']['opt_treatment'] = opt_treatment
+        plan.config['collaborator']['settings']['opt_treatment'] = opt_treatment.name
         plan.config['collaborator']['settings'][
-            'device_assignment_policy'] = device_assignment_policy
+            'device_assignment_policy'] = device_assignment_policy.name
 
         # DataLoader part
         for setting, value in data_loader.kwargs.items():

@@ -105,7 +105,7 @@ class CoreTaskRunner:
                 validation_flag = True if task_contract['optimizer'] is None else False
                 task_settings = self.task_provider.task_settings[task_name]
 
-                device = kwargs.get('device', DevicePolicy.CPU_ONLY)
+                device = kwargs.get('device', 'cpu')
 
                 self.rebuild_model(input_tensor_dict, validation=validation_flag, device=device)
                 task_kwargs = {}
@@ -216,7 +216,7 @@ class CoreTaskRunner:
         """Change the treatment of current instance optimizer."""
         self.opt_treatment = opt_treatment
 
-    def rebuild_model(self, input_tensor_dict, validation=False, device=DevicePolicy.CPU_ONLY):
+    def rebuild_model(self, input_tensor_dict, validation=False, device='cpu'):
         """
         Parse tensor names and update weights of model. Handles the optimizer treatment.
 
@@ -360,7 +360,7 @@ class CoreTaskRunner:
 
         return self.framework_adapter.get_tensor_dict(*args)
 
-    def set_tensor_dict(self, tensor_dict, with_opt_vars=False, device=DevicePolicy.CPU_ONLY):
+    def set_tensor_dict(self, tensor_dict, with_opt_vars=False, device='cpu'):
         """Set the tensor dictionary.
 
         Args:
