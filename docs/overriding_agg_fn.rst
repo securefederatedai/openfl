@@ -40,7 +40,7 @@ Choose from the following predefined aggregation functions:
 .. _adaptive_aggregation_functions:
 
 Adaptive Aggregation Functions
-^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. note::
     To create adaptive aggregation functions,
