@@ -7,7 +7,6 @@ from threading import Lock
 from typing import Dict
 from typing import Iterator
 from typing import Optional
-from typing import Type
 
 import numpy as np
 import pandas as pd
@@ -105,7 +104,7 @@ class TensorDB:
         return np.array(df['nparray'].iloc[0])
 
     def get_aggregated_tensor(self, tensor_key: TensorKey, collaborator_weight_dict: dict,
-                              aggregation_function: Type[AggregationFunction]
+                              aggregation_function: AggregationFunction
                               ) -> Optional[np.ndarray]:
         """
         Determine whether all of the collaborator tensors are present for a given tensor key.
