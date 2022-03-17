@@ -15,7 +15,7 @@ FedProx
 =========
 Paper: https://arxiv.org/abs/1812.06127
 
-FedProx in OpenFL is implemented as custom optimizer for PyTorch/TensorFlow. In order to use FedProx, do the following:
+FedProx in OpenFL is implemented as a custom optimizer for PyTorch/TensorFlow. In order to use FedProx, do the following:
 
 1. PyTorch:
 
