@@ -136,7 +136,7 @@ class DogsCatsShardDescriptor(ShardDescriptor):
             enforce_image_hw=self.enforce_image_hw
         )
 
-    def calc_all_md5(self) -> Dict:
+    def calc_all_md5(self) -> Dict[str]:
         """Calculate hash of all dataset."""
         md5_dict = {}
         for root, _, files in os.walk(self.data_folder):

@@ -69,7 +69,7 @@ class FrameworkAdapterPlugin(FrameworkAdapterPluginInterface):
             model_params[param_name].set_data(nd.array(tensor_dict.pop(param_name), ctx=device))
 
 
-def _get_optimizer_state(optimizer: Optional[mx.gluon.Trainer]) -> Dict:
+def _get_optimizer_state(optimizer: Optional[mx.gluon.Trainer]) -> Dict[str, np.ndarray]:
     """Return the optimizer state.
 
     Args:
@@ -85,7 +85,8 @@ def _get_optimizer_state(optimizer: Optional[mx.gluon.Trainer]) -> Dict:
 
 
 def _set_optimizer_state(optimizer: Optional[mx.gluon.Trainer],
-                         device: Optional[mx.context], opt_state_dict: Dict) -> None:
+                         device: Optional[mx.context],
+                         opt_state_dict: Dict[str, np.ndarray]) -> None:
     """Set the optimizer state.
 
     Args:

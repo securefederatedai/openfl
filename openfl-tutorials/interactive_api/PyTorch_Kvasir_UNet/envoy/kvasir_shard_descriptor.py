@@ -6,6 +6,7 @@ import os
 from pathlib import Path
 from typing import List
 from typing import Optional
+from typing import Tuple
 
 import numpy as np
 from PIL import Image
@@ -20,7 +21,7 @@ class KvasirShardDataset(ShardDataset):
 
     def __init__(self, dataset_dir: Path, rank: int = 1,
                  worldsize: int = 1,
-                 enforce_image_hw: Optional[tuple] = None) -> None:
+                 enforce_image_hw: Optional[Tuple[int, int]] = None) -> None:
         """Initialize KvasirShardDataset."""
         self.rank = rank
         self.worldsize = worldsize
@@ -37,7 +38,7 @@ class KvasirShardDataset(ShardDataset):
         # Sharding
         self.images_names = self.images_names[self.rank - 1::self.worldsize]
 
-    def __getitem__(self, index: int) -> tuple:
+    def __getitem__(self, index: int) -> Tuple[np.ndarray, np.ndarray]:
         """Return a item by the index."""
         name = self.images_names[index]
         # Reading data

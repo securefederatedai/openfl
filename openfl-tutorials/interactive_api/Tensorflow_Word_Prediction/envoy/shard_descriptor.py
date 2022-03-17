@@ -7,6 +7,8 @@ import urllib.request
 import zipfile
 from pathlib import Path
 from typing import Any
+from typing import List
+from typing import Tuple
 
 import gdown
 import numpy as np
@@ -28,7 +30,7 @@ class NextWordShardDataset(ShardDataset):
         """Count number of sequences."""
         return len(self.X)
 
-    def __getitem__(self, index: int) -> tuple:
+    def __getitem__(self, index: int) -> Tuple[np.ndarray, np.ndarray]:
         """Return an item by the index."""
         return self.X[index], self.y[index]
 
@@ -63,13 +65,13 @@ class NextWordShardDescriptor(ShardDescriptor):
         return NextWordShardDataset(X, y)
 
     @property
-    def sample_shape(self) -> list:
+    def sample_shape(self) -> List[str, str]:
         """Return the sample shape info."""
         length, n_gram, vector_size = self.X.shape
         return [str(n_gram), str(vector_size)]  # three vectors
 
     @property
-    def target_shape(self) -> list:
+    def target_shape(self) -> List[str]:
         """Return the target shape info."""
         length, vocab_size = self.y.shape
         return [str(vocab_size)]  # row at one-hot matrix with n = vocab_size
@@ -80,14 +82,14 @@ class NextWordShardDescriptor(ShardDescriptor):
         return f'Dataset from {self.title} by {self.author}'
 
     @staticmethod
-    def load_data(path: Any) -> list:
+    def load_data(path: Any) -> List[str]:
         """Load text file, return list of words."""
         file = open(path, 'r', encoding='utf8').read()
         data = re.findall(r'[a-z]+', file.lower())
         return data
 
     @staticmethod
-    def get_sequences(data: list) -> tuple:
+    def get_sequences(data: List[str]) -> Tuple[np.ndarray, np.ndarray]:
         """Transform words to sequences, for X transform to vectors as well."""
         # spacy en_core_web_sm vocab_size = 10719, vector_size = 96
         x_seq = []

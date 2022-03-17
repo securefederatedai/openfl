@@ -15,6 +15,8 @@ import numpy as np
 import torch
 from torch.utils.data.sampler import Sampler
 
+from openfl.openfl.interface.interactive_api.shard_descriptor import ShardDataset
+
 logger = getLogger(__name__)
 
 
@@ -44,7 +46,7 @@ class AverageMeter:
         self.avg = self.sum / self.count
 
 
-def compute_ap_cmc(index: int, good_index: Any, junk_index: Any) -> Tuple:
+def compute_ap_cmc(index: int, good_index: Any, junk_index: Any) -> Tuple[float, np.ndarray]:
     """Compute validation metrics."""
     ap = 0
     cmc = np.zeros(len(index))
@@ -148,7 +150,7 @@ class RandomIdentitySampler(Sampler):
     - num_instances (int): number of instances per identity.
     """
 
-    def __init__(self, data_source: tuple, num_instances: int = 4) -> None:
+    def __init__(self, data_source: ShardDataset, num_instances: int = 4) -> None:
         """Initialize Sampler."""
         self.data_source = data_source
         self.num_instances = num_instances

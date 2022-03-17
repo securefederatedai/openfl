@@ -70,7 +70,7 @@ class RandomErasing:
 
     def __init__(self, probability: float = 0.5,
                  sl: float = 0.02, sh: float = 0.4, r1: float = 0.3,
-                 mean: Optional[List] = None) -> None:
+                 mean: Optional[List[int]] = None) -> None:
         """Initialize Erasing."""
         if not mean:
             mean = [0.4914, 0.4822, 0.4465]

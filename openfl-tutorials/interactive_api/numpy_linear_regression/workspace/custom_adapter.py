@@ -4,6 +4,8 @@
 from typing import Any
 from typing import Dict
 
+from numpy import ndarray
+
 from openfl.plugins.frameworks_adapters.framework_adapter_interface import (
     FrameworkAdapterPluginInterface,
 )
@@ -13,12 +15,12 @@ class CustomFrameworkAdapter(FrameworkAdapterPluginInterface):
     """Framework adapter plugin class."""
 
     @staticmethod
-    def get_tensor_dict(model: Any, optimizer: Any = None) -> Dict:
+    def get_tensor_dict(model: Any, optimizer: Any = None) -> Dict[str, ndarray]:
         """Extract tensors from a model."""
         return {'w': model.weights}
 
     @staticmethod
     def set_tensor_dict(model: Any, tensor_dict: Any,
-                        optimizer: Any = None, device: Any = 'cpu') -> Any:
+                        optimizer: Any = None, device: Any = 'cpu') -> None:
         """Load tensors to a model."""
         model.weights = tensor_dict['w']

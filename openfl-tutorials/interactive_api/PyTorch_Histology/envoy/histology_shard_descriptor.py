@@ -114,13 +114,13 @@ class HistologyShardDescriptor(ShardDescriptor):
         )
 
     @property
-    def sample_shape(self) -> List:
+    def sample_shape(self) -> List[str]:
         """Return the sample shape info."""
         shape = self.get_dataset('train')[0][0].size
         return [str(dim) for dim in shape]
 
     @property
-    def target_shape(self) -> List:
+    def target_shape(self) -> List[str]:
         """Return the target shape info."""
         target = self.get_dataset('train')[0][1]
         shape = np.array([target]).shape

@@ -41,7 +41,7 @@ def task(_: Any) -> Iterable:
 class DictionaryConcatDataset(Dataset):
     """Concate dictionaries."""
 
-    def __init__(self, d_of_datasets: Dict) -> None:
+    def __init__(self, d_of_datasets: Dict[str, Dataset]) -> None:
         """Initialize."""
         self.d_of_datasets = d_of_datasets
         lengths = [len(d) for d in d_of_datasets.values()]
@@ -49,7 +49,7 @@ class DictionaryConcatDataset(Dataset):
         self.keys = self.d_of_datasets.keys()
         assert min(lengths) == max(lengths), 'Length of the datasets should be the same'
 
-    def __getitem__(self, idx: int) -> Dict:
+    def __getitem__(self, idx: int) -> Dict[str, Any]:
         """Get item."""
         return {
             key: self.d_of_datasets[key][idx]

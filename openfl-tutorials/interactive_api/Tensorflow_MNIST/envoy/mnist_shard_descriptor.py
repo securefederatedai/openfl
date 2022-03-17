@@ -85,7 +85,7 @@ class MnistShardDescriptor(ShardDescriptor):
         return (f'Mnist dataset, shard number {self.rank}'
                 f' out of {self.worldsize}')
 
-    def download_data(self) -> Tuple[Tuple, Tuple]:
+    def download_data(self) -> Tuple[Tuple[np.ndarray, np.ndarray], Tuple[np.ndarray, np.ndarray]]:
         """Download prepared dataset."""
         local_file_path = 'mnist.npz'
         mnist_url = 'https://storage.googleapis.com/tensorflow/tf-keras-datasets/mnist.npz'
