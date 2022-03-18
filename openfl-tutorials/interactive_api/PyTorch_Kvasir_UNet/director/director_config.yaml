@@ -4,7 +4,14 @@ settings:
   sample_shape: [ '300', '400', '3' ]
   target_shape: [ '300', '400' ]
   envoy_health_check_period: 5  # in seconds
-  docker_env:
-    http_proxy:
-    https_proxy:
-    no_proxy:
+  docker:
+    env:
+      http_proxy:
+      https_proxy:
+      no_proxy:
+    buildargs:
+      HTTP_PROXY:
+      HTTPS_PROXY:
+      NO_PROXY:
+
+
