@@ -37,6 +37,11 @@ Choose from the following predefined aggregation functions:
 - ``openfl.component.aggregation_functions.YogiAdaptiveAggregation``
 
 
+.. _adaptive_aggregation_functions:
+
+Adaptive Aggregation Functions
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 .. note::
     To create adaptive aggregation functions,
     the user must specify parameters for the aggregation optimizer

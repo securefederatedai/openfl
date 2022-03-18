@@ -1,4 +1,4 @@
-set -e
+set -euxo pipefail
 # Test the pipeline
 # =========== Set SGX_RUN variable to 0 or 1 ============
 
@@ -15,11 +15,6 @@ FQDN=localhost
 COL1_DATA_PATH=1
 COL2_DATA_PATH=2
 
-if [ $REBUILD_IMAGES -gt 0 ]
-then
-REBUILD_OPTION="--rebuild"
-fi
-
 # START
 # =====
 # Make sure you are in a Python virtual environment with the FL package installed.
@@ -34,8 +29,14 @@ FED_DIRECTORY=`pwd`  # Get the absolute directory path for the workspace
 fx plan initialize -a ${FQDN}
 
 openssl genrsa -3 -out ${FED_DIRECTORY}/key.pem 3072
+
 # Build graminized app image
-fx workspace graminize -s ${FED_DIRECTORY}/key.pem --no-save $REBUILD_OPTION
+if [ $REBUILD_IMAGES -gt 0 ]
+then
+fx workspace graminize -s ${FED_DIRECTORY}/key.pem --no-save --rebuild
+else
+fx workspace graminize -s ${FED_DIRECTORY}/key.pem --no-save
+fi
 
 # CERTIFICATION PART------------------------------
 # ================================================

@@ -65,7 +65,7 @@ with open('README.md') as f:
 
 setup(
     name='openfl',
-    version='1.2.1',
+    version='1.3',
     author='Intel Corporation',
     description='Federated Learning for the Edge',
     long_description=long_description,
