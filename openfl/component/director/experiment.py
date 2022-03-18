@@ -55,6 +55,7 @@ class Experiment:
             users: Iterable[str] = None,
             use_docker: bool = False,
             docker_env: Optional[Dict[str, str]] = None,
+            docker_buildargs: Optional[Dict[str, str]] = None,
     ) -> None:
         """Initialize an experiment object."""
         self.name = name
@@ -73,11 +74,16 @@ class Experiment:
         self.aggregator_container = None  # ???
         self.aggregator_client = aggregator_client
         self._use_docker = use_docker
-        self.env = docker_env
         self.director_host = director_host
         self.director_port = director_port
         self.last_tensor_dict = {}
         self.best_tensor_dict = {}
+        if docker_env is None:
+            docker_env = {}
+        self.docker_env = docker_env
+        if docker_buildargs is None:
+            docker_buildargs = {}
+        self.docker_buildargs = docker_buildargs
 
     async def start(
             self, *,
@@ -140,6 +146,7 @@ class Experiment:
         image_tag = await docker_client.build_image(
             context_path=docker_context_path,
             tag='aggregator',
+            buildargs=self.docker_buildargs,
         )
         cmd = (
             f'python run.py '
@@ -158,7 +165,7 @@ class Experiment:
             name=f'{self.name.lower()}_aggregator',
             image_tag=image_tag,
             cmd=cmd,
-            env=self.env,
+            env=self.docker_env,
         )
         self.status = Status.DOCKER_RUN_CONTAINER
         await docker_client.start_and_monitor_container(container=self.container)

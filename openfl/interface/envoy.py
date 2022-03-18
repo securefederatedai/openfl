@@ -98,8 +98,9 @@ def start_(shard_name, director_host, director_port, tls, envoy_config_path,
     # Instantiate Shard Descriptor
     shard_descriptor_config = config.as_dict().get('SHARD_DESCRIPTOR', {})
     shard_descriptor = shard_descriptor_from_config(shard_descriptor_config)
-    docker_env = envoy_params.pop('docker_env', {})
-
+    docker_config = envoy_params.pop('docker', {})
+    docker_env = docker_config.get('env', {})
+    docker_buildargs = docker_config.get('buildargs', {})
     envoy = Envoy(
         shard_name=shard_name,
         director_host=director_host,
@@ -112,6 +113,7 @@ def start_(shard_name, director_host, director_port, tls, envoy_config_path,
         certificate=config.certificate,
         use_docker=use_docker,
         docker_env=docker_env,
+        docker_buildargs=docker_buildargs,
         **envoy_params
     )
 

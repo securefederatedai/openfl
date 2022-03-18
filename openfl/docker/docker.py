@@ -32,6 +32,7 @@ class Docker:
             self, *,
             context_path: Path,
             tag: str,
+            buildargs: Dict[str, str],
     ) -> str:
         """Build docker image."""
         with open(context_path, 'rb') as f:
@@ -41,7 +42,7 @@ class Docker:
                 encoding='gzip',
                 tag=tag,
                 stream=True,
-                buildargs={},  # Here could be defined build proxy
+                buildargs=buildargs,  # Here could be defined build proxy
             )
         async for message in build_image_iter:
             if 'stream' not in message or len(message) > 1:

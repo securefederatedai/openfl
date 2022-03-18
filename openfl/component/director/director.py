@@ -45,6 +45,7 @@ class Director:
             settings: dict = None,
             use_docker: bool = False,
             docker_env: Optional[Dict[str, str]] = None,
+            docker_buildargs: Optional[Dict[str, str]] = None,
     ) -> None:
         """Initialize a director object."""
         self.sample_shape, self.target_shape = sample_shape, target_shape
@@ -60,7 +61,12 @@ class Director:
         self._use_docker = use_docker
         self.director_host = director_host
         self.director_port = director_port
+        if docker_env is None:
+            docker_env = {}
         self.docker_env = docker_env
+        if docker_buildargs is None:
+            docker_buildargs = {}
+        self.docker_buildargs = docker_buildargs
 
     def acknowledge_shard(self, shard_info: dict) -> bool:
         """Save shard info to shard registry if it's acceptable."""
@@ -113,6 +119,7 @@ class Director:
             init_tensor_dict_path=tensor_dict_path,
             use_docker=self._use_docker,
             docker_env=self.docker_env,
+            docker_buildargs=self.docker_buildargs,
             director_host=self.director_host,
             director_port=self.director_port,
             plan=plan,

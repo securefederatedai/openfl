@@ -1,9 +1,14 @@
 params:
   cuda_devices: [ 0, 2 ]
-  docker_env:
-    http_proxy:
-    https_rpoxy:
-    no_proxy:
+  docker:
+    env:
+      http_proxy:
+      https_rpoxy:
+      no_proxy:
+    buildargs:
+      HTTP_PROXY:
+      HTTPS_PROXY:
+      NO_PROXY:
 
 optional_plugin_components:
   cuda_device_monitor:

@@ -43,6 +43,7 @@ class DirectorGRPCServer(director_pb2_grpc.DirectorServicer):
             listen_port: int = 50051,
             use_docker: bool = False,
             docker_env: Optional[Dict[str, str]] = None,
+            docker_buildargs: Optional[Dict[str, str]] = None,
             **kwargs,
     ) -> None:
         """Initialize a director object."""
@@ -66,6 +67,7 @@ class DirectorGRPCServer(director_pb2_grpc.DirectorServicer):
             director_host=listen_host,
             director_port=listen_port,
             docker_env=docker_env,
+            docker_buildargs=docker_buildargs,
             **kwargs
         )
 

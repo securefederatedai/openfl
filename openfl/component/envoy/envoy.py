@@ -46,6 +46,7 @@ class Envoy:
             shard_descriptor_config,
             use_docker: bool = False,
             docker_env: Optional[Dict[str, str]] = None,
+            docker_buildargs: Optional[Dict[str, str]] = None,
     ) -> None:
         """Initialize a envoy object."""
         self.name = shard_name
@@ -76,7 +77,12 @@ class Envoy:
         self.is_experiment_running = False
         self._health_check_future = None
         self._use_docker = use_docker
+        if docker_env is None:
+            docker_env = {}
         self.docker_env = docker_env
+        if docker_buildargs is None:
+            docker_buildargs = {}
+        self.docker_buildargs = docker_buildargs
 
     async def run(self):
         """Run of the envoy working cycle."""
@@ -189,6 +195,7 @@ class Envoy:
         image_tag = await docker_client.build_image(
             context_path=docker_context_path,
             tag=f'{self.name}_{experiment_name}',
+            buildargs=self.docker_buildargs,
         )
         cuda_devices = ','.join(map(str, self.cuda_devices))
         gpu_allowed = bool(cuda_devices)
@@ -206,7 +213,7 @@ class Envoy:
             cmd += f'--cuda_devices {cuda_devices} '
 
         container = await docker_client.create_container(
-            name=experiment_name,
+            name=f'{experiment_name}_collaborator_{self.name}',
             image_tag=image_tag,
             cmd=cmd,
             volumes=self.shard_descriptor_config.get('volumes'),
