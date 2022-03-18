@@ -15,7 +15,7 @@ def corrupt_shard(spoil_method: Callable[[ShardDataset], ShardDataset]) -> Calla
     1. `corrupt` parameter is added to the SD init function.
         The Envoy manager may enable corruption by putting `corrupt: true` to SD params.
     2. `spoil_method` passed to the wrapper will be used to spoil Shard Datasets of this Envoy
-        if corruption is enabeled.
+        if corruption is enabled.
     """
     def decorator_func(ShardDescriptorClass: ShardDescriptor) -> ShardDescriptor:
         # This decorator is aware of the chosen `spoil_method`
