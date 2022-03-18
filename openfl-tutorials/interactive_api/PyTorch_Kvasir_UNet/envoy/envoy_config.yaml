@@ -1,9 +1,9 @@
 params:
-  cuda_devices: [ 0,2 ]
+  cuda_devices: [ 0, 2 ]
   docker_env:
-    HTTP_PROXY: localhost:12312
-    HTTPS_PROXY: localhost:12312
-    NO_PROXY: localhost:12312
+    http_proxy:
+    https_rpoxy:
+    no_proxy:
 
 optional_plugin_components:
   cuda_device_monitor:
@@ -16,3 +16,5 @@ shard_descriptor:
     data_folder: kvasir_data
     rank_worldsize: 1,10
     enforce_image_hw: '300,400'
+
+

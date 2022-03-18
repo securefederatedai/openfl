@@ -223,11 +223,11 @@ class Director:
                 and caller in self.experiments_registry[experiment_name].users):
             self.experiments_registry.remove(experiment_name)
 
-    def set_experiment_failed(self, *, experiment_name: str, collaborator_name: str):
+    async def set_experiment_failed(self, *, experiment_name: str, collaborator_name: str):
         """Set experiment failed."""
         exp = self.experiments_registry.get(experiment_name)
         if exp is not None:
-            exp.stop(collaborator_name)
+            await exp.stop(collaborator_name)
 
     def update_envoy_status(
             self, *,

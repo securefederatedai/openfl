@@ -188,7 +188,7 @@ class Envoy:
         )
         image_tag = await docker_client.build_image(
             context_path=docker_context_path,
-            tag=experiment_name,
+            tag=f'{self.name}_{experiment_name}',
         )
         cuda_devices = ','.join(map(str, self.cuda_devices))
         gpu_allowed = bool(cuda_devices)
