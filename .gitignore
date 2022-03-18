@@ -13,3 +13,4 @@ venv/*
 *.jpg
 *.crt
 *.key
+.eggs

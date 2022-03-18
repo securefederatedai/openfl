@@ -3,15 +3,12 @@
 
 """This package includes dependencies of the openfl project."""
 
-from subprocess import check_call
-from sys import executable
-
 from setuptools import Command
 from setuptools import setup
 from setuptools.command.build_py import build_py
 
 
-class BuildGRPC(Command):
+class BuildPackageProtos(Command):
     """Command to generate project *_pb2.py modules from proto files."""
 
     user_options = []
@@ -45,27 +42,8 @@ class BuildGRPC(Command):
 
     def run(self):
         """Build gRPC modules."""
-        check_call([executable, '-m', 'pip', 'install', 'grpcio-tools~=1.34.0'])
-
-        check_call([
-            executable,
-            '-m',
-            'grpc_tools.protoc',
-            '-I.',
-            '--python_out=.',
-            '--grpc_python_out=.',
-            'openfl/protocols/aggregator.proto',
-            'openfl/protocols/director.proto'
-        ])
-
-        check_call([
-            executable,
-            '-m',
-            'grpc_tools.protoc',
-            '-I.',
-            '--python_out=.',
-            'openfl/protocols/base.proto'
-        ])
+        from grpc.tools import command
+        command.build_package_protos(self.distribution.package_dir[''])
 
 
 class BuildPyGRPC(build_py):
@@ -73,7 +51,7 @@ class BuildPyGRPC(build_py):
 
     def __init__(self, dist):
         """Create a sub-command to execute."""
-        self.subcommand = BuildGRPC(dist)
+        self.subcommand = BuildPackageProtos(dist)
         super().__init__(dist)
 
     def run(self):
@@ -87,6 +65,7 @@ with open('README.md') as f:
 
 setup(
     name='openfl',
+    package_dir={'': '.'},
     version='1.2.1',
     author='Intel Corporation',
     description='Federated Learning for the Edge',
@@ -155,6 +134,7 @@ setup(
         'tensorboardX',
         'tqdm',
     ],
+    setup_requires=['grpcio-tools~=1.34.0'],
     python_requires='>=3.6, <3.9',
     project_urls={
         'Bug Tracker': 'https://github.com/intel/openfl/issues',
@@ -185,6 +165,6 @@ setup(
     },
     cmdclass={
         'build_py': BuildPyGRPC,
-        'build_grpc': BuildGRPC
+        'build_grpc': BuildPackageProtos
     },
 )
