@@ -182,12 +182,13 @@ class FLExperiment:
         delta_updates - [bool] Tells if collaborators should send delta updates
             for the locally tuned models. If set to False, whole checkpoints will be sent.
         opt_treatment - Optimizer state treatment policy.
-            Valid options: 'RESET' - reinitialize optimizer for every round,
+            Valid options:
+            'RESET' - reinitialize optimizer for every round,
             'CONTINUE_LOCAL' - keep local optimizer state,
             'CONTINUE_GLOBAL' - aggregate optimizer state.
         device_assignment_policy - device assignment policy.
-            Valid options: 'CPU_ONLY' - device parameter passed to tasks
-            will always be 'cpu',
+            Valid options:
+            'CPU_ONLY' - device parameter passed to tasks will always be 'cpu',
             'CUDA_PREFERRED' - enable passing CUDA device identifiers to tasks
             by collaborators, works with cuda-device-monitor plugin equipped Envoys.
         pip_install_options - tuple of options for the remote `pip install` calls,
