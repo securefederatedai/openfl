@@ -4,14 +4,19 @@
 """Cryptography IO utilities."""
 
 from hashlib import sha384
+from pathlib import Path
+from typing import Tuple
 
 from cryptography import x509
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
+from cryptography.hazmat.primitives.asymmetric.rsa import RSAPrivateKey
 from cryptography.hazmat.primitives.serialization import load_pem_private_key
+from cryptography.x509.base import Certificate
+from cryptography.x509.base import CertificateSigningRequest
 
 
-def read_key(path):
+def read_key(path: Path) -> RSAPrivateKey:
     """
     Read private key.
 
@@ -29,7 +34,7 @@ def read_key(path):
     return signing_key
 
 
-def write_key(key, path):
+def write_key(key: RSAPrivateKey, path: Path) -> None:
     """
     Write private key.
 
@@ -46,7 +51,7 @@ def write_key(key, path):
         ))
 
 
-def read_crt(path):
+def read_crt(path: Path) -> Certificate:
     """
     Read signed TLS certificate.
 
@@ -64,7 +69,7 @@ def read_crt(path):
     return certificate
 
 
-def write_crt(certificate, path):
+def write_crt(certificate: Certificate, path: Path) -> None:
     """
     Write cryptography certificate / csr.
 
@@ -81,7 +86,7 @@ def write_crt(certificate, path):
         ))
 
 
-def read_csr(path):
+def read_csr(path: Path) -> Tuple[CertificateSigningRequest, str]:
     """
     Read certificate signing request.
 

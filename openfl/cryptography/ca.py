@@ -5,17 +5,22 @@
 
 import datetime
 import uuid
+from typing import Tuple
 
 from cryptography import x509
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import rsa
+from cryptography.hazmat.primitives.asymmetric.rsa import RSAPrivateKey
+from cryptography.x509.base import Certificate
+from cryptography.x509.base import CertificateSigningRequest
 from cryptography.x509.extensions import ExtensionNotFound
+from cryptography.x509.name import Name
 from cryptography.x509.oid import ExtensionOID
 from cryptography.x509.oid import NameOID
 
 
-def generate_root_cert(days_to_expiration=365):
+def generate_root_cert(days_to_expiration: int = 365) -> Tuple[RSAPrivateKey, Certificate]:
     """Generate_root_certificate."""
     now = datetime.datetime.utcnow()
     expiration_delta = days_to_expiration * datetime.timedelta(1, 0, 0)
@@ -58,7 +63,7 @@ def generate_root_cert(days_to_expiration=365):
     return root_private_key, certificate
 
 
-def generate_signing_csr():
+def generate_signing_csr() -> Tuple[RSAPrivateKey, CertificateSigningRequest]:
     """Generate signing CSR."""
     # Generate private key
     signing_private_key = rsa.generate_private_key(
@@ -89,7 +94,9 @@ def generate_signing_csr():
     return signing_private_key, csr
 
 
-def sign_certificate(csr, issuer_private_key, issuer_name, days_to_expiration=365, ca=False):
+def sign_certificate(csr: CertificateSigningRequest, issuer_private_key: RSAPrivateKey,
+                     issuer_name: Name, days_to_expiration: int = 365,
+                     ca: bool = False) -> Certificate:
     """
     Sign the incoming CSR request.
 
