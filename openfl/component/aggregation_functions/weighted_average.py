@@ -6,11 +6,13 @@ from typing import Any
 from typing import List
 
 import numpy as np
+from numpy.typing import ArrayLike
 
+from openfl.utilities import LocalTensor
 from .core import AggregationFunction
 
 
-def weighted_average(tensors: np.ndarray, weights: np.ndarray) -> np.ndarray:
+def weighted_average(tensors: ArrayLike, weights: ArrayLike) -> np.ndarray:
     """Compute average."""
     return np.average(tensors, weights=weights, axis=0)
 
@@ -18,7 +20,7 @@ def weighted_average(tensors: np.ndarray, weights: np.ndarray) -> np.ndarray:
 class WeightedAverage(AggregationFunction):
     """Weighted average aggregation."""
 
-    def call(self, local_tensors: List, *_: Any) -> np.ndarray:
+    def call(self, local_tensors: List[LocalTensor], *_: Any) -> np.ndarray:
         """Aggregate tensors.
 
         Args:
@@ -46,5 +48,5 @@ class WeightedAverage(AggregationFunction):
             np.ndarray: aggregated tensor
         """
         tensors, weights = zip(*[(x.tensor, x.weight) for x in local_tensors])
-        tensors, weights = np.array(tensors), np.array(weights)
+
         return weighted_average(tensors, weights)

@@ -7,6 +7,7 @@ from typing import List
 
 import numpy as np
 
+from openfl.utilities import LocalTensor
 from .core import AggregationFunction
 from .weighted_average import weighted_average
 
@@ -50,7 +51,7 @@ def _l2dist(p1: np.ndarray, p2: np.ndarray) -> float:
 class GeometricMedian(AggregationFunction):
     """Geometric median aggregation."""
 
-    def call(self, local_tensors: List, *_: Any) -> np.ndarray:
+    def call(self, local_tensors: List[LocalTensor], *_: Any) -> np.ndarray:
         """Aggregate tensors.
 
         Args:

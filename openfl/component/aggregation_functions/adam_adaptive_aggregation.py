@@ -26,7 +26,7 @@ class AdamAdaptiveAggregation(AdaptiveAggregation):
         *,
         agg_func: AggregationFunction = DEFAULT_AGG_FUNC,
         params: Optional[Dict[str, np.ndarray]] = None,
-        model_interface: 'ModelInterface' = None, # NOQA
+        model_interface: Optional['ModelInterface'] = None, # NOQA
         learning_rate: float = 0.01,
         betas: Tuple[float, float] = (0.9, 0.999),
         initial_accumulator_value: float = 0.0,
