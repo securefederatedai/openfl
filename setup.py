@@ -43,7 +43,7 @@ class BuildPackageProtos(Command):
     def run(self):
         """Build gRPC modules."""
         from grpc.tools import command
-        command.build_package_protos(self.distribution.package_dir[''])
+        command.build_package_protos('.')
 
 
 class BuildPyGRPC(build_py):
@@ -65,7 +65,6 @@ with open('README.md') as f:
 
 setup(
     name='openfl',
-    package_dir={'': '.'},
     version='1.2.1',
     author='Intel Corporation',
     description='Federated Learning for the Edge',
