@@ -231,7 +231,8 @@ class KerasTaskRunner(TaskRunner):
             suffix += '_local'
         else:
             suffix += '_agg'
-        tags = change_tags(suffix, add_field='metric')
+        tags = ('metric',)
+        tags = change_tags(tags, add_field=suffix)
         output_tensor_dict = {
             TensorKey(metric, origin, round_num, True, tags):
                 np.array(ret_dict[metric])

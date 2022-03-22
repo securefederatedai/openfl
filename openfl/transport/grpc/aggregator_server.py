@@ -14,7 +14,6 @@ from grpc import ssl_server_credentials
 from openfl.protocols import aggregator_pb2
 from openfl.protocols import aggregator_pb2_grpc
 from openfl.protocols import utils
-from openfl.utilities import change_tags
 from openfl.utilities import check_equal
 from openfl.utilities import check_is_in
 
@@ -186,7 +185,7 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
         require_lossless = request.require_lossless
         round_number = request.round_number
         report = request.report
-        tags = change_tags(request.tags)
+        tags = tuple(request.tags)
 
         named_tensor = self.aggregator.get_aggregated_tensor(
             collaborator_name, tensor_name, round_number, report, tags, require_lossless)

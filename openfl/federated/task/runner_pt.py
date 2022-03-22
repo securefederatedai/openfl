@@ -118,7 +118,8 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
             suffix += '_local'
         else:
             suffix += '_agg'
-        tags = change_tags(suffix, add_field='metric')
+        tags = ('metric',)
+        tags = change_tags(tags, add_field=suffix)
         # TODO figure out a better way to pass in metric for this pytorch
         #  validate function
         output_tensor_dict = {

@@ -567,7 +567,7 @@ class Aggregator:
             self.uuid,
             named_tensor.round_number,
             named_tensor.report,
-            change_tags(named_tensor.tags)
+            tuple(named_tensor.tags)
         )
         tensor_name, origin, round_number, report, tags = tensor_key
         assert ('compressed' in tags or 'lossy_compressed' in tags), (
@@ -776,7 +776,7 @@ class Aggregator:
                 f'Tensor {tensor_key} in task {task_name} has not been processed correctly'
             )
             # Strip the collaborator label, and lookup aggregated tensor
-            new_tags = change_tags(tags[:-1])
+            new_tags = change_tags(tags, remove_field=collaborators_for_task[0])
             agg_tensor_key = TensorKey(tensor_name, origin, round_number, report, new_tags)
             agg_tensor_name, agg_origin, agg_round_number, agg_report, agg_tags = agg_tensor_key
             agg_function = WeightedAverage() if 'metric' in tags else task_agg_function

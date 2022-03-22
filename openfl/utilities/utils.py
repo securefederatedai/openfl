@@ -238,7 +238,7 @@ def merge_configs(
     return settings
 
 
-def change_tags(tags, add_field=None, remove_field=None):
+def change_tags(tags, add_field=None, remove_field=None) -> Tuple[str]:
     """Change tensor tags to add or remove fields and change tensor type.
 
     Args:
@@ -252,7 +252,10 @@ def change_tags(tags, add_field=None, remove_field=None):
         else:
             tags = list(tags) + [add_field]
     if remove_field:
-        tags = list(tags)
+        if type(tags) == str:
+            tags = [tags]
+        else:
+            tags = list(tags)
         tags.remove(remove_field)
     # remove duplicates while keeping the order
     tags = tuple(dict.fromkeys(tags))

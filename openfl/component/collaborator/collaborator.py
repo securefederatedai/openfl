@@ -12,7 +12,6 @@ from openfl.databases import TensorDB
 from openfl.pipelines import NoCompressionPipeline
 from openfl.pipelines import TensorCodec
 from openfl.protocols import utils
-from openfl.utilities import change_tags
 from openfl.utilities import TensorKey
 
 
@@ -495,7 +494,7 @@ class Collaborator:
             self.collaborator_name,
             named_tensor.round_number,
             named_tensor.report,
-            change_tags(named_tensor.tags)
+            tuple(named_tensor.tags)
         )
         tensor_name, origin, round_number, report, tags = tensor_key
         if 'compressed' in tags:
