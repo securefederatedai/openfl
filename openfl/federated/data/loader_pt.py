@@ -4,6 +4,10 @@
 """PyTorchDataLoader module."""
 
 from math import ceil
+from typing import Iterator
+from typing import Optional
+from typing import Tuple
+
 
 import numpy as np
 
@@ -13,7 +17,7 @@ from .loader import DataLoader
 class PyTorchDataLoader(DataLoader):
     """Federation Data Loader for TensorFlow Models."""
 
-    def __init__(self, batch_size, random_seed=None, **kwargs):
+    def __init__(self, batch_size: int, random_seed: Optional[int] = None, **kwargs) -> None:
         """
         Instantiate the data object.
 
@@ -35,7 +39,7 @@ class PyTorchDataLoader(DataLoader):
         # (self, batch_size, **kwargs), should call this __init__ and then
         # define self.X_train, self.y_train, self.X_valid, and self.y_valid
 
-    def get_feature_shape(self):
+    def get_feature_shape(self) -> Tuple[int, ...]:
         """Get the shape of an example feature array.
 
         Returns:
@@ -43,7 +47,8 @@ class PyTorchDataLoader(DataLoader):
         """
         return self.X_train[0].shape
 
-    def get_train_loader(self, batch_size=None, num_batches=None):
+    def get_train_loader(self, batch_size: Optional[int] = None, num_batches: Optional[int] = None
+                         ) -> Iterator[Tuple[np.ndarray, np.ndarray]]:
         """
         Get training data loader.
 
@@ -54,7 +59,8 @@ class PyTorchDataLoader(DataLoader):
         return self._get_batch_generator(
             X=self.X_train, y=self.y_train, batch_size=batch_size, num_batches=num_batches)
 
-    def get_valid_loader(self, batch_size=None):
+    def get_valid_loader(self, batch_size: Optional[int] = None
+                         ) -> Iterator[Tuple[np.ndarray, np.ndarray]]:
         """
         Get validation data loader.
 
@@ -63,7 +69,7 @@ class PyTorchDataLoader(DataLoader):
         """
         return self._get_batch_generator(X=self.X_valid, y=self.y_valid, batch_size=batch_size)
 
-    def get_train_data_size(self):
+    def get_train_data_size(self) -> int:
         """
         Get total number of training samples.
 
@@ -72,7 +78,7 @@ class PyTorchDataLoader(DataLoader):
         """
         return self.X_train.shape[0]
 
-    def get_valid_data_size(self):
+    def get_valid_data_size(self) -> int:
         """
         Get total number of validation samples.
 
@@ -82,7 +88,9 @@ class PyTorchDataLoader(DataLoader):
         return self.X_valid.shape[0]
 
     @staticmethod
-    def _batch_generator(X, y, idxs, batch_size, num_batches):
+    def _batch_generator(X: np.ndarray, y: np.ndarray, idxs: np.ndarray,
+                         batch_size: int, num_batches: int
+                         ) -> Iterator[Tuple[np.ndarray, np.ndarray]]:
         """
         Generate batch of data.
 
@@ -102,7 +110,9 @@ class PyTorchDataLoader(DataLoader):
             b = a + batch_size
             yield X[idxs[a:b]], y[idxs[a:b]]
 
-    def _get_batch_generator(self, X, y, batch_size, num_batches=None):
+    def _get_batch_generator(self, X: np.ndarray, y: np.ndarray, batch_size: int,
+                             num_batches: Optional[int] = None
+                             ) -> Iterator[Tuple[np.ndarray, np.ndarray]]:
         """
         Return the dataset generator.
 

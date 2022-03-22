@@ -3,13 +3,17 @@
 
 """FastEsitmatorDataLoader module."""
 
+from typing import Tuple
+
+from fastestimator import Pipeline
+
 from .loader import DataLoader
 
 
 class FastEstimatorDataLoader(DataLoader):
     """Federation Data Loader for FastEstimator."""
 
-    def __init__(self, pipeline, **kwargs):
+    def __init__(self, pipeline: Pipeline, **kwargs) -> None:
         """
         Instantiate the data object.
 
@@ -32,7 +36,7 @@ class FastEstimatorDataLoader(DataLoader):
         # (self, batch_size, **kwargs), should call this __init__ and then
         # define self.X_train, self.y_train, self.X_valid, and self.y_valid
 
-    def get_train_data_size(self):
+    def get_train_data_size(self) -> int:
         """
         Get total number of training samples.
 
@@ -41,7 +45,7 @@ class FastEstimatorDataLoader(DataLoader):
         """
         return len(self.pipeline.data['train'])
 
-    def get_valid_data_size(self):
+    def get_valid_data_size(self) -> int:
         """
         Get total number of validation samples.
 
@@ -50,7 +54,7 @@ class FastEstimatorDataLoader(DataLoader):
         """
         return len(self.pipeline.data['test'])
 
-    def get_feature_shape(self):
+    def get_feature_shape(self) -> Tuple[int, ...]:
         """
         Get feature shape.
 

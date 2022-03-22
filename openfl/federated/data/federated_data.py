@@ -3,6 +3,10 @@
 
 """FederatedDataset module."""
 
+from typing import List
+from typing import Optional
+from typing import Union
+
 import numpy as np
 
 from openfl.utilities.data_splitters import EqualNumPyDataSplitter
@@ -34,8 +38,11 @@ class FederatedDataSet(PyTorchDataLoader):
     train_splitter: NumPyDataSplitter
     valid_splitter: NumPyDataSplitter
 
-    def __init__(self, X_train, y_train, X_valid, y_valid,
-                 batch_size=1, num_classes=None, train_splitter=None, valid_splitter=None):
+    def __init__(self, X_train: np.ndarray, y_train: np.ndarray,
+                 X_valid: np.ndarray, y_valid: np.ndarray,
+                 batch_size: int = 1, num_classes: Optional[int] = None,
+                 train_splitter: Optional[NumPyDataSplitter] = None,
+                 valid_splitter: Optional[NumPyDataSplitter] = None) -> None:
         """
         Initialize.
 
@@ -74,7 +81,8 @@ class FederatedDataSet(PyTorchDataLoader):
         self.valid_splitter = self._get_splitter_or_default(valid_splitter)
 
     @staticmethod
-    def _get_splitter_or_default(value):
+    def _get_splitter_or_default(value: Optional[NumPyDataSplitter]
+                                 ) -> Union[NumPyDataSplitter, EqualNumPyDataSplitter]:
         if value is None:
             return EqualNumPyDataSplitter()
         if isinstance(value, NumPyDataSplitter):
@@ -82,7 +90,7 @@ class FederatedDataSet(PyTorchDataLoader):
         else:
             raise NotImplementedError(f'Data splitter {value} is not supported')
 
-    def split(self, num_collaborators):
+    def split(self, num_collaborators: int) -> List['FederatedDataSet']:
         """Create a Federated Dataset for each of the collaborators.
 
         Args:

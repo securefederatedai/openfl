@@ -3,11 +3,13 @@
 
 """DataLoader module."""
 
+from typing import NoReturn
+
 
 class DataLoader:
     """Federated Learning Data Loader Class."""
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs) -> None:
         """
         Instantiate the data object.
 
@@ -16,7 +18,7 @@ class DataLoader:
         """
         pass
 
-    def get_feature_shape(self):
+    def get_feature_shape(self) -> NoReturn:
         """
         Get the shape of an example feature array.
 
@@ -25,7 +27,7 @@ class DataLoader:
         """
         raise NotImplementedError
 
-    def get_train_loader(self, **kwargs):
+    def get_train_loader(self, **kwargs) -> NoReturn:
         """
         Get training data loader.
 
@@ -34,7 +36,7 @@ class DataLoader:
         """
         raise NotImplementedError
 
-    def get_valid_loader(self):
+    def get_valid_loader(self) -> NoReturn:
         """
         Get validation data loader.
 
@@ -43,7 +45,7 @@ class DataLoader:
         """
         raise NotImplementedError
 
-    def get_infer_loader(self):
+    def get_infer_loader(self) -> NoReturn:
         """
         Get inferencing data loader.
 
@@ -53,7 +55,7 @@ class DataLoader:
         """
         return NotImplementedError
 
-    def get_train_data_size(self):
+    def get_train_data_size(self) -> NoReturn:
         """
         Get total number of training samples.
 
@@ -62,7 +64,7 @@ class DataLoader:
         """
         raise NotImplementedError
 
-    def get_valid_data_size(self):
+    def get_valid_data_size(self) -> NoReturn:
         """
         Get total number of validation samples.
 
