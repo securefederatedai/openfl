@@ -86,7 +86,7 @@ class Plan:
 
     @staticmethod
     def parse(plan_config_path: Path, cols_config_path: Optional[Path] = None,
-              data_config_path: Path = Optional[None], resolve: bool = True) -> 'Plan':
+              data_config_path: Optional[Path] = None, resolve: bool = True) -> 'Plan':
         """
         Parse the Federated Learning plan.
 
