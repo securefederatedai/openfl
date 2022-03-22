@@ -1,3 +1,6 @@
+# Copyright (C) 2020-2021 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 from openfl.interface.interactive_api.federation import Federation
 from openfl.interface.interactive_api.experiment import TaskInterface, DataInterface
 from openfl.interface.interactive_api.experiment import ModelInterface, FLExperiment
@@ -220,7 +223,6 @@ def validate(unet_model, val_loader, device, loss_fn=soft_dice_coef):
     with torch.no_grad():
         for data, target in val_loader:
             samples = target.shape[0]
-            # print(f'number of samples in this batch : {samples}')
             total_samples += samples
             data, target = torch.tensor(data).to(device, dtype=torch.float32), \
                 torch.tensor(target).to(device, dtype=torch.float32)
