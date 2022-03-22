@@ -7,15 +7,31 @@ from importlib import import_module
 from logging import getLogger
 from os.path import splitext
 from pathlib import Path
+from typing import Any
+from typing import Dict
+from typing import Optional
+from typing import Tuple
+from typing import Union
 
+from numpy import ndarray
 from yaml import dump
 from yaml import safe_load
 from yaml import SafeDumper
 
+
+from openfl.component import Aggregator
 from openfl.component.aggregation_functions import AggregationFunction
 from openfl.component.aggregation_functions import WeightedAverage
 from openfl.component.assigner.custom_assigner import Assigner
+from openfl.component.collaborator import Collaborator
+from openfl.federated.data import DataLoader
+from openfl.federated.task import TaskRunner
+from openfl.federated.task.task_runner import CoreTaskRunner
 from openfl.interface.cli_helper import WORKSPACE
+from openfl.interface.interactive_api.shard_descriptor import ShardDescriptor
+from openfl.pipelines.pipeline import TransformationPipeline
+from openfl.pipelines.pipeline import Transformer
+from openfl.plugins.interface_serializer.serializer_interface import Serializer
 from openfl.transport import AggregatorGRPCClient
 from openfl.transport import AggregatorGRPCServer
 from openfl.utilities.utils import getfqdn_env
@@ -25,6 +41,11 @@ TEMPLATE = 'template'
 DEFAULTS = 'defaults'
 AUTO = 'auto'
 
+INSTANCE = Union[Aggregator, Collaborator,
+                 DataLoader,
+                 TaskRunner, CoreTaskRunner,
+                 Transformer, TransformationPipeline]
+
 
 class Plan:
     """Federated Learning plan."""
@@ -32,7 +53,7 @@ class Plan:
     logger = getLogger(__name__)
 
     @staticmethod
-    def load(yaml_path: Path, default: dict = None):
+    def load(yaml_path: Path, default: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """Load the plan from YAML file."""
         if default is None:
             default = {}
@@ -41,12 +62,12 @@ class Plan:
         return default
 
     @staticmethod
-    def dump(yaml_path, config, freeze=False):
+    def dump(yaml_path: Path, config: Dict[str, Any], freeze: bool = False) -> None:
         """Dump the plan config to YAML file."""
 
         class NoAliasDumper(SafeDumper):
 
-            def ignore_aliases(self, data):
+            def ignore_aliases(self, data: ndarray) -> bool:
                 return True
 
         if freeze:
@@ -64,8 +85,8 @@ class Plan:
             yaml_path.write_text(dump(config))
 
     @staticmethod
-    def parse(plan_config_path: Path, cols_config_path: Path = None,
-              data_config_path: Path = None, resolve=True):
+    def parse(plan_config_path: Path, cols_config_path: Optional[Path] = None,
+              data_config_path: Path = Optional[None], resolve: bool = True) -> 'Plan':
         """
         Parse the Federated Learning plan.
 
@@ -154,7 +175,7 @@ class Plan:
             raise
 
     @staticmethod
-    def build(template, settings, **override):
+    def build(template: str, settings: Any, **override) -> INSTANCE:
         """
         Create an instance of a openfl Component or Federated DataLoader/TaskRunner.
 
@@ -184,7 +205,7 @@ class Plan:
         return instance
 
     @staticmethod
-    def import_(template):
+    def import_(template: str) -> INSTANCE:
         """
         Import an instance of a openfl Component or Federated DataLoader/TaskRunner.
 
@@ -204,7 +225,7 @@ class Plan:
 
         return instance
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize."""
         self.config = {}  # dictionary containing patched plan definition
         self.authorized_cols = []  # authorized collaborator list
@@ -227,7 +248,7 @@ class Plan:
         self.serializer_ = None
 
     @property
-    def hash(self):  # NOQA
+    def hash(self) -> str:  # NOQA
         """Generate hash for this instance."""
         self.hash_ = sha384(dump(self.config).encode('utf-8'))
         Plan.logger.info(f'FL-Plan hash is [blue]{self.hash_.hexdigest()}[/]',
@@ -235,7 +256,7 @@ class Plan:
 
         return self.hash_.hexdigest()
 
-    def resolve(self):
+    def resolve(self) -> None:
         """Resolve the federation settings."""
         self.federation_uuid = f'{self.name}_{self.hash[:8]}'
         self.aggregator_uuid = f'aggregator_{self.federation_uuid}'
@@ -251,7 +272,7 @@ class Plan:
                 self.hash[:8], 16
             ) % (60999 - 49152) + 49152
 
-    def get_assigner(self):
+    def get_assigner(self) -> Assigner:
         """Get the plan task assigner."""
         aggregation_functions_by_task = None
         assigner_function = None
@@ -287,7 +308,7 @@ class Plan:
 
         return self.assigner_
 
-    def get_tasks(self):
+    def get_tasks(self) -> Dict[str, Any]:
         """Get federation tasks."""
         tasks = self.config.get('tasks', {})
         tasks.pop(DEFAULTS, None)
@@ -307,7 +328,7 @@ class Plan:
             tasks[task]['aggregation_type'] = aggregation_type
         return tasks
 
-    def get_aggregator(self, tensor_dict=None):
+    def get_aggregator(self, tensor_dict: Optional[Dict[str, ndarray]] = None) -> Aggregator:
         """Get federation aggregator."""
         defaults = self.config.get('aggregator',
                                    {
@@ -335,7 +356,7 @@ class Plan:
 
         return self.aggregator_
 
-    def get_tensor_pipe(self):
+    def get_tensor_pipe(self) -> TransformationPipeline:
         """Get data tensor pipeline."""
         defaults = self.config.get(
             'compression_pipeline',
@@ -351,7 +372,7 @@ class Plan:
         return self.pipe_
 
     # legacy api (TaskRunner subclassing)
-    def get_data_loader(self, collaborator_name):
+    def get_data_loader(self, collaborator_name: str) -> DataLoader:
         """Get data loader."""
         defaults = self.config.get('data_loader',
                                    {
@@ -369,13 +390,14 @@ class Plan:
         return self.loader_
 
     # Python interactive api
-    def initialize_data_loader(self, data_loader, shard_descriptor):
+    def initialize_data_loader(self, data_loader: 'DataInterface',  # NOQA
+                               shard_descriptor: ShardDescriptor) -> 'DataInterface':  # NOQA
         """Get data loader."""
         data_loader.shard_descriptor = shard_descriptor
         return data_loader
 
     # legacy api (TaskRunner subclassing)
-    def get_task_runner(self, data_loader):
+    def get_task_runner(self, data_loader: 'DataInterface') -> TaskRunner:  # NOQA
         """Get task runner."""
         defaults = self.config.get('task_runner',
                                    {
@@ -391,9 +413,10 @@ class Plan:
         return self.runner_
 
     # Python interactive api
-    def get_core_task_runner(self, data_loader=None,
-                             model_provider=None,
-                             task_keeper=None):
+    def get_core_task_runner(self, data_loader: Optional['DataInterface'] = None,  # NOQA
+                             model_provider: Optional['ModelInterface'] = None,  # NOQA
+                             task_keeper: Optional['TaskInterface'] = None  # NOQA
+                             ) -> CoreTaskRunner:
         """Get task runner."""
         defaults = self.config.get(
             'task_runner',
@@ -420,8 +443,13 @@ class Plan:
 
         return self.runner_
 
-    def get_collaborator(self, collaborator_name, root_certificate=None, private_key=None,
-                         certificate=None, task_runner=None, client=None, shard_descriptor=None):
+    def get_collaborator(self, collaborator_name: str,
+                         root_certificate: Union[Path, str, None] = None,
+                         private_key: Union[Path, str, None] = None,
+                         certificate: Union[Path, str, None] = None,
+                         task_runner: Optional[TaskRunner] = None,
+                         client: Optional[AggregatorGRPCClient] = None,
+                         shard_descriptor: Optional[ShardDescriptor] = None) -> Collaborator:
         """Get collaborator."""
         defaults = self.config.get(
             'collaborator',
@@ -475,8 +503,10 @@ class Plan:
 
         return self.collaborator_
 
-    def get_client(self, collaborator_name, aggregator_uuid, federation_uuid,
-                   root_certificate=None, private_key=None, certificate=None):
+    def get_client(self, collaborator_name: str, aggregator_uuid: str, federation_uuid: str,
+                   root_certificate: Union[Path, str, None] = None,
+                   private_key: Union[Path, str, None] = None,
+                   certificate: Union[Path, str, None] = None) -> AggregatorGRPCClient:
         """Get gRPC client for the specified collaborator."""
         common_name = collaborator_name
         if not root_certificate or not private_key or not certificate:
@@ -500,7 +530,9 @@ class Plan:
 
         return self.client_
 
-    def get_server(self, root_certificate=None, private_key=None, certificate=None, **kwargs):
+    def get_server(self, root_certificate: Union[Path, str, None] = None,
+                   private_key: Union[Path, str, None] = None,
+                   certificate: Union[Path, str, None] = None, **kwargs) -> AggregatorGRPCServer:
         """Get gRPC server of the aggregator instance."""
         common_name = self.config['network'][SETTINGS]['agg_addr'].lower()
 
@@ -525,8 +557,11 @@ class Plan:
 
         return self.server_
 
-    def interactive_api_get_server(self, *, tensor_dict, root_certificate, certificate,
-                                   private_key, tls):
+    def interactive_api_get_server(self, *, tensor_dict: Dict[str, ndarray],
+                                   root_certificate: Union[Path, str, None],
+                                   certificate: Union[Path, str, None],
+                                   private_key: Union[Path, str, None],
+                                   tls: bool) -> AggregatorGRPCServer:
         """Get gRPC server of the aggregator instance."""
         server_args = self.config['network'][SETTINGS]
 
@@ -543,7 +578,8 @@ class Plan:
 
         return self.server_
 
-    def deserialize_interface_objects(self):
+    def deserialize_interface_objects(self) -> Tuple['ModelInterface', # NOQA
+                                                     'TaskInterface', 'DataInterface']:  # NOQA
         """Deserialize objects for TaskRunner."""
         api_layer = self.config['api_layer']
         filenames = [
@@ -553,7 +589,7 @@ class Plan:
         ]
         return (self.restore_object(api_layer['settings'][filename]) for filename in filenames)
 
-    def get_serializer_plugin(self, **kwargs):
+    def get_serializer_plugin(self, **kwargs) -> Serializer:
         """Get serializer plugin.
 
         This plugin is used for serialization of interfaces in new interactive API
@@ -566,7 +602,7 @@ class Plan:
             self.serializer_ = Plan.build(serializer_plugin, kwargs)
         return self.serializer_
 
-    def restore_object(self, filename):
+    def restore_object(self, filename: str) -> Any:
         """Deserialize an object."""
         serializer_plugin = self.get_serializer_plugin()
         if serializer_plugin is None:
