@@ -88,7 +88,8 @@ class AggregatorGRPCServer(AggregatorServicer):
                     common_name, collaborator_common_name):
                 raise ValueError(
                     f'Invalid collaborator. CN: |{common_name}| '
-                    f'collaborator_common_name: |{collaborator_common_name}|')
+                    f'collaborator_common_name: |{collaborator_common_name}|'
+                    f'request: |{request}|')
 
     def get_header(self, collaborator_name):
         """

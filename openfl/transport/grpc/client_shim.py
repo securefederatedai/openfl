@@ -336,8 +336,13 @@ class CollaboratorGRPCClientShim:
 
     def _save_response(self, response_path, proto):
 
-        with open(response_path,'wb') as f:
+        # Save intermediate response
+        intermediate_resp_file = response_path.replace('response','intermediate_resp')
+        with open(intermediate_resp_file,'wb') as f:
             f.write(proto.SerializeToString())
+        # Reponse is now ready to send
+        Path(intermediate_resp_file).rename(response_path)
+
 
 
 

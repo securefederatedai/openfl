@@ -146,9 +146,15 @@ class AggregatorGRPCServerShim(AggregatorServicer):
 
     def _request_response_shim(self, request, collaborator_name, func_name):
         request_file, response_file = self._generate_fnames(collaborator_name,func_name)
-        with open(request_file,'wb') as f:
+        
+        # Write to intermediate file to prevent premature request
+        intermediate_req_file = request_file.replace('request','intermediate_req')
+        with open(intermediate_req_file,'wb') as f:
             f.write(request.SerializeToString())
             self.logger.info(f'Serialized {func_name} request')
+        
+        # Request is now ready to be sent
+        Path(intermediate_req_file).rename(request_file)
 
         while not Path(response_file).exists():
             self.logger.info(
