@@ -1,3 +1,6 @@
+# Copyright (C) 2021-2022 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """FedProx Keras optimizer module."""
 import tensorflow as tf
 import tensorflow.keras as keras

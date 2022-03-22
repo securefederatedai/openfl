@@ -84,7 +84,7 @@ class Envoy:
             self.is_experiment_running = True
             try:
                 with ExperimentWorkspace(
-                        self.name + ' ' + experiment_name,
+                        self.name + '_' + experiment_name,
                         data_file_path,
                         is_install_requirements=True
                 ):

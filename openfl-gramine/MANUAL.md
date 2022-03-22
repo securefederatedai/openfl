@@ -7,10 +7,9 @@ Building machine:
 - Docker should be installed, user included in Docker group
 
 Machines that will run an Aggregator and Collaborator containers should have the following:
-- SGX enabled in BIOS
-- Ubuntu with Linux kernel 5.11+
-- ? SGX drivers, it is built in kernel: `/dev/sgx_enclave`
-- [aesmd service](https://github.com/intel/linux-sgx) (`/var/run/aesmd/aesm.socket`)
+- FSGSBASE feature and SGX enabled from BIOS
+- Intel SGX driver or Linux 5.11+ driver
+- Intel SGX SDK/PSW
 </br>
 This is a short list, see more in [Gramine docs](https://gramine.readthedocs.io/en/latest/devel/building.html).
 
