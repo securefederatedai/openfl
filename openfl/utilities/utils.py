@@ -7,7 +7,7 @@ import ipaddress
 import logging
 import os
 import re
-from collections import Callable
+from collections.abc import Callable
 from functools import partial
 from socket import getfqdn
 from typing import List
