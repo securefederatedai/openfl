@@ -631,12 +631,14 @@ class Aggregator:
                 The numpy array associated with the returned tensorkey
         """
         raw_bytes = named_tensor.data_bytes
-        metadata = [{
-            'int_to_float': proto.int_to_float,
-            'int_list': proto.int_list,
-            'bool_list': proto.bool_list
-        }
-            for proto in named_tensor.transformer_metadata]
+        metadata = [
+            {
+                'int_to_float': proto.int_to_float,
+                'int_list': proto.int_list,
+                'bool_list': proto.bool_list,
+            }
+            for proto in named_tensor.transformer_metadata
+        ]
         # The tensor has already been transfered to aggregator,
         # so the newly constructed tensor should have the aggregator origin
         tensor_key = TensorKey(
@@ -991,10 +993,11 @@ class Aggregator:
     def stop(self, failed_collaborator: str = None) -> None:
         """Stop aggregator execution."""
         self.logger.info('Force stopping the aggregator execution.')
-        for collaborator_name in filter(lambda c: c != failed_collaborator,
-                                        self.authorized_cols):
-            self.logger.info(
-                f'Sending signal to collaborator {collaborator_name} to shutdown...')
+
+        for collaborator_name in self.authorized_cols:
+            if collaborator_name == failed_collaborator:
+                continue
+            self.logger.info(f'Sending signal to collaborator {collaborator_name} to shutdown...')
             self.quit_job_sent_to.append(collaborator_name)
 
 

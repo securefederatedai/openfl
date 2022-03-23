@@ -33,7 +33,6 @@ class Status:
     FAILED = 'failed'
     DOCKER_BUILD_IN_PROGRESS = 'docker_build_in_progress'
     DOCKER_CREATE_CONTAINER = 'docker_create_container'
-    DOCKER_RUN_CONTAINER = 'docker_run_container'
 
 
 class Experiment:
@@ -68,7 +67,6 @@ class Experiment:
         self.plan = plan
         self.users = set() if users is None else set(users)
         self.status = Status.PENDING
-        self.aggregator_container = None  # ???
         self.aggregator_client = aggregator_client
         self.director_host = director_host
         self.director_port = director_port
@@ -84,7 +82,6 @@ class Experiment:
             certificate: Union[Path, str] = None,
     ) -> None:
         """Run experiment."""
-        self.status = Status.IN_PROGRESS
         try:
             logger.info(f'New experiment {self.name} for '
                         f'collaborators {self.collaborators}')
@@ -98,6 +95,7 @@ class Experiment:
                     certificate=certificate,
                 )
             else:
+                self.status = Status.IN_PROGRESS
                 with ExperimentWorkspace(self.name, self.archive_path):
                     aggregator_grpc_server = self._create_aggregator_grpc_server(
                         director_host=self.director_host,
@@ -120,6 +118,21 @@ class Experiment:
     async def stop(self, failed_collaborator: str = None):
         await self.aggregator_client.stop(failed_collaborator=failed_collaborator)
 
+    async def get_description(self) -> dict:
+        description = {
+            'name': self.name,
+            'status': self.status,
+            'collaborators_amount': len(self.collaborators),
+        }
+
+        if self.status == Status.IN_PROGRESS:
+            description = await self.aggregator_client.get_experiment_description()
+
+        return description
+
+    async def get_metric_stream(self):
+        await self.aggregator_client.get_metric_stream()
+
     async def _run_aggregator_in_docker(
             self, *,
             data_file_path: Path,
@@ -128,12 +141,12 @@ class Experiment:
             private_key: Union[Path, str] = None,
             certificate: Union[Path, str] = None,
     ) -> None:
+        self.status = Status.DOCKER_BUILD_IN_PROGRESS
         docker_client = docker.Docker(config=self.docker_config)
         docker_context_path = docker.create_aggregator_context(
             data_file_path=data_file_path,
             init_tensor_dict_path=self.init_tensor_dict_path,
         )
-        self.status = Status.DOCKER_BUILD_IN_PROGRESS
         image_tag = await docker_client.build_image(
             context_path=docker_context_path,
             tag='aggregator',
@@ -156,7 +169,7 @@ class Experiment:
             image_tag=image_tag,
             cmd=cmd,
         )
-        self.status = Status.DOCKER_RUN_CONTAINER
+        self.status = Status.IN_PROGRESS
         await docker_client.start_and_monitor_container(container=self.container)
         await self.container.delete(force=True)
 

@@ -10,6 +10,7 @@ from typing import Optional
 from typing import Tuple
 
 import grpc
+from google.protobuf.json_format import MessageToDict
 
 from openfl.pipelines import NoCompressionPipeline
 from openfl.protocols import aggregator_pb2
@@ -536,7 +537,7 @@ class AsyncAggregatorGRPCClient(BaseAggregatorGRPCClient):
         """Get experiment info."""
         request = aggregator_pb2.GetExperimentDescriptionRequest()
         response = await self.stub.GetExperimentDescription(request)
-        return response.experiment
+        return MessageToDict(response.experiment)
 
     async def stop(self, failed_collaborator: str = None):
         request = aggregator_pb2.StopRequest(failed_collaborator=failed_collaborator)

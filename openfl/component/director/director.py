@@ -12,6 +12,7 @@ from collections import defaultdict
 from pathlib import Path
 from tarfile import TarFile
 from typing import Iterable
+from typing import List
 from typing import Union
 from typing import ValuesView
 
@@ -120,8 +121,6 @@ class Director:
     async def get_aggregator_client(self, experiment_name):
         """Return an aggregator client for the experiment."""
         exp = self.experiments_registry[experiment_name]
-        # while exp.status != Status.IN_PROGRESS:
-        #     await asyncio.sleep(1)
         agg_port = exp.plan.agg_port
         agg_addr = exp.plan.agg_addr
         logger.info(f'Aggregator uri: {agg_addr}:{agg_port}')
@@ -144,14 +143,7 @@ class Director:
             logger.error('No experiment data in the stash')
             return None
         exp = self.experiments_registry[experiment_name]
-        # if exp.status != Status.IN_PROGRESS:
-        #     return None
 
-        # aggregator_client = await self.get_aggregator_client(experiment_name)
-        # trained_model = await aggregator_client.get_trained_model(
-        #     experiment_name,
-        #     model_type
-        # )
         if model_type == 'last':
             return exp.last_tensor_dict
         elif model_type == 'best':
@@ -202,14 +194,14 @@ class Director:
         Raises:
             StopIteration - if the experiment is finished and there is no more metrics to report
         """
-        if (experiment_name not in self.experiments_registry
-                or caller not in self.experiments_registry[experiment_name].users):
+        exp = self.experiments_registry.get(experiment_name)
+        if exp is None or caller not in exp.users:
             raise Exception(
                 f'No experiment name "{experiment_name}" in experiments list, or caller "{caller}"'
                 f' does not have access to this experiment'
             )
 
-        aggregator_client = await self.get_aggregator_client(experiment_name)
+        exp.get_metric_stream()
         async for metric_dict in aggregator_client.get_metric_stream():
             yield metric_dict
 
@@ -260,27 +252,17 @@ class Director:
 
         return self._shard_registry.values()
 
-    async def get_experiments_list(self, caller: str) -> list:
+    async def get_experiments_list(self, caller: str) -> List[dict]:
         """Get experiments list for specific user."""
         experiments = self.experiments_registry.get_user_experiments(caller)
         result = []
         for exp in experiments:
-            exp_data = {
-                'name': exp.name,
-                'status': exp.status,
-                'collaborators_amount': len(exp.collaborators),
-            }
-            if exp.status == Status.IN_PROGRESS:
-                aggregator_client = await self.get_aggregator_client(exp.name)
-                experiment_pb2 = await aggregator_client.get_experiment_description()
-                exp_data['progress'] = experiment_pb2.progress
-                exp_data['tasks_amount'] = len(experiment_pb2.tasks)
-            result.append(exp_data)
-
+            description = await exp.get_description()
+            result.append(description)
         return result
 
     async def get_experiment_description(self, caller: str, experiment_name: str) -> dict:
-        """Get a experiment information by name for specific user."""
+        """Get an experiment information by name for specific user."""
         exp = self.experiments_registry.get(experiment_name)
         if not exp or caller not in exp.users:
             logger.info(f'Experiment {experiment_name} for user {caller} does not exist.')
@@ -290,12 +272,8 @@ class Director:
                 name=exp.name,
                 status=exp.status,
             )
-        aggregator_client = await self.get_aggregator_client(experiment_name)
-        experiment_pb2 = await aggregator_client.get_experiment_description()
-        experiment_pb2.name = experiment_name
-        experiment_pb2.status = exp.status
-
-        return experiment_pb2
+        description = await exp.get_description()
+        return description
 
     async def start_experiment_execution_loop(self):
         """Run task to monitor and run experiments."""

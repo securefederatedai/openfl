@@ -20,7 +20,8 @@ service Director {
   rpc SetExperimentFailed (SetExperimentFailedRequest) returns (SetExperimentFailedResponse) {}
 
   // 1.2 Aggregator RPCs
-  rpc UploadExperimentModel(UploadExperimentModelRequest) returns (UploadExperimentModelResponse) {}
+  rpc UploadExperimentModel(UploadExperimentModelRequest)
+      returns (UploadExperimentModelResponse) {}
 
   // 2. Frontend RPCs
   // 2.1 Extension RPCs
