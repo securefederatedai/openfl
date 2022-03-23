@@ -1,0 +1,36 @@
+ARG BASE_IMAGE=python:3.8
+FROM ${BASE_IMAGE}
+
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
+# until these changes are not in pip, install from repo
+RUN git clone https://github.com/intel/openfl.git
+WORKDIR /openfl
+RUN --mount=type=cache,target=/root/.cache/ \
+    pip install --upgrade pip && \
+    pip install .
+WORKDIR /
+
+# install gramine
+RUN curl -fsSLo /usr/share/keyrings/gramine-keyring.gpg https://packages.gramineproject.io/gramine-keyring.gpg && \
+    echo 'deb [arch=amd64 signed-by=/usr/share/keyrings/gramine-keyring.gpg] https://packages.gramineproject.io/ stable main' | \
+    tee /etc/apt/sources.list.d/gramine.list
+RUN --mount=type=cache,id=apt-dev,target=/var/cache/apt \
+    apt-get update && \
+    apt-get install -y --no-install-recommends \
+    gramine libprotobuf-c-dev \
+    && rm -rf /var/lib/apt/lists/*
+    # there is an issue for libprotobuf-c in gramine repo, install from apt for now
+
+# graminelibos is under this dir
+ENV PYTHONPATH=/usr/local/lib/python3.8/site-packages/:/usr/lib/python3/dist-packages/:
+
+# install linux headers
+# WORKDIR /tmp/
+# RUN wget -c https://kernel.ubuntu.com/~kernel-ppa/mainline/v5.11/amd64/linux-headers-5.11.0-051100_5.11.0-051100.202102142330_all.deb
+# RUN dpkg -i *.deb
+# RUN mv /usr/src/linux-headers-5.11.0-051100/ /usr/src/linux-headers-5.11.0-051100rc5-generic/
+# WORKDIR /
+
+# ENV LC_ALL=C.UTF-8
+# ENV LANG=C.UTF-8

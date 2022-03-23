@@ -2,8 +2,11 @@
 # SPDX-License-Identifier: Apache-2.0
 """Workspace module."""
 
+import os
+import subprocess
 import sys
 from pathlib import Path
+from typing import Tuple
 
 from click import Choice
 from click import confirm
@@ -14,7 +17,7 @@ from click import pass_context
 from click import Path as ClickPath
 
 from openfl.utilities.path_check import is_directory_traversal
-from openfl.utilities.utils import is_package_versioned
+from openfl.utilities.workspace import dump_requirements_file
 
 
 @group()
@@ -109,7 +112,12 @@ def create(prefix, template):
 
 
 @workspace.command(name='export')
-def export_():
+@option('-o', '--pip-install-options', required=False,
+        type=str, multiple=True, default=tuple,
+        help='Options for remote pip install. '
+             'You may pass several options in quotation marks alongside with arguments, '
+             'e.g. -o "--find-links source.site"')
+def export_(pip_install_options: Tuple[str]):
     """Export federated learning workspace."""
     from os import getcwd
     from os import makedirs
@@ -124,19 +132,14 @@ def export_():
     from plan import freeze_plan
     from openfl.interface.cli_helper import WORKSPACE
 
-    # TODO: Does this need to freeze all plans?
     plan_file = Path('plan/plan.yaml').absolute()
     try:
         freeze_plan(plan_file)
     except Exception:
         echo(f'Plan file "{plan_file}" not found. No freeze performed.')
 
-    from pip._internal.operations import freeze
-    requirements_generator = freeze.freeze()
-    with open('./requirements.txt', 'w') as f:
-        for package in requirements_generator:
-            if is_package_versioned(package):
-                f.write(package + '\n')
+    # Dump requirements.txt
+    dump_requirements_file(prefixes=pip_install_options, keep_original_prefixes=True)
 
     archive_type = 'zip'
     archive_name = basename(getcwd())
@@ -168,9 +171,10 @@ def export_():
             raise
 
     # Create Zip archive of directory
+    echo('\n 🗜️ Preparing workspace distribution zip file')
     make_archive(archive_name, archive_type, tmp_dir)
 
-    echo(f'Workspace exported to archive: {archive_file_name}')
+    echo(f'\n ✔️ Workspace exported to archive: {archive_file_name}')
 
 
 @workspace.command(name='import')
@@ -195,6 +199,9 @@ def import_(archive):
     requirements_filename = 'requirements.txt'
 
     if isfile(requirements_filename):
+        check_call([
+            executable, '-m', 'pip', 'install', '--upgrade', 'pip'],
+            shell=False)
         check_call([
             executable, '-m', 'pip', 'install', '-r', 'requirements.txt'],
             shell=False)
@@ -363,7 +370,6 @@ def dockerize_(context, base_image, save):
     If your machine is behind a proxy, make sure you set it up in ~/.docker/config.json.
     """
     import docker
-    import os
     import sys
     from shutil import copyfile
 
@@ -419,6 +425,96 @@ def dockerize_(context, base_image, save):
             for chunk in resp:
                 f.write(chunk)
         echo(f'{workspace_name} image saved to {workspace_path}/{workspace_image_tar}')
+
+
+@workspace.command(name='graminize')
+@option('-s', '--signing-key', required=False,
+        type=lambda p: Path(p).absolute(), default='/',
+        help='A 3072-bit RSA private key (PEM format) is required for signing the manifest.\n'
+             'If a key is passed the gramine-sgx manifest fill be prepared.\n'
+             'In option is ignored this command will build an image that can only run '
+             'with gramine-direct (not in enclave).',
+        )
+@option('-o', '--pip-install-options', required=False,
+        type=str, multiple=True, default=tuple,
+        help='Options for remote pip install. '
+             'You may pass several options in quotation marks alongside with arguments, '
+             'e.g. -o "--find-links source.site"')
+@option('--save/--no-save', required=False,
+        default=True, type=bool,
+        help='Dump the Docker image to an archive')
+@option('--rebuild', help='Build images with `--no-cache`', is_flag=True)
+@pass_context
+def graminize_(context, signing_key: Path, pip_install_options: Tuple[str],
+               save: bool, rebuild: bool) -> None:
+    """
+    Build gramine app inside a docker image.
+
+    This command is the alternative to `workspace export`.
+    It should be called after `fx plan initialize` inside the workspace dir.
+
+    User is expected to be in docker group.
+    If your machine is behind a proxy, make sure you set it up in ~/.docker/config.json.
+
+    TODO:
+    1. gramine-direct, check if a key is provided
+    2. make a standalone function with `export` parametr
+    """
+    def open_pipe(command: str):
+        echo(f'\n 📦 Executing command:\n{command}\n')
+        process = subprocess.Popen(
+            command,
+            shell=True, stderr=subprocess.STDOUT,
+            stdout=subprocess.PIPE)
+        for line in process.stdout:
+            echo(line)
+        _ = process.communicate()  # pipe is already empty, used to get `returncode`
+        if process.returncode != 0:
+            raise Exception('\n ❌ Execution failed\n')
+
+    from openfl.interface.cli_helper import SITEPACKS
+
+    # We can build for gramine-sgx and run with gramine-direct,
+    # but not vice versa.
+    sgx_build = signing_key.is_file()
+    if sgx_build:
+        echo('\n Building SGX-ready applecation')
+    else:
+        echo('\n Building gramine-direct applecation')
+    rebuild_option = '--no-cache' if rebuild else ''
+
+    os.environ['DOCKER_BUILDKIT'] = '1'
+
+    echo('\n 🐋 Building base gramine-openfl image...')
+    base_dockerfile = SITEPACKS / 'openfl-gramine' / 'Dockerfile.gramine'
+    base_build_command = f'docker build {rebuild_option} -t gramine_openfl -f {base_dockerfile} .'
+    open_pipe(base_build_command)
+    echo('\n ✔️ DONE: Building base gramine-openfl image')
+
+    workspace_path = Path.cwd()
+    workspace_name = workspace_path.name
+    context.invoke(export_, pip_install_options=pip_install_options)
+    workspace_archive = workspace_path / f'{workspace_name}.zip'
+
+    grainized_ws_dockerfile = SITEPACKS / 'openfl-gramine' / 'Dockerfile.graminized.workspace'
+
+    echo('\n 🐋 Building graminized workspace image...')
+    signing_key = f'--secret id=signer-key,src={signing_key} ' if sgx_build else ''
+    graminized_build_command = (
+        f'docker build -t {workspace_name} {rebuild_option} '
+        '--build-arg BASE_IMAGE=gramine_openfl '
+        f'--build-arg WORKSPACE_ARCHIVE={workspace_archive.relative_to(workspace_path)} '
+        f'--build-arg SGX_BUILD={int(sgx_build)} '
+        f'{signing_key}'
+        f'-f {grainized_ws_dockerfile} {workspace_path}')
+    open_pipe(graminized_build_command)
+    echo('\n ✔️ DONE: Building graminized workspace image')
+
+    if save:
+        echo('\n 💾 Saving the graminized workspace image...')
+        save_image_command = f'docker save {workspace_name} | gzip > {workspace_name}.tar.gz'
+        open_pipe(save_image_command)
+        echo(f'\n ✔️ The image saved to file: {workspace_name}.tar.gz')
 
 
 def apply_template_plan(prefix, template):

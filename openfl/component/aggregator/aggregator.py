@@ -277,9 +277,7 @@ class Aggregator:
         time_to_quit = False
 
         # otherwise, get the tasks from our task assigner
-        tasks = self.assigner.get_tasks_for_collaborator(
-            collaborator_name,
-            self.round_number)  # fancy task assigners may want aggregator state
+        tasks = self.assigner.get_tasks_for_collaborator(collaborator_name, self.round_number)
 
         # if no tasks, tell the collaborator to sleep
         if len(tasks) == 0:
@@ -289,10 +287,17 @@ class Aggregator:
             return tasks, self.round_number, sleep_time, time_to_quit
 
         # if we do have tasks, remove any that we already have results for
-        tasks = [
-            t for t in tasks if not self._collaborator_task_completed(
-                collaborator_name, t, self.round_number)
-        ]
+        if isinstance(tasks[0], str):
+            # backward compatibility
+            tasks = [
+                t for t in tasks if not self._collaborator_task_completed(
+                    collaborator_name, t, self.round_number)
+            ]
+        else:
+            tasks = [
+                t for t in tasks if not self._collaborator_task_completed(
+                    collaborator_name, t.name, self.round_number)
+            ]
 
         # Do the check again because it's possible that all tasks have
         # been completed
@@ -801,7 +806,8 @@ class Aggregator:
         # This handles getting the subset of collaborators that may be
         # part of the validation task
         collaborators_for_task = self.assigner.get_collaborators_for_task(
-            task_name, self.round_number)
+            task_name, self.round_number
+        )
         # The collaborator data sizes for that task
         collaborator_weights_unnormalized = {
             c: self.collaborator_task_weight[TaskResultKey(task_name, c, self.round_number)]
@@ -825,7 +831,6 @@ class Aggregator:
             assert (tags[-1] == collaborators_for_task[0]), (
                 f'Tensor {tensor_key} in task {task_name} has not been processed correctly'
             )
-
             # Strip the collaborator label, and lookup aggregated tensor
             new_tags = tuple(tags[:-1])
             agg_tensor_key = TensorKey(tensor_name, origin, round_number, report, new_tags)
@@ -893,7 +898,6 @@ class Aggregator:
             self._compute_validation_related_task_metrics(task_name)
 
         # Once all of the task results have been processed
-        # Increment the round number
         self.round_number += 1
 
         # Save the latest model
@@ -923,11 +927,9 @@ class Aggregator:
 
     def _is_round_done(self):
         """Check that round is done."""
-        tasks_for_round = self.assigner.get_all_tasks_for_round(
-            self.round_number
-        )
+        tasks_for_round = self.assigner.get_all_tasks_for_round(self.round_number)
 
-        return all([self._is_task_done(t) for t in tasks_for_round])
+        return all([self._is_task_done(task_name) for task_name in tasks_for_round])
 
     def _log_big_warning(self):
         """Warn user about single collaborator cert mode."""

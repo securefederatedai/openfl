@@ -1,0 +1,22 @@
+ARG BASE_IMAGE=gramine_openfl
+FROM ${BASE_IMAGE} as builder
+
+ARG WORKSPACE_ARCHIVE
+COPY ${WORKSPACE_ARCHIVE} /workspace.zip
+RUN --mount=type=cache,target=/root/.cache/ \
+    fx workspace import --archive /workspace.zip
+
+WORKDIR /workspace
+
+# TODO: Find a way to remove the hardcoded paths
+RUN cp /usr/local/lib/python3.8/site-packages/openfl-gramine/openfl.manifest.template . && \
+    cp /usr/local/lib/python3.8/site-packages/openfl-gramine/Makefile . && \
+    cp /usr/local/lib/python3.8/site-packages/openfl-gramine/start_process.sh .
+
+ARG SGX_BUILD=1
+RUN --mount=type=secret,id=signer-key,dst=/key.pem \
+    make clean && make SGX=${SGX_BUILD} SGX_SIGNER_KEY=/key.pem
+
+ENV GRAMINE_EXECUTABLE=gramine-sgx
+ENTRYPOINT ["/bin/bash", "start_process.sh"]
+CMD [ "aggregator", "start"]
