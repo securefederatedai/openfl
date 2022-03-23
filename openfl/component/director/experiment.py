@@ -8,15 +8,14 @@ import logging
 from contextlib import asynccontextmanager
 from pathlib import Path
 from tarfile import TarFile
-from typing import Dict
 from typing import Iterable
 from typing import List
-from typing import Optional
 from typing import Union
 
 import numpy as np
 
 from openfl.docker import docker
+from openfl.docker.docker import DockerConfig
 from openfl.federated import Plan
 from openfl.transport import AggregatorGRPCServer
 from openfl.transport import AsyncAggregatorGRPCClient
@@ -53,9 +52,7 @@ class Experiment:
             plan: Plan,
             plan_path: Union[Path, str] = 'plan/plan.yaml',
             users: Iterable[str] = None,
-            use_docker: bool = False,
-            docker_env: Optional[Dict[str, str]] = None,
-            docker_buildargs: Optional[Dict[str, str]] = None,
+            docker_config: DockerConfig,
     ) -> None:
         """Initialize an experiment object."""
         self.name = name
@@ -73,17 +70,11 @@ class Experiment:
         self.status = Status.PENDING
         self.aggregator_container = None  # ???
         self.aggregator_client = aggregator_client
-        self._use_docker = use_docker
         self.director_host = director_host
         self.director_port = director_port
         self.last_tensor_dict = {}
         self.best_tensor_dict = {}
-        if docker_env is None:
-            docker_env = {}
-        self.docker_env = docker_env
-        if docker_buildargs is None:
-            docker_buildargs = {}
-        self.docker_buildargs = docker_buildargs
+        self.docker_config = docker_config
 
     async def start(
             self, *,
@@ -98,7 +89,7 @@ class Experiment:
             logger.info(f'New experiment {self.name} for '
                         f'collaborators {self.collaborators}')
 
-            if self._use_docker:
+            if self.docker_config.use_docker:
                 await self._run_aggregator_in_docker(
                     data_file_path=self.archive_path,
                     tls=tls,
@@ -137,7 +128,7 @@ class Experiment:
             private_key: Union[Path, str] = None,
             certificate: Union[Path, str] = None,
     ) -> None:
-        docker_client = docker.Docker()
+        docker_client = docker.Docker(config=self.docker_config)
         docker_context_path = docker.create_aggregator_context(
             data_file_path=data_file_path,
             init_tensor_dict_path=self.init_tensor_dict_path,
@@ -146,7 +137,6 @@ class Experiment:
         image_tag = await docker_client.build_image(
             context_path=docker_context_path,
             tag='aggregator',
-            buildargs=self.docker_buildargs,
         )
         cmd = (
             f'python run.py '
@@ -165,7 +155,6 @@ class Experiment:
             name=f'{self.name.lower()}_aggregator',
             image_tag=image_tag,
             cmd=cmd,
-            env=self.docker_env,
         )
         self.status = Status.DOCKER_RUN_CONTAINER
         await docker_client.start_and_monitor_container(container=self.container)

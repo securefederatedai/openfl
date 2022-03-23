@@ -9,6 +9,7 @@ params:
       HTTP_PROXY:
       HTTPS_PROXY:
       NO_PROXY:
+    volumes:
 
 optional_plugin_components:
   cuda_device_monitor:

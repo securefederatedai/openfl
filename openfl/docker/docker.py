@@ -3,6 +3,7 @@
 
 """Docker module."""
 
+from dataclasses import dataclass
 import logging
 import os
 from io import BytesIO
@@ -11,6 +12,7 @@ from tarfile import TarFile
 from typing import Dict
 from typing import List
 from typing import Optional
+from dataclasses import field
 
 import aiodocker
 import yaml
@@ -21,18 +23,59 @@ logger = logging.getLogger(__name__)
 OPENFL_ROOT_PATH = Path(__file__).parent.parent.parent.absolute()
 
 
+@dataclass
+class DockerConfig:
+    use_docker: bool = True
+    env: Dict[str, str] = field(default_factory=dict)
+    buildargs: Dict[str, str] = field(default_factory=dict)
+    volumes: List[str] = field(default_factory=list)
+
+    @property
+    def binds(self) -> List[str]:
+        """Convert docker volumes to binds."""
+        binds = []
+        for volume in map(lambda x: x.split(':'), self.volumes):
+            target = volume[0]
+            bind = volume[0] if len(volume) == 1 else volume[1]
+
+            if bind.startswith('./'):
+                bind = bind.replace('.', '/code', 1)
+            elif bind.startswith('~'):
+                bind = bind.replace('~', '/root', 1)
+
+            if target.startswith('~'):
+                target = str(Path(target).expanduser().resolve())
+            if target.startswith('./'):
+                target = str(Path(target).expanduser().resolve())
+            binds.append(f'{target}:{bind}')
+
+        return binds
+
+    @property
+    def env_list(self):
+        env_lst = []
+        for k, v in self.env.items():
+            env_lst.append(f'{k}={v}')
+        return env_lst
+
+
 class Docker:
     """Docker class."""
 
-    def __init__(self):
+    def __init__(
+            self, *,
+            config: Optional[DockerConfig] = None,
+    ):
         """Initialize an docker object."""
         self.docker = aiodocker.Docker()
+        if config is None:
+            config = DockerConfig()
+        self.config = config
 
     async def build_image(
             self, *,
             context_path: Path,
             tag: str,
-            buildargs: Dict[str, str],
     ) -> str:
         """Build docker image."""
         with open(context_path, 'rb') as f:
@@ -42,7 +85,7 @@ class Docker:
                 encoding='gzip',
                 tag=tag,
                 stream=True,
-                buildargs=buildargs,  # Here could be defined build proxy
+                buildargs=self.config.buildargs,
             )
         async for message in build_image_iter:
             if 'stream' not in message or len(message) > 1:
@@ -56,21 +99,15 @@ class Docker:
             image_tag: str,
             cmd: str,
             gpu_allowed: bool = False,
-            volumes: Optional[List[str]] = None,
-            env: Optional[Dict[str, str]] = None,
     ) -> DockerContainer:
         """Create docker container."""
-        if volumes is None:
-            volumes = []
-        binds = volumes_to_binds(volumes)
-        env = dict_to_env(env)
         config = {
             'Cmd': ['/bin/bash', '-c', cmd],
-            'Env': env,
+            'Env': self.config.env_list,
             'Image': image_tag,
             'HostConfig': {
                 'NetworkMode': 'host',
-                'Binds': binds,
+                'Binds': self.config.binds,
                 'ShmSize': 30 * 1024 * 1024 * 1024,
             },
         }
@@ -155,33 +192,3 @@ def create_collaborator_context(
         shar_descriptor_path = str(Path.joinpath(Path('.'), *module_path))
         tar_file.add(shar_descriptor_path, shar_descriptor_path)
     return data_file_path
-
-
-def volumes_to_binds(volumes: List[str]) -> List[str]:
-    """Convert docker volumes to binds."""
-    binds = []
-    for volume in map(lambda x: x.split(':'), volumes):
-        target = volume[0]
-        bind = volume[0] if len(volume) == 1 else volume[1]
-
-        if bind.startswith('./'):
-            bind = bind.replace('.', '/code', 1)
-        elif bind.startswith('~'):
-            bind = bind.replace('~', '/root', 1)
-
-        if target.startswith('~'):
-            target = str(Path(target).expanduser().resolve())
-        if target.startswith('./'):
-            target = str(Path(target).expanduser().resolve())
-        binds.append(f'{target}:{bind}')
-
-    return binds
-
-
-def dict_to_env(dct: Optional[Dict[str, str]] = None) -> List[str]:
-    env_lst = []
-    if dct is None:
-        dct = {}
-    for k, v in dct.items():
-        env_lst.append(f'{k}={v}')
-    return env_lst

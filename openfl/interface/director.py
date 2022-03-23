@@ -15,6 +15,7 @@ from click import Path as ClickPath
 from dynaconf import Validator
 
 from openfl.component.director import Director
+from openfl.docker.docker import DockerConfig
 from openfl.interface.cli_helper import WORKSPACE
 from openfl.transport import DirectorGRPCServer
 from openfl.utilities import merge_configs
@@ -90,6 +91,13 @@ def start(director_config_path, tls, root_certificate, private_key, certificate,
     docker_config = config.as_dict().get('SETTINGS', {}).pop('docker', {})
     docker_env = docker_config.get('env', {})
     docker_buildargs = docker_config.get('buildargs', {})
+    docker_volumes = docker_config.get('volumes', {})
+    docker_config = DockerConfig(
+        use_docker=use_docker,
+        env=docker_env,
+        buildargs=docker_buildargs,
+        volumes=docker_volumes,
+    )
     director_server = DirectorGRPCServer(
         director_cls=Director,
         tls=tls,
@@ -101,9 +109,7 @@ def start(director_config_path, tls, root_certificate, private_key, certificate,
         settings=config.settings,
         listen_host=config.settings.listen_host,
         listen_port=config.settings.listen_port,
-        use_docker=use_docker,
-        docker_env=docker_env,
-        docker_buildargs=docker_buildargs,
+        docker_config=docker_config,
     )
     director_server.start()
 

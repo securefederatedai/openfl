@@ -9,7 +9,6 @@ import traceback
 import uuid
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
-from typing import Dict
 from typing import Optional
 from typing import Type
 from typing import Union
@@ -17,6 +16,7 @@ from typing import Union
 from click import echo
 
 from openfl.docker import docker
+from openfl.docker.docker import DockerConfig
 from openfl.federated import Plan
 from openfl.interface.interactive_api.shard_descriptor import ShardDescriptor
 from openfl.plugins.processing_units_monitor.cuda_device_monitor import CUDADeviceMonitor
@@ -44,9 +44,7 @@ class Envoy:
             cuda_devices: Union[tuple, list] = (),
             cuda_device_monitor: Optional[Type[CUDADeviceMonitor]] = None,
             shard_descriptor_config,
-            use_docker: bool = False,
-            docker_env: Optional[Dict[str, str]] = None,
-            docker_buildargs: Optional[Dict[str, str]] = None,
+            docker_config: DockerConfig,
     ) -> None:
         """Initialize a envoy object."""
         self.name = shard_name
@@ -76,13 +74,7 @@ class Envoy:
         self.running_experiments = {}
         self.is_experiment_running = False
         self._health_check_future = None
-        self._use_docker = use_docker
-        if docker_env is None:
-            docker_env = {}
-        self.docker_env = docker_env
-        if docker_buildargs is None:
-            docker_buildargs = {}
-        self.docker_buildargs = docker_buildargs
+        self.docker_config = docker_config
 
     async def run(self):
         """Run of the envoy working cycle."""
@@ -98,7 +90,7 @@ class Envoy:
             data_file_path = self._save_data_stream_to_file(data_stream)
             self.is_experiment_running = True
             try:
-                if self._use_docker:
+                if self.docker_config.use_docker:
                     await self._run_collaborator_in_docker(
                         experiment_name=experiment_name.lower(),
                         data_file_path=data_file_path,
@@ -187,7 +179,7 @@ class Envoy:
 
     async def _run_collaborator_in_docker(self, experiment_name: str, data_file_path: Path):
         """Run the collaborator for the experiment running."""
-        docker_client = docker.Docker()
+        docker_client = docker.Docker(config=self.docker_config)
         docker_context_path = docker.create_collaborator_context(
             data_file_path=data_file_path,
             shard_descriptor_config=self.shard_descriptor_config,
@@ -195,7 +187,6 @@ class Envoy:
         image_tag = await docker_client.build_image(
             context_path=docker_context_path,
             tag=f'{self.name}_{experiment_name}',
-            buildargs=self.docker_buildargs,
         )
         cuda_devices = ','.join(map(str, self.cuda_devices))
         gpu_allowed = bool(cuda_devices)
@@ -216,8 +207,6 @@ class Envoy:
             name=f'{experiment_name}_collaborator_{self.name}',
             image_tag=image_tag,
             cmd=cmd,
-            volumes=self.shard_descriptor_config.get('volumes'),
-            env=self.docker_env,
             gpu_allowed=gpu_allowed,
         )
         await docker_client.start_and_monitor_container(container=container)

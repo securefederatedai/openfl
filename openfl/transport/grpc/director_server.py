@@ -7,7 +7,6 @@ import asyncio
 import logging
 import uuid
 from pathlib import Path
-from typing import Dict
 from typing import Optional
 from typing import Union
 
@@ -16,6 +15,7 @@ from google.protobuf.json_format import ParseDict
 from grpc import aio
 from grpc import ssl_server_credentials
 
+from openfl.docker.docker import DockerConfig
 from openfl.pipelines import NoCompressionPipeline
 from openfl.protocols import director_pb2
 from openfl.protocols import director_pb2_grpc
@@ -41,9 +41,7 @@ class DirectorGRPCServer(director_pb2_grpc.DirectorServicer):
             certificate: Optional[Union[Path, str]] = None,
             listen_host: str = '[::]',
             listen_port: int = 50051,
-            use_docker: bool = False,
-            docker_env: Optional[Dict[str, str]] = None,
-            docker_buildargs: Optional[Dict[str, str]] = None,
+            docker_config: DockerConfig,
             **kwargs,
     ) -> None:
         """Initialize a director object."""
@@ -63,11 +61,9 @@ class DirectorGRPCServer(director_pb2_grpc.DirectorServicer):
             root_certificate=self.root_certificate,
             private_key=self.private_key,
             certificate=self.certificate,
-            use_docker=use_docker,
             director_host=listen_host,
             director_port=listen_port,
-            docker_env=docker_env,
-            docker_buildargs=docker_buildargs,
+            docker_config=docker_config,
             **kwargs
         )
 

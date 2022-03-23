@@ -11,9 +11,7 @@ import uuid
 from collections import defaultdict
 from pathlib import Path
 from tarfile import TarFile
-from typing import Dict
 from typing import Iterable
-from typing import Optional
 from typing import Union
 from typing import ValuesView
 
@@ -22,6 +20,7 @@ from openfl.transport import AsyncAggregatorGRPCClient
 from .experiment import Experiment
 from .experiment import ExperimentsRegistry
 from .experiment import Status
+from ...docker.docker import DockerConfig
 from ...federated import Plan
 
 logger = logging.getLogger(__name__)
@@ -43,9 +42,7 @@ class Director:
             sample_shape: list = None,
             target_shape: list = None,
             settings: dict = None,
-            use_docker: bool = False,
-            docker_env: Optional[Dict[str, str]] = None,
-            docker_buildargs: Optional[Dict[str, str]] = None,
+            docker_config: DockerConfig,
     ) -> None:
         """Initialize a director object."""
         self.sample_shape, self.target_shape = sample_shape, target_shape
@@ -58,15 +55,9 @@ class Director:
         self.settings = settings or {}
         self.col_exp_queues = defaultdict(asyncio.Queue)
         self.col_exp = {}
-        self._use_docker = use_docker
         self.director_host = director_host
         self.director_port = director_port
-        if docker_env is None:
-            docker_env = {}
-        self.docker_env = docker_env
-        if docker_buildargs is None:
-            docker_buildargs = {}
-        self.docker_buildargs = docker_buildargs
+        self.docker_config = docker_config
 
     def acknowledge_shard(self, shard_info: dict) -> bool:
         """Save shard info to shard registry if it's acceptable."""
@@ -117,9 +108,7 @@ class Director:
             users=[sender_name],
             sender=sender_name,
             init_tensor_dict_path=tensor_dict_path,
-            use_docker=self._use_docker,
-            docker_env=self.docker_env,
-            docker_buildargs=self.docker_buildargs,
+            docker_config=self.docker_config,
             director_host=self.director_host,
             director_port=self.director_port,
             plan=plan,

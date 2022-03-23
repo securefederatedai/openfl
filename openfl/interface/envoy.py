@@ -16,6 +16,7 @@ from click import Path as ClickPath
 from dynaconf import Validator
 
 from openfl.component.envoy.envoy import Envoy
+from openfl.docker.docker import DockerConfig
 from openfl.interface.cli_helper import WORKSPACE
 from openfl.utilities import click_types
 from openfl.utilities import merge_configs
@@ -101,6 +102,13 @@ def start_(shard_name, director_host, director_port, tls, envoy_config_path,
     docker_config = envoy_params.pop('docker', {})
     docker_env = docker_config.get('env', {})
     docker_buildargs = docker_config.get('buildargs', {})
+    docker_volumes = docker_config.get('volumes', {})
+    docker_config = DockerConfig(
+        use_docker=use_docker,
+        env=docker_env,
+        buildargs=docker_buildargs,
+        volumes=docker_volumes,
+    )
     envoy = Envoy(
         shard_name=shard_name,
         director_host=director_host,
@@ -111,9 +119,7 @@ def start_(shard_name, director_host, director_port, tls, envoy_config_path,
         root_certificate=config.root_certificate,
         private_key=config.private_key,
         certificate=config.certificate,
-        use_docker=use_docker,
-        docker_env=docker_env,
-        docker_buildargs=docker_buildargs,
+        docker_config=docker_config,
         **envoy_params
     )
 
@@ -159,16 +165,3 @@ def shard_descriptor_from_config(shard_config: dict):
     instance = getattr(module, class_name)(**params)
 
     return instance
-
-# if __name__ == '__main__':
-#     start_(
-#         shard_name='env_one',
-#         director_host='localhost',
-#         director_port=50050,
-#         tls=False,
-#         envoy_config_path='envoy_config.yaml',
-#         root_certificate=None,
-#         private_key=None,
-#         certificate=None,
-#         use_docker=True,
-#     )
