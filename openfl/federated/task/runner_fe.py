@@ -2,6 +2,15 @@
 # SPDX-License-Identifier: Apache-2.0
 """FastEstimatorTaskRunner module."""
 
+from typing import Any
+from typing import Callable
+from typing import Dict
+from typing import List
+from typing import NoReturn
+from typing import OrderedDict
+from typing import Tuple
+from typing import Union
+
 import numpy as np
 
 from openfl.utilities import split_tensor_dict_for_holdouts
@@ -14,7 +23,7 @@ from .runner_pt import PyTorchTaskRunner
 class FastEstimatorTaskRunner(TaskRunner):
     """A wrapper for fastestimator.estimator."""
 
-    def __init__(self, estimator, **kwargs):
+    def __init__(self, estimator: Any, **kwargs) -> None:
         """Initialize.
 
         Args:
@@ -24,11 +33,11 @@ class FastEstimatorTaskRunner(TaskRunner):
         import fastestimator as fe
 
         class ProgressLoader(fe.trace.Trace):
-            def __init__(self, get_progress) -> None:
+            def __init__(self, get_progress: Callable[[], Dict[str, int]]) -> None:
                 super().__init__(mode='train')
                 self.get_progress = get_progress
 
-            def on_begin(self, data) -> None:
+            def on_begin(self, data: Dict[Any, Any]) -> None:
                 """Run once at the beginning of training or testing.
 
                 Args:
@@ -74,7 +83,10 @@ class FastEstimatorTaskRunner(TaskRunner):
         self.global_step = None
         self.total_epochs = self.estimator.system.total_epochs
 
-    def train(self, col_name, round_num, input_tensor_dict, epochs, **kwargs):
+    def train(self, col_name: str, round_num: int,
+              input_tensor_dict: Dict[str, Union[np.ndarray, str]],
+              epochs: int, **kwargs
+              ) -> Tuple[Dict[TensorKey, np.ndarray], Dict[TensorKey, np.ndarray]]:
         """Perform training for a specified number of epochs."""
         if 'metrics' not in kwargs:
             raise KeyError('metrics must be included in kwargs')
@@ -153,7 +165,9 @@ class FastEstimatorTaskRunner(TaskRunner):
 
         return global_tensor_dict, local_tensor_dict
 
-    def validate(self, col_name, round_num, input_tensor_dict, **kwargs):
+    def validate(self, col_name: str, round_num: int,
+                 input_tensor_dict: Dict[str, Union[np.ndarray, str]],
+                 **kwargs) -> Tuple[Dict[TensorKey, np.ndarray], Dict[TensorKey, np.ndarray]]:
         """
         Run the trained model on validation data; report results.
 
@@ -191,7 +205,7 @@ class FastEstimatorTaskRunner(TaskRunner):
 
         return output_tensor_dict, {}
 
-    def initialize_tensorkeys_for_functions(self, with_opt_vars=False):
+    def initialize_tensorkeys_for_functions(self, with_opt_vars: bool = False) -> None:
         """
         Set the required tensors for all publicly accessible methods that could \
             be called as part of a task.
@@ -209,11 +223,12 @@ class FastEstimatorTaskRunner(TaskRunner):
         """
         self.runner.initialize_tensorkeys_for_functions(with_opt_vars)
 
-    def build_model(self):
+    def build_model(self) -> NoReturn:
         """Abstract method."""
         raise NotImplementedError
 
-    def get_required_tensorkeys_for_function(self, func_name, **kwargs):
+    def get_required_tensorkeys_for_function(self, func_name: str, **kwargs
+                                             ) -> List[TensorKey]:
         """
         When running a task, a map of named tensorkeys must be provided to the \
             function as dependencies.
@@ -224,7 +239,7 @@ class FastEstimatorTaskRunner(TaskRunner):
         return self.runner.get_required_tensorkeys_for_function(
             func_name, **kwargs)
 
-    def get_tensor_dict(self, with_opt_vars):
+    def get_tensor_dict(self, with_opt_vars: bool) -> OrderedDict[str, Union[np.ndarray, str]]:
         """
         Get the weights.
 
@@ -237,7 +252,8 @@ class FastEstimatorTaskRunner(TaskRunner):
         """
         return self.runner.get_tensor_dict(with_opt_vars)
 
-    def set_tensor_dict(self, tensor_dict, with_opt_vars):
+    def set_tensor_dict(self, tensor_dict: OrderedDict[str, Union[np.ndarray, str]],
+                        with_opt_vars: bool) -> None:
         """
         Set the model weights with a tensor dictionary: {<tensor_name>: <value>}.
 
@@ -251,11 +267,11 @@ class FastEstimatorTaskRunner(TaskRunner):
         """
         return self.runner.set_tensor_dict(tensor_dict, with_opt_vars)
 
-    def reset_opt_vars(self):
+    def reset_opt_vars(self) -> None:
         """Reinitialize the optimizer variables."""
         return self.runner.reset_opt_vars()
 
-    def initialize_globals(self):
+    def initialize_globals(self) -> None:
         """
         Initialize all global variables.
 
@@ -264,7 +280,7 @@ class FastEstimatorTaskRunner(TaskRunner):
         """
         return self.runner.initialize_globals()
 
-    def load_native(self, filepath, **kwargs):
+    def load_native(self, filepath: str, **kwargs) -> None:
         """
         Load model state from a filepath in ML-framework "native" format, \
             e.g. PyTorch pickled models.
@@ -283,7 +299,7 @@ class FastEstimatorTaskRunner(TaskRunner):
         """
         return self.runner.load_native(filepath, **kwargs)
 
-    def save_native(self, filepath, **kwargs):
+    def save_native(self, filepath: str, **kwargs) -> None:
         """
         Save model state in ML-framework "native" format, \
             e.g. PyTorch pickled models.
@@ -302,7 +318,9 @@ class FastEstimatorTaskRunner(TaskRunner):
         """
         return self.runner.save_native(filepath, **kwargs)
 
-    def rebuild_model(self, round_num, input_tensor_dict, validation=False):
+    def rebuild_model(self, round_num: int,
+                      input_tensor_dict: Dict[str, Union[np.ndarray, str]],
+                      validation: bool = False) -> None:
         """
         Parse tensor names and update weights of model. Handles the optimizer treatment.
 
@@ -312,7 +330,7 @@ class FastEstimatorTaskRunner(TaskRunner):
         return self.runner.rebuild_model(
             round_num, input_tensor_dict, validation)
 
-    def set_optimizer_treatment(self, opt_treatment):
+    def set_optimizer_treatment(self, opt_treatment: str) -> None:
         """Change treatment of current instance optimizer."""
         super().set_optimizer_treatment(opt_treatment)
         self.runner.opt_treatment = opt_treatment

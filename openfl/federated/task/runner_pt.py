@@ -4,18 +4,30 @@
 """PyTorchTaskRunner module."""
 
 from copy import deepcopy
+from typing import Any
+from typing import Dict
 from typing import Iterator
+from typing import List
+from typing import Optional
+from typing import OrderedDict
 from typing import Tuple
+from typing import TypedDict
+from typing import Union
 
 import numpy as np
 import torch as pt
 import torch.nn as nn
 import tqdm
+from torch.optim.optimizer import Optimizer
 
 from openfl.utilities import Metric
 from openfl.utilities import split_tensor_dict_for_holdouts
 from openfl.utilities import TensorKey
 from .runner import TaskRunner
+
+OPT_STATE_DICT = TypedDict('OPT_STATE_DICT',
+                           {'state': Dict[int, Dict[str, Union[int, pt.Tensor]]],
+                            'param_groups': List[Dict[str, Any]]})
 
 
 class PyTorchTaskRunner(nn.Module, TaskRunner):
@@ -23,11 +35,11 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
 
     def __init__(
             self,
-            device: str = None,
-            loss_fn=None,
-            optimizer=None,
+            device: Optional[pt.device] = None,
+            loss_fn: Optional[nn.Module] = None,
+            optimizer: Optional[Optimizer] = None,
             **kwargs
-    ):
+    ) -> None:
         """Initialize.
 
         Args:
@@ -56,7 +68,8 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
             'holdout_tensor_names': ['__opt_state_needed']
         })
 
-    def rebuild_model(self, round_num, input_tensor_dict, validation=False):
+    def rebuild_model(self, round_num: int, input_tensor_dict: Dict[str, Union[np.ndarray, str]],
+                      validation: bool = False) -> None:
         """
         Parse tensor names and update weights of model. Handles the optimizer treatment.
 
@@ -72,8 +85,10 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
         else:
             self.set_tensor_dict(input_tensor_dict, with_opt_vars=False)
 
-    def validate(self, col_name, round_num, input_tensor_dict,
-                 use_tqdm=False, **kwargs):
+    def validate(self, col_name: str, round_num: int,
+                 input_tensor_dict: Dict[str, Union[np.ndarray, str]],
+                 use_tqdm: bool = False, **kwargs
+                 ) -> Tuple[Dict[TensorKey, np.ndarray], Dict[str, np.ndarray]]:
         """Validate.
 
         Run validation of the model on the local data.
@@ -128,8 +143,10 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
         # Empty list represents metrics that should only be stored locally
         return output_tensor_dict, {}
 
-    def train_batches(self, col_name, round_num, input_tensor_dict,
-                      use_tqdm=False, epochs=1, **kwargs):
+    def train_batches(self, col_name: str, round_num: int,
+                      input_tensor_dict: Dict[str, Union[np.ndarray, str]],
+                      use_tqdm: bool = False, epochs: int = 1, **kwargs
+                      ) -> Tuple[Dict[TensorKey, np.ndarray], Dict[TensorKey, np.ndarray]]:
         """Train batches.
 
         Train the model on the requested number of batches.
@@ -217,7 +234,8 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
         # Return global_tensor_dict, local_tensor_dict
         return global_tensor_dict, local_tensor_dict
 
-    def get_tensor_dict(self, with_opt_vars=False):
+    def get_tensor_dict(self, with_opt_vars: bool = False
+                        ) -> Dict[str, Union[str, np.ndarray]]:
         """Return the tensor dictionary.
 
         Args:
@@ -242,7 +260,7 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
 
         return state
 
-    def _get_weights_names(self, with_opt_vars=False):
+    def _get_weights_names(self, with_opt_vars: bool = False) -> List[str]:
         # Gets information regarding tensor model layers and optimizer state.
         # FIXME: self.parameters() instead? Unclear if load_state_dict() or
         # simple assignment is better
@@ -257,7 +275,8 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
 
         return state
 
-    def set_tensor_dict(self, tensor_dict, with_opt_vars=False):
+    def set_tensor_dict(self, tensor_dict: Dict[str, Union[np.ndarray, str]],
+                        with_opt_vars: bool = False) -> None:
         """Set the tensor dictionary.
 
         Args:
@@ -292,11 +311,12 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
             # sanity check that we did not record any state that was not used
             assert len(tensor_dict) == 0
 
-    def get_optimizer(self):
+    def get_optimizer(self) -> Optimizer:
         """Get the optimizer of this instance."""
         return self.optimizer
 
-    def get_required_tensorkeys_for_function(self, func_name, **kwargs):
+    def get_required_tensorkeys_for_function(self, func_name: str, **kwargs
+                                             ) -> List[TensorKey]:
         """
         Get the required tensors for specified function that could be called \
         as part of a task. By default, this is just all of the layers and \
@@ -314,7 +334,7 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
         else:
             return self.required_tensorkeys_for_function[func_name]
 
-    def initialize_tensorkeys_for_functions(self, with_opt_vars=False):
+    def initialize_tensorkeys_for_functions(self, with_opt_vars: bool = False) -> None:
         """Set the required tensors for all publicly accessible task methods.
 
         By default, this is just all of the layers and optimizer of the model.
@@ -383,8 +403,9 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
             for tensor_name in local_model_dict_val
         ]
 
-    def load_native(self, filepath, model_state_dict_key='model_state_dict',
-                    optimizer_state_dict_key='optimizer_state_dict', **kwargs):
+    def load_native(self, filepath: str, model_state_dict_key: str = 'model_state_dict',
+                    optimizer_state_dict_key: str = 'optimizer_state_dict', **kwargs
+                    ) -> None:
         """
         Load model and optimizer states from a pickled file specified by \
         filepath. model_/optimizer_state_dict args can be specified if needed. \
@@ -406,8 +427,9 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
         self.load_state_dict(pickle_dict[model_state_dict_key])
         self.optimizer.load_state_dict(pickle_dict[optimizer_state_dict_key])
 
-    def save_native(self, filepath, model_state_dict_key='model_state_dict',
-                    optimizer_state_dict_key='optimizer_state_dict', **kwargs):
+    def save_native(self, filepath: str, model_state_dict_key: str = 'model_state_dict',
+                    optimizer_state_dict_key: str = 'optimizer_state_dict', **kwargs
+                    ) -> None:
         """
         Save model and optimizer states in a picked file specified by the \
         filepath. model_/optimizer_state_dicts are stored in the keys provided. \
@@ -431,7 +453,7 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
         }
         pt.save(pickle_dict, filepath)
 
-    def reset_opt_vars(self):
+    def reset_opt_vars(self) -> None:
         """
         Reset optimizer variables.
 
@@ -465,7 +487,7 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
         return Metric(name=self.loss_fn.__name__, value=np.array(loss))
 
 
-def _derive_opt_state_dict(opt_state_dict):
+def _derive_opt_state_dict(opt_state_dict: OPT_STATE_DICT) -> Dict[str, Union[str, np.ndarray]]:
     """Separate optimizer tensors from the tensor dictionary.
 
     Flattens the optimizer state dict so as to have key, value pairs with
@@ -549,7 +571,8 @@ def _derive_opt_state_dict(opt_state_dict):
     return derived_opt_state_dict
 
 
-def expand_derived_opt_state_dict(derived_opt_state_dict, device):
+def expand_derived_opt_state_dict(derived_opt_state_dict: Dict[str, np.ndarray],
+                                  device: str) -> OPT_STATE_DICT:
     """Expand the optimizer state dictionary.
 
     Takes a derived opt_state_dict and creates an opt_state_dict suitable as
@@ -605,7 +628,8 @@ def expand_derived_opt_state_dict(derived_opt_state_dict, device):
     return opt_state_dict
 
 
-def _get_optimizer_state(optimizer):
+def _get_optimizer_state(optimizer: Optimizer
+                         ) -> Dict[str, Union[str, np.ndarray]]:
     """Return the optimizer state.
 
     Args:
@@ -626,7 +650,9 @@ def _get_optimizer_state(optimizer):
     return derived_opt_state_dict
 
 
-def _set_optimizer_state(optimizer, device, derived_opt_state_dict):
+def _set_optimizer_state(optimizer: Optimizer,
+                         device: str,
+                         derived_opt_state_dict: Dict[str, np.ndarray]) -> None:
     """Set the optimizer state.
 
     Args:
@@ -650,7 +676,7 @@ def _set_optimizer_state(optimizer, device, derived_opt_state_dict):
     optimizer.load_state_dict(temp_state_dict)
 
 
-def to_cpu_numpy(state):
+def to_cpu_numpy(state: OrderedDict[str, pt.Tensor]) -> OrderedDict[str, np.ndarray]:
     """Send data to CPU as Numpy array.
 
     Args:

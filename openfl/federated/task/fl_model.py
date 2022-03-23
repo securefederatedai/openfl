@@ -4,6 +4,16 @@
 """FederatedModel module."""
 
 import inspect
+from typing import Any
+from typing import Callable
+from typing import List
+from typing import Union
+
+import tensorflow as tf
+from tensorflow.keras.losses import Loss as tf_Loss
+from tensorflow.keras.optimizers import Optimizer as tf_Optimizer
+from torch import nn
+from torch.optim.optimizer import Optimizer as pt_Optimizer
 
 from .runner import TaskRunner
 
@@ -25,7 +35,9 @@ class FederatedModel(TaskRunner):
         loss_fn : pytorch loss_fun (only required for pytorch)
     """
 
-    def __init__(self, build_model, optimizer=None, loss_fn=None, **kwargs):
+    def __init__(self, build_model: Callable[[Any], Union[nn.Module, tf.Module]],
+                 optimizer: Union[pt_Optimizer, tf_Optimizer, None] = None,
+                 loss_fn: Union[nn.Module, tf_Loss, None] = None, **kwargs) -> None:
         """Initialize.
 
         Args:
@@ -66,7 +78,7 @@ class FederatedModel(TaskRunner):
         self.tensor_dict_split_fn_kwargs = self.runner.tensor_dict_split_fn_kwargs
         self.initialize_tensorkeys_for_functions()
 
-    def __getattribute__(self, attr):
+    def __getattribute__(self, attr: str) -> Any:
         """Direct call into self.runner methods if necessary."""
         if attr in ['reset_opt_vars', 'initialize_globals',
                     'set_tensor_dict', 'get_tensor_dict',
@@ -78,7 +90,7 @@ class FederatedModel(TaskRunner):
             return self.runner.__getattribute__(attr)
         return super(FederatedModel, self).__getattribute__(attr)
 
-    def setup(self, num_collaborators, **kwargs):
+    def setup(self, num_collaborators: int, **kwargs) -> List['FederatedModel']: # NOQA
         """
         Create new models for all of the collaborators in the experiment.
 

@@ -3,6 +3,11 @@
 
 """TensorFlowTaskRunner module."""
 
+from typing import Dict
+from typing import List
+from typing import Optional
+from typing import Tuple
+
 import numpy as np
 import tensorflow.compat.v1 as tf
 from tqdm import tqdm
@@ -20,7 +25,7 @@ class TensorFlowTaskRunner(TaskRunner):
         and should overwrite at least the following while defining the model
     """
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs) -> None:
         """
         Initialize.
 
@@ -67,7 +72,9 @@ class TensorFlowTaskRunner(TaskRunner):
         # self.tvars + self.opt_vars
         self.fl_vars = None
 
-    def rebuild_model(self, round_num, input_tensor_dict, validation=False):
+    def rebuild_model(self, round_num: int,
+                      input_tensor_dict: Dict[str, np.ndarray],
+                      validation: bool = False) -> None:
         """
         Parse tensor names and update weights of model. Handles the optimizer treatment.
 
@@ -83,8 +90,10 @@ class TensorFlowTaskRunner(TaskRunner):
         else:
             self.set_tensor_dict(input_tensor_dict, with_opt_vars=False)
 
-    def train_batches(self, col_name, round_num, input_tensor_dict,
-                      epochs=1, use_tqdm=False, **kwargs):
+    def train_batches(self, col_name: str, round_num: int,
+                      input_tensor_dict: Dict[str, np.ndarray],
+                      epochs: int = 1, use_tqdm: bool = False, **kwargs
+                      ) -> Tuple[Dict[TensorKey, np.ndarray], Dict[TensorKey, np.ndarray]]:
         """
         Perform the training.
 
@@ -177,7 +186,7 @@ class TensorFlowTaskRunner(TaskRunner):
 
         return global_tensor_dict, local_tensor_dict
 
-    def train_batch(self, X, y):
+    def train_batch(self, X: np.ndarray, y: np.ndarray) -> float:
         """
         Train the model on a single batch.
 
@@ -195,8 +204,10 @@ class TensorFlowTaskRunner(TaskRunner):
 
         return loss
 
-    def validate(self, col_name, round_num,
-                 input_tensor_dict, use_tqdm=False, **kwargs):
+    def validate(self, col_name: str, round_num: int,
+                 input_tensor_dict: Dict[str, np.ndarray],
+                 use_tqdm: bool = False, **kwargs
+                 ) -> Tuple[Dict[TensorKey, np.ndarray], Dict[TensorKey, np.ndarray]]:
         """
         Run validation.
 
@@ -238,7 +249,7 @@ class TensorFlowTaskRunner(TaskRunner):
         # return empty dict for local metrics
         return output_tensor_dict, {}
 
-    def validate_batch(self, X, y):
+    def validate_batch(self, X: np.ndarray, y: np.ndarray) -> Tuple[np.ndarray, float]:
         """Validate the model on a single local batch.
 
         Args:
@@ -254,7 +265,8 @@ class TensorFlowTaskRunner(TaskRunner):
         return self.sess.run(
             [self.output, self.validation_metric], feed_dict=feed_dict)
 
-    def get_tensor_dict(self, with_opt_vars=True):
+    def get_tensor_dict(self, with_opt_vars: bool = True
+                        ) -> Dict[str, np.ndarray]:
         """Get the dictionary weights.
 
         Get the weights from the tensor
@@ -276,7 +288,8 @@ class TensorFlowTaskRunner(TaskRunner):
         return {var.name: val for var, val in zip(
             variables, self.sess.run(variables))}
 
-    def set_tensor_dict(self, tensor_dict, with_opt_vars):
+    def set_tensor_dict(self, tensor_dict: Dict[str, np.ndarray],
+                        with_opt_vars: bool) -> None:
         """Set the tensor dictionary.
 
         Set the model weights with a tensor
@@ -304,12 +317,12 @@ class TensorFlowTaskRunner(TaskRunner):
                 self.tvar_placeholders
             )
 
-    def reset_opt_vars(self):
+    def reset_opt_vars(self) -> None:
         """Reinitialize the optimizer variables."""
         for v in self.opt_vars:
             v.initializer.run(session=self.sess)
 
-    def initialize_globals(self):
+    def initialize_globals(self) -> None:
         """Initialize Global Variables.
 
         Initialize all global variables
@@ -319,7 +332,7 @@ class TensorFlowTaskRunner(TaskRunner):
         """
         self.sess.run(tf.global_variables_initializer())
 
-    def _get_weights_names(self, with_opt_vars=True):
+    def _get_weights_names(self, with_opt_vars: bool = True) -> List[str]:
         """Get the weights.
 
         Args:
@@ -336,7 +349,7 @@ class TensorFlowTaskRunner(TaskRunner):
 
         return [var.name for var in variables]
 
-    def get_required_tensorkeys_for_function(self, func_name, **kwargs):
+    def get_required_tensorkeys_for_function(self, func_name: str, **kwargs) -> List[TensorKey]:
         """
         Get the required tensors for specified function that could be called as part of a task.
 
@@ -351,7 +364,7 @@ class TensorFlowTaskRunner(TaskRunner):
         else:
             return self.required_tensorkeys_for_function[func_name]
 
-    def initialize_tensorkeys_for_functions(self, with_opt_vars=False):
+    def initialize_tensorkeys_for_functions(self, with_opt_vars: bool = False) -> None:
         """
         Set the required tensors for all publicly accessible methods \
             that could be called as part of a task.
@@ -415,8 +428,11 @@ class TensorFlowTaskRunner(TaskRunner):
 # to avoid inflating the graph, caller should keep these and pass them back
 # What if we want to set a different group of vars in the middle?
 # It is good if it is the subset of the original variables.
-def tf_set_tensor_dict(tensor_dict, session, variables,
-                       assign_ops=None, placeholders=None):
+def tf_set_tensor_dict(tensor_dict: Dict[str, np.ndarray],
+                       session: tf.Session, variables: List[tf.Variable],
+                       assign_ops: Optional[Dict[str, tf.Operation]] = None,
+                       placeholders: Optional[Dict[str, tf.placeholder]] = None
+                       ) -> Tuple[Dict[str, tf.Operation], Dict[str, tf.placeholder]]:
     """Tensorflow set tensor dictionary.
 
     Args:
