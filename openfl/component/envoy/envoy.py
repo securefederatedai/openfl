@@ -97,7 +97,7 @@ class Envoy:
                     )
                 else:
                     with ExperimentWorkspace(
-                            self.name + ' ' + experiment_name,
+                            self.name + '_' + experiment_name,
                             data_file_path,
                             is_install_requirements=True
                     ):

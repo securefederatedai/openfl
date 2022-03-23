@@ -6,7 +6,7 @@ from openfl.utilities import validate_file_hash
 
 def load_data():
     os.makedirs('data', exist_ok=True)
-    os.system("wget -nc 'https://datasets.simula.no/hyper-kvasir/hyper-kvasir-segmented-images.zip'"
+    os.system("wget -nc 'https://datasets.simula.no/downloads/hyper-kvasir/hyper-kvasir-segmented-images.zip'"
               " -O ./data/kvasir.zip")
     zip_sha384 = 'e30d18a772c6520476e55b610a4db457237f151e' \
                  '19182849d54b49ae24699881c1e18e0961f77642be900450ef8b22e7'
