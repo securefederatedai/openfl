@@ -1,9 +1,4 @@
-# Compile Protocol Buffers description files
+# OpenFL gRPC protocols
 
-After changing proto files run 
-```
-./compile_proto.sh
-```
-to recompile. It will delete old generated python 
-files (*_pb2.py and *_pb2_grpc.py) and generate new.
-Generated files should be committed with proto files.
+All `*_pb2*` files are generated automatically during the installation via `pip`.
+You can always build these files manually by running `python setup.py build_grpc` command from the root repository directory.
