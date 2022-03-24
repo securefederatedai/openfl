@@ -3,7 +3,7 @@
 
 """Adaptive aggregation module."""
 
-from typing import Iterable
+from typing import Iterator
 from typing import List
 from typing import Tuple
 
@@ -48,7 +48,7 @@ class AdaptiveAggregation(AggregationFunction):
     def call(
         self,
         local_tensors: List[LocalTensor],
-        db_iterator: Iterable[pd.Series],
+        db_iterator: Iterator[pd.Series],
         tensor_name: str,
         fl_round: int,
         tags: Tuple[str, ...]
