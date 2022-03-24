@@ -47,8 +47,9 @@ class PyTorchDataLoader(DataLoader):
         """
         return self.X_train[0].shape
 
-    def get_train_loader(self, batch_size: Optional[int] = None, num_batches: Optional[int] = None
-                         ) -> Iterator[Tuple[np.ndarray, np.ndarray]]:
+    def get_train_loader(
+        self, batch_size: Optional[int] = None, num_batches: Optional[int] = None
+    ) -> Iterator[Tuple[np.ndarray, np.ndarray]]:
         """
         Get training data loader.
 

@@ -81,8 +81,10 @@ class FederatedDataSet(PyTorchDataLoader):
         self.valid_splitter = self._get_splitter_or_default(valid_splitter)
 
     @staticmethod
-    def _get_splitter_or_default(value: Optional[NumPyDataSplitter]
-                                 ) -> Union[NumPyDataSplitter, EqualNumPyDataSplitter]:
+    def _get_splitter_or_default(
+        value: Optional[NumPyDataSplitter]
+    ) -> Union[NumPyDataSplitter, EqualNumPyDataSplitter]:
+
         if value is None:
             return EqualNumPyDataSplitter()
         if isinstance(value, NumPyDataSplitter):
