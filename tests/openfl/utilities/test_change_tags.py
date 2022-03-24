@@ -7,20 +7,52 @@ from openfl.utilities import change_tags
 
 
 @pytest.mark.parametrize(
+    'tags,expected_result', [
+        ((), ()),
+        (('abc',), ('abc',)),
+        (('abc', 'def'), ('abc', 'def')),
+    ])
+def test_change_tags_without_add_or_remove(tags, expected_result):
+    """Test change_tags without add or remove fields."""
+    result = change_tags(tags)
+    assert result == expected_result
+
+
+@pytest.mark.parametrize(
+    'tags,add_field,expected_result', [
+        (('abc',), None, ('abc',)),
+        (('abc',), '', ('abc',)),
+        (('abc', 'def'), 'ghi', ('abc', 'def', 'ghi')),
+        (('abc', 'def'), 'def', ('abc', 'def')),
+    ])
+def test_change_tags_add(tags, add_field, expected_result):
+    """Test change_tags with add field."""
+    result = change_tags(tags, add_field=add_field)
+    assert result == expected_result
+
+
+@pytest.mark.parametrize(
+    'tags,remove_field,expected_result', [
+        (('abc',), None, ('abc',)),
+        (('abc',), '', ('abc',)),
+        (('abc', 'def'), 'def', ('abc',)),
+    ])
+def test_change_tags_remove(tags, remove_field, expected_result):
+    """Test change_tags with remove field."""
+    result = change_tags(tags, remove_field=remove_field)
+    assert result == expected_result
+
+
+@pytest.mark.parametrize(
     'tags,add_field,remove_field,expected_result', [
-        ('abc', None, 'abc', ()),
-        (('abc',), None, 'abc', ()),
-        (['abc'], None, 'abc', ()),
-        ('abc', 'def', None, ('abc', 'def')),
-        (['abc'], 'ghi', None, ('abc', 'ghi')),
-        (['abc', 'def'], 'ghi', None, ('abc', 'def', 'ghi')),
-        (['abc', 'def'], None, 'abc', ('def',)),
-        (['abc', 'def'], 'ghi', 'abc', ('def', 'ghi')),
         (('abc', 'def'), 'ghi', 'abc', ('def', 'ghi')),
+        (('abc', 'def'), None, 'abc', ('def',)),
+        (('abc', 'def'), 'ghi', None, ('abc', 'def', 'ghi')),
+        (('abc', 'def'), 'ghi', 'ghi', ('abc', 'def')),
         (('abc', 'def', 'def'), 'ghi', 'abc', ('def', 'ghi')),
         (('abc', 'ghi', 'def'), 'ghi', 'abc', ('ghi', 'def')),
     ])
-def test_equal(tags, add_field, remove_field, expected_result):
-    """Test equal splitter."""
-    result = change_tags(tags, add_field, remove_field)
+def test_change_tags_add_and_remove_both(tags, add_field, remove_field, expected_result):
+    """Test change tags with both add and remove fields."""
+    result = change_tags(tags, add_field=add_field, remove_field=remove_field)
     assert result == expected_result
