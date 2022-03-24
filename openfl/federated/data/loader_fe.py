@@ -5,19 +5,18 @@
 
 from typing import Tuple
 
-from fastestimator import Pipeline
-
 from .loader import DataLoader
 
 
 class FastEstimatorDataLoader(DataLoader):
     """Federation Data Loader for FastEstimator."""
 
-    def __init__(self, pipeline: Pipeline, **kwargs) -> None:
+    def __init__(self, pipeline: 'Pipeline', **kwargs) -> None:  # NOQA
         """
         Instantiate the data object.
 
         Args:
+            pipeline: Pipeline from fastestimator
             batch_size: Size of batches used for all data loaders
             kwargs: consumes all un-used kwargs
 
