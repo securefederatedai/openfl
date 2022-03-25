@@ -133,7 +133,7 @@ class Experiment:
         return description
 
     async def get_metric_stream(self):
-        return await self.aggregator_client.get_metric_stream()
+        return self.aggregator_client.get_metric_stream()
 
     async def _run_aggregator_in_docker(
             self, *,

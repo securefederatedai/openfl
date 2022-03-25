@@ -4,3 +4,4 @@ RUN pip install --upgrade pip
 RUN pip install git+https://github.com/dmitryagapov/openfl.git@feature/run_collaborator_in_docker
 
 COPY . /code
+WORKDIR /code
