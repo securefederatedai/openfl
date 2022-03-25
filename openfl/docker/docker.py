@@ -55,6 +55,8 @@ class DockerConfig:
     def env_list(self):
         env_lst = []
         for k, v in self.env.items():
+            if v is None:
+                continue
             env_lst.append(f'{k}={v}')
         return env_lst
 

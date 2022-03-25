@@ -256,7 +256,7 @@ class DirectorGRPCServer(director_pb2_grpc.DirectorServicer):
         logger.error(f'Collaborator {request.collaborator_name} was failed with error code:'
                      f' {request.error_code}, error_description: {request.error_description}'
                      f'Stopping experiment.')
-        self.director.set_experiment_failed(
+        await self.director.set_experiment_failed(
             experiment_name=request.experiment_name,
             collaborator_name=request.collaborator_name
         )

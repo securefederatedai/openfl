@@ -102,7 +102,7 @@ def start_(shard_name, director_host, director_port, tls, envoy_config_path,
     docker_config = envoy_params.pop('docker', {})
     docker_env = docker_config.get('env', {})
     docker_buildargs = docker_config.get('buildargs', {})
-    docker_volumes = docker_config.get('volumes', {})
+    docker_volumes = docker_config.get('volumes', [])
     docker_config = DockerConfig(
         use_docker=use_docker,
         env=docker_env,

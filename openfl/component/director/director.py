@@ -6,6 +6,7 @@
 import asyncio
 import logging
 import pickle
+import shutil
 import time
 import uuid
 from collections import defaultdict
@@ -201,8 +202,7 @@ class Director:
                 f' does not have access to this experiment'
             )
 
-        exp.get_metric_stream()
-        async for metric_dict in aggregator_client.get_metric_stream():
+        async for metric_dict in await exp.get_metric_stream():
             yield metric_dict
 
     def remove_experiment_data(self, experiment_name: str, caller: str):
@@ -316,10 +316,10 @@ class Director:
             if plan_buffer is None:
                 raise Exception(f'No {plan_path} in workspace.')
             plan_data = plan_buffer.read()
-        tmp_plan_path = Path('tmp') / f'{uuid.uuid4()}.yaml'
+        tmp_plan_path = Path('tmp') / f'{uuid.uuid4()}' / 'plan.yaml'
         tmp_plan_path.parent.mkdir(parents=True, exist_ok=True)
         with tmp_plan_path.open('wb') as plan_f:
             plan_f.write(plan_data)
         plan = Plan.parse(plan_config_path=tmp_plan_path)
-        tmp_plan_path.unlink(missing_ok=True)
+        shutil.rmtree(tmp_plan_path.parent, ignore_errors=True)
         return plan

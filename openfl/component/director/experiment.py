@@ -13,6 +13,7 @@ from typing import List
 from typing import Union
 
 import numpy as np
+from google.protobuf.json_format import MessageToDict
 
 from openfl.docker import docker
 from openfl.docker.docker import DockerConfig
@@ -126,12 +127,13 @@ class Experiment:
         }
 
         if self.status == Status.IN_PROGRESS:
-            description = await self.aggregator_client.get_experiment_description()
+            description_pb2 = await self.aggregator_client.get_experiment_description()
+            description = MessageToDict(description_pb2)
 
         return description
 
     async def get_metric_stream(self):
-        await self.aggregator_client.get_metric_stream()
+        return await self.aggregator_client.get_metric_stream()
 
     async def _run_aggregator_in_docker(
             self, *,
