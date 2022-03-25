@@ -81,6 +81,8 @@ class Collaborator:
 
         self.logger = getLogger(__name__)
 
+        self.opt_treatment = opt_treatment
+
         if isinstance(device_assignment_policy, Enum):
             self.device_assignment_policy = device_assignment_policy
         else:
