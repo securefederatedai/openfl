@@ -92,7 +92,7 @@ class Collaborator:
                 f'Unknown device_assignment_policy: {device_assignment_policy}.'
             )
 
-        self.task_runner.set_optimizer_treatment(self.opt_treatment.name)
+        self.task_runner.set_optimizer_treatment(self.opt_treatment)
 
     def set_available_devices(self, cuda: Tuple[str] = ()):
         """
