@@ -19,7 +19,7 @@ logger = getLogger(__name__)
 
 
 @staticmethod
-def download_data_() -> Any:
+def download_data_() -> str:
     """Download data.
 
     Returns:
@@ -63,8 +63,10 @@ def download_data_() -> Any:
         return ''
 
 
-def import_raw_data_(data_path: Any = '',
-                     num_samples: int = 0) -> Tuple[Dict, np.ndarray, np.ndarray, np.ndarray]:
+def import_raw_data_(
+    data_path: str = '',
+    num_samples: int = 0
+) -> Tuple[Dict[str, int], np.ndarray, np.ndarray, np.ndarray]:
     """Import data.
 
     Returns:
@@ -152,7 +154,8 @@ def import_raw_data_(data_path: Any = '',
 
 
 def get_datasets_(encoder_input_data: np.ndarray, decoder_input_data: np.ndarray,
-                  decoder_target_data: np.ndarray, num_samples: int, split_ratio: float) -> Dict:
+                  decoder_target_data: np.ndarray,
+                  num_samples: int, split_ratio: float) -> Dict[str, np.ndarray]:
     """Create train/val.
 
     Returns:
@@ -186,8 +189,10 @@ def get_datasets_(encoder_input_data: np.ndarray, decoder_input_data: np.ndarray
     return results
 
 
-def load_shard(collaborator_count: int, shard_num: Any, data_path: str,
-               num_samples: int, split_ratio: float) -> Tuple:
+def load_shard(
+    collaborator_count: int, shard_num: Any, data_path: str,
+    num_samples: int, split_ratio: float
+) -> Tuple[Tuple[np.ndarray, ...], Tuple[np.ndarray, ...], Dict[str, int]]:
     """Load data-shards.
 
     Returns:

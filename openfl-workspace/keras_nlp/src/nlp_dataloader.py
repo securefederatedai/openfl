@@ -4,10 +4,10 @@ Licensed subject to the terms of the separately executed evaluation
 license agreement between Intel Corporation and you.
 """
 from logging import getLogger
-from typing import Callable
-from typing import Iterable
+from typing import Iterator
 from typing import List
 from typing import Optional
+from typing import Tuple
 
 import numpy as np
 import src.dataloader_utils as dlu
@@ -21,7 +21,7 @@ class NLPDataLoader(KerasDataLoader):
     """NLP Dataloader template."""
 
     def __init__(self, collaborator_count: int, split_ratio: float,
-                 num_samples: int, data_path: str, batch_size: Optional[int], **kwargs) -> None:
+                 num_samples: int, data_path: str, batch_size: int, **kwargs) -> None:
         """Instantiate the data object.
 
         Args:
@@ -51,11 +51,11 @@ class NLPDataLoader(KerasDataLoader):
         self.X_valid = [valid[0], valid[1]]
         self.y_valid = valid[2]
 
-    def get_feature_shape(self) -> tuple:
+    def get_feature_shape(self) -> Tuple[int, ...]:
         """Get the shape of an example feature array."""
         return self.X_train[0].shape
 
-    def get_train_loader(self, batch_size: Optional[int] = None) -> Callable[..., Callable]:
+    def get_train_loader(self, batch_size: Optional[int] = None) -> Iterator[List[np.ndarray]]:
         """
         Get training data loader.
 
@@ -66,7 +66,7 @@ class NLPDataLoader(KerasDataLoader):
         return self._get_batch_generator(X1=self.X_train[0], X2=self.X_train[1],
                                          y=self.y_train, batch_size=batch_size)
 
-    def get_valid_loader(self, batch_size: Optional[int] = None) -> Callable[..., Callable]:
+    def get_valid_loader(self, batch_size: Optional[int] = None) -> Iterator[List[np.ndarray]]:
         """
         Get validation data loader.
 
@@ -98,7 +98,7 @@ class NLPDataLoader(KerasDataLoader):
     def _batch_generator(X1: np.ndarray, X2: np.ndarray,
                          y: np.ndarray, idxs: np.ndarray,
                          batch_size: Optional[int],
-                         num_batches: int) -> Iterable[List[np.ndarray]]:
+                         num_batches: int) -> Iterator[List[np.ndarray]]:
         """
         Generate batch of data.
 
@@ -117,7 +117,8 @@ class NLPDataLoader(KerasDataLoader):
             yield [X1[idxs[a:b]], X2[idxs[a:b]]], y[idxs[a:b]]
 
     def _get_batch_generator(self, X1: np.ndarray, X2: np.ndarray,
-                             y: np.ndarray, batch_size: Optional[int]) -> Callable[..., Iterable]:
+                             y: np.ndarray,
+                             batch_size: Optional[int]) -> Iterator[List[np.ndarray]]:
         """
         Return the dataset generator.
 
