@@ -12,32 +12,9 @@ from openfl.databases import TensorDB
 from openfl.pipelines import NoCompressionPipeline
 from openfl.pipelines import TensorCodec
 from openfl.protocols import utils
+from openfl.utilities.enum_types import DevicePolicy
+from openfl.utilities.enum_types import OptTreatment
 from openfl.utilities import TensorKey
-
-
-class DevicePolicy(Enum):
-    """Device assignment policy."""
-
-    CPU_ONLY = 1
-    CUDA_PREFERRED = 2
-
-
-class OptTreatment(Enum):
-    """Optimizer Methods.
-
-    - RESET tells each collaborator to reset the optimizer state at the beginning
-    of each round.
-
-    - CONTINUE_LOCAL tells each collaborator to continue with the local optimizer
-    state from the previous round.
-
-    - CONTINUE_GLOBAL tells each collaborator to continue with the federally
-    averaged optimizer state from the previous round.
-    """
-
-    RESET = 1
-    CONTINUE_LOCAL = 2
-    CONTINUE_GLOBAL = 3
 
 
 class Collaborator:
@@ -104,19 +81,7 @@ class Collaborator:
 
         self.logger = getLogger(__name__)
 
-        # RESET/CONTINUE_LOCAL/CONTINUE_GLOBAL
-        if isinstance(opt_treatment, str) and hasattr(OptTreatment, opt_treatment):
-            self.opt_treatment = OptTreatment[opt_treatment]
-        elif isinstance(opt_treatment, Enum):
-            self.opt_treatment = opt_treatment
-        else:
-            self.logger.error(f'Unknown opt_treatment: {opt_treatment.name}.')
-            raise NotImplementedError(f'Unknown opt_treatment: {opt_treatment}.')
-
-        if isinstance(device_assignment_policy, str) and hasattr(
-                DevicePolicy, device_assignment_policy):
-            self.device_assignment_policy = DevicePolicy[device_assignment_policy]
-        elif isinstance(device_assignment_policy, Enum):
+        if isinstance(device_assignment_policy, Enum):
             self.device_assignment_policy = device_assignment_policy
         else:
             self.logger.error('Unknown device_assignment_policy: '

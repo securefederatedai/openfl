@@ -11,7 +11,7 @@ from torch.utils.data import Dataset
 from torch.utils.data import SubsetRandomSampler
 from torchvision import transforms as tsf
 
-from openfl.component.collaborator.collaborator import OptTreatment
+from openfl.utilities.enum_types import OptTreatment
 from openfl.interface.interactive_api.experiment import DataInterface
 from openfl.interface.interactive_api.experiment import FLExperiment
 from openfl.interface.interactive_api.experiment import ModelInterface

@@ -6,7 +6,7 @@ from logging import getLogger
 
 import numpy as np
 
-from openfl.component.collaborator.collaborator import OptTreatment
+from openfl.utilities.enum_types import OptTreatment
 from openfl.utilities import split_tensor_dict_for_holdouts
 from openfl.utilities import TensorKey
 

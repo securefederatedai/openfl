@@ -8,7 +8,7 @@ import numpy
 import pytest
 
 from openfl.component.collaborator import Collaborator
-from openfl.component.collaborator.collaborator import OptTreatment
+from openfl.utilities.enum_types import OptTreatment
 from openfl.protocols import base_pb2
 from openfl.utilities.types import TensorKey
 

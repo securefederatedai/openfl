@@ -1,7 +1,7 @@
 import time
 import tensorflow as tf
 # Create a federation
-from openfl.component.collaborator.collaborator import OptTreatment
+from openfl.utilities.enum_types import OptTreatment
 from openfl.interface.interactive_api.federation import Federation
 from openfl.interface.interactive_api.experiment import TaskInterface, DataInterface, ModelInterface, FLExperiment
 from tests.github.interactive_api_director.experiments.tensorflow_mnist.dataset import FedDataset

@@ -18,8 +18,8 @@ from openfl.component.aggregation_functions import WeightedAverage
 from openfl.component.assigner.tasks import Task
 from openfl.component.assigner.tasks import TrainTask
 from openfl.component.assigner.tasks import ValidateTask
-from openfl.component.collaborator.collaborator import DevicePolicy
-from openfl.component.collaborator.collaborator import OptTreatment
+from openfl.utilities.enum_types import DevicePolicy
+from openfl.utilities.enum_types import OptTreatment
 from openfl.federated import Plan
 from openfl.interface.cli import setup_logging
 from openfl.interface.cli_helper import WORKSPACE

@@ -7,7 +7,7 @@ import numpy as np
 import tensorflow.compat.v1 as tf
 from tqdm import tqdm
 
-from openfl.component.collaborator.collaborator import OptTreatment
+from openfl.utilities.enum_types import OptTreatment
 from openfl.utilities import split_tensor_dict_for_holdouts
 from openfl.utilities import TensorKey
 from .runner import TaskRunner
