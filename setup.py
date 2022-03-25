@@ -6,6 +6,7 @@
 from setuptools import Command
 from setuptools import setup
 from setuptools.command.build_py import build_py
+from setuptools.command.develop import develop
 
 
 class BuildPackageProtos(Command):
@@ -56,6 +57,20 @@ class BuildPyGRPC(build_py):
 
     def run(self):
         """Build Python and GRPC modules."""
+        self.subcommand.run()
+        super().run()
+
+
+class DevelopGRPC(develop):
+    """Command for develop installation."""
+
+    def __init__(self, dist):
+        """Create a sub-command to execute."""
+        self.subcommand = BuildPackageProtos(dist)
+        super().__init__(dist)
+
+    def run(self):
+        """Build GRPC modules before the default installation."""
         self.subcommand.run()
         super().run()
 
@@ -164,6 +179,7 @@ setup(
     },
     cmdclass={
         'build_py': BuildPyGRPC,
-        'build_grpc': BuildPackageProtos
+        'build_grpc': BuildPackageProtos,
+        'develop': DevelopGRPC
     },
 )
