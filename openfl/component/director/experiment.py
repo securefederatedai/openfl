@@ -37,6 +37,7 @@ class Experiment:
             collaborators: List[str],
             sender: str,
             init_tensor_dict: dict,
+            agg_port: int,
             plan_path: Union[Path, str] = 'plan/plan.yaml',
             users: Iterable[str] = None,
     ) -> None:
@@ -54,6 +55,7 @@ class Experiment:
         self.users = set() if users is None else set(users)
         self.status = Status.PENDING
         self.aggregator = None
+        self.agg_port = agg_port
 
     async def start(
             self, *,
@@ -102,6 +104,7 @@ class Experiment:
             certificate=certificate,
             private_key=private_key,
             tls=tls,
+            agg_port=self.agg_port,
         )
         return aggregator_grpc_server
 

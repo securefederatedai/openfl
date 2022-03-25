@@ -40,6 +40,7 @@ class DirectorGRPCServer(director_pb2_grpc.DirectorServicer):
             certificate: Optional[Union[Path, str]] = None,
             listen_host: str = '[::]',
             listen_port: int = 50051,
+            open_ports: list = [50011],
             **kwargs,
     ) -> None:
         """Initialize a director object."""

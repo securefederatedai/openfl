@@ -4,6 +4,7 @@
 """Director module."""
 
 import asyncio
+import itertools
 import logging
 import time
 from collections import defaultdict
@@ -19,6 +20,7 @@ from .experiment import Status
 logger = logging.getLogger(__name__)
 
 ENVOY_HEALTH_CHECK_PERIOD = 60  # in seconds
+OPEN_PORTS_LIST = [50011]
 
 
 class Director:
@@ -65,6 +67,21 @@ class Director:
         is_accepted = True
         return is_accepted
 
+    def get_open_port(self, open_ports_list: list, sender_name: str) -> int:
+        """Monitor and send an open port from a list of ports."""
+        iterator = itertools.cycle(open_ports_list)
+        len_itr = len(open_ports_list)
+        for i in range(3 * len_itr):
+            port = int(next(iterator))
+            all_experiments = self.experiments_registry.get_user_experiments(sender_name)
+            for exp in all_experiments:
+                if exp.status == Status.IN_PROGRESS and exp.agg_port == port:
+                    logger.info(f'Port {port} already in use for experiment {exp.name}')
+                    port = int(next(iterator))
+            logger.info(f'Using open port {port} for connecting to aggregator')
+            return port
+        return None
+
     async def set_new_experiment(
             self, *,
             experiment_name: str,
@@ -74,16 +91,21 @@ class Director:
             experiment_archive_path: Path,
     ) -> bool:
         """Set new experiment."""
-        experiment = Experiment(
-            name=experiment_name,
-            archive_path=experiment_archive_path,
-            collaborators=list(collaborator_names),
-            users=[sender_name],
-            sender=sender_name,
-            init_tensor_dict=tensor_dict,
-        )
-        self.experiments_registry.add(experiment)
-        return True
+        open_ports_list = self.settings.get('open_ports', OPEN_PORTS_LIST)
+        open_port = self.get_open_port(open_ports_list, sender_name)
+        if open_port:
+            experiment = Experiment(
+                name=experiment_name,
+                archive_path=experiment_archive_path,
+                collaborators=list(collaborator_names),
+                users=[sender_name],
+                sender=sender_name,
+                init_tensor_dict=tensor_dict,
+                agg_port=open_port,
+            )
+            self.experiments_registry.add(experiment)
+            return True
+        logger.info(f'Could not find open ports out of the list: {open_ports_list}')
 
     def get_trained_model(self, experiment_name: str, caller: str, model_type: str):
         """Get trained model."""
