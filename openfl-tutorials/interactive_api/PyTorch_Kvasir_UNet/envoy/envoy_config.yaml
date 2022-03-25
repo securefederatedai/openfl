@@ -10,6 +10,7 @@ params:
       HTTPS_PROXY:
       NO_PROXY:
     volumes:
+      - './kvasir_data'
 
 optional_plugin_components:
   cuda_device_monitor:
