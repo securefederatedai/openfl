@@ -89,7 +89,12 @@ class Director:
             experiment_archive_path: Path,
     ) -> bool:
         """Set new experiment."""
-        tensor_dict_path = Path(f'{experiment_name}.pickle').absolute()
+        tensor_dict_path = (
+                Path('tmp') /
+                f'{uuid.uuid4()}' /
+                f'{experiment_name}.pickle'
+        ).absolute()
+        tensor_dict_path.parent.mkdir(parents=True, exist_ok=True)
 
         with tensor_dict_path.open('wb') as f:
             pickle.dump(tensor_dict, f)

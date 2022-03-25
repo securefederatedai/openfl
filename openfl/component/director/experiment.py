@@ -62,9 +62,7 @@ class Experiment:
         self.collaborators = collaborators
         self.sender = sender
         self.init_tensor_dict_path = Path(init_tensor_dict_path)
-        if isinstance(plan_path, str):
-            plan_path = Path(plan_path)
-        self.plan_path = plan_path
+        self.plan_path = Path(plan_path)
         self.plan = plan
         self.users = set() if users is None else set(users)
         self.status = Status.PENDING
