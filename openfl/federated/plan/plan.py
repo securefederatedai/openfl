@@ -46,6 +46,8 @@ INSTANCE = Union[Aggregator, Collaborator,
                  TaskRunner, CoreTaskRunner,
                  Transformer, TransformationPipeline]
 
+YAML_VALUE_TYPE = Union[int, float, str]
+
 
 class Plan:
     """Federated Learning plan."""
@@ -53,7 +55,8 @@ class Plan:
     logger = getLogger(__name__)
 
     @staticmethod
-    def load(yaml_path: Path, default: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    def load(yaml_path: Path,
+             default: Optional[Dict[str, YAML_VALUE_TYPE]] = None) -> Dict[str, YAML_VALUE_TYPE]:
         """Load the plan from YAML file."""
         if default is None:
             default = {}
@@ -62,7 +65,7 @@ class Plan:
         return default
 
     @staticmethod
-    def dump(yaml_path: Path, config: Dict[str, Any], freeze: bool = False) -> None:
+    def dump(yaml_path: Path, config: Dict[str, YAML_VALUE_TYPE], freeze: bool = False) -> None:
         """Dump the plan config to YAML file."""
 
         class NoAliasDumper(SafeDumper):
@@ -175,7 +178,7 @@ class Plan:
             raise
 
     @staticmethod
-    def build(template: str, settings: Any, **override) -> INSTANCE:
+    def build(template: str, settings: Dict[str, Any], **override) -> INSTANCE:
         """
         Create an instance of a openfl Component or Federated DataLoader/TaskRunner.
 
