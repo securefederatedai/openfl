@@ -45,14 +45,42 @@ def test_change_tags_remove(tags, remove_field, expected_result):
 
 @pytest.mark.parametrize(
     'tags,add_field,remove_field,expected_result', [
+        (('abc', 'def'), None, None, ('abc', 'def')),
         (('abc', 'def'), 'ghi', 'abc', ('def', 'ghi')),
         (('abc', 'def'), None, 'abc', ('def',)),
         (('abc', 'def'), 'ghi', None, ('abc', 'def', 'ghi')),
         (('abc', 'def'), 'ghi', 'ghi', ('abc', 'def')),
         (('abc', 'def', 'def'), 'ghi', 'abc', ('def', 'ghi')),
         (('abc', 'ghi', 'def'), 'ghi', 'abc', ('ghi', 'def')),
+        (('abc', 'ghi', 'def'), 'ghi', 'ghi', ('abc', 'def', 'ghi')),
     ])
 def test_change_tags_add_and_remove_both(tags, add_field, remove_field, expected_result):
     """Test change tags with both add and remove fields."""
     result = change_tags(tags, add_field=add_field, remove_field=remove_field)
     assert result == expected_result
+
+
+expected_exception_message = 'list.remove(x): x not in list'
+
+
+@pytest.mark.parametrize(
+    'tags,remove_field,expected_result', [
+        (('abc', 'def'), 'ghi', expected_exception_message),
+    ])
+def test_change_tags_remove_not_in_tags(tags, remove_field, expected_result):
+    """Test change_tags with remove field not in tags."""
+    with pytest.raises(ValueError) as excinfo:
+        change_tags(tags, remove_field=remove_field)
+    assert str(excinfo.value) == expected_exception_message
+
+
+@pytest.mark.parametrize(
+    'tags,add_field,remove_field,expected_result', [
+        (('abc', 'def'), None, 'ghi', expected_exception_message),
+        (('abc', 'def'), 'xyz', 'ghi', expected_exception_message),
+    ])
+def test_change_tags_add_remove_not_in_tags(tags, add_field, remove_field, expected_result):
+    """Test change_tags with add and remove field not in tags."""
+    with pytest.raises(ValueError) as excinfo:
+        change_tags(tags, add_field=add_field, remove_field=remove_field)
+    assert str(excinfo.value) == expected_exception_message
