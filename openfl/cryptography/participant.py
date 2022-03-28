@@ -2,15 +2,19 @@
 # SPDX-License-Identifier: Apache-2.0
 
 """Cryptography participant utilities."""
+from typing import Tuple
 
 from cryptography import x509
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import rsa
+from cryptography.hazmat.primitives.asymmetric.rsa import RSAPrivateKey
+from cryptography.x509.base import CertificateSigningRequest
 from cryptography.x509.oid import NameOID
 
 
-def generate_csr(common_name, server=False):
+def generate_csr(common_name: str,
+                 server: bool = False) -> Tuple[RSAPrivateKey, CertificateSigningRequest]:
     """Issue certificate signing request for server and client."""
     # Generate private key
     private_key = rsa.generate_private_key(
