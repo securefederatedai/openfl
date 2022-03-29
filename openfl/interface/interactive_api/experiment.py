@@ -6,7 +6,6 @@ import os
 import time
 from collections import defaultdict
 from copy import deepcopy
-from enum import Enum
 from logging import getLogger
 from pathlib import Path
 from typing import Dict
