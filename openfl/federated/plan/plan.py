@@ -459,9 +459,12 @@ class Plan:
 
         defaults[SETTINGS]['compression_pipeline'] = self.get_tensor_pipe()
         defaults[SETTINGS]['task_config'] = self.config.get('tasks', {})
+
         opt_treatment = defaults[SETTINGS]['opt_treatment']
         if isinstance(opt_treatment, str) and hasattr(OptTreatment, opt_treatment):
-            defaults[SETTINGS]['opt_treatment'] = OptTreatment[opt_treatment].name
+            defaults[SETTINGS]['opt_treatment'] = OptTreatment[opt_treatment].value
+        elif isinstance(opt_treatment, int) and OptTreatment(opt_treatment):
+            pass
         else:
             self.logger.error(f'Unknown opt_treatment: {opt_treatment}.')
             raise NotImplementedError(f'Unknown opt_treatment: {opt_treatment}.')

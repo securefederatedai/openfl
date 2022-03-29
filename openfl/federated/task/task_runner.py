@@ -213,7 +213,7 @@ class CoreTaskRunner:
         # SHould be removed! We have this info at the initialization time
         # and do not change this one during training.
         """Change the treatment of current instance optimizer."""
-        self.opt_treatment = opt_treatment.name
+        self.opt_treatment = opt_treatment
 
     def rebuild_model(self, input_tensor_dict, validation=False, device='cpu'):
         """

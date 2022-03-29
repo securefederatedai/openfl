@@ -3,7 +3,6 @@
 
 """Collaborator module."""
 
-from enum import Enum
 from logging import getLogger
 from time import sleep
 from typing import Tuple
@@ -25,8 +24,8 @@ class Collaborator:
         aggregator_uuid: The unique id for the client
         federation_uuid: The unique id for the federation
         model: The model
-        opt_treatment* (string): The optimizer state treatment (Defaults to
-            "CONTINUE_GLOBAL", which is aggreagated state from previous round.)
+        opt_treatment* (enum.Enum): The optimizer state treatment (Defaults to
+            OptTreatment.CONTINUE_GLOBAL, which is aggreagated state from previous round.)
 
         compression_pipeline: The compression pipeline (Defaults to None)
 
@@ -82,15 +81,7 @@ class Collaborator:
         self.logger = getLogger(__name__)
 
         self.opt_treatment = opt_treatment
-
-        if isinstance(device_assignment_policy, Enum):
-            self.device_assignment_policy = device_assignment_policy
-        else:
-            self.logger.error('Unknown device_assignment_policy: '
-                              f'{device_assignment_policy.name}.')
-            raise NotImplementedError(
-                f'Unknown device_assignment_policy: {device_assignment_policy}.'
-            )
+        self.device_assignment_policy = device_assignment_policy
 
         self.task_runner.set_optimizer_treatment(self.opt_treatment)
 

@@ -6,6 +6,7 @@ import os
 import time
 from collections import defaultdict
 from copy import deepcopy
+from enum import Enum
 from logging import getLogger
 from pathlib import Path
 from typing import Dict
@@ -169,8 +170,8 @@ class FLExperiment:
               rounds_to_train: int,
               task_assigner=None,
               delta_updates: bool = False,
-              opt_treatment: str = OptTreatment.RESET,
-              device_assignment_policy: str = DevicePolicy.CPU_ONLY,
+              opt_treatment: Enum = OptTreatment.RESET,
+              device_assignment_policy: Enum = DevicePolicy.CPU_ONLY,
               pip_install_options: Tuple[str] = ()) -> None:
         """
         Prepare workspace distribution and send to Director.
@@ -197,6 +198,7 @@ class FLExperiment:
         pip_install_options - tuple of options for the remote `pip install` calls,
             example: ('-f some.website', '--no-index')
         """
+
         if not task_assigner:
             task_assigner = self.define_task_assigner(task_keeper, rounds_to_train)
 
