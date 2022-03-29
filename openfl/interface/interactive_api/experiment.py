@@ -170,8 +170,8 @@ class FLExperiment:
               rounds_to_train: int,
               task_assigner=None,
               delta_updates: bool = False,
-              opt_treatment: Enum = OptTreatment.RESET,
-              device_assignment_policy: Enum = DevicePolicy.CPU_ONLY,
+              opt_treatment: OptTreatment = OptTreatment.RESET,
+              device_assignment_policy: DevicePolicy = DevicePolicy.CPU_ONLY,
               pip_install_options: Tuple[str] = ()) -> None:
         """
         Prepare workspace distribution and send to Director.
