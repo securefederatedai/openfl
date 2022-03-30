@@ -205,7 +205,8 @@ class DirectorGRPCServer(director_pb2_grpc.DirectorServicer):
             experiment_name, agg_port = await self.director.wait_experiment(msg.collaborator_name)
             logger.info(f'Experiment {experiment_name} was prepared')
 
-            yield director_pb2.WaitExperimentResponse(experiment_name=experiment_name, agg_port=agg_port)
+            yield director_pb2.WaitExperimentResponse(
+                experiment_name=experiment_name, agg_port=agg_port)
 
     async def GetDatasetInfo(self, request, context):  # NOQA:N802
         """Request the info about target and sample shapes in the dataset."""
