@@ -772,7 +772,7 @@ class Aggregator:
         task_key = TaskResultKey(task_name, collaborators_for_task[0], self.round_number)
         for tensor_key in self.collaborator_tasks_results[task_key]:
             tensor_name, origin, round_number, report, tags = tensor_key
-            assert (tags[-1] == collaborators_for_task[0]), (
+            assert (collaborators_for_task[0] in tags), (
                 f'Tensor {tensor_key} in task {task_name} has not been processed correctly'
             )
             # Strip the collaborator label, and lookup aggregated tensor
