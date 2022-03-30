@@ -13,7 +13,7 @@ from typing import Optional
 from typing import Tuple
 from typing import Union
 
-from numpy import ndarray
+import numpy as np
 from yaml import dump
 from yaml import safe_load
 from yaml import SafeDumper
@@ -30,7 +30,6 @@ from openfl.federated.task.task_runner import CoreTaskRunner
 from openfl.interface.cli_helper import WORKSPACE
 from openfl.interface.interactive_api.shard_descriptor import ShardDescriptor
 from openfl.pipelines.pipeline import TransformationPipeline
-from openfl.pipelines.pipeline import Transformer
 from openfl.plugins.interface_serializer.serializer_interface import Serializer
 from openfl.transport import AggregatorGRPCClient
 from openfl.transport import AggregatorGRPCServer
@@ -41,12 +40,12 @@ TEMPLATE = 'template'
 DEFAULTS = 'defaults'
 AUTO = 'auto'
 
-INSTANCE = Union[Aggregator, Collaborator,
-                 DataLoader,
-                 TaskRunner, CoreTaskRunner,
-                 Transformer, TransformationPipeline]
+# Type definition for an instance of a openfl Component or Federated DataLoader/TaskRunner
+Component = Any
 
-YAML_VALUE_TYPE = Union[int, float, str]
+PartYAMLValueType = Union[int, float, str, bool]
+YAMLValueType = Union[PartYAMLValueType,
+                      Dict[str, Union[PartYAMLValueType, Dict[str, PartYAMLValueType]]]]
 
 
 class Plan:
@@ -56,7 +55,7 @@ class Plan:
 
     @staticmethod
     def load(yaml_path: Path,
-             default: Optional[Dict[str, YAML_VALUE_TYPE]] = None) -> Dict[str, YAML_VALUE_TYPE]:
+             default: Optional[Dict[str, YAMLValueType]] = None) -> Dict[str, YAMLValueType]:
         """Load the plan from YAML file."""
         if default is None:
             default = {}
@@ -65,12 +64,12 @@ class Plan:
         return default
 
     @staticmethod
-    def dump(yaml_path: Path, config: Dict[str, YAML_VALUE_TYPE], freeze: bool = False) -> None:
+    def dump(yaml_path: Path, config: Dict[str, YAMLValueType], freeze: bool = False) -> None:
         """Dump the plan config to YAML file."""
 
         class NoAliasDumper(SafeDumper):
 
-            def ignore_aliases(self, data: ndarray) -> bool:
+            def ignore_aliases(self, data: np.ndarray) -> bool:
                 return True
 
         if freeze:
@@ -178,7 +177,7 @@ class Plan:
             raise
 
     @staticmethod
-    def build(template: str, settings: Dict[str, Any], **override) -> INSTANCE:
+    def build(template: str, settings: Dict[str, Any], **override) -> Component:
         """
         Create an instance of a openfl Component or Federated DataLoader/TaskRunner.
 
@@ -208,7 +207,7 @@ class Plan:
         return instance
 
     @staticmethod
-    def import_(template: str) -> INSTANCE:
+    def import_(template: str) -> Component:
         """
         Import an instance of a openfl Component or Federated DataLoader/TaskRunner.
 
@@ -311,7 +310,7 @@ class Plan:
 
         return self.assigner_
 
-    def get_tasks(self) -> Dict[str, Any]:
+    def get_tasks(self) -> Dict[str, Dict[str, Any]]:
         """Get federation tasks."""
         tasks = self.config.get('tasks', {})
         tasks.pop(DEFAULTS, None)
@@ -331,7 +330,7 @@ class Plan:
             tasks[task]['aggregation_type'] = aggregation_type
         return tasks
 
-    def get_aggregator(self, tensor_dict: Optional[Dict[str, ndarray]] = None) -> Aggregator:
+    def get_aggregator(self, tensor_dict: Optional[Dict[str, np.ndarray]] = None) -> Aggregator:
         """Get federation aggregator."""
         defaults = self.config.get('aggregator',
                                    {
@@ -447,9 +446,9 @@ class Plan:
         return self.runner_
 
     def get_collaborator(self, collaborator_name: str,
-                         root_certificate: Union[Path, str, None] = None,
-                         private_key: Union[Path, str, None] = None,
-                         certificate: Union[Path, str, None] = None,
+                         root_certificate: Optional[Union[Path, str]] = None,
+                         private_key: Optional[Union[Path, str]] = None,
+                         certificate: Optional[Union[Path, str]] = None,
                          task_runner: Optional[TaskRunner] = None,
                          client: Optional[AggregatorGRPCClient] = None,
                          shard_descriptor: Optional[ShardDescriptor] = None) -> Collaborator:
@@ -507,9 +506,9 @@ class Plan:
         return self.collaborator_
 
     def get_client(self, collaborator_name: str, aggregator_uuid: str, federation_uuid: str,
-                   root_certificate: Union[Path, str, None] = None,
-                   private_key: Union[Path, str, None] = None,
-                   certificate: Union[Path, str, None] = None) -> AggregatorGRPCClient:
+                   root_certificate: Optional[Union[Path, str]] = None,
+                   private_key: Optional[Union[Path, str]] = None,
+                   certificate: Optional[Union[Path, str]] = None) -> AggregatorGRPCClient:
         """Get gRPC client for the specified collaborator."""
         common_name = collaborator_name
         if not root_certificate or not private_key or not certificate:
@@ -533,9 +532,10 @@ class Plan:
 
         return self.client_
 
-    def get_server(self, root_certificate: Union[Path, str, None] = None,
-                   private_key: Union[Path, str, None] = None,
-                   certificate: Union[Path, str, None] = None, **kwargs) -> AggregatorGRPCServer:
+    def get_server(self, root_certificate: Optional[Union[Path, str]] = None,
+                   private_key: Optional[Union[Path, str]] = None,
+                   certificate: Optional[Union[Path, str]] = None,
+                   **kwargs) -> AggregatorGRPCServer:
         """Get gRPC server of the aggregator instance."""
         common_name = self.config['network'][SETTINGS]['agg_addr'].lower()
 
@@ -560,10 +560,10 @@ class Plan:
 
         return self.server_
 
-    def interactive_api_get_server(self, *, tensor_dict: Dict[str, ndarray],
-                                   root_certificate: Union[Path, str, None],
-                                   certificate: Union[Path, str, None],
-                                   private_key: Union[Path, str, None],
+    def interactive_api_get_server(self, *, tensor_dict: Dict[str, np.ndarray],
+                                   root_certificate: Optional[Union[Path, str]],
+                                   certificate: Optional[Union[Path, str]],
+                                   private_key: Optional[Union[Path, str]],
                                    tls: bool) -> AggregatorGRPCServer:
         """Get gRPC server of the aggregator instance."""
         server_args = self.config['network'][SETTINGS]
