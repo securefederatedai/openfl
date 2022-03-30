@@ -11,7 +11,7 @@ from typing import Optional
 import numpy as np
 import pandas as pd
 
-from openfl.component.aggregation_functions import AggregationFunction
+from openfl.interface.aggregation_functions import AggregationFunction
 from openfl.utilities import LocalTensor
 from openfl.utilities import TensorKey
 

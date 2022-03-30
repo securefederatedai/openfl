@@ -45,5 +45,5 @@ Paper: https://arxiv.org/abs/1910.07796
 Requires PyTorch >= 1.9.0. Other frameworks are not supported yet.
 
 Use :py:class:`openfl.utilities.fedcurv.torch.FedCurv` to override train function using :code:`.get_penalty()`, :code:`.on_train_begin()`, and :code:`.on_train_end()` methods.
-In addition, you should override default :code:`AggregationFunction` of the train task with :class:`openfl.component.aggregation_functions.FedCurvWeightedAverage`.
+In addition, you should override default :code:`AggregationFunction` of the train task with :class:`openfl.interface.aggregation_functions.FedCurvWeightedAverage`.
 See :code:`PyTorch_Histology_FedCurv` tutorial in :code:`openfl-tutorials/interactive_api` directory for more details.

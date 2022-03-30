@@ -5,7 +5,7 @@
 import queue
 from logging import getLogger
 
-from openfl.component.aggregation_functions import WeightedAverage
+from openfl.interface.aggregation_functions import WeightedAverage
 from openfl.databases import TensorDB
 from openfl.pipelines import NoCompressionPipeline
 from openfl.pipelines import TensorCodec
