@@ -73,6 +73,7 @@ message WaitExperimentRequest {
 
 message WaitExperimentResponse {
   string experiment_name = 1;
+  uint64 agg_port = 2;
 }
 
 message GetExperimentDataRequest {

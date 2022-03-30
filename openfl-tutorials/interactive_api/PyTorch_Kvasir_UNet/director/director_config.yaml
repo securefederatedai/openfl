@@ -4,3 +4,4 @@ settings:
   sample_shape: ['300', '400', '3']
   target_shape: ['300', '400']
   envoy_health_check_period: 5  # in seconds
+  open_ports: [47000, 48000]

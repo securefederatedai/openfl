@@ -47,6 +47,7 @@ class Director:
         self.settings = settings or {}
         self.col_exp_queues = defaultdict(asyncio.Queue)
         self.col_exp = {}
+        self.open_port = None
 
     def acknowledge_shard(self, shard_info: dict) -> bool:
         """Save shard info to shard registry if it's acceptable."""
@@ -70,8 +71,7 @@ class Director:
     def get_open_port(self, open_ports_list: list, sender_name: str) -> int:
         """Monitor and send an open port from a list of ports."""
         iterator = itertools.cycle(open_ports_list)
-        len_itr = len(open_ports_list)
-        for i in range(3 * len_itr):
+        while True:
             port = int(next(iterator))
             all_experiments = self.experiments_registry.get_user_experiments(sender_name)
             for exp in all_experiments:
@@ -80,7 +80,6 @@ class Director:
                     port = int(next(iterator))
             logger.info(f'Using open port {port} for connecting to aggregator')
             return port
-        return None
 
     async def set_new_experiment(
             self, *,
@@ -92,20 +91,18 @@ class Director:
     ) -> bool:
         """Set new experiment."""
         open_ports_list = self.settings.get('open_ports', OPEN_PORTS_LIST)
-        open_port = self.get_open_port(open_ports_list, sender_name)
-        if open_port:
-            experiment = Experiment(
-                name=experiment_name,
-                archive_path=experiment_archive_path,
-                collaborators=list(collaborator_names),
-                users=[sender_name],
-                sender=sender_name,
-                init_tensor_dict=tensor_dict,
-                agg_port=open_port,
-            )
-            self.experiments_registry.add(experiment)
-            return True
-        logger.info(f'Could not find open ports out of the list: {open_ports_list}')
+        self.open_port = self.get_open_port(open_ports_list, sender_name)
+        experiment = Experiment(
+            name=experiment_name,
+            archive_path=experiment_archive_path,
+            collaborators=list(collaborator_names),
+            users=[sender_name],
+            sender=sender_name,
+            init_tensor_dict=tensor_dict,
+            agg_port=self.open_port,
+        )
+        self.experiments_registry.add(experiment)
+        return True
 
     def get_trained_model(self, experiment_name: str, caller: str, model_type: str):
         """Get trained model."""
@@ -139,7 +136,7 @@ class Director:
         experiment_name = await queue.get()
         self.col_exp[envoy_name] = experiment_name
 
-        return experiment_name
+        return experiment_name, self.open_port
 
     def get_dataset_info(self):
         """Get dataset info."""
