@@ -7,7 +7,6 @@ from logging import getLogger
 from os import getcwd
 from os import path
 from os import remove
-from typing import Any
 from typing import Dict
 from typing import Tuple
 from zipfile import ZipFile
@@ -190,7 +189,7 @@ def get_datasets_(encoder_input_data: np.ndarray, decoder_input_data: np.ndarray
 
 
 def load_shard(
-    collaborator_count: int, shard_num: Any, data_path: str,
+    collaborator_count: int, shard_num: str, data_path: str,
     num_samples: int, split_ratio: float
 ) -> Tuple[Tuple[np.ndarray, ...], Tuple[np.ndarray, ...], Dict[str, int]]:
     """Load data-shards.

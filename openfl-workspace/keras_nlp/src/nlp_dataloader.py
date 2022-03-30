@@ -97,7 +97,7 @@ class NLPDataLoader(KerasDataLoader):
     @staticmethod
     def _batch_generator(X1: np.ndarray, X2: np.ndarray,
                          y: np.ndarray, idxs: np.ndarray,
-                         batch_size: Optional[int],
+                         batch_size: int,
                          num_batches: int) -> Iterator[List[np.ndarray]]:
         """
         Generate batch of data.
