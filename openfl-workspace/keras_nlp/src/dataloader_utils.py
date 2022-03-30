@@ -17,7 +17,6 @@ import requests
 logger = getLogger(__name__)
 
 
-@staticmethod
 def download_data_() -> str:
     """Download data.
 
