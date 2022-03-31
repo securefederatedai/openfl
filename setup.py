@@ -129,7 +129,7 @@ setup(
         'pandas',
         'protobuf',
         'requests',
-        'rich==9.1.0',
+        'rich==12.0.1',
         'scikit-learn',
         'tensorboard',
         'tensorboardX',

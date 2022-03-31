@@ -821,7 +821,7 @@ class Aggregator:
         # Finally, cache the updated model tensor
         self.tensor_db.cache_tensor({final_model_tk: new_model_nparray})
 
-    def _compute_validation_related_task_metrics(self, task_name):
+    def _compute_validation_related_task_metrics(self, task_name) -> bool:
         """
         Compute all validation related metrics.
 
@@ -829,6 +829,7 @@ class Aggregator:
             task_name : str
                 The task name to compute
         """
+        is_best_model = False
         # By default, print out all of the metrics that the validation
         # task sent
         # This handles getting the subset of collaborators that may be
@@ -901,27 +902,25 @@ class Aggregator:
                                            f'model with score {agg_results:f}')
                         self.best_model_score = agg_results
                         self._save_model(round_number, self.best_state_path)
-                        self.upload_model_to_aggregator(model_type='best')
+                        is_best_model = True
+                        # self.upload_model_to_aggregator(model_type='best')
             if 'trained' in tags:
                 self._prepare_trained(tensor_name, origin, round_number, report, agg_results)
+        return is_best_model
 
     def upload_model_to_aggregator(self, model_type: str = 'last'):
-        if model_type == 'best':
-            tensor_dict = self.best_tensor_dict
-        elif model_type == 'last':
-            tensor_dict = self.last_tensor_dict
-        else:
+        if model_type not in ['last', 'best']:
             raise ValueError(
                 f'Invalid {model_type=} for upload_model_to_aggregator function. '
                 f'Allowed values "last", "best"'
             )
         model_proto = utils.construct_model_proto(
-            tensor_dict, 0, NoCompressionPipeline()
+            self.last_tensor_dict, 0, NoCompressionPipeline()
         )
         self.director_client.upload_experiment_model(
             experiment_name=self.experiment_name,
             model_proto=model_proto,
-            model_type='best'
+            model_type=model_type
         )
 
     def _end_of_round_check(self):
@@ -943,8 +942,11 @@ class Aggregator:
 
         # Compute all validation related metrics
         all_tasks = self.assigner.get_all_tasks_for_round(self.round_number)
+        is_best_model = False
         for task_name in all_tasks:
-            self._compute_validation_related_task_metrics(task_name)
+            _is_best_model = self._compute_validation_related_task_metrics(task_name)
+            if _is_best_model:
+                is_best_model = True
 
         # Once all of the task results have been processed
         self.round_number += 1
@@ -952,7 +954,8 @@ class Aggregator:
         # Save the latest model
         self.logger.info(f'Saving round {self.round_number} model...')
         self._save_model(self.round_number, self.last_state_path)
-        self.upload_model_to_aggregator(model_type='last')
+        model_type = 'best' if is_best_model else 'last'
+        self.upload_model_to_aggregator(model_type=model_type)
 
         # TODO This needs to be fixed!
         if self._time_to_quit():

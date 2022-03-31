@@ -302,16 +302,16 @@ class Director:
             tensor_dict: dict,
             model_type: str,
     ) -> None:
-        exp = self.experiments_registry[experiment_name]
-        if model_type == 'last':
-            exp.last_tensor_dict = tensor_dict
-        elif model_type == 'best':
-            exp.best_tensor_dict = tensor_dict
-        else:
+        if model_type not in ['last', 'best']:
             raise ValueError(
                 f'Invalid {model_type=} in upload_experiment_model function. '
                 f'Allowed values "last", "best"'
             )
+        exp = self.experiments_registry[experiment_name]
+        if model_type == 'last':
+            exp.last_tensor_dict = tensor_dict
+        if model_type == 'best':
+            exp.best_tensor_dict = tensor_dict
 
     @staticmethod
     def _parse_plan(archive_path):
