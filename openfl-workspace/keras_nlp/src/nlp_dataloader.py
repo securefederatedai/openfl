@@ -8,6 +8,7 @@ from typing import Iterator
 from typing import List
 from typing import Optional
 from typing import Tuple
+from typing import Union
 
 import numpy as np
 import src.dataloader_utils as dlu
@@ -118,7 +119,7 @@ class NLPDataLoader(KerasDataLoader):
 
     def _get_batch_generator(self, X1: np.ndarray, X2: np.ndarray,
                              y: np.ndarray,
-                             batch_size: Optional[int]) -> Iterator[List[np.ndarray]]:
+                             batch_size: Union[int, None]) -> Iterator[List[np.ndarray]]:
         """
         Return the dataset generator.
 
