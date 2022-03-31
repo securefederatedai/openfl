@@ -10,7 +10,7 @@ Run the Federation
 OpenFL currently offers two ways to set up and run experiments with a federation: the Director-based workflow and Aggregator-based workflow. The Director-based workflow introduces a new and more convenient way to set up a federation and brings "long-lived" components in a federation ("Director" and "Envoy"), while the Aggregator-based workflow is advised for scenarios where the workload needs to be verified prior to execution.
 
 `Director-Based Workflow`_
-    Setup long-lived components to run many experiments in series. Recommended for FL research when many changes to model, dataloader, or hypterparameters are expected
+    Setup long-lived components to run many experiments in series. Recommended for FL research when many changes to model, dataloader, or hyperparameters are expected
 
 
 `Aggregator-Based Workflow`_

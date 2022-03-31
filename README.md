@@ -28,7 +28,7 @@ For more installation options check out the [online documentation](https://openf
 OpenFL enables data scientists to set up a federated learning experiment following one of the workflows:
 
 - [Director-based Workflow](https://openfl.readthedocs.io/en/latest/running_the_federation.html#director-based-workflow):
-Setup long-lived components to run many experiments in series. Recommended for FL research when many changes to model, dataloader, or hypterparameters are expected
+Setup long-lived components to run many experiments in series. Recommended for FL research when many changes to model, dataloader, or hyperparameters are expected
 
 - [Aggregator-based Workflow](https://openfl.readthedocs.io/en/latest/running_the_federation.html#aggregator-based-workflow):
 Define an experiment and distribute it manually. All participants can verify model code and [FL plan](https://openfl.readthedocs.io/en/latest/running_the_federation.html#federated-learning-plan-fl-plan-settings) prior to execution. The federation is terminated when the experiment is finished
