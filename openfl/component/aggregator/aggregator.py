@@ -19,7 +19,6 @@ from openfl.databases import TensorDB
 from openfl.pipelines import NoCompressionPipeline
 from openfl.pipelines import TensorCodec
 from openfl.pipelines.pipeline import TransformationPipeline
-from openfl.pipelines.pipeline import Transformer
 from openfl.protocols import base_pb2
 from openfl.protocols import utils
 from openfl.utilities import TaskResultKey
@@ -57,7 +56,7 @@ class Aggregator:
 
                  rounds_to_train: int = 256,
                  single_col_cert_common_name: Optional[str] = None,
-                 compression_pipeline: Union[Transformer, TransformationPipeline, None] = None,
+                 compression_pipeline: Optional[TransformationPipeline] = None,
                  db_store_rounds: int = 1,
                  write_logs: bool = False,
                  **kwargs) -> None:
@@ -327,7 +326,7 @@ class Aggregator:
         return tasks, self.round_number, sleep_time, time_to_quit
 
     def get_aggregated_tensor(self, collaborator_name: str, tensor_name: str,
-                              round_number: int, report: bool, tags: Tuple[str],
+                              round_number: int, report: bool, tags: Tuple[str, ...],
                               require_lossless: bool) -> base_pb2.NamedTensor:
         """
         RPC called by collaborator.

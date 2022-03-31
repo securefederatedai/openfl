@@ -4,13 +4,14 @@
 
 import logging
 from collections import defaultdict
-from typing import Any
 from typing import Callable
 from typing import Dict
 from typing import List
+from typing import Union
 
 from openfl.component.aggregation_functions import WeightedAverage
 from openfl.component.aggregation_functions.core import AggregationFunction
+from openfl.component.assigner.tasks import Task
 
 logger = logging.getLogger(__name__)
 
@@ -57,12 +58,12 @@ class Assigner:
                         ] = self.agg_functions_by_task.get(task.function_name, WeightedAverage())
 
     def get_tasks_for_collaborator(self, collaborator_name: str,
-                                   round_number: int) -> List[Any]:
+                                   round_number: int) -> List[Union[str, Task]]:
         """Abstract method."""
         return self.collaborator_tasks[round_number][collaborator_name]
 
     def get_collaborators_for_task(self, task_name: str,
-                                   round_number: int) -> List[Any]:
+                                   round_number: int) -> List[str]:
         """Abstract method."""
         return self.collaborators_for_task[round_number][task_name]
 

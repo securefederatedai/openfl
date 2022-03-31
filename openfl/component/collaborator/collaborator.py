@@ -6,22 +6,20 @@
 from enum import Enum
 from logging import getLogger
 from time import sleep
-from typing import Any
 from typing import Dict
 from typing import List
-from typing import NamedTuple
 from typing import Optional
 from typing import Tuple
 from typing import Union
 
-from numpy import ndarray
+import numpy as np
 
 from openfl.component.assigner.tasks import Task
 from openfl.databases import TensorDB
 from openfl.federated.task.task_runner import CoreTaskRunner
 from openfl.pipelines import NoCompressionPipeline
 from openfl.pipelines import TensorCodec
-from openfl.pipelines.pipeline import Transformer
+from openfl.pipelines.pipeline import TransformationPipeline
 from openfl.protocols import utils
 from openfl.protocols.base_pb2 import NamedTensor
 from openfl.transport import AggregatorGRPCClient
@@ -86,11 +84,11 @@ class Collaborator:
                  federation_uuid: str,
                  client: AggregatorGRPCClient,
                  task_runner: CoreTaskRunner,
-                 task_config: Any,
-                 opt_treatment: Union[OptTreatment, str] = 'RESET',
+                 task_config: Dict[str, Dict[str, str]],
+                 opt_treatment: str = 'RESET',
                  device_assignment_policy: str = 'CPU_ONLY',
                  delta_updates: bool = False,
-                 compression_pipeline: Optional[Transformer] = None,
+                 compression_pipeline: Optional[TransformationPipeline] = None,
                  db_store_rounds: int = 1,
                  **kwargs) -> None:
         """Initialize."""
@@ -279,11 +277,11 @@ class Collaborator:
         # this function
         self.send_task_results(global_output_tensor_dict, round_number, task_name)
 
-    def get_numpy_dict_for_tensorkeys(self, tensor_keys: NamedTuple) -> Dict[str, ndarray]:
+    def get_numpy_dict_for_tensorkeys(self, tensor_keys: List[TensorKey]) -> Dict[str, np.ndarray]:
         """Get tensor dictionary for specified tensorkey set."""
         return {k.tensor_name: self.get_data_for_tensorkey(k) for k in tensor_keys}
 
-    def get_data_for_tensorkey(self, tensor_key: NamedTuple) -> ndarray:
+    def get_data_for_tensorkey(self, tensor_key: TensorKey) -> np.ndarray:
         """
         Resolve the tensor corresponding to the requested tensorkey.
 
@@ -362,8 +360,8 @@ class Collaborator:
 
         return nparray
 
-    def get_aggregated_tensor_from_aggregator(self, tensor_key: NamedTuple,
-                                              require_lossless: bool = False) -> ndarray:
+    def get_aggregated_tensor_from_aggregator(self, tensor_key: TensorKey,
+                                              require_lossless: bool = False) -> np.ndarray:
         """
         Return the decompressed tensor associated with the requested tensor key.
 
@@ -402,7 +400,7 @@ class Collaborator:
 
         return nparray
 
-    def send_task_results(self, tensor_dict: Dict[str, ndarray],
+    def send_task_results(self, tensor_dict: Dict[str, np.ndarray],
                           round_number: int, task_name: str) -> None:
         """Send task results to the aggregator."""
         named_tensors = [
@@ -434,7 +432,7 @@ class Collaborator:
         self.client.send_local_task_results(
             self.collaborator_name, round_number, task_name, data_size, named_tensors)
 
-    def nparray_to_named_tensor(self, tensor_key: NamedTuple, nparray: ndarray) -> NamedTensor:
+    def nparray_to_named_tensor(self, tensor_key: TensorKey, nparray: np.ndarray) -> NamedTensor:
         """
         Construct the NamedTensor Protobuf.
 
@@ -492,7 +490,7 @@ class Collaborator:
 
         return named_tensor
 
-    def named_tensor_to_nparray(self, named_tensor: NamedTensor) -> ndarray:
+    def named_tensor_to_nparray(self, named_tensor: NamedTensor) -> np.ndarray:
         """Convert named tensor to a numpy array."""
         # do the stuff we do now for decompression and frombuffer and stuff
         # This should probably be moved back to protoutils

@@ -8,6 +8,7 @@ import logging
 import time
 from collections import defaultdict
 from pathlib import Path
+from typing import Any
 from typing import AsyncGenerator
 from typing import Dict
 from typing import Iterable
@@ -191,7 +192,7 @@ class Director:
             self, *,
             envoy_name: str,
             is_experiment_running: bool,
-            cuda_devices_status: Optional[List] = None,
+            cuda_devices_status: Optional[List[Dict[str, Any]]] = None,
     ) -> int:
         """Accept health check from envoy."""
         shard_info = self._shard_registry.get(envoy_name)

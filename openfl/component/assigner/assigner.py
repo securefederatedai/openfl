@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 """Assigner module."""
 
+from typing import Dict
 from typing import List
 from typing import NoReturn
 from typing import Optional
@@ -34,7 +35,7 @@ class Assigner:
         \* - ``tasks`` argument is taken from ``tasks`` section of FL plan YAML file.
     """
 
-    def __init__(self, tasks: List[object], authorized_cols: List[str],
+    def __init__(self, tasks: Optional[Dict[str, Dict[str, str]]], authorized_cols: List[str],
                  rounds_to_train: int, **kwargs) -> None:
         """Initialize."""
         self.tasks = tasks

@@ -131,7 +131,7 @@ def get_token(name: str, ca_url: str,
     ])
 
 
-def get_ca_bin_paths(ca_path: Path) -> Tuple[Optional[Path], Optional[Path]]:
+def get_ca_bin_paths(ca_path: Union[Path, str]) -> Tuple[Optional[Path], Optional[Path]]:
     """Get paths of step binaries."""
     ca_path = Path(ca_path)
     step = None
@@ -146,8 +146,8 @@ def get_ca_bin_paths(ca_path: Path) -> Tuple[Optional[Path], Optional[Path]]:
     return step, step_ca
 
 
-def certify(name: str, cert_path: Path, token_with_cert: str,
-            ca_path: Path) -> None:
+def certify(name: str, cert_path: Union[Path, str], token_with_cert: str,
+            ca_path: Union[Path, str]) -> None:
     """Create an envoy workspace."""
     os.makedirs(cert_path, exist_ok=True)
 
@@ -170,13 +170,13 @@ def certify(name: str, cert_path: Path, token_with_cert: str,
          f'{cert_path}/{name}.key --kty EC --curve P-384 -f --token {token}', shell=True)
 
 
-def remove_ca(ca_path: str) -> None:
+def remove_ca(ca_path: Union[Path, str]) -> None:
     """Kill step-ca process and rm ca directory."""
     _check_kill_process('step-ca')
     shutil.rmtree(ca_path, ignore_errors=True)
 
 
-def install(ca_path: str, ca_url: str, password: str) -> None:
+def install(ca_path: Union[Path, str], ca_url: str, password: str) -> None:
     """
     Create certificate authority for federation.
 

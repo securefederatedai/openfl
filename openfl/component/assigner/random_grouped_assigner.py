@@ -93,6 +93,6 @@ class RandomGroupedAssigner(Assigner):
         """Get tasks for the collaborator specified."""
         return self.collaborator_tasks[collaborator_name][round_number]
 
-    def get_collaborators_for_task(self, task_name: str, round_number: int) -> List[Any]:
+    def get_collaborators_for_task(self, task_name: str, round_number: int) -> List[str]:
         """Get collaborators for the task specified."""
         return self.collaborators_for_task[task_name][round_number]
