@@ -7,13 +7,6 @@ import inspect
 from typing import Any
 from typing import Callable
 from typing import List
-from typing import Union
-
-import tensorflow as tf
-from tensorflow.keras.losses import Loss as tf_Loss
-from tensorflow.keras.optimizers import Optimizer as tf_Optimizer
-from torch import nn
-from torch.optim.optimizer import Optimizer as pt_Optimizer
 
 from .runner import TaskRunner
 
@@ -35,9 +28,9 @@ class FederatedModel(TaskRunner):
         loss_fn : pytorch loss_fun (only required for pytorch)
     """
 
-    def __init__(self, build_model: Callable[[Any], Union[nn.Module, tf.Module]],
-                 optimizer: Union[pt_Optimizer, tf_Optimizer, None] = None,
-                 loss_fn: Union[nn.Module, tf_Loss, None] = None, **kwargs) -> None:
+    def __init__(self, build_model: Callable[[Any], Any],
+                 optimizer: Any = None,
+                 loss_fn: Any = None, **kwargs) -> None:
         """Initialize.
 
         Args:

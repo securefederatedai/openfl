@@ -37,13 +37,8 @@ class FastEstimatorTaskRunner(TaskRunner):
                 super().__init__(mode='train')
                 self.get_progress = get_progress
 
-            def on_begin(self, data: Dict[Any, Any]) -> None:
-                """Run once at the beginning of training or testing.
-
-                Args:
-                    data: A dictionary through which traces can communicate with
-                    each other or write values for logging.
-                """
+            def on_begin(self) -> None:
+                """Run once at the beginning of training or testing."""
                 progress = self.get_progress()
                 self.system.epoch_idx = progress['epoch_idx']
                 self.system.global_step = progress['global_step']
