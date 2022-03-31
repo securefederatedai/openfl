@@ -17,13 +17,13 @@ from typing import List
 from typing import Union
 from typing import ValuesView
 
+from openfl.docker.docker import DockerConfig
+from openfl.federated import Plan
 from openfl.protocols import base_pb2
 from openfl.transport import AsyncAggregatorGRPCClient
 from .experiment import Experiment
 from .experiment import ExperimentsRegistry
 from .experiment import Status
-from ...docker.docker import DockerConfig
-from ...federated import Plan
 
 logger = logging.getLogger(__name__)
 
