@@ -18,6 +18,8 @@ from openfl.component.aggregation_functions import WeightedAverage
 from openfl.component.assigner.tasks import Task
 from openfl.component.assigner.tasks import TrainTask
 from openfl.component.assigner.tasks import ValidateTask
+from openfl.utilities.enum_types import DevicePolicy
+from openfl.utilities.enum_types import OptTreatment
 from openfl.federated import Plan
 from openfl.interface.cli import setup_logging
 from openfl.interface.cli_helper import WORKSPACE
@@ -103,7 +105,8 @@ class FLExperiment:
             self.logger.warning(warning_msg)
 
         else:
-            self.task_runner_stub.rebuild_model(tensor_dict, validation=True, device='cpu')
+            self.task_runner_stub.rebuild_model(
+                tensor_dict, validation=True, device='cpu')
             self.current_model_status = upcoming_model_status
 
         return deepcopy(self.task_runner_stub.model)
@@ -165,8 +168,8 @@ class FLExperiment:
               rounds_to_train: int,
               task_assigner=None,
               delta_updates: bool = False,
-              opt_treatment: str = 'RESET',
-              device_assignment_policy: str = 'CPU_ONLY',
+              opt_treatment: OptTreatment = OptTreatment.RESET,
+              device_assignment_policy: DevicePolicy = DevicePolicy.CPU_ONLY,
               pip_install_options: Tuple[str] = ()) -> None:
         """
         Prepare workspace distribution and send to Director.
@@ -193,6 +196,7 @@ class FLExperiment:
         pip_install_options - tuple of options for the remote `pip install` calls,
             example: ('-f some.website', '--no-index')
         """
+
         if not task_assigner:
             task_assigner = self.define_task_assigner(task_keeper, rounds_to_train)
 
@@ -360,9 +364,9 @@ class FLExperiment:
 
         # Collaborator part
         plan.config['collaborator']['settings']['delta_updates'] = delta_updates
-        plan.config['collaborator']['settings']['opt_treatment'] = opt_treatment
+        plan.config['collaborator']['settings']['opt_treatment'] = opt_treatment.name
         plan.config['collaborator']['settings'][
-            'device_assignment_policy'] = device_assignment_policy
+            'device_assignment_policy'] = device_assignment_policy.name
 
         # DataLoader part
         for setting, value in data_loader.kwargs.items():

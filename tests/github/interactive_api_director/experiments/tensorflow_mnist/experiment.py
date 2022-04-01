@@ -1,6 +1,7 @@
 import time
 import tensorflow as tf
 # Create a federation
+from openfl.utilities.enum_types import OptTreatment
 from openfl.interface.interactive_api.federation import Federation
 from openfl.interface.interactive_api.experiment import TaskInterface, DataInterface, ModelInterface, FLExperiment
 from tests.github.interactive_api_director.experiments.tensorflow_mnist.dataset import FedDataset
@@ -118,7 +119,7 @@ fl_experiment.start(model_provider=MI,
                     task_keeper=TI,
                     data_loader=fed_dataset,
                     rounds_to_train=2,
-                    opt_treatment='CONTINUE_GLOBAL')
+                    opt_treatment=OptTreatment.CONTINUE_GLOBAL)
 
 fl_experiment.stream_metrics()
 best_model = fl_experiment.get_best_model()

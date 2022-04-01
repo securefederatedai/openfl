@@ -18,6 +18,7 @@ from openfl.component.assigner.custom_assigner import Assigner
 from openfl.interface.cli_helper import WORKSPACE
 from openfl.transport import AggregatorGRPCClient
 from openfl.transport import AggregatorGRPCServer
+from openfl.utilities.enum_types import OptTreatment
 from openfl.utilities.utils import getfqdn_env
 
 SETTINGS = 'settings'
@@ -458,6 +459,16 @@ class Plan:
 
         defaults[SETTINGS]['compression_pipeline'] = self.get_tensor_pipe()
         defaults[SETTINGS]['task_config'] = self.config.get('tasks', {})
+
+        opt_treatment = defaults[SETTINGS]['opt_treatment']
+        if isinstance(opt_treatment, str) and hasattr(OptTreatment, opt_treatment):
+            defaults[SETTINGS]['opt_treatment'] = OptTreatment[opt_treatment].value
+        elif isinstance(opt_treatment, int) and OptTreatment(opt_treatment):
+            pass
+        else:
+            self.logger.error(f'Unknown opt_treatment: {opt_treatment}.')
+            raise NotImplementedError(f'Unknown opt_treatment: {opt_treatment}.')
+
         if client is not None:
             defaults[SETTINGS]['client'] = client
         else:

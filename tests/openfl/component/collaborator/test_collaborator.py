@@ -8,6 +8,7 @@ import numpy
 import pytest
 
 from openfl.component.collaborator import Collaborator
+from openfl.utilities.enum_types import OptTreatment
 from openfl.protocols import base_pb2
 from openfl.utilities.types import TensorKey
 
@@ -16,7 +17,7 @@ from openfl.utilities.types import TensorKey
 def collaborator_mock():
     """Initialize the collaborator mock."""
     col = Collaborator('col1', 'some_uuid', 'federation_uuid',
-                       mock.Mock(), mock.Mock(), mock.Mock(), opt_treatment='RESET')
+                       mock.Mock(), mock.Mock(), mock.Mock(), opt_treatment=OptTreatment.RESET)
     col.tensor_db = mock.Mock()
 
     return col

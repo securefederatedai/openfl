@@ -13,6 +13,7 @@ import torch.nn as nn
 import tqdm
 
 from openfl.utilities import Metric
+from openfl.utilities.enum_types import OptTreatment
 from openfl.utilities import split_tensor_dict_for_holdouts
 from openfl.utilities import TensorKey
 from .runner import TaskRunner
@@ -63,11 +64,11 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
         Returns:
             None
         """
-        if self.opt_treatment == 'RESET':
+        if self.opt_treatment == OptTreatment.RESET:
             self.reset_opt_vars()
             self.set_tensor_dict(input_tensor_dict, with_opt_vars=False)
         elif (self.training_round_completed
-              and self.opt_treatment == 'CONTINUE_GLOBAL' and not validation):
+              and self.opt_treatment == OptTreatment.CONTINUE_GLOBAL and not validation):
             self.set_tensor_dict(input_tensor_dict, with_opt_vars=True)
         else:
             self.set_tensor_dict(input_tensor_dict, with_opt_vars=False)
@@ -207,7 +208,7 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
         # these are only created after training occurs. A work around could
         # involve doing a single epoch of training on random data to get the
         # optimizer names, and then throwing away the model.
-        if self.opt_treatment == 'CONTINUE_GLOBAL':
+        if self.opt_treatment == OptTreatment.CONTINUE_GLOBAL:
             self.initialize_tensorkeys_for_functions(with_opt_vars=True)
 
         # This will signal that the optimizer values are now present,

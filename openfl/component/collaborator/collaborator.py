@@ -3,7 +3,6 @@
 
 """Collaborator module."""
 
-from enum import Enum
 from logging import getLogger
 from time import sleep
 from typing import Tuple
@@ -12,33 +11,9 @@ from openfl.databases import TensorDB
 from openfl.pipelines import NoCompressionPipeline
 from openfl.pipelines import TensorCodec
 from openfl.protocols import utils
+from openfl.utilities.enum_types import DevicePolicy
+from openfl.utilities.enum_types import OptTreatment
 from openfl.utilities import TensorKey
-
-
-class DevicePolicy(Enum):
-    """Device assignment policy."""
-
-    CPU_ONLY = 1
-
-    CUDA_PREFERRED = 2
-
-
-class OptTreatment(Enum):
-    """Optimizer Methods.
-
-    - RESET tells each collaborator to reset the optimizer state at the beginning
-    of each round.
-
-    - CONTINUE_LOCAL tells each collaborator to continue with the local optimizer
-    state from the previous round.
-
-    - CONTINUE_GLOBAL tells each collaborator to continue with the federally
-    averaged optimizer state from the previous round.
-    """
-
-    RESET = 1
-    CONTINUE_LOCAL = 2
-    CONTINUE_GLOBAL = 3
 
 
 class Collaborator:
@@ -49,8 +24,8 @@ class Collaborator:
         aggregator_uuid: The unique id for the client
         federation_uuid: The unique id for the federation
         model: The model
-        opt_treatment* (string): The optimizer state treatment (Defaults to
-            "CONTINUE_GLOBAL", which is aggreagated state from previous round.)
+        opt_treatment* (enum.Enum): The optimizer state treatment (Defaults to
+            OptTreatment.CONTINUE_GLOBAL, which is aggreagated state from previous round.)
 
         compression_pipeline: The compression pipeline (Defaults to None)
 
@@ -74,8 +49,8 @@ class Collaborator:
                  client,
                  task_runner,
                  task_config,
-                 opt_treatment='RESET',
-                 device_assignment_policy='CPU_ONLY',
+                 opt_treatment=OptTreatment.RESET,
+                 device_assignment_policy=DevicePolicy.CPU_ONLY,
                  delta_updates=False,
                  compression_pipeline=None,
                  db_store_rounds=1,
@@ -105,23 +80,10 @@ class Collaborator:
 
         self.logger = getLogger(__name__)
 
-        # RESET/CONTINUE_LOCAL/CONTINUE_GLOBAL
-        if hasattr(OptTreatment, opt_treatment):
-            self.opt_treatment = OptTreatment[opt_treatment]
-        else:
-            self.logger.error(f'Unknown opt_treatment: {opt_treatment.name}.')
-            raise NotImplementedError(f'Unknown opt_treatment: {opt_treatment}.')
+        self.opt_treatment = opt_treatment
+        self.device_assignment_policy = device_assignment_policy
 
-        if hasattr(DevicePolicy, device_assignment_policy):
-            self.device_assignment_policy = DevicePolicy[device_assignment_policy]
-        else:
-            self.logger.error('Unknown device_assignment_policy: '
-                              f'{device_assignment_policy.name}.')
-            raise NotImplementedError(
-                f'Unknown device_assignment_policy: {device_assignment_policy}.'
-            )
-
-        self.task_runner.set_optimizer_treatment(self.opt_treatment.name)
+        self.task_runner.set_optimizer_treatment(self.opt_treatment)
 
     def set_available_devices(self, cuda: Tuple[str] = ()):
         """

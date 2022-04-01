@@ -11,6 +11,7 @@ from torch.utils.data import Dataset
 from torch.utils.data import SubsetRandomSampler
 from torchvision import transforms as tsf
 
+from openfl.utilities.enum_types import OptTreatment
 from openfl.interface.interactive_api.experiment import DataInterface
 from openfl.interface.interactive_api.experiment import FLExperiment
 from openfl.interface.interactive_api.experiment import ModelInterface
@@ -145,7 +146,7 @@ fl_experiment.start(model_provider=MI,
                     task_keeper=task_interface,
                     data_loader=fed_dataset,
                     rounds_to_train=2,
-                    opt_treatment='CONTINUE_GLOBAL')
+                    opt_treatment=OptTreatment.CONTINUE_GLOBAL)
 fl_experiment.stream_metrics()
 best_model = fl_experiment.get_best_model()
 fl_experiment.remove_experiment_data()

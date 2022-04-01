@@ -4,6 +4,7 @@
 
 import numpy as np
 
+from openfl.utilities.enum_types import OptTreatment
 from openfl.utilities import split_tensor_dict_for_holdouts
 from openfl.utilities import TensorKey
 from .runner import TaskRunner
@@ -148,7 +149,7 @@ class FastEstimatorTaskRunner(TaskRunner):
         # A work around could involve doing a single epoch of training
         # on random data to get the optimizer names, and then throwing away
         # the model.
-        if self.opt_treatment == 'CONTINUE_GLOBAL':
+        if self.opt_treatment == OptTreatment.CONTINUE_GLOBAL:
             self.initialize_tensorkeys_for_functions(with_opt_vars=True)
 
         return global_tensor_dict, local_tensor_dict

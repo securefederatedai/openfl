@@ -6,6 +6,7 @@ from logging import getLogger
 
 import numpy as np
 
+from openfl.utilities.enum_types import OptTreatment
 from openfl.utilities import split_tensor_dict_for_holdouts
 from openfl.utilities import TensorKey
 
@@ -63,7 +64,7 @@ class CoreTaskRunner:
             # A work around could involve doing a single epoch of training
             # on random data to get the optimizer names,
             # and then throwing away the model.
-            if self.opt_treatment == 'CONTINUE_GLOBAL':
+            if self.opt_treatment == OptTreatment.CONTINUE_GLOBAL:
                 self.initialize_tensorkeys_for_functions(with_opt_vars=True)
 
             # This will signal that the optimizer values are now present,
@@ -154,7 +155,7 @@ class CoreTaskRunner:
         self.TASK_REGISTRY = {}
 
         # Why is it here
-        self.opt_treatment = 'RESET'
+        self.opt_treatment = OptTreatment.RESET
         self.tensor_dict_split_fn_kwargs = {}
         self.required_tensorkeys_for_function = {}
 
@@ -198,7 +199,7 @@ class CoreTaskRunner:
         of the model with the purpose to make a list of parameters to be aggregated.
         """
         self.framework_adapter = framework_adapter
-        if self.opt_treatment == 'CONTINUE_GLOBAL':
+        if self.opt_treatment == OptTreatment.CONTINUE_GLOBAL:
             aggregate_optimizer_parameters = True
         else:
             aggregate_optimizer_parameters = False
@@ -221,11 +222,11 @@ class CoreTaskRunner:
         Returns:
             None
         """
-        if self.opt_treatment == 'RESET':
+        if self.opt_treatment == OptTreatment.RESET:
             self.reset_opt_vars()
             self.set_tensor_dict(input_tensor_dict, with_opt_vars=False, device=device)
         elif (self.training_round_completed
-              and self.opt_treatment == 'CONTINUE_GLOBAL' and not validation):
+              and self.opt_treatment == OptTreatment.CONTINUE_GLOBAL and not validation):
             self.set_tensor_dict(input_tensor_dict, with_opt_vars=True, device=device)
         else:
             self.set_tensor_dict(input_tensor_dict, with_opt_vars=False, device=device)
