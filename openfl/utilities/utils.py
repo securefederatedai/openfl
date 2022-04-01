@@ -238,7 +238,7 @@ def merge_configs(
     return settings
 
 
-def change_tags(tags, *, add_field=None, remove_field=None) -> Tuple[str]:
+def change_tags(tags, *, add_field=None, remove_field=None) -> Tuple[str, ...]:
     """Change tensor tags to add or remove fields.
 
     Args:
