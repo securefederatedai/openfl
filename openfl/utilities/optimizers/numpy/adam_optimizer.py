@@ -4,7 +4,6 @@
 """Adam optimizer module."""
 
 from typing import Dict
-from typing import Optional
 from typing import Tuple
 
 import numpy as np
@@ -21,8 +20,6 @@ class NumPyAdam(Optimizer):
     def __init__(
         self,
         *,
-        params: Optional[Dict[str, np.ndarray]] = None,
-        model_interface=None,
         learning_rate: float = 0.01,
         betas: Tuple[float, float] = (0.9, 0.999),
         initial_accumulator_value: float = 0.0,
@@ -43,9 +40,6 @@ class NumPyAdam(Optimizer):
         """
         super().__init__()
 
-        if model_interface is None and params is None:
-            raise ValueError('Should provide one of the params or model_interface')
-
         if learning_rate < 0:
             raise ValueError(
                 f'Invalid learning rate: {learning_rate}. Learning rate must be >= 0.')
@@ -63,24 +57,12 @@ class NumPyAdam(Optimizer):
             raise ValueError(
                 f'Invalid epsilon value: {epsilon}. Epsilon avalue must be > 0.')
 
-        self.params = params
-
-        if params is None and model_interface is not None:
-            self._set_params_from_model(model_interface)
-
         self.learning_rate = learning_rate
         self.beta_1, self.beta_2 = betas
         self.initial_accumulator_value = initial_accumulator_value
         self.epsilon = epsilon
-        self.current_step: Dict[str, int] = {param_name: 0 for param_name in self.params}
-
+        self.current_step = {}
         self.grads_first_moment, self.grads_second_moment = {}, {}
-
-        for param_name in self.params:
-            self.grads_first_moment[param_name] = np.full_like(self.params[param_name],
-                                                               self.initial_accumulator_value)
-            self.grads_second_moment[param_name] = np.full_like(self.params[param_name],
-                                                                self.initial_accumulator_value)
 
     def _update_first_moment(self, grad_name: str, grad: np.ndarray) -> None:
         """Update gradients first moment."""
@@ -94,7 +76,11 @@ class NumPyAdam(Optimizer):
                                                * self.grads_second_moment[grad_name]
                                                + ((1.0 - self.beta_2) * grad**2))
 
-    def step(self, gradients: Dict[str, np.ndarray]) -> None:
+    def step(
+        self,
+        params: Dict[str, np.ndarray],
+        gradients: Dict[str, np.ndarray]
+    ) -> Dict[str, np.ndarray]:
         """
         Perform a single step for parameter update.
 
@@ -103,9 +89,17 @@ class NumPyAdam(Optimizer):
         Args:
             gradients: Partial derivatives with respect to optimized parameters.
         """
+        result = {}
         for grad_name in gradients:
+            if grad_name not in self.current_step:
+                self.current_step[grad_name] = 0
+
             if grad_name not in self.grads_first_moment:
-                raise KeyError(f"Key {grad_name} doesn't exist in optimized parameters")
+                self.grads_first_moment[grad_name] = np.full_like(params[grad_name],
+                                                                  self.initial_accumulator_value)
+            if grad_name not in self.grads_second_moment:
+                self.grads_second_moment[grad_name] = np.full_like(params[grad_name],
+                                                                   self.initial_accumulator_value)
 
             grad = gradients[grad_name]
 
@@ -120,7 +114,11 @@ class NumPyAdam(Optimizer):
             grads_second_moment_normalized = var / (1. - self.beta_2 ** t)
 
             # Make an update for a group of parameters
-            self.params[grad_name] -= (self.learning_rate * grads_first_moment_normalized
-                                       / (np.sqrt(grads_second_moment_normalized) + self.epsilon))
+            updated_param = params[grad_name] - (self.learning_rate * grads_first_moment_normalized
+                                                 / (np.sqrt(grads_second_moment_normalized)
+                                                    + self.epsilon))
 
             self.current_step[grad_name] += 1
+            result[grad_name] = updated_param
+
+        return result

@@ -18,10 +18,15 @@ class Optimizer(abc.ABC):
     """Base abstract optimizer class."""
 
     @abc.abstractmethod
-    def step(self, gradients: Dict[str, ndarray]) -> None:
+    def step(
+        self,
+        params: Dict[str, ndarray],
+        gradients: Dict[str, ndarray]
+    ) -> Dict[str, ndarray]:
         """Perform a single step for parameter update.
 
         Args:
+            params: Optimized parameters
             gradients: Partial derivatives with respect to optimized parameters.
         """
         pass
