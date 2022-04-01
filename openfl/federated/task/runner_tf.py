@@ -249,7 +249,7 @@ class TensorFlowTaskRunner(TaskRunner):
         # return empty dict for local metrics
         return output_tensor_dict, {}
 
-    def validate_batch(self, X: np.ndarray, y: np.ndarray) -> Tuple[np.ndarray, float]:
+    def validate_batch(self, X: np.ndarray, y: np.ndarray) -> float:
         """Validate the model on a single local batch.
 
         Args:
@@ -285,6 +285,8 @@ class TensorFlowTaskRunner(TaskRunner):
             variables = self.tvars
 
         # FIXME: do this in one call?
+        print({var.name: type(val) for var, val in zip(
+            variables, self.sess.run(variables))})
         return {var.name: val for var, val in zip(
             variables, self.sess.run(variables))}
 

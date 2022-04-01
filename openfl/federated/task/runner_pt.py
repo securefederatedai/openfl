@@ -15,9 +15,9 @@ from typing import TypedDict
 from typing import Union
 
 import numpy as np
-import torch as pt
-import torch.nn as nn
+import torch
 import tqdm
+from torch import nn
 from torch.optim.optimizer import Optimizer
 
 from openfl.utilities import Metric
@@ -25,9 +25,9 @@ from openfl.utilities import split_tensor_dict_for_holdouts
 from openfl.utilities import TensorKey
 from .runner import TaskRunner
 
-OPT_STATE_DICT = TypedDict('OPT_STATE_DICT',
-                           {'state': Dict[int, Dict[str, Union[int, pt.Tensor]]],
-                            'param_groups': List[Dict[str, Any]]})
+OptStateDict = TypedDict('OptStateDict',
+                         {'state': Dict[int, Dict[str, Union[int, float, torch.Tensor]]],
+                          'param_groups': List[Dict[str, Any]]})
 
 
 class PyTorchTaskRunner(nn.Module, TaskRunner):
@@ -35,7 +35,7 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
 
     def __init__(
             self,
-            device: Optional[pt.device] = None,
+            device: Optional[Union[torch.device, str]] = None,
             loss_fn: Optional[nn.Module] = None,
             optimizer: Optional[Optimizer] = None,
             **kwargs
@@ -51,7 +51,7 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
         if device:
             self.device = device
         else:
-            self.device = pt.device('cuda' if pt.cuda.is_available() else 'cpu')
+            self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
         # This is a map of all the required tensors for each of the public
         # functions in PyTorchTaskRunner
@@ -114,12 +114,12 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
         if use_tqdm:
             loader = tqdm.tqdm(loader, desc='validate')
 
-        with pt.no_grad():
+        with torch.no_grad():
             for data, target in loader:
                 samples = target.shape[0]
                 total_samples += samples
-                data, target = pt.tensor(data).to(self.device), pt.tensor(
-                    target).to(self.device, dtype=pt.int64)
+                data, target = torch.tensor(data).to(self.device), torch.tensor(
+                    target).to(self.device, dtype=torch.int64)
                 output = self(data)
                 # get the index of the max log-probability
                 pred = output.argmax(dim=1, keepdim=True)
@@ -234,8 +234,7 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
         # Return global_tensor_dict, local_tensor_dict
         return global_tensor_dict, local_tensor_dict
 
-    def get_tensor_dict(self, with_opt_vars: bool = False
-                        ) -> Dict[str, Union[str, np.ndarray]]:
+    def get_tensor_dict(self, with_opt_vars: bool = False) -> Dict[str, Union[str, np.ndarray]]:
         """Return the tensor dictionary.
 
         Args:
@@ -298,7 +297,7 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
         # Grabbing keys from model's state_dict helps to confirm we have
         # everything
         for k in self.state_dict():
-            new_state[k] = pt.from_numpy(tensor_dict.pop(k)).to(device)
+            new_state[k] = torch.from_numpy(tensor_dict.pop(k)).to(device)
 
         # set model state
         self.load_state_dict(new_state)
@@ -409,11 +408,11 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
         """
         Load model and optimizer states from a pickled file specified by \
         filepath. model_/optimizer_state_dict args can be specified if needed. \
-        Uses pt.load().
+        Uses torch.load().
 
         Args:
             filepath (string)                 : Path to pickle file created
-                                                by pt.save().
+                                                by torch.save().
             model_state_dict_key (string)     : key for model state dict
                                                 in pickled file.
             optimizer_state_dict_key (string) : key for optimizer state dict
@@ -423,7 +422,7 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
         Returns:
             None
         """
-        pickle_dict = pt.load(filepath)
+        pickle_dict = torch.load(filepath)
         self.load_state_dict(pickle_dict[model_state_dict_key])
         self.optimizer.load_state_dict(pickle_dict[optimizer_state_dict_key])
 
@@ -433,11 +432,11 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
         """
         Save model and optimizer states in a picked file specified by the \
         filepath. model_/optimizer_state_dicts are stored in the keys provided. \
-        Uses pt.save().
+        Uses torch.save().
 
         Args:
             filepath (string)                 : Path to pickle file to be
-                                                created by pt.save().
+                                                created by torch.save().
             model_state_dict_key (string)     : key for model state dict
                                                 in pickled file.
             optimizer_state_dict_key (string) : key for optimizer state
@@ -451,7 +450,7 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
             model_state_dict_key: self.state_dict(),
             optimizer_state_dict_key: self.optimizer.state_dict()
         }
-        pt.save(pickle_dict, filepath)
+        torch.save(pickle_dict, filepath)
 
     def reset_opt_vars(self) -> None:
         """
@@ -475,7 +474,7 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
         """
         losses = []
         for data, target in batch_generator:
-            data, target = pt.tensor(data).to(self.device), pt.tensor(
+            data, target = torch.tensor(data).to(self.device), torch.tensor(
                 target).to(self.device)
             self.optimizer.zero_grad()
             output = self(data)
@@ -487,7 +486,7 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
         return Metric(name=self.loss_fn.__name__, value=np.array(loss))
 
 
-def _derive_opt_state_dict(opt_state_dict: OPT_STATE_DICT) -> Dict[str, Union[str, np.ndarray]]:
+def _derive_opt_state_dict(opt_state_dict: OptStateDict) -> Dict[str, Union[str, np.ndarray]]:
     """Separate optimizer tensors from the tensor dictionary.
 
     Flattens the optimizer state dict so as to have key, value pairs with
@@ -526,10 +525,10 @@ def _derive_opt_state_dict(opt_state_dict: OPT_STATE_DICT) -> Dict[str, Union[st
         for state_subkey in example_state_subkeys:
             assert (isinstance(
                 opt_state_dict['state'][example_state_key][state_subkey],
-                pt.Tensor)
+                torch.Tensor)
                 == isinstance(
                     opt_state_dict['state'][state_key][state_subkey],
-                    pt.Tensor))
+                    torch.Tensor))
 
     state_subkeys = list(opt_state_dict['state'][example_state_key].keys())
 
@@ -539,7 +538,7 @@ def _derive_opt_state_dict(opt_state_dict: OPT_STATE_DICT) -> Dict[str, Union[st
     for state_subkey in state_subkeys:
         if isinstance(
                 opt_state_dict['state'][example_state_key][state_subkey],
-                pt.Tensor
+                torch.Tensor
         ):
             state_subkey_tags.append('istensor')
         else:
@@ -571,8 +570,7 @@ def _derive_opt_state_dict(opt_state_dict: OPT_STATE_DICT) -> Dict[str, Union[st
     return derived_opt_state_dict
 
 
-def expand_derived_opt_state_dict(derived_opt_state_dict: Dict[str, np.ndarray],
-                                  device: str) -> OPT_STATE_DICT:
+def expand_derived_opt_state_dict(derived_opt_state_dict: Dict[str, np.ndarray]) -> OptStateDict:
     """Expand the optimizer state dictionary.
 
     Takes a derived opt_state_dict and creates an opt_state_dict suitable as
@@ -613,7 +611,7 @@ def expand_derived_opt_state_dict(derived_opt_state_dict: Dict[str, np.ndarray],
             for subkey, tag in state_subkeys_and_tags:
                 flat_key = f'__opt_state_{this_id}_{tag}_{subkey}'
                 if tag == 'istensor':
-                    new_v = pt.from_numpy(derived_opt_state_dict.pop(flat_key))
+                    new_v = torch.from_numpy(derived_opt_state_dict.pop(flat_key))
                 else:
                     # Here (for currrently supported optimizers) the subkey
                     # should be 'step' and the length of array should be one.
@@ -676,7 +674,7 @@ def _set_optimizer_state(optimizer: Optimizer,
     optimizer.load_state_dict(temp_state_dict)
 
 
-def to_cpu_numpy(state: OrderedDict[str, pt.Tensor]) -> OrderedDict[str, np.ndarray]:
+def to_cpu_numpy(state: OrderedDict[str, torch.Tensor]) -> OrderedDict[str, np.ndarray]:
     """Send data to CPU as Numpy array.
 
     Args:
@@ -688,7 +686,7 @@ def to_cpu_numpy(state: OrderedDict[str, pt.Tensor]) -> OrderedDict[str, np.ndar
 
     for k, v in state.items():
         # When restoring, we currently assume all values are tensors.
-        if not pt.is_tensor(v):
+        if not torch.is_tensor(v):
             raise ValueError('We do not currently support non-tensors '
                              'coming from model.state_dict()')
         # get as a numpy array, making sure is on cpu

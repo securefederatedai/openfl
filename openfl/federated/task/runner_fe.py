@@ -2,7 +2,6 @@
 # SPDX-License-Identifier: Apache-2.0
 """FastEstimatorTaskRunner module."""
 
-from typing import Any
 from typing import Callable
 from typing import Dict
 from typing import List
@@ -12,6 +11,7 @@ from typing import Tuple
 from typing import Union
 
 import numpy as np
+from fastestimator import Estimator
 
 from openfl.utilities import split_tensor_dict_for_holdouts
 from openfl.utilities import TensorKey
@@ -23,7 +23,7 @@ from .runner_pt import PyTorchTaskRunner
 class FastEstimatorTaskRunner(TaskRunner):
     """A wrapper for fastestimator.estimator."""
 
-    def __init__(self, estimator: Any, **kwargs) -> None:
+    def __init__(self, estimator: Estimator, **kwargs) -> None:
         """Initialize.
 
         Args:
