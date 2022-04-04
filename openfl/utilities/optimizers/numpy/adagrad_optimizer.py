@@ -66,8 +66,11 @@ class NumPyAdagrad(Optimizer):
         Implement Adagrad optimizer weights update rule.
 
         Args:
-            params: Optimized parameters
+            params: Optimized parameters.
             gradients: Partial derivatives with respect to optimized parameters.
+
+        Returns:
+            Updated parameters.
         """
         result = {}
         for grad_name in gradients:

@@ -28,8 +28,6 @@ class NumPyAdam(Optimizer):
         """Initialize.
 
         Args:
-            params: Parameters to be stored for optimization.
-            model_interface: Model interface instance to provide parameters.
             learning_rate: Tuning parameter that determines
                 the step size at each iteration.
             betas: Coefficients used for computing running
@@ -87,7 +85,11 @@ class NumPyAdam(Optimizer):
         Implement Adam optimizer weights update rule.
 
         Args:
+            params: Optimized parameters.
             gradients: Partial derivatives with respect to optimized parameters.
+
+        Returns:
+            Updated parameters.
         """
         result = {}
         for grad_name in gradients:
