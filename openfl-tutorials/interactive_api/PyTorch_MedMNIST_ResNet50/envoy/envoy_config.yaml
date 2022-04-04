@@ -4,9 +4,7 @@ params:
 optional_plugin_components: {}
 
 shard_descriptor:
-  template: linreg_shard_descriptor.LinRegSD
+  template: medmnist_shard_descriptor.MedMnistSD
   params:
     rank: 1
-    n_samples: 80
-    noise: 0.15
   
