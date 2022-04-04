@@ -71,7 +71,6 @@ def _shard_descriptor_from_config(shard_config: dict):
 
 if __name__ == '__main__':
     args = _parse_args()
-    print(args.name)
     with open(args.shard_config) as f:
         shard_descriptor_config = yaml.safe_load(f)
     shard_descriptor = _shard_descriptor_from_config(shard_descriptor_config)

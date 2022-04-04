@@ -903,7 +903,6 @@ class Aggregator:
                         self.best_model_score = agg_results
                         self._save_model(round_number, self.best_state_path)
                         is_best_model = True
-                        # self.upload_model_to_aggregator(model_type='best')
             if 'trained' in tags:
                 self._prepare_trained(tensor_name, origin, round_number, report, agg_results)
         return is_best_model

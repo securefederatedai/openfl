@@ -79,7 +79,7 @@ class ExperimentWorkspace:
         shutil.rmtree(self.experiment_name, ignore_errors=True)
         if self.experiment_work_dir in sys.path:
             sys.path.remove(self.experiment_work_dir)
-        os.remove(self.data_file_path)
+        self.data_file_path.unlink(missing_ok=True)
 
 
 def dump_requirements_file(
@@ -95,7 +95,7 @@ def dump_requirements_file(
     if prefixes is None:
         prefixes = set()
     elif type(prefixes) is str:
-        prefixes = set(prefixes,)
+        prefixes = set(prefixes, )
     else:
         prefixes = set(prefixes)
 

@@ -65,8 +65,6 @@ class Envoy:
         self.shard_descriptor = shard_descriptor
         self.shard_descriptor_config = shard_descriptor_config
         self.cuda_devices = tuple(cuda_devices)
-        print(f'{cuda_devices=}')
-        logger.info(f'{cuda_devices=}')
         # Optional plugins
         self.cuda_device_monitor = cuda_device_monitor
 
@@ -75,6 +73,8 @@ class Envoy:
         self.is_experiment_running = False
         self._health_check_future = None
         self.docker_config = docker_config
+        envoy_info = '\n'.join([f'{k}={v}' for k, v in self.__dict__.items()])
+        logger.info(f'Envoy Info: \n{envoy_info}')
 
     async def run(self):
         """Run of the envoy working cycle."""
