@@ -1,0 +1,55 @@
+sequenceDiagram
+    participant N as NoteBook
+    participant D as Director
+    participant E as Envoy
+    rect rgb(0, 255, 0,.1)
+        Note over D,E: A Federation startup process
+        D->D: Starts
+        E->E: Adapting a dataset
+        E->E: Starts
+        Note over D,E: Exchange certs
+        E-->>D: Connects using FQDN and pwd
+        E-->>D: Communicates dataset info to
+        D-->D: Keeps a list of connected Envoys
+        D-->D: Ensures unified data interface
+    end
+    Note over D,E: We consider a Federation set up
+    rect rgb(0, 255, 0,.1)
+    Note over N,D: Create new experiment
+        N->>N: Prepare experiment in Notebook
+        N->>N: Connect to federation
+        N->>N: Run experiment
+        N->>D: Send Experiment workspace
+        D->>D: Create new experiment
+        D->>D: Add experiment to regestry
+    end
+    rect rgb(0, 255, 0,.1)
+        Note over D,E: An Experiment's start
+        D->>D: Get next experiment<br>from Experiment Registry
+        opt Docker specific logic
+            D->>D: Create aggregator docker build<br>context from experiment workspace.<br>(Add Dockerfile and execution script<br>to context specific for aggregator)
+            D->>D: Build aggregator docker image
+            D->>D: Create aggregator docker container
+            D->>D: Run aggregator docker container
+            D->>D: Monitor aggregator docker container
+        end
+        E->>D: WaitExperiment
+        D-->>E: Send Experiment name
+        E->>D: GetExperimentData(experiment_name)
+        D-->>E: Send Experiment workspace
+        opt Docker specific logic
+            E->>E: Create collaborator docker build<br>context from Experiment workspace.<br>(Add Dockerfile and execution script<br>to context specific for collaborator)
+            E->>E: Build collaborator docker image
+            E->>E: Create collaborator docker container
+            E->>E: Run collaborator docker container
+            E->>E: Monitor collaborator docker container
+        end
+            Note over D,E: Wait for last round finished
+        opt Docker specific logic
+            E->>E: Delete collaborator docker container<br>when experiment was finished
+            D->>D: Delete aggregator docker container<br>when experiment was finished
+        end
+    end
+    N->>D: Get best model
+    D-->>N: Send best model
+    Note over D,E: The Experiment ended. <br> The Federation keeps existing.
