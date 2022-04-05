@@ -6,6 +6,7 @@
 import numpy as np
 
 from openfl.pipelines import NoCompressionPipeline
+from openfl.utilities import change_tags
 from openfl.utilities import TensorKey
 
 
@@ -67,9 +68,9 @@ class TensorCodec:
         # returned ('trained.delta'->'trained.delta.lossy_compressed')
         tensor_name, origin, round_number, report, tags = tensor_key
         if not self.compression_pipeline.is_lossy() or require_lossless:
-            new_tags = tuple(list(tags) + ['compressed'])
+            new_tags = change_tags(tags, add_field='compressed')
         else:
-            new_tags = tuple(list(tags) + ['lossy_compressed'])
+            new_tags = change_tags(tags, add_field='lossy_compressed')
         compressed_tensor_key = TensorKey(
             tensor_name, origin, round_number, report, new_tags)
         return compressed_tensor_key, compressed_nparray, metadata
@@ -121,18 +122,16 @@ class TensorCodec:
                 data, transformer_metadata, **kwargs)
         # Define the decompressed tensorkey that should be returned
         if 'lossy_compressed' in tags:
-            lc_idx = tags.index('lossy_compressed')
-            new_tags = list(tags)
-            new_tags[lc_idx] = 'lossy_decompressed'
+            new_tags = change_tags(
+                tags, add_field='lossy_decompressed', remove_field='lossy_compressed')
             decompressed_tensor_key = TensorKey(
-                tensor_name, origin, round_number, report, tuple(new_tags))
+                tensor_name, origin, round_number, report, new_tags)
         elif 'compressed' in tags:
             # 'compressed' == lossless compression; no need for
             # compression related tag after decompression
-            new_tags = list(tags)
-            new_tags.remove('compressed')
+            new_tags = change_tags(tags, remove_field='compressed')
             decompressed_tensor_key = TensorKey(
-                tensor_name, origin, round_number, report, tuple(new_tags))
+                tensor_name, origin, round_number, report, new_tags)
         else:
             raise NotImplementedError(
                 'Decompression is only supported on compressed data')
@@ -170,10 +169,7 @@ class TensorCodec:
         assert 'model' not in tags, (
             'The tensorkey should be provided '
             'from the layer with new weights, not the base model')
-        if type(tags) == str:
-            new_tags = tuple([tensor_key[3]] + ['delta'])
-        else:
-            new_tags = tuple(list(tags) + ['delta'])
+        new_tags = change_tags(tags, add_field='delta')
         delta_tensor_key = TensorKey(
             tensor_name, origin, round_number, report, new_tags)
         return delta_tensor_key, nparray - base_model_nparray
@@ -209,9 +205,7 @@ class TensorCodec:
         # from the base model'
         # Aggregator UUID has the prefix 'aggregator'
         if 'aggregator' in origin and not creates_model:
-            tags = list(tags)
-            tags.remove('delta')
-            new_tags = tuple(tags)
+            new_tags = change_tags(tags, remove_field='delta')
             new_model_tensor_key = TensorKey(
                 tensor_name, origin, round_number, report, new_tags)
         else:

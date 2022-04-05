@@ -185,7 +185,7 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
         require_lossless = request.require_lossless
         round_number = request.round_number
         report = request.report
-        tags = request.tags
+        tags = tuple(request.tags)
 
         named_tensor = self.aggregator.get_aggregated_tensor(
             collaborator_name, tensor_name, round_number, report, tags, require_lossless)
