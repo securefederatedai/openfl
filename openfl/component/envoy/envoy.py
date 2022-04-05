@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 """Envoy module."""
-
+import asyncio
 import logging
 import time
 import traceback
@@ -15,6 +15,8 @@ from typing import Union
 
 from click import echo
 
+from openfl.docker import docker
+from openfl.docker.docker import DockerConfig
 from openfl.federated import Plan
 from openfl.interface.interactive_api.shard_descriptor import ShardDescriptor
 from openfl.plugins.processing_units_monitor.cuda_device_monitor import CUDADeviceMonitor
@@ -41,6 +43,8 @@ class Envoy:
             tls: bool = True,
             cuda_devices: Union[tuple, list] = (),
             cuda_device_monitor: Optional[Type[CUDADeviceMonitor]] = None,
+            shard_descriptor_config,
+            docker_config: DockerConfig,
     ) -> None:
         """Initialize a envoy object."""
         self.name = shard_name
@@ -59,8 +63,8 @@ class Envoy:
         )
 
         self.shard_descriptor = shard_descriptor
+        self.shard_descriptor_config = shard_descriptor_config
         self.cuda_devices = tuple(cuda_devices)
-
         # Optional plugins
         self.cuda_device_monitor = cuda_device_monitor
 
@@ -68,8 +72,11 @@ class Envoy:
         self.running_experiments = {}
         self.is_experiment_running = False
         self._health_check_future = None
+        self.docker_config = docker_config
+        envoy_info = '\n'.join([f'{k}={v}' for k, v in self.__dict__.items()])
+        logger.info(f'Envoy Info: \n{envoy_info}')
 
-    def run(self):
+    async def run(self):
         """Run of the envoy working cycle."""
         while True:
             try:
@@ -83,12 +90,19 @@ class Envoy:
             data_file_path = self._save_data_stream_to_file(data_stream)
             self.is_experiment_running = True
             try:
-                with ExperimentWorkspace(
-                        self.name + '_' + experiment_name,
-                        data_file_path,
-                        is_install_requirements=True
-                ):
-                    self._run_collaborator()
+                if self.docker_config.use_docker:
+                    await self._run_collaborator_in_docker(
+                        experiment_name=experiment_name.lower(),
+                        data_file_path=data_file_path,
+                    )
+                else:
+                    with ExperimentWorkspace(
+                            self.name + '_' + experiment_name,
+                            data_file_path,
+                            is_install_requirements=True
+                    ):
+                        self._run_collaborator()
+
             except Exception as exc:
                 logger.exception(f'Collaborator failed with error: {exc}:')
                 self.director_client.set_experiment_failed(
@@ -163,6 +177,41 @@ class Envoy:
         col.set_available_devices(cuda=self.cuda_devices)
         col.run()
 
+    async def _run_collaborator_in_docker(self, experiment_name: str, data_file_path: Path):
+        """Run the collaborator for the experiment running."""
+        docker_client = docker.Docker(config=self.docker_config)
+        docker_context_path = docker.create_collaborator_context(
+            data_file_path=data_file_path,
+            shard_descriptor_config=self.shard_descriptor_config,
+        )
+        image_tag = await docker_client.build_image(
+            context_path=docker_context_path,
+            tag=f'{self.name}_{experiment_name}',
+        )
+        cuda_devices = ','.join(map(str, self.cuda_devices))
+        gpu_allowed = bool(cuda_devices)
+
+        cmd = (
+            f'python run.py '
+            f'--name {self.name} '
+            f'--plan_path plan/plan.yaml '
+            f'--root_certificate {self.root_certificate} '
+            f'--private_key {self.private_key} '
+            f'--certificate {self.certificate} '
+            f'--shard_config shard_descriptor_config.yaml '
+        )
+        if gpu_allowed:
+            cmd += f'--cuda_devices {cuda_devices} '
+
+        container = await docker_client.create_container(
+            name=f'{experiment_name}_collaborator_{self.name}',
+            image_tag=image_tag,
+            cmd=cmd,
+            gpu_allowed=gpu_allowed,
+        )
+        await docker_client.start_and_monitor_container(container=container)
+        await container.delete(force=True)
+
     def start(self):
         """Start the envoy."""
         try:
@@ -176,7 +225,7 @@ class Envoy:
                 # Shard accepted for participation in the federation
                 logger.info('Shard accepted')
                 self._health_check_future = self.executor.submit(self.send_health_check)
-                self.run()
+                asyncio.run(self.run())
             else:
                 # Shut down
                 logger.error('Report shard info was not accepted')

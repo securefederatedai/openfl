@@ -15,7 +15,8 @@ service Aggregator {
   rpc GetMetricStream(GetMetricStreamRequest) returns (stream GetMetricStreamResponse) {}
   rpc GetTrainedModel(GetTrainedModelRequest) returns (TrainedModelResponse) {}
   rpc GetExperimentDescription(GetExperimentDescriptionRequest)
-    returns (GetExperimentDescriptionResponse) {}
+      returns (GetExperimentDescriptionResponse) {}
+  rpc Stop(StopRequest) returns (StopResponse) {}
 }
 
 message MessageHeader {
@@ -50,7 +51,7 @@ message GetAggregatedTensorRequest {
   string tensor_name = 2;
   int32 round_number = 3;
   bool report = 4;
-  repeated string	tags = 5;
+  repeated string  tags = 5;
   bool require_lossless = 6;
 }
 
@@ -66,7 +67,7 @@ message TaskResults {
   MessageHeader  header = 1;
   int32 round_number = 2;
   string task_name = 3;
-  int32	data_size = 4;
+  int32  data_size = 4;
   repeated NamedTensor tensors = 5;
 }
 
@@ -108,3 +109,9 @@ message GetExperimentDescriptionRequest {}
 message GetExperimentDescriptionResponse {
   ExperimentDescription experiment = 1;
 }
+
+message StopRequest {
+  string failed_collaborator = 1;
+}
+
+message StopResponse {}

@@ -33,7 +33,7 @@ class LinRegSD(ShardDescriptor):
         """
         Return a shard dataset by type.
 
-        A simple list with elements (x, y) implemets the Shard Dataset interface.
+        A simple list with elements (x, y) implements the Shard Dataset interface.
         """
         if dataset_type == 'train':
             return self.data[:self.n_samples // 2]

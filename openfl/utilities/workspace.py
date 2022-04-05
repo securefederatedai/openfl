@@ -61,7 +61,7 @@ class ExperimentWorkspace:
             shutil.rmtree(self.experiment_work_dir)
         os.makedirs(self.experiment_work_dir)
 
-        shutil.unpack_archive(self.data_file_path, self.experiment_work_dir, format='zip')
+        shutil.unpack_archive(self.data_file_path, self.experiment_work_dir, format='tar')
 
         if self.is_install_requirements:
             self._install_requirements()
@@ -71,13 +71,15 @@ class ExperimentWorkspace:
         # This is needed for python module finder
         sys.path.append(self.experiment_work_dir)
 
+        return self.experiment_work_dir
+
     def __exit__(self, exc_type, exc_value, traceback):
         """Remove the workspace."""
         os.chdir(self.cwd)
         shutil.rmtree(self.experiment_name, ignore_errors=True)
         if self.experiment_work_dir in sys.path:
             sys.path.remove(self.experiment_work_dir)
-        os.remove(self.data_file_path)
+        self.data_file_path.unlink(missing_ok=True)
 
 
 def dump_requirements_file(
@@ -93,7 +95,7 @@ def dump_requirements_file(
     if prefixes is None:
         prefixes = set()
     elif type(prefixes) is str:
-        prefixes = set(prefixes,)
+        prefixes = set(prefixes, )
     else:
         prefixes = set(prefixes)
 

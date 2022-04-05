@@ -1,0 +1,22 @@
+sequenceDiagram
+    participant D as Director
+    participant A as Aggregator
+    rect rgb(0, 255, 0,.1)
+        Note over D: An Experiment's start
+        D->>D: Get next experiment<br>from Experiment Registry
+        opt Docker specific logic
+            D->>D: Create aggregator docker build<br>context from experiment workspace.<br>(Add Dockerfile and execution script<br>to context specific for aggregator)
+            D->>D: Build aggregator docker image
+            D->>D: Create aggregator docker container
+            D->>D: Run aggregator docker container
+            D->>D: Monitor aggregator docker container
+        end
+        loop every round
+            A->>D: Send last/best model to director
+            D->>D: Save model on director
+        end
+        opt Docker specific logic
+            D->>D: Delete aggregator docker container<br>when experiment was finished
+        end
+    end
+    Note over D: The Experiment ended. <br> The Federation keeps existing.

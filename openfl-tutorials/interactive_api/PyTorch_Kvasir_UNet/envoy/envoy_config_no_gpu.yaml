@@ -1,7 +1,11 @@
 params:
-  cuda_devices: []
+  cuda_devices: [ ]
+  docker_env:
+    http_proxy:
+    https_rpoxy:
+    no_proxy:
 
-optional_plugin_components: {}
+optional_plugin_components: { }
 
 shard_descriptor:
   template: kvasir_shard_descriptor.KvasirShardDescriptor

@@ -15,6 +15,7 @@ from click import Path as ClickPath
 from dynaconf import Validator
 
 from openfl.component.director import Director
+from openfl.docker.docker import DockerConfig
 from openfl.interface.cli_helper import WORKSPACE
 from openfl.transport import DirectorGRPCServer
 from openfl.utilities import merge_configs
@@ -44,7 +45,9 @@ def director(context):
 @option('-oc', '--public-cert-path', 'certificate', required=False,
         type=ClickPath(exists=True), default=None,
         help='Path to a signed certificate')
-def start(director_config_path, tls, root_certificate, private_key, certificate):
+@option('--use-docker/--no-use-docker', default=False, is_flag=True,
+        help='Use docker to run aggregator.')
+def start(director_config_path, tls, root_certificate, private_key, certificate, use_docker):
     """Start the director service."""
     director_config_path = Path(director_config_path).absolute()
     logger.info('🧿 Starting the Director Service.')
@@ -85,6 +88,16 @@ def start(director_config_path, tls, root_certificate, private_key, certificate)
     if config.certificate:
         config.certificate = Path(config.certificate).absolute()
 
+    docker_config = config.as_dict().get('SETTINGS', {}).pop('docker', {})
+    docker_env = docker_config.get('env', {})
+    docker_buildargs = docker_config.get('buildargs', {})
+    docker_volumes = docker_config.get('volumes', {})
+    docker_config = DockerConfig(
+        use_docker=use_docker,
+        env=docker_env,
+        buildargs=docker_buildargs,
+        volumes=docker_volumes,
+    )
     director_server = DirectorGRPCServer(
         director_cls=Director,
         tls=tls,
@@ -96,6 +109,7 @@ def start(director_config_path, tls, root_certificate, private_key, certificate)
         settings=config.settings,
         listen_host=config.settings.listen_host,
         listen_port=config.settings.listen_port,
+        docker_config=docker_config,
     )
     director_server.start()
 
