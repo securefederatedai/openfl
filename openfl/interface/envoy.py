@@ -16,6 +16,7 @@ from click import Path as ClickPath
 from dynaconf import Validator
 
 from openfl.component.envoy.envoy import Envoy
+from openfl.docker.docker import DockerConfig
 from openfl.interface.cli_helper import WORKSPACE
 from openfl.utilities import click_types
 from openfl.utilities import merge_configs
@@ -48,8 +49,10 @@ def envoy(context):
         help='Path to a private key', type=ClickPath(exists=True))
 @option('-oc', '--public-cert-path', 'certificate', default=None,
         help='Path to a signed certificate', type=ClickPath(exists=True))
+@option('--use-docker/--no-use-docker', default=False, is_flag=True,
+        help='Use docker to run collaborator.')
 def start_(shard_name, director_host, director_port, tls, envoy_config_path,
-           root_certificate, private_key, certificate):
+           root_certificate, private_key, certificate, use_docker):
     """Start the Envoy."""
     logger.info('🧿 Starting the Envoy.')
     if is_directory_traversal(envoy_config_path):
@@ -77,7 +80,7 @@ def start_(shard_name, director_host, director_port, tls, envoy_config_path,
         config.certificate = Path(config.certificate).absolute()
 
     # Parse envoy parameters
-    envoy_params = config.get('params', {})
+    envoy_params = config.as_dict().get('PARAMS', {})
 
     # Build optional plugin components
     optional_plugins_section = config.get('optional_plugin_components')
@@ -93,18 +96,30 @@ def start_(shard_name, director_host, director_port, tls, envoy_config_path,
             module = import_module(module_path)
             instance = getattr(module, class_name)(**plugin_params)
             envoy_params[plugin_name] = instance
-
     # Instantiate Shard Descriptor
-    shard_descriptor = shard_descriptor_from_config(config.get('shard_descriptor', {}))
+    shard_descriptor_config = config.as_dict().get('SHARD_DESCRIPTOR', {})
+    shard_descriptor = shard_descriptor_from_config(shard_descriptor_config)
+    docker_config = envoy_params.pop('docker', {})
+    docker_env = docker_config.get('env', {})
+    docker_buildargs = docker_config.get('buildargs', {})
+    docker_volumes = docker_config.get('volumes', [])
+    docker_config = DockerConfig(
+        use_docker=use_docker,
+        env=docker_env,
+        buildargs=docker_buildargs,
+        volumes=docker_volumes,
+    )
     envoy = Envoy(
         shard_name=shard_name,
         director_host=director_host,
         director_port=director_port,
         tls=tls,
         shard_descriptor=shard_descriptor,
+        shard_descriptor_config=shard_descriptor_config,
         root_certificate=config.root_certificate,
         private_key=config.private_key,
         certificate=config.certificate,
+        docker_config=docker_config,
         **envoy_params
     )
 

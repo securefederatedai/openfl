@@ -1,10 +1,21 @@
 params:
-  cuda_devices: [0,2]
-  
+  cuda_devices: [ 0, 2 ]
+  docker:
+    env:
+      http_proxy:
+      https_rpoxy:
+      no_proxy:
+    buildargs:
+      HTTP_PROXY:
+      HTTPS_PROXY:
+      NO_PROXY:
+    volumes:
+      - './kvasir_data'
+
 optional_plugin_components:
- cuda_device_monitor:
-   template: openfl.plugins.processing_units_monitor.pynvml_monitor.PynvmlCUDADeviceMonitor
-   settings: []
+  cuda_device_monitor:
+    template: openfl.plugins.processing_units_monitor.pynvml_monitor.PynvmlCUDADeviceMonitor
+    settings: [ ]
 
 shard_descriptor:
   template: kvasir_shard_descriptor.KvasirShardDescriptor
@@ -12,3 +23,5 @@ shard_descriptor:
     data_folder: kvasir_data
     rank_worldsize: 1,10
     enforce_image_hw: '300,400'
+
+

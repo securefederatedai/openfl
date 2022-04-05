@@ -225,6 +225,8 @@ class Plan:
         self.hash_ = None
         self.name_ = None
         self.serializer_ = None
+        self.agg_addr = None
+        self.agg_port = None
 
     @property
     def hash(self):  # NOQA
@@ -234,6 +236,12 @@ class Plan:
                          extra={'markup': True})
 
         return self.hash_.hexdigest()
+
+    def generate_agg_port(self):
+        """Generate an aggregator port by plan hash."""
+        return int(
+            self.hash[:8], 16
+        ) % (60999 - 49152) + 49152
 
     def resolve(self):
         """Resolve the federation settings."""
@@ -245,11 +253,11 @@ class Plan:
 
         if self.config['network'][SETTINGS]['agg_addr'] == AUTO:
             self.config['network'][SETTINGS]['agg_addr'] = getfqdn_env()
+        self.agg_addr = self.config['network'][SETTINGS]['agg_addr']
 
         if self.config['network'][SETTINGS]['agg_port'] == AUTO:
-            self.config['network'][SETTINGS]['agg_port'] = int(
-                self.hash[:8], 16
-            ) % (60999 - 49152) + 49152
+            self.config['network'][SETTINGS]['agg_port'] = self.generate_agg_port()
+        self.agg_port = self.config['network'][SETTINGS]['agg_port']
 
     def get_assigner(self):
         """Get the plan task assigner."""
@@ -307,7 +315,17 @@ class Plan:
             tasks[task]['aggregation_type'] = aggregation_type
         return tasks
 
-    def get_aggregator(self, tensor_dict=None):
+    def get_aggregator(
+            self,
+            director_host,
+            director_port,
+            experiment_name: str = None,
+            tensor_dict=None,
+            tls=False,
+            root_certificate=None,
+            certificate=None,
+            private_key=None,
+    ):
         """Get federation aggregator."""
         defaults = self.config.get('aggregator',
                                    {
@@ -320,6 +338,13 @@ class Plan:
         defaults[SETTINGS]['authorized_cols'] = self.authorized_cols
         defaults[SETTINGS]['assigner'] = self.get_assigner()
         defaults[SETTINGS]['compression_pipeline'] = self.get_tensor_pipe()
+        defaults[SETTINGS]['root_certificate'] = root_certificate
+        defaults[SETTINGS]['certificate'] = certificate
+        defaults[SETTINGS]['private_key'] = private_key
+        defaults[SETTINGS]['tls'] = tls
+        defaults[SETTINGS]['director_host'] = director_host
+        defaults[SETTINGS]['director_port'] = director_port
+        defaults[SETTINGS]['experiment_name'] = experiment_name
         log_metric_callback = defaults[SETTINGS].get('log_metric_callback')
 
         if log_metric_callback:
@@ -500,7 +525,8 @@ class Plan:
 
         return self.client_
 
-    def get_server(self, root_certificate=None, private_key=None, certificate=None, **kwargs):
+    def get_server(self, director_host, director_port, root_certificate=None, private_key=None,
+                   certificate=None, **kwargs):
         """Get gRPC server of the aggregator instance."""
         common_name = self.config['network'][SETTINGS]['agg_addr'].lower()
 
@@ -518,15 +544,30 @@ class Plan:
         server_args['certificate'] = certificate
         server_args['private_key'] = private_key
 
-        server_args['aggregator'] = self.get_aggregator()
+        server_args['aggregator'] = self.get_aggregator(
+            director_host=director_host,
+            director_port=director_port,
+            root_certificate=root_certificate,
+            private_key=private_key,
+            certificate=certificate,
+        )
 
         if self.server_ is None:
             self.server_ = AggregatorGRPCServer(**server_args)
 
         return self.server_
 
-    def interactive_api_get_server(self, *, tensor_dict, root_certificate, certificate,
-                                   private_key, tls):
+    def interactive_api_get_server(
+            self, *,
+            experiment_name,
+            director_host,
+            director_port,
+            tensor_dict,
+            root_certificate,
+            certificate,
+            private_key,
+            tls,
+    ):
         """Get gRPC server of the aggregator instance."""
         server_args = self.config['network'][SETTINGS]
 
@@ -536,7 +577,16 @@ class Plan:
         server_args['private_key'] = private_key
         server_args['tls'] = tls
 
-        server_args['aggregator'] = self.get_aggregator(tensor_dict)
+        server_args['aggregator'] = self.get_aggregator(
+            experiment_name=experiment_name,
+            director_host=director_host,
+            director_port=director_port,
+            tensor_dict=tensor_dict,
+            root_certificate=root_certificate,
+            certificate=certificate,
+            private_key=private_key,
+            tls=tls,
+        )
 
         if self.server_ is None:
             self.server_ = AggregatorGRPCServer(**server_args)

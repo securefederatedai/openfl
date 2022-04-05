@@ -1,0 +1,10 @@
+FROM python:3.8
+
+RUN pip install --upgrade pip
+RUN pip install git+https://github.com/dmitryagapov/openfl.git@feature/run_collaborator_in_docker
+
+WORKDIR /code
+COPY ./requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY . .

@@ -5,10 +5,12 @@
 
 from .grpc import AggregatorGRPCClient
 from .grpc import AggregatorGRPCServer
+from .grpc import AsyncAggregatorGRPCClient
 from .grpc import DirectorGRPCServer
 
 __all__ = [
     'AggregatorGRPCServer',
     'AggregatorGRPCClient',
+    'AsyncAggregatorGRPCClient',
     'DirectorGRPCServer',
 ]

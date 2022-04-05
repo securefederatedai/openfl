@@ -4,6 +4,9 @@
 """Aggregator module."""
 import queue
 from logging import getLogger
+from pathlib import Path
+from typing import List
+from typing import Union
 
 from openfl.component.aggregation_functions import WeightedAverage
 from openfl.databases import TensorDB
@@ -11,6 +14,7 @@ from openfl.pipelines import NoCompressionPipeline
 from openfl.pipelines import TensorCodec
 from openfl.protocols import base_pb2
 from openfl.protocols import utils
+from openfl.transport.grpc.director_client import DirectorClient
 from openfl.utilities import TaskResultKey
 from openfl.utilities import TensorKey
 from openfl.utilities.logs import write_metric
@@ -32,24 +36,33 @@ class Aggregator:
         \* - plan setting.
     """
 
-    def __init__(self,
+    def __init__(
+            self,
 
-                 aggregator_uuid,
-                 federation_uuid,
-                 authorized_cols,
+            aggregator_uuid,
+            federation_uuid,
+            authorized_cols,
 
-                 init_state_path,
-                 best_state_path,
-                 last_state_path,
+            init_state_path,
+            best_state_path,
+            last_state_path,
 
-                 assigner,
+            assigner,
 
-                 rounds_to_train=256,
-                 single_col_cert_common_name=None,
-                 compression_pipeline=None,
-                 db_store_rounds=1,
-                 write_logs=False,
-                 **kwargs):
+            director_host,
+            director_port,
+            experiment_name: str = None,
+            rounds_to_train=256,
+            single_col_cert_common_name=None,
+            compression_pipeline=None,
+            db_store_rounds=1,
+            write_logs=False,
+            tls: bool = False,
+            root_certificate: Union[Path, str] = None,
+            private_key: Union[Path, str] = None,
+            certificate: Union[Path, str] = None,
+            **kwargs
+    ) -> None:
         """Initialize."""
         self.round_number = 0
         self.single_col_cert_common_name = single_col_cert_common_name
@@ -109,6 +122,17 @@ class Aggregator:
         self.collaborator_tasks_results = {}  # {TaskResultKey: list of TensorKeys}
 
         self.collaborator_task_weight = {}  # {TaskResultKey: data_size}
+        self.experiment_name = experiment_name
+
+        self.director_client = DirectorClient(
+            client_id=f'aggregator_{experiment_name}',
+            director_host=director_host,
+            director_port=director_port,
+            tls=tls,
+            root_certificate=root_certificate,
+            private_key=private_key,
+            certificate=certificate,
+        )
 
     def _load_initial_tensors(self):
         """
@@ -516,7 +540,8 @@ class Aggregator:
                     'task_name': task_name,
                     'metric_name': tensor_key.tensor_name,
                     'metric_value': metric_value,
-                    'round': round_number}
+                    'round': round_number
+                }
                 if self.write_logs:
                     self.log_metric(tensor_key.tags[-1], task_name,
                                     tensor_key.tensor_name, nparray, round_number)
@@ -536,6 +561,55 @@ class Aggregator:
         self.collaborator_tasks_results[task_key] = task_results
 
         self._end_of_task_check(task_name)
+
+    def get_experiment_description(self) -> dict:
+        """Get a experiment information by name for specific user."""
+        progress = self.round_number / self.rounds_to_train
+        model_statuses = self.model_download_statuses
+        tasks = [{
+            'name': task['function'],
+            'description': 'Task description Mock',
+        } for task in self.assigner.tasks.values()]
+        collaborators = [{
+            'name': name,
+            'status': 'pending_mock',
+            'progress': 0.0,
+            'round': 0,
+            'current_task': 'Current Task Mock',
+            'next_task': 'Next Task Mock'
+        } for name in self.authorized_cols]
+        result = {
+            'current_round': self.round_number,
+            'total_rounds': self.rounds_to_train,
+            'download_statuses': {
+                'models': model_statuses,
+                'logs': [{
+                    'name': 'aggregator',
+                    'status': 'ready'
+                }],
+            },
+            'collaborators': collaborators,
+            'tasks': tasks,
+            'progress': progress
+        }
+        return result
+
+    @property
+    def model_download_statuses(self) -> List[dict]:
+        """Return model download statuses representation."""
+        best_model_status = 'ready' if self.best_tensor_dict else 'pending'
+        last_model_status = 'ready' if self.last_tensor_dict else 'pending'
+        model_statuses = [{
+            'name': 'best',
+            'status': best_model_status,
+        }, {
+            'name': 'last',
+            'status': last_model_status,
+        }, {
+            'name': 'init',
+            'status': 'ready'
+        }]
+        return model_statuses
 
     def _process_named_tensor(self, named_tensor, collaborator_name):
         """
@@ -557,10 +631,14 @@ class Aggregator:
                 The numpy array associated with the returned tensorkey
         """
         raw_bytes = named_tensor.data_bytes
-        metadata = [{'int_to_float': proto.int_to_float,
-                     'int_list': proto.int_list,
-                     'bool_list': proto.bool_list}
-                    for proto in named_tensor.transformer_metadata]
+        metadata = [
+            {
+                'int_to_float': proto.int_to_float,
+                'int_list': proto.int_list,
+                'bool_list': proto.bool_list,
+            }
+            for proto in named_tensor.transformer_metadata
+        ]
         # The tensor has already been transfered to aggregator,
         # so the newly constructed tensor should have the aggregator origin
         tensor_key = TensorKey(
@@ -743,7 +821,7 @@ class Aggregator:
         # Finally, cache the updated model tensor
         self.tensor_db.cache_tensor({final_model_tk: new_model_nparray})
 
-    def _compute_validation_related_task_metrics(self, task_name):
+    def _compute_validation_related_task_metrics(self, task_name) -> bool:
         """
         Compute all validation related metrics.
 
@@ -751,6 +829,7 @@ class Aggregator:
             task_name : str
                 The task name to compute
         """
+        is_best_model = False
         # By default, print out all of the metrics that the validation
         # task sent
         # This handles getting the subset of collaborators that may be
@@ -795,7 +874,8 @@ class Aggregator:
                     'task_name': task_name,
                     'metric_name': tensor_key.tensor_name,
                     'metric_value': agg_results.item(),
-                    'round': round_number}
+                    'round': round_number,
+                }
 
                 if agg_results is None:
                     self.logger.warning(
@@ -822,8 +902,25 @@ class Aggregator:
                                            f'model with score {agg_results:f}')
                         self.best_model_score = agg_results
                         self._save_model(round_number, self.best_state_path)
+                        is_best_model = True
             if 'trained' in tags:
                 self._prepare_trained(tensor_name, origin, round_number, report, agg_results)
+        return is_best_model
+
+    def upload_model_to_aggregator(self, model_type: str = 'last'):
+        if model_type not in ['last', 'best']:
+            raise ValueError(
+                f'Invalid {model_type=} for upload_model_to_aggregator function. '
+                f'Allowed values "last", "best"'
+            )
+        model_proto = utils.construct_model_proto(
+            self.last_tensor_dict, 0, NoCompressionPipeline()
+        )
+        self.director_client.upload_experiment_model(
+            experiment_name=self.experiment_name,
+            model_proto=model_proto,
+            model_type=model_type
+        )
 
     def _end_of_round_check(self):
         """
@@ -844,8 +941,11 @@ class Aggregator:
 
         # Compute all validation related metrics
         all_tasks = self.assigner.get_all_tasks_for_round(self.round_number)
+        is_best_model = False
         for task_name in all_tasks:
-            self._compute_validation_related_task_metrics(task_name)
+            _is_best_model = self._compute_validation_related_task_metrics(task_name)
+            if _is_best_model:
+                is_best_model = True
 
         # Once all of the task results have been processed
         self.round_number += 1
@@ -853,6 +953,8 @@ class Aggregator:
         # Save the latest model
         self.logger.info(f'Saving round {self.round_number} model...')
         self._save_model(self.round_number, self.last_state_path)
+        model_type = 'best' if is_best_model else 'last'
+        self.upload_model_to_aggregator(model_type=model_type)
 
         # TODO This needs to be fixed!
         if self._time_to_quit():
@@ -893,7 +995,9 @@ class Aggregator:
     def stop(self, failed_collaborator: str = None) -> None:
         """Stop aggregator execution."""
         self.logger.info('Force stopping the aggregator execution.')
-        for collaborator_name in filter(lambda c: c != failed_collaborator, self.authorized_cols):
+
+        for collaborator_name in filter(lambda c: c != failed_collaborator,
+                                        self.authorized_cols):
             self.logger.info(f'Sending signal to collaborator {collaborator_name} to shutdown...')
             self.quit_job_sent_to.append(collaborator_name)
 
