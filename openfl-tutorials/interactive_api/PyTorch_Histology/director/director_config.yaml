@@ -3,4 +3,3 @@ settings:
   listen_port: 50051
   sample_shape: ['150', '150']
   target_shape: ['1']
-  open_ports: [49537, 50011, 57124]

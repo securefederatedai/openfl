@@ -6,6 +6,7 @@
 import asyncio
 import itertools
 import logging
+import socket
 import time
 from collections import defaultdict
 from pathlib import Path
@@ -68,19 +69,6 @@ class Director:
         is_accepted = True
         return is_accepted
 
-    def get_open_port(self, open_ports_list: list, sender_name: str) -> int:
-        """Monitor and send an open port from a list of ports."""
-        iterator = itertools.cycle(open_ports_list)
-        while True:
-            port = int(next(iterator))
-            all_experiments = self.experiments_registry.get_user_experiments(sender_name)
-            for exp in all_experiments:
-                if exp.status == Status.IN_PROGRESS and exp.agg_port == port:
-                    logger.info(f'Port {port} already in use for experiment {exp.name}')
-                    port = int(next(iterator))
-            logger.info(f'Using open port {port} for connecting to aggregator')
-            return port
-
     async def set_new_experiment(
             self, *,
             experiment_name: str,
@@ -90,8 +78,6 @@ class Director:
             experiment_archive_path: Path,
     ) -> bool:
         """Set new experiment."""
-        open_ports_list = self.settings.get('open_ports', OPEN_PORTS_LIST)
-        self.open_port = self.get_open_port(open_ports_list, sender_name)
         experiment = Experiment(
             name=experiment_name,
             archive_path=experiment_archive_path,
@@ -99,7 +85,6 @@ class Director:
             users=[sender_name],
             sender=sender_name,
             init_tensor_dict=tensor_dict,
-            agg_port=self.open_port,
         )
         self.experiments_registry.add(experiment)
         return True
@@ -284,16 +269,34 @@ class Director:
         }
         return result
 
+    def get_open_port(self, open_ports_list: list, sender_name: str) -> int:
+        """Monitor and send an open port from a list of ports."""
+        iterator = itertools.cycle(open_ports_list)
+        while True:
+            port = int(next(iterator))
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            result = sock.connect_ex(('127.0.0.1', port))
+            sock.close()
+            if result == 0:
+                logger.info(f'Port {port} already in use')
+                continue
+            logger.info(f'Using open port {port} for connecting to aggregator')
+            return port
+
     async def start_experiment_execution_loop(self):
         """Run task to monitor and run experiments."""
         while True:
             async with self.experiments_registry.get_next_experiment() as experiment:
+                open_ports_list = self.settings.get('open_ports', OPEN_PORTS_LIST)
+                logger.info(f'Checking open ports out of {open_ports_list} ...')
+                self.open_port = self.get_open_port(open_ports_list, experiment.sender)
                 loop = asyncio.get_event_loop()
                 run_aggregator_future = loop.create_task(experiment.start(
                     root_certificate=self.root_certificate,
                     certificate=self.certificate,
                     private_key=self.private_key,
                     tls=self.tls,
+                    agg_port=self.open_port,
                 ))
                 for col_name in experiment.collaborators:
                     queue = self.col_exp_queues[col_name]
