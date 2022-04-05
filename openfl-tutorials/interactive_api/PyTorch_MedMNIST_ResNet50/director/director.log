@@ -1,3 +1,0 @@
-[13:21:45] INFO     🧿 Starting the Director Service.                                                                                             director.py:50
-           INFO     Sample shape: ['1'], target shape: ['1']                                                                                      director.py:74
-           INFO     Starting server on localhost:50049                                                                                    director_server.py:114
