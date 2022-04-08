@@ -40,7 +40,7 @@ jobs:
         pytest
     - name: Test TaskRunner API
       run: |
-        python tests/github/test_hello_federation.sh
+        bash tests/github/test_hello_federation.sh
     - name: Interactive API - pytorch_kvasir_unet
       run: |
         ./tests/github/interactive_api_director/experiments/pytorch_kvasir_unet/run.sh
