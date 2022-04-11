@@ -43,6 +43,7 @@ jobs:
         bash tests/github/test_hello_federation.sh keras_cnn_mnist aggregator col1 col2 $(hostname --all-fqdns | awk '{print $1}') --rounds-to-train 3
     - name: Interactive API - pytorch_kvasir_unet
       run: |
+        python setup.py build_grpc
         cd tests/github/interactive_api_director/experiments/pytorch_kvasir_unet
         ./run.sh
     - name: Interactive API - tensorflow_mnist
