@@ -17,7 +17,7 @@ cd ../envoy
 pip install -r sd_requirements.txt
 bash start_envoy.sh &
 PID=$!
-sleep 3
+sleep 10
 if ! ps -p $PID > /dev/null
 then
   echo 'Error: failed to create envoy'
