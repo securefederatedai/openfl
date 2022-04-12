@@ -42,7 +42,8 @@ jobs:
       run: |
         python setup.py build_grpc
         cd tests/github/interactive_api_director/experiments/tensorflow_mnist
-        ./run.sh 
+        ./run.sh
+        pkill fx
     - name: Interactive API - pytorch_kvasir_unet
       run: |
         python setup.py build_grpc
@@ -50,6 +51,7 @@ jobs:
         pip install torchvision==0.8.2
         cd tests/github/interactive_api_director/experiments/pytorch_kvasir_unet
         ./run.sh
+        pkill fx
     - name: Test TaskRunner API
       run: |
         bash tests/github/test_hello_federation.sh keras_cnn_mnist aggregator col1 col2 $(hostname --all-fqdns | awk '{print $1}') --rounds-to-train 3
