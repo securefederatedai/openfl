@@ -16,7 +16,9 @@ from openfl.component.aggregation_functions import AggregationFunctionInterface
 from openfl.component.aggregation_functions import WeightedAverage
 from openfl.interface.cli_helper import WORKSPACE
 from openfl.transport import AggregatorGRPCServer
+from openfl.transport import AggregatorGRPCServerShim
 from openfl.transport import CollaboratorGRPCClient
+from openfl.transport import CollaboratorGRPCClientShim
 from openfl.utilities.utils import getfqdn_env
 
 SETTINGS = 'settings'
@@ -373,7 +375,8 @@ openfl.component.aggregation_functions.AggregationFunctionInterface
         return self.runner_
 
     def get_collaborator(self, collaborator_name,
-                         task_runner=None, client=None):
+                         task_runner=None, client=None,
+                         shim=False):
         """Get collaborator."""
         defaults = self.config.get(
             'collaborator',
@@ -416,7 +419,8 @@ openfl.component.aggregation_functions.AggregationFunctionInterface
             defaults[SETTINGS]['client'] = self.get_client(
                 collaborator_name,
                 self.aggregator_uuid,
-                self.federation_uuid
+                self.federation_uuid,
+                shim
             )
 
         if self.collaborator_ is None:
@@ -424,7 +428,7 @@ openfl.component.aggregation_functions.AggregationFunctionInterface
 
         return self.collaborator_
 
-    def get_client(self, collaborator_name, aggregator_uuid, federation_uuid):
+    def get_client(self, collaborator_name, aggregator_uuid, federation_uuid, shim=False):
         """Get gRPC client for the specified collaborator."""
         common_name = collaborator_name
 
@@ -444,11 +448,14 @@ openfl.component.aggregation_functions.AggregationFunctionInterface
         client_args['federation_uuid'] = federation_uuid
 
         if self.client_ is None:
-            self.client_ = CollaboratorGRPCClient(**client_args)
+            if shim:
+                self.client_ = CollaboratorGRPCClientShim(**client_args)
+            else:
+                self.client_ = CollaboratorGRPCClient(**client_args)
 
         return self.client_
 
-    def get_server(self):
+    def get_server(self, shim=False):
         """Get gRPC server of the aggregator instance."""
         common_name = self.config['network'][SETTINGS]['agg_addr'].lower()
 
@@ -467,7 +474,10 @@ openfl.component.aggregation_functions.AggregationFunctionInterface
         server_args['aggregator'] = self.get_aggregator()
 
         if self.server_ is None:
-            self.server_ = AggregatorGRPCServer(**server_args)
+            if shim:
+                self.server_ = AggregatorGRPCServerShim(**server_args)
+            else:
+                self.server_ = AggregatorGRPCServer(**server_args)
 
         return self.server_
 

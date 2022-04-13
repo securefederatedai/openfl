@@ -50,6 +50,36 @@ def start_(context, plan, collaborator_name, data_config, secure):
 
     plan.get_collaborator(collaborator_name).run()
 
+@collaborator.command(name='shim')
+@pass_context
+@option('-p', '--plan', required=False,
+        help='Federated learning plan [plan/plan.yaml]',
+        default='plan/plan.yaml',
+        type=ClickPath(exists=True))
+@option('-d', '--data_config', required=False,
+        help='The data set/shard configuration file [plan/data.yaml]',
+        default='plan/data.yaml', type=ClickPath(exists=True))
+@option('-n', '--collaborator_name', required=True,
+        help='The certified common name of the collaborator')
+@option('-s', '--secure', required=False,
+        help='Enable Intel SGX Enclave', is_flag=True, default=False)
+def shim_(context, plan, collaborator_name, data_config, secure):
+    """Start a collaborator service."""
+    from pathlib import Path
+
+    from openfl.federated import Plan
+
+    plan = Plan.parse(plan_config_path=Path(plan),
+                      data_config_path=Path(data_config))
+
+    # TODO: Need to restructure data loader config file loader
+
+    echo(f'Data = {plan.cols_data_paths}')
+    logger.info('🧿 Starting a Collaborator Service.')
+
+    collaborator = plan.get_collaborator(collaborator_name, shim=True)
+    collaborator.client.issue_requests()
+
 
 def register_data_path(collaborator_name, data_path=None, silent=False):
     """Register dataset path in the plan/data.yaml file.

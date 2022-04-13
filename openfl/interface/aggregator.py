@@ -48,6 +48,32 @@ def start_(context, plan, authorized_cols, secure):
     plan.get_server().serve()
 
 
+@aggregator.command(name='shim')
+@pass_context
+@option('-p', '--plan', required=False,
+        help='Federated learning plan [plan/plan.yaml]',
+        default='plan/plan.yaml',
+        type=ClickPath(exists=True))
+@option('-c', '--authorized_cols', required=False,
+        help='Authorized collaborator list [plan/cols.yaml]',
+        default='plan/cols.yaml', type=ClickPath(exists=True))
+@option('-s', '--secure', required=False,
+        help='Enable Intel SGX Enclave', is_flag=True, default=False)
+def shim_(context, plan, authorized_cols, secure):
+    """Start the aggregator shim."""
+    from pathlib import Path
+
+    from openfl.federated import Plan
+
+    plan = Plan.parse(plan_config_path=Path(plan),
+                      cols_config_path=Path(authorized_cols))
+
+    logger.info('🧿 Starting the Aggregator Service.')
+
+    plan.get_server(shim=True).serve()
+
+
+
 @aggregator.command(name='generate-cert-request')
 @option('--fqdn', required=False,
         help=f'The fully qualified domain name of'
