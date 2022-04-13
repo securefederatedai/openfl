@@ -4,8 +4,7 @@ set -e
 TEMPLATE=${1:-'keras_cnn_mnist'}  # ['torch_cnn_mnist', 'keras_cnn_mnist']
 FED_WORKSPACE=${2:-'fed_work12345alpha81671'}   # This can be whatever unique directory name you want
 COL1=${3:-'one123dragons'}  # This can be any unique label (lowercase)
-
-FQDN=${5:-$(hostname --all-fqdns | awk '{print $1}')}
+FQDN=${4:-$(hostname --all-fqdns | awk '{print $1}')}
 
 COL1_DATA_PATH=1
 
