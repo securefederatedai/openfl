@@ -38,6 +38,12 @@ jobs:
     - name: Test with pytest
       run: |
         pytest
+    - name: Test TaskRunner API (1 collaborator)
+      run: |
+        bash tests/github/test_hello_federation.sh keras_cnn_mnist aggregator col1 $(hostname --all-fqdns | awk '{print $1}') --rounds-to-train 2
+    - name: Test TaskRunner API (2 collaborators)
+      run: |
+        bash tests/github/test_hello_federation.sh keras_cnn_mnist aggregator col1 col2 $(hostname --all-fqdns | awk '{print $1}') --rounds-to-train 2
     - name: Interactive API - tensorflow_mnist
       run: |
         python setup.py build_grpc
@@ -52,7 +58,4 @@ jobs:
         cd tests/github/interactive_api_director/experiments/pytorch_kvasir_unet
         ./run.sh
         pkill fx
-    - name: Test TaskRunner API
-      run: |
-        bash tests/github/test_hello_federation.sh keras_cnn_mnist aggregator col1 col2 $(hostname --all-fqdns | awk '{print $1}') --rounds-to-train 3
 
