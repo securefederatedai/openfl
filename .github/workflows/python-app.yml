@@ -40,7 +40,7 @@ jobs:
         pytest
     - name: Test TaskRunner API (1 collaborator)
       run: |
-        bash tests/github/test_hello_federation.sh keras_cnn_mnist aggregator col1 $(hostname --all-fqdns | awk '{print $1}') --rounds-to-train 2
+        bash tests/github/test_single_col_federation.sh keras_cnn_mnist aggregator col1 $(hostname --all-fqdns | awk '{print $1}') --rounds-to-train 2
     - name: Test TaskRunner API (2 collaborators)
       run: |
         bash tests/github/test_hello_federation.sh keras_cnn_mnist aggregator col1 col2 $(hostname --all-fqdns | awk '{print $1}') --rounds-to-train 2
