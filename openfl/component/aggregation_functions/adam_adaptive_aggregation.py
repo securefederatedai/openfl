@@ -52,5 +52,5 @@ class AdamAdaptiveAggregation(AdaptiveAggregation):
                         learning_rate=learning_rate,
                         betas=betas,
                         initial_accumulator_value=initial_accumulator_value,
-                        epsilo=epsilon)
+                        epsilon=epsilon)
         super().__init__(opt, agg_func)
