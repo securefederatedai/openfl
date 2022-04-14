@@ -3,11 +3,7 @@
 
 """Adam adaptive aggregation module."""
 
-from typing import Dict
-from typing import Optional
 from typing import Tuple
-
-import numpy as np
 
 from openfl.utilities.optimizers.numpy import NumPyAdam
 from .core import AdaptiveAggregation
@@ -25,8 +21,6 @@ class AdamAdaptiveAggregation(AdaptiveAggregation):
         self,
         *,
         agg_func: AggregationFunction = DEFAULT_AGG_FUNC,
-        params: Optional[Dict[str, np.ndarray]] = None,
-        model_interface=None,
         learning_rate: float = 0.01,
         betas: Tuple[float, float] = (0.9, 0.999),
         initial_accumulator_value: float = 0.0,
@@ -37,8 +31,6 @@ class AdamAdaptiveAggregation(AdaptiveAggregation):
         Args:
             agg_func: Aggregate function for aggregating
                 parameters that are not inside the optimizer (default: WeightedAverage()).
-            params: Parameters to be stored for optimization.
-            model_interface: Model interface instance to provide parameters.
             learning_rate: Tuning parameter that determines
                 the step size at each iteration.
             betas: Coefficients used for computing running
@@ -47,9 +39,7 @@ class AdamAdaptiveAggregation(AdaptiveAggregation):
                 and squared gradients.
             epsilon: Value for computational stability.
         """
-        opt = NumPyAdam(params=params,
-                        model_interface=model_interface,
-                        learning_rate=learning_rate,
+        opt = NumPyAdam(learning_rate=learning_rate,
                         betas=betas,
                         initial_accumulator_value=initial_accumulator_value,
                         epsilon=epsilon)

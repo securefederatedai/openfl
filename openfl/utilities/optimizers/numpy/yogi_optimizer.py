@@ -4,7 +4,6 @@
 """Adam optimizer module."""
 
 from typing import Dict
-from typing import Optional
 from typing import Tuple
 
 import numpy as np
@@ -22,8 +21,6 @@ class NumPyYogi(NumPyAdam):
     def __init__(
         self,
         *,
-        params: Optional[Dict[str, np.ndarray]] = None,
-        model_interface=None,
         learning_rate: float = 0.01,
         betas: Tuple[float, float] = (0.9, 0.999),
         initial_accumulator_value: float = 0.0,
@@ -32,8 +29,6 @@ class NumPyYogi(NumPyAdam):
         """Initialize.
 
         Args:
-            params: Parameters to be stored for optimization.
-            model_interface: Model interface instance to provide parameters.
             learning_rate: Tuning parameter that determines
                 the step size at each iteration.
             betas: Coefficients used for computing running
@@ -42,9 +37,7 @@ class NumPyYogi(NumPyAdam):
                 and squared gradients.
             epsilon: Value for computational stability.
         """
-        super().__init__(params=params,
-                         model_interface=model_interface,
-                         learning_rate=learning_rate,
+        super().__init__(learning_rate=learning_rate,
                          betas=betas,
                          initial_accumulator_value=initial_accumulator_value,
                          epsilon=epsilon)
@@ -56,13 +49,21 @@ class NumPyYogi(NumPyAdam):
                                                * self.grads_second_moment[grad_name]
                                                + (1.0 - self.beta_2) * sign * grad**2)
 
-    def step(self, gradients: Dict[str, np.ndarray]) -> None:
+    def step(
+        self,
+        params: Dict[str, np.ndarray],
+        gradients: Dict[str, np.ndarray]
+    ) -> Dict[str, np.ndarray]:
         """
         Perform a single step for parameter update.
 
         Implement Yogi optimizer weights update rule.
 
         Args:
+            params: Optimized parameters.
             gradients: Partial derivatives with respect to optimized parameters.
+
+        Returns:
+            Updated parameters.
         """
-        super().step(gradients)
+        return super().step(params, gradients)

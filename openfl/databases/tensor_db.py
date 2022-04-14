@@ -5,6 +5,7 @@
 
 from threading import Lock
 from typing import Dict
+from typing import Set
 from typing import Iterator
 from typing import Optional
 
@@ -104,9 +105,13 @@ class TensorDB:
             return None
         return np.array(df['nparray'].iloc[0])
 
-    def get_aggregated_tensor(self, tensor_key: TensorKey, collaborator_weight_dict: dict,
-                              aggregation_function: AggregationFunction
-                              ) -> Optional[np.ndarray]:
+    def get_aggregated_tensor(
+        self,
+        tensor_key: TensorKey,
+        collaborator_weight_dict: dict,
+        aggregation_function: AggregationFunction,
+        tensor_names_from_model: Optional[Set[str]] = None,
+    ) -> Optional[np.ndarray]:
         """
         Determine whether all of the collaborator tensors are present for a given tensor key.
 
@@ -119,8 +124,10 @@ class TensorDB:
             collaborator_weight_dict: List of collaborator names in federation
                                       and their respective weights
             aggregation_function: Call the underlying numpy aggregation
-                                   function. Default is just the weighted
-                                   average.
+                                  function. Default is just the weighted
+                                  average.
+            tensor_names_from_model: A set of tensor names from the model,
+                                     not from  the optimizer.
         Returns:
             weighted_nparray if all collaborator values are present
             None if not all values are present
@@ -164,6 +171,10 @@ class TensorDB:
                                      tensor=agg_tensor_dict[col_name],
                                      weight=collaborator_weight_dict[col_name])
                          for col_name in collaborator_names]
+
+        # Add extra tag while aggregation.
+        if tensor_names_from_model and tensor_name in tensor_names_from_model:
+            tags = tuple(list(tags) + ['from_model'])
 
         db_iterator = self._iterate()
         agg_nparray = aggregation_function(local_tensors,

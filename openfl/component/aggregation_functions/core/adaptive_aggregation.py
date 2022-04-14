@@ -76,7 +76,7 @@ class AdaptiveAggregation(AggregationFunction):
         Returns:
             np.ndarray: aggregated tensor
         """
-        if tensor_name not in self.optimizer.params:
+        if 'from_model' not in tags:
             return self.default_agg_func(local_tensors,
                                          db_iterator,
                                          tensor_name,
@@ -100,5 +100,5 @@ class AdaptiveAggregation(AggregationFunction):
 
         gradient = self._make_gradient(base_model_nparray, local_tensors)
         gradients = {tensor_name: gradient}
-        self.optimizer.step(gradients)
-        return self.optimizer.params[tensor_name]
+        params = {tensor_name: base_model_nparray}
+        return self.optimizer.step(params, gradients)[tensor_name]

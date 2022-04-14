@@ -46,15 +46,7 @@ Adaptive Aggregation Functions
     To create adaptive aggregation functions,
     the user must specify parameters for the aggregation optimizer
     (``NumPyAdagrad``, ``NumPyAdam`` or ``NumPyYogi``) that will aggregate
-    the global model. Theese parameters parameters are passed via **keywords**.
-
-    Also, user must pass one of the arguments: ``params``
-    - model parameters (a dictionary with named model parameters
-    in the form of numpy arrays), or pass ``model_interface``
-    - an instance of the `ModelInterface <https://github.com/intel/openfl/blob/develop/openfl/interface/interactive_api/experiment.py>`_ class.
-    If user pass both ``params`` and ``model_interface``,
-    then the optimizer parameters are initialized via
-    ``params``, ignoring ``model_interface`` argument.
+    the global model.
 
     See the `AdagradAdaptiveAggregation
     <https://github.com/intel/openfl/blob/develop/openfl/component/aggregation_functions/adagrad_adaptive_aggregation.py>`_
@@ -66,18 +58,10 @@ Adaptive Aggregation Functions
 
 .. code-block:: python
 
-    from openfl.interface.interactive_api.experiment import TaskInterface, ModelInterface
     from openfl.component.aggregation_functions import AdagradAdaptiveAggregation
 
-    TI = TaskInterface()
-    MI = ModelInterface(model=model,
-                        optimizer=optimizer,
-                        framework_plugin=framework_adapter)
-    ...
-
     # Creating aggregation function
-    agg_fn = AdagradAdaptiveAggregation(model_interface=MI,
-                                        learning_rate=0.4)
+    agg_fn = AdagradAdaptiveAggregation(learning_rate=0.4)
 
     # Define training task
     @TI.register_fl_task(model='model', data_loader='train_loader', \
@@ -99,8 +83,6 @@ which will be used for global model aggreagation:
         def __init__(
             self,
             *,
-            params: Optional[Dict[str, np.ndarray]] = None,
-            model_interface=None,
             learning_rate: float = 0.001,
             param1: Any = None,
             param2: Any = None
@@ -108,8 +90,6 @@ which will be used for global model aggreagation:
             """Initialize.
 
             Args:
-                params: Parameters to be stored for optimization.
-                model_interface: Model interface instance to provide parameters.
                 learning_rate: Tuning parameter that determines
                     the step size at each iteration.
                 param1: My own defined parameter.
@@ -118,7 +98,11 @@ which will be used for global model aggreagation:
             super().__init__()
             pass # Your code here!
 
-        def step(self, gradients: Dict[str, np.ndarray]) -> None:
+        def step(
+            self,
+            params: Dict[str, np.ndarray],
+            gradients: Dict[str, np.ndarray]
+        ) -> Dict[str, np.ndarray]:
             """
             Perform a single step for parameter update.
 
@@ -126,6 +110,8 @@ which will be used for global model aggreagation:
 
             Args:
                 gradients: Partial derivatives with respect to optimized parameters.
+            Returns:
+                Updated parameters.
             """
             pass # Your code here!
     ...
@@ -134,7 +120,7 @@ which will be used for global model aggreagation:
     from openfl.component.aggregation_functions.core import AdaptiveAggregation
 
     # Creating your implemented optimizer instance based on numpy:
-    my_own_optimizer = MyOpt(model_interface=MI, learning_rate=0.01)
+    my_own_optimizer = MyOpt(learning_rate=0.01)
 
     # Creating aggregation function
     agg_fn = AdaptiveAggregation(optimizer=my_own_optimizer,

@@ -104,6 +104,8 @@ class Aggregator:
             self.model: base_pb2.ModelProto = utils.load_proto(self.init_state_path)
             self._load_initial_tensors()  # keys are TensorKeys
 
+        self.model_tensor_names = {row['tensor_name'] for row in self.tensor_db._iterate()}
+
         self.collaborator_tensor_results = {}  # {TensorKey: nparray}}
 
         # these enable getting all tensors for a task
@@ -781,7 +783,8 @@ class Aggregator:
             agg_tensor_name, agg_origin, agg_round_number, agg_report, agg_tags = agg_tensor_key
             agg_function = WeightedAverage() if 'metric' in tags else task_agg_function
             agg_results = self.tensor_db.get_aggregated_tensor(
-                agg_tensor_key, collaborator_weight_dict, aggregation_function=agg_function)
+                agg_tensor_key, collaborator_weight_dict,
+                aggregation_function=agg_function, tensor_names_from_model=self.model_tensor_names)
             if report:
                 # Print the aggregated metric
                 metric_dict = {
