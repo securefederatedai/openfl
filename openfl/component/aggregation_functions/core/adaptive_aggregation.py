@@ -30,6 +30,7 @@ class AdaptiveAggregation(AggregationFunction):
             agg_func: Aggregate function for aggregating
                 parameters that are not inside the optimizer.
         """
+        super().__init__()
         self.optimizer = optimizer
         self.default_agg_func = agg_func
 
@@ -45,7 +46,7 @@ class AdaptiveAggregation(AggregationFunction):
     def call(
         self,
         local_tensors,
-        db_iterator,
+        tensor_db,
         tensor_name,
         fl_round,
         tags
@@ -54,7 +55,7 @@ class AdaptiveAggregation(AggregationFunction):
 
         Args:
             local_tensors(list[openfl.utilities.LocalTensor]): List of local tensors to aggregate.
-            db_iterator: iterator over history of all tensors. Columns:
+            tensor_db: Either an iterator over history of all tensors (read only) or the raw dataframe (for write access). Columns:
                 - 'tensor_name': name of the tensor.
                     Examples for `torch.nn.Module`s: 'conv1.weight', 'fc2.bias'.
                 - 'fl_round': 0-based number of round corresponding to this tensor.
@@ -78,14 +79,14 @@ class AdaptiveAggregation(AggregationFunction):
         """
         if tensor_name not in self.optimizer.params:
             return self.default_agg_func(local_tensors,
-                                         db_iterator,
+                                         tensor_db,
                                          tensor_name,
                                          fl_round,
                                          tags)
 
         base_model_nparray = None
         search_tag = 'aggregated' if fl_round != 0 else 'model'
-        for record in db_iterator:
+        for record in tensor_db:
             if (
                 record['round'] == fl_round
                 and record['tensor_name'] == tensor_name

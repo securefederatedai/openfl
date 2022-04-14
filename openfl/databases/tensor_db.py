@@ -49,7 +49,8 @@ class TensorDB:
             return
         current_round = int(self.tensor_db['round'].max())
         self.tensor_db = self.tensor_db[
-            self.tensor_db['round'] > current_round - remove_older_than
+            (self.tensor_db['round'] > current_round - remove_older_than) |
+            (self.tensor_db['report'] == True)
         ].reset_index(drop=True)
 
     def cache_tensor(self, tensor_key_dict: Dict[TensorKey, np.ndarray]) -> None:
@@ -167,12 +168,20 @@ class TensorDB:
                                      weight=collaborator_weight_dict[col_name])
                          for col_name in collaborator_names]
 
-        db_iterator = self._iterate()
-        agg_nparray = aggregation_function(local_tensors,
-                                           db_iterator,
-                                           tensor_name,
-                                           fl_round,
-                                           tags)
+        if aggregation_function._privileged:
+            with self.mutex:
+                agg_nparray = aggregation_function(local_tensors,
+                                                   self.tensor_db,
+                                                   tensor_name,
+                                                   fl_round,
+                                                   tags)
+        else:
+            db_iterator = self._iterate()
+            agg_nparray = aggregation_function(local_tensors,
+                                               db_iterator,
+                                               tensor_name,
+                                               fl_round,
+                                               tags)
         self.cache_tensor({tensor_key: agg_nparray})
 
         return np.array(agg_nparray)

@@ -16,7 +16,7 @@ class Median(AggregationFunction):
 
         Args:
             local_tensors(list[openfl.utilities.LocalTensor]): List of local tensors to aggregate.
-            db_iterator: iterator over history of all tensors. Columns:
+            tensor_db: iterator over history of all tensors. Columns:
                 - 'tensor_name': name of the tensor.
                     Examples for `torch.nn.Module`s: 'conv1.weight', 'fc2.bias'.
                 - 'round': 0-based number of round corresponding to this tensor.
