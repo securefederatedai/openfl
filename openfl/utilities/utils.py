@@ -236,3 +236,25 @@ def merge_configs(
             settings.set(key, operation(value))
     settings.validators.validate()
     return settings
+
+
+def change_tags(tags, *, add_field=None, remove_field=None) -> Tuple[str, ...]:
+    """Change tensor tags to add or remove fields.
+
+    Args:
+        tags(tuple): tensor tags.
+        add_field(str): add a new tensor tag field.
+        remove_field(str): remove a tensor tag field.
+    """
+    tags = list(set(tags))
+
+    if add_field is not None and add_field not in tags:
+        tags.append(add_field)
+    if remove_field is not None:
+        if remove_field in tags:
+            tags.remove(remove_field)
+        else:
+            raise Exception(f'{remove_field} not in tags {tuple(tags)}')
+
+    tags = tuple(sorted(tags))
+    return tags

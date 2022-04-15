@@ -8,6 +8,8 @@ from logging import getLogger
 from os import getcwd
 from os import path
 from os import remove
+from typing import Dict
+from typing import Tuple
 from zipfile import ZipFile
 
 import numpy as np
@@ -16,7 +18,7 @@ import requests
 logger = getLogger(__name__)
 
 
-def download_data_():
+def download_data_() -> str:
     """Download data.
 
     Returns:
@@ -60,7 +62,10 @@ def download_data_():
         return ''
 
 
-def import_raw_data_(data_path='', num_samples=0):
+def import_raw_data_(
+    data_path: str = '',
+    num_samples: int = 0
+) -> Tuple[Dict[str, int], np.ndarray, np.ndarray, np.ndarray]:
     """Import data.
 
     Returns:
@@ -147,8 +152,9 @@ def import_raw_data_(data_path='', num_samples=0):
     return details, encoder_input_data, decoder_input_data, decoder_target_data
 
 
-def get_datasets_(encoder_input_data, decoder_input_data,
-                  decoder_target_data, num_samples, split_ratio):
+def get_datasets_(encoder_input_data: np.ndarray, decoder_input_data: np.ndarray,
+                  decoder_target_data: np.ndarray,
+                  num_samples: int, split_ratio: float) -> Dict[str, np.ndarray]:
     """Create train/val.
 
     Returns:
@@ -182,7 +188,10 @@ def get_datasets_(encoder_input_data, decoder_input_data,
     return results
 
 
-def load_shard(collaborator_count, shard_num, data_path, num_samples, split_ratio):
+def load_shard(
+    collaborator_count: int, shard_num: str, data_path: str,
+    num_samples: int, split_ratio: float
+) -> Tuple[Tuple[np.ndarray, ...], Tuple[np.ndarray, ...], Dict[str, int]]:
     """Load data-shards.
 
     Returns:

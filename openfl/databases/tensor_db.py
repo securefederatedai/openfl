@@ -12,6 +12,7 @@ import numpy as np
 import pandas as pd
 
 from openfl.component.aggregation_functions import AggregationFunction
+from openfl.utilities import change_tags
 from openfl.utilities import LocalTensor
 from openfl.utilities import TensorKey
 
@@ -146,10 +147,7 @@ class TensorDB:
             return np.array(raw_df.iloc[0]), {}
 
         for col in collaborator_names:
-            if type(tags) == str:
-                new_tags = tuple([tags] + [col])
-            else:
-                new_tags = tuple(list(tags) + [col])
+            new_tags = change_tags(tags, add_field=col)
             raw_df = self.tensor_db[
                 (self.tensor_db['tensor_name'] == tensor_name)
                 & (self.tensor_db['origin'] == origin)

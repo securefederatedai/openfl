@@ -6,6 +6,7 @@ from logging import getLogger
 
 import numpy as np
 
+from openfl.utilities import change_tags
 from openfl.utilities import split_tensor_dict_for_holdouts
 from openfl.utilities import TensorKey
 
@@ -73,7 +74,7 @@ class CoreTaskRunner:
         else:
             suffix = 'validate' + validation_flag
             tags = (suffix,)
-        tags = ('metric', *tags)
+        tags = change_tags(tags, add_field='metric')
         metric_dict = {
             TensorKey(metric, origin, round_num, True, tags):
                 np.array(value) for metric, value in metric_dict.items()

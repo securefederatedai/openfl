@@ -11,6 +11,7 @@ from warnings import simplefilter
 
 import numpy as np
 
+from openfl.utilities import change_tags
 from openfl.utilities import Metric
 from openfl.utilities import split_tensor_dict_for_holdouts
 from openfl.utilities import TensorKey
@@ -230,7 +231,8 @@ class KerasTaskRunner(TaskRunner):
             suffix += '_local'
         else:
             suffix += '_agg'
-        tags = ('metric', suffix)
+        tags = ('metric',)
+        tags = change_tags(tags, add_field=suffix)
         output_tensor_dict = {
             TensorKey(metric, origin, round_num, True, tags):
                 np.array(ret_dict[metric])
