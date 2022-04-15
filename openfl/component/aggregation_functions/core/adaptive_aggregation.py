@@ -46,7 +46,7 @@ class AdaptiveAggregation(AggregationFunction):
     def call(
         self,
         local_tensors,
-        tensor_db,
+        db_iterator,
         tensor_name,
         fl_round,
         tags
@@ -55,7 +55,7 @@ class AdaptiveAggregation(AggregationFunction):
 
         Args:
             local_tensors(list[openfl.utilities.LocalTensor]): List of local tensors to aggregate.
-            tensor_db: Either an iterator over history of all tensors (read only) or the raw dataframe (for write access). Columns:
+            db_iterator: An iterator over history of all tensors. Columns:
                 - 'tensor_name': name of the tensor.
                     Examples for `torch.nn.Module`s: 'conv1.weight', 'fc2.bias'.
                 - 'fl_round': 0-based number of round corresponding to this tensor.
@@ -86,7 +86,7 @@ class AdaptiveAggregation(AggregationFunction):
 
         base_model_nparray = None
         search_tag = 'aggregated' if fl_round != 0 else 'model'
-        for record in tensor_db:
+        for record in db_iterator:
             if (
                 record['round'] == fl_round
                 and record['tensor_name'] == tensor_name

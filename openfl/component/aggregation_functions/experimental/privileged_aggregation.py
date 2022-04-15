@@ -1,27 +1,43 @@
 # Copyright (C) 2020-2021 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-
-"""Federated averaging module."""
+"""Aggregation function interface module."""
+from abc import abstractmethod
+from typing import Iterator
+from typing import List
+from typing import Tuple
+from typing import Union
 
 import numpy as np
+import pandas as pd
 
-from .core import AggregationFunction
-
-
-def weighted_average(tensors, weights):
-    """Compute average."""
-    return np.average(tensors, weights=weights, axis=0)
+from openfl.utilities import LocalTensor
+from openfl.component.aggregation_functions import AggregationFunction
 
 
-class WeightedAverage(AggregationFunction):
-    """Weighted average aggregation."""
+class PrivilegedAggregationFunction(AggregationFunction):
+    """Privileged Aggregation Function interface provides write access to TensorDB Dataframe.
 
-    def call(self, local_tensors, *_) -> np.ndarray:
+    """
+
+    def __init__(
+        self
+    ) -> None:
+        """Initialize with TensorDB write access"""
+        super().__init__()
+        self._privileged = True
+
+    @abstractmethod
+    def call(self,
+             local_tensors: List[LocalTensor],
+             tensor_db: pd.DataFrame,
+             tensor_name: str,
+             fl_round: int,
+             tags: Tuple[str]) -> np.ndarray:
         """Aggregate tensors.
 
         Args:
             local_tensors(list[openfl.utilities.LocalTensor]): List of local tensors to aggregate.
-            db_iterator: iterator over history of all tensors. Columns:
+            tensor_db: Raw TensorDB dataframe (for write access). Columns:
                 - 'tensor_name': name of the tensor.
                     Examples for `torch.nn.Module`s: 'conv1.weight', 'fc2.bias'.
                 - 'round': 0-based number of round corresponding to this tensor.
@@ -43,5 +59,5 @@ class WeightedAverage(AggregationFunction):
         Returns:
             np.ndarray: aggregated tensor
         """
-        tensors, weights = zip(*[(x.tensor, x.weight) for x in local_tensors])
-        return weighted_average(tensors, weights)
+        raise NotImplementedError
+

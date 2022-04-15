@@ -166,20 +166,24 @@ class TensorDB:
                                      weight=collaborator_weight_dict[col_name])
                          for col_name in collaborator_names]
 
-        if aggregation_function._privileged:
-            with self.mutex:
-                agg_nparray = aggregation_function(local_tensors,
-                                                   self.tensor_db,
-                                                   tensor_name,
-                                                   fl_round,
-                                                   tags)
-        else:
-            db_iterator = self._iterate()
-            agg_nparray = aggregation_function(local_tensors,
-                                               db_iterator,
-                                               tensor_name,
-                                               fl_round,
-                                               tags)
+        if hasattr(aggregation_function, '_privileged'):
+            if(aggregation_function._privileged):
+                with self.mutex:
+                    agg_nparray = aggregation_function(local_tensors,
+                                                       self.tensor_db,
+                                                       tensor_name,
+                                                       fl_round,
+                                                       tags)
+                self.cache_tensor({tensor_key: agg_nparray})
+
+                return np.array(agg_nparray)
+
+        db_iterator = self._iterate()
+        agg_nparray = aggregation_function(local_tensors,
+                                           db_iterator,
+                                           tensor_name,
+                                           fl_round,
+                                           tags)
         self.cache_tensor({tensor_key: agg_nparray})
 
         return np.array(agg_nparray)

@@ -91,6 +91,7 @@ setup(
         'openfl.component',
         'openfl.component.aggregation_functions',
         'openfl.component.aggregation_functions.core',
+        'openfl.component.aggregation_functions.experimental',
         'openfl.component.aggregator',
         'openfl.component.assigner',
         'openfl.component.ca',

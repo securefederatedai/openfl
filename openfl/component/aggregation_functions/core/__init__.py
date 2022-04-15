@@ -5,8 +5,6 @@
 
 from .adaptive_aggregation import AdaptiveAggregation
 from .interface import AggregationFunction
-from .interface import PrivilegedAggregationFunction
 
 __all__ = ['AggregationFunction',
-           'PrivilegedAggregationFunction',
            'AdaptiveAggregation']
