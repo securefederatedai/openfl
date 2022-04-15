@@ -79,7 +79,7 @@ class AdaptiveAggregation(AggregationFunction):
         """
         if tensor_name not in self.optimizer.params:
             return self.default_agg_func(local_tensors,
-                                         tensor_db,
+                                         db_iterator,
                                          tensor_name,
                                          fl_round,
                                          tags)
