@@ -464,16 +464,11 @@ class Collaborator:
                 return named_tensor
 
         # Assume every other tensor requires lossless compression
-        try:
-            compressed_tensor_key, compressed_nparray, metadata = self.tensor_codec.compress(
-                tensor_key,
-                nparray,
-                require_lossless=True
-            )
-        except:
-            print(tensor_key)
-            raise
-        
+        compressed_tensor_key, compressed_nparray, metadata = self.tensor_codec.compress(
+            tensor_key,
+            nparray,
+            require_lossless=True
+        )
         named_tensor = utils.construct_named_tensor(
             compressed_tensor_key,
             compressed_nparray,
