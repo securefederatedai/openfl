@@ -7,13 +7,14 @@
 Run the Federation
 ******************
 
-OpenFL currently supports two types of workflow for how to set up and run a federation: Director-based workflow (preferrable) and Aggregator-based workflow (old workflow, will not be supported soon). Director-based workflow introduces a new and more convenient way to set up a federation and brings "long-lived" components in a federation ("Director" and "Envoy").
+OpenFL currently offers two ways to set up and run experiments with a federation: the Director-based workflow and Aggregator-based workflow. The Director-based workflow introduces a new and more convenient way to set up a federation and brings "long-lived" components in a federation ("Director" and "Envoy"), while the Aggregator-based workflow is advised for scenarios where the workload needs to be verified prior to execution.
 
 `Director-Based Workflow`_
-    A federation created with this workflow continues to be available to distribute more experiments in series.
+    Setup long-lived components to run many experiments in series. Recommended for FL research when many changes to model, dataloader, or hyperparameters are expected
+
 
 `Aggregator-Based Workflow`_
-    With this workflow, the federation is terminated when the experiment is finished.
+    Define an experiment and distribute it manually. All participants can verify model code and [FL plan](https://openfl.readthedocs.io/en/latest/running_the_federation.html#federated-learning-plan-fl-plan-settings) prior to execution. The federation is terminated when the experiment is finished
 
 
 .. _director_workflow:
@@ -52,7 +53,7 @@ An overview of this workflow is shown below.
 .. centered:: Overview of the Director-Based Workflow
 
 
-.. # Copyright (C) 2020-2021 Intel Corporation
+.. # Copyright (C) 2020-2022 Intel Corporation
 .. # SPDX-License-Identifier: Apache-2.0
 
 

@@ -4,10 +4,15 @@
 """TensorDB Module."""
 
 from threading import Lock
+from typing import Dict
+from typing import Iterator
+from typing import Optional
 
 import numpy as np
 import pandas as pd
 
+from openfl.component.aggregation_functions import AggregationFunction
+from openfl.utilities import change_tags
 from openfl.utilities import LocalTensor
 from openfl.utilities import TensorKey
 
@@ -21,24 +26,24 @@ class TensorDB:
     collaborator and aggregator has its own TensorDB.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize."""
         self.tensor_db = pd.DataFrame([], columns=[
             'tensor_name', 'origin', 'round', 'report', 'tags', 'nparray'
         ])
         self.mutex = Lock()
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """Representation of the object."""
         with pd.option_context('display.max_rows', None):
             content = self.tensor_db[['tensor_name', 'origin', 'round', 'report', 'tags']]
             return f'TensorDB contents:\n{content}'
 
-    def __str__(self):
+    def __str__(self) -> str:
         """Printable string representation."""
         return self.__repr__()
 
-    def clean_up(self, remove_older_than=1):
+    def clean_up(self, remove_older_than: int = 1) -> None:
         """Remove old entries from database preventing the db from becoming too large and slow."""
         if remove_older_than < 0:
             # Getting a negative argument calls off cleaning
@@ -48,7 +53,7 @@ class TensorDB:
             self.tensor_db['round'] > current_round - remove_older_than
         ].reset_index(drop=True)
 
-    def cache_tensor(self, tensor_key_dict):
+    def cache_tensor(self, tensor_key_dict: Dict[TensorKey, np.ndarray]) -> None:
         """Insert tensor into TensorDB (dataframe).
 
         Args:
@@ -79,7 +84,7 @@ class TensorDB:
                 [self.tensor_db, *entries_to_add], ignore_index=True
             )
 
-    def get_tensor_from_cache(self, tensor_key):
+    def get_tensor_from_cache(self, tensor_key: TensorKey) -> Optional[np.ndarray]:
         """
         Perform a lookup of the tensor_key in the TensorDB.
 
@@ -99,8 +104,9 @@ class TensorDB:
             return None
         return np.array(df['nparray'].iloc[0])
 
-    def get_aggregated_tensor(self, tensor_key, collaborator_weight_dict,
-                              aggregation_function):
+    def get_aggregated_tensor(self, tensor_key: TensorKey, collaborator_weight_dict: dict,
+                              aggregation_function: AggregationFunction
+                              ) -> Optional[np.ndarray]:
         """
         Determine whether all of the collaborator tensors are present for a given tensor key.
 
@@ -140,10 +146,7 @@ class TensorDB:
             return np.array(raw_df.iloc[0]), {}
 
         for col in collaborator_names:
-            if type(tags) == str:
-                new_tags = tuple([tags] + [col])
-            else:
-                new_tags = tuple(list(tags) + [col])
+            new_tags = change_tags(tags, add_field=col)
             raw_df = self.tensor_db[
                 (self.tensor_db['tensor_name'] == tensor_name)
                 & (self.tensor_db['origin'] == origin)
@@ -172,7 +175,7 @@ class TensorDB:
 
         return np.array(agg_nparray)
 
-    def _iterate(self, order_by='round', ascending=False):
+    def _iterate(self, order_by: str = 'round', ascending: bool = False) -> Iterator[pd.Series]:
         columns = ['round', 'nparray', 'tensor_name', 'tags']
         rows = self.tensor_db[columns].sort_values(by=order_by, ascending=ascending).iterrows()
         for _, row in rows:
