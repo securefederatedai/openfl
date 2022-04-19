@@ -13,7 +13,7 @@ from openfl.utilities import TensorKey
 
 from .runner import TaskRunner
 
-from GANDLF.compute.generic import create_pytorch_objects
+from GANDLF.compute.generic             import create_pytorch_objects
 from GANDLF.compute.training_loop       import train_network
 from GANDLF.compute.forward_pass        import validate_network
 
@@ -29,7 +29,6 @@ class GaNDLFTaskRunner(TaskRunner):
             **kwargs
     ):
         """Initialize.
-
         Args:
             device (string): Compute device (default="cpu")
             **kwargs: Additional parameters to pass to the functions
@@ -47,7 +46,7 @@ class GaNDLFTaskRunner(TaskRunner):
         self.scheduler  = scheduler
         self.params     = params
         self.device     = device
-        
+
         # pass the actual dataloaders to the wrapper loader
         self.data_loader.set_dataloaders(train_loader, val_loader)
 
@@ -68,7 +67,6 @@ class GaNDLFTaskRunner(TaskRunner):
     def rebuild_model(self, round_num, input_tensor_dict, validation=False):
         """
         Parse tensor names and update weights of model. Handles the optimizer treatment.
-
         Returns:
             None
         """
@@ -85,20 +83,16 @@ class GaNDLFTaskRunner(TaskRunner):
     def validate(self, col_name, round_num, input_tensor_dict,
                  use_tqdm=False, **kwargs):
         """Validate.
-
         Run validation of the model on the local data.
-
         Args:
             col_name:            Name of the collaborator
             round_num:           What round is it
             input_tensor_dict:   Required input tensors (for model)
             use_tqdm (bool):     Use tqdm to print a progress bar (Default=True)
             kwargs:              Key word arguments passed to GaNDLF main_run
-
         Returns:
             global_output_dict:   Tensors to send back to the aggregator
             local_output_dict:   Tensors to maintain in the local TensorDB
-
         """
         self.rebuild_model(round_num, input_tensor_dict, validation=True)
         self.model.eval()
@@ -132,9 +126,7 @@ class GaNDLFTaskRunner(TaskRunner):
 
     def train(self, col_name, round_num, input_tensor_dict, use_tqdm=False, epochs=1, **kwargs):
         """Train batches.
-
         Train the model on the requested number of batches.
-
         Args:
             col_name                : Name of the collaborator
             round_num               : What round is it
@@ -151,7 +143,6 @@ class GaNDLFTaskRunner(TaskRunner):
             crossfold_val_n         : number of folds to use for the train,val level of the nested crossfold.
             corssfold_test_n        : number of folds to use for the trainval,test level of the nested crossfold.
             kwargs                  : Key word arguments passed to GaNDLF main_run
-
         Returns:
             global_output_dict      : Tensors to send back to the aggregator
             local_output_dict       : Tensors to maintain in the local TensorDB
@@ -206,14 +197,11 @@ class GaNDLFTaskRunner(TaskRunner):
 
     def get_tensor_dict(self, with_opt_vars=False):
         """Return the tensor dictionary.
-
         Args:
             with_opt_vars (bool): Return the tensor dictionary including the
                                   optimizer tensors (Default=False)
-
         Returns:
             dict: Tensor dictionary {**dict, **optimizer_dict}
-
         """
         # Gets information regarding tensor model layers and optimizer state.
         # FIXME: self.parameters() instead? Unclear if load_state_dict() or
@@ -246,12 +234,10 @@ class GaNDLFTaskRunner(TaskRunner):
 
     def set_tensor_dict(self, tensor_dict, with_opt_vars=False):
         """Set the tensor dictionary.
-
         Args:
             tensor_dict: The tensor dictionary
             with_opt_vars (bool): Return the tensor dictionary including the
                                   optimizer tensors (Default=False)
-
         """
         set_pt_model_from_tensor_dict(self.model, tensor_dict, self.device, with_opt_vars)
 
@@ -264,10 +250,8 @@ class GaNDLFTaskRunner(TaskRunner):
         Get the required tensors for specified function that could be called \
         as part of a task. By default, this is just all of the layers and \
         optimizer of the model.
-
         Args:
             func_name
-
         Returns:
             list : [TensorKey]
         """
@@ -279,13 +263,10 @@ class GaNDLFTaskRunner(TaskRunner):
 
     def initialize_tensorkeys_for_functions(self, with_opt_vars=False):
         """Set the required tensors for all publicly accessible task methods.
-
         By default, this is just all of the layers and optimizer of the model.
         Custom tensors should be added to this function.
-
         Args:
             None
-
         Returns:
             None
         """
@@ -345,7 +326,6 @@ class GaNDLFTaskRunner(TaskRunner):
         Load model and optimizer states from a pickled file specified by \
         filepath. model_/optimizer_state_dict args can be specified if needed. \
         Uses pt.load().
-
         Args:
             filepath (string)                 : Path to pickle file created
                                                 by pt.save().
@@ -354,7 +334,6 @@ class GaNDLFTaskRunner(TaskRunner):
             optimizer_state_dict_key (string) : key for optimizer state dict
                                                 in picked file.
             kwargs                            : unused
-
         Returns:
             None
         """
@@ -368,7 +347,6 @@ class GaNDLFTaskRunner(TaskRunner):
         Save model and optimizer states in a picked file specified by the \
         filepath. model_/optimizer_state_dicts are stored in the keys provided. \
         Uses pt.save().
-
         Args:
             filepath (string)                 : Path to pickle file to be
                                                 created by pt.save().
@@ -377,7 +355,6 @@ class GaNDLFTaskRunner(TaskRunner):
             optimizer_state_dict_key (string) : key for optimizer state
                                                 dict in picked file.
             kwargs                            : unused
-
         Returns:
             None
         """
@@ -390,9 +367,7 @@ class GaNDLFTaskRunner(TaskRunner):
     def reset_opt_vars(self):
         """
         Reset optimizer variables.
-
         Resets the optimizer variables
-
         """
         pass
 
@@ -440,14 +415,12 @@ def create_tensorkey_dicts(tensor_dict, metric_dict, col_name, round_num, logger
 
 def set_pt_model_from_tensor_dict(model, tensor_dict, device, with_opt_vars=False):
     """Set the tensor dictionary.
-
     Args:
         model: the pytorch nn.module object
         tensor_dict: The tensor dictionary
         device: the device where the tensor values need to be sent
         with_opt_vars (bool): Return the tensor dictionary including the
                                 optimizer tensors (Default=False)
-
     """
     # Sets tensors for model layers and optimizer state.
     # FIXME: model.parameters() instead? Unclear if load_state_dict() or
@@ -474,15 +447,12 @@ def set_pt_model_from_tensor_dict(model, tensor_dict, device, with_opt_vars=Fals
 
 def _derive_opt_state_dict(opt_state_dict):
     """Separate optimizer tensors from the tensor dictionary.
-
     Flattens the optimizer state dict so as to have key, value pairs with
     values as numpy arrays.
     The keys have sufficient info to restore opt_state_dict using
     expand_derived_opt_state_dict.
-
     Args:
         opt_state_dict: The optimizer state dictionary
-
     """
     derived_opt_state_dict = {}
 
@@ -558,16 +528,12 @@ def _derive_opt_state_dict(opt_state_dict):
 
 def expand_derived_opt_state_dict(derived_opt_state_dict, device):
     """Expand the optimizer state dictionary.
-
     Takes a derived opt_state_dict and creates an opt_state_dict suitable as
     input for load_state_dict for restoring optimizer state.
-
     Reconstructing state_subkeys_and_tags using the example key
     prefix, "__opt_state_0_0_", certain to be present.
-
     Args:
         derived_opt_state_dict: Optimizer state dictionary
-
     Returns:
         dict: Optimizer state dictionary
     """
@@ -614,7 +580,6 @@ def expand_derived_opt_state_dict(derived_opt_state_dict, device):
 
 def _get_optimizer_state(optimizer):
     """Return the optimizer state.
-
     Args:
         optimizer
     """
@@ -635,12 +600,10 @@ def _get_optimizer_state(optimizer):
 
 def _set_optimizer_state(optimizer, device, derived_opt_state_dict):
     """Set the optimizer state.
-
     Args:
         optimizer:
         device:
         derived_opt_state_dict:
-
     """
     temp_state_dict = expand_derived_opt_state_dict(
         derived_opt_state_dict, device)
@@ -659,10 +622,8 @@ def _set_optimizer_state(optimizer, device, derived_opt_state_dict):
 
 def to_cpu_numpy(state):
     """Send data to CPU as Numpy array.
-
     Args:
         state
-
     """
     # deep copy so as to decouple from active model
     state = deepcopy(state)
