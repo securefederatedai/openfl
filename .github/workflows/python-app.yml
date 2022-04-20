@@ -52,7 +52,6 @@ jobs:
         head -n 1 testing/data/train_3d_rad_segmentation.csv > ../test_seg_valid.csv
         tail -n +9 testing/data/train_3d_rad_segmentation.csv >> ../test_seg_valid.csv
         head -n 8 testing/data/train_3d_rad_segmentation.csv > ../test_seg_train.csv
-        cd ..
         ls
         bash tests/github/test_gandlf.sh
         pkill fx    
