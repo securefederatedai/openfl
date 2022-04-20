@@ -1,44 +1,10 @@
 # Copyright (C) 2020-2021 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-
+"""Proto utils."""
 
 from openfl.protocols import base_pb2
 from openfl.utilities import TensorKey
-from openfl.utilities import TensorKey
 
-"""Utils to be used in constructing keyed tensor dicts"""
-
-def augment_keys(raw_dict, origin, round_num, report, tags): 
-    return {
-            TensorKey(name, origin, round_num, report, tags):
-                array for name, array in raw_dict.items()
-           }
-
-    # ['tensor_name', 'origin', 'round_number', 'report', 'tags']
-
-
-def global_local_tensorkey_dicts(global_local_w_kwargs):
-    """
-    Takes a number of raw global and local tensor dicts and creates one global and one local specially 
-    keyed tensor dict.
-
-    Args:
-        global_local_w_kwargs:  List of 3-tuples, each consisting of (raw global tensor dict, raw local tensor dict, kwargs)
-                                where kwargs is used by aument keys to turn each of the first two raw dictionaries into 
-                                specially keyed ones that will be used to update the final output global and local specially 
-                                keyed dictionaries.
-    """
-    global_tensorkey_dict = {}
-    local_tensorkey_dict = {}
-
-
-    for global_dict, local_dict, kwargs in global_local_w_kwargs:
-        global_tensorkey_dict.update(augment_keys(raw_dict=global_dict, **kwargs))
-        local_tensorkey_dict.update(augment_keys(raw_dict=local_dict, **kwargs))
-
-    return global_tensorkey_dict, local_tensorkey_dict
-
-"""Proto utils."""
 
 def model_proto_to_bytes_and_metadata(model_proto):
     """Convert the model protobuf to bytes and metadata.
