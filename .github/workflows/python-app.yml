@@ -51,9 +51,9 @@ jobs:
         pip install -e .
         # Download data and Split CSVs into training and validation
         python -c "from testing.test_full import test_download_data, test_constructTrainingCSV; test_download_data(); test_constructTrainingCSV()"
-        head -n 1 testing/data/train_3d_rad_segmentation.csv > ../test_seg_valid.csv
-        tail -n +9 testing/data/train_3d_rad_segmentation.csv >> ../test_seg_valid.csv
-        head -n 8 testing/data/train_3d_rad_segmentation.csv > ../test_seg_train.csv
+        head -n 1 testing/data/train_3d_rad_segmentation.csv > ../seg_test_valid.csv
+        tail -n +9 testing/data/train_3d_rad_segmentation.csv >> ../seg_test_valid.csv
+        head -n 8 testing/data/train_3d_rad_segmentation.csv > ../seg_test_train.csv
         cd /home/runner/work/openfl/openfl
         bash tests/github/test_fets_challenge.sh
         pkill fx    
