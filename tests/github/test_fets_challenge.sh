@@ -79,6 +79,11 @@ fx workspace create --prefix ${FED_WORKSPACE} --template ${TEMPLATE}
 cd ${FED_WORKSPACE}
 FED_DIRECTORY=`pwd`  # Get the absolute directory path for the workspace
 
+#Copy any missing files into workspace
+if [ ! -f ${FED_DIRECTORY}/seg_test_train.csv ]
+then
+	    cp ../seg_test*.csv ${FED_DIRECTORY}/seg_test*.csv
+fi
 # Initialize FL plan
 fx plan initialize -a ${FQDN}
 
@@ -113,10 +118,6 @@ create_collaborator ${FED_WORKSPACE} ${FED_DIRECTORY} ${COL2} ${COL2_DIRECTORY} 
 # cp /media/ujjwal/SSD4TB/sbutil/DatasetForTraining_Horizontal/Site2_*.csv ${COL2_DIRECTORY}/${FED_WORKSPACE}
 
 # UJJWAL: Comment out these:
-if [ ! -f ${FED_DIRECTORY}/seg_test_train.csv ]
-then
-	    cp ../seg_test*.csv ${FED_DIRECTORY}/seg_test*.csv
-fi
 cp ${FED_DIRECTORY}/seg_test*.csv ${COL1_DIRECTORY}/${FED_WORKSPACE}
 cp ${FED_DIRECTORY}/seg_test*.csv ${COL2_DIRECTORY}/${FED_WORKSPACE}
 
