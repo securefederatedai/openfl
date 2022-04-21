@@ -41,7 +41,7 @@ jobs:
     - name: Setup FeTS Challenge Prerequisites
       uses: actions/checkout@master
       with:
-          repository: cbist/GaNDLF
+          repository: CBICA/GaNDLF
           ref: master
           path: fets_challenge
     - name: FeTS Challenge Task Runner Test
