@@ -82,7 +82,7 @@ FED_DIRECTORY=`pwd`  # Get the absolute directory path for the workspace
 #Copy any missing files into workspace
 if [ ! -f ${FED_DIRECTORY}/seg_test_train.csv ]
 then
-	    cp ../seg_test*.csv ${FED_DIRECTORY}/seg_test*.csv
+	    cp ../seg_test*.csv ${FED_DIRECTORY}/
 fi
 # Initialize FL plan
 fx plan initialize -a ${FQDN}
