@@ -115,7 +115,7 @@ create_collaborator ${FED_WORKSPACE} ${FED_DIRECTORY} ${COL2} ${COL2_DIRECTORY} 
 # UJJWAL: Comment out these:
 if [ ! -f ${FED_DIRECTORY}/seg_test_train.csv ]
 then
-	    cp seg_test*.csv ${FED_DIRECTORY}/seg_test*.csv
+	    cp ../seg_test*.csv ${FED_DIRECTORY}/seg_test*.csv
 fi
 cp ${FED_DIRECTORY}/seg_test*.csv ${COL1_DIRECTORY}/${FED_WORKSPACE}
 cp ${FED_DIRECTORY}/seg_test*.csv ${COL2_DIRECTORY}/${FED_WORKSPACE}
