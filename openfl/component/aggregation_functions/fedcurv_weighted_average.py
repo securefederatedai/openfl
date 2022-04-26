@@ -16,7 +16,7 @@ class FedCurvWeightedAverage(WeightedAverage):
     FedCurv paper: https://arxiv.org/pdf/1910.07796.pdf
     """
 
-    def call(self, local_tensors, db_iterator, tensor_name, fl_round, tags):
+    def call(self, local_tensors, tensor_db, tensor_name, fl_round, tags):
         """Apply aggregation."""
         if (
             tensor_name.endswith('_u')

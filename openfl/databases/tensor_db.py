@@ -7,6 +7,7 @@ from threading import Lock
 from typing import Dict
 from typing import Iterator
 from typing import Optional
+from types import MethodType
 
 import numpy as np
 import pandas as pd
@@ -15,6 +16,7 @@ from openfl.component.aggregation_functions import AggregationFunction
 from openfl.utilities import change_tags
 from openfl.utilities import LocalTensor
 from openfl.utilities import TensorKey
+from openfl.databases.utilities import _search,_store,_retrieve, ROUND_PLACEHOLDER
 
 
 class TensorDB:
@@ -31,7 +33,18 @@ class TensorDB:
         self.tensor_db = pd.DataFrame([], columns=[
             'tensor_name', 'origin', 'round', 'report', 'tags', 'nparray'
         ])
+        self._bind_convenience_methods()
+        
         self.mutex = Lock()
+
+    def _bind_convenience_methods(self):
+        # Bind convenience methods for TensorDB dataframe to make storage, retrieval, and search easier
+        if not hasattr(self.tensor_db, 'store'):
+            self.tensor_db.store = MethodType(_store, self.tensor_db)
+        if not hasattr(self.tensor_db, 'retrieve'):
+            self.tensor_db.retrieve = MethodType(_retrieve, self.tensor_db)
+        if not hasattr(self.tensor_db, 'search'):
+            self.tensor_db.search = MethodType(_search, self.tensor_db)
 
     def __repr__(self) -> str:
         """Representation of the object."""
@@ -42,15 +55,19 @@ class TensorDB:
     def __str__(self) -> str:
         """Printable string representation."""
         return self.__repr__()
+        
 
     def clean_up(self, remove_older_than: int = 1) -> None:
         """Remove old entries from database preventing the db from becoming too large and slow."""
         if remove_older_than < 0:
             # Getting a negative argument calls off cleaning
             return
-        current_round = int(self.tensor_db['round'].max())
+        current_round = self.tensor_db['round'].astype(int).max()
+        if current_round == ROUND_PLACEHOLDER:
+            current_round = np.sort(self.tensor_db['round'].astype(int).unique())[-2]
         self.tensor_db = self.tensor_db[
-            self.tensor_db['round'] > current_round - remove_older_than
+            (self.tensor_db['round'].astype(int) > current_round - remove_older_than) |
+            (self.tensor_db['report'] == True)
         ].reset_index(drop=True)
 
     def cache_tensor(self, tensor_key_dict: Dict[TensorKey, np.ndarray]) -> None:
@@ -164,6 +181,22 @@ class TensorDB:
                                      tensor=agg_tensor_dict[col_name],
                                      weight=collaborator_weight_dict[col_name])
                          for col_name in collaborator_names]
+
+        if hasattr(aggregation_function, '_privileged'):
+            if(aggregation_function._privileged):
+                with self.mutex:
+                    #self.tensor_db.store = MethodType(_store, self.tensor_db)
+                    #self.tensor_db.retrieve = MethodType(_retrieve, self.tensor_db)
+                    #self.tensor_db.search = MethodType(_search, self.tensor_db)
+                    self._bind_convenience_methods()
+                    agg_nparray = aggregation_function(local_tensors,
+                                                       self.tensor_db,
+                                                       tensor_name,
+                                                       fl_round,
+                                                       tags)
+                self.cache_tensor({tensor_key: agg_nparray})
+
+                return np.array(agg_nparray)
 
         db_iterator = self._iterate()
         agg_nparray = aggregation_function(local_tensors,

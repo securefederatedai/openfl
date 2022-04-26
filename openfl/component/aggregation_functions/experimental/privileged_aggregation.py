@@ -11,23 +11,25 @@ import numpy as np
 import pandas as pd
 
 from openfl.utilities import LocalTensor
-from openfl.utilities import SingletonABCMeta
+from openfl.component.aggregation_functions import AggregationFunction
 
 
-class AggregationFunction(metaclass=SingletonABCMeta):
-    """Interface for specifying aggregation function."""
+class PrivilegedAggregationFunction(AggregationFunction):
+    """Privileged Aggregation Function interface provides write access to TensorDB Dataframe.
 
-    def __init__(self):
-        """Initialize common AggregationFunction params
-        
-           Default: Read only access to TensorDB
-        """
-        self._privileged = False
+    """
+
+    def __init__(
+        self
+    ) -> None:
+        """Initialize with TensorDB write access"""
+        super().__init__()
+        self._privileged = True
 
     @abstractmethod
     def call(self,
              local_tensors: List[LocalTensor],
-             db_iterator: Iterator[pd.Series],
+             tensor_db: pd.DataFrame,
              tensor_name: str,
              fl_round: int,
              tags: Tuple[str]) -> np.ndarray:
@@ -35,7 +37,7 @@ class AggregationFunction(metaclass=SingletonABCMeta):
 
         Args:
             local_tensors(list[openfl.utilities.LocalTensor]): List of local tensors to aggregate.
-            db_iterator: An iterator over history of all tensors. Columns:
+            tensor_db: Raw TensorDB dataframe (for write access). Columns:
                 - 'tensor_name': name of the tensor.
                     Examples for `torch.nn.Module`s: 'conv1.weight', 'fc2.bias'.
                 - 'round': 0-based number of round corresponding to this tensor.
@@ -58,12 +60,4 @@ class AggregationFunction(metaclass=SingletonABCMeta):
             np.ndarray: aggregated tensor
         """
         raise NotImplementedError
-
-    def __call__(self, local_tensors,
-                 db_iterator,
-                 tensor_name,
-                 fl_round,
-                 tags):
-        """Use magic function for ease."""
-        return self.call(local_tensors, db_iterator, tensor_name, fl_round, tags)
 
