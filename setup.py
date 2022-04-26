@@ -100,6 +100,7 @@ setup(
         'openfl.component.envoy',
         'openfl.cryptography',
         'openfl.databases',
+        'openfl.databases.utilities',
         'openfl.federated',
         'openfl.federated.data',
         'openfl.federated.plan',
