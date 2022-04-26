@@ -44,7 +44,7 @@ def _search(self, tensor_name: str = None, origin: str = None,
     if fl_round is not None:
         query_string.append(f"(round == {round})")
     if metric is not None:
-        query_string.append(f"(report == {report})")
+        query_string.append(f"(report == {metric})")
 
     if len(query_string) > 0:
         query_string = (' and ').join(query_string)
