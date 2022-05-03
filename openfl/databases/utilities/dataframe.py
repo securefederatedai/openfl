@@ -42,7 +42,7 @@ def _search(self, tensor_name: str = None, origin: str = None,
     if origin is not None:
         query_string.append(f"(origin == '{origin}')")
     if fl_round is not None:
-        query_string.append(f"(round == {round})")
+        query_string.append(f"(round == {fl_round})")
     if metric is not None:
         query_string.append(f"(report == {metric})")
 
