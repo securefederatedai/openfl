@@ -1,7 +1,8 @@
 # Copyright (C) 2020-2021 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Aggregator module."""
+"""Aggregator module.""" 
+import time
 import queue
 from logging import getLogger
 
@@ -363,6 +364,14 @@ class Aggregator:
             agg_tensor_key = tensor_key
 
         nparray = self.tensor_db.get_tensor_from_cache(agg_tensor_key)
+
+        start_retrieving_time = time.time()
+        while(nparray is None):
+            self.logger.debug(f'Waiting for tensor_key {agg_tensor_key}')
+            time.sleep(5)
+            nparray = self.tensor_db.get_tensor_from_cache(agg_tensor_key)
+            if (time.time() - start_retrieving_time) > 60:
+                break
 
         if nparray is None:
             raise ValueError(f'Aggregator does not have an aggregated tensor for {tensor_key}')
