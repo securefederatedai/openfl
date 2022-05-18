@@ -11,7 +11,7 @@ from copy import copy
 from logging import getLogger
 from pathlib import Path
 
-from flatten_json import flatten_preserve_lists
+import flatten_json
 
 import openfl.interface.aggregator as aggregator
 import openfl.interface.collaborator as collaborator
@@ -54,7 +54,7 @@ def setup_plan(log_level='CRITICAL'):
 
 def flatten(config, return_complete=False):
     """Flatten nested config."""
-    flattened_config = flatten_preserve_lists(config, '.')[0]
+    flattened_config = flatten_json.flatten(config, '.')
     if not return_complete:
         keys_to_remove = [
             k for k, v in flattened_config.items()
@@ -70,11 +70,15 @@ def flatten(config, return_complete=False):
 def update_plan(override_config):
     """
     Update the plan with the provided override and save it to disk.
+    If the override value is a list, keys corresponding to each list
+    value should be specified.
 
     For a list of available override options, call `fx.get_plan()`
 
     Args:
-        override_config : dict {"COMPONENT.settings.variable" : value}
+        override_config : dict {"COMPONENT.settings.variable" : value,
+                                "COMPONENT.settings.list_variable.0" : list_value_0,
+                                "COMPONENT.settings.list_variable.1" : list_value_1}
 
     Returns:
         None
@@ -95,18 +99,7 @@ def update_plan(override_config):
 
 def unflatten(config, separator='.'):
     """Unfold `config` settings that have `separator` in their names."""
-    keys_to_separate = [k for k in config if separator in k]
-    if len(keys_to_separate) > 0:
-        for key in keys_to_separate:
-            prefix = separator.join(key.split(separator)[:-1])
-            suffix = key.split(separator)[-1]
-            if prefix in config:
-                temp = {**config[prefix], suffix: config[key]}
-                config[prefix] = temp
-            else:
-                config[prefix] = {suffix: config[key]}
-            del config[key]
-        unflatten(config, separator)
+    config = flatten_json.unflatten_list(config, separator)
     return config
 
 
