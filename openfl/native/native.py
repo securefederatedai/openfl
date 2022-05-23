@@ -67,7 +67,7 @@ def flatten(config, return_complete=False):
     return flattened_config
 
 
-def update_plan(override_config):
+def update_plan(override_config, plan=None, resolve=True):
     """
     Update the plan with the provided override and save it to disk.
     If the override value is a list, keys corresponding to each list
@@ -83,7 +83,8 @@ def update_plan(override_config):
     Returns:
         None
     """
-    plan = setup_plan()
+    if plan is None:
+        plan = setup_plan()
     flat_plan_config = flatten(plan.config, return_complete=True)
     for k, v in override_config.items():
         if k in flat_plan_config:
@@ -93,7 +94,8 @@ def update_plan(override_config):
             logger.warn(f'Did not find {k} in config. Make sure it should exist. Creating...')
         flat_plan_config[k] = v
     plan.config = unflatten(flat_plan_config, '.')
-    plan.resolve()
+    if resolve:
+        plan.resolve()
     return plan
 
 

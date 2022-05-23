@@ -1,0 +1,6 @@
+Planet:
+  Earth:
+    Continent:
+      North-America:
+        USA:
+          Oregon: 'Portland'
