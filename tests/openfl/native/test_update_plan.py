@@ -19,7 +19,7 @@ from openfl.native import update_plan
 def test_update_plan_new_key_value_addition(override_config,expected_result):
     """Test update_plan for adding a new key value pair."""
     plan = Plan()
-    plan.config = Plan.load(Path('./base_example.yaml'))
+    plan.config = Plan.load(Path('./tests/openfl/native/base_example.yaml'))
     result = update_plan(override_config, plan=plan, resolve=False)
     assert result.config == expected_result
 
@@ -36,7 +36,7 @@ def test_update_plan_new_key_value_addition(override_config,expected_result):
 def test_update_plan_new_key_list_value_addition(override_config,expected_result):
     """Test update_plan or adding a new key with value as a list."""
     plan = Plan()
-    plan.config = Plan.load(Path('./base_example.yaml'))
+    plan.config = Plan.load(Path('./tests/openfl/native/base_example.yaml'))
     result = update_plan(override_config, plan=plan, resolve=False)
     assert result.config == expected_result
 
@@ -49,7 +49,7 @@ def test_update_plan_new_key_list_value_addition(override_config,expected_result
 def test_update_plan_existing_key_value_updation(override_config,expected_result):
     """Test update_plan for adding a new key value pair."""
     plan = Plan()
-    plan.config = Plan.load(Path('./base_example.yaml'))
+    plan.config = Plan.load(Path('./tests/openfl/native/base_example.yaml'))
     result = update_plan(override_config, plan=plan, resolve=False)
     assert result.config == expected_result
 
@@ -64,6 +64,6 @@ def test_update_plan_existing_key_value_updation(override_config,expected_result
 def test_update_plan_existing_key_list_value_updation(override_config,expected_result):
     """Test update_plan or adding a new key with value as a list."""
     plan = Plan()
-    plan.config = Plan.load(Path('./base_example.yaml'))
+    plan.config = Plan.load(Path('./tests/openfl/native/base_example.yaml'))
     result = update_plan(override_config, plan=plan, resolve=False)
     assert result.config == expected_result
