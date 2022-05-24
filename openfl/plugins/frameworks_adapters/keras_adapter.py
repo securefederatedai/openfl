@@ -15,6 +15,7 @@ class FrameworkAdapterPlugin(FrameworkAdapterPluginInterface):
     def serialization_setup():
         """Prepare model for serialization (optional)."""
         # Source: https://github.com/tensorflow/tensorflow/issues/34697
+        import tensorflow as tf
         from tensorflow.keras.models import Model
         from tensorflow.python.keras.layers import deserialize
         from tensorflow.python.keras.layers import serialize
@@ -32,6 +33,7 @@ class FrameworkAdapterPlugin(FrameworkAdapterPluginInterface):
             return restored_model
 
         # Hotfix function
+        # Not required for TF versions 2.7 or higher.
         def make_keras_picklable():
 
             def __reduce__(self):  # NOQA:N807
@@ -45,7 +47,9 @@ class FrameworkAdapterPlugin(FrameworkAdapterPluginInterface):
             cls.__reduce__ = __reduce__
 
         # Run the function
-        make_keras_picklable()
+        tf_version = float((tf.__version__).split(".")[0] + "." + (tf.__version__).split(".")[1])
+        if tf_version < 2.7:
+            make_keras_picklable()
 
     @staticmethod
     def get_tensor_dict(model, optimizer=None, suffix=''):
