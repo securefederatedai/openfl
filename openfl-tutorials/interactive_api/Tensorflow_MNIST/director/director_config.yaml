@@ -1,5 +1,5 @@
 settings:
   listen_host: localhost
   listen_port: 50051
-  sample_shape: ['784']
+  sample_shape: ['28', '28', '1']
   target_shape: ['1']

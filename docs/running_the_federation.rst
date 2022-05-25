@@ -39,7 +39,7 @@ Follow the procedure in the director-based workflow to become familiar with the 
 
 - *Experiment manager* (or Data scientist) is a person or group of people using OpenFL.
 - *Director Manager* is ML model creator's representative controlling Director.
-- *Collaborator manager* is Data onwer's representative controlling Envoy.
+- *Collaborator manager* is Data owner's representative controlling Envoy.
 
 .. note::
     The Open Federated Learning (|productName|) interactive Python API enables the Experiment manager (data scientists) to define and start a federated learning experiment from a single entry point: a Jupyter\*\  notebook or a Python\*\  script.
