@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 class MedMNISTShardDataset(ShardDataset):
     """MedMNIST Shard dataset class."""
 
-    def __init__(self, x, y, data_type, rank=1, worldsize=1):
+    def __init__(self, x, y, data_type: str = 'train', rank: int = 1, worldsize: int = 1) -> None:
         """Initialize MedMNISTDataset."""
         self.data_type = data_type
         self.rank = rank
@@ -46,7 +46,7 @@ class MedMNISTShardDescriptor(ShardDescriptor):
             datapath: str = '',
             dataname: str = 'bloodmnist',
             **kwargs
-    ):
+    ) -> None:
         """Initialize MedMNISTShardDescriptor."""
         self.rank, self.worldsize = tuple(int(num) for num in rank_worldsize.split(','))
         
@@ -76,15 +76,13 @@ class MedMNISTShardDescriptor(ShardDescriptor):
         )
 
     @property
-    def sample_shape(self):
+    def sample_shape(self) -> List[str] :
         """Return the sample shape info."""
-        #return data_by_type['train'][0][0].shape
         return ['28', '28', '3']
 
     @property
-    def target_shape(self):
+    def target_shape(self) -> List[str] :
         """Return the target shape info."""
-        #return data_by_type['train'][1][0].shape
         return ['1','1']
 
     @property
@@ -93,8 +91,10 @@ class MedMNISTShardDescriptor(ShardDescriptor):
         return (f'MedMNIST dataset, shard number {self.rank}'
                 f' out of {self.worldsize}')
 
-    def download_data(datapath, dataname, info):
-        #"{}.npz".format(dataname),
+    def download_data(datapath: str = 'data/', 
+                      dataname: str = 'bloodmnist', 
+                      info: dict = {}):
+
         print(f"{datapath}\n{dataname}\n{info}")
         try:
             from torchvision.datasets.utils import download_url
