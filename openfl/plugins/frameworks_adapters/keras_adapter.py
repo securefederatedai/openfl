@@ -14,38 +14,9 @@ class FrameworkAdapterPlugin(FrameworkAdapterPluginInterface):
     @staticmethod
     def serialization_setup():
         """Prepare model for serialization (optional)."""
-        # Source: https://github.com/tensorflow/tensorflow/issues/34697
-        from tensorflow.keras.models import Model
-        from tensorflow.python.keras.layers import deserialize
-        from tensorflow.python.keras.layers import serialize
-        from tensorflow.python.keras.saving import saving_utils
-
-        def unpack(model, training_config, weights):
-            restored_model = deserialize(model)
-            if training_config is not None:
-                restored_model.compile(
-                    **saving_utils.compile_args_from_training_config(
-                        training_config
-                    )
-                )
-            restored_model.set_weights(weights)
-            return restored_model
-
-        # Hotfix function
-        def make_keras_picklable():
-
-            def __reduce__(self):  # NOQA:N807
-                model_metadata = saving_utils.model_metadata(self)
-                training_config = model_metadata.get('training_config', None)
-                model = serialize(self)
-                weights = self.get_weights()
-                return (unpack, (model, training_config, weights))
-
-            cls = Model
-            cls.__reduce__ = __reduce__
-
-        # Run the function
-        make_keras_picklable()
+        # Keras supports serialization natively.
+        # https://github.com/keras-team/keras/pull/14748.
+        pass
 
     @staticmethod
     def get_tensor_dict(model, optimizer=None, suffix=''):
