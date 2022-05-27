@@ -1,9 +1,11 @@
 # Copyright (C) 2020-2021 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 """Keras Framework Adapter plugin."""
+from logging import getLogger
+
 from .framework_adapter_interface import FrameworkAdapterPluginInterface
 
-
+logger = getLogger(__name__)
 class FrameworkAdapterPlugin(FrameworkAdapterPluginInterface):
     """Framework adapter plugin class."""
 
@@ -47,8 +49,9 @@ class FrameworkAdapterPlugin(FrameworkAdapterPluginInterface):
             cls.__reduce__ = __reduce__
 
         # Run the function
-        tf_version = float((tf.__version__).split(".")[0] + "." + (tf.__version__).split(".")[1])
-        if tf_version < 2.7:
+        if tf.__version__ < '2.7.1':
+            logger.warn(f'Applying hotfix for model serialization.'
+            'Please consider updating to tensorflow>=2.8 to silence this warning.')
             make_keras_picklable()
 
     @staticmethod
