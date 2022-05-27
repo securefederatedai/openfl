@@ -1,4 +1,4 @@
-# MedMNIST 2D Classification Tutorial
+# MedMNIST 3D Classification Tutorial
 
 ![MedMNISTv2_overview](https://raw.githubusercontent.com/MedMNIST/MedMNIST/main/assets/medmnistv2.jpg)
 
@@ -37,14 +37,14 @@ We use a simple convolutional neural network and settings coming from [the exper
 1. Run director:
 
 ```sh
-cd director_folder
+cd director
 ./start_director.sh
 ```
 
 2. Run envoy:
 
 ```sh
-cd envoy_folder
+cd envoy
 ./start_envoy.sh env_one envoy_config_one.yaml
 ```
 
@@ -60,5 +60,5 @@ Optional: start second envoy:
 
 ```sh
 cd workspace
-jupyter lab Pytorch_MedMNIST_2D.ipynb
+jupyter lab Pytorch_MedMNIST_3D.ipynb
 ```
