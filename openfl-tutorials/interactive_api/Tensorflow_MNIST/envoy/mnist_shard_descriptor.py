@@ -70,7 +70,7 @@ class MnistShardDescriptor(ShardDescriptor):
     @property
     def sample_shape(self):
         """Return the sample shape info."""
-        return ['784']
+        return ['28', '28', '1']
 
     @property
     def target_shape(self):
@@ -94,8 +94,8 @@ class MnistShardDescriptor(ShardDescriptor):
         with np.load(local_file_path) as f:
             x_train, y_train = f['x_train'], f['y_train']
             x_test, y_test = f['x_test'], f['y_test']
-            x_train = np.reshape(x_train, (-1, 784))
-            x_test = np.reshape(x_test, (-1, 784))
+            x_train = np.reshape(x_train, (-1, 28, 28, 1))
+            x_test = np.reshape(x_test, (-1, 28, 28, 1))
 
         os.remove(local_file_path)  # remove mnist.npz
         print('Mnist data was loaded!')

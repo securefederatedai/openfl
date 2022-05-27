@@ -34,8 +34,8 @@ class FrameworkAdapterPlugin(FrameworkAdapterPluginInterface):
             restored_model.set_weights(weights)
             return restored_model
 
-        # Hotfix function
-        # Not required for TF versions 2.7 or higher.
+        # Hotfix function, not required for TF versions above 2.7.1.
+        # https://github.com/keras-team/keras/pull/14748.
         def make_keras_picklable():
 
             def __reduce__(self):  # NOQA:N807
@@ -49,7 +49,7 @@ class FrameworkAdapterPlugin(FrameworkAdapterPluginInterface):
             cls.__reduce__ = __reduce__
 
         # Run the function
-        if tf.__version__ < '2.7.1':
+        if tf.__version__ <= '2.7.1':
             logger.warn(f'Applying hotfix for model serialization.'
             'Please consider updating to tensorflow>=2.8 to silence this warning.')
             make_keras_picklable()
