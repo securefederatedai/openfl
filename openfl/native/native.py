@@ -51,7 +51,6 @@ def setup_plan(log_level='CRITICAL'):
 
     return plan
 
-
 def flatten(config, return_complete=False):
     """Flatten nested config."""
     flattened_config = flatten_json.flatten(config, '.')
@@ -70,15 +69,11 @@ def flatten(config, return_complete=False):
 def update_plan(override_config, plan=None, resolve=True):
     """
     Update the plan with the provided override and save it to disk.
-    If the override value is a list, keys corresponding to each list
-    value should be specified.
 
     For a list of available override options, call `fx.get_plan()`
 
     Args:
-        override_config : dict {"COMPONENT.settings.variable" : value,
-                                "COMPONENT.settings.list_variable.0" : list_value_0,
-                                "COMPONENT.settings.list_variable.1" : list_value_1}
+        override_config : dict {"COMPONENT.settings.variable" : value or list of values}
 
     Returns:
         None
@@ -86,13 +81,33 @@ def update_plan(override_config, plan=None, resolve=True):
     if plan is None:
         plan = setup_plan()
     flat_plan_config = flatten(plan.config, return_complete=True)
-    for k, v in override_config.items():
-        if k in flat_plan_config:
-            logger.info(f'Updating {k} to {v}... ')
+
+    org_list_keys_with_count = {}
+    for k in flat_plan_config:
+        k_split = k.rsplit('.', 1)
+        if k_split[1].isnumeric():
+            if k_split[0] in org_list_keys_with_count:
+                org_list_keys_with_count[k_split[0]] += 1
+            else:
+                org_list_keys_with_count[k_split[0]] = 1
+
+    for key, val in override_config.items():
+        if key in org_list_keys_with_count:
+            # remove old list corresponding to this key entirely
+            for idx in range(org_list_keys_with_count[key]):
+                del flat_plan_config[f'{key}.{idx}']
+            logger.info(f'Updating {key} to {val}... ')
+        elif key in flat_plan_config:
+            logger.info(f'Updating {key} to {val}... ')
         else:
             # TODO: We probably need to validate the new key somehow
-            logger.warn(f'Did not find {k} in config. Make sure it should exist. Creating...')
-        flat_plan_config[k] = v
+            logger.warning(f'Did not find {key} in config. Make sure it should exist. Creating...')
+        if type(val) == list:
+            for idx,v in enumerate(val):
+                flat_plan_config[f'{key}.{idx}'] = v
+        else:
+            flat_plan_config[key] = val
+
     plan.config = unflatten(flat_plan_config, '.')
     if resolve:
         plan.resolve()

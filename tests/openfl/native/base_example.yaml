@@ -4,3 +4,4 @@ Planet:
       North-America:
         USA:
           Oregon: 'Portland'
+  Mars: ['Water', 'Ice']
