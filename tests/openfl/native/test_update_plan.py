@@ -11,14 +11,14 @@ from openfl.native import update_plan
 @pytest.mark.parametrize(
     'override_config,expected_result', [
         ({},
-        {'Planet': {'Earth': {'Continent': {'North-America': {'USA': {'Oregon': 'Portland'}}}},
-                    'Mars': ['Water', 'Ice']}}),
+         {'Planet': {'Earth': {'Continent': {'North-America': {'USA': {'Oregon': 'Portland'}}}},
+                     'Mars': ['Water', 'Ice']}}),
         ({'Planet.Earth.Continent.Australia': 'Sydney'},
-        {'Planet': {'Earth': {'Continent': {'Australia': 'Sydney',
-                                            'North-America': {'USA': {'Oregon': 'Portland'}}}},
-                    'Mars': ['Water', 'Ice']}})
+         {'Planet': {'Earth': {'Continent': {'Australia': 'Sydney',
+                                             'North-America': {'USA': {'Oregon': 'Portland'}}}},
+                     'Mars': ['Water', 'Ice']}})
     ])
-def test_update_plan_new_key_value_addition(override_config,expected_result):
+def test_update_plan_new_key_value_addition(override_config, expected_result):
     """Test update_plan for adding a new key value pair."""
     plan = Plan()
     plan.config = Plan.load(Path('./tests/openfl/native/base_example.yaml'))
@@ -29,15 +29,15 @@ def test_update_plan_new_key_value_addition(override_config,expected_result):
 @pytest.mark.parametrize(
     'override_config,expected_result', [
         ({'Planet.Jupiter': ['Sun', 'Rings']},
-        {'Planet': {'Earth': {'Continent': {'North-America': {'USA': {'Oregon': 'Portland'}}}},
-                    'Mars': ['Water', 'Ice'],
-                    'Jupiter': ['Sun', 'Rings']}}),
+         {'Planet': {'Earth': {'Continent': {'North-America': {'USA': {'Oregon': 'Portland'}}}},
+                     'Mars': ['Water', 'Ice'],
+                     'Jupiter': ['Sun', 'Rings']}}),
         ({'Planet.Earth.Continent.Australia': ['Sydney', 'Melbourne']},
-        {'Planet': {'Earth': {'Continent': {'Australia': ['Sydney', 'Melbourne'],
-                                            'North-America': {'USA': {'Oregon': 'Portland'}}}},
-                    'Mars': ['Water', 'Ice']}})
+         {'Planet': {'Earth': {'Continent': {'Australia': ['Sydney', 'Melbourne'],
+                                             'North-America': {'USA': {'Oregon': 'Portland'}}}},
+                     'Mars': ['Water', 'Ice']}})
     ])
-def test_update_plan_new_key_list_value_addition(override_config,expected_result):
+def test_update_plan_new_key_list_value_addition(override_config, expected_result):
     """Test update_plan or adding a new key with value as a list."""
     plan = Plan()
     plan.config = Plan.load(Path('./tests/openfl/native/base_example.yaml'))
@@ -48,13 +48,13 @@ def test_update_plan_new_key_list_value_addition(override_config,expected_result
 @pytest.mark.parametrize(
     'override_config,expected_result', [
         ({'Planet.Earth.Continent.North-America.USA.Oregon': 'Salem'},
-        {'Planet': {'Earth': {'Continent': {'North-America': {'USA': {'Oregon': 'Salem'}}}},
-                    'Mars': ['Water', 'Ice']}}),
+         {'Planet': {'Earth': {'Continent': {'North-America': {'USA': {'Oregon': 'Salem'}}}},
+                     'Mars': ['Water', 'Ice']}}),
         ({'Planet.Mars': 'Moon'},
-        {'Planet': {'Earth': {'Continent': {'North-America': {'USA': {'Oregon': 'Portland'}}}},
-                    'Mars': 'Moon'}})
+         {'Planet': {'Earth': {'Continent': {'North-America': {'USA': {'Oregon': 'Portland'}}}},
+                     'Mars': 'Moon'}})
     ])
-def test_update_plan_existing_key_value_updation(override_config,expected_result):
+def test_update_plan_existing_key_value_updation(override_config, expected_result):
     """Test update_plan for adding a new key value pair."""
     plan = Plan()
     plan.config = Plan.load(Path('./tests/openfl/native/base_example.yaml'))
@@ -65,19 +65,20 @@ def test_update_plan_existing_key_value_updation(override_config,expected_result
 @pytest.mark.parametrize(
     'override_config,expected_result', [
         ({'Planet.Mars': ['Water', 'Moon', 'Ice']},
-        {'Planet': {'Earth': {'Continent': {'North-America': {'USA': {'Oregon': 'Portland'}}}},
-                    'Mars': ['Water', 'Moon', 'Ice']}}),
+         {'Planet': {'Earth': {'Continent': {'North-America': {'USA': {'Oregon': 'Portland'}}}},
+                     'Mars': ['Water', 'Moon', 'Ice']}}),
         ({'Planet.Mars': ['Water']},
-        {'Planet': {'Earth': {'Continent': {'North-America': {'USA': {'Oregon': 'Portland'}}}},
-                    'Mars': ['Water']}}),
+         {'Planet': {'Earth': {'Continent': {'North-America': {'USA': {'Oregon': 'Portland'}}}},
+                     'Mars': ['Water']}}),
         ({'Planet.Earth.Continent.North-America.USA.Oregon': ['Portland', 'Salem']},
-        {'Planet': {'Earth': {'Continent': {'North-America': {'USA': {'Oregon': ['Portland', 'Salem']}}}},
-                    'Mars': ['Water', 'Ice']}}),
+         {'Planet': {'Earth': {'Continent': {'North-America':
+                                             {'USA': {'Oregon': ['Portland', 'Salem']}}}},
+                     'Mars': ['Water', 'Ice']}}),
         ({'Planet.Earth.Continent.North-America.USA.Oregon': ['Salem']},
-        {'Planet': {'Earth': {'Continent': {'North-America': {'USA': {'Oregon': ['Salem']}}}},
-                    'Mars': ['Water', 'Ice']}})
+         {'Planet': {'Earth': {'Continent': {'North-America': {'USA': {'Oregon': ['Salem']}}}},
+                     'Mars': ['Water', 'Ice']}})
     ])
-def test_update_plan_existing_key_list_value_updation(override_config,expected_result):
+def test_update_plan_existing_key_list_value_updation(override_config, expected_result):
     """Test update_plan or adding a new key with value as a list."""
     plan = Plan()
     plan.config = Plan.load(Path('./tests/openfl/native/base_example.yaml'))

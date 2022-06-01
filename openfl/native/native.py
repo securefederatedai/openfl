@@ -51,6 +51,7 @@ def setup_plan(log_level='CRITICAL'):
 
     return plan
 
+
 def flatten(config, return_complete=False):
     """Flatten nested config."""
     flattened_config = flatten_json.flatten(config, '.')
@@ -103,7 +104,7 @@ def update_plan(override_config, plan=None, resolve=True):
             # TODO: We probably need to validate the new key somehow
             logger.warning(f'Did not find {key} in config. Make sure it should exist. Creating...')
         if type(val) == list:
-            for idx,v in enumerate(val):
+            for idx, v in enumerate(val):
                 flat_plan_config[f'{key}.{idx}'] = v
         else:
             flat_plan_config[key] = val
