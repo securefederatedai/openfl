@@ -1,4 +1,4 @@
-# Copyright (C) 2020-2021 Intel Corporation
+# Copyright (C) 2022 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """CIFAR10 Shard Descriptor (using `tf.data.Dataset` API)"""
