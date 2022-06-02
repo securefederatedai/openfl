@@ -1,0 +1,12 @@
+params:
+  cuda_devices: []
+
+optional_plugin_components: {}
+
+shard_descriptor:
+  template: linreg_shard_descriptor.LinRegSD
+  params:
+    rank: 1
+    n_samples: 80
+    noise: 0.15
+  
