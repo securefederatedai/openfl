@@ -28,11 +28,11 @@ class MedMNISTShardDataset(ShardDataset):
         self.x = x[self.rank - 1::self.worldsize]
         self.y = y[self.rank - 1::self.worldsize]
 
-    def __getitem__(self, index: int):
+    def __getitem__(self, index: int) -> Tuple[Any, Any]:
         """Return an item by the index."""
         return self.x[index], self.y[index]
 
-    def __len__(self):
+    def __len__(self) -> int:
         """Return the len of the dataset."""
         return len(self.x)
 
@@ -64,7 +64,7 @@ class MedMNISTShardDescriptor(ShardDescriptor):
         """Get available shard dataset types."""
         return list(self.data_by_type)
 
-    def get_dataset(self, dataset_type='train'):
+    def get_dataset(self, dataset_type='train') -> MedMNISTShardDataset:
         """Return a shard dataset by type."""
         if dataset_type not in self.data_by_type:
             raise Exception(f'Wrong dataset type: {dataset_type}')
@@ -93,7 +93,7 @@ class MedMNISTShardDescriptor(ShardDescriptor):
 
     def download_data(datapath: str = 'data/', 
                       dataname: str = 'bloodmnist', 
-                      info: dict = {}):
+                      info: dict = {}) -> None:
 
         print(f"{datapath}\n{dataname}\n{info}")
         try:
@@ -108,7 +108,7 @@ class MedMNISTShardDescriptor(ShardDescriptor):
                                HOMEPAGE)
 
 
-    def load_data(self):
+    def load_data(self) -> Tuple[Tuple[Any, Any], Tuple[Any, Any]]:
         """Download prepared dataset."""
         
         dataname = self.dataset_name + '.npz'
