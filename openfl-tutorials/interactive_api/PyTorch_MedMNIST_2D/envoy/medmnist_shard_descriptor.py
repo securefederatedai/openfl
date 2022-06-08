@@ -124,8 +124,8 @@ class MedMNISTShardDescriptor(ShardDescriptor):
         x_train = data["train_images"]
         x_test = data["test_images"]
         
-        y_train=data["train_labels"]#np.concatenate(data["train_labels"])
-        y_test=data["test_labels"]#np.concatenate(data["test_labels"])
+        y_train=data["train_labels"]
+        y_test=data["test_labels"]
         print('MedMNIST data was loaded!')
         return (x_train, y_train), (x_test, y_test)
         
