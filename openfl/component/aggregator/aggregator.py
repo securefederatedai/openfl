@@ -67,7 +67,7 @@ class Aggregator:
         
         if straggler_handling_policy is None:
             straggler_handling_policy = CutoffTimeBasedStragglerHandling(
-                round_start_time=None, straggler_cutoff_time=30, minimum_reporting=1)
+                round_start_time=None, straggler_cutoff_time=np.inf, minimum_reporting=1)
         self.straggler_handling_policy = straggler_handling_policy
 
         self.rounds_to_train = rounds_to_train
@@ -906,7 +906,7 @@ class Aggregator:
                 if c not in collaborators_done:
                     stragglers.append(c)
             self.logger.warning('\tIdentified stragglers: {}'.format(stragglers))
-            
+
         # all are done or straggler policy calls for early round end.
         return straggler_check or len(all_collaborators) == len(collaborators_done)
 
