@@ -11,7 +11,7 @@ from copy import copy
 from logging import getLogger
 from pathlib import Path
 
-from flatten_json import flatten_preserve_lists
+import flatten_json
 
 import openfl.interface.aggregator as aggregator
 import openfl.interface.collaborator as collaborator
@@ -54,7 +54,7 @@ def setup_plan(log_level='CRITICAL'):
 
 def flatten(config, return_complete=False):
     """Flatten nested config."""
-    flattened_config = flatten_preserve_lists(config, '.')[0]
+    flattened_config = flatten_json.flatten(config, '.')
     if not return_complete:
         keys_to_remove = [
             k for k, v in flattened_config.items()
@@ -67,46 +67,57 @@ def flatten(config, return_complete=False):
     return flattened_config
 
 
-def update_plan(override_config):
+def update_plan(override_config, plan=None, resolve=True):
     """
     Update the plan with the provided override and save it to disk.
 
     For a list of available override options, call `fx.get_plan()`
 
     Args:
-        override_config : dict {"COMPONENT.settings.variable" : value}
+        override_config : dict {"COMPONENT.settings.variable" : value or list of values}
 
     Returns:
         None
     """
-    plan = setup_plan()
+    if plan is None:
+        plan = setup_plan()
     flat_plan_config = flatten(plan.config, return_complete=True)
-    for k, v in override_config.items():
-        if k in flat_plan_config:
-            logger.info(f'Updating {k} to {v}... ')
+
+    org_list_keys_with_count = {}
+    for k in flat_plan_config:
+        k_split = k.rsplit('.', 1)
+        if k_split[1].isnumeric():
+            if k_split[0] in org_list_keys_with_count:
+                org_list_keys_with_count[k_split[0]] += 1
+            else:
+                org_list_keys_with_count[k_split[0]] = 1
+
+    for key, val in override_config.items():
+        if key in org_list_keys_with_count:
+            # remove old list corresponding to this key entirely
+            for idx in range(org_list_keys_with_count[key]):
+                del flat_plan_config[f'{key}.{idx}']
+            logger.info(f'Updating {key} to {val}... ')
+        elif key in flat_plan_config:
+            logger.info(f'Updating {key} to {val}... ')
         else:
             # TODO: We probably need to validate the new key somehow
-            logger.warn(f'Did not find {k} in config. Make sure it should exist. Creating...')
-        flat_plan_config[k] = v
+            logger.warning(f'Did not find {key} in config. Make sure it should exist. Creating...')
+        if type(val) == list:
+            for idx, v in enumerate(val):
+                flat_plan_config[f'{key}.{idx}'] = v
+        else:
+            flat_plan_config[key] = val
+
     plan.config = unflatten(flat_plan_config, '.')
-    plan.resolve()
+    if resolve:
+        plan.resolve()
     return plan
 
 
 def unflatten(config, separator='.'):
     """Unfold `config` settings that have `separator` in their names."""
-    keys_to_separate = [k for k in config if separator in k]
-    if len(keys_to_separate) > 0:
-        for key in keys_to_separate:
-            prefix = separator.join(key.split(separator)[:-1])
-            suffix = key.split(separator)[-1]
-            if prefix in config:
-                temp = {**config[prefix], suffix: config[key]}
-                config[prefix] = temp
-            else:
-                config[prefix] = {suffix: config[key]}
-            del config[key]
-        unflatten(config, separator)
+    config = flatten_json.unflatten_list(config, separator)
     return config
 
 
