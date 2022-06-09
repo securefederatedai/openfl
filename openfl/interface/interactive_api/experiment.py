@@ -394,7 +394,7 @@ class FLExperiment:
         }
 
         if override_config:
-            plan = update_plan(override_config, plan = plan, resolve = False)
+            plan = update_plan(override_config, plan=plan, resolve=False)
 
         self.plan = deepcopy(plan)
 
