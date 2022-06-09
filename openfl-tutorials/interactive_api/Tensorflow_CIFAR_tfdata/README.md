@@ -32,7 +32,7 @@ $> ./start_envoy.sh env_one envoy_config_one.yaml
 
 3. [Optional] Start second envoy:
 
-- Copy `envoy_folder` to another place and run from there:
+- Copy `envoy_folder` to another place and run from there (alternatively, use the other config for second envoy):
 
 ```sh
 $> ./start_envoy.sh env_two envoy_config_two.yaml
