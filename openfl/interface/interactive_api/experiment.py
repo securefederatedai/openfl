@@ -21,6 +21,7 @@ from openfl.component.assigner.tasks import ValidateTask
 from openfl.federated import Plan
 from openfl.interface.cli import setup_logging
 from openfl.interface.cli_helper import WORKSPACE
+from openfl.native import update_plan
 from openfl.utilities import split_tensor_dict_for_holdouts
 from openfl.utilities.workspace import dump_requirements_file
 
@@ -165,6 +166,7 @@ class FLExperiment:
               rounds_to_train: int,
               task_assigner=None,
               delta_updates: bool = False,
+              override_config: dict = None,
               opt_treatment: str = 'RESET',
               device_assignment_policy: str = 'CPU_ONLY',
               pip_install_options: Tuple[str] = ()) -> None:
@@ -200,6 +202,7 @@ class FLExperiment:
                            rounds_to_train,
                            delta_updates=delta_updates, opt_treatment=opt_treatment,
                            device_assignment_policy=device_assignment_policy,
+                           override_config=override_config,
                            model_interface_file='model_obj.pkl',
                            tasks_interface_file='tasks_obj.pkl',
                            dataloader_interface_file='loader_obj.pkl')
@@ -324,6 +327,7 @@ class FLExperiment:
                       rounds_to_train,
                       delta_updates, opt_treatment,
                       device_assignment_policy,
+                      override_config=None,
                       model_interface_file='model_obj.pkl', tasks_interface_file='tasks_obj.pkl',
                       dataloader_interface_file='loader_obj.pkl',
                       aggregation_function_interface_file='aggregation_function_obj.pkl',
@@ -388,6 +392,9 @@ class FLExperiment:
                 'task_assigner_file': task_assigner_file
             }
         }
+
+        if override_config:
+            plan = update_plan(override_config, plan = plan, resolve = False)
 
         self.plan = deepcopy(plan)
 
