@@ -1,0 +1,13 @@
+params:
+  cuda_devices: []
+
+optional_plugin_components: {}
+
+shard_descriptor:
+  template: linreg_shard_descriptor.LinRegSD
+  params:
+    rank: 24 # Dataset seed
+    n_samples: 100 # No. of Samples
+    n_features: 1
+    noise: 14 # Spread of sampled `make_regression` data.
+  

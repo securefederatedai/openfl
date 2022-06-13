@@ -1,0 +1,2 @@
+openfl==1.3
+numpy
