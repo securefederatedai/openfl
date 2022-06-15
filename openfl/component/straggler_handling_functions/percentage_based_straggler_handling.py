@@ -13,6 +13,4 @@ class PercentageBasedStragglerHandling(StragglerHandlingFunction):
 
     def straggler_cutoff_check(self, num_collaborators_done, all_collaborators):
         cutoff = (num_collaborators_done >= self.percent_collaborators_needed*all_collaborators)
-        if cutoff:
-            self.logger.info('\tEnding round early due to percentage based straggler cutoff. Collaborators done: {}'.format(num_collaborators_done))
         return cutoff

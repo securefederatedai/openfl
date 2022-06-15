@@ -22,6 +22,4 @@ class CutoffTimeBasedStragglerHandling(StragglerHandlingFunction):
 
     def straggler_cutoff_check(self, num_collaborators_done, all_collaborators=None):
         cutoff = self.straggler_time_expired() and self.minimum_collaborators_reported(num_collaborators_done)
-        if cutoff:
-            self.logger.info('\tEnding task early due to time based straggler cutoff. Collaborators done: {}'.format(num_collaborators_done))
         return cutoff

@@ -491,9 +491,18 @@ class Aggregator:
         """
         if self._is_task_done(task_name):
             self.logger.warning(
-                f'Collaborator {collaborator_name} is reporting results after round has finished.'
+                f'STRAGGLER: Collaborator {collaborator_name} is reporting results after task {task_name} has finished.'
+            )
+            self._end_of_round_check()
+            return
+
+        if self.round_number != round_number:
+            self.logger.warning(
+                f'Collaborator {collaborator_name} is reporting results for the wrong round: {round_number}.'
+                f' Ignoring...'
             )
             return
+
         self.logger.info(
             f'Collaborator {collaborator_name} is sending task results '
             f'for {task_name}, round {round_number}'
@@ -518,12 +527,12 @@ class Aggregator:
         # task dictionary
         for named_tensor in named_tensors:
             # sanity check that this tensor has been updated
-            if named_tensor.round_number != round_number:
-                self.logger.warning(
-                    f'Collaborator {collaborator_name} is reporting results for the wrong round.'
-                    f' Ignoring...'
-                )
-                return
+            # if named_tensor.round_number != round_number:
+            #     self.logger.warning(
+            #         f'Collaborator {collaborator_name} is reporting results for the wrong round.'
+            #         f' Ignoring...'
+            #     )
+            #     return
 
             # quite a bit happens in here, including decompression, delta
             # handling, etc...
@@ -905,7 +914,8 @@ class Aggregator:
             for c in all_collaborators:
                 if c not in collaborators_done:
                     stragglers.append(c)
-            self.logger.warning('\tIdentified stragglers: {}'.format(stragglers))
+            self.logger.info('\tEnding task {} early due to straggler cutoff policy'.format(task_name))
+            self.logger.warning('\tIdentified stragglers: {} for task {}'.format(stragglers, task_name))
 
         # all are done or straggler policy calls for early round end.
         return straggler_check or len(all_collaborators) == len(collaborators_done)
