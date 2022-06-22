@@ -2,12 +2,10 @@
 
 ### 1. About dataset
 
-Generate a random regression problem using `make_regression` from sklearn.datasets.
-Define the below params in envoy.yaml config to control the dataset generation.
-- rank (seed)
-- n_samples (number of dataset instance)
-- n_features (number of features)
-- noise (Add noise to sampled dataset)
+Generate a random regression problem using `make_regression` from sklearn.datasets with pre-defined parameters.
+
+Define the below param in envoy.yaml config to shard the dataset across participants/envoy.
+- rank_worldsize
 
 
 ### 2. About model
@@ -26,24 +24,29 @@ cd director_folder
 
 2. Run envoy:
 
-```sh
+Step 1: Activate virtual environment and install packages
+```
 cd envoy_folder
+pip install -r requirements.txt
+```
+Step 2: start the envoy
+```sh
 ./start_envoy.sh env_instance_1 envoy_config_1.yaml
 ```
 
 Optional: start second envoy:
 
-- Copy `envoy_folder` to another place and run from there:
+- Copy `envoy_folder` to another place and follow the same process as above:
 
 ```sh
 ./start_envoy.sh env_instance_2 envoy_config_2.yaml
 ```
 
-3. Run `jax_linear_regression.ipybnb` jupyter notebook:
+3. Run `jax_linear_regression.ipynb` jupyter notebook:
 
 ```sh
 cd workspace
-jupyter lab Mnist_Classification_FL.ipybnb
+jupyter lab jax_linear_regression.ipynb
 ```
 
 4. Visualization
