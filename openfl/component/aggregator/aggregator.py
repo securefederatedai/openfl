@@ -2,7 +2,6 @@
 # SPDX-License-Identifier: Apache-2.0
 
 """Aggregator module.""" 
-import numpy as np
 import time
 import queue
 from logging import getLogger
@@ -65,11 +64,8 @@ class Aggregator:
             # Cleaner solution?
             self.single_col_cert_common_name = ''
         
-        if straggler_handling_policy is None:
-            straggler_handling_policy = CutoffTimeBasedStragglerHandling(
-                round_start_time=None, straggler_cutoff_time=np.inf, minimum_reporting=1)
         self.straggler_handling_policy = straggler_handling_policy
-
+        
         self.rounds_to_train = rounds_to_train
 
         # if the collaborator requests a delta, this value is set to true
@@ -318,7 +314,9 @@ class Aggregator:
             f'Sending tasks to collaborator {collaborator_name} for round {self.round_number}'
         )
         sleep_time = 0
-        self.straggler_handling_policy.round_start_time = time.time()
+
+        if hasattr(self.straggler_handling_policy, 'round_start_time'):
+            self.straggler_handling_policy.round_start_time = time.time()
 
         return tasks, self.round_number, sleep_time, time_to_quit
 
@@ -526,14 +524,6 @@ class Aggregator:
         # go through the tensors and add them to the tensor dictionary and the
         # task dictionary
         for named_tensor in named_tensors:
-            # sanity check that this tensor has been updated
-            # if named_tensor.round_number != round_number:
-            #     self.logger.warning(
-            #         f'Collaborator {collaborator_name} is reporting results for the wrong round.'
-            #         f' Ignoring...'
-            #     )
-            #     return
-
             # quite a bit happens in here, including decompression, delta
             # handling, etc...
             tensor_key, nparray = self._process_named_tensor(
