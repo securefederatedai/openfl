@@ -64,7 +64,7 @@ class Aggregator:
             # Cleaner solution?
             self.single_col_cert_common_name = ''
         
-        self.straggler_handling_policy = straggler_handling_policy
+        self.straggler_handling_policy = straggler_handling_policy or CutoffTimeBasedStragglerHandling()
         
         self.rounds_to_train = rounds_to_train
 
