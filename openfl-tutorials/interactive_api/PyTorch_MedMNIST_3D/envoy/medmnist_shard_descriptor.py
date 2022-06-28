@@ -5,7 +5,7 @@
 
 import logging
 import os
-from typing import List
+from typing import Any, Dict, List, Tuple
 from medmnist.info import INFO, HOMEPAGE
 
 import numpy as np
