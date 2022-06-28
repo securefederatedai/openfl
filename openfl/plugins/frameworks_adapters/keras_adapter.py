@@ -1,9 +1,11 @@
 # Copyright (C) 2020-2021 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 """Keras Framework Adapter plugin."""
+from logging import getLogger
+
 from .framework_adapter_interface import FrameworkAdapterPluginInterface
 
-
+logger = getLogger(__name__)
 class FrameworkAdapterPlugin(FrameworkAdapterPluginInterface):
     """Framework adapter plugin class."""
 
@@ -14,9 +16,43 @@ class FrameworkAdapterPlugin(FrameworkAdapterPluginInterface):
     @staticmethod
     def serialization_setup():
         """Prepare model for serialization (optional)."""
-        # Keras supports serialization natively.
+        # Source: https://github.com/tensorflow/tensorflow/issues/34697
+        import tensorflow as tf
+        from tensorflow.keras.models import Model
+        from tensorflow.python.keras.layers import deserialize
+        from tensorflow.python.keras.layers import serialize
+        from tensorflow.python.keras.saving import saving_utils
+
+        def unpack(model, training_config, weights):
+            restored_model = deserialize(model)
+            if training_config is not None:
+                restored_model.compile(
+                    **saving_utils.compile_args_from_training_config(
+                        training_config
+                    )
+                )
+            restored_model.set_weights(weights)
+            return restored_model
+
+        # Hotfix function, not required for TF versions above 2.7.1.
         # https://github.com/keras-team/keras/pull/14748.
-        pass
+        def make_keras_picklable():
+
+            def __reduce__(self):  # NOQA:N807
+                model_metadata = saving_utils.model_metadata(self)
+                training_config = model_metadata.get('training_config', None)
+                model = serialize(self)
+                weights = self.get_weights()
+                return (unpack, (model, training_config, weights))
+
+            cls = Model
+            cls.__reduce__ = __reduce__
+
+        # Run the function
+        if tf.__version__ <= '2.7.1':
+            logger.warn(f'Applying hotfix for model serialization.'
+            'Please consider updating to tensorflow>=2.8 to silence this warning.')
+            make_keras_picklable()
 
     @staticmethod
     def get_tensor_dict(model, optimizer=None, suffix=''):
