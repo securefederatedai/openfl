@@ -20,7 +20,7 @@ class MnistShardDataset(ShardDataset):
     """Mnist Shard dataset class."""
 
     def __init__(self, x, y, data_type, rank=1, worldsize=1):
-        """Initialize TinyImageNetDataset."""
+        """Pick rank-specific subset of (x, y)"""
         self.data_type = data_type
         self.rank = rank
         self.worldsize = worldsize
