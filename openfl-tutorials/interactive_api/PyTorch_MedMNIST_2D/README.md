@@ -45,7 +45,7 @@ cd director
 
 ```sh
 cd envoy
-./start_envoy.sh env_one envoy_config_one.yaml
+./start_envoy.sh env_one envoy_config.yaml
 ```
 
 Optional: start second envoy:
@@ -53,7 +53,7 @@ Optional: start second envoy:
 - Copy `envoy_folder` to another place and run from there:
 
 ```sh
-./start_envoy.sh env_two envoy_config_two.yaml
+./start_envoy.sh env_two envoy_config.yaml
 ```
 
 3. Run `Pytorch_MedMNIST_2D.ipynb` jupyter notebook:

@@ -9,7 +9,6 @@ from typing import Any, Dict, List, Tuple
 from medmnist.info import INFO, HOMEPAGE
 
 import numpy as np
-import requests
 
 from openfl.interface.interactive_api.shard_descriptor import ShardDataset
 from openfl.interface.interactive_api.shard_descriptor import ShardDescriptor
@@ -50,7 +49,7 @@ class MedMNISTShardDescriptor(ShardDescriptor):
         """Initialize MedMNISTShardDescriptor."""
         self.rank, self.worldsize = tuple(int(num) for num in rank_worldsize.split(','))
         
-        self.datapath = datapath;
+        self.datapath = datapath
         self.dataset_name = dataname;
         self.info = INFO[self.dataset_name]
         
@@ -95,7 +94,7 @@ class MedMNISTShardDescriptor(ShardDescriptor):
                       dataname: str = 'bloodmnist', 
                       info: dict = {}) -> None:
 
-        print(f"{datapath}\n{dataname}\n{info}")
+        logger.info(f"{datapath}\n{dataname}\n{info}")
         try:
             from torchvision.datasets.utils import download_url
             download_url(url=info["url"],
