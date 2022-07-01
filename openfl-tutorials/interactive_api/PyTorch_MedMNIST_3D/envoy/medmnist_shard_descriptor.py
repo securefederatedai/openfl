@@ -116,9 +116,9 @@ class MedMNISTShardDescriptor(ShardDescriptor):
         dataset = os.path.join(self.datapath, dataname)
         
         if not os.path.isfile(dataset):
-            print(f"Dataset {dataname} not found at:{self.datapath}.\n\tDownloading...")
+            logger.info(f"Dataset {dataname} not found at:{self.datapath}.\n\tDownloading...")
             MedMNISTShardDescriptor.download_data(self.datapath, dataname, self.info)
-            print(f"DONE!")
+            logger.info(f"DONE!")
 
         data = np.load(dataset)
         
@@ -127,7 +127,7 @@ class MedMNISTShardDescriptor(ShardDescriptor):
         
         y_train=data["train_labels"]
         y_test=data["test_labels"]
-        print('MedMNIST data was loaded!')
+        logger.info('MedMNIST data was loaded!')
         return (x_train, y_train), (x_test, y_test)
         
         
