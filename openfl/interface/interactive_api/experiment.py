@@ -77,23 +77,6 @@ class FLExperiment:
         # Change plan name to default one
         plan.name = 'plan.yaml'
 
-        # Seems like we still need to fill authorized_cols list
-        # So aggregator know when to start sending tasks
-        # We also could change the aggregator logic so it will send tasks to aggregator
-        # as soon as it connects. This change should be a part of a bigger PR
-        # brining in fault tolerance changes
-
-        shard_registry = self.federation.get_shard_registry()
-        plan.authorized_cols = [
-            name for name, info in shard_registry.items() if info['is_online']
-        ]
-        # Network part of the plan
-        # We keep in mind that an aggregator FQND will be the same as the directors FQDN
-        # We just choose a port randomly from plan hash
-        director_fqdn = self.federation.director_node_fqdn.split(':')[0]  # We drop the port
-        plan.config['network']['settings']['agg_addr'] = director_fqdn
-        plan.config['network']['settings']['tls'] = self.federation.tls
-
         self.plan = deepcopy(plan)
     
     def _assert_experiment_accepted(self):
@@ -366,6 +349,23 @@ class FLExperiment:
                       aggregation_function_interface_file='aggregation_function_obj.pkl',
                       task_assigner_file='task_assigner_obj.pkl'):
         """Fill plan.yaml file using user provided setting."""
+
+        # Seems like we still need to fill authorized_cols list
+        # So aggregator know when to start sending tasks
+        # We also could change the aggregator logic so it will send tasks to aggregator
+        # as soon as it connects. This change should be a part of a bigger PR
+        # brining in fault tolerance changes
+
+        shard_registry = self.federation.get_shard_registry()
+        self.plan.authorized_cols = [
+            name for name, info in shard_registry.items() if info['is_online']
+        ]
+        # Network part of the plan
+        # We keep in mind that an aggregator FQND will be the same as the directors FQDN
+        # We just choose a port randomly from plan hash
+        director_fqdn = self.federation.director_node_fqdn.split(':')[0]  # We drop the port
+        self.plan.config['network']['settings']['agg_addr'] = director_fqdn
+        self.plan.config['network']['settings']['tls'] = self.federation.tls
 
         # Aggregator part of the plan
         self.plan.config['aggregator']['settings']['rounds_to_train'] = rounds_to_train
