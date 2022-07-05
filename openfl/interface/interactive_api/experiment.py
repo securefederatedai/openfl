@@ -21,6 +21,7 @@ from openfl.component.assigner.tasks import ValidateTask
 from openfl.federated import Plan
 from openfl.interface.cli import setup_logging
 from openfl.interface.cli_helper import WORKSPACE
+from openfl.native import update_plan
 from openfl.utilities import split_tensor_dict_for_holdouts
 from openfl.utilities.workspace import dump_requirements_file
 
@@ -62,6 +63,39 @@ class FLExperiment:
         self.logger = getLogger(__name__)
         setup_logging()
 
+        self._initialize_plan()
+
+
+    def _initialize_plan(self):
+        """Setup plan from base plan interactive api."""
+        # Create a folder to store plans
+        os.makedirs('./plan', exist_ok=True)
+        os.makedirs('./save', exist_ok=True)
+        # Load the default plan
+        base_plan_path = WORKSPACE / 'workspace/plan/plans/default/base_plan_interactive_api.yaml'
+        plan = Plan.parse(base_plan_path, resolve=False)
+        # Change plan name to default one
+        plan.name = 'plan.yaml'
+
+        # Seems like we still need to fill authorized_cols list
+        # So aggregator know when to start sending tasks
+        # We also could change the aggregator logic so it will send tasks to aggregator
+        # as soon as it connects. This change should be a part of a bigger PR
+        # brining in fault tolerance changes
+
+        shard_registry = self.federation.get_shard_registry()
+        plan.authorized_cols = [
+            name for name, info in shard_registry.items() if info['is_online']
+        ]
+        # Network part of the plan
+        # We keep in mind that an aggregator FQND will be the same as the directors FQDN
+        # We just choose a port randomly from plan hash
+        director_fqdn = self.federation.director_node_fqdn.split(':')[0]  # We drop the port
+        plan.config['network']['settings']['agg_addr'] = director_fqdn
+        plan.config['network']['settings']['tls'] = self.federation.tls
+
+        self.plan = deepcopy(plan)
+    
     def _assert_experiment_accepted(self):
         """Assure experiment is sent to director."""
         if not self.experiment_accepted:
@@ -164,6 +198,7 @@ class FLExperiment:
     def start(self, *, model_provider, task_keeper, data_loader,
               rounds_to_train: int,
               task_assigner=None,
+              override_config: dict = None,
               delta_updates: bool = False,
               opt_treatment: str = 'RESET',
               device_assignment_policy: str = 'CPU_ONLY',
@@ -200,6 +235,7 @@ class FLExperiment:
                            rounds_to_train,
                            delta_updates=delta_updates, opt_treatment=opt_treatment,
                            device_assignment_policy=device_assignment_policy,
+                           override_config=override_config,
                            model_interface_file='model_obj.pkl',
                            tasks_interface_file='tasks_obj.pkl',
                            dataloader_interface_file='loader_obj.pkl')
@@ -324,59 +360,35 @@ class FLExperiment:
                       rounds_to_train,
                       delta_updates, opt_treatment,
                       device_assignment_policy,
+                      override_config=None,
                       model_interface_file='model_obj.pkl', tasks_interface_file='tasks_obj.pkl',
                       dataloader_interface_file='loader_obj.pkl',
                       aggregation_function_interface_file='aggregation_function_obj.pkl',
                       task_assigner_file='task_assigner_obj.pkl'):
-        """Fill plan.yaml file using provided setting."""
-        # Create a folder to store plans
-        os.makedirs('./plan', exist_ok=True)
-        os.makedirs('./save', exist_ok=True)
-        # Load the default plan
-        base_plan_path = WORKSPACE / 'workspace/plan/plans/default/base_plan_interactive_api.yaml'
-        plan = Plan.parse(base_plan_path, resolve=False)
-        # Change plan name to default one
-        plan.name = 'plan.yaml'
-
-        # Seems like we still need to fill authorized_cols list
-        # So aggregator know when to start sending tasks
-        # We also could change the aggregator logic so it will send tasks to aggregator
-        # as soon as it connects. This change should be a part of a bigger PR
-        # brining in fault tolerance changes
-
-        shard_registry = self.federation.get_shard_registry()
-        plan.authorized_cols = [
-            name for name, info in shard_registry.items() if info['is_online']
-        ]
-        # Network part of the plan
-        # We keep in mind that an aggregator FQND will be the same as the directors FQDN
-        # We just choose a port randomly from plan hash
-        director_fqdn = self.federation.director_node_fqdn.split(':')[0]  # We drop the port
-        plan.config['network']['settings']['agg_addr'] = director_fqdn
-        plan.config['network']['settings']['tls'] = self.federation.tls
+        """Fill plan.yaml file using user provided setting."""
 
         # Aggregator part of the plan
-        plan.config['aggregator']['settings']['rounds_to_train'] = rounds_to_train
+        self.plan.config['aggregator']['settings']['rounds_to_train'] = rounds_to_train
 
         # Collaborator part
-        plan.config['collaborator']['settings']['delta_updates'] = delta_updates
-        plan.config['collaborator']['settings']['opt_treatment'] = opt_treatment
-        plan.config['collaborator']['settings'][
+        self.plan.config['collaborator']['settings']['delta_updates'] = delta_updates
+        self.plan.config['collaborator']['settings']['opt_treatment'] = opt_treatment
+        self.plan.config['collaborator']['settings'][
             'device_assignment_policy'] = device_assignment_policy
 
         # DataLoader part
         for setting, value in data_loader.kwargs.items():
-            plan.config['data_loader']['settings'][setting] = value
+            self.plan.config['data_loader']['settings'][setting] = value
 
         # TaskRunner framework plugin
         # ['required_plugin_components'] should be already in the default plan with all the fields
         # filled with the default values
-        plan.config['task_runner']['required_plugin_components'] = {
+        self.plan.config['task_runner']['required_plugin_components'] = {
             'framework_adapters': model_provider.framework_plugin
         }
 
         # API layer
-        plan.config['api_layer'] = {
+        self.plan.config['api_layer'] = {
             'required_plugin_components': {
                 'serializer_plugin': self.serializer_plugin
             },
@@ -389,7 +401,8 @@ class FLExperiment:
             }
         }
 
-        self.plan = deepcopy(plan)
+        if override_config:
+            self.plan = update_plan(override_config, plan=self.plan, resolve=False)
 
     def _serialize_interface_objects(
             self,
