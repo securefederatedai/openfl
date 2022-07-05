@@ -65,6 +65,7 @@ class Aggregator:
             self.single_col_cert_common_name = ''
         
         self.straggler_handling_policy = straggler_handling_policy or CutoffTimeBasedStragglerHandling()
+        self._end_of_round_check_done = [False] * rounds_to_train
         
         self.rounds_to_train = rounds_to_train
 
@@ -487,11 +488,10 @@ class Aggregator:
         Returns:
              None
         """
-        if self._is_task_done(task_name):
+        if self._time_to_quit() or self._is_task_done(task_name):
             self.logger.warning(
                 f'STRAGGLER: Collaborator {collaborator_name} is reporting results after task {task_name} has finished.'
             )
-            self._end_of_round_check()
             return
 
         if self.round_number != round_number:
@@ -860,7 +860,7 @@ class Aggregator:
         Returns:
             None
         """
-        if not self._is_round_done():
+        if not self._is_round_done() or self._end_of_round_check_done[self.round_number]:
             return
 
         # Compute all validation related metrics
@@ -869,6 +869,7 @@ class Aggregator:
             self._compute_validation_related_task_metrics(task_name)
 
         # Once all of the task results have been processed
+        self._end_of_round_check_done[self.round_number] = True
         self.round_number += 1
 
         # Save the latest model
