@@ -41,6 +41,7 @@ class FLExperiment:
             self,
             federation,
             experiment_name: str = None,
+            review_experiment: bool = False,
             serializer_plugin: str = 'openfl.plugins.interface_serializer.'
                                      'cloudpickle_serializer.CloudpickleSerializer'
     ) -> None:
@@ -54,7 +55,7 @@ class FLExperiment:
         self.experiment_name = experiment_name or 'test-' + time.strftime('%Y%m%d-%H%M%S')
         self.summary_writer = None
         self.serializer_plugin = serializer_plugin
-
+        self.review_experiment = review_experiment
         self.experiment_accepted = False
 
         self.is_validate_task_exist = False
@@ -160,6 +161,21 @@ class FLExperiment:
 
         # Compress te workspace to restore it on collaborator
         self.arch_path = self._pack_the_workspace()
+    
+    def prepare_workspace_review(self, pip_install_options: Tuple[str] = ()):
+        """Prepare an archive from a user workspace."""
+        # # Save serialized python objects to disc
+        # self._serialize_interface_objects(model_provider, task_keeper, data_loader, task_assigner)
+        # Save the prepared plan
+        Plan.dump(Path(f'./plan/{self.plan.name}'), self.plan.config, freeze=False)
+
+        # PACK the WORKSPACE!
+        # Prepare requirements file to restore python env
+        dump_requirements_file(keep_original_prefixes=True,
+                               prefixes=pip_install_options)
+
+        # Compress te workspace to restore it on collaborator
+        self.arch_path = self._pack_the_workspace()
 
     def start(self, *, model_provider, task_keeper, data_loader,
               rounds_to_train: int,
@@ -196,20 +212,30 @@ class FLExperiment:
         if not task_assigner:
             task_assigner = self.define_task_assigner(task_keeper, rounds_to_train)
 
-        self._prepare_plan(model_provider, data_loader,
-                           rounds_to_train,
-                           delta_updates=delta_updates, opt_treatment=opt_treatment,
-                           device_assignment_policy=device_assignment_policy,
-                           model_interface_file='model_obj.pkl',
-                           tasks_interface_file='tasks_obj.pkl',
-                           dataloader_interface_file='loader_obj.pkl')
+        if self.review_experiment:
+            from pack_workspace import MI, TI, fed_dataset
+            #prepare workload for review
+            self._prepare_plan_with_workload(model_provider=MI, data_loader=fed_dataset, rounds_to_train=rounds_to_train, workload='pack_workspace.py',
+                                        delta_updates=delta_updates, opt_treatment=opt_treatment,
+                                        device_assignment_policy=device_assignment_policy)
+            self.prepare_workspace_review()
 
-        self.prepare_workspace_distribution(
-            model_provider, task_keeper, data_loader,
-            task_assigner,
-            pip_install_options
-        )
+        else:
+            self._prepare_plan(model_provider, data_loader,
+                            rounds_to_train,
+                            delta_updates=delta_updates, opt_treatment=opt_treatment,
+                            device_assignment_policy=device_assignment_policy,
+                            model_interface_file='model_obj.pkl',
+                            tasks_interface_file='tasks_obj.pkl',
+                            dataloader_interface_file='loader_obj.pkl')
 
+            self.prepare_workspace_distribution(
+                model_provider, task_keeper, data_loader,
+                task_assigner,
+                pip_install_options
+            )
+
+        # experiment should start after review has happened
         self.logger.info('Starting experiment!')
         self.plan.resolve()
         initial_tensor_dict = self._get_initial_tensor_dict(model_provider)
@@ -389,6 +415,84 @@ class FLExperiment:
             }
         }
 
+        self.plan = deepcopy(plan)
+
+    def _prepare_plan_with_workload(self,
+                      model_provider,
+                      data_loader,
+                      rounds_to_train,
+                      workload,
+                      delta_updates, opt_treatment,
+                      device_assignment_policy):
+        """Fill plan.yaml file using provided setting."""
+        # Create a folder to store plans
+        os.makedirs('./plan', exist_ok=True)
+        os.makedirs('./save', exist_ok=True)
+        # Load the default plan
+        base_plan_path = WORKSPACE / 'workspace/plan/plans/default/base_plan_interactive_api.yaml'
+        plan = Plan.parse(base_plan_path, resolve=False)
+        # Change plan name to default one
+        plan.name = 'plan.yaml'
+
+        # Seems like we still need to fill authorized_cols list
+        # So aggregator know when to start sending tasks
+        # We also could change the aggregator logic so it will send tasks to aggregator
+        # as soon as it connects. This change should be a part of a bigger PR
+        # brining in fault tolerance changes
+
+        shard_registry = self.federation.get_shard_registry()
+        plan.authorized_cols = [
+            name for name, info in shard_registry.items() if info['is_online']
+        ]
+        # Network part of the plan
+        # We keep in mind that an aggregator FQND will be the same as the directors FQDN
+        # We just choose a port randomly from plan hash
+        director_fqdn = self.federation.director_node_fqdn.split(':')[0]  # We drop the port
+        plan.config['network']['settings']['agg_addr'] = director_fqdn
+        plan.config['network']['settings']['tls'] = self.federation.tls
+
+        # Aggregator part of the plan
+        plan.config['aggregator']['settings']['rounds_to_train'] = rounds_to_train
+
+        # Collaborator part
+        plan.config['collaborator']['settings']['delta_updates'] = delta_updates
+        plan.config['collaborator']['settings']['opt_treatment'] = opt_treatment
+        plan.config['collaborator']['settings'][
+            'device_assignment_policy'] = device_assignment_policy
+        plan.config['collaborator']['settings']['review'] = True
+
+        # Secure API layer
+        plan.config['api_layer'] = {
+            'settings': {
+                'workload_file': workload
+            }
+        }
+
+        # DataLoader part
+        for setting, value in data_loader.kwargs.items():
+            plan.config['data_loader']['settings'][setting] = value
+
+        # # TaskRunner framework plugin
+        # # ['required_plugin_components'] should be already in the default plan with all the fields
+        # # filled with the default values
+        plan.config['task_runner']['required_plugin_components'] = {
+            'framework_adapters': model_provider.framework_plugin
+        }
+
+        # # API layer
+        # plan.config['api_layer'] = {
+        #     'required_plugin_components': {
+        #         'serializer_plugin': self.serializer_plugin
+        #     },
+        #     'settings': {
+        #         'model_interface_file': model_interface_file,
+        #         'tasks_interface_file': tasks_interface_file,
+        #         'dataloader_interface_file': dataloader_interface_file,
+        #         'aggregation_function_interface_file': aggregation_function_interface_file,
+        #         'task_assigner_file': task_assigner_file
+        #     }
+        # }
+        
         self.plan = deepcopy(plan)
 
     def _serialize_interface_objects(

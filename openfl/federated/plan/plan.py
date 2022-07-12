@@ -445,12 +445,20 @@ class Plan:
             # a part of the old interface and we follow legacy initialization procedure.
             if 'openfl.federated.task.task_runner' in self.config['task_runner']['template']:
                 # Interactive API
-                model_provider, task_keeper, data_loader = self.deserialize_interface_objects()
-                data_loader = self.initialize_data_loader(data_loader, shard_descriptor)
-                defaults[SETTINGS]['task_runner'] = self.get_core_task_runner(
-                    data_loader=data_loader,
-                    model_provider=model_provider,
-                    task_keeper=task_keeper)
+                if defaults[SETTINGS]['review']:
+                    from pack_workspace import MI, TI, fed_dataset
+                    model_provider, task_keeper, data_loader = MI, TI, fed_dataset
+                    defaults[SETTINGS]['task_runner'] = self.get_core_task_runner(
+                        data_loader=data_loader,
+                        model_provider=model_provider,
+                        task_keeper=task_keeper)
+                else:
+                    model_provider, task_keeper, data_loader = self.deserialize_interface_objects()
+                    data_loader = self.initialize_data_loader(data_loader, shard_descriptor)
+                    defaults[SETTINGS]['task_runner'] = self.get_core_task_runner(
+                        data_loader=data_loader,
+                        model_provider=model_provider,
+                        task_keeper=task_keeper)
             else:
                 # TaskRunner subclassing API
                 data_loader = self.get_data_loader(collaborator_name)
