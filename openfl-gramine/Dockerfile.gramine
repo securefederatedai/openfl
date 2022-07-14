@@ -3,13 +3,9 @@ FROM ${BASE_IMAGE}
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
-# until these changes are not in pip, install from repo
-RUN git clone https://github.com/intel/openfl.git
-WORKDIR /openfl
 RUN --mount=type=cache,target=/root/.cache/ \
     pip install --upgrade pip && \
-    pip install .
-WORKDIR /
+    pip install openfl
 
 # install gramine
 RUN curl -fsSLo /usr/share/keyrings/gramine-keyring.gpg https://packages.gramineproject.io/gramine-keyring.gpg && \
