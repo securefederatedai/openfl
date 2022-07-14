@@ -8,11 +8,17 @@ from .assigner import Assigner
 from .assigner import RandomGroupedAssigner
 from .assigner import StaticGroupedAssigner
 from .collaborator import Collaborator
+from .straggler_handling_functions import StragglerHandlingFunction
+from .straggler_handling_functions import CutoffTimeBasedStragglerHandling
+from .straggler_handling_functions import PercentageBasedStragglerHandling
 
 __all__ = [
     'Assigner',
     'RandomGroupedAssigner',
     'StaticGroupedAssigner',
     'Aggregator',
-    'Collaborator'
+    'Collaborator',
+    'StragglerHandlingFunction',
+    'CutoffTimeBasedStragglerHandling',
+    'PercentageBasedStragglerHandling'
 ]

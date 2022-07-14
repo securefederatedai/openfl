@@ -7,6 +7,7 @@ import queue
 from logging import getLogger
 
 from openfl.component.aggregation_functions import WeightedAverage
+from openfl.component.straggler_handling_functions import CutoffTimeBasedStragglerHandling
 from openfl.databases import TensorDB
 from openfl.pipelines import NoCompressionPipeline
 from openfl.pipelines import TensorCodec
@@ -45,7 +46,7 @@ class Aggregator:
                  last_state_path,
 
                  assigner,
-
+                 straggler_handling_policy=None,
                  rounds_to_train=256,
                  single_col_cert_common_name=None,
                  compression_pipeline=None,
@@ -62,7 +63,10 @@ class Aggregator:
             # FIXME: '' instead of None is just for protobuf compatibility.
             # Cleaner solution?
             self.single_col_cert_common_name = ''
-
+        
+        self.straggler_handling_policy = straggler_handling_policy or CutoffTimeBasedStragglerHandling()
+        self._end_of_round_check_done = [False] * rounds_to_train
+        
         self.rounds_to_train = rounds_to_train
 
         # if the collaborator requests a delta, this value is set to true
@@ -276,7 +280,6 @@ class Aggregator:
             return tasks, self.round_number, sleep_time, time_to_quit
 
         time_to_quit = False
-
         # otherwise, get the tasks from our task assigner
         tasks = self.assigner.get_tasks_for_collaborator(collaborator_name, self.round_number)
 
@@ -312,6 +315,9 @@ class Aggregator:
             f'Sending tasks to collaborator {collaborator_name} for round {self.round_number}'
         )
         sleep_time = 0
+
+        if hasattr(self.straggler_handling_policy, 'round_start_time'):
+            self.straggler_handling_policy.round_start_time = time.time()
 
         return tasks, self.round_number, sleep_time, time_to_quit
 
@@ -482,6 +488,19 @@ class Aggregator:
         Returns:
              None
         """
+        if self._time_to_quit() or self._is_task_done(task_name):
+            self.logger.warning(
+                f'STRAGGLER: Collaborator {collaborator_name} is reporting results after task {task_name} has finished.'
+            )
+            return
+
+        if self.round_number != round_number:
+            self.logger.warning(
+                f'Collaborator {collaborator_name} is reporting results for the wrong round: {round_number}.'
+                f' Ignoring...'
+            )
+            return
+
         self.logger.info(
             f'Collaborator {collaborator_name} is sending task results '
             f'for {task_name}, round {round_number}'
@@ -505,13 +524,6 @@ class Aggregator:
         # go through the tensors and add them to the tensor dictionary and the
         # task dictionary
         for named_tensor in named_tensors:
-            # sanity check that this tensor has been updated
-            if named_tensor.round_number != round_number:
-                raise ValueError(
-                    f'Collaborator {collaborator_name} is reporting results for the wrong round.'
-                    f' Exiting...'
-                )
-
             # quite a bit happens in here, including decompression, delta
             # handling, etc...
             tensor_key, nparray = self._process_named_tensor(
@@ -758,9 +770,15 @@ class Aggregator:
         # task sent
         # This handles getting the subset of collaborators that may be
         # part of the validation task
-        collaborators_for_task = self.assigner.get_collaborators_for_task(
+        all_collaborators_for_task = self.assigner.get_collaborators_for_task(
             task_name, self.round_number
         )
+        # leave out stragglers for the round
+        collaborators_for_task = []
+        for c in all_collaborators_for_task:
+            if self._collaborator_task_completed(c, task_name, self.round_number):
+                collaborators_for_task.append(c)
+
         # The collaborator data sizes for that task
         collaborator_weights_unnormalized = {
             c: self.collaborator_task_weight[TaskResultKey(task_name, c, self.round_number)]
@@ -842,7 +860,7 @@ class Aggregator:
         Returns:
             None
         """
-        if not self._is_round_done():
+        if not self._is_round_done() or self._end_of_round_check_done[self.round_number]:
             return
 
         # Compute all validation related metrics
@@ -851,6 +869,7 @@ class Aggregator:
             self._compute_validation_related_task_metrics(task_name)
 
         # Once all of the task results have been processed
+        self._end_of_round_check_done[self.round_number] = True
         self.round_number += 1
 
         # Save the latest model
@@ -868,21 +887,37 @@ class Aggregator:
 
     def _is_task_done(self, task_name):
         """Check that task is done."""
-        collaborators_needed = self.assigner.get_collaborators_for_task(
+        all_collaborators = self.assigner.get_collaborators_for_task(
             task_name, self.round_number
         )
+        
+        collaborators_done = []
+        for c in all_collaborators:
+            if self._collaborator_task_completed(
+                c, task_name, self.round_number):
+                collaborators_done.append(c)
+        
+        straggler_check = self.straggler_handling_policy.straggler_cutoff_check(
+            len(collaborators_done), all_collaborators)
+        
+        stragglers = []
+        if straggler_check:
+            for c in all_collaborators:
+                if c not in collaborators_done:
+                    stragglers.append(c)
+            self.logger.info('\tEnding task {} early due to straggler cutoff policy'.format(task_name))
+            self.logger.warning('\tIdentified stragglers: {} for task {}'.format(stragglers, task_name))
 
-        return all([
-            self._collaborator_task_completed(
-                c, task_name, self.round_number
-            ) for c in collaborators_needed
-        ])
+        # all are done or straggler policy calls for early round end.
+        return straggler_check or len(all_collaborators) == len(collaborators_done)
 
     def _is_round_done(self):
         """Check that round is done."""
         tasks_for_round = self.assigner.get_all_tasks_for_round(self.round_number)
 
-        return all([self._is_task_done(task_name) for task_name in tasks_for_round])
+        return all([
+            self._is_task_done(
+                task_name) for task_name in tasks_for_round])
 
     def _log_big_warning(self):
         """Warn user about single collaborator cert mode."""

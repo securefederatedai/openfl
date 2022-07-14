@@ -55,6 +55,9 @@ jobs:
     - name: Test TaskRunner API
       run: |
         bash tests/github/test_hello_federation.sh keras_cnn_mnist aggregator col1 col2 $(hostname --all-fqdns | awk '{print $1}') --rounds-to-train 3
+    - name: Test Straggler Handling Interface
+      run: |
+        bash tests/github/test_hello_federation.sh torch_cnn_mnist_straggler_check aggregator col1 col2 $(hostname --all-fqdns | awk '{print $1}') --rounds-to-train 3
     - name: Setup FeTS Challenge Prerequisites
       uses: actions/checkout@master
       with:
