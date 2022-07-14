@@ -300,12 +300,12 @@ def run_experiment(collaborator_dict: dict, override_config: dict = None):
     return model
 
 
-def get_plan(plan_config_path=None, indent=4, sort_keys=True):
+def get_plan(fl_plan=None, indent=4, sort_keys=True):
     """Get string representation of current Plan."""
     import json
-    if plan_config_path is None:
+    if fl_plan is None:
         plan = setup_plan()
     else:
-        plan = Plan.parse(plan_config_path=Path(plan_config_path), resolve=False)
+        plan = fl_plan
     flat_plan_config = flatten(plan.config)
     return json.dumps(flat_plan_config, indent=indent, sort_keys=sort_keys)
