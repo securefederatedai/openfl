@@ -55,6 +55,8 @@ Here is an example of the default plan settings that get displayed:
     "collaborator.settings.delta_updates": false,
     "collaborator.settings.opt_treatment": "RESET",
     "collaborator.template": "openfl.component.Collaborator",
+    "compression_pipeline.settings": {},
+    "compression_pipeline.template": "openfl.pipelines.NoCompressionPipeline",
     "data_loader.settings": {},
     "data_loader.template": "openfl.federated.DataLoader",
     "network.settings.agg_addr": "auto",
@@ -83,15 +85,15 @@ Use **override_config** with FL_experiment.start to make any changes to the defa
                    override_config={'aggregator.settings.db_store_rounds': 1, 'compression_pipeline.template': 'openfl.pipelines.KCPipeline', 'compression_pipeline.settings.n_clusters': 2})
 
 
-Since 'aggregator.settings.db_store_rounds' is a field already present in the plan, its value gets replaced with the new value specified. Fields  'compression_pipeline.template' and 'compression_pipeline.settings.n_clusters' are new enteries that get added to the plan:
+Since 'aggregator.settings.db_store_rounds' and 'compression_pipeline.template' fields are already present in the plan, the values of these fields get replaced. Field  'compression_pipeline.settings.n_clusters' is a new entry that gets added to the plan:
 
 .. code-block:: python
 
     INFO     Updating aggregator.settings.db_store_rounds to 1...                                                                           native.py:102
 
-    WARNING  Did not find compression_pipeline.template in config. Make sure it should exist. Creating...                                   native.py:105
+    INFO     Updating compression_pipeline.template to openfl.pipelines.KCPipeline...                                                       native.py:102
 
-    WARNING  Did not find compression_pipeline.settings.n_clusters in config. Make sure it should exist. Creating...                        native.py:105
+    INFO     Did not find compression_pipeline.settings.n_clusters in config. Make sure it should exist. Creating...                        native.py:105
 
 
 A full implementation can be found at `Federated_Pytorch_MNIST_Tutorial.ipynb <https://github.com/intel/openfl/blob/develop/openfl-tutorials/Federated_Pytorch_MNIST_Tutorial.ipynb>`_ and at `Tensorflow_MNIST.ipynb <https://github.com/intel/openfl/blob/develop/openfl-tutorials/interactive_api/Tensorflow_MNIST/workspace/Tensorflow_MNIST.ipynb>`_.
