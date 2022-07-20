@@ -15,6 +15,8 @@ from yaml import SafeDumper
 from openfl.component.aggregation_functions import AggregationFunction
 from openfl.component.aggregation_functions import WeightedAverage
 from openfl.component.assigner.custom_assigner import Assigner
+from openfl.component.straggler_handling_functions import CutoffTimeBasedStragglerHandling
+from openfl.component.straggler_handling_functions import StragglerHandlingFunction
 from openfl.interface.cli_helper import WORKSPACE
 from openfl.transport import AggregatorGRPCClient
 from openfl.transport import AggregatorGRPCServer
@@ -222,6 +224,8 @@ class Plan:
 
         self.pipe_ = None  # compression pipeline object
 
+        self.straggler_policy_ = None  # straggler handling policy
+
         self.hash_ = None
         self.name_ = None
         self.serializer_ = None
@@ -320,6 +324,7 @@ class Plan:
         defaults[SETTINGS]['authorized_cols'] = self.authorized_cols
         defaults[SETTINGS]['assigner'] = self.get_assigner()
         defaults[SETTINGS]['compression_pipeline'] = self.get_tensor_pipe()
+        defaults[SETTINGS]['straggler_handling_policy'] = self.get_straggler_handling_policy()
         log_metric_callback = defaults[SETTINGS].get('log_metric_callback')
 
         if log_metric_callback:
@@ -349,6 +354,21 @@ class Plan:
             self.pipe_ = Plan.build(**defaults)
 
         return self.pipe_
+
+    def get_straggler_handling_policy(self):
+        """Get straggler handling policy."""
+        defaults = self.config.get(
+            'straggler_handling_policy',
+            {
+                TEMPLATE: 'openfl.component.straggler_handling_functions.CutoffTimeBasedStragglerHandling',
+                SETTINGS: {}
+            }
+        )
+        
+        if self.straggler_policy_ is None:
+            self.straggler_policy_ = Plan.build(**defaults)
+
+        return self.straggler_policy_
 
     # legacy api (TaskRunner subclassing)
     def get_data_loader(self, collaborator_name):
