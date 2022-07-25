@@ -26,6 +26,10 @@ Advanced Topics
     
     - :doc:`overriding_agg_fn`
 
+    Customize straggler handling function:
+
+    - :doc:`straggler_handling_algorithms`
+
 **Director-Based Workflow**
 
     Customize the logging function for each task:
