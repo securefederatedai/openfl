@@ -34,7 +34,6 @@ The following is a list of commonly reported issues in Open Federated Learning (
       * :code:`fx envoy` command terminates abruptly during the execution of training or validation loop due to the SIGKILL command issued by the kernel. 
       * OOM error is captured in the kernel trace but not at the user program level.
       * The failure is likely due to non-optimal memory resource utilization in the prior PyTorch version 1.3.1 & 1.4.0.
-      * Interactive API example fails with the PyTorch v1.3.1/v1.4.0 and CG memory restricted to 4GB but succeeds with PyTorch v1.11.0 and CG memory restricted to 768MB. 
 
    Solution:
       * Recent version of PyTorch better handles the memory utilization during runtime. Upgrade the PyTorch version to >= 1.11.0
