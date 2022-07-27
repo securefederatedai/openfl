@@ -36,8 +36,9 @@ Advanced Topics
 
     - :doc:`log_metric_callback`
 
+    Update plan settings:
 
-
+    - :doc:`overriding_plan_settings`
 
 
 .. toctree::
@@ -50,5 +51,6 @@ Advanced Topics
    overriding_agg_fn
    log_metric_callback
    supported_aggregation_algorithms
+   overriding_plan_settings
    
    

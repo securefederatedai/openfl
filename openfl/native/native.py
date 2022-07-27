@@ -102,7 +102,7 @@ def update_plan(override_config, plan=None, resolve=True):
             logger.info(f'Updating {key} to {val}... ')
         else:
             # TODO: We probably need to validate the new key somehow
-            logger.warning(f'Did not find {key} in config. Make sure it should exist. Creating...')
+            logger.info(f'Did not find {key} in config. Make sure it should exist. Creating...')
         if type(val) == list:
             for idx, v in enumerate(val):
                 flat_plan_config[f'{key}.{idx}'] = v
@@ -300,9 +300,12 @@ def run_experiment(collaborator_dict: dict, override_config: dict = None):
     return model
 
 
-def get_plan(indent=4, sort_keys=True):
+def get_plan(fl_plan=None, indent=4, sort_keys=True):
     """Get string representation of current Plan."""
     import json
-    plan = setup_plan()
+    if fl_plan is None:
+        plan = setup_plan()
+    else:
+        plan = fl_plan
     flat_plan_config = flatten(plan.config)
     return json.dumps(flat_plan_config, indent=indent, sort_keys=sort_keys)
