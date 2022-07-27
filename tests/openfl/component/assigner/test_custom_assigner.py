@@ -6,8 +6,8 @@ from unittest import mock
 
 import pytest
 
-from openfl.component.aggregation_functions import GeometricMedian
-from openfl.component.aggregation_functions import WeightedAverage
+from openfl.interface.aggregation_functions import GeometricMedian
+from openfl.interface.aggregation_functions import WeightedAverage
 from openfl.component.assigner.custom_assigner import Assigner
 from openfl.component.assigner.tasks import TrainTask
 from openfl.component.assigner.tasks import ValidateTask

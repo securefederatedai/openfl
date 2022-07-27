@@ -13,8 +13,8 @@ from typing import Tuple
 
 from tensorboardX import SummaryWriter
 
-from openfl.component.aggregation_functions import AggregationFunction
-from openfl.component.aggregation_functions import WeightedAverage
+from openfl.interface.aggregation_functions import AggregationFunction
+from openfl.interface.aggregation_functions import WeightedAverage
 from openfl.component.assigner.tasks import Task
 from openfl.component.assigner.tasks import TrainTask
 from openfl.component.assigner.tasks import ValidateTask
@@ -549,8 +549,8 @@ class TaskKeeper:
             aggregation_function: Aggregation function.
 
         You might need to override default FedAvg aggregation with built-in aggregation types:
-            - openfl.component.aggregation_functions.GeometricMedian
-            - openfl.component.aggregation_functions.Median
+            - openfl.interface.aggregation_functions.GeometricMedian
+            - openfl.interface.aggregation_functions.Median
         or define your own AggregationFunction subclass.
         See more details on `Overriding the aggregation function`_ documentation page.
         .. _Overriding the aggregation function:

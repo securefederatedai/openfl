@@ -6,7 +6,7 @@
 import logging
 from collections import defaultdict
 
-from openfl.component.aggregation_functions import WeightedAverage
+from openfl.interface.aggregation_functions import WeightedAverage
 
 logger = logging.getLogger(__name__)
 

@@ -13,7 +13,7 @@ With the aggregator-based workflow, you can use custom aggregation functions for
 Python API
 ==========
 
-1. Create an implementation of :class:`openfl.component.aggregation_functions.core.AggregationFunction`.
+1. Create an implementation of :class:`openfl.interface.aggregation_functions.core.AggregationFunction`.
 
 2. In the ``override_config`` keyword argument of the :func:`openfl.native.run_experiment` native function, pass the implementation as a ``tasks.{task_name}.aggregation_type`` parameter.
 
@@ -29,12 +29,12 @@ Predefined Aggregation Functions
 
 Choose from the following predefined aggregation functions:
 
-- ``openfl.component.aggregation_functions.WeightedAverage`` (default)
-- ``openfl.component.aggregation_functions.Median``
-- ``openfl.component.aggregation_functions.GeometricMedian``
-- ``openfl.component.aggregation_functions.AdagradAdaptiveAggregation``
-- ``openfl.component.aggregation_functions.AdamAdaptiveAggregation``
-- ``openfl.component.aggregation_functions.YogiAdaptiveAggregation``
+- ``openfl.interface.aggregation_functions.WeightedAverage`` (default)
+- ``openfl.interface.aggregation_functions.Median``
+- ``openfl.interface.aggregation_functions.GeometricMedian``
+- ``openfl.interface.aggregation_functions.AdagradAdaptiveAggregation``
+- ``openfl.interface.aggregation_functions.AdamAdaptiveAggregation``
+- ``openfl.interface.aggregation_functions.YogiAdaptiveAggregation``
 
 
 .. _adaptive_aggregation_functions:
@@ -57,7 +57,7 @@ Adaptive Aggregation Functions
     ``params``, ignoring ``model_interface`` argument.
 
     See the `AdagradAdaptiveAggregation
-    <https://github.com/intel/openfl/blob/develop/openfl/component/aggregation_functions/adagrad_adaptive_aggregation.py>`_
+    <https://github.com/intel/openfl/blob/develop/openfl/interface/aggregation_functions/adagrad_adaptive_aggregation.py>`_
     definitions for details.
 
     `Adaptive federated optimization <https://arxiv.org/pdf/2003.00295.pdf>`_ original paper.
@@ -67,7 +67,7 @@ Adaptive Aggregation Functions
 .. code-block:: python
 
     from openfl.interface.interactive_api.experiment import TaskInterface, ModelInterface
-    from openfl.component.aggregation_functions import AdagradAdaptiveAggregation
+    from openfl.interface.aggregation_functions import AdagradAdaptiveAggregation
 
     TI = TaskInterface()
     MI = ModelInterface(model=model,
@@ -130,8 +130,8 @@ which will be used for global model aggreagation:
             pass # Your code here!
     ...
 
-    from openfl.component.aggregation_functions import WeightedAverage
-    from openfl.component.aggregation_functions.core import AdaptiveAggregation
+    from openfl.interface.aggregation_functions import WeightedAverage
+    from openfl.interface.aggregation_functions.core import AdaptiveAggregation
 
     # Creating your implemented optimizer instance based on numpy:
     my_own_optimizer = MyOpt(model_interface=MI, learning_rate=0.01)
@@ -150,12 +150,12 @@ which will be used for global model aggreagation:
 
 .. note::
     If you do not understand how to write your own numpy based optimizer, please see the `NumPyAdagrad <https://github.com/intel/openfl/blob/develop/openfl/utilities/optimizers/numpy/adagrad_optimizer.py>`_ and
-    `AdaptiveAggregation <https://github.com/intel/openfl/blob/develop/openfl/component/aggregation_functions/core/adaptive_aggregation.py>`_ definitions for details.
+    `AdaptiveAggregation <https://github.com/intel/openfl/blob/develop/openfl/interface/aggregation_functions/core/adaptive_aggregation.py>`_ definitions for details.
 
 Custom Aggregation Functions
 ----------------------------
 
-OpenFL provides interfaces to support your own custom aggregation functions. You can also create your own implementation of :class:`openfl.component.aggregation_functions.core.AggregationFunction`. See `example <https://github.com/intel/openfl/blob/develop/openfl-tutorials/Federated_Pytorch_MNIST_custom_aggregation_Tutorial.ipynb>`_ for details.
+OpenFL provides interfaces to support your own custom aggregation functions. You can also create your own implementation of :class:`openfl.interface.aggregation_functions.core.AggregationFunction`. See `example <https://github.com/intel/openfl/blob/develop/openfl-tutorials/Federated_Pytorch_MNIST_custom_aggregation_Tutorial.ipynb>`_ for details.
 
 1. Define the behavior of the aggregation.
 
@@ -188,7 +188,7 @@ The following is an example of a **plan.yaml** with a modified aggregation funct
     train:
       function: train_batches
       aggregation_type:
-        template: openfl.component.aggregation_functions.Median  
+        template: openfl.interface.aggregation_functions.Median  
       kwargs:
         metrics:
         - loss
@@ -202,7 +202,7 @@ For example, you can try:
 
 .. code-block:: python
 
-    from openfl.component.aggregation_functions import Median
+    from openfl.interface.aggregation_functions import Median
     TI = TaskInterface()
     agg_fn = Median()
     @TI.register_fl_task(model='model', data_loader='train_loader', \
@@ -215,11 +215,11 @@ For example, you can try:
 
 
 ``AggregationFunction`` requires a single ``call`` function.
-This function receives tensors for a single parameter from multiple collaborators with additional metadata (see definition of :meth:`openfl.component.aggregation_functions.core.AggregationFunction.call`) and returns a single tensor that represents the result of aggregation.
+This function receives tensors for a single parameter from multiple collaborators with additional metadata (see definition of :meth:`openfl.interface.aggregation_functions.core.AggregationFunction.call`) and returns a single tensor that represents the result of aggregation.
 
 
 .. note::
-    See the `definition <https://github.com/intel/openfl/blob/develop/openfl/component/aggregation_functions/core/interface.py>`_ of :class:`openfl.component.aggregation_functions.core.AggregationFunction.call` for details.
+    See the `definition <https://github.com/intel/openfl/blob/develop/openfl/interface/aggregation_functions/core/interface.py>`_ of :class:`openfl.interface.aggregation_functions.core.AggregationFunction.call` for details.
 
 
 Example of a Custom Aggregation Function
@@ -229,7 +229,7 @@ This is an example of a custom tensor clipping aggregation function that multipl
 
 .. code-block:: python
 
-    from openfl.component.aggregation_functions import AggregationFunction
+    from openfl.interface.aggregation_functions import AggregationFunction
     import numpy as np
 
     class ClippedAveraging(AggregationFunction):
@@ -293,11 +293,11 @@ A full implementation can be found at `Federated_Pytorch_MNIST_custom_aggregatio
 Example of a Privileged Aggregation Function
 ========================================
 
-Most of the time the AggregationFunction interface is sufficient to implement custom methods, but in certain scenarios users may want to store additional information inside the TensorDB Dataframe beyond the aggregated tensor. The :class:`openfl.component.aggregation_functions.experimental.PrivilegedAggregationFunction` interface is provided for this use, and gives the user direct access to aggregator's TensorDB dataframe (notice the `tensor_db` param in the call function replaces the `db_iterator` from the standard AggregationFunction interface). As the name suggests, this interface is called privileged because with great power comes great responsibility, and modifying the TensorDB dataframe directly can lead to unexpected behavior and experiment failures if entries are arbitrarily deleted.
+Most of the time the AggregationFunction interface is sufficient to implement custom methods, but in certain scenarios users may want to store additional information inside the TensorDB Dataframe beyond the aggregated tensor. The :class:`openfl.interface.aggregation_functions.experimental.PrivilegedAggregationFunction` interface is provided for this use, and gives the user direct access to aggregator's TensorDB dataframe (notice the `tensor_db` param in the call function replaces the `db_iterator` from the standard AggregationFunction interface). As the name suggests, this interface is called privileged because with great power comes great responsibility, and modifying the TensorDB dataframe directly can lead to unexpected behavior and experiment failures if entries are arbitrarily deleted.
 
 .. code-block:: python
 
-    from openfl.component.aggregation_functions.experimental import PrivilegedAggregationFunction 
+    from openfl.interface.aggregation_functions.experimental import PrivilegedAggregationFunction 
     import numpy as np
     import pandas as pd
 

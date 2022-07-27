@@ -12,8 +12,8 @@ from yaml import dump
 from yaml import safe_load
 from yaml import SafeDumper
 
-from openfl.component.aggregation_functions import AggregationFunction
-from openfl.component.aggregation_functions import WeightedAverage
+from openfl.interface.aggregation_functions import AggregationFunction
+from openfl.interface.aggregation_functions import WeightedAverage
 from openfl.component.assigner.custom_assigner import Assigner
 from openfl.component.straggler_handling_functions import CutoffTimeBasedStragglerHandling
 from openfl.component.straggler_handling_functions import StragglerHandlingFunction
@@ -306,7 +306,7 @@ class Plan:
                 aggregation_type = Plan.build(**aggregation_type)
                 if not isinstance(aggregation_type, AggregationFunction):
                     raise NotImplementedError(f'''{task} task aggregation type does not implement an interface:
-    openfl.component.aggregation_functions.AggregationFunction
+    openfl.interface.aggregation_functions.AggregationFunction
     ''')
             tasks[task]['aggregation_type'] = aggregation_type
         return tasks

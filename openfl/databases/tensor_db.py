@@ -12,7 +12,7 @@ from types import MethodType
 import numpy as np
 import pandas as pd
 
-from openfl.component.aggregation_functions import AggregationFunction
+from openfl.interface.aggregation_functions import AggregationFunction
 from openfl.utilities import change_tags
 from openfl.utilities import LocalTensor
 from openfl.utilities import TensorKey

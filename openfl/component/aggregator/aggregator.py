@@ -6,7 +6,7 @@ import time
 import queue
 from logging import getLogger
 
-from openfl.component.aggregation_functions import WeightedAverage
+from openfl.interface.aggregation_functions import WeightedAverage
 from openfl.component.straggler_handling_functions import CutoffTimeBasedStragglerHandling
 from openfl.databases import TensorDB
 from openfl.pipelines import NoCompressionPipeline

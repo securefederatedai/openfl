@@ -5,8 +5,8 @@
 import numpy as np
 import pytest
 
-from openfl.component.aggregation_functions import AggregationFunction
-from openfl.component.aggregation_functions import WeightedAverage
+from openfl.interface.aggregation_functions import AggregationFunction
+from openfl.interface.aggregation_functions import WeightedAverage
 from openfl.databases.tensor_db import TensorDB
 from openfl.protocols import base_pb2
 from openfl.utilities.types import TensorKey
