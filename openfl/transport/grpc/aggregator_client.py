@@ -4,7 +4,6 @@
 """AggregatorGRPCClient module."""
 
 import time
-from time import sleep
 from logging import getLogger
 from typing import Optional
 from typing import Tuple
