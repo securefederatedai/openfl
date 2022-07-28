@@ -4,6 +4,7 @@
 """AggregatorGRPCClient module."""
 
 import time
+from time import sleep
 from logging import getLogger
 from typing import Optional
 from typing import Tuple
@@ -272,6 +273,7 @@ class AggregatorGRPCClient:
                               report, tags, require_lossless):
         """Get aggregated tensor from the aggregator."""
         self._set_header(collaborator_name)
+
         request = aggregator_pb2.GetAggregatedTensorRequest(
             header=self.header,
             tensor_name=tensor_name,
@@ -291,21 +293,28 @@ class AggregatorGRPCClient:
                                 task_name, data_size, named_tensors):
         """Send task results to the aggregator."""
         self._set_header(collaborator_name)
-        request = aggregator_pb2.TaskResults(
-            header=self.header,
-            round_number=round_number,
-            task_name=task_name,
-            data_size=data_size,
-            tensors=named_tensors
-        )
+        while True:
+            try:
+                request = aggregator_pb2.TaskResults(
+                    header=self.header,
+                    round_number=round_number,
+                    task_name=task_name,
+                    data_size=data_size,
+                    tensors=named_tensors
+                )
 
-        # convert (potentially) long list of tensors into stream
-        stream = []
-        stream += utils.proto_to_datastream(request, self.logger)
-        response = self.stub.SendLocalTaskResults(iter(stream))
-
-        # also do other validation, like on the round_number
-        self.validate_response(response, collaborator_name)
+                # convert (potentially) long list of tensors into stream
+                stream = []
+                stream += utils.proto_to_datastream(request, self.logger)
+                response = self.stub.SendLocalTaskResults(iter(stream))
+                # also do other validation, like on the round_number
+                self.validate_response(response, collaborator_name)
+            
+            except grpc.RpcError as e:
+                if e.code() == grpc.StatusCode.UNKNOWN:
+                    self.logger.info(f'Attempting to resend tasks to aggregator at {self.uri}')
+                continue
+            break
 
     def _get_trained_model(self, experiment_name, model_type):
         """Get trained model RPC."""
