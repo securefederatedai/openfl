@@ -294,23 +294,25 @@ class Aggregator:
         # if we do have tasks, remove any that we already have results for
         if isinstance(tasks[0], str):
             # backward compatibility
-            # self.stragglers_for_task[task_name] = stragglers
             tasks = [
                 t for t in tasks if not self._collaborator_task_completed(
                     collaborator_name, t, self.round_number)
             ]
+            for t in tasks:
+                if t in self.stragglers_for_task:
+                    for stragglers in self.stragglers_for_task[t]:
+                        if collaborator_name in stragglers:
+                            tasks.remove(t)
         else:
             tasks = [
                 t for t in tasks if not self._collaborator_task_completed(
                     collaborator_name, t.name, self.round_number)
             ]
-
-        # remove tasks for identified stragglers
-        for t in tasks:
-            if t in self.stragglers_for_task:
-                for stragglers in self.stragglers_for_task[t]:
-                    if collaborator_name in stragglers:
-                        tasks.remove(t)
+            for t in tasks:
+                if t.name in self.stragglers_for_task:
+                    for stragglers in self.stragglers_for_task[t.name]:
+                        if collaborator_name in stragglers:
+                            tasks.remove(t)
 
         # Do the check again because it's possible that all tasks have
         # been completed
