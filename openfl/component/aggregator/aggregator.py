@@ -63,10 +63,11 @@ class Aggregator:
             # FIXME: '' instead of None is just for protobuf compatibility.
             # Cleaner solution?
             self.single_col_cert_common_name = ''
-        
+
         self.straggler_handling_policy = straggler_handling_policy or CutoffTimeBasedStragglerHandling()
         self._end_of_round_check_done = [False] * rounds_to_train
-        
+        self.stragglers_for_task = {}
+
         self.rounds_to_train = rounds_to_train
 
         # if the collaborator requests a delta, this value is set to true
@@ -297,11 +298,21 @@ class Aggregator:
                 t for t in tasks if not self._collaborator_task_completed(
                     collaborator_name, t, self.round_number)
             ]
+            for t in tasks:
+                if t in self.stragglers_for_task:
+                    for stragglers in self.stragglers_for_task[t]:
+                        if collaborator_name in stragglers:
+                            tasks.remove(t)
         else:
             tasks = [
                 t for t in tasks if not self._collaborator_task_completed(
                     collaborator_name, t.name, self.round_number)
             ]
+            for t in tasks:
+                if t.name in self.stragglers_for_task:
+                    for stragglers in self.stragglers_for_task[t.name]:
+                        if collaborator_name in stragglers:
+                            tasks.remove(t)
 
         # Do the check again because it's possible that all tasks have
         # been completed
@@ -871,6 +882,8 @@ class Aggregator:
         # Once all of the task results have been processed
         self._end_of_round_check_done[self.round_number] = True
         self.round_number += 1
+        # resetting stragglers for task for a new round
+        self.stragglers_for_task = {}
 
         # Save the latest model
         self.logger.info(f'Saving round {self.round_number} model...')
@@ -907,6 +920,7 @@ class Aggregator:
                     stragglers.append(c)
             self.logger.info('\tEnding task {} early due to straggler cutoff policy'.format(task_name))
             self.logger.warning('\tIdentified stragglers: {} for task {}'.format(stragglers, task_name))
+            self.stragglers_for_task[task_name] = stragglers
 
         # all are done or straggler policy calls for early round end.
         return straggler_check or len(all_collaborators) == len(collaborators_done)
