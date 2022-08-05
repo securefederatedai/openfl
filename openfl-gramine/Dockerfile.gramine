@@ -1,4 +1,4 @@
-ARG BASE_IMAGE=python:3.8
+ARG BASE_IMAGE=python:3.11-rc-slim-bullseye
 FROM ${BASE_IMAGE}
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
