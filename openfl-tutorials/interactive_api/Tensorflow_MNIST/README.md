@@ -15,22 +15,27 @@ We use a simple fully-connected neural network defined at
 ## III. How to run this tutorial (without TLC and locally as a simulation):
 <br/>
 
-### 0. Activate the virtual environment and navigate to the OpenFL repository:
+### 0. If you haven't done so already, create a virtual environment, install OpenFL, and upgrade pip:
   - For help with this step, visit the "Install the Package" section of the [OpenFL installation instructions](https://openfl.readthedocs.io/en/latest/install.html#install-the-package).
 <br/>
-
-### 1. Within the OpenFL repository, navigate to the tutorial:
- ```sh
- cd openfl-tutorials/interactive_api/Tensorflow_MNIST
- ```
- <br/>
  
-### 2. Split terminal into 3 (1 terminal for the director, 1 for the envoy, and 1 for the experiment):
+### 1. Split terminal into 3 (1 terminal for the director, 1 for the envoy, and 1 for the experiment) and do the following in each terminal:
+   - Activate the virtual environment from step 0:
+   
+   ```sh
+   source venv/bin/activate
+   ```
    - Ensure proxies are set. If you do not have sudo permissions on your machine, ensure your proxies are set in all terminals.
-   - For each terminal, ensure steps 0 and 1 are complete. 
+   - Navigate to the tutorial:
+    
+   ```sh
+   cd openfl/openfl-tutorials/interactive_api/Tensorflow_MNIST
+   ```
+
+    
 <br/>
 
-### 3. In the first terminal, run the director:
+### 2. In the first terminal, run the director:
 
 ```sh
 cd director
@@ -38,7 +43,7 @@ cd director
 ```
 <br/>
 
-### 4. In the second terminal, run the envoy:
+### 3. In the second terminal, run the envoy:
 
 ```sh
 cd envoy
@@ -55,7 +60,7 @@ cd envoy
   - Notice that "env_one" was changed to "env_two", and "envoy_config_one.yaml" was changed to "envoy_config_two.yaml"
 <br/>
 
-### 5. In the third terminal (or forth terminal, if you chose to do two envoys) run the `Tensorflow_MNIST.ipynb` Jupyter Notebook:
+### 4. In the third terminal (or forth terminal, if you chose to do two envoys) run the `Tensorflow_MNIST.ipynb` Jupyter Notebook:
 
 ```sh
 cd workspace
