@@ -85,6 +85,19 @@ def _atomic_connection(func):
 
     return wrapper
 
+def _resend_data_on_reconnection(func):
+    def wrapper(self, *args, **kwargs):
+        while True:
+            try:
+                response = func(self, *args, **kwargs)
+            except grpc.RpcError as e:
+                if e.code() == grpc.StatusCode.UNKNOWN:
+                    self.logger.info(f'Attempting to resend data request to aggregator at {self.uri}')
+                continue
+            break
+        return response
+
+    return wrapper
 
 class AggregatorGRPCClient:
     """Client to the aggregator over gRPC-TLS."""
@@ -258,6 +271,7 @@ class AggregatorGRPCClient:
         )
 
     @_atomic_connection
+    @_resend_data_on_reconnection
     def get_tasks(self, collaborator_name):
         """Get tasks from the aggregator."""
         self._set_header(collaborator_name)
@@ -268,10 +282,12 @@ class AggregatorGRPCClient:
         return response.tasks, response.round_number, response.sleep_time, response.quit
 
     @_atomic_connection
+    @_resend_data_on_reconnection
     def get_aggregated_tensor(self, collaborator_name, tensor_name, round_number,
                               report, tags, require_lossless):
         """Get aggregated tensor from the aggregator."""
         self._set_header(collaborator_name)
+
         request = aggregator_pb2.GetAggregatedTensorRequest(
             header=self.header,
             tensor_name=tensor_name,
@@ -287,6 +303,7 @@ class AggregatorGRPCClient:
         return response.tensor
 
     @_atomic_connection
+    @_resend_data_on_reconnection
     def send_local_task_results(self, collaborator_name, round_number,
                                 task_name, data_size, named_tensors):
         """Send task results to the aggregator."""

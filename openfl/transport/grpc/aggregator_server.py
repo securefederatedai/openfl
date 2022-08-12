@@ -205,8 +205,11 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
             context: The gRPC context
 
         """
-        proto = aggregator_pb2.TaskResults()
-        proto = utils.datastream_to_proto(proto, request)
+        try:
+            proto = aggregator_pb2.TaskResults()
+            proto = utils.datastream_to_proto(proto, request)
+        except RuntimeError:
+            raise RuntimeError('Empty stream message, reestablishing connection from client to resume training...')
 
         self.validate_collaborator(proto, context)
         # all messages get sanity checked
@@ -223,7 +226,7 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
         return aggregator_pb2.SendLocalTaskResultsResponse(
             header=self.get_header(collaborator_name)
         )
-
+        
     def get_server(self):
         """Return gRPC server."""
         self.server = server(ThreadPoolExecutor(max_workers=cpu_count()),
