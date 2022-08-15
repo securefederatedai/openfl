@@ -25,7 +25,7 @@ We use a simple fully-connected neural network defined at
    ```sh
    source venv/bin/activate
    ```
-   - Ensure proxies are set. If you do not have sudo permissions on your machine, ensure your proxies are set in all terminals.
+   - If you are in a network environment with a proxy, ensure proxy environment variables are set in each of your terminals.
    - Navigate to the tutorial:
     
    ```sh
