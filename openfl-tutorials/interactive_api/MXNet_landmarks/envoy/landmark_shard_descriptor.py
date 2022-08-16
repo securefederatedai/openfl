@@ -128,7 +128,7 @@ class LandmarkShardDescriptor(ShardDescriptor):
         """Calculate hash of all dataset."""
         md5_dict = {}
         for root in self.data_folder.glob('*.npy'):
-            md5_calc = md5()
+            md5_calc = md5(usedforsecurity=False)
             rel_file = root.relative_to(self.data_folder)
 
             with open(self.data_folder / rel_file, 'rb') as f:
