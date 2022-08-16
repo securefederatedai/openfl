@@ -26,7 +26,7 @@ def download_data_() -> str:
     """
     pkg = 'fra-eng.zip'   # Language file: change this to change the language
     data_dir = 'data'
-    url = 'http://www.manythings.org/anki/' + pkg
+    url = 'https://www.manythings.org/anki/' + pkg
     filename = pkg.split('-')[0] + '.txt'
 
     workspace_dir = getcwd()

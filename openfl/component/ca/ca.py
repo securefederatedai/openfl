@@ -151,7 +151,7 @@ def certify(name, cert_path: Path, token_with_cert, ca_path: Path):
 
     step_path, _ = get_ca_bin_paths(ca_path)
     if not step_path:
-        url = 'http://api.github.com/repos/smallstep/cli/releases/latest'
+        url = 'https://api.github.com/repos/smallstep/cli/releases/latest'
         system, arch = get_system_and_architecture()
         download_step_bin(url, f'step_{system}', arch, prefix=ca_path)
         step_path, _ = get_ca_bin_paths(ca_path)
@@ -191,9 +191,9 @@ def install(ca_path, ca_url, password):
     if not (step_path and step_ca_path and step_path.exists() and step_ca_path.exists()):
         confirm('CA binaries from github will be downloaded now', default=True, abort=True)
         system, arch = get_system_and_architecture()
-        url = 'http://api.github.com/repos/smallstep/certificates/releases/latest'
+        url = 'https://api.github.com/repos/smallstep/certificates/releases/latest'
         download_step_bin(url, f'step-ca_{system}', arch, prefix=ca_path, confirmation=False)
-        url = 'http://api.github.com/repos/smallstep/cli/releases/latest'
+        url = 'https://api.github.com/repos/smallstep/cli/releases/latest'
         download_step_bin(url, f'step_{system}', arch, prefix=ca_path, confirmation=False)
     step_config_dir = ca_path / CA_STEP_CONFIG_DIR
     if (not step_config_dir.exists()
