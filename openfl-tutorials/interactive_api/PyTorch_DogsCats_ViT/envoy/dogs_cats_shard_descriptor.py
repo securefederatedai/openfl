@@ -50,16 +50,16 @@ class DogsCatsShardDataset(ShardDataset):
         """Return a item by the index."""
         name = self.img_names[index]
         # Reading data
-        with Image.open(self.img_path / name) as img_:
-            img_class = 1 if name[:3] == 'dog' else 0
-            assert name[:3] in {'cat', 'dog'}, 'Wrong object classification'
+        img = Image.open(self.img_path / name)
+        img_class = 1 if name[:3] == 'dog' else 0
+        assert name[:3] in {'cat', 'dog'}, 'Wrong object classification'
 
-            if self.enforce_image_hw is not None:
-                # If we need to resize data
-                # PIL accepts (w,h) tuple, not (h,w)
-                img_ = img_.resize(self.enforce_image_hw[::-1])
+        if self.enforce_image_hw is not None:
+            # If we need to resize data
+            # PIL accepts (w,h) tuple, not (h,w)
+            img = img.resize(self.enforce_image_hw[::-1])
 
-            img = np.asarray(img_)
+        img = np.asarray(img)
 
         assert img.shape[2] == 3
 

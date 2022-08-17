@@ -42,15 +42,15 @@ class KvasirShardDataset(ShardDataset):
         """Return a item by the index."""
         name = self.images_names[index]
         # Reading data
-        with Image.open(self.images_path / name) as img_, \
-                Image.open(self.masks_path / name) as mask_:
-            if self.enforce_image_hw is not None:
-                # If we need to resize data
-                # PIL accepts (w,h) tuple, not (h,w)
-                img_ = img_.resize(self.enforce_image_hw[::-1])
-                mask_ = mask_.resize(self.enforce_image_hw[::-1])
-            img = np.asarray(img_)
-            mask = np.asarray(mask_)
+        img = Image.open(self.images_path / name)
+        mask = Image.open(self.masks_path / name)
+        if self.enforce_image_hw is not None:
+            # If we need to resize data
+            # PIL accepts (w,h) tuple, not (h,w)
+            img = img.resize(self.enforce_image_hw[::-1])
+            mask = mask.resize(self.enforce_image_hw[::-1])
+        img = np.asarray(img)
+        mask = np.asarray(mask)
         assert img.shape[2] == 3
 
         return img, mask[:, :, 0].astype(np.uint8)
