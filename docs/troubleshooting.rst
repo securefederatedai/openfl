@@ -28,3 +28,12 @@ The following is a list of commonly reported issues in Open Federated Learning (
 
    Yes! You can turn on verbose logging with :code:`fx -l DEBUG collaborator start` or :code:`fx -l DEBUG aggregator start`. This will give verbose information related to gRPC, bidirectional tensor transfer, and compression related information.  
 
+5. **Silent failures resulting from Out of Memory errors**
+
+   Observations:
+      * :code:`fx envoy` command terminates abruptly during the execution of training or validation loop due to the SIGKILL command issued by the kernel. 
+      * OOM error is captured in the kernel trace but not at the user program level.
+      * The failure is likely due to non-optimal memory resource utilization in the prior PyTorch version 1.3.1 & 1.4.0.
+
+   Solution:
+      * Recent version of PyTorch better handles the memory utilization during runtime. Upgrade the PyTorch version to >= 1.11.0
