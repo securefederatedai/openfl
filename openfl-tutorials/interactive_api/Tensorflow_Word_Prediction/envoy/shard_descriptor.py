@@ -119,8 +119,8 @@ class NextWordShardDescriptor(ShardDescriptor):
                + '.txt')
         filepath = Path.cwd() / f'{title}.txt'
         if not filepath.exists():
-            response = urllib.request.urlopen(url)
-            content = response.read().decode('utf-8')
+            with urllib.request.urlopen(url) as response:
+                content = response.read().decode('utf-8')
             with open(filepath, 'w', encoding='utf-8') as file:
                 file.write(content)
         return filepath
