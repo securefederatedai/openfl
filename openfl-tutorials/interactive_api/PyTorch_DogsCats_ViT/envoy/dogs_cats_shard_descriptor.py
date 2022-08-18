@@ -139,7 +139,7 @@ class DogsCatsShardDescriptor(ShardDescriptor):
             for file in files:
                 if file == 'dataset.json':
                     continue
-                md5_calc = md5()
+                md5_calc = md5(usedforsecurity=False)
                 rel_dir = os.path.relpath(root, self.data_folder)
                 rel_file = os.path.join(rel_dir, file)
 
