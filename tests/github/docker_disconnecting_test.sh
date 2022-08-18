@@ -88,31 +88,40 @@ tar -cf ${AGGREGATOR_REQUIRED_FILES} plan/ cert/ save/ --remove-files
 
 # 5. Start federation in containers
 
+# Create a docker network
+docker network create ${FED_WORKSPACE} || true
+
 # Start the aggregator
 docker run --rm \
-        --network host \
+        --network ${FED_WORKSPACE} \
         -v $(pwd)/${AGGREGATOR_REQUIRED_FILES}:/certs.tar \
         -e "CONTAINER_TYPE=aggregator" \
-        --name "agg" \
+        --name ${FQDN} \
         ${WORSPACE_IMAGE_NAME} \
         bash /openfl/openfl-docker/start_actor_in_container.sh &
-
-# docker run --rm --network host -v $(pwd)/'fed_work12345alpha81671/cert_agg.tar':/certs.tar -e "CONTAINER_TYPE=aggregator" --name "agg" 'fed_work12345alpha81671' bash /openfl/openfl-docker/start_actor_in_container.sh &
-# docker run --rm --publish-all -v $(pwd)/'fed_work12345alpha81671/cert_agg.tar':/certs.tar -e "CONTAINER_TYPE=aggregator" --name "agg" 'fed_work12345alpha81671' bash /openfl/openfl-docker/start_actor_in_container.sh &
+        # --add-host ${FQDN}:127.0.0.1 \ adding this mapping to the aggregator container is not required somehow
 
 # Start the collaborator
 docker run --rm \
-        --network host \
+        --network ${FED_WORKSPACE} \
         -v $(pwd)/cert_col_${COL_NAME}.tar:/certs.tar \
         -e "CONTAINER_TYPE=collaborator" \
-        --name ${COL_NAME} \
+        -e "no_proxy=${FQDN}" \
         -e "COL=${COL_NAME}" \
+        --name ${COL_NAME} \
         ${WORSPACE_IMAGE_NAME} \
-        bash /openfl/openfl-docker/start_actor_in_container.sh 
-
-# COL_NAME=col1 && docker run --rm --network host -v $(pwd)/fed_work12345alpha81671/cert_col_${COL_NAME}.tar:/certs.tar -e "CONTAINER_TYPE=collaborator" -e "COL=${COL_NAME}" --name ${COL_NAME} 'fed_work12345alpha81671' bash /openfl/openfl-docker/start_actor_in_container.sh &
-# COL_NAME=col1 && docker run --rm -v $(pwd)/fed_work12345alpha81671/cert_col_${COL_NAME}.tar:/certs.tar -e "CONTAINER_TYPE=collaborator" -e "COL=${COL_NAME}" --name ${COL_NAME} 'fed_work12345alpha81671' bash /openfl/openfl-docker/start_actor_in_container.sh &
+        bash /openfl/openfl-docker/start_actor_in_container.sh  &
 
 
-# If containers are started but collaborator will fail to 
-# conect the aggregator, the pipeline will go to the infinite loop
+sleep 20
+printf "\n\n ++++++ DISCONNECTING ++++++ \n\n"
+
+docker network disconnect ${FED_WORKSPACE} ${COL_NAME}
+
+sleep 10
+printf "\n\n ++++++ CONNECTING ++++++ \n\n"
+
+docker network connect ${FED_WORKSPACE} ${COL_NAME}
+
+wait
+docker network rm ${FED_WORKSPACE}
