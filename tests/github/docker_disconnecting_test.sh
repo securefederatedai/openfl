@@ -7,8 +7,8 @@ set -e
 # 3 - Certify federation, choose any number of collaborators; 4 - run existing containers
 
 STAGE=${1:-1}  
-TEMPLATE=${2:-'keras_cnn_mnist'}  # ['torch_cnn_mnist', 'keras_cnn_mnist']
-NUMBER_OF_COLS=${3:-1}  
+NUMBER_OF_COLS=${2:-1}  
+TEMPLATE=${3:-'keras_cnn_mnist'}  # ['torch_cnn_mnist', 'keras_cnn_mnist']
 
 BASE_IMAGE_TAG='openfl'
 
