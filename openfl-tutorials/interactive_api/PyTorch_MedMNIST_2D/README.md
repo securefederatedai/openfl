@@ -46,7 +46,7 @@ cd director
 ```sh
 cd envoy
 pip install -r requirements.txt
-./start_envoy.sh env_one envoy_config_one.yaml
+./start_envoy.sh env_one envoy_config.yaml
 ```
 
 Optional: Run a second envoy in an additional terminal:
@@ -54,9 +54,8 @@ Optional: Run a second envoy in an additional terminal:
   - Run the second envoy:
 ```sh
 cd envoy
-./start_envoy.sh env_two envoy_config_two.yaml
+./start_envoy.sh env_two envoy_config.yaml
 ```
-  - Notice that "env_one" was changed to "env_two", and "envoy_config_one.yaml" was changed to "envoy_config_two.yaml"
 <br/>
 
 ### 5. In the third terminal (or forth terminal, if you chose to do two envoys) run the `Tensorflow_MNIST.ipynb` Jupyter Notebook:
