@@ -58,7 +58,7 @@ cd envoy
 ```
 <br/>
 
-### 5. In the third terminal (or forth terminal, if you chose to do two envoys) run the `Tensorflow_MNIST.ipynb` Jupyter Notebook:
+### 5. In the third terminal (or forth terminal, if you chose to do two envoys) run the Jupyter Notebook:
 
 ```sh
 cd workspace
