@@ -35,7 +35,7 @@ We use a simple convolutional neural network and settings coming from [the exper
 
 ```sh
 cd director
-
+./start_director.sh
 ```
 <br/>
 
