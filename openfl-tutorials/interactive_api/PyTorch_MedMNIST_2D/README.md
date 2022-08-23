@@ -6,16 +6,18 @@ For more details, please refer to the original paper:
 **MedMNIST v2: A Large-Scale Lightweight Benchmark for 2D and 3D Biomedical Image Classification** ([arXiv](https://arxiv.org/abs/2110.14795))
 
 
-### I. About model and experiments
+## I. About model and experiments
 
 We use a simple convolutional neural network and settings coming from [the experiments](https://github.com/MedMNIST/experiments) repository.
+<br/>
 
-### II. How to run this tutorial (without TLC and locally as a simulation):
+## II. How to run this tutorial (without TLC and locally as a simulation):
 ### 0. If you haven't done so already, create a virtual environment, install OpenFL, and upgrade pip:
   - For help with this step, visit the "Install the Package" section of the [OpenFL installation instructions](https://openfl.readthedocs.io/en/latest/install.html#install-the-package).
 <br/>
  
-### 1. Split terminal into 3 (1 terminal for the director, 1 for the envoy, and 1 for the experiment) 
+### 1. Split terminal into 3 (1 terminal for the director, 1 for the envoy, and 1 for the experiment)
+<br/> 
 
 ### 2. Do the following in each terminal:
    - Activate the virtual environment from step 0:
