@@ -9,6 +9,8 @@ set -e
 STAGE=${1:-1}  
 NUMBER_OF_COLS=${2:-1}  
 TEMPLATE=${3:-'keras_cnn_mnist'}  # ['torch_cnn_mnist', 'keras_cnn_mnist']
+CUT_ON_LOG=${4:-"Run 0 epoch of 2 round"} 
+RECONNECTION_TIMEOUT=${4:-10} 
 
 BASE_IMAGE_TAG='openfl'
 
@@ -93,6 +95,20 @@ if [ $STAGE -le 3 ]; then
         tar -cf ${AGGREGATOR_REQUIRED_FILES} plan/ cert/ save/
 fi
 
+process_stream() {
+        PATTERN=$1
+        RECONNECTION_TIMEOUT=$2
+
+        while read line
+        do
+                if [[ $line == *$PATTERN* ]]; then
+                        docker network disconnect ${FED_WORKSPACE} ${COL_NAME} && printf "\n\n ++++++ DISCONNECTING ++++++ \n\n"
+                        echo $line >> triggers.log
+                        sleep $RECONNECTION_TIMEOUT && docker network connect ${FED_WORKSPACE} ${COL_NAME} &
+                fi
+                # echo $line
+        done
+}
 
 if [ $STAGE -le 4 ]; then
         echo "RUNNING FEDERATION IN DOCKER CONTAINERS"
@@ -124,20 +140,21 @@ if [ $STAGE -le 4 ]; then
                         -e "COL=${COL_NAME}" \
                         --name ${COL_NAME} \
                         ${WORSPACE_IMAGE_NAME} \
-                        bash /openfl/openfl-docker/start_actor_in_container.sh  &
+                        bash /openfl/openfl-docker/start_actor_in_container.sh | tee /dev/tty | process_stream "$CUT_ON_LOG" $RECONNECTION_TIMEOUT
         done
 fi
 
 
-sleep 20
-printf "\n\n ++++++ DISCONNECTING ++++++ \n\n"
 
-docker network disconnect ${FED_WORKSPACE} ${COL_NAME}
+# sleep 20
+# printf "\n\n ++++++ DISCONNECTING ++++++ \n\n"
 
-sleep 10
-printf "\n\n ++++++ CONNECTING ++++++ \n\n"
+# docker network disconnect ${FED_WORKSPACE} ${COL_NAME}
 
-docker network connect ${FED_WORKSPACE} ${COL_NAME}
+# sleep 10
+# printf "\n\n ++++++ CONNECTING ++++++ \n\n"
+
+# docker network connect ${FED_WORKSPACE} ${COL_NAME}
 
 wait
 docker network rm ${FED_WORKSPACE}
