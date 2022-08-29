@@ -47,7 +47,7 @@ if [ $STAGE -le 2 ]; then
 fi
 
 if [ $STAGE -le 3 ]; then
-        echo "CERTIFYING ACTORS"
+        echo "CERTIFICATION STAGE"
         cd ${FED_WORKSPACE} || true
         # 3. Generate certificates for the aggregator and the collaborator
 
@@ -106,7 +106,6 @@ process_stream() {
                         echo $line >> triggers.log
                         sleep $RECONNECTION_TIMEOUT && docker network connect ${FED_WORKSPACE} ${COL_NAME} &
                 fi
-                # echo $line
         done
 }
 
@@ -126,8 +125,7 @@ if [ $STAGE -le 4 ]; then
                 -e "CONTAINER_TYPE=aggregator" \
                 --name ${FQDN} \
                 ${WORSPACE_IMAGE_NAME} \
-                bash /openfl/openfl-docker/start_actor_in_container.sh &
-                # --add-host ${FQDN}:127.0.0.1 \ adding this mapping to the aggregator container is not required somehow
+                bash /openfl/openfl-docker/start_actor_in_container.sh | tee aggregator.log &
 
         # Start the collaborator
         for ((i=1; i<=$NUMBER_OF_COLS; i++)); do
@@ -140,7 +138,7 @@ if [ $STAGE -le 4 ]; then
                         -e "COL=${COL_NAME}" \
                         --name ${COL_NAME} \
                         ${WORSPACE_IMAGE_NAME} \
-                        bash /openfl/openfl-docker/start_actor_in_container.sh | tee /dev/tty | process_stream "$CUT_ON_LOG" $RECONNECTION_TIMEOUT
+                        bash /openfl/openfl-docker/start_actor_in_container.sh | tee >(process_stream "$CUT_ON_LOG" $RECONNECTION_TIMEOUT)
         done
 fi
 
