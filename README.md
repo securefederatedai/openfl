@@ -1,4 +1,4 @@
-# OpenFL - An Open-Source Framework For Federated Learning
+# Open Federated Learning (OpenFL) - An Open-Source Framework For Federated Learning
 
 [![PyPI - Python Version](https://img.shields.io/badge/python-3.6%20%7C%203.7%20%7C%203.8-blue)](https://pypi.org/project/openfl/)
 [![Continuous Integration](https://github.com/intel/openfl/actions/workflows/python-app.yml/badge.svg?branch=develop)](https://github.com/intel/openfl/actions/workflows/python-app.yml)
