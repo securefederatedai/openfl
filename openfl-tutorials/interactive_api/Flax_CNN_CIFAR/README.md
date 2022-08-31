@@ -15,38 +15,38 @@ Definition provided in the notebook.
 ### 3. How to run this tutorial (without TLS and locally as a simulation):
 
 0. Pre-requisites:
+    
+    - Nvidia Driver >= 495.29.05
+    - CUDA >= 11.1.105
+    - cuDNN >= 8
+    
+    Activate virtual environment (Python - 3.8.10) and install packages from requirements.txt
 
-    Activate virtual environment (Python - 3.8.10) and install below packages.
-
-```
-pip install openfl==1.3 protobuf==3.19.4 --no-cache-dir
+```sh
+cd Flax_CNN_CIFAR
+pip install -r requirements.txt
 ```
 
 1. Run director:
 
 ```sh
-cd director_folder
+cd director
 ./start_director.sh
 ```
 
 2. Run envoy:
 
-Step 1: Activate virtual environment and install packages from the requirements.txt
-```
-cd envoy_folder
-pip install -r requirements.txt --no-cache-dir
-```
-Step 2: start the envoy
 ```sh
-./start_envoy.sh env_instance_1 envoy_config_1.yaml
+cd envoy
+./start_envoy.sh "envoy_identifier" envoy_config.yaml
 ```
 
 Optional: start second envoy:
 
-- Copy `envoy_folder` to another place and follow the same process as above:
+- Copy `envoy` folder to another place and follow the same process as above:
 
 ```sh
-./start_envoy.sh env_instance_2 envoy_config_2.yaml
+./start_envoy.sh "envoy_identifier_2" envoy_config_2.yaml
 ```
 
 3. Run `FLAX_CIFAR10_CNN.ipynb` jupyter notebook:

@@ -6,15 +6,14 @@ import jax.numpy as jnp
 import numpy as np
 import optax
 
+from flax import traverse_util
 from .framework_adapter_interface import FrameworkAdapterPluginInterface
-
-_DELIM = '.'
 
 class FrameworkAdapterPlugin(FrameworkAdapterPluginInterface):
     """Framework adapter plugin class."""
 
     @staticmethod
-    def get_tensor_dict(model, optimizer=None, suffix=''):
+    def get_tensor_dict(model, optimizer=None):
         """
         Extract tensor dict from a model.params and model.opt_state (optimizer).
 
@@ -25,12 +24,18 @@ class FrameworkAdapterPlugin(FrameworkAdapterPluginInterface):
 
         # Convert PyTree Structure DeviceArray to Numpy
         model_params = jax.tree_util.tree_map(np.array, model.params)
-        params_dict = _get_weights_dict(model_params, 'param', suffix)
+        params_dict = _get_weights_dict(model_params, 'param')
         
-        if isinstance(model.opt_state[0], optax.TraceState):
-            model_opt_state = jax.tree_util.tree_map(np.array, model.opt_state)[0][0]
-            opt_dict = _get_weights_dict(model_opt_state, 'opt', suffix)
-            params_dict.update(opt_dict)
+        # If optimizer is initialized
+        # Optax Optimizer agnostic state processing (TraceState, AdamScaleState, any...)
+        if not isinstance(model.opt_state[0], optax.EmptyState):
+            opt_state = jax.tree_util.tree_map(np.array, model.opt_state)[0]
+            opt_vars = filter(_get_opt_vars, dir(opt_state))
+            for var in opt_vars:
+                opt_dict = getattr(opt_state, var) # Returns a dict
+                # Flattens a deeply nested dictionary
+                opt_dict = _get_weights_dict(opt_dict, f'opt_{var}')
+                params_dict.update(opt_dict)
 
         return params_dict
 
@@ -50,9 +55,11 @@ class FrameworkAdapterPlugin(FrameworkAdapterPluginInterface):
 
         _set_weights_dict(model, tensor_dict, 'param')
 
-        if isinstance(model.opt_state[0], optax.TraceState):
-            _set_weights_dict(model, tensor_dict, 'opt')            
+        if not isinstance(model.opt_state[0], optax.EmptyState):
+            _set_weights_dict(model, tensor_dict, 'opt')
 
+def _get_opt_vars(x):
+    return False if x.startswith('_') or x in ['index', 'count'] else True
 
 def _set_weights_dict(obj, weights_dict, prefix=''):
     """Set the object weights with a dictionary.
@@ -68,16 +75,27 @@ def _set_weights_dict(obj, weights_dict, prefix=''):
         None
     """
     
-    model_state_dict = obj.opt_state[0][0] if prefix == 'opt' else obj.params       
+    if prefix == 'opt':
+        model_state_dict = obj.opt_state[0]
+        # opt_vars -> ['mu', 'nu'] for Adam or ['trace'] for SGD or ['ANY'] for any
+        opt_vars = filter(_get_opt_vars, dir(model_state_dict))
+        for var in opt_vars:
+            opt_state_dict = getattr(model_state_dict, var)
+            _update_weights(opt_state_dict, weights_dict, prefix, var)
+    else:
+        _update_weights(obj.params, weights_dict, prefix)
 
-    for layer_name, param_obj in model_state_dict.items():
+def _update_weights(state_dict, tensor_dict, prefix, suffix=None):
+    # Re-assignment of the state variable(s) is restricted.
+    # Instead update the nested layers weights iteratively.
+    dict_prefix = f'{prefix}_{suffix}' if suffix is not None else f'{prefix}'
+    for layer_name, param_obj in state_dict.items():
         for param_name, value in param_obj.items():
-            key = _DELIM.join(filter(None, [prefix, layer_name, param_name]))
-            if key in weights_dict:
-                model_state_dict[layer_name][param_name] = weights_dict[key]
+            key = '*'.join([dict_prefix, layer_name, param_name])
+            if key in tensor_dict:
+                state_dict[layer_name][param_name] = tensor_dict[key]
 
-
-def _get_weights_dict(obj, prefix='', suffix=''):
+def _get_weights_dict(obj, prefix):
     """
     Get the dictionary of weights.
 
@@ -91,10 +109,8 @@ def _get_weights_dict(obj, prefix='', suffix=''):
     dict
         The weight dictionary.
     """
-    weights_dict = dict()
-    for layer_name, param_obj in obj.items():
-        for param_name, value in param_obj.items():
-            key = _DELIM.join(filter(None, [prefix, layer_name, param_name, suffix]))
-            weights_dict[key] = value
-
-    return weights_dict
+    weights_dict = {prefix: obj}
+    # Flatten the dictionary with a given separator for
+    # easy lookup and assignment in `set_tensor_dict` method.
+    flat_params = traverse_util.flatten_dict(weights_dict, sep='*')
+    return flat_params
