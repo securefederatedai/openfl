@@ -8,9 +8,9 @@ set -e
 
 STAGE=${1:-1}  
 NUMBER_OF_COLS=${2:-1}  
-TEMPLATE=${3:-'keras_cnn_mnist'}  # ['torch_cnn_mnist', 'keras_cnn_mnist']
-CUT_ON_LOG=${4:-"Run 0 epoch of 2 round"} 
-RECONNECTION_TIMEOUT=${4:-10} 
+RECONNECTION_TIMEOUT=${3:-20} 
+CUT_ON_LOG=${4:-"Run 0 epoch of 1 round"} 
+TEMPLATE=${5:-'keras_cnn_mnist'}  # ['torch_cnn_mnist', 'keras_cnn_mnist']
 
 BASE_IMAGE_TAG='openfl'
 
@@ -96,15 +96,19 @@ if [ $STAGE -le 3 ]; then
 fi
 
 process_stream() {
+        # This function will asyncronously monitor logs from a Collaborator in a docker container
+        # and will disconnect this collaborator from the docker network.
+        # After the specified timeout the Collaborator will be reconnected. 
         PATTERN=$1
         RECONNECTION_TIMEOUT=$2
+        COL_NAME=$3
 
         while read line
         do
                 if [[ $line == *$PATTERN* ]]; then
-                        docker network disconnect ${FED_WORKSPACE} ${COL_NAME} && printf "\n\n ++++++ DISCONNECTING ++++++ \n\n"
+                        docker network disconnect ${FED_WORKSPACE} ${COL_NAME} && printf $'\033[0;31m'"\n\n ------ DISCONNECTING ------ \n\n"'\033[0m'
                         echo $line >> triggers.log
-                        sleep $RECONNECTION_TIMEOUT && docker network connect ${FED_WORKSPACE} ${COL_NAME} &
+                        sleep $RECONNECTION_TIMEOUT && docker network connect ${FED_WORKSPACE} ${COL_NAME} && printf $'\033[0;32m'"\n\n ++++++ RECONNECTING ++++++ \n\n"'\033[0m' &
                 fi
         done
 }
@@ -130,7 +134,7 @@ if [ $STAGE -le 4 ]; then
         # Start the collaborator
         for ((i=1; i<=$NUMBER_OF_COLS; i++)); do
                 COL_NAME='col'$i
-                docker run --rm \
+                COMMAND_RUN_COLLABORATOR="docker run --rm \
                         --network ${FED_WORKSPACE} \
                         -v $(pwd)/cert_col_${COL_NAME}.tar:/certs.tar \
                         -e "CONTAINER_TYPE=collaborator" \
@@ -138,21 +142,16 @@ if [ $STAGE -le 4 ]; then
                         -e "COL=${COL_NAME}" \
                         --name ${COL_NAME} \
                         ${WORSPACE_IMAGE_NAME} \
-                        bash /openfl/openfl-docker/start_actor_in_container.sh | tee >(process_stream "$CUT_ON_LOG" $RECONNECTION_TIMEOUT)
+                        bash /openfl/openfl-docker/start_actor_in_container.sh"
+                
+                if [[ $i -eq $NUMBER_OF_COLS ]]; then
+                        # We only disconnect the last collaborator
+                        $COMMAND_RUN_COLLABORATOR | tee >(process_stream "$CUT_ON_LOG" $RECONNECTION_TIMEOUT $COL_NAME) collaborator$i.log &
+                else
+                        $COMMAND_RUN_COLLABORATOR | tee collaborator$i.log &
+                fi
         done
 fi
-
-
-
-# sleep 20
-# printf "\n\n ++++++ DISCONNECTING ++++++ \n\n"
-
-# docker network disconnect ${FED_WORKSPACE} ${COL_NAME}
-
-# sleep 10
-# printf "\n\n ++++++ CONNECTING ++++++ \n\n"
-
-# docker network connect ${FED_WORKSPACE} ${COL_NAME}
 
 wait
 docker network rm ${FED_WORKSPACE}
