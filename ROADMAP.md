@@ -56,6 +56,8 @@ This causes community fragmentation and distracts from some of the bigger proble
  first at the communication and storage layer, and make these components modular across other frameworks. Our aim is also to provide a library for FL algorithms, compression methods,
  that can both be applied and interpreted easily.
 
+## Upcoming OpenFL releases
+
 ### OpenFL 1.5 (November 2022)
 1. OpenFL Workflows Interface (Experimental)
 2. New use cases enabled by custom workflows
