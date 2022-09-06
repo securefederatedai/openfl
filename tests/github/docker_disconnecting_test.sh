@@ -9,8 +9,9 @@ set -e
 STAGE=${1:-1}  
 NUMBER_OF_COLS=${2:-1}  
 RECONNECTION_TIMEOUT=${3:-20} 
-CUT_ON_LOG=${4:-"Run 0 epoch of 1 round"} 
-TEMPLATE=${5:-'keras_cnn_mnist'}  # ['torch_cnn_mnist', 'keras_cnn_mnist']
+MAXIMUM_DISCONNECTIONS=${4:-1} 
+CUT_ON_LOG=${5:-"Run 0 epoch of"} 
+TEMPLATE=${6:-'keras_cnn_mnist'}  # ['torch_cnn_mnist', 'keras_cnn_mnist']
 
 BASE_IMAGE_TAG='openfl'
 
@@ -99,14 +100,19 @@ process_stream() {
         # This function will asyncronously monitor logs from a Collaborator in a docker container
         # and will disconnect this collaborator from the docker network.
         # After the specified timeout the Collaborator will be reconnected. 
+
+        # WARNING! This function uses global variables: RECONNECTION_TIMEOUT and MAXIMUM_DISCONNECTIONS.
+        # Keep this in mind importing it.
         PATTERN=$1
-        RECONNECTION_TIMEOUT=$2
-        COL_NAME=$3
+        COL_NAME=$2
+
+        DISCONNECTIONS=0
 
         while read line
         do
-                if [[ $line == *$PATTERN* ]]; then
+                if [[ $line == *$PATTERN* ]] && (( $DISCONNECTIONS < $MAXIMUM_DISCONNECTIONS )); then
                         docker network disconnect ${FED_WORKSPACE} ${COL_NAME} && printf $'\033[0;31m'"\n\n ------ DISCONNECTING ------ \n\n"'\033[0m'
+                        ((DISCONNECTIONS+=1))
                         echo $line >> triggers.log
                         sleep $RECONNECTION_TIMEOUT && docker network connect ${FED_WORKSPACE} ${COL_NAME} && printf $'\033[0;32m'"\n\n ++++++ RECONNECTING ++++++ \n\n"'\033[0m' &
                 fi
@@ -146,7 +152,7 @@ if [ $STAGE -le 4 ]; then
                 
                 if [[ $i -eq $NUMBER_OF_COLS ]]; then
                         # We only disconnect the last collaborator
-                        $COMMAND_RUN_COLLABORATOR | tee >(process_stream "$CUT_ON_LOG" $RECONNECTION_TIMEOUT $COL_NAME) collaborator$i.log &
+                        $COMMAND_RUN_COLLABORATOR | tee >(process_stream "$CUT_ON_LOG" $COL_NAME) collaborator$i.log &
                 else
                         $COMMAND_RUN_COLLABORATOR | tee collaborator$i.log &
                 fi
