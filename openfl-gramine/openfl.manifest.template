@@ -51,6 +51,9 @@ sys.stack.size = "4M"
 sgx.thread_num = 512
 #sys.brk.max_size = "1M"
 
+sgx.isvprodid = {{ isvprodid }}
+sgx.isvsvn = {{ isvsvn }}
+
 sgx.trusted_files = [
   "file:/usr/local/bin/python3.8",
   "file:{{ gramine.runtimedir() }}/",
