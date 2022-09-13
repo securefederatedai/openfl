@@ -17,6 +17,8 @@ from openfl.protocols import utils
 from openfl.utilities import check_equal
 from openfl.utilities import check_is_in
 
+from .grpc_channel_options import channel_options
+
 logger = logging.getLogger(__name__)
 
 
@@ -54,11 +56,6 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
         self.root_certificate = root_certificate
         self.certificate = certificate
         self.private_key = private_key
-        self.channel_options = [
-            ('grpc.max_metadata_size', 32 * 1024 * 1024),
-            ('grpc.max_send_message_length', 128 * 1024 * 1024),
-            ('grpc.max_receive_message_length', 128 * 1024 * 1024)
-        ]
         self.server = None
         self.server_credentials = None
 
@@ -209,7 +206,9 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
             proto = aggregator_pb2.TaskResults()
             proto = utils.datastream_to_proto(proto, request)
         except RuntimeError:
-            raise RuntimeError('Empty stream message, reestablishing connection from client to resume training...')
+            raise RuntimeError(
+                'Empty stream message, reestablishing connection from client to resume training...'
+            )
 
         self.validate_collaborator(proto, context)
         # all messages get sanity checked
@@ -226,11 +225,11 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
         return aggregator_pb2.SendLocalTaskResultsResponse(
             header=self.get_header(collaborator_name)
         )
-        
+
     def get_server(self):
         """Return gRPC server."""
         self.server = server(ThreadPoolExecutor(max_workers=cpu_count()),
-                             options=self.channel_options)
+                             options=channel_options)
 
         aggregator_pb2_grpc.add_AggregatorServicer_to_server(self, self.server)
 
