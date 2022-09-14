@@ -62,3 +62,7 @@ Optional: start second envoy:
 cd workspace
 jupyter lab Pytorch_MedMNIST_2D.ipynb
 ```
+
+### 4. How to run this tutorial in Google Colab:
+
+Head over to [Colab](https://colab.research.google.com/) and upload `ColabNotebook_MedMNIST_2D.ipynb`. Then you can continue to work on it as if you are in the Jupyter Notebook server.
