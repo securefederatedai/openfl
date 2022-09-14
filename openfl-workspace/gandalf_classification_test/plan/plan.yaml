@@ -1,0 +1,163 @@
+# Copyright (C) 2022 Intel Corporation
+# Licensed subject to the terms of the separately executed evaluation license agreement between Intel Corporation and you.
+
+aggregator :
+  defaults : plan/defaults/aggregator.yaml
+  template : openfl.component.Aggregator
+  settings :
+    init_state_path : save/fets_seg_test_init.pbuf
+    best_state_path : save/fets_seg_test_best.pbuf
+    last_state_path : save/fets_seg_test_last.pbuf
+    rounds_to_train : 3
+    write_logs : true
+
+
+collaborator :
+  defaults : plan/defaults/collaborator.yaml
+  template : openfl.component.Collaborator
+  settings :
+    delta_updates    : false
+    opt_treatment    : RESET
+
+data_loader :
+  defaults : plan/defaults/data_loader.yaml
+  template : openfl.federated.data.loader_fets_challenge.FeTSChallengeDataLoaderWrapper
+  settings :
+    feature_shape : [128, 128]
+
+task_runner:
+  template: openfl.federated.task.runner_fets_challenge.FeTSChallengeTaskRunner
+  settings:
+    device: cuda
+    fets_config_dict:
+      output_dir: '.'
+      batch_size: 16
+      data_augmentation: {}
+      data_preprocessing:
+        resize:
+        - 128
+        - 128
+      enable_padding: false
+      in_memory: false
+      learning_rate: 0.001
+      loss_function: cel
+      metrics:
+        classification_accuracy: None
+        f1:
+          f1:
+            average: weighted
+          average: weighted
+          multi_class: true
+          mdmc_average: samplewise
+          threshold: 0.5
+        accuracy:
+          average: weighted
+          multi_class: true
+          mdmc_average: samplewise
+          threshold: 0.5
+          subset_accuracy: false
+        balanced_accuracy: None
+      modality: rad
+      optimizer:
+        type: adam
+      model:
+        amp: false
+        architecture: resnet18
+        base_filters: 32
+        batch_norm: true
+        class_list:
+        - 0
+        - 1
+        - 2
+        - 3
+        - 4
+        - 5
+        - 6
+        - 7
+        - 8
+        dimension: 2
+        final_layer: sigmoid
+        n_channels: 3
+        num_channels: 3
+        norm_type: batch
+        ignore_label_validation: None
+        type: torch
+        save_at_every_epoch: false
+      nested_training:
+        testing: 1
+        validation: -5
+      num_epochs: 5
+      opt: adam
+      patch_size:
+      - 128
+      - 128
+      - 1
+      patience: 5
+      patch_sampler: uniform
+      q_max_length: 5
+      q_num_workers: 0
+      q_samples_per_volume: 1
+      q_verbose: false
+      verbose: false
+      save_masks: false
+      scheduler:
+        type: triangle
+        step_size: 0.0002
+      version:
+        maximum: 0.0.14
+        minimum: 0.0.14
+      weighted_loss: true
+      clip_grad: null
+      clip_mode: null
+      data_postprocessing: {}
+      data_augmentation: {}
+      inference_mechanism:
+        grid_aggregator_overlap: crop
+        patch_overlap: 0
+      medcam_enabled: false
+      parallel_compute_command: ''
+      pin_memory_dataloader: false
+      print_rgb_label_warning: true
+      save_output: false
+      save_training: false
+      track_memory_usage: false
+      scaling_factor: 1
+      grid_aggregator_overlap: crop
+    train_csv: train_path_full.csv
+    val_csv: val_path_full.csv
+    
+
+network :
+  defaults : plan/defaults/network.yaml
+
+assigner :
+  defaults : plan/defaults/assigner.yaml
+
+tasks :
+  aggregated_model_validation:
+    function : validate
+    kwargs   :
+      apply   : global
+      metrics :
+      - valid_loss
+      - valid_accuracy
+    
+  locally_tuned_model_validation:
+    function  : validate
+    kwargs    :
+      apply: local
+      metrics :
+      - valid_loss
+      - valid_accuracy
+    
+  train:
+    function : train
+    kwargs   :
+      metrics     :
+      - loss
+      - train_accuracy
+      epochs : 1
+
+
+compression_pipeline :
+  defaults : plan/defaults/compression_pipeline.yaml

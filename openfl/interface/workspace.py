@@ -198,15 +198,15 @@ def import_(archive):
 
     requirements_filename = 'requirements.txt'
 
-    if isfile(requirements_filename):
-        check_call([
-            executable, '-m', 'pip', 'install', '--upgrade', 'pip'],
-            shell=False)
-        check_call([
-            executable, '-m', 'pip', 'install', '-r', 'requirements.txt'],
-            shell=False)
-    else:
-        echo('No ' + requirements_filename + ' file found.')
+    # if isfile(requirements_filename):
+    #     check_call([
+    #         executable, '-m', 'pip', 'install', '--upgrade', 'pip'],
+    #         shell=False)
+    #     check_call([
+    #         executable, '-m', 'pip', 'install', '-r', 'requirements.txt'],
+    #         shell=False)
+    # else:
+    #     echo('No ' + requirements_filename + ' file found.')
 
     echo(f'Workspace {archive} has been imported.')
     echo('You may need to copy your PKI certificates to join the federation.')

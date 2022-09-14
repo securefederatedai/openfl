@@ -42,6 +42,7 @@ def setup_logging(level='info', log_file=None):
     handlers.append(RichHandler(console=console))
     basicConfig(level=level, format='%(message)s',
                 datefmt='[%X]', handlers=handlers)
+    logging.root.level = 20
 
 
 def disable_warnings():
