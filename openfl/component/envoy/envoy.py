@@ -86,7 +86,7 @@ class Envoy:
                 with ExperimentWorkspace(
                         self.name + '_' + experiment_name,
                         data_file_path,
-                        is_install_requirements=True
+                        is_install_requirements=False  # FIXME: Skip for Colab
                 ):
                     self._run_collaborator()
             except Exception as exc:
