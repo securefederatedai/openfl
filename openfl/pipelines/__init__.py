@@ -3,6 +3,7 @@
 """openfl.pipelines module."""
 
 from .kc_pipeline import KCPipeline
+from .eden_pipeline import EdenPipeline
 from .no_compression_pipeline import NoCompressionPipeline
 from .random_shift_pipeline import RandomShiftPipeline
 from .skc_pipeline import SKCPipeline
@@ -15,5 +16,6 @@ __all__ = [
     'STCPipeline',
     'SKCPipeline',
     'KCPipeline',
+    'EdenPipeline',
     'TensorCodec',
 ]
