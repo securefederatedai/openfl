@@ -12,7 +12,17 @@ Define the below param in envoy.yaml config to shard the dataset across particip
 A simple multi-layer CNN is used with XLA compiled and Auto-grad based parameter updates.
 Definition provided in the notebook.
 
-### 3. How to run this tutorial (without TLS and locally as a simulation):
+### 3. Notebook Overview
+
+1. Class `CustomTrainState` - Subclasses `flax.training.TrainState`
+    - Variable `opt_vars` to keep track of generic optimizer variables.
+    - Method `update_state` to update the OpenFL `ModelInterface` registered state with the new_state returned within the `TaskInterface` registered training loop.
+
+2. Method `create_train_state`: Creates a new `TrainState` by encapsulating model layer definitions, random model parameters, and optax optimizer state.
+
+3. Method `apply_model` (`@jax.jit` decorated function): It takes a TrainState, images, and labels as parameters. It computes and returns the gradients, loss, and accuracy. These gradients are applied to a given state in the `update_model` method (`@jax.jit` decorated function) and a new TrainState instance is returned.
+
+### 4. How to run this tutorial (without TLS and locally as a simulation):
 
 0. Pre-requisites:
     
@@ -63,7 +73,7 @@ tensorboard --logdir logs/
 ```
 
 
-### 4. Known issues
+### 5. Known issues
 
 1. #### CUDA_ERROR_OUT_OF_MEMORY Exception - JAX XLA pre-allocates 90% of the GPU at start
 
