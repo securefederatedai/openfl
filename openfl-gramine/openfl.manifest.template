@@ -55,6 +55,7 @@ sgx.trusted_files = [
 ]
 
 sgx.allowed_files = [
+  "file:/etc",
   "file:/workspace/save",
   "file:/workspace/logs",
   "file:/workspace/cert",
