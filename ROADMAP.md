@@ -58,7 +58,7 @@ This causes community fragmentation and distracts from some of the bigger proble
 
 ## Upcoming OpenFL releases
 
-### OpenFL 1.5 (November 2022)
+### OpenFL 1.5 (Q4 2022)
 1. OpenFL Workflows Interface (Experimental)
 2. New use cases enabled by custom workflows
     * End-of-round validation with aggregator dataset
@@ -72,7 +72,7 @@ This causes community fragmentation and distracts from some of the bigger proble
 4. Significantly improved documentation
 5. New OpenFL Security Repo for that extends OpenFL to provide governance, and end-to-end security for federated learning experiments
 
-### OpenFL 2.0 (February 2022)
+### OpenFL 2.0 (2023)
 1. Interface Cohesion
     * High level interface: Interactive API
     * Mid level interface: Workflow API
