@@ -95,3 +95,10 @@ OR
 ```
 %env TF_FORCE_GPU_ALLOW_GROWTH=true
 ```
+
+3. #### DNN library Not found error
+
+- Make sure the jaxlib(cuda version), Nvidia Driver, CUDA and cuDNN versions are specific, relevant and compatible as per the documentation.
+- Reference:
+    -   CUDA and cuDNN Compatibility Matrix: https://docs.nvidia.com/deeplearning/cudnn/support-matrix/index.html
+    -   Official JAX Compatible CUDA Releases: https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
