@@ -3,8 +3,15 @@ set -e
 ENVOY_NAME=$1
 ENVOY_CONF=$2
 
-# export JAX_PLATFORM_NAME=cpu # Set preferred platform for computation - cpu/gpu/tpu.
-export XLA_PYTHON_CLIENT_PREALLOCATE=false # Overide default behaviour. Incrementally allocate memory as required
-export TF_FORCE_GPU_ALLOW_GROWTH=true
+DEFAULT_DEVICE='CPU'
+
+if [[ $DEFAULT_DEVICE == 'CPU' ]]
+then
+    export JAX_PLATFORMS="CPU" # Force XLA to use CPU
+    export CUDA_VISIBLE_DEVICES='-1' # Force TF to use CPU
+else
+    export XLA_PYTHON_CLIENT_PREALLOCATE=false
+    export TF_FORCE_GPU_ALLOW_GROWTH=true
+fi
 
 fx envoy start -n "$ENVOY_NAME" --disable-tls --envoy-config-path "$ENVOY_CONF" -dh localhost -dp 50055
