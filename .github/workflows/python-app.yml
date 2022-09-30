@@ -80,3 +80,4 @@ jobs:
         cd /home/runner/work/openfl/openfl
         ls
         bash tests/github/test_fets_challenge.sh fets_challenge_seg_test aggregator col1 col2 $(hostname --all-fqdns | awk '{print $1}') --rounds-to-train 1
+        
