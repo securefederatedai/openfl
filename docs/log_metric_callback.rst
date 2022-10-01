@@ -6,14 +6,15 @@
 ***********************
 Metric Logging Callback
 ***********************
-
-With the director-based workflow, you can use custom metric logging function for each task via Python\*\  API or command line interface. This function calls on the aggregator node.
-
+You can use custom metric logging function for each task via Python\*\  API or command line interface. This function calls on the aggregator node.
 
 Python API
 ==========
 
-Define the function with the follow signature:
+Director-based workflow supports `Tensorboard <https://www.tensorflow.org/tensorboard/get_started>`_ to log metrics by default. Once :code:`fl_experiment.stream_metrics()` is called from the frontend API, it saves logs in the tensorboard format.
+After the experiment has finished, the logs can be invoked from the workspace with :code:`tensorboard --logdir logs`. 
+
+You could also add your custom metric logging function by define the function with the follow signature:
 
 .. code-block:: python
 
@@ -29,6 +30,7 @@ Define the function with the follow signature:
             round_number (int): Round number
         """
         your code 
+
 
 Command Line Interface
 ======================
