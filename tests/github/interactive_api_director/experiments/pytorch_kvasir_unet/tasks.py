@@ -32,8 +32,10 @@ def train(unet_model, train_loader, optimizer, device, loss_fn=soft_dice_loss, s
     losses = []
 
     for data, target in train_loader:
-        data, target = torch.tensor(data).to(device), torch.tensor(
-            target).to(device, dtype=torch.float32)
+        #data, target = torch.tensor(data).to(device), torch.tensor(
+        #    target).to(device, dtype=torch.float32)
+        data, target = data.clone().detach().to(device), target.clone(
+            ).detach().to(device, dtype=torch.float32)
         optimizer.zero_grad()
         output = unet_model(data)
         loss = loss_fn(output=output, target=target)
