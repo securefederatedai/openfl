@@ -22,7 +22,7 @@ Equivalently for the interactive API, this can be done by only registering a sin
 But there are *many* other types of workflows that can't be easily represented purely by training / validation tasks performed on a collaborator with a single model.
 An example is training a Federated Generative Adversarial Network (GAN); because this may be represented by separate generative and discriminator models, and could leak information about a collaborator dataset,
 the interface we provide should allow for better control over what gets sent over the network and how. 
-Another common request we get if for validation with an aggregator dataset after training. Today there is not a great way to enable this in OpenFL. 
+Another common request we get is for validation with an aggregator's dataset after training. Today there is not a great way to enable this in OpenFL. 
 
 For these reasons, we are planning to add *experimental support* for complex distributed workflows in OpenFL 1.5, with the following goals: 
 
