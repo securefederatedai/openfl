@@ -103,7 +103,8 @@ class CollaboratorGRPCClientShim:
                  aggregator_uuid=None,
                  federation_uuid=None,
                  single_col_cert_common_name=None,
-                 proto_path='proto_path',
+                 request_path='request_path',
+                 response_path='response_path',
                  **kwargs):
         """Initialize."""
         self.uri = f'{agg_addr}:{agg_port}'
@@ -112,8 +113,10 @@ class CollaboratorGRPCClientShim:
         self.ca = ca
         self.certificate = certificate
         self.private_key = private_key
-        self.proto_path = proto_path
-        Path(self.proto_path).mkdir(parents=True, exist_ok=True)
+        self.request_path = request_path
+        self.response_path = response_path
+        Path(self.request_path).mkdir(parents=True, exist_ok=True)
+        Path(self.response_path).mkdir(parents=True, exist_ok=True)
 
         self.channel_options = [
             ('grpc.max_metadata_size', 32 * 1024 * 1024),
@@ -273,7 +276,7 @@ class CollaboratorGRPCClientShim:
         self.completed_requests = {}
         # Parse and issue requests from airgapped collaborator
         while True:
-            for request_file in glob(f'{self.proto_path}/*request*.pbuf'):
+            for request_file in glob(f'{self.request_path}/*request*.pbuf'):
                 if request_file in self.completed_requests:
                     continue
                 # Each request to be unpacked, repacked to reuse existing functions
@@ -334,10 +337,10 @@ class CollaboratorGRPCClientShim:
     def _save_response(self, response_path, proto):
 
         # Save intermediate response
-        intermediate_resp_file = response_path.replace('response','intermediate_resp')
+        intermediate_resp_file = response_path.replace('_response_','_intermediate_resp_')
         with open(intermediate_resp_file,'wb') as f:
             f.write(proto.SerializeToString())
-        # Reponse is now ready to send
+        # Response is now ready to send
         Path(intermediate_resp_file).rename(response_path)
 
     @_atomic_connection

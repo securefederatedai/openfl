@@ -36,7 +36,8 @@ class AggregatorGRPCServerShim(AggregatorServicer):
                  ca=None,
                  certificate=None,
                  private_key=None,
-                 proto_path='proto_path',
+                 request_path='request_path',
+                 response_path='response_path',
                  **kwargs):
         """
         Class initializer.
@@ -60,8 +61,10 @@ class AggregatorGRPCServerShim(AggregatorServicer):
         self.ca = ca
         self.certificate = certificate
         self.private_key = private_key
-        self.proto_path = proto_path
-        Path(self.proto_path).mkdir(parents=True, exist_ok=True)
+        self.request_path = request_path
+        self.response_path = response_path
+        Path(self.request_path).mkdir(parents=True, exist_ok=True)
+        Path(self.response_path).mkdir(parents=True, exist_ok=True)
         self.channel_options = [
             ('grpc.max_metadata_size', 32 * 1024 * 1024),
             ('grpc.max_send_message_length', 128 * 1024 * 1024),
@@ -140,15 +143,15 @@ class AggregatorGRPCServerShim(AggregatorServicer):
         Generates filenames for request / response protobufs
         """
         request_id = randint(0,1000000000000)
-        request = f'{self.proto_path}/{collaborator_name}_{func_name}_request_{request_id}.pbuf'
-        response = f'{self.proto_path}/{collaborator_name}_{func_name}_response_{request_id}.pbuf'
+        request = f'{self.request_path}/{collaborator_name}_{func_name}_request_{request_id}.pbuf'
+        response = f'{self.response_path}/{collaborator_name}_{func_name}_response_{request_id}.pbuf'
         return request, response
 
     def _request_response_shim(self, request, collaborator_name, func_name):
         request_file, response_file = self._generate_fnames(collaborator_name,func_name)
 
         # Write to intermediate file to prevent premature request
-        intermediate_req_file = request_file.replace('request','intermediate_req')
+        intermediate_req_file = request_file.replace('_request_','_intermediate_req_')
         with open(intermediate_req_file,'wb') as f:
             f.write(request.SerializeToString())
             self.logger.info(f'Serialized {func_name} request')
