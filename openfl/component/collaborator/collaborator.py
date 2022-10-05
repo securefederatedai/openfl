@@ -12,6 +12,7 @@ from openfl.pipelines import NoCompressionPipeline
 from openfl.pipelines import TensorCodec
 from openfl.protocols import utils
 from openfl.utilities import TensorKey
+from multiprocessing.dummy import Pool as ThreadPool
 
 
 class OptTreatment(Enum):
@@ -218,7 +219,12 @@ class Collaborator:
 
     def get_numpy_dict_for_tensorkeys(self, tensor_keys):
         """Get tensor dictionary for specified tensorkey set."""
-        return {k.tensor_name: self.get_data_for_tensorkey(k) for k in tensor_keys}
+        pool = ThreadPool(len(tensor_keys))
+        results = dict(zip([k.tensor_name for k in tensor_keys], pool.map(self.get_data_for_tensorkey, tensor_keys)))
+        pool.close()
+        pool.join()
+
+        return results
 
     def get_data_for_tensorkey(self, tensor_key):
         """

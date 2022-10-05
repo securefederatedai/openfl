@@ -258,7 +258,7 @@ class CollaboratorGRPCClient:
             grpc.intercept_channel(self.channel, *self.interceptors)
         )
 
-    @_atomic_connection
+    #@_atomic_connection
     def get_tasks(self, collaborator_name):
         """Get tasks from the aggregator."""
         self._set_header(collaborator_name)
@@ -268,7 +268,7 @@ class CollaboratorGRPCClient:
 
         return response.tasks, response.round_number, response.sleep_time, response.quit
 
-    @_atomic_connection
+    #@_atomic_connection
     def get_aggregated_tensor(self, collaborator_name, tensor_name, round_number,
                               report, tags, require_lossless):
         """Get aggregated tensor from the aggregator."""
@@ -287,7 +287,7 @@ class CollaboratorGRPCClient:
 
         return response.tensor
 
-    @_atomic_connection
+    #@_atomic_connection
     def send_local_task_results(self, collaborator_name, round_number,
                                 task_name, data_size, named_tensors):
         """Send task results to the aggregator."""
