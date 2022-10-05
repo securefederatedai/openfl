@@ -19,6 +19,8 @@ from openfl.protocols.utils import construct_model_proto
 from openfl.protocols.utils import deconstruct_model_proto
 from openfl.transport.grpc.director_server import CLIENT_ID_DEFAULT
 
+from .grpc_channel_options import channel_options
+
 logger = logging.getLogger(__name__)
 
 
@@ -30,9 +32,8 @@ class ShardDirectorClient:
         """Initialize a shard director client object."""
         self.shard_name = shard_name
         director_addr = f'{director_host}:{director_port}'
-        options = [('grpc.max_message_length', 100 * 1024 * 1024)]
         if not tls:
-            channel = grpc.insecure_channel(director_addr, options=options)
+            channel = grpc.insecure_channel(director_addr, options=channel_options)
         else:
             if not (root_certificate and private_key and certificate):
                 raise Exception('No certificates provided')
@@ -51,7 +52,7 @@ class ShardDirectorClient:
                 private_key=private_key_b,
                 certificate_chain=certificate_b
             )
-            channel = grpc.secure_channel(director_addr, credentials, options=options)
+            channel = grpc.secure_channel(director_addr, credentials, options=channel_options)
         self.stub = director_pb2_grpc.DirectorStub(channel)
 
     def report_shard_info(self, shard_descriptor: Type[ShardDescriptor],
@@ -164,12 +165,10 @@ class DirectorClient:
     ) -> None:
         """Initialize director client object."""
         director_addr = f'{director_host}:{director_port}'
-        channel_opt = [('grpc.max_send_message_length', 512 * 1024 * 1024),
-                       ('grpc.max_receive_message_length', 512 * 1024 * 1024)]
         if not tls:
             if not client_id:
                 client_id = CLIENT_ID_DEFAULT
-            channel = grpc.insecure_channel(director_addr, options=channel_opt)
+            channel = grpc.insecure_channel(director_addr, options=channel_options)
             headers = {
                 'client_id': client_id,
             }
@@ -194,7 +193,7 @@ class DirectorClient:
                 certificate_chain=certificate_b
             )
 
-            channel = grpc.secure_channel(director_addr, credentials, options=channel_opt)
+            channel = grpc.secure_channel(director_addr, credentials, options=channel_options)
         self.stub = director_pb2_grpc.DirectorStub(channel)
 
     def set_new_experiment(self, name, col_names, arch_path,

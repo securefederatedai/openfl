@@ -32,7 +32,7 @@ def read_data(image_path, mask_path):
 
     """
     img = io.imread(image_path)
-    assert(img.shape[2] == 3)
+    assert (img.shape[2] == 3)
     mask = io.imread(mask_path)
     return (img, mask[:, :, 0].astype(np.uint8))
 
@@ -59,7 +59,7 @@ class KvasirDataset(Dataset):
 
         self.images_names = self.images_names[shard_num:: collaborator_count]
         self.is_validation = is_validation
-        assert(len(self.images_names) > 8)
+        assert (len(self.images_names) > 8)
         validation_size = len(self.images_names) // 8
 
         if is_validation:
@@ -92,8 +92,8 @@ class KvasirDataset(Dataset):
 
 def load_kvasir_dataset():
     """Load and unzip kvasir dataset."""
-    zip_sha384 = ('e30d18a772c6520476e55b610a4db457237f151e'
-                  '19182849d54b49ae24699881c1e18e0961f77642be900450ef8b22e7')
+    zip_sha384 = ('66cd659d0e8afd8c83408174'
+                  '1ade2b75dada8d4648b816f2533c8748b1658efa3d49e205415d4116faade2c5810e241e')
     data_url = ('https://datasets.simula.no/downloads/'
                 'hyper-kvasir/hyper-kvasir-segmented-images.zip')
     filename = 'kvasir.zip'

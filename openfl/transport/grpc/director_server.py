@@ -23,6 +23,8 @@ from openfl.protocols.utils import construct_model_proto
 from openfl.protocols.utils import deconstruct_model_proto
 from openfl.protocols.utils import get_headers
 
+from .grpc_channel_options import channel_options
+
 logger = logging.getLogger(__name__)
 
 CLIENT_ID_DEFAULT = '__default__'
@@ -91,9 +93,7 @@ class DirectorGRPCServer(director_pb2_grpc.DirectorServicer):
         loop.run_until_complete(self._run_server())
 
     async def _run_server(self):
-        channel_opt = [('grpc.max_send_message_length', 512 * 1024 * 1024),
-                       ('grpc.max_receive_message_length', 512 * 1024 * 1024)]
-        self.server = aio.server(options=channel_opt)
+        self.server = aio.server(options=channel_options)
         director_pb2_grpc.add_DirectorServicer_to_server(self, self.server)
 
         if not self.tls:

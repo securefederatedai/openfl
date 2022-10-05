@@ -8,8 +8,8 @@ def load_data():
     os.makedirs('data', exist_ok=True)
     os.system("wget -nc 'https://datasets.simula.no/downloads/hyper-kvasir/hyper-kvasir-segmented-images.zip'"
               " -O ./data/kvasir.zip")
-    zip_sha384 = 'e30d18a772c6520476e55b610a4db457237f151e' \
-                 '19182849d54b49ae24699881c1e18e0961f77642be900450ef8b22e7'
+    zip_sha384 = ('66cd659d0e8afd8c83408174'
+                  '1ade2b75dada8d4648b816f2533c8748b1658efa3d49e205415d4116faade2c5810e241e')
     validate_file_hash('./data/kvasir.zip', zip_sha384)
     os.system('unzip -n ./data/kvasir.zip -d ./data')
 
