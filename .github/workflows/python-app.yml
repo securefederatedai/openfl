@@ -41,6 +41,7 @@ jobs:
     - name: Interactive API - tensorflow_mnist
       run: |
         python setup.py build_grpc
+        pip install tensorflow==2.8
         cd tests/github/interactive_api_director/experiments/tensorflow_mnist
         ./run.sh
         pkill fx
@@ -62,13 +63,14 @@ jobs:
       uses: actions/checkout@master
       with:
           repository: CBICA/GaNDLF
-          ref: master
+          ref: 0.0.14
+          fetch-depth: 1
           path: fets_challenge
     - name: FeTS Challenge Task Runner Test
       run: |
         cd fets_challenge
         pwd
-        pip3 install torch==1.8.2+cpu torchvision==0.9.2+cpu torchaudio===0.8.2 -f https://download.pytorch.org/whl/lts/1.8/torch_lts.html
+        pip install torch==1.8.2+cpu torchvision==0.9.2+cpu torchaudio===0.8.2 -f https://download.pytorch.org/whl/lts/1.8/torch_lts.html
         pip install -e .
         # Download data and Split CSVs into training and validation
         python -c "from testing.test_full import test_generic_download_data, test_generic_constructTrainingCSV; test_generic_download_data(); test_generic_constructTrainingCSV()"
@@ -78,3 +80,4 @@ jobs:
         cd /home/runner/work/openfl/openfl
         ls
         bash tests/github/test_fets_challenge.sh fets_challenge_seg_test aggregator col1 col2 $(hostname --all-fqdns | awk '{print $1}') --rounds-to-train 1
+        

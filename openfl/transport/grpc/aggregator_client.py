@@ -16,6 +16,8 @@ from openfl.protocols import aggregator_pb2_grpc
 from openfl.protocols import utils
 from openfl.utilities import check_equal
 
+from .grpc_channel_options import channel_options
+
 
 class ConstantBackoff:
     """Constant Backoff policy."""
@@ -85,6 +87,7 @@ def _atomic_connection(func):
 
     return wrapper
 
+
 def _resend_data_on_reconnection(func):
     def wrapper(self, *args, **kwargs):
         while True:
@@ -92,12 +95,15 @@ def _resend_data_on_reconnection(func):
                 response = func(self, *args, **kwargs)
             except grpc.RpcError as e:
                 if e.code() == grpc.StatusCode.UNKNOWN:
-                    self.logger.info(f'Attempting to resend data request to aggregator at {self.uri}')
+                    self.logger.info(
+                        f'Attempting to resend data request to aggregator at {self.uri}'
+                    )
                 continue
             break
         return response
 
     return wrapper
+
 
 class AggregatorGRPCClient:
     """Client to the aggregator over gRPC-TLS."""
@@ -121,12 +127,6 @@ class AggregatorGRPCClient:
         self.root_certificate = root_certificate
         self.certificate = certificate
         self.private_key = private_key
-
-        self.channel_options = [
-            ('grpc.max_metadata_size', 32 * 1024 * 1024),
-            ('grpc.max_send_message_length', 128 * 1024 * 1024),
-            ('grpc.max_receive_message_length', 128 * 1024 * 1024)
-        ]
 
         self.logger = getLogger(__name__)
 
@@ -175,7 +175,7 @@ class AggregatorGRPCClient:
             An insecure gRPC channel object
 
         """
-        return grpc.insecure_channel(uri, options=self.channel_options)
+        return grpc.insecure_channel(uri, options=channel_options)
 
     def create_tls_channel(self, uri, root_certificate, disable_client_auth,
                            certificate, private_key):
@@ -213,7 +213,7 @@ class AggregatorGRPCClient:
         )
 
         return grpc.secure_channel(
-            uri, credentials, options=self.channel_options)
+            uri, credentials, options=channel_options)
 
     def _set_header(self, collaborator_name):
         self.header = aggregator_pb2.MessageHeader(
