@@ -92,13 +92,14 @@ This project is licensed under [Apache License Version 2.0](LICENSE). By contrib
 ## Citation
 
 ```
-@misc{reina2021openfl,
-      title={OpenFL: An open-source framework for Federated Learning}, 
-      author={G Anthony Reina and Alexey Gruzdev and Patrick Foley and Olga Perepelkina and Mansi Sharma and Igor Davidyuk and Ilya Trushkin and Maksim Radionov and Aleksandr Mokrov and Dmitry Agapov and Jason Martin and Brandon Edwards and Micah J. Sheller and Sarthak Pati and Prakash Narayana Moorthy and Shih-han Wang and Prashant Shah and Spyridon Bakas},
-      year={2021},
-      eprint={2105.06413},
-      archivePrefix={arXiv},
-      primaryClass={cs.LG}
+@article{openfl_citation,
+	author={Foley, Patrick and Sheller, Micah J and Edwards, Brandon and Pati, Sarthak and Riviera, Walter and Sharma, Mansi and Moorthy, Prakash Narayana and Wang, Shi-han and Martin, Jason and Mirhaji, Parsa and Shah, Prashant and Bakas, Spyridon},
+	title={OpenFL: the open federated learning library},
+	journal={Physics in Medicine \& Biology},
+	url={http://iopscience.iop.org/article/10.1088/1361-6560/ac97d9},
+	year={2022},
+	doi={10.1088/1361-6560/ac97d9},
+	publisher={IOP Publishing}
 }
 ```
 
