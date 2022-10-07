@@ -16,6 +16,18 @@ Shay Vargaftik, Ran Ben Basat, Amit Portnoy, Gal Mendelson, Yaniv Ben Itzhak, Mi
 Proceedings of the 39th International Conference on Machine Learning, PMLR 162:21984-22014, 2022.
 
 https://proceedings.mlr.press/v162/vargaftik22a.html
+
+------------------------------------------------------------------------------------------------------------------------
+
+In order to use and configure EDEN use the following lines in plan.yaml:
+ 
+compression_pipeline :
+  defaults : plan/defaults/compression_pipeline.yaml
+  template : openfl.pipelines.EdenPipeline
+  settings :
+    n_bits : <number of bits per coordinate>
+    device: <cpu|cuda:0|cuda:1|...>
+    dim_threshold: 1000 #EDEN compresses layers that their dimension is above the dim_threshold, use 1000 as default
 """
 
 import torch
