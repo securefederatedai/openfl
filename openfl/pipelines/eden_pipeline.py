@@ -9,9 +9,7 @@
 
 """
 EDEN is an unbiased lossy compression method that uses a random rotation followed by deterministic quantization and scaling. 
-EDEN is designed for federated learning and supports arbitrary bandwidth constraints, heterogeneous clients, and lossy networks.
-
-EDEN also provides strong theoretical guarantees, as described in the following ICML 2022 paper: 
+EDEN provides strong theoretical guarantees, as described in the following ICML 2022 paper: 
 
 "EDEN: Communication-Efficient and Robust Distributed Mean Estimation for Federated Learning" 
 Shay Vargaftik, Ran Ben Basat, Amit Portnoy, Gal Mendelson, Yaniv Ben Itzhak, Michael Mitzenmacher, 
@@ -190,7 +188,7 @@ class Eden:
         
         for i in range(self.nbits):
             bitVec[Lunit*i:Lunit*(i+1)] = toBits_h((intBoolVec % 2 != 0).int())
-            intBoolVec //= 2
+            intBoolVec = torch.div(intBoolVec, 2, rounding_mode='floor')
         
         return bitVec
     
@@ -205,7 +203,7 @@ class Eden:
             iv = torch.zeros((8, n)).to(device)
             for i in range(8):
                 temp = bv.clone()
-                iv[i] = (temp//(2**i)%2 != 0).int()
+                iv[i] = (torch.div(temp, 2 ** i, rounding_mode='floor') % 2 != 0).int()
 
             return iv.T.reshape(-1)  
         
