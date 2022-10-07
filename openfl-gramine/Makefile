@@ -1,5 +1,9 @@
 ARCH_LIBDIR ?= /lib/$(shell $(CC) -dumpmachine)
 
+# Enclave attributes to the manifest
+SGX_ISVPRODID ?= 0
+SGX_ISVSVN ?= 0
+
 # This is a signer key on the BUILDING machine
 SGX_SIGNER_KEY ?= /key.pem
 
@@ -20,6 +24,8 @@ openfl.manifest: openfl.manifest.template
 	gramine-manifest \
 		-Dlog_level=$(GRAMINE_LOG_LEVEL) \
 		-Darch_libdir=$(ARCH_LIBDIR) \
+		-Disvprodid=$(SGX_ISVPRODID) \
+		-Disvsvn=$(SGX_ISVSVN) \
 		-Dno_proxy=$(no_proxy) \
 		-Dhttp_proxy=$(http_proxy) \
 		-Dhttps_proxy=$(https_proxy) \
