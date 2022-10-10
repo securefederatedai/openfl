@@ -26,8 +26,6 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install flake8 pytest
-        pip install -r requirements-test.txt
         pip install .
     - name: Setup FeTS Challenge Prerequisites
       uses: actions/checkout@master
