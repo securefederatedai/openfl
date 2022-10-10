@@ -1,18 +1,6 @@
-# MedMNIST 3D Classification Tutorial
+# PyTorch_Kvasir_UNet
 
-![MedMNISTv2_overview](https://raw.githubusercontent.com/MedMNIST/MedMNIST/main/assets/medmnistv2.jpg)
-
-For more details, please refer to the original paper:
-**MedMNIST v2: A Large-Scale Lightweight Benchmark for 2D and 3D Biomedical Image Classification** ([arXiv](https://arxiv.org/abs/2110.14795))
-or visit the MedMNIST [PyPI](https://pypi.org/project/medmnist/).
-
-## **I. About model and experiments**
-
-We use a simple convolutional neural network and settings coming from [the experiments](https://github.com/MedMNIST/experiments) repository.
-<br/>
-<br/>
-
-## **II. How to run this tutorial (without TLC and locally as a simulation):**
+## **How to run this tutorial (without TLC and locally as a simulation):**
 <br/>
 
 ### 0. If you haven't done so already, create a virtual environment, install OpenFL, and upgrade pip:
@@ -34,7 +22,7 @@ We use a simple convolutional neural network and settings coming from [the exper
    - Navigate to the tutorial:
     
    ```sh
-   cd openfl/openfl-tutorials/interactive_api/PyTorch_MedMNIST_3D
+   cd openfl/openfl-tutorials/interactive_api/PyTorch_Kvasir_UNet
    ```
 
 <br/>
@@ -52,17 +40,21 @@ cd director
 
 ```sh
 cd envoy
-pip install -r requirements.txt
+pip install -r sd_requirements.txt
+```
+ - If you have GPUs:
+```sh
 ./start_envoy.sh env_one envoy_config.yaml
 ```
+  - For no GPUs, use:
+```sh
+./start_envoy.sh env_one envoy_config_no_gpu.yaml
+```
+
 
 Optional: Run a second envoy in an additional terminal:
   - Ensure step 2 is complete for this terminal as well.
-  - Run the second envoy:
-```sh
-cd envoy
-./start_envoy.sh env_two envoy_config.yaml
-```
+  - Repeat step 4 instructions above but change "env_one" name to "env_two" (or another name of your choice).
 
 <br/>
 
@@ -70,9 +62,9 @@ cd envoy
 
 ```sh
 cd workspace
-jupyter lab Pytorch_MedMNIST_3D.ipynb
+jupyter lab PyTorch_Kvasir_UNet.ipynb
 ```
-- A Jupyter Server URL will appear in your terminal. In your browser, proceed to that link. Once the webpage loads, click on the Pytorch_MedMNIST_3D.ipynb file. 
+- A Jupyter Server URL will appear in your terminal. In your browser, proceed to that link. Once the webpage loads, click on the PyTorch_Kvasir_UNet.ipynb file. 
 - To run the experiment, select the icon that looks like two triangles to "Restart Kernel and Run All Cells". 
 - You will notice activity in your terminals as the experiment runs, and when the experiment is finished the director terminal will display a message that the experiment has finished successfully.  
  
