@@ -138,7 +138,7 @@ setup(
         'docker',
         'dynaconf==3.1.7',
         'flatten_json',
-        'grpcio~=1.34.0',
+        'grpcio~=1.48.2',
         'ipykernel',
         'jupyterlab',
         'numpy',
@@ -151,8 +151,8 @@ setup(
         'tensorboardX',
         'tqdm',
     ],
-    setup_requires=['grpcio-tools~=1.34.0'],
-    python_requires='>=3.6, <3.9',
+    setup_requires=['grpcio-tools~=1.48.2'],
+    python_requires='>=3.6, <3.11',
     project_urls={
         'Bug Tracker': 'https://github.com/intel/openfl/issues',
         'Documentation': 'https://openfl.readthedocs.io/en/stable/',
@@ -176,6 +176,10 @@ setup(
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9',
+        'Programming Language :: Python :: 3.10',
+
+
     ],
     entry_points={
         'console_scripts': ['fx=openfl.interface.cli:entry']
