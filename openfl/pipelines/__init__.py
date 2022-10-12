@@ -1,6 +1,12 @@
 # Copyright (C) 2020-2021 Intel Corporation
+# Copyright 2022 VMware, Inc.
 # SPDX-License-Identifier: Apache-2.0
 """openfl.pipelines module."""
+
+import pkgutil
+
+if pkgutil.find_loader('torch'):
+    from .eden_pipeline import EdenPipeline  # NOQA
 
 from .kc_pipeline import KCPipeline
 from .no_compression_pipeline import NoCompressionPipeline
@@ -15,5 +21,6 @@ __all__ = [
     'STCPipeline',
     'SKCPipeline',
     'KCPipeline',
+    'EdenPipeline',
     'TensorCodec',
 ]
