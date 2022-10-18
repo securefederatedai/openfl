@@ -83,7 +83,7 @@ For logging through Tensorboard, enable the parameter :code:`write_logs : true` 
     settings :
         write_logs : true
 
-You can also write your custom callback function instead:
+Follow the steps below to write your custom callback function instead. As an example, a full implementation can be found at `Federated_Pytorch_MNIST_Tutorial.ipynb <https://github.com/intel/openfl/blob/develop/openfl-tutorials/Federated_Pytorch_MNIST_Tutorial.ipynb>`_ and in the **torch_cnn_mnist** workspace.
 
 1. Define the callback function, like how you defined in Python API, in the **src** directory in your workspace.
 
@@ -119,6 +119,3 @@ The following is an example of a log metric callback, which writes metric values
     def write_metric(node_name, task_name, metric_name, metric, round_number):
         writer.add_scalar("{}/{}/{}".format(node_name, task_name, metric_name),
                         metric, round_number) 
-
-
-A full implementation can be found at `Federated_Pytorch_MNIST_Tutorial.ipynb <https://github.com/intel/openfl/blob/develop/openfl-tutorials/Federated_Pytorch_MNIST_Tutorial.ipynb>`_ and in the **torch_cnn_mnist** workspace.
