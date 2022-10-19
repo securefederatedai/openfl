@@ -61,6 +61,7 @@ class Experiment:
             root_certificate: Union[Path, str] = None,
             private_key: Union[Path, str] = None,
             certificate: Union[Path, str] = None,
+            install_requirements: bool = False,
     ):
         """Run experiment."""
         self.status = Status.IN_PROGRESS
@@ -68,7 +69,11 @@ class Experiment:
             logger.info(f'New experiment {self.name} for '
                         f'collaborators {self.collaborators}')
 
-            with ExperimentWorkspace(self.name, self.archive_path):
+            with ExperimentWorkspace(
+                experiment_name=self.name,
+                data_file_path=self.archive_path,
+                install_requirements=install_requirements,
+            ):
                 aggregator_grpc_server = self._create_aggregator_grpc_server(
                     tls=tls,
                     root_certificate=root_certificate,

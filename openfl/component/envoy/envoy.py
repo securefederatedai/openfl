@@ -39,6 +39,7 @@ class Envoy:
             private_key: Optional[Union[Path, str]] = None,
             certificate: Optional[Union[Path, str]] = None,
             tls: bool = True,
+            install_requirements: bool = True,
             cuda_devices: Union[tuple, list] = (),
             cuda_device_monitor: Optional[Type[CUDADeviceMonitor]] = None,
     ) -> None:
@@ -60,6 +61,7 @@ class Envoy:
 
         self.shard_descriptor = shard_descriptor
         self.cuda_devices = tuple(cuda_devices)
+        self.install_requirements = install_requirements
 
         # Optional plugins
         self.cuda_device_monitor = cuda_device_monitor
@@ -84,9 +86,9 @@ class Envoy:
             self.is_experiment_running = True
             try:
                 with ExperimentWorkspace(
-                        self.name + '_' + experiment_name,
-                        data_file_path,
-                        is_install_requirements=True
+                        experiment_name=self.name + '_' + experiment_name,
+                        data_file_path=data_file_path,
+                        install_requirements=self.install_requirements
                 ):
                     self._run_collaborator()
             except Exception as exc:
