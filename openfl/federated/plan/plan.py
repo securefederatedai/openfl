@@ -517,7 +517,6 @@ class Plan:
 
         if self.client_ is None:
             self.client_ = AggregatorGRPCClient(**client_args)
-
         return self.client_
 
     def get_server(self, root_certificate=None, private_key=None, certificate=None, **kwargs):
@@ -546,7 +545,7 @@ class Plan:
         return self.server_
 
     def interactive_api_get_server(self, *, tensor_dict, root_certificate, certificate,
-                                   private_key, tls):
+                                   private_key, tls, agg_port):
         """Get gRPC server of the aggregator instance."""
         server_args = self.config['network'][SETTINGS]
 
@@ -555,9 +554,8 @@ class Plan:
         server_args['certificate'] = certificate
         server_args['private_key'] = private_key
         server_args['tls'] = tls
-
+        server_args['agg_port'] = agg_port
         server_args['aggregator'] = self.get_aggregator(tensor_dict)
-
         if self.server_ is None:
             self.server_ = AggregatorGRPCServer(**server_args)
 

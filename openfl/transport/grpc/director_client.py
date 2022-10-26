@@ -83,10 +83,11 @@ class ShardDirectorClient:
         logger.info('WaitExperiment response has received')
         response = next(response_iter)
         experiment_name = response.experiment_name
+        agg_port = response.agg_port
         if not experiment_name:
             raise Exception('No experiment')
 
-        return experiment_name
+        return experiment_name, agg_port
 
     def get_experiment_data(self, experiment_name):
         """Get an experiment data from the director."""

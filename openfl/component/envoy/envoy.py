@@ -74,7 +74,7 @@ class Envoy:
         while True:
             try:
                 # Workspace import should not be done by gRPC client!
-                experiment_name = self.director_client.wait_experiment()
+                experiment_name, agg_port = self.director_client.wait_experiment()
                 data_stream = self.director_client.get_experiment_data(experiment_name)
             except Exception as exc:
                 logger.exception(f'Failed to get experiment: {exc}')
@@ -88,7 +88,7 @@ class Envoy:
                         data_file_path,
                         is_install_requirements=True
                 ):
-                    self._run_collaborator()
+                    self._run_collaborator(agg_port=agg_port)
             except Exception as exc:
                 logger.exception(f'Collaborator failed with error: {exc}:')
                 self.director_client.set_experiment_failed(
@@ -150,10 +150,12 @@ class Envoy:
                              f'Check your cuda device monitor plugin.')
         return cuda_devices_info
 
-    def _run_collaborator(self, plan='plan/plan.yaml'):
+    def _run_collaborator(self, plan='plan/plan.yaml', agg_port=None):
         """Run the collaborator for the experiment running."""
         plan = Plan.parse(plan_config_path=Path(plan))
-
+        if agg_port:
+            plan.config['network']['settings']['agg_port'] = agg_port
+            echo(f'Aggregator port = {agg_port}')
         # TODO: Need to restructure data loader config file loader
         echo(f'Data = {plan.cols_data_paths}')
         logger.info('🧿 Starting a Collaborator Service.')

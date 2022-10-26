@@ -57,6 +57,7 @@ class Experiment:
 
     async def start(
             self, *,
+            agg_port: int,
             tls: bool = True,
             root_certificate: Union[Path, str] = None,
             private_key: Union[Path, str] = None,
@@ -70,6 +71,7 @@ class Experiment:
 
             with ExperimentWorkspace(self.name, self.archive_path):
                 aggregator_grpc_server = self._create_aggregator_grpc_server(
+                    agg_port=agg_port,
                     tls=tls,
                     root_certificate=root_certificate,
                     private_key=private_key,
@@ -87,6 +89,7 @@ class Experiment:
 
     def _create_aggregator_grpc_server(
             self, *,
+            agg_port: int,
             tls: bool = True,
             root_certificate: Union[Path, str] = None,
             private_key: Union[Path, str] = None,
@@ -102,6 +105,7 @@ class Experiment:
             certificate=certificate,
             private_key=private_key,
             tls=tls,
+            agg_port=agg_port,
         )
         return aggregator_grpc_server
 

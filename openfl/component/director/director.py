@@ -4,7 +4,9 @@
 """Director module."""
 
 import asyncio
+import itertools
 import logging
+import socket
 import time
 from collections import defaultdict
 from pathlib import Path
@@ -19,6 +21,7 @@ from .experiment import Status
 logger = logging.getLogger(__name__)
 
 ENVOY_HEALTH_CHECK_PERIOD = 60  # in seconds
+OPEN_PORTS_LIST = [50011]
 
 
 class Director:
@@ -45,6 +48,7 @@ class Director:
         self.settings = settings or {}
         self.col_exp_queues = defaultdict(asyncio.Queue)
         self.col_exp = {}
+        self.open_port = None
 
     def acknowledge_shard(self, shard_info: dict) -> bool:
         """Save shard info to shard registry if it's acceptable."""
@@ -117,7 +121,7 @@ class Director:
         experiment_name = await queue.get()
         self.col_exp[envoy_name] = experiment_name
 
-        return experiment_name
+        return experiment_name, self.open_port
 
     def get_dataset_info(self):
         """Get dataset info."""
@@ -265,16 +269,34 @@ class Director:
         }
         return result
 
+    def get_open_port(self, open_ports_list: list, sender_name: str) -> int:
+        """Monitor and send an open port from a list of ports."""
+        iterator = itertools.cycle(open_ports_list)
+        while True:
+            port = int(next(iterator))
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            result = sock.connect_ex(('127.0.0.1', port))
+            sock.close()
+            if result == 0:
+                logger.info(f'Port {port} already in use')
+                continue
+            logger.info(f'Using open port {port} for connecting to aggregator')
+            return port
+
     async def start_experiment_execution_loop(self):
         """Run task to monitor and run experiments."""
         while True:
             async with self.experiments_registry.get_next_experiment() as experiment:
+                open_ports_list = self.settings.get('open_ports', OPEN_PORTS_LIST)
+                logger.info(f'Checking open ports out of {open_ports_list} ...')
+                self.open_port = self.get_open_port(open_ports_list, experiment.sender)
                 loop = asyncio.get_event_loop()
                 run_aggregator_future = loop.create_task(experiment.start(
                     root_certificate=self.root_certificate,
                     certificate=self.certificate,
                     private_key=self.private_key,
                     tls=self.tls,
+                    agg_port=self.open_port,
                 ))
                 for col_name in experiment.collaborators:
                     queue = self.col_exp_queues[col_name]

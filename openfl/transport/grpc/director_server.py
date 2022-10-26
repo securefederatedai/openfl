@@ -42,6 +42,7 @@ class DirectorGRPCServer(director_pb2_grpc.DirectorServicer):
             certificate: Optional[Union[Path, str]] = None,
             listen_host: str = '[::]',
             listen_port: int = 50051,
+            open_ports: list = [50011],
             **kwargs,
     ) -> None:
         """Initialize a director object."""
@@ -144,7 +145,6 @@ class DirectorGRPCServer(director_pb2_grpc.DirectorServicer):
             tensor_dict, _ = deconstruct_model_proto(request.model_proto, NoCompressionPipeline())
 
         caller = self.get_caller(context)
-
         is_accepted = await self.director.set_new_experiment(
             experiment_name=request.name,
             sender_name=caller,
@@ -202,10 +202,11 @@ class DirectorGRPCServer(director_pb2_grpc.DirectorServicer):
         logger.info('Request WaitExperiment has got!')
         async for msg in request_iterator:
             logger.info(msg)
-            experiment_name = await self.director.wait_experiment(msg.collaborator_name)
+            experiment_name, agg_port = await self.director.wait_experiment(msg.collaborator_name)
             logger.info(f'Experiment {experiment_name} was prepared')
 
-            yield director_pb2.WaitExperimentResponse(experiment_name=experiment_name)
+            yield director_pb2.WaitExperimentResponse(
+                experiment_name=experiment_name, agg_port=agg_port)
 
     async def GetDatasetInfo(self, request, context):  # NOQA:N802
         """Request the info about target and sample shapes in the dataset."""

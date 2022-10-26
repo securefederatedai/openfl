@@ -64,6 +64,7 @@ def start(director_config_path, tls, root_certificate, private_key, certificate)
             Validator('settings.sample_shape', default=[]),
             Validator('settings.target_shape', default=[]),
             Validator('settings.envoy_health_check_period', gte=1, lte=24 * 60 * 60),
+            Validator('settings.open_ports', default=[50011]),
         ],
         value_transform=[
             ('settings.sample_shape', lambda x: list(map(str, x))),
@@ -96,6 +97,7 @@ def start(director_config_path, tls, root_certificate, private_key, certificate)
         settings=config.settings,
         listen_host=config.settings.listen_host,
         listen_port=config.settings.listen_port,
+        open_ports=config.settings.open_ports,
     )
     director_server.start()
 
