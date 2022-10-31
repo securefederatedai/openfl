@@ -38,6 +38,10 @@ fs.mount.workspace.type = "chroot"
 fs.mount.workspace.path = "/workspace"
 fs.mount.workspace.uri = "file:/workspace"
 
+fs.mount.tmp.type = "chroot"
+fs.mount.tmp.path = "/tmp"
+fs.mount.tmp.uri = "file:/tmp"
+
 sgx.preheat_enclave = false
 
 # Detected a huge manifest, preallocating 64MB of internal memory.
