@@ -2,14 +2,13 @@
 # SPDX-License-Identifier: Apache-2.0
 """Model CLI module."""
 
-from logging import getLogger
-from pathlib import Path
-from typing import Union
-
 from click import group
 from click import option
 from click import pass_context
 from click import Path as ClickPath
+from logging import getLogger
+from pathlib import Path
+
 from openfl.federated import Plan
 from openfl.federated import TaskRunner
 from openfl.protocols import utils
@@ -46,21 +45,25 @@ def save_(context, plan_config, cols_config, data_config, model_protobuf_path, o
     """
     Save the model in native format (PyTorch / Keras).
     """
-    save_model(plan_config, cols_config, data_config, model_protobuf_path, output_filepath)
+
+    task_runner = get_model(plan_config, cols_config, data_config, model_protobuf_path)
+
+    output_filepath = Path(output_filepath).absolute()
+    task_runner.save_native(output_filepath)
+    logger.info(f'Saved model in native format:  🠆 {output_filepath}')
 
 
-def save_model(
+def get_model(
     plan_config: str,
     cols_config: str,
     data_config: str,
-    model_protobuf_path: str,
-    output_filepath: str = None
-) -> Union[None, TaskRunner]:
+    model_protobuf_path: str
+) -> TaskRunner:
     """
-    Save the model in native format (PyTorch / Keras).
+    Initialize TaskRunner and load it with provided model.pbuf.
     """
+
     model_protobuf_path = Path(model_protobuf_path).absolute()
-    output_filepath = Path(output_filepath).absolute()
 
     plan = Plan.parse(plan_config_path=Path(plan_config),
                       cols_config_path=Path(cols_config),
@@ -80,9 +83,5 @@ def save_model(
     # task_runner.set_tensor_dict will need to handle multiple models
     task_runner.set_tensor_dict(tensor_dict, with_opt_vars=False)
 
-    if output_filepath:
-        task_runner.save_native(output_filepath)
-        logger.info(f'Saved model in native format:  🠆 {output_filepath}')
-    else:
-        del task_runner.data_loader
-        return task_runner
+    del task_runner.data_loader
+    return task_runner

@@ -3,4 +3,4 @@
 """openfl base package."""
 from .__version__ import __version__
 # flake8: noqa
-from .interface.model import save_model
+from .interface.model import get_model
