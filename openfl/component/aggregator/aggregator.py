@@ -1,7 +1,7 @@
 # Copyright (C) 2020-2021 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Aggregator module.""" 
+"""Aggregator module."""
 import time
 import queue
 from logging import getLogger
@@ -64,7 +64,8 @@ class Aggregator:
             # Cleaner solution?
             self.single_col_cert_common_name = ''
 
-        self.straggler_handling_policy = straggler_handling_policy or CutoffTimeBasedStragglerHandling()
+        self.straggler_handling_policy = straggler_handling_policy \
+            or CutoffTimeBasedStragglerHandling()
         self._end_of_round_check_done = [False] * rounds_to_train
         self.stragglers_for_task = {}
 
@@ -383,7 +384,7 @@ class Aggregator:
         nparray = self.tensor_db.get_tensor_from_cache(agg_tensor_key)
 
         start_retrieving_time = time.time()
-        while(nparray is None):
+        while (nparray is None):
             self.logger.debug(f'Waiting for tensor_key {agg_tensor_key}')
             time.sleep(5)
             nparray = self.tensor_db.get_tensor_from_cache(agg_tensor_key)
@@ -501,14 +502,15 @@ class Aggregator:
         """
         if self._time_to_quit() or self._is_task_done(task_name):
             self.logger.warning(
-                f'STRAGGLER: Collaborator {collaborator_name} is reporting results after task {task_name} has finished.'
+                f'STRAGGLER: Collaborator {collaborator_name} is reporting results '
+                'after task {task_name} has finished.'
             )
             return
 
         if self.round_number != round_number:
             self.logger.warning(
-                f'Collaborator {collaborator_name} is reporting results for the wrong round: {round_number}.'
-                f' Ignoring...'
+                f'Collaborator {collaborator_name} is reporting results'
+                f' for the wrong round: {round_number}. Ignoring...'
             )
             return
 
@@ -903,23 +905,24 @@ class Aggregator:
         all_collaborators = self.assigner.get_collaborators_for_task(
             task_name, self.round_number
         )
-        
+
         collaborators_done = []
         for c in all_collaborators:
             if self._collaborator_task_completed(
-                c, task_name, self.round_number):
+                c, task_name, self.round_number
+            ):
                 collaborators_done.append(c)
-        
+
         straggler_check = self.straggler_handling_policy.straggler_cutoff_check(
             len(collaborators_done), all_collaborators)
-        
+
         stragglers = []
         if straggler_check:
             for c in all_collaborators:
                 if c not in collaborators_done:
                     stragglers.append(c)
-            self.logger.info('\tEnding task {} early due to straggler cutoff policy'.format(task_name))
-            self.logger.warning('\tIdentified stragglers: {} for task {}'.format(stragglers, task_name))
+            self.logger.info(f'\tEnding task {task_name} early due to straggler cutoff policy')
+            self.logger.warning(f'\tIdentified stragglers: {stragglers} for task {task_name}')
             self.stragglers_for_task[task_name] = stragglers
 
         # all are done or straggler policy calls for early round end.
