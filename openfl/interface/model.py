@@ -2,9 +2,11 @@
 # SPDX-License-Identifier: Apache-2.0
 """Model CLI module."""
 
+from click import confirm
 from click import group
 from click import option
 from click import pass_context
+from click import style
 from click import Path as ClickPath
 from logging import getLogger
 from pathlib import Path
@@ -26,6 +28,12 @@ def model(context):
 
 @model.command(name='save')
 @pass_context
+@option('-i', '--input', 'model_protobuf_path', required=True,
+        help='The model protobuf to convert',
+        type=ClickPath(exists=True))
+@option('-o', '--output', 'output_filepath', required=False,
+        help='Filename the model will be saved to in native format',
+        default='output_model', type=ClickPath(writable=True))
 @option('-p', '--plan-config', required=False,
         help='Federated learning plan [plan/plan.yaml]',
         default='plan/plan.yaml', type=ClickPath(exists=True))
@@ -35,20 +43,21 @@ def model(context):
 @option('-d', '--data-config', required=False,
         help='The data set/shard configuration file [plan/data.yaml]',
         default='plan/data.yaml', type=ClickPath(exists=True))
-@option('-i', '--input', 'model_protobuf_path', required=True,
-        help='The model protobuf to convert',
-        type=ClickPath(exists=True))
-@option('-o', '--output', 'output_filepath', required=False,
-        help='Filename the model will be saved to in native format',
-        default='output_model', type=ClickPath())
 def save_(context, plan_config, cols_config, data_config, model_protobuf_path, output_filepath):
     """
     Save the model in native format (PyTorch / Keras).
     """
+    output_filepath = Path(output_filepath).absolute()
+    if output_filepath.exists():
+        if not confirm(style(
+            'Do you want to overwrite the {}?'.format(output_filepath), fg='red', bold=True
+        )):
+            logger.info('Exiting')
+            context.obj['fail'] = True
+            return
 
     task_runner = get_model(plan_config, cols_config, data_config, model_protobuf_path)
 
-    output_filepath = Path(output_filepath).absolute()
     task_runner.save_native(output_filepath)
     logger.info(f'Saved model in native format:  🠆 {output_filepath}')
 
