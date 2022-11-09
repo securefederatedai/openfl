@@ -435,6 +435,11 @@ def dockerize_(context, base_image, save):
              'In option is ignored this command will build an image that can only run '
              'with gramine-direct (not in enclave).',
         )
+@option('-e', '--enclave_size', required=False,
+        type=str, default='16G',
+        help='Memory size of the enclave, defined as number with size suffix. Must be a power-of-2.\n'
+             'Default is 16G.'
+        )
 @option('-o', '--pip-install-options', required=False,
         type=str, multiple=True, default=tuple,
         help='Options for remote pip install. '
@@ -445,7 +450,7 @@ def dockerize_(context, base_image, save):
         help='Dump the Docker image to an archive')
 @option('--rebuild', help='Build images with `--no-cache`', is_flag=True)
 @pass_context
-def graminize_(context, signing_key: Path, pip_install_options: Tuple[str],
+def graminize_(context, signing_key: Path, enclave_size: str, pip_install_options: Tuple[str],
                save: bool, rebuild: bool) -> None:
     """
     Build gramine app inside a docker image.
@@ -504,6 +509,7 @@ def graminize_(context, signing_key: Path, pip_install_options: Tuple[str],
         f'docker build -t {workspace_name} {rebuild_option} '
         '--build-arg BASE_IMAGE=gramine_openfl '
         f'--build-arg WORKSPACE_ARCHIVE={workspace_archive.relative_to(workspace_path)} '
+        f'--build-arg SGX_ENCLAVE_SIZE={enclave_size} '
         f'--build-arg SGX_BUILD={int(sgx_build)} '
         f'{signing_key}'
         f'-f {grainized_ws_dockerfile} {workspace_path}')

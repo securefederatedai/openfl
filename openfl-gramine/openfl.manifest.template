@@ -36,7 +36,7 @@ loader.pal_internal_mem_size = "256M"
 
 sgx.debug = false
 sgx.nonpie_binary = true
-sgx.enclave_size = "16G"
+sgx.enclave_size = "{{ enclave_size }}"
 sys.stack.size = "4M"
 sgx.thread_num = 512
 #sys.brk.max_size = "1M"
