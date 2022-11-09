@@ -437,7 +437,8 @@ def dockerize_(context, base_image, save):
         )
 @option('-e', '--enclave_size', required=False,
         type=str, default='16G',
-        help='Memory size of the enclave, defined as number with size suffix. Must be a power-of-2.\n'
+        help='Memory size of the enclave, defined as number with size suffix. '
+             'Must be a power-of-2.\n'
              'Default is 16G.'
         )
 @option('-o', '--pip-install-options', required=False,
