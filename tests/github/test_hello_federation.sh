@@ -117,4 +117,7 @@ fx collaborator start -n ${COL1} &
 cd ${COL2_DIRECTORY}/${FED_WORKSPACE}
 fx collaborator start -n ${COL2}
 wait
+# # Convert model to native format
+cd ${FED_DIRECTORY}
+fx model save -i "./save/${TEMPLATE}_last.pbuf"
 rm -rf ${FED_DIRECTORY}
