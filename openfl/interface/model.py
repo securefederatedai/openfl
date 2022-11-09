@@ -70,6 +70,10 @@ def get_model(
 ) -> TaskRunner:
     """
     Initialize TaskRunner and load it with provided model.pbuf.
+
+    Contrary to its name, this function returns a TaskRunner instance.
+    The reason for this behavior is the flexibility of the TaskRunner interface and
+    the diversity of the ways we store models in our template workspaces.
     """
 
     model_protobuf_path = Path(model_protobuf_path).absolute()
