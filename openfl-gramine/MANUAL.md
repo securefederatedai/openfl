@@ -17,7 +17,7 @@ Building machine:
 - Docker should be installed, user included in Docker group
 
 Machines that will run an Aggregator and Collaborator containers should have the following:
-- OpenFL
+- OpenFL (If used for certification through built-in tooling)
 - FSGSBASE feature and SGX enabled from BIOS
 - Intel SGX driver or Linux 5.11+ driver
 - Intel SGX SDK/PSW
