@@ -40,7 +40,6 @@ fs.mount.workspace.uri = "file:/workspace"
 
 fs.mount.tmp.type = "tmpfs"
 fs.mount.tmp.path = "/tmp"
-fs.mount.tmp.uri = "file:/tmp"
 
 sgx.preheat_enclave = false
 
