@@ -15,6 +15,7 @@ from openfl.federated import Plan
 from openfl.federated import TaskRunner
 from openfl.protocols import utils
 from openfl.pipelines import NoCompressionPipeline
+from openfl.utilities.workspace import set_directory
 
 logger = getLogger(__name__)
 
@@ -76,16 +77,24 @@ def get_model(
     the diversity of the ways we store models in our template workspaces.
     """
 
-    model_protobuf_path = Path(model_protobuf_path).absolute()
+    # Here we change cwd to the experiment workspace folder
+    # because plan.yaml usually containe relaiteve paths to components.
+    workspace_path = Path(plan_config).resolve().parent.parent
+    plan_config = Path(plan_config).resolve().relative_to(workspace_path)
+    cols_config = Path(cols_config).resolve().relative_to(workspace_path)
+    data_config = Path(data_config).resolve().relative_to(workspace_path)
 
-    plan = Plan.parse(plan_config_path=Path(plan_config),
-                      cols_config_path=Path(cols_config),
-                      data_config_path=Path(data_config))
+    with set_directory(workspace_path):
+        plan = Plan.parse(
+            plan_config_path=plan_config,
+            cols_config_path=cols_config,
+            data_config_path=data_config
+        )
+        collaborator_name = list(plan.cols_data_paths)[0]
+        data_loader = plan.get_data_loader(collaborator_name)
+        task_runner = plan.get_task_runner(data_loader=data_loader)
 
-    collaborator_name = list(plan.cols_data_paths)[0]
-    data_loader = plan.get_data_loader(collaborator_name)
-    task_runner = plan.get_task_runner(data_loader=data_loader)
-
+    model_protobuf_path = Path(model_protobuf_path).resolve()
     logger.info(f'Loading OpenFL model protobuf:  🠆 {model_protobuf_path}')
 
     model_protobuf = utils.load_proto(model_protobuf_path)
