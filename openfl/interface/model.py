@@ -78,7 +78,7 @@ def get_model(
     """
 
     # Here we change cwd to the experiment workspace folder
-    # because plan.yaml usually containe relaiteve paths to components.
+    # because plan.yaml usually contains relative paths to components.
     workspace_path = Path(plan_config).resolve().parent.parent
     plan_config = Path(plan_config).resolve().relative_to(workspace_path)
     cols_config = Path(cols_config).resolve().relative_to(workspace_path)
