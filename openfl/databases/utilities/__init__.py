@@ -3,7 +3,7 @@
 
 """Database Utilities."""
 
-from .dataframe import _search,_store,_retrieve,ROUND_PLACEHOLDER,ROUND_PLACEHOLDER
+from .dataframe import _search, _store, _retrieve, ROUND_PLACEHOLDER
 
 __all__ = [
     '_search',
