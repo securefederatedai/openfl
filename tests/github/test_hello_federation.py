@@ -1,3 +1,6 @@
+# Copyright (C) 2020-2021 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 import os
 import time
 import socket
@@ -28,8 +31,7 @@ col1_data_path, col2_data_path = args.col1_data_path, args.col2_data_path
 
 
 def create_collaborator(col, workspace_root, data_path):
-    os.chdir(workspace_root)
-    col_path = Path(col).resolve()
+    col_path = workspace_root / col
     shutil.rmtree(col_path, ignore_errors=True)
     col_path.mkdir()
     os.chdir(col_path)

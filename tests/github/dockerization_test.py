@@ -1,3 +1,6 @@
+# Copyright (C) 2020-2021 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 from argparse import ArgumentParser
 import socket
 from subprocess import check_call
