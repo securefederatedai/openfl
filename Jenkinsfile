@@ -47,6 +47,7 @@ pipeline {
                     docker image build ${DOCKER_BUILD_ARGS} -t openfl-docker:latest . -f openfl-docker/Dockerfile.base
                     docker images | { grep openfl || true; }
                 '''
+                sh 'scripts/build_wheel.sh'
             }
         }
         stage('Prep Code Scan') {
@@ -71,11 +72,23 @@ pipeline {
                 SNYK_PYTHON_VERSION = '3.8'
 
                 BANDIT_SOURCE_PATH = 'openfl/ openfl-workspace/ openfl-tutorials/'
+                BANDIT_SEVERITY_LEVEL = 'high'
 
                 PUBLISH_TO_ARTIFACTORY = false
             }
             steps {
                 rbheStaticCodeScan()
+            }
+        }
+        stage('Publish') {
+            when {
+                expression {
+                    env.GIT_BRANCH ==~ /(?i)(develop|jenkins-v\d+.\d+)/
+                    isPyPiPublishCommit()
+                }
+            }
+            steps {
+                pypiPublish()
             }
         }
     }
@@ -85,4 +98,12 @@ pipeline {
             cleanWs()
         }
     }
+}
+
+def isPyPiPublishCommit() {
+    def commitMessage = common.getCommitMessage()
+    echo "last commit message: ${commitMessage}"
+    def publish = commitMessage ==~ /(?s)^release\(pypi\):.*publish package.*$/
+    echo "publish to PyPi: ${publish}"
+    publish
 }
