@@ -11,24 +11,6 @@ import shutil
 from subprocess import check_call
 from concurrent.futures import ProcessPoolExecutor
 
-parser = argparse.ArgumentParser()
-parser.add_argument('--template', default='keras_cnn_mnist')
-parser.add_argument('--fed_workspace', default='fed_work12345alpha81671')
-parser.add_argument('--col1', default='one123dragons')
-parser.add_argument('--col2', default='beta34unicorns')
-parser.add_argument('--rounds-to-train')
-parser.add_argument('--col1-data-path', default='1')
-parser.add_argument('--col2-data-path', default='2')
-
-args = parser.parse_args()
-fed_workspace = args.fed_workspace
-archive_name = f'{fed_workspace}.zip'
-fqdn = socket.getfqdn()
-template = args.template
-rounds_to_train = args.rounds_to_train
-col1, col2 = args.col1, args.col2
-col1_data_path, col2_data_path = args.col1_data_path, args.col2_data_path
-
 
 def create_collaborator(col, workspace_root, data_path):
     col_path = workspace_root / col
@@ -57,6 +39,23 @@ def exec(command, directory):
 
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--template', default='keras_cnn_mnist')
+    parser.add_argument('--fed_workspace', default='fed_work12345alpha81671')
+    parser.add_argument('--col1', default='one123dragons')
+    parser.add_argument('--col2', default='beta34unicorns')
+    parser.add_argument('--rounds-to-train')
+    parser.add_argument('--col1-data-path', default='1')
+    parser.add_argument('--col2-data-path', default='2')
+
+    args = parser.parse_args()
+    fed_workspace = args.fed_workspace
+    archive_name = f'{fed_workspace}.zip'
+    fqdn = socket.getfqdn()
+    template = args.template
+    rounds_to_train = args.rounds_to_train
+    col1, col2 = args.col1, args.col2
+    col1_data_path, col2_data_path = args.col1_data_path, args.col2_data_path
     shutil.rmtree(fed_workspace, ignore_errors=True)
     check_call(['fx', 'workspace', 'create', '--prefix', fed_workspace, '--template', template])
     os.chdir(fed_workspace)
