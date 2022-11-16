@@ -64,7 +64,7 @@ if __name__ == '__main__':
         with os.scandir('..') as iterator:
             for entry in iterator:
                 if re.match(r'^seg_test.*\.csv$', entry.name):
-                    shutil.copyfile('entry.path', '.')
+                    shutil.copy(entry.path, '.')
     check_call(['fx', 'plan', 'initialize', '-a', fqdn])
     try:
         rounds_to_train = int(rounds_to_train)
@@ -91,15 +91,15 @@ if __name__ == '__main__':
         with os.scandir('/media/ujjwal/SSD4TB/sbutil/DatasetForTraining_Horizontal/') as iterator:
             for entry in iterator:
                 if re.match(r'^Site1_.*\.csv$', entry.name):
-                    shutil.copyfile(entry.path, workspace_root / col1)
+                    shutil.copy(entry.path, workspace_root / col1)
                 if re.match(r'^Site2_.*\.csv$', entry.name):
-                    shutil.copyfile(entry.path, workspace_root / col2)
+                    shutil.copy(entry.path, workspace_root / col2)
     else:
         with os.scandir(workspace_root) as iterator:
             for entry in iterator:
                 if re.match(r'^seg_test.*\.csv$', entry.name):
-                    shutil.copyfile(entry.path, workspace_root / col1 / fed_workspace)
-                    shutil.copyfile(entry.path, workspace_root / col2 / fed_workspace)
+                    shutil.copy(entry.path, workspace_root / col1 / fed_workspace)
+                    shutil.copy(entry.path, workspace_root / col2 / fed_workspace)
 
     with ProcessPoolExecutor() as executor:
         executor.submit(exec, ['fx', 'aggregator', 'start'], workspace_root)
