@@ -50,9 +50,13 @@ def create_signed_cert_for_collaborator(col, data_path):
 if __name__ == '__main__':
     # 1. Create the workspace
     parser = ArgumentParser()
-
-    parser.add_argument('--template', default='keras_cnn_mnist')  # ['torch_cnn_mnist', 'keras_cnn_mnist']
-    parser.add_argument('--fed_workspace', default='fed_work12345alpha81671')  # This can be whatever unique directory name you want
+    workspace_choice = []
+    with os.scandir('openfl-workspace') as iterator:
+        for entry in iterator:
+            if entry.name not in ['__init__.py', 'workspace', 'default']:
+                workspace_choice.append(entry.name)
+    parser.add_argument('--template', default='keras_cnn_mnist', choices=workspace_choice)
+    parser.add_argument('--fed_workspace', default='fed_work12345alpha81671')
     parser.add_argument('--col', default='one123dragons')
     parser.add_argument('--data_path', default='1')
     parser.add_argument('--base_image_tag', default='openfl')
@@ -88,7 +92,7 @@ if __name__ == '__main__':
     check_call(['fx', 'workspace', 'dockerize', '--base_image', base_image_tag])
 
     # We remove the base OpenFL image as well
-    # as built workspace image to simulate starting 
+    # as built workspace image to simulate starting
     # on another machine
     workspace_image_name = fed_workspace
     check_call(['docker', 'image', 'rm', '-f', base_image_tag, workspace_image_name])
