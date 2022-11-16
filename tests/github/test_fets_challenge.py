@@ -61,7 +61,10 @@ if __name__ == '__main__':
     check_call(['fx', 'workspace', 'create', '--prefix', fed_workspace, '--template', template])
     os.chdir(fed_workspace)
     if not Path('seg_test_train.csv').exists():
-        shutil.copyfile('../seg_test*.csv', '.')
+        with os.scandir('..') as iterator:
+            for entry in iterator:
+                if re.match(r'^seg_test.*\.csv$', entry.name):
+                    shutil.copyfile('entry.path', '.')
     check_call(['fx', 'plan', 'initialize', '-a', fqdn])
     try:
         rounds_to_train = int(rounds_to_train)
@@ -87,14 +90,14 @@ if __name__ == '__main__':
     if args.ujjwal:
         with os.scandir('/media/ujjwal/SSD4TB/sbutil/DatasetForTraining_Horizontal/') as iterator:
             for entry in iterator:
-                if re.match(r'^Site1_.*.csv$', entry.name):
+                if re.match(r'^Site1_.*\.csv$', entry.name):
                     shutil.copyfile(entry.path, workspace_root / col1)
-                if re.match(r'^Site2_.*.csv$', entry.name):
+                if re.match(r'^Site2_.*\.csv$', entry.name):
                     shutil.copyfile(entry.path, workspace_root / col2)
     else:
-        with os.scandir(workspace_root / 'seg_test*.csv') as iterator:
+        with os.scandir(workspace_root) as iterator:
             for entry in iterator:
-                if re.match(r'^seg_test.*.csv$', entry.name):
+                if re.match(r'^seg_test.*\.csv$', entry.name):
                     shutil.copyfile(entry.path, workspace_root / col1 / fed_workspace)
                     shutil.copyfile(entry.path, workspace_root / col2 / fed_workspace)
 
