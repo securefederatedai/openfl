@@ -80,10 +80,8 @@ if __name__ == '__main__':
     workspace_root = Path().resolve()
     create_collaborator(col1, workspace_root, col1_data_path)
     create_collaborator(col2, workspace_root, col2_data_path)
-    with open(workspace_root / 'plan' / 'cols.yaml', 'r') as f:
-        for line in f.readlines():
-            print(line)
-    raise
+    time.sleep(10)
+
     with ProcessPoolExecutor() as executor:
         executor.submit(exec, ['fx', 'aggregator', 'start'], workspace_root)
         time.sleep(5)
