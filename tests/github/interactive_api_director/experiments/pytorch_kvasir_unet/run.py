@@ -2,7 +2,7 @@ import time
 import sys
 from subprocess import Popen, check_call
 import psutil
-import experiment
+from tests.github.interactive_api_director.experiments.pytorch_kvasir_unet import experiment
 
 
 if __name__ == '__main__':
@@ -30,6 +30,6 @@ if __name__ == '__main__':
         print('Error: failed to create envoy')
         sys.exit(1)
 
-    experiment.start()
+    experiment.run()
     for proc in bg_procs:
         proc.kill()

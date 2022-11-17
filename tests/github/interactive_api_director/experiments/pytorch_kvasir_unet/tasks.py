@@ -3,7 +3,7 @@ import torch
 import numpy as np
 
 from openfl.interface.interactive_api.experiment import TaskInterface
-from layers import soft_dice_loss, soft_dice_coef
+from tests.github.interactive_api_director.experiments.pytorch_kvasir_unet.layers import soft_dice_loss, soft_dice_coef ## import in buffer REPLACE IMPORTS!!!!!!
 
 
 task_interface = TaskInterface()

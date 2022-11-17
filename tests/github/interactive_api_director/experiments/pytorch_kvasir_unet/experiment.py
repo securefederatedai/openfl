@@ -3,9 +3,9 @@ from copy import deepcopy
 import numpy as np
 import PIL
 import torch.optim as optim
-from model import UNet
-from tasks import task_interface
-from tasks import validate
+from tests.github.interactive_api_director.experiments.pytorch_kvasir_unet.model import UNet
+from tests.github.interactive_api_director.experiments.pytorch_kvasir_unet.tasks import task_interface
+from tests.github.interactive_api_director.experiments.pytorch_kvasir_unet.tasks import validate
 from torch.utils.data import DataLoader
 from torch.utils.data import Dataset
 from torch.utils.data import SubsetRandomSampler
@@ -16,7 +16,8 @@ from openfl.interface.interactive_api.experiment import FLExperiment
 from openfl.interface.interactive_api.experiment import ModelInterface
 from openfl.interface.interactive_api.federation import Federation
 
-def start():
+
+def run():
     federation = Federation(
         client_id='frontend',
         director_node_fqdn='localhost',
