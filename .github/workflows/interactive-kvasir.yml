@@ -34,6 +34,4 @@ jobs:
         python setup.py build_grpc
         pip install torch==1.7.1
         pip install torchvision==0.8.2
-        cd tests/github/interactive_api_director/experiments/pytorch_kvasir_unet
-        ./run.sh
-        pkill fx
+        python -m tests.github.interactive_api_director.experiments.pytorch_kvasir_unet.run

@@ -11,6 +11,7 @@ from PIL import Image
 from openfl.interface.interactive_api.shard_descriptor import ShardDataset
 from openfl.interface.interactive_api.shard_descriptor import ShardDescriptor
 from openfl.utilities import validate_file_hash
+from zipfile import ZipFile
 
 
 class KvasirShardDataset(ShardDataset):
@@ -100,8 +101,8 @@ class KvasirShardDescriptor(ShardDescriptor):
         zip_sha384 = ('66cd659d0e8afd8c83408174'
                       '1ade2b75dada8d4648b816f2533c8748b1658efa3d49e205415d4116faade2c5810e241e')
         validate_file_hash(zip_file_path, zip_sha384)
-        os.system(f'unzip -n {zip_file_path.relative_to(Path.cwd())}'
-                  f' -d {data_folder.relative_to(Path.cwd())}')
+        with ZipFile(zip_file_path.relative_to(Path.cwd())) as f:
+            f.extractall(data_folder.relative_to(Path.cwd()))
 
     @property
     def sample_shape(self):
