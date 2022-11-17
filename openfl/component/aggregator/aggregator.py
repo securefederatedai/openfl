@@ -52,6 +52,7 @@ class Aggregator:
                  compression_pipeline=None,
                  db_store_rounds=1,
                  write_logs=False,
+                 log_metric_callback=None,
                  **kwargs):
         """Initialize."""
         self.round_number = 0
@@ -84,10 +85,16 @@ class Aggregator:
         self.db_store_rounds = db_store_rounds
 
         # Gathered together logging-related objects
+        self.logger = getLogger(__name__)
         self.write_logs = write_logs
+        self.log_metric_callback = log_metric_callback
+
         if self.write_logs:
             self.log_metric = write_metric
-        self.logger = getLogger(__name__)
+            if self.log_metric_callback:
+                self.log_metric = log_metric_callback
+                self.logger.info(f'Using custom log metric: {self.log_metric}')
+        
         self.best_model_score = None
         self.metric_queue = queue.Queue()
 
