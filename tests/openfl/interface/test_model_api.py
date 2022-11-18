@@ -13,10 +13,10 @@ from openfl.federated.task import TaskRunner
 def test_get_model(Plan, utils):
     "Test get_module returns TaskRunner."
     plan_instance = mock.Mock()
-    plan_instanse.cols_data_paths = ['mock_col_name']
-    Plan.parse.return_value = plan_instanse
+    plan_instance.cols_data_paths = ['mock_col_name']
+    Plan.parse.return_value = plan_instance
 
-    plan_instanse.get_task_runner.return_value = TaskRunner(data_loader=mock.Mock())
+    plan_instance.get_task_runner.return_value = TaskRunner(data_loader=mock.Mock())
     TaskRunner.set_tensor_dict = mock.Mock()
 
     tensor_dict = mock.Mock()
@@ -31,7 +31,7 @@ def test_get_model(Plan, utils):
     utils.load_proto.assert_called_once()
     utils.deconstruct_model_proto.assert_called_once()
 
-    plan_instanse.get_task_runner.assert_called_once()
+    plan_instance.get_task_runner.assert_called_once()
 
     TaskRunner.set_tensor_dict.assert_called_once_with(tensor_dict, with_opt_vars=False)
 
