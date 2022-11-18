@@ -12,7 +12,7 @@ from openfl.federated.task import TaskRunner
 @mock.patch('openfl.interface.model.Plan')
 def test_get_model(Plan, utils):
     "Test get_module returns TaskRunner."
-    plan_instanse = mock.Mock()
+    plan_instance = mock.Mock()
     plan_instanse.cols_data_paths = ['mock_col_name']
     Plan.parse.return_value = plan_instanse
 
