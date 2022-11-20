@@ -2,11 +2,6 @@
 # SPDX-License-Identifier: Apache-2.0
 
 """PyTorchDataLoader module."""
-
-from math import ceil, fabs
-
-import numpy as np
-
 from .loader import DataLoader
 
 

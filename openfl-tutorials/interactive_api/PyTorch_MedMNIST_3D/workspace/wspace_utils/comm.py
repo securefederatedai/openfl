@@ -1,9 +1,12 @@
+# Copyright (C) 2020-2021 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 # -*- coding: utf-8 -*-
-# File   : comm.py
-# Author : Jiayuan Mao
-# Email  : maojiayuan@gmail.com
-# Date   : 27/01/2018
-# 
+# File    comm.py
+# Author  Jiayuan Mao
+# Email   maojiayuan@gmail.com
+# Date    27/01/2018
+#
 # This file is part of Synchronized-BatchNorm-PyTorch.
 # https://github.com/vacancy/Synchronized-BatchNorm-PyTorch
 # Distributed under MIT License.
@@ -56,19 +59,21 @@ class SlavePipe(_SlavePipeBase):
 class SyncMaster(object):
     """An abstract `SyncMaster` object.
 
-    - During the replication, as the data parallel will trigger an callback of each module, all slave devices should
-    call `register(id)` and obtain an `SlavePipe` to communicate with the master.
-    - During the forward pass, master device invokes `run_master`, all messages from slave devices will be collected,
-    and passed to a registered callback.
-    - After receiving the messages, the master device should gather the information and determine to message passed
-    back to each slave devices.
+    - During the replication, as the data parallel will trigger an callback of each module,
+    all slave devices should call `register(id)` and obtain an `SlavePipe`
+    to communicate with the master.
+    - During the forward pass, master device invokes `run_master`,
+    all messages from slave devices will be collected, and passed to a registered callback.
+    - After receiving the messages, the master device should gather the information
+    and determine to message passed back to each slave devices.
     """
 
     def __init__(self, master_callback):
         """
 
         Args:
-            master_callback: a callback to be invoked after having collected messages from slave devices.
+            master_callback: a callback to be invoked
+                             after having collected messages from slave devices.
         """
         self._master_callback = master_callback
         self._queue = queue.Queue()
@@ -107,8 +112,9 @@ class SyncMaster(object):
         (including the master device).
 
         Args:
-            master_msg: the message that the master want to send to itself. This will be placed as the first
-            message when calling `master_callback`. For detailed usage, see `_SynchronizedBatchNorm` for an example.
+            master_msg: the message that the master want to send to itself.
+                        This will be placed as the first message when calling `master_callback`.
+                        For detailed usage, see `_SynchronizedBatchNorm` for an example.
 
         Returns: the message to be sent back to the master device.
 

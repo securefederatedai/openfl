@@ -8,6 +8,7 @@ import os
 import shutil
 import sys
 import time
+from contextlib import contextmanager
 from pathlib import Path
 from subprocess import check_call
 from sys import executable
@@ -126,3 +127,23 @@ def _is_package_versioned(package: str) -> bool:
             and package not in ['pkg-resources==0.0.0', 'pkg_resources==0.0.0']
             and '-e ' not in package
             )
+
+
+@contextmanager
+def set_directory(path: Path):
+    """
+    Sets provided path as the cwd within the context.
+
+    Args:
+        path (Path): The path to the cwd
+
+    Yields:
+        None
+    """
+
+    origin = Path().absolute()
+    try:
+        os.chdir(path)
+        yield
+    finally:
+        os.chdir(origin)
