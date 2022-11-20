@@ -61,6 +61,7 @@ if __name__ == '__main__':
     parser.add_argument('--rounds-to-train')
     parser.add_argument('--col1-data-path', default='1')
     parser.add_argument('--col2-data-path', default='2')
+    parser.add_argument('--save-model')
 
     args = parser.parse_args()
     fed_workspace = args.fed_workspace
@@ -70,6 +71,7 @@ if __name__ == '__main__':
     rounds_to_train = args.rounds_to_train
     col1, col2 = args.col1, args.col2
     col1_data_path, col2_data_path = args.col1_data_path, args.col2_data_path
+    save_model = args.save_model
 
     # START
     # =====
@@ -121,4 +123,11 @@ if __name__ == '__main__':
 
         dir2 = workspace_root / col2 / fed_workspace
         executor.submit(check_call, ['fx', 'collaborator', 'start', '-n', col2], cwd=dir2)
+
+    # Convert model to native format
+    if save_model:
+        check_call(
+            ['fx', 'model', 'save', '-i', f'./save/{template}_last.pbuf', '-o', save_model],
+            cwd=workspace_root)
+
     shutil.rmtree(workspace_root)
