@@ -94,7 +94,7 @@ class Aggregator:
             if self.log_metric_callback:
                 self.log_metric = log_metric_callback
                 self.logger.info(f'Using custom log metric: {self.log_metric}')
-        
+
         self.best_model_score = None
         self.metric_queue = queue.Queue()
 
