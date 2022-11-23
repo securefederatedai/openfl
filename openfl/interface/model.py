@@ -51,7 +51,7 @@ def save_(context, plan_config, cols_config, data_config, model_protobuf_path, o
     output_filepath = Path(output_filepath).absolute()
     if output_filepath.exists():
         if not confirm(style(
-            'Do you want to overwrite the {}?'.format(output_filepath), fg='red', bold=True
+            f'Do you want to overwrite the {output_filepath}?', fg='red', bold=True
         )):
             logger.info('Exiting')
             context.obj['fail'] = True
