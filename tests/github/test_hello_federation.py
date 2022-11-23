@@ -8,6 +8,7 @@ import argparse
 from pathlib import Path
 import re
 import shutil
+import stat
 from subprocess import check_call
 from concurrent.futures import ProcessPoolExecutor
 
@@ -63,6 +64,7 @@ if __name__ == '__main__':
     parser.add_argument('--col2-data-path', default='2')
     parser.add_argument('--save-model')
 
+    origin_dir = Path.cwd().resolve()
     args = parser.parse_args()
     fed_workspace = args.fed_workspace
     archive_name = f'{fed_workspace}.zip'
@@ -82,11 +84,12 @@ if __name__ == '__main__':
 
     # Initialize FL plan
     check_call(['fx', 'plan', 'initialize', '-a', fqdn])
+    plan_path = Path('plan/plan.yaml')
     try:
         rounds_to_train = int(rounds_to_train)
-        with open("plan/plan.yaml", "r") as sources:
+        with open(plan_path, "r", encoding='utf-8') as sources:
             lines = sources.readlines()
-        with open("plan/plan.yaml", "w") as sources:
+        with open(plan_path, "w", encoding='utf-8') as sources:
             for line in lines:
                 sources.write(
                     re.sub(r'rounds_to_train.*', f'rounds_to_train: {rounds_to_train}', line)
@@ -130,4 +133,10 @@ if __name__ == '__main__':
             ['fx', 'model', 'save', '-i', f'./save/{template}_last.pbuf', '-o', save_model],
             cwd=workspace_root)
 
-    shutil.rmtree(workspace_root)
+    def onerror(func, path, _):
+        "Clear the readonly bit and reattempt the removal"
+        os.chmod(path, stat.S_IWRITE)  # Windows can not remove read-only files.
+        func(path)
+
+    os.chdir(origin_dir)
+    shutil.rmtree(workspace_root, onerror=onerror)
