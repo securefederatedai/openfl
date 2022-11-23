@@ -102,7 +102,7 @@ def dump_requirements_file(
     # We expect that all the prefixes in a requirement file
     # are placed at the top
     if keep_original_prefixes and path.is_file():
-        with open(path) as f:
+        with open(path, encoding='utf-8') as f:
             for line in f:
                 if line == '\n':
                     continue
@@ -112,7 +112,7 @@ def dump_requirements_file(
                     break
 
     requirements_generator = freeze.freeze()
-    with open(path, 'w') as f:
+    with open(path, 'w', encoding='utf-8') as f:
         for prefix in prefixes:
             f.write(prefix + '\n')
 
