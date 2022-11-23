@@ -3,6 +3,7 @@
 """Collaborator module."""
 
 import sys
+import os
 from logging import getLogger
 
 from click import echo
@@ -194,7 +195,7 @@ def generate_cert_request(collaborator_name, data_path, silent, skip_package):
 
 def find_certificate_name(file_name):
     """Parse the collaborator name."""
-    col_name = str(file_name).split('/')[-1].split('.')[0][4:]
+    col_name = str(file_name).split(os.sep)[-1].split('.')[0][4:]
     return col_name
 
 
