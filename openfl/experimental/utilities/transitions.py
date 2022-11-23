@@ -5,7 +5,7 @@
 
 
 def should_transfer(func,parent_func):
-    if (aggregator_to_collaborator(func,parent_func) or collaborator_to_aggregator(func,parent_func)):
+    if (collaborator_to_aggregator(func,parent_func)):
         return True
     else:
         return False
