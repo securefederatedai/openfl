@@ -89,7 +89,7 @@ if __name__ == '__main__':
                     '--disable-tls',
                     '-ec', 'envoy_config.yaml'
                 ])
-                time.sleep(10)
+                time.sleep(10)  # Wait for envoy to start
                 # Expectation is that secure server won't let insecure client connect
                 if envoy.poll() != 1 or expected_error not in envoy.communicate():
                     envoy.kill()
@@ -97,7 +97,12 @@ if __name__ == '__main__':
         finally:
             director.kill()
     finally:
-        subprocess.check_call([
-            'fx', 'pki', 'uninstall',
-            '-p', str(CA_PATH)
-        ])
+        # Stop the CA Server and remove the CA folder
+        try:
+            subprocess.check_call([
+                'fx', 'pki', 'uninstall',
+                '-p', str(CA_PATH)
+            ])
+        except subprocess.CalledProcessError:
+            # This means we have stopped our previously created process (fx pki start)
+            pass
