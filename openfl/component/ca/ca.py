@@ -190,7 +190,7 @@ def install(ca_path, ca_url, password):
     step_path, step_ca_path = get_ca_bin_paths(ca_path)
 
     if not (step_path and step_ca_path and step_path.exists() and step_ca_path.exists()):
-        print('CA binaries from GitHub will be downloaded now')
+        confirm('CA binaries from GitHub will be downloaded now', default=True, abort=True)
         system, arch = get_system_and_architecture()
         url = 'https://api.github.com/repos/smallstep/certificates/releases/tags/v0.16.1'
         download_step_bin(url, f'step-ca_{system}', arch, prefix=ca_path, confirmation=False)

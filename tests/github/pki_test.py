@@ -12,13 +12,13 @@ from openfl.utilities.workspace import set_directory
 CA_PATH = Path('~/.local/ca').expanduser()
 CA_URL = 'localhost:9123'
 CA_PASSWORD = 'qwerty'
-
+DIRECTOR_SUBJECT_NAME = 'localhost'
 
 if __name__ == '__main__':
     shutil.rmtree(CA_PATH, ignore_errors=True)
     # 1. Install CA
     subprocess.check_call([
-        'fx', 'pki', 'install'
+        'fx', 'pki', 'install',
         '-p', str(CA_PATH),
         '--password', str(CA_PASSWORD)
     ])
@@ -38,7 +38,7 @@ if __name__ == '__main__':
         # 3. Generate token for Director
         token_output = subprocess.check_output([
             'fx', 'pki', 'get-token',
-            '-n', 'localhost'
+            '-n', DIRECTOR_SUBJECT_NAME,
             '-p', str(CA_PATH)
         ])
         token = token_output.decode('utf-8').split('\n')[1]
@@ -46,9 +46,9 @@ if __name__ == '__main__':
         # 4. Certify the Director with generated token
         subprocess.check_call([
             'fx', 'pki', 'certify',
-            '-n', 'localhost'
+            '-n', DIRECTOR_SUBJECT_NAME,
             '-t', token,
-            '-c', f'{CA_PATH / "cert"}'
+            '-c', f'{CA_PATH / "cert"}',
             '-p', str(CA_PATH)
         ])
 
@@ -58,8 +58,8 @@ if __name__ == '__main__':
             'director/director_config.yaml'
         )
         root_cert_path = CA_PATH / 'cert' / 'root_ca.crt'
-        private_key_path = CA_PATH / 'cert' / 'localhost.key'
-        public_cert_path = CA_PATH / 'cert' / 'localhost.crt'
+        private_key_path = CA_PATH / 'cert' / f'{DIRECTOR_SUBJECT_NAME}.key'
+        public_cert_path = CA_PATH / 'cert' / f'{DIRECTOR_SUBJECT_NAME}.crt'
         director = subprocess.Popen([
             'fx', 'director', 'start',
             '-c', str(director_config_path),
@@ -92,5 +92,7 @@ if __name__ == '__main__':
         finally:
             director.kill()
     finally:
-        ca_server.kill()
-        shutil.rmtree(CA_PATH)
+        subprocess.check_call([
+            'fx', 'pki', 'uninstall',
+            '-p', str(CA_PATH)
+        ])
