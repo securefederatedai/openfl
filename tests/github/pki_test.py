@@ -78,6 +78,9 @@ if __name__ == '__main__':
             envoy_folder = ('tests/github/interactive_api_director/'
                             'experiments/pytorch_kvasir_unet/envoy/')
             with set_directory(envoy_folder):
+                subprocess.check_call([
+                    sys.executable, '-m', 'pip', 'install', '-r', 'sd_requirements.txt'
+                ])
                 envoy = subprocess.Popen([
                     'fx', 'envoy', 'start',
                     '-n', 'one',
