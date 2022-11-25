@@ -17,11 +17,13 @@ DIRECTOR_SUBJECT_NAME = 'localhost'
 if __name__ == '__main__':
     shutil.rmtree(CA_PATH, ignore_errors=True)
     # 1. Install CA
-    subprocess.check_call([
+    pki_install = subprocess.Popen([
         'fx', 'pki', 'install',
         '-p', str(CA_PATH),
         '--password', str(CA_PASSWORD)
-    ])
+    ], stdin=subprocess.PIPE)
+    time.sleep(3)
+    pki_install.communicate('y'.encode('utf-8'))
 
     # 2. Start CA server
     ca_server = subprocess.Popen([
