@@ -7,6 +7,7 @@ import logging
 import time
 import traceback
 import uuid
+import sys
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Optional
@@ -171,6 +172,7 @@ class Envoy:
                 cuda_devices=self.cuda_devices)
         except Exception as exc:
             logger.exception(f'Failed to report shard info: {exc}')
+            sys.exit(1)
         else:
             if is_accepted:
                 # Shard accepted for participation in the federation
@@ -180,3 +182,4 @@ class Envoy:
             else:
                 # Shut down
                 logger.error('Report shard info was not accepted')
+                sys.exit(1)

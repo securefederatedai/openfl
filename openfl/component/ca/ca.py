@@ -1,11 +1,12 @@
 # Copyright (C) 2020-2021 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Aggregator module."""
+"""CA module."""
 
 import base64
 import json
 import os
+import sys
 import platform
 import shutil
 import signal
@@ -14,7 +15,7 @@ import time
 import urllib.request
 from logging import getLogger
 from pathlib import Path
-from subprocess import call
+from subprocess import check_call
 
 import requests
 from click import confirm
@@ -63,8 +64,8 @@ def download_step_bin(url, grep_name, architecture, prefix='.', confirmation=Tru
         confirm('CA binaries from github will be downloaded now', default=True, abort=True)
     result = requests.get(url)
     if result.status_code != 200:
-        logger.warning('Can\'t download binaries from github. Please try lately.')
-        return
+        logger.error('Can\'t download binaries from github. Please try later.')
+        sys.exit(1)
 
     assets = result.json().get('assets', [])
     archive_urls = [
@@ -111,7 +112,7 @@ def get_token(name, ca_url, ca_path='.'):
             f'--password-file {pass_file} 'f'--ca-url {ca_url}', shell=True)
     except subprocess.CalledProcessError as exc:
         logger.error(f'Error code {exc.returncode}: {exc.output}')
-        return
+        sys.exit(1)
 
     token = token.strip()
     token_b64 = base64.b64encode(token)
@@ -151,7 +152,7 @@ def certify(name, cert_path: Path, token_with_cert, ca_path: Path):
 
     step_path, _ = get_ca_bin_paths(ca_path)
     if not step_path:
-        url = 'https://api.github.com/repos/smallstep/cli/releases/latest'
+        url = 'https://api.github.com/repos/smallstep/cli/releases/tags/v0.16.1'
         system, arch = get_system_and_architecture()
         download_step_bin(url, f'step_{system}', arch, prefix=ca_path)
         step_path, _ = get_ca_bin_paths(ca_path)
@@ -160,8 +161,8 @@ def certify(name, cert_path: Path, token_with_cert, ca_path: Path):
 
     with open(f'{cert_path}/root_ca.crt', mode='wb') as file:
         file.write(root_certificate)
-    call(f'{step_path} ca certificate {name} {cert_path}/{name}.crt '
-         f'{cert_path}/{name}.key --kty EC --curve P-384 -f --token {token}', shell=True)
+    check_call(f'{step_path} ca certificate {name} {cert_path}/{name}.crt '
+               f'{cert_path}/{name}.key --kty EC --curve P-384 -f --token {token}', shell=True)
 
 
 def remove_ca(ca_path):
@@ -189,11 +190,11 @@ def install(ca_path, ca_url, password):
     step_path, step_ca_path = get_ca_bin_paths(ca_path)
 
     if not (step_path and step_ca_path and step_path.exists() and step_ca_path.exists()):
-        confirm('CA binaries from github will be downloaded now', default=True, abort=True)
+        print('CA binaries from GitHub will be downloaded now')
         system, arch = get_system_and_architecture()
-        url = 'https://api.github.com/repos/smallstep/certificates/releases/latest'
+        url = 'https://api.github.com/repos/smallstep/certificates/releases/tags/v0.16.1'
         download_step_bin(url, f'step-ca_{system}', arch, prefix=ca_path, confirmation=False)
-        url = 'https://api.github.com/repos/smallstep/cli/releases/latest'
+        url = 'https://api.github.com/repos/smallstep/cli/releases/tags/v0.16.1'
         download_step_bin(url, f'step_{system}', arch, prefix=ca_path, confirmation=False)
     step_config_dir = ca_path / CA_STEP_CONFIG_DIR
     if (not step_config_dir.exists()
@@ -206,7 +207,7 @@ def run_ca(step_ca, pass_file, ca_json):
     """Run CA server."""
     if _check_kill_process('step-ca', confirmation=True):
         logger.info('Up CA server')
-        call(f'{step_ca} --password-file {pass_file} {ca_json}', shell=True)
+        check_call(f'{step_ca} --password-file {pass_file} {ca_json}', shell=True)
 
 
 def _check_kill_process(pstring, confirmation=False):
@@ -242,20 +243,28 @@ def _create_ca(ca_path: Path, ca_url: str, password: str):
         f.write(password)
     os.chmod(f'{pki_dir}/pass_file', 0o600)
     step_path, step_ca_path = get_ca_bin_paths(ca_path)
-    assert (step_path and step_ca_path and step_path.exists() and step_ca_path.exists())
+    if not (step_path and step_ca_path and step_path.exists() and step_ca_path.exists()):
+        logger.error('Could not find step-ca binaries in the path specified')
+        sys.exit(1)
 
     logger.info('Create CA Config')
     os.environ['STEPPATH'] = str(step_config_dir)
     shutil.rmtree(step_config_dir, ignore_errors=True)
     name = ca_url.split(':')[0]
-    call(f'{step_path} ca init --name name --dns {name} '
-         f'--address {ca_url}  --provisioner prov '
-         f'--password-file {pki_dir}/pass_file', shell=True)
+    check_call(
+        f'{step_path} ca init --name name --dns {name} '
+        f'--address {ca_url}  --provisioner prov '
+        f'--password-file {pki_dir}/pass_file',
+        shell=True
+    )
 
-    call(f'{step_path} ca provisioner remove prov --all', shell=True)
-    call(f'{step_path} crypto jwk create {step_config_dir}/certs/pub.json '
-         f'{step_config_dir}/secrets/priv.json --password-file={pki_dir}/pass_file', shell=True)
-    call(
+    check_call(f'{step_path} ca provisioner remove prov --all', shell=True)
+    check_call(
+        f'{step_path} crypto jwk create {step_config_dir}/certs/pub.json '
+        f'{step_config_dir}/secrets/priv.json --password-file={pki_dir}/pass_file',
+        shell=True
+    )
+    check_call(
         f'{step_path} ca provisioner add provisioner {step_config_dir}/certs/pub.json',
         shell=True
     )
