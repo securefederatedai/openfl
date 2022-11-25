@@ -15,7 +15,7 @@ CA_PASSWORD = 'qwerty'
 
 
 if __name__ == '__main__':
-    shutil.rmtree(CA_PATH)
+    shutil.rmtree(CA_PATH, ignore_errors=True)
     # 1. Install CA
     subprocess.check_call([
         'fx', 'pki', 'install'
