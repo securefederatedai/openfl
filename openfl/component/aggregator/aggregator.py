@@ -4,6 +4,7 @@
 """Aggregator module."""
 import time
 import queue
+from copy import deepcopy
 from logging import getLogger
 
 from openfl.interface.aggregation_functions import WeightedAverage
@@ -306,7 +307,8 @@ class Aggregator:
                 t for t in tasks if not self._collaborator_task_completed(
                     collaborator_name, t, self.round_number)
             ]
-            for t in tasks:
+            init_tasks = deepcopy(tasks)
+            for t in init_tasks:
                 if t in self.stragglers_for_task:
                     for stragglers in self.stragglers_for_task[t]:
                         if collaborator_name in stragglers:
@@ -316,7 +318,8 @@ class Aggregator:
                 t for t in tasks if not self._collaborator_task_completed(
                     collaborator_name, t.name, self.round_number)
             ]
-            for t in tasks:
+            init_tasks = deepcopy(tasks)
+            for t in init_tasks:
                 if t.name in self.stragglers_for_task:
                     for stragglers in self.stragglers_for_task[t.name]:
                         if collaborator_name in stragglers:
