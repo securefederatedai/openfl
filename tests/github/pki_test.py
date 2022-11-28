@@ -5,18 +5,41 @@ import time
 import sys
 import shutil
 import subprocess
+import signal
+from openfl.interface.pki import run as run_pki
 
 from openfl.utilities.workspace import set_directory
+from threading import Thread
 
 
 CA_PATH = Path('~/.local/ca').expanduser()
 CA_URL = 'localhost:9123'
 CA_PASSWORD = 'qwerty'
 DIRECTOR_SUBJECT_NAME = 'localhost'
+EXPECTED_ERROR = ('Handshake failed with fatal error SSL_ERROR_SSL: error:100000f7:'
+                  'SSL routines:OPENSSL_internal:WRONG_VERSION_NUMBER.')
 
-if __name__ == '__main__':
-    shutil.rmtree(CA_PATH, ignore_errors=True)
-    # 1. Install CA
+
+def start_ca_server():
+    def start_server():
+        try:
+            run_pki(str(CA_PATH))
+        except subprocess.CalledProcessError as e:
+            if signal.Signals(-e.returncode) is signal.SIGKILL:  # intended stop signal
+                pass
+            else:
+                raise
+    ca_server = Thread(target=start_server, daemon=True)
+    ca_server.start()
+    time.sleep(3)  # Wait for server to initialize
+
+    if not ca_server.is_alive():
+        print('CA Server failed to initialize')
+        sys.exit(1)
+    return ca_server
+
+
+def install_ca():
     pki_install = subprocess.Popen([
         'fx', 'pki', 'install',
         '-p', str(CA_PATH),
@@ -25,84 +48,101 @@ if __name__ == '__main__':
     time.sleep(3)
     pki_install.communicate('y'.encode('utf-8'))
 
-    # 2. Start CA server
-    ca_server = subprocess.Popen([
-        'fx', 'pki', 'run',
+
+def get_token():
+    token_output = subprocess.check_output([
+        'fx', 'pki', 'get-token',
+        '-n', DIRECTOR_SUBJECT_NAME,
         '-p', str(CA_PATH)
     ])
-    time.sleep(3)  # Wait for server to initialize
+    return token_output.decode('utf-8').split('\n')[1]
 
-    if ca_server.poll() is not None:
-        print('CA Server failed to initialize')
-        sys.exit(1)
 
-    try:
-        # 3. Generate token for Director
-        token_output = subprocess.check_output([
-            'fx', 'pki', 'get-token',
-            '-n', DIRECTOR_SUBJECT_NAME,
-            '-p', str(CA_PATH)
-        ])
-        token = token_output.decode('utf-8').split('\n')[1]
+def certify_director(token):
+    subprocess.check_call([
+        'fx', 'pki', 'certify',
+        '-n', DIRECTOR_SUBJECT_NAME,
+        '-t', token,
+        '-c', f'{CA_PATH / "cert"}',
+        '-p', str(CA_PATH)
+    ])
 
-        # 4. Certify the Director with generated token
+
+def start_director(tls=True):
+    director_config_path = Path(
+        'tests/github/interactive_api_director/experiments/pytorch_kvasir_unet/'
+        'director/director_config.yaml'
+    )
+    root_cert_path = CA_PATH / 'cert' / 'root_ca.crt'
+    private_key_path = CA_PATH / 'cert' / f'{DIRECTOR_SUBJECT_NAME}.key'
+    public_cert_path = CA_PATH / 'cert' / f'{DIRECTOR_SUBJECT_NAME}.crt'
+    args = [
+        '-c', str(director_config_path),
+        '-rc', str(root_cert_path),
+        '-pk', str(private_key_path),
+        '-oc', str(public_cert_path)
+    ]
+    if not tls:
+        args.append('--disable-tls')
+    director = subprocess.Popen([
+        'fx', 'director', 'start',
+        *args
+    ], stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+    time.sleep(3)  # Wait for Director to start
+    return director
+
+
+def stop_server(ca_server):
+    subprocess.check_call([
+        'fx', 'pki', 'uninstall',
+        '-p', str(CA_PATH)
+    ])
+    if ca_server.is_alive():
+        ca_server.join()
+
+
+def start_envoy(tls=False):
+    envoy_folder = ('tests/github/interactive_api_director/'
+                    'experiments/pytorch_kvasir_unet/envoy/')
+    with set_directory(envoy_folder):
         subprocess.check_call([
-            'fx', 'pki', 'certify',
-            '-n', DIRECTOR_SUBJECT_NAME,
-            '-t', token,
-            '-c', f'{CA_PATH / "cert"}',
-            '-p', str(CA_PATH)
+            sys.executable, '-m', 'pip', 'install', '-r', 'sd_requirements.txt'
         ])
+        params = [
+            '-n', 'one',
+            '-dh', 'localhost',
+            '-dp', '50051',
+            '--disable-tls',
+            '-ec', 'envoy_config.yaml'
+        ]
+        if not tls:
+            params.append('--disable-tls')
+        envoy = subprocess.Popen([
+            'fx', 'envoy', 'start',
+            *params
+        ], stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+        time.sleep(10)  # Wait for envoy to start
+        return envoy
 
-        # 5. Start the Director with TLS enabled
-        director_config_path = Path(
-            'tests/github/interactive_api_director/experiments/pytorch_kvasir_unet/'
-            'director/director_config.yaml'
-        )
-        root_cert_path = CA_PATH / 'cert' / 'root_ca.crt'
-        private_key_path = CA_PATH / 'cert' / f'{DIRECTOR_SUBJECT_NAME}.key'
-        public_cert_path = CA_PATH / 'cert' / f'{DIRECTOR_SUBJECT_NAME}.crt'
-        director = subprocess.Popen([
-            'fx', 'director', 'start',
-            '-c', str(director_config_path),
-            '-rc', str(root_cert_path),
-            '-pk', str(private_key_path),
-            '-oc', str(public_cert_path)
-        ])
-        time.sleep(3)  # Wait for Director to start
 
-        # 6. Start the Envoy without TLS
-        expected_error = ('Handshake failed with fatal error SSL_ERROR_SSL: error:100000f7:'
-                          'SSL routines:OPENSSL_internal:WRONG_VERSION_NUMBER.')
+if __name__ == '__main__':
+    shutil.rmtree(CA_PATH, ignore_errors=True)
+    install_ca()
+    ca_server = start_ca_server()
+    try:
+        token = get_token()
+        certify_director(token)
+        director = start_director(tls=True)
         try:
-            envoy_folder = ('tests/github/interactive_api_director/'
-                            'experiments/pytorch_kvasir_unet/envoy/')
-            with set_directory(envoy_folder):
-                subprocess.check_call([
-                    sys.executable, '-m', 'pip', 'install', '-r', 'sd_requirements.txt'
-                ])
-                envoy = subprocess.Popen([
-                    'fx', 'envoy', 'start',
-                    '-n', 'one',
-                    '-dh', 'localhost',
-                    '-dp', '50051',
-                    '--disable-tls',
-                    '-ec', 'envoy_config.yaml'
-                ])
-                time.sleep(10)  # Wait for envoy to start
-                # Expectation is that secure server won't let insecure client connect
-                if envoy.poll() != 1 or expected_error not in envoy.communicate():
-                    envoy.kill()
+            envoy = start_envoy(tls=False)
+            # Expectation is that secure server won't let insecure client connect
+            while True:
+                tmp = director.stderr.readline().decode('utf-8')
+                if tmp == '':
                     sys.exit(1)
+                if EXPECTED_ERROR in tmp:
+                    break
         finally:
             director.kill()
     finally:
-        # Stop the CA Server and remove the CA folder
-        try:
-            subprocess.check_call([
-                'fx', 'pki', 'uninstall',
-                '-p', str(CA_PATH)
-            ])
-        except subprocess.CalledProcessError:
-            # This means we have stopped our previously created process (fx pki start)
-            pass
+        stop_server(ca_server)

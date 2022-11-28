@@ -64,7 +64,8 @@ def download_step_bin(url, grep_name, architecture, prefix='.', confirmation=Tru
         confirm('CA binaries from github will be downloaded now', default=True, abort=True)
     result = requests.get(url)
     if result.status_code != 200:
-        logger.error('Can\'t download binaries from github. Please try later.')
+        logger.error(f'''Can\'t download binaries from GitHub. Please try later.
+    Response: {result.text}''')
         sys.exit(1)
 
     assets = result.json().get('assets', [])
