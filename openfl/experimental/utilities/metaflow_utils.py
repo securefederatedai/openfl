@@ -21,6 +21,8 @@ from pathlib import Path
 from metaflow.runtime import TruncatedBuffer, mflog_msg, MAX_LOG_SIZE
 from metaflow.mflog import mflog, RUNTIME_LOG_SOURCE
 from metaflow.task import MetaDatum
+from dill.source import getsource
+
 
 class Flow:
     def __init__(self, name):
@@ -47,8 +49,7 @@ class DAGnode(DAGNode):
         self.func_lineno = func_ast.lineno
         self.decorators = decos
         self.doc = deindent_docstring(doc)
-        self.parallel_step = any(
-            getattr(deco, "IS_PARALLEL", False) for deco in decos)
+        self.parallel_step = any(getattr(deco, "IS_PARALLEL", False) for deco in decos)
 
         # these attributes are populated by _parse
         self.tail_next_lineno = 0
@@ -139,8 +140,7 @@ class StepVisitor(StepVisitor):
     def visit_FunctionDef(self, node):
         func = getattr(self.flow, node.name)
         if hasattr(func, "is_step"):
-            self.nodes[node.name] = DAGnode(
-                node, func.decorators, func.__doc__)
+            self.nodes[node.name] = DAGnode(node, func.decorators, func.__doc__)
 
 
 class FlowGraph(FlowGraph):
@@ -153,7 +153,7 @@ class FlowGraph(FlowGraph):
 
     def _create_nodes(self, flow):
         module = __import__(flow.__module__)
-        tree = ast.parse(inspect.getsource(module)).body
+        tree = ast.parse(getsource(module)).body
         root = [n for n in tree if isinstance(n, ast.ClassDef) and n.name == self.name][
             0
         ]
@@ -163,10 +163,27 @@ class FlowGraph(FlowGraph):
 
 
 class TaskDataStore(TaskDataStore):
-    def __init__(self, flow_datastore, run_id, step_name, task_id, attempt=None,
-                 data_metadata=None, mode="r", allow_not_done=False):
-        super().__init__(flow_datastore, run_id, step_name,
-                         task_id, attempt, data_metadata, mode, allow_not_done)
+    def __init__(
+        self,
+        flow_datastore,
+        run_id,
+        step_name,
+        task_id,
+        attempt=None,
+        data_metadata=None,
+        mode="r",
+        allow_not_done=False,
+    ):
+        super().__init__(
+            flow_datastore,
+            run_id,
+            step_name,
+            task_id,
+            attempt,
+            data_metadata,
+            mode,
+            allow_not_done,
+        )
 
     @only_if_not_done
     @require_mode("w")
@@ -242,17 +259,31 @@ class TaskDataStore(TaskDataStore):
                 yield blob
 
         # Use the content-addressed store to store all artifacts
-        save_result = self._ca_store.save_blobs(
-            pickle_iter(), len_hint=len_hint)
+        save_result = self._ca_store.save_blobs(pickle_iter(), len_hint=len_hint)
         for name, result in zip(artifact_names, save_result):
             self._objects[name] = result.key
 
 
 class FlowDataStore(FlowDataStore):
-    def __init__(self, flow_name, environment, metadata=None, event_logger=None,
-                 monitor=None, storage_impl=None, ds_root=None):
-        super().__init__(flow_name, environment, metadata,
-                         event_logger, monitor, storage_impl, ds_root)
+    def __init__(
+        self,
+        flow_name,
+        environment,
+        metadata=None,
+        event_logger=None,
+        monitor=None,
+        storage_impl=None,
+        ds_root=None,
+    ):
+        super().__init__(
+            flow_name,
+            environment,
+            metadata,
+            event_logger,
+            monitor,
+            storage_impl,
+            ds_root,
+        )
 
     def get_task_datastore(
         self,
@@ -278,12 +309,12 @@ class FlowDataStore(FlowDataStore):
 
 
 class MetaflowInterface:
-    def __init__(self, flow, backend='ray'):
+    def __init__(self, flow, backend="ray"):
         self.backend = backend
         self.flow_name = flow.__name__
-        #self._graph = FlowGraph(flow)
-        #self._steps = [getattr(flow, node.name) for node in self._graph]
-        if backend == 'ray':
+        self._graph = FlowGraph(flow)
+        self._steps = [getattr(flow, node.name) for node in self._graph]
+        if backend == "ray":
             self.counter = Counter.remote()
         else:
             self.counter = 0
@@ -295,19 +326,23 @@ class MetaflowInterface:
         self.local_metadata = LocalMetadataProvider(env, flow, None, None)
         self.run_id = self.local_metadata.new_run_id()
         self.flow_datastore = FlowDataStore(
-            self.flow_name, env, metadata=self.local_metadata, storage_impl=DATASTORES['local'],
-            ds_root=f'{Path.home()}/.metaflow')
+            self.flow_name,
+            env,
+            metadata=self.local_metadata,
+            storage_impl=DATASTORES["local"],
+            ds_root=f"{Path.home()}/.metaflow",
+        )
         return self.run_id
 
     def create_task(self, task_name):
         # May need a lock here
-        if self.backend == 'ray':
+        if self.backend == "ray":
             task_id = ray.get(self.counter.get_counter.remote())
         else:
             task_id = self.counter
         self.local_metadata._task_id_seq = task_id
         self.local_metadata.new_task_id(self.run_id, task_name)
-        if self.backend == 'ray':
+        if self.backend == "ray":
             return ray.get(self.counter.increment.remote())
         else:
             self.counter += 1
@@ -316,7 +351,8 @@ class MetaflowInterface:
     def save_artifacts(self, data_pairs, task_name, task_id, buffer_out, buffer_err):
         """Use metaflow task datastore to save federated flow attributes"""
         task_datastore = self.flow_datastore.get_task_datastore(
-            self.run_id, task_name, str(task_id), attempt=0, mode='w')
+            self.run_id, task_name, str(task_id), attempt=0, mode="w"
+        )
         task_datastore.init_task()
         task_datastore.save_artifacts(data_pairs)
 
@@ -362,7 +398,8 @@ class MetaflowInterface:
     def load_artifacts(self, artifact_names, task_name, task_id):
         """Use metaflow task datastore to load flow attributes"""
         task_datastore = self.flow_datastore.get_task_datastore(
-            self.run_id, task_name, str(task_id), attempt=0, mode='r')
+            self.run_id, task_name, str(task_id), attempt=0, mode="r"
+        )
         return task_datastore.load_artifacts(artifact_names)
 
     def emit_log(self, msgbuffer_out, msgbuffer_err, task_datastore, system_msg=False):
@@ -378,14 +415,20 @@ class MetaflowInterface:
 
         for std_output in msgbuffer_out.readlines():
             timestamp = datetime.utcnow()
-            stdout_buffer.write(mflog_msg(std_output, now=timestamp), system_msg=system_msg)
+            stdout_buffer.write(
+                mflog_msg(std_output, now=timestamp), system_msg=system_msg
+            )
 
         for std_error in msgbuffer_err.readlines():
             timestamp = datetime.utcnow()
-            stderr_buffer.write(mflog_msg(std_error, now=timestamp), system_msg=system_msg)
+            stderr_buffer.write(
+                mflog_msg(std_error, now=timestamp), system_msg=system_msg
+            )
 
-        task_datastore.save_logs(RUNTIME_LOG_SOURCE, {
-            "stdout": stdout_buffer.get_buffer(),
-            "stderr": stderr_buffer.get_buffer(),
-            })
-    
+        task_datastore.save_logs(
+            RUNTIME_LOG_SOURCE,
+            {
+                "stdout": stdout_buffer.get_buffer(),
+                "stderr": stderr_buffer.get_buffer(),
+            },
+        )
