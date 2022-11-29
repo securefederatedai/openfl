@@ -12,7 +12,7 @@ from typing import Iterable
 from typing import List
 from typing import Union
 
-from openfl import ShardNotFoundError
+from openfl.transport.grpc import ShardNotFoundError
 
 from .experiment import Experiment
 from .experiment import ExperimentsRegistry

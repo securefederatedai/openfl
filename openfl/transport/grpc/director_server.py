@@ -16,7 +16,6 @@ import grpc
 from grpc import aio
 from grpc import ssl_server_credentials
 
-from openfl import ShardNotFoundError
 from openfl.pipelines import NoCompressionPipeline
 from openfl.protocols import base_pb2
 from openfl.protocols import director_pb2
@@ -24,6 +23,7 @@ from openfl.protocols import director_pb2_grpc
 from openfl.protocols.utils import construct_model_proto
 from openfl.protocols.utils import deconstruct_model_proto
 from openfl.protocols.utils import get_headers
+from openfl.transport.grpc import ShardNotFoundError
 
 from .grpc_channel_options import channel_options
 

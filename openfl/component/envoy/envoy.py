@@ -15,10 +15,10 @@ from typing import Union
 
 from click import echo
 
-from openfl import ShardNotFoundError
 from openfl.federated import Plan
 from openfl.interface.interactive_api.shard_descriptor import ShardDescriptor
 from openfl.plugins.processing_units_monitor.cuda_device_monitor import CUDADeviceMonitor
+from openfl.transport.grpc import ShardNotFoundError
 from openfl.transport.grpc.director_client import ShardDirectorClient
 from openfl.utilities.workspace import ExperimentWorkspace
 
