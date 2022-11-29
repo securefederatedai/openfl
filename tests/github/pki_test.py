@@ -16,6 +16,7 @@ CA_PATH = Path('~/.local/ca').expanduser()
 CA_URL = 'localhost:9123'
 CA_PASSWORD = 'qwerty'
 DIRECTOR_SUBJECT_NAME = 'localhost'
+WORKSPACE_PATH = Path('tests/github/interactive_api_director/experiments/pytorch_kvasir_unet/')
 EXPECTED_ERROR = ('Handshake failed with fatal error SSL_ERROR_SSL: error:100000f7:'
                   'SSL routines:OPENSSL_internal:WRONG_VERSION_NUMBER.')
 
@@ -69,26 +70,22 @@ def certify_director(token):
 
 
 def start_director(tls=True):
-    director_config_path = Path(
-        'tests/github/interactive_api_director/experiments/pytorch_kvasir_unet/'
-        'director/director_config.yaml'
-    )
+    director_config_path = WORKSPACE_PATH / 'director' / 'director_config.yaml'
     root_cert_path = CA_PATH / 'cert' / 'root_ca.crt'
     private_key_path = CA_PATH / 'cert' / f'{DIRECTOR_SUBJECT_NAME}.key'
     public_cert_path = CA_PATH / 'cert' / f'{DIRECTOR_SUBJECT_NAME}.crt'
-    args = [
+    params = [
         '-c', str(director_config_path),
         '-rc', str(root_cert_path),
         '-pk', str(private_key_path),
         '-oc', str(public_cert_path)
     ]
     if not tls:
-        args.append('--disable-tls')
+        params.append('--disable-tls')
     director = subprocess.Popen([
         'fx', 'director', 'start',
-        *args
-    ], stderr=subprocess.PIPE, stdout=subprocess.PIPE)
-    time.sleep(3)  # Wait for Director to start
+        *params
+    ], stderr=subprocess.PIPE)
     return director
 
 
@@ -102,8 +99,7 @@ def stop_server(ca_server):
 
 
 def start_envoy(tls=False):
-    envoy_folder = ('tests/github/interactive_api_director/'
-                    'experiments/pytorch_kvasir_unet/envoy/')
+    envoy_folder = WORKSPACE_PATH / 'envoy'
     with set_directory(envoy_folder):
         subprocess.check_call([
             sys.executable, '-m', 'pip', 'install', '-r', 'sd_requirements.txt'
@@ -120,8 +116,7 @@ def start_envoy(tls=False):
         envoy = subprocess.Popen([
             'fx', 'envoy', 'start',
             *params
-        ], stderr=subprocess.PIPE, stdout=subprocess.PIPE)
-        time.sleep(10)  # Wait for envoy to start
+        ])
         return envoy
 
 
@@ -133,8 +128,10 @@ if __name__ == '__main__':
         token = get_token()
         certify_director(token)
         director = start_director(tls=True)
+        time.sleep(3)  # Wait for Director to start
         try:
             envoy = start_envoy(tls=False)
+            time.sleep(3)  # Wait for envoy to start
             # Expectation is that secure server won't let insecure client connect
             while True:
                 tmp = director.stderr.readline().decode('utf-8')
