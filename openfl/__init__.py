@@ -4,7 +4,3 @@
 from .__version__ import __version__
 # flake8: noqa
 from .interface.model import get_model
-
-
-class ShardNotFoundError(Exception):
-    """Indicates that director has no information about that shard."""
