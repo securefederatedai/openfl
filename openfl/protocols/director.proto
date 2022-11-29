@@ -13,7 +13,7 @@ service Director {
   // 1. Envoy RPCs
   rpc UpdateShardInfo(UpdateShardInfoRequest) returns (UpdateShardInfoResponse) {}
   // Shard owner could also provide some public data for tests
-  rpc WaitExperiment(stream WaitExperimentRequest) returns (stream WaitExperimentResponse) {}
+  rpc WaitExperiment(WaitExperimentRequest) returns (WaitExperimentResponse) {}
   rpc GetExperimentData(GetExperimentDataRequest) returns (stream ExperimentData) {}
   rpc UpdateEnvoyStatus(UpdateEnvoyStatusRequest) returns (UpdateEnvoyStatusResponse) {}
   rpc SetExperimentFailed (SetExperimentFailedRequest) returns (SetExperimentFailedResponse) {}

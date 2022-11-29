@@ -32,6 +32,7 @@ class ShardDirectorClient:
         """Initialize a shard director client object."""
         self.shard_name = shard_name
         director_addr = f'{director_host}:{director_port}'
+        logger.info(f'Director address: {director_addr}')
         if not tls:
             channel = grpc.insecure_channel(director_addr, options=channel_options)
         else:
@@ -79,9 +80,8 @@ class ShardDirectorClient:
     def wait_experiment(self):
         """Wait an experiment data from the director."""
         logger.info('Send WaitExperiment request')
-        response_iter = self.stub.WaitExperiment(self._get_experiment_data())
-        logger.info('WaitExperiment response has received')
-        response = next(response_iter)
+        response = self.stub.WaitExperiment(self._get_experiment_data())
+        logger.info(f'WaitExperiment response has received: {response}')
         experiment_name = response.experiment_name
         if not experiment_name:
             raise Exception('No experiment')
@@ -116,7 +116,7 @@ class ShardDirectorClient:
 
     def _get_experiment_data(self):
         """Generate the experiment data request."""
-        yield director_pb2.WaitExperimentRequest(collaborator_name=self.shard_name)
+        return director_pb2.WaitExperimentRequest(collaborator_name=self.shard_name)
 
     def send_health_check(
             self, *,

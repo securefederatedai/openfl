@@ -197,15 +197,13 @@ class DirectorGRPCServer(director_pb2_grpc.DirectorServicer):
                     break
                 yield director_pb2.ExperimentData(size=len(data), npbytes=data)
 
-    async def WaitExperiment(self, request_iterator, context):  # NOQA:N802
+    async def WaitExperiment(self, request, context):  # NOQA:N802
         """Request for wait an experiment."""
-        logger.info('Request WaitExperiment has got!')
-        async for msg in request_iterator:
-            logger.info(msg)
-            experiment_name = await self.director.wait_experiment(msg.collaborator_name)
-            logger.info(f'Experiment {experiment_name} was prepared')
+        logger.info(f'Request WaitExperiment has got from envoy {request.collaborator_name}!')
+        experiment_name = await self.director.wait_experiment(request.collaborator_name)
+        logger.info(f'Experiment {experiment_name} is ready for {request.collaborator_name}')
 
-            yield director_pb2.WaitExperimentResponse(experiment_name=experiment_name)
+        return director_pb2.WaitExperimentResponse(experiment_name=experiment_name)
 
     async def GetDatasetInfo(self, request, context):  # NOQA:N802
         """Request the info about target and sample shapes in the dataset."""
