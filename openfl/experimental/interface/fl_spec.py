@@ -192,11 +192,11 @@ class FLSpec:
                 yield var, val
         return artifacts_iter, cls_attrs
 
-    def at_transition_point(self, f, parent):
+    def at_transition_point(self, f, parent_func):
         """
         Has the collaborator finished its current sequence?
         """
-        if parent in self._foreach_methods:
+        if parent_func.__name__ in self._foreach_methods:
             self._foreach_methods.append(f.__name__)
             if should_transfer(f, parent_func):
                 print(
@@ -268,7 +268,6 @@ class FLSpec:
                         clone, attr)
                     if hasattr(clone, attr):
                         delattr(clone, attr)
-            print(f'Next function = {func}')
             g = getattr(self, func)
             # remove private collaborator state
             g([FLSpec._clones[col] for col in selected_collaborators])
@@ -276,7 +275,7 @@ class FLSpec:
             to_exec = getattr(self, f.__name__)
             to_exec()
             if f.__name__ == 'end':
-                artifacts_iter, _ = cln.generate_artifacts()
+                artifacts_iter, _ = self.generate_artifacts()
                 final_attributes = artifacts_iter()
 
     def next(self, f, **kwargs):
@@ -299,11 +298,7 @@ class FLSpec:
         
         if self.at_transition_point(f, parent_func):
             # Collaborator is done executing for now
-            print(f'Collaborator done executing at {parent_func.__name__}')
             return
-        else:
-            print(f'No transition point detected!')
-            print(f'foreach_methods = {self._foreach_methods}')
 
         self.display_transition_logs(f, parent_func)
 
