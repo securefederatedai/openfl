@@ -12,9 +12,11 @@ from typing import Union
 
 from google.protobuf.json_format import MessageToDict
 from google.protobuf.json_format import ParseDict
+import grpc
 from grpc import aio
 from grpc import ssl_server_credentials
 
+from openfl import ShardNotFoundError
 from openfl.pipelines import NoCompressionPipeline
 from openfl.protocols import base_pb2
 from openfl.protocols import director_pb2
@@ -266,15 +268,20 @@ class DirectorGRPCServer(director_pb2_grpc.DirectorServicer):
             MessageToDict(message, preserving_proto_field_name=True)
             for message in request.cuda_devices
         ]
-        health_check_period = self.director.update_envoy_status(
-            envoy_name=request.name,
-            is_experiment_running=request.is_experiment_running,
-            cuda_devices_status=cuda_devices_info
-        )
-        resp = director_pb2.UpdateEnvoyStatusResponse()
-        resp.health_check_period.seconds = health_check_period
+        try:
+            health_check_period = self.director.update_envoy_status(
+                envoy_name=request.name,
+                is_experiment_running=request.is_experiment_running,
+                cuda_devices_status=cuda_devices_info
+            )
+        except ShardNotFoundError as exc:
+            logger.error(exc)
+            await context.abort(grpc.StatusCode.NOT_FOUND, str(exc))
+        else:
+            resp = director_pb2.UpdateEnvoyStatusResponse()
+            resp.health_check_period.seconds = health_check_period
 
-        return resp
+            return resp
 
     async def GetEnvoys(self, request, context):  # NOQA:N802
         """Get a status information about envoys."""

@@ -15,6 +15,7 @@ from typing import Union
 
 from click import echo
 
+from openfl import ShardNotFoundError
 from openfl.federated import Plan
 from openfl.interface.interactive_api.shard_descriptor import ShardDescriptor
 from openfl.plugins.processing_units_monitor.cuda_device_monitor import CUDADeviceMonitor
@@ -113,13 +114,21 @@ class Envoy:
     def send_health_check(self):
         """Send health check to the director."""
         logger.info('The health check sender is started.')
+        timeout = DEFAULT_RETRY_TIMEOUT_IN_SECONDS
         while True:
             cuda_devices_info = self._get_cuda_device_info()
-            timeout = self.director_client.send_health_check(
-                envoy_name=self.name,
-                is_experiment_running=self.is_experiment_running,
-                cuda_devices_info=cuda_devices_info,
-            )
+            try:
+                timeout = self.director_client.send_health_check(
+                    envoy_name=self.name,
+                    is_experiment_running=self.is_experiment_running,
+                    cuda_devices_info=cuda_devices_info,
+                )
+            except ShardNotFoundError:
+                logger.info('The director has lost information about current shard. Resending...')
+                self.director_client.report_shard_info(
+                    shard_descriptor=self.shard_descriptor,
+                    cuda_devices=self.cuda_devices
+                )
             time.sleep(timeout)
 
     def _get_cuda_device_info(self):

@@ -10,6 +10,7 @@ from typing import Type
 
 import grpc
 
+from openfl import ShardNotFoundError
 from openfl.interface.interactive_api.shard_descriptor import ShardDescriptor
 from openfl.pipelines import NoCompressionPipeline
 from openfl.protocols import director_pb2
@@ -144,10 +145,16 @@ class ShardDirectorClient:
 
         logger.debug(f'Sending health check status: {status}')
 
-        response = self.stub.UpdateEnvoyStatus(status)
-        health_check_period = response.health_check_period.seconds
+        try:
+            response = self.stub.UpdateEnvoyStatus(status)
+        except grpc.RpcError as rpc_error:
+            logger.error(rpc_error)
+            if rpc_error.code() == grpc.StatusCode.NOT_FOUND:
+                raise ShardNotFoundError
+        else:
+            health_check_period = response.health_check_period.seconds
 
-        return health_check_period
+            return health_check_period
 
 
 class DirectorClient:

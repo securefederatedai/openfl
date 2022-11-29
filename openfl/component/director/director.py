@@ -12,6 +12,8 @@ from typing import Iterable
 from typing import List
 from typing import Union
 
+from openfl import ShardNotFoundError
+
 from .experiment import Experiment
 from .experiment import ExperimentsRegistry
 from .experiment import Status
@@ -188,7 +190,7 @@ class Director:
         """Accept health check from envoy."""
         shard_info = self._shard_registry.get(envoy_name)
         if not shard_info:
-            raise Exception(f'Unknown shard {envoy_name}')
+            raise ShardNotFoundError(f'Unknown shard {envoy_name}')
 
         hc_period = self.settings.get('envoy_health_check_period', ENVOY_HEALTH_CHECK_PERIOD)
         shard_info['is_online']: True
