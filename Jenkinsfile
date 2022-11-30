@@ -99,7 +99,7 @@ pipeline {
                 }
                 stage('Publish Package') {
                     steps {
-                        pypiPublish([pypiPublishRepository: 'test-pypi'])
+                        pypiPublish()
                     }
                 }
             }
