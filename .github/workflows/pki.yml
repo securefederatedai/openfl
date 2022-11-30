@@ -13,7 +13,7 @@ permissions:
   contents: read
 
 jobs:
-  build:
+  test_insecure_client:
 
     runs-on: ubuntu-latest
 
@@ -29,4 +29,21 @@ jobs:
         pip install .
     - name: Test PKI
       run: |
-        python tests/github/pki_test.py
+        python tests/github/test_pki_insecure_client.py
+    test_wrong_common_name:
+    
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python 3.8
+      uses: actions/setup-python@v3
+      with:
+        python-version: "3.8"
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install .
+    - name: Test PKI
+      run: |
+        python tests/github/test_pki_wrong_cn.py
