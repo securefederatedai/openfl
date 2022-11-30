@@ -29,7 +29,7 @@ jobs:
         pip install .
     - name: Test PKI
       run: |
-        python tests/github/test_pki_insecure_client.py
+        python tests/github/pki_insecure_client.py
   test_wrong_common_name:
   
     runs-on: ubuntu-latest
@@ -46,4 +46,4 @@ jobs:
         pip install .
     - name: Test PKI
       run: |
-        python tests/github/test_pki_wrong_cn.py
+        python tests/github/pki_wrong_cn.py
