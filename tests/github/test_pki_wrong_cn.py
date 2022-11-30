@@ -1,3 +1,5 @@
+# Copyright (C) 2020-2021 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
 from pathlib import Path
 import socket
 import os
@@ -30,6 +32,6 @@ if __name__ == '__main__':
         fqdn = socket.getfqdn()
         aggregator.generate_cert_request(fqdn)
         common_name = extract_common_name(f'cert/server/agg_{fqdn}.csr')
-        assert common_name == fqdn
+        assert common_name == fqdn, 'Aggregator certificate doesn\'t match the FQDN'
         print('[SUCCESS]')
-        print('Aggregator certificate matches the fully qualified domain name')
+        print('Aggregator certificate matches the FQDN')

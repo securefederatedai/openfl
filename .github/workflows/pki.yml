@@ -30,8 +30,8 @@ jobs:
     - name: Test PKI
       run: |
         python tests/github/test_pki_insecure_client.py
-    test_wrong_common_name:
-    
+  test_wrong_common_name:
+  
     runs-on: ubuntu-latest
 
     steps:
