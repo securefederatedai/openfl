@@ -219,7 +219,7 @@ if __name__ == "__main__":
 
     local_runtime = LocalRuntime(
         aggregator=aggregator,
-        collaborators=collaborators,backend="single_process"
+        collaborators=collaborators
     )
     print(f"Local runtime collaborators = {local_runtime._collaborators}")
 
