@@ -33,8 +33,6 @@ class FLSpec:
     def __init__(self, checkpoint=False):
         self._foreach_methods = []
         self._reserved_words = ['next', 'runtime']
-        #self._metaflow_interface = MetaflowInterface(self.__class__, backend='ray')
-        #self._run_id = self._metaflow_interface.create_run()
         self._checkpoint = checkpoint
 
     @classmethod
@@ -115,41 +113,13 @@ class FLSpec:
                     valid_artifacts.append((i[0], i[1]))
         return cls_attrs, valid_artifacts
 
-    def next(self, f, **kwargs):
-        global final_attributes
+    def filter_attributes(self, cln, **kwargs):
+        """
+        Filter out explicitly included / excluded attributes from the next task
+        in the flow.
+        """
 
-        if FLSpec._initial_state is None:
-            cln = self
-        else:
-            runtime = FLSpec._initial_state.runtime
-            FLSpec._initial_state.runtime = Runtime()
-            cln = deepcopy(FLSpec._initial_state)
-            FLSpec._initial_state.runtime = runtime
-        parent = inspect.stack()[1][3]
-        parent_func = getattr(self, parent)
-
-        # Extract the stdout & stderr from the buffer
-        # NOTE: Any prints in this method before this line will be recorded as step output/error
-        step_stdout, step_stderr = parent_func._stream_buffer.get_stdstream()
-
-        # TODO Persist attributes to local disk, database, object store, etc. here
-        cls_attrs, valid_artifacts = self.parse_attrs()
-
-        def artifacts_iter():
-            # Helper function from metaflow source
-            while valid_artifacts:
-                var, val = valid_artifacts.pop()
-                yield var, val
-
-        if self._checkpoint:
-            # all objects will be serialized using Metaflow internals
-            print(f'Saving data artifacts for {parent_func.__name__}')
-            task_id = self._metaflow_interface.create_task(
-                parent_func.__name__)
-            self._metaflow_interface.save_artifacts(
-                artifacts_iter(), task_name=parent_func.__name__, task_id=task_id, buffer_out=step_stdout, buffer_err=step_stderr)
-            print(f'Saved data artifacts for {parent_func.__name__}')
-
+        artifacts_iter, cls_attrs = self.generate_artifacts()
         if 'include' in kwargs and 'exclude' in kwargs:
             raise RuntimeError(
                 "'include' and 'exclude' should not both be present")
@@ -178,23 +148,76 @@ class FLSpec:
             # filtering after a foreach may run into problems
             cln = self
 
-        # Reload state for next function if it exists (this may happen remotely)
-        if hasattr(self, 'input'):
-            '{self.__class__.__name__}{self._instance}_{f.__name__}_{self._counter - 1}_'
+    def checkpoint(self, parent_func):
+        """
+        [Optionally] save current state for the task just executed task
+        """
 
-        if parent in self._foreach_methods:
+        # Extract the stdout & stderr from the buffer
+        # NOTE: Any prints in this method before this line will be recorded as step output/error
+        step_stdout, step_stderr = parent_func._stream_buffer.get_stdstream()
+
+        if self._checkpoint:
+            # all objects will be serialized using Metaflow interface
+            print(f'Saving data artifacts for {parent_func.__name__}')
+            artifacts_iter, _ = self.generate_artifacts()
+            task_id = self._metaflow_interface.create_task(
+                parent_func.__name__)
+            self._metaflow_interface.save_artifacts(
+                artifacts_iter(), task_name=parent_func.__name__, task_id=task_id, buffer_out=step_stdout, buffer_err=step_stderr)
+            print(f'Saved data artifacts for {parent_func.__name__}')
+
+    def create_clone(self):
+        """
+        Create a copy of the current state to modify for the next task
+        in the flow while leaving the current object untouched.
+        """
+        if FLSpec._initial_state is None:
+            cln = self
+        else:
+            runtime = FLSpec._initial_state.runtime
+            FLSpec._initial_state.runtime = Runtime()
+            cln = deepcopy(FLSpec._initial_state)
+            FLSpec._initial_state.runtime = runtime
+        return cln
+
+    def generate_artifacts(self):
+
+        cls_attrs, valid_artifacts = self.parse_attrs()
+
+        def artifacts_iter():
+            # Helper function from metaflow source
+            while valid_artifacts:
+                var, val = valid_artifacts.pop()
+                yield var, val
+        return artifacts_iter, cls_attrs
+
+    def at_transition_point(self, f, parent_func):
+        """
+        Has the collaborator finished its current sequence?
+        """
+        if parent_func.__name__ in self._foreach_methods:
             self._foreach_methods.append(f.__name__)
             if should_transfer(f, parent_func):
                 print(
                     f'Should transfer from {parent_func.__name__} to {f.__name__}')
                 self.execute_next = f.__name__
-                return
+                return True
+        return False
 
+    def display_transition_logs(self, f, parent_func):
         if aggregator_to_collaborator(f, parent_func):
             print(f'Sending state from aggregator to collaborators')
 
         elif collaborator_to_aggregator(f, parent_func):
             print(f'Sending state from collaborator to aggregator')
+
+    def execute_task(self, cln, f, parent_func, **kwargs):
+        """
+        Next task execution happens here
+        """
+
+        global final_attributes
 
         if 'foreach' in kwargs:
             self._foreach_methods.append(f.__name__)
@@ -202,7 +225,7 @@ class FLSpec:
 
             for col in selected_collaborators:
                 clone = FLSpec._clones[col]
-                cls_attrs, valid_artifacts = cln.parse_attrs()              
+                artifacts_iter, _ = cln.generate_artifacts()
                 attributes = artifacts_iter()
                 for name,attr in attributes:
                     setattr(clone,name,deepcopy(attr))
@@ -245,7 +268,6 @@ class FLSpec:
                         clone, attr)
                     if hasattr(clone, attr):
                         delattr(clone, attr)
-            print(f'Next function = {func}')
             g = getattr(self, func)
             # remove private collaborator state
             g([FLSpec._clones[col] for col in selected_collaborators])
@@ -253,5 +275,33 @@ class FLSpec:
             to_exec = getattr(self, f.__name__)
             to_exec()
             if f.__name__ == 'end':
-                cls_attrs, valid_artifacts = cln.parse_attrs()
+                artifacts_iter, _ = self.generate_artifacts()
                 final_attributes = artifacts_iter()
+
+    def next(self, f, **kwargs):
+        """
+        Next task in the flow to execute
+        """
+
+        # Make a local clone to isolate state for the next task
+        cln = self.create_clone()
+
+        # Get the name and reference to the calling function
+        parent = inspect.stack()[1][3]
+        parent_func = getattr(self, parent)
+
+        # Checkpoint current attributes (if checkpoint==True)
+        self.checkpoint(parent_func)
+
+        # Remove included / excluded attributes from next task
+        self.filter_attributes(cln, **kwargs)
+        
+        if self.at_transition_point(f, parent_func):
+            # Collaborator is done executing for now
+            return
+
+        self.display_transition_logs(f, parent_func)
+
+        self.execute_task(cln, f, parent_func, **kwargs)
+
+
