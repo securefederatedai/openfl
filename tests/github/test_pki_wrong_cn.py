@@ -3,35 +3,24 @@
 from pathlib import Path
 import socket
 import os
-from cryptography import x509
-from cryptography.hazmat.backends import default_backend
-
-from openfl.utilities.workspace import set_directory
 
 
 PREFIX = Path('~/.local/workspace').expanduser()
 TEMPLATE = 'keras_cnn_mnist'
 
 
-def extract_common_name(csr_path):
-    with open(csr_path, 'rb') as csr:
-        request = csr.read()
-        info = x509.load_pem_x509_csr(request, backend=default_backend)
-        return info.subject.get_attributes_for_oid(x509.oid.NameOID.COMMON_NAME)[0].value
+def test_aggregator_common_name(common_name, should_fail):
+    exit_code = os.system(f'fx aggregator generate-cert-request --fqdn {common_name}')
+    if should_fail != bool(exit_code):
+        raise Exception(f'Aggregator certificate generation command for {common_name} '
+                        f'finished with exit code {exit_code}.')
 
 
 if __name__ == '__main__':
-    PREFIX.mkdir(parents=True, exist_ok=True)
-    with set_directory(PREFIX):
-        from openfl.interface import workspace
-        from openfl.interface import aggregator
-        workspace.create(PREFIX, TEMPLATE)
-        origin_dir = os.getcwd()
+    os.system(f'fx workspace create --prefix {PREFIX} --template {TEMPLATE}')
+    os.chdir(PREFIX)
+    os.system('fx workspace certify')
 
-        workspace.certify()
-        fqdn = socket.getfqdn()
-        aggregator.generate_cert_request(fqdn)
-        common_name = extract_common_name(f'cert/server/agg_{fqdn}.csr')
-        assert common_name == fqdn, 'Aggregator certificate doesn\'t match the FQDN'
-        print('[SUCCESS]')
-        print('Aggregator certificate matches the FQDN')
+    test_aggregator_common_name('not_an_fqdn', should_fail=True)
+    test_aggregator_common_name('some.fqdn.com', should_fail=True)
+    test_aggregator_common_name(socket.getfqdn(), should_fail=False)
