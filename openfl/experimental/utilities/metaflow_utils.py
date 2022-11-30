@@ -21,6 +21,21 @@ from pathlib import Path
 from metaflow.runtime import TruncatedBuffer, mflog_msg, MAX_LOG_SIZE
 from metaflow.mflog import mflog, RUNTIME_LOG_SOURCE
 from metaflow.task import MetaDatum
+import fcntl, hashlib
+
+
+class SystemMutex:
+    def __init__(self, name):
+        self.name = name
+
+    def __enter__(self):
+        lock_id = hashlib.md5(self.name.encode("utf8")).hexdigest()
+        self.fp = open(f"/tmp/.lock-{lock_id}.lck", "wb")
+        fcntl.flock(self.fp.fileno(), fcntl.LOCK_EX)
+
+    def __exit__(self, _type, value, tb):
+        fcntl.flock(self.fp.fileno(), fcntl.LOCK_UN)
+        self.fp.close()
 
 class Flow:
     def __init__(self, name):
@@ -301,17 +316,19 @@ class MetaflowInterface:
 
     def create_task(self, task_name):
         # May need a lock here
-        if self.backend == 'ray':
-            task_id = ray.get(self.counter.get_counter.remote())
+        if self.backend == "ray":
+            with SystemMutex("critical_setcion"):
+                task_id = ray.get(self.counter.get_counter.remote())
+                self.local_metadata._task_id_seq = task_id
+                self.local_metadata.new_task_id(self.run_id, task_name)
+                return ray.get(self.counter.increment.remote())
         else:
             task_id = self.counter
-        self.local_metadata._task_id_seq = task_id
-        self.local_metadata.new_task_id(self.run_id, task_name)
-        if self.backend == 'ray':
-            return ray.get(self.counter.increment.remote())
-        else:
+            self.local_metadata._task_id_seq = task_id
+            self.local_metadata.new_task_id(self.run_id, task_name)
             self.counter += 1
             return self.counter
+
 
     def save_artifacts(self, data_pairs, task_name, task_id, buffer_out, buffer_err):
         """Use metaflow task datastore to save federated flow attributes"""
