@@ -47,7 +47,6 @@ pipeline {
                     docker image build ${DOCKER_BUILD_ARGS} -t openfl-docker:latest . -f openfl-docker/Dockerfile.base
                     docker images | { grep openfl || true; }
                 '''
-                sh 'scripts/build_wheel.sh'
             }
         }
         stage('Prep Code Scan') {
@@ -87,8 +86,22 @@ pipeline {
                     isPyPiPublishCommit()
                 }
             }
-            steps {
-                pypiPublish()
+            stages {
+                stage('Build Package') {
+                    agent {
+                        docker {
+                            image 'python:3.8'
+                        }
+                    }
+                    steps {
+                        sh 'scripts/build_wheel.sh'
+                    }
+                }
+                stage('Publish Package') {
+                    steps {
+                        pypiPublish([pypiPublishRepository: 'test-pypi'])
+                    }
+                }
             }
         }
     }
