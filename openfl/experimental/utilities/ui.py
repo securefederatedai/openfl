@@ -1,4 +1,4 @@
-from openfl.experimental.utilities.basic import DefaultCard
+from openfl.experimental.utilities.metaflow_utils import DefaultCard
 from metaflow.client import Task
 from pathlib import Path
 import os
