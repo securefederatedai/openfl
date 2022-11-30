@@ -38,4 +38,4 @@ class InspectFlow:
             f.write(html)
 
         if self.show_html:
-            self.open_in_browser("./card_ui.html")
+            self.open_in_browser(f"{pathspec}/card_ui.html")
