@@ -17,29 +17,27 @@ import multiprocessing
 import ray
 import ast
 import inspect
+import fcntl
+import hashlib
 from pathlib import Path
 from metaflow.runtime import TruncatedBuffer, mflog_msg, MAX_LOG_SIZE
 from metaflow.mflog import mflog, RUNTIME_LOG_SOURCE
 from metaflow.task import MetaDatum
 from dill.source import getsource
 
-from metaflow.plugins.cards.card_modules.basic import DefaultCard, TaskInfoComponent
-from metaflow.plugins.cards.card_modules.basic import (
-    DagComponent,
-    SectionComponent,
-    PageComponent,
-)
-from metaflow.plugins.cards.card_modules.basic import (
-    RENDER_TEMPLATE_PATH,
-    JS_PATH,
-    CSS_PATH,
-)
-from metaflow.plugins.cards.card_modules.basic import read_file, transform_flow_graph
-from metaflow import __version__ as mf_version
 
-import json
-import base64
-import uuid
+class SystemMutex:
+    def __init__(self, name):
+        self.name = name
+
+    def __enter__(self):
+        lock_id = hashlib.md5(self.name.encode('utf8')).hexdigest()
+        self.fp = open(f'/tmp/.lock-{lock_id}.lck', 'wb')
+        fcntl.flock(self.fp.fileno(), fcntl.LOCK_EX)
+
+    def __exit__(self, _type, value, tb):
+        fcntl.flock(self.fp.fileno(), fcntl.LOCK_UN)
+        self.fp.close()
 
 
 class Flow:
@@ -355,14 +353,15 @@ class MetaflowInterface:
     def create_task(self, task_name):
         # May need a lock here
         if self.backend == "ray":
-            task_id = ray.get(self.counter.get_counter.remote())
+            with SystemMutex("critical_setcion"):
+                task_id = ray.get(self.counter.get_counter.remote())
+                self.local_metadata._task_id_seq = task_id
+                self.local_metadata.new_task_id(self.run_id, task_name)
+                return ray.get(self.counter.increment.remote())
         else:
             task_id = self.counter
-        self.local_metadata._task_id_seq = task_id
-        self.local_metadata.new_task_id(self.run_id, task_name)
-        if self.backend == "ray":
-            return ray.get(self.counter.increment.remote())
-        else:
+            self.local_metadata._task_id_seq = task_id
+            self.local_metadata.new_task_id(self.run_id, task_name)
             self.counter += 1
             return self.counter
 
@@ -450,93 +449,3 @@ class MetaflowInterface:
                 "stderr": stderr_buffer.get_buffer(),
             },
         )
-
-
-class DefaultCard(DefaultCard):
-
-    ALLOW_USER_COMPONENTS = True
-
-    type = "default"
-
-    def __init__(self, options=dict(only_repr=True), components=[], graph=None):
-        self._only_repr = True
-        self._graph = None if graph is None else transform_flow_graph(graph)
-        if "only_repr" in options:
-            self._only_repr = options["only_repr"]
-        self._components = components
-
-    # modified Defaultcard render function
-    def render(self, task):
-        # :param: task instead of metaflow.client.Task object task.pathspec (string) is provided
-        RENDER_TEMPLATE = read_file(RENDER_TEMPLATE_PATH)
-        JS_DATA = read_file(JS_PATH)
-        CSS_DATA = read_file(CSS_PATH)
-        final_component_dict = dict(self._graph)
-        final_component_dict = TaskInfoComponent(
-            task,
-            only_repr=self._only_repr,
-            graph=self._graph,
-            components=self._components,
-        ).render()
-        pt = self._get_mustache()
-        data_dict = dict(
-            task_data=base64.b64encode(
-                json.dumps(final_component_dict).encode("utf-8")
-            ).decode("utf-8"),
-            javascript=JS_DATA,
-            title=task,
-            css=CSS_DATA,
-            card_data_id=uuid.uuid4(),
-        )
-        return pt.render(RENDER_TEMPLATE, data_dict)
-
-
-class TaskInfoComponent(TaskInfoComponent):
-    """
-    Properties
-        page_content : a list of MetaflowCardComponents going as task info
-        final_component: the dictionary returned by the `render` function of this class.
-    """
-
-    def __init__(
-        self, task, page_title="Task Info", only_repr=True, graph=None, components=[]
-    ):
-        self._task = task
-        self._only_repr = only_repr
-        self._graph = graph
-        self._components = components
-        self._page_title = page_title
-        self.final_component = None
-        self.page_component = None
-
-    # modified TaskInfoComponent render function
-    def render(self):
-        """
-
-        Returns:
-            a dictionary of form:
-                dict(metadata = {},components= [])
-        """
-        final_component_dict = dict(
-            metadata=dict(
-                metaflow_version=mf_version, version=1, template="defaultCardTemplate"
-            ),
-            components=[],
-        )
-
-        dag_component = SectionComponent(
-            title="DAG", contents=[DagComponent(data=self._graph).render()]
-        ).render()
-
-        page_contents = []
-        page_contents.append(dag_component)
-        page_component = PageComponent(
-            title=self._page_title,
-            contents=page_contents,
-        ).render()
-        final_component_dict["components"].append(page_component)
-
-        self.final_component = final_component_dict
-        self.page_component = page_component
-
-        return final_component_dict
