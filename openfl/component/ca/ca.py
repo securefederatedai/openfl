@@ -238,7 +238,7 @@ def _create_ca(ca_path: Path, ca_url: str, password: str):
     pki_dir.mkdir(parents=True, exist_ok=True)
     step_config_dir.mkdir(parents=True, exist_ok=True)
 
-    with open(f'{pki_dir}/pass_file', 'w') as f:
+    with open(f'{pki_dir}/pass_file', 'w', encoding='utf-8') as f:
         f.write(password)
     os.chmod(f'{pki_dir}/pass_file', 0o600)
     step_path, step_ca_path = get_ca_bin_paths(ca_path)
@@ -263,7 +263,7 @@ def _create_ca(ca_path: Path, ca_url: str, password: str):
 
 def _configure(step_config_dir):
     conf_file = step_config_dir / CA_CONFIG_JSON
-    with open(conf_file, 'r+') as f:
+    with open(conf_file, 'r+', encoding='utf-8') as f:
         data = json.load(f)
         data.setdefault('authority', {}).setdefault('claims', {})
         data['authority']['claims']['maxTLSCertDuration'] = f'{365 * 24}h'
