@@ -236,9 +236,11 @@ class FLSpec:
 
             for col in selected_collaborators:
                 clone = FLSpec._clones[col]
+                if ("exclude" in kwargs and hasattr(clone, kwargs["exclude"][0])) or \
+                   ("include" in kwargs and hasattr(clone, kwargs["include"][0])):
+                    clone.filter_attributes(f, **kwargs)
                 artifacts_iter, _ = self.generate_artifacts()
-                attributes = artifacts_iter()
-                for name,attr in attributes:
+                for name,attr in artifacts_iter():
                     setattr(clone,name,deepcopy(attr))
                 clone._foreach_methods = self._foreach_methods
 
