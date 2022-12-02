@@ -49,11 +49,12 @@ Goals
 Design
 ======
 
-In the design of the flow interface, we evaluated many existing pipeline frameworks and workflow platforms in the python ecosystem. Airflow, Luigi, Flyte and others   
+In the design of the flow interface, we evaluated many existing pipeline frameworks and workflow platforms in the python ecosystem. Airflow, Luigi, Flyte and others.   
 
-Python API
-==========
+Workflow Interface API
+======================
 
+The workflow interface formulates the experiment as a series of tasks, or a flow. Every flow begins with the `start` task and concludes with `end`.
 Modify the plan settings:
 
 .. code-block:: python
