@@ -68,7 +68,8 @@ class Aggregator:
         self.straggler_handling_policy = straggler_handling_policy \
             or CutoffTimeBasedStragglerHandling()
         self._end_of_round_check_done = [False] * rounds_to_train
-        self.stragglers_for_task = {}
+        # self.stragglers_for_task = {}
+        self.stragglers_for_task = []
 
         self.rounds_to_train = rounds_to_train
 
@@ -306,21 +307,29 @@ class Aggregator:
                 t for t in tasks if not self._collaborator_task_completed(
                     collaborator_name, t, self.round_number)
             ]
-            for t in tasks:
-                if t in self.stragglers_for_task:
-                    for stragglers in self.stragglers_for_task[t]:
-                        if collaborator_name in stragglers:
-                            tasks.remove(t)
+            # init_tasks = deepcopy(tasks)
+            # for t in tasks:
+            #     if t in self.stragglers_for_task:
+            #         for stragglers in self.stragglers_for_task[t]:
+            #             if collaborator_name in stragglers:
+            #                 tasks.remove(t)
+            for straggler in self.stragglers_for_task:
+                if collaborator_name == straggler:
+                    tasks = []
+
         else:
             tasks = [
                 t for t in tasks if not self._collaborator_task_completed(
                     collaborator_name, t.name, self.round_number)
             ]
-            for t in tasks:
-                if t.name in self.stragglers_for_task:
-                    for stragglers in self.stragglers_for_task[t.name]:
-                        if collaborator_name in stragglers:
-                            tasks.remove(t)
+            # for t in tasks:
+            #     if t.name in self.stragglers_for_task:
+            #         for stragglers in self.stragglers_for_task[t.name]:
+            #             if collaborator_name in stragglers:
+            #                 tasks.remove(t)
+            for straggler in self.stragglers_for_task:
+                if collaborator_name == straggler:
+                    tasks = []
 
         # Do the check again because it's possible that all tasks have
         # been completed
@@ -892,7 +901,8 @@ class Aggregator:
         self._end_of_round_check_done[self.round_number] = True
         self.round_number += 1
         # resetting stragglers for task for a new round
-        self.stragglers_for_task = {}
+        # self.stragglers_for_task = {}
+        self.stragglers_for_task = []
 
         # Save the latest model
         self.logger.info(f'Saving round {self.round_number} model...')
@@ -923,14 +933,16 @@ class Aggregator:
         straggler_check = self.straggler_handling_policy.straggler_cutoff_check(
             len(collaborators_done), all_collaborators)
 
-        stragglers = []
+        # stragglers = []
         if straggler_check:
             for c in all_collaborators:
                 if c not in collaborators_done:
-                    stragglers.append(c)
+                    # stragglers.append(c)
+                    self.stragglers_for_task.append(c)
             self.logger.info(f'\tEnding task {task_name} early due to straggler cutoff policy')
-            self.logger.warning(f'\tIdentified stragglers: {stragglers} for task {task_name}')
-            self.stragglers_for_task[task_name] = stragglers
+            # self.logger.warning(f'\tIdentified stragglers: {stragglers} for task {task_name}')
+            self.logger.warning(f'\tIdentified stragglers: {self.stragglers_for_task}')
+            # self.stragglers_for_task[task_name] = stragglers
 
         # all are done or straggler policy calls for early round end.
         return straggler_check or len(all_collaborators) == len(collaborators_done)
