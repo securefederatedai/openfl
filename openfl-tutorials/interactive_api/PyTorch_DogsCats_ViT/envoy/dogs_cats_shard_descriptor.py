@@ -152,14 +152,14 @@ class DogsCatsShardDescriptor(ShardDescriptor):
     def save_all_md5(self):
         """Save dataset hash."""
         all_md5 = self.calc_all_md5()
-        with open(os.path.join(self.data_folder, 'dataset.json'), 'w') as f:
+        with open(os.path.join(self.data_folder, 'dataset.json'), 'w', encoding='utf-8') as f:
             json.dump(all_md5, f)
 
     def is_dataset_complete(self):
         """Check dataset integrity."""
         new_md5 = self.calc_all_md5()
         try:
-            with open(os.path.join(self.data_folder, 'dataset.json'), 'r') as f:
+            with open(os.path.join(self.data_folder, 'dataset.json'), 'r', encoding='utf-8') as f:
                 old_md5 = json.load(f)
         except FileNotFoundError:
             return False

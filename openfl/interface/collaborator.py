@@ -3,6 +3,7 @@
 """Collaborator module."""
 
 import sys
+import os
 from logging import getLogger
 
 from click import echo
@@ -93,7 +94,7 @@ def register_data_path(collaborator_name, data_path=None, silent=False):
     data_yaml = 'plan/data.yaml'
     separator = ','
     if isfile(data_yaml):
-        with open(data_yaml, 'r') as f:
+        with open(data_yaml, 'r', encoding='utf-8') as f:
             for line in f:
                 if separator in line:
                     key, val = line.split(separator, maxsplit=1)
@@ -102,7 +103,7 @@ def register_data_path(collaborator_name, data_path=None, silent=False):
     d[collaborator_name] = dir_path
 
     # Write the data.yaml
-    with open(data_yaml, 'w') as f:
+    with open(data_yaml, 'w', encoding='utf-8') as f:
         for key, val in d.items():
             f.write(f'{key}{separator}{val}\n')
 
@@ -194,7 +195,7 @@ def generate_cert_request(collaborator_name, data_path, silent, skip_package):
 
 def find_certificate_name(file_name):
     """Parse the collaborator name."""
-    col_name = str(file_name).split('/')[-1].split('.')[0][4:]
+    col_name = str(file_name).split(os.sep)[-1].split('.')[0][4:]
     return col_name
 
 
@@ -217,7 +218,7 @@ def register_collaborator(file_name):
 
     if not isfile(cols_file):
         cols_file.touch()
-    with open(cols_file, 'r') as f:
+    with open(cols_file, 'r', encoding='utf-8') as f:
         doc = load(f, Loader=FullLoader)
 
     if not doc:  # YAML is not correctly formatted
@@ -237,7 +238,7 @@ def register_collaborator(file_name):
     else:
 
         doc['collaborators'].append(col_name)
-        with open(cols_file, 'w') as f:
+        with open(cols_file, 'w', encoding='utf-8') as f:
             dump(doc, f)
 
         echo('\nRegistering '
