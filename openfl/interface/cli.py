@@ -13,6 +13,7 @@ from click import pass_context
 from click import style
 
 from openfl.utilities import add_log_level
+import sys
 
 
 def setup_logging(level='info', log_file=None):
@@ -137,6 +138,7 @@ def cli(context, log_level):
 
     log_file = os.getenv('LOG_FILE')
     setup_logging(log_level, log_file)
+    sys.stdout.reconfigure(encoding='utf-8')
 
 
 @cli.result_callback()

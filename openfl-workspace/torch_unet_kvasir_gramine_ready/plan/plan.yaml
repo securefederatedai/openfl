@@ -9,6 +9,7 @@ aggregator :
     best_state_path : save/torch_unet_kvasir_best.pbuf
     last_state_path : save/torch_unet_kvasir_last.pbuf
     rounds_to_train : 40
+    write_logs : false
 
 collaborator :
   defaults : plan/defaults/collaborator.yaml

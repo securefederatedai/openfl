@@ -179,7 +179,7 @@ def switch_plan(name):
         # Update the .workspace file to show the current workspace plan
         workspace_file = '.workspace'
 
-        with open(workspace_file, 'r') as f:
+        with open(workspace_file, 'r', encoding='utf-8') as f:
             doc = load(f, Loader=FullLoader)
 
         if not doc:  # YAML is not correctly formatted
@@ -188,7 +188,7 @@ def switch_plan(name):
         doc['current_plan_name'] = f'{name}'  # Switch with new plan name
 
         # Rewrite updated workspace file
-        with open(workspace_file, 'w') as f:
+        with open(workspace_file, 'w', encoding='utf-8') as f:
             dump(doc, f)
 
     else:

@@ -1,45 +1,90 @@
 # Next Word Prediction Tutorial on Keras
 
-### 0. GPU supporting
+## I. GPU supporting
 
-Currently GPU (with CUDA 11) is not supported by Tensorflow properly, so we disable CUDA in the
-tutorial. Otherwise, you can use these charms in first
-answer (https://stackoverflow.com/questions/41991101/importerror-libcudnn-when-running-a-tensorflow-program)
+Currently GPU (with CUDA 11) is not supported by Tensorflow properly, so we disabled CUDA in the
+tutorial. Otherwise, you can use these charms in the first answer of this Stack Overflow question (https://stackoverflow.com/questions/41991101/importerror-libcudnn-when-running-a-tensorflow-program)
 to fix your environment and enjoy GPU. Don't forget to
 change `os.environ['CUDA_VISIBLE_DEVICES'] = '-1'` to a positive value.
 
-As an option you can set CUDA variable for each envoy before starting
+As an option you can set the CUDA variable for each envoy before starting
 it: `export CUDA_VISIBLE_DEVICES=0`
+<br/>
+<br/>
 
-### 1. Data
+## II. Data
 
-Different envoys could have different texts, there were used 3 books of fairy tales:
+Different envoys can have different texts, so in this tutorial each envoy uses one of these 3 fairy tale books:
 
 - Polish Fairy Tales by A. J. Gliński https://www.gutenberg.org/files/36668/36668-h/36668-h.htm
 - English Fairy Tales by Joseph Jacobs https://www.gutenberg.org/cache/epub/7439/pg7439-images.html
 - American Fairy Tales by L. FRANK BAUM https://www.gutenberg.org/files/4357/4357-h/4357-h.htm
+<br/>
+<br/>
 
-### 2. Keras Model
+## III. Keras Model
 
 At this point OpenFL maintains Sequential API and Functional API. Keras Submodel is not supported.
 https://github.com/intel/openfl/issues/185
+<br/>
+<br/>
 
-## To run experiment:
+## IV. To run this experiment:
+<br/>
 
-1. Create a folder for each envoy (they can be subfolders of `envoy` for simulation purposes or
-   folders on different machines in a real-life setting), in our case we should create three
-   folders.
-2. Put a relevant `envoy_config` in each of the three folders and copy other files from `envoy`
-   there as well.
-3. Modify the `start_envoy` accordingly:
-    1. change `env_one` to `env_two`, `env_three` (or any unique envoy names you like)
-    2. `envoy_config_one.yaml` to  `envoy_config_two.yaml` and `envoy_config_three.yaml`.
-4. Install requirements for each envoy: `pip install -r sd_requirements.txt`
-5. Run the director: execute `start_director.sh` in `director`.
-6. Run the envoys: execute `start_envoy.sh` in each envoy folder.
-7. Run the notebook using JupyterLab in `workspace`.
+### 0. If you haven't done so already, create a virtual environment, install OpenFL, and upgrade pip:
+  - For help with this step, visit the "Install the Package" section of the [OpenFL installation instructions](https://openfl.readthedocs.io/en/latest/install.html#install-the-package).
+<br/>
+ 
+### 1. Split terminal into 3 (1 terminal for the director, 1 for the envoy, and 1 for the experiment)
+<br/> 
+
+### 2. Do the following in each terminal:
+   - Activate the virtual environment from step 0:
+   
+   ```sh
+   source venv/bin/activate
+   ```
+   - If you are in a network environment with a proxy, ensure proxy environment variables are set in each of your terminals.
+   - Navigate to the tutorial:
+    
+   ```sh
+   cd openfl/openfl-tutorials/interactive_api/Tensorflow_Word_Prediction
+   ```
+<br/>
+
+### 3. In the first terminal, run the director:
 
 ```sh
-cd workspace 
-jupyter lab
+cd director
+./start_director.sh
 ```
+<br/>
+
+### 4. In the second terminal, install requirements and run the envoy:
+
+```sh
+cd envoy
+pip install -r sd_requirements.txt
+./start_envoy.sh env_one envoy_config_one.yaml
+```
+
+Optional: Run a second or third envoy in additional terminals:
+  - Ensure step 2 is complete for these terminals as well.
+  - Follow step 4 for each envoy, changing the envoy name and config file accordingly. For example:
+      - Envoy two would use: 
+   ```sh
+   ./start_envoy.sh env_two envoy_config_two.yaml
+   ```
+<br/>
+
+### 5. Now that your director and envoy terminals are set up, run the Jupyter Notebook in your experiment terminal:
+
+```sh
+cd workspace
+jupyter lab Tensorflow_Word_Prediction.ipynb
+```
+- A Jupyter Server URL will appear in your terminal. In your browser, proceed to that link. Once the webpage loads, click on the Tensorflow_Word_Prediction.ipynb file. 
+- To run the experiment, select the icon that looks like two triangles to "Restart Kernel and Run All Cells". 
+- You will notice activity in your terminals as the experiment runs, and when the experiment is finished the director terminal will display a message that the experiment has finished successfully.  
+ 

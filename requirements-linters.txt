@@ -11,3 +11,4 @@ flake8-import-single
 flake8-quotes
 flake8-use-fstring
 pep8-naming
+setuptools>=65.5.1 # not directly required, pinned by Snyk to avoid a vulnerability
