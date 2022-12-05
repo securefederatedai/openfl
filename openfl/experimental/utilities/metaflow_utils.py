@@ -317,7 +317,7 @@ class MetaflowInterface:
     def create_task(self, task_name):
         # May need a lock here
         if self.backend == "ray":
-            with SystemMutex("critical_setcion"):
+            with SystemMutex("critical_section"):
                 task_id = ray.get(self.counter.get_counter.remote())
                 self.local_metadata._task_id_seq = task_id
                 self.local_metadata.new_task_id(self.run_id, task_name)
