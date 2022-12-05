@@ -394,15 +394,23 @@ def dockerize_(context, base_image, save):
         'BASE_IMAGE': base_image
     }
 
-    client = docker.from_env(timeout=3600)
+    cli = docker.APIClient()
     echo('Building the Docker image')
     try:
-        client.images.build(
+        for line in cli.build(
             path=str(workspace_path),
             tag=workspace_name,
             buildargs=build_args,
-            dockerfile=dockerfile_workspace
-        )
+            dockerfile=dockerfile_workspace,
+            timeout=3600,
+            decode=True
+        ):
+            if 'stream' in line:
+                print(f'> {line["stream"]}', end='')
+            elif 'error' in line:
+                print('Failed to build the Docker image:')
+                print(line)
+                sys.exit(1)
     except docker.errors.BuildError as e:
         for log in e.build_log:
             msg = log.get('stream')
@@ -419,6 +427,7 @@ def dockerize_(context, base_image, save):
     if save:
         workspace_image_tar = workspace_name + '_image.tar'
         echo('Saving the Docker image...')
+        client = docker.from_env()
         image = client.images.get(f'{workspace_name}')
         resp = image.save(named=True)
         with open(workspace_image_tar, 'wb') as f:
