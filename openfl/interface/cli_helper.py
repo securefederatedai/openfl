@@ -164,7 +164,7 @@ def get_workspace_parameter(name):
     # Update the .workspace file to show the current workspace plan
     workspace_file = '.workspace'
 
-    with open(workspace_file, 'r') as f:
+    with open(workspace_file, 'r', encoding='utf-8') as f:
         doc = load(f, Loader=FullLoader)
 
     if not doc:  # YAML is not correctly formatted
@@ -203,7 +203,7 @@ def get_fx_path(curr_path=''):
 
 def remove_line_from_file(pkg, filename):
     """Remove line that contains `pkg` from the `filename` file."""
-    with open(filename, 'r+') as f:
+    with open(filename, 'r+', encoding='utf-8') as f:
         d = f.readlines()
         f.seek(0)
         for i in d:
@@ -214,7 +214,7 @@ def remove_line_from_file(pkg, filename):
 
 def replace_line_in_file(line, line_num_to_replace, filename):
     """Replace line at `line_num_to_replace` with `line`."""
-    with open(filename, 'r+') as f:
+    with open(filename, 'r+', encoding='utf-8') as f:
         d = f.readlines()
         f.seek(0)
         for idx, i in enumerate(d):

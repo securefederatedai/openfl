@@ -782,10 +782,10 @@ However, continue with the following procedure for details in creating a federat
 .. _creating_workspaces:
 
 
-STEP 1: Create a Workspace on the Aggregator
+STEP 1: Create a Workspace
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-1.	Start a Python 3.8 (>=3.6, <3.9) virtual environment and confirm |productName| is available.
+1.	Start a Python 3.8 (>=3.6, <3.11) virtual environment and confirm |productName| is available.
 
 	.. code-block:: python
 
@@ -1111,6 +1111,27 @@ STEP 3: Start the Federation
 
   When the last round of training is completed, the Aggregator stores the final weights in the protobuf file that was specified in the YAML file, which in this example is located at **save/${WORKSPACE_TEMPLATE}_latest.pbuf**.
 
+
+Post Experiment
+^^^^^^^^^^^^^^^
+
+Experiment owners may access the final model in its native format.
+Among other training artifacts, the aggregator creates the last and best aggregated (highest validation score) model snapshots. One may convert a snapshot to the native format and save the model to disk by calling the following command from the workspace:
+
+.. code-block:: console
+
+    fx model save -i model_protobuf_path.pth -o save_model_path
+
+In order for this command to succeed, the **TaskRunner** used in the experiment must implement a :code:`save_native()` method.
+
+Another way to access the trained model is by calling the API command directly from a Python script:
+
+.. code-block:: python
+
+    from openfl import get_model
+    model = get_model(plan_config, cols_config, data_config, model_protobuf_path)
+
+In fact, the :code:`get_model()` method returns a **TaskRunner** object loaded with the chosen model snapshot. Users may utilize the linked model as a regular Python object.
 
 
 .. _running_the_federation_docker:

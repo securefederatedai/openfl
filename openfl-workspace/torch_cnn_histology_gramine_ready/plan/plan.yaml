@@ -9,6 +9,7 @@ aggregator :
     best_state_path : save/torch_cnn_histology_best.pbuf
     last_state_path : save/torch_cnn_histology_last.pbuf
     rounds_to_train : 20
+    write_logs : false
 
 collaborator :
   defaults : plan/defaults/collaborator.yaml
