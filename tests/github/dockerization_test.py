@@ -8,7 +8,7 @@ import shutil
 import os
 from pathlib import Path
 import tarfile
-from concurrent.futures import ProcessPoolExecutor
+from threading import Thread
 
 
 def create_signed_cert_for_collaborator(col, data_path):
@@ -45,6 +45,29 @@ def create_signed_cert_for_collaborator(col, data_path):
         os.remove(f)
     # Remove request archive
     os.remove(f'col_{col}_to_agg_cert_request.zip')
+
+
+def start_aggregator_container():
+    check_call([
+        'docker', 'run', '--rm',
+        '--network', 'host',
+        '-v', f'{Path.cwd().resolve()}/{aggregator_required_files}:/certs.tar',
+        '-e', '\"CONTAINER_TYPE=aggregator\"',
+        workspace_image_name,
+        'bash /openfl/openfl-docker/start_actor_in_container.sh'
+    ])
+
+
+def start_collaborator_container():
+    check_call([
+        'docker', 'run', '--rm',
+        '--network', 'host',
+        '-v', f'{Path.cwd()}/cert_col_{args.col}.tar:/certs.tar',
+        '-e', '\"CONTAINER_TYPE=collaborator\"',
+        '-e', f'\"COL={col}\"',
+        workspace_image_name,
+        'bash /openfl/openfl-docker/start_actor_in_container.sh'
+    ])
 
 
 if __name__ == '__main__':
@@ -124,24 +147,11 @@ if __name__ == '__main__':
     # 4. Load the image
     image_tar = f'{fed_workspace}_image.tar'
     check_call(['docker', 'load', '--input', image_tar])
-    with ProcessPoolExecutor() as executor:
-        executor.submit(lambda: check_call([
-            'docker', 'run', '--rm',
-            '--network', 'host',
-            '-v', f'{Path.cwd().resolve()}/{aggregator_required_files}:/certs.tar',
-            '-e', '\"CONTAINER_TYPE=aggregator\"',
-            workspace_image_name,
-            'bash /openfl/openfl-docker/start_actor_in_container.sh'])
-        )
-        executor.submit(lambda: check_call([
-            'docker', 'run', '--rm',
-            '--network', 'host',
-            '-v', f'{Path.cwd()}/cert_col_{args.col}.tar:/certs.tar',
-            '-e', '\"CONTAINER_TYPE=collaborator\"',
-            '-e', f'\"COL={col}\"',
-            workspace_image_name,
-            'bash /openfl/openfl-docker/start_actor_in_container.sh'
-        ]))
-
+    agg_thread = Thread(target=start_aggregator_container)
+    agg_thread.start()
+    col_thread = Thread(target=start_collaborator_container)
+    col_thread.start()
+    col_thread.join()
+    agg_thread.join()
     # If containers are started but collaborator will fail to
     # conect the aggregator, the pipeline will go to the infinite loop
