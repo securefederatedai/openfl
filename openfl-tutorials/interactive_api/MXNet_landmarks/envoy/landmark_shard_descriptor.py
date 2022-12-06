@@ -140,14 +140,14 @@ class LandmarkShardDescriptor(ShardDescriptor):
     def save_all_md5(self) -> None:
         """Save dataset hash."""
         all_md5 = self.calc_all_md5()
-        with open(self.data_folder / 'dataset.json', 'w') as f:
+        with open(self.data_folder / 'dataset.json', 'w', encoding='utf-8') as f:
             json.dump(all_md5, f)
 
     def is_dataset_complete(self) -> bool:
         """Check dataset integrity."""
         dataset_md5_path = self.data_folder / 'dataset.json'
         if dataset_md5_path.exists():
-            with open(dataset_md5_path, 'r') as f:
+            with open(dataset_md5_path, 'r', encoding='utf-8') as f:
                 old_md5 = json.load(f)
             new_md5 = self.calc_all_md5()
             return new_md5 == old_md5
