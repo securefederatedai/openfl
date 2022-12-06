@@ -427,7 +427,7 @@ def dockerize_(context, base_image, save):
     if save:
         workspace_image_tar = workspace_name + '_image.tar'
         echo('Saving the Docker image...')
-        client = docker.from_env()
+        client = docker.from_env(timeout=3600)
         image = client.images.get(f'{workspace_name}')
         resp = image.save(named=True)
         with open(workspace_image_tar, 'wb') as f:

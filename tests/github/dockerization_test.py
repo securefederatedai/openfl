@@ -8,7 +8,8 @@ import shutil
 import os
 from pathlib import Path
 import tarfile
-from threading import Thread
+import time
+from concurrent.futures import ProcessPoolExecutor
 
 
 def create_signed_cert_for_collaborator(col, data_path):
@@ -48,26 +49,26 @@ def create_signed_cert_for_collaborator(col, data_path):
 
 
 def start_aggregator_container():
-    check_call([
-        'docker', 'run', '--rm',
-        '--network', 'host',
-        '-v', f'{Path.cwd().resolve()}/{aggregator_required_files}:/certs.tar',
-        '-e', '\"CONTAINER_TYPE=aggregator\"',
-        workspace_image_name,
-        'bash /openfl/openfl-docker/start_actor_in_container.sh'
-    ])
+    check_call(
+        'docker run --rm '
+        '--network host '
+        f'-v {Path.cwd().resolve()}/{aggregator_required_files}:/certs.tar '
+        '-e \"CONTAINER_TYPE=aggregator\" '
+        f'{workspace_image_name} '
+        'bash /openfl/openfl-docker/start_actor_in_container.sh',
+        shell=True)
 
 
 def start_collaborator_container():
-    check_call([
-        'docker', 'run', '--rm',
-        '--network', 'host',
-        '-v', f'{Path.cwd()}/cert_col_{args.col}.tar:/certs.tar',
-        '-e', '\"CONTAINER_TYPE=collaborator\"',
-        '-e', f'\"COL={col}\"',
-        workspace_image_name,
-        'bash /openfl/openfl-docker/start_actor_in_container.sh'
-    ])
+    check_call(
+        'docker run --rm '
+        '--network host '
+        f'-v {Path.cwd()}/cert_col_{args.col}.tar:/certs.tar '
+        '-e \"CONTAINER_TYPE=collaborator\" '
+        f'-e \"COL={col}\" '
+        f'{workspace_image_name} '
+        'bash /openfl/openfl-docker/start_actor_in_container.sh',
+        shell=True)
 
 
 if __name__ == '__main__':
@@ -147,11 +148,10 @@ if __name__ == '__main__':
     # 4. Load the image
     image_tar = f'{fed_workspace}_image.tar'
     check_call(['docker', 'load', '--input', image_tar])
-    agg_thread = Thread(target=start_aggregator_container)
-    agg_thread.start()
-    col_thread = Thread(target=start_collaborator_container)
-    col_thread.start()
-    col_thread.join()
-    agg_thread.join()
+    time.sleep(5)
+    with ProcessPoolExecutor(max_workers=2) as executor:
+        executor.submit(start_aggregator_container)
+        time.sleep(5)
+        executor.submit(start_collaborator_container)
     # If containers are started but collaborator will fail to
     # conect the aggregator, the pipeline will go to the infinite loop
