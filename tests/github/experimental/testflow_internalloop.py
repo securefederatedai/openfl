@@ -134,7 +134,7 @@ def validate_flow(flow_obj, expected_flow_steps):
         # Each aggregator step should be executed for training rounds times
         if (func.aggregator_step == True) and (
             task_count != flflow.training_rounds
-        ):
+        ) and (step.id != 'end'):
             validate_flow_error.append(
                 f"{bcolors.FAIL}... Error : More than one execution detected for Aggregator Step: {step} {bcolors.ENDC} \n"
             )
