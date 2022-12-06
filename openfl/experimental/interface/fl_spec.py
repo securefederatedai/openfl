@@ -32,7 +32,6 @@ class FLSpec:
 
     def __init__(self, checkpoint=False):
         self._foreach_methods = []
-#         self._reserved_words = ['next', 'runtime', 'input']
         self._checkpoint = checkpoint
 
     @classmethod
