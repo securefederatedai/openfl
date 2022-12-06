@@ -32,7 +32,7 @@ class FLSpec:
 
     def __init__(self, checkpoint=False):
         self._foreach_methods = []
-        self._reserved_words = ['next', 'runtime', 'input']
+#         self._reserved_words = ['next', 'runtime', 'input']
         self._checkpoint = checkpoint
 
     @classmethod
@@ -99,14 +99,14 @@ class FLSpec:
         else:
             raise TypeError(f'{runtime} is not a valid OpenFL Runtime')
 
-    def parse_attrs(self, exclude=[]):
+    def parse_attrs(self, exclude=[], reserved_words=['next', 'runtime', 'input']):
         # TODO Persist attributes to local disk, database, object store, etc. here
         cls_attrs = []
         valid_artifacts = []
         for i in inspect.getmembers(self):
             if not hasattr(i[1], 'task') and \
                not i[0].startswith('_') and \
-               i[0] not in self._reserved_words and \
+               i[0] not in reserved_words and \
                i[0] not in exclude and \
                i not in inspect.getmembers(type(self)):
                 if not isinstance(i[1], MethodType):
@@ -160,7 +160,7 @@ class FLSpec:
                 if attr in kwargs["exclude"] and hasattr(self, attr):
                     delattr(self, attr)
 
-    def checkpoint(self, parent_func):
+    def checkpoint(self, parent_func, chkpnt_reserved_words=['next', 'runtime']):
         """
         [Optionally] save current state for the task just executed task
         """
@@ -172,7 +172,7 @@ class FLSpec:
         if self._checkpoint:
             # all objects will be serialized using Metaflow interface
             print(f'Saving data artifacts for {parent_func.__name__}')
-            artifacts_iter, _ = self.generate_artifacts()
+            artifacts_iter, _ = self.generate_artifacts(reserved_words=chkpnt_reserved_words)
             task_id = self._metaflow_interface.create_task(
                 parent_func.__name__)
             self._metaflow_interface.save_artifacts(
@@ -193,9 +193,9 @@ class FLSpec:
             FLSpec._initial_state.runtime = runtime
         return cln
 
-    def generate_artifacts(self):
+    def generate_artifacts(self, reserved_words=['next', 'runtime', 'input']):
 
-        cls_attrs, valid_artifacts = self.parse_attrs()
+        cls_attrs, valid_artifacts = self.parse_attrs(reserved_words=reserved_words)
 
         def artifacts_iter():
             # Helper function from metaflow source
