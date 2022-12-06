@@ -9,6 +9,7 @@ aggregator :
     best_state_path : save/keras_nlp_best.pbuf
     last_state_path : save/keras_nlp_last.pbuf
     rounds_to_train : 10
+    write_logs : false
 
 collaborator :
   defaults : plan/defaults/collaborator.yaml

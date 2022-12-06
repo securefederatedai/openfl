@@ -14,7 +14,8 @@ class CutoffTimeBasedStragglerHandling(StragglerHandlingFunction):
         round_start_time=None,
         straggler_cutoff_time=np.inf,
         minimum_reporting=1,
-        **kwargs):
+        **kwargs
+    ):
         self.round_start_time = round_start_time
         self.straggler_cutoff_time = straggler_cutoff_time
         self.minimum_reporting = minimum_reporting

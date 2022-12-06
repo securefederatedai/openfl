@@ -1,0 +1,6 @@
+settings:
+  listen_host: localhost
+  listen_port: 50055
+  sample_shape: ['32', '32', '3'] # [[shape], channel]
+  target_shape: ['1']
+  envoy_health_check_period: 5  # in seconds

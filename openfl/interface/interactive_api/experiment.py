@@ -65,7 +65,6 @@ class FLExperiment:
 
         self._initialize_plan()
 
-
     def _initialize_plan(self):
         """Setup plan from base plan interactive api."""
         # Create a folder to store plans
@@ -78,7 +77,7 @@ class FLExperiment:
         plan.name = 'plan.yaml'
 
         self.plan = deepcopy(plan)
-    
+
     def _assert_experiment_accepted(self):
         """Assure experiment is sent to director."""
         if not self.experiment_accepted:

@@ -5,4 +5,4 @@
 
 from .privileged_aggregation import PrivilegedAggregationFunction
 
-__all__ = ['PrivilegedAggregationFunction',]
+__all__ = ['PrivilegedAggregationFunction']

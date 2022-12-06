@@ -8,6 +8,7 @@ import os
 import shutil
 import sys
 import time
+from contextlib import contextmanager
 from pathlib import Path
 from subprocess import check_call
 from sys import executable
@@ -101,7 +102,7 @@ def dump_requirements_file(
     # We expect that all the prefixes in a requirement file
     # are placed at the top
     if keep_original_prefixes and path.is_file():
-        with open(path) as f:
+        with open(path, encoding='utf-8') as f:
             for line in f:
                 if line == '\n':
                     continue
@@ -111,7 +112,7 @@ def dump_requirements_file(
                     break
 
     requirements_generator = freeze.freeze()
-    with open(path, 'w') as f:
+    with open(path, 'w', encoding='utf-8') as f:
         for prefix in prefixes:
             f.write(prefix + '\n')
 
@@ -126,3 +127,23 @@ def _is_package_versioned(package: str) -> bool:
             and package not in ['pkg-resources==0.0.0', 'pkg_resources==0.0.0']
             and '-e ' not in package
             )
+
+
+@contextmanager
+def set_directory(path: Path):
+    """
+    Sets provided path as the cwd within the context.
+
+    Args:
+        path (Path): The path to the cwd
+
+    Yields:
+        None
+    """
+
+    origin = Path().absolute()
+    try:
+        os.chdir(path)
+        yield
+    finally:
+        os.chdir(origin)

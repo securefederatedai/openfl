@@ -22,7 +22,25 @@ from metaflow.runtime import TruncatedBuffer, mflog_msg, MAX_LOG_SIZE
 from metaflow.mflog import mflog, RUNTIME_LOG_SOURCE
 from metaflow.task import MetaDatum
 import fcntl, hashlib
+from dill.source import getsource
 
+from metaflow.plugins.cards.card_modules.basic import DefaultCard, TaskInfoComponent
+from metaflow.plugins.cards.card_modules.basic import (
+    DagComponent,
+    SectionComponent,
+    PageComponent,
+)
+from metaflow.plugins.cards.card_modules.basic import (
+    RENDER_TEMPLATE_PATH,
+    JS_PATH,
+    CSS_PATH,
+)
+from metaflow.plugins.cards.card_modules.basic import read_file, transform_flow_graph
+from metaflow import __version__ as mf_version
+
+import json
+import base64
+import uuid
 
 class SystemMutex:
     def __init__(self, name):
@@ -36,6 +54,7 @@ class SystemMutex:
     def __exit__(self, _type, value, tb):
         fcntl.flock(self.fp.fileno(), fcntl.LOCK_UN)
         self.fp.close()
+
 
 class Flow:
     def __init__(self, name):
@@ -62,8 +81,7 @@ class DAGnode(DAGNode):
         self.func_lineno = func_ast.lineno
         self.decorators = decos
         self.doc = deindent_docstring(doc)
-        self.parallel_step = any(
-            getattr(deco, "IS_PARALLEL", False) for deco in decos)
+        self.parallel_step = any(getattr(deco, "IS_PARALLEL", False) for deco in decos)
 
         # these attributes are populated by _parse
         self.tail_next_lineno = 0
@@ -154,8 +172,7 @@ class StepVisitor(StepVisitor):
     def visit_FunctionDef(self, node):
         func = getattr(self.flow, node.name)
         if hasattr(func, "is_step"):
-            self.nodes[node.name] = DAGnode(
-                node, func.decorators, func.__doc__)
+            self.nodes[node.name] = DAGnode(node, func.decorators, func.__doc__)
 
 
 class FlowGraph(FlowGraph):
@@ -168,7 +185,7 @@ class FlowGraph(FlowGraph):
 
     def _create_nodes(self, flow):
         module = __import__(flow.__module__)
-        tree = ast.parse(inspect.getsource(module)).body
+        tree = ast.parse(getsource(module)).body
         root = [n for n in tree if isinstance(n, ast.ClassDef) and n.name == self.name][
             0
         ]
@@ -178,10 +195,27 @@ class FlowGraph(FlowGraph):
 
 
 class TaskDataStore(TaskDataStore):
-    def __init__(self, flow_datastore, run_id, step_name, task_id, attempt=None,
-                 data_metadata=None, mode="r", allow_not_done=False):
-        super().__init__(flow_datastore, run_id, step_name,
-                         task_id, attempt, data_metadata, mode, allow_not_done)
+    def __init__(
+        self,
+        flow_datastore,
+        run_id,
+        step_name,
+        task_id,
+        attempt=None,
+        data_metadata=None,
+        mode="r",
+        allow_not_done=False,
+    ):
+        super().__init__(
+            flow_datastore,
+            run_id,
+            step_name,
+            task_id,
+            attempt,
+            data_metadata,
+            mode,
+            allow_not_done,
+        )
 
     @only_if_not_done
     @require_mode("w")
@@ -257,17 +291,31 @@ class TaskDataStore(TaskDataStore):
                 yield blob
 
         # Use the content-addressed store to store all artifacts
-        save_result = self._ca_store.save_blobs(
-            pickle_iter(), len_hint=len_hint)
+        save_result = self._ca_store.save_blobs(pickle_iter(), len_hint=len_hint)
         for name, result in zip(artifact_names, save_result):
             self._objects[name] = result.key
 
 
 class FlowDataStore(FlowDataStore):
-    def __init__(self, flow_name, environment, metadata=None, event_logger=None,
-                 monitor=None, storage_impl=None, ds_root=None):
-        super().__init__(flow_name, environment, metadata,
-                         event_logger, monitor, storage_impl, ds_root)
+    def __init__(
+        self,
+        flow_name,
+        environment,
+        metadata=None,
+        event_logger=None,
+        monitor=None,
+        storage_impl=None,
+        ds_root=None,
+    ):
+        super().__init__(
+            flow_name,
+            environment,
+            metadata,
+            event_logger,
+            monitor,
+            storage_impl,
+            ds_root,
+        )
 
     def get_task_datastore(
         self,
@@ -293,12 +341,12 @@ class FlowDataStore(FlowDataStore):
 
 
 class MetaflowInterface:
-    def __init__(self, flow, backend='ray'):
+    def __init__(self, flow, backend="ray"):
         self.backend = backend
         self.flow_name = flow.__name__
-        #self._graph = FlowGraph(flow)
-        #self._steps = [getattr(flow, node.name) for node in self._graph]
-        if backend == 'ray':
+        self._graph = FlowGraph(flow)
+        self._steps = [getattr(flow, node.name) for node in self._graph]
+        if backend == "ray":
             self.counter = Counter.remote()
         else:
             self.counter = 0
@@ -310,8 +358,12 @@ class MetaflowInterface:
         self.local_metadata = LocalMetadataProvider(env, flow, None, None)
         self.run_id = self.local_metadata.new_run_id()
         self.flow_datastore = FlowDataStore(
-            self.flow_name, env, metadata=self.local_metadata, storage_impl=DATASTORES['local'],
-            ds_root=f'{Path.home()}/.metaflow')
+            self.flow_name,
+            env,
+            metadata=self.local_metadata,
+            storage_impl=DATASTORES["local"],
+            ds_root=f"{Path.home()}/.metaflow",
+        )
         return self.run_id
 
     def create_task(self, task_name):
@@ -333,7 +385,8 @@ class MetaflowInterface:
     def save_artifacts(self, data_pairs, task_name, task_id, buffer_out, buffer_err):
         """Use metaflow task datastore to save federated flow attributes"""
         task_datastore = self.flow_datastore.get_task_datastore(
-            self.run_id, task_name, str(task_id), attempt=0, mode='w')
+            self.run_id, task_name, str(task_id), attempt=0, mode="w"
+        )
         task_datastore.init_task()
         task_datastore.save_artifacts(data_pairs)
 
@@ -379,7 +432,8 @@ class MetaflowInterface:
     def load_artifacts(self, artifact_names, task_name, task_id):
         """Use metaflow task datastore to load flow attributes"""
         task_datastore = self.flow_datastore.get_task_datastore(
-            self.run_id, task_name, str(task_id), attempt=0, mode='r')
+            self.run_id, task_name, str(task_id), attempt=0, mode="r"
+        )
         return task_datastore.load_artifacts(artifact_names)
 
     def emit_log(self, msgbuffer_out, msgbuffer_err, task_datastore, system_msg=False):
@@ -395,14 +449,110 @@ class MetaflowInterface:
 
         for std_output in msgbuffer_out.readlines():
             timestamp = datetime.utcnow()
-            stdout_buffer.write(mflog_msg(std_output, now=timestamp), system_msg=system_msg)
+            stdout_buffer.write(
+                mflog_msg(std_output, now=timestamp), system_msg=system_msg
+            )
 
         for std_error in msgbuffer_err.readlines():
             timestamp = datetime.utcnow()
-            stderr_buffer.write(mflog_msg(std_error, now=timestamp), system_msg=system_msg)
+            stderr_buffer.write(
+                mflog_msg(std_error, now=timestamp), system_msg=system_msg
+            )
 
-        task_datastore.save_logs(RUNTIME_LOG_SOURCE, {
-            "stdout": stdout_buffer.get_buffer(),
-            "stderr": stderr_buffer.get_buffer(),
-            })
-    
+        task_datastore.save_logs(
+            RUNTIME_LOG_SOURCE,
+            {
+                "stdout": stdout_buffer.get_buffer(),
+                "stderr": stderr_buffer.get_buffer(),
+            },
+        )
+
+
+class DefaultCard(DefaultCard):
+
+    ALLOW_USER_COMPONENTS = True
+
+    type = "default"
+
+    def __init__(self, options=dict(only_repr=True), components=[], graph=None):
+        self._only_repr = True
+        self._graph = None if graph is None else transform_flow_graph(graph)
+        if "only_repr" in options:
+            self._only_repr = options["only_repr"]
+        self._components = components
+
+    # modified Defaultcard render function
+    def render(self, task):
+        # :param: task instead of metaflow.client.Task object task.pathspec (string) is provided
+        RENDER_TEMPLATE = read_file(RENDER_TEMPLATE_PATH)
+        JS_DATA = read_file(JS_PATH)
+        CSS_DATA = read_file(CSS_PATH)
+        final_component_dict = dict(self._graph)
+        final_component_dict = TaskInfoComponent(
+            task,
+            only_repr=self._only_repr,
+            graph=self._graph,
+            components=self._components,
+        ).render()
+        pt = self._get_mustache()
+        data_dict = dict(
+            task_data=base64.b64encode(
+                json.dumps(final_component_dict).encode("utf-8")
+            ).decode("utf-8"),
+            javascript=JS_DATA,
+            title=task,
+            css=CSS_DATA,
+            card_data_id=uuid.uuid4(),
+        )
+        return pt.render(RENDER_TEMPLATE, data_dict)
+
+
+class TaskInfoComponent(TaskInfoComponent):
+    """
+    Properties
+        page_content : a list of MetaflowCardComponents going as task info
+        final_component: the dictionary returned by the `render` function of this class.
+    """
+
+    def __init__(
+        self, task, page_title="Task Info", only_repr=True, graph=None, components=[]
+    ):
+        self._task = task
+        self._only_repr = only_repr
+        self._graph = graph
+        self._components = components
+        self._page_title = page_title
+        self.final_component = None
+        self.page_component = None
+
+    # modified TaskInfoComponent render function
+    def render(self):
+        """
+
+        Returns:
+            a dictionary of form:
+                dict(metadata = {},components= [])
+        """
+        final_component_dict = dict(
+            metadata=dict(
+                metaflow_version=mf_version, version=1, template="defaultCardTemplate"
+            ),
+            components=[],
+        )
+
+        dag_component = SectionComponent(
+            title="DAG", contents=[DagComponent(data=self._graph).render()]
+        ).render()
+
+        page_contents = []
+        page_contents.append(dag_component)
+        page_component = PageComponent(
+            title=self._page_title,
+            contents=page_contents,
+        ).render()
+        final_component_dict["components"].append(page_component)
+
+        self.final_component = final_component_dict
+        self.page_component = page_component
+
+        return final_component_dict

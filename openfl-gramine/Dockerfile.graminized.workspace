@@ -14,8 +14,9 @@ RUN cp /usr/local/lib/python3.8/site-packages/openfl-gramine/openfl.manifest.tem
     cp /usr/local/lib/python3.8/site-packages/openfl-gramine/start_process.sh .
 
 ARG SGX_BUILD=1
+ARG SGX_ENCLAVE_SIZE=16G
 RUN --mount=type=secret,id=signer-key,dst=/key.pem \
-    make clean && make SGX=${SGX_BUILD} SGX_SIGNER_KEY=/key.pem
+    make clean && make SGX=${SGX_BUILD} SGX_ENCLAVE_SIZE=${SGX_ENCLAVE_SIZE} SGX_SIGNER_KEY=/key.pem
 
 ENV GRAMINE_EXECUTABLE=gramine-sgx
 ENTRYPOINT ["/bin/bash", "start_process.sh"]

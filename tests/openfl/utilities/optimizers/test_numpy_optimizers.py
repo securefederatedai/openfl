@@ -8,8 +8,8 @@ import pytest
 from openfl.utilities.optimizers.numpy.adagrad_optimizer import NumPyAdagrad
 from openfl.utilities.optimizers.numpy.adam_optimizer import NumPyAdam
 from openfl.utilities.optimizers.numpy.yogi_optimizer import NumPyYogi
-from.func_for_optimization import mc_cormick_func
-from.func_for_optimization import rosenbrock_func
+from .func_for_optimization import mc_cormick_func
+from .func_for_optimization import rosenbrock_func
 
 EPS = 5e-5
 

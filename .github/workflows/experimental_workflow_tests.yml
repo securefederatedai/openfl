@@ -1,0 +1,36 @@
+name: Workflow Interface Tests
+
+on:
+  push:
+    branches: [ develop ]
+  pull_request:
+    branches: [ develop ]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    if: contains(github.event.pull_request.labels.*.name, 'workflow_interface')
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python 3.8
+      uses: actions/setup-python@v3
+      with:
+        python-version: "3.8"
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install metaflow ray torch
+        pip install .
+    - name: Workflow - Internal Loop Test
+      run: |
+        python tests/github/experimental/testflow_internalloop.py
+    - name: Workflow - References
+      run: |
+        python tests/github/experimental/testflow_reference.py
+    - name: Workflow - Collaborator Subset
+      run: |
+        python tests/github/experimental/testflow_subset_of_collaborators.py
