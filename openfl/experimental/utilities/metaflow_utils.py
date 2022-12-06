@@ -23,6 +23,7 @@ from pathlib import Path
 from metaflow.runtime import TruncatedBuffer, mflog_msg, MAX_LOG_SIZE
 from metaflow.mflog import mflog, RUNTIME_LOG_SOURCE
 from metaflow.task import MetaDatum
+import fcntl, hashlib
 from dill.source import getsource
 
 
@@ -38,7 +39,6 @@ class SystemMutex:
     def __exit__(self, _type, value, tb):
         fcntl.flock(self.fp.fileno(), fcntl.LOCK_UN)
         self.fp.close()
-
 
 class Flow:
     def __init__(self, name):
@@ -353,7 +353,7 @@ class MetaflowInterface:
     def create_task(self, task_name):
         # May need a lock here
         if self.backend == "ray":
-            with SystemMutex("critical_setcion"):
+            with SystemMutex("critical_section"):
                 task_id = ray.get(self.counter.get_counter.remote())
                 self.local_metadata._task_id_seq = task_id
                 self.local_metadata.new_task_id(self.run_id, task_name)
@@ -364,6 +364,7 @@ class MetaflowInterface:
             self.local_metadata.new_task_id(self.run_id, task_name)
             self.counter += 1
             return self.counter
+
 
     def save_artifacts(self, data_pairs, task_name, task_id, buffer_out, buffer_err):
         """Use metaflow task datastore to save federated flow attributes"""
