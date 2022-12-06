@@ -275,6 +275,7 @@ class Director:
                     certificate=self.certificate,
                     private_key=self.private_key,
                     tls=self.tls,
+                    install_requirements=self.settings.get('install_requirements', False),
                 ))
                 for col_name in experiment.collaborators:
                     queue = self.col_exp_queues[col_name]

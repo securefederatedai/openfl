@@ -64,6 +64,7 @@ def start(director_config_path, tls, root_certificate, private_key, certificate)
             Validator('settings.sample_shape', default=[]),
             Validator('settings.target_shape', default=[]),
             Validator('settings.envoy_health_check_period', gte=1, lte=24 * 60 * 60),
+            Validator('settings.install_requirements', default=False),
         ],
         value_transform=[
             ('settings.sample_shape', lambda x: list(map(str, x))),

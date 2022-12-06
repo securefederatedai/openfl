@@ -18,6 +18,7 @@
 
 
 params:
+  install_requirements: true
   cuda_devices: []
 
 optional_plugin_components:
