@@ -4,7 +4,6 @@ on:
   push:
     branches: [ develop ]
   pull_request:
-    types: [ labeled, opened, synchronize, reopened ]
     branches: [ develop ]
 
 permissions:
@@ -12,7 +11,7 @@ permissions:
 
 jobs:
   build:
-    if: contains(github.event.pull_request.labels.*.name == 'workflow_interface')
+    if: contains(github.event.pull_request.labels.*.name, 'workflow_interface')
     runs-on: ubuntu-latest
 
     steps:
