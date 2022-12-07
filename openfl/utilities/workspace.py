@@ -26,14 +26,14 @@ class ExperimentWorkspace:
             self,
             experiment_name: str,
             data_file_path: Path,
-            is_install_requirements: bool = False
+            install_requirements: bool = False
     ) -> None:
         """Initialize workspace context manager."""
         self.experiment_name = experiment_name
         self.data_file_path = data_file_path
         self.cwd = os.getcwd()
         self.experiment_work_dir = f'{self.cwd}/{self.experiment_name}'
-        self.is_install_requirements = is_install_requirements
+        self.install_requirements = install_requirements
 
     def _install_requirements(self):
         """Install experiment requirements."""
@@ -64,7 +64,7 @@ class ExperimentWorkspace:
 
         shutil.unpack_archive(self.data_file_path, self.experiment_work_dir, format='zip')
 
-        if self.is_install_requirements:
+        if self.install_requirements:
             self._install_requirements()
 
         os.chdir(self.experiment_work_dir)
@@ -102,7 +102,7 @@ def dump_requirements_file(
     # We expect that all the prefixes in a requirement file
     # are placed at the top
     if keep_original_prefixes and path.is_file():
-        with open(path) as f:
+        with open(path, encoding='utf-8') as f:
             for line in f:
                 if line == '\n':
                     continue
@@ -112,7 +112,7 @@ def dump_requirements_file(
                     break
 
     requirements_generator = freeze.freeze()
-    with open(path, 'w') as f:
+    with open(path, 'w', encoding='utf-8') as f:
         for prefix in prefixes:
             f.write(prefix + '\n')
 

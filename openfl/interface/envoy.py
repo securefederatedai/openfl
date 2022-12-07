@@ -66,6 +66,7 @@ def start_(shard_name, director_host, director_port, tls, envoy_config_path,
         validators=[
             Validator('shard_descriptor.template', required=True),
             Validator('params.cuda_devices', default=[]),
+            Validator('params.install_requirements', default=True),
         ],
     )
 
