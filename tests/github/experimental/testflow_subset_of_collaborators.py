@@ -9,8 +9,6 @@ from metaflow import Metaflow, Flow, Run, Step
 import random
 import os
 import shutil
-import time
-import ray
 
 
 class bcolors:
@@ -123,9 +121,6 @@ if __name__ == "__main__":
         )
         testflow_subset_collaborators.runtime = local_runtime
         testflow_subset_collaborators.run()
-
-        #time.sleep(5)
-        #ray.shutdown()
 
         subset_collaborators = testflow_subset_collaborators.subset_collabrators
         collaborators_ran = testflow_subset_collaborators.collaborators_ran
