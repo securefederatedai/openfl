@@ -36,9 +36,10 @@ def prepare_workspace():
             '-n', col,
             '-s'
         ])
-    
+
     sys.path.append(os.getcwd())
-    
+
+
 def start_invalid_collaborator():
     '''
     We choose the gRPC client of another collaborator
@@ -49,11 +50,7 @@ def start_invalid_collaborator():
     col_name = 'one'
     plan = fx.setup_plan()
     plan.resolve()
-    client = plan.get_client(
-        'two', 
-        plan.aggregator_uuid,
-        plan.federation_uuid
-        )
+    client = plan.get_client('two', plan.aggregator_uuid, plan.federation_uuid)
     collaborator = plan.get_collaborator(col_name, client=client)
     collaborator.run()
 
@@ -72,7 +69,7 @@ if __name__ == '__main__':
     importlib.reload(openfl.federated.task)
     importlib.reload(openfl.federated.data)
     importlib.reload(openfl.federated)
-    agg = Process(target=subprocess.check_call, args=[['fx','aggregator', 'start']])
+    agg = Process(target=subprocess.check_call, args=[['fx', 'aggregator', 'start']])
     agg.start()
     time.sleep(3)
     failed = False
