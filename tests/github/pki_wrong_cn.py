@@ -7,8 +7,9 @@ import time
 import socket
 from multiprocessing import Process
 import sys
+import importlib
 
-from openfl.native import setup_plan
+import openfl.native as fx
 
 
 def prepare_workspace():
@@ -45,7 +46,7 @@ def start_invalid_collaborator():
     '''
     print('Starting Collaborator...')
     col_name = 'one'
-    plan = setup_plan()
+    plan = fx.setup_plan()
     plan.resolve()
     client = plan.get_client(
         'two', 
@@ -68,6 +69,7 @@ if __name__ == '__main__':
     fqdn = socket.getfqdn()
     try:
         prepare_workspace()
+        importlib.reload(fx)
         agg = Process(target=subprocess.check_call, args=[['fx','aggregator', 'start']])
         agg.start()
         time.sleep(3)
