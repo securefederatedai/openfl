@@ -5,6 +5,7 @@
 
 import ray
 
+
 class Runtime:
     def __init__(self):
         """
@@ -13,14 +14,15 @@ class Runtime:
         """
         pass
 
-class LocalRuntime(Runtime):
 
+class LocalRuntime(Runtime):
     def __init__(self, aggregator=None, collaborators=None, backend="ray", **kwargs):
         """Use remote federated infrastructure to run the flow"""
         super().__init__()
         if backend not in ["ray", "single_process"]:
             raise ValueError(
-                f"Invalid 'backend' value '{backend}', accepted values are 'ray', or 'single_process'")
+                f"Invalid 'backend' value '{backend}', accepted values are 'ray', or 'single_process'"
+            )
         if backend == "ray":
             if not ray.is_initialized():
                 dh = kwargs.get("dashboard_host", "127.0.0.1")
@@ -51,14 +53,14 @@ class LocalRuntime(Runtime):
     @collaborators.setter
     def collaborators(self, collaborators):
         self._collaborators = {
-            collaborator.name: collaborator for collaborator in collaborators}
+            collaborator.name: collaborator for collaborator in collaborators
+        }
 
     def __repr__(self):
-        return f'LocalRuntime'
+        return f"LocalRuntime"
 
 
 class FederatedRuntime(Runtime):
     def __init__(self, aggregator, collaborators=None):
         """Use remote federated infrastructure to run the flow"""
-        raise NotImplementedError("FederatedRuntime will be implemented in the future") 
-
+        raise NotImplementedError("FederatedRuntime will be implemented in the future")

@@ -42,6 +42,7 @@ import json
 import base64
 import uuid
 
+
 class SystemMutex:
     def __init__(self, name):
         self.name = name
@@ -380,7 +381,6 @@ class MetaflowInterface:
             self.local_metadata.new_task_id(self.run_id, task_name)
             self.counter += 1
             return self.counter
-
 
     def save_artifacts(self, data_pairs, task_name, task_id, buffer_out, buffer_err):
         """Use metaflow task datastore to save federated flow attributes"""

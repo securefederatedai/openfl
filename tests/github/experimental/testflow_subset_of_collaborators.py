@@ -127,10 +127,11 @@ if __name__ == "__main__":
         random_ints = testflow_subset_collaborators.random_ints
         random_ints.remove(len(subset_collaborators))
 
-        step = Step(f'TestFlowSubsetCollaborators/'
-                    + f'{testflow_subset_collaborators._run_id}'
-                    + f'/test_valid_collaborators'
-                    )
+        step = Step(
+            f"TestFlowSubsetCollaborators/"
+            + f"{testflow_subset_collaborators._run_id}"
+            + f"/test_valid_collaborators"
+        )
 
         if len(list(step)) != len(subset_collaborators):
             tc_pass_fail["failed"].append(

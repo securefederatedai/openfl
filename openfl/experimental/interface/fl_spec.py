@@ -15,7 +15,13 @@ from random import randint
 from copy import deepcopy
 from time import sleep
 from openfl.experimental.placement import make_remote, ray_call_put
-from openfl.experimental.utilities import MetaflowInterface, SerializationException, aggregator_to_collaborator, collaborator_to_aggregator, should_transfer
+from openfl.experimental.utilities import (
+    MetaflowInterface,
+    SerializationException,
+    aggregator_to_collaborator,
+    collaborator_to_aggregator,
+    should_transfer,
+)
 from openfl.experimental.runtime import LocalRuntime, Runtime
 from types import MethodType
 from threading import Lock
@@ -24,6 +30,7 @@ import numpy as np
 import sys
 
 final_attributes = []
+
 
 class FLSpec:
 
@@ -35,8 +42,8 @@ class FLSpec:
         self._checkpoint = checkpoint
 
     @classmethod
-    def create_clones(cls,instance,names):
-        cls._clones = {name: deepcopy(instance) for name in names} 
+    def create_clones(cls, instance, names):
+        cls._clones = {name: deepcopy(instance) for name in names}
 
     @classmethod
     def reset_clones(cls):
@@ -49,39 +56,43 @@ class FLSpec:
     def run(self):
         # Submit flow to Runtime
         FLSpec.save_initial_state(self)
-        self._metaflow_interface = MetaflowInterface(self.__class__, self.runtime.backend)
+        self._metaflow_interface = MetaflowInterface(
+            self.__class__, self.runtime.backend
+        )
         self._run_id = self._metaflow_interface.create_run()
-        if str(self._runtime) == 'LocalRuntime':
+        if str(self._runtime) == "LocalRuntime":
             # Setup any necessary ShardDescriptors through the LocalEnvoys
             # Assume that first task always runs on the aggregator
             self._setup_aggregator()
             self._foreach_methods = []
             FLSpec.reset_clones()
-            FLSpec.create_clones(self,self.runtime.collaborators)
+            FLSpec.create_clones(self, self.runtime.collaborators)
             # the start function can just be invoked locally
             if self._checkpoint:
-                print(f'Created flow {self.__class__.__name__}')
+                print(f"Created flow {self.__class__.__name__}")
             try:
                 self.start()
             except Exception as e:
                 if "cannot pickle" in str(e) or "Failed to unpickle" in str(e):
-                    msg = "\nA serialization error was encountered that could not" \
-                        "\nbe handled by the ray backend." \
-                        "\nTry rerunning the flow without ray as follows:\n" \
-                        "\nLocalRuntime(...,backend='single_process')\n" \
-                        "\n or for more information about the original error," \
-                        "\nPlease see the official Ray documentation" \
+                    msg = (
+                        "\nA serialization error was encountered that could not"
+                        "\nbe handled by the ray backend."
+                        "\nTry rerunning the flow without ray as follows:\n"
+                        "\nLocalRuntime(...,backend='single_process')\n"
+                        "\n or for more information about the original error,"
+                        "\nPlease see the official Ray documentation"
                         "\nhttps://docs.ray.io/en/latest/ray-core/objects/serialization.html"
-                    raise SerializationException(str(e)+msg)
+                    )
+                    raise SerializationException(str(e) + msg)
                 else:
                     raise e
             for name, attr in final_attributes:
                 setattr(self, name, attr)
-        elif str(self._runtime) == 'FederatedRuntime':
+        elif str(self._runtime) == "FederatedRuntime":
             # Submit to director
-            raise Exception(f'Submission to remote runtime not available yet')
+            raise Exception(f"Submission to remote runtime not available yet")
         else:
-            raise Exception(f'Runtime not supported')
+            raise Exception(f"Runtime not supported")
 
     def _setup_aggregator(self):
         for name, attr in self.runtime._aggregator.private_attributes.items():
@@ -96,18 +107,20 @@ class FLSpec:
         if isinstance(runtime, Runtime):
             self._runtime = runtime
         else:
-            raise TypeError(f'{runtime} is not a valid OpenFL Runtime')
+            raise TypeError(f"{runtime} is not a valid OpenFL Runtime")
 
-    def parse_attrs(self, exclude=[], reserved_words=['next', 'runtime', 'input']):
+    def parse_attrs(self, exclude=[], reserved_words=["next", "runtime", "input"]):
         # TODO Persist attributes to local disk, database, object store, etc. here
         cls_attrs = []
         valid_artifacts = []
         for i in inspect.getmembers(self):
-            if not hasattr(i[1], 'task') and \
-               not i[0].startswith('_') and \
-               i[0] not in reserved_words and \
-               i[0] not in exclude and \
-               i not in inspect.getmembers(type(self)):
+            if (
+                not hasattr(i[1], "task")
+                and not i[0].startswith("_")
+                and i[0] not in reserved_words
+                and i[0] not in exclude
+                and i not in inspect.getmembers(type(self))
+            ):
                 if not isinstance(i[1], MethodType):
                     cls_attrs.append(i[0])
                     valid_artifacts.append((i[0], i[1]))
@@ -137,29 +150,30 @@ class FLSpec:
         """
 
         artifacts_iter, cls_attrs = self.generate_artifacts()
-        if 'include' in kwargs and 'exclude' in kwargs:
-            raise RuntimeError(
-                "'include' and 'exclude' should not both be present")
-        elif 'include' in kwargs:
-            assert (type(kwargs['include']) == list)
-            for in_attr in kwargs['include']:
+        if "include" in kwargs and "exclude" in kwargs:
+            raise RuntimeError("'include' and 'exclude' should not both be present")
+        elif "include" in kwargs:
+            assert type(kwargs["include"]) == list
+            for in_attr in kwargs["include"]:
                 if in_attr not in cls_attrs:
                     raise RuntimeError(
-                        f"argument '{in_attr}' not found in flow task {f.__name__}")
+                        f"argument '{in_attr}' not found in flow task {f.__name__}"
+                    )
             for attr in cls_attrs:
-                if attr not in kwargs['include']:
+                if attr not in kwargs["include"]:
                     delattr(self, attr)
-        elif 'exclude' in kwargs:
-            assert (type(kwargs['exclude']) == list)
-            for in_attr in kwargs['exclude']:
+        elif "exclude" in kwargs:
+            assert type(kwargs["exclude"]) == list
+            for in_attr in kwargs["exclude"]:
                 if in_attr not in cls_attrs:
                     raise RuntimeError(
-                        f"argument '{in_attr}' not found in flow task {f.__name__}")
+                        f"argument '{in_attr}' not found in flow task {f.__name__}"
+                    )
             for attr in cls_attrs:
                 if attr in kwargs["exclude"] and hasattr(self, attr):
                     delattr(self, attr)
 
-    def checkpoint(self, parent_func, chkpnt_reserved_words=['next', 'runtime']):
+    def checkpoint(self, parent_func, chkpnt_reserved_words=["next", "runtime"]):
         """
         [Optionally] save current state for the task just executed task
         """
@@ -170,13 +184,19 @@ class FLSpec:
 
         if self._checkpoint:
             # all objects will be serialized using Metaflow interface
-            print(f'Saving data artifacts for {parent_func.__name__}')
-            artifacts_iter, _ = self.generate_artifacts(reserved_words=chkpnt_reserved_words)
-            task_id = self._metaflow_interface.create_task(
-                parent_func.__name__)
+            print(f"Saving data artifacts for {parent_func.__name__}")
+            artifacts_iter, _ = self.generate_artifacts(
+                reserved_words=chkpnt_reserved_words
+            )
+            task_id = self._metaflow_interface.create_task(parent_func.__name__)
             self._metaflow_interface.save_artifacts(
-                artifacts_iter(), task_name=parent_func.__name__, task_id=task_id, buffer_out=step_stdout, buffer_err=step_stderr)
-            print(f'Saved data artifacts for {parent_func.__name__}')
+                artifacts_iter(),
+                task_name=parent_func.__name__,
+                task_id=task_id,
+                buffer_out=step_stdout,
+                buffer_err=step_stderr,
+            )
+            print(f"Saved data artifacts for {parent_func.__name__}")
 
     def create_clone(self):
         """
@@ -192,7 +212,7 @@ class FLSpec:
             FLSpec._initial_state.runtime = runtime
         return cln
 
-    def generate_artifacts(self, reserved_words=['next', 'runtime', 'input']):
+    def generate_artifacts(self, reserved_words=["next", "runtime", "input"]):
 
         cls_attrs, valid_artifacts = self.parse_attrs(reserved_words=reserved_words)
 
@@ -201,6 +221,7 @@ class FLSpec:
             while valid_artifacts:
                 var, val = valid_artifacts.pop()
                 yield var, val
+
         return artifacts_iter, cls_attrs
 
     def is_at_transition_point(self, f, parent_func):
@@ -210,18 +231,17 @@ class FLSpec:
         if parent_func.__name__ in self._foreach_methods:
             self._foreach_methods.append(f.__name__)
             if should_transfer(f, parent_func):
-                print(
-                    f'Should transfer from {parent_func.__name__} to {f.__name__}')
+                print(f"Should transfer from {parent_func.__name__} to {f.__name__}")
                 self.execute_next = f.__name__
                 return True
         return False
 
     def display_transition_logs(self, f, parent_func):
         if aggregator_to_collaborator(f, parent_func):
-            print(f'Sending state from aggregator to collaborators')
+            print(f"Sending state from aggregator to collaborators")
 
         elif collaborator_to_aggregator(f, parent_func):
-            print(f'Sending state from collaborator to aggregator')
+            print(f"Sending state from collaborator to aggregator")
 
     def execute_task(self, f, parent_func, instance_snapshot=(), **kwargs):
         """
@@ -229,55 +249,67 @@ class FLSpec:
         """
         global final_attributes
 
-        if 'foreach' in kwargs:
+        if "foreach" in kwargs:
             self._foreach_methods.append(f.__name__)
-            selected_collaborators = self.__getattribute__(kwargs['foreach'])
+            selected_collaborators = self.__getattribute__(kwargs["foreach"])
 
             for col in selected_collaborators:
                 clone = FLSpec._clones[col]
-                if ("exclude" in kwargs and hasattr(clone, kwargs["exclude"][0])) or \
-                   ("include" in kwargs and hasattr(clone, kwargs["include"][0])):
+                if ("exclude" in kwargs and hasattr(clone, kwargs["exclude"][0])) or (
+                    "include" in kwargs and hasattr(clone, kwargs["include"][0])
+                ):
                     clone.filter_attributes(f, **kwargs)
                 artifacts_iter, _ = self.generate_artifacts()
-                for name,attr in artifacts_iter():
-                    setattr(clone,name,deepcopy(attr))
+                for name, attr in artifacts_iter():
+                    setattr(clone, name, deepcopy(attr))
                 clone._foreach_methods = self._foreach_methods
 
             for col in selected_collaborators:
                 clone = FLSpec._clones[col]
                 clone.input = col
-                if aggregator_to_collaborator(f,parent_func):
-                    #remove private aggregator state
+                if aggregator_to_collaborator(f, parent_func):
+                    # remove private aggregator state
                     for attr in self.runtime._aggregator.private_attributes:
-                        self.runtime._aggregator.private_attributes[attr] = getattr(self,attr)
-                        if hasattr(clone,attr):
-                            delattr(clone,attr)
+                        self.runtime._aggregator.private_attributes[attr] = getattr(
+                            self, attr
+                        )
+                        if hasattr(clone, attr):
+                            delattr(clone, attr)
 
             func = None
             remote_functions = []
             for col in selected_collaborators:
                 # TODO make task_id a shared value
                 clone = FLSpec._clones[col]
-                for name,attr in self.runtime._collaborators[clone.input].private_attributes.items():
-                    setattr(clone,name,attr)
-                to_exec = getattr(clone,f.__name__)
+                for name, attr in self.runtime._collaborators[
+                    clone.input
+                ].private_attributes.items():
+                    setattr(clone, name, attr)
+                to_exec = getattr(clone, f.__name__)
                 # write the clone to the object store
                 # ensure clone is getting latest _metaflow_interface
                 clone._metaflow_interface = self._metaflow_interface
-                if self._runtime.backend == "ray":     
+                if self._runtime.backend == "ray":
                     remote_functions.append(ray_call_put(clone, to_exec))
                 else:
                     to_exec()
             if self._runtime.backend == "ray":
-                FLSpec._clones.update({col: obj for col,obj in \
-                    zip(selected_collaborators, ray.get(remote_functions))})
+                FLSpec._clones.update(
+                    {
+                        col: obj
+                        for col, obj in zip(
+                            selected_collaborators, ray.get(remote_functions)
+                        )
+                    }
+                )
             for col in selected_collaborators:
                 clone = FLSpec._clones[col]
                 func = clone.execute_next
                 # This sets up possibility for different collaborators to have custom private attributes
                 for attr in self.runtime._collaborators[clone.input].private_attributes:
-                    self.runtime._collaborators[clone.input].private_attributes[attr] = getattr(
-                        clone, attr)
+                    self.runtime._collaborators[clone.input].private_attributes[
+                        attr
+                    ] = getattr(clone, attr)
                     if hasattr(clone, attr):
                         delattr(clone, attr)
             # Restore the self state if back-up is taken
@@ -288,7 +320,7 @@ class FLSpec:
         else:
             to_exec = getattr(self, f.__name__)
             to_exec()
-            if f.__name__ == 'end':
+            if f.__name__ == "end":
                 self.checkpoint(f)
                 artifacts_iter, _ = self.generate_artifacts()
                 final_attributes = artifacts_iter()
@@ -319,7 +351,9 @@ class FLSpec:
         self.display_transition_logs(f, parent_func)
 
         # if back-up of self is created then pass it to execute_task function
-        if 'agg_to_collab_ss' in vars():
-            self.execute_task(f, parent_func, instance_snapshot=agg_to_collab_ss, **kwargs)
+        if "agg_to_collab_ss" in vars():
+            self.execute_task(
+                f, parent_func, instance_snapshot=agg_to_collab_ss, **kwargs
+            )
         else:
             self.execute_task(f, parent_func, **kwargs)

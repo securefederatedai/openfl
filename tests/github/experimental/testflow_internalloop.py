@@ -47,9 +47,7 @@ class TestFlow_InternalLoop(FLSpec):
         """
 
         self.agg_mean_value = np.mean(self.model)
-        print(
-            f"<Collab>: {self.input} Mean of Agg model: {self.agg_mean_value} "
-        )
+        print(f"<Collab>: {self.input} Mean of Agg model: {self.agg_mean_value} ")
         self.next(self.collab_model_update)
 
     @collaborator
@@ -75,9 +73,7 @@ class TestFlow_InternalLoop(FLSpec):
         """
         Joining inputs from collaborators
         """
-        self.agg_mean = sum(input.local_mean_value for input in inputs) / len(
-            inputs
-        )
+        self.agg_mean = sum(input.local_mean_value for input in inputs) / len(inputs)
         print(f"Aggregated mean : {self.agg_mean}")
         self.next(self.internal_loop)
 
@@ -132,9 +128,11 @@ def validate_flow(flow_obj, expected_flow_steps):
             task_count = task_count + 1
 
         # Each aggregator step should be executed for training rounds times
-        if (func.aggregator_step == True) and (
-            task_count != flflow.training_rounds
-        ) and (step.id != 'end'):
+        if (
+            (func.aggregator_step == True)
+            and (task_count != flflow.training_rounds)
+            and (step.id != "end")
+        ):
             validate_flow_error.append(
                 f"{bcolors.FAIL}... Error : More than one execution detected for Aggregator Step: {step} {bcolors.ENDC} \n"
             )
@@ -217,10 +215,7 @@ if __name__ == "__main__":
     ]
     collaborators = [Collaborator(name=name) for name in collaborator_names]
 
-    local_runtime = LocalRuntime(
-        aggregator=aggregator,
-        collaborators=collaborators
-    )
+    local_runtime = LocalRuntime(aggregator=aggregator, collaborators=collaborators)
     print(f"Local runtime collaborators = {local_runtime._collaborators}")
 
     model = None

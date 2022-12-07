@@ -6,8 +6,4 @@
 from .fl_spec import FLSpec
 from .participants import Aggregator, Collaborator
 
-__all__ = [
-    'FLSpec',
-    'Aggregator',
-    'Collaborator'
-]
+__all__ = ["FLSpec", "Aggregator", "Collaborator"]

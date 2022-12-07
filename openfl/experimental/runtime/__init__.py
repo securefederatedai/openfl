@@ -5,7 +5,4 @@
 
 from .runtime import LocalRuntime, Runtime
 
-__all__ = [
-    'LocalRuntime',
-    'Runtime'
-]
+__all__ = ["LocalRuntime", "Runtime"]

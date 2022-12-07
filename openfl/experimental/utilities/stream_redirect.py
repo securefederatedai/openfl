@@ -7,14 +7,15 @@ import sys
 import io
 from copy import deepcopy
 
+
 class RedirectStdStreamBuffer:
     """
-    Buffer object used to store stdout & stderr 
+    Buffer object used to store stdout & stderr
     """
 
     def __init__(self):
         self._stdoutbuff = io.StringIO()
-        self._stderrbuff = io.StringIO() 
+        self._stderrbuff = io.StringIO()
 
     def get_stdstream(self):
         """
@@ -47,6 +48,7 @@ class RedirectStdStream(object):
         self.__stdDestination.write(message)
         self.__stdBuffer.write(message)
 
+
 class RedirectStdStreamContext:
     """
     Context Manager that enables redirection of stdout & stderr
@@ -57,7 +59,7 @@ class RedirectStdStreamContext:
 
     def __enter__(self):
         """
-        Create context to redirect stdout & stderr 
+        Create context to redirect stdout & stderr
         """
         self.__old_stdout = sys.stdout
         self.__old_stderr = sys.stderr
@@ -71,4 +73,3 @@ class RedirectStdStreamContext:
         """
         sys.stdout = self.__old_stdout
         sys.stderr = self.__old_stderr
-
