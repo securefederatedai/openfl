@@ -1,0 +1,11 @@
+metaflow
+torch
+torchvision
+matplotlib
+pillow
+ray
+opacus
+cloudpickle
+scikit-learn
+git+https://github.com/privacytrustlab/ml_privacy_meter.git@bb2ad8d08f8ba732292458307145050e795ef952
+protobuf==3.19.5
