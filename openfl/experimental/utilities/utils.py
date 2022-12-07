@@ -1,5 +1,7 @@
-from torch.cuda import device_count
+# Copyright (C) 2020-2022 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
 
+from torch.cuda import device_count
 
 def get_number_of_gpus():
     return device_count()

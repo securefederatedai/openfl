@@ -13,15 +13,14 @@ from metaflow.datastore.task_datastore import TaskDataStore
 from metaflow.datastore.exceptions import DataException, UnpicklableArtifactException
 from metaflow.datastore.task_datastore import only_if_not_done, require_mode
 import cloudpickle as pickle
-import multiprocessing
 import ray
 import ast
-import inspect
 from pathlib import Path
 from metaflow.runtime import TruncatedBuffer, mflog_msg, MAX_LOG_SIZE
-from metaflow.mflog import mflog, RUNTIME_LOG_SOURCE
+from metaflow.mflog import RUNTIME_LOG_SOURCE
 from metaflow.task import MetaDatum
-import fcntl, hashlib
+import fcntl
+import hashlib
 from dill.source import getsource
 
 from metaflow.plugins.cards.card_modules.basic import DefaultCard, TaskInfoComponent

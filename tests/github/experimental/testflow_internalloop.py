@@ -34,7 +34,9 @@ class TestFlow_InternalLoop(FLSpec):
 
         """
         print(
-            f"{bcolors.OKBLUE}Testing FederatedFlow - Test for Internal Loops - Round: {self.train_count} of Training Rounds: {self.training_rounds}{bcolors.ENDC}"
+            f"{bcolors.OKBLUE}Testing FederatedFlow - " +
+            f"Test for Internal Loops - Round: {self.train_count}" +
+            f" of Training Rounds: {self.training_rounds}{bcolors.ENDC}"
         )
         self.model = np.zeros((10, 10, 10))  # Test model
         self.collaborators = self.runtime.collaborators
@@ -96,7 +98,7 @@ class TestFlow_InternalLoop(FLSpec):
 
         """
         self.end_count = self.end_count + 1
-        print(f"This is the end of the flow")
+        print("This is the end of the flow")
 
 
 def validate_flow(flow_obj, expected_flow_steps):

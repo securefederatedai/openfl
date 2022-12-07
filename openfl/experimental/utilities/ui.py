@@ -1,5 +1,7 @@
+# Copyright (C) 2020-2022 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 from openfl.experimental.utilities.metaflow_utils import DefaultCard
-from metaflow.client import Task
 from pathlib import Path
 import os
 import webbrowser

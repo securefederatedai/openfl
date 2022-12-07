@@ -3,18 +3,11 @@
 
 """openfl.experimental.interface.flspec module."""
 
-
-import functools
-from multiprocessing import Pool
 import inspect
-import pickle
-import hashlib
 import ray
 from types import MethodType
-from random import randint
 from copy import deepcopy
-from time import sleep
-from openfl.experimental.placement import make_remote, ray_call_put
+from openfl.experimental.placement import  ray_call_put
 from openfl.experimental.utilities import (
     MetaflowInterface,
     SerializationException,
@@ -22,12 +15,8 @@ from openfl.experimental.utilities import (
     collaborator_to_aggregator,
     should_transfer,
 )
-from openfl.experimental.runtime import LocalRuntime, Runtime
-from types import MethodType
+from openfl.experimental.runtime import Runtime
 from threading import Lock
-import time
-import numpy as np
-import sys
 
 final_attributes = []
 
@@ -90,9 +79,9 @@ class FLSpec:
                 setattr(self, name, attr)
         elif str(self._runtime) == "FederatedRuntime":
             # Submit to director
-            raise Exception(f"Submission to remote runtime not available yet")
+            raise Exception("Submission to remote runtime not available yet")
         else:
-            raise Exception(f"Runtime not supported")
+            raise Exception("Runtime not supported")
 
     def _setup_aggregator(self):
         for name, attr in self.runtime._aggregator.private_attributes.items():
@@ -238,10 +227,10 @@ class FLSpec:
 
     def display_transition_logs(self, f, parent_func):
         if aggregator_to_collaborator(f, parent_func):
-            print(f"Sending state from aggregator to collaborators")
+            print("Sending state from aggregator to collaborators")
 
         elif collaborator_to_aggregator(f, parent_func):
-            print(f"Sending state from collaborator to aggregator")
+            print("Sending state from collaborator to aggregator")
 
     def execute_task(self, f, parent_func, instance_snapshot=(), **kwargs):
         """
@@ -305,7 +294,6 @@ class FLSpec:
             for col in selected_collaborators:
                 clone = FLSpec._clones[col]
                 func = clone.execute_next
-                # This sets up possibility for different collaborators to have custom private attributes
                 for attr in self.runtime._collaborators[clone.input].private_attributes:
                     self.runtime._collaborators[clone.input].private_attributes[
                         attr

@@ -1,3 +1,6 @@
+# Copyright (C) 2020-2022 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 import functools
 import ray
 from openfl.experimental.utilities import (

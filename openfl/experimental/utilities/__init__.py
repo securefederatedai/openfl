@@ -18,7 +18,8 @@ from .stream_redirect import (
 from .resources import get_number_of_gpus
 
 __all__ = [
-    "MetaflowInterface" "should_transfer",
+    "MetaflowInterface",
+    "should_transfer",
     "aggregator_to_collaborator",
     "collaborator_to_aggregator",
     "SerializationException",
@@ -26,4 +27,5 @@ __all__ = [
     "RedirectStdStreamBuffer",
     "RedirectStdStream",
     "RedirectStdStreamContext",
+    "get_number_of_gpus",
 ]
