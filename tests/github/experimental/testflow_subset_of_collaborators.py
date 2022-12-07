@@ -5,7 +5,7 @@ from openfl.experimental.interface.fl_spec import FLSpec
 from openfl.experimental.interface.participants import Aggregator, Collaborator
 from openfl.experimental.interface.fl_spec import LocalRuntime
 from openfl.experimental.placement.placement import aggregator, collaborator
-from metaflow import Metaflow
+from metaflow import Metaflow, Flow, Run, Step
 import random
 import os
 import shutil
@@ -127,16 +127,15 @@ if __name__ == "__main__":
         random_ints = testflow_subset_collaborators.random_ints
         random_ints.remove(len(subset_collaborators))
 
-        mflow = Metaflow()
-        flow = list(mflow)[0]
-        run = flow.latest_run
-        # When problem with 'end' step in metaflow cli resolved then
-        # change the following line to list(r)[2]
-        step = list(run)[1]
+        step = Step(f'TestFlowSubsetCollaborators/'
+                    + f'{testflow_subset_collaborators._run_id}'
+                    + f'/test_valid_collaborators'
+                    )
 
         if len(list(step)) != len(subset_collaborators):
             tc_pass_fail["failed"].append(
                 f"{bcolors.FAIL}...Flow only ran for {len(list(step))} "
+                + f"instead of the {len(subset_collaborators)} expected "
                 + f"collaborators- Testcase Failed.{bcolors.ENDC} "
             )
         else:
