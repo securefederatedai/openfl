@@ -5,7 +5,7 @@ import subprocess
 import os
 import time
 import socket
-from subprocess import Popen
+from multiprocessing import Process
 import sys
 
 from openfl.native import setup_plan
@@ -43,6 +43,7 @@ def start_invalid_collaborator():
     to check if aggregator would accept certificate
     that does not correspond to the collaborator's name.
     '''
+    print('Starting Collaborator...')
     col_name = 'one'
     plan = setup_plan()
     plan.resolve()
@@ -67,10 +68,9 @@ if __name__ == '__main__':
     fqdn = socket.getfqdn()
     try:
         prepare_workspace()
-        agg = Popen(target=subprocess.check_call, args=[['fx','aggregator', 'start']])
+        agg = Process(target=subprocess.check_call, args=[['fx','aggregator', 'start']])
         agg.start()
         time.sleep(3)
-        print('Starting Collaborator...')
         start_invalid_collaborator()
         agg.join()
         assert False, 'Aggregator accepted invalid collaborator certificate.'
