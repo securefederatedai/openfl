@@ -8,6 +8,7 @@ import logging
 import time
 from collections import defaultdict
 from pathlib import Path
+from typing import Callable
 from typing import Iterable
 from typing import List
 from typing import Union
@@ -32,7 +33,8 @@ class Director:
             certificate: Union[Path, str] = None,
             sample_shape: list = None,
             target_shape: list = None,
-            settings: dict = None
+            review_plan_callback: Union[None, Callable] = None,
+            envoy_health_check_period: int = ENVOY_HEALTH_CHECK_PERIOD
     ) -> None:
         """Initialize a director object."""
         self.sample_shape, self.target_shape = sample_shape, target_shape
@@ -42,9 +44,10 @@ class Director:
         self.private_key = private_key
         self.certificate = certificate
         self.experiments_registry = ExperimentsRegistry()
-        self.settings = settings or {}
         self.col_exp_queues = defaultdict(asyncio.Queue)
         self.col_exp = {}
+        self.review_plan_callback = review_plan_callback
+        self.envoy_health_check_period = envoy_health_check_period
 
     def acknowledge_shard(self, shard_info: dict) -> bool:
         """Save shard info to shard registry if it's acceptable."""
@@ -54,12 +57,11 @@ class Director:
             logger.info('Request was not accepted')
             return is_accepted
         logger.info('Request was accepted')
-        hc_period = self.settings.get('envoy_health_check_period', ENVOY_HEALTH_CHECK_PERIOD)
         self._shard_registry[shard_info['node_info']['name']] = {
             'shard_info': shard_info,
             'is_online': True,
             'is_experiment_running': False,
-            'valid_duration': 2 * hc_period,
+            'valid_duration': 2 * self.envoy_health_check_period,
             'last_updated': time.time(),
         }
         is_accepted = True
@@ -84,6 +86,17 @@ class Director:
         )
         self.experiments_registry.add(experiment)
         return True
+
+    async def get_experiment_status(
+            self,
+            experiment_name: str,
+            caller: str):
+        """Get experiment status."""
+        if (experiment_name not in self.experiments_registry
+                or caller not in self.experiments_registry[experiment_name].users):
+            logger.error('No experiment data in the stash')
+            return None
+        return self.experiments_registry[experiment_name].status
 
     def get_trained_model(self, experiment_name: str, caller: str, model_type: str):
         """Get trained model."""
@@ -174,10 +187,27 @@ class Director:
             self.experiments_registry.remove(experiment_name)
 
     def set_experiment_failed(self, *, experiment_name: str, collaborator_name: str):
-        """Set experiment failed."""
-        if experiment_name in self.experiments_registry:
-            aggregator = self.experiments_registry[experiment_name].aggregator
-            aggregator.stop(failed_collaborator=collaborator_name)
+        """
+        Envoys Set experiment failed RPC.
+
+        This method shoud call `experiment.abort()` and all the code
+        should be pushed down to that method.
+
+        It would be also good to be able to interrupt aggregator async task with
+        the following code:
+        ```
+        run_aggregator_atask = self.experiments_registry[experiment_name].run_aggregator_atask
+        if asyncio.isfuture(run_aggregator_atask) and not run_aggregator_atask.done():
+            run_aggregator_atask.cancel()
+        ```
+        unfortunately, cancelling does not work on already awaited future.
+        """
+
+        if experiment_name not in self.experiments_registry:
+            return
+        aggregator = self.experiments_registry[experiment_name].aggregator
+        aggregator.stop(failed_collaborator=collaborator_name)
+        self.experiments_registry[experiment_name].status = Status.FAILED
 
     def update_envoy_status(
             self, *,
@@ -190,17 +220,16 @@ class Director:
         if not shard_info:
             raise Exception(f'Unknown shard {envoy_name}')
 
-        hc_period = self.settings.get('envoy_health_check_period', ENVOY_HEALTH_CHECK_PERIOD)
         shard_info['is_online']: True
         shard_info['is_experiment_running'] = is_experiment_running
-        shard_info['valid_duration'] = 2 * hc_period
+        shard_info['valid_duration'] = 2 * self.envoy_health_check_period
         shard_info['last_updated'] = time.time()
 
         if cuda_devices_status is not None:
             for i in range(len(cuda_devices_status)):
                 shard_info['shard_info']['node_info']['cuda_devices'][i] = cuda_devices_status[i]
 
-        return hc_period
+        return self.envoy_health_check_period
 
     def get_envoys(self) -> list:
         """Get a status information about envoys."""
@@ -267,9 +296,19 @@ class Director:
 
     async def start_experiment_execution_loop(self):
         """Run task to monitor and run experiments."""
+        loop = asyncio.get_event_loop()
         while True:
             async with self.experiments_registry.get_next_experiment() as experiment:
-                loop = asyncio.get_event_loop()
+
+                # Review experiment block starts.
+                if self.review_plan_callback:
+                    if not await experiment.review_experiment(self.review_plan_callback):
+                        logger.info(
+                            f'"{experiment.name}" Plan was rejected by the Director manager.'
+                        )
+                        continue
+                # Review experiment block ends.
+
                 run_aggregator_future = loop.create_task(experiment.start(
                     root_certificate=self.root_certificate,
                     certificate=self.certificate,
@@ -277,6 +316,7 @@ class Director:
                     tls=self.tls,
                     install_requirements=self.settings.get('install_requirements', False),
                 ))
+                # Adding the experiment to collaborators queues
                 for col_name in experiment.collaborators:
                     queue = self.col_exp_queues[col_name]
                     await queue.put(experiment.name)

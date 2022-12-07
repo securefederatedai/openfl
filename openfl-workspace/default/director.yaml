@@ -13,3 +13,4 @@ settings:
   listen_port: 50051  # listen port
   envoy_health_check_period: 60  # in seconds
   install_requirements: false
+  review_experiment: false
