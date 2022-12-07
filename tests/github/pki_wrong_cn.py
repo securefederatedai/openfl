@@ -1,6 +1,6 @@
 # Copyright (C) 2020-2021 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-import shutil
+import grpc
 import subprocess
 import os
 import time
@@ -9,6 +9,7 @@ from multiprocessing import Process
 import sys
 import importlib
 
+import openfl
 import openfl.native as fx
 
 
@@ -41,7 +42,7 @@ def prepare_workspace():
 def start_invalid_collaborator():
     '''
     We choose the gRPC client of another collaborator
-    to check if aggregator would accept certificate
+    to check if aggregator accepts certificate
     that does not correspond to the collaborator's name.
     '''
     print('Starting Collaborator...')
@@ -67,16 +68,20 @@ if __name__ == '__main__':
     ])
     os.chdir(prefix)
     fqdn = socket.getfqdn()
+    prepare_workspace()
+    importlib.reload(openfl.federated.task)
+    importlib.reload(openfl.federated.data)
+    importlib.reload(openfl.federated)
+    agg = Process(target=subprocess.check_call, args=[['fx','aggregator', 'start']])
+    agg.start()
+    time.sleep(3)
+    failed = False
     try:
-        prepare_workspace()
-        importlib.reload(fx)
-        agg = Process(target=subprocess.check_call, args=[['fx','aggregator', 'start']])
-        agg.start()
-        time.sleep(3)
         start_invalid_collaborator()
         agg.join()
-        assert False, 'Aggregator accepted invalid collaborator certificate.'
+        assert failed, 'Aggregator accepted invalid collaborator certificate.'
+    except grpc.RpcError as e:
+        if e.code() == grpc.StatusCode.UNAUTHENTICATED:
+            failed = True
     finally:
         agg.kill()
-        os.chdir(origin_dir)
-        shutil.rmtree(prefix)
