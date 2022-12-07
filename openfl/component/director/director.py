@@ -19,8 +19,6 @@ from .experiment import Status
 
 logger = logging.getLogger(__name__)
 
-ENVOY_HEALTH_CHECK_PERIOD = 60  # in seconds
-
 
 class Director:
     """Director class."""
@@ -34,7 +32,8 @@ class Director:
             sample_shape: list = None,
             target_shape: list = None,
             review_plan_callback: Union[None, Callable] = None,
-            envoy_health_check_period: int = ENVOY_HEALTH_CHECK_PERIOD
+            envoy_health_check_period: int = 60,
+            install_requirements: bool = False
     ) -> None:
         """Initialize a director object."""
         self.sample_shape, self.target_shape = sample_shape, target_shape
@@ -48,6 +47,7 @@ class Director:
         self.col_exp = {}
         self.review_plan_callback = review_plan_callback
         self.envoy_health_check_period = envoy_health_check_period
+        self.install_requirements = install_requirements
 
     def acknowledge_shard(self, shard_info: dict) -> bool:
         """Save shard info to shard registry if it's acceptable."""
@@ -314,7 +314,7 @@ class Director:
                     certificate=self.certificate,
                     private_key=self.private_key,
                     tls=self.tls,
-                    install_requirements=self.settings.get('install_requirements', False),
+                    install_requirements=self.install_requirements,
                 ))
                 # Adding the experiment to collaborators queues
                 for col_name in experiment.collaborators:

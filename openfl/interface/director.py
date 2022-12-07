@@ -65,7 +65,9 @@ def start(director_config_path, tls, root_certificate, private_key, certificate)
             Validator('settings.sample_shape', default=[]),
             Validator('settings.target_shape', default=[]),
             Validator('settings.install_requirements', default=False),
-            Validator('settings.envoy_health_check_period', default=60, gte=1, lte=24 * 60 * 60),
+            Validator('settings.envoy_health_check_period',
+                      default=60,  # in seconds
+                      gte=1, lte=24 * 60 * 60),
             Validator('settings.review_experiment', default=False),
         ],
         value_transform=[
@@ -106,6 +108,7 @@ def start(director_config_path, tls, root_certificate, private_key, certificate)
         listen_port=config.settings.listen_port,
         review_plan_callback=overwritten_review_plan_callback,
         envoy_health_check_period=config.settings.envoy_health_check_period,
+        install_requirements=config.settings.install_requirements
     )
     director_server.start()
 
