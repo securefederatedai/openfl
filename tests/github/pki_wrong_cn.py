@@ -46,13 +46,22 @@ def start_invalid_collaborator():
     to check if aggregator accepts certificate
     that does not correspond to the collaborator's name.
     '''
-    print('Starting Collaborator...')
+    importlib.reload(openfl.federated.task)  # fetch TF-based task runner
+    importlib.reload(openfl.federated.data)  # fetch TF-based data loader
+    importlib.reload(openfl.federated)  # allow imports from parent module
     col_name = 'one'
     plan = fx.setup_plan()
     plan.resolve()
     client = plan.get_client('two', plan.aggregator_uuid, plan.federation_uuid)
     collaborator = plan.get_collaborator(col_name, client=client)
     collaborator.run()
+
+
+def start_aggregator():
+    agg = Process(target=subprocess.check_call, args=[['fx', 'aggregator', 'start']])
+    agg.start()
+    time.sleep(3)  # wait for initialization
+    return agg
 
 
 if __name__ == '__main__':
@@ -66,12 +75,7 @@ if __name__ == '__main__':
     os.chdir(prefix)
     fqdn = socket.getfqdn()
     prepare_workspace()
-    importlib.reload(openfl.federated.task)
-    importlib.reload(openfl.federated.data)
-    importlib.reload(openfl.federated)
-    agg = Process(target=subprocess.check_call, args=[['fx', 'aggregator', 'start']])
-    agg.start()
-    time.sleep(3)
+    agg = start_aggregator()
     failed = False
     try:
         start_invalid_collaborator()
