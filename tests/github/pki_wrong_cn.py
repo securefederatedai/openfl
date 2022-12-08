@@ -76,13 +76,16 @@ if __name__ == '__main__':
     fqdn = socket.getfqdn()
     prepare_workspace()
     agg = start_aggregator()
-    failed = False
     try:
         start_invalid_collaborator()
         agg.join()
-        assert failed, 'Aggregator accepted invalid collaborator certificate.'
     except grpc.RpcError as e:
         if e.code() == grpc.StatusCode.UNAUTHENTICATED:
-            failed = True
+            pass
+        else:
+            raise
+    else:
+        print('Aggregator accepted invalid collaborator certificate.')
+        sys.exit(1)
     finally:
         agg.kill()
