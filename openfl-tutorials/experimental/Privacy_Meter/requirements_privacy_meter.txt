@@ -1,4 +1,4 @@
-metaflow
+metaflow==2.7.15
 torch
 torchvision
 matplotlib
@@ -7,5 +7,5 @@ ray
 opacus
 cloudpickle
 scikit-learn
-git+https://github.com/privacytrustlab/ml_privacy_meter.git@bb2ad8d08f8ba732292458307145050e795ef952
+git+https://github.com/privacytrustlab/ml_privacy_meter.git@ac181a885815f85b3809317c247f422e6596cb4a
 protobuf==3.19.5

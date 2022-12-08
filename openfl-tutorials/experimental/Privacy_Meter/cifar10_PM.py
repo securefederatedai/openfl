@@ -93,6 +93,7 @@ def FedAvg(models):
 
 def inference(network,test_loader,device):
     network.eval()
+    network.to(device)
     test_loss = 0
     correct = 0
     with torch.no_grad():
@@ -109,6 +110,7 @@ def inference(network,test_loader,device):
     test_loss, correct, len(test_loader.dataset),
     100. * correct / len(test_loader.dataset)))  
     accuracy = float(correct / len(test_loader.dataset))
+    network.to('cpu')
     return accuracy
 
 def optimizer_to_device(optimizer, device):
@@ -212,16 +214,6 @@ class FederatedFlow(FLSpec):
     @collaborator(num_gpus=1)           # Assuming GPU(s) is available in the machine
     def aggregated_model_validation(self):
         print(f'Performing aggregated model validation for collaborator {self.input} in round {self.round_num}')
-        
-        self.model = self.model.to("cpu")        # Putting model into cpu and then back to gpu to prevent gpu memory hogging
-        self.model = self.model.to(self.device)
-        self.global_model = self.global_model.to(self.device)
-
-        # verifying that model went to the correct GPU device
-        assert next(self.model.parameters()).device == self.device
-        assert next(self.global_model.parameters()).device == self.device
-
-        print("Test dataset performance")
         self.agg_validation_score = inference(self.model, self.test_loader, self.device)
         print(f'{self.input} value of {self.agg_validation_score}')
         self.collaborator_name = self.input
@@ -232,8 +224,9 @@ class FederatedFlow(FLSpec):
     def train(self):
         print(20*"#")
         print(f'Performing model training for collaborator {self.input} in round {self.round_num}')
-        print(self.device)
-        
+        # print(self.device)
+
+        self.model.to(self.device)        
         self.optimizer = default_optimizer(self.model,optimizer_like=self.optimizers[self.input])
 
         if self.round_num > 0:
@@ -264,7 +257,11 @@ class FederatedFlow(FLSpec):
         if self.flow_internal_loop_test:
             save_current_round_model_and_optimizer_for_next_round_testing(self.model, self.optimizer, self.collaborator_name, self.round_num)
 
-
+        self.model.to('cpu')
+        tmp_opt = deepcopy(self.optimizers[self.input])
+        tmp_opt.load_state_dict(self.optimizer.state_dict())
+        self.optimizer = tmp_opt
+        torch.cuda.empty_cache()
         self.next(self.local_model_validation)
 
     # @collaborator                     # Uncomment this if you don't have GPU on the machine and want this application ro run on CPU instead 
@@ -306,7 +303,7 @@ class FederatedFlow(FLSpec):
         # for computing loss and logits, it can be large, e.g., 1000.
         # for computing the signal_norm, it should be around 25. Otherwise, we will get OOM.
         
-        target_model = PytorchModelTensor(copy.deepcopy(self.model),nn.CrossEntropyLoss(),self.device, batch_size=10)
+        target_model = PytorchModelTensor(copy.deepcopy(self.model),nn.CrossEntropyLoss(),self.device)
         self.local_pm_info =  PopulationAuditor(target_model,datasets,self.local_pm_info)
         target_model.model_obj.to('cpu')
         self.local_pm_info.update_history('round',self.round_num)
@@ -351,12 +348,7 @@ class FederatedFlow(FLSpec):
             pickle.dump(history_dict, handle, protocol=pickle.HIGHEST_PROTOCOL)
         
         print('saving and ploting the attack for the both attacks uses {}'.format(time.time()-start_time))
-        print('auditing time: {}'.format(time.time()-begin_time))
-
-        self.model = self.model.to("cpu")        # Putting model into cpu and then back to gpu to prevent gpu memory hogging
-        self.global_model = self.global_model.to("cpu")        # Putting model into cpu and then back to gpu to prevent gpu memory hogging
-        torch.cuda.empty_cache()
-        
+        print('auditing time: {}'.format(time.time()-begin_time))        
         self.next(self.join, exclude=['training_completed'])
 
     @aggregator
@@ -371,7 +363,8 @@ class FederatedFlow(FLSpec):
         self.model = FedAvg([input.model.cpu() for input in inputs])
         self.global_model.load_state_dict(deepcopy(self.model.state_dict()))
         self.optimizers.update({input.collaborator_name: input.optimizer for input in inputs})
-       
+
+        del inputs
         self.next(self.check_round_completion)
 
     @aggregator
