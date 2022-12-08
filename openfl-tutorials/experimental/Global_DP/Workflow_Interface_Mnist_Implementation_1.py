@@ -296,6 +296,11 @@ class FederatedFlow(FLSpec):
         
         self.loss = np.mean(train_losses)
         self.training_completed = True
+
+        tmp_opt = deepcopy(self.optimizers[self.input])
+        tmp_opt.load_state_dict(self.optimizer.state_dict())
+        self.optimizer = tmp_opt
+        torch.cuda.empty_cache()
         self.next(self.local_model_validation)
 
     # @collaborator                     # Uncomment this if you don't have GPU in the machine and want this application ro run on CPU instead 
@@ -331,6 +336,7 @@ class FederatedFlow(FLSpec):
             print(20*"#")
         self.previous_global_model.load_state_dict(deepcopy(self.model.state_dict()))
         self.optimizers.update({input.collaborator_name: input.optimizer for input in inputs})
+        del inputs
         self.next(self.check_round_completion)
         
     @aggregator
