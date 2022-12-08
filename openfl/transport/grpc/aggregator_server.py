@@ -5,6 +5,7 @@
 
 import logging
 from concurrent.futures import ThreadPoolExecutor
+from random import random
 from multiprocessing import cpu_count
 from time import sleep
 
@@ -81,6 +82,8 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
             collaborator_common_name = request.header.sender
             if not self.aggregator.valid_collaborator_cn_and_id(
                     common_name, collaborator_common_name):
+                # Random delay in authentication failures
+                sleep(5 * random())
                 context.abort(
                     StatusCode.UNAUTHENTICATED,
                     f'Invalid collaborator. CN: |{common_name}| '
