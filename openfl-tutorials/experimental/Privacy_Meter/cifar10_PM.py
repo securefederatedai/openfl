@@ -145,7 +145,7 @@ def load_previous_round_model_and_optimizer_and_perform_testing(model, global_mo
     """
     print(f'Loading model and optimizer state dict for round {round_num-1}')
     model_prevround = Net()    # instanciate a new model
-    model_prevround = model_prevround.to(device,optimizer_like=optimizer)
+    model_prevround = model_prevround.to(device)
     optimizer_prevround = default_optimizer(model_prevround,optimizer_like=optimizer)
     if os.path.isfile(f'Collaborator_{collaborator_name}_model_config_roundnumber_{round_num-1}.pickle'):
         with open(f'Collaborator_{collaborator_name}_model_config_roundnumber_{round_num-1}.pickle', "rb") as f:
@@ -155,7 +155,7 @@ def load_previous_round_model_and_optimizer_and_perform_testing(model, global_mo
             
             for param_tensor in model.state_dict():                        
                 for tensor_1, tensor_2 in zip(model.state_dict()[param_tensor], global_model.state_dict()[param_tensor]):
-                    if torch.equal(tensor_1, tensor_2) is not True:
+                    if torch.equal(tensor_1.to(device), tensor_2.to(device)) is not True:
                             raise (ValueError(f'Before train model state and global state do not match for collaborator: {collaborator_name} at round {round_num-1}.'))
 
                 if isinstance(optimizer, optim.SGD):
@@ -170,7 +170,7 @@ def load_previous_round_model_and_optimizer_and_perform_testing(model, global_mo
                 model_params = [model.state_dict()[param_tensor] for param_tensor in model.state_dict()]
                 for idx, param in enumerate(optimizer.param_groups[0]['params']):
                     for tensor_1, tensor_2 in zip(param.data, model_params[idx]):
-                        if torch.equal(tensor_1, tensor_2) is not True:
+                        if torch.equal(tensor_1.to(device), tensor_2.to(device)) is not True:
                             raise (ValueError(f'Model and optimizer do not point to the same params for collaborator: {collaborator_name} at round {round_num-1}.'))
             
     else:
