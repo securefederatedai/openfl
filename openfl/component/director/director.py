@@ -114,6 +114,14 @@ class Director:
 
     async def wait_experiment(self, envoy_name: str) -> str:
         """Wait an experiment."""
+        experiment_name = self.col_exp.get(envoy_name)
+        if experiment_name and experiment_name in self.experiments_registry:
+            # Experiment already set, but the envoy hasn't received experiment
+            # name (e.g. was disconnected)
+            experiment = self.experiments_registry[experiment_name]
+            if experiment.aggregator.round_number == 0:
+                return experiment_name
+
         self.col_exp[envoy_name] = None
         queue = self.col_exp_queues[envoy_name]
         experiment_name = await queue.get()
