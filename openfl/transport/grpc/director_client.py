@@ -17,6 +17,7 @@ from openfl.protocols import director_pb2_grpc
 from openfl.protocols import interceptors
 from openfl.protocols.utils import construct_model_proto
 from openfl.protocols.utils import deconstruct_model_proto
+from openfl.transport.grpc.exceptions import ShardNotFoundError
 from openfl.transport.grpc.director_server import CLIENT_ID_DEFAULT
 
 from .grpc_channel_options import channel_options
@@ -144,10 +145,16 @@ class ShardDirectorClient:
 
         logger.debug(f'Sending health check status: {status}')
 
-        response = self.stub.UpdateEnvoyStatus(status)
-        health_check_period = response.health_check_period.seconds
+        try:
+            response = self.stub.UpdateEnvoyStatus(status)
+        except grpc.RpcError as rpc_error:
+            logger.error(rpc_error)
+            if rpc_error.code() == grpc.StatusCode.NOT_FOUND:
+                raise ShardNotFoundError
+        else:
+            health_check_period = response.health_check_period.seconds
 
-        return health_check_period
+            return health_check_period
 
 
 class DirectorClient:
