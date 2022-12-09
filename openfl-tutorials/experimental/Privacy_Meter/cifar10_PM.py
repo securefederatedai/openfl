@@ -348,7 +348,14 @@ class FederatedFlow(FLSpec):
             pickle.dump(history_dict, handle, protocol=pickle.HIGHEST_PROTOCOL)
         
         print('saving and ploting the attack for the both attacks uses {}'.format(time.time()-start_time))
-        print('auditing time: {}'.format(time.time()-begin_time))        
+        print('auditing time: {}'.format(time.time()-begin_time))
+        
+        # Clean up state before transitioning to collaborator
+        delattr(self,'train_dataset')
+        delattr(self,'train_loader')
+        delattr(self,'test_dataset')
+        delattr(self,'test_loader') 
+        delattr(self,'population_dataset')        
         self.next(self.join, exclude=['training_completed'])
 
     @aggregator
@@ -540,7 +547,7 @@ if __name__ == '__main__':
                 'test_loader': torch.utils.data.DataLoader(local_test,batch_size=batch_size_test, shuffle=False)
                 
         }
-
+    
     local_runtime = LocalRuntime(aggregator=aggregator, collaborators=collaborators)
     print(f'Local runtime collaborators = {local_runtime._collaborators}')
 
