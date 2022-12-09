@@ -4,10 +4,10 @@
 """openfl.experimental.interface.flspec module."""
 
 import inspect
-import ray
+import gc
 from types import MethodType
 from copy import deepcopy
-from openfl.experimental.placement import  ray_call_put
+from openfl.experimental.placement import RayExecutor
 from openfl.experimental.utilities import (
     MetaflowInterface,
     SerializationException,
@@ -17,6 +17,7 @@ from openfl.experimental.utilities import (
 )
 from openfl.experimental.runtime import Runtime
 from threading import Lock
+from time import sleep
 
 final_attributes = []
 
@@ -44,7 +45,6 @@ class FLSpec:
 
     def run(self):
         # Submit flow to Runtime
-        FLSpec.save_initial_state(self)
         self._metaflow_interface = MetaflowInterface(
             self.__class__, self.runtime.backend
         )
@@ -187,20 +187,6 @@ class FLSpec:
             )
             print(f"Saved data artifacts for {parent_func.__name__}")
 
-    def create_clone(self):
-        """
-        Create a copy of the current state to modify for the next task
-        in the flow while leaving the current object untouched.
-        """
-        if FLSpec._initial_state is None:
-            cln = self
-        else:
-            runtime = FLSpec._initial_state.runtime
-            FLSpec._initial_state.runtime = Runtime()
-            cln = deepcopy(FLSpec._initial_state)
-            FLSpec._initial_state.runtime = runtime
-        return cln
-
     def generate_artifacts(self, reserved_words=["next", "runtime", "input"]):
 
         cls_attrs, valid_artifacts = self.parse_attrs(reserved_words=reserved_words)
@@ -266,9 +252,12 @@ class FLSpec:
                             delattr(clone, attr)
 
             func = None
+            func_refs = []
             remote_functions = []
+            remote_ctx_refs = []
+            if self._runtime.backend == "ray":
+                ray_executor = RayExecutor()
             for col in selected_collaborators:
-                # TODO make task_id a shared value
                 clone = FLSpec._clones[col]
                 for name, attr in self.runtime._collaborators[
                     clone.input
@@ -279,31 +268,39 @@ class FLSpec:
                 # ensure clone is getting latest _metaflow_interface
                 clone._metaflow_interface = self._metaflow_interface
                 if self._runtime.backend == "ray":
-                    remote_functions.append(ray_call_put(clone, to_exec))
+                    clone.runtime = Runtime()
+                    ray_executor.ray_call_put(clone, to_exec)
                 else:
                     to_exec()
             if self._runtime.backend == "ray":
+                clones = ray_executor.get_remote_clones()
                 FLSpec._clones.update(
                     {
                         col: obj
                         for col, obj in zip(
-                            selected_collaborators, ray.get(remote_functions)
+                            selected_collaborators, clones
                         )
                     }
                 )
+                del ray_executor
+                del clones
+                gc.collect()
             for col in selected_collaborators:
                 clone = FLSpec._clones[col]
                 func = clone.execute_next
                 for attr in self.runtime._collaborators[clone.input].private_attributes:
-                    self.runtime._collaborators[clone.input].private_attributes[
-                        attr
-                    ] = getattr(clone, attr)
                     if hasattr(clone, attr):
+                        self.runtime._collaborators[clone.input].private_attributes[
+                            attr
+                        ] = getattr(clone, attr)
                         delattr(clone, attr)
             # Restore the self state if back-up is taken
             self.restore_instance_snapshot(instance_snapshot)
+            del instance_snapshot
+
             g = getattr(self, func)
             # remove private collaborator state
+            gc.collect()
             g([FLSpec._clones[col] for col in selected_collaborators])
         else:
             to_exec = getattr(self, f.__name__)

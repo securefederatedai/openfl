@@ -3,17 +3,34 @@
 
 import functools
 import ray
+import gc
+from copy import deepcopy
 from openfl.experimental.utilities import (
     RedirectStdStreamContext,
     GPUResourcesNotAvailable,
     get_number_of_gpus,
 )
 
+class RayExecutor:
+    def __init__(self):
+        self.remote_functions = []
+        self.remote_contexts = []
 
-def ray_call_put(ctx, func):
-    remote_to_exec = make_remote(func, num_gpus=func.num_gpus)
-    ref_ctx = ray.put(ctx)
-    return remote_to_exec.remote(ref_ctx, func.__name__)
+    def ray_call_put(self, ctx, func):
+        remote_to_exec = make_remote(func, num_gpus=func.num_gpus)
+        ref_ctx = ray.put(ctx)
+        self.remote_contexts.append(ref_ctx)
+        self.remote_functions.append(remote_to_exec.remote(ref_ctx, func.__name__))
+        del remote_to_exec
+        del ref_ctx
+
+    def get_remote_clones(self):
+        clones = deepcopy(ray.get(self.remote_functions))
+        del self.remote_functions
+        # Remove clones from ray object store
+        for ctx in self.remote_contexts:
+            ray.cancel(ctx)
+        return clones
 
 
 def make_remote(f, num_gpus):

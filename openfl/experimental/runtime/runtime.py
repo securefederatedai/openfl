@@ -16,7 +16,7 @@ class Runtime:
 
 
 class LocalRuntime(Runtime):
-    def __init__(self, aggregator=None, collaborators=None, backend="ray", **kwargs):
+    def __init__(self, aggregator=None, collaborators=None, backend="single_process", **kwargs):
         """Use remote federated infrastructure to run the flow"""
         super().__init__()
         if backend not in ["ray", "single_process"]:

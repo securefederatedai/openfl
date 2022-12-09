@@ -3,6 +3,6 @@
 
 """openfl.experimental.placement package."""
 
-from .placement import ray_call_put, make_remote, aggregator, collaborator
+from .placement import RayExecutor, make_remote, aggregator, collaborator
 
-__all__ = ["ray_call_put", "make_remote", "aggregator", "collaborator"]
+__all__ = ["RayExecutor", "make_remote", "aggregator", "collaborator"]
