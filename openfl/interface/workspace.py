@@ -105,7 +105,7 @@ def create(prefix, template):
     else:
         echo('No additional requirements for workspace defined. Skipping...')
     prefix_hash = _get_dir_hash(str(prefix.absolute()))
-    with open(OPENFL_USERDIR / f'requirements.{prefix_hash}.txt', 'w') as f:
+    with open(OPENFL_USERDIR / f'requirements.{prefix_hash}.txt', 'w', encoding='utf-8') as f:
         check_call([executable, '-m', 'pip', 'freeze'], shell=False, stdout=f)
 
     print_tree(prefix, level=3)
@@ -238,14 +238,14 @@ def certify():
 
     echo('1.2 Create Database')
 
-    with open(CERT_DIR / 'ca/root-ca/db/root-ca.db', 'w') as f:
+    with open(CERT_DIR / 'ca/root-ca/db/root-ca.db', 'w', encoding='utf-8') as f:
         pass  # write empty file
-    with open(CERT_DIR / 'ca/root-ca/db/root-ca.db.attr', 'w') as f:
+    with open(CERT_DIR / 'ca/root-ca/db/root-ca.db.attr', 'w', encoding='utf-8') as f:
         pass  # write empty file
 
-    with open(CERT_DIR / 'ca/root-ca/db/root-ca.crt.srl', 'w') as f:
+    with open(CERT_DIR / 'ca/root-ca/db/root-ca.crt.srl', 'w', encoding='utf-8') as f:
         f.write('01')  # write file with '01'
-    with open(CERT_DIR / 'ca/root-ca/db/root-ca.crl.srl', 'w') as f:
+    with open(CERT_DIR / 'ca/root-ca/db/root-ca.crl.srl', 'w', encoding='utf-8') as f:
         f.write('01')  # write file with '01'
 
     echo('1.3 Create CA Request and Certificate')
@@ -277,14 +277,14 @@ def certify():
 
     echo('2.2 Create Database')
 
-    with open(CERT_DIR / 'ca/signing-ca/db/signing-ca.db', 'w') as f:
+    with open(CERT_DIR / 'ca/signing-ca/db/signing-ca.db', 'w', encoding='utf-8') as f:
         pass  # write empty file
-    with open(CERT_DIR / 'ca/signing-ca/db/signing-ca.db.attr', 'w') as f:
+    with open(CERT_DIR / 'ca/signing-ca/db/signing-ca.db.attr', 'w', encoding='utf-8') as f:
         pass  # write empty file
 
-    with open(CERT_DIR / 'ca/signing-ca/db/signing-ca.crt.srl', 'w') as f:
+    with open(CERT_DIR / 'ca/signing-ca/db/signing-ca.crt.srl', 'w', encoding='utf-8') as f:
         f.write('01')  # write file with '01'
-    with open(CERT_DIR / 'ca/signing-ca/db/signing-ca.crl.srl', 'w') as f:
+    with open(CERT_DIR / 'ca/signing-ca/db/signing-ca.crl.srl', 'w', encoding='utf-8') as f:
         f.write('01')  # write file with '01'
 
     echo('2.3 Create Signing Certificate CSR')
@@ -320,8 +320,8 @@ def certify():
     echo('3   Create Certificate Chain')
 
     # create certificate chain file by combining root-ca and signing-ca
-    with open(CERT_DIR / 'cert_chain.crt', 'w') as d:
-        with open(CERT_DIR / 'ca/root-ca.crt') as s:
+    with open(CERT_DIR / 'cert_chain.crt', 'w', encoding='utf-8') as d:
+        with open(CERT_DIR / 'ca/root-ca.crt', encoding='utf-8') as s:
             d.write(s.read())
         with open(CERT_DIR / 'ca/signing-ca.crt') as s:
             d.write(s.read())
@@ -330,7 +330,7 @@ def certify():
 
 
 def _get_requirements_dict(txtfile):
-    with open(txtfile, 'r') as snapshot:
+    with open(txtfile, 'r', encoding='utf-8') as snapshot:
         snapshot_dict = {}
         for line in snapshot:
             try:
@@ -437,7 +437,8 @@ def dockerize_(context, base_image, save):
         )
 @option('-e', '--enclave_size', required=False,
         type=str, default='16G',
-        help='Memory size of the enclave, defined as number with size suffix. Must be a power-of-2.\n'
+        help='Memory size of the enclave, defined as number with size suffix. '
+             'Must be a power-of-2.\n'
              'Default is 16G.'
         )
 @option('-o', '--pip-install-options', required=False,
