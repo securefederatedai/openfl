@@ -49,14 +49,14 @@ The figures generated for the privacy loss are shown as below:
 Seattle:
 ||||||
 |---|---|---|---|---|
-|![](result_sgd/Seattle_roc_at_30.png)|![](result_sgd/Seattle_tpr_at_0.1.png)|![](result_sgd/Seattle_tpr_at_0.2.png)|![](result_sgd/Seattle_tpr_at_0.3.png)|![](result_sgd/Seattle_auc.png)|
+|![](Results/result_sgd/Seattle_roc_at_30.png)|![](Results/result_sgd/Seattle_tpr_at_0.1.png)|![](Results/result_sgd/Seattle_tpr_at_0.2.png)|![](Results/result_sgd/Seattle_tpr_at_0.3.png)|![](Results/result_sgd/Seattle_auc.png)|
 
 
 
 Portland:
 ||||||
 |---|---|---|---|---|
-|![](result_sgd/Portland_roc_at_30.png)|![](result_sgd/Portland_tpr_at_0.1.png)|![](result_sgd/Portland_tpr_at_0.2.png)|![](result_sgd/Portland_tpr_at_0.3.png)|![](result_sgd/Portland_auc.png)|
+|![](Results/result_sgd/Portland_roc_at_30.png)|![](Results/result_sgd/Portland_tpr_at_0.1.png)|![](Results/result_sgd/Portland_tpr_at_0.2.png)|![](Results/result_sgd/Portland_tpr_at_0.3.png)|![](Results/result_sgd/Portland_auc.png)|
 
 
 ### Auditing the privacy loss based on the model loss, logits, and gradient norm (the 10th layer of the representation), where the model is trained using Adam.
@@ -76,10 +76,10 @@ The figures generated for the privacy loss are shown as below:
 Seattle:
 ||||||
 |---|---|---|---|---|
-|![](result_adam/Seattle_roc_at_30.png)|![](result_adam/Seattle_tpr_at_0.1.png)|![](result_adam/Seattle_tpr_at_0.2.png)|![](result_adam/Seattle_tpr_at_0.3.png)|![](result_adam/Seattle_auc.png)|
+|![](Results/result_adam/Seattle_roc_at_30.png)|![](Results/result_adam/Seattle_tpr_at_0.1.png)|![](Results/result_adam/Seattle_tpr_at_0.2.png)|![](Results/result_adam/Seattle_tpr_at_0.3.png)|![](Results/result_adam/Seattle_auc.png)|
 
 
 Portland:
 ||||||
 |---|---|---|---|---|
-|![](result_adam/Portland_roc_at_30.png)|![](result_adam/Portland_tpr_at_0.1.png)|![](result_adam/Portland_tpr_at_0.2.png)|![](result_adam/Portland_tpr_at_0.3.png)|![](result_adam/Portland_auc.png)|
+|![](Results/result_adam/Portland_roc_at_30.png)|![](Results/result_adam/Portland_tpr_at_0.1.png)|![](Results/result_adam/Portland_tpr_at_0.2.png)|![](Results/result_adam/Portland_tpr_at_0.3.png)|![](Results/result_adam/Portland_auc.png)|
