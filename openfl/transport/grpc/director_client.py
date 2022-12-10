@@ -236,6 +236,13 @@ class DirectorClient:
                 yield experiment_info
                 chunk = arch.read(max_buffer_size)
 
+    def get_experiment_status(self, experiment_name):
+        """Check if the experiment was accepted by the director"""
+        logger.info('Get Experiment Status')
+        request = director_pb2.GetExperimentStatusRequest(experiment_name=experiment_name)
+        resp = self.stub.GetExperimentStatus(request)
+        return resp
+
     def get_dataset_info(self):
         """Request the dataset info from the director."""
         resp = self.stub.GetDatasetInfo(director_pb2.GetDatasetInfoRequest())

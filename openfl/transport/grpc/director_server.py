@@ -7,6 +7,7 @@ import asyncio
 import logging
 import uuid
 from pathlib import Path
+from typing import Callable
 from typing import Optional
 from typing import Union
 
@@ -42,9 +43,11 @@ class DirectorGRPCServer(director_pb2_grpc.DirectorServicer):
             root_certificate: Optional[Union[Path, str]] = None,
             private_key: Optional[Union[Path, str]] = None,
             certificate: Optional[Union[Path, str]] = None,
+            review_plan_callback: Union[None, Callable] = None,
             listen_host: str = '[::]',
             listen_port: int = 50051,
-            **kwargs,
+            envoy_health_check_period: int = 0,
+            **kwargs
     ) -> None:
         """Initialize a director object."""
         # TODO: add working directory
@@ -63,6 +66,8 @@ class DirectorGRPCServer(director_pb2_grpc.DirectorServicer):
             root_certificate=self.root_certificate,
             private_key=self.private_key,
             certificate=self.certificate,
+            review_plan_callback=review_plan_callback,
+            envoy_health_check_period=envoy_health_check_period,
             **kwargs
         )
 
@@ -157,6 +162,17 @@ class DirectorGRPCServer(director_pb2_grpc.DirectorServicer):
 
         logger.info('Send response')
         return director_pb2.SetNewExperimentResponse(accepted=is_accepted)
+
+    async def GetExperimentStatus(self, request, context):
+        """Get experiment status and update if experiment was approved."""
+        logger.info('GetExperimentStatus request received')
+        caller = self.get_caller(context)
+        experiment_status = await self.director.get_experiment_status(
+            experiment_name=request.experiment_name,
+            caller=caller
+        )
+        logger.info('Send response')
+        return director_pb2.GetExperimentStatusResponse(experiment_status=experiment_status)
 
     async def GetTrainedModel(self, request, context):  # NOQA:N802
         """RPC for retrieving trained models."""

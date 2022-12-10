@@ -9,11 +9,10 @@ import traceback
 import uuid
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
+from typing import Callable
 from typing import Optional
 from typing import Type
 from typing import Union
-
-from click import echo
 
 from openfl.federated import Plan
 from openfl.interface.interactive_api.shard_descriptor import ShardDescriptor
@@ -43,6 +42,7 @@ class Envoy:
             install_requirements: bool = True,
             cuda_devices: Union[tuple, list] = (),
             cuda_device_monitor: Optional[Type[CUDADeviceMonitor]] = None,
+            review_plan_callback: Union[None, Callable] = None,
     ) -> None:
         """Initialize a envoy object."""
         self.name = shard_name
@@ -64,6 +64,8 @@ class Envoy:
         self.cuda_devices = tuple(cuda_devices)
         self.install_requirements = install_requirements
 
+        self.review_plan_callback = review_plan_callback
+
         # Optional plugins
         self.cuda_device_monitor = cuda_device_monitor
 
@@ -83,14 +85,29 @@ class Envoy:
                 logger.exception(f'Failed to get experiment: {exc}')
                 time.sleep(DEFAULT_RETRY_TIMEOUT_IN_SECONDS)
                 continue
+
             data_file_path = self._save_data_stream_to_file(data_stream)
-            self.is_experiment_running = True
+
             try:
                 with ExperimentWorkspace(
                         experiment_name=f'{self.name}_{experiment_name}',
                         data_file_path=data_file_path,
                         install_requirements=self.install_requirements
                 ):
+                    # If the callback is passed
+                    if self.review_plan_callback:
+                        # envoy to review the experiment before starting
+                        if not self.review_plan_callback('plan', 'plan/plan.yaml'):
+                            self.director_client.set_experiment_failed(
+                                experiment_name,
+                                error_description='Experiment is rejected'
+                                f' by Envoy "{self.name}" manager.'
+                            )
+                            continue
+                        logger.debug(
+                            f'Experiment "{experiment_name}" was accepted by Envoy manager'
+                        )
+                    self.is_experiment_running = True
                     self._run_collaborator()
             except Exception as exc:
                 logger.exception(f'Collaborator failed with error: {exc}:')
@@ -166,7 +183,7 @@ class Envoy:
         plan = Plan.parse(plan_config_path=Path(plan))
 
         # TODO: Need to restructure data loader config file loader
-        echo(f'Data = {plan.cols_data_paths}')
+        logger.info(f'Data = {plan.cols_data_paths}')
         logger.info('🧿 Starting a Collaborator Service.')
 
         col = plan.get_collaborator(self.name, self.root_certificate, self.private_key,
