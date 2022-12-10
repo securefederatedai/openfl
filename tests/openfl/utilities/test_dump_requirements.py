@@ -23,7 +23,7 @@ NEW_PREFIXES_OVERLAP = [p + '\n' for p in PREFIXES_OVERLAP]
 def requirements_file():
     """Prepare test requirements file."""
     path = Path('./test_requirements.txt').absolute()
-    with open(path, 'w') as f:
+    with open(path, 'w', encoding='utf-8') as f:
         f.writelines(LINES)
     yield path
     path.unlink()
@@ -47,7 +47,7 @@ def test_dump(requirements_file, monkeypatch,
                            keep_original_prefixes=keep_original_prefixes,
                            prefixes=prefixes)
 
-    with open(requirements_file) as f:
+    with open(requirements_file, encoding='utf-8') as f:
         read_lines = f.readlines()
 
     read_options = []
@@ -100,7 +100,7 @@ def test_dump_empty_original_list(
                                keep_original_prefixes=keep_original_prefixes,
                                prefixes=prefixes)
 
-        with open(requirements_file) as f:
+        with open(requirements_file, encoding='utf-8') as f:
             read_lines = f.readlines()
     finally:
         requirements_file.unlink(missing_ok=True)

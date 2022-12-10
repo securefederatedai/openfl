@@ -1,0 +1,11 @@
+params:
+  cuda_devices: []
+  review_experiment: True
+
+optional_plugin_components: {}
+
+shard_descriptor:
+  template: histology_shard_descriptor.HistologyShardDescriptor
+  params:
+    data_folder: histology_data
+    rank_worldsize: 1,2

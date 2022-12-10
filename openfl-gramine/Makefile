@@ -3,6 +3,7 @@ ARCH_LIBDIR ?= /lib/$(shell $(CC) -dumpmachine)
 # Enclave attributes to the manifest
 SGX_ISVPRODID ?= 0
 SGX_ISVSVN ?= 0
+SGX_ENCLAVE_SIZE ?= 16G
 
 # This is a signer key on the BUILDING machine
 SGX_SIGNER_KEY ?= /key.pem
@@ -26,6 +27,7 @@ openfl.manifest: openfl.manifest.template
 		-Darch_libdir=$(ARCH_LIBDIR) \
 		-Disvprodid=$(SGX_ISVPRODID) \
 		-Disvsvn=$(SGX_ISVSVN) \
+		-Denclave_size=$(SGX_ENCLAVE_SIZE) \
 		-Dno_proxy=$(no_proxy) \
 		-Dhttp_proxy=$(http_proxy) \
 		-Dhttps_proxy=$(https_proxy) \

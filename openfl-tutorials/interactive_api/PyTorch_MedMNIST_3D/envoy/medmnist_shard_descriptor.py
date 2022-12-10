@@ -5,7 +5,7 @@
 
 import logging
 import os
-from typing import Any, Dict, List, Tuple
+from typing import Any, List, Tuple
 from medmnist.info import INFO, HOMEPAGE
 
 import numpy as np
@@ -48,11 +48,11 @@ class MedMNISTShardDescriptor(ShardDescriptor):
     ) -> None:
         """Initialize MedMNISTShardDescriptor."""
         self.rank, self.worldsize = tuple(int(num) for num in rank_worldsize.split(','))
-        
+
         self.datapath = datapath
-        self.dataset_name = dataname;
+        self.dataset_name = dataname
         self.info = INFO[self.dataset_name]
-        
+
         (x_train, y_train), (x_test, y_test) = self.load_data()
         self.data_by_type = {
             'train': (x_train, y_train),
@@ -75,16 +75,14 @@ class MedMNISTShardDescriptor(ShardDescriptor):
         )
 
     @property
-    def sample_shape(self) -> List[str] :
+    def sample_shape(self) -> List[str]:
         """Return the sample shape info."""
-        #return data_by_type['train'][0][0].shape
         return ['28', '28', '28']
 
     @property
-    def target_shape(self) -> List[str] :
+    def target_shape(self) -> List[str]:
         """Return the target shape info."""
-        #return data_by_type['train'][1][0].shape
-        return ['1','1']
+        return ['1', '1']
 
     @property
     def dataset_description(self) -> str:
@@ -92,8 +90,8 @@ class MedMNISTShardDescriptor(ShardDescriptor):
         return (f'MedMNIST dataset, shard number {self.rank}'
                 f' out of {self.worldsize}')
 
-    def download_data(datapath: str = 'data/', 
-                      dataname: str = 'bloodmnist', 
+    def download_data(datapath: str = 'data/',
+                      dataname: str = 'bloodmnist',
                       info: dict = {}) -> None:
 
         logger.info(f"{datapath}\n{dataname}\n{info}")
@@ -103,31 +101,28 @@ class MedMNISTShardDescriptor(ShardDescriptor):
                          root=datapath,
                          filename=dataname,
                          md5=info["MD5"])
-        except:
-            raise RuntimeError('Something went wrong when downloading! ' +
-                               'Go to the homepage to download manually. ' +
-                               HOMEPAGE)
-
+        except Exception:
+            raise RuntimeError('Something went wrong when downloading! '
+                               + 'Go to the homepage to download manually. '
+                               + HOMEPAGE)
 
     def load_data(self) -> Tuple[Tuple[Any, Any], Tuple[Any, Any]]:
         """Download prepared dataset."""
-        
+
         dataname = self.dataset_name + '.npz'
         dataset = os.path.join(self.datapath, dataname)
-        
+
         if not os.path.isfile(dataset):
             logger.info(f"Dataset {dataname} not found at:{self.datapath}.\n\tDownloading...")
             MedMNISTShardDescriptor.download_data(self.datapath, dataname, self.info)
-            logger.info(f"DONE!")
+            logger.info("DONE!")
 
         data = np.load(dataset)
-        
+
         x_train = data["train_images"]
         x_test = data["test_images"]
-        
-        y_train=data["train_labels"]
-        y_test=data["test_labels"]
+
+        y_train = data["train_labels"]
+        y_test = data["test_labels"]
         logger.info('MedMNIST data was loaded!')
         return (x_train, y_train), (x_test, y_test)
-        
-        

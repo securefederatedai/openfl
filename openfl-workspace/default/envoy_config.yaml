@@ -18,7 +18,9 @@
 
 
 params:
+  install_requirements: true
   cuda_devices: []
+  review_experiment: False
 
 optional_plugin_components:
   cuda_device_monitor:
