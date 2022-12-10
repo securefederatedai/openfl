@@ -11,6 +11,7 @@ from time import sleep
 
 from grpc import server
 from grpc import ssl_server_credentials
+from grpc import StatusCode
 
 from openfl.protocols import aggregator_pb2
 from openfl.protocols import aggregator_pb2_grpc
@@ -83,7 +84,8 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
                     common_name, collaborator_common_name):
                 # Random delay in authentication failures
                 sleep(5 * random())
-                raise ValueError(
+                context.abort(
+                    StatusCode.UNAUTHENTICATED,
                     f'Invalid collaborator. CN: |{common_name}| '
                     f'collaborator_common_name: |{collaborator_common_name}|')
 
