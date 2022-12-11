@@ -1,11 +1,7 @@
 ARG BASE_IMAGE=python:3.8
-FROM ${BASE_IMAGE}
+FROM ${BASE_IMAGE} as base
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
-
-RUN --mount=type=cache,target=/root/.cache/ \
-    pip install --upgrade pip && \
-    pip install openfl
 
 # install gramine
 RUN curl -fsSLo /usr/share/keyrings/gramine-keyring.gpg https://packages.gramineproject.io/gramine-keyring.gpg && \
@@ -30,3 +26,15 @@ ENV PYTHONPATH=/usr/local/lib/python3.8/site-packages/:/usr/lib/python3/dist-pac
 
 # ENV LC_ALL=C.UTF-8
 # ENV LANG=C.UTF-8
+
+FROM base AS build
+RUN --mount=type=cache,target=/root/.cache/ \
+    pip install --upgrade pip && \
+    pip install openfl
+
+FROM base AS build-dev
+COPY . .
+RUN --mount=type=cache,target=/root/.cache/ \
+    pip install --upgrade pip && \
+    pip install .
+

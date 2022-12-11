@@ -33,9 +33,9 @@ openssl genrsa -3 -out ${FED_DIRECTORY}/key.pem 3072
 # Build graminized app image
 if [ $REBUILD_IMAGES -gt 0 ]
 then
-fx workspace graminize -s ${FED_DIRECTORY}/key.pem --no-save --rebuild
+fx workspace graminize -s ${FED_DIRECTORY}/key.pem --no-save --developer-mode --rebuild
 else
-fx workspace graminize -s ${FED_DIRECTORY}/key.pem --no-save
+fx workspace graminize -s ${FED_DIRECTORY}/key.pem --no-save --developer-mode
 fi
 
 # CERTIFICATION PART------------------------------

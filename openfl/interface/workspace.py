@@ -450,9 +450,12 @@ def dockerize_(context, base_image, save):
         default=True, type=bool,
         help='Dump the Docker image to an archive')
 @option('--rebuild', help='Build images with `--no-cache`', is_flag=True)
+@option('--developer-mode', required=False,
+        default=False, type=bool, is_flag=True,
+        help='Use the local OpenFL package in the Docker image')
 @pass_context
 def graminize_(context, signing_key: Path, enclave_size: str, pip_install_options: Tuple[str],
-               save: bool, rebuild: bool) -> None:
+               save: bool, rebuild: bool, developer_mode: bool) -> None:
     """
     Build gramine app inside a docker image.
 
@@ -466,12 +469,13 @@ def graminize_(context, signing_key: Path, enclave_size: str, pip_install_option
     1. gramine-direct, check if a key is provided
     2. make a standalone function with `export` parametr
     """
-    def open_pipe(command: str):
+    def open_pipe(command: str, **popen_kwargs):
         echo(f'\n 📦 Executing command:\n{command}\n')
         process = subprocess.Popen(
             command,
             shell=True, stderr=subprocess.STDOUT,
-            stdout=subprocess.PIPE)
+            stdout=subprocess.PIPE,
+            **popen_kwargs)
         for line in process.stdout:
             echo(line)
         _ = process.communicate()  # pipe is already empty, used to get `returncode`
@@ -493,8 +497,11 @@ def graminize_(context, signing_key: Path, enclave_size: str, pip_install_option
 
     echo('\n 🐋 Building base gramine-openfl image...')
     base_dockerfile = SITEPACKS / 'openfl-gramine' / 'Dockerfile.gramine'
-    base_build_command = f'docker build {rebuild_option} -t gramine_openfl -f {base_dockerfile} .'
-    open_pipe(base_build_command)
+    base_build_command = (
+        f'docker build {rebuild_option} -t gramine_openfl -f {base_dockerfile} '
+        f'--target {"build-dev" if developer_mode else "build"} .'
+    )
+    open_pipe(base_build_command, env=dict(os.environ, DOCKER_BUILDKIT='1'))
     echo('\n ✔️ DONE: Building base gramine-openfl image')
 
     workspace_path = Path.cwd()
