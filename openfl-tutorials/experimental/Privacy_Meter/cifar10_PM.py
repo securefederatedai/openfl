@@ -548,7 +548,9 @@ if __name__ == '__main__':
                 
         }
     
-    local_runtime = LocalRuntime(aggregator=aggregator, collaborators=collaborators)
+    # Default: all collaborators running on single proocess in a sequential fashion
+    # To enable running each colaborator task on its own isolated process in parallel, please modify backend='ray' 
+    local_runtime = LocalRuntime(aggregator=aggregator, collaborators=collaborators, backend='single_process')
     print(f'Local runtime collaborators = {local_runtime._collaborators}')
 
     ## change to the internal flow loop
