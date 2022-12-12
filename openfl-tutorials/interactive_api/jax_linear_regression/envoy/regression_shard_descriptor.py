@@ -10,6 +10,7 @@ from sklearn.model_selection import train_test_split
 
 from openfl.interface.interactive_api.shard_descriptor import ShardDescriptor
 
+
 class RegressionShardDescriptor(ShardDescriptor):
     """Regression Shard descriptor class."""
 
@@ -21,7 +22,7 @@ class RegressionShardDescriptor(ShardDescriptor):
         using make_regression method from sklearn.datasets.
         Shards data across participants using rank and world size.
         """
-        
+
         self.rank, self.worldsize = tuple(int(num) for num in rank_worldsize.split(','))
         X_train, y_train, X_test, y_test = self.generate_data()
         self.data_by_type = {

@@ -9,6 +9,7 @@ import optax
 from flax import traverse_util
 from .framework_adapter_interface import FrameworkAdapterPluginInterface
 
+
 class FrameworkAdapterPlugin(FrameworkAdapterPluginInterface):
     """Framework adapter plugin class."""
 
@@ -25,14 +26,14 @@ class FrameworkAdapterPlugin(FrameworkAdapterPluginInterface):
         # Convert PyTree Structure DeviceArray to Numpy
         model_params = jax.tree_util.tree_map(np.array, model.params)
         params_dict = _get_weights_dict(model_params, 'param')
-        
+
         # If optimizer is initialized
         # Optax Optimizer agnostic state processing (TraceState, AdamScaleState, any...)
         if not isinstance(model.opt_state[0], optax.EmptyState):
             opt_state = jax.tree_util.tree_map(np.array, model.opt_state)[0]
             opt_vars = filter(_get_opt_vars, dir(opt_state))
             for var in opt_vars:
-                opt_dict = getattr(opt_state, var) # Returns a dict
+                opt_dict = getattr(opt_state, var)  # Returns a dict
                 # Flattens a deeply nested dictionary
                 opt_dict = _get_weights_dict(opt_dict, f'opt_{var}')
                 params_dict.update(opt_dict)
@@ -50,7 +51,7 @@ class FrameworkAdapterPlugin(FrameworkAdapterPluginInterface):
         Returns:
             None
         """
-        
+
         tensor_dict = jax.tree_util.tree_map(jnp.array, tensor_dict)
 
         _set_weights_dict(model, tensor_dict, 'param')
@@ -58,14 +59,16 @@ class FrameworkAdapterPlugin(FrameworkAdapterPluginInterface):
         if not isinstance(model.opt_state[0], optax.EmptyState):
             _set_weights_dict(model, tensor_dict, 'opt')
 
+
 def _get_opt_vars(x):
     return False if x.startswith('_') or x in ['index', 'count'] else True
+
 
 def _set_weights_dict(obj, weights_dict, prefix=''):
     """Set the object weights with a dictionary.
 
     The obj can be a model or an optimizer.
-    
+
     Args:
         obj (Model or Optimizer): The target object that we want to set
         the weights.
@@ -74,7 +77,7 @@ def _set_weights_dict(obj, weights_dict, prefix=''):
     Returns:
         None
     """
-    
+
     if prefix == 'opt':
         model_state_dict = obj.opt_state[0]
         # opt_vars -> ['mu', 'nu'] for Adam or ['trace'] for SGD or ['ANY'] for any
@@ -85,6 +88,7 @@ def _set_weights_dict(obj, weights_dict, prefix=''):
     else:
         _update_weights(obj.params, weights_dict, prefix)
 
+
 def _update_weights(state_dict, tensor_dict, prefix, suffix=None):
     # Re-assignment of the state variable(s) is restricted.
     # Instead update the nested layers weights iteratively.
@@ -94,6 +98,7 @@ def _update_weights(state_dict, tensor_dict, prefix, suffix=None):
             key = '*'.join([dict_prefix, layer_name, param_name])
             if key in tensor_dict:
                 state_dict[layer_name][param_name] = tensor_dict[key]
+
 
 def _get_weights_dict(obj, prefix):
     """

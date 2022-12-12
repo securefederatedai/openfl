@@ -7,17 +7,18 @@ import logging
 import time
 import traceback
 import uuid
+import sys
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
+from typing import Callable
 from typing import Optional
 from typing import Type
 from typing import Union
 
-from click import echo
-
 from openfl.federated import Plan
 from openfl.interface.interactive_api.shard_descriptor import ShardDescriptor
 from openfl.plugins.processing_units_monitor.cuda_device_monitor import CUDADeviceMonitor
+from openfl.transport.grpc.exceptions import ShardNotFoundError
 from openfl.transport.grpc.director_client import ShardDirectorClient
 from openfl.utilities.workspace import ExperimentWorkspace
 
@@ -39,8 +40,10 @@ class Envoy:
             private_key: Optional[Union[Path, str]] = None,
             certificate: Optional[Union[Path, str]] = None,
             tls: bool = True,
+            install_requirements: bool = True,
             cuda_devices: Union[tuple, list] = (),
             cuda_device_monitor: Optional[Type[CUDADeviceMonitor]] = None,
+            review_plan_callback: Union[None, Callable] = None,
     ) -> None:
         """Initialize a envoy object."""
         self.name = shard_name
@@ -60,6 +63,9 @@ class Envoy:
 
         self.shard_descriptor = shard_descriptor
         self.cuda_devices = tuple(cuda_devices)
+        self.install_requirements = install_requirements
+
+        self.review_plan_callback = review_plan_callback
 
         # Optional plugins
         self.cuda_device_monitor = cuda_device_monitor
@@ -80,14 +86,29 @@ class Envoy:
                 logger.exception(f'Failed to get experiment: {exc}')
                 time.sleep(DEFAULT_RETRY_TIMEOUT_IN_SECONDS)
                 continue
+
             data_file_path = self._save_data_stream_to_file(data_stream)
-            self.is_experiment_running = True
+
             try:
                 with ExperimentWorkspace(
-                        self.name + '_' + experiment_name,
-                        data_file_path,
-                        is_install_requirements=True
+                        experiment_name=f'{self.name}_{experiment_name}',
+                        data_file_path=data_file_path,
+                        install_requirements=self.install_requirements
                 ):
+                    # If the callback is passed
+                    if self.review_plan_callback:
+                        # envoy to review the experiment before starting
+                        if not self.review_plan_callback('plan', 'plan/plan.yaml'):
+                            self.director_client.set_experiment_failed(
+                                experiment_name,
+                                error_description='Experiment is rejected'
+                                f' by Envoy "{self.name}" manager.'
+                            )
+                            continue
+                        logger.debug(
+                            f'Experiment "{experiment_name}" was accepted by Envoy manager'
+                        )
+                    self.is_experiment_running = True
                     self._run_collaborator()
             except Exception as exc:
                 logger.exception(f'Collaborator failed with error: {exc}:')
@@ -113,13 +134,21 @@ class Envoy:
     def send_health_check(self):
         """Send health check to the director."""
         logger.info('The health check sender is started.')
+        timeout = DEFAULT_RETRY_TIMEOUT_IN_SECONDS
         while True:
             cuda_devices_info = self._get_cuda_device_info()
-            timeout = self.director_client.send_health_check(
-                envoy_name=self.name,
-                is_experiment_running=self.is_experiment_running,
-                cuda_devices_info=cuda_devices_info,
-            )
+            try:
+                timeout = self.director_client.send_health_check(
+                    envoy_name=self.name,
+                    is_experiment_running=self.is_experiment_running,
+                    cuda_devices_info=cuda_devices_info,
+                )
+            except ShardNotFoundError:
+                logger.info('The director has lost information about current shard. Resending...')
+                self.director_client.report_shard_info(
+                    shard_descriptor=self.shard_descriptor,
+                    cuda_devices=self.cuda_devices
+                )
             time.sleep(timeout)
 
     def _get_cuda_device_info(self):
@@ -155,7 +184,7 @@ class Envoy:
         plan = Plan.parse(plan_config_path=Path(plan))
 
         # TODO: Need to restructure data loader config file loader
-        echo(f'Data = {plan.cols_data_paths}')
+        logger.info(f'Data = {plan.cols_data_paths}')
         logger.info('🧿 Starting a Collaborator Service.')
 
         col = plan.get_collaborator(self.name, self.root_certificate, self.private_key,
@@ -171,6 +200,7 @@ class Envoy:
                 cuda_devices=self.cuda_devices)
         except Exception as exc:
             logger.exception(f'Failed to report shard info: {exc}')
+            sys.exit(1)
         else:
             if is_accepted:
                 # Shard accepted for participation in the federation
@@ -180,3 +210,4 @@ class Envoy:
             else:
                 # Shut down
                 logger.error('Report shard info was not accepted')
+                sys.exit(1)
