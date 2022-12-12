@@ -1,3 +1,6 @@
+# Copyright (C) 2020-2022 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 from openfl.experimental.interface import FLSpec, Aggregator, Collaborator
 from openfl.experimental.runtime import LocalRuntime
 from openfl.experimental.placement import aggregator, collaborator
@@ -157,7 +160,6 @@ class TestFlow_Reference_With_Exclude(FLSpec):
             key,
             val,
         ) in TestFlow_Reference_With_Exclude.all_ref_error_dict.items():
-            # exclude_variable= ', '.join(Testflow_exclude.exclude_error_list)
             all_shared_attr = all_shared_attr + ",".join(val)
 
         if all_shared_attr:
