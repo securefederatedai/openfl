@@ -1,6 +1,9 @@
+# Copyright (C) 2020-2021 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 import torch.nn as nn
 import numpy as np
-from .batchnorm import SynchronizedBatchNorm3d, SynchronizedBatchNorm2d
+
 
 class Transform3D:
 
@@ -8,12 +11,12 @@ class Transform3D:
         self.mul = mul
 
     def __call__(self, voxel):
-   
+
         if self.mul == '0.5':
             voxel = voxel * 0.5
         elif self.mul == 'random':
             voxel = voxel * np.random.uniform()
-        
+
         return voxel.astype(np.float32)
 
 
@@ -25,10 +28,12 @@ def model_to_syncbn(model):
 
 
 def _convert_module_from_bn_to_syncbn(module):
-    for child_name, child in module.named_children(): 
-        if hasattr(nn, child.__class__.__name__) and \
-            'batchnorm' in child.__class__.__name__.lower():
-            TargetClass = globals()['Synchronized'+child.__class__.__name__]
+    for child_name, child in module.named_children():
+        if (
+            hasattr(nn, child.__class__.__name__)
+            and 'batchnorm' in child.__class__.__name__.lower()
+        ):
+            TargetClass = globals()['Synchronized' + child.__class__.__name__]
             arguments = TargetClass.__init__.__code__.co_varnames[1:]
             kwargs = {k: getattr(child, k) for k in arguments}
             setattr(module, child_name, TargetClass(**kwargs))

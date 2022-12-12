@@ -5,7 +5,6 @@ from abc import abstractmethod
 from typing import Iterator
 from typing import List
 from typing import Tuple
-from typing import Union
 
 import numpy as np
 import pandas as pd
@@ -19,7 +18,7 @@ class AggregationFunction(metaclass=SingletonABCMeta):
 
     def __init__(self):
         """Initialize common AggregationFunction params
-        
+
            Default: Read only access to TensorDB
         """
         self._privileged = False
@@ -66,4 +65,3 @@ class AggregationFunction(metaclass=SingletonABCMeta):
                  tags):
         """Use magic function for ease."""
         return self.call(local_tensors, db_iterator, tensor_name, fl_round, tags)
-
