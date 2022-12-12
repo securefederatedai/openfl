@@ -31,7 +31,8 @@ class TestFlowExclude(FLSpec):
         Flow start.
         """
         print(
-            f"{bcolors.OKBLUE}Testing FederatedFlow - Starting Test for Exclude Attributes {bcolors.ENDC}"
+            f"{bcolors.OKBLUE}Testing FederatedFlow - Starting Test for Exclude Attributes "
+            + f"{bcolors.ENDC}"
         )
         self.collaborators = self.runtime.collaborators
 
@@ -45,11 +46,12 @@ class TestFlowExclude(FLSpec):
         Testing whether attributes are excluded from agg to agg
         """
         if (
-            hasattr(self, "include_agg_to_agg") == True
-            and hasattr(self, "exclude_agg_to_agg") == False
+            hasattr(self, "include_agg_to_agg") is True
+            and hasattr(self, "exclude_agg_to_agg") is False
         ):
             print(
-                f"{bcolors.OKGREEN} ... Exclude test passed in test_exclude_agg_to_agg {bcolors.ENDC}"
+                f"{bcolors.OKGREEN} ... Exclude test passed in test_exclude_agg_to_agg "
+                + f"{bcolors.ENDC}"
             )
         else:
             TestFlowExclude.exclude_error_list.append("test_exclude_agg_to_agg")
@@ -72,24 +74,29 @@ class TestFlowExclude(FLSpec):
         """
 
         if (
-            hasattr(self, "include_agg_to_agg") == True
-            and hasattr(self, "include_agg_to_collab") == True
-            and hasattr(self, "exclude_agg_to_agg") == False
-            and hasattr(self, "exclude_agg_to_collab") == False
+            hasattr(self, "include_agg_to_agg") is True
+            and hasattr(self, "include_agg_to_collab") is True
+            and hasattr(self, "exclude_agg_to_agg") is False
+            and hasattr(self, "exclude_agg_to_collab") is False
         ):
             print(
-                f"{bcolors.OKGREEN} ... Exclude test passed in test_exclude_agg_to_collab {bcolors.ENDC}"
+                f"{bcolors.OKGREEN} ... Exclude test passed in test_exclude_agg_to_collab "
+                + f"{bcolors.ENDC}"
             )
         else:
-            TestFlowExclude.exclude_error_list.append("test_exclude_agg_to_collab")
+            TestFlowExclude.exclude_error_list.append(
+                "test_exclude_agg_to_collab"
+            )
             print(
-                f"{bcolors.FAIL} ... Exclude test failed in test_exclude_agg_to_collab {bcolors.ENDC}"
+                f"{bcolors.FAIL} ... Exclude test failed in test_exclude_agg_to_collab "
+                + f"{bcolors.ENDC}"
             )
 
         self.exclude_collab_to_collab = 10
         self.include_collab_to_collab = 44
         self.next(
-            self.test_exclude_collab_to_collab, exclude=["exclude_collab_to_collab"]
+            self.test_exclude_collab_to_collab,
+            exclude=["exclude_collab_to_collab"],
         )
 
     @collaborator
@@ -99,20 +106,24 @@ class TestFlowExclude(FLSpec):
         """
 
         if (
-            hasattr(self, "include_agg_to_agg") == True
-            and hasattr(self, "include_agg_to_collab") == True
-            and hasattr(self, "include_collab_to_collab") == True
-            and hasattr(self, "exclude_agg_to_agg") == False
-            and hasattr(self, "exclude_agg_to_collab") == False
-            and hasattr(self, "exclude_collab_to_collab") == False
+            hasattr(self, "include_agg_to_agg") is True
+            and hasattr(self, "include_agg_to_collab") is True
+            and hasattr(self, "include_collab_to_collab") is True
+            and hasattr(self, "exclude_agg_to_agg") is False
+            and hasattr(self, "exclude_agg_to_collab") is False
+            and hasattr(self, "exclude_collab_to_collab") is False
         ):
             print(
-                f"{bcolors.OKGREEN} ... Exclude test passed in test_exclude_collab_to_collab {bcolors.ENDC}"
+                f"{bcolors.OKGREEN} ... Exclude test passed in test_exclude_collab_to_collab "
+                + f"{bcolors.ENDC}"
             )
         else:
-            TestFlowExclude.exclude_error_list.append("test_exclude_collab_to_collab")
+            TestFlowExclude.exclude_error_list.append(
+                "test_exclude_collab_to_collab"
+            )
             print(
-                f"{bcolors.FAIL} ... Exclude test failed in test_exclude_collab_to_collab {bcolors.ENDC}"
+                f"{bcolors.FAIL} ... Exclude test failed in test_exclude_collab_to_collab "
+                + f"{bcolors.ENDC}"
             )
 
         self.exclude_collab_to_agg = 20
@@ -126,33 +137,42 @@ class TestFlowExclude(FLSpec):
         """
         # Aggregator attribute check
         validate = (
-            hasattr(self, "include_agg_to_agg") == True
-            and hasattr(self, "include_agg_to_collab") == True
-            and hasattr(self, "exclude_agg_to_collab") == True
-            and hasattr(self, "exclude_agg_to_agg") == False
+            hasattr(self, "include_agg_to_agg") is True
+            and hasattr(self, "include_agg_to_collab") is True
+            and hasattr(self, "exclude_agg_to_collab") is True
+            and hasattr(self, "exclude_agg_to_agg") is False
         )
 
         # Collaborator attribute check
         for input in inputs:
             validation = validate and (
-                hasattr(input, "include_collab_to_collab") == True
-                and hasattr(input, "exclude_collab_to_collab") == False
-                and hasattr(input, "exclude_collab_to_agg") == False
-                and hasattr(input, "include_collab_to_agg") == True
+                hasattr(input, "include_collab_to_collab") is True
+                and hasattr(input, "exclude_collab_to_collab") is False
+                and hasattr(input, "exclude_collab_to_agg") is False
+                and hasattr(input, "include_collab_to_agg") is True
             )
 
         if validation:
-            print(f"{bcolors.OKGREEN} ... Exclude test passed in join {bcolors.ENDC}")
+            print(
+                f"{bcolors.OKGREEN} ... Exclude test passed in join {bcolors.ENDC}"
+            )
         else:
             TestFlowExclude.exclude_error_list.append("join")
-            print(f"{bcolors.FAIL} ... Exclude test failed in join {bcolors.ENDC}")
+            print(
+                f"{bcolors.FAIL} ... Exclude test failed in join {bcolors.ENDC}"
+            )
 
-        print(f"\n{bcolors.UNDERLINE}Exclude attribute test summary: {bcolors.ENDC}\n")
+        print(
+            f"\n{bcolors.UNDERLINE}Exclude attribute test summary: {bcolors.ENDC}\n"
+        )
 
         if TestFlowExclude.exclude_error_list:
-            validated_exclude_variables = ", ".join(TestFlowExclude.exclude_error_list)
+            validated_exclude_variables = ", ".join(
+                TestFlowExclude.exclude_error_list
+            )
             print(
-                f"{bcolors.FAIL}...Test case failed for {validated_exclude_variables} {bcolors.ENDC}"
+                f"{bcolors.FAIL}...Test case failed for {validated_exclude_variables} "
+                + f"{bcolors.ENDC}"
             )
         self.next(self.end)
 
@@ -164,7 +184,8 @@ class TestFlowExclude(FLSpec):
 
         """
         print(
-            f"{bcolors.OKBLUE}Testing FederatedFlow - Ending Test for Exclude Attributes {bcolors.ENDC}"
+            f"{bcolors.OKBLUE}Testing FederatedFlow - Ending Test for Exclude Attributes "
+            + f"{bcolors.ENDC}"
         )
         if TestFlowExclude.exclude_error_list:
             raise (
@@ -183,7 +204,9 @@ if __name__ == "__main__":
     collaborator_names = ["Portland", "Chandler", "Bangalore", "Delhi"]
     collaborators = [Collaborator(name=name) for name in collaborator_names]
 
-    local_runtime = LocalRuntime(aggregator=aggregator, collaborators=collaborators)
+    local_runtime = LocalRuntime(
+        aggregator=aggregator, collaborators=collaborators
+    )
     print(f"Local runtime collaborators = {local_runtime._collaborators}")
 
     flflow = TestFlowExclude(checkpoint=True)

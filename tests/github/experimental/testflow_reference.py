@@ -9,7 +9,6 @@ import math
 import logging
 import torch.nn as nn
 import torch.optim as optim
-import torch.nn.functional as F
 import inspect
 from types import MethodType
 
@@ -57,7 +56,8 @@ class TestFlowReference(FLSpec):
 
         """
         print(
-            f"{bcolors.OKBLUE}Testing FederatedFlow - Starting Test for validating references. {bcolors.ENDC}"
+            f"{bcolors.OKBLUE}Testing FederatedFlow - Starting Test for validating references. "
+            + f"{bcolors.ENDC}"
         )
         self.next(self.test_create_agg_attr)
 
@@ -107,7 +107,9 @@ class TestFlowReference(FLSpec):
         self.collab_attr_str_one = "Test string data in collab " + self.input
         self.collab_attr_list_one = [1, 2, 5, 6, 7, 8]
         self.collab_attr_dict_one = {key: key for key in range(5)}
-        self.collab_attr_file_one = io.StringIO("Test file data in collaborator")
+        self.collab_attr_file_one = io.StringIO(
+            "Test file data in collaborator"
+        )
         self.collab_attr_math_one = math.sqrt(self.index)
         self.collab_attr_complex_num_one = complex(self.index, self.index)
         self.collab_attr_log_one = logging.getLogger(
@@ -197,7 +199,8 @@ class TestFlowReference(FLSpec):
 
         """
         print(
-            f"{bcolors.OKBLUE}Testing FederatedFlow - Ending test for validatng the references. {bcolors.ENDC}"
+            f"{bcolors.OKBLUE}Testing FederatedFlow - Ending test for validatng the references. "
+            + f"{bcolors.ENDC}"
         )
         if TestFlowReference.all_ref_error_dict:
             raise (
@@ -231,23 +234,25 @@ def find_matched_references(collab_attr_list, all_collborators):
     """
     matched_ref_dict = {}
     previous_collaborator = ""
-    # Initialize dictionary with collborator as key and value as empty list to hold duplicated attr list
+    # Initialize dictionary with collborator as key and value as empty list
+    # to hold duplicated attr list
     for collborator_name in all_collborators:
         matched_ref_dict[collborator_name.input] = []
 
     # Iterate the attributes and get duplicate attribute id
     for attr in collab_attr_list:
         di = {attr: []}
-        for collaborator in all_collborators:
-            attr_id = id(getattr(collaborator, attr))
-            collaborator_name = collaborator.input
+        for collab in all_collborators:
+            attr_id = id(getattr(collab, attr))
+            collaborator_name = collab.input
             if attr_id not in di.get(attr):
                 di.get(attr).append(attr_id)
             else:
-                # append the dict with collabartor as key and attrs as value which has same reference
+                # append the dict with collabartor as key and attrs as value having same reference
                 matched_ref_dict.get(collaborator_name).append(attr)
                 print(
-                    f"{bcolors.FAIL} ... Reference test failed - {collaborator_name} sharing same {attr} reference with {previous_collaborator} {bcolors.ENDC}"
+                    f"{bcolors.FAIL} ... Reference test failed - {collaborator_name} sharing same "
+                    + f"{attr} reference with {previous_collaborator} {bcolors.ENDC}"
                 )
             previous_collaborator = collaborator_name
     return matched_ref_dict
@@ -260,16 +265,16 @@ def validate_collab_references(matched_ref_dict):
     collborators_sharing_ref = []
     reference_flag = False
 
-    for collaborator, val in matched_ref_dict.items():
+    for collab, val in matched_ref_dict.items():
         if val:
-            collborators_sharing_ref.append(collaborator)
+            collborators_sharing_ref.append(collab)
             reference_flag = True
     if collborators_sharing_ref:
         for collab in collborators_sharing_ref:
             if collab not in TestFlowReference.all_ref_error_dict:
-                TestFlowReference.all_ref_error_dict[collab] = matched_ref_dict.get(
+                TestFlowReference.all_ref_error_dict[
                     collab
-                )
+                ] = matched_ref_dict.get(collab)
 
     if not reference_flag:
         print(
@@ -280,15 +285,19 @@ def validate_collab_references(matched_ref_dict):
 def validate_agg_attr_ref(agg_attrs, agg_obj):
     attr_flag = False
     for attr in agg_attrs:
-        if TestFlowReference.agg_attr_dict.get(attr) == id(getattr(agg_obj, attr)):
+        if TestFlowReference.agg_attr_dict.get(attr) == id(
+            getattr(agg_obj, attr)
+        ):
             attr_flag = True
     if not attr_flag:
         print(
-            f"{bcolors.FAIL}...Aggregator references are not intact after coming out of collaborators.{bcolors.ENDC}"
+            f"{bcolors.FAIL}...Aggregator references are not intact after coming out of "
+            + f"collaborators.{bcolors.ENDC}"
         )
     else:
         print(
-            f"{bcolors.OKGREEN}  Pass : Aggregator references are intact after coming out of collaborators.{bcolors.ENDC}"
+            f"{bcolors.OKGREEN}  Pass : Aggregator references are intact after coming out of "
+            + f"collaborators.{bcolors.ENDC}"
         )
 
 
@@ -313,7 +322,8 @@ def validate_agg_collab_references(all_collborators, agg_obj, agg_attrs):
 
     if attr_ref_flag:
         print(
-            f"{bcolors.FAIL}...Aggregator references are shared between collaborators.{bcolors.ENDC}"
+            f"{bcolors.FAIL}...Aggregator references are shared between collaborators."
+            + f"{bcolors.ENDC}"
         )
     else:
         print(
@@ -335,15 +345,17 @@ if __name__ == "__main__":
     collaborator.private_attributes = {}
 
     local_runtime = LocalRuntime(
-        aggregator=aggregator, collaborators=collaborators, backend="single_process"
+        aggregator=aggregator,
+        collaborators=collaborators,
+        backend="single_process",
     )
     print(f"Local runtime collaborators = {local_runtime._collaborators}")
 
     testflow = TestFlowReference(checkpoint=True)
     testflow.runtime = local_runtime
 
-    for idx, collaborator in enumerate(collaborators):
-        collaborator.private_attributes = {"index": idx + 1}
+    for idx, collab in enumerate(collaborators):
+        collab.private_attributes = {"index": idx + 1}
 
     for i in range(2):
         print(f"Starting round {i}...")

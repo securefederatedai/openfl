@@ -5,7 +5,6 @@ from openfl.experimental.placement import aggregator, collaborator
 
 import torch.nn as nn
 import torch.optim as optim
-import torch.nn.functional as F
 import inspect
 from types import MethodType
 
@@ -56,7 +55,8 @@ class TestFlow_Reference_With_Exclude(FLSpec):
         """
         self.agg_agg_attr_dict = {key: key for key in range(5)}
         print(
-            f"{bcolors.OKBLUE}Testing FederatedFlow - Starting Test for validating references  {bcolors.ENDC}"
+            f"{bcolors.OKBLUE}Testing FederatedFlow - Starting Test for validating "
+            + f"references  {bcolors.ENDC}"
         )
         self.next(self.test_create_agg_attr, exclude=["agg_agg_attr_dict"])
 
@@ -91,18 +91,23 @@ class TestFlow_Reference_With_Exclude(FLSpec):
         self.collab_attr_dict_one = {key: key for key in range(5)}
 
         attr_collab_dict, collab_attr_list = create_collab_dict(self)
-        TestFlow_Reference_With_Exclude.step_one_collab_attrs.update(attr_collab_dict)
+        TestFlow_Reference_With_Exclude.step_one_collab_attrs.update(
+            attr_collab_dict
+        )
 
         if (
             len(TestFlow_Reference_With_Exclude.step_one_collab_attrs)
             >= MIN_COLLECTION_COUNT
         ):
             matched_ref_dict = find_match_ref_at_step(
-                collab_attr_list, TestFlow_Reference_With_Exclude.step_one_collab_attrs
+                collab_attr_list,
+                TestFlow_Reference_With_Exclude.step_one_collab_attrs,
             )
             validate_references(matched_ref_dict)
 
-        self.next(self.test_create_more_collab_attr, exclude=["collab_attr_dict_one"])
+        self.next(
+            self.test_create_more_collab_attr, exclude=["collab_attr_dict_one"]
+        )
 
     @collaborator
     def test_create_more_collab_attr(self):
@@ -115,14 +120,17 @@ class TestFlow_Reference_With_Exclude(FLSpec):
         self.collab_attr_dict_two = {key: key for key in range(5)}
 
         attr_collab_dict, collab_attr_list = create_collab_dict(self)
-        TestFlow_Reference_With_Exclude.step_two_collab_attrs.update(attr_collab_dict)
+        TestFlow_Reference_With_Exclude.step_two_collab_attrs.update(
+            attr_collab_dict
+        )
 
         if (
             len(TestFlow_Reference_With_Exclude.step_two_collab_attrs)
             >= MIN_COLLECTION_COUNT
         ):
             matched_ref_dict = find_match_ref_at_step(
-                collab_attr_list, TestFlow_Reference_With_Exclude.step_two_collab_attrs
+                collab_attr_list,
+                TestFlow_Reference_With_Exclude.step_two_collab_attrs,
             )
             validate_references(matched_ref_dict)
 
@@ -145,7 +153,10 @@ class TestFlow_Reference_With_Exclude(FLSpec):
             f"\n{bcolors.UNDERLINE}Reference with exclude keyword test summary: {bcolors.ENDC}\n"
         )
 
-        for key, val in TestFlow_Reference_With_Exclude.all_ref_error_dict.items():
+        for (
+            key,
+            val,
+        ) in TestFlow_Reference_With_Exclude.all_ref_error_dict.items():
             # exclude_variable= ', '.join(Testflow_exclude.exclude_error_list)
             all_shared_attr = all_shared_attr + ",".join(val)
 
@@ -154,13 +165,16 @@ class TestFlow_Reference_With_Exclude(FLSpec):
                 f"{bcolors.FAIL}...Test case failed for {all_shared_attr} {bcolors.ENDC}"
             )
         else:
-            print(f"{bcolors.OKGREEN}...Test case passed for all the attributes.")
+            print(
+                f"{bcolors.OKGREEN}...Test case passed for all the attributes."
+            )
         self.next(self.end)
 
     @aggregator
     def end(self):
         print(
-            f"{bcolors.OKBLUE}Testing FederatedFlow - Ending test for validatng the references. {bcolors.ENDC}"
+            f"{bcolors.OKBLUE}Testing FederatedFlow - Ending test for validatng the "
+            + f"references. {bcolors.ENDC}"
         )
 
         if TestFlow_Reference_With_Exclude.all_ref_error_dict:
@@ -195,23 +209,25 @@ def find_matched_references(collab_attr_list, all_collborators):
     """
     matched_ref_dict = {}
     previous_collaborator = ""
-    # Initialize dictionary with collborator as key and value as empty list to hold duplicated attr list
+    # Initialize dictionary with collborator as key and value as empty list to hold
+    # duplicated attr list
     for collborator_name in all_collborators:
         matched_ref_dict[collborator_name.input] = []
 
     # Iterate the attributes and get duplicate attribute id
     for attr in collab_attr_list:
         attr_dict = {attr: []}
-        for collaborator in all_collborators:
-            attr_id = id(getattr(collaborator, attr))
-            collaborator_name = collaborator.input
+        for collab in all_collborators:
+            attr_id = id(getattr(collab, attr))
+            collaborator_name = collab.input
             if attr_id not in attr_dict.get(attr):
                 attr_dict.get(attr).append(attr_id)
             else:
-                # append the dict with collabartor as key and attrs as value which has same reference
+                # append the dict with collabartor as key and attrs as value having same reference
                 matched_ref_dict.get(collaborator_name).append(attr)
                 print(
-                    f"{bcolors.FAIL} ... Reference test failed - {collaborator_name} sharing same {attr} reference with {previous_collaborator} {bcolors.ENDC}"
+                    f"{bcolors.FAIL} ... Reference test failed - {collaborator_name} sharing same "
+                    + f"{attr} reference with {previous_collaborator} {bcolors.ENDC}"
                 )
             previous_collaborator = collaborator_name
     return matched_ref_dict
@@ -224,9 +240,9 @@ def validate_references(matched_ref_dict):
     collborators_sharing_ref = []
     reference_flag = False
 
-    for collaborator, val in matched_ref_dict.items():
+    for collab, val in matched_ref_dict.items():
         if val:
-            collborators_sharing_ref.append(collaborator)
+            collborators_sharing_ref.append(collab)
             reference_flag = True
     if collborators_sharing_ref:
         for collab in collborators_sharing_ref:
@@ -236,7 +252,9 @@ def validate_references(matched_ref_dict):
                 ] = matched_ref_dict.get(collab)
 
     if not reference_flag:
-        print(f"{bcolors.OKGREEN}  Pass : Reference test passed  {bcolors.ENDC}")
+        print(
+            f"{bcolors.OKGREEN}  Pass : Reference test passed  {bcolors.ENDC}"
+        )
 
 
 def create_collab_dict(collab):
@@ -265,6 +283,7 @@ def find_match_ref_at_step(collab_attr_list, all_collborators):
     for collborator_name in collab_names:
         matched_ref_dict[collborator_name] = []
 
+    previous_collaborator = ""
     for attr in collab_attr_list:
         attr_dict = {attr: []}
         for collborator_name in all_collborators.keys():
@@ -274,7 +293,8 @@ def find_match_ref_at_step(collab_attr_list, all_collborators):
             else:
                 matched_ref_dict.get(collborator_name).append(attr)
                 print(
-                    f"{bcolors.FAIL} ... Reference test failed - {collborator_name} sharing same {attr} reference with {previous_collaborator} {bcolors.ENDC}"
+                    f"{bcolors.FAIL} ... Reference test failed - {collborator_name} sharing same "
+                    + f"{attr} reference with {previous_collaborator} {bcolors.ENDC}"
                 )
 
             previous_collaborator = collborator_name
@@ -293,7 +313,9 @@ if __name__ == "__main__":
     collaborators = [Collaborator(name=name) for name in collaborator_names]
     collaborator.private_attributes = {}
 
-    local_runtime = LocalRuntime(aggregator=aggregator, collaborators=collaborators)
+    local_runtime = LocalRuntime(
+        aggregator=aggregator, collaborators=collaborators
+    )
     print(f"Local runtime collaborators = {local_runtime._collaborators}")
 
     testflow = TestFlow_Reference_With_Exclude(checkpoint=False)
