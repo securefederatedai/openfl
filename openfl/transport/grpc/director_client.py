@@ -17,6 +17,7 @@ from openfl.protocols import director_pb2_grpc
 from openfl.protocols import interceptors
 from openfl.protocols.utils import construct_model_proto
 from openfl.protocols.utils import deconstruct_model_proto
+from openfl.transport.grpc.exceptions import ShardNotFoundError
 from openfl.transport.grpc.director_server import CLIENT_ID_DEFAULT
 
 from .grpc_channel_options import channel_options
@@ -32,6 +33,7 @@ class ShardDirectorClient:
         """Initialize a shard director client object."""
         self.shard_name = shard_name
         director_addr = f'{director_host}:{director_port}'
+        logger.info(f'Director address: {director_addr}')
         if not tls:
             channel = grpc.insecure_channel(director_addr, options=channel_options)
         else:
@@ -79,9 +81,8 @@ class ShardDirectorClient:
     def wait_experiment(self):
         """Wait an experiment data from the director."""
         logger.info('Send WaitExperiment request')
-        response_iter = self.stub.WaitExperiment(self._get_experiment_data())
-        logger.info('WaitExperiment response has received')
-        response = next(response_iter)
+        response = self.stub.WaitExperiment(self._get_experiment_data())
+        logger.info(f'WaitExperiment response has received: {response}')
         experiment_name = response.experiment_name
         if not experiment_name:
             raise Exception('No experiment')
@@ -116,7 +117,7 @@ class ShardDirectorClient:
 
     def _get_experiment_data(self):
         """Generate the experiment data request."""
-        yield director_pb2.WaitExperimentRequest(collaborator_name=self.shard_name)
+        return director_pb2.WaitExperimentRequest(collaborator_name=self.shard_name)
 
     def send_health_check(
             self, *,
@@ -144,10 +145,16 @@ class ShardDirectorClient:
 
         logger.debug(f'Sending health check status: {status}')
 
-        response = self.stub.UpdateEnvoyStatus(status)
-        health_check_period = response.health_check_period.seconds
+        try:
+            response = self.stub.UpdateEnvoyStatus(status)
+        except grpc.RpcError as rpc_error:
+            logger.error(rpc_error)
+            if rpc_error.code() == grpc.StatusCode.NOT_FOUND:
+                raise ShardNotFoundError
+        else:
+            health_check_period = response.health_check_period.seconds
 
-        return health_check_period
+            return health_check_period
 
 
 class DirectorClient:
@@ -228,6 +235,13 @@ class DirectorClient:
                 experiment_info.experiment_data.npbytes = chunk
                 yield experiment_info
                 chunk = arch.read(max_buffer_size)
+
+    def get_experiment_status(self, experiment_name):
+        """Check if the experiment was accepted by the director"""
+        logger.info('Get Experiment Status')
+        request = director_pb2.GetExperimentStatusRequest(experiment_name=experiment_name)
+        resp = self.stub.GetExperimentStatus(request)
+        return resp
 
     def get_dataset_info(self):
         """Request the dataset info from the director."""

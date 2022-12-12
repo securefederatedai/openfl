@@ -22,11 +22,11 @@ def experiment_object(federation_object):  # NOQA
 
 def test_initialization(experiment_object):
     """Test experimnet object initialization."""
-    assert not experiment_object.experiment_accepted
+    assert not experiment_object.experiment_submitted
     assert experiment_object.serializer_plugin
 
 
 def test_get_best_model(experiment_object):
     """Test get_best_model method."""
-    with pytest.raises(Exception):
-        experiment_object.get_best_model()
+    model = experiment_object.get_best_model()
+    assert model is None

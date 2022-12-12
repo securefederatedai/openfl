@@ -16,6 +16,7 @@ from click import Path as ClickPath
 from dynaconf import Validator
 
 from openfl.component.envoy.envoy import Envoy
+from openfl.interface.cli import review_plan_callback
 from openfl.interface.cli_helper import WORKSPACE
 from openfl.utilities import click_types
 from openfl.utilities import merge_configs
@@ -66,6 +67,8 @@ def start_(shard_name, director_host, director_port, tls, envoy_config_path,
         validators=[
             Validator('shard_descriptor.template', required=True),
             Validator('params.cuda_devices', default=[]),
+            Validator('params.install_requirements', default=True),
+            Validator('params.review_experiment', default=False),
         ],
     )
 
@@ -94,6 +97,13 @@ def start_(shard_name, director_host, director_port, tls, envoy_config_path,
             instance = getattr(module, class_name)(**plugin_params)
             envoy_params[plugin_name] = instance
 
+    # We pass the `review_experiment` callback only if it is needed.
+    # Otherwise we pass None.
+    overwritten_review_plan_callback = None
+    if envoy_params.review_experiment:
+        overwritten_review_plan_callback = review_plan_callback
+    del envoy_params.review_experiment
+
     # Instantiate Shard Descriptor
     shard_descriptor = shard_descriptor_from_config(config.get('shard_descriptor', {}))
     envoy = Envoy(
@@ -105,6 +115,7 @@ def start_(shard_name, director_host, director_port, tls, envoy_config_path,
         root_certificate=config.root_certificate,
         private_key=config.private_key,
         certificate=config.certificate,
+        review_plan_callback=overwritten_review_plan_callback,
         **envoy_params
     )
 
