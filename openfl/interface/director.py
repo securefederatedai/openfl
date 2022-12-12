@@ -19,6 +19,7 @@ from openfl.interface.cli_helper import WORKSPACE
 from openfl.transport import DirectorGRPCServer
 from openfl.utilities import merge_configs
 from openfl.utilities.path_check import is_directory_traversal
+from openfl.interface.cli import review_plan_callback
 
 logger = logging.getLogger(__name__)
 
@@ -63,7 +64,11 @@ def start(director_config_path, tls, root_certificate, private_key, certificate)
             Validator('settings.listen_port', default=50051, gte=1024, lte=65535),
             Validator('settings.sample_shape', default=[]),
             Validator('settings.target_shape', default=[]),
-            Validator('settings.envoy_health_check_period', gte=1, lte=24 * 60 * 60),
+            Validator('settings.install_requirements', default=False),
+            Validator('settings.envoy_health_check_period',
+                      default=60,  # in seconds
+                      gte=1, lte=24 * 60 * 60),
+            Validator('settings.review_experiment', default=False),
         ],
         value_transform=[
             ('settings.sample_shape', lambda x: list(map(str, x))),
@@ -85,6 +90,12 @@ def start(director_config_path, tls, root_certificate, private_key, certificate)
     if config.certificate:
         config.certificate = Path(config.certificate).absolute()
 
+    # We pass the `review_experiment` callback only if it is needed.
+    # Otherwise we pass None.
+    overwritten_review_plan_callback = None
+    if config.settings.review_experiment:
+        overwritten_review_plan_callback = review_plan_callback
+
     director_server = DirectorGRPCServer(
         director_cls=Director,
         tls=tls,
@@ -93,9 +104,11 @@ def start(director_config_path, tls, root_certificate, private_key, certificate)
         root_certificate=config.root_certificate,
         private_key=config.private_key,
         certificate=config.certificate,
-        settings=config.settings,
         listen_host=config.settings.listen_host,
         listen_port=config.settings.listen_port,
+        review_plan_callback=overwritten_review_plan_callback,
+        envoy_health_check_period=config.settings.envoy_health_check_period,
+        install_requirements=config.settings.install_requirements
     )
     director_server.start()
 

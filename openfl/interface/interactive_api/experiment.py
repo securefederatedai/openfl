@@ -56,7 +56,7 @@ class FLExperiment:
         self.summary_writer = None
         self.serializer_plugin = serializer_plugin
 
-        self.experiment_accepted = False
+        self.experiment_submitted = False
 
         self.is_validate_task_exist = False
 
@@ -64,7 +64,6 @@ class FLExperiment:
         setup_logging()
 
         self._initialize_plan()
-
 
     def _initialize_plan(self):
         """Setup plan from base plan interactive api."""
@@ -78,19 +77,30 @@ class FLExperiment:
         plan.name = 'plan.yaml'
 
         self.plan = deepcopy(plan)
-    
-    def _assert_experiment_accepted(self):
-        """Assure experiment is sent to director."""
-        if not self.experiment_accepted:
-            self.logger.error('The experiment has not been accepted by director')
+
+    def _assert_experiment_submitted(self):
+        """Assure experiment is sent to director and accepted."""
+        if not self.experiment_submitted:
+            self.logger.error('The experiment was not submitted to a Director service.')
             self.logger.error(
                 'Report the experiment first: '
                 'use the Experiment.start() method.')
-            raise Exception
+            return False
+        return True
+
+    def get_experiment_status(self):
+        """Returns the current state of the experiment."""
+        if not self._assert_experiment_submitted():
+            return
+        exp_status = self.federation.dir_client.get_experiment_status(
+            experiment_name=self.experiment_name
+        )
+        return exp_status.experiment_status
 
     def get_best_model(self):
         """Retrieve the model with the best score."""
-        self._assert_experiment_accepted()
+        if not self._assert_experiment_submitted():
+            return
         tensor_dict = self.federation.dir_client.get_best_model(
             experiment_name=self.experiment_name)
 
@@ -98,7 +108,8 @@ class FLExperiment:
 
     def get_last_model(self):
         """Retrieve the aggregated model after the last round."""
-        self._assert_experiment_accepted()
+        if not self._assert_experiment_submitted():
+            return
         tensor_dict = self.federation.dir_client.get_last_model(
             experiment_name=self.experiment_name)
 
@@ -127,7 +138,8 @@ class FLExperiment:
 
     def stream_metrics(self, tensorboard_logs: bool = True) -> None:
         """Stream metrics."""
-        self._assert_experiment_accepted()
+        if not self._assert_experiment_submitted():
+            return
         for metric_message_dict in self.federation.dir_client.stream_metrics(self.experiment_name):
             self.logger.metric(
                 f'Round {metric_message_dict["round"]}, '
@@ -149,13 +161,14 @@ class FLExperiment:
 
     def remove_experiment_data(self):
         """Remove experiment data."""
-        self._assert_experiment_accepted()
+        if not self._assert_experiment_submitted():
+            return
         log_message = 'Removing experiment data '
         if self.federation.dir_client.remove_experiment_data(
                 name=self.experiment_name
         ):
             log_message += 'succeed.'
-            self.experiment_accepted = False
+            self.experiment_submitted = False
         else:
             log_message += 'failed.'
 
@@ -243,10 +256,10 @@ class FLExperiment:
             self.remove_workspace_archive()
 
         if response.accepted:
-            self.logger.info('Experiment was accepted and launched.')
-            self.experiment_accepted = True
+            self.logger.info('Experiment was submitted to the director!')
+            self.experiment_submitted = True
         else:
-            self.logger.info('Experiment was not accepted or failed.')
+            self.logger.info('Experiment could not be submitted to the director.')
 
     def define_task_assigner(self, task_keeper, rounds_to_train):
         """Define task assigner by registered tasks."""
@@ -292,7 +305,7 @@ class FLExperiment:
         """Restore accepted experiment object."""
         self.task_runner_stub = self.plan.get_core_task_runner(model_provider=model_provider)
         self.current_model_status = ModelStatus.RESTORED
-        self.experiment_accepted = True
+        self.experiment_submitted = True
 
     @staticmethod
     def _pack_the_workspace():

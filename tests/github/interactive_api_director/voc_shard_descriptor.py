@@ -80,7 +80,7 @@ class VOCDataset_SD(ShardDescriptor):
     @staticmethod
     def _read_image_ids(image_sets_file):
         ids = []
-        with open(image_sets_file) as f:
+        with open(image_sets_file, encoding='utf-8') as f:
             for line in f:
                 ids.append(line.split(' ')[0])
         return ids
