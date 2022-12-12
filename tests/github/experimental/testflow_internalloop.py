@@ -3,7 +3,7 @@
 
 from openfl.experimental.interface.fl_spec import FLSpec
 from openfl.experimental.interface.participants import Aggregator, Collaborator
-from openfl.experimental.interface.fl_spec import LocalRuntime
+from openfl.experimental.runtime import LocalRuntime
 from openfl.experimental.placement.placement import aggregator, collaborator
 import numpy as np
 

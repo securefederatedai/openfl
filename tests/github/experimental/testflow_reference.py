@@ -1,7 +1,5 @@
 from openfl.experimental.interface import FLSpec, Aggregator, Collaborator
 from openfl.experimental.runtime import LocalRuntime
-
-# This will become federated_flow.placement
 from openfl.experimental.placement import aggregator, collaborator
 
 import io
