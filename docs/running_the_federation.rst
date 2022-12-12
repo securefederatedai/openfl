@@ -64,6 +64,19 @@ Director Manager: Set Up the Director
 
 The *Director manager* sets up the *Director*, which is the central node of the federation.
 
+    - :ref:`plan_agreement_director`
+    - :ref:`optional_step_create_pki_using_step_ca`
+    - :ref:`step0_install_director_prerequisites`
+    - :ref:`step1_start_the_director`
+
+.. _plan_agreement_director:
+
+OPTIONAL STEP: Plan Agreement
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+In order to carry out a secure federation, the Director must approve the FL Plan before starting the experiment. This check could be enforced with the use of the setting :code:`review_experiment: True` in director config. Refer to **director_config_review_exp.yaml** file under **PyTorch_Histology** interactive API example.
+After the Director approves the experiment, it starts the aggregator and sends the experiment archive to all the participanting Envoys for review.
+On the other hand, if the Director rejects the experiment, the experiment is aborted right away, no aggregator is started and the Envoys don't receive the experiment archive at all.
+
 .. _optional_step_create_pki_using_step_ca:
 
 OPTIONAL STEP: Create PKI Certificates Using Step-CA
@@ -122,10 +135,18 @@ Collaborator Manager: Set Up the Envoy
 --------------------------------------
 
 The *Collaborator manager* sets up the *Envoys*, which are long-lived components on collaborator nodes. When started, Envoys will try to connect to the Director. Envoys receive an experiment archive and provide access to local data.
-
+    
+    - :ref:`plan_agreement_envoy`
     - :ref:`optional_step_sign_pki_envoy`
     - :ref:`step0_install_envoy_prerequisites`
     - :ref:`step1_start_the_envoy`
+
+.. _plan_agreement_envoy:
+
+OPTIONAL STEP: Plan Agreement
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+In order to carry out a secure federation, each of the Envoys must approve the experiment before it is started, after the Director's approval. This check could be enforced with the use of the parameter :code:`review_experiment: True` in envoy config. Refer to **envoy_config_review_exp.yaml** file under **PyTorch_Histology** interactive API example.
+If any of the Envoys rejects the experiment, a :code:`set_experiment_failed` request is sent to the Director to stop the aggregator.
 
 .. _optional_step_sign_pki_envoy:
 
@@ -510,6 +531,12 @@ Observe the Experiment Execution
 
 If the experiment was accepted by the *Director*, you can oversee its execution with the :code:`FLexperiment.stream_metrics()` method. This method prints metrics from the FL tasks (and saves TensorBoard logs).
 
+.. _federation_api_get_fl_experiment_status:
+
+Get Experiment Status
+^^^^^^^^^^^^^^^^^^^^^
+
+You can get the current experiment status with the :code:`FLexperiment.get_experiment_status()` method. The status could be pending, in progress, finished, rejected or failed.
 
 .. _federation_api_complete_fl_experiment:
 
@@ -782,10 +809,10 @@ However, continue with the following procedure for details in creating a federat
 .. _creating_workspaces:
 
 
-STEP 1: Create a Workspace on the Aggregator
+STEP 1: Create a Workspace
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-1.	Start a Python 3.8 (>=3.6, <3.9) virtual environment and confirm |productName| is available.
+1.	Start a Python 3.8 (>=3.6, <3.11) virtual environment and confirm |productName| is available.
 
 	.. code-block:: python
 
@@ -1111,6 +1138,27 @@ STEP 3: Start the Federation
 
   When the last round of training is completed, the Aggregator stores the final weights in the protobuf file that was specified in the YAML file, which in this example is located at **save/${WORKSPACE_TEMPLATE}_latest.pbuf**.
 
+
+Post Experiment
+^^^^^^^^^^^^^^^
+
+Experiment owners may access the final model in its native format.
+Among other training artifacts, the aggregator creates the last and best aggregated (highest validation score) model snapshots. One may convert a snapshot to the native format and save the model to disk by calling the following command from the workspace:
+
+.. code-block:: console
+
+    fx model save -i model_protobuf_path.pth -o save_model_path
+
+In order for this command to succeed, the **TaskRunner** used in the experiment must implement a :code:`save_native()` method.
+
+Another way to access the trained model is by calling the API command directly from a Python script:
+
+.. code-block:: python
+
+    from openfl import get_model
+    model = get_model(plan_config, cols_config, data_config, model_protobuf_path)
+
+In fact, the :code:`get_model()` method returns a **TaskRunner** object loaded with the chosen model snapshot. Users may utilize the linked model as a regular Python object.
 
 
 .. _running_the_federation_docker:

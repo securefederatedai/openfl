@@ -100,7 +100,7 @@ def generate_cert_request(fqdn):
 def find_certificate_name(file_name):
     """Search the CRT for the actual aggregator name."""
     # This loop looks for the collaborator name in the key
-    with open(file_name, 'r') as f:
+    with open(file_name, 'r', encoding='utf-8') as f:
         for line in f:
             if 'Subject: CN=' in line:
                 col_name = line.split('=')[-1].strip()

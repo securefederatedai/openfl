@@ -3,10 +3,18 @@
 
 # If your machine is behind a proxy, make sure you set it up in ~/.docker/config.json
 
-FROM ubuntu:18.04
+FROM ubuntu:22.10
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 ARG INSTALL_SOURCES="no"
+
+WORKDIR /zlib
+#zlib install to 1.2.13
+RUN apt-get update && apt-get install -y --no-install-recommends wget build-essential
+RUN wget --no-check-certificate https://github.com/madler/zlib/archive/refs/tags/v1.2.13.tar.gz && tar -xvf ./v1.2.13.tar.gz && cd zlib-1.2.13 && ./configure --prefix=/usr && make && make install
+RUN rm -rf zlib-1.2.13 && rm -rf v1.2.13.tar.gz
+#RUN apt-get -y remove wget build-essential
+
 WORKDIR /thirdparty
 
 RUN dpkg --get-selections | grep -v deinstall | awk '{print $1}' > base_packages.txt  && \
@@ -15,7 +23,7 @@ RUN dpkg --get-selections | grep -v deinstall | awk '{print $1}' > base_packages
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         openssh-server=\* \
-        python3.8=\* \
+        python3.10=\* \
         python3-distutils=\* \
         curl=\* \
         ca-certificates=\* && \
@@ -42,7 +50,7 @@ WORKDIR /openfl
 COPY . .
 
 # Install pip
-RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.8 1
+RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.10 1
 RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py && python get-pip.py && rm -rf get-pip.py
 RUN pip install --no-cache-dir . 
 WORKDIR /thirdparty

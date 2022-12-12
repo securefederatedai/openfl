@@ -71,11 +71,37 @@ pipeline {
                 SNYK_PYTHON_VERSION = '3.8'
 
                 BANDIT_SOURCE_PATH = 'openfl/ openfl-workspace/ openfl-tutorials/'
+                BANDIT_SEVERITY_LEVEL = 'high'
 
                 PUBLISH_TO_ARTIFACTORY = false
             }
             steps {
                 rbheStaticCodeScan()
+            }
+        }
+        stage('Publish') {
+            when {
+                expression {
+                    env.GIT_BRANCH ==~ /(?i)(develop|jenkins-v\d+.\d+)/
+                    isPyPiPublishCommit()
+                }
+            }
+            stages {
+                stage('Build Package') {
+                    agent {
+                        docker {
+                            image 'python:3.8'
+                        }
+                    }
+                    steps {
+                        sh 'scripts/build_wheel.sh'
+                    }
+                }
+                stage('Publish Package') {
+                    steps {
+                        pypiPublish()
+                    }
+                }
             }
         }
     }
@@ -85,4 +111,12 @@ pipeline {
             cleanWs()
         }
     }
+}
+
+def isPyPiPublishCommit() {
+    def commitMessage = common.getCommitMessage()
+    echo "last commit message: ${commitMessage}"
+    def publish = commitMessage ==~ /(?s)^release\(pypi\):.*publish package.*$/
+    echo "publish to PyPi: ${publish}"
+    publish
 }

@@ -94,7 +94,7 @@ class Aggregator:
             if self.log_metric_callback:
                 self.log_metric = log_metric_callback
                 self.logger.info(f'Using custom log metric: {self.log_metric}')
-        
+
         self.best_model_score = None
         self.metric_queue = queue.Queue()
 
@@ -955,6 +955,13 @@ class Aggregator:
     def stop(self, failed_collaborator: str = None) -> None:
         """Stop aggregator execution."""
         self.logger.info('Force stopping the aggregator execution.')
+        # We imitate quit_job_sent_to the failed collaborator
+        # So the experiment set to a finished state
+        if failed_collaborator:
+            self.quit_job_sent_to.append(failed_collaborator)
+
+        # This code does not actually send `quit` tasks to collaborators,
+        # it just mimics it by filling arrays.
         for collaborator_name in filter(lambda c: c != failed_collaborator, self.authorized_cols):
             self.logger.info(f'Sending signal to collaborator {collaborator_name} to shutdown...')
             self.quit_job_sent_to.append(collaborator_name)
