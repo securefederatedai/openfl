@@ -18,18 +18,20 @@ help() {
     echo "--rounds-to-train     rounds to train"
     echo "--col1-data-path      data path for collaborator 1"
     echo "--col2-data-path      data path for collaborator 2"
+    echo "--save-model          path to save model in native format"
     echo "-h, --help            display this help and exit"
 }
 
 # Getting additional options
 ADD_OPTS=$(getopt -o "h" -l "rounds-to-train:,col1-data-path:,
-col2-data-path:,help" -n test_hello_federation.sh -- "$@")
+col2-data-path:,save-model:,help" -n test_hello_federation.sh -- "$@")
 eval set -- "$ADD_OPTS"
 while (($#)); do
     case "${1:-}" in
     (--rounds-to-train) ROUNDS_TO_TRAIN="$2" ; shift 2 ;;
     (--col1-data-path) COL1_DATA_PATH="$2" ; shift 2 ;;
     (--col2-data-path) COL2_DATA_PATH="$2" ; shift 2 ;;
+    (--save-model) SAVE_MODEL="$2" ; shift 2 ;;
     (-h|--help) help ; exit 0 ;;
 
     (--)        shift ; break ;;
@@ -117,4 +119,12 @@ fx collaborator start -n ${COL1} &
 cd ${COL2_DIRECTORY}/${FED_WORKSPACE}
 fx collaborator start -n ${COL2}
 wait
+
+# # Convert model to native format
+if [[ ! -z "$SAVE_MODEL" ]]
+then
+    cd ${FED_DIRECTORY}
+    fx model save -i "./save/${TEMPLATE}_last.pbuf" -o ${SAVE_MODEL}
+fi
+
 rm -rf ${FED_DIRECTORY}

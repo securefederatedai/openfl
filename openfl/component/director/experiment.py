@@ -7,6 +7,7 @@ import asyncio
 import logging
 from contextlib import asynccontextmanager
 from pathlib import Path
+from typing import Callable
 from typing import Iterable
 from typing import List
 from typing import Union
@@ -25,6 +26,7 @@ class Status:
     FINISHED = 'finished'
     IN_PROGRESS = 'in_progress'
     FAILED = 'failed'
+    REJECTED = 'rejected'
 
 
 class Experiment:
@@ -42,18 +44,15 @@ class Experiment:
     ) -> None:
         """Initialize an experiment object."""
         self.name = name
-        if isinstance(archive_path, str):
-            archive_path = Path(archive_path)
-        self.archive_path = archive_path
+        self.archive_path = Path(archive_path).absolute()
         self.collaborators = collaborators
         self.sender = sender
         self.init_tensor_dict = init_tensor_dict
-        if isinstance(plan_path, str):
-            plan_path = Path(plan_path)
-        self.plan_path = plan_path
+        self.plan_path = Path(plan_path)
         self.users = set() if users is None else set(users)
         self.status = Status.PENDING
         self.aggregator = None
+        self.run_aggregator_atask = None
 
     async def start(
             self, *,
@@ -61,6 +60,7 @@ class Experiment:
             root_certificate: Union[Path, str] = None,
             private_key: Union[Path, str] = None,
             certificate: Union[Path, str] = None,
+            install_requirements: bool = False,
     ):
         """Run experiment."""
         self.status = Status.IN_PROGRESS
@@ -68,7 +68,11 @@ class Experiment:
             logger.info(f'New experiment {self.name} for '
                         f'collaborators {self.collaborators}')
 
-            with ExperimentWorkspace(self.name, self.archive_path):
+            with ExperimentWorkspace(
+                experiment_name=self.name,
+                data_file_path=self.archive_path,
+                install_requirements=install_requirements,
+            ):
                 aggregator_grpc_server = self._create_aggregator_grpc_server(
                     tls=tls,
                     root_certificate=root_certificate,
@@ -76,14 +80,43 @@ class Experiment:
                     certificate=certificate,
                 )
                 self.aggregator = aggregator_grpc_server.aggregator
-                await self._run_aggregator_grpc_server(
-                    aggregator_grpc_server=aggregator_grpc_server,
+
+                self.run_aggregator_atask = asyncio.create_task(
+                    self._run_aggregator_grpc_server(
+                        aggregator_grpc_server=aggregator_grpc_server,
+                    )
                 )
+                await self.run_aggregator_atask
             self.status = Status.FINISHED
             logger.info(f'Experiment "{self.name}" was finished successfully.')
         except Exception as e:
             self.status = Status.FAILED
-            logger.exception(f'Experiment "{self.name}" was failed with error: {e}.')
+            logger.exception(f'Experiment "{self.name}" failed with error: {e}.')
+
+    async def review_experiment(self, review_plan_callback: Callable) -> bool:
+        """Get plan approve in console."""
+        logger.debug("Experiment Review starts")
+        # Extract the workspace for review (without installing requirements)
+        with ExperimentWorkspace(
+            self.name,
+            self.archive_path,
+            is_install_requirements=False,
+            remove_archive=False
+        ):
+            loop = asyncio.get_event_loop()
+            # Call for a review in a separate thread (server is not blocked)
+            review_approve = await loop.run_in_executor(
+                None,
+                review_plan_callback,
+                self.name, self.plan_path
+            )
+            if not review_approve:
+                self.status = Status.REJECTED
+                self.archive_path.unlink(missing_ok=True)
+                return False
+
+        logger.debug("Experiment Review succeed")
+        return True
 
     def _create_aggregator_grpc_server(
             self, *,
@@ -92,10 +125,10 @@ class Experiment:
             private_key: Union[Path, str] = None,
             certificate: Union[Path, str] = None,
     ) -> AggregatorGRPCServer:
-        plan = Plan.parse(plan_config_path=Path(self.plan_path))
+        plan = Plan.parse(plan_config_path=self.plan_path)
         plan.authorized_cols = list(self.collaborators)
 
-        logger.info('🧿 Starting the Aggregator Service.')
+        logger.info(f'🧿 Created an Aggregator Server for {self.name} experiment.')
         aggregator_grpc_server = plan.interactive_api_get_server(
             tensor_dict=self.init_tensor_dict,
             root_certificate=root_certificate,
@@ -117,6 +150,7 @@ class Experiment:
             while not aggregator_grpc_server.aggregator.all_quit_jobs_sent():
                 # Awaiting quit job sent to collaborators
                 await asyncio.sleep(10)
+            logger.debug('Aggregator sent quit jobs calls to all collaborators')
         except KeyboardInterrupt:
             pass
         finally:

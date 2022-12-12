@@ -1,0 +1,10 @@
+params:
+  cuda_devices: []
+
+optional_plugin_components: {}
+
+shard_descriptor:
+  template: tinyimagenet_shard_descriptor.TinyImageNetShardDescriptor
+  params:
+    data_folder: tinyimagenet_data
+    rank_worldsize: 1,1

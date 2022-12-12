@@ -79,11 +79,30 @@ You can find more details in the following articles:
 | FedCurv | [Shoham et al., 2019](https://arxiv.org/pdf/1910.07796.pdf) | ✅ | ❌ | ❌ | [docs](http://openfl.readthedocs.io/en/latest/supported_aggregation_algorithms.html#fedcurv) |
 
 ## Support
-We welcome questions, issue reports, and suggestions:
+Please join us for our bi-monthly community meetings starting December 1 & 2, 2022! <br>
+Meet with some of the Intel team members behind OpenFL. <br>
+We will be going over our roadmap, open for Q&A, and welcome idea sharing. <br>
+
+2-time slots available:
+
+Europe
+Occurs every 2 months on the first Thursday of that month, 6 pm <br>
+https://intel.zoom.us/j/96858990725?pwd=ODJRVUhXNGNQU2YySTFqRi9qRXdtUT09 <br>
+Meeting ID: 968 5899 0725 <br>
+Passcode: 157568 <br>
+
+Asia Pacific
+Occurs every 2 months on the first Friday of that month, 10 AM GMT+8 <br>
+https://intel.zoom.us/j/98930263828?pwd=VkhIbVBtTG9xaHZCZ2dQNUdYSWpydz09 <br>
+Meeting ID: 989 3026 3828 <br>
+Passcode: 774320 <br>
+
+See you there!
+
+We also always welcome questions, issue reports, and suggestions via:
 
 * [GitHub Issues](https://github.com/intel/openfl/issues)
 * [Slack workspace](https://join.slack.com/t/openfl/shared_invite/zt-ovzbohvn-T5fApk05~YS_iZhjJ5yaTw)
-
 
 ## License
 This project is licensed under [Apache License Version 2.0](LICENSE). By contributing to the project, you agree to the license and copyright terms therein and release your contribution under these terms.
