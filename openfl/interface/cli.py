@@ -5,14 +5,18 @@
 
 from click import argument
 from click import command
+from click import confirm
 from click import echo
 from click import Group
 from click import group
+from click import open_file
 from click import option
 from click import pass_context
 from click import style
+import time
 
 from openfl.utilities import add_log_level
+import sys
 
 
 def setup_logging(level='info', log_file=None):
@@ -137,6 +141,7 @@ def cli(context, log_level):
 
     log_file = os.getenv('LOG_FILE')
     setup_logging(log_level, log_file)
+    sys.stdout.reconfigure(encoding='utf-8')
 
 
 @cli.result_callback()
@@ -171,6 +176,26 @@ def error_handler(error):
     echo(style('EXCEPTION', fg='red', bold=True)
          + ' : ' + style(f'{error}', fg='red'))
     raise error
+
+
+def review_plan_callback(file_name, file_path):
+    """Review plan callback for Director and Envoy."""
+    echo(style(
+        f'Please review the contents of {file_name} before proceeding...',
+        fg='green',
+        bold=True))
+    # Wait for users to read the question before flashing the contents of the file.
+    time.sleep(3)
+
+    with open_file(file_path, 'r') as f:
+        echo(f.read())
+
+    if confirm(style(f'Do you want to accept the {file_name}?', fg='green', bold=True)):
+        echo(style(f'{file_name} accepted!', fg='green', bold=True))
+        return True
+    else:
+        echo(style(f'EXCEPTION: {file_name} rejected!', fg='red', bold=True))
+        return False
 
 
 def show_header():

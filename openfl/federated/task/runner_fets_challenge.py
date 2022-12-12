@@ -13,9 +13,10 @@ from openfl.utilities import TensorKey
 
 from .runner import TaskRunner
 
-from GANDLF.compute.generic             import create_pytorch_objects
-from GANDLF.compute.training_loop       import train_network
-from GANDLF.compute.forward_pass        import validate_network
+from GANDLF.compute.generic import create_pytorch_objects
+from GANDLF.compute.training_loop import train_network
+from GANDLF.compute.forward_pass import validate_network
+
 
 class FeTSChallengeTaskRunner(TaskRunner):
     """FeTSChallenge Model class for Federated Learning."""
@@ -35,17 +36,16 @@ class FeTSChallengeTaskRunner(TaskRunner):
         """
         super().__init__(**kwargs)
 
-        # if device:
-        #     self.device = device
-        # else:
-        #     self.device = pt.device('cuda' if pt.cuda.is_available() else 'cpu')
-
-        model, optimizer, train_loader, val_loader, scheduler, params = create_pytorch_objects(fets_config_dict, train_csv=train_csv, val_csv=val_csv, device=device)
-        self.model      = model
-        self.optimizer  = optimizer
-        self.scheduler  = scheduler
-        self.params     = params
-        self.device     = device
+        model, optimizer, train_loader, val_loader, scheduler, params = \
+            create_pytorch_objects(fets_config_dict,
+                                   train_csv=train_csv,
+                                   val_csv=val_csv,
+                                   device=device)
+        self.model = model
+        self.optimizer = optimizer
+        self.scheduler = scheduler
+        self.params = params
+        self.device = device
 
         # pass the actual dataloaders to the wrapper loader
         self.data_loader.set_dataloaders(train_loader, val_loader)
@@ -96,7 +96,6 @@ class FeTSChallengeTaskRunner(TaskRunner):
         """
         self.rebuild_model(round_num, input_tensor_dict, validation=True)
         self.model.eval()
-        # self.model.to(self.device)
 
         epoch_valid_loss, epoch_valid_metric = validate_network(self.model,
                                                                 self.data_loader.val_dataloader,
@@ -117,9 +116,11 @@ class FeTSChallengeTaskRunner(TaskRunner):
         tags = ('metric', suffix)
 
         output_tensor_dict = {}
-        output_tensor_dict[TensorKey('valid_loss', origin, round_num, True, tags)] = np.array(epoch_valid_loss)
+        valid_loss_tensor_key = TensorKey('valid_loss', origin, round_num, True, tags)
+        output_tensor_dict[valid_loss_tensor_key] = np.array(epoch_valid_loss)
         for k, v in epoch_valid_metric.items():
-            output_tensor_dict[TensorKey(f'valid_{k}', origin, round_num, True, tags)] = np.array(v)
+            tensor_key = TensorKey(f'valid_{k}', origin, round_num, True, tags)
+            output_tensor_dict[tensor_key] = np.array(v)
 
         # Empty list represents metrics that should only be stored locally
         return output_tensor_dict, {}
@@ -135,13 +136,15 @@ class FeTSChallengeTaskRunner(TaskRunner):
             epochs                  : The number of epochs to train
             crossfold_test          : Whether or not to use cross fold trainval/test
                                     to evaluate the quality of the model under fine tuning
-                                    (this uses a separate prameter to pass in the data and 
+                                    (this uses a separate prameter to pass in the data and
                                     config used)
             crossfold_test_data_csv : Data csv used to define data used in crossfold test.
                                       This csv does not itself define the folds, just
                                       defines the total data to be used.
-            crossfold_val_n         : number of folds to use for the train,val level of the nested crossfold.
-            corssfold_test_n        : number of folds to use for the trainval,test level of the nested crossfold.
+            crossfold_val_n         : number of folds to use for the train,val level
+                                      of the nested crossfold.
+            corssfold_test_n        : number of folds to use for the trainval,test level
+                                      of the nested crossfold.
             kwargs                  : Key word arguments passed to GaNDLF main_run
         Returns:
             global_output_dict      : Tensors to send back to the aggregator
@@ -150,10 +153,10 @@ class FeTSChallengeTaskRunner(TaskRunner):
         self.rebuild_model(round_num, input_tensor_dict)
         # set to "training" mode
         self.model.train()
-        # self.model.to(self.device)
         for epoch in range(epochs):
             self.logger.info(f'Run {epoch} epoch of {round_num} round')
-            # FIXME: do we want to capture these in an array rather than simply taking the last value?
+            # FIXME: do we want to capture these in an array
+            # rather than simply taking the last value?
             epoch_train_loss, epoch_train_metric = train_network(self.model,
                                                                  self.data_loader.train_dataloader,
                                                                  self.optimizer,
@@ -168,12 +171,13 @@ class FeTSChallengeTaskRunner(TaskRunner):
 
         # Return global_tensor_dict, local_tensor_dict
         # is this even pt-specific really?
-        global_tensor_dict, local_tensor_dict = create_tensorkey_dicts(tensor_dict,
-                                                                       metric_dict,
-                                                                       col_name,
-                                                                       round_num,
-                                                                       self.logger,
-                                                                       self.tensor_dict_split_fn_kwargs)
+        global_tensor_dict, local_tensor_dict = \
+            create_tensorkey_dicts(tensor_dict,
+                                   metric_dict,
+                                   col_name,
+                                   round_num,
+                                   self.logger,
+                                   self.tensor_dict_split_fn_kwargs)
 
         # Update the required tensors if they need to be pulled from the
         # aggregator
@@ -372,7 +376,12 @@ class FeTSChallengeTaskRunner(TaskRunner):
         pass
 
 
-def create_tensorkey_dicts(tensor_dict, metric_dict, col_name, round_num, logger, tensor_dict_split_fn_kwargs):
+def create_tensorkey_dicts(tensor_dict,
+                           metric_dict,
+                           col_name,
+                           round_num,
+                           logger,
+                           tensor_dict_split_fn_kwargs):
     origin = col_name
     tags = ('trained',)
     output_metric_dict = {}
@@ -444,6 +453,7 @@ def set_pt_model_from_tensor_dict(model, tensor_dict, device, with_opt_vars=Fals
 
         # sanity check that we did not record any state that was not used
         assert len(tensor_dict) == 0
+
 
 def _derive_opt_state_dict(opt_state_dict):
     """Separate optimizer tensors from the tensor dictionary.

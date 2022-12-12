@@ -22,8 +22,10 @@ sequenceDiagram
             D-->D: Notifies user that <br>the experiment is inconsistent
             D-->D: The experiment ends
         end
+        D->D: Reviews the FL plan
         D->D: Starts an Aggregator
         D-->>E: Sends the experiment archive <br>and the FL plan to envoys
+        E-->E: Reviews the FL Plan
         E-->E: Starts a Collaborator
         D-->D: Fills the model with the final weights <br>and returns to user
     end

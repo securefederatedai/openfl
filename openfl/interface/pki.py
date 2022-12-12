@@ -4,6 +4,7 @@
 
 import logging
 import os
+import sys
 from pathlib import Path
 
 from click import group
@@ -38,6 +39,10 @@ def pki(context):
 @pki.command(name='run')
 @option('-p', '--ca-path', required=True,
         help='The ca path', type=ClickPath())
+def run_(ca_path):
+    run(ca_path)
+
+
 def run(ca_path):
     """Run CA server."""
     ca_path = Path(ca_path).absolute()
@@ -49,8 +54,8 @@ def run(ca_path):
     if (not os.path.exists(step_config_dir) or not os.path.exists(pki_dir)
             or not os.path.exists(password_file) or not os.path.exists(ca_json)
             or not os.path.exists(step_ca_path)):
-        logger.warning('CA is not installed or corrupted, please install it first')
-        return
+        logger.error('CA is not installed or corrupted, please install it first')
+        sys.exit(1)
     run_ca(step_ca_path, password_file, ca_json)
 
 
