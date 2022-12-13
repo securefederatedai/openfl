@@ -49,10 +49,13 @@ def setup_logging(level='info', log_file=None):
 
 
 def disable_warnings():
-    """Disables CUDA warnings."""
+    """Disables warnings."""
     import os
+    import warnings
 
     os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+    warnings.simplefilter(action='ignore', category=FutureWarning)
+    warnings.simplefilter(action='ignore', category=UserWarning)
 
 
 class CLI(Group):
@@ -127,8 +130,9 @@ class CLI(Group):
 
 @group(cls=CLI)
 @option('-l', '--log-level', default='info', help='Logging verbosity level.')
+@option('--enable-warnings', is_flag=True, help='Enable third-party warnings.')
 @pass_context
-def cli(context, log_level):
+def cli(context, log_level, enable_warnings):
     """Command-line Interface."""
     import os
     from sys import argv
@@ -139,6 +143,10 @@ def cli(context, log_level):
     context.obj['script'] = argv[0]
     context.obj['arguments'] = argv[1:]
 
+    if not enable_warnings:
+        # Setup logging immediately to suppress unnecessary warnings on import
+        # This will be overridden later with user selected debugging level
+        disable_warnings()
     log_file = os.getenv('LOG_FILE')
     setup_logging(log_level, log_file)
     sys.stdout.reconfigure(encoding='utf-8')
@@ -216,10 +224,6 @@ def entry():
     work = Path.cwd().resolve()
     path.append(str(root))
     path.insert(0, str(work))
-
-    # Setup logging immediately to suppress unnecessary warnings on import
-    # This will be overridden later with user selected debugging level
-    disable_warnings()
 
     for module in root.glob('*.py'):  # load command modules
 
