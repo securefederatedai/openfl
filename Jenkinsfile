@@ -103,10 +103,17 @@ pipeline {
             }
         }
         stage('Publish PyPi') {
+            // only publish pypi package when these conditions are true:
+            //   * commit is a release pypi publish commit
+            //   * branch is a jenkins release branch
+            // NOTE: ensure version in setup.py is updated accordingly
             when {
                 allOf {
                     expression { env.GIT_BRANCH ==~ /(?i)(jenkins-v\d+.\d+)/ }
                     expression { common.isPyPiPublishCommit() }
+                    not {
+                        triggeredBy 'TimerTrigger'
+                    }
                 }
             }
             stages {
