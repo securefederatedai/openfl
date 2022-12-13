@@ -86,7 +86,7 @@ pipeline {
             when {
                 expression {
                     env.GIT_BRANCH ==~ /(?i)(develop|jenkins-v\d+.\d+)/
-                    isPyPiPublishCommit()
+                    common.isPyPiPublishCommit()
                 }
             }
             stages {
@@ -114,12 +114,4 @@ pipeline {
             cleanWs()
         }
     }
-}
-
-def isPyPiPublishCommit() {
-    def commitMessage = common.getCommitMessage()
-    echo "last commit message: ${commitMessage}"
-    def publish = commitMessage ==~ /(?s)^release\(pypi\):.*publish package.*$/
-    echo "publish to PyPi: ${publish}"
-    publish
 }
