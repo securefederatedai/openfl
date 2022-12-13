@@ -127,6 +127,37 @@ pipeline {
                 }
             }
         }
+        stage('Publish Docker Hub') {
+            // only publish docker image when these conditions are true:
+            //   * commit is a release docker publish commit
+            //   * the docker image:tag is not already published
+            //   * branch is a jenkins release branch
+            // NOTE: ensure image tag is updated accordingly
+            when {
+                allOf {
+                    expression { env.GIT_BRANCH ==~ /(?i)(jenkins-v\d+.\d+)/ }
+                    expression { isDockerPublishCommit() }
+                    expression { ! isDockerImagePublished('intel/openfl:1.5') }
+                    not {
+                        triggeredBy 'TimerTrigger'
+                    }
+                }
+            }
+            steps {
+                rbheDocker(
+                    image: 'intel/openfl',
+                    dockerfile: 'openfl-docker/Dockerfile.base',
+                    latest: true,
+                    tags: ['1.5'],
+                    pushOn: /^(?:jenkins-v\d+.\d+)$/,
+                    scan: false,
+                    registry: [[
+                        url: 'docker.io',
+                        credentialId: rbhe.credentials.intelDockerHub
+                    ]]
+                )
+            }
+        }
     }
     post {
         always {
@@ -134,4 +165,21 @@ pipeline {
             cleanWs()
         }
     }
+}
+
+def isDockerPublishCommit() {
+    def publish = common.isMatchingCommit(/(?s)^release\(.*docker.*\):.*publish image.*$/)
+    echo "[isDockerPublishCommit]: publish Docker image: ${publish}"
+    publish
+}
+
+def isDockerImagePublished(dockerImage) {
+    // temporary method until this feature is made available within the rbheDocker function
+    def status
+    docker.withRegistry('https://docker.io', rbhe.credentials.intelDockerHub) {
+        status = sh(script:"docker pull ${dockerImage}", returnStatus: true)
+    }
+    def published = status == 0
+    echo "[isDockerImagePublished]: ${dockerImage} already published: ${published}"
+    published
 }
