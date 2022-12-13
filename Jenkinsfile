@@ -74,7 +74,6 @@ pipeline {
                 SNYK_PYTHON_VERSION = '3.8'
 
                 BANDIT_SOURCE_PATH = 'openfl/ openfl-workspace/ openfl-tutorials/'
-                BANDIT_SEVERITY_LEVEL = 'high'
 
                 PUBLISH_TO_ARTIFACTORY = false
             }
