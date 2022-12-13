@@ -82,11 +82,11 @@ pipeline {
                 rbheStaticCodeScan()
             }
         }
-        stage('Publish') {
+        stage('Publish PyPi') {
             when {
-                expression {
-                    env.GIT_BRANCH ==~ /(?i)(develop|jenkins-v\d+.\d+)/
-                    common.isPyPiPublishCommit()
+                allOf {
+                    expression { env.GIT_BRANCH ==~ /(?i)(develop|jenkins-v\d+.\d+)/ }
+                    expression { common.isPyPiPublishCommit() }
                 }
             }
             stages {
