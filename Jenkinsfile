@@ -37,6 +37,9 @@ pipeline {
     agent { 
         label 'rbhe'
     }
+    options {
+        disableConcurrentBuilds()
+    }
     stages {
         stage('Build') {
             environment {
