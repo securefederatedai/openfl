@@ -66,7 +66,7 @@ pipeline {
         stage('Code Scan') {
             environment {
                 PROJECT_NAME = 'OpenFL-Main'
-                SCANNERS = 'snyk,checkmarx,protex,bandit'
+                SCANNERS = 'snyk,checkmarx,protex,bandit,virus'
 
                 SNYK_ALLOW_LONG_PROJECT_NAME = true
                 SNYK_USE_MULTI_PROC = true
