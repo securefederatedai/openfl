@@ -105,7 +105,7 @@ pipeline {
         stage('Publish PyPi') {
             when {
                 allOf {
-                    expression { env.GIT_BRANCH ==~ /(?i)(develop|jenkins-v\d+.\d+)/ }
+                    expression { env.GIT_BRANCH ==~ /(?i)(jenkins-v\d+.\d+)/ }
                     expression { common.isPyPiPublishCommit() }
                 }
             }
