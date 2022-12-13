@@ -1,5 +1,6 @@
 def snykData = [
     'openfl-docker': 'openfl-docker/Dockerfile.base',
+    'openfl-docker-gramine': 'openfl-gramine/Dockerfile.gramine',
     'openfl': 'setup.py',
     'openfl-workspace_tf_2dunet': 'openfl-workspace/tf_2dunet/requirements.txt',
     'openfl-workspace_torch_cnn_mnist_straggler_check': 'openfl-workspace/torch_cnn_mnist_straggler_check/requirements.txt',
@@ -41,13 +42,14 @@ pipeline {
         disableConcurrentBuilds()
     }
     stages {
-        stage('Build') {
+        stage('Build Docker Images') {
             environment {
                 DOCKER_BUILD_ARGS = '--build-arg http_proxy --build-arg https_proxy --no-cache'
             }
             steps {
                 sh '''
                     docker image build ${DOCKER_BUILD_ARGS} -t openfl-docker:latest . -f openfl-docker/Dockerfile.base
+                    DOCKER_BUILDKIT=1 docker image build ${DOCKER_BUILD_ARGS} -t openfl-docker-gramine:latest . -f openfl-gramine/Dockerfile.gramine
                     docker images | { grep openfl || true; }
                 '''
             }
