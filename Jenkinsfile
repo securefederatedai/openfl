@@ -77,6 +77,8 @@ pipeline {
 
                 BANDIT_SOURCE_PATH = 'openfl/ openfl-workspace/ openfl-tutorials/'
 
+                VIRUS_SCAN_DIR = '.'
+
                 PUBLISH_TO_ARTIFACTORY = false
             }
             steps {
