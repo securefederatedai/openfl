@@ -41,48 +41,65 @@ pipeline {
     options {
         disableConcurrentBuilds()
     }
+    triggers {
+        cron('TZ=US/Arizona\nH 20 * * 0-4')
+    }
     stages {
-        stage('Build Docker Images') {
-            environment {
-                DOCKER_BUILD_ARGS = '--build-arg http_proxy --build-arg https_proxy --no-cache'
-            }
-            steps {
-                sh '''
-                    docker image build ${DOCKER_BUILD_ARGS} -t openfl-docker:latest . -f openfl-docker/Dockerfile.base
-                    DOCKER_BUILDKIT=1 docker image build ${DOCKER_BUILD_ARGS} -t openfl-docker-gramine:latest . -f openfl-gramine/Dockerfile.gramine
-                    docker images | { grep openfl || true; }
-                '''
-            }
-        }
-        stage('Prep Code Scan') {
-            steps {
-                script {
-                    // prep environment variables for Snyk Scan
-                    env.SNYK_PROJECT_NAME = snykData.collect { project, manifest -> project }.join(',')
-                    env.SNYK_MANIFEST_FILE = snykData.collect { project, manifest -> manifest }.join(',')
-                    env.SNYK_DOCKER_IMAGE = snykData.collect { project, manifest -> manifest.contains('Dockerfile') ? project : '' }.join(',')
-                    sh 'env | { grep SNYK || true; }'
+        stage('Code Scan Pipeline') {
+            when {
+                anyOf {
+                    allOf {
+                        expression { env.GIT_BRANCH == 'develop' }
+                        triggeredBy 'TimerTrigger'
+                    }
+                    triggeredBy 'UserIdCause'
+                    triggeredBy 'BranchIndexingCause'
                 }
             }
-        }
-        stage('Code Scan') {
-            environment {
-                PROJECT_NAME = 'OpenFL-Main'
-                SCANNERS = 'snyk,checkmarx,protex,bandit,virus'
+            stages {
+                stage('Build Docker Images') {
+                    environment {
+                        DOCKER_BUILD_ARGS = '--build-arg http_proxy --build-arg https_proxy --no-cache'
+                    }
+                    steps {
+                        sh '''
+                            docker image build ${DOCKER_BUILD_ARGS} -t openfl-docker:latest . -f openfl-docker/Dockerfile.base
+                            DOCKER_BUILDKIT=1 docker image build ${DOCKER_BUILD_ARGS} -t openfl-docker-gramine:latest . -f openfl-gramine/Dockerfile.gramine
+                            docker images | { grep openfl || true; }
+                        '''
+                    }
+                }
+                stage('Prep Code Scan') {
+                    steps {
+                        script {
+                            // prep environment variables for Snyk Scan
+                            env.SNYK_PROJECT_NAME = snykData.collect { project, manifest -> project }.join(',')
+                            env.SNYK_MANIFEST_FILE = snykData.collect { project, manifest -> manifest }.join(',')
+                            env.SNYK_DOCKER_IMAGE = snykData.collect { project, manifest -> manifest.contains('Dockerfile') ? project : '' }.join(',')
+                            sh 'env | { grep SNYK || true; }'
+                        }
+                    }
+                }
+                stage('Code Scan') {
+                    environment {
+                        PROJECT_NAME = 'OpenFL-Main'
+                        SCANNERS = 'snyk,checkmarx,protex,bandit,virus'
 
-                SNYK_ALLOW_LONG_PROJECT_NAME = true
-                SNYK_USE_MULTI_PROC = true
-                SNYK_DEBUG = true
-                SNYK_PYTHON_VERSION = '3.8'
+                        SNYK_ALLOW_LONG_PROJECT_NAME = true
+                        SNYK_USE_MULTI_PROC = true
+                        SNYK_DEBUG = true
+                        SNYK_PYTHON_VERSION = '3.8'
 
-                BANDIT_SOURCE_PATH = 'openfl/ openfl-workspace/ openfl-tutorials/'
+                        BANDIT_SOURCE_PATH = 'openfl/ openfl-workspace/ openfl-tutorials/'
 
-                VIRUS_SCAN_DIR = '.'
+                        VIRUS_SCAN_DIR = '.'
 
-                PUBLISH_TO_ARTIFACTORY = false
-            }
-            steps {
-                rbheStaticCodeScan()
+                        PUBLISH_TO_ARTIFACTORY = false
+                    }
+                    steps {
+                        rbheStaticCodeScan()
+                    }
+                }
             }
         }
         stage('Publish PyPi') {
