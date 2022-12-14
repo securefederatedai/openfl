@@ -16,6 +16,13 @@ from .stream_redirect import (
     RedirectStdStreamContext,
 )
 from .resources import get_number_of_gpus
+from .runtime_utils import (
+    parse_attrs,
+    generate_artifacts,
+    filter_attributes,
+    checkpoint,
+)
+
 
 __all__ = [
     "MetaflowInterface",
@@ -28,4 +35,8 @@ __all__ = [
     "RedirectStdStream",
     "RedirectStdStreamContext",
     "get_number_of_gpus",
+    "parse_attrs",
+    "generate_artifacts",
+    "filter_attributes",
+    "checkpoint",
 ]

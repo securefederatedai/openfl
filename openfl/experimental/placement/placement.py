@@ -20,9 +20,7 @@ class RayExecutor:
         remote_to_exec = make_remote(func, num_gpus=func.num_gpus)
         ref_ctx = ray.put(ctx)
         self.remote_contexts.append(ref_ctx)
-        self.remote_functions.append(
-            remote_to_exec.remote(ref_ctx, func.__name__)
-        )
+        self.remote_functions.append(remote_to_exec.remote(ref_ctx, func.__name__))
         del remote_to_exec
         del ref_ctx
 
