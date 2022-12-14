@@ -21,9 +21,9 @@ def test_check_sync_function_return_same_value_within_timelimit(input, expected)
     Function call returns the expected output and it is asserted.
     """
 
-    @fedtiming(timeout=2)
+    @fedtiming(timeout=0.2)
     def some_sync_fn(value):
-        time.sleep(1)  # Simulate long running operation
+        time.sleep(0.1)  # Simulate long running operation
         return value
 
     assert some_sync_fn(input) == expected
@@ -39,9 +39,9 @@ def test_check_async_function_return_same_value_within_timelimit(input, expected
     Function call returns the expected output and it is asserted
     """
 
-    @fedtiming(timeout=2)
+    @fedtiming(timeout=0.2)
     async def some_async_fn(value):
-        await asyncio.sleep(1)  # Simulate long running operation
+        await asyncio.sleep(0.1)  # Simulate long running operation
         return value
 
     assert asyncio.run(some_async_fn(input)) == expected
@@ -56,9 +56,9 @@ def test_check_sync_function_timeout():
 
     os._exit = mock.MagicMock()
 
-    @fedtiming(timeout=1)
+    @fedtiming(timeout=0.1)
     def some_sync_fn(value):
-        time.sleep(2)
+        time.sleep(0.2)
         return value
 
     assert some_sync_fn('') is None
@@ -74,9 +74,9 @@ def test_check_async_function_timeout():
 
     os._exit = mock.MagicMock()
 
-    @fedtiming(timeout=1)
+    @fedtiming(timeout=0.1)
     async def some_async_fn(value):
-        await asyncio.sleep(2)
+        await asyncio.sleep(0.2)
         return value
 
     assert asyncio.run(some_async_fn('')) is None
@@ -89,7 +89,7 @@ def test_check_sync_decorated_function_returns_normal_function():
     and returns a normal python function (sync_wrapper) from SyncAsyncTaskDecoFactory.
     """
 
-    @fedtiming(timeout=1)
+    @fedtiming(timeout=0.1)
     def some_sync_fn():
         pass
 
@@ -103,9 +103,9 @@ def test_check_async_decorated_function_returns_coroutine():
     and returns a coroutine instance (async_wrapper) from SyncAsyncTaskDecoFactory.
     """
 
-    @fedtiming(timeout=2)
+    @fedtiming(timeout=0.2)
     async def some_async_fn():
-        await asyncio.sleep(1)
+        await asyncio.sleep(0.1)
 
     assert asyncio.iscoroutinefunction(some_async_fn) is True
     assert some_async_fn.__code__.co_name == 'async_wrapper'
