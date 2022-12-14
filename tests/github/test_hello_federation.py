@@ -8,9 +8,10 @@ import argparse
 from pathlib import Path
 import re
 import shutil
-import stat
 from subprocess import check_call
 from concurrent.futures import ProcessPoolExecutor
+
+from openfl.utilities.utils import rmtree
 
 
 def create_collaborator(col, workspace_root, data_path):
@@ -133,10 +134,5 @@ if __name__ == '__main__':
             ['fx', 'model', 'save', '-i', f'./save/{template}_last.pbuf', '-o', save_model],
             cwd=workspace_root)
 
-    def onerror(func, path, _):
-        "Clear the readonly bit and reattempt the removal"
-        os.chmod(path, stat.S_IWRITE)  # Windows can not remove read-only files.
-        func(path)
-
     os.chdir(origin_dir)
-    shutil.rmtree(workspace_root, onerror=onerror)
+    rmtree(workspace_root)

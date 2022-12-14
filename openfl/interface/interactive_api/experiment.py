@@ -299,10 +299,11 @@ class FLExperiment:
         from shutil import copytree
         from shutil import ignore_patterns
         from shutil import make_archive
-        from shutil import rmtree
         from os import getcwd
         from os import makedirs
         from os.path import basename
+
+        from openfl.utilities.utils import rmtree
 
         archive_type = 'zip'
         archive_name = basename(getcwd())
