@@ -548,6 +548,8 @@ if __name__ == '__main__':
                 
         }
     
+    # To activate the ray backend (with parallel collaborator tasks and exclusive GPUs assigned to tasks):
+    # local_runtime = LocalRuntime(aggregator=aggregator, collaborators=collaborators, backend='ray')
     local_runtime = LocalRuntime(aggregator=aggregator, collaborators=collaborators)
     print(f'Local runtime collaborators = {local_runtime._collaborators}')
 
