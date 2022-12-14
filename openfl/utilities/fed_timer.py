@@ -79,7 +79,8 @@ class PrepareTask():
         try:
             await asyncio.wait_for(task, timeout=self._max_timeout)
         except asyncio.TimeoutError:
-            raise asyncio.TimeoutError(f"Timeout after {self._max_timeout} second(s), Exception method: ({self._fn_name})") # noqa
+            raise asyncio.TimeoutError(f"Timeout after {self._max_timeout} second(s), "
+                                       f"Exception method: ({self._fn_name})")
         except Exception:
             raise Exception(f"Generic Exception: {self._fn_name}")
 
@@ -108,7 +109,8 @@ class PrepareTask():
         # If the control is back to current/main thread
         # and the spawned thread is still alive then timeout and raise exception.
         if task.is_alive():
-            raise TimeoutError(f"Timeout after {self._max_timeout} second(s), Exception method: ({self._fn_name})") # noqa
+            raise TimeoutError(f"Timeout after {self._max_timeout} second(s), "
+                               f"Exception method: ({self._fn_name})")
 
         return task.result()
 
@@ -184,8 +186,6 @@ class fedtiming(SyncAsyncTaskDecoFactory):
             yield
             logger.info(f"({self.task._fn_name}) Elapsed Time: {time.perf_counter() - start}")
         except Exception as e:
-            template = "An exception of type {0} occurred. Arguments:\n{1!r}"
-            message = template.format(type(e).__name__, e.args[0])
-            logger.exception(message)
-            time.sleep(2)
+            logger.exception(f"An exception of type {type(e).__name__} occurred. "
+                             f"Arguments:\n{e.args[0]!r}")
             os._exit(status=os.EX_TEMPFAIL)

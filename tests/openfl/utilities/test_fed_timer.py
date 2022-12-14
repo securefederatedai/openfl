@@ -14,11 +14,6 @@ from unittest import mock
 @pytest.mark.parametrize(
     'input,expected', [
         ('first', 'first'),
-        (2.0, 2.0),
-        ({}, {}),
-        ([], []),
-        ('a', 'a'),
-        (True, True),
     ])
 def test_check_sync_function_return_same_value_within_timelimit(input, expected):
     """
@@ -26,9 +21,9 @@ def test_check_sync_function_return_same_value_within_timelimit(input, expected)
     Function call returns the expected output and it is asserted.
     """
 
-    @fedtiming(timeout=3)
+    @fedtiming(timeout=2)
     def some_sync_fn(value):
-        time.sleep(2)  # Simulate long running operation
+        time.sleep(1)  # Simulate long running operation
         return value
 
     assert some_sync_fn(input) == expected
@@ -36,11 +31,6 @@ def test_check_sync_function_return_same_value_within_timelimit(input, expected)
 
 @pytest.mark.parametrize(
     'input,expected', [
-        ('first', 'first'),
-        (2.0, 2.0),
-        ({}, {}),
-        ([], []),
-        ('a', 'a'),
         (True, True),
     ])
 def test_check_async_function_return_same_value_within_timelimit(input, expected):
@@ -57,16 +47,7 @@ def test_check_async_function_return_same_value_within_timelimit(input, expected
     assert asyncio.run(some_async_fn(input)) == expected
 
 
-@pytest.mark.parametrize(
-    'input,expected', [
-        ('first', 'first'),
-        (2.0, 2.0),
-        ({}, {}),
-        ([], []),
-        ('a', 'a'),
-        (True, True),
-    ])
-def test_check_sync_function_timeout(input, expected):
+def test_check_sync_function_timeout():
     """
     Test that the decorated synchronous function exceeds the timeout value and
     1. function call returns - None
@@ -80,20 +61,11 @@ def test_check_sync_function_timeout(input, expected):
         time.sleep(2)
         return value
 
-    assert some_sync_fn(input) is None
+    assert some_sync_fn('') is None
     assert os._exit.called
 
 
-@pytest.mark.parametrize(
-    'input,expected', [
-        ('first', 'first'),
-        (2.0, 2.0),
-        ({}, {}),
-        ([], []),
-        ('a', 'a'),
-        (True, True),
-    ])
-def test_check_async_function_timeout(input, expected):
+def test_check_async_function_timeout():
     """
     Test that the decorated asynchronous function exceeds the timeout value and
     1. function call returns - None
@@ -107,7 +79,7 @@ def test_check_async_function_timeout(input, expected):
         await asyncio.sleep(2)
         return value
 
-    assert asyncio.run(some_async_fn(input)) is None
+    assert asyncio.run(some_async_fn('')) is None
     assert os._exit.called
 
 
