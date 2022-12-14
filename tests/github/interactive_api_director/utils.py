@@ -3,11 +3,11 @@ import time
 import sys
 
 
-def start_director(cwd):
+def start_director(cwd, config_path):
     director = subprocess.Popen(
         'fx director start '
         '--disable-tls '
-        '-c director_config.yaml',
+        f'-c {config_path}',
         cwd=cwd, shell=True
     )
     time.sleep(3)
@@ -17,7 +17,7 @@ def start_director(cwd):
     return director
 
 
-def start_envoy(cwd):
+def start_envoy(cwd, config_path):
     subprocess.check_call(
         [sys.executable, '-m', 'pip', 'install', '-r', 'sd_requirements.txt'], cwd=cwd
     )
@@ -25,7 +25,7 @@ def start_envoy(cwd):
         'fx envoy start '
         '-n env_one '
         '--disable-tls '
-        '--envoy-config-path envoy_config.yaml '
+        f'--envoy-config-path {config_path} '
         '-dh localhost '
         '-dp 50051',
         cwd=cwd, shell=True
