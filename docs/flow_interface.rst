@@ -7,10 +7,14 @@
 Flow Interface
 ***************
 
+**Important Note**
+
+The OpenFL workflow interface is experimental, subject to change, and is currently limited to single node execution.
+
 What is it?
 ===========
 
-A new OpenFL interface that gives significantly more flexility to researchers in the construction of federated learning experiments. It is heavily influenced by the interface and design of Metaflow, the popular framework for data scientists originally developed at Netflix. There are several reasons we converged on Metaflow as inspiration for our work:
+A new OpenFL interface that gives significantly more flexility to researchers in the construction of federated learning experiments. It is heavily influenced by the interface and design of `Metaflow , the popular framework for data scientists originally developed at Netflix. There are several reasons we converged on Metaflow as inspiration for our work:
 
 1. Clean expression of task sequence. Flows start with a `start` task, and end with `end`. The next task in the sequence is called by `self.next`.
 2. Easy selection of what should be sent between tasks using `include` or `exclude`
@@ -26,7 +30,7 @@ There are several modifications we make in our reimagined version of this interf
 How to use it?
 ==============
 
-Let's start with the basics. A flow is intended to define the entirety of federated learning experiment. Every flow begins with the `start` task and concludes with the `end` task. At each step in the flow, attributes can be defined, modified, or deleted. Attributes get passed forward to the next step in the flow, which is defined by the name of the task passed to the `next` function.  
+Let's start with the basics. A flow is intended to define the entirety of federated learning experiment. Every flow begins with the `start` task and concludes with the `end` task. At each step in the flow, attributes can be defined, modified, or deleted. Attributes get passed forward to the next step in the flow, which is defined by the name of the task passed to the `next` function. In the line before each task, there is a **placement decorator**. The placement decorator defines where that task will be run. The OpenFL Workflow Interface adopts the conventions set by Metaflow, that every workflow begins with start and concludes with the end task. In the following example, the aggregator begins with an optionally passed in model and optimizer. The aggregator begins the flow with the start task, where the list of collaborators is extracted from the runtime (self.collaborators = self.runtime.collaborators) and is then used as the list of participants to run the task listed in self.next, aggregated_model_validation. The model, optimizer, and anything that is not explicitly excluded from the next function will be passed from the start function on the aggregator to the aggregated_model_validation task on the collaborator. Where the tasks run is determined by the placement decorator that precedes each task definition (@aggregator or @collaborator). Once each of the collaborators (defined in the runtime) complete the aggregated_model_validation task, they pass their current state onto the train task, from train to local_model_validation, and then finally to join at the aggregator. It is in join that an average is taken of the model weights, and the next round can begin. 
 
 .. code-block:: python
 
@@ -140,4 +144,88 @@ Workflow Interface API
 
 The workflow interface formulates the experiment as a series of tasks, or a flow. Every flow begins with the `start` task and concludes with `end`.
 
+Runtimes
+========
+
+A :code:`Runtime` defines where the flow will be executed, who the participants are in the experiment, and the private information that each participant has access to. In this experimental release, single node execution is supported using the :code:`LocalRuntime`. Let's see how a :code:`LocalRuntime` is created:
+
+.. code-block:: python
+    
+    # Setup participants
+    aggregator = Aggregator()
+    aggregator.private_attributes = {}
+
+    # Setup collaborators with private attributes
+    collaborator_names = ['Portland', 'Seattle', 'Chandler','Bangalore']
+    collaborators = [Collaborator(name=name) for name in collaborator_names]
+    for idx, collaborator in enumerate(collaborators):
+        local_train = deepcopy(mnist_train)
+        local_test = deepcopy(mnist_test)
+        local_train.data = mnist_train.data[idx::len(collaborators)]
+        local_train.targets = mnist_train.targets[idx::len(collaborators)]
+        local_test.data = mnist_test.data[idx::len(collaborators)]
+        local_test.targets = mnist_test.targets[idx::len(collaborators)]
+        collaborator.private_attributes = {
+                'train_loader': torch.utils.data.DataLoader(local_train,batch_size=batch_size_train, shuffle=True),
+                'test_loader': torch.utils.data.DataLoader(local_test,batch_size=batch_size_train, shuffle=True)
+        }
+
+    # This is equivalent to:
+    # local_runtime = LocalRuntime(aggregator=aggregator, collaborators=collaborators, backend='single_process')
+    local_runtime = LocalRuntime(aggregator=aggregator, collaborators=collaborators)
+
+Let's break this down, starting with the :code:`Aggregator` and :code:`Collaborator` placeholders. These placeholders represent the nodes where tasks will be executed. Each participant placeholder has its own set of :code:`private_attributes`; a dictionary where the key is the name of the attribute, and the value is the object. In the above example, each of the four collaborators ('Portland', 'Seattle', 'Chandler', and 'Bangalore'), have a :code:`train_loader` and `test_loader` that they can access. These private attributes can be named anything, and do not necessarily need to be the same across each participant. 
+
+Now let's see how the runtime for a flow is assigned, and the flow gets run:
+
+.. code-block:: python
+   
+    flow = FederatedFlow()
+    flow.runtime = local_runtime
+    flow.run()
+    
+And that's it! This will run an instance of the :code:`FederatedFlow` on a single node in a single process. 
+
+Runtime Backends
+================
+
+The Runtime defines where code will run, but the Runtime has a :code:`Backend` - which defines the underlying implementation of *how* the flow will be executed. :code:`'single_process'` is the default in the :code:`LocalRuntime`: it executes all code sequentially within a single python process, and is well suited to run both on high spec and low spec hardware. For users with large servers or multiple GPUs they wish to take advantage of, we also provide a `Ray <https://github.com/ray-project/ray>` backend. The Ray backend enables parallel task execution for collaborators, and optionally allows users to request dedicated GPUs for collaborator tasks in the placement decorator, as follows:
+
+.. code-block:: python
+    
+    ExampleDedicatedGPUFlow(FLSpec):
+        ...
+        # We request one dedicated GPU for this task 
+        @collaborator(num_gpus=1)
+        def training(self):
+            print(f'CUDA_VISIBLE_DEVICES: {os.environ["CUDA_VISIBLE_DEVICES"]}'))
+            self.loss = train_func(self.model, self.train_loader)
+            self.next(self.validation)    
+        ...
+    
+     # The Ray Backend will now be used for local execution
+     local_runtime = LocalRuntime(aggregator=aggregator, collaborators=collaborators, backend='ray')
+
+Debugging with the Metaflow Client
+==================================
+
+WIP
+
+Runtimes: Future Plans
+======================
+
+Our goal is to make it a one line change to configure where and how a flow is executed. While we only support single node execution with the :code:`LocalRuntime` today, our aim in future releases is to make going from one to multiple nodes as easy as:
+
+.. code-block:: python
+   
+    flow = FederatedFlow()
+    # Run on a single node first
+    local_runtime = LocalRuntime(aggregator=aggregator, collaborators=collaborators)
+    flow.runtime = local_runtime
+    flow.run()
+    
+    # A future example of how the same flow could be run on distributed infrastructure
+    federated_runtime = FederatedRuntime(...)
+    flow.runtime = federated_runtime
+    flow.run()
 
