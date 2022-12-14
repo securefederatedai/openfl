@@ -9,7 +9,7 @@ Flow Interface
 
 **Important Note**
 
-The OpenFL workflow interface is experimental, subject to change, and is currently limited to single node execution.
+The OpenFL workflow interface is experimental, subject to change, and is currently limited to single node execution. To setup and launch a real federation, see :doc:`running_the_federation`
 
 What is it?
 ===========
