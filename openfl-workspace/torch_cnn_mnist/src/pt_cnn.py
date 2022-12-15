@@ -193,3 +193,16 @@ class PyTorchCNN(PyTorchTaskRunner):
 
         """
         self._init_optimizer()
+
+    def save_native(self, filepath):
+        """
+        Save model in a picked file specified by the filepath.
+        Uses torch.save().
+
+        Args:
+            filepath (string)                 : Path to pickle file to be
+                                                created by pt.save().
+        Returns:
+            None
+        """
+        torch.save(self, filepath)

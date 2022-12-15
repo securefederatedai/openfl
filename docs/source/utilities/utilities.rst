@@ -13,9 +13,13 @@ The following are utilities available in Open Federated Learning (|productName|)
 :doc:`splitters_data`
     Split your data to run your federation from a single dataset.
 
+:doc:`timeouts`
+    Decorate methods to enforce timeout on it's execution.
+
 .. toctree::
    :maxdepth: 1
    :hidden:
 
    pki
    splitters_data
+   timeouts

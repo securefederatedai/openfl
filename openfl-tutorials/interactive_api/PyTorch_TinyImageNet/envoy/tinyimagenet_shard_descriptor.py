@@ -35,7 +35,8 @@ class TinyImageNetDataset(ShardDataset):
                 recursive=True
             )
         )[rank - 1::worldsize]
-        with open(os.path.join(self._common_data_folder, 'wnids.txt'), 'r') as fp:
+        wnids_path = os.path.join(self._common_data_folder, 'wnids.txt')
+        with open(wnids_path, 'r', encoding='utf-8') as fp:
             self.label_texts = sorted([text.strip() for text in fp.readlines()])
         self.label_text_to_number = {text: i for i, text in enumerate(self.label_texts)}
         self.fill_labels()
@@ -62,7 +63,8 @@ class TinyImageNetDataset(ShardDataset):
                 for cnt in range(self.NUM_IMAGES_PER_CLASS):
                     self.labels[f'{label_text}_{cnt}.JPEG'] = i
         elif self.data_type == 'val':
-            with open(os.path.join(self._data_folder, 'val_annotations.txt'), 'r') as fp:
+            val_annotations_path = os.path.join(self._data_folder, 'val_annotations.txt')
+            with open(val_annotations_path, 'r', encoding='utf-8') as fp:
                 for line in fp.readlines():
                     terms = line.split('\t')
                     file_name, label_text = terms[0], terms[1]

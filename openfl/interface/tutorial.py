@@ -29,13 +29,14 @@ def tutorial(context):
 def start(ip, port):
     """Start the Jupyter Lab from the tutorials directory."""
     from os import environ
+    from os import sep
     from subprocess import check_call
     from sys import executable
 
     from openfl.interface.cli_helper import TUTORIALS
 
     if 'VIRTUAL_ENV' in environ:
-        venv = environ['VIRTUAL_ENV'].split('/')[-1]
+        venv = environ['VIRTUAL_ENV'].split(sep)[-1]
         check_call([
             executable, '-m', 'ipykernel', 'install',
             '--user', '--name', f'{venv}'

@@ -10,7 +10,8 @@ class PercentageBasedStragglerHandling(StragglerHandlingFunction):
         self,
         percent_collaborators_needed=1.0,
         minimum_reporting=1,
-        **kwargs):
+        **kwargs
+    ):
         self.percent_collaborators_needed = percent_collaborators_needed
         self.minimum_reporting = minimum_reporting
 

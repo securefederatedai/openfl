@@ -14,6 +14,11 @@ sequenceDiagram
   note over ER,D: Registry can also return <br>an experiment list by user id
   D->>-F: Approves
 
+  F->>+D: Get Experiment Status
+  D->>+ER: Gets the status of the current experiment
+  note over ER,D: Experiment might be pending, in progress, failed or finished
+  D->>-F: Approves
+
   rect rgb(225, 255, 225)
     note over ER,E: Envoys may start awaiting experiments <br>even if the queue is empty
     E-)+D: Wait Experiment *STREAM*
@@ -23,6 +28,7 @@ sequenceDiagram
 
     E->>+D: Get Experiment Data
     D->>ER: Gets experiment archive (by name)
+    D-->D: Reviews the FL Plan
     D->>ER: Sets status to In Progress
     D->>-E: Experiment Data
   end

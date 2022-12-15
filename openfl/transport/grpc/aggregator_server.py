@@ -5,11 +5,13 @@
 
 import logging
 from concurrent.futures import ThreadPoolExecutor
+from random import random
 from multiprocessing import cpu_count
 from time import sleep
 
 from grpc import server
 from grpc import ssl_server_credentials
+from grpc import StatusCode
 
 from openfl.protocols import aggregator_pb2
 from openfl.protocols import aggregator_pb2_grpc
@@ -80,7 +82,10 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
             collaborator_common_name = request.header.sender
             if not self.aggregator.valid_collaborator_cn_and_id(
                     common_name, collaborator_common_name):
-                raise ValueError(
+                # Random delay in authentication failures
+                sleep(5 * random())
+                context.abort(
+                    StatusCode.UNAUTHENTICATED,
                     f'Invalid collaborator. CN: |{common_name}| '
                     f'collaborator_common_name: |{collaborator_common_name}|')
 

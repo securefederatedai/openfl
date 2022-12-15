@@ -15,8 +15,6 @@ from yaml import SafeDumper
 from openfl.interface.aggregation_functions import AggregationFunction
 from openfl.interface.aggregation_functions import WeightedAverage
 from openfl.component.assigner.custom_assigner import Assigner
-from openfl.component.straggler_handling_functions import CutoffTimeBasedStragglerHandling
-from openfl.component.straggler_handling_functions import StragglerHandlingFunction
 from openfl.interface.cli_helper import WORKSPACE
 from openfl.transport import AggregatorGRPCClient
 from openfl.transport import AggregatorGRPCServer
@@ -305,7 +303,8 @@ class Plan:
                     aggregation_type[SETTINGS] = {}
                 aggregation_type = Plan.build(**aggregation_type)
                 if not isinstance(aggregation_type, AggregationFunction):
-                    raise NotImplementedError(f'''{task} task aggregation type does not implement an interface:
+                    raise NotImplementedError(
+                        f'''{task} task aggregation type does not implement an interface:
     openfl.interface.aggregation_functions.AggregationFunction
     ''')
             tasks[task]['aggregation_type'] = aggregation_type
@@ -357,14 +356,15 @@ class Plan:
 
     def get_straggler_handling_policy(self):
         """Get straggler handling policy."""
+        template = 'openfl.component.straggler_handling_functions.CutoffTimeBasedStragglerHandling'
         defaults = self.config.get(
             'straggler_handling_policy',
             {
-                TEMPLATE: 'openfl.component.straggler_handling_functions.CutoffTimeBasedStragglerHandling',
+                TEMPLATE: template,
                 SETTINGS: {}
             }
         )
-        
+
         if self.straggler_policy_ is None:
             self.straggler_policy_ = Plan.build(**defaults)
 
