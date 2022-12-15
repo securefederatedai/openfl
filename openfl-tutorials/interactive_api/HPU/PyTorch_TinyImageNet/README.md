@@ -69,38 +69,30 @@ The default virtual environment folder is $HOME/habanalabs-venv. To override the
 
 The following set of code additions are required in the workspace notebook to run a model on Habana. The following steps cover Eager and Lazy modes of execution.
 
-### 1. Load the Habana PyTorch Plugin Library, libhabana_pytorch_plugin.so.
-
-```
-import torch
-from habana_frameworks.torch.utils.library_loader import load_habana_module
-load_habana_module()
-```
-
-### 2. Target the Gaudi HPU device:
+### 1. Target the Gaudi HPU device:
 
 ```
 device = torch.device("hpu")
 ```
-### 3. Move the model to the device:
+### 2. Move the model to the device:
 
 **There is a dependency in the order of execution (moving model to HPU and intializing optimizer). The workaround is to execute this step before initializing any optimizers.**
 
 ```
 model.to(device)
 ```
-### 4. Import the Habana Torch Library:
+### 3. Import the Habana Torch Library:
 
 ```
 import habana_frameworks.torch.core as htcore
 ```
-### 5. Enable Lazy execution mode by setting the environment variable shown below. 
+### 4. Enable Lazy execution mode by setting the environment variable shown below. 
 Do not set this environment variable if you want to execute your code in Eager mode:
 
 ```
 os.environ["PT_HPU_LAZY_MODE"] = "1"
 ```
-### 6. In Lazy mode, execution is triggered wherever data is read back to the host from the Habana device. 
+### 5. In Lazy mode, execution is triggered wherever data is read back to the host from the Habana device. 
 For example, execution is triggered if you are running a topology and getting loss value into the host from the device with loss.item(). Adding a mark_step() in the code is another way to trigger execution:
 
 ```
