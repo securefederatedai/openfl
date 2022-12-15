@@ -34,9 +34,9 @@ class TestFlow_InternalLoop(FLSpec):
 
         """
         print(
-            f"{bcolors.OKBLUE}Testing FederatedFlow - " +
-            f"Test for Internal Loops - Round: {self.train_count}" +
-            f" of Training Rounds: {self.training_rounds}{bcolors.ENDC}"
+            f"{bcolors.OKBLUE}Testing FederatedFlow - "
+            + f"Test for Internal Loops - Round: {self.train_count}"
+            + f" of Training Rounds: {self.training_rounds}{bcolors.ENDC}"
         )
         self.model = np.zeros((10, 10, 10))  # Test model
         self.collaborators = self.runtime.collaborators
@@ -49,7 +49,9 @@ class TestFlow_InternalLoop(FLSpec):
         """
 
         self.agg_mean_value = np.mean(self.model)
-        print(f"<Collab>: {self.input} Mean of Agg model: {self.agg_mean_value} ")
+        print(
+            f"<Collab>: {self.input} Mean of Agg model: {self.agg_mean_value} "
+        )
         self.next(self.collab_model_update)
 
     @collaborator
@@ -75,7 +77,9 @@ class TestFlow_InternalLoop(FLSpec):
         """
         Joining inputs from collaborators
         """
-        self.agg_mean = sum(input.local_mean_value for input in inputs) / len(inputs)
+        self.agg_mean = sum(input.local_mean_value for input in inputs) / len(
+            inputs
+        )
         print(f"Aggregated mean : {self.agg_mean}")
         self.next(self.internal_loop)
 
@@ -111,7 +115,7 @@ def validate_flow(flow_obj, expected_flow_steps):
     """
     validate_flow_error = []  # List to capture any errors in the flow
 
-    from metaflow import Metaflow, Flow, Run, Task, Step
+    from metaflow import Flow
 
     cli_flow_obj = Flow("TestFlow_InternalLoop")  # Flow object from CLI
     cli_flow_steps = list(cli_flow_obj.latest_run)  # Steps from CLI
@@ -120,7 +124,8 @@ def validate_flow(flow_obj, expected_flow_steps):
     # 1. If the given training round were completed
     if not flow_obj.training_rounds == flow_obj.train_count:
         validate_flow_error.append(
-            f"{bcolors.FAIL}... Error : Number of training completed is not equal to training rounds {bcolors.ENDC} \n"
+            f"{bcolors.FAIL}... Error : Number of training completed is not equal"
+            + f" to training rounds {bcolors.ENDC} \n"
         )
 
     for step in cli_flow_steps:
@@ -131,20 +136,24 @@ def validate_flow(flow_obj, expected_flow_steps):
 
         # Each aggregator step should be executed for training rounds times
         if (
-            (func.aggregator_step == True)
+            (func.aggregator_step is True)
             and (task_count != flflow.training_rounds)
             and (step.id != "end")
         ):
             validate_flow_error.append(
-                f"{bcolors.FAIL}... Error : More than one execution detected for Aggregator Step: {step} {bcolors.ENDC} \n"
+                f"{bcolors.FAIL}... Error : More than one execution detected for "
+                + f"Aggregator Step: {step} {bcolors.ENDC} \n"
             )
 
-        # Each collaborator step should be executed for (training rounds)*(number of collaborator) times
-        if (func.collaborator_step == True) and (
+        # Each collaborator step is executed for (training rounds)*(number of collaborator) times
+        if (func.collaborator_step is True) and (
             task_count != len(flow_obj.collaborators) * flflow.training_rounds
         ):
             validate_flow_error.append(
-                f"{bcolors.FAIL}... Error : Incorrect number of execution detected for Collaborator Step: {step}. Expected: {flflow.training_rounds*len(flow_obj.collaborators)} Actual: {task_count}{bcolors.ENDC} \n"
+                f"{bcolors.FAIL}... Error : Incorrect number of execution detected for "
+                + f"Collaborator Step: {step}. Expected: "
+                + f"{flflow.training_rounds*len(flow_obj.collaborators)} "
+                + f"Actual: {task_count}{bcolors.ENDC} \n"
             )
 
     steps_present_in_cli = [
@@ -159,17 +168,20 @@ def validate_flow(flow_obj, expected_flow_steps):
 
     if len(steps_present_in_cli) != len(expected_flow_steps):
         validate_flow_error.append(
-            f"{bcolors.FAIL}... Error : Number of steps fetched from Datastore through CLI do not match the Expected steps provided {bcolors.ENDC}  \n"
+            f"{bcolors.FAIL}... Error : Number of steps fetched from Datastore through CLI do not "
+            + f"match the Expected steps provided {bcolors.ENDC}  \n"
         )
 
     if len(missing_steps_in_cli) != 0:
         validate_flow_error.append(
-            f"{bcolors.FAIL}... Error : Following steps missing from Datastore: {missing_steps_in_cli} {bcolors.ENDC}  \n"
+            f"{bcolors.FAIL}... Error : Following steps missing from Datastore: "
+            + f"{missing_steps_in_cli} {bcolors.ENDC}  \n"
         )
 
     if len(extra_steps_in_cli) != 0:
         validate_flow_error.append(
-            f"{bcolors.FAIL}... Error : Following steps are extra in Datastore: {extra_steps_in_cli} {bcolors.ENDC}  \n"
+            f"{bcolors.FAIL}... Error : Following steps are extra in Datastore: "
+            + f"{extra_steps_in_cli} {bcolors.ENDC}  \n"
         )
 
     if not flow_obj.end_count == 1:
@@ -183,8 +195,8 @@ def validate_flow(flow_obj, expected_flow_steps):
     else:
         print(
             f"""{bcolors.OKGREEN}\n **** Summary of internal flow testing ****
-        No issues found and below are the tests that ran successfully 
-        1. Number of training completed is equal to training rounds 
+        No issues found and below are the tests that ran successfully
+        1. Number of training completed is equal to training rounds
         2. Cli steps and Expected steps are matching
         3. Number of tasks are aligned with number of rounds and number of collaborators
         4. End function executed one time {bcolors.ENDC}"""
@@ -217,7 +229,9 @@ if __name__ == "__main__":
     ]
     collaborators = [Collaborator(name=name) for name in collaborator_names]
 
-    local_runtime = LocalRuntime(aggregator=aggregator, collaborators=collaborators)
+    local_runtime = LocalRuntime(
+        aggregator=aggregator, collaborators=collaborators
+    )
     print(f"Local runtime collaborators = {local_runtime._collaborators}")
 
     model = None

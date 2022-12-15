@@ -5,6 +5,7 @@ from openfl.experimental.interface import FLSpec, Aggregator, Collaborator
 from openfl.experimental.runtime import LocalRuntime
 from openfl.experimental.placement import aggregator, collaborator
 
+
 class bcolors:
     HEADER = "\033[95m"
     OKBLUE = "\033[94m"
@@ -30,7 +31,8 @@ class TestFlowInclude(FLSpec):
         Flow start.
         """
         print(
-            f"{bcolors.OKBLUE}Testing FederatedFlow - Starting Test for Include Attributes {bcolors.ENDC}"
+            f"{bcolors.OKBLUE}Testing FederatedFlow - Starting Test for Include Attributes "
+            + f"{bcolors.ENDC}"
         )
         self.collaborators = self.runtime.collaborators
 
@@ -47,11 +49,12 @@ class TestFlowInclude(FLSpec):
         Testing whether attributes are included from agg to agg
         """
         if (
-            hasattr(self, "include_agg_to_agg") == True
-            and hasattr(self, "exclude_agg_to_agg") == False
+            hasattr(self, "include_agg_to_agg") is True
+            and hasattr(self, "exclude_agg_to_agg") is False
         ):
             print(
-                f"{bcolors.OKGREEN} ... Include test passed in test_include_agg_to_agg {bcolors.ENDC}"
+                f"{bcolors.OKGREEN} ... Include test passed in test_include_agg_to_agg "
+                + f"{bcolors.ENDC}"
             )
         else:
             TestFlowInclude.include_error_list.append("test_include_agg_to_agg")
@@ -73,23 +76,28 @@ class TestFlowInclude(FLSpec):
         Testing whether attributes are included from agg to collab
         """
         if (
-            hasattr(self, "include_agg_to_agg") == False
-            and hasattr(self, "exclude_agg_to_agg") == False
-            and hasattr(self, "exclude_agg_to_collab") == False
-            and hasattr(self, "include_agg_to_collab") == True
+            hasattr(self, "include_agg_to_agg") is False
+            and hasattr(self, "exclude_agg_to_agg") is False
+            and hasattr(self, "exclude_agg_to_collab") is False
+            and hasattr(self, "include_agg_to_collab") is True
         ):
             print(
-                f"{bcolors.OKGREEN} ... Include test passed in test_include_agg_to_collab {bcolors.ENDC}"
+                f"{bcolors.OKGREEN} ... Include test passed in test_include_agg_to_collab "
+                + f"{bcolors.ENDC}"
             )
         else:
-            TestFlowInclude.include_error_list.append("test_include_agg_to_collab")
+            TestFlowInclude.include_error_list.append(
+                "test_include_agg_to_collab"
+            )
             print(
-                f"{bcolors.FAIL} ... Include test failed in test_include_agg_to_collab {bcolors.ENDC}"
+                f"{bcolors.FAIL} ... Include test failed in test_include_agg_to_collab "
+                + f"{bcolors.ENDC}"
             )
         self.exclude_collab_to_collab = 10
         self.include_collab_to_collab = 44
         self.next(
-            self.test_include_collab_to_collab, include=["include_collab_to_collab"]
+            self.test_include_collab_to_collab,
+            include=["include_collab_to_collab"],
         )
 
     @collaborator
@@ -98,20 +106,24 @@ class TestFlowInclude(FLSpec):
         Testing whether attributes are included from collab to collab
         """
         if (
-            hasattr(self, "include_agg_to_agg") == False
-            and hasattr(self, "include_agg_to_collab") == False
-            and hasattr(self, "include_collab_to_collab") == True
-            and hasattr(self, "exclude_agg_to_agg") == False
-            and hasattr(self, "exclude_agg_to_collab") == False
-            and hasattr(self, "exclude_collab_to_collab") == False
+            hasattr(self, "include_agg_to_agg") is False
+            and hasattr(self, "include_agg_to_collab") is False
+            and hasattr(self, "include_collab_to_collab") is True
+            and hasattr(self, "exclude_agg_to_agg") is False
+            and hasattr(self, "exclude_agg_to_collab") is False
+            and hasattr(self, "exclude_collab_to_collab") is False
         ):
             print(
-                f"{bcolors.OKGREEN} ... Include test passed in test_include_collab_to_collab {bcolors.ENDC}"
+                f"{bcolors.OKGREEN} ... Include test passed in test_include_collab_to_collab "
+                + f"{bcolors.ENDC}"
             )
         else:
-            TestFlowInclude.include_error_list.append("test_include_collab_to_collab")
+            TestFlowInclude.include_error_list.append(
+                "test_include_collab_to_collab"
+            )
             print(
-                f"{bcolors.FAIL} ... Include test failed in test_include_collab_to_collab {bcolors.ENDC}"
+                f"{bcolors.FAIL} ... Include test failed in test_include_collab_to_collab "
+                + f"{bcolors.ENDC}"
             )
 
         self.exclude_collab_to_agg = 20
@@ -125,33 +137,42 @@ class TestFlowInclude(FLSpec):
         """
         # Aggregator attribute check
         validate = (
-            hasattr(self, "include_agg_to_agg") == True
-            and hasattr(self, "include_agg_to_collab") == True
-            and hasattr(self, "exclude_agg_to_collab") == True
-            and hasattr(self, "exclude_agg_to_agg") == False
+            hasattr(self, "include_agg_to_agg") is True
+            and hasattr(self, "include_agg_to_collab") is True
+            and hasattr(self, "exclude_agg_to_collab") is True
+            and hasattr(self, "exclude_agg_to_agg") is False
         )
 
         # Collaborator attribute check
         for input in inputs:
             validation = validate and (
-                hasattr(input, "include_collab_to_collab") == False
-                and hasattr(input, "exclude_collab_to_collab") == False
-                and hasattr(input, "exclude_collab_to_agg") == False
-                and hasattr(input, "include_collab_to_agg") == True
+                hasattr(input, "include_collab_to_collab") is False
+                and hasattr(input, "exclude_collab_to_collab") is False
+                and hasattr(input, "exclude_collab_to_agg") is False
+                and hasattr(input, "include_collab_to_agg") is True
             )
 
         if validation:
-            print(f"{bcolors.OKGREEN} ... Include test passed in join {bcolors.ENDC}")
+            print(
+                f"{bcolors.OKGREEN} ... Include test passed in join {bcolors.ENDC}"
+            )
         else:
             TestFlowInclude.include_error_list.append("join")
-            print(f"{bcolors.FAIL} ... Include test failed in join {bcolors.ENDC}")
+            print(
+                f"{bcolors.FAIL} ... Include test failed in join {bcolors.ENDC}"
+            )
 
-        print(f"\n{bcolors.UNDERLINE}Include attribute test summary: {bcolors.ENDC}\n")
+        print(
+            f"\n{bcolors.UNDERLINE}Include attribute test summary: {bcolors.ENDC}\n"
+        )
 
         if TestFlowInclude.include_error_list:
-            validated_include_variables = ",".join(TestFlowInclude.include_error_list)
+            validated_include_variables = ",".join(
+                TestFlowInclude.include_error_list
+            )
             print(
-                f"{bcolors.FAIL} ...Test case failed for {validated_include_variables} {bcolors.ENDC}"
+                f"{bcolors.FAIL} ...Test case failed for {validated_include_variables} "
+                + f"{bcolors.ENDC}"
             )
 
         self.next(self.end)
@@ -163,7 +184,8 @@ class TestFlowInclude(FLSpec):
         last step in the flow.
         """
         print(
-            f"{bcolors.OKBLUE}Testing FederatedFlow - Ending Test for Include Attributes {bcolors.ENDC}"
+            f"{bcolors.OKBLUE}Testing FederatedFlow - Ending Test for Include Attributes "
+            + f"{bcolors.ENDC}"
         )
         if TestFlowInclude.include_error_list:
             raise (
@@ -182,7 +204,9 @@ if __name__ == "__main__":
     collaborator_names = ["Portland", "Chandler", "Bangalore", "Delhi"]
     collaborators = [Collaborator(name=name) for name in collaborator_names]
 
-    local_runtime = LocalRuntime(aggregator=aggregator, collaborators=collaborators)
+    local_runtime = LocalRuntime(
+        aggregator=aggregator, collaborators=collaborators
+    )
     print(f"Local runtime collaborators = {local_runtime._collaborators}")
 
     flflow = TestFlowInclude(checkpoint=True)

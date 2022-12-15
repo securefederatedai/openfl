@@ -756,13 +756,13 @@ if __name__ == "__main__":
                 local_test, batch_size=batch_size_test, shuffle=False
             ),
         }
-
-    # Default: all collaborators running on single process in a sequential fashion
-    # To enable running each colaborator task on its own isolated process in parallel, please change backend='ray'
-    local_runtime = LocalRuntime(
-        aggregator=aggregator, collaborators=collaborators, backend="single_process"
-    )
-    print(f"Local runtime collaborators = {local_runtime._collaborators}")
+    
+    # To activate the ray backend with parallel collaborator tasks run in their own process
+    # and exclusive GPUs assigned to tasks, uncomment the following:
+    # local_runtime = LocalRuntime(aggregator=aggregator, collaborators=collaborators, backend='ray')
+    local_runtime = LocalRuntime(aggregator=aggregator, collaborators=collaborators)
+    
+    print(f'Local runtime collaborators = {local_runtime._collaborators}')
 
     ## change to the internal flow loop
     model = Net()
