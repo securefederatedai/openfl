@@ -1,1 +1,1 @@
-tensorflow-cpu==2.8.3
+tensorflow-cpu==2.8.4
