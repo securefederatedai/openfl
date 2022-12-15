@@ -1,9 +1,12 @@
+# Copyright (C) 2020-2021 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 # -*- coding: utf-8 -*-
-# File   : replicate.py
-# Author : Jiayuan Mao
-# Email  : maojiayuan@gmail.com
-# Date   : 27/01/2018
-# 
+# File    replicate.py
+# Author  Jiayuan Mao
+# Email   maojiayuan@gmail.com
+# Date    27/01/2018
+#
 # This file is part of Synchronized-BatchNorm-PyTorch.
 # https://github.com/vacancy/Synchronized-BatchNorm-PyTorch
 # Distributed under MIT License.
@@ -26,7 +29,8 @@ class CallbackContext(object):
 
 def execute_replication_callbacks(modules):
     """
-    Execute an replication callback `__data_parallel_replicate__` on each module created by original replication.
+    Execute an replication callback `__data_parallel_replicate__`
+    on each module created by original replication.
 
     The callback will be invoked with arguments `__data_parallel_replicate__(ctx, copy_id)`
 
@@ -34,8 +38,8 @@ def execute_replication_callbacks(modules):
     (shared among multiple copies of this module on different devices).
     Through this context, different copies can share some information.
 
-    We guarantee that the callback on the master copy (the first copy) will be called ahead of calling the callback
-    of any slave copies.
+    We guarantee that the callback on the master copy (the first copy)
+    will be called ahead of calling the callback of any slave copies.
     """
     master_copy = modules[0]
     nr_modules = len(list(master_copy.modules()))
@@ -51,8 +55,8 @@ class DataParallelWithCallback(DataParallel):
     """
     Data Parallel with a replication callback.
 
-    An replication callback `__data_parallel_replicate__` of each module will be invoked after being created by
-    original `replicate` function.
+    An replication callback `__data_parallel_replicate__` of each module
+    will be invoked after being created by original `replicate` function.
     The callback will be invoked with arguments `__data_parallel_replicate__(ctx, copy_id)`
 
     Examples:
