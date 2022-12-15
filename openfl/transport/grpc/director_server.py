@@ -7,11 +7,13 @@ import asyncio
 import logging
 import uuid
 from pathlib import Path
+from typing import Callable
 from typing import Optional
 from typing import Union
 
 from google.protobuf.json_format import MessageToDict
 from google.protobuf.json_format import ParseDict
+import grpc
 from grpc import aio
 from grpc import ssl_server_credentials
 
@@ -22,6 +24,7 @@ from openfl.protocols import director_pb2_grpc
 from openfl.protocols.utils import construct_model_proto
 from openfl.protocols.utils import deconstruct_model_proto
 from openfl.protocols.utils import get_headers
+from openfl.transport.grpc.exceptions import ShardNotFoundError
 
 from .grpc_channel_options import channel_options
 
@@ -40,9 +43,11 @@ class DirectorGRPCServer(director_pb2_grpc.DirectorServicer):
             root_certificate: Optional[Union[Path, str]] = None,
             private_key: Optional[Union[Path, str]] = None,
             certificate: Optional[Union[Path, str]] = None,
+            review_plan_callback: Union[None, Callable] = None,
             listen_host: str = '[::]',
             listen_port: int = 50051,
-            **kwargs,
+            envoy_health_check_period: int = 0,
+            **kwargs
     ) -> None:
         """Initialize a director object."""
         # TODO: add working directory
@@ -61,6 +66,8 @@ class DirectorGRPCServer(director_pb2_grpc.DirectorServicer):
             root_certificate=self.root_certificate,
             private_key=self.private_key,
             certificate=self.certificate,
+            review_plan_callback=review_plan_callback,
+            envoy_health_check_period=envoy_health_check_period,
             **kwargs
         )
 
@@ -156,6 +163,17 @@ class DirectorGRPCServer(director_pb2_grpc.DirectorServicer):
         logger.info('Send response')
         return director_pb2.SetNewExperimentResponse(accepted=is_accepted)
 
+    async def GetExperimentStatus(self, request, context):
+        """Get experiment status and update if experiment was approved."""
+        logger.info('GetExperimentStatus request received')
+        caller = self.get_caller(context)
+        experiment_status = await self.director.get_experiment_status(
+            experiment_name=request.experiment_name,
+            caller=caller
+        )
+        logger.info('Send response')
+        return director_pb2.GetExperimentStatusResponse(experiment_status=experiment_status)
+
     async def GetTrainedModel(self, request, context):  # NOQA:N802
         """RPC for retrieving trained models."""
         logger.info('Request GetTrainedModel has got!')
@@ -197,15 +215,13 @@ class DirectorGRPCServer(director_pb2_grpc.DirectorServicer):
                     break
                 yield director_pb2.ExperimentData(size=len(data), npbytes=data)
 
-    async def WaitExperiment(self, request_iterator, context):  # NOQA:N802
+    async def WaitExperiment(self, request, context):  # NOQA:N802
         """Request for wait an experiment."""
-        logger.info('Request WaitExperiment has got!')
-        async for msg in request_iterator:
-            logger.info(msg)
-            experiment_name = await self.director.wait_experiment(msg.collaborator_name)
-            logger.info(f'Experiment {experiment_name} was prepared')
+        logger.info(f'Request WaitExperiment has got from envoy {request.collaborator_name}!')
+        experiment_name = await self.director.wait_experiment(request.collaborator_name)
+        logger.info(f'Experiment {experiment_name} is ready for {request.collaborator_name}')
 
-            yield director_pb2.WaitExperimentResponse(experiment_name=experiment_name)
+        return director_pb2.WaitExperimentResponse(experiment_name=experiment_name)
 
     async def GetDatasetInfo(self, request, context):  # NOQA:N802
         """Request the info about target and sample shapes in the dataset."""
@@ -266,15 +282,20 @@ class DirectorGRPCServer(director_pb2_grpc.DirectorServicer):
             MessageToDict(message, preserving_proto_field_name=True)
             for message in request.cuda_devices
         ]
-        health_check_period = self.director.update_envoy_status(
-            envoy_name=request.name,
-            is_experiment_running=request.is_experiment_running,
-            cuda_devices_status=cuda_devices_info
-        )
-        resp = director_pb2.UpdateEnvoyStatusResponse()
-        resp.health_check_period.seconds = health_check_period
+        try:
+            health_check_period = self.director.update_envoy_status(
+                envoy_name=request.name,
+                is_experiment_running=request.is_experiment_running,
+                cuda_devices_status=cuda_devices_info
+            )
+        except ShardNotFoundError as exc:
+            logger.error(exc)
+            await context.abort(grpc.StatusCode.NOT_FOUND, str(exc))
+        else:
+            resp = director_pb2.UpdateEnvoyStatusResponse()
+            resp.health_check_period.seconds = health_check_period
 
-        return resp
+            return resp
 
     async def GetEnvoys(self, request, context):  # NOQA:N802
         """Get a status information about envoys."""

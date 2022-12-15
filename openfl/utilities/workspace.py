@@ -8,6 +8,7 @@ import os
 import shutil
 import sys
 import time
+from contextlib import contextmanager
 from pathlib import Path
 from subprocess import check_call
 from sys import executable
@@ -25,20 +26,22 @@ class ExperimentWorkspace:
             self,
             experiment_name: str,
             data_file_path: Path,
-            is_install_requirements: bool = False
+            install_requirements: bool = False,
+            remove_archive: bool = True
     ) -> None:
         """Initialize workspace context manager."""
         self.experiment_name = experiment_name
         self.data_file_path = data_file_path
-        self.cwd = os.getcwd()
-        self.experiment_work_dir = f'{self.cwd}/{self.experiment_name}'
-        self.is_install_requirements = is_install_requirements
+        self.install_requirements = install_requirements
+        self.cwd = Path.cwd()
+        self.experiment_work_dir = self.cwd / self.experiment_name
+        self.remove_archive = remove_archive
 
     def _install_requirements(self):
         """Install experiment requirements."""
-        requirements_filename = f'{self.experiment_work_dir}/requirements.txt'
+        requirements_filename = self.experiment_work_dir / 'requirements.txt'
 
-        if os.path.isfile(requirements_filename):
+        if requirements_filename.is_file():
             attempts = 10
             for _ in range(attempts):
                 try:
@@ -57,13 +60,13 @@ class ExperimentWorkspace:
 
     def __enter__(self):
         """Create a collaborator workspace for the experiment."""
-        if os.path.exists(self.experiment_work_dir):
-            shutil.rmtree(self.experiment_work_dir)
+        if self.experiment_work_dir.exists():
+            shutil.rmtree(self.experiment_work_dir, ignore_errors=True)
         os.makedirs(self.experiment_work_dir)
 
         shutil.unpack_archive(self.data_file_path, self.experiment_work_dir, format='zip')
 
-        if self.is_install_requirements:
+        if self.install_requirements:
             self._install_requirements()
 
         os.chdir(self.experiment_work_dir)
@@ -74,10 +77,17 @@ class ExperimentWorkspace:
     def __exit__(self, exc_type, exc_value, traceback):
         """Remove the workspace."""
         os.chdir(self.cwd)
-        shutil.rmtree(self.experiment_name, ignore_errors=True)
+        shutil.rmtree(self.experiment_work_dir, ignore_errors=True)
         if self.experiment_work_dir in sys.path:
             sys.path.remove(self.experiment_work_dir)
-        os.remove(self.data_file_path)
+
+        if self.remove_archive:
+            logger.debug(
+                'Exiting from the workspace context manager'
+                f' for {self.experiment_name} experiment'
+            )
+            logger.debug(f'Archive still exists: {self.data_file_path.exists()}')
+            self.data_file_path.unlink(missing_ok=False)
 
 
 def dump_requirements_file(
@@ -101,7 +111,7 @@ def dump_requirements_file(
     # We expect that all the prefixes in a requirement file
     # are placed at the top
     if keep_original_prefixes and path.is_file():
-        with open(path) as f:
+        with open(path, encoding='utf-8') as f:
             for line in f:
                 if line == '\n':
                     continue
@@ -111,7 +121,7 @@ def dump_requirements_file(
                     break
 
     requirements_generator = freeze.freeze()
-    with open(path, 'w') as f:
+    with open(path, 'w', encoding='utf-8') as f:
         for prefix in prefixes:
             f.write(prefix + '\n')
 
@@ -126,3 +136,23 @@ def _is_package_versioned(package: str) -> bool:
             and package not in ['pkg-resources==0.0.0', 'pkg_resources==0.0.0']
             and '-e ' not in package
             )
+
+
+@contextmanager
+def set_directory(path: Path):
+    """
+    Sets provided path as the cwd within the context.
+
+    Args:
+        path (Path): The path to the cwd
+
+    Yields:
+        None
+    """
+
+    origin = Path().absolute()
+    try:
+        os.chdir(path)
+        yield
+    finally:
+        os.chdir(origin)

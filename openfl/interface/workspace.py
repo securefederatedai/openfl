@@ -105,7 +105,7 @@ def create(prefix, template):
     else:
         echo('No additional requirements for workspace defined. Skipping...')
     prefix_hash = _get_dir_hash(str(prefix.absolute()))
-    with open(OPENFL_USERDIR / f'requirements.{prefix_hash}.txt', 'w') as f:
+    with open(OPENFL_USERDIR / f'requirements.{prefix_hash}.txt', 'w', encoding='utf-8') as f:
         check_call([executable, '-m', 'pip', 'freeze'], shell=False, stdout=f)
 
     print_tree(prefix, level=3)
@@ -238,14 +238,14 @@ def certify():
 
     echo('1.2 Create Database')
 
-    with open(CERT_DIR / 'ca/root-ca/db/root-ca.db', 'w') as f:
+    with open(CERT_DIR / 'ca/root-ca/db/root-ca.db', 'w', encoding='utf-8') as f:
         pass  # write empty file
-    with open(CERT_DIR / 'ca/root-ca/db/root-ca.db.attr', 'w') as f:
+    with open(CERT_DIR / 'ca/root-ca/db/root-ca.db.attr', 'w', encoding='utf-8') as f:
         pass  # write empty file
 
-    with open(CERT_DIR / 'ca/root-ca/db/root-ca.crt.srl', 'w') as f:
+    with open(CERT_DIR / 'ca/root-ca/db/root-ca.crt.srl', 'w', encoding='utf-8') as f:
         f.write('01')  # write file with '01'
-    with open(CERT_DIR / 'ca/root-ca/db/root-ca.crl.srl', 'w') as f:
+    with open(CERT_DIR / 'ca/root-ca/db/root-ca.crl.srl', 'w', encoding='utf-8') as f:
         f.write('01')  # write file with '01'
 
     echo('1.3 Create CA Request and Certificate')
@@ -277,14 +277,14 @@ def certify():
 
     echo('2.2 Create Database')
 
-    with open(CERT_DIR / 'ca/signing-ca/db/signing-ca.db', 'w') as f:
+    with open(CERT_DIR / 'ca/signing-ca/db/signing-ca.db', 'w', encoding='utf-8') as f:
         pass  # write empty file
-    with open(CERT_DIR / 'ca/signing-ca/db/signing-ca.db.attr', 'w') as f:
+    with open(CERT_DIR / 'ca/signing-ca/db/signing-ca.db.attr', 'w', encoding='utf-8') as f:
         pass  # write empty file
 
-    with open(CERT_DIR / 'ca/signing-ca/db/signing-ca.crt.srl', 'w') as f:
+    with open(CERT_DIR / 'ca/signing-ca/db/signing-ca.crt.srl', 'w', encoding='utf-8') as f:
         f.write('01')  # write file with '01'
-    with open(CERT_DIR / 'ca/signing-ca/db/signing-ca.crl.srl', 'w') as f:
+    with open(CERT_DIR / 'ca/signing-ca/db/signing-ca.crl.srl', 'w', encoding='utf-8') as f:
         f.write('01')  # write file with '01'
 
     echo('2.3 Create Signing Certificate CSR')
@@ -320,8 +320,8 @@ def certify():
     echo('3   Create Certificate Chain')
 
     # create certificate chain file by combining root-ca and signing-ca
-    with open(CERT_DIR / 'cert_chain.crt', 'w') as d:
-        with open(CERT_DIR / 'ca/root-ca.crt') as s:
+    with open(CERT_DIR / 'cert_chain.crt', 'w', encoding='utf-8') as d:
+        with open(CERT_DIR / 'ca/root-ca.crt', encoding='utf-8') as s:
             d.write(s.read())
         with open(CERT_DIR / 'ca/signing-ca.crt') as s:
             d.write(s.read())
@@ -330,7 +330,7 @@ def certify():
 
 
 def _get_requirements_dict(txtfile):
-    with open(txtfile, 'r') as snapshot:
+    with open(txtfile, 'r', encoding='utf-8') as snapshot:
         snapshot_dict = {}
         for line in snapshot:
             try:
@@ -435,6 +435,12 @@ def dockerize_(context, base_image, save):
              'In option is ignored this command will build an image that can only run '
              'with gramine-direct (not in enclave).',
         )
+@option('-e', '--enclave_size', required=False,
+        type=str, default='16G',
+        help='Memory size of the enclave, defined as number with size suffix. '
+             'Must be a power-of-2.\n'
+             'Default is 16G.'
+        )
 @option('-o', '--pip-install-options', required=False,
         type=str, multiple=True, default=tuple,
         help='Options for remote pip install. '
@@ -445,7 +451,7 @@ def dockerize_(context, base_image, save):
         help='Dump the Docker image to an archive')
 @option('--rebuild', help='Build images with `--no-cache`', is_flag=True)
 @pass_context
-def graminize_(context, signing_key: Path, pip_install_options: Tuple[str],
+def graminize_(context, signing_key: Path, enclave_size: str, pip_install_options: Tuple[str],
                save: bool, rebuild: bool) -> None:
     """
     Build gramine app inside a docker image.
@@ -504,6 +510,7 @@ def graminize_(context, signing_key: Path, pip_install_options: Tuple[str],
         f'docker build -t {workspace_name} {rebuild_option} '
         '--build-arg BASE_IMAGE=gramine_openfl '
         f'--build-arg WORKSPACE_ARCHIVE={workspace_archive.relative_to(workspace_path)} '
+        f'--build-arg SGX_ENCLAVE_SIZE={enclave_size} '
         f'--build-arg SGX_BUILD={int(sgx_build)} '
         f'{signing_key}'
         f'-f {grainized_ws_dockerfile} {workspace_path}')

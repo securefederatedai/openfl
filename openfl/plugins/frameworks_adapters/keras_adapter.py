@@ -4,8 +4,11 @@
 from logging import getLogger
 
 from .framework_adapter_interface import FrameworkAdapterPluginInterface
+from packaging import version
 
 logger = getLogger(__name__)
+
+
 class FrameworkAdapterPlugin(FrameworkAdapterPluginInterface):
     """Framework adapter plugin class."""
 
@@ -49,9 +52,9 @@ class FrameworkAdapterPlugin(FrameworkAdapterPluginInterface):
             cls.__reduce__ = __reduce__
 
         # Run the function
-        if tf.__version__ <= '2.7.1':
-            logger.warn(f'Applying hotfix for model serialization.'
-            'Please consider updating to tensorflow>=2.8 to silence this warning.')
+        if version.parse(tf.__version__) <= version.parse('2.7.1'):
+            logger.warn('Applying hotfix for model serialization.'
+                        'Please consider updating to tensorflow>=2.8 to silence this warning.')
             make_keras_picklable()
 
     @staticmethod
