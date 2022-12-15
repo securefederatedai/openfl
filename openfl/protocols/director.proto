@@ -13,7 +13,7 @@ service Director {
   // 1. Envoy RPCs
   rpc UpdateShardInfo(UpdateShardInfoRequest) returns (UpdateShardInfoResponse) {}
   // Shard owner could also provide some public data for tests
-  rpc WaitExperiment(stream WaitExperimentRequest) returns (stream WaitExperimentResponse) {}
+  rpc WaitExperiment(WaitExperimentRequest) returns (WaitExperimentResponse) {}
   rpc GetExperimentData(GetExperimentDataRequest) returns (stream ExperimentData) {}
   rpc UpdateEnvoyStatus(UpdateEnvoyStatusRequest) returns (UpdateEnvoyStatusResponse) {}
   rpc SetExperimentFailed (SetExperimentFailedRequest) returns (SetExperimentFailedResponse) {}
@@ -26,6 +26,7 @@ service Director {
 
   // 2.2 API RPCs
   rpc SetNewExperiment(stream ExperimentInfo) returns (SetNewExperimentResponse) {}
+  rpc GetExperimentStatus(GetExperimentStatusRequest) returns (GetExperimentStatusResponse) {}
   rpc GetDatasetInfo(GetDatasetInfoRequest) returns (GetDatasetInfoResponse) {}
   rpc GetTrainedModel(GetTrainedModelRequest) returns (TrainedModelResponse) {}
   rpc GetMetricStream(GetMetricStreamRequest) returns (stream GetMetricStreamResponse) {}
@@ -139,6 +140,14 @@ message ExperimentInfo {
 
 message SetNewExperimentResponse{
   bool accepted = 1;
+}
+
+message GetExperimentStatusRequest {
+  string experiment_name = 1;
+}
+
+message GetExperimentStatusResponse {
+  string experiment_status = 1;
 }
 
 message GetTrainedModelRequest {

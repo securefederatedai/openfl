@@ -3,6 +3,7 @@
 
 """Cryptography IO utilities."""
 
+import os
 from hashlib import sha384
 from pathlib import Path
 from typing import Tuple
@@ -30,7 +31,8 @@ def read_key(path: Path) -> RSAPrivateKey:
         pem_data = f.read()
 
     signing_key = load_pem_private_key(pem_data, password=None)
-    assert(isinstance(signing_key, rsa.RSAPrivateKey))
+    # TODO: replace assert with exception / sys.exit
+    assert (isinstance(signing_key, rsa.RSAPrivateKey))
     return signing_key
 
 
@@ -43,7 +45,10 @@ def write_key(key: RSAPrivateKey, path: Path) -> None:
         path : Path (pathlib)
 
     """
-    with open(path, 'wb') as f:
+    def key_opener(path, flags):
+        return os.open(path, flags, mode=0o600)
+
+    with open(path, 'wb', opener=key_opener) as f:
         f.write(key.private_bytes(
             encoding=serialization.Encoding.PEM,
             format=serialization.PrivateFormat.TraditionalOpenSSL,
@@ -65,7 +70,8 @@ def read_crt(path: Path) -> Certificate:
         pem_data = f.read()
 
     certificate = x509.load_pem_x509_certificate(pem_data)
-    assert(isinstance(certificate, x509.Certificate))
+    # TODO: replace assert with exception / sys.exit
+    assert (isinstance(certificate, x509.Certificate))
     return certificate
 
 
@@ -102,5 +108,6 @@ def read_csr(path: Path) -> Tuple[CertificateSigningRequest, str]:
         hasher.update(pem_data)
 
     csr = x509.load_pem_x509_csr(pem_data)
-    assert(isinstance(csr, x509.CertificateSigningRequest))
+    # TODO: replace assert with exception / sys.exit
+    assert (isinstance(csr, x509.CertificateSigningRequest))
     return csr, hasher.hexdigest()

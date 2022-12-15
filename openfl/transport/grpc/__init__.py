@@ -7,8 +7,14 @@ from .aggregator_client import AggregatorGRPCClient
 from .aggregator_server import AggregatorGRPCServer
 from .director_server import DirectorGRPCServer
 
+
+class ShardNotFoundError(Exception):
+    """Indicates that director has no information about that shard."""
+
+
 __all__ = [
     'AggregatorGRPCServer',
     'AggregatorGRPCClient',
     'DirectorGRPCServer',
+    'ShardNotFoundError',
 ]

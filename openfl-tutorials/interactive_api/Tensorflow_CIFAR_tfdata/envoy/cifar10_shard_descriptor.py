@@ -31,7 +31,10 @@ class CIFAR10ShardDescriptor(ShardDescriptor):
         self.rank, self.worldsize = tuple(int(num) for num in rank_worldsize.split(','))
 
         # Load dataset
-        train_ds, valid_ds = self._download_and_prepare_dataset(rank=self.rank, worldsize=self.worldsize)
+        train_ds, valid_ds = self._download_and_prepare_dataset(
+            rank=self.rank,
+            worldsize=self.worldsize
+        )
 
         # Set attributes
         self._sample_shape = train_ds.element_spec[0].shape
@@ -53,8 +56,8 @@ class CIFAR10ShardDescriptor(ShardDescriptor):
         (x_train, y_train), (x_test, y_test) = tf.keras.datasets.cifar10.load_data()
 
         # Split
-        x_train, y_train = x_train[rank-1::worldsize], y_train[rank-1::worldsize]
-        x_test, y_test = x_test[rank-1::worldsize], y_test[rank-1::worldsize]
+        x_train, y_train = x_train[rank - 1::worldsize], y_train[rank - 1::worldsize]
+        x_test, y_test = x_test[rank - 1::worldsize], y_test[rank - 1::worldsize]
 
         train_ds = tf.data.Dataset.from_tensor_slices((x_train, y_train))
         test_ds = tf.data.Dataset.from_tensor_slices((x_test, y_test))
