@@ -10,7 +10,10 @@ from metaflow.datastore import FlowDataStore, DATASTORES
 from metaflow.graph import DAGNode, FlowGraph, StepVisitor
 from metaflow.graph import deindent_docstring
 from metaflow.datastore.task_datastore import TaskDataStore
-from metaflow.datastore.exceptions import DataException, UnpicklableArtifactException
+from metaflow.datastore.exceptions import (
+    DataException,
+    UnpicklableArtifactException,
+)
 from metaflow.datastore.task_datastore import only_if_not_done, require_mode
 import cloudpickle as pickle
 import ray
@@ -23,7 +26,10 @@ import fcntl
 import hashlib
 from dill.source import getsource
 
-from metaflow.plugins.cards.card_modules.basic import DefaultCard, TaskInfoComponent
+from metaflow.plugins.cards.card_modules.basic import (
+    DefaultCard,
+    TaskInfoComponent,
+)
 from metaflow.plugins.cards.card_modules.basic import (
     DagComponent,
     SectionComponent,
@@ -34,7 +40,10 @@ from metaflow.plugins.cards.card_modules.basic import (
     JS_PATH,
     CSS_PATH,
 )
-from metaflow.plugins.cards.card_modules.basic import read_file, transform_flow_graph
+from metaflow.plugins.cards.card_modules.basic import (
+    read_file,
+    transform_flow_graph,
+)
 from metaflow import __version__ as mf_version
 
 import json
@@ -81,7 +90,9 @@ class DAGnode(DAGNode):
         self.func_lineno = func_ast.lineno
         self.decorators = decos
         self.doc = deindent_docstring(doc)
-        self.parallel_step = any(getattr(deco, "IS_PARALLEL", False) for deco in decos)
+        self.parallel_step = any(
+            getattr(deco, "IS_PARALLEL", False) for deco in decos
+        )
 
         # these attributes are populated by _parse
         self.tail_next_lineno = 0
@@ -108,7 +119,7 @@ class DAGnode(DAGNode):
 
         # end doesn't need a transition
         if self.name == "end":
-            # TYPE: end
+            # TYPE is end
             self.type = "end"
 
         # ensure that the tail an expression
@@ -125,14 +136,14 @@ class DAGnode(DAGNode):
             self.tail_next_lineno = tail.lineno
             self.out_funcs = [e.attr for e in tail.value.args]
 
-            keywords = dict(
-                (k.arg, getattr(k.value, "s", None)) for k in tail.value.keywords
-            )
+            keywords = {
+                k.arg: getattr(k.value, "s", None) for k in tail.value.keywords
+            }
             # Second condition in the folliwing line added,
             # To add the support for up to 2 keyword arguments in Flowgraph
             if len(keywords) == 1 or len(keywords) == 2:
                 if "foreach" in keywords:
-                    # TYPE: foreach
+                    # TYPE is foreach
                     self.type = "foreach"
                     if len(self.out_funcs) == 1:
                         self.foreach_param = keywords["foreach"]
@@ -149,11 +160,11 @@ class DAGnode(DAGNode):
                     self.type = "linear"
             elif len(keywords) == 0:
                 if len(self.out_funcs) > 1:
-                    # TYPE: split
+                    # TYPE is split
                     self.type = "split"
                     self.invalid_tail_next = False
                 elif len(self.out_funcs) == 1:
-                    # TYPE: linear
+                    # TYPE is linear
                     if self.name == "start":
                         self.type = "start"
                     elif self.num_args > 1:
@@ -186,9 +197,11 @@ class FlowGraph(FlowGraph):
     def _create_nodes(self, flow):
         module = __import__(flow.__module__)
         tree = ast.parse(getsource(module)).body
-        root = [n for n in tree if isinstance(n, ast.ClassDef) and n.name == self.name][
-            0
-        ]
+        root = [
+            n
+            for n in tree
+            if isinstance(n, ast.ClassDef) and n.name == self.name
+        ][0]
         nodes = {}
         StepVisitor(nodes, flow).visit(root)
         return nodes
@@ -256,12 +269,12 @@ class TaskDataStore(TaskDataStore):
                     encode_type = "gzip+pickle-v4"
                     if encode_type not in self._encodings:
                         raise DataException(
-                            "Artifact *%s* requires a serialization encoding that "
-                            "requires Python 3.4 or newer." % name
+                            f"Artifact {name} requires a serialization encoding that "
+                            + "requires Python 3.4 or newer."
                         )
                     try:
                         blob = pickle.dumps(obj, protocol=4)
-                    except TypeError as e:
+                    except TypeError:
                         raise UnpicklableArtifactException(name)
                 else:
                     try:
@@ -271,15 +284,15 @@ class TaskDataStore(TaskDataStore):
                         encode_type = "gzip+pickle-v4"
                         if encode_type not in self._encodings:
                             raise DataException(
-                                "Artifact *%s* is very large (over 2GB). "
-                                "You need to use Python 3.4 or newer if you want to "
-                                "serialize large objects." % name
+                                f"Artifact {name} is very large (over 2GB). "
+                                + "You need to use Python 3.4 or newer if you want to "
+                                + "serialize large objects."
                             )
                         try:
                             blob = pickle.dumps(obj, protocol=4)
-                        except TypeError as e:
+                        except TypeError:
                             raise UnpicklableArtifactException(name)
-                    except TypeError as e:
+                    except TypeError:
                         raise UnpicklableArtifactException(name)
 
                 self._info[name] = {
@@ -291,7 +304,9 @@ class TaskDataStore(TaskDataStore):
                 yield blob
 
         # Use the content-addressed store to store all artifacts
-        save_result = self._ca_store.save_blobs(pickle_iter(), len_hint=len_hint)
+        save_result = self._ca_store.save_blobs(
+            pickle_iter(), len_hint=len_hint
+        )
         for name, result in zip(artifact_names, save_result):
             self._objects[name] = result.key
 
@@ -381,7 +396,9 @@ class MetaflowInterface:
             self.counter += 1
             return self.counter
 
-    def save_artifacts(self, data_pairs, task_name, task_id, buffer_out, buffer_err):
+    def save_artifacts(
+        self, data_pairs, task_name, task_id, buffer_out, buffer_err
+    ):
         """Use metaflow task datastore to save federated flow attributes"""
         task_datastore = self.flow_datastore.get_task_datastore(
             self.run_id, task_name, str(task_id), attempt=0, mode="w"
@@ -391,7 +408,7 @@ class MetaflowInterface:
 
         # Register metadata for task
         retry_count = 0
-        metadata_tags = ["attempt_id:{0}".format(retry_count)]
+        metadata_tags = [f"attempt_id:{retry_count}"]
         self.local_metadata.register_metadata(
             self.run_id,
             task_name,
@@ -435,7 +452,9 @@ class MetaflowInterface:
         )
         return task_datastore.load_artifacts(artifact_names)
 
-    def emit_log(self, msgbuffer_out, msgbuffer_err, task_datastore, system_msg=False):
+    def emit_log(
+        self, msgbuffer_out, msgbuffer_err, task_datastore, system_msg=False
+    ):
         """
         This function writes the stdout and stderr to Metaflow TaskDatastore
         Args
@@ -473,7 +492,7 @@ class DefaultCard(DefaultCard):
 
     type = "default"
 
-    def __init__(self, options=dict(only_repr=True), components=[], graph=None):
+    def __init__(self, options={"only_repr": True}, components=[], graph=None):
         self._only_repr = True
         self._graph = None if graph is None else transform_flow_graph(graph)
         if "only_repr" in options:
@@ -494,15 +513,15 @@ class DefaultCard(DefaultCard):
             components=self._components,
         ).render()
         pt = self._get_mustache()
-        data_dict = dict(
-            task_data=base64.b64encode(
+        data_dict = {
+            "task_data": base64.b64encode(
                 json.dumps(final_component_dict).encode("utf-8")
             ).decode("utf-8"),
-            javascript=JS_DATA,
-            title=task,
-            css=CSS_DATA,
-            card_data_id=uuid.uuid4(),
-        )
+            "javascript": JS_DATA,
+            "title": task,
+            "css": CSS_DATA,
+            "card_data_id": uuid.uuid4(),
+        }
         return pt.render(RENDER_TEMPLATE, data_dict)
 
 
@@ -514,7 +533,12 @@ class TaskInfoComponent(TaskInfoComponent):
     """
 
     def __init__(
-        self, task, page_title="Task Info", only_repr=True, graph=None, components=[]
+        self,
+        task,
+        page_title="Task Info",
+        only_repr=True,
+        graph=None,
+        components=[],
     ):
         self._task = task
         self._only_repr = only_repr
@@ -532,12 +556,14 @@ class TaskInfoComponent(TaskInfoComponent):
             a dictionary of form:
                 dict(metadata = {},components= [])
         """
-        final_component_dict = dict(
-            metadata=dict(
-                metaflow_version=mf_version, version=1, template="defaultCardTemplate"
-            ),
-            components=[],
-        )
+        final_component_dict = {
+            "metadata": {
+                "metaflow_version": mf_version,
+                "version": 1,
+                "template": "defaultCardTemplate",
+            },
+            "components": [],
+        }
 
         dag_component = SectionComponent(
             title="DAG", contents=[DagComponent(data=self._graph).render()]

@@ -3,13 +3,13 @@
 
 import functools
 import ray
-import gc
 from copy import deepcopy
 from openfl.experimental.utilities import (
     RedirectStdStreamContext,
     GPUResourcesNotAvailable,
     get_number_of_gpus,
 )
+
 
 class RayExecutor:
     def __init__(self):
