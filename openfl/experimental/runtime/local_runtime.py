@@ -124,6 +124,11 @@ class LocalRuntime(Runtime):
                 ray_executor = RayExecutor()
             for col in selected_collaborators:
                 clone = FLSpec._clones[col]
+                # Set new LocalRuntime for clone as it is required
+                # for calling execute_task and also new runtime
+                # object will not contain private attributes of
+                # aggregator or other collaborators
+                clone.runtime = LocalRuntime(backend="single_process")
                 for name, attr in self._collaborators[
                     clone.input
                 ].private_attributes.items():
@@ -133,7 +138,6 @@ class LocalRuntime(Runtime):
                 # ensure clone is getting latest _metaflow_interface
                 clone._metaflow_interface = flspec_obj._metaflow_interface
                 if self.backend == "ray":
-                    clone._runtime = self  # MOD: Runtime()
                     ray_executor.ray_call_put(clone, to_exec)
                 else:
                     to_exec()

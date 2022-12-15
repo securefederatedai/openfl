@@ -102,7 +102,7 @@ class FLSpec:
         else:
             raise TypeError(f"{runtime} is not a valid OpenFL Runtime")
 
-    def capture_instance_snapshot(self, f, parent_func, kwargs):
+    def capture_instance_snapshot(self, kwargs):
         """Takes backup of self before exclude or include filtering"""
         return_objs = []
         if "exclude" in kwargs:
@@ -151,10 +151,9 @@ class FLSpec:
         checkpoint(self, parent_func)
 
         # Take back-up of current state of self
+        agg_to_collab_ss = []
         if aggregator_to_collaborator(f, parent_func):
-            agg_to_collab_ss = self.capture_instance_snapshot(
-                f, parent_func, kwargs
-            )
+            agg_to_collab_ss = self.capture_instance_snapshot(kwargs=kwargs)
 
         # Remove included / excluded attributes from next task
         filter_attributes(self, f, **kwargs)
@@ -165,14 +164,10 @@ class FLSpec:
 
         self.display_transition_logs(f, parent_func)
 
-        # if back-up of self is created then pass it to execute_task function
-        if "agg_to_collab_ss" in vars():
-            self._runtime.execute_task(
-                self,
-                f,
-                parent_func,
-                instance_snapshot=agg_to_collab_ss,
-                **kwargs,
-            )
-        else:
-            self._runtime.execute_task(self, f, parent_func, **kwargs)
+        self._runtime.execute_task(
+            self,
+            f,
+            parent_func,
+            instance_snapshot=agg_to_collab_ss,
+            **kwargs,
+        )
