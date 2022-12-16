@@ -6,46 +6,11 @@ import time
 import socket
 import argparse
 from pathlib import Path
-import re
-import shutil
 from subprocess import check_call
 from concurrent.futures import ProcessPoolExecutor
 
 from openfl.utilities.utils import rmtree
-
-
-def create_collaborator(col, workspace_root, data_path):
-    # Copy workspace to collaborator directories (these can be on different machines)
-    col_path = workspace_root / col
-    shutil.rmtree(col_path, ignore_errors=True)  # Remove any existing directory
-    col_path.mkdir()  # Create a new directory for the collaborator
-
-    # Import the workspace to this collaborator
-    check_call(
-        ['fx', 'workspace', 'import', '--archive', workspace_root / archive_name],
-        cwd=col_path
-    )
-
-    # Create collaborator certificate request
-    # Remove '--silent' if you run this manually
-    check_call(
-        ['fx', 'collaborator', 'generate-cert-request', '-d', data_path, '-n', col, '--silent'],
-        cwd=col_path / fed_workspace
-    )
-
-    # Sign collaborator certificate
-    # Remove '--silent' if you run this manually
-    request_pkg = col_path / fed_workspace / f'col_{col}_to_agg_cert_request.zip'
-    check_call(
-        ['fx', 'collaborator', 'certify', '--request-pkg', str(request_pkg), '--silent'],
-        cwd=workspace_root)
-
-    # Import the signed certificate from the aggregator
-    import_path = workspace_root / f'agg_to_col_{col}_signed_cert.zip'
-    check_call(
-        ['fx', 'collaborator', 'certify', '--import', import_path],
-        cwd=col_path / fed_workspace
-    )
+from tests.github.utils import create_collaborator, create_certified_workspace, certify_aggregator
 
 
 if __name__ == '__main__':
@@ -79,43 +44,16 @@ if __name__ == '__main__':
     # START
     # =====
     # Make sure you are in a Python virtual environment with the FL package installed.
-    shutil.rmtree(fed_workspace, ignore_errors=True)
-    check_call(['fx', 'workspace', 'create', '--prefix', fed_workspace, '--template', template])
-    os.chdir(fed_workspace)
-
-    # Initialize FL plan
-    check_call(['fx', 'plan', 'initialize', '-a', fqdn])
-    plan_path = Path('plan/plan.yaml')
-    try:
-        rounds_to_train = int(rounds_to_train)
-        with open(plan_path, "r", encoding='utf-8') as sources:
-            lines = sources.readlines()
-        with open(plan_path, "w", encoding='utf-8') as sources:
-            for line in lines:
-                sources.write(
-                    re.sub(r'rounds_to_train.*', f'rounds_to_train: {rounds_to_train}', line)
-                )
-    except (ValueError, TypeError):
-        pass
-    # Create certificate authority for workspace
-    check_call(['fx', 'workspace', 'certify'])
-
-    # Export FL workspace
-    check_call(['fx', 'workspace', 'export'])
-
-    # Create aggregator certificate
-    check_call(['fx', 'aggregator', 'generate-cert-request', '--fqdn', fqdn])
-
-    # Sign aggregator certificate
-    check_call(['fx', 'aggregator', 'certify', '--fqdn', fqdn, '--silent'])
+    create_certified_workspace(fed_workspace, template, fqdn, rounds_to_train)
+    certify_aggregator(fqdn)
 
     workspace_root = Path().resolve()  # Get the absolute directory path for the workspace
 
     # Create collaborator #1
-    create_collaborator(col1, workspace_root, col1_data_path)
+    create_collaborator(col1, workspace_root, col1_data_path, archive_name)
 
     # Create collaborator #2
-    create_collaborator(col2, workspace_root, col2_data_path)
+    create_collaborator(col2, workspace_root, col2_data_path, fed_workspace)
 
     # Run the federation
     with ProcessPoolExecutor(max_workers=3) as executor:

@@ -11,64 +11,9 @@ import tarfile
 import time
 from concurrent.futures import ProcessPoolExecutor
 
-
-def create_signed_cert_for_collaborator(col, data_path):
-    '''
-    We do certs exchage for all participants in a single workspace to speed up this test run.
-    Do not do this in real experiments in untrusted environments
-    '''
-    print(f'Certifying collaborator {col} with data path {data_path}...')
-    # Create collaborator certificate request
-    check_call([
-        'fx', 'collaborator', 'generate-cert-request', '-d', data_path, '-n', col, '--silent'
-    ])
-    # Sign collaborator certificate
-    check_call([
-        'fx',
-        'collaborator',
-        'certify',
-        '--request-pkg',
-        f'col_{col}_to_agg_cert_request.zip',
-        '--silent'
-    ])
-
-    # Pack the collaborators private key and the signed cert
-    # as well as it's data.yaml to a tarball
-    tarfiles = ['plan/data.yaml', f'agg_to_col_{col}_signed_cert.zip']
-    with os.scandir('cert/client') as iterator:
-        for entry in iterator:
-            if entry.name.endswith('key'):
-                tarfiles.append(entry.path)
-    with tarfile.open(f'cert_col_{col}.tar', 'w') as t:
-        for f in tarfiles:
-            t.add(f)
-    for f in tarfiles:
-        os.remove(f)
-    # Remove request archive
-    os.remove(f'col_{col}_to_agg_cert_request.zip')
-
-
-def start_aggregator_container():
-    check_call(
-        'docker run --rm '
-        '--network host '
-        f'-v {Path.cwd().resolve()}/{aggregator_required_files}:/certs.tar '
-        '-e \"CONTAINER_TYPE=aggregator\" '
-        f'{workspace_image_name} '
-        'bash /openfl/openfl-docker/start_actor_in_container.sh',
-        shell=True)
-
-
-def start_collaborator_container():
-    check_call(
-        'docker run --rm '
-        '--network host '
-        f'-v {Path.cwd()}/cert_col_{args.col}.tar:/certs.tar '
-        '-e \"CONTAINER_TYPE=collaborator\" '
-        f'-e \"COL={col}\" '
-        f'{workspace_image_name} '
-        'bash /openfl/openfl-docker/start_actor_in_container.sh',
-        shell=True)
+from tests.github.utils import start_aggregator_container
+from tests.github.utils import start_collaborator_container
+from tests.github.utils import create_signed_cert_for_collaborator
 
 
 if __name__ == '__main__':
@@ -150,8 +95,14 @@ if __name__ == '__main__':
     check_call(['docker', 'load', '--input', image_tar])
     time.sleep(5)
     with ProcessPoolExecutor(max_workers=2) as executor:
-        executor.submit(start_aggregator_container)
+        executor.submit(start_aggregator_container, args=(
+            workspace_image_name,
+            aggregator_required_files
+        ))
         time.sleep(5)
-        executor.submit(start_collaborator_container)
+        executor.submit(start_collaborator_container, args=(
+            workspace_image_name,
+            col
+        ))
     # If containers are started but collaborator will fail to
     # conect the aggregator, the pipeline will go to the infinite loop

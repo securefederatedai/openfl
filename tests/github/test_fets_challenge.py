@@ -10,27 +10,7 @@ import re
 import shutil
 from subprocess import check_call
 from concurrent.futures import ProcessPoolExecutor
-
-
-def create_collaborator(col, workspace_root, data_path):
-    col_path = workspace_root / col
-    shutil.rmtree(col_path, ignore_errors=True)
-    col_path.mkdir()
-    os.chdir(col_path)
-    check_call(['fx', 'workspace', 'import', '--archive', workspace_root / archive_name])
-
-    os.chdir(col_path / fed_workspace)
-    check_call([
-        'fx', 'collaborator', 'generate-cert-request', '-d', data_path, '-n', col, '--silent'
-    ])
-
-    os.chdir(workspace_root)
-    request_pkg = col_path / fed_workspace / f'col_{col}_to_agg_cert_request.zip'
-    check_call(['fx', 'collaborator', 'certify', '--request-pkg', f'{request_pkg}', '--silent'])
-
-    os.chdir(col_path / fed_workspace)
-    import_path = workspace_root / f'agg_to_col_{col}_signed_cert.zip'
-    check_call(['fx', 'collaborator', 'certify', '--import', import_path])
+from tests.github.utils import create_collaborator, create_certified_workspace, certify_aggregator
 
 
 def exec(command, directory):
@@ -57,35 +37,16 @@ if __name__ == '__main__':
     rounds_to_train = args.rounds_to_train
     col1, col2 = args.col1, args.col2
     col1_data_path, col2_data_path = args.col1_data_path, args.col2_data_path
-    shutil.rmtree(fed_workspace, ignore_errors=True)
-    check_call(['fx', 'workspace', 'create', '--prefix', fed_workspace, '--template', template])
-    os.chdir(fed_workspace)
+    create_certified_workspace(fed_workspace, template, fqdn, rounds_to_train)
+    certify_aggregator(fqdn)
     if not Path('seg_test_train.csv').exists():
         with os.scandir('..') as iterator:
             for entry in iterator:
                 if re.match(r'^seg_test.*\.csv$', entry.name):
                     shutil.copy(entry.path, '.')
-    check_call(['fx', 'plan', 'initialize', '-a', fqdn])
-    try:
-        rounds_to_train = int(rounds_to_train)
-        with open("plan/plan.yaml", "r") as sources:
-            lines = sources.readlines()
-        with open("plan/plan.yaml", "w") as sources:
-            for line in lines:
-                sources.write(
-                    re.sub(r'rounds_to_train.*', f'rounds_to_train: {rounds_to_train}', line)
-                )
-    except (ValueError, TypeError):
-        pass
-
-    check_call(['fx', 'workspace', 'certify'])
-    check_call(['fx', 'workspace', 'export'])
-    check_call(['fx', 'aggregator', 'generate-cert-request', '--fqdn', fqdn])
-    check_call(['fx', 'aggregator', 'certify', '--fqdn', fqdn, '--silent'])
-
     workspace_root = Path().resolve()
-    create_collaborator(col1, workspace_root, col1_data_path)
-    create_collaborator(col2, workspace_root, col2_data_path)
+    create_collaborator(col1, workspace_root, col1_data_path, archive_name, fed_workspace)
+    create_collaborator(col2, workspace_root, col2_data_path, archive_name, fed_workspace)
 
     if args.ujjwal:
         with os.scandir('/media/ujjwal/SSD4TB/sbutil/DatasetForTraining_Horizontal/') as iterator:
