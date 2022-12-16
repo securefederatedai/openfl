@@ -3,7 +3,6 @@ from bisect import bisect
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
-from xxlimited import Str
 
 from privacy_meter.audit import Audit, MetricEnum
 from privacy_meter.constants import InferenceGame
@@ -127,7 +126,7 @@ def PopulationAuditor(target_model, datasets, pm_info):
         models=[target_model], datasets=[pm_population_dataset]
     )
 
-    print("debug:prepare for the dataset {}".format(time.time() - begin_time))
+    print(f"debug:prepare for the dataset {time.time() - begin_time}")
 
     start_time = time.time()
     metrics = []
@@ -167,7 +166,7 @@ def PopulationAuditor(target_model, datasets, pm_info):
         else:
             raise ValueError(f"The provided signal {signal} is not supported.")
 
-    print("debug:construct the metrics uses {}".format(time.time() - start_time))
+    print(f"debug:construct the metrics uses {time.time() - start_time}")
 
     start_time = time.time()
     audit_obj = Audit(
@@ -179,11 +178,11 @@ def PopulationAuditor(target_model, datasets, pm_info):
         save_logs=False,
     )
     audit_obj.prepare()
-    print("preparing the auditing uses {}".format(time.time() - start_time))
+    print(f"preparing the auditing uses {time.time() - start_time}")
 
     start_time = time.time()
     audit_results = audit_obj.run()
-    print("debug:running the auditing uses {}".format(time.time() - start_time))
+    print(f"debug:running the auditing uses {time.time() - start_time}")
 
     start_time = time.time()
     roc_list = []
@@ -217,7 +216,7 @@ def PopulationAuditor(target_model, datasets, pm_info):
     pm_info.update_history("auc", auc_list)
     pm_info.update_history("roc", roc_list)
 
-    print("debug:saving the information uses {}".format(time.time() - start_time))
+    print(f"debug:saving the information uses {time.time() - start_time}")
     return pm_info
 
 
@@ -236,7 +235,7 @@ def plot_tpr_history(history_dict, client, fpr_tolerance_list):
                 plt.plot(
                     history_dict[key].history["round"], hist, label=f"{key}-{signal}"
                 )
-        plt.title("{} (FPR @ {})".format(client, fpr_tolerance_list[idx]))
+        plt.title(f"{client} (FPR @ {fpr_tolerance_list[idx]})")
         plt.legend()
         plt.savefig(
             "{}/{}_tpr_at_{}.png".format(
@@ -260,9 +259,9 @@ def plot_auc_history(history_dict, client):
                 label=f"{key}-{signal}",
             )
 
-    plt.title("{} (AUC)".format(client))
+    plt.title(f"{client} (AUC)")
     plt.legend()
-    plt.savefig("{}/{}_auc.png".format(history_dict[key].log_dir, client), dpi=200)
+    plt.savefig(f"{history_dict[key].log_dir}/{client}_auc.png", dpi=200)
     plt.clf()
 
 
@@ -287,10 +286,10 @@ def plot_roc_history(history_dict, client):
     plt.ylim(0, 1)
     plt.plot([0, 1], [0, 1], ls="--", color="gray", label="Random guess")
 
-    plt.title("ROC curve - {}".format(client))
+    plt.title(f"ROC curve - {client}")
     plt.legend()
     plt.savefig(
-        "{}/{}_roc_at_{}.png".format(history_dict[key].log_dir, client, round_num),
+        f"{history_dict[key].log_dir}/{client}_roc_at_{round_num}.png",
         dpi=200,
     )
     plt.clf()
