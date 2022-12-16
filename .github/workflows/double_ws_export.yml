@@ -28,5 +28,5 @@ jobs:
         pip install .
     - name: Double workspace export test
       run: |
-        python tests/github/test_double_ws_export.py
+        python -m tests.github.test_double_ws_export
     
