@@ -10,7 +10,8 @@ import re
 import shutil
 from subprocess import check_call
 from concurrent.futures import ProcessPoolExecutor
-from tests.github.utils import create_collaborator, create_certified_workspace, certify_aggregator
+
+from tests.github.utils import create_collaborator, certify_aggregator
 
 
 def exec(command, directory):
@@ -29,6 +30,7 @@ if __name__ == '__main__':
     parser.add_argument('--col2-data-path', default='2')
     parser.add_argument('--ujjwal', action='store_true')
 
+    origin_dir = Path().resolve()
     args = parser.parse_args()
     fed_workspace = args.fed_workspace
     archive_name = f'{fed_workspace}.zip'
@@ -37,7 +39,35 @@ if __name__ == '__main__':
     rounds_to_train = args.rounds_to_train
     col1, col2 = args.col1, args.col2
     col1_data_path, col2_data_path = args.col1_data_path, args.col2_data_path
-    create_certified_workspace(fed_workspace, template, fqdn, rounds_to_train)
+    shutil.rmtree(fed_workspace, ignore_errors=True)
+    check_call(['fx', 'workspace', 'create', '--prefix', fed_workspace, '--template', template])
+    os.chdir(fed_workspace)
+    print(origin_dir)
+    with os.scandir(origin_dir) as iterator:
+        for entry in iterator:
+            print(entry)
+            if re.match(r'.*\.csv$', entry.name):
+                shutil.copy(entry.path, Path.cwd().resolve())
+    # Initialize FL plan
+    check_call(['fx', 'plan', 'initialize', '-a', fqdn])
+    plan_path = Path('plan/plan.yaml')
+    try:
+        rounds_to_train = int(rounds_to_train)
+        with open(plan_path, "r", encoding='utf-8') as sources:
+            lines = sources.readlines()
+        with open(plan_path, "w", encoding='utf-8') as sources:
+            for line in lines:
+                sources.write(
+                    re.sub(r'rounds_to_train.*', f'rounds_to_train: {rounds_to_train}', line)
+                )
+    except (ValueError, TypeError):
+        pass
+    # Create certificate authority for workspace
+    check_call(['fx', 'workspace', 'certify'])
+
+    # Export FL workspace
+    check_call(['fx', 'workspace', 'export'])
+
     certify_aggregator(fqdn)
     if not Path('seg_test_train.csv').exists():
         with os.scandir('..') as iterator:
