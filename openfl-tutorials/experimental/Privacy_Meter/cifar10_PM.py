@@ -762,7 +762,7 @@ if __name__ == "__main__":
     # local_runtime = LocalRuntime(aggregator=aggregator, collaborators=collaborators, backend='ray')
     local_runtime = LocalRuntime(aggregator=aggregator, collaborators=collaborators)
     
-    print(f'Local runtime collaborators = {local_runtime._collaborators}')
+    print(f'Local runtime collaborators = {local_runtime.collaborators}')
 
     ## change to the internal flow loop
     model = Net()

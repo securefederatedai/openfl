@@ -311,7 +311,7 @@ if __name__ == "__main__":
     local_runtime = LocalRuntime(
         aggregator=aggregator, collaborators=collaborators
     )
-    print(f"Local runtime collaborators = {local_runtime._collaborators}")
+    print(f"Local runtime collaborators = {local_runtime.collaborators}")
 
     testflow = TestFlowReferenceWithInclude(checkpoint=False)
     testflow.runtime = local_runtime

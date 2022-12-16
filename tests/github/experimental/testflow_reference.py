@@ -350,7 +350,7 @@ if __name__ == "__main__":
         collaborators=collaborators,
         backend="single_process",
     )
-    print(f"Local runtime collaborators = {local_runtime._collaborators}")
+    print(f"Local runtime collaborators = {local_runtime.collaborators}")
 
     testflow = TestFlowReference(checkpoint=True)
     testflow.runtime = local_runtime
