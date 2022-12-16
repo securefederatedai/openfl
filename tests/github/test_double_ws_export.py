@@ -11,7 +11,7 @@ from subprocess import check_call
 from concurrent.futures import ProcessPoolExecutor
 import psutil
 
-from tests.github.utils import create_certified_workspace, certify_aggregator, create_collaborator
+from utils import create_certified_workspace, certify_aggregator, create_collaborator
 
 
 if __name__ == '__main__':
@@ -73,7 +73,7 @@ if __name__ == '__main__':
     certify_aggregator(fqdn)
 
     # Create collaborator #1
-    create_collaborator(col1, workspace_root, col1_data_path)
+    create_collaborator(col1, workspace_root, col1_data_path, archive_name, fed_workspace)
     # Run the federation
     with ProcessPoolExecutor(max_workers=3) as executor:
         executor.submit(check_call, ['fx', 'aggregator', 'start'], cwd=workspace_root)

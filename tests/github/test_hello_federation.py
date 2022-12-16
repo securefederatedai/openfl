@@ -10,7 +10,7 @@ from subprocess import check_call
 from concurrent.futures import ProcessPoolExecutor
 
 from openfl.utilities.utils import rmtree
-from tests.github.utils import create_collaborator, create_certified_workspace, certify_aggregator
+from utils import create_collaborator, create_certified_workspace, certify_aggregator
 
 
 if __name__ == '__main__':
@@ -50,10 +50,10 @@ if __name__ == '__main__':
     workspace_root = Path().resolve()  # Get the absolute directory path for the workspace
 
     # Create collaborator #1
-    create_collaborator(col1, workspace_root, col1_data_path, archive_name)
+    create_collaborator(col1, workspace_root, col1_data_path, archive_name, fed_workspace)
 
     # Create collaborator #2
-    create_collaborator(col2, workspace_root, col2_data_path, fed_workspace)
+    create_collaborator(col2, workspace_root, col2_data_path, archive_name, fed_workspace)
 
     # Run the federation
     with ProcessPoolExecutor(max_workers=3) as executor:
