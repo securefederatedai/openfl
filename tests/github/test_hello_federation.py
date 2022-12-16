@@ -10,7 +10,7 @@ from subprocess import check_call
 from concurrent.futures import ProcessPoolExecutor
 
 from openfl.utilities.utils import rmtree
-from utils import create_collaborator, create_certified_workspace, certify_aggregator
+from .utils import create_collaborator, create_certified_workspace, certify_aggregator
 
 
 if __name__ == '__main__':

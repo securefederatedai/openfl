@@ -11,9 +11,9 @@ import tarfile
 import time
 from concurrent.futures import ProcessPoolExecutor
 
-from tests.github.utils import start_aggregator_container
-from tests.github.utils import start_collaborator_container
-from tests.github.utils import create_signed_cert_for_collaborator
+from .utils import start_aggregator_container
+from .utils import start_collaborator_container
+from .utils import create_signed_cert_for_collaborator
 
 
 if __name__ == '__main__':
