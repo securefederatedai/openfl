@@ -4,20 +4,17 @@
 """openfl.experimental.interface.flspec module."""
 
 import inspect
-import gc
-from types import MethodType
 from copy import deepcopy
-from openfl.experimental.placement import RayExecutor
 from openfl.experimental.utilities import (
     MetaflowInterface,
     SerializationException,
     aggregator_to_collaborator,
     collaborator_to_aggregator,
     should_transfer,
+    filter_attributes,
+    checkpoint,
 )
 from openfl.experimental.runtime import Runtime
-from threading import Lock
-from time import sleep
 
 final_attributes = []
 
@@ -33,17 +30,21 @@ class FLSpec:
 
     @classmethod
     def create_clones(cls, instance, names):
+        """Creates clones for instance for each collaborator in names"""
         cls._clones = {name: deepcopy(instance) for name in names}
 
     @classmethod
     def reset_clones(cls):
+        """Reset clones"""
         cls._clones = []
 
     @classmethod
     def save_initial_state(cls, instance):
+        """Save initial state of instance before executing the flow"""
         cls._initial_state = deepcopy(instance)
 
     def run(self):
+        """Starts the execution of the flow"""
         # Submit flow to Runtime
         self._metaflow_interface = MetaflowInterface(
             self.__class__, self.runtime.backend
@@ -84,38 +85,25 @@ class FLSpec:
             raise Exception("Runtime not supported")
 
     def _setup_aggregator(self):
+        """Sets aggregator private attributes as self attributes"""
         for name, attr in self.runtime._aggregator.private_attributes.items():
             setattr(self, name, attr)
 
     @property
     def runtime(self):
+        """Returns flow runtime"""
         return self._runtime
 
     @runtime.setter
     def runtime(self, runtime):
+        """Sets flow runtime"""
         if isinstance(runtime, Runtime):
             self._runtime = runtime
         else:
             raise TypeError(f"{runtime} is not a valid OpenFL Runtime")
 
-    def parse_attrs(self, exclude=[], reserved_words=["next", "runtime", "input"]):
-        # TODO Persist attributes to local disk, database, object store, etc. here
-        cls_attrs = []
-        valid_artifacts = []
-        for i in inspect.getmembers(self):
-            if (
-                not hasattr(i[1], "task")
-                and not i[0].startswith("_")
-                and i[0] not in reserved_words
-                and i[0] not in exclude
-                and i not in inspect.getmembers(type(self))
-            ):
-                if not isinstance(i[1], MethodType):
-                    cls_attrs.append(i[0])
-                    valid_artifacts.append((i[0], i[1]))
-        return cls_attrs, valid_artifacts
-
-    def capture_instance_snapshot(self, f, parent_func, kwargs):
+    def capture_instance_snapshot(self, kwargs):
+        """Takes backup of self before exclude or include filtering"""
         return_objs = []
         if "exclude" in kwargs:
             exclude_backup = deepcopy(self)
@@ -125,80 +113,6 @@ class FLSpec:
             return_objs.append(include_backup)
         return return_objs
 
-    def restore_instance_snapshot(self, instance_snapshot):
-        for backup in instance_snapshot:
-            artifacts_iter, _ = backup.generate_artifacts()
-            for name, attr in artifacts_iter():
-                if not hasattr(self, name):
-                    setattr(self, name, attr)
-
-    def filter_attributes(self, f, **kwargs):
-        """
-        Filter out explicitly included / excluded attributes from the next task
-        in the flow.
-        """
-
-        artifacts_iter, cls_attrs = self.generate_artifacts()
-        if "include" in kwargs and "exclude" in kwargs:
-            raise RuntimeError("'include' and 'exclude' should not both be present")
-        elif "include" in kwargs:
-            assert type(kwargs["include"]) == list
-            for in_attr in kwargs["include"]:
-                if in_attr not in cls_attrs:
-                    raise RuntimeError(
-                        f"argument '{in_attr}' not found in flow task {f.__name__}"
-                    )
-            for attr in cls_attrs:
-                if attr not in kwargs["include"]:
-                    delattr(self, attr)
-        elif "exclude" in kwargs:
-            assert type(kwargs["exclude"]) == list
-            for in_attr in kwargs["exclude"]:
-                if in_attr not in cls_attrs:
-                    raise RuntimeError(
-                        f"argument '{in_attr}' not found in flow task {f.__name__}"
-                    )
-            for attr in cls_attrs:
-                if attr in kwargs["exclude"] and hasattr(self, attr):
-                    delattr(self, attr)
-
-    def checkpoint(self, parent_func, chkpnt_reserved_words=["next", "runtime"]):
-        """
-        [Optionally] save current state for the task just executed task
-        """
-
-        # Extract the stdout & stderr from the buffer
-        # NOTE: Any prints in this method before this line will be recorded as step output/error
-        step_stdout, step_stderr = parent_func._stream_buffer.get_stdstream()
-
-        if self._checkpoint:
-            # all objects will be serialized using Metaflow interface
-            print(f"Saving data artifacts for {parent_func.__name__}")
-            artifacts_iter, _ = self.generate_artifacts(
-                reserved_words=chkpnt_reserved_words
-            )
-            task_id = self._metaflow_interface.create_task(parent_func.__name__)
-            self._metaflow_interface.save_artifacts(
-                artifacts_iter(),
-                task_name=parent_func.__name__,
-                task_id=task_id,
-                buffer_out=step_stdout,
-                buffer_err=step_stderr,
-            )
-            print(f"Saved data artifacts for {parent_func.__name__}")
-
-    def generate_artifacts(self, reserved_words=["next", "runtime", "input"]):
-
-        cls_attrs, valid_artifacts = self.parse_attrs(reserved_words=reserved_words)
-
-        def artifacts_iter():
-            # Helper function from metaflow source
-            while valid_artifacts:
-                var, val = valid_artifacts.pop()
-                yield var, val
-
-        return artifacts_iter, cls_attrs
-
     def is_at_transition_point(self, f, parent_func):
         """
         Has the collaborator finished its current sequence?
@@ -206,109 +120,23 @@ class FLSpec:
         if parent_func.__name__ in self._foreach_methods:
             self._foreach_methods.append(f.__name__)
             if should_transfer(f, parent_func):
-                print(f"Should transfer from {parent_func.__name__} to {f.__name__}")
+                print(
+                    f"Should transfer from {parent_func.__name__} to {f.__name__}"
+                )
                 self.execute_next = f.__name__
                 return True
         return False
 
     def display_transition_logs(self, f, parent_func):
+        """
+        Prints aggregator to collaborators or
+        collaborators to aggregator state transition logs
+        """
         if aggregator_to_collaborator(f, parent_func):
             print("Sending state from aggregator to collaborators")
 
         elif collaborator_to_aggregator(f, parent_func):
             print("Sending state from collaborator to aggregator")
-
-    def execute_task(self, f, parent_func, instance_snapshot=(), **kwargs):
-        """
-        Next task execution happens here
-        """
-        global final_attributes
-
-        if "foreach" in kwargs:
-            self._foreach_methods.append(f.__name__)
-            selected_collaborators = self.__getattribute__(kwargs["foreach"])
-
-            for col in selected_collaborators:
-                clone = FLSpec._clones[col]
-                if ("exclude" in kwargs and hasattr(clone, kwargs["exclude"][0])) or (
-                    "include" in kwargs and hasattr(clone, kwargs["include"][0])
-                ):
-                    clone.filter_attributes(f, **kwargs)
-                artifacts_iter, _ = self.generate_artifacts()
-                for name, attr in artifacts_iter():
-                    setattr(clone, name, deepcopy(attr))
-                clone._foreach_methods = self._foreach_methods
-
-            for col in selected_collaborators:
-                clone = FLSpec._clones[col]
-                clone.input = col
-                if aggregator_to_collaborator(f, parent_func):
-                    # remove private aggregator state
-                    for attr in self.runtime._aggregator.private_attributes:
-                        self.runtime._aggregator.private_attributes[attr] = getattr(
-                            self, attr
-                        )
-                        if hasattr(clone, attr):
-                            delattr(clone, attr)
-
-            func = None
-            func_refs = []
-            remote_functions = []
-            remote_ctx_refs = []
-            if self._runtime.backend == "ray":
-                ray_executor = RayExecutor()
-            for col in selected_collaborators:
-                clone = FLSpec._clones[col]
-                for name, attr in self.runtime._collaborators[
-                    clone.input
-                ].private_attributes.items():
-                    setattr(clone, name, attr)
-                to_exec = getattr(clone, f.__name__)
-                # write the clone to the object store
-                # ensure clone is getting latest _metaflow_interface
-                clone._metaflow_interface = self._metaflow_interface
-                if self._runtime.backend == "ray":
-                    clone.runtime = Runtime()
-                    ray_executor.ray_call_put(clone, to_exec)
-                else:
-                    to_exec()
-            if self._runtime.backend == "ray":
-                clones = ray_executor.get_remote_clones()
-                FLSpec._clones.update(
-                    {
-                        col: obj
-                        for col, obj in zip(
-                            selected_collaborators, clones
-                        )
-                    }
-                )
-                del ray_executor
-                del clones
-                gc.collect()
-            for col in selected_collaborators:
-                clone = FLSpec._clones[col]
-                func = clone.execute_next
-                for attr in self.runtime._collaborators[clone.input].private_attributes:
-                    if hasattr(clone, attr):
-                        self.runtime._collaborators[clone.input].private_attributes[
-                            attr
-                        ] = getattr(clone, attr)
-                        delattr(clone, attr)
-            # Restore the self state if back-up is taken
-            self.restore_instance_snapshot(instance_snapshot)
-            del instance_snapshot
-
-            g = getattr(self, func)
-            # remove private collaborator state
-            gc.collect()
-            g([FLSpec._clones[col] for col in selected_collaborators])
-        else:
-            to_exec = getattr(self, f.__name__)
-            to_exec()
-            if f.__name__ == "end":
-                self.checkpoint(f)
-                artifacts_iter, _ = self.generate_artifacts()
-                final_attributes = artifacts_iter()
 
     def next(self, f, **kwargs):
         """
@@ -320,14 +148,15 @@ class FLSpec:
         parent_func = getattr(self, parent)
 
         # Checkpoint current attributes (if checkpoint==True)
-        self.checkpoint(parent_func)
+        checkpoint(self, parent_func)
 
         # Take back-up of current state of self
+        agg_to_collab_ss = []
         if aggregator_to_collaborator(f, parent_func):
-            agg_to_collab_ss = self.capture_instance_snapshot(f, parent_func, kwargs)
+            agg_to_collab_ss = self.capture_instance_snapshot(kwargs=kwargs)
 
         # Remove included / excluded attributes from next task
-        self.filter_attributes(f, **kwargs)
+        filter_attributes(self, f, **kwargs)
 
         if self.is_at_transition_point(f, parent_func):
             # Collaborator is done executing for now
@@ -335,10 +164,10 @@ class FLSpec:
 
         self.display_transition_logs(f, parent_func)
 
-        # if back-up of self is created then pass it to execute_task function
-        if "agg_to_collab_ss" in vars():
-            self.execute_task(
-                f, parent_func, instance_snapshot=agg_to_collab_ss, **kwargs
-            )
-        else:
-            self.execute_task(f, parent_func, **kwargs)
+        self._runtime.execute_task(
+            self,
+            f,
+            parent_func,
+            instance_snapshot=agg_to_collab_ss,
+            **kwargs,
+        )

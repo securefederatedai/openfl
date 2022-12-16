@@ -1,11 +1,8 @@
-metaflow==2.7.15
 torch
 torchvision
 matplotlib
 pillow
-ray
 opacus
 cloudpickle
 scikit-learn
 git+https://github.com/privacytrustlab/ml_privacy_meter.git@ac181a885815f85b3809317c247f422e6596cb4a
-protobuf==3.19.5
