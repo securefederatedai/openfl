@@ -37,7 +37,8 @@ class LocalRuntime(Runtime):
                 dp = kwargs.get("dashboard_port", 5252)
                 ray.init(dashboard_host=dh, dashboard_port=dp)
         self.backend = backend
-        self.aggregator = aggregator
+        if aggregator is not None:
+            self.aggregator = aggregator
         # List of envoys should be iterable, so that a subset can be selected at runtime
         # The envoys is the superset of envoys that can be selected during the experiment
         if collaborators is not None:
@@ -58,12 +59,12 @@ class LocalRuntime(Runtime):
         """
         Return names of collaborators. Don't give direct access to private attributes
         """
-        return list(self._collaborators.keys())
+        return list(self.__collaborators.keys())
 
     @collaborators.setter
     def collaborators(self, collaborators):
         """Set LocalRuntime collaborators"""
-        self._collaborators = {
+        self.__collaborators = {
             collaborator.name: collaborator for collaborator in collaborators
         }
 
@@ -129,7 +130,7 @@ class LocalRuntime(Runtime):
                 # object will not contain private attributes of
                 # aggregator or other collaborators
                 clone.runtime = LocalRuntime(backend="single_process")
-                for name, attr in self._collaborators[
+                for name, attr in self.__collaborators[
                     clone.input
                 ].private_attributes.items():
                     setattr(clone, name, attr)
@@ -155,9 +156,11 @@ class LocalRuntime(Runtime):
             for col in selected_collaborators:
                 clone = FLSpec._clones[col]
                 func = clone.execute_next
-                for attr in self._collaborators[clone.input].private_attributes:
+                for attr in self.__collaborators[
+                    clone.input
+                ].private_attributes:
                     if hasattr(clone, attr):
-                        self._collaborators[clone.input].private_attributes[
+                        self.__collaborators[clone.input].private_attributes[
                             attr
                         ] = getattr(clone, attr)
                         delattr(clone, attr)
