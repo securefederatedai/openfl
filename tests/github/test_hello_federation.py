@@ -5,12 +5,14 @@ import os
 import time
 import socket
 import argparse
+import sys
 from pathlib import Path
 from subprocess import check_call
 from concurrent.futures import ProcessPoolExecutor
 
 from openfl.utilities.utils import rmtree
-from .utils import create_collaborator, create_certified_workspace, certify_aggregator
+print(sys.path)
+from tests.github.utils import create_collaborator, create_certified_workspace, certify_aggregator
 
 
 if __name__ == '__main__':

@@ -10,7 +10,7 @@ import re
 import shutil
 from subprocess import check_call
 from concurrent.futures import ProcessPoolExecutor
-from utils import create_collaborator, create_certified_workspace, certify_aggregator
+from tests.github.utils import create_collaborator, create_certified_workspace, certify_aggregator
 
 
 def exec(command, directory):

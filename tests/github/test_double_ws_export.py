@@ -11,7 +11,7 @@ from subprocess import check_call
 from concurrent.futures import ProcessPoolExecutor
 import psutil
 
-from .utils import create_certified_workspace, certify_aggregator, create_collaborator
+from tests.github.utils import create_certified_workspace, certify_aggregator, create_collaborator
 
 
 if __name__ == '__main__':
