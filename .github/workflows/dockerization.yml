@@ -14,8 +14,6 @@ permissions:
 
 jobs:
   build:
-    strategy:
-      matrix:
     runs-on: ubuntu-latest
 
     steps:
