@@ -1,7 +1,11 @@
+# Copyright (C) 2020-2022 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 # Co-authored-by: Anindya S. Paul <anindya.s.paul@intel.com>
 # Co-authored-by: Brandon Edwards <brandon.edwards@intel.com>
 # Co-authored-by: Mansi Sharma <mansi.sharma@intel.com>
 
+from clip_optimizer import ClipOptimizer
 from copy import deepcopy
 import torch.nn as nn
 import torch.nn.functional as F
@@ -25,7 +29,6 @@ import warnings
 
 warnings.filterwarnings("ignore")
 
-from clip_optimizer import ClipOptimizer
 
 batch_size_train = 64
 batch_size_test = 1000
@@ -86,13 +89,15 @@ class Net(nn.Module):
 
 
 def default_optimizer(model):
-    # indicate the default optimizer for training the target model (we have tested with SGD w/ momentum)
+    # indicate the default optimizer for training the target model (we have
+    # tested with SGD w/ momentum)
     return optim.SGD(model.parameters(), lr=learning_rate, momentum=momentum)
 
 
 def FedAvg(models, previous_global_model=None, dp_params=None):
     """
-    This tutorial utilizes non-weighted averaging of collaborator model updates regardless of whether DP config is used.
+    This tutorial utilizes non-weighted averaging of collaborator
+    model updates regardless of whether DP config is used.
     Weighted FedAvg is currently not supported.
     """
     if dp_params is not None and previous_global_model is not None:
@@ -117,7 +122,9 @@ def FedAvg(models, previous_global_model=None, dp_params=None):
                 > dp_params["clip_norm"]
             ):
                 raise ValueError(
-                    f"The model with index {idx} had update whose L2-norm was greater than clip norm. Correct the local periodic clipping."
+                    f"The model with index {idx} had update whose "
+                    + "L2-norm was greater than clip norm."
+                    + "Correct the local periodic clipping."
                 )
     new_model = models[0]
     state_dicts = [model.state_dict() for model in models]
@@ -145,12 +152,9 @@ def inference(network, test_loader, device):
             correct += pred.eq(target.data.view_as(pred)).sum()
     test_loss /= len(test_loader.dataset)
     print(
-        "\nTest set: Avg. loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n".format(
-            test_loss,
-            correct,
-            len(test_loader.dataset),
-            100.0 * correct / len(test_loader.dataset),
-        )
+        f"\nTest set: Avg. loss: {test_loss:.4f},"
+        + f"Accuracy: {correct}/{len(test_loader.dataset)}"
+        + f"({(100.0 * correct / len(test_loader.dataset)):.0f})\n"
     )
     accuracy = float(correct / len(test_loader.dataset))
     return accuracy
@@ -171,7 +175,7 @@ def optimizer_to_device(optimizer, device):
     else:
         raise (
             ValueError(
-                f"Current optimizer state does not have dict keys: please verify"
+                "Current optimizer state does not have dict keys: please verify"
             )
         )
 
@@ -194,7 +198,9 @@ def clip_testing_on_optimizer_parameters(
     if len_equal_tensor == len(optimizer_after_step_params):
         raise (
             ValueError(
-                f"No clipping effect: Optimizer param data is the same between before and after optimizer step for collaborator: {collaborator_name} at round {round_num}"
+                "No clipping effect: Optimizer param data is the same "
+                + "between before and after optimizer step for collaborator: "
+                + f"{collaborator_name} at round {round_num}"
             )
         )
 
@@ -214,15 +220,12 @@ def validate_dp_params(dp_params):
 
     if excess != []:
         print(
-            "\nCAUTION: The keys: {} where provided in the 'differential_privacy' block of the flow config and are not being used.\n".format(
-                excess
-            )
+            f"\nCAUTION: The keys: {excess} where provided in the 'differential_privacy'"
+            + "block of the flow config and are not being used.\n"
         )
     if deficit != []:
         raise ValueError(
-            "The 'differential_privacy' block is missing the required keys: {}".format(
-                deficit
-            )
+            f"The 'differential_privacy' block is missing the required keys: {deficit}"
         )
 
 
@@ -276,12 +279,12 @@ class FederatedFlow(FLSpec):
             self.dp_params = None
         else:
             self.dp_params = config["differential_privacy"]
-            print("Here are dp_params: {}".format(self.dp_params))
+            print(f"Here are dp_params: {self.dp_params}")
             validate_dp_params(self.dp_params)
 
     @aggregator
     def start(self):
-        print(f"Performing initialization for model")
+        print("Performing initialization for model")
         self.collaborators = self.runtime.collaborators
         self.private = 10
 
@@ -345,13 +348,12 @@ class FederatedFlow(FLSpec):
             )
             self.next(self.check_round_completion)
 
-    # @collaborator                     # Uncomment this if you don't have GPU in the machine and want this application ro run on CPU instead
+    # Uncomment this if you don't have GPU in the machine and
+    # want this application to run on CPU instead
+    # @collaborator
     @collaborator(num_gpus=1)  # Assuming GPU(s) is available in the machine
     def aggregated_model_validation(self):
-        print(
-            f"Performing aggregated model validation for collaborator {self.input}"
-        )
-        # print(self.device)
+        print(f"Performing aggregated model validation for collaborator {self.input}")
         self.model = self.model.to(self.device)
         self.previous_global_model = self.previous_global_model.to(self.device)
 
@@ -368,11 +370,12 @@ class FederatedFlow(FLSpec):
         self.collaborator_name = self.input
         self.next(self.train)
 
-    # @collaborator                     # Uncomment this if you don't have GPU in the machine and want this application ro run on CPU instead
+    # Uncomment this if you don't have GPU in the machine
+    # and want this application to run on CPU instead
+    # @collaborator
     @collaborator(num_gpus=1)  # Assuming GPU(s) is available in the machine
     def train(self):
         print(f"Performing model training for collaborator {self.input}")
-        # print(self.device)
         self.optimizer = ClipOptimizer(
             base_optimizer=default_optimizer(self.model),
             device=self.device,
@@ -380,7 +383,8 @@ class FederatedFlow(FLSpec):
             clip_freq=self.dp_params["clip_frequency"],
         )
 
-        # copy state dict from optimizer object from previous round to the newly instantiated optimizer for the same collaborator
+        # copy state dict from optimizer object from previous round to the newly
+        # instantiated optimizer for the same collaborator
         if self.round > 0:
             self.optimizer.load_state_dict(
                 deepcopy(self.optimizers[self.input].state_dict())
@@ -438,13 +442,12 @@ class FederatedFlow(FLSpec):
         torch.cuda.empty_cache()
         self.next(self.local_model_validation)
 
-    # @collaborator                     # Uncomment this if you don't have GPU in the machine and want this application ro run on CPU instead
+    # Uncomment this if you don't have GPU in the machine
+    # and want this application to run on CPU instead
+    # @collaborator
     @collaborator(num_gpus=1)  # Assuming GPU(s) is available in the machine
     def local_model_validation(self):
-        print(
-            f"Performing local model validation for collaborator {self.input}"
-        )
-        # print(self.device)
+        print(f"Performing local model validation for collaborator {self.input}")
         self.local_validation_score = inference(
             self.model, self.test_loader, self.device
         )
@@ -489,7 +492,8 @@ class FederatedFlow(FLSpec):
             )
             print(20 * "#")
             print(
-                f"\nCurrent privacy spent using delta={self.dp_params['delta']} is epsilon={epsilon} (best alpha was: {best_alpha})."
+                f"\nCurrent privacy spent using delta={self.dp_params['delta']} "
+                + f"is epsilon={epsilon} (best alpha was: {best_alpha})."
             )
             print(20 * "#")
         self.previous_global_model.load_state_dict(
@@ -509,7 +513,8 @@ class FederatedFlow(FLSpec):
             if self.aggregated_model_accuracy is not None:
                 if self.aggregated_model_accuracy > self.top_model_accuracy:
                     print(
-                        f"Accuracy improved to {self.aggregated_model_accuracy} for round {self.round}"
+                        f"Accuracy improved to {self.aggregated_model_accuracy} for "
+                        + f"round {self.round}"
                     )
                     self.top_model_accuracy = self.aggregated_model_accuracy
 
@@ -563,9 +568,9 @@ class FederatedFlow(FLSpec):
     @aggregator
     def end(self):
         print(20 * "#")
-        print(f"All rounds completed successfully")
+        print("All rounds completed successfully")
         print(20 * "#")
-        print(f"This is the end of the flow")
+        print("This is the end of the flow")
         print(20 * "#")
 
 
@@ -604,21 +609,21 @@ if __name__ == "__main__":
 
     if torch.cuda.is_available():
         device = torch.device(
-            f"cuda:0"
+            "cuda:0"
         )  # This will enable Ray library to reserve available GPU(s) for the task
     else:
-        device = torch.device(
-            f"cpu"
-        )  # Uncomment appropriate collaborator decorators in FederatedFlow class if you want the application ro run on CPU
+        # Uncomment appropriate collaborator decorators in FederatedFlow class if
+        # you want the application to run on CPU
+        device = torch.device("cpu")
 
-    for idx, collaborator in enumerate(collaborators):
+    for idx, collab in enumerate(collaborators):
         local_train = deepcopy(mnist_train)
         local_test = deepcopy(mnist_test)
-        local_train.data = mnist_train.data[idx :: len(collaborators)]
-        local_train.targets = mnist_train.targets[idx :: len(collaborators)]
-        local_test.data = mnist_test.data[idx :: len(collaborators)]
-        local_test.targets = mnist_test.targets[idx :: len(collaborators)]
-        collaborator.private_attributes = {
+        local_train.data = mnist_train.data[idx:: len(collaborators)]
+        local_train.targets = mnist_train.targets[idx:: len(collaborators)]
+        local_test.data = mnist_test.data[idx:: len(collaborators)]
+        local_test.targets = mnist_test.targets[idx:: len(collaborators)]
+        collab.private_attributes = {
             "train_loader": DataLoader(
                 local_train, batch_size=batch_size_train, shuffle=True
             ),

@@ -1,3 +1,6 @@
+# Copyright (C) 2020-2022 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 import os.path
 import pickle
 from typing import Any, Callable, Optional, Tuple
@@ -89,7 +92,6 @@ class CIFAR10(VisionDataset):
                     self.targets.extend(entry["fine_labels"])
 
         self.data = np.vstack(self.data).reshape(-1, 3, 32, 32)
-        # self.data = self.data.transpose((0, 2, 3, 1))  # convert to HWC
 
         self._load_meta()
 
@@ -97,7 +99,8 @@ class CIFAR10(VisionDataset):
         path = os.path.join(self.root, self.base_folder, self.meta["filename"])
         if not check_integrity(path, self.meta["md5"]):
             raise RuntimeError(
-                "Dataset metadata file not found or corrupted. You can use download=True to download it"
+                "Dataset metadata file not found or corrupted."
+                + "You can use download=True to download it"
             )
         with open(path, "rb") as infile:
             data = pickle.load(infile, encoding="latin1")
