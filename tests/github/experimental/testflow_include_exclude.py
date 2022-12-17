@@ -210,7 +210,7 @@ if __name__ == "__main__":
     local_runtime = LocalRuntime(
         aggregator=aggregator, collaborators=collaborators
     )
-    print(f"Local runtime collaborators = {local_runtime._collaborators}")
+    print(f"Local runtime collaborators = {local_runtime.collaborators}")
     flflow = TestFlowIncludeExclude(checkpoint=False)
     flflow.runtime = local_runtime
     for i in range(5):
