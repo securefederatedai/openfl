@@ -6,6 +6,7 @@ from openfl.experimental.interface.participants import Aggregator, Collaborator
 from openfl.experimental.runtime import LocalRuntime
 from openfl.experimental.placement.placement import aggregator, collaborator
 import numpy as np
+import sys
 
 
 class bcolors:
@@ -232,6 +233,13 @@ if __name__ == "__main__":
     local_runtime = LocalRuntime(
         aggregator=aggregator, collaborators=collaborators
     )
+
+    if len(sys.argv) > 1:
+        if sys.argv[1] == 'ray':
+            local_runtime = LocalRuntime(
+                aggregator=aggregator, collaborators=collaborators, backend='ray'
+            )
+
     print(f"Local runtime collaborators = {local_runtime.collaborators}")
 
     model = None

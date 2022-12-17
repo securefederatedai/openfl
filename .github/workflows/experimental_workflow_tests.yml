@@ -25,12 +25,58 @@ jobs:
         python -m pip install --upgrade pip
         pip install metaflow==2.7.15 ray==2.1.0 torch
         pip install .
-    - name: Workflow - Internal Loop Test
+    - name: Workflow - Exclude Test (Single Process Backend)
+      run: |
+        python tests/github/experimental/testflow_exclude.py
+    - name: Workflow - Exclude Test (Ray Backend)
+      run: |
+        python tests/github/experimental/testflow_exclude.py ray
+    - name: Workflow - Include Test (Single Process Backend)
+      run: |
+        python tests/github/experimental/testflow_include.py
+    - name: Workflow - Include Test (Ray Backend)
+      run: |
+        python tests/github/experimental/testflow_include.py ray
+    - name: Workflow - Include / Exclude Test (Single Process Backend)
+      run: |
+        python tests/github/experimental/testflow_include_exclude.py
+    - name: Workflow - Include / Exclude Test (Ray Backend)
+      run: |
+        python tests/github/experimental/testflow_include_exclude.py ray
+
+    - name: Workflow - Internal Loop Test (Single Process Backend)
       run: |
         python tests/github/experimental/testflow_internalloop.py
-    - name: Workflow - References
+    - name: Workflow - Internal Loop Test (Ray Backend)
+      run: |
+        python tests/github/experimental/testflow_internalloop.py ray
+    - name: Workflow - Private Attributes (Single Process Backend)
+      run: |
+        python tests/github/experimental/testflow_privateattributes.py
+    - name: Workflow - Private Attributes (Ray Backend)
+      run: |
+        python tests/github/experimental/testflow_privateattributes.py ray
+    - name: Workflow - References (Single Process Backend)
       run: |
         python tests/github/experimental/testflow_reference.py
-    - name: Workflow - Collaborator Subset
+    - name: Workflow - References (Ray Backend)
+      run: |
+        python tests/github/experimental/testflow_reference.py ray
+    - name: Workflow - References with Exclude (Single Process Backend)
+      run: |
+        python tests/github/experimental/testflow_reference_with_exclude.py
+    - name: Workflow - References with Exclude (Ray Backend)
+      run: |
+        python tests/github/experimental/testflow_reference_with_exclude.py ray
+    - name: Workflow - References with Include (Single Process Backend)
+      run: |
+        python tests/github/experimental/testflow_reference_with_include.py
+    - name: Workflow - References with Include (Ray Backend)
+      run: |
+        python tests/github/experimental/testflow_reference_with_include.py ray
+    - name: Workflow - Collaborator Subset (Single Process Backend)
       run: |
         python tests/github/experimental/testflow_subset_of_collaborators.py
+    - name: Workflow - Collaborator Subset (Ray Backend)
+      run: |
+        python tests/github/experimental/testflow_subset_of_collaborators.py ray

@@ -7,6 +7,7 @@ from openfl.experimental.runtime import LocalRuntime
 from openfl.experimental.placement.placement import aggregator, collaborator
 from metaflow import Step
 import random
+import sys
 import os
 import shutil
 
@@ -109,7 +110,16 @@ if __name__ == "__main__":
         collaborators.append(temp_collab_obj)
         del temp_collab_obj
 
-    local_runtime = LocalRuntime(aggregator, collaborators)
+    local_runtime = LocalRuntime(
+        aggregator=aggregator, collaborators=collaborators
+    )
+
+    if len(sys.argv) > 1:
+        if sys.argv[1] == 'ray':
+            local_runtime = LocalRuntime(
+                aggregator=aggregator, collaborators=collaborators, backend='ray'
+            )
+
     random_ints = random.sample(
         range(1, len(collaborators) + 1), len(collaborators)
     )

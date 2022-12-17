@@ -1,6 +1,7 @@
 # Copyright (C) 2020-2022 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
+import sys
 from openfl.experimental.interface import FLSpec, Aggregator, Collaborator
 from openfl.experimental.runtime import LocalRuntime
 from openfl.experimental.placement import aggregator, collaborator
@@ -210,6 +211,13 @@ if __name__ == "__main__":
     local_runtime = LocalRuntime(
         aggregator=aggregator, collaborators=collaborators
     )
+
+    if len(sys.argv) > 1:
+        if sys.argv[1] == 'ray':
+            local_runtime = LocalRuntime(
+                aggregator=aggregator, collaborators=collaborators, backend='ray'
+            )
+
     print(f"Local runtime collaborators = {local_runtime.collaborators}")
     flflow = TestFlowIncludeExclude(checkpoint=False)
     flflow.runtime = local_runtime
