@@ -1,10 +1,12 @@
+# Copyright (C) 2020-2022 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 # Co-authored-by: Brandon Edwards <brandon.edwards@intel.com>
 # Co-authored-by: Anindya S. Paul <anindya.s.paul@intel.com>
 # Co-authored-by: Mansi Sharma <mansi.sharma@intel.com>
 
+from clip_optimizer import ClipOptimizer
 from copy import deepcopy
-from pydoc import cli
-import re
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
@@ -16,7 +18,6 @@ from openfl.experimental.interface import FLSpec, Aggregator, Collaborator
 from openfl.experimental.runtime import LocalRuntime
 from openfl.experimental.placement import aggregator, collaborator
 
-import opacus
 from opacus import PrivacyEngine
 import argparse
 import yaml
@@ -25,7 +26,6 @@ import warnings
 
 warnings.filterwarnings("ignore")
 
-from clip_optimizer import ClipOptimizer
 
 batch_size_train = 64
 batch_size_test = 1000
@@ -34,12 +34,7 @@ momentum = 0.5
 log_interval = 10
 
 random_seed = 5495300300540669060
-# random_seed = 5495
 
-# random_seed = torch.seed()
-
-# random_seed = 5495300300540669060 # this one causes updates to be too large :(
-# torch.backends.cudnn.enabled = False
 # NOTE: remove below to stop repeatable runs
 torch.manual_seed(random_seed)
 print(f"\n\nWe are using seed: {random_seed}")
@@ -90,14 +85,15 @@ class GlobalModelTools(object):
         self.dp_params = dp_params
         self.privacy_engine = PrivacyEngine()
         if dp_params is None:
-            # this is the expected fraction of collaborators to select each round, also the indepencent probability that each
+            # this is the expected fraction of collaborators to select each round,
+            # also the indepencent probability that each
             # collaborator gets selected for a round
             sample_rate = 1.0
         else:
             sample_rate = dp_params["sample_rate"]
         self.global_data_loader = torch.utils.data.DataLoader(
             TensorDataset(
-                torch.Tensor([idx for idx in range(len(self.collaborator_names))]).to(
+                torch.Tensor(list(range(len(self.collaborator_names)))).to(
                     torch.int
                 )
             ),
@@ -121,7 +117,8 @@ class GlobalModelTools(object):
         self, state_for_params, states_for_gradients
     ):
         if self.dp_params is not None:
-            # populate param.grad_sample with individual updates from state_dicts, and populate pram.grad with a random
+            # populate param.grad_sample with individual updates from state_dicts,
+            # and populate pram.grad with a random
             # properly shaped update in order to help opacus infer that shape information
             per_layer_grad_samples = {
                 key: [state[key] for state in states_for_gradients]
@@ -132,7 +129,8 @@ class GlobalModelTools(object):
             ):
                 params.data = state_for_params[name]
                 params.grad_sample = torch.stack(per_layer_grad_samples[name], dim=0)
-                # only the shape is important below, values are not important and so we use only the first state
+                # only the shape is important below, values are not important and so we
+                # use only the first state
                 params.grad = states_for_gradients[0][name]
 
 
@@ -162,7 +160,8 @@ def default_optimizer(model):
 
 def FedAvg(models, global_model_tools, previous_global_state, dp_params):
     """
-    This tutorial utilizes non-weighted averaging of collaborator model updates regardless of whether DP config is used.
+    This tutorial utilizes non-weighted averaging of collaborator model updates
+    regardless of whether DP config is used.
     Weighted FedAvg is currently not supported.
     """
     new_model = models[0]
@@ -187,7 +186,8 @@ def FedAvg(models, global_model_tools, previous_global_state, dp_params):
         print(f"delta_norm for idx {idx} is: {delta_norm}")
         if delta_norm > dp_params["clip_norm"]:
             raise ValueError(
-                f"The model with index {idx} had update whose L2-norm was greater than clip norm. Correct the local periodic clipping."
+                f"The model with index {idx} had update whose "
+                + "L2-norm was greater than clip norm. Correct the local periodic clipping."
             )
     print()
     # Clearing state from optimizer from last round so as to not leak information
@@ -197,7 +197,8 @@ def FedAvg(models, global_model_tools, previous_global_state, dp_params):
     )
     global_model_tools.global_optimizer.step()
 
-    # removing the '_module.' from the beggining of all keys coming from global_model_tools.global_model state dict
+    # removing the '_module.' from the beggining of all keys coming from
+    # global_model_tools.global_model state dict
     new_model.load_state_dict(
         {
             key[8:]: value
@@ -221,12 +222,9 @@ def inference(network, test_loader, device):
             correct += pred.eq(target.data.view_as(pred)).sum()
     test_loss /= len(test_loader.dataset)
     print(
-        "\nTest set: Avg. loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n".format(
-            test_loss,
-            correct,
-            len(test_loader.dataset),
-            100.0 * correct / len(test_loader.dataset),
-        )
+        "\nTest set: Avg. loss: {test_loss:.4f},"
+        f" Accuracy: {correct}/{len(test_loader.dataset)}"
+        f" ({(100.0 * correct / len(test_loader.dataset)):.0f})\n"
     )
     accuracy = float(correct / len(test_loader.dataset))
     return accuracy
@@ -247,7 +245,7 @@ def optimizer_to_device(optimizer, device):
     else:
         raise (
             ValueError(
-                f"Current optimizer state does not have dict keys: please verify"
+                "Current optimizer state does not have dict keys: please verify"
             )
         )
 
@@ -270,7 +268,9 @@ def clip_testing_on_optimizer_parameters(
     if len_equal_tensor == len(optimizer_after_step_params):
         raise (
             ValueError(
-                f"No clipping effect: Optimizer param data is the same between before and after optimizer step for collaborator: {collaborator_name} at round {round_num}"
+                "No clipping effect: Optimizer param data is the same "
+                + "between before and after optimizer step for collaborator: "
+                + f"{collaborator_name} at round {round_num}"
             )
         )
 
@@ -291,15 +291,12 @@ def validate_dp_params(dp_params):
 
     if excess != []:
         print(
-            "\nCAUTION: The keys: {} where provided in the 'differential_privacy' block of the flow config and are not being used.\n".format(
-                excess
-            )
+            f"\nCAUTION: The keys: {excess} where provided in the 'differential_privacy'"
+            + " block of the flow config and are not being used.\n"
         )
     if deficit != []:
         raise ValueError(
-            "The 'differential_privacy' block is missing the required keys: {}".format(
-                deficit
-            )
+            f"The 'differential_privacy' block is missing the required keys: {deficit}"
         )
 
 
@@ -330,7 +327,8 @@ class FederatedFlow(FLSpec):
         self.top_model_accuracy = top_model_accuracy
         self.device = device
         self.clip_test = clip_test
-        # we will set this attribute at the beginning of each round (tracks using indices against the collaborator list)
+        # we will set this attribute at the beginning of each round (tracks using
+        # indices against the collaborator list)
         self.round_collaborator_idxs = None
 
         config = parse_config(config_path)
@@ -339,7 +337,7 @@ class FederatedFlow(FLSpec):
             self.dp_params = None
         else:
             self.dp_params = config["differential_privacy"]
-            print("Here are dp_params: {}".format(self.dp_params))
+            print(f"Here are dp_params: {self.dp_params}")
             validate_dp_params(self.dp_params)
         self.global_model_tools = GlobalModelTools(
             global_model=self.global_model,
@@ -381,13 +379,13 @@ class FederatedFlow(FLSpec):
                 }
 
         print("\n\n" + 20 * "#")
-        print("Round {}...".format(self.round))
+        print("Round {self.round}...")
         print("Training with collaborators: ", self.round_collaborators)
         print(20 * "#" + "\n\n")
 
         if (len(round_collaborator_idxs) != 0) and (
             round_collaborator_idxs[0].nelement() != 0
-        ):  # (not isinstance(round_collaborator_idxs[0], torch.Tensor)):
+        ):
             self.next(
                 self.aggregated_model_validation,
                 foreach="round_collaborators",
@@ -396,18 +394,19 @@ class FederatedFlow(FLSpec):
         else:
             if self.round == self.total_rounds - 1:
                 print(
-                    f"Completed all rounds with no collaborator selected for training at any round"
+                    "Completed all rounds with no collaborator selected for training at any round"
                 )
                 self.next(self.end)
 
             self.round += 1
             self.next(self.start)
 
-    # @collaborator                     # Uncomment this if you don't have GPU in the machine and want this application ro run on CPU instead
+    # Uncomment below line if you are using the ray backend and
+    # do not have a GPU accessible
+    # @collaborator
     @collaborator(num_gpus=1)  # Assuming GPU(s) is available in the machine
     def aggregated_model_validation(self):
         print(f"Performing aggregated model validation for collaborator {self.input}")
-        # print(self.device)
         self.model = self.model.to(self.device)
         self.global_model = self.global_model.to(self.device)
 
@@ -420,11 +419,12 @@ class FederatedFlow(FLSpec):
         self.collaborator_name = self.input
         self.next(self.train)
 
-    # @collaborator                     # Uncomment this if you don't have GPU in the machine and want this application ro run on CPU instead
+    # Uncomment below line if you are using the ray backend and
+    # do not have a GPU accessible
+    # @collaborator
     @collaborator(num_gpus=1)  # Assuming GPU(s) is available in the machine
     def train(self):
         print(f"Performing model training for collaborator {self.input}")
-        # print(self.device)
 
         self.optimizer = ClipOptimizer(
             base_optimizer=default_optimizer(self.model),
@@ -433,7 +433,8 @@ class FederatedFlow(FLSpec):
             clip_freq=self.dp_params["clip_frequency"],
         )
 
-        # copy state dict from optimizer object from previous round to the newly instantiated optimizer for the same collaborator
+        # copy state dict from optimizer object from previous round to the newly
+        # instantiated optimizer for the same collaborator
         if self.round > 0:
             self.optimizer.load_state_dict(
                 deepcopy(self.optimizers[self.input].state_dict())
@@ -488,11 +489,12 @@ class FederatedFlow(FLSpec):
         torch.cuda.empty_cache()
         self.next(self.local_model_validation)
 
-    # @collaborator                     # Uncomment this if you don't have GPU in the machine and want this application ro run on CPU instead
+    # Uncomment below line if you are using the ray backend and
+    # do not have a GPU accessible
+    # @collaborator
     @collaborator(num_gpus=1)  # Assuming GPU(s) is available in the machine
     def local_model_validation(self):
         print(f"Performing local model validation for collaborator {self.input}")
-        # print(self.device)
         self.local_validation_score = inference(
             self.model, self.test_loader, self.device
         )
@@ -524,8 +526,11 @@ class FederatedFlow(FLSpec):
 
         if self.dp_params is not None:
             print(15 * "#")
+            epsilon = self.global_model_tools.privacy_engine.get_epsilon(
+                delta=self.dp_params['delta'])
             print(
-                f"\nCurrent epsilon is: {self.global_model_tools.privacy_engine.get_epsilon(delta=self.dp_params['delta'])} for delta: {self.dp_params['delta']}"
+                "\nCurrent epsilon is: "
+                + f"{epsilon} for delta: {self.dp_params['delta']}"
             )
             print(15 * "#")
 
@@ -544,15 +549,16 @@ class FederatedFlow(FLSpec):
         else:
             if self.aggregated_model_accuracy > self.top_model_accuracy:
                 print(
-                    f"Accuracy improved to {self.aggregated_model_accuracy} for round {self.round}"
+                    f"Accuracy improved to {self.aggregated_model_accuracy}"
+                    + f"for round {self.round}"
                 )
                 self.top_model_accuracy = self.aggregated_model_accuracy
             self.round += 1
 
             # determine starting round collaborators by grabbing first batch of loader
-            round_collaborator_idxs = [
-                batch for batch in self.global_model_tools.global_data_loader
-            ][0]
+            for batch in self.global_model_tools.global_data_loader:
+                round_collaborator_idxs = batch
+                break
             self.round_collaborators = [
                 self.collaborator_names[idx] for idx in round_collaborator_idxs[0]
             ]
@@ -576,9 +582,9 @@ class FederatedFlow(FLSpec):
     @aggregator
     def end(self):
         print(20 * "#")
-        print(f"All rounds completed successfully")
+        print("All rounds completed successfully")
         print(20 * "#")
-        print(f"This is the end of the flow")
+        print("This is the end of the flow")
         print(20 * "#")
 
 
@@ -617,21 +623,21 @@ if __name__ == "__main__":
 
     if torch.cuda.is_available():
         device = torch.device(
-            f"cuda:0"
+            "cuda:0"
         )  # This will enable Ray library to reserve available GPU(s) for the task
     else:
-        device = torch.device(
-            f"cpu"
-        )  # Uncomment appropriate collaborator decorators in FederatedFlow class if you want the application ro run on CPU
+        # Uncomment appropriate collaborator decorators in FederatedFlow class if
+        # you want the application to run on CPU
+        device = torch.device("cpu")
 
-    for idx, collaborator in enumerate(collaborators):
+    for idx, collab in enumerate(collaborators):
         local_train = deepcopy(mnist_train)
         local_test = deepcopy(mnist_test)
-        local_train.data = mnist_train.data[idx :: len(collaborators)]
-        local_train.targets = mnist_train.targets[idx :: len(collaborators)]
-        local_test.data = mnist_test.data[idx :: len(collaborators)]
-        local_test.targets = mnist_test.targets[idx :: len(collaborators)]
-        collaborator.private_attributes = {
+        local_train.data = mnist_train.data[idx:: len(collaborators)]
+        local_train.targets = mnist_train.targets[idx:: len(collaborators)]
+        local_test.data = mnist_test.data[idx:: len(collaborators)]
+        local_test.targets = mnist_test.targets[idx:: len(collaborators)]
+        collab.private_attributes = {
             "train_loader": torch.utils.data.DataLoader(
                 local_train, batch_size=batch_size_train, shuffle=True
             ),
