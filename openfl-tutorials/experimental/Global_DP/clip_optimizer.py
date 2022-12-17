@@ -1,3 +1,6 @@
+# Copyright (C) 2020-2022 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 # This file overrides the step method of PyTorch Optimizer
 # Adopts fix clipping from https://arxiv.org/abs/1710.06963
 
@@ -61,7 +64,8 @@ class ClipOptimizer(object):
             for idx, param in enumerate(local_params):
                 if param.data.shape != updated_params[idx].shape:
                     raise ValueError(
-                        f"Trying to update params of shape: {param.data.shape} with update of shape: {updated_params[idx].shape}"
+                        f"Trying to update params of shape: {param.data.shape}"
+                        + f"with update of shape: {updated_params[idx].shape}"
                     )
                 param.data = updated_params[idx]
 

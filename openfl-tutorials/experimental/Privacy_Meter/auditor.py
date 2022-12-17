@@ -1,22 +1,17 @@
+# Copyright (C) 2020-2022 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 from bisect import bisect
 
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
 
-from privacy_meter.audit import Audit, MetricEnum
+from privacy_meter.audit import Audit
 from privacy_meter.constants import InferenceGame
 from privacy_meter.dataset import Dataset
 from privacy_meter.information_source import InformationSource
 
-import torch
-import numpy as np
-
-import matplotlib.pyplot as plt
-from privacy_meter.audit import Audit, MetricEnum
-from privacy_meter.constants import InferenceGame
-from privacy_meter.dataset import Dataset
-from privacy_meter.information_source import InformationSource
 import time
 from privacy_meter.metric import PopulationMetric
 from privacy_meter.information_source_signal import ModelLoss, ModelGradientNorm
@@ -25,7 +20,8 @@ import privacy_meter.hypothesis_test as prtest
 
 class PM_report:
     """
-    This class indicates the information about the auditing and save the history of the privacy loss during the training.
+    This class indicates the information about the auditing and
+    save the history of the privacy loss during the training.
     """
 
     def __init__(
@@ -43,12 +39,14 @@ class PM_report:
 
         Args:
             fpr_tolerance_list: FPR tolerance value(s) to be used by the audit.
-            is_report_roc: Indicate whether the report should include the whole ROC of the privacy loss
+            is_report_roc: Indicate whether the report should include the whole ROC
+                           of the privacy loss
             signal: A list which indicates the auditing signal, e.g., [loss, gradient norm].
             level: Indicate which model to audit, e.g., local model or global model
             log_dir: Indicate where to save the privacy loss profile during the training.
             interval: Indicate the auditing interval
-            other_info: contains other parameters, e.g., on which layer we want to compute the gradient norm
+            other_info: contains other parameters, e.g., on which layer we want to
+                        compute the gradient norm
         """
         self.fpr_tolerance = fpr_tolerance_list
         self.is_report_roc = is_report_roc
@@ -68,12 +66,16 @@ class PM_report:
 
 def PopulationAuditor(target_model, datasets, pm_info):
     """
-    Function that returns updated privacy risk report based on the current snapshot of the model and FL history and updates the PM history.
+    Function that returns updated privacy risk report based on the current
+    snapshot of the model and FL history and updates the PM history.
+
     Args:
         target_model (PM model obj): The current snapshot of the model
-        datasets (dict): Dataset dictionary, which contains members dataset and non-members dataset, as well as the dataset for auditing.
+        datasets (dict): Dataset dictionary, which contains members dataset and i
+                         non-members dataset, as well as the dataset for auditing.
                          Each dataset is the PM dataset obj
-        pm_info (PM_report obj): Dictionary that contains the history of the privacy loss report
+        pm_info (PM_report obj): Dictionary that contains the history
+                                 of the privacy loss report
     Returns:
         Updated privacy report
     """
@@ -222,7 +224,9 @@ def PopulationAuditor(target_model, datasets, pm_info):
 
 def plot_tpr_history(history_dict, client, fpr_tolerance_list):
     """
-    Plot the history of true positive rate for each fpr tolerance in the fpr_tolerance_list  during the training.
+    Plot the history of true positive rate for each fpr tolerance
+    in the fpr_tolerance_list  during the training.
+
     history_list: contains all the signals or reports we aim to show
     client: the auditing client
     name_list: idx for the history list
@@ -238,9 +242,7 @@ def plot_tpr_history(history_dict, client, fpr_tolerance_list):
         plt.title(f"{client} (FPR @ {fpr_tolerance_list[idx]})")
         plt.legend()
         plt.savefig(
-            "{}/{}_tpr_at_{}.png".format(
-                history_dict[key].log_dir, client, fpr_tolerance_list[idx]
-            ),
+            f"{history_dict[key].log_dir}/{client}_tpr_at_{fpr_tolerance_list[idx]}.png",
             dpi=200,
         )
         plt.clf()

@@ -1,3 +1,6 @@
+# Copyright (C) 2020-2022 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 # -----------------------------------------------------------
 # Primary author: Hongyan Chang <hongyan.chang@intel.com>
 # Co-authored-by: Anindya S. Paul <anindya.s.paul@intel.com>
@@ -646,7 +649,7 @@ if __name__ == "__main__":
     )
 
     # partition the dataset for clients
-    for idx, collaborator in enumerate(collaborators):
+    for idx, collab in enumerate(collaborators):
 
         # construct the training and test and population dataset
         local_train = deepcopy(train_dataset)
@@ -691,7 +694,7 @@ if __name__ == "__main__":
         Path(local_pm_info.log_dir).mkdir(parents=True, exist_ok=True)
         Path(global_pm_info.log_dir).mkdir(parents=True, exist_ok=True)
 
-        collaborator.private_attributes = {
+        collab.private_attributes = {
             "local_pm_info": local_pm_info,
             "global_pm_info": global_pm_info,
             "train_dataset": local_train,
@@ -704,15 +707,14 @@ if __name__ == "__main__":
                 local_test, batch_size=batch_size_test, shuffle=False
             ),
         }
-    
+
     # To activate the ray backend with parallel collaborator tasks run in their own process
-    # and exclusive GPUs assigned to tasks, uncomment the following:
-    # local_runtime = LocalRuntime(aggregator=aggregator, collaborators=collaborators, backend='ray')
+    # and exclusive GPUs assigned to tasks, set LocalRuntime with backend='ray':
     local_runtime = LocalRuntime(aggregator=aggregator, collaborators=collaborators)
-    
+
     print(f'Local runtime collaborators = {local_runtime._collaborators}')
 
-    ## change to the internal flow loop
+    # change to the internal flow loop
     model = Net()
     top_model_accuracy = 0
     optimizers = {
