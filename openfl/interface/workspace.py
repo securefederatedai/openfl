@@ -18,6 +18,7 @@ from click import Path as ClickPath
 
 from openfl.utilities.path_check import is_directory_traversal
 from openfl.utilities.workspace import dump_requirements_file
+from openfl.utilities.click_types import REPOSITORY
 
 
 @group()
@@ -450,12 +451,14 @@ def dockerize_(context, base_image, save):
         default=True, type=bool,
         help='Dump the Docker image to an archive')
 @option('--rebuild', help='Build images with `--no-cache`', is_flag=True)
-@option('--developer-mode', required=False,
-        default=False, type=bool, is_flag=True,
-        help='Use the local OpenFL package in the Docker image')
+@option('--openfl-path', required=False, type=REPOSITORY,
+        help='Path to OpenFL.\n'
+             'Could be either a local path or remote URL.\n'
+             'For the remote case, the branch can be specified after the "@" sign.\n'
+             'For example: https://github.com/intel/openfl.git@develop\n')
 @pass_context
 def graminize_(context, signing_key: Path, enclave_size: str, pip_install_options: Tuple[str],
-               save: bool, rebuild: bool, developer_mode: bool) -> None:
+               save: bool, rebuild: bool, openfl_path: str) -> None:
     """
     Build gramine app inside a docker image.
 
@@ -473,9 +476,9 @@ def graminize_(context, signing_key: Path, enclave_size: str, pip_install_option
         echo(f'\n 📦 Executing command:\n{command}\n')
         process = subprocess.Popen(
             command,
+            **popen_kwargs,
             shell=True, stderr=subprocess.STDOUT,
-            stdout=subprocess.PIPE,
-            **popen_kwargs)
+            stdout=subprocess.PIPE)
         for line in process.stdout:
             echo(line)
         _ = process.communicate()  # pipe is already empty, used to get `returncode`
@@ -497,9 +500,21 @@ def graminize_(context, signing_key: Path, enclave_size: str, pip_install_option
 
     echo('\n 🐋 Building base gramine-openfl image...')
     base_dockerfile = SITEPACKS / 'openfl-gramine' / 'Dockerfile.gramine'
+
+    build_target = 'default'
+    if openfl_path is not None:
+        if Path(openfl_path).exists():
+            build_target = 'local'
+        else:
+            openfl_path = f'git+{openfl_path}'
+            build_target = 'remote'
+
+    build_path = openfl_path if build_target == 'local' else '.'
+
     base_build_command = (
         f'docker build {rebuild_option} -t gramine_openfl -f {base_dockerfile} '
-        f'--target {"build-dev" if developer_mode else "build"} .'
+        f'--target {build_target} '
+        f'--build-arg OPENFL_PATH={openfl_path} {build_path}'
     )
     open_pipe(base_build_command, env=dict(os.environ, DOCKER_BUILDKIT='1'))
     echo('\n ✔️ DONE: Building base gramine-openfl image')

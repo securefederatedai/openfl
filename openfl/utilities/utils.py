@@ -65,6 +65,21 @@ def is_api_adress(address: str) -> bool:
         return False
 
 
+def is_repo(path: str) -> bool:
+    """Validate url value."""
+    import re
+
+    if os.path.exists(path):
+        return True
+    regex = re.compile(
+        r'(?P<host>(git@|https://)([\w.@]+)[/:])'
+        r'(?P<owner>[\w,-,\_]+)/'
+        r'(?P<repo>[\w,-,\_]+)(.git)?(/?)'
+        r'(?P<branch>@[\w,-,\_]+)?'
+    )
+    return re.match(regex, path)
+
+
 def add_log_level(level_name, level_num, method_name=None):
     """
     Add a new logging level to the logging module.

@@ -15,6 +15,8 @@ FQDN=localhost
 COL1_DATA_PATH=1
 COL2_DATA_PATH=2
 
+OPENFL_PATH=`pwd`
+
 # START
 # =====
 # Make sure you are in a Python virtual environment with the FL package installed.
@@ -33,9 +35,9 @@ openssl genrsa -3 -out ${FED_DIRECTORY}/key.pem 3072
 # Build graminized app image
 if [ $REBUILD_IMAGES -gt 0 ]
 then
-fx workspace graminize -s ${FED_DIRECTORY}/key.pem --no-save --developer-mode --rebuild
+fx workspace graminize -s ${FED_DIRECTORY}/key.pem --no-save --openfl-path ${OPENFL_PATH} --rebuild
 else
-fx workspace graminize -s ${FED_DIRECTORY}/key.pem --no-save --developer-mode
+fx workspace graminize -s ${FED_DIRECTORY}/key.pem --no-save --openfl-path ${OPENFL_PATH}
 fi
 
 # CERTIFICATION PART------------------------------

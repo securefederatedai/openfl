@@ -3,6 +3,7 @@
 """Click types module."""
 
 import click
+from pathlib import Path
 
 from openfl.utilities import utils
 
@@ -31,5 +32,22 @@ class IpAddressParamType(click.ParamType):
         return value
 
 
+class RepositoryParamType(click.ParamType):
+    """Repository Type for click arguments."""
+
+    name = 'Repository type'
+
+    def convert(self, value, param, ctx):
+        """Validate value, if value is valid, return it."""
+        if not utils.is_repo(value):
+            self.fail(f'{value} is not an existing path or valid repository URL.', param, ctx)
+        path = Path(value)
+        if path.exists():
+            return path.resolve()
+        return value
+
+
 FQDN = FqdnParamType()
 IP_ADDRESS = IpAddressParamType()
+
+REPOSITORY = RepositoryParamType()
