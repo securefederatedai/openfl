@@ -472,11 +472,10 @@ def graminize_(context, signing_key: Path, enclave_size: str, pip_install_option
     1. gramine-direct, check if a key is provided
     2. make a standalone function with `export` parametr
     """
-    def open_pipe(command: str, **popen_kwargs):
+    def open_pipe(command: str):
         echo(f'\n 📦 Executing command:\n{command}\n')
         process = subprocess.Popen(
             command,
-            **popen_kwargs,
             shell=True, stderr=subprocess.STDOUT,
             stdout=subprocess.PIPE)
         for line in process.stdout:
@@ -516,7 +515,7 @@ def graminize_(context, signing_key: Path, enclave_size: str, pip_install_option
         f'--target {build_target} '
         f'--build-arg OPENFL_PATH={openfl_path} {build_path}'
     )
-    open_pipe(base_build_command, env=dict(os.environ, DOCKER_BUILDKIT='1'))
+    open_pipe(base_build_command)
     echo('\n ✔️ DONE: Building base gramine-openfl image')
 
     workspace_path = Path.cwd()
