@@ -7,14 +7,14 @@ on:
   push:
     branches: [ develop ]
   pull_request:
-    branches: [  ]
+    branches: [ develop ]
 
 permissions:
   contents: read
 
 jobs:
   build:
-    runs-on: 'ubuntu-latest' # Add Windows support after https://github.com/keras-team/keras/issues/16308 is merged
+    runs-on: ubuntu-latest # Add Windows support after https://github.com/keras-team/keras/issues/16308 is merged
 
     steps:
     - uses: actions/checkout@v3

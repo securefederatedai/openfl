@@ -7,13 +7,14 @@ on:
   push:
     branches: [ develop ]
   pull_request:
-    branches: [  ]
+    branches: [ develop ]
 
 permissions:
   contents: read
 
 jobs:
   build:
+
     runs-on: ubuntu-latest
 
     steps:

@@ -7,13 +7,14 @@ on:
   push:
     branches: [ develop ]
   pull_request:
-    branches: [  ]
+    branches: [ develop ]
 
 permissions:
   contents: read
 
 jobs:
   build:
+
     strategy:
       matrix:
        os: ['ubuntu-latest', 'windows-latest']

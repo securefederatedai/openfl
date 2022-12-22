@@ -408,16 +408,9 @@ def dockerize_(context, base_image, save):
             if 'stream' in line:
                 print(f'> {line["stream"]}', end='')
             elif 'error' in line:
-                print('Failed to build the Docker image:')
-                print(line)
+                echo('Failed to build the Docker image:')
+                echo(line)
                 sys.exit(1)
-    except docker.errors.BuildError as e:
-        for log in e.build_log:
-            msg = log.get('stream')
-            if msg:
-                echo(msg)
-        echo('Failed to build the image\n' + str(e) + '\n')
-        sys.exit(1)
     finally:
         os.remove(workspace_archive)
         os.remove(dockerfile_workspace)
