@@ -38,7 +38,9 @@ class TensorDB:
             'tags': 'object',
             'nparray': 'object'
         }
-        self.tensor_db = pd.DataFrame({col: pd.Series(dtype=dtype) for col, dtype in types_dict.items()})
+        self.tensor_db = pd.DataFrame(
+            {col: pd.Series(dtype=dtype) for col, dtype in types_dict.items()}
+        )
         self._bind_convenience_methods()
 
         self.mutex = Lock()
