@@ -28,4 +28,4 @@ jobs:
         pip install .
     - name: Graminize test
       run: |
-        bash tests/github/test_graminize.sh 0
+        bash tests/github/test_graminize.sh 0 1 torch_unet_kvasir_gramine_ready fed_gramine one two --rounds-to-train 2 --data-shards 40
