@@ -160,6 +160,7 @@ def generate_cert_request(collaborator_name, data_path, silent, skip_package):
         from shutil import copytree
         from shutil import ignore_patterns
         from shutil import make_archive
+        from shutil import rmtree
         from tempfile import mkdtemp
         from os.path import basename
         from os.path import join
@@ -183,6 +184,7 @@ def generate_cert_request(collaborator_name, data_path, silent, skip_package):
 
         # Create Zip archive of directory
         make_archive(archive_name, archive_type, tmp_dir)
+        rmtree(tmp_dir)
 
         echo(f'Archive {archive_file_name} with certificate signing'
              f' request created')
@@ -269,6 +271,7 @@ def certify(collaborator_name, silent, request_pkg=None, import_=False):
     from pathlib import Path
     from shutil import copy
     from shutil import make_archive
+    from shutil import rmtree
     from shutil import unpack_archive
     from glob import glob
     from os.path import basename
@@ -378,6 +381,7 @@ def certify(collaborator_name, silent, request_pkg=None, import_=False):
 
         # Create Zip archive of directory
         make_archive(archive_name, archive_type, tmp_dir)
+        rmtree(tmp_dir)
 
     else:
         # Copy the signed certificate and cert chain into PKI_DIR

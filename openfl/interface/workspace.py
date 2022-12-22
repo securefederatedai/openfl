@@ -127,6 +127,7 @@ def export_(pip_install_options: Tuple[str]):
     from shutil import copytree
     from shutil import ignore_patterns
     from shutil import make_archive
+    from shutil import rmtree
     from tempfile import mkdtemp
 
     from plan import freeze_plan
@@ -173,7 +174,7 @@ def export_(pip_install_options: Tuple[str]):
     # Create Zip archive of directory
     echo('\n 🗜️ Preparing workspace distribution zip file')
     make_archive(archive_name, archive_type, tmp_dir)
-
+    rmtree(tmp_dir)
     echo(f'\n ✔️ Workspace exported to archive: {archive_file_name}')
 
 
