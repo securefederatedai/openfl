@@ -265,6 +265,7 @@ def change_tags(tags, *, add_field=None, remove_field=None) -> Tuple[str, ...]:
 def rmtree(path, ignore_errors=False):
     def remove_readonly(func, path, _):
         "Clear the readonly bit and reattempt the removal"
-        os.chmod(path, stat.S_IWRITE)  # Windows can not remove read-only files.
+        if os.name == 'nt':
+            os.chmod(path, stat.S_IWRITE)  # Windows can not remove read-only files.
         func(path)
     return shutil.rmtree(path, ignore_errors=ignore_errors, onerror=remove_readonly)

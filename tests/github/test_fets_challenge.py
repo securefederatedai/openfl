@@ -42,7 +42,6 @@ if __name__ == '__main__':
     shutil.rmtree(fed_workspace, ignore_errors=True)
     check_call(['fx', 'workspace', 'create', '--prefix', fed_workspace, '--template', template])
     os.chdir(fed_workspace)
-    print(origin_dir)
     with os.scandir(origin_dir) as iterator:
         for entry in iterator:
             print(entry)
