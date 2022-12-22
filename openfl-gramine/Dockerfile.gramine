@@ -38,7 +38,7 @@ FROM base AS remote
 ARG OPENFL_PATH
 RUN --mount=type=cache,target=/root/.cache/ \
     pip install --upgrade pip && \
-    pip install ${OPENFL_PATH}
+    pip install git+${OPENFL_PATH}
 
 FROM base AS default
 RUN --mount=type=cache,target=/root/.cache/ \

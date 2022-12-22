@@ -7,6 +7,7 @@ loader.env.no_proxy = "{{ no_proxy }}"
 loader.env.https_proxy = "{{ https_proxy }}"
 loader.env.http_proxy = "{{ http_proxy }}"
 loader.env.SSL_CERT_DIR = "/etc/ssl/certs"
+loader.env.PYTHONPATH = { passthrough = true }
 
 loader.insecure__use_cmdline_argv = true
 

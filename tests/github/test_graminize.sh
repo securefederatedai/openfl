@@ -35,7 +35,7 @@ openssl genrsa -3 -out ${FED_DIRECTORY}/key.pem 3072
 # Build graminized app image
 if [ $REBUILD_IMAGES -gt 0 ]
 then
-fx workspace graminize -s ${FED_DIRECTORY}/key.pem --no-save --openfl-path ${OPENFL_PATH} --rebuild
+fx workspace graminize -s ${FED_DIRECTORY}/key.pem --no-save --rebuild --openfl-path ${OPENFL_PATH}
 else
 fx workspace graminize -s ${FED_DIRECTORY}/key.pem --no-save --openfl-path ${OPENFL_PATH}
 fi
@@ -140,5 +140,5 @@ docker logs --follow ${COL2}
 
 wait
 
-docker stop Aggregator ${COL1} ${COL2}
+docker ps -q --filter "ancestor=${FED_WORKSPACE}" | xargs docker stop
 # rm -rf ${FED_DIRECTORY}

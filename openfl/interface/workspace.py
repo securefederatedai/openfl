@@ -502,11 +502,7 @@ def graminize_(context, signing_key: Path, enclave_size: str, pip_install_option
 
     build_target = 'default'
     if openfl_path is not None:
-        if Path(openfl_path).exists():
-            build_target = 'local'
-        else:
-            openfl_path = f'git+{openfl_path}'
-            build_target = 'remote'
+        build_target = 'local' if Path(openfl_path).exists() else 'remote'
 
     build_path = openfl_path if build_target == 'local' else '.'
 
