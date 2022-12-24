@@ -500,7 +500,7 @@ class Plan:
         """Get gRPC client for the specified collaborator."""
         common_name = collaborator_name
         if not root_certificate or not private_key or not certificate:
-            root_certificate = 'cert/cert_chain.crt'
+            root_certificate = f'cert/cert_chain.crt'
             certificate = f'cert/client/col_{common_name}.crt'
             private_key = f'cert/client/col_{common_name}.key'
 
@@ -525,7 +525,7 @@ class Plan:
         common_name = self.config['network'][SETTINGS]['agg_addr'].lower()
 
         if not root_certificate or not private_key or not certificate:
-            root_certificate = 'cert/cert_chain.crt'
+            root_certificate = f'cert/cert_chain.crt'
             certificate = f'cert/server/agg_{common_name}.crt'
             private_key = f'cert/server/agg_{common_name}.key'
 

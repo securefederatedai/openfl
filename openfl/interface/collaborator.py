@@ -37,7 +37,9 @@ def collaborator(context):
         help='The certified common name of the collaborator')
 @option('-s', '--secure', required=False,
         help='Enable Intel SGX Enclave', is_flag=True, default=False)
-def start_(plan, collaborator_name, data_config, secure):
+@option('-c', '--cert_path',
+        help='The cert path where pki certs will reside', required=False)
+def start_(plan, collaborator_name, data_config, secure, cert_path):
     """Start a collaborator service."""
     from pathlib import Path
 
@@ -57,8 +59,20 @@ def start_(plan, collaborator_name, data_config, secure):
 
     echo(f'Data = {plan.cols_data_paths}')
     logger.info('🧿 Starting a Collaborator Service.')
-
-    plan.get_collaborator(collaborator_name).run()
+    
+    if cert_path:
+        CERT_DIR = Path(cert_path).absolute()
+        if not Path(CERT_DIR).exists():
+            echo(style('Certificate Path not found.', fg='red')
+                 + ' Please run `fx collaborator generate-cert-request --cert_path`'
+                   ' to generate certs under this directory first.')
+        plan.get_collaborator(
+                            collaborator_name,
+                            root_certificate=f'{CERT_DIR}/cert_chain.crt',
+                            private_key=f'{CERT_DIR}/client/col_{common_name}.key',
+                            certificate=f'{CERT_DIR}/client/col_{common_name}.crt').run()
+    else:
+        plan.get_collaborator(collaborator_name).run()
 
 
 def register_data_path(collaborator_name, data_path=None, silent=False):
@@ -117,21 +131,24 @@ def register_data_path(collaborator_name, data_path=None, silent=False):
 @option('-x', '--skip-package',
         help='Do not package the certificate signing request for export',
         is_flag=True)
+@option('-c', '--cert_path',
+        help='The cert path where pki certs will reside', required=False)
 def generate_cert_request_(collaborator_name,
-                           data_path, silent, skip_package):
+                           data_path, silent, skip_package, cert_path):
     """Generate certificate request for the collaborator."""
     if data_path and is_directory_traversal(data_path):
         echo('Data path is out of the openfl workspace scope.')
         sys.exit(1)
-    generate_cert_request(collaborator_name, data_path, silent, skip_package)
+    generate_cert_request(collaborator_name, data_path, silent, skip_package, cert_path)
 
 
-def generate_cert_request(collaborator_name, data_path, silent, skip_package):
+def generate_cert_request(collaborator_name, data_path, silent, skip_package, cert_path=None):
     """
     Create collaborator certificate key pair.
 
     Then create a package with the CSR to send for signing.
     """
+    from pathlib import Path
     from openfl.cryptography.participant import generate_csr
     from openfl.cryptography.io import write_crt
     from openfl.cryptography.io import write_key
@@ -146,7 +163,9 @@ def generate_cert_request(collaborator_name, data_path, silent, skip_package):
          f' SAN={style(subject_alternative_name, fg="red")}')
 
     client_private_key, client_csr = generate_csr(common_name, server=False)
-
+    
+    if cert_path:
+        CERT_DIR = Path(cert_path).absolute()
     (CERT_DIR / 'client').mkdir(parents=True, exist_ok=True)
 
     echo('  Moving COLLABORATOR certificate to: ' + style(
@@ -258,12 +277,14 @@ def register_collaborator(file_name):
 @option('-i', '--import', 'import_', type=ClickPath(exists=True),
         help='Import the archive containing the collaborator\'s'
              ' certificate (signed by the CA)')
-def certify_(collaborator_name, silent, request_pkg, import_):
+@option('-c', '--cert_path',
+        help='The cert path where pki certs will reside', required=False)
+def certify_(collaborator_name, silent, request_pkg, import_, cert_path):
     """Certify the collaborator."""
-    certify(collaborator_name, silent, request_pkg, import_)
+    certify(collaborator_name, silent, request_pkg, import_, cert_path)
 
 
-def certify(collaborator_name, silent, request_pkg=None, import_=False):
+def certify(collaborator_name, silent, request_pkg=None, import_=False, cert_path=None):
     """Sign/certify collaborator certificate key pair."""
     from click import confirm
     from pathlib import Path
@@ -284,6 +305,9 @@ def certify(collaborator_name, silent, request_pkg=None, import_=False):
     from openfl.interface.cli_helper import CERT_DIR
 
     common_name = f'{collaborator_name}'.lower()
+
+    if cert_path:
+        CERT_DIR = Path(cert_path).absolute()
 
     if not import_:
         if request_pkg:

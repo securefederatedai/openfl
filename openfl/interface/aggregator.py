@@ -36,7 +36,9 @@ def aggregator(context):
         default='plan/cols.yaml', type=ClickPath(exists=True))
 @option('-s', '--secure', required=False,
         help='Enable Intel SGX Enclave', is_flag=True, default=False)
-def start_(plan, authorized_cols, secure):
+@option('-c', '--cert_path',
+        help='The cert path where pki certs will reside', required=False)
+def start_(plan, authorized_cols, secure, cert_path):
     """Start the aggregator service."""
     from pathlib import Path
 
@@ -54,7 +56,18 @@ def start_(plan, authorized_cols, secure):
 
     logger.info('🧿 Starting the Aggregator Service.')
 
-    plan.get_server().serve()
+    if cert_path:
+        CERT_DIR = Path(cert_path).absolute()
+        if not Path(CERT_DIR).exists():
+            echo(style('Certificate Path not found.', fg='red')
+                 + ' Please run `fx aggregator generate-cert-request --cert_path`'
+                   ' to generate certs under this directory first.')
+        plan.get_server(
+                    root_certificate=f'{CERT_DIR}/cert_chain.crt',
+                    private_key=f'{CERT_DIR}/server/agg_{common_name}.key',
+                    certificate=f'{CERT_DIR}/server/agg_{common_name}.crt').serve()
+    else:
+        plan.get_server().serve()
 
 
 @aggregator.command(name='generate-cert-request')
@@ -62,12 +75,15 @@ def start_(plan, authorized_cols, secure):
         help=f'The fully qualified domain name of'
              f' aggregator node [{getfqdn_env()}]',
         default=getfqdn_env())
-def _generate_cert_request(fqdn):
-    generate_cert_request(fqdn)
+@option('-c', '--cert_path',
+        help='The cert path where pki certs will reside', required=False)
+def _generate_cert_request(fqdn, cert_path):
+    generate_cert_request(fqdn, cert_path)
 
 
-def generate_cert_request(fqdn):
+def generate_cert_request(fqdn, cert_path=None):
     """Create aggregator certificate key pair."""
+    from pathlib import Path
     from openfl.cryptography.participant import generate_csr
     from openfl.cryptography.io import write_crt
     from openfl.cryptography.io import write_key
@@ -86,6 +102,8 @@ def generate_cert_request(fqdn):
 
     server_private_key, server_csr = generate_csr(common_name, server=True)
 
+    if cert_path:
+        CERT_DIR = Path(cert_path).absolute()
     (CERT_DIR / 'server').mkdir(parents=True, exist_ok=True)
 
     echo('  Writing AGGREGATOR certificate key pair to: ' + style(
@@ -113,11 +131,13 @@ def find_certificate_name(file_name):
         help=f'The fully qualified domain name of aggregator node [{getfqdn_env()}]',
         default=getfqdn_env())
 @option('-s', '--silent', help='Do not prompt', is_flag=True)
-def _certify(fqdn, silent):
-    certify(fqdn, silent)
+@option('-c', '--cert_path',
+        help='The cert path where pki certs will reside', required=False)
+def _certify(fqdn, silent, cert_path):
+    certify(fqdn, silent, cert_path)
 
 
-def certify(fqdn, silent):
+def certify(fqdn, silent, cert_path=None):
     """Sign/certify the aggregator certificate key pair."""
     from pathlib import Path
 
@@ -140,6 +160,9 @@ def certify(fqdn, silent):
     signing_crt_path = 'ca/signing-ca.crt'
 
     # Load CSR
+    if cert_path:
+        CERT_DIR = Path(cert_path).absolute()
+
     csr_path_absolute_path = Path(CERT_DIR / f'{cert_name}.csr').absolute()
     if not csr_path_absolute_path.exists():
         echo(style('Aggregator certificate signing request not found.', fg='red')
