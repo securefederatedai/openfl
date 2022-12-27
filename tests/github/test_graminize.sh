@@ -45,13 +45,13 @@ FED_DIRECTORY=`pwd`  # Get the absolute directory path for the workspace
 fx plan initialize -a ${FQDN}
 
 # Set rounds to train if given
-if [[ ! -z "$ROUNDS_TO_TRAIN" ]]
+if [[ ! -z "${ROUNDS_TO_TRAIN-}" ]]
 then
     sed -i "/rounds_to_train/c\    rounds_to_train: $ROUNDS_TO_TRAIN" plan/plan.yaml
 fi
 
 # Set rounds to train if given
-if [[ ! -z "$DATA_SHARDS" ]]
+if [[ ! -z "${DATA_SHARDS-}" ]]
 then
     sed -i "/collaborator_count/c\    collaborator_count: $DATA_SHARDS" plan/plan.yaml
 fi
@@ -61,9 +61,9 @@ openssl genrsa -3 -out ${FED_DIRECTORY}/key.pem 3072
 # Build graminized app image
 if [ $REBUILD_IMAGES -gt 0 ]
 then
-fx workspace graminize -s ${FED_DIRECTORY}/key.pem --no-save --rebuild --openfl-path ${OPENFL_PATH}
+fx workspace graminize -s ${FED_DIRECTORY}/key.pem --no-save -e 1G --rebuild --openfl-path ${OPENFL_PATH}
 else
-fx workspace graminize -s ${FED_DIRECTORY}/key.pem --no-save --openfl-path ${OPENFL_PATH}
+fx workspace graminize -s ${FED_DIRECTORY}/key.pem --no-save -e 1G --openfl-path ${OPENFL_PATH}
 fi
 
 # CERTIFICATION PART------------------------------
