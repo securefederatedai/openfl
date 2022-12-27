@@ -40,7 +40,7 @@ def read_data(image_path, mask_path):
 class KvasirDataset(Dataset):
     """Kvasir dataset. Splits data by shards for each collaborator."""
 
-    def __init__(self, is_validation, shard_num, collaborator_count, **kwargs):
+    def __init__(self, is_validation, shard_num, collaborator_count, valid_ratio=0.125, **kwargs):
         """Initialize dataset.
 
         Args:
@@ -59,8 +59,8 @@ class KvasirDataset(Dataset):
 
         self.images_names = self.images_names[shard_num:: collaborator_count]
         self.is_validation = is_validation
-        assert (len(self.images_names) > 8)
-        validation_size = len(self.images_names) // 8
+        assert (len(self.images_names) >= 1 / valid_ratio)
+        validation_size = int(len(self.images_names) * valid_ratio)
 
         if is_validation:
             self.images_names = self.images_names[-validation_size:]
@@ -110,7 +110,7 @@ def load_kvasir_dataset():
 class PyTorchKvasirDataLoader(PyTorchDataLoader):
     """PyTorch data loader for Kvasir dataset."""
 
-    def __init__(self, data_path, batch_size, **kwargs):
+    def __init__(self, data_path, batch_size, valid_ratio, **kwargs):
         """Instantiate the data object.
 
         Args:
@@ -122,8 +122,12 @@ class PyTorchKvasirDataLoader(PyTorchDataLoader):
         super().__init__(batch_size, **kwargs)
 
         load_kvasir_dataset()
-        self.valid_dataset = KvasirDataset(True, shard_num=int(data_path), **kwargs)
-        self.train_dataset = KvasirDataset(False, shard_num=int(data_path), **kwargs)
+        self.valid_dataset = KvasirDataset(
+            True, shard_num=int(data_path), valid_ratio=valid_ratio, **kwargs
+        )
+        self.train_dataset = KvasirDataset(
+            False, shard_num=int(data_path), valid_ratio=valid_ratio, **kwargs
+        )
         self.train_loader = self.get_train_loader()
         self.val_loader = self.get_valid_loader()
         self.batch_size = batch_size
