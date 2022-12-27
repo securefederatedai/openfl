@@ -47,3 +47,21 @@ jobs:
     - name: Test PKI
       run: |
         python tests/github/pki_wrong_cn.py
+
+  test_pki_cert_location:
+  
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python 3.8
+      uses: actions/setup-python@v3
+      with:
+        python-version: "3.8"
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install .
+    - name: Test PKI
+      run: |
+        bash tests/github/test_pki_cert_location.sh torch_cnn_mnist aggregator col1 col2 $(hostname --all-fqdns | awk '{print $1}') --rounds-to-train 3
