@@ -213,12 +213,14 @@ def import_(archive):
 
 
 @workspace.command(name='certify')
-def certify_():
+@option('-c', '--cert_path',
+        help='The cert path where pki certs will reside', required=False)
+def certify_(cert_path):
     """Create certificate authority for federation."""
-    certify()
+    certify(cert_path)
 
 
-def certify():
+def certify(cert_path=None):
     """Create certificate authority for federation."""
     from cryptography.hazmat.primitives import serialization
 
@@ -232,6 +234,9 @@ def certify():
     echo('1.  Create Root CA')
     echo('1.1 Create Directories')
 
+    if cert_path:
+        CERT_DIR = Path(cert_path).absolute()
+    
     (CERT_DIR / 'ca/root-ca/private').mkdir(
         parents=True, exist_ok=True, mode=0o700)
     (CERT_DIR / 'ca/root-ca/db').mkdir(parents=True, exist_ok=True)

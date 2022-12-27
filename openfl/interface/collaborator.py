@@ -66,6 +66,7 @@ def start_(plan, collaborator_name, data_config, secure, cert_path):
             echo(style('Certificate Path not found.', fg='red')
                  + ' Please run `fx collaborator generate-cert-request --cert_path`'
                    ' to generate certs under this directory first.')
+        common_name = f'{collaborator_name}'.lower()
         plan.get_collaborator(
                             collaborator_name,
                             root_certificate=f'{CERT_DIR}/cert_chain.crt',

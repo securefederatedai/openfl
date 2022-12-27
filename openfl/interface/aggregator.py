@@ -38,7 +38,11 @@ def aggregator(context):
         help='Enable Intel SGX Enclave', is_flag=True, default=False)
 @option('-c', '--cert_path',
         help='The cert path where pki certs will reside', required=False)
-def start_(plan, authorized_cols, secure, cert_path):
+@option('--fqdn', required=False, type=click_types.FQDN,
+        help=f'The fully qualified domain name of'
+             f' aggregator node [{getfqdn_env()}]',
+        default=getfqdn_env())
+def start_(plan, authorized_cols, secure, cert_path, fqdn):
     """Start the aggregator service."""
     from pathlib import Path
 
@@ -62,6 +66,9 @@ def start_(plan, authorized_cols, secure, cert_path):
             echo(style('Certificate Path not found.', fg='red')
                  + ' Please run `fx aggregator generate-cert-request --cert_path`'
                    ' to generate certs under this directory first.')
+        if fqdn is None:
+            fqdn = getfqdn_env()
+        common_name = f'{fqdn}'.lower()
         plan.get_server(
                     root_certificate=f'{CERT_DIR}/cert_chain.crt',
                     private_key=f'{CERT_DIR}/server/agg_{common_name}.key',
