@@ -166,5 +166,5 @@ docker logs --follow ${COL2}
 
 wait
 
-docker ps -q --filter "ancestor=${FED_WORKSPACE}" | xargs docker stop
+docker ps -q --filter "ancestor=${FED_WORKSPACE}" | xargs -r docker stop
 # rm -rf ${FED_DIRECTORY}
