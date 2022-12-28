@@ -69,10 +69,9 @@ def start_(plan, authorized_cols, secure, cert_path, fqdn):
         if fqdn is None:
             fqdn = getfqdn_env()
         common_name = f'{fqdn}'.lower()
-        plan.get_server(
-                    root_certificate=f'{CERT_DIR}/cert_chain.crt',
-                    private_key=f'{CERT_DIR}/server/agg_{common_name}.key',
-                    certificate=f'{CERT_DIR}/server/agg_{common_name}.crt').serve()
+        plan.get_server(root_certificate=f'{CERT_DIR}/cert_chain.crt',
+                        private_key=f'{CERT_DIR}/server/agg_{common_name}.key',
+                        certificate=f'{CERT_DIR}/server/agg_{common_name}.crt').serve()
     else:
         plan.get_server().serve()
 
@@ -110,7 +109,7 @@ def generate_cert_request(fqdn, cert_path=None):
     server_private_key, server_csr = generate_csr(common_name, server=True)
 
     if cert_path:
-        CERT_DIR = Path(cert_path).absolute()
+        CERT_DIR = Path(cert_path).absolute() # NOQA
     (CERT_DIR / 'server').mkdir(parents=True, exist_ok=True)
 
     echo('  Writing AGGREGATOR certificate key pair to: ' + style(
@@ -168,7 +167,7 @@ def certify(fqdn, silent, cert_path=None):
 
     # Load CSR
     if cert_path:
-        CERT_DIR = Path(cert_path).absolute()
+        CERT_DIR = Path(cert_path).absolute() # NOQA
 
     csr_path_absolute_path = Path(CERT_DIR / f'{cert_name}.csr').absolute()
     if not csr_path_absolute_path.exists():

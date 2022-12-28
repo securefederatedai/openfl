@@ -7,7 +7,7 @@ COL1=${3:-'one123dragons'}  # This can be any unique label (lowercase)
 COL2=${4:-'beta34unicorns'} # This can be any unique label (lowercase)
 
 FQDN=${5:-$(hostname --all-fqdns | awk '{print $1}')}
-CERT_PATH="${HOME}/.openfl"
+CERT_PATH=${6:-"${HOME}/.openfl"}
 
 COL1_DATA_PATH=1
 COL2_DATA_PATH=2

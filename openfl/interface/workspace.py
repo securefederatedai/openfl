@@ -235,8 +235,8 @@ def certify(cert_path=None):
     echo('1.1 Create Directories')
 
     if cert_path:
-        CERT_DIR = Path(cert_path).absolute()
-    
+        CERT_DIR = Path(cert_path).absolute() # NOQA
+
     (CERT_DIR / 'ca/root-ca/private').mkdir(
         parents=True, exist_ok=True, mode=0o700)
     (CERT_DIR / 'ca/root-ca/db').mkdir(parents=True, exist_ok=True)

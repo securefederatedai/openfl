@@ -59,7 +59,7 @@ def start_(plan, collaborator_name, data_config, secure, cert_path):
 
     echo(f'Data = {plan.cols_data_paths}')
     logger.info('🧿 Starting a Collaborator Service.')
-    
+
     if cert_path:
         CERT_DIR = Path(cert_path).absolute()
         if not Path(CERT_DIR).exists():
@@ -67,11 +67,10 @@ def start_(plan, collaborator_name, data_config, secure, cert_path):
                  + ' Please run `fx collaborator generate-cert-request --cert_path`'
                    ' to generate certs under this directory first.')
         common_name = f'{collaborator_name}'.lower()
-        plan.get_collaborator(
-                            collaborator_name,
-                            root_certificate=f'{CERT_DIR}/cert_chain.crt',
-                            private_key=f'{CERT_DIR}/client/col_{common_name}.key',
-                            certificate=f'{CERT_DIR}/client/col_{common_name}.crt').run()
+        plan.get_collaborator(collaborator_name,
+                              root_certificate=f'{CERT_DIR}/cert_chain.crt',
+                              private_key=f'{CERT_DIR}/client/col_{common_name}.key',
+                              certificate=f'{CERT_DIR}/client/col_{common_name}.crt').run()
     else:
         plan.get_collaborator(collaborator_name).run()
 
@@ -164,9 +163,9 @@ def generate_cert_request(collaborator_name, data_path, silent, skip_package, ce
          f' SAN={style(subject_alternative_name, fg="red")}')
 
     client_private_key, client_csr = generate_csr(common_name, server=False)
-    
+
     if cert_path:
-        CERT_DIR = Path(cert_path).absolute()
+        CERT_DIR = Path(cert_path).absolute() # NOQA
     (CERT_DIR / 'client').mkdir(parents=True, exist_ok=True)
 
     echo('  Moving COLLABORATOR certificate to: ' + style(
@@ -308,7 +307,7 @@ def certify(collaborator_name, silent, request_pkg=None, import_=False, cert_pat
     common_name = f'{collaborator_name}'.lower()
 
     if cert_path:
-        CERT_DIR = Path(cert_path).absolute()
+        CERT_DIR = Path(cert_path).absolute() # NOQA
 
     if not import_:
         if request_pkg:
