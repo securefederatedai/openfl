@@ -235,7 +235,9 @@ def certify(cert_path=None):
     echo('1.1 Create Directories')
 
     if cert_path:
-        CERT_DIR = Path(cert_path).absolute() # NOQA
+        CERT_PATH = Path(cert_path).absolute()
+        (CERT_PATH / 'cert').mkdir(parents=True, exist_ok=True)
+        CERT_DIR = CERT_PATH/ 'cert' # NOQA
 
     (CERT_DIR / 'ca/root-ca/private').mkdir(
         parents=True, exist_ok=True, mode=0o700)
@@ -529,6 +531,22 @@ def graminize_(context, signing_key: Path, enclave_size: str, pip_install_option
         save_image_command = f'docker save {workspace_name} | gzip > {workspace_name}.tar.gz'
         open_pipe(save_image_command)
         echo(f'\n ✔️ The image saved to file: {workspace_name}.tar.gz')
+
+
+@workspace.command(name='uninstall-cert')
+@option('-c', '--cert_path',
+        help='The cert path where pki certs reside', required=True)
+def _uninstall_cert(cert_path):
+    uninstall_cert(cert_path)
+
+
+def uninstall_cert(cert_path=None):
+    """Uninstall certs under a given directory."""
+    import shutil
+    from pathlib import Path
+
+    cert_path = Path(cert_path).absolute()
+    shutil.rmtree(cert_path, ignore_errors=True)
 
 
 def apply_template_plan(prefix, template):

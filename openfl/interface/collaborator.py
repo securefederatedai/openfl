@@ -61,7 +61,9 @@ def start_(plan, collaborator_name, data_config, secure, cert_path):
     logger.info('🧿 Starting a Collaborator Service.')
 
     if cert_path:
-        CERT_DIR = Path(cert_path).absolute()
+        CERT_PATH = Path(cert_path).absolute()
+        (CERT_PATH / 'cert').mkdir(parents=True, exist_ok=True)
+        CERT_DIR = CERT_PATH / 'cert'
         if not Path(CERT_DIR).exists():
             echo(style('Certificate Path not found.', fg='red')
                  + ' Please run `fx collaborator generate-cert-request --cert_path`'
@@ -165,11 +167,14 @@ def generate_cert_request(collaborator_name, data_path, silent, skip_package, ce
     client_private_key, client_csr = generate_csr(common_name, server=False)
 
     if cert_path:
-        CERT_DIR = Path(cert_path).absolute() # NOQA
+        CERT_PATH = Path(cert_path).absolute()
+        (CERT_PATH / 'cert').mkdir(parents=True, exist_ok=True)
+        CERT_DIR = CERT_PATH/ 'cert' # NOQA
+
     (CERT_DIR / 'client').mkdir(parents=True, exist_ok=True)
 
     echo('  Moving COLLABORATOR certificate to: ' + style(
-        f'{CERT_DIR}/{file_name}', fg='green'))
+        f'{CERT_DIR}', fg='green'))
 
     # Write collaborator csr and key to disk
     write_crt(client_csr, CERT_DIR / 'client' / f'{file_name}.csr')
@@ -307,7 +312,9 @@ def certify(collaborator_name, silent, request_pkg=None, import_=False, cert_pat
     common_name = f'{collaborator_name}'.lower()
 
     if cert_path:
-        CERT_DIR = Path(cert_path).absolute() # NOQA
+        CERT_PATH = Path(cert_path).absolute()
+        (CERT_PATH / 'cert').mkdir(parents=True, exist_ok=True)
+        CERT_DIR = CERT_PATH/ 'cert' # NOQA
 
     if not import_:
         if request_pkg:
@@ -414,3 +421,19 @@ def certify(collaborator_name, silent, request_pkg=None, import_=False, cert_pat
             echo(f'Certificate {crt} installed to PKI directory')
         else:
             echo('Certificate updated in the PKI directory')
+
+
+@collaborator.command(name='uninstall-cert')
+@option('-c', '--cert_path',
+        help='The cert path where pki certs reside', required=True)
+def _uninstall_cert(cert_path):
+    uninstall_cert(cert_path)
+
+
+def uninstall_cert(cert_path=None):
+    """Uninstall certs under a given directory."""
+    import shutil
+    from pathlib import Path
+
+    cert_path = Path(cert_path).absolute()
+    shutil.rmtree(cert_path, ignore_errors=True)

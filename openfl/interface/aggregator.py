@@ -61,7 +61,9 @@ def start_(plan, authorized_cols, secure, cert_path, fqdn):
     logger.info('🧿 Starting the Aggregator Service.')
 
     if cert_path:
-        CERT_DIR = Path(cert_path).absolute()
+        CERT_PATH = Path(cert_path).absolute()
+        (CERT_PATH / 'cert').mkdir(parents=True, exist_ok=True)
+        CERT_DIR = CERT_PATH / 'cert'
         if not Path(CERT_DIR).exists():
             echo(style('Certificate Path not found.', fg='red')
                  + ' Please run `fx aggregator generate-cert-request --cert_path`'
@@ -109,7 +111,9 @@ def generate_cert_request(fqdn, cert_path=None):
     server_private_key, server_csr = generate_csr(common_name, server=True)
 
     if cert_path:
-        CERT_DIR = Path(cert_path).absolute() # NOQA
+        CERT_PATH = Path(cert_path).absolute()
+        (CERT_PATH / 'cert').mkdir(parents=True, exist_ok=True)
+        CERT_DIR = CERT_PATH/ 'cert' # NOQA
     (CERT_DIR / 'server').mkdir(parents=True, exist_ok=True)
 
     echo('  Writing AGGREGATOR certificate key pair to: ' + style(
@@ -167,7 +171,9 @@ def certify(fqdn, silent, cert_path=None):
 
     # Load CSR
     if cert_path:
-        CERT_DIR = Path(cert_path).absolute() # NOQA
+        CERT_PATH = Path(cert_path).absolute()
+        (CERT_PATH / 'cert').mkdir(parents=True, exist_ok=True)
+        CERT_DIR = CERT_PATH/ 'cert' # NOQA
 
     csr_path_absolute_path = Path(CERT_DIR / f'{cert_name}.csr').absolute()
     if not csr_path_absolute_path.exists():
@@ -220,3 +226,19 @@ def certify(fqdn, silent, cert_path=None):
             echo(style('Not signing certificate.', fg='red')
                  + ' Please check with this AGGREGATOR to get the correct'
                    ' certificate for this federation.')
+
+
+@aggregator.command(name='uninstall-cert')
+@option('-c', '--cert_path',
+        help='The cert path where pki certs reside', required=True)
+def _uninstall_cert(cert_path):
+    uninstall_cert(cert_path)
+
+
+def uninstall_cert(cert_path=None):
+    """Uninstall certs under a given directory."""
+    import shutil
+    from pathlib import Path
+
+    cert_path = Path(cert_path).absolute()
+    shutil.rmtree(cert_path, ignore_errors=True)

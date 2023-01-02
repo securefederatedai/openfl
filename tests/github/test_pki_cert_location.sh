@@ -7,7 +7,10 @@ COL1=${3:-'one123dragons'}  # This can be any unique label (lowercase)
 COL2=${4:-'beta34unicorns'} # This can be any unique label (lowercase)
 
 FQDN=${5:-$(hostname --all-fqdns | awk '{print $1}')}
-CERT_PATH=${6:-"${HOME}/.openfl"}
+
+CERT_PATH_AG=${6:-"${HOME}/.openfl/aggregator"}
+CERT_PATH_COL1=${7:-"${HOME}/.openfl/one123dragons"}
+CERT_PATH_COL2=${8:-"${HOME}/.openfl/beta34unicorns"}
 
 COL1_DATA_PATH=1
 COL2_DATA_PATH=2
@@ -49,6 +52,8 @@ create_collaborator() {
     COL=$3
     COL_DIRECTORY=$4
     DATA_PATH=$5
+    CERT_PATH_COL=$6
+    CERT_PATH=$7
 
     ARCHIVE_NAME="${FED_WORKSPACE}.zip"
 
@@ -60,7 +65,7 @@ create_collaborator() {
 
     # Create collaborator certificate request
     cd ${COL_DIRECTORY}/${FED_WORKSPACE}
-    fx collaborator generate-cert-request -d ${DATA_PATH} -n ${COL} -c ${CERT_PATH} --silent # Remove '--silent' if you run this manually
+    fx collaborator generate-cert-request -d ${DATA_PATH} -n ${COL} -c ${CERT_PATH_COL} --silent # Remove '--silent' if you run this manually
 
     # Sign collaborator certificate 
     cd ${FED_DIRECTORY}  # Move back to the Aggregator
@@ -68,7 +73,7 @@ create_collaborator() {
 
     #Import the signed certificate from the aggregator
     cd ${COL_DIRECTORY}/${FED_WORKSPACE}
-    fx collaborator certify --import ${FED_DIRECTORY}/agg_to_col_${COL}_signed_cert.zip -c ${CERT_PATH}
+    fx collaborator certify --import ${FED_DIRECTORY}/agg_to_col_${COL}_signed_cert.zip -c ${CERT_PATH_COL}
 
 }
 
@@ -92,33 +97,33 @@ then
 fi
 
 # Create certificate authority for workspace
-fx workspace certify -c ${CERT_PATH}
+fx workspace certify -c ${CERT_PATH_AG}
 
 # Export FL workspace
 fx workspace export
 
 # Create aggregator certificate
-fx aggregator generate-cert-request --fqdn ${FQDN} -c ${CERT_PATH}
+fx aggregator generate-cert-request --fqdn ${FQDN} -c ${CERT_PATH_AG}
 
 # Sign aggregator certificate
-fx aggregator certify --fqdn ${FQDN} -c ${CERT_PATH} --silent # Remove '--silent' if you run this manually
+fx aggregator certify --fqdn ${FQDN} -c ${CERT_PATH_AG} --silent # Remove '--silent' if you run this manually
 
 # Create collaborator #1
 COL1_DIRECTORY=${FED_DIRECTORY}/${COL1}
-create_collaborator ${FED_WORKSPACE} ${FED_DIRECTORY} ${COL1} ${COL1_DIRECTORY} ${COL1_DATA_PATH}
+create_collaborator ${FED_WORKSPACE} ${FED_DIRECTORY} ${COL1} ${COL1_DIRECTORY} ${COL1_DATA_PATH} ${CERT_PATH_COL1} ${CERT_PATH_AG}
 
 # Create collaborator #2
 COL2_DIRECTORY=${FED_DIRECTORY}/${COL2}
-create_collaborator ${FED_WORKSPACE} ${FED_DIRECTORY} ${COL2} ${COL2_DIRECTORY} ${COL2_DATA_PATH}
+create_collaborator ${FED_WORKSPACE} ${FED_DIRECTORY} ${COL2} ${COL2_DIRECTORY} ${COL2_DATA_PATH} ${CERT_PATH_COL2} ${CERT_PATH_AG}
 
 # # Run the federation
 cd ${FED_DIRECTORY}
-fx aggregator start -c ${CERT_PATH} --fqdn ${FQDN} & 
+fx aggregator start -c ${CERT_PATH_AG} --fqdn ${FQDN} & 
 sleep 5 
 cd ${COL1_DIRECTORY}/${FED_WORKSPACE}
-fx collaborator start -n ${COL1} -c ${CERT_PATH} & 
+fx collaborator start -n ${COL1} -c ${CERT_PATH_COL1} & 
 cd ${COL2_DIRECTORY}/${FED_WORKSPACE}
-fx collaborator start -n ${COL2} -c ${CERT_PATH}
+fx collaborator start -n ${COL2} -c ${CERT_PATH_COL2}
 wait
 
 # # Convert model to native format
@@ -128,4 +133,14 @@ then
     fx model save -i "./save/${TEMPLATE}_last.pbuf" -o ${SAVE_MODEL}
 fi
 
+# Clear cert directories
+
+cd ${FED_DIRECTORY}
+fx aggregator uninstall-cert -c ${CERT_PATH_AG}
+cd ${COL1_DIRECTORY}/${FED_WORKSPACE}
+fx collaborator uninstall-cert -c ${CERT_PATH_COL1}
+cd ${COL2_DIRECTORY}/${FED_WORKSPACE}
+fx collaborator uninstall-cert -c ${CERT_PATH_COL2}
+
 rm -rf ${FED_DIRECTORY}
+
