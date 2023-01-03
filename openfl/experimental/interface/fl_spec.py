@@ -105,12 +105,9 @@ class FLSpec:
     def capture_instance_snapshot(self, kwargs):
         """Takes backup of self before exclude or include filtering"""
         return_objs = []
-        if "exclude" in kwargs:
-            exclude_backup = deepcopy(self)
-            return_objs.append(exclude_backup)
-        if "include" in kwargs:
-            include_backup = deepcopy(self)
-            return_objs.append(include_backup)
+        if "exclude" in kwargs or "include" in kwargs:
+            backup = deepcopy(self)
+            return_objs.append(backup)
         return return_objs
 
     def is_at_transition_point(self, f, parent_func):
