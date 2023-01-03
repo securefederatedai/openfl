@@ -129,7 +129,9 @@ pipeline {
                 }
                 stage('Publish Package') {
                     steps {
-                        pypiPublish()
+                        pypiPublish([
+                            pypiPublishPushOn: /^(?:jenkins-v\d+.\d+)$/
+                        ])
                     }
                 }
             }
