@@ -36,11 +36,16 @@ class FeTSChallengeTaskRunner(TaskRunner):
         """
         super().__init__(**kwargs)
 
-        model, optimizer, train_loader, val_loader, scheduler, params = \
-            create_pytorch_objects(fets_config_dict,
-                                   train_csv=train_csv,
-                                   val_csv=val_csv,
-                                   device=device)
+        (
+            model,
+            optimizer,
+            train_loader,
+            val_loader,
+            scheduler,
+            params,
+        ) = create_pytorch_objects(
+            fets_config_dict, train_csv=train_csv, val_csv=val_csv, device=device
+        )
         self.model = model
         self.optimizer = optimizer
         self.scheduler = scheduler
@@ -171,13 +176,14 @@ class FeTSChallengeTaskRunner(TaskRunner):
 
         # Return global_tensor_dict, local_tensor_dict
         # is this even pt-specific really?
-        global_tensor_dict, local_tensor_dict = \
-            create_tensorkey_dicts(tensor_dict,
-                                   metric_dict,
-                                   col_name,
-                                   round_num,
-                                   self.logger,
-                                   self.tensor_dict_split_fn_kwargs)
+        global_tensor_dict, local_tensor_dict = create_tensorkey_dicts(
+            tensor_dict,
+            metric_dict,
+            col_name,
+            round_num,
+            self.logger,
+            self.tensor_dict_split_fn_kwargs,
+        )
 
         # Update the required tensors if they need to be pulled from the
         # aggregator

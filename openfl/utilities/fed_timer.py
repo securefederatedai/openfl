@@ -161,7 +161,7 @@ class SyncAsyncTaskDecoFactory:
         return sync_wrapper
 
 
-class fedtiming(SyncAsyncTaskDecoFactory):
+class fedtiming(SyncAsyncTaskDecoFactory):  # noqa: N801
     def __init__(self, timeout):
         self.timeout = timeout
 
