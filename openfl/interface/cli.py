@@ -130,9 +130,9 @@ class CLI(Group):
 
 @group(cls=CLI)
 @option('-l', '--log-level', default='info', help='Logging verbosity level.')
-@option('--enable-warnings', is_flag=True, help='Enable third-party warnings.')
+@option('--no-warnings', is_flag=True, help='Disable third-party warnings.')
 @pass_context
-def cli(context, log_level, enable_warnings):
+def cli(context, log_level, no_warnings):
     """Command-line Interface."""
     import os
     from sys import argv
@@ -143,7 +143,7 @@ def cli(context, log_level, enable_warnings):
     context.obj['script'] = argv[0]
     context.obj['arguments'] = argv[1:]
 
-    if not enable_warnings:
+    if no_warnings:
         # Setup logging immediately to suppress unnecessary warnings on import
         # This will be overridden later with user selected debugging level
         disable_warnings()
