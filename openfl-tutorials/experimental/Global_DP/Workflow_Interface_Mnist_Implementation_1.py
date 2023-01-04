@@ -386,10 +386,10 @@ class FederatedFlow(FLSpec):
         # copy state dict from optimizer object from previous round to the newly
         # instantiated optimizer for the same collaborator
         if self.round > 0:
+            optimizer_to_device(optimizer=self.optimizer, device=self.device)
             self.optimizer.load_state_dict(
                 deepcopy(self.optimizers[self.input].state_dict())
             )
-            optimizer_to_device(optimizer=self.optimizer, device=self.device)
 
         self.model.train()
         train_losses = []
