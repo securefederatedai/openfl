@@ -235,24 +235,26 @@ def certify(cert_path=None):
     echo('1.1 Create Directories')
 
     if cert_path:
-        CERT_PATH = Path(cert_path).absolute()
-        (CERT_PATH / 'cert').mkdir(parents=True, exist_ok=True)
-        CERT_DIR = CERT_PATH/ 'cert' # NOQA
+        cert_path = Path(cert_path).absolute()
+        (cert_path / 'cert').mkdir(parents=True, exist_ok=True)
+        cert_dir_path = cert_path / 'cert'
+    else:
+        cert_dir_path = CERT_DIR
 
-    (CERT_DIR / 'ca/root-ca/private').mkdir(
+    (cert_dir_path / 'ca/root-ca/private').mkdir(
         parents=True, exist_ok=True, mode=0o700)
-    (CERT_DIR / 'ca/root-ca/db').mkdir(parents=True, exist_ok=True)
+    (cert_dir_path / 'ca/root-ca/db').mkdir(parents=True, exist_ok=True)
 
     echo('1.2 Create Database')
 
-    with open(CERT_DIR / 'ca/root-ca/db/root-ca.db', 'w', encoding='utf-8') as f:
+    with open(cert_dir_path / 'ca/root-ca/db/root-ca.db', 'w', encoding='utf-8') as f:
         pass  # write empty file
-    with open(CERT_DIR / 'ca/root-ca/db/root-ca.db.attr', 'w', encoding='utf-8') as f:
+    with open(cert_dir_path / 'ca/root-ca/db/root-ca.db.attr', 'w', encoding='utf-8') as f:
         pass  # write empty file
 
-    with open(CERT_DIR / 'ca/root-ca/db/root-ca.crt.srl', 'w', encoding='utf-8') as f:
+    with open(cert_dir_path / 'ca/root-ca/db/root-ca.crt.srl', 'w', encoding='utf-8') as f:
         f.write('01')  # write file with '01'
-    with open(CERT_DIR / 'ca/root-ca/db/root-ca.crl.srl', 'w', encoding='utf-8') as f:
+    with open(cert_dir_path / 'ca/root-ca/db/root-ca.crl.srl', 'w', encoding='utf-8') as f:
         f.write('01')  # write file with '01'
 
     echo('1.3 Create CA Request and Certificate')
@@ -263,12 +265,12 @@ def certify(cert_path=None):
     root_private_key, root_cert = generate_root_cert()
 
     # Write root CA certificate to disk
-    with open(CERT_DIR / root_crt_path, 'wb') as f:
+    with open(cert_dir_path / root_crt_path, 'wb') as f:
         f.write(root_cert.public_bytes(
             encoding=serialization.Encoding.PEM,
         ))
 
-    with open(CERT_DIR / root_key_path, 'wb') as f:
+    with open(cert_dir_path / root_key_path, 'wb') as f:
         f.write(root_private_key.private_bytes(
             encoding=serialization.Encoding.PEM,
             format=serialization.PrivateFormat.TraditionalOpenSSL,
@@ -278,20 +280,20 @@ def certify(cert_path=None):
     echo('2.  Create Signing Certificate')
     echo('2.1 Create Directories')
 
-    (CERT_DIR / 'ca/signing-ca/private').mkdir(
+    (cert_dir_path / 'ca/signing-ca/private').mkdir(
         parents=True, exist_ok=True, mode=0o700)
-    (CERT_DIR / 'ca/signing-ca/db').mkdir(parents=True, exist_ok=True)
+    (cert_dir_path / 'ca/signing-ca/db').mkdir(parents=True, exist_ok=True)
 
     echo('2.2 Create Database')
 
-    with open(CERT_DIR / 'ca/signing-ca/db/signing-ca.db', 'w', encoding='utf-8') as f:
+    with open(cert_dir_path / 'ca/signing-ca/db/signing-ca.db', 'w', encoding='utf-8') as f:
         pass  # write empty file
-    with open(CERT_DIR / 'ca/signing-ca/db/signing-ca.db.attr', 'w', encoding='utf-8') as f:
+    with open(cert_dir_path / 'ca/signing-ca/db/signing-ca.db.attr', 'w', encoding='utf-8') as f:
         pass  # write empty file
 
-    with open(CERT_DIR / 'ca/signing-ca/db/signing-ca.crt.srl', 'w', encoding='utf-8') as f:
+    with open(cert_dir_path / 'ca/signing-ca/db/signing-ca.crt.srl', 'w', encoding='utf-8') as f:
         f.write('01')  # write file with '01'
-    with open(CERT_DIR / 'ca/signing-ca/db/signing-ca.crl.srl', 'w', encoding='utf-8') as f:
+    with open(cert_dir_path / 'ca/signing-ca/db/signing-ca.crl.srl', 'w', encoding='utf-8') as f:
         f.write('01')  # write file with '01'
 
     echo('2.3 Create Signing Certificate CSR')
@@ -303,12 +305,12 @@ def certify(cert_path=None):
     signing_private_key, signing_csr = generate_signing_csr()
 
     # Write Signing CA CSR to disk
-    with open(CERT_DIR / signing_csr_path, 'wb') as f:
+    with open(cert_dir_path / signing_csr_path, 'wb') as f:
         f.write(signing_csr.public_bytes(
             encoding=serialization.Encoding.PEM,
         ))
 
-    with open(CERT_DIR / signing_key_path, 'wb') as f:
+    with open(cert_dir_path / signing_key_path, 'wb') as f:
         f.write(signing_private_key.private_bytes(
             encoding=serialization.Encoding.PEM,
             format=serialization.PrivateFormat.TraditionalOpenSSL,
@@ -319,7 +321,7 @@ def certify(cert_path=None):
 
     signing_cert = sign_certificate(signing_csr, root_private_key, root_cert.subject, ca=True)
 
-    with open(CERT_DIR / signing_crt_path, 'wb') as f:
+    with open(cert_dir_path / signing_crt_path, 'wb') as f:
         f.write(signing_cert.public_bytes(
             encoding=serialization.Encoding.PEM,
         ))
@@ -327,10 +329,10 @@ def certify(cert_path=None):
     echo('3   Create Certificate Chain')
 
     # create certificate chain file by combining root-ca and signing-ca
-    with open(CERT_DIR / 'cert_chain.crt', 'w', encoding='utf-8') as d:
-        with open(CERT_DIR / 'ca/root-ca.crt', encoding='utf-8') as s:
+    with open(cert_dir_path / 'cert_chain.crt', 'w', encoding='utf-8') as d:
+        with open(cert_dir_path / 'ca/root-ca.crt', encoding='utf-8') as s:
             d.write(s.read())
-        with open(CERT_DIR / 'ca/signing-ca.crt') as s:
+        with open(cert_dir_path / 'ca/signing-ca.crt') as s:
             d.write(s.read())
 
     echo('\nDone.')

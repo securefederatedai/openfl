@@ -31,18 +31,14 @@ def aggregator(context):
         help='Federated learning plan [plan/plan.yaml]',
         default='plan/plan.yaml',
         type=ClickPath(exists=True))
-@option('-c', '--authorized_cols', required=False,
+@option('-col', '--authorized_cols', required=False,
         help='Authorized collaborator list [plan/cols.yaml]',
         default='plan/cols.yaml', type=ClickPath(exists=True))
 @option('-s', '--secure', required=False,
         help='Enable Intel SGX Enclave', is_flag=True, default=False)
 @option('-c', '--cert_path',
         help='The cert path where pki certs will reside', required=False)
-@option('--fqdn', required=False, type=click_types.FQDN,
-        help=f'The fully qualified domain name of'
-             f' aggregator node [{getfqdn_env()}]',
-        default=getfqdn_env())
-def start_(plan, authorized_cols, secure, cert_path, fqdn):
+def start_(plan, authorized_cols, secure, cert_path):
     """Start the aggregator service."""
     from pathlib import Path
 
@@ -61,19 +57,18 @@ def start_(plan, authorized_cols, secure, cert_path, fqdn):
     logger.info('🧿 Starting the Aggregator Service.')
 
     if cert_path:
-        CERT_PATH = Path(cert_path).absolute()
-        (CERT_PATH / 'cert').mkdir(parents=True, exist_ok=True)
-        CERT_DIR = CERT_PATH / 'cert'
-        if not Path(CERT_DIR).exists():
+        cert_path = Path(cert_path).absolute()
+        (cert_path / 'cert').mkdir(parents=True, exist_ok=True)
+        cert_dir_path = cert_path / 'cert'
+        if not Path(cert_dir_path).exists():
             echo(style('Certificate Path not found.', fg='red')
                  + ' Please run `fx aggregator generate-cert-request --cert_path`'
                    ' to generate certs under this directory first.')
-        if fqdn is None:
-            fqdn = getfqdn_env()
-        common_name = f'{fqdn}'.lower()
-        plan.get_server(root_certificate=f'{CERT_DIR}/cert_chain.crt',
-                        private_key=f'{CERT_DIR}/server/agg_{common_name}.key',
-                        certificate=f'{CERT_DIR}/server/agg_{common_name}.crt').serve()
+
+        common_name = plan.config['network']['settings']['agg_addr'].lower()
+        plan.get_server(root_certificate=f'{cert_dir_path}/cert_chain.crt',
+                        private_key=f'{cert_dir_path}/server/agg_{common_name}.key',
+                        certificate=f'{cert_dir_path}/server/agg_{common_name}.crt').serve()
     else:
         plan.get_server().serve()
 
@@ -111,17 +106,20 @@ def generate_cert_request(fqdn, cert_path=None):
     server_private_key, server_csr = generate_csr(common_name, server=True)
 
     if cert_path:
-        CERT_PATH = Path(cert_path).absolute()
-        (CERT_PATH / 'cert').mkdir(parents=True, exist_ok=True)
-        CERT_DIR = CERT_PATH/ 'cert' # NOQA
-    (CERT_DIR / 'server').mkdir(parents=True, exist_ok=True)
+        cert_path = Path(cert_path).absolute()
+        (cert_path / 'cert').mkdir(parents=True, exist_ok=True)
+        cert_dir_path = cert_path / 'cert'
+    else:
+        cert_dir_path = CERT_DIR
+
+    (cert_dir_path / 'server').mkdir(parents=True, exist_ok=True)
 
     echo('  Writing AGGREGATOR certificate key pair to: ' + style(
-        f'{CERT_DIR}/server', fg='green'))
+        f'{cert_dir_path}/server', fg='green'))
 
     # Write aggregator csr and key to disk
-    write_crt(server_csr, CERT_DIR / 'server' / f'{file_name}.csr')
-    write_key(server_private_key, CERT_DIR / 'server' / f'{file_name}.key')
+    write_crt(server_csr, cert_dir_path / 'server' / f'{file_name}.csr')
+    write_key(server_private_key, cert_dir_path / 'server' / f'{file_name}.key')
 
 
 # TODO: function not used
@@ -171,11 +169,13 @@ def certify(fqdn, silent, cert_path=None):
 
     # Load CSR
     if cert_path:
-        CERT_PATH = Path(cert_path).absolute()
-        (CERT_PATH / 'cert').mkdir(parents=True, exist_ok=True)
-        CERT_DIR = CERT_PATH/ 'cert' # NOQA
+        cert_path = Path(cert_path).absolute()
+        (cert_path / 'cert').mkdir(parents=True, exist_ok=True)
+        cert_dir_path = cert_path / 'cert'
+    else:
+        cert_dir_path = CERT_DIR
 
-    csr_path_absolute_path = Path(CERT_DIR / f'{cert_name}.csr').absolute()
+    csr_path_absolute_path = Path(cert_dir_path / f'{cert_name}.csr').absolute()
     if not csr_path_absolute_path.exists():
         echo(style('Aggregator certificate signing request not found.', fg='red')
              + ' Please run `fx aggregator generate-cert-request`'
@@ -184,7 +184,7 @@ def certify(fqdn, silent, cert_path=None):
     csr, csr_hash = read_csr(csr_path_absolute_path)
 
     # Load private signing key
-    private_sign_key_absolute_path = Path(CERT_DIR / signing_key_path).absolute()
+    private_sign_key_absolute_path = Path(cert_dir_path / signing_key_path).absolute()
     if not private_sign_key_absolute_path.exists():
         echo(style('Signing key not found.', fg='red')
              + ' Please run `fx workspace certify`'
@@ -193,7 +193,7 @@ def certify(fqdn, silent, cert_path=None):
     signing_key = read_key(private_sign_key_absolute_path)
 
     # Load signing cert
-    signing_crt_absolute_path = Path(CERT_DIR / signing_crt_path).absolute()
+    signing_crt_absolute_path = Path(cert_dir_path / signing_crt_path).absolute()
     if not signing_crt_absolute_path.exists():
         echo(style('Signing certificate not found.', fg='red')
              + ' Please run `fx workspace certify`'
@@ -206,7 +206,7 @@ def certify(fqdn, silent, cert_path=None):
          + ' = '
          + style(f'{csr_hash}', fg='red'))
 
-    crt_path_absolute_path = Path(CERT_DIR / f'{cert_name}.crt').absolute()
+    crt_path_absolute_path = Path(cert_dir_path / f'{cert_name}.crt').absolute()
 
     if silent:
 

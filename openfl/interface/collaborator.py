@@ -61,18 +61,18 @@ def start_(plan, collaborator_name, data_config, secure, cert_path):
     logger.info('🧿 Starting a Collaborator Service.')
 
     if cert_path:
-        CERT_PATH = Path(cert_path).absolute()
-        (CERT_PATH / 'cert').mkdir(parents=True, exist_ok=True)
-        CERT_DIR = CERT_PATH / 'cert'
-        if not Path(CERT_DIR).exists():
+        cert_path = Path(cert_path).absolute()
+        (cert_path / 'cert').mkdir(parents=True, exist_ok=True)
+        cert_dir_path = cert_path / 'cert'
+        if not Path(cert_dir_path).exists():
             echo(style('Certificate Path not found.', fg='red')
                  + ' Please run `fx collaborator generate-cert-request --cert_path`'
                    ' to generate certs under this directory first.')
         common_name = f'{collaborator_name}'.lower()
         plan.get_collaborator(collaborator_name,
-                              root_certificate=f'{CERT_DIR}/cert_chain.crt',
-                              private_key=f'{CERT_DIR}/client/col_{common_name}.key',
-                              certificate=f'{CERT_DIR}/client/col_{common_name}.crt').run()
+                              root_certificate=f'{cert_dir_path}/cert_chain.crt',
+                              private_key=f'{cert_dir_path}/client/col_{common_name}.key',
+                              certificate=f'{cert_dir_path}/client/col_{common_name}.crt').run()
     else:
         plan.get_collaborator(collaborator_name).run()
 
@@ -167,18 +167,20 @@ def generate_cert_request(collaborator_name, data_path, silent, skip_package, ce
     client_private_key, client_csr = generate_csr(common_name, server=False)
 
     if cert_path:
-        CERT_PATH = Path(cert_path).absolute()
-        (CERT_PATH / 'cert').mkdir(parents=True, exist_ok=True)
-        CERT_DIR = CERT_PATH/ 'cert' # NOQA
+        cert_path = Path(cert_path).absolute()
+        (cert_path / 'cert').mkdir(parents=True, exist_ok=True)
+        cert_dir_path = cert_path / 'cert'
+    else:
+        cert_dir_path = CERT_DIR
 
-    (CERT_DIR / 'client').mkdir(parents=True, exist_ok=True)
+    (cert_dir_path / 'client').mkdir(parents=True, exist_ok=True)
 
     echo('  Moving COLLABORATOR certificate to: ' + style(
-        f'{CERT_DIR}', fg='green'))
+        f'{cert_dir_path}', fg='green'))
 
     # Write collaborator csr and key to disk
-    write_crt(client_csr, CERT_DIR / 'client' / f'{file_name}.csr')
-    write_key(client_private_key, CERT_DIR / 'client' / f'{file_name}.key')
+    write_crt(client_csr, cert_dir_path / 'client' / f'{file_name}.csr')
+    write_key(client_private_key, cert_dir_path / 'client' / f'{file_name}.key')
 
     if not skip_package:
         from shutil import copytree
@@ -199,7 +201,7 @@ def generate_cert_request(collaborator_name, data_path, silent, skip_package, ce
 
         ignore = ignore_patterns('__pycache__', '*.key', '*.srl', '*.pem')
         # Copy the current directory into the temporary directory
-        copytree(f'{CERT_DIR}/client', tmp_dir, ignore=ignore)
+        copytree(f'{cert_dir_path}/client', tmp_dir, ignore=ignore)
 
         for f in glob(f'{tmp_dir}/*'):
             if common_name not in basename(f):
@@ -312,15 +314,17 @@ def certify(collaborator_name, silent, request_pkg=None, import_=False, cert_pat
     common_name = f'{collaborator_name}'.lower()
 
     if cert_path:
-        CERT_PATH = Path(cert_path).absolute()
-        (CERT_PATH / 'cert').mkdir(parents=True, exist_ok=True)
-        CERT_DIR = CERT_PATH/ 'cert' # NOQA
+        cert_path = Path(cert_path).absolute()
+        (cert_path / 'cert').mkdir(parents=True, exist_ok=True)
+        cert_dir_path = cert_path / 'cert'
+    else:
+        cert_dir_path = CERT_DIR
 
     if not import_:
         if request_pkg:
-            Path(f'{CERT_DIR}/client').mkdir(parents=True, exist_ok=True)
-            unpack_archive(request_pkg, extract_dir=f'{CERT_DIR}/client')
-            csr = glob(f'{CERT_DIR}/client/*.csr')[0]
+            Path(f'{cert_dir_path}/client').mkdir(parents=True, exist_ok=True)
+            unpack_archive(request_pkg, extract_dir=f'{cert_dir_path}/client')
+            csr = glob(f'{cert_dir_path}/client/*.csr')[0]
         else:
             if collaborator_name is None:
                 echo('collaborator_name can only be omitted if signing\n'
@@ -329,8 +333,8 @@ def certify(collaborator_name, silent, request_pkg=None, import_=False, cert_pat
                      'Example: fx collaborator certify --request-pkg '
                      'col_one_to_agg_cert_request.zip')
                 return
-            csr = glob(f'{CERT_DIR}/client/col_{common_name}.csr')[0]
-            copy(csr, CERT_DIR)
+            csr = glob(f'{cert_dir_path}/client/col_{common_name}.csr')[0]
+            copy(csr, cert_dir_path)
         cert_name = splitext(csr)[0]
         file_name = basename(cert_name)
         signing_key_path = 'ca/signing-ca/private/signing-ca.key'
@@ -345,20 +349,20 @@ def certify(collaborator_name, silent, request_pkg=None, import_=False, cert_pat
         csr, csr_hash = read_csr(f'{cert_name}.csr')
 
         # Load private signing key
-        if not Path(CERT_DIR / signing_key_path).exists():
+        if not Path(cert_dir_path / signing_key_path).exists():
             echo(style('Signing key not found.', fg='red')
                  + ' Please run `fx workspace certify`'
                    ' to initialize the local certificate authority.')
 
-        signing_key = read_key(CERT_DIR / signing_key_path)
+        signing_key = read_key(cert_dir_path / signing_key_path)
 
         # Load signing cert
-        if not Path(CERT_DIR / signing_crt_path).exists():
+        if not Path(cert_dir_path / signing_crt_path).exists():
             echo(style('Signing certificate not found.', fg='red')
                  + ' Please run `fx workspace certify`'
                    ' to initialize the local certificate authority.')
 
-        signing_crt = read_crt(CERT_DIR / signing_crt_path)
+        signing_crt = read_crt(cert_dir_path / signing_crt_path)
 
         echo('The CSR Hash for file '
              + style(f'{file_name}.csr', fg='green')
@@ -370,7 +374,7 @@ def certify(collaborator_name, silent, request_pkg=None, import_=False, cert_pat
             echo(' Signing COLLABORATOR certificate')
             signed_col_cert = sign_certificate(csr, signing_key, signing_crt.subject)
             write_crt(signed_col_cert, f'{cert_name}.crt')
-            register_collaborator(CERT_DIR / 'client' / f'{file_name}.crt')
+            register_collaborator(cert_dir_path / 'client' / f'{file_name}.crt')
 
         else:
 
@@ -379,7 +383,7 @@ def certify(collaborator_name, silent, request_pkg=None, import_=False, cert_pat
                 echo(' Signing COLLABORATOR certificate')
                 signed_col_cert = sign_certificate(csr, signing_key, signing_crt.subject)
                 write_crt(signed_col_cert, f'{cert_name}.crt')
-                register_collaborator(CERT_DIR / 'client' / f'{file_name}.crt')
+                register_collaborator(cert_dir_path / 'client' / f'{file_name}.crt')
 
             else:
                 echo(style('Not signing certificate.', fg='red')
@@ -403,18 +407,18 @@ def certify(collaborator_name, silent, request_pkg=None, import_=False, cert_pat
 
         Path(f'{tmp_dir}/client').mkdir(parents=True, exist_ok=True)
         # Copy the signed cert to the temporary directory
-        copy(f'{CERT_DIR}/client/{file_name}.crt', f'{tmp_dir}/client/')
+        copy(f'{cert_dir_path}/client/{file_name}.crt', f'{tmp_dir}/client/')
         # Copy the CA certificate chain to the temporary directory
-        copy(f'{CERT_DIR}/cert_chain.crt', tmp_dir)
+        copy(f'{cert_dir_path}/cert_chain.crt', tmp_dir)
 
         # Create Zip archive of directory
         make_archive(archive_name, archive_type, tmp_dir)
 
     else:
         # Copy the signed certificate and cert chain into PKI_DIR
-        previous_crts = glob(f'{CERT_DIR}/client/*.crt')
-        unpack_archive(import_, extract_dir=CERT_DIR)
-        updated_crts = glob(f'{CERT_DIR}/client/*.crt')
+        previous_crts = glob(f'{cert_dir_path}/client/*.crt')
+        unpack_archive(import_, extract_dir=cert_dir_path)
+        updated_crts = glob(f'{cert_dir_path}/client/*.crt')
         cert_difference = list(set(updated_crts) - set(previous_crts))
         if len(cert_difference) != 0:
             crt = basename(cert_difference[0])
