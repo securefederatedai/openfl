@@ -30,7 +30,7 @@ def experiment_rep(_):
                          [(True, 0, 'pending'), (False, 1, 'rejected')]
                          )
 async def test_review_experiment(
-    ExperimentWorkspace, experiment_rep, review_result,
+    ExperimentWorkspace, experiment_rep, review_result,  # noqa: N803
     archive_unlink_call_count, experiment_status
 ):
     """Review experiment method test."""
