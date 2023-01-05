@@ -14,7 +14,7 @@ from types import MethodType
 MIN_COLLECTION_COUNT = 2
 
 
-class bcolors:
+class bcolors:  # NOQA: N801
     HEADER = "\033[95m"
     OKBLUE = "\033[94m"
     OKCYAN = "\033[96m"

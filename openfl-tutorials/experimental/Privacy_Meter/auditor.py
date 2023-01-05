@@ -18,7 +18,7 @@ from privacy_meter.information_source_signal import ModelLoss, ModelGradientNorm
 import privacy_meter.hypothesis_test as prtest
 
 
-class PM_report:
+class PM_report:  # NOQA: N801
     """
     This class indicates the information about the auditing and
     save the history of the privacy loss during the training.
@@ -64,7 +64,7 @@ class PM_report:
         self.history[attr].append(info)
 
 
-def PopulationAuditor(target_model, datasets, pm_info):
+def PopulationAuditor(target_model, datasets, pm_info):  # NOQA: N802
     """
     Function that returns updated privacy risk report based on the current
     snapshot of the model and FL history and updates the PM history.

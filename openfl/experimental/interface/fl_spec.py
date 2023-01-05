@@ -10,7 +10,7 @@ from copy import deepcopy
 from typing import Type, List, Callable
 from openfl.experimental.utilities import (
     MetaflowInterface,
-    SerializationException,
+    SerializationError,
     aggregator_to_collaborator,
     collaborator_to_aggregator,
     should_transfer,
@@ -76,7 +76,7 @@ class FLSpec:
                         "\nPlease see the official Ray documentation"
                         "\nhttps://docs.ray.io/en/latest/ray-core/objects/serialization.html"
                     )
-                    raise SerializationException(str(e) + msg)
+                    raise SerializationError(str(e) + msg)
                 else:
                     raise e
             for name, attr in final_attributes:

@@ -15,7 +15,7 @@ from types import MethodType
 MIN_COLLECTION_COUNT = 2
 
 
-class bcolors:
+class bcolors:  # NOQA: N801
     HEADER = "\033[95m"
     OKBLUE = "\033[94m"
     OKCYAN = "\033[96m"
@@ -39,7 +39,7 @@ class Net(nn.Module):
         return x
 
 
-class TestFlow_Reference_With_Exclude(FLSpec):
+class TestFlowReferenceWithExclude(FLSpec):
 
     """
     Testflow to validate references of collabartor attributes in Federated Flow with exclude.
@@ -94,17 +94,17 @@ class TestFlow_Reference_With_Exclude(FLSpec):
         self.collab_attr_dict_one = {key: key for key in range(5)}
 
         attr_collab_dict, collab_attr_list = create_collab_dict(self)
-        TestFlow_Reference_With_Exclude.step_one_collab_attrs.update(
+        TestFlowReferenceWithExclude.step_one_collab_attrs.update(
             attr_collab_dict
         )
 
         if (
-            len(TestFlow_Reference_With_Exclude.step_one_collab_attrs)
+            len(TestFlowReferenceWithExclude.step_one_collab_attrs)
             >= MIN_COLLECTION_COUNT
         ):
             matched_ref_dict = find_match_ref_at_step(
                 collab_attr_list,
-                TestFlow_Reference_With_Exclude.step_one_collab_attrs,
+                TestFlowReferenceWithExclude.step_one_collab_attrs,
             )
             validate_references(matched_ref_dict)
 
@@ -123,17 +123,17 @@ class TestFlow_Reference_With_Exclude(FLSpec):
         self.collab_attr_dict_two = {key: key for key in range(5)}
 
         attr_collab_dict, collab_attr_list = create_collab_dict(self)
-        TestFlow_Reference_With_Exclude.step_two_collab_attrs.update(
+        TestFlowReferenceWithExclude.step_two_collab_attrs.update(
             attr_collab_dict
         )
 
         if (
-            len(TestFlow_Reference_With_Exclude.step_two_collab_attrs)
+            len(TestFlowReferenceWithExclude.step_two_collab_attrs)
             >= MIN_COLLECTION_COUNT
         ):
             matched_ref_dict = find_match_ref_at_step(
                 collab_attr_list,
-                TestFlow_Reference_With_Exclude.step_two_collab_attrs,
+                TestFlowReferenceWithExclude.step_two_collab_attrs,
             )
             validate_references(matched_ref_dict)
 
@@ -159,7 +159,7 @@ class TestFlow_Reference_With_Exclude(FLSpec):
         for (
             key,
             val,
-        ) in TestFlow_Reference_With_Exclude.all_ref_error_dict.items():
+        ) in TestFlowReferenceWithExclude.all_ref_error_dict.items():
             all_shared_attr = all_shared_attr + ",".join(val)
 
         if all_shared_attr:
@@ -179,16 +179,16 @@ class TestFlow_Reference_With_Exclude(FLSpec):
             + f"references. {bcolors.ENDC}"
         )
 
-        if TestFlow_Reference_With_Exclude.all_ref_error_dict:
+        if TestFlowReferenceWithExclude.all_ref_error_dict:
             raise (
                 AssertionError(
                     f"{bcolors.FAIL}\n ...Test case failed ... {bcolors.ENDC}"
                 )
             )
 
-        TestFlow_Reference_With_Exclude.step_one_collab_attrs = {}
-        TestFlow_Reference_With_Exclude.step_two_collab_attrs = {}
-        TestFlow_Reference_With_Exclude.all_ref_error_dict = {}
+        TestFlowReferenceWithExclude.step_one_collab_attrs = {}
+        TestFlowReferenceWithExclude.step_two_collab_attrs = {}
+        TestFlowReferenceWithExclude.all_ref_error_dict = {}
 
 
 def filter_attrs(attr_list):
@@ -198,7 +198,7 @@ def filter_attrs(attr_list):
         if (
             not attr[0].startswith("_")
             and attr[0] not in reserved_words
-            and not hasattr(TestFlow_Reference_With_Exclude, attr[0])
+            and not hasattr(TestFlowReferenceWithExclude, attr[0])
         ):
             if not isinstance(attr[1], MethodType):
                 valid_attrs.append(attr[0])
@@ -248,8 +248,8 @@ def validate_references(matched_ref_dict):
             reference_flag = True
     if collborators_sharing_ref:
         for collab in collborators_sharing_ref:
-            if collab not in TestFlow_Reference_With_Exclude.all_ref_error_dict:
-                TestFlow_Reference_With_Exclude.all_ref_error_dict[
+            if collab not in TestFlowReferenceWithExclude.all_ref_error_dict:
+                TestFlowReferenceWithExclude.all_ref_error_dict[
                     collab
                 ] = matched_ref_dict.get(collab)
 
@@ -327,7 +327,7 @@ if __name__ == "__main__":
 
     print(f"Local runtime collaborators = {local_runtime.collaborators}")
 
-    testflow = TestFlow_Reference_With_Exclude(checkpoint=False)
+    testflow = TestFlowReferenceWithExclude(checkpoint=False)
     testflow.runtime = local_runtime
 
     for i in range(5):

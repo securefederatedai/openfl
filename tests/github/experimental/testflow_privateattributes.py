@@ -7,7 +7,7 @@ from openfl.experimental.placement import aggregator, collaborator
 import numpy as np
 
 
-class bcolors:
+class bcolors:  # NOQA: N801
     HEADER = "\033[95m"
     OKBLUE = "\033[94m"
     OKCYAN = "\033[96m"

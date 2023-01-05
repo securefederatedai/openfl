@@ -158,7 +158,7 @@ def default_optimizer(model):
     return optim.SGD(model.parameters(), lr=learning_rate, momentum=momentum)
 
 
-def FedAvg(models, global_model_tools, previous_global_state, dp_params):
+def FedAvg(models, global_model_tools, previous_global_state, dp_params):  # NOQA: N802
     """
     This tutorial utilizes non-weighted averaging of collaborator model updates
     regardless of whether DP config is used.

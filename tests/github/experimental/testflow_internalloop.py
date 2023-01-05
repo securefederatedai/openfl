@@ -9,7 +9,7 @@ import numpy as np
 import sys
 
 
-class bcolors:
+class bcolors:  # NOQA: N801
     HEADER = "\033[95m"
     OKBLUE = "\033[94m"
     OKCYAN = "\033[96m"
@@ -21,7 +21,7 @@ class bcolors:
     UNDERLINE = "\033[4m"
 
 
-class TestFlow_InternalLoop(FLSpec):
+class TestFlowInternalLoop(FLSpec):
     def __init__(self, model=None, optimizer=None, rounds=None, **kwargs):
         super().__init__(**kwargs)
         self.training_rounds = rounds
@@ -118,7 +118,7 @@ def validate_flow(flow_obj, expected_flow_steps):
 
     from metaflow import Flow
 
-    cli_flow_obj = Flow("TestFlow_InternalLoop")  # Flow object from CLI
+    cli_flow_obj = Flow("TestFlowInternalLoop")  # Flow object from CLI
     cli_flow_steps = list(cli_flow_obj.latest_run)  # Steps from CLI
     cli_step_names = [step.id for step in cli_flow_steps]
 
@@ -247,7 +247,7 @@ if __name__ == "__main__":
     optimizer = None
     top_model_accuracy = 0
 
-    flflow = TestFlow_InternalLoop(model, optimizer, 5, checkpoint=True)
+    flflow = TestFlowInternalLoop(model, optimizer, 5, checkpoint=True)
     flflow.runtime = local_runtime
     flflow.run()
 

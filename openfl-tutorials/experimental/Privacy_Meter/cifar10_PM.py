@@ -93,7 +93,7 @@ def default_optimizer(model, optimizer_type=None, optimizer_like=None):
         return optim.Adam(model.parameters())
 
 
-def FedAvg(models):
+def FedAvg(models):  # NOQA: N802
     new_model = models[0]
     if len(models) > 1:
         state_dicts = [model.state_dict() for model in models]

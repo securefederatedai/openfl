@@ -180,7 +180,7 @@ class StepVisitor(StepVisitor):
     def __init__(self, nodes, flow):
         super().__init__(nodes, flow)
 
-    def visit_FunctionDef(self, node):
+    def visit_FunctionDef(self, node):  # NOQA: N802
         func = getattr(self.flow, node.name)
         if hasattr(func, "is_step"):
             self.nodes[node.name] = DAGnode(node, func.decorators, func.__doc__)
@@ -502,9 +502,9 @@ class DefaultCard(DefaultCard):
     # modified Defaultcard render function
     def render(self, task):
         # :param: task instead of metaflow.client.Task object task.pathspec (string) is provided
-        RENDER_TEMPLATE = read_file(RENDER_TEMPLATE_PATH)
-        JS_DATA = read_file(JS_PATH)
-        CSS_DATA = read_file(CSS_PATH)
+        RENDER_TEMPLATE = read_file(RENDER_TEMPLATE_PATH)  # NOQA: N806
+        JS_DATA = read_file(JS_PATH)  # NOQA: N806
+        CSS_DATA = read_file(CSS_PATH)  # NOQA: N806
         final_component_dict = dict(self._graph)
         final_component_dict = TaskInfoComponent(
             task,

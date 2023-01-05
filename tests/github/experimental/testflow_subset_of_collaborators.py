@@ -12,7 +12,7 @@ import os
 import shutil
 
 
-class bcolors:
+class bcolors:  # NOQA: N801
     OKBLUE = "\033[94m"
     OKCYAN = "\033[96m"
     OKGREEN = "\033[92m"

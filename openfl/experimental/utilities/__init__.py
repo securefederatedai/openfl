@@ -9,7 +9,7 @@ from .transitions import (
     aggregator_to_collaborator,
     collaborator_to_aggregator,
 )
-from .exceptions import SerializationException, GPUResourcesNotAvailable
+from .exceptions import SerializationError, GPUResourcesNotAvailableError
 from .stream_redirect import (
     RedirectStdStreamBuffer,
     RedirectStdStream,
@@ -29,8 +29,8 @@ __all__ = [
     "should_transfer",
     "aggregator_to_collaborator",
     "collaborator_to_aggregator",
-    "SerializationException",
-    "GPUResourcesNotAvailable",
+    "SerializationError",
+    "GPUResourcesNotAvailableError",
     "RedirectStdStreamBuffer",
     "RedirectStdStream",
     "RedirectStdStreamContext",

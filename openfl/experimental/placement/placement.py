@@ -6,7 +6,7 @@ import ray
 from copy import deepcopy
 from openfl.experimental.utilities import (
     RedirectStdStreamContext,
-    GPUResourcesNotAvailable,
+    GPUResourcesNotAvailableError,
     get_number_of_gpus,
 )
 from typing import Callable
@@ -135,7 +135,7 @@ def collaborator(
         f.__doc__ = "<Node: Collaborator>" + f.__doc__
     total_gpus = get_number_of_gpus()
     if total_gpus < num_gpus:
-        GPUResourcesNotAvailable(
+        GPUResourcesNotAvailableError(
             f"cannot assign more than available GPUs ({total_gpus} < {num_gpus})."
         )
     f.num_gpus = num_gpus
