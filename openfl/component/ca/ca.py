@@ -80,9 +80,15 @@ def get_ca_bin_paths(ca_path):
         dirs = os.listdir(ca_path / 'step')
         for dir_ in dirs:
             if 'step_' in dir_:
-                step = ca_path / 'step' / dir_ / 'bin' / 'step'
+                step_executable = 'step'
+                if sys.platform == 'win32':
+                    step_executable = 'step.exe'
+                step = ca_path / 'step' / dir_ / 'bin' / step_executable
             if 'step-ca' in dir_:
-                step_ca = ca_path / 'step' / dir_ / 'bin' / 'step-ca'
+                step_ca_executable = 'step-ca'
+                if sys.platform == 'win32':
+                    step_ca_executable = 'step-ca.exe'
+                step_ca = ca_path / 'step' / dir_ / 'bin' / step_ca_executable
     return step, step_ca
 
 

@@ -38,9 +38,6 @@ def download_step_bin(prefix='.', confirmation=True):
     Donwload step binaries from github.
 
     Args:
-        url: address of latest release
-        grep_name: name to grep over github assets
-        architecture: architecture type to grep
         prefix: folder path to download
         confirmation: request user confirmation or not
     """
@@ -52,6 +49,13 @@ def download_step_bin(prefix='.', confirmation=True):
 
 
 def download_step_ca_bin(prefix='.', confirmation=True):
+    """
+    Donwload step binaries from github.
+
+    Args:
+        prefix: folder path to download
+        confirmation: request user confirmation or not
+    """
     system, arch = get_system_and_architecture()
     ext = FILE_EXTENSIONS[system]
     binary = f'step-ca_{system}_{VERSION}_{arch}.{ext}'
