@@ -3,6 +3,7 @@
 
 """Cryptography IO utilities."""
 
+import os
 from hashlib import sha384
 from pathlib import Path
 from typing import Tuple
@@ -44,7 +45,10 @@ def write_key(key: RSAPrivateKey, path: Path) -> None:
         path : Path (pathlib)
 
     """
-    with open(path, 'wb') as f:
+    def key_opener(path, flags):
+        return os.open(path, flags, mode=0o600)
+
+    with open(path, 'wb', opener=key_opener) as f:
         f.write(key.private_bytes(
             encoding=serialization.Encoding.PEM,
             format=serialization.PrivateFormat.TraditionalOpenSSL,

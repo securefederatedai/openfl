@@ -65,8 +65,9 @@ class Aggregator:
             # Cleaner solution?
             self.single_col_cert_common_name = ''
 
-        self.straggler_handling_policy = straggler_handling_policy \
-            or CutoffTimeBasedStragglerHandling()
+        self.straggler_handling_policy = (
+            straggler_handling_policy or CutoffTimeBasedStragglerHandling()
+        )
         self._end_of_round_check_done = [False] * rounds_to_train
         self.stragglers_for_task = {}
 
@@ -955,6 +956,13 @@ class Aggregator:
     def stop(self, failed_collaborator: str = None) -> None:
         """Stop aggregator execution."""
         self.logger.info('Force stopping the aggregator execution.')
+        # We imitate quit_job_sent_to the failed collaborator
+        # So the experiment set to a finished state
+        if failed_collaborator:
+            self.quit_job_sent_to.append(failed_collaborator)
+
+        # This code does not actually send `quit` tasks to collaborators,
+        # it just mimics it by filling arrays.
         for collaborator_name in filter(lambda c: c != failed_collaborator, self.authorized_cols):
             self.logger.info(f'Sending signal to collaborator {collaborator_name} to shutdown...')
             self.quit_job_sent_to.append(collaborator_name)

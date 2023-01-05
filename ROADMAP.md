@@ -58,7 +58,7 @@ This causes community fragmentation and distracts from some of the bigger proble
 
 ## Upcoming OpenFL releases
 
-### OpenFL 1.5 (Q4 2022)
+### OpenFL 1.5 (Q1 2023)
 1. OpenFL Workflows Interface (Experimental)
 2. New use cases enabled by custom workflows
     * End-of-round validation with aggregator dataset

@@ -1,3 +1,6 @@
+# This test is not used due to possible dependency version conflict
+# between local version and PyPI version of openfl.
+
 set -euxo pipefail
 # Test the pipeline
 # =========== Set SGX_RUN variable to 0 or 1 ============
