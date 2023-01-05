@@ -7,6 +7,7 @@ from copy import deepcopy
 import ray
 import gc
 from openfl.experimental.runtime import Runtime
+from openfl.experimental.interface import Aggregator, Collaborator, FLSpec
 from openfl.experimental.placement import RayExecutor
 from openfl.experimental.utilities import (
     aggregator_to_collaborator,
@@ -14,17 +15,45 @@ from openfl.experimental.utilities import (
     filter_attributes,
     checkpoint,
 )
+from typing import List
+from typing import Type
+from typing import Callable
 
 
 class LocalRuntime(Runtime):
     def __init__(
         self,
-        aggregator=None,
-        collaborators=None,
-        backend="single_process",
+        aggregator: Type[Aggregator] = None,
+        collaborators: List[Type[Collaborator]] = None,
+        backend: str = "single_process",
         **kwargs,
-    ):
-        """Use Local infrastructure to run the flow"""
+    ) -> None:
+        """
+        Use single node to run the flow
+
+        Args:
+            aggregator:    The aggregator instance that holds private attributes
+            collaborators: A list of collaborators; each with their own private attributes
+            backend:       The backend that will execute the tasks. Available options are:
+
+                           'single_process': (default) Executes every task within the same process
+
+                           'ray':            Executes tasks using the Ray library. Each participant
+                                             runs tasks in their own isolated process. Also
+                                             supports GPU isolation using Ray's 'num_gpus'
+                                             argument, which can be passed in through the
+                                             collaborator placement decorator.
+
+                                             Example:
+                                             @collaborator(num_gpus=1)
+                                             def some_collaborator_task(self):
+                                                 ...
+
+
+                                             By selecting num_gpus=1, the task is guaranteed
+                                             exclusive GPU access. If the system has one GPU,
+                                             collaborator tasks will run sequentially.
+        """
         super().__init__()
         if backend not in ["ray", "single_process"]:
             raise ValueError(
@@ -45,30 +74,34 @@ class LocalRuntime(Runtime):
             self.collaborators = collaborators
 
     @property
-    def aggregator(self):
+    def aggregator(self) -> str:
         """Returns name of _aggregator"""
         return self._aggregator.name
 
     @aggregator.setter
-    def aggregator(self, aggregator):
+    def aggregator(self, aggregator: Type[Aggregator]):
         """Set LocalRuntime _aggregator"""
         self._aggregator = aggregator
 
     @property
-    def collaborators(self):
+    def collaborators(self) -> List[str]:
         """
         Return names of collaborators. Don't give direct access to private attributes
         """
         return list(self.__collaborators.keys())
 
     @collaborators.setter
-    def collaborators(self, collaborators):
+    def collaborators(self, collaborators: List[Type[Collaborator]]):
         """Set LocalRuntime collaborators"""
         self.__collaborators = {
             collaborator.name: collaborator for collaborator in collaborators
         }
 
-    def restore_instance_snapshot(self, ctx, instance_snapshot):
+    def restore_instance_snapshot(
+            self,
+            ctx: Type[FLSpec],
+            instance_snapshot: List[Type[FLSpec]]
+    ):
         """Restores attributes from backup (in instance snapshot) to ctx"""
         for backup in instance_snapshot:
             artifacts_iter, _ = generate_artifacts(ctx=backup)
@@ -77,10 +110,27 @@ class LocalRuntime(Runtime):
                     setattr(ctx, name, attr)
 
     def execute_task(
-        self, flspec_obj, f, parent_func, instance_snapshot=(), **kwargs
+        self,
+        flspec_obj: Type[FLSpec],
+        f: Callable,
+        parent_func: Callable,
+        instance_snapshot: List[Type[FLSpec]] = [],
+        **kwargs
     ):
         """
-        Next task execution happens here
+        Performs the execution of a task as defined by the
+        implementation and underlying backend (single_process, ray, etc)
+        on a single node
+
+        Args:
+            flspec_obj:        Reference to the FLSpec (flow) object. Contains information
+                               about task sequence, flow attributes, that are needed to
+                               execute a future task
+            f:                 The next task to be executed within the flow
+            parent_func:       The prior task executed in the flow
+            instance_snapshot: A prior FLSpec state that needs to be restored from
+                               (i.e. restoring aggregator state after collaborator
+                               execution)
         """
         from openfl.experimental.interface import (
             FLSpec,

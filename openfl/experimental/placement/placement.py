@@ -9,6 +9,7 @@ from openfl.experimental.utilities import (
     GPUResourcesNotAvailable,
     get_number_of_gpus,
 )
+from typing import Callable
 
 
 class RayExecutor:
@@ -33,7 +34,14 @@ class RayExecutor:
         return clones
 
 
-def make_remote(f, num_gpus):
+def make_remote(f: Callable, num_gpus: int) -> Callable:
+    """
+    Assign function to run in its own process using
+    Ray
+
+    Args:
+        num_gpus: Defines the number of GPUs to request for a task
+    """
     f = ray.put(f)
 
     @functools.wraps(f)
@@ -47,9 +55,20 @@ def make_remote(f, num_gpus):
     return wrapper
 
 
-def aggregator(f=None, *, num_gpus=0):
-    if f is None:
-        return functools.partial(aggregator, num_gpus=num_gpus)
+def aggregator(f: Callable = None) -> Callable:
+    """
+    Placement decorator that designates that the task will
+    run at the aggregator node
+
+    Usage:
+    class MyFlow(FLSpec):
+        ...
+        @aggregator
+        def agg_task(self):
+           ...
+        ...
+
+    """
 
     print(f'Aggregator step "{f.__name__}" registered')
     f.is_step = True
@@ -60,12 +79,7 @@ def aggregator(f=None, *, num_gpus=0):
     f.collaborator_step = False
     if f.__doc__:
         f.__doc__ = "<Node: Aggregator>" + f.__doc__
-    total_gpus = get_number_of_gpus()
-    if total_gpus < num_gpus:
-        GPUResourcesNotAvailable(
-            f"cannot assign more than available GPUs ({total_gpus} < {num_gpus})."
-        )
-    f.num_gpus = num_gpus
+    f.num_gpus = 0
 
     @functools.wraps(f)
     def wrapper(*args, **kwargs):
@@ -78,7 +92,35 @@ def aggregator(f=None, *, num_gpus=0):
     return wrapper
 
 
-def collaborator(f=None, *, num_gpus=0):
+def collaborator(
+        f: Callable = None,
+        *,
+        num_gpus: float = 0
+) -> Callable:
+    """
+    Placement decorator that designates that the task will
+    run at the collaborator node
+
+    Usage:
+    class MyFlow(FLSpec):
+        ...
+        @collaborator
+        def collaborator_task(self):
+            ...
+
+        @collaborator(num_gpus=1)
+        @def collaborator_gpu_task:
+            ...
+        ...
+
+    Args:
+        num_gpus: [Applicable for Ray backend only]
+                  Defines how many GPUs will be made available
+                  to the task (Default = 0). Selecting a value < 1 (0.0-1.0]
+                  will result in sharing of GPUs between tasks. 1 >= results in
+                  exclusive GPU access for the task.
+    """
+
     if f is None:
         return functools.partial(collaborator, num_gpus=num_gpus)
 

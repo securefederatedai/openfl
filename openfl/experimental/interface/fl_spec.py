@@ -3,8 +3,11 @@
 
 """openfl.experimental.interface.flspec module."""
 
+from __future__ import annotations
+
 import inspect
 from copy import deepcopy
+from typing import Type, List, Callable
 from openfl.experimental.utilities import (
     MetaflowInterface,
     SerializationException,
@@ -24,26 +27,26 @@ class FLSpec:
     _clones = []
     _initial_state = None
 
-    def __init__(self, checkpoint=False):
+    def __init__(self, checkpoint: bool = False):
         self._foreach_methods = []
         self._checkpoint = checkpoint
 
     @classmethod
-    def create_clones(cls, instance, names):
+    def _create_clones(cls, instance: Type[FLSpec], names: List[str]) -> None:
         """Creates clones for instance for each collaborator in names"""
         cls._clones = {name: deepcopy(instance) for name in names}
 
     @classmethod
-    def reset_clones(cls):
+    def _reset_clones(cls):
         """Reset clones"""
         cls._clones = []
 
     @classmethod
-    def save_initial_state(cls, instance):
+    def save_initial_state(cls, instance: Type[FLSpec]) -> None:
         """Save initial state of instance before executing the flow"""
         cls._initial_state = deepcopy(instance)
 
-    def run(self):
+    def run(self) -> None:
         """Starts the execution of the flow"""
         # Submit flow to Runtime
         self._metaflow_interface = MetaflowInterface(
@@ -55,8 +58,8 @@ class FLSpec:
             # Assume that first task always runs on the aggregator
             self._setup_aggregator()
             self._foreach_methods = []
-            FLSpec.reset_clones()
-            FLSpec.create_clones(self, self.runtime.collaborators)
+            FLSpec._reset_clones()
+            FLSpec._create_clones(self, self.runtime.collaborators)
             # the start function can just be invoked locally
             if self._checkpoint:
                 print(f"Created flow {self.__class__.__name__}")
@@ -79,10 +82,9 @@ class FLSpec:
             for name, attr in final_attributes:
                 setattr(self, name, attr)
         elif str(self._runtime) == "FederatedRuntime":
-            # Submit to director
             raise Exception("Submission to remote runtime not available yet")
         else:
-            raise Exception("Runtime not supported")
+            raise Exception("Runtime not implemented")
 
     def _setup_aggregator(self):
         """Sets aggregator private attributes as self attributes"""
@@ -90,29 +92,40 @@ class FLSpec:
             setattr(self, name, attr)
 
     @property
-    def runtime(self):
+    def runtime(self) -> Type[Runtime]:
         """Returns flow runtime"""
         return self._runtime
 
     @runtime.setter
-    def runtime(self, runtime):
+    def runtime(self, runtime: Type[Runtime]) -> None:
         """Sets flow runtime"""
         if isinstance(runtime, Runtime):
             self._runtime = runtime
         else:
             raise TypeError(f"{runtime} is not a valid OpenFL Runtime")
 
-    def capture_instance_snapshot(self, kwargs):
-        """Takes backup of self before exclude or include filtering"""
+    def _capture_instance_snapshot(self, kwargs):
+        """
+        Takes backup of self before exclude or include filtering
+
+        Args:
+            kwargs: Key word arguments originally passed to the next function.
+                    If include or exclude are in the kwargs, the state of the
+                    aggregator needs to be retained
+        """
         return_objs = []
         if "exclude" in kwargs or "include" in kwargs:
             backup = deepcopy(self)
             return_objs.append(backup)
         return return_objs
 
-    def is_at_transition_point(self, f, parent_func):
+    def _is_at_transition_point(self, f: Callable, parent_func: Callable) -> bool:
         """
         Has the collaborator finished its current sequence?
+
+        Args:
+            f:           The next function to be executed
+            parent_func: The previous function executed
         """
         if parent_func.__name__ in self._foreach_methods:
             self._foreach_methods.append(f.__name__)
@@ -124,7 +137,7 @@ class FLSpec:
                 return True
         return False
 
-    def display_transition_logs(self, f, parent_func):
+    def _display_transition_logs(self, f: Callable, parent_func: Callable) -> None:
         """
         Prints aggregator to collaborators or
         collaborators to aggregator state transition logs
@@ -135,9 +148,12 @@ class FLSpec:
         elif collaborator_to_aggregator(f, parent_func):
             print("Sending state from collaborator to aggregator")
 
-    def next(self, f, **kwargs):
+    def next(self, f: Callable, **kwargs) -> None:
         """
         Next task in the flow to execute
+
+        Args:
+            f: The next task that will be executed in the flow
         """
 
         # Get the name and reference to the calling function
@@ -150,16 +166,16 @@ class FLSpec:
         # Take back-up of current state of self
         agg_to_collab_ss = []
         if aggregator_to_collaborator(f, parent_func):
-            agg_to_collab_ss = self.capture_instance_snapshot(kwargs=kwargs)
+            agg_to_collab_ss = self._capture_instance_snapshot(kwargs=kwargs)
 
         # Remove included / excluded attributes from next task
         filter_attributes(self, f, **kwargs)
 
-        if self.is_at_transition_point(f, parent_func):
+        if self._is_at_transition_point(f, parent_func):
             # Collaborator is done executing for now
             return
 
-        self.display_transition_logs(f, parent_func)
+        self._display_transition_logs(f, parent_func)
 
         self._runtime.execute_task(
             self,

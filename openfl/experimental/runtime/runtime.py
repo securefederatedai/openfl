@@ -2,12 +2,16 @@
 # SPDX-License-Identifier: Apache-2.0
 
 """ openfl.experimental.runtime module Runtime class."""
+from openfl.experimental.interface import Aggregator, Collaborator, FLSpec
+from typing import Type
+from typing import List
+from typing import Callable
 
 
 class Runtime:
     def __init__(self):
         """
-        Interface for runtimes that can run FLSpec flows
+        Base interface for runtimes that can run FLSpec flows
 
         """
         pass
@@ -18,7 +22,7 @@ class Runtime:
         raise NotImplementedError
 
     @aggregator.setter
-    def aggregator(self, aggregator):
+    def aggregator(self, aggregator: Type[Aggregator]):
         """Set Runtime aggregator"""
         raise NotImplementedError
 
@@ -30,15 +34,30 @@ class Runtime:
         raise NotImplementedError
 
     @collaborators.setter
-    def collaborators(self, collaborators):
+    def collaborators(self, collaborators: List[Type[Collaborator]]):
         """Set Runtime collaborators"""
         raise NotImplementedError
 
     def execute_task(
-        self, flspec_obj, f, parent_func, instance_snapshot=(), **kwargs
+        self,
+        flspec_obj: Type[FLSpec],
+        f: Callable,
+        parent_func: Callable,
+        instance_snapshot: List[Type[FLSpec]] = [],
+        **kwargs
     ):
         """
         Performs the execution of a task as defined by the
-        runtime implementation and underlying backend (single_process, ray, etc)
+        implementation and underlying backend (single_process, ray, etc)
+
+        Args:
+            flspec_obj:        Reference to the FLSpec (flow) object. Contains information
+                               about task sequence, flow attributes, that are needed to
+                               execute a future task
+            f:                 The next task to be executed within the flow
+            parent_func:       The prior task executed in the flow
+            instance_snapshot: A prior FLSpec state that needs to be restored from
+                               (i.e. restoring aggregator state after collaborator
+                               execution)
         """
         raise NotImplementedError
