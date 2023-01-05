@@ -79,10 +79,6 @@ You can find more details in the following articles:
 | FedOpt | [Reddi et al., 2020](https://arxiv.org/abs/2003.00295) | ✅ | ✅ | ✅ | [docs](http://openfl.readthedocs.io/en/latest/supported_aggregation_algorithms.html#fedopt) |
 | FedCurv | [Shoham et al., 2019](https://arxiv.org/pdf/1910.07796.pdf) | ✅ | ❌ | ❌ | [docs](http://openfl.readthedocs.io/en/latest/supported_aggregation_algorithms.html#fedcurv) |
 
-## Build status
-| Operating system | Status |
-| ---- | ------ | 
-| ubuntu-latest | [![CLI](https://github.com/intel/openfl/actions/workflows/taskrunner.yml/badge.svg)](https://github.com/intel/openfl/actions/workflows/taskrunner.yml)
 ## Support
 Please join us for our bi-monthly community meetings starting December 1 & 2, 2022! <br>
 Meet with some of the Intel team members behind OpenFL. <br>
