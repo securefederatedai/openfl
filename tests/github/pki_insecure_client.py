@@ -45,21 +45,9 @@ def install_ca():
         'fx', 'pki', 'install',
         '-p', str(CA_PATH),
         '--password', str(CA_PASSWORD)
-    ], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+    ], stdin=subprocess.PIPE)
     time.sleep(3)
-    stdout, _ = pki_install.communicate('y'.encode('utf-8'))
-    while 'API rate limit exceeded' in stdout.decode('utf-8'):
-        minutes_to_wait = 5
-        print('Got GitHub API rate limit exceeded error.')
-        print(f'Retrying in {minutes_to_wait} minutes...')
-        time.sleep(minutes_to_wait * 60)
-        pki_install = subprocess.Popen([
-            'fx', 'pki', 'install',
-            '-p', str(CA_PATH),
-            '--password', str(CA_PASSWORD)
-        ], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
-        time.sleep(3)
-        stdout, _ = pki_install.communicate('y'.encode('utf-8'))
+    pki_install.communicate('y'.encode('utf-8'))
 
 
 def get_token():

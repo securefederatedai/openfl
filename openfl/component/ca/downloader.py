@@ -35,7 +35,7 @@ def get_system_and_architecture():
 
 def download_step_bin(prefix='.', confirmation=True):
     """
-    Donwload step binaries from github.
+    Download step binaries.
 
     Args:
         prefix: folder path to download
@@ -50,7 +50,7 @@ def download_step_bin(prefix='.', confirmation=True):
 
 def download_step_ca_bin(prefix='.', confirmation=True):
     """
-    Donwload step binaries from github.
+    Download step-ca binaries.
 
     Args:
         prefix: folder path to download
