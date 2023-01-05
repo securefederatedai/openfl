@@ -7,7 +7,9 @@ from copy import deepcopy
 import ray
 import gc
 from openfl.experimental.runtime import Runtime
-from openfl.experimental.interface import Aggregator, Collaborator, FLSpec
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from openfl.experimental.interface import Aggregator, Collaborator, FLSpec
 from openfl.experimental.placement import RayExecutor
 from openfl.experimental.utilities import (
     aggregator_to_collaborator,

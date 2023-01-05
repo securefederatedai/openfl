@@ -2,7 +2,9 @@
 # SPDX-License-Identifier: Apache-2.0
 
 """ openfl.experimental.runtime module Runtime class."""
-from openfl.experimental.interface import Aggregator, Collaborator, FLSpec
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from openfl.experimental.interface import Aggregator, Collaborator, FLSpec
 from typing import Type
 from typing import List
 from typing import Callable
