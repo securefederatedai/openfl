@@ -3,6 +3,7 @@
 
 """ openfl.experimental.runtime package LocalRuntime class."""
 
+from __future__ import annotations
 from copy import deepcopy
 import ray
 import gc

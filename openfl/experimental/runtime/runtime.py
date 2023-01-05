@@ -2,10 +2,10 @@
 # SPDX-License-Identifier: Apache-2.0
 
 """ openfl.experimental.runtime module Runtime class."""
+from __future__ import annotations
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from openfl.experimental.interface import Aggregator, Collaborator, FLSpec
-from typing import Type
 from typing import List
 from typing import Callable
 
@@ -24,7 +24,7 @@ class Runtime:
         raise NotImplementedError
 
     @aggregator.setter
-    def aggregator(self, aggregator: Type[Aggregator]):
+    def aggregator(self, aggregator: Aggregator):
         """Set Runtime aggregator"""
         raise NotImplementedError
 
@@ -36,16 +36,16 @@ class Runtime:
         raise NotImplementedError
 
     @collaborators.setter
-    def collaborators(self, collaborators: List[Type[Collaborator]]):
+    def collaborators(self, collaborators: List[Collaborator]):
         """Set Runtime collaborators"""
         raise NotImplementedError
 
     def execute_task(
         self,
-        flspec_obj: Type[FLSpec],
+        flspec_obj: FLSpec,
         f: Callable,
         parent_func: Callable,
-        instance_snapshot: List[Type[FLSpec]] = [],
+        instance_snapshot: List[FLSpec] = [],
         **kwargs
     ):
         """
