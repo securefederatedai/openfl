@@ -81,6 +81,16 @@ message ExperimentListItem {
 
 // Should we merge NodeInfo, ShardInfo and EnvoyInfo messages?
 // Our design is: one Virtual Dataset Shard = one Envoy 
+message CudaDeviceInfo {
+    uint64 index = 1;
+    uint64 memory_total = 2;
+    uint64 memory_utilized = 3;
+    string device_utilization = 4;
+    string cuda_driver_version = 5;
+    string cuda_version = 6;
+    string name = 7;
+  }
+
 message NodeInfo {
     string name = 1;
     repeated CudaDeviceInfo cuda_devices = 2;

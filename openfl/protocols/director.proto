@@ -35,16 +35,6 @@ service Director {
   rpc GetEnvoysList(GetEnvoysListRequest) returns (GetEnvoysListResponse) {}
 }
 
-message CudaDeviceInfo {
-  uint64 index = 1;
-  uint64 memory_total = 2;
-  uint64 memory_utilized = 3;
-  string device_utilization = 4;
-  string cuda_driver_version = 5;
-  string cuda_version = 6;
-  string name = 7;
-}
-
 // Envoy Messages
 
 message UpdateShardInfoRequest {
