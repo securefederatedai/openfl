@@ -4,8 +4,6 @@
 name: FeTS Challenge TaskRunner
 
 on:
-  push:
-    branches: [ develop ]
   pull_request:
     branches: [ develop ]
 

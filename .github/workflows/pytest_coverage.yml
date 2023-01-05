@@ -4,8 +4,6 @@
 name: Pytest and code coverage 
 
 on:
-  push:
-    branches: [ develop ]
   pull_request:
     branches: [ develop ]
 
