@@ -1,9 +1,12 @@
-// Copyright (C) 2020-2021 Intel Corporation
+// Copyright (C) 2020-2022 Intel Corporation
 // Licensed subject to the terms of the separately executed evaluation license agreement between Intel Corporation and you.
 
 syntax = "proto3";
 
-// This is only needed to initializing the model weights on the aggregator
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/duration.proto";
+
+// This is only needed to initialize the model weights on the aggregator
 message ModelProto {
   repeated NamedTensor tensors = 1;
 }
@@ -65,3 +68,40 @@ message ExperimentDescription {
   repeated CollaboratorDescription collaborators = 7;
   repeated TaskDescription tasks = 8;
 }
+
+message ExperimentListItem {
+    string name = 1;
+    string status = 2;
+    uint32 collaborators_amount = 3;
+    uint32 tasks_amount = 4;
+    float progress = 5;
+    string owner = 6;
+    string experiment_id = 7;
+}
+
+// Should we merge NodeInfo, ShardInfo and EnvoyInfo messages?
+// Our design is: one Virtual Dataset Shard = one Envoy 
+message NodeInfo {
+    string name = 1;
+    repeated CudaDeviceInfo cuda_devices = 2;
+}
+
+message ShardInfo {
+    NodeInfo node_info = 1;
+    string shard_description = 2;
+    uint64 n_samples = 3;
+    // We just pass numpy shapes
+    // NAMING: repeated field names should be pluralized 
+    repeated string sample_shape = 4;
+    repeated string target_shape = 5;
+}
+
+message EnvoyInfo {
+    ShardInfo shard_info = 1;
+    bool is_online = 2;
+    bool is_experiment_running = 3;
+    google.protobuf.Timestamp last_updated = 4;
+    google.protobuf.Duration valid_duration = 5;
+    string experiment_name = 6;
+    string envoy_id = 7;
+  }

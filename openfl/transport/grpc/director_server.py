@@ -297,7 +297,7 @@ class DirectorGRPCServer(director_pb2_grpc.DirectorServicer):
 
             return resp
 
-    async def GetEnvoys(self, request, context):  # NOQA:N802
+    async def GetEnvoysList(self, request, context):  # NOQA:N802
         """Get a status information about envoys."""
         envoy_infos = self.director.get_envoys()
         envoy_statuses = []
@@ -313,7 +313,7 @@ class DirectorGRPCServer(director_pb2_grpc.DirectorServicer):
 
             envoy_statuses.append(envoy_info_message)
 
-        return director_pb2.GetEnvoysResponse(envoy_infos=envoy_statuses)
+        return director_pb2.GetEnvoysListResponse(envoy_infos=envoy_statuses)
 
     async def GetExperimentsList(self, request, context):  # NOQA:N802
         """Get list of experiments description."""

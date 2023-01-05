@@ -1,0 +1,97 @@
+// Copyright (C) 2020-2022 Intel Corporation
+// Licensed subject to the terms of the separately executed evaluation license agreement between Intel Corporation and you.
+
+syntax = "proto3";
+
+package openfl.director.admin;
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/duration.proto";
+import "openfl/protocols/base.proto";
+
+service DirectorAdmin {
+    // Experiment registry
+    rpc GetExperimentDescription(GetExperimentDescriptionRequest)
+        returns (GetExperimentDescriptionResponse) {}
+    rpc GetExperimentsList(GetExperimentsListRequest) returns (GetExperimentsListResponse) {}
+    rpc AbortExperiment(AbortExperimentRequest) returns (AbortExperimentResponse) {}
+    rpc ApproveExperiment(ApproveExperimentRequest) returns (ApproveExperimentResponse) {}
+    // Envoy registry
+    rpc GetEnvoysList(GetEnvoysListRequest) returns (GetEnvoysListResponse) {}
+    rpc RemoveEnvoy(RemoveEnvoyRequest) returns (RemoveEnvoyResponse) {}
+    // DistributedSystemSettings
+    // Should we make one huge message?
+    // An alternative would be dividing Director settings and Envoy settings.
+    // Another option is creating numerous distinct smaller messages
+    //      for different components of the system.
+    rpc GetCurrentSettings(GetCurrentSettingsRequest) returns (GetCurrentSettingsResponse) {}
+    rpc UpdateSettings(UpdateSettingsRequest) returns (UpdateSettingsResponse) {}
+    
+    // Questionable
+    // rpc GetSystemStatus(GetSystemStatusRequest) returns (GetSystemStatusResponse) {}
+    // rpc RemoveExperimentData(RemoveExperimentRequest) returns (RemoveExperimentResponse) {}
+}
+
+message GetExperimentDescriptionRequest {
+    string experiment_id = 1;
+  }
+  
+message GetExperimentDescriptionResponse {
+ExperimentDescription experiment = 1;
+}
+
+message GetExperimentsListRequest {}
+
+message GetExperimentsListResponse {
+  repeated ExperimentListItem experiments = 1;
+}
+
+message AbortExperimentRequest {
+    string experiment_id = 1;
+}
+
+message AbortExperimentResponse {
+    bool acknowledgement = 1;
+}
+
+message ApproveExperimentRequest {
+    string experiment_id = 1;
+}
+
+message ApproveExperimentResponse {
+    bool acknowledgement = 1;
+}
+
+message GetEnvoysListRequest {}
+
+message GetEnvoysListResponse {
+    repeated EnvoyInfo envoy_infos = 1;
+}
+
+message RemoveEnvoyRequest {
+    string envoy_id = 1;
+}
+
+message RemoveEnvoyResponse {
+    bool acknowledgement = 1;
+}
+
+message DirectorSettings {
+    google.protobuf.Duration envoy_health_check_period = 1;
+    bool install_python_requirements = 2;
+    google.protobuf.Duration some_timeout = 3;
+}
+
+message GetCurrentSettingsRequest {}
+
+message GetCurrentSettingsResponse {
+    DirectorSettings director_settings = 1;
+}
+
+message UpdateSettingsRequest {
+    DirectorSettings director_settings = 1;
+}
+
+message UpdateSettingsResponse {
+    bool acknowledgement = 1;
+}

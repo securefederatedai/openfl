@@ -291,7 +291,7 @@ class DirectorClient:
 
     def get_envoys(self, raw_result=False):
         """Get envoys info."""
-        envoys = self.stub.GetEnvoys(director_pb2.GetEnvoysRequest())
+        envoys = self.stub.GetEnvoysList(director_pb2.GetEnvoysListRequest())
         if raw_result:
             return envoys
         now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
