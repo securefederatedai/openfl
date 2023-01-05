@@ -1,7 +1,8 @@
 # Open Federated Learning (OpenFL) - An Open-Source Framework For Federated Learning
 
 [![PyPI - Python Version](https://img.shields.io/badge/python-3.6%20%7C%203.7%20%7C%203.8-blue)](https://pypi.org/project/openfl/)
-[![Continuous Integration](https://github.com/intel/openfl/actions/workflows/python-app.yml/badge.svg?branch=develop)](https://github.com/intel/openfl/actions/workflows/python-app.yml)
+[![Ubuntu CI status](https://github.com/intel/openfl/actions/workflows/ubuntu.yml/badge.svg)](https://github.com/intel/openfl/actions/workflows/ubuntu.yml)
+[![Windows CI status](https://github.com/intel/openfl/actions/workflows/windows.yml/badge.svg)](https://github.com/intel/openfl/actions/workflows/windows.yml)
 [![Documentation Status](https://readthedocs.org/projects/openfl/badge/?version=latest)](https://openfl.readthedocs.io/en/latest/?badge=latest)
 [![Downloads](https://pepy.tech/badge/openfl)](https://pepy.tech/project/openfl)
 [![DockerHub](https://img.shields.io/docker/pulls/intel/openfl.svg)](https://hub.docker.com/r/intel/openfl)
@@ -78,6 +79,10 @@ You can find more details in the following articles:
 | FedOpt | [Reddi et al., 2020](https://arxiv.org/abs/2003.00295) | ✅ | ✅ | ✅ | [docs](http://openfl.readthedocs.io/en/latest/supported_aggregation_algorithms.html#fedopt) |
 | FedCurv | [Shoham et al., 2019](https://arxiv.org/pdf/1910.07796.pdf) | ✅ | ❌ | ❌ | [docs](http://openfl.readthedocs.io/en/latest/supported_aggregation_algorithms.html#fedcurv) |
 
+## Build status
+| Operating system | Status |
+| ---- | ------ | 
+| ubuntu-latest | [![CLI](https://github.com/intel/openfl/actions/workflows/taskrunner.yml/badge.svg)](https://github.com/intel/openfl/actions/workflows/taskrunner.yml)
 ## Support
 Please join us for our bi-monthly community meetings starting December 1 & 2, 2022! <br>
 Meet with some of the Intel team members behind OpenFL. <br>
