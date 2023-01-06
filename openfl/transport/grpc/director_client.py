@@ -227,7 +227,7 @@ class DirectorClient:
                 if not chunk:
                     raise StopIteration
                 # TODO: add hash or/and size to check
-                experiment_info = base_pb2.ExperimentInfo(
+                experiment_info = director_pb2.ExperimentInfo(
                     name=name,
                     collaborator_names=col_names,
                     model_proto=model_proto
