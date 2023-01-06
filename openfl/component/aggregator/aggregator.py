@@ -306,18 +306,16 @@ class Aggregator:
                 t for t in tasks if not self._collaborator_task_completed(
                     collaborator_name, t, self.round_number)
             ]
-            for straggler in self.stragglers:
-                if collaborator_name == straggler:
-                    tasks = []
+            if collaborator_name in self.stragglers:
+                tasks = []
 
         else:
             tasks = [
                 t for t in tasks if not self._collaborator_task_completed(
                     collaborator_name, t.name, self.round_number)
             ]
-            for straggler in self.stragglers:
-                if collaborator_name == straggler:
-                    tasks = []
+            if collaborator_name in self.stragglers:
+                tasks = []
 
         # Do the check again because it's possible that all tasks have
         # been completed
