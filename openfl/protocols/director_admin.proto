@@ -36,13 +36,13 @@ message GetExperimentDescriptionRequest {
   }
   
 message GetExperimentDescriptionResponse {
-ExperimentDescription experiment = 1;
+    ExperimentDescription experiment = 1;
 }
 
 message GetExperimentsListRequest {}
 
 message GetExperimentsListResponse {
-  repeated ExperimentListItem experiments = 1;
+    repeated ExperimentListItem experiments = 1;
 }
 
 message AbortExperimentRequest {
