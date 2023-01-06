@@ -3,6 +3,7 @@
 
 """openfl.experimental.utilities.metaflow_utils module."""
 
+from __future__ import annotations
 from datetime import datetime
 from metaflow.metaflow_environment import MetaflowEnvironment
 from metaflow.plugins import LocalMetadataProvider
@@ -25,6 +26,11 @@ from metaflow.task import MetaDatum
 import fcntl
 import hashlib
 from dill.source import getsource
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from openfl.experimental.interface import FLSpec
+from io import StringIO
+from typing import Generator, Any, Type
 
 from metaflow.plugins.cards.card_modules.basic import (
     DefaultCard,
@@ -356,7 +362,18 @@ class FlowDataStore(FlowDataStore):
 
 
 class MetaflowInterface:
-    def __init__(self, flow, backend="ray"):
+    def __init__(self, flow: Type[FLSpec], backend: str = "ray"):
+        """
+        Wrapper class for the metaflow tooling modified to work with the
+        workflow interface. Keeps track of the current flow run, tasks,
+        and data artifacts.
+
+        Args:
+            flow:    the current flow that will be serialized / tracked using
+                     metaflow tooling
+            backend: Which backend is selected by the runtime. Permitted selections
+                     are 'ray' and 'single_process'
+        """
         self.backend = backend
         self.flow_name = flow.__name__
         self._graph = FlowGraph(flow)
@@ -366,7 +383,17 @@ class MetaflowInterface:
         else:
             self.counter = 0
 
-    def create_run(self):
+    def create_run(self) -> int:
+        """
+        Creates a run for the current flow using metaflow
+        internal functions
+
+        Args:
+            None
+
+        Returns:
+            run_id [int]
+        """
         flow = Flow(self.flow_name)
         env = MetaflowEnvironment(self.flow_name)
         env.get_environment_info()
@@ -381,7 +408,18 @@ class MetaflowInterface:
         )
         return self.run_id
 
-    def create_task(self, task_name):
+    def create_task(self, task_name: str) -> int:
+        """
+        Creates a task for the current run. The generated
+        task_id is unique for each task and can be recalled
+        later with the metaflow client
+
+        Args:
+            task_name: The name of the new task
+
+        Returns:
+            task_id [int]
+        """
         # May need a lock here
         if self.backend == "ray":
             with SystemMutex("critical_section"):
@@ -397,9 +435,27 @@ class MetaflowInterface:
             return self.counter
 
     def save_artifacts(
-        self, data_pairs, task_name, task_id, buffer_out, buffer_err
-    ):
-        """Use metaflow task datastore to save federated flow attributes"""
+        self,
+        data_pairs: Generator[str, Any],
+        task_name: str,
+        task_id: int,
+        buffer_out: Type[StringIO],
+        buffer_err: Type[StringIO]
+    ) -> None:
+        """
+        Use metaflow task datastore to save flow attributes, stdout, and stderr
+        for a specific task (identified by the task_name + task_id)
+
+        Args:
+            data_pairs: Generator that returns the name of the attribute,
+                        and it's corresponding object
+            task_name:  The task that an artifact is being saved for
+            task_id:    A unique id (within the flow) that will be used to recover
+                        these data artifacts by the metaflow client
+            buffer_out: StringIO buffer containing stdout
+            buffer_err: StringIO buffer containing stderr
+
+        """
         task_datastore = self.flow_datastore.get_task_datastore(
             self.run_id, task_name, str(task_id), attempt=0, mode="w"
         )
@@ -453,11 +509,15 @@ class MetaflowInterface:
         return task_datastore.load_artifacts(artifact_names)
 
     def emit_log(
-        self, msgbuffer_out, msgbuffer_err, task_datastore, system_msg=False
-    ):
+            self,
+            msgbuffer_out: Type[StringIO],
+            msgbuffer_err: Type[StringIO],
+            task_datastore: Type[TaskDataStore],
+            system_msg: bool = False
+    ) -> None:
         """
         This function writes the stdout and stderr to Metaflow TaskDatastore
-        Args
+        Args:
             msgbuffer_out: StringIO buffer containing stdout
             msgbuffer_err: StringIO buffer containing stderr
             task_datastore: Metaflow TaskDataStore instance
