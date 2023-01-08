@@ -9,26 +9,48 @@ import "google/protobuf/duration.proto";
 import "openfl/protocols/base.proto";
 
 service DirectorAdmin {
+    // Director control 
+    rpc StopDirectorService (StopDirectorServiceRequest) returns (StopDirectorServiceResponse) {}
+    rpc PauseExperimentsExecution (PauseExperimentsExecutionRequest) returns (PauseExperimentsExecutionResponse) {}
+    rpc ResumeExperimentsExecution (ResumeExperimentsExecutionRequest) returns (PauseExperimentsExecutionResponse) {}
     // Experiment registry
-    rpc GetExperimentDescription(GetExperimentDescriptionRequest)
+    rpc GetExperimentDescription (GetExperimentDescriptionRequest)
         returns (GetExperimentDescriptionResponse) {}
-    rpc GetExperimentsList(GetExperimentsListRequest) returns (GetExperimentsListResponse) {}
-    rpc AbortExperiment(AbortExperimentRequest) returns (AbortExperimentResponse) {}
-    rpc ApproveExperiment(ApproveExperimentRequest) returns (ApproveExperimentResponse) {}
+    rpc GetExperimentsList (GetExperimentsListRequest) returns (GetExperimentsListResponse) {}
+    rpc AbortExperiment (AbortExperimentRequest) returns (AbortExperimentResponse) {}
+    rpc ApproveExperiment (ApproveExperimentRequest) returns (ApproveExperimentResponse) {}
     // Envoy registry
-    rpc GetEnvoysList(GetEnvoysListRequest) returns (GetEnvoysListResponse) {}
-    rpc RemoveEnvoy(RemoveEnvoyRequest) returns (RemoveEnvoyResponse) {}
+    rpc GetEnvoysList (GetEnvoysListRequest) returns (GetEnvoysListResponse) {}
+    rpc RemoveEnvoy (RemoveEnvoyRequest) returns (RemoveEnvoyResponse) {}
     // DistributedSystemSettings
     // Should we make one huge message?
     // An alternative would be dividing Director settings and Envoy settings.
     // Another option is creating numerous distinct smaller messages
     //      for different components of the system.
-    rpc GetCurrentSettings(GetCurrentSettingsRequest) returns (GetCurrentSettingsResponse) {}
-    rpc UpdateSettings(UpdateSettingsRequest) returns (UpdateSettingsResponse) {}
+    rpc GetCurrentSettings (GetCurrentSettingsRequest) returns (GetCurrentSettingsResponse) {}
+    rpc UpdateSettings (UpdateSettingsRequest) returns (UpdateSettingsResponse) {}
     
     // Questionable
     // rpc GetSystemStatus(GetSystemStatusRequest) returns (GetSystemStatusResponse) {}
     // rpc RemoveExperimentData(RemoveExperimentRequest) returns (RemoveExperimentResponse) {}
+}
+
+message StopDirectorServiceRequest {}
+
+message StopDirectorServiceResponse {
+    bool acknowledgement = 1;
+}
+
+message PauseExperimentsExecutionRequest {}
+
+message PauseExperimentsExecutionResponse {
+    bool acknowledgement = 1;
+}
+
+message ResumeExperimentsExecutionRequest {}
+
+message ResumeExperimentsExecutionResponse {
+    bool acknowledgement = 1;
 }
 
 message GetExperimentDescriptionRequest {
