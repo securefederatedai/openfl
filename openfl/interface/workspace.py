@@ -127,11 +127,11 @@ def export_(pip_install_options: Tuple[str]):
     from shutil import copytree
     from shutil import ignore_patterns
     from shutil import make_archive
-    from shutil import rmtree
     from tempfile import mkdtemp
 
     from plan import freeze_plan
     from openfl.interface.cli_helper import WORKSPACE
+    from openfl.utilities.utils import rmtree
 
     plan_file = Path('plan/plan.yaml').absolute()
     try:

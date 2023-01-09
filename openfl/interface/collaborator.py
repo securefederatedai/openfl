@@ -160,12 +160,13 @@ def generate_cert_request(collaborator_name, data_path, silent, skip_package):
         from shutil import copytree
         from shutil import ignore_patterns
         from shutil import make_archive
-        from shutil import rmtree
         from tempfile import mkdtemp
         from os.path import basename
         from os.path import join
         from os import remove
         from glob import glob
+
+        from openfl.utilities.utils import rmtree
 
         archive_type = 'zip'
         archive_name = f'col_{common_name}_to_agg_cert_request'
@@ -271,7 +272,6 @@ def certify(collaborator_name, silent, request_pkg=None, import_=False):
     from pathlib import Path
     from shutil import copy
     from shutil import make_archive
-    from shutil import rmtree
     from shutil import unpack_archive
     from glob import glob
     from os.path import basename
@@ -285,6 +285,7 @@ def certify(collaborator_name, silent, request_pkg=None, import_=False):
     from openfl.cryptography.io import read_key
     from openfl.cryptography.io import write_crt
     from openfl.interface.cli_helper import CERT_DIR
+    from openfl.utilities.utils import rmtree
 
     common_name = f'{collaborator_name}'.lower()
 
