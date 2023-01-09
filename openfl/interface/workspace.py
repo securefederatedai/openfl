@@ -443,6 +443,11 @@ def dockerize_(context, base_image, save):
              'Must be a power-of-2.\n'
              'Default is 16G.'
         )
+@option('-t', '--tag', required=False,
+        type=str, multiple=False, default='',
+        help='Tag of the built image.\n'
+             'By default, the workspace name is used.'
+        )
 @option('-o', '--pip-install-options', required=False,
         type=str, multiple=True, default=tuple,
         help='Options for remote pip install. '
@@ -453,8 +458,8 @@ def dockerize_(context, base_image, save):
         help='Dump the Docker image to an archive')
 @option('--rebuild', help='Build images with `--no-cache`', is_flag=True)
 @pass_context
-def graminize_(context, signing_key: Path, enclave_size: str, pip_install_options: Tuple[str],
-               save: bool, rebuild: bool) -> None:
+def graminize_(context, signing_key: Path, enclave_size: str, tag: str,
+               pip_install_options: Tuple[str], save: bool, rebuild: bool) -> None:
     """
     Build gramine app inside a docker image.
 
@@ -501,6 +506,10 @@ def graminize_(context, signing_key: Path, enclave_size: str, pip_install_option
 
     workspace_path = Path.cwd()
     workspace_name = workspace_path.name
+
+    if not tag:
+        tag = workspace_name
+
     context.invoke(export_, pip_install_options=pip_install_options)
     workspace_archive = workspace_path / f'{workspace_name}.zip'
 
@@ -509,7 +518,7 @@ def graminize_(context, signing_key: Path, enclave_size: str, pip_install_option
     echo('\n 🐋 Building graminized workspace image...')
     signing_key = f'--secret id=signer-key,src={signing_key} ' if sgx_build else ''
     graminized_build_command = (
-        f'docker build -t {workspace_name} {rebuild_option} '
+        f'docker build -t {tag} {rebuild_option} '
         '--build-arg BASE_IMAGE=gramine_openfl '
         f'--build-arg WORKSPACE_ARCHIVE={workspace_archive.relative_to(workspace_path)} '
         f'--build-arg SGX_ENCLAVE_SIZE={enclave_size} '
@@ -521,9 +530,9 @@ def graminize_(context, signing_key: Path, enclave_size: str, pip_install_option
 
     if save:
         echo('\n 💾 Saving the graminized workspace image...')
-        save_image_command = f'docker save {workspace_name} | gzip > {workspace_name}.tar.gz'
+        save_image_command = f'docker save {tag} | gzip > {tag}.tar.gz'
         open_pipe(save_image_command)
-        echo(f'\n ✔️ The image saved to file: {workspace_name}.tar.gz')
+        echo(f'\n ✔️ The image saved to file: {tag}.tar.gz')
 
 
 def apply_template_plan(prefix, template):
