@@ -9,23 +9,6 @@ permissions:
   contents: read
 
 jobs:
-  lint: # from lint.yml
-    runs-on: windows-latest
-    steps:
-    - uses: actions/checkout@v3
-    - name: Set up Python 3.8
-      uses: actions/setup-python@v3
-      with:
-        python-version: "3.8"
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements-linters.txt 
-        pip install .
-    - name: Lint with flake8
-      run: |
-        flake8 --show-source
-
   pytest-coverage: # from pytest_coverage.yml
     needs: lint
     runs-on: windows-latest
