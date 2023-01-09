@@ -7,12 +7,9 @@ on:
 permissions:
   contents: read
 
-env:
-  OS: windows-latest
-
 jobs:
   lint: # from lint.yml
-    runs-on: $OS
+    runs-on: windows-latest
     steps:
     - uses: actions/checkout@v3
     - name: Set up Python 3.8
@@ -30,7 +27,7 @@ jobs:
 
   pytest-coverage: # from pytest_coverage.yml
     needs: lint
-    runs-on: $OS
+    runs-on: windows-latest
     steps:
     - uses: actions/checkout@v3
     - name: Set up Python 3.8
@@ -50,7 +47,7 @@ jobs:
     
   dockerization: # from dockerization.yml
     needs: [lint, pytest-coverage]
-    runs-on: $OS
+    runs-on: windows-latest
     steps:
       - uses: actions/checkout@v3
       - name: Set up Python 3.8
@@ -67,7 +64,7 @@ jobs:
   
   interactive-kvasir: # from interactive-kvasir.yml
     needs: [lint, pytest-coverage, dockerization]
-    runs-on: $OS
+    runs-on: windows-latest
     steps:
     - uses: actions/checkout@v3
     - name: Set up Python 3.8
@@ -87,7 +84,7 @@ jobs:
   
   cli:
     needs: [lint, pytest-coverage, dockerization, interactive-kvasir]
-    runs-on: $OS
+    runs-on: windows-latest
     steps:
       - uses: actions/checkout@v3
       - name: Set up Python 3.8
