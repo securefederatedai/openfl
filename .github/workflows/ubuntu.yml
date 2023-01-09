@@ -1,8 +1,9 @@
 name: Ubuntu (latest)
 
 on:
-  schedule:
-    - cron: '0 0 * * *'
+  push:
+    branches:
+      - ci_badges
 
 permissions:
   contents: read
