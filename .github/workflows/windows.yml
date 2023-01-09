@@ -10,7 +10,6 @@ permissions:
 
 jobs:
   pytest-coverage: # from pytest_coverage.yml
-    needs: lint
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@v3
@@ -30,7 +29,7 @@ jobs:
         coverage report
     
   dockerization: # from dockerization.yml
-    needs: [lint, pytest-coverage]
+    needs: [pytest-coverage]
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v3
@@ -47,7 +46,7 @@ jobs:
           python -m tests.github.dockerization_test
   
   interactive-kvasir: # from interactive-kvasir.yml
-    needs: [lint, pytest-coverage, dockerization]
+    needs: [pytest-coverage, dockerization]
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@v3
@@ -67,7 +66,7 @@ jobs:
         python -m tests.github.interactive_api_director.experiments.pytorch_kvasir_unet.run
   
   cli:
-    needs: [lint, pytest-coverage, dockerization, interactive-kvasir]
+    needs: [pytest-coverage, dockerization, interactive-kvasir]
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v3
