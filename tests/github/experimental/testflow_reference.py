@@ -285,6 +285,10 @@ def validate_collab_references(matched_ref_dict):
 
 
 def validate_agg_attr_ref(agg_attrs, agg_obj):
+    """
+    Verifies aggregator attributes are retained after
+    collaborator execution
+    """
     attr_flag = False
     for attr in agg_attrs:
         if TestFlowReference.agg_attr_dict.get(attr) == id(

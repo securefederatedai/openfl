@@ -261,7 +261,7 @@ def validate_references(matched_ref_dict):
 
 def create_collab_dict(collab):
     """
-    saving the collaborator and its attributes to compare with other collaborator refences.
+    saving the collaborator and its attributes to compare with other collaborator references.
     return : dict ({
                     'Portland': {'collab_attr_dict_one': 140512653871680},
                     'Seattle': {'collab_attr_dict_one': 140512653871936}
@@ -280,6 +280,11 @@ def create_collab_dict(collab):
 
 
 def find_match_ref_at_step(collab_attr_list, all_collborators):
+    """
+    Determines whether the current attributes are shared with
+    other participant attributes. If attributes are shared,
+    the test fails
+    """
     collab_names = all_collborators.keys()
     matched_ref_dict = {}
     for collborator_name in collab_names:
