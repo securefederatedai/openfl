@@ -35,8 +35,11 @@ log_interval = 10
 
 random_seed = 5495300300540669060
 
+g_device = torch.Generator(device='cuda')
+# Uncomment the line below to use g_cpu if not using cuda
+# g_device = torch.Generator()
 # NOTE: remove below to stop repeatable runs
-torch.manual_seed(random_seed)
+g_device.manual_seed(random_seed)
 print(f"\n\nWe are using seed: {random_seed}")
 
 mnist_train = torchvision.datasets.MNIST(
