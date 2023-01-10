@@ -131,6 +131,7 @@ def export_(pip_install_options: Tuple[str]):
 
     from plan import freeze_plan
     from openfl.interface.cli_helper import WORKSPACE
+    from openfl.utilities.utils import rmtree
 
     plan_file = Path('plan/plan.yaml').absolute()
     try:
@@ -173,7 +174,7 @@ def export_(pip_install_options: Tuple[str]):
     # Create Zip archive of directory
     echo('\n 🗜️ Preparing workspace distribution zip file')
     make_archive(archive_name, archive_type, tmp_dir)
-
+    rmtree(tmp_dir)
     echo(f'\n ✔️ Workspace exported to archive: {archive_file_name}')
 
 
