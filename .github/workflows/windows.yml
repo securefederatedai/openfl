@@ -1,9 +1,8 @@
 name: Windows (latest)
 
 on:
-  push:
-    branches:
-      - ci_badges
+  schedule:
+    - cron: '0 0 * * *'
 
 permissions:
   contents: read
