@@ -93,9 +93,7 @@ class GlobalModelTools(object):
             sample_rate = dp_params["sample_rate"]
         self.global_data_loader = torch.utils.data.DataLoader(
             TensorDataset(
-                torch.Tensor(list(range(len(self.collaborator_names)))).to(
-                    torch.int
-                )
+                torch.Tensor(list(range(len(self.collaborator_names)))).to(torch.int)
             ),
             batch_size=int(sample_rate * float(len(collaborator_names))),
             shuffle=True,
@@ -244,9 +242,7 @@ def optimizer_to_device(optimizer, device):
                         state[k] = v.to(device)
     else:
         raise (
-            ValueError(
-                "Current optimizer state does not have dict keys: please verify"
-            )
+            ValueError("Current optimizer state does not have dict keys: please verify")
         )
 
 
@@ -527,7 +523,8 @@ class FederatedFlow(FLSpec):
         if self.dp_params is not None:
             print(15 * "#")
             epsilon = self.global_model_tools.privacy_engine.get_epsilon(
-                delta=self.dp_params['delta'])
+                delta=self.dp_params["delta"]
+            )
             print(
                 "\nCurrent epsilon is: "
                 + f"{epsilon} for delta: {self.dp_params['delta']}"
@@ -633,10 +630,10 @@ if __name__ == "__main__":
     for idx, collab in enumerate(collaborators):
         local_train = deepcopy(mnist_train)
         local_test = deepcopy(mnist_test)
-        local_train.data = mnist_train.data[idx:: len(collaborators)]
-        local_train.targets = mnist_train.targets[idx:: len(collaborators)]
-        local_test.data = mnist_test.data[idx:: len(collaborators)]
-        local_test.targets = mnist_test.targets[idx:: len(collaborators)]
+        local_train.data = mnist_train.data[idx::len(collaborators)]
+        local_train.targets = mnist_train.targets[idx::len(collaborators)]
+        local_test.data = mnist_test.data[idx::len(collaborators)]
+        local_test.targets = mnist_test.targets[idx::len(collaborators)]
         collab.private_attributes = {
             "train_loader": torch.utils.data.DataLoader(
                 local_train, batch_size=batch_size_train, shuffle=True
