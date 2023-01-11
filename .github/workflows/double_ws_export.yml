@@ -4,8 +4,6 @@
 name: Double workspace export
 
 on:
-  push:
-    branches: [ develop ]
   pull_request:
     branches: [ develop ]
 

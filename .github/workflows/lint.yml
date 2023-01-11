@@ -4,8 +4,6 @@
 name: Lint with Flake8
 
 on:
-  push:
-    branches: [ develop ]
   pull_request:
     branches: [ develop ]
 
