@@ -86,6 +86,11 @@ class Net(nn.Module):
 def default_optimizer(model, optimizer_type=None, optimizer_like=None):
     """
     Return a new optimizer based on the optimizer_type or the optimizer template
+
+    Args:
+        model:   NN model architected from nn.module class
+        optimizer_type: "SGD" or "Adam"
+        optimizer_like: "torch.optim.SGD" or "torch.optim.Adam" optimizer
     """
     if optimizer_type == "SGD" or isinstance(optimizer_like, optim.SGD):
         return optim.SGD(model.parameters(), lr=learning_rate, momentum=momentum)
@@ -94,6 +99,14 @@ def default_optimizer(model, optimizer_type=None, optimizer_like=None):
 
 
 def FedAvg(models):  # NOQA: N802
+    """
+    Return a Federated average model based on Fedavg algorithm: H. B. Mcmahan,
+    E. Moore, D. Ramage, S. Hampson, and B. A. Y.Arcas,
+    “Communication-efficient learning of deep networks from decentralized data,” 2017.
+
+    Args:
+        models: Python list of locally trained models by each collaborator
+    """
     new_model = models[0]
     if len(models) > 1:
         state_dicts = [model.state_dict() for model in models]
@@ -123,8 +136,10 @@ def inference(network, test_loader, device):
     test_loss /= len(test_loader)
     accuracy = float(correct / len(test_loader.dataset))
     print(
-        (f"Test set: Avg. loss: {test_loss}, "
-            f"Accuracy: {correct}/{len(test_loader.dataset)} ({100.0 * accuracy}%)")
+        (
+            f"Test set: Avg. loss: {test_loss}, "
+            f"Accuracy: {correct}/{len(test_loader.dataset)} ({100.0 * accuracy}%)"
+        )
     )
     network.to("cpu")
     return accuracy
@@ -132,6 +147,14 @@ def inference(network, test_loader, device):
 
 def optimizer_to_device(optimizer, device):
 
+    """
+    Sending the "torch.optim.Optimizer" object into the specified device
+    for model training and inference
+
+    Args:
+        optimizer: torch.optim.Optimizer from "default_optimizer" function
+        device: CUDA device id or "cpu"
+    """
     if optimizer.state_dict()["state"] != {}:
         if isinstance(optimizer, optim.SGD):
             for param in optimizer.param_groups[0]["params"]:
@@ -150,6 +173,22 @@ def optimizer_to_device(optimizer, device):
 def load_previous_round_model_and_optimizer_and_perform_testing(
     model, global_model, optimizer, collaborator_name, round_num, device
 ):
+    """
+    Load pickle file to retrieve the model and optimizer state dictionary
+    from the previous round for each collaborator
+    and perform several validation routines with current
+    round state dictionaries to test the flow loop.
+    Note: this functionality can be enabled through the command line argument
+    by setting "--flow_internal_loop_test=True".
+
+    Args:
+        model: local collaborator model at the current round
+        global_model: Federated averaged model at the aggregator
+        optimizer: local collaborator optimizer at the current round
+        collaborator_name: name of the collaborator (Type:string)
+        round_num: current round (Type:int)
+        device: CUDA device id or "cpu"
+    """
     print(f"Loading model and optimizer state dict for round {round_num-1}")
     model_prevround = Net()  # instanciate a new model
     model_prevround = model_prevround.to(device)
@@ -178,8 +217,10 @@ def load_previous_round_model_and_optimizer_and_perform_testing(
                     ):
                         raise (
                             ValueError(
-                                ("local and global model differ: "
-                                    f"{collaborator_name} at round {round_num-1}.")
+                                (
+                                    "local and global model differ: "
+                                    f"{collaborator_name} at round {round_num-1}."
+                                )
                             )
                         )
 
@@ -204,8 +245,10 @@ def load_previous_round_model_and_optimizer_and_perform_testing(
                                 ):
                                     raise (
                                         ValueError(
-                                            ("Momentum buffer data differ: "
-                                                f"{collaborator_name} at round {round_num-1}")
+                                            (
+                                                "Momentum buffer data differ: "
+                                                f"{collaborator_name} at round {round_num-1}"
+                                            )
                                         )
                                     )
                     else:
@@ -223,9 +266,11 @@ def load_previous_round_model_and_optimizer_and_perform_testing(
                         ):
                             raise (
                                 ValueError(
-                                    ("Model and optimizer do not point "
+                                    (
+                                        "Model and optimizer do not point "
                                         "to the same params for collaborator: "
-                                        f"{collaborator_name} at round {round_num-1}.")
+                                        f"{collaborator_name} at round {round_num-1}."
+                                    )
                                 )
                             )
 
@@ -236,6 +281,23 @@ def load_previous_round_model_and_optimizer_and_perform_testing(
 def save_current_round_model_and_optimizer_for_next_round_testing(
     model, optimizer, collaborator_name, round_num
 ):
+    """
+    Save the model and optimizer state dictionary
+    of a collaboartor ("collaborator_name")
+    in a given round ("round_num") into a pickle file
+    for later retieving and verifying its correctness.
+    This provide the user the ability to verify the fields
+    in the model and optimizer state dictionary and
+    may provide confidence on the results of privacy auditing.
+    Note: this functionality can be enabled through the command line
+    argument by setting "--flow_internal_loop_test=True".
+
+    Args:
+        model: local collaborator model at the current round
+        optimizer: local collaborator optimizer at the current round
+        collaborator_name: name of the collaborator (Type:string)
+        round_num: current round (Type:int)
+    """
     model_config = {
         "model_state_dict": model.state_dict(),
         "optim_state_dict": optimizer.state_dict(),
@@ -287,8 +349,10 @@ class FederatedFlow(FLSpec):
     @collaborator(num_gpus=1)  # Assuming GPU(s) is available in the machine
     def aggregated_model_validation(self):
         print(
-            ("Performing aggregated model validation for collaborator: "
-                f"{self.input} in round {self.round_num}")
+            (
+                "Performing aggregated model validation for collaborator: "
+                f"{self.input} in round {self.round_num}"
+            )
         )
         self.agg_validation_score = inference(self.model, self.test_loader, self.device)
         print(f"{self.input} value of {self.agg_validation_score}")
@@ -357,8 +421,10 @@ class FederatedFlow(FLSpec):
     @collaborator(num_gpus=1)  # Assuming GPU(s) is available in the machine
     def local_model_validation(self):
         print(
-            ("Performing local model validation for collaborator: "
-                f"{self.input} in round {self.round_num}")
+            (
+                "Performing local model validation for collaborator: "
+                f"{self.input} in round {self.round_num}"
+            )
         )
         print(self.device)
         start_time = time.time()
@@ -373,8 +439,10 @@ class FederatedFlow(FLSpec):
         )
 
         print(
-            ("Doing local model validation for collaborator: "
-                f"{self.input}: {self.local_validation_score}")
+            (
+                "Doing local model validation for collaborator: "
+                f"{self.input}: {self.local_validation_score}"
+            )
         )
         print(f"local validation time cost {(time.time() - start_time)}")
 
@@ -392,8 +460,10 @@ class FederatedFlow(FLSpec):
     @collaborator(num_gpus=1)  # Assuming GPU(s) is available in the machine
     def audit(self):
         print(
-            ("Performing local and global model auditing for collaborator: "
-                f"{self.input} in round {self.round_num}")
+            (
+                "Performing local and global model auditing for collaborator: "
+                f"{self.input} in round {self.round_num}"
+            )
         )
         begin_time = time.time()
 
@@ -406,7 +476,8 @@ class FederatedFlow(FLSpec):
         start_time = time.time()
         # batch_size for the PytorchModelTensor indicates batch size for computing the signals.
         # for computing loss and logits, it can be large, e.g., 1000.
-        # for computing the signal_norm, it should be around 25. Otherwise, we will get OOM.
+        # for computing the signal_norm, it should be around 25.
+        # Otherwise, one may get OOM depending on the GPU memory.
 
         target_model = PytorchModelTensor(
             copy.deepcopy(self.model), nn.CrossEntropyLoss(), self.device
@@ -417,9 +488,7 @@ class FederatedFlow(FLSpec):
         target_model.model_obj.to("cpu")
         self.local_pm_info.update_history("round", self.round_num)
 
-        print(
-            f"population attack for the local model uses {time.time() - start_time}"
-        )
+        print(f"population attack for the local model uses {time.time() - start_time}")
 
         start_time = time.time()
         target_model = PytorchModelTensor(
@@ -430,9 +499,7 @@ class FederatedFlow(FLSpec):
         )
         self.global_pm_info.update_history("round", self.round_num)
         target_model.model_obj.to("cpu")
-        print(
-            f"population attack for the global model uses {time.time() - start_time}"
-        )
+        print(f"population attack for the global model uses {time.time() - start_time}")
 
         start_time = time.time()
 
@@ -490,8 +557,10 @@ class FederatedFlow(FLSpec):
         if self.round_num != self.total_rounds:
             if self.aggregated_model_accuracy > self.top_model_accuracy:
                 print(
-                    ("Accuracy improved to "
-                        f"{self.aggregated_model_accuracy} for round {self.round_num}")
+                    (
+                        "Accuracy improved to "
+                        f"{self.aggregated_model_accuracy} for round {self.round_num}"
+                    )
                 )
                 self.top_model_accuracy = self.aggregated_model_accuracy
             self.round_num += 1
@@ -605,9 +674,7 @@ if __name__ == "__main__":
             "cuda:0"
         )  # This will enable Ray library to reserve available GPU(s) for the task
     else:
-        device = torch.device(
-            "cpu"
-        )
+        device = torch.device("cpu")
 
     transform = transforms.Compose([transforms.ToTensor()])
 
@@ -642,10 +709,12 @@ if __name__ == "__main__":
     population_dataset.targets = Y[-audit_dataset_size:]
 
     print(
-        (f"Dataset info (total {N_total_samples}): "
+        (
+            f"Dataset info (total {N_total_samples}): "
             f"train - {len(train_dataset)}, "
             f"test - {len(test_dataset)}, "
-            f"audit - {len(population_dataset)}")
+            f"audit - {len(population_dataset)}"
+        )
     )
 
     # partition the dataset for clients
@@ -712,7 +781,7 @@ if __name__ == "__main__":
     # and exclusive GPUs assigned to tasks, set LocalRuntime with backend='ray':
     local_runtime = LocalRuntime(aggregator=aggregator, collaborators=collaborators)
 
-    print(f'Local runtime collaborators = {local_runtime.collaborators}')
+    print(f"Local runtime collaborators = {local_runtime.collaborators}")
 
     # change to the internal flow loop
     model = Net()

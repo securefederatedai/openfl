@@ -47,7 +47,7 @@ g_device.manual_seed(random_seed)
 print(f"\n\nWe are using seed: {random_seed}")
 # ----------------------------------
 
-# Loading torchvision datasets
+# Loading torchvision MNIST datasets
 mnist_train = torchvision.datasets.MNIST(
     "files/",
     train=True,
@@ -93,16 +93,35 @@ class Net(nn.Module):
 
 
 def default_optimizer(model):
-    # indicate the default optimizer for training the target model (we have
-    # tested with SGD w/ momentum)
+
+    """
+    Return a new optimizer: we have only tested torch.optim.SGD w/ momentum
+    however, we encouraging users to test other optimizers (i.e. torch.optim.Adam)
+    and provide us feedback regarding your observations.
+
+    Args:
+        model:   NN model architected from nn.module class
+    """
     return optim.SGD(model.parameters(), lr=learning_rate, momentum=momentum)
 
 
 def FedAvg(models, previous_global_model=None, dp_params=None):  # NOQA: N802
+
     """
+    Return a Federated average model based on Fedavg algorithm: H. B. Mcmahan,
+    E. Moore, D. Ramage, S. Hampson, and B. A. Y.Arcas,
+    “Communication-efficient learning of deep networks
+    from decentralized data,” 2017.
     This tutorial utilizes non-weighted averaging of collaborator
     model updates regardless of whether DP config is used.
     Weighted FedAvg is currently not supported.
+
+    Args:
+        models: Python list of locally trained models by each collaborator
+        at the current round
+        previous_global_model: Federated averaged model from the previous round
+        dp_params: Python dictionary for differential privacy
+        specific hyperparameters as read from "test_config.yml"
     """
     if dp_params is not None and previous_global_model is not None:
         # Validate that in fact the local models clipped their updates
@@ -121,10 +140,7 @@ def FedAvg(models, previous_global_model=None, dp_params=None):  # NOQA: N802
             for key, tensor in state.items():
                 per_layer_norms.append(torch.norm(tensor))
 
-            if (
-                torch.norm(torch.Tensor(per_layer_norms))
-                > dp_params["clip_norm"]
-            ):
+            if torch.norm(torch.Tensor(per_layer_norms)) > dp_params["clip_norm"]:
                 raise ValueError(
                     f"The model with index {idx} had update whose "
                     + "L2-norm was greater than clip norm."
@@ -165,6 +181,15 @@ def inference(network, test_loader, device):
 
 
 def optimizer_to_device(optimizer, device):
+
+    """
+    Sending the "torch.optim.Optimizer" object into the specified device
+    for model training and inference
+
+    Args:
+        optimizer: torch.optim.Optimizer from "default_optimizer" function
+        device: CUDA device id or "cpu"
+    """
     if optimizer.state_dict != {}:
         if isinstance(optimizer, optim.SGD):
             for param in optimizer.param_groups[0]["params"]:
@@ -178,9 +203,7 @@ def optimizer_to_device(optimizer, device):
                         state[k] = v.to(device)
     else:
         raise (
-            ValueError(
-                "Current optimizer state does not have dict keys: please verify"
-            )
+            ValueError("Current optimizer state does not have dict keys: please verify")
         )
 
 
@@ -191,6 +214,17 @@ def clip_testing_on_optimizer_parameters(
     round_num,
     device,
 ):
+    """
+    Test to check that optimizer parameters are clipped after performing
+    optimizer step method.
+
+    Args:
+        optimizer_before_step_params: optimizer parameters before step
+        optimizer_after_step_params: optimizer parameters after step
+        collaborator_name: name of the collaborator (Type:string)
+        round_num: current round (Type:int)
+        device: CUDA device id or "cpu"
+    """
     len_equal_tensor = 0
     for param_idx in range(len(optimizer_after_step_params)):
         for tensor_1, tensor_2 in zip(
@@ -210,7 +244,14 @@ def clip_testing_on_optimizer_parameters(
 
 
 def validate_dp_params(dp_params):
-    # The differential privacy block should have the exact keys provided below:
+
+    """
+    The differential privacy block should have the exact keys as provided below.
+
+    Args:
+        dp_params: Python dictionary for differential privacy
+        specific hyperparameters as read from "test_config.yml"
+    """
     required_dp_keys = [
         "clip_norm",
         "noise_multiplier",
@@ -234,12 +275,29 @@ def validate_dp_params(dp_params):
 
 
 def parse_config(config_path):
+
+    """
+    Parse "test_config.yml".
+
+    Args:
+        config_path: Path of "test_config.yml"
+    """
     with open(config_path, "rb") as _file:
         config = yaml.safe_load(_file)
     return config
 
 
 def add_noise_on_aggegated_parameters(collaborators, model, dp_params):
+
+    """
+    Adds noise on aggregated model parameters performed at the aggregator.
+
+    Args:
+        collaborators: Python list of collaborator name strings
+        model: Federeated averaged model
+        dp_params: Python dictionary for differential privacy
+        specific hyperparameters as read from "test_config.yml"
+    """
     state_dict = model.state_dict()
     normal_distribution = Normal(
         loc=0, scale=dp_params["noise_multiplier"] * dp_params["clip_norm"]
@@ -312,9 +370,7 @@ class FederatedFlow(FLSpec):
             self.sample_rate = self.dp_params["sample_rate"]
             global_data_loader = DataLoader(
                 self.collaborators,
-                batch_size=int(
-                    self.sample_rate * float(len(self.collaborators))
-                ),
+                batch_size=int(self.sample_rate * float(len(self.collaborators))),
             )
             dp_data_loader = DPDataLoader.from_data_loader(
                 global_data_loader, distributed=False
@@ -342,14 +398,10 @@ class FederatedFlow(FLSpec):
                     exclude=["private"],
                 )
             else:
-                print(
-                    f"No collaborator selected for training at Round: {self.round}"
-                )
+                print(f"No collaborator selected for training at Round: {self.round}")
                 self.next(self.check_round_completion)
         else:
-            print(
-                f"No collaborator selected for training at Round: {self.round}"
-            )
+            print(f"No collaborator selected for training at Round: {self.round}")
             self.next(self.check_round_completion)
 
     # Uncomment this if you don't have GPU in the machine and
@@ -363,13 +415,9 @@ class FederatedFlow(FLSpec):
 
         # verifying that model went to the correct GPU device
         assert next(self.model.parameters()).device == self.device
-        assert (
-            next(self.previous_global_model.parameters()).device == self.device
-        )
+        assert next(self.previous_global_model.parameters()).device == self.device
 
-        self.agg_validation_score = inference(
-            self.model, self.test_loader, self.device
-        )
+        self.agg_validation_score = inference(self.model, self.test_loader, self.device)
         print(f"{self.input} value of {self.agg_validation_score}")
         self.collaborator_name = self.input
         self.next(self.train)
@@ -407,8 +455,7 @@ class FederatedFlow(FLSpec):
 
             if self.clip_test:
                 optimizer_before_step_params = [
-                    param.data
-                    for param in self.optimizer.param_groups()[0]["params"]
+                    param.data for param in self.optimizer.param_groups()[0]["params"]
                 ]
 
             self.optimizer.step(
@@ -423,9 +470,7 @@ class FederatedFlow(FLSpec):
                     if self.clip_test:
                         optimizer_after_step_params = [
                             param.data
-                            for param in self.optimizer.param_groups()[0][
-                                "params"
-                            ]
+                            for param in self.optimizer.param_groups()[0]["params"]
                         ]
                         clip_testing_on_optimizer_parameters(
                             optimizer_before_step_params,
@@ -471,9 +516,7 @@ class FederatedFlow(FLSpec):
             f"Average aggregated model validation values = {self.aggregated_model_accuracy}"
         )
         print(f"Average training loss = {self.average_loss}")
-        print(
-            f"Average local model validation values = {self.local_model_accuracy}"
-        )
+        print(f"Average local model validation values = {self.local_model_accuracy}")
         if self.dp_params is not None:
             self.model = FedAvg(
                 [input.model.cpu() for input in inputs],
@@ -500,9 +543,7 @@ class FederatedFlow(FLSpec):
                 + f"is epsilon={epsilon} (best alpha was: {best_alpha})."
             )
             print(20 * "#")
-        self.previous_global_model.load_state_dict(
-            deepcopy(self.model.state_dict())
-        )
+        self.previous_global_model.load_state_dict(deepcopy(self.model.state_dict()))
         self.optimizers.update(
             {input.collaborator_name: input.optimizer for input in inputs}
         )
@@ -525,9 +566,7 @@ class FederatedFlow(FLSpec):
             if self.dp_params is not None:
                 global_data_loader = DataLoader(
                     self.collaborators,
-                    batch_size=int(
-                        self.sample_rate * float(len(self.collaborators))
-                    ),
+                    batch_size=int(self.sample_rate * float(len(self.collaborators))),
                 )
                 dp_data_loader = DPDataLoader.from_data_loader(
                     global_data_loader, distributed=False
@@ -564,9 +603,7 @@ class FederatedFlow(FLSpec):
                     )
                     self.next(self.check_round_completion)
             else:
-                print(
-                    f"No collaborator selected for training at Round: {self.round}"
-                )
+                print(f"No collaborator selected for training at Round: {self.round}")
                 self.next(self.check_round_completion)
 
     @aggregator
@@ -623,10 +660,10 @@ if __name__ == "__main__":
     for idx, collab in enumerate(collaborators):
         local_train = deepcopy(mnist_train)
         local_test = deepcopy(mnist_test)
-        local_train.data = mnist_train.data[idx:: len(collaborators)]
-        local_train.targets = mnist_train.targets[idx:: len(collaborators)]
-        local_test.data = mnist_test.data[idx:: len(collaborators)]
-        local_test.targets = mnist_test.targets[idx:: len(collaborators)]
+        local_train.data = mnist_train.data[idx::len(collaborators)]
+        local_train.targets = mnist_train.targets[idx::len(collaborators)]
+        local_test.data = mnist_test.data[idx::len(collaborators)]
+        local_test.targets = mnist_test.targets[idx::len(collaborators)]
         collab.private_attributes = {
             "train_loader": DataLoader(
                 local_train, batch_size=batch_size_train, shuffle=True
@@ -636,9 +673,7 @@ if __name__ == "__main__":
             ),
         }
 
-    local_runtime = LocalRuntime(
-        aggregator=aggregator, collaborators=collaborators
-    )
+    local_runtime = LocalRuntime(aggregator=aggregator, collaborators=collaborators)
     print(f"Local runtime collaborators = {local_runtime.collaborators}")
 
     top_model_accuracy = 0
