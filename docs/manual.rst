@@ -33,3 +33,4 @@ Familiarize with the APIs:
    source/utilities/utilities
    advanced_topics
    source/workflow/running_the_federation.tutorial
+   experimental_features
