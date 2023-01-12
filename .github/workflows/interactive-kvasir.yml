@@ -31,6 +31,6 @@ jobs:
     - name: Interactive API - pytorch_kvasir_unet
       run: |
         python setup.py build_grpc
-        pip install torch==1.8.1
-        pip install torchvision==0.9.1
+        pip install torch<2.0
+        pip install torchvision<0.20
         python -m tests.github.interactive_api_director.experiments.pytorch_kvasir_unet.run
