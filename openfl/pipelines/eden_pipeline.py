@@ -135,8 +135,9 @@ class Eden:
 
             # normal centroids
             for i in centroids:
-                centroids[i] = torch.Tensor([-j for j in centroids[i][::-1]] + centroids[i])\
-                    .to(device)
+                centroids[i] = torch.Tensor(
+                    [-j for j in centroids[i][::-1]] + centroids[i]
+                ).to(device)
 
             # centroids to bin boundaries
             def gen_boundaries(centroids):
@@ -259,9 +260,9 @@ class Eden:
         return (scale * vec)[:int(dim)].cpu().numpy()
 
     # packing the quantization values to bytes
-    def toBits(self, intBoolVec):
+    def to_bits(self, int_bool_vec):
 
-        def toBits_h(ibv):
+        def to_bits_h(ibv):
 
             n = ibv.numel()
             ibv = ibv.view(n // 8, 8).int()
@@ -272,19 +273,19 @@ class Eden:
 
             return bv
 
-        Lunit = intBoolVec.numel() // 8
-        bitVec = torch.zeros(Lunit * self.nbits, dtype=torch.uint8)
+        l_unit = int_bool_vec.numel() // 8
+        bit_vec = torch.zeros(l_unit * self.nbits, dtype=torch.uint8)
 
         for i in range(self.nbits):
-            bitVec[Lunit * i:Lunit * (i + 1)] = toBits_h((intBoolVec % 2 != 0).int())
-            intBoolVec = torch.div(intBoolVec, 2, rounding_mode='floor')
+            bit_vec[l_unit * i:l_unit * (i + 1)] = to_bits_h((int_bool_vec % 2 != 0).int())
+            int_bool_vec = torch.div(int_bool_vec, 2, rounding_mode='floor')
 
-        return bitVec
+        return bit_vec
 
     # unpacking bytes to quantization values
-    def fromBits(self, bitVec):
+    def from_bits(self, bit_vec):
 
-        def fromBits_h(bv, device):
+        def from_bits_h(bv, device):
 
             n = bv.numel()
 
@@ -295,13 +296,13 @@ class Eden:
 
             return iv.T.reshape(-1)
 
-        bitVec = bitVec.view(self.nbits, bitVec.numel() // self.nbits).to(self.device)
-        intVecs = torch.zeros(bitVec.numel() // self.nbits * 8).to(self.device)
+        bit_vec = bit_vec.view(self.nbits, bit_vec.numel() // self.nbits).to(self.device)
+        int_vecs = torch.zeros(bit_vec.numel() // self.nbits * 8).to(self.device)
 
         for i in range(self.nbits):
-            intVecs += 2**i * fromBits_h(bitVec[i], self.device)
+            int_vecs += 2**i * from_bits_h(bit_vec[i], self.device)
 
-        return intVecs.reshape(1, -1)
+        return int_vecs.reshape(1, -1)
 
 
 class EdenTransformer(Transformer):

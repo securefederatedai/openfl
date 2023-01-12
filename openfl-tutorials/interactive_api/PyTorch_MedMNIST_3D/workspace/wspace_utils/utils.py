@@ -33,7 +33,7 @@ def _convert_module_from_bn_to_syncbn(module):
             hasattr(nn, child.__class__.__name__)
             and 'batchnorm' in child.__class__.__name__.lower()
         ):
-            TargetClass = globals()['Synchronized' + child.__class__.__name__]
+            TargetClass = globals()['Synchronized' + child.__class__.__name__]  # noqa: N806
             arguments = TargetClass.__init__.__code__.co_varnames[1:]
             kwargs = {k: getattr(child, k) for k in arguments}
             setattr(module, child_name, TargetClass(**kwargs))

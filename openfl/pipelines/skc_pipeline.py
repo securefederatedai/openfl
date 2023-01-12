@@ -154,7 +154,7 @@ class KmeansTransformer(Transformer):
         """
         flatten_array = np_array.reshape(-1)
         unique_value_array = np.unique(flatten_array)
-        int_array = np.zeros(flatten_array.shape, dtype=np.int)
+        int_array = np.zeros(flatten_array.shape, dtype=np.int32)
         int_to_float_map = {}
         float_to_int_map = {}
         # create table

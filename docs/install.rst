@@ -41,7 +41,7 @@ Perform this procedure on every node in the federation.
     
         .. code-block:: console
         
-            pip install openfl
+            python -m pip install openfl
    
     B. Installation from source:
 
@@ -52,12 +52,13 @@ Perform this procedure on every node in the federation.
                 git clone https://github.com/intel/openfl.git 
 
 
-        #. From inside the Python environment, call :code:`pip install`: 
+        #. Install build tools, before installing |productName|: 
 
             .. code-block:: console
             
+                python -m pip install -U pip setuptools wheel
                 cd openfl/
-                pip install .
+                python -m pip install .
 
 
 

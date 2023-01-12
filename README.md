@@ -1,7 +1,8 @@
 # Open Federated Learning (OpenFL) - An Open-Source Framework For Federated Learning
 
 [![PyPI - Python Version](https://img.shields.io/badge/python-3.6%20%7C%203.7%20%7C%203.8-blue)](https://pypi.org/project/openfl/)
-[![Continuous Integration](https://github.com/intel/openfl/actions/workflows/python-app.yml/badge.svg?branch=develop)](https://github.com/intel/openfl/actions/workflows/python-app.yml)
+[![Ubuntu CI status](https://github.com/intel/openfl/actions/workflows/ubuntu.yml/badge.svg)](https://github.com/intel/openfl/actions/workflows/ubuntu.yml)
+[![Windows CI status](https://github.com/intel/openfl/actions/workflows/windows.yml/badge.svg)](https://github.com/intel/openfl/actions/workflows/windows.yml)
 [![Documentation Status](https://readthedocs.org/projects/openfl/badge/?version=latest)](https://openfl.readthedocs.io/en/latest/?badge=latest)
 [![Downloads](https://pepy.tech/badge/openfl)](https://pepy.tech/project/openfl)
 [![DockerHub](https://img.shields.io/docker/pulls/intel/openfl.svg)](https://hub.docker.com/r/intel/openfl)
@@ -32,6 +33,9 @@ Setup long-lived components to run many experiments in series. Recommended for F
 
 - [Aggregator-based Workflow](https://openfl.readthedocs.io/en/latest/running_the_federation.html#aggregator-based-workflow):
 Define an experiment and distribute it manually. All participants can verify model code and [FL plan](https://openfl.readthedocs.io/en/latest/running_the_federation.html#federated-learning-plan-fl-plan-settings) prior to execution. The federation is terminated when the experiment is finished
+
+- [Workflow Interface](https://openfl.readthedocs.io/en/latest/workflow_interface.html) ([*experimental*](https://openfl.readthedocs.io/en/latest/experimental_features.html)):
+Create complex experiments that extend beyond traditional horizontal federated learning. See the [experimental tutorials](https://github.com/intel/openfl/blob/develop/openfl-tutorials/experimental/) to learn how to coordinate [aggregator validation after collaborator model training](https://github.com/intel/openfl/tree/develop/openfl-tutorials/experimental/Workflow_Interface_102_Aggregator_Validation.ipynb), [perform global differentially private federated learning](https://github.com/psfoley/openfl/tree/experimental-workflow-interface/openfl-tutorials/experimental/Global_DP), measure the amount of private information embedded in a model after collaborator training with [privacy meter](https://github.com/intel/openfl/blob/develop/openfl-tutorials/experimental/Privacy_Meter/readme.md), or [add a watermark to a federated model](https://github.com/intel/openfl/blob/develop/openfl-tutorials/experimental/Workflow_Interface_301_MNIST_Watermarking.ipynb).
 
 The quickest way to test OpenFL is to follow our [tutorials](https://github.com/intel/openfl/tree/develop/openfl-tutorials). </br>
 Read the [blog post](https://towardsdatascience.com/go-federated-with-openfl-8bc145a5ead1) explaining steps to train a model with OpenFL. </br>

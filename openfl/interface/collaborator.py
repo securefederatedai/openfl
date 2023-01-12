@@ -330,7 +330,6 @@ def certify(collaborator_name, silent, request_pkg=None, import_=False,
     from openfl.cryptography.io import read_key
     from openfl.cryptography.io import write_crt
     from openfl.interface.cli_helper import CERT_DIR
-
     from openfl.utilities.utils import rmtree
 
     common_name = f'{collaborator_name}'.lower()
@@ -540,9 +539,9 @@ def certify(collaborator_name, silent, request_pkg=None, import_=False,
             # Copy the CA certificate chain to the temporary directory
             copy(f'{CERT_DIR}/cert_chain.crt', tmp_dir)
 
-            # Create Zip archive of directory
-            make_archive(archive_name, archive_type, tmp_dir)
-            rmtree(tmp_dir)
+        # Create Zip archive of directory
+        make_archive(archive_name, archive_type, tmp_dir)
+        rmtree(tmp_dir)
 
         else:
             # Copy the signed certificate and cert chain into PKI_DIR

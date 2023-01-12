@@ -4,8 +4,6 @@
 name: Interactive API - Pytorch Kvasir UNet
 
 on:
-  push:
-    branches: [ develop ]
   pull_request:
     branches: [ develop ]
 

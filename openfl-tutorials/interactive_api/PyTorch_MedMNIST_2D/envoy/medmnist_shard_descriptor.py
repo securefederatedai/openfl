@@ -90,6 +90,7 @@ class MedMNISTShardDescriptor(ShardDescriptor):
         return (f'MedMNIST dataset, shard number {self.rank}'
                 f' out of {self.worldsize}')
 
+    @staticmethod
     def download_data(datapath: str = 'data/',
                       dataname: str = 'bloodmnist',
                       info: dict = {}) -> None:
