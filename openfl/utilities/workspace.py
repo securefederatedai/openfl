@@ -72,14 +72,14 @@ class ExperimentWorkspace:
         os.chdir(self.experiment_work_dir)
 
         # This is needed for python module finder
-        sys.path.append(self.experiment_work_dir)
+        sys.path.append(str(self.experiment_work_dir))
 
     def __exit__(self, exc_type, exc_value, traceback):
         """Remove the workspace."""
         os.chdir(self.cwd)
         shutil.rmtree(self.experiment_work_dir, ignore_errors=True)
         if self.experiment_work_dir in sys.path:
-            sys.path.remove(self.experiment_work_dir)
+            sys.path.remove(str(self.experiment_work_dir))
 
         if self.remove_archive:
             logger.debug(
