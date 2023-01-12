@@ -571,6 +571,6 @@ def uninstall_cert(cert_path=None, key_path=None):
     from pathlib import Path
 
     cert_path = Path(cert_path).absolute()
-    rmtree(cert_path, ignore_errors=True)
     key_path = Path(key_path).absolute()
+    rmtree(cert_path, ignore_errors=True)
     rmtree(key_path, ignore_errors=True)
