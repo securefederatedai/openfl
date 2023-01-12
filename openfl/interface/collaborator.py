@@ -342,7 +342,6 @@ def certify(collaborator_name, silent, request_pkg=None, import_=False,
             if request_pkg:
                 unpack_archive(request_pkg, extract_dir=cert_path)
                 csr = glob(f'{cert_path}/*.csr')[0]
-                print("csr is", csr)
             else:
                 if collaborator_name is None:
                     echo('collaborator_name can only be omitted if signing\n'
@@ -352,12 +351,9 @@ def certify(collaborator_name, silent, request_pkg=None, import_=False,
                          'col_one_to_agg_cert_request.zip')
                     return
                 csr = glob(f'{cert_path}/col_{common_name}.csr')[0]
-                print("Csr is", csr)
                 copy(csr, cert_path)
             cert_name = splitext(csr)[0]
-            print("cert name", cert_name)
             file_name = basename(cert_name)
-            print("file name", file_name)
             signing_key_path = 'signing-ca.key'
             signing_crt_path = 'signing-ca.crt'
 
