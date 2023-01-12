@@ -78,7 +78,7 @@ class ExperimentWorkspace:
         """Remove the workspace."""
         os.chdir(self.cwd)
         shutil.rmtree(self.experiment_work_dir, ignore_errors=True)
-        if self.experiment_work_dir in sys.path:
+        if str(self.experiment_work_dir) in sys.path:
             sys.path.remove(str(self.experiment_work_dir))
 
         if self.remove_archive:
