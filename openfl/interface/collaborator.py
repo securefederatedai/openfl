@@ -330,6 +330,7 @@ def certify(collaborator_name, silent, request_pkg=None, import_=False,
     from openfl.cryptography.io import read_key
     from openfl.cryptography.io import write_crt
     from openfl.interface.cli_helper import CERT_DIR
+
     from openfl.utilities.utils import rmtree
 
     common_name = f'{collaborator_name}'.lower()
