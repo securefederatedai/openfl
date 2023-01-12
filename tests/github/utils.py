@@ -9,7 +9,7 @@ import tarfile
 
 
 def create_collaborator(col, workspace_root, data_path, archive_name, fed_workspace,
-                        cert_path=None, ca_cert_path=None):
+                        cert_path=None, key_path=None, ca_cert_path=None, ca_key_path=None):
     # Copy workspace to collaborator directories (these can be on different machines)
     col_path = workspace_root / col
     shutil.rmtree(col_path, ignore_errors=True)  # Remove any existing directory
@@ -23,10 +23,10 @@ def create_collaborator(col, workspace_root, data_path, archive_name, fed_worksp
 
     # Create collaborator certificate request
     # Remove '--silent' if you run this manually
-    if cert_path:
+    if cert_path and key_path:
         check_call(
             ['fx', 'collaborator', 'generate-cert-request', '-d', data_path,
-             '-n', col, '-c', cert_path, '--silent'],
+             '-n', col, '-c', cert_path, '-k', key_path, '--silent'],
             cwd=col_path / fed_workspace
         )
     else:
@@ -39,10 +39,10 @@ def create_collaborator(col, workspace_root, data_path, archive_name, fed_worksp
     # Sign collaborator certificate
     # Remove '--silent' if you run this manually
     request_pkg = col_path / fed_workspace / f'col_{col}_to_agg_cert_request.zip'
-    if ca_cert_path:
+    if ca_cert_path and ca_key_path:
         check_call(
             ['fx', 'collaborator', 'certify', '--request-pkg', str(request_pkg),
-             '-c', ca_cert_path, '--silent'],
+             '-c', ca_cert_path, '-k', ca_key_path, '--silent'],
             cwd=workspace_root)
     else:
         check_call(
@@ -51,9 +51,10 @@ def create_collaborator(col, workspace_root, data_path, archive_name, fed_worksp
 
     # Import the signed certificate from the aggregator
     import_path = workspace_root / f'agg_to_col_{col}_signed_cert.zip'
-    if cert_path:
+    if cert_path and key_path:
         check_call(
-            ['fx', 'collaborator', 'certify', '--import', import_path, '-c', cert_path],
+            ['fx', 'collaborator', 'certify', '--import', import_path,
+             '-c', cert_path, '-k', key_path],
             cwd=col_path / fed_workspace
         )
     else:
@@ -63,7 +64,8 @@ def create_collaborator(col, workspace_root, data_path, archive_name, fed_worksp
         )
 
 
-def create_certified_workspace(path, template, fqdn, rounds_to_train, cert_path=None):
+def create_certified_workspace(path, template, fqdn, rounds_to_train,
+                               cert_dir=None, cert_path=None, key_path=None):
     shutil.rmtree(path, ignore_errors=True)
     check_call(['fx', 'workspace', 'create', '--prefix', path, '--template', template])
     os.chdir(path)
@@ -83,8 +85,9 @@ def create_certified_workspace(path, template, fqdn, rounds_to_train, cert_path=
     except (ValueError, TypeError):
         pass
     # Create certificate authority for workspace
-    if cert_path:
-        check_call(['fx', 'workspace', 'certify', '-c', cert_path])
+    if cert_dir and cert_path and key_path:
+        check_call(['fx', 'workspace', 'certify',
+                    '-cdir', cert_dir, '-c', cert_path, '-k', key_path])
     else:
         check_call(['fx', 'workspace', 'certify'])
 
@@ -92,12 +95,14 @@ def create_certified_workspace(path, template, fqdn, rounds_to_train, cert_path=
     check_call(['fx', 'workspace', 'export'])
 
 
-def certify_aggregator(fqdn, cert_path=None):
-    if cert_path:
+def certify_aggregator(fqdn, cert_path=None, key_path=None):
+    if cert_path and key_path:
         # Create aggregator certificate
-        check_call(['fx', 'aggregator', 'generate-cert-request', '--fqdn', fqdn, '-c', cert_path])
+        check_call(['fx', 'aggregator', 'generate-cert-request', '--fqdn', fqdn,
+                    '-c', cert_path, '-k', key_path])
         # Sign aggregator certificate
-        check_call(['fx', 'aggregator', 'certify', '--fqdn', fqdn, '-c', cert_path, '--silent'])
+        check_call(['fx', 'aggregator', 'certify', '--fqdn', fqdn,
+                    '-c', cert_path, '-k', key_path, '--silent'])
     else:
         # Create aggregator certificate
         check_call(['fx', 'aggregator', 'generate-cert-request', '--fqdn', fqdn])

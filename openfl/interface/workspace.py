@@ -213,14 +213,18 @@ def import_(archive):
 
 
 @workspace.command(name='certify')
+@option('-cdir', '--cert_dir',
+        help='The cert directory path where CA certs and keys will reside', required=False)
 @option('-c', '--cert_path',
-        help='The cert path where pki certs will reside', required=False)
-def certify_(cert_path):
+        help='The cert path where CA signing cert will reside', required=False)
+@option('-k', '--key_path',
+        help='The cert path where CA key path will reside', required=False)
+def certify_(cert_dir, cert_path, key_path):
     """Create certificate authority for federation."""
-    certify(cert_path)
+    certify(cert_dir, cert_path, key_path)
 
 
-def certify(cert_path=None):
+def certify(cert_dir=None, cert_path=None, key_path=None):
     """Create certificate authority for federation."""
     from cryptography.hazmat.primitives import serialization
 
@@ -234,10 +238,10 @@ def certify(cert_path=None):
     echo('1.  Create Root CA')
     echo('1.1 Create Directories')
 
-    if cert_path:
-        cert_path = Path(cert_path).absolute()
-        (cert_path / 'cert').mkdir(parents=True, exist_ok=True)
-        cert_dir_path = cert_path / 'cert'
+    if cert_dir:
+        cert_dir = Path(cert_dir).absolute()
+        (cert_dir / 'cert').mkdir(parents=True, exist_ok=True)
+        cert_dir_path = cert_dir / 'cert'
     else:
         cert_dir_path = CERT_DIR
 
@@ -298,42 +302,67 @@ def certify(cert_path=None):
 
     echo('2.3 Create Signing Certificate CSR')
 
-    signing_csr_path = 'ca/signing-ca.csr'
-    signing_crt_path = 'ca/signing-ca.crt'
-    signing_key_path = 'ca/signing-ca/private/signing-ca.key'
-
     signing_private_key, signing_csr = generate_signing_csr()
 
     # Write Signing CA CSR to disk
+    signing_csr_path = 'ca/signing-ca.csr'
     with open(cert_dir_path / signing_csr_path, 'wb') as f:
         f.write(signing_csr.public_bytes(
             encoding=serialization.Encoding.PEM,
         ))
 
-    with open(cert_dir_path / signing_key_path, 'wb') as f:
-        f.write(signing_private_key.private_bytes(
-            encoding=serialization.Encoding.PEM,
-            format=serialization.PrivateFormat.TraditionalOpenSSL,
-            encryption_algorithm=serialization.NoEncryption()
-        ))
+    if key_path:
+        key_path = Path(key_path).absolute()
+        signing_key_path = 'signing-ca.key'
+        with open(key_path / signing_key_path, 'wb') as f:
+            f.write(signing_private_key.private_bytes(
+                encoding=serialization.Encoding.PEM,
+                format=serialization.PrivateFormat.TraditionalOpenSSL,
+                encryption_algorithm=serialization.NoEncryption()
+            ))
+    else:
+        signing_key_path = 'ca/signing-ca/private/signing-ca.key'
+        with open(cert_dir_path / signing_key_path, 'wb') as f:
+            f.write(signing_private_key.private_bytes(
+                encoding=serialization.Encoding.PEM,
+                format=serialization.PrivateFormat.TraditionalOpenSSL,
+                encryption_algorithm=serialization.NoEncryption()
+            ))
 
     echo('2.4 Sign Signing Certificate CSR')
 
     signing_cert = sign_certificate(signing_csr, root_private_key, root_cert.subject, ca=True)
 
-    with open(cert_dir_path / signing_crt_path, 'wb') as f:
-        f.write(signing_cert.public_bytes(
-            encoding=serialization.Encoding.PEM,
-        ))
+    if cert_path:
+        cert_path = Path(cert_path).absolute()
+        signing_crt_path = 'signing-ca.crt'
+        with open(cert_path / signing_crt_path, 'wb') as f:
+            f.write(signing_cert.public_bytes(
+                encoding=serialization.Encoding.PEM,
+            ))
+    else:
+        signing_crt_path = 'ca/signing-ca.crt'
+        with open(cert_dir_path / signing_crt_path, 'wb') as f:
+            f.write(signing_cert.public_bytes(
+                encoding=serialization.Encoding.PEM,
+            ))
 
     echo('3   Create Certificate Chain')
 
     # create certificate chain file by combining root-ca and signing-ca
-    with open(cert_dir_path / 'cert_chain.crt', 'w', encoding='utf-8') as d:
-        with open(cert_dir_path / 'ca/root-ca.crt', encoding='utf-8') as s:
-            d.write(s.read())
-        with open(cert_dir_path / 'ca/signing-ca.crt') as s:
-            d.write(s.read())
+    if cert_path:
+        cert_chain_path = Path(cert_path).absolute()
+        with open(cert_chain_path / 'cert_chain.crt', 'w', encoding='utf-8') as d:
+            with open(cert_dir_path / 'ca/root-ca.crt', encoding='utf-8') as s:
+                d.write(s.read())
+            with open(cert_chain_path / 'signing-ca.crt') as s:
+                d.write(s.read())
+    else:
+        with open(cert_dir_path / 'cert_chain.crt', 'w', encoding='utf-8') as d:
+            with open(cert_dir_path / 'ca/root-ca.crt', encoding='utf-8') as s:
+                d.write(s.read())
+            with open(cert_dir_path / 'ca/signing-ca.crt') as s:
+                d.write(s.read())
 
     echo('\nDone.')
 
@@ -538,17 +567,21 @@ def graminize_(context, signing_key: Path, enclave_size: str, pip_install_option
 @workspace.command(name='uninstall-cert')
 @option('-c', '--cert_path',
         help='The cert path where pki certs reside', required=True)
-def _uninstall_cert(cert_path):
-    uninstall_cert(cert_path)
+@option('-k', '--key_path',
+        help='The key path where key reside', required=True)
+def _uninstall_cert(cert_path, key_path):
+    uninstall_cert(cert_path, key_path)
 
 
-def uninstall_cert(cert_path=None):
+def uninstall_cert(cert_path=None, key_path=None):
     """Uninstall certs under a given directory."""
-    import shutil
+    from openfl.utilities.utils import rmtree
     from pathlib import Path
 
     cert_path = Path(cert_path).absolute()
-    shutil.rmtree(cert_path, ignore_errors=True)
+    rmtree(cert_path, ignore_errors=True)
+    key_path = Path(key_path).absolute()
+    rmtree(key_path, ignore_errors=True)
 
 
 def apply_template_plan(prefix, template):
