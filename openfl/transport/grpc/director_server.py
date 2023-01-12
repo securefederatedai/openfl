@@ -228,7 +228,7 @@ class DirectorGRPCServer(director_pb2_grpc.DirectorServicer):
         logger.info('Request GetDatasetInfo has got!')
 
         sample_shape, target_shape = self.director.get_dataset_info()
-        shard_info = director_pb2.ShardInfo(
+        shard_info = base_pb2.ShardInfo(
             sample_shape=sample_shape,
             target_shape=target_shape
         )
@@ -297,14 +297,14 @@ class DirectorGRPCServer(director_pb2_grpc.DirectorServicer):
 
             return resp
 
-    async def GetEnvoys(self, request, context):  # NOQA:N802
+    async def GetEnvoysList(self, request, context):  # NOQA:N802
         """Get a status information about envoys."""
         envoy_infos = self.director.get_envoys()
         envoy_statuses = []
         for envoy_info in envoy_infos:
-            envoy_info_message = director_pb2.EnvoyInfo(
+            envoy_info_message = base_pb2.EnvoyInfo(
                 shard_info=ParseDict(
-                    envoy_info['shard_info'], director_pb2.ShardInfo(),
+                    envoy_info['shard_info'], base_pb2.ShardInfo(),
                     ignore_unknown_fields=True),
                 is_online=envoy_info['is_online'],
                 is_experiment_running=envoy_info['is_experiment_running'])
@@ -313,14 +313,14 @@ class DirectorGRPCServer(director_pb2_grpc.DirectorServicer):
 
             envoy_statuses.append(envoy_info_message)
 
-        return director_pb2.GetEnvoysResponse(envoy_infos=envoy_statuses)
+        return director_pb2.GetEnvoysListResponse(envoy_infos=envoy_statuses)
 
     async def GetExperimentsList(self, request, context):  # NOQA:N802
         """Get list of experiments description."""
         caller = self.get_caller(context)
         experiments = self.director.get_experiments_list(caller)
         experiment_list = [
-            director_pb2.ExperimentListItem(**exp)
+            base_pb2.ExperimentListItem(**exp)
             for exp in experiments
         ]
         return director_pb2.GetExperimentsListResponse(

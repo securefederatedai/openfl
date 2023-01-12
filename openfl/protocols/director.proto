@@ -5,10 +5,11 @@ syntax = "proto3";
 
 package openfl.director;
 
-import "google/protobuf/timestamp.proto";
 import "google/protobuf/duration.proto";
 import "openfl/protocols/base.proto";
 
+// DirectorScientist (DirectorFrontend) and DirectorEnvoy services should be separated
+// And placed in distinct packages openfl.director.envoy and openfl.director.scientist
 service Director {
   // 1. Envoy RPCs
   rpc UpdateShardInfo(UpdateShardInfoRequest) returns (UpdateShardInfoResponse) {}
@@ -31,34 +32,10 @@ service Director {
   rpc GetTrainedModel(GetTrainedModelRequest) returns (TrainedModelResponse) {}
   rpc GetMetricStream(GetMetricStreamRequest) returns (stream GetMetricStreamResponse) {}
   rpc RemoveExperimentData(RemoveExperimentRequest) returns (RemoveExperimentResponse) {}
-  rpc GetEnvoys(GetEnvoysRequest) returns (GetEnvoysResponse) {}
-}
-
-message CudaDeviceInfo {
-  uint64 index = 1;
-  uint64 memory_total = 2;
-  uint64 memory_utilized = 3;
-  string device_utilization = 4;
-  string cuda_driver_version = 5;
-  string cuda_version = 6;
-  string name = 7;
+  rpc GetEnvoysList(GetEnvoysListRequest) returns (GetEnvoysListResponse) {}
 }
 
 // Envoy Messages
-
-message NodeInfo {
-  string name = 1;
-  repeated CudaDeviceInfo cuda_devices = 2;
-}
-
-message ShardInfo {
-  NodeInfo node_info = 1;
-  string shard_description = 2;
-  uint64 n_samples = 3;
-  // We just pass numpy shapes
-  repeated string sample_shape = 4;
-  repeated string target_shape = 5;
-}
 
 message UpdateShardInfoRequest {
   ShardInfo shard_info = 1;
@@ -83,7 +60,7 @@ message GetExperimentDataRequest {
 
 message ExperimentData {
   uint32 size = 1; // size, in bytes, of the data sent in npbytes
-  bytes npbytes = 2; //actual data
+  bytes npbytes = 2; // actual data
 }
 
 message UpdateEnvoyStatusRequest {
@@ -109,14 +86,6 @@ message SetExperimentFailedResponse {}
 
 message GetExperimentsListRequest {}
 
-message ExperimentListItem {
-  string name = 1;
-  string status = 2;
-  uint32 collaborators_amount = 3;
-  uint32 tasks_amount = 4;
-  float progress = 5;
-}
-
 message GetExperimentsListResponse {
   repeated ExperimentListItem experiments = 1;
 }
@@ -131,6 +100,8 @@ message GetExperimentDescriptionResponse {
 
 // Frontend. API Messages
 
+// ExperimentData and ExperimentInfo messages may be united
+//  to mirror ExperimentRepresentation class oneness 
 message ExperimentInfo {
   string name = 1;
   repeated string collaborator_names = 2;
@@ -189,17 +160,8 @@ message RemoveExperimentResponse {
   bool acknowledgement = 1;
 }
 
-message EnvoyInfo {
-  ShardInfo shard_info = 1;
-  bool is_online = 2;
-  bool is_experiment_running = 3;
-  google.protobuf.Timestamp last_updated = 4;
-  google.protobuf.Duration valid_duration = 5;
-  string experiment_name = 6;
-}
+message GetEnvoysListRequest {}
 
-message GetEnvoysRequest {}
-
-message GetEnvoysResponse {
+message GetEnvoysListResponse {
   repeated EnvoyInfo envoy_infos = 1;
 }

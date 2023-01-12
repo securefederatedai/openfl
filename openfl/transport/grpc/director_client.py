@@ -12,6 +12,7 @@ import grpc
 
 from openfl.interface.interactive_api.shard_descriptor import ShardDescriptor
 from openfl.pipelines import NoCompressionPipeline
+from openfl.protocols import base_pb2
 from openfl.protocols import director_pb2
 from openfl.protocols import director_pb2_grpc
 from openfl.protocols import interceptors
@@ -62,7 +63,7 @@ class ShardDirectorClient:
         """Report shard info to the director."""
         logger.info('Send report UpdateShardInfo')
         # True considered as successful registration
-        shard_info = director_pb2.ShardInfo(
+        shard_info = base_pb2.ShardInfo(
             shard_description=shard_descriptor.dataset_description,
             sample_shape=shard_descriptor.sample_shape,
             target_shape=shard_descriptor.target_shape
@@ -70,7 +71,7 @@ class ShardDirectorClient:
 
         shard_info.node_info.name = self.shard_name
         shard_info.node_info.cuda_devices.extend(
-            director_pb2.CudaDeviceInfo(index=cuda_device)
+            base_pb2.CudaDeviceInfo(index=cuda_device)
             for cuda_device in cuda_devices
         )
 
@@ -135,7 +136,7 @@ class ShardDirectorClient:
         if cuda_devices_info is not None:
             try:
                 cuda_messages = [
-                    director_pb2.CudaDeviceInfo(**item)
+                    base_pb2.CudaDeviceInfo(**item)
                     for item in cuda_devices_info
                 ]
             except Exception as e:
@@ -291,7 +292,7 @@ class DirectorClient:
 
     def get_envoys(self, raw_result=False):
         """Get envoys info."""
-        envoys = self.stub.GetEnvoys(director_pb2.GetEnvoysRequest())
+        envoys = self.stub.GetEnvoysList(director_pb2.GetEnvoysListRequest())
         if raw_result:
             return envoys
         now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
