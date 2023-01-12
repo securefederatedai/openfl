@@ -341,7 +341,7 @@ def certify(collaborator_name, silent, request_pkg=None, import_=False,
         if not import_:
             if request_pkg:
                 unpack_archive(request_pkg, extract_dir=cert_path)
-                csr = glob(f'{cert_path}/*.csr')[0]
+                csr = glob(f'{cert_path}/col_{common_name}.csr')[0]
             else:
                 if collaborator_name is None:
                     echo('collaborator_name can only be omitted if signing\n'

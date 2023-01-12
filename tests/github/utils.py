@@ -42,7 +42,7 @@ def create_collaborator(col, workspace_root, data_path, archive_name, fed_worksp
     if ca_cert_path and ca_key_path:
         check_call(
             ['fx', 'collaborator', 'certify', '--request-pkg', str(request_pkg),
-             '-c', ca_cert_path, '-k', ca_key_path, '--silent'],
+             '-n', col, '-c', ca_cert_path, '-k', ca_key_path, '--silent'],
             cwd=workspace_root)
     else:
         check_call(
