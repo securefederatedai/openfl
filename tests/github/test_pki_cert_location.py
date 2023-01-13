@@ -106,13 +106,13 @@ if __name__ == '__main__':
 
     # Clear cert paths
     check_call(
-        ['fx', 'aggregator', 'uninstall-cert', '-c', agg_cert_path],
+        ['fx', 'aggregator', 'uninstall-cert', '-c', agg_cert_path, '-k', agg_key_path],
         cwd=workspace_root)
     check_call(
-        ['fx', 'collaborator', 'uninstall-cert', '-c', col1_cert_path],
+        ['fx', 'collaborator', 'uninstall-cert', '-c', col1_cert_path, '-k', col1_key_path],
         cwd=workspace_root / col1 / fed_workspace)
     check_call(
-        ['fx', 'collaborator', 'uninstall-cert', '-c', col2_cert_path],
+        ['fx', 'collaborator', 'uninstall-cert', '-c', col2_cert_path, '-k', col2_key_path],
         cwd=workspace_root / col2 / fed_workspace)
     os.chdir(origin_dir)
     rmtree(workspace_root)
