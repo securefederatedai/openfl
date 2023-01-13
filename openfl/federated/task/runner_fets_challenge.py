@@ -567,7 +567,7 @@ def expand_derived_opt_state_dict(derived_opt_state_dict, device):
 
     opt_state_dict = {'param_groups': [], 'state': {}}
     nb_params_per_group = list(
-        derived_opt_state_dict.pop('__opt_group_lengths').astype(np.int)
+        derived_opt_state_dict.pop('__opt_group_lengths').astype(np.int32)
     )
 
     # Construct the expanded dict.
