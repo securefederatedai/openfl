@@ -44,6 +44,7 @@ from .pipeline import TransformationPipeline
 from .pipeline import Transformer
 from .pipeline import Float32NumpyArrayToBytes
 
+
 class Eden:
 
     def __init__(self, nbits=8, device='cpu'):
@@ -172,24 +173,24 @@ class Eden:
 
     def rand_diag(self, size, seed):
 
-        boolsInFloat32 = 8
+        bools_in_float32 = 8
 
-        shift = 32 // boolsInFloat32
+        shift = 32 // bools_in_float32
         threshold = 1 << (shift - 1)
         mask = (1 << shift) - 1
 
-        size_scaled = size // boolsInFloat32 + (size % boolsInFloat32 != 0)
+        size_scaled = size // bools_in_float32 + (size % bools_in_float32 != 0)
         mask32 = (1 << 32) - 1
 
         # hash seed and then limit its size to prevent overflow
         seed = (seed * 1664525 + 1013904223) & mask32
         seed = (seed * 8121 + 28411) & mask32
 
-        r =  torch.arange(end=size_scaled, device=self.device) + seed
+        r = torch.arange(end=size_scaled, device=self.device) + seed
 
         # LCG (https://en.wikipedia.org/wiki/Linear_congruential_generator)
         r = (1103515245 * r + 12345 + seed) & mask32
-        r = (1140671485  * r + 12820163  + seed) & mask32
+        r = (1140671485 * r + 12820163 + seed) & mask32
 
         # SplitMix (https://dl.acm.org/doi/10.1145/2714064.2660195)
         r += 0x9e3779b9
@@ -197,11 +198,11 @@ class Eden:
         r = (r ^ (r >> 13)) * 0xc2b2ae35 & mask32
         r = (r ^ (r >> 16)) & mask32
 
-        res = torch.zeros(size_scaled * boolsInFloat32, device=self.device)
+        res = torch.zeros(size_scaled * bools_in_float32, device=self.device)
 
         s = 0
-        for i in range(boolsInFloat32):
-            res[s:s+size_scaled] = r & mask
+        for i in range(bools_in_float32):
+            res[s:s + size_scaled] = r & mask
             s += size_scaled
             r >>= shift
 
@@ -279,12 +280,12 @@ class Eden:
 
     def compress(self, vec, seed):
 
-        def lowPO2(n):
+        def low_po2(n):
             if not n:
                 return 0
             return 2 ** int(np.log2(n))
 
-        def hgihPO2(n):
+        def high_po2(n):
             if not n:
                 return 0
             return 2 ** (int(np.ceil(np.log2(n))))
@@ -298,10 +299,11 @@ class Eden:
         dim = remaining = vec.numel()
         curr_index = 0
 
-        while (hgihPO2(remaining) - remaining) / dim > self.max_padding_overhead:
-            low = lowPO2(remaining)
+        while (high_po2(remaining) - remaining) / dim > self.max_padding_overhead:
+            low = low_po2(remaining)
 
-            slice_bins, slice_scale, slice_dim = self.compress_slice(vec[curr_index: curr_index + low], seed)
+            slice_bins, slice_scale, slice_dim = self.compress_slice(
+                vec[curr_index: curr_index + low], seed)
 
             res_bins.append(slice_bins)
             res_scale.append(slice_scale)
@@ -340,10 +342,10 @@ class Eden:
         curr_index = 0
         vec = []
 
-        for k in range(2, max(metadata.keys())+1, 2):
+        for k in range(2, max(metadata.keys()) + 1, 2):
             scale = metadata[k]
             dim = int(metadata[k + 1])
-            vec.append(self.decompress_slice(bins[curr_index:curr_index+dim], scale, dim, seed))
+            vec.append(self.decompress_slice(bins[curr_index:curr_index + dim], scale, dim, seed))
             curr_index += dim
 
         vec = torch.cat(vec)
@@ -430,7 +432,7 @@ class EdenTransformer(Transformer):
             k = 2
             for scale, dim in zip(scale_list, dim_list):
                 metadata['int_to_float'][k] = scale
-                metadata['int_to_float'][k+1] = float(dim)
+                metadata['int_to_float'][k + 1] = float(dim)
                 k += 2
 
             return_values = int_array.astype(np.uint8).tobytes(), metadata
