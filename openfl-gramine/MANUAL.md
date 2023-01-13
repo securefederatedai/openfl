@@ -2,16 +2,28 @@
 This manual will help you run OpenFL with Aggregator-based workflow inside SGX enclave with Gramine.
 
 ## Prerequisites
+
+This guide will take into account three different types of machines:
+- the building machine, where the docker image will be built;
+- the Aggregator machine, where the Aggregator will run;
+- the Collaborator machines, where the Collaborators will run.
+
+It is, by the way, not mandatory that these machines are physically different. A single machine can be used to carry out multiple functions; this choice is made only to make the following tutorial clearer.
+</br>
+In the following the requirements for the different machines will be presented.
+
 Building machine:
 - OpenFL
 - Docker should be installed, user included in Docker group
 
 Machines that will run an Aggregator and Collaborator containers should have the following:
+- OpenFL (If used for certification through built-in tooling)
 - FSGSBASE feature and SGX enabled from BIOS
 - Intel SGX driver or Linux 5.11+ driver
 - Intel SGX SDK/PSW
 </br>
 This is a short list, see more in [Gramine docs](https://gramine.readthedocs.io/en/latest/devel/building.html).
+The use of a Python Virtual Environment (venv) is strongly encouraged.
 
 ## Workflow
 The user will mainly interact with OpenFL CLI, docker CLI, and other command-line tools. But the user is also expected to modify plan.yaml file and Python code under workspace/src folder to set up an FL Experiment.
@@ -24,25 +36,31 @@ export TEMPLATE_NAME=torch_cnn_histology
 fx workspace create --prefix $WORKSPACE_NAME --template $TEMPLATE_NAME
 cd $WORKSPACE_NAME
 ```
+Be sure that the Python versions used on the building node and inside the Docker container both support the requirement.txt files of your selected workspace.
+If that is not the case, proceed to manually modify your selected workspace requirement.txt file in the openfl-workspace installation folder to obtain a congruous environment.
+Also, if you are planning to use the SGX support, be sure that that requirements.txt file does not contain any reference to CUDA distributions.
+
 Modify the code and the plan.yaml, set up your training procedure. </br>
 Pay attention to the following: 
 - make sure the data loading code reads data from ./data folder inside the workspace
 - if you download data (development scenario) make sure your code first checks if data exists, as connecting to the internet from an enclave may be problematic.
-- make sure you do not use any CUDA driver-dependent packages
+- make sure you do not use any CUDA driver-dependent packages. If you are using the ready-made OpenFL examples double-check that the `requirements.txt` suits these needs. This could require to modify the `requirements.txt` file located under the installed openfl/openfl-workspace example-specific folder on the building node.
 
 Default workspaces (templates) in OpenFL differ in their data downloading procedures. Workspaces with data loading flow that do not require changes to run with Gramine include:
 - torch_unet_kvasir
 - torch_cnn_histology
 - keras_nlp
 
+Also the other workspaces can be used by taking care of placing the dataset used under a data/ folder and modifying the requirements.txt file so that it does not contain references to CUDA distributions.
+
 2. **Initialize the experiment plan** </br> 
-Find out the FQDN of the aggregator machine and use it for plan initialization.
+Find out the FQDN of the **Aggregator machine** and use it for plan initialization.
 For example, on Unix-like OS try the following command:
 ```
 hostname --all-fqdns | awk '{print $1}'
 ```
 (In case this FQDN does not work for your federation, try putting the machine IP instead)
-Then pass the result as `AGG_FQDN` parameter to:
+Then, on the building node, pass the result as `AGG_FQDN` parameter to:
 ```
 fx plan initialize -a $AGG_FQDN
 ```
@@ -57,6 +75,9 @@ openssl genrsa -3 -out $KEY_LOCATION/key.pem 3072
 This key will not be packed into the final Docker image.
 
 4. **Build the Experiment Docker image**
+
+Before building the image, according to your SGX-capable processor, it could be necessary to turn off the logging TensorBoardX logging functionality from the plan.
+This can be done by simply setting `write_logs: false` in the plan/plan.yaml file.
 
 ```
 fx workspace graminize -s $KEY_LOCATION/key.pem
@@ -73,7 +94,7 @@ If there is a connection between machines, you may use `scp`. In other cases use
 Send files to the aggregator machine:
 ```
 scp BUILDING_MACHINE:WORKSPACE_PATH/WORKSPACE_NAME.tar.gz AGGREGATOR_MACHINE:SOME_PATH
-scp BUILDING_MACHINE:WORKSPACE_PATH/save/WORKSPACE_NAME_init.pbuf AGGREGATOR_MACHINE:SOME_PATH
+scp BUILDING_MACHINE:WORKSPACE_PATH/save/TEMPLATE_NAME_init.pbuf AGGREGATOR_MACHINE:SOME_PATH
 ```
 
 Send the image archive to collaborator machines:
@@ -91,13 +112,14 @@ docker load < WORKSPACE_NAME.tar.gz
 ```
 
 7. **Prepare certificates**
-Certificates exchange is a big separate topic. To run an experiment following OpenFL Aggregator-based workflow, a user must follow the established procedure, please refer to [the docs](https://openfl.readthedocs.io/en/latest/running_the_federation.html#bare-metal-approach).
-Following the above-mentioned procedure, running machines will acquire certificates. Moreover, as the result of this procedure, the aggregator machine will also obtain a `cols.yaml` file (required to start an experiment) with registered collaborators' names, and the collaborator machines will obtain `data.yaml` files.
+Certificates exchange is a big separate topic. To run an experiment following OpenFL Aggregator-based workflow, a user must follow the established procedure, please refer to [the docs](https://openfl.readthedocs.io/en/latest/running_the_federation.html#bare-metal-approach) (only Section 2 without the workspace import/export steps). 
+Before starting to create the certificates, create an empty plan/cols.yaml file on the Aggregator node and an empty plan/data.yaml file on each Colleborator node.
+Please double-check that the `cols.yaml` and `data.yaml` files contain only the names of the desired collaborators after the certification procedure.
 
 We recommend replicating the OpenFL workspace folder structure on all the machines and following the usual certifying procedure. Finally, on the aggregator node you should have the following folder structure:
 ```
 workspace/
---save/WORKSPACE_NAME_init.pbuf
+--save/TEMPLATE_NAME_init.pbuf
 --logs/
 --plan/cols.yaml
 --cert/
@@ -146,6 +168,9 @@ docker run -it --rm --device=/dev/sgx_enclave --volume=/var/run/aesmd/aesm.socke
 --volume=${WORKSPACE_PATH}/data:/workspace/data \
 ${WORKSPACE_NAME} collaborator start -n ${COL_NAME}
 ```
+
+In case you want to modify the running code, you need to go back to the building node, fix your code, re-build the Docker image through the graminize command and then sending the new image to the Aggregator and Collaborators nodes.
+At this point you have to re-run the docker load command on the Aggregator and Collaborators machines; now you should be able to re-run successfully your experiment.
 
 ### **No SGX run (`gramine-direct`)**:
 The user may run an experiment under gramine without SGX. Note how we do not mount `sgx_enclave` device and pass a `--security-opt` instead that allows syscalls required by `gramine-direct`
@@ -211,6 +236,9 @@ Another option is to copy OpenFL source files from an on-disk cloned repo, but i
 - During plan initialization we need data to initialize the model. so at least one collaborator should be in data.yaml and its data should be available. cols.yaml may be empty at first
 During cert sign request generation cols.yaml on collaborators remain empty, data.yaml is extended if needed. On aggregator, cols.yaml are updated during signing procedure, data.yaml remains unmodified
 - `error: Disallowing access to file '/usr/local/lib/python3.8/__pycache__/signal.cpython-38.pyc.3423950304'; file is not protected, trusted or allowed.`
+- The TensorBoardX logging functionality is troublesome; it is better to deactivate the log functionality in the plan.
+- Depending on the Python version inside the Docker container, it could be necessary to manually change the requirement.txt file present in the chosen workspace installation folder.
+- Different OpenFL version used inside and outside the Docker container could lead into issues when running the experiments.
 
  ## TO-DO:
 - [X] import manifest and makefile from OpenFL dist-package 

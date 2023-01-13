@@ -28,6 +28,9 @@ fs.mounts = [
   { type = "tmpfs", path = "/tmp" },
 ]
 
+fs.mount.tmp.type = "tmpfs"
+fs.mount.tmp.path = "/tmp"
+
 sgx.preheat_enclave = false
 
 # Detected a huge manifest, preallocating 64MB of internal memory.
