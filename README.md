@@ -68,6 +68,8 @@ and OpenFL developers and researchers continue to work very closely with UPenn o
 Although initially developed for use in medical imaging, OpenFL designed to be agnostic to the use-case, the industry, and the machine learning framework.
 
 You can find more details in the following articles:
+- [Pati S, et al., 2022](https://www.nature.com/articles/s41467-022-33407-5)
+- [Reina A, et al., 2021](https://arxiv.org/abs/2105.06413)
 - [Sheller MJ,  et al., 2020](https://www.nature.com/articles/s41598-020-69250-1) 
 - [Sheller MJ, et al., 2019](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6589345)
 - [Yang Y, et al., 2019](https://arxiv.org/abs/1902.04885)
