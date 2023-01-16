@@ -133,7 +133,7 @@ def generate_cert_request(collaborator_name, data_path, silent, skip_package):
     Then create a package with the CSR to send for signing.
     """
     from openfl.cryptography.participant import generate_csr
-    from openfl.cryptography.io import write_crt
+    from openfl.cryptography.io import write_csr
     from openfl.cryptography.io import write_key
     from openfl.interface.cli_helper import CERT_DIR
 
@@ -153,8 +153,10 @@ def generate_cert_request(collaborator_name, data_path, silent, skip_package):
         f'{CERT_DIR}/{file_name}', fg='green'))
 
     # Write collaborator csr and key to disk
-    write_crt(client_csr, CERT_DIR / 'client' / f'{file_name}.csr')
+    csr_hash = write_csr(client_csr, CERT_DIR / 'client' / f'{file_name}.csr')
     write_key(client_private_key, CERT_DIR / 'client' / f'{file_name}.key')
+
+    print(f'  CSR hash = {style(csr_hash, fg="red")}')
 
     if not skip_package:
         from shutil import copytree

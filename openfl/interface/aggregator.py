@@ -69,7 +69,7 @@ def _generate_cert_request(fqdn):
 def generate_cert_request(fqdn):
     """Create aggregator certificate key pair."""
     from openfl.cryptography.participant import generate_csr
-    from openfl.cryptography.io import write_crt
+    from openfl.cryptography.io import write_csr
     from openfl.cryptography.io import write_key
     from openfl.interface.cli_helper import CERT_DIR
 
@@ -92,8 +92,10 @@ def generate_cert_request(fqdn):
         f'{CERT_DIR}/server', fg='green'))
 
     # Write aggregator csr and key to disk
-    write_crt(server_csr, CERT_DIR / 'server' / f'{file_name}.csr')
+    csr_hash = write_csr(server_csr, CERT_DIR / 'server' / f'{file_name}.csr')
     write_key(server_private_key, CERT_DIR / 'server' / f'{file_name}.key')
+
+    echo(f'  CSR hash = {style(csr_hash, fg="red")}')
 
 
 # TODO: function not used

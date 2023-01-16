@@ -111,3 +111,25 @@ def read_csr(path: Path) -> Tuple[CertificateSigningRequest, str]:
     # TODO: replace assert with exception / sys.exit
     assert (isinstance(csr, x509.CertificateSigningRequest))
     return csr, hasher.hexdigest()
+
+
+def write_csr(certificate: Certificate, path: Path) -> str:
+    """
+    Write certificate signing request.
+
+    Args:
+        certificate: Certificate
+        path : Path (pathlib)
+
+    Returns:
+        SHA-384 hash of the CSR file in hex format
+    """
+    hasher = sha384()
+    pem_data = certificate.public_bytes(
+        encoding=serialization.Encoding.PEM,
+    )
+    hasher.update(pem_data)
+    with open(path, 'wb') as f:
+        f.write(pem_data)
+
+    return hasher.hexdigest()
