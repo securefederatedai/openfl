@@ -23,5 +23,3 @@ if pkgutil.find_loader('tensorflow'):
 if pkgutil.find_loader('torch'):
     from .runner_pt import PyTorchTaskRunner  # NOQA
     from .fl_model import FederatedModel  # NOQA
-if pkgutil.find_loader('torch') and pkgutil.find_loader('tensorflow'):
-    from .runner_fe import FastEstimatorTaskRunner  # NOQA
