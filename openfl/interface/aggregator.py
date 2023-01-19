@@ -68,8 +68,8 @@ def start_(plan, authorized_cols, secure, cert_path, key_path):
 
         common_name = plan.config['network']['settings']['agg_addr'].lower()
         plan.get_server(root_certificate=f'{cert_path}/cert_chain.crt',
-                        private_key=f'{cert_path}/agg_{common_name}.key',
-                        certificate=f'{key_path}/agg_{common_name}.crt').serve()
+                        private_key=f'{key_path}/agg_{common_name}.key',
+                        certificate=f'{cert_path}/agg_{common_name}.crt').serve()
     else:
         plan.get_server().serve()
 

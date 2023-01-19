@@ -72,7 +72,7 @@ def start_(plan, collaborator_name, data_config, secure, cert_path, key_path):
         common_name = f'{collaborator_name}'.lower()
         plan.get_collaborator(collaborator_name,
                               root_certificate=f'{cert_path}/cert_chain.crt',
-                              private_key=f'{cert_path}/col_{common_name}.key',
+                              private_key=f'{key_path}/col_{common_name}.key',
                               certificate=f'{cert_path}/col_{common_name}.crt').run()
     else:
         plan.get_collaborator(collaborator_name).run()
