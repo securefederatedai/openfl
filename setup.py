@@ -1,4 +1,4 @@
-# Copyright (C) 2020-2021 Intel Corporation
+# Copyright (C) 2020-2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """This package includes dependencies of the openfl project."""
@@ -80,7 +80,7 @@ with open('README.md', encoding='utf-8') as f:
 
 setup(
     name='openfl',
-    version='1.4',
+    version='1.5',
     author='Intel Corporation',
     description='Federated Learning for the Edge',
     long_description=long_description,
