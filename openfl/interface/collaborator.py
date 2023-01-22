@@ -335,7 +335,7 @@ def certify(collaborator_name, silent, request_pkg=None, import_=False):
 
         signing_crt = read_crt(CERT_DIR / signing_crt_path)
 
-        echo(f'Certificate request attributes:')
+        echo('Certificate request attributes:')
         for a in csr.subject:
             echo(f'  {style(a.rfc4514_attribute_name, fg="green")} = {style(a.value, fg="red")}')
         echo('The CSR Hash for file '
