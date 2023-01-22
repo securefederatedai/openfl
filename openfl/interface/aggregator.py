@@ -168,6 +168,9 @@ def certify(fqdn, silent):
 
     signing_crt = read_crt(signing_crt_absolute_path)
 
+    echo(f'Certificate request attributes:')
+    for a in csr.subject:
+        echo(f'  {style(a.rfc4514_attribute_name, fg="green")} = {style(a.value, fg="red")}')
     echo('The CSR Hash for file '
          + style(f'{cert_name}.csr', fg='green')
          + ' = '
