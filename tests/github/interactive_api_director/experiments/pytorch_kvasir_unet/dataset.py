@@ -87,14 +87,14 @@ class FedDataset(DataInterface):
         Output of this method will be provided to tasks with optimizer in contract
         """
         return DataLoader(
-            self.train_set, num_workers=8, batch_size=self.kwargs['train_bs'], shuffle=True
+            self.train_set, batch_size=self.kwargs['train_bs'], shuffle=True
         )
 
     def get_valid_loader(self, **kwargs):
         """
         Output of this method will be provided to tasks without optimizer in contract
         """
-        return DataLoader(self.valid_set, num_workers=8, batch_size=self.kwargs['valid_bs'])
+        return DataLoader(self.valid_set, batch_size=self.kwargs['valid_bs'])
 
     def get_train_data_size(self):
         """
