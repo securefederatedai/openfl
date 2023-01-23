@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# Copyright (C) 2020-2021 Intel Corporation
+# Copyright (C) 2020-2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 """CLI module."""
 
