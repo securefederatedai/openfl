@@ -1,4 +1,4 @@
-.. # Copyright (C) 2022-2023 Intel Corporation
+.. # Copyright (C) 2020-2023 Intel Corporation
 .. # SPDX-License-Identifier: Apache-2.0
 
 .. _straggler_handling_algorithms:

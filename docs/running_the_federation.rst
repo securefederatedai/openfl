@@ -1,4 +1,4 @@
-.. # Copyright (C) 2020-2021 Intel Corporation
+.. # Copyright (C) 2020-2023 Intel Corporation
 .. # SPDX-License-Identifier: Apache-2.0
 
 .. _running_the_federation:
@@ -53,7 +53,7 @@ An overview of this workflow is shown below.
 .. centered:: Overview of the Director-Based Workflow
 
 
-.. # Copyright (C) 2020-2022 Intel Corporation
+.. # Copyright (C) 2020-2023 Intel Corporation
 .. # SPDX-License-Identifier: Apache-2.0
 
 
