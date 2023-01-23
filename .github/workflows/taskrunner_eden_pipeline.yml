@@ -5,7 +5,7 @@ name: TaskRunner (Eden Compression)
 
 on:
   pull_request:
-    branches: [ develop ]
+    branches: [ develop ] 
 
 permissions:
   contents: read
