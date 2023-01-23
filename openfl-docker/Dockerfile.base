@@ -6,7 +6,7 @@
 FROM ubuntu:22.10
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
-ARG INSTALL_SOURCES="no"
+ARG INSTALL_SOURCES="yes"
 
 WORKDIR /zlib
 #zlib install to 1.2.13
