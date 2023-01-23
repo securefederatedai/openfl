@@ -33,11 +33,12 @@ RUN apt-get update && \
         apt-get update && \
         grep -v -f base_packages.txt all_packages.txt | while read -r line; do \
             package=$line; \
-            name=("${package//:/ }"); \
-            echo "${name[0]}" >> all_dependencies.txt; \
-            echo "${name[0]}" >> licenses.txt;\
-            cat /usr/share/doc/"${name[0]}"/copyright >> licenses.txt; \
-            grep -lE 'GPL|MPL|EPL' /usr/share/doc/"${name[0]}"/copyright; \
+            unparsed_name=("${package//:/ }"); \
+            name=$(echo $unparsed_name | awk '{ print $1 }'); \
+            echo "${name}" >> all_dependencies.txt; \
+            echo "${name}" >> licenses.txt;\
+            cat /usr/share/doc/"${name}"/copyright >> licenses.txt; \
+            grep -lE 'GPL|MPL|EPL' /usr/share/doc/"${name}"/copyright; \
             exit_status=$?; \
             if [ $exit_status -eq 0 ]; then \
                 apt-get source -q --download-only "$package";  \
