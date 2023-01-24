@@ -8,7 +8,6 @@ def snykData = [
     // 'openfl-workspace_torch_cnn_histology': 'openfl-workspace/torch_cnn_histology/requirements.txt',
     'openfl-workspace_torch_cnn_histology_src': 'openfl-workspace/torch_cnn_histology/src/requirements.txt',
     'openfl-workspace_keras_nlp': 'openfl-workspace/keras_nlp/requirements.txt',
-    'openfl-workspace_fe_tf_adversarial_cifar': 'openfl-workspace/fe_tf_adversarial_cifar/requirements.txt',
     'openfl-workspace_torch_cnn_mnist': 'openfl-workspace/torch_cnn_mnist/requirements.txt',
     'openfl-workspace_keras_nlp_gramine_ready': 'openfl-workspace/keras_nlp_gramine_ready/requirements.txt',
     'openfl-workspace_torch_unet_kvasir': 'openfl-workspace/torch_unet_kvasir/requirements.txt',
