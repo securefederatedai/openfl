@@ -4,7 +4,7 @@ FROM ${BASE_IMAGE}
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 RUN --mount=type=cache,target=/root/.cache/ \
-    pip install --upgrade pip && \
+    pip install --upgrade pip setuptools wheel && \
     pip install openfl
 
 # install gramine
