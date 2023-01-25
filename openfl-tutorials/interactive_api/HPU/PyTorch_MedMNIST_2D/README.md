@@ -39,6 +39,8 @@ For example: HPU_PyTorch_MedMNIST_2D.ipynb placed under workspace folder contain
 chmod +x habanalabs-installer.sh
 ./habanalabs-installer.sh install --type base
 ```
+ **NOTE:** Habanalabs requires python 3.8 version. It is hardcoded in [habanalabs-installer.sh](https://vault.habana.ai/ui/native/gaudi-installer/latest/habanalabs-installer.sh)
+ 
 You can refer the [Habana docs](https://docs.habana.ai/en/latest/Installation_Guide/Bare_Metal_Fresh_OS.html#set-up-synapseai-sw-stack) mentioned [GitHub repository](https://github.com/HabanaAI/Setup_and_Install) for detailed instructions.
 
 <br/>
