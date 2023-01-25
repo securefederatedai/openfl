@@ -6,6 +6,8 @@ For example: HPU_pytorch_tinyimagenet.ipynb placed under workspace folder contai
 
  All the execution steps mention in last section (**V. How to run this tutorial**) remain same for HPU examples but as pre-requisite it needs some additional environment setup and Habana supported package installations which is explained below from **section I to IV**.
 
+**Note:** By default these experiments utilize only 1 HPU device
+
  <br/>
 
  ## **I. AWS DL1 Instance Setup**
@@ -25,6 +27,8 @@ For example: HPU_pytorch_tinyimagenet.ipynb placed under workspace folder contai
 chmod +x habanalabs-installer.sh
 ./habanalabs-installer.sh install --type base
 ```
+ **NOTE:** Habanalabs requires python 3.8 version. It is hardcoded in [habanalabs-installer.sh](https://vault.habana.ai/ui/native/gaudi-installer/latest/habanalabs-installer.sh)
+ 
 You can refer the [Habana docs](https://docs.habana.ai/en/latest/Installation_Guide/Bare_Metal_Fresh_OS.html#set-up-synapseai-sw-stack) mentioned [GitHub repository](https://github.com/HabanaAI/Setup_and_Install) for detailed instructions.
 
 <br/>
