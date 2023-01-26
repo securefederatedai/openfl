@@ -104,6 +104,7 @@ setup(
         'openfl.databases.utilities',
         'openfl.experimental',
         'openfl.experimental.interface',
+        'openfl.experimental.interface.aggregation_functions',
         'openfl.experimental.placement',
         'openfl.experimental.runtime',
         'openfl.experimental.utilities',
