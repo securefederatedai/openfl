@@ -4,7 +4,6 @@ import shutil
 from subprocess import check_call
 import os
 from pathlib import Path
-import re
 import tarfile
 
 
@@ -50,17 +49,7 @@ def create_certified_workspace(path, template, fqdn, rounds_to_train):
     # Initialize FL plan
     check_call(['fx', 'plan', 'initialize', '-a', fqdn])
     plan_path = Path('plan/plan.yaml')
-    try:
-        rounds_to_train = int(rounds_to_train)
-        with open(plan_path, "r", encoding='utf-8') as sources:
-            lines = sources.readlines()
-        with open(plan_path, "w", encoding='utf-8') as sources:
-            for line in lines:
-                sources.write(
-                    re.sub(r'rounds_to_train.*', f'rounds_to_train: {rounds_to_train}', line)
-                )
-    except (ValueError, TypeError):
-        pass
+    edit_plan(plan_path, parameter_dict={'rounds_to_train': rounds_to_train})
     # Create certificate authority for workspace
     check_call(['fx', 'workspace', 'certify'])
 
@@ -76,11 +65,12 @@ def certify_aggregator(fqdn):
     check_call(['fx', 'aggregator', 'certify', '--fqdn', fqdn, '--silent'])
 
 
-def create_signed_cert_for_collaborator(col, data_path):
+def create_signed_cert_for_collaborator(col, data_path) -> Path:
     '''
     We do certs exchage for all participants in a single workspace to speed up this test run.
     Do not do this in real experiments in untrusted environments
     '''
+    result_file = Path(f'cert_col_{col}.tar')
     print(f'Certifying collaborator {col} with data path {data_path}...')
     # Create collaborator certificate request
     check_call([
@@ -103,13 +93,15 @@ def create_signed_cert_for_collaborator(col, data_path):
         for entry in iterator:
             if entry.name.endswith('key'):
                 tarfiles.append(entry.path)
-    with tarfile.open(f'cert_col_{col}.tar', 'w') as t:
+    with tarfile.open(result_file, 'w') as t:
         for f in tarfiles:
             t.add(f)
     for f in tarfiles:
         os.remove(f)
     # Remove request archive
     os.remove(f'col_{col}_to_agg_cert_request.zip')
+
+    return result_file.absolute()
 
 
 def start_aggregator_container(workspace_image_name, aggregator_required_files):
@@ -133,3 +125,43 @@ def start_collaborator_container(workspace_image_name, col_name):
         f'{workspace_image_name} '
         'bash /openfl/openfl-docker/start_actor_in_container.sh',
         shell=True)
+
+
+def edit_plan(plan_path: Path, parameter_dict: dict) -> None:
+    import re
+    try:
+        with open(plan_path, "r", encoding='utf-8') as sources:
+            lines = sources.readlines()
+        with open(plan_path, "w", encoding='utf-8') as sources:
+            for line in lines:
+                for parameter, value in parameter_dict.items():
+                    if parameter in line:
+                        line = re.sub(
+                            f'{parameter}.*',
+                            f'{parameter}: {value}',
+                            line)
+                        break
+                sources.write(line)
+    except (ValueError, TypeError):
+        pass
+
+
+def edit_plan_yaml(plan_path: Path, parameter_dict: dict) -> None:
+    """
+    Change plan.yaml settings.
+
+    parameter_dict keys are expected to be dot-delimited,
+        for example: {'aggregator.settings.rounds_to_train':5}
+    """
+    import yaml
+    from functools import reduce
+    from operator import getitem
+
+    with open(plan_path, "r", encoding='utf-8') as sources:
+        plan = yaml.safe_load(sources)
+    for parameter, value in parameter_dict.items():
+        keys_list = parameter.split('.')
+        # Chain dict access
+        reduce(getitem, keys_list[:-1], plan)[keys_list[-1]] = value
+    with open(plan_path, "w", encoding='utf-8') as sources:
+        yaml.safe_dump(plan, sources)
