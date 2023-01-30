@@ -95,14 +95,14 @@ if __name__ == '__main__':
     check_call(['docker', 'load', '--input', image_tar])
     time.sleep(5)
     with ProcessPoolExecutor(max_workers=2) as executor:
-        executor.submit(start_aggregator_container, args=(
+        executor.submit(start_aggregator_container,
             workspace_image_name,
             aggregator_required_files
-        ))
+        )
         time.sleep(5)
-        executor.submit(start_collaborator_container, args=(
+        executor.submit(start_collaborator_container,
             workspace_image_name,
             col
-        ))
+        )
     # If containers are started but collaborator will fail to
     # conect the aggregator, the pipeline will go to the infinite loop
