@@ -301,6 +301,7 @@ def certify(fqdn, silent, cert_path=None, key_path=None):
 @option('-k', '--key_path',
         help='The key path where key reside', required=True)
 def _uninstall_cert(cert_path, key_path):
+    """Uninstall cert/key pair under a given directory."""
     uninstall_cert(cert_path, key_path)
 
 

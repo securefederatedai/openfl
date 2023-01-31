@@ -574,12 +574,58 @@ def graminize_(context, signing_key: Path, enclave_size: str, tag: str,
         echo(f'\n ✔️ The image saved to file: {tag}.tar.gz')
 
 
+@workspace.command(name='participants')
+@option('-c', '--cert_path',
+        help='Cert path where signing CA certs reside', required=False)
+def participants_(cert_path=None):
+    """Select a subset of registered collaborators for the experiment."""
+    participants(cert_path)
+
+
+def participants(cert_path=None):
+    """Select a subset of collaborators from all regsitered collaborators."""
+    from click import Choice
+    from click import confirm
+    from click import prompt as click_prompt
+    from glob import glob
+    from yaml import dump
+    from pathlib import Path
+    from openfl.interface.cli_helper import CERT_DIR
+
+    if cert_path:
+        cert_path = Path(cert_path).absolute()
+        participant_certs = glob(f'{cert_path}/col_*.crt')
+    else:
+        participant_certs = glob(f'{CERT_DIR}/client/col_*.crt')
+
+    total_participants = []
+    for cert in participant_certs:
+        total_participants.append(os.path.basename(os.path.normpath(cert)).split('.')[0][4:])
+
+    collaborators_added = []
+    collaborators_to_add = True
+
+    while collaborators_to_add:
+        collaborator = click_prompt('Select collaborator for the experiment: ',
+                                    type=Choice(total_participants), show_choices=True)
+        collaborators_added.append(collaborator)
+        total_participants.remove(collaborator)
+
+        if not confirm("Are there additional collaborators to add to the experiment?"):
+            collaborators_to_add = False
+
+    cols_file = Path('plan/cols.yaml').absolute()
+    with open(cols_file, 'w', encoding='utf-8') as f:
+        dump({'collaborators': collaborators_added}, f)
+
+
 @workspace.command(name='uninstall-cert')
 @option('-c', '--cert_path',
         help='The cert path where pki certs reside', required=True)
 @option('-k', '--key_path',
         help='The key path where key reside', required=True)
 def _uninstall_cert(cert_path, key_path):
+    """Uninstall cert/key pair under a given directory."""
     uninstall_cert(cert_path, key_path)
 
 

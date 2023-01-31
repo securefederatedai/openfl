@@ -801,6 +801,7 @@ However, continue with the following procedure for details in creating a federat
 
         - Ensures each node in the federation has a valid public key infrastructure (PKI) certificate.
         - Distributes the workspace from the aggregator node to the other collaborator nodes.
+        - Optionally, select a subset of registered/certified collaborators to participate in the federation. By default, all certified collaborators will be added.
 
 
     `STEP 3: Start the Federation`_
@@ -1124,6 +1125,22 @@ Importing the Workspace
     .. code-block:: console
 
        fx collaborator certify --import /PATH/TO/agg_to_col_{COL_LABEL}_signed_cert.zip -c CERT_PATH_COL -k KEY_PATH_COL
+
+.. _select_participants:
+
+**On the Aggregator Node:**
+
+OPTIONAL STEP: Users can select participants to take part in a federation. By default, all the participants (Collaborators) certified by the CA are added to the plan :code:`plan/cols.yaml` file. To select only a subset of participants out of the displayed names of all certified collaborators for the current federation:
+
+    .. code-block:: console
+
+       fx workspace participants
+
+If :code:`CERT_PATH` was used at the aggregator node to store CA signing certificate, specify the same path here:
+
+    .. code-block:: console
+
+       fx workspace participants -c CERT_PATH
 
 
 .. _running_the_federation.start_nodes:

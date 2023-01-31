@@ -499,7 +499,7 @@ class Plan:
                    root_certificate=None, private_key=None, certificate=None):
         """Get gRPC client for the specified collaborator."""
         from openfl.interface.cli_helper import CERT_DIR
-        
+
         common_name = collaborator_name
         if not root_certificate or not private_key or not certificate:
             root_certificate = f'{CERT_DIR}/cert_chain.crt'

@@ -115,6 +115,7 @@ def create_signed_cert_for_collaborator(col, data_path):
     We do certs exchage for all participants in a single workspace to speed up this test run.
     Do not do this in real experiments in untrusted environments
     '''
+    from openfl.interface.cli_helper import CERT_DIR
     print(f'Certifying collaborator {col} with data path {data_path}...')
     # Create collaborator certificate request
     check_call([
@@ -133,7 +134,7 @@ def create_signed_cert_for_collaborator(col, data_path):
     # Pack the collaborators private key and the signed cert
     # as well as it's data.yaml to a tarball
     tarfiles = ['plan/data.yaml', f'agg_to_col_{col}_signed_cert.zip']
-    with os.scandir('cert/client') as iterator:
+    with os.scandir(f'{CERT_DIR}/client') as iterator:
         for entry in iterator:
             if entry.name.endswith('key'):
                 tarfiles.append(entry.path)
