@@ -1,4 +1,5 @@
 from copy import deepcopy
+import sys
 
 import numpy as np
 import PIL
@@ -15,6 +16,8 @@ from openfl.interface.interactive_api.experiment import DataInterface
 from openfl.interface.interactive_api.experiment import FLExperiment
 from openfl.interface.interactive_api.experiment import ModelInterface
 from openfl.interface.interactive_api.federation import Federation
+
+sys.stdout.reconfigure(encoding='utf-8')
 
 
 def run():
