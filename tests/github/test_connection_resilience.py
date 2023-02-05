@@ -2,7 +2,6 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from argparse import ArgumentParser
-import socket
 from subprocess import check_call
 import shutil
 import os
@@ -11,8 +10,9 @@ import tarfile
 import time
 from concurrent.futures import ProcessPoolExecutor
 
-from tests.github.utils import edit_plan_yaml
 from tests.github.utils import create_signed_cert_for_collaborator
+from tests.github.utils import edit_plan_yaml
+from tests.github.utils import prepare_tc_flags
 
 ROUNDS_TO_TRAIN = 2
 DATA_REDUCTION_FACTOR = 10
@@ -25,6 +25,11 @@ if __name__ == '__main__':
         for entry in iterator:
             if entry.name not in ['__init__.py', 'workspace', 'default']:
                 workspace_choice.append(entry.name)
+    docker_tc_help_string = (
+        'options: "com.docker-tc.limit=1mbps" "com.docker-tc.delay=100ms" "com.docker-tc.loss=50%" '
+        '"com.docker-tc.duplicate=50%" "com.docker-tc.corrupt=10%" '
+        'read more: https://github.com/lukaszlach/docker-tc#usage'
+    )
     parser.add_argument('--template', default='torch_unet_kvasir_gramine_ready',
                         choices=workspace_choice)
     parser.add_argument('--fed_workspace', default='test_federation')
@@ -35,6 +40,16 @@ if __name__ == '__main__':
                         '2 - start from creating a workspace \n' +
                         '3 - start from building a dockerized workspace image \n' +
                         '4 - run Federation')
+    parser.add_argument(
+        '-atc',
+        '--aggregator_traffic_control_flag', action='append', default=[],
+        help=docker_tc_help_string
+        )
+    parser.add_argument(
+        '-ctc',
+        '--collaborator_traffic_control_flag', action='append', default=[],
+        help=docker_tc_help_string
+        )
     args = parser.parse_args()
     fed_workspace = args.fed_workspace
     workspace_image_name = fed_workspace
@@ -46,6 +61,10 @@ if __name__ == '__main__':
     base_image_tag = 'openfl'
     aggregator_container_name = 'aggregatorContainer'
     # collaborator_container_base_name = f'{fed_workspace}_collaborator_container'
+
+    # traffic control flags for containers
+    agg_tc_flags = prepare_tc_flags(args.aggregator_traffic_control_flag)
+    col_tc_flags = prepare_tc_flags(args.collaborator_traffic_control_flag)
 
     # FQDN here is the name of Aggregator container
     fqdn = aggregator_container_name
@@ -125,6 +144,7 @@ if __name__ == '__main__':
                     f'--network {docker_network_name} '
                     f'-v {aggregator_required_files}:/certs.tar '
                     '-e \"CONTAINER_TYPE=aggregator\" '
+                    f'{agg_tc_flags}'
                     f'--name {aggregator_container_name} '
                     f'{workspace_image_name} '
                     'bash /openfl/openfl-docker/start_actor_in_container.sh',
@@ -138,6 +158,7 @@ if __name__ == '__main__':
                     '-e \"CONTAINER_TYPE=collaborator\" '
                     f'-e \"no_proxy={aggregator_container_name}\" '
                     f'-e \"COL={col_names[index]}\" '
+                    f'{col_tc_flags}'
                     f'--name {col_names[index]} '
                     f'{workspace_image_name} '
                     'bash /openfl/openfl-docker/start_actor_in_container.sh',

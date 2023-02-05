@@ -5,6 +5,7 @@ from subprocess import check_call
 import os
 from pathlib import Path
 import tarfile
+from typing import List
 
 
 def create_collaborator(col, workspace_root, data_path, archive_name, fed_workspace):
@@ -165,3 +166,39 @@ def edit_plan_yaml(plan_path: Path, parameter_dict: dict) -> None:
         reduce(getitem, keys_list[:-1], plan)[keys_list[-1]] = value
     with open(plan_path, "w", encoding='utf-8') as sources:
         yaml.safe_dump(plan, sources)
+
+
+def prepare_tc_flags(list_of_flags: List[str]) -> str:
+    '''
+    Docker Traffic Control: https://github.com/lukaszlach/docker-tc#usage
+     
+    If you want to test docker-tc follow these steps:
+
+    # to start docker traffic control container:
+    docker run --rm \
+        --name docker-tc \
+        --network host \
+        --cap-add NET_ADMIN \
+        -v /var/run/docker.sock:/var/run/docker.sock \
+        -v /var/docker-tc:/var/docker-tc \
+        lukaszlach/docker-tc
+
+    # create a test docker bridge network:
+    docker network create iperf3
+
+    # to check bandwidth run iperf3 containers with docker-tc labels:
+    docker run --network iperf3 -it --rm --label "com.docker-tc.enabled=1" --label "com.docker-tc.limit=1mbit" --name=iperf3-server networkstatic/iperf3 -s
+    docker run --network iperf3 -it --rm networkstatic/iperf3 -c iperf3-server
+
+    # stop the containers:
+    docker stop iperf3-server docker-tc
+
+    # remove the test docker bridge network:
+    docker network rm iperf3
+    '''
+    if list_of_flags:
+        list_of_flags.insert(0, 'com.docker-tc.enabled=1')
+    result = ''
+    for flag in list_of_flags:
+        result += f'--label "{flag}" '
+    return result
