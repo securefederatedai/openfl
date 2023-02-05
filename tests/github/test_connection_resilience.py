@@ -3,6 +3,7 @@
 
 from argparse import ArgumentParser
 from subprocess import check_call
+import asyncio
 import shutil
 import os
 from pathlib import Path
@@ -133,26 +134,18 @@ if __name__ == '__main__':
                 # shutil.rmtree(d)
 
         # 4. Run the Federation
-        try:
-            # Create a Docker Network
-            docker_network_name = f'{fed_workspace}_network'
-            check_call(f'docker network create {docker_network_name} || true', shell=True)
-
-            def start_aggregator_command():
-                check_call(
-                    'docker run --rm '
+        def get_start_aggregator_command():
+            return ('docker run --rm '
                     f'--network {docker_network_name} '
                     f'-v {aggregator_required_files}:/certs.tar '
                     '-e \"CONTAINER_TYPE=aggregator\" '
                     f'{agg_tc_flags}'
                     f'--name {aggregator_container_name} '
                     f'{workspace_image_name} '
-                    'bash /openfl/openfl-docker/start_actor_in_container.sh',
-                    shell=True)
+                    'bash /openfl/openfl-docker/start_actor_in_container.sh')
 
-            def start_collaborator_command(index):
-                check_call(
-                    'docker run --rm '
+        def get_start_collaborator_command(index):
+            return ('docker run --rm '
                     f'--network {docker_network_name} '
                     f'-v {collaborator_required_files[index]}:/certs.tar '
                     '-e \"CONTAINER_TYPE=collaborator\" '
@@ -161,18 +154,41 @@ if __name__ == '__main__':
                     f'{col_tc_flags}'
                     f'--name {col_names[index]} '
                     f'{workspace_image_name} '
-                    'bash /openfl/openfl-docker/start_actor_in_container.sh',
-                    shell=True)
+                    'bash /openfl/openfl-docker/start_actor_in_container.sh')
 
+        async def run_federation_async():
+            agg_proc = await asyncio.create_subprocess_shell(
+                get_start_aggregator_command(),
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE)
+            asyncio.sleep(1)
+            col_processes = []
+            for i in range(n_cols):
+                col_proc = await asyncio.create_subprocess_shell(
+                    get_start_collaborator_command(i),
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE)
+                col_processes.append(col_proc)
+
+
+        def run_federation_subprocess():
             with ProcessPoolExecutor(max_workers=n_cols + 1) as executor:
                 executor.submit(
-                    start_aggregator_command
+                    check_call, get_start_aggregator_command(), shell=True
                 )
                 time.sleep(3)
                 for i in range(n_cols):
                     executor.submit(
-                        start_collaborator_command, i
+                        check_call, get_start_collaborator_command(i), shell=True
                     )
+
+        # Create a Docker Network
+        docker_network_name = f'{fed_workspace}_network'
+        check_call(f'docker network create {docker_network_name} || true', shell=True)
+
+        run_federation_subprocess()
+        try:
+            pass
         except Exception as e:
             print(e)
         finally:
@@ -180,6 +196,5 @@ if __name__ == '__main__':
                 f'docker stop {aggregator_container_name} {" ".join(col_names)} || true',
                 shell=True)
             check_call(f'docker network rm {docker_network_name}', shell=True)
-
         # If containers are started but collaborator will fail to
         # conect the aggregator, the pipeline will go to the infinite loop
