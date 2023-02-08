@@ -1,4 +1,4 @@
-.. # Copyright (C) 2020-2021 Intel Corporation
+.. # Copyright (C) 2020-2023 Intel Corporation
 .. # SPDX-License-Identifier: Apache-2.0
 
 *************************************************
@@ -13,9 +13,13 @@ The following are utilities available in Open Federated Learning (|productName|)
 :doc:`splitters_data`
     Split your data to run your federation from a single dataset.
 
+:doc:`timeouts`
+    Decorate methods to enforce timeout on it's execution.
+
 .. toctree::
    :maxdepth: 1
    :hidden:
 
    pki
    splitters_data
+   timeouts

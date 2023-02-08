@@ -1,4 +1,4 @@
-# Copyright (C) 2020-2021 Intel Corporation
+# Copyright (C) 2020-2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 """Kvasir shard descriptor."""
 
@@ -12,6 +12,8 @@ from PIL import Image
 from openfl.interface.interactive_api.shard_descriptor import ShardDataset
 from openfl.interface.interactive_api.shard_descriptor import ShardDescriptor
 from openfl.utilities import validate_file_hash
+from zipfile import ZipFile
+import requests
 
 
 class KvasirShardDataset(ShardDataset):
@@ -95,9 +97,11 @@ class KvasirShardDescriptor(ShardDescriptor):
         """Download data."""
         zip_file_path = data_folder / 'kvasir.zip'
         os.makedirs(data_folder, exist_ok=True)
-        os.system('wget -nc'
-                  " 'https://datasets.simula.no/downloads/hyper-kvasir/hyper-kvasir-segmented-images.zip'"
-                  f' -O {zip_file_path.relative_to(Path.cwd())}')
+        with open(zip_file_path.relative_to(Path.cwd()), 'wb') as zf:
+            response = requests.get('https://datasets.simula.no/downloads/hyper-kvasir/'
+                                    'hyper-kvasir-segmented-images.zip')
+            for chunk in response.iter_content(1024 * 1024 * 1024):
+                zf.write(chunk)
         zip_sha384 = ('66cd659d0e8afd8c83408174'
                       '1ade2b75dada8d4648b816f2533c8748b1658efa3d49e205415d4116faade2c5810e241e')
         validate_file_hash(zip_file_path, zip_sha384)

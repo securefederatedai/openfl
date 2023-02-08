@@ -4,8 +4,6 @@
 name: Interactive API - Tensorflow MNIST
 
 on:
-  push:
-    branches: [ develop ]
   pull_request:
     branches: [ develop ]
 
@@ -14,8 +12,7 @@ permissions:
 
 jobs:
   build:
-
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest # Add Windows support after https://github.com/keras-team/keras/issues/16308 is merged
 
     steps:
     - uses: actions/checkout@v3
@@ -31,6 +28,4 @@ jobs:
       run: |
         python setup.py build_grpc
         pip install tensorflow==2.8
-        cd tests/github/interactive_api_director/experiments/tensorflow_mnist
-        ./run.sh
-        pkill fx
+        python -m tests.github.interactive_api_director.experiments.tensorflow_mnist.run

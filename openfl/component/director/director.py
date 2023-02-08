@@ -1,4 +1,4 @@
-# Copyright (C) 2020-2021 Intel Corporation
+# Copyright (C) 2020-2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Director module."""
@@ -132,7 +132,7 @@ class Director:
             # Experiment already set, but the envoy hasn't received experiment
             # name (e.g. was disconnected)
             experiment = self.experiments_registry[experiment_name]
-            if experiment.aggregator.round_number == 0:
+            if experiment.aggregator.round_number < experiment.aggregator.rounds_to_train:
                 return experiment_name
 
         self.col_exp[envoy_name] = None

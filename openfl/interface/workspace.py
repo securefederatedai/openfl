@@ -1,4 +1,4 @@
-# Copyright (C) 2020-2021 Intel Corporation
+# Copyright (C) 2020-2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 """Workspace module."""
 
@@ -132,6 +132,7 @@ def export_(pip_install_options: Tuple[str]):
 
     from plan import freeze_plan
     from openfl.interface.cli_helper import WORKSPACE
+    from openfl.utilities.utils import rmtree
 
     plan_file = Path('plan/plan.yaml').absolute()
     try:
@@ -174,7 +175,7 @@ def export_(pip_install_options: Tuple[str]):
     # Create Zip archive of directory
     echo('\n 🗜️ Preparing workspace distribution zip file')
     make_archive(archive_name, archive_type, tmp_dir)
-
+    rmtree(tmp_dir)
     echo(f'\n ✔️ Workspace exported to archive: {archive_file_name}')
 
 
@@ -395,22 +396,23 @@ def dockerize_(context, base_image, save):
         'BASE_IMAGE': base_image
     }
 
-    client = docker.from_env(timeout=3600)
+    cli = docker.APIClient()
     echo('Building the Docker image')
     try:
-        client.images.build(
+        for line in cli.build(
             path=str(workspace_path),
             tag=workspace_name,
             buildargs=build_args,
-            dockerfile=dockerfile_workspace
-        )
-    except docker.errors.BuildError as e:
-        for log in e.build_log:
-            msg = log.get('stream')
-            if msg:
-                echo(msg)
-        echo('Failed to build the image\n' + str(e) + '\n')
-        sys.exit(1)
+            dockerfile=dockerfile_workspace,
+            timeout=3600,
+            decode=True
+        ):
+            if 'stream' in line:
+                print(f'> {line["stream"]}', end='')
+            elif 'error' in line:
+                echo('Failed to build the Docker image:')
+                echo(line)
+                sys.exit(1)
     finally:
         os.remove(workspace_archive)
         os.remove(dockerfile_workspace)
@@ -420,6 +422,7 @@ def dockerize_(context, base_image, save):
     if save:
         workspace_image_tar = workspace_name + '_image.tar'
         echo('Saving the Docker image...')
+        client = docker.from_env(timeout=3600)
         image = client.images.get(f'{workspace_name}')
         resp = image.save(named=True)
         with open(workspace_image_tar, 'wb') as f:
@@ -442,6 +445,11 @@ def dockerize_(context, base_image, save):
              'Must be a power-of-2.\n'
              'Default is 16G.'
         )
+@option('-t', '--tag', required=False,
+        type=str, multiple=False, default='',
+        help='Tag of the built image.\n'
+             'By default, the workspace name is used.'
+        )
 @option('-o', '--pip-install-options', required=False,
         type=str, multiple=True, default=tuple,
         help='Options for remote pip install. '
@@ -457,8 +465,16 @@ def dockerize_(context, base_image, save):
              'For the remote case, the branch can be specified after the "@" sign.\n'
              'For example: https://github.com/intel/openfl.git@develop\n')
 @pass_context
-def graminize_(context, signing_key: Path, enclave_size: str, pip_install_options: Tuple[str],
-               save: bool, rebuild: bool, openfl_path: str) -> None:
+def graminize_(
+    context,
+    signing_key: Path,
+    enclave_size: str,
+    tag: str,
+    pip_install_options: Tuple[str],
+    save: bool,
+    rebuild: bool,
+    openfl_path: str,
+) -> None:
     """
     Build gramine app inside a docker image.
 
@@ -516,6 +532,10 @@ def graminize_(context, signing_key: Path, enclave_size: str, pip_install_option
 
     workspace_path = Path.cwd()
     workspace_name = workspace_path.name
+
+    if not tag:
+        tag = workspace_name
+
     context.invoke(export_, pip_install_options=pip_install_options)
     workspace_archive = workspace_path / f'{workspace_name}.zip'
 
@@ -524,7 +544,7 @@ def graminize_(context, signing_key: Path, enclave_size: str, pip_install_option
     echo('\n 🐋 Building graminized workspace image...')
     signing_key = f'--secret id=signer-key,src={signing_key} ' if sgx_build else ''
     graminized_build_command = (
-        f'docker build -t {workspace_name} {rebuild_option} '
+        f'docker build -t {tag} {rebuild_option} '
         '--build-arg BASE_IMAGE=gramine_openfl '
         f'--build-arg WORKSPACE_ARCHIVE={workspace_archive.relative_to(workspace_path)} '
         f'--build-arg SGX_ENCLAVE_SIZE={enclave_size} '
@@ -536,9 +556,9 @@ def graminize_(context, signing_key: Path, enclave_size: str, pip_install_option
 
     if save:
         echo('\n 💾 Saving the graminized workspace image...')
-        save_image_command = f'docker save {workspace_name} | gzip > {workspace_name}.tar.gz'
+        save_image_command = f'docker save {tag} | gzip > {tag}.tar.gz'
         open_pipe(save_image_command)
-        echo(f'\n ✔️ The image saved to file: {workspace_name}.tar.gz')
+        echo(f'\n ✔️ The image saved to file: {tag}.tar.gz')
 
 
 def apply_template_plan(prefix, template):

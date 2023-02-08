@@ -1,4 +1,4 @@
-# Copyright (C) 2020-2021 Intel Corporation
+# Copyright (C) 2020-2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 """Collaborator module."""
 
@@ -166,6 +166,8 @@ def generate_cert_request(collaborator_name, data_path, silent, skip_package):
         from os import remove
         from glob import glob
 
+        from openfl.utilities.utils import rmtree
+
         archive_type = 'zip'
         archive_name = f'col_{common_name}_to_agg_cert_request'
         archive_file_name = archive_name + '.' + archive_type
@@ -183,6 +185,7 @@ def generate_cert_request(collaborator_name, data_path, silent, skip_package):
 
         # Create Zip archive of directory
         make_archive(archive_name, archive_type, tmp_dir)
+        rmtree(tmp_dir)
 
         echo(f'Archive {archive_file_name} with certificate signing'
              f' request created')
@@ -282,6 +285,7 @@ def certify(collaborator_name, silent, request_pkg=None, import_=False):
     from openfl.cryptography.io import read_key
     from openfl.cryptography.io import write_crt
     from openfl.interface.cli_helper import CERT_DIR
+    from openfl.utilities.utils import rmtree
 
     common_name = f'{collaborator_name}'.lower()
 
@@ -378,6 +382,7 @@ def certify(collaborator_name, silent, request_pkg=None, import_=False):
 
         # Create Zip archive of directory
         make_archive(archive_name, archive_type, tmp_dir)
+        rmtree(tmp_dir)
 
     else:
         # Copy the signed certificate and cert chain into PKI_DIR

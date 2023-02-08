@@ -97,8 +97,9 @@ class _SynchronizedBatchNorm(_BatchNorm):
         # Compute the output.
         if self.affine:
             # MJY:: Fuse the multiplication for speed.
-            output = (input - _unsqueeze_ft(mean)) * _unsqueeze_ft(inv_std * self.weight)\
-                + _unsqueeze_ft(self.bias)
+            output = (input - _unsqueeze_ft(mean)) * _unsqueeze_ft(
+                inv_std * self.weight
+            ) + _unsqueeze_ft(self.bias)
         else:
             output = (input - _unsqueeze_ft(mean)) * _unsqueeze_ft(inv_std)
 

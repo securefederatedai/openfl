@@ -1,4 +1,4 @@
-# Copyright (C) 2020-2021 Intel Corporation
+# Copyright (C) 2020-2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Director server."""
@@ -163,7 +163,7 @@ class DirectorGRPCServer(director_pb2_grpc.DirectorServicer):
         logger.info('Send response')
         return director_pb2.SetNewExperimentResponse(accepted=is_accepted)
 
-    async def GetExperimentStatus(self, request, context):
+    async def GetExperimentStatus(self, request, context):  # NOQA: N802
         """Get experiment status and update if experiment was approved."""
         logger.info('GetExperimentStatus request received')
         caller = self.get_caller(context)

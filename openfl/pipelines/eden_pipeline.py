@@ -1,4 +1,4 @@
-# Copyright (C) 2020-2021 Intel Corporation
+# Copyright (C) 2020-2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 # Copyright 2022 VMware, Inc.
@@ -135,8 +135,9 @@ class Eden:
 
             # normal centroids
             for i in centroids:
-                centroids[i] = torch.Tensor([-j for j in centroids[i][::-1]] + centroids[i])\
-                    .to(device)
+                centroids[i] = torch.Tensor(
+                    [-j for j in centroids[i][::-1]] + centroids[i]
+                ).to(device)
 
             # centroids to bin boundaries
             def gen_boundaries(centroids):
@@ -160,15 +161,55 @@ class Eden:
             raise Exception("nbits value is not supported")
         self.nbits = int(nbits)
 
-        # shared randomness
-        self.sender_prng = torch.Generator(device=device)
-        self.receiver_prng = torch.Generator(device=device)
-
         # number of hadamard transforms to employ
         self.num_hadamard = 2
+
+        # The maximum overhead that is allowed for padding the vector
+        self.max_padding_overhead = 0.1
+
         # TODO: add as a configurable parameter to YAML?
         # 2 is default and always works,
         # but 1 can be used for non-adversarial inputs and thus run faster
+
+    def rand_diag(self, size, seed):
+
+        bools_in_float32 = 8
+
+        shift = 32 // bools_in_float32
+        threshold = 1 << (shift - 1)
+        mask = (1 << shift) - 1
+
+        size_scaled = size // bools_in_float32 + (size % bools_in_float32 != 0)
+        mask32 = (1 << 32) - 1
+
+        # hash seed and then limit its size to prevent overflow
+        seed = (seed * 1664525 + 1013904223) & mask32
+        seed = (seed * 8121 + 28411) & mask32
+
+        r = torch.arange(end=size_scaled, device=self.device) + seed
+
+        # LCG (https://en.wikipedia.org/wiki/Linear_congruential_generator)
+        r = (1103515245 * r + 12345 + seed) & mask32
+        r = (1140671485 * r + 12820163 + seed) & mask32
+
+        # SplitMix (https://dl.acm.org/doi/10.1145/2714064.2660195)
+        r += 0x9e3779b9
+        r = (r ^ (r >> 16)) * 0x85ebca6b & mask32
+        r = (r ^ (r >> 13)) * 0xc2b2ae35 & mask32
+        r = (r ^ (r >> 16)) & mask32
+
+        res = torch.zeros(size_scaled * bools_in_float32, device=self.device)
+
+        s = 0
+        for i in range(bools_in_float32):
+            res[s:s + size_scaled] = r & mask
+            s += size_scaled
+            r >>= shift
+
+        # convert to signs
+        res = 2 * (res >= threshold) - 1
+
+        return res[:size]
 
     def hadamard(self, vec):
 
@@ -190,9 +231,7 @@ class Eden:
     # randomized Hadamard transform
     def rht(self, vec, seed):
 
-        self.sender_prng.manual_seed(seed)
-        ones = torch.ones(vec.numel(), device=vec.device)
-        vec = vec * (2 * torch.bernoulli(ones / 2, generator=self.sender_prng) - 1)
+        vec = vec * self.rand_diag(size=vec.numel(), seed=seed)
         vec = self.hadamard(vec)
 
         return vec
@@ -200,11 +239,8 @@ class Eden:
     # inverse randomized Hadamard transform
     def irht(self, vec, seed):
 
-        self.receiver_prng.manual_seed(seed)
-
         vec = self.hadamard(vec)
-        ones = torch.ones(vec.numel(), device=vec.device)
-        vec = vec * (2 * torch.bernoulli(ones / 2, generator=self.receiver_prng) - 1)
+        vec = vec * self.rand_diag(size=vec.numel(), seed=seed)
 
         return vec
 
@@ -221,11 +257,10 @@ class Eden:
             if not torch.isnan(scale):
                 return bins, scale
 
-        return torch.zeros(vec.numel(), device=vec.device), torch.tensor([0])
+        return torch.zeros(vec.numel(), device=self.device), torch.tensor([0])
 
-    def compress(self, vec, seed):
+    def compress_slice(self, vec, seed):
 
-        vec = torch.Tensor(vec.flatten()).to(self.device)
         dim = vec.numel()
 
         if not dim & (dim - 1) == 0 or dim < 8:
@@ -234,74 +269,134 @@ class Eden:
             padded_vec = torch.zeros(padded_dim, device=self.device)
             padded_vec[:dim] = vec
 
-            vec = self.rht(padded_vec, seed)
-            for i in range(1, self.num_hadamard):
-                vec = self.rht(vec, seed + i)
+            vec = padded_vec
 
-        else:
-
-            for i in range(self.num_hadamard):
-                vec = self.rht(vec, seed + i)
+        for i in range(self.num_hadamard):
+            vec = self.rht(vec, seed + i)
 
         bins, scale = self.quantize(vec)
-        bins = self.toBits(bins)
 
-        return bins.cpu().numpy(), float(scale.cpu().numpy()), dim
+        return bins, float(scale.cpu().numpy()), vec.numel()
 
-    def decompress(self, bins, scale, dim, seed):
+    def compress(self, vec, seed):
 
-        bins = self.fromBits(torch.Tensor(bins).to(self.device)).long()
+        def low_po2(n):
+            if not n:
+                return 0
+            return 2 ** int(np.log2(n))
+
+        def high_po2(n):
+            if not n:
+                return 0
+            return 2 ** (int(np.ceil(np.log2(n))))
+
+        vec = torch.Tensor(vec.flatten()).to(self.device)
+
+        res_bins = []
+        res_scale = []
+        res_dim = []
+
+        dim = remaining = vec.numel()
+        curr_index = 0
+
+        while (high_po2(remaining) - remaining) / dim > self.max_padding_overhead:
+            low = low_po2(remaining)
+
+            slice_bins, slice_scale, slice_dim = self.compress_slice(
+                vec[curr_index: curr_index + low], seed)
+
+            res_bins.append(slice_bins)
+            res_scale.append(slice_scale)
+            res_dim.append(slice_dim)
+
+            curr_index += low
+            remaining -= low
+
+        slice_bins, slice_scale, slice_dim = self.compress_slice(vec[curr_index:], seed)
+
+        res_bins.append(slice_bins)
+        res_scale.append(slice_scale)
+        res_dim.append(slice_dim)
+
+        all_bins = torch.cat(res_bins)
+        all_bins = self.to_bits(all_bins)
+
+        return all_bins.cpu().numpy(), res_scale, res_dim, vec.numel()
+
+    def decompress_slice(self, bins, scale, dim, seed):
+
         vec = torch.take(self.centroids[self.nbits], bins)
 
         for i in range(self.num_hadamard):
             vec = self.irht(vec, int(seed + (self.num_hadamard - 1) - i))
 
-        return (scale * vec)[:int(dim)].cpu().numpy()
+        return (scale * vec)[:dim]
+
+    def decompress(self, bins, metadata):
+
+        bins = self.from_bits(torch.Tensor(bins).to(self.device)).long().flatten()
+
+        seed = int(metadata[0])
+        total_dim = int(metadata[1])
+
+        curr_index = 0
+        vec = []
+
+        for k in range(2, max(metadata.keys()) + 1, 2):
+            scale = metadata[k]
+            dim = int(metadata[k + 1])
+            vec.append(self.decompress_slice(bins[curr_index:curr_index + dim], scale, dim, seed))
+            curr_index += dim
+
+        vec = torch.cat(vec)
+        vec = vec[:total_dim]
+
+        return vec.cpu().numpy()
 
     # packing the quantization values to bytes
-    def toBits(self, intBoolVec):
+    def to_bits(self, int_bool_vec):
 
-        def toBits_h(ibv):
+        def to_bits_h(ibv):
 
             n = ibv.numel()
             ibv = ibv.view(n // 8, 8).int()
 
-            bv = torch.zeros(n // 8, dtype=torch.uint8, device=ibv.device)
+            bv = torch.zeros(n // 8, dtype=torch.uint8, device=self.device)
             for i in range(8):
                 bv += ibv[:, i] * (2**i)
 
             return bv
 
-        Lunit = intBoolVec.numel() // 8
-        bitVec = torch.zeros(Lunit * self.nbits, dtype=torch.uint8)
+        l_unit = int_bool_vec.numel() // 8
+        bit_vec = torch.zeros(l_unit * self.nbits, dtype=torch.uint8)
 
         for i in range(self.nbits):
-            bitVec[Lunit * i:Lunit * (i + 1)] = toBits_h((intBoolVec % 2 != 0).int())
-            intBoolVec = torch.div(intBoolVec, 2, rounding_mode='floor')
+            bit_vec[l_unit * i:l_unit * (i + 1)] = to_bits_h((int_bool_vec % 2 != 0).int())
+            int_bool_vec = torch.div(int_bool_vec, 2, rounding_mode='floor')
 
-        return bitVec
+        return bit_vec
 
     # unpacking bytes to quantization values
-    def fromBits(self, bitVec):
+    def from_bits(self, bit_vec):
 
-        def fromBits_h(bv, device):
+        def from_bits_h(bv):
 
             n = bv.numel()
 
-            iv = torch.zeros((8, n)).to(device)
+            iv = torch.zeros((8, n)).to(self.device)
             for i in range(8):
                 temp = bv.clone()
                 iv[i] = (torch.div(temp, 2 ** i, rounding_mode='floor') % 2 != 0).int()
 
             return iv.T.reshape(-1)
 
-        bitVec = bitVec.view(self.nbits, bitVec.numel() // self.nbits).to(self.device)
-        intVecs = torch.zeros(bitVec.numel() // self.nbits * 8).to(self.device)
+        bit_vec = bit_vec.view(self.nbits, bit_vec.numel() // self.nbits).to(self.device)
+        int_vecs = torch.zeros(bit_vec.numel() // self.nbits * 8).to(self.device)
 
         for i in range(self.nbits):
-            intVecs += 2**i * fromBits_h(bitVec[i], self.device)
+            int_vecs += 2**i * from_bits_h(bit_vec[i])
 
-        return intVecs.reshape(1, -1)
+        return int_vecs.reshape(1, -1)
 
 
 class EdenTransformer(Transformer):
@@ -329,9 +424,16 @@ class EdenTransformer(Transformer):
         metadata = {'int_list': list(data.shape)}
 
         if data.size > self.dim_threshold:
-            int_array, scale, dim = self.eden.compress(data, seed)
+            int_array, scale_list, dim_list, total_dim = self.eden.compress(data, seed)
+
             # TODO: workaround: using the int to float dictionary to pass eden's metadata
-            metadata['int_to_float'] = {0: scale, 1: float(dim), 2: float(seed)}
+            metadata['int_to_float'] = {0: float(seed), 1: float(total_dim)}
+
+            k = 2
+            for scale, dim in zip(scale_list, dim_list):
+                metadata['int_to_float'][k] = scale
+                metadata['int_to_float'][k + 1] = float(dim)
+                k += 2
 
             return_values = int_array.astype(np.uint8).tobytes(), metadata
 
@@ -358,9 +460,7 @@ class EdenTransformer(Transformer):
             data = co.deepcopy(data)
             data = self.eden.decompress(
                 data,
-                metadata['int_to_float'][0],
-                metadata['int_to_float'][1],
-                metadata['int_to_float'][2]
+                metadata['int_to_float']
             )
             data_shape = list(metadata['int_list'])
             data = data.reshape(data_shape)

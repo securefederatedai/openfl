@@ -1,4 +1,4 @@
-# Copyright (C) 2020-2021 Intel Corporation
+# Copyright (C) 2020-2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """CA module."""
@@ -7,18 +7,18 @@ import base64
 import json
 import os
 import sys
-import platform
 import shutil
 import signal
 import subprocess
 import time
-import urllib.request
 from logging import getLogger
 from pathlib import Path
 from subprocess import check_call
 
-import requests
 from click import confirm
+
+from openfl.component.ca.downloader import download_step_bin
+from openfl.component.ca.downloader import download_step_ca_bin
 
 logger = getLogger(__name__)
 
@@ -27,63 +27,6 @@ CA_STEP_CONFIG_DIR = Path('step_config')
 CA_PKI_DIR = Path('cert')
 CA_PASSWORD_FILE = Path('pass_file')
 CA_CONFIG_JSON = Path('config/ca.json')
-
-
-def get_system_and_architecture():
-    """Get system and architecture of machine."""
-    uname_res = platform.uname()
-    system = uname_res.system.lower()
-
-    architecture_aliases = {
-        'x86_64': 'amd64',
-        'armv6l': 'armv6',
-        'armv7l': 'armv7',
-        'aarch64': 'arm64'
-    }
-    architecture = uname_res.machine.lower()
-    for alias in architecture_aliases:
-        if architecture == alias:
-            architecture = architecture_aliases[alias]
-            break
-
-    return system, architecture
-
-
-def download_step_bin(url, grep_name, architecture, prefix='.', confirmation=True):
-    """
-    Donwload step binaries from github.
-
-    Args:
-        url: address of latest release
-        grep_name: name to grep over github assets
-        architecture: architecture type to grep
-        prefix: folder path to download
-        confirmation: request user confirmation or not
-    """
-    if confirmation:
-        confirm('CA binaries from github will be downloaded now', default=True, abort=True)
-    result = requests.get(url)
-    if result.status_code != 200:
-        logger.error(f'''Can\'t download binaries from GitHub. Please try later.
-    Response: {result.text}''')
-        sys.exit(1)
-
-    assets = result.json().get('assets', [])
-    archive_urls = [
-        a['browser_download_url']
-        for a in assets
-        if (grep_name in a['name'] and architecture in a['name']
-            and 'application/gzip' in a['content_type'])
-    ]
-    if len(archive_urls) == 0:
-        raise Exception('Applicable CA binaries from github were not found '
-                        f'(name: {grep_name}, architecture: {architecture})')
-    archive_url = archive_urls[-1]
-    archive_url = archive_url.replace('https', 'http')
-    name = archive_url.split('/')[-1]
-    logger.info(f'Downloading {name}')
-    urllib.request.urlretrieve(archive_url, f'{prefix}/{name}')
-    shutil.unpack_archive(f'{prefix}/{name}', f'{prefix}/step')
 
 
 def get_token(name, ca_url, ca_path='.'):
@@ -137,9 +80,15 @@ def get_ca_bin_paths(ca_path):
         dirs = os.listdir(ca_path / 'step')
         for dir_ in dirs:
             if 'step_' in dir_:
-                step = ca_path / 'step' / dir_ / 'bin' / 'step'
+                step_executable = 'step'
+                if sys.platform == 'win32':
+                    step_executable = 'step.exe'
+                step = ca_path / 'step' / dir_ / 'bin' / step_executable
             if 'step-ca' in dir_:
-                step_ca = ca_path / 'step' / dir_ / 'bin' / 'step-ca'
+                step_ca_executable = 'step-ca'
+                if sys.platform == 'win32':
+                    step_ca_executable = 'step-ca.exe'
+                step_ca = ca_path / 'step' / dir_ / 'bin' / step_ca_executable
     return step, step_ca
 
 
@@ -153,9 +102,7 @@ def certify(name, cert_path: Path, token_with_cert, ca_path: Path):
 
     step_path, _ = get_ca_bin_paths(ca_path)
     if not step_path:
-        url = 'https://api.github.com/repos/smallstep/cli/releases/tags/v0.16.1'
-        system, arch = get_system_and_architecture()
-        download_step_bin(url, f'step_{system}', arch, prefix=ca_path)
+        download_step_bin(prefix=ca_path)
         step_path, _ = get_ca_bin_paths(ca_path)
     if not step_path:
         raise Exception('Step-CA is not installed!\nRun `fx pki install` first')
@@ -191,12 +138,8 @@ def install(ca_path, ca_url, password):
     step_path, step_ca_path = get_ca_bin_paths(ca_path)
 
     if not (step_path and step_ca_path and step_path.exists() and step_ca_path.exists()):
-        confirm('CA binaries from GitHub will be downloaded now', default=True, abort=True)
-        system, arch = get_system_and_architecture()
-        url = 'https://api.github.com/repos/smallstep/certificates/releases/tags/v0.16.1'
-        download_step_bin(url, f'step-ca_{system}', arch, prefix=ca_path, confirmation=False)
-        url = 'https://api.github.com/repos/smallstep/cli/releases/tags/v0.16.1'
-        download_step_bin(url, f'step_{system}', arch, prefix=ca_path, confirmation=False)
+        download_step_bin(prefix=ca_path, confirmation=True)
+        download_step_ca_bin(prefix=ca_path, confirmation=False)
     step_config_dir = ca_path / CA_STEP_CONFIG_DIR
     if (not step_config_dir.exists()
             or confirm('CA exists, do you want to recreate it?', default=True)):

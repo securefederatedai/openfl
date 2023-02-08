@@ -17,18 +17,48 @@ from openfl.interface.interactive_api.experiment import ModelInterface
 from openfl.interface.interactive_api.federation import Federation
 
 
-federation = Federation(
-    client_id='frontend',
-    director_node_fqdn='localhost',
-    director_port=50051,
-    tls=False
-)
+def run():
+    federation = Federation(
+        client_id='frontend',
+        director_node_fqdn='localhost',
+        director_port=50051,
+        tls=False
+    )
 
-shard_registry = federation.get_shard_registry()
+    shard_registry = federation.get_shard_registry()
 
-dummy_shard_desc = federation.get_dummy_shard_descriptor(size=10)
-dummy_shard_dataset = dummy_shard_desc.get_dataset('')
-sample, target = dummy_shard_dataset[0]
+    dummy_shard_desc = federation.get_dummy_shard_descriptor(size=10)
+    dummy_shard_dataset = dummy_shard_desc.get_dataset('')
+    sample, target = dummy_shard_dataset[0]
+    fed_dataset = KvasirSD(train_bs=4, valid_bs=8)
+    fed_dataset.shard_descriptor = dummy_shard_desc
+    for i, (sample, target) in enumerate(fed_dataset.get_train_loader()):
+        print(sample.shape)
+
+    model_unet = UNet()
+    optimizer_adam = optim.Adam(model_unet.parameters(), lr=1e-4)
+
+    framework_adapter = 'openfl.plugins.frameworks_adapters.pytorch_adapter.FrameworkAdapterPlugin'
+    MI = ModelInterface(model=model_unet, optimizer=optimizer_adam, framework_plugin=framework_adapter)
+
+    # Save the initial model state
+    initial_model = deepcopy(model_unet)
+
+    # create an experimnet in federation
+    experiment_name = 'kvasir_test_experiment'
+    fl_experiment = FLExperiment(federation=federation, experiment_name=experiment_name)
+
+    fl_experiment.start(model_provider=MI,
+                        task_keeper=task_interface,
+                        data_loader=fed_dataset,
+                        rounds_to_train=2,
+                        opt_treatment='CONTINUE_GLOBAL')
+    fl_experiment.stream_metrics()
+    best_model = fl_experiment.get_best_model()
+    fl_experiment.remove_experiment_data()
+    best_model.inc.conv[0].weight
+    validate(initial_model, fed_dataset.get_valid_loader(), 'cpu')
+    validate(best_model, fed_dataset.get_valid_loader(), 'cpu')
 
 
 # Register dataset
@@ -122,33 +152,3 @@ class KvasirSD(DataInterface):
         Information for aggregation
         """
         return len(self.val_indeces)
-
-fed_dataset = KvasirSD(train_bs=4, valid_bs=8)
-fed_dataset.shard_descriptor = dummy_shard_desc
-for i, (sample, target) in enumerate(fed_dataset.get_train_loader()):
-    print(sample.shape)
-
-model_unet = UNet()
-optimizer_adam = optim.Adam(model_unet.parameters(), lr=1e-4)
-
-framework_adapter = 'openfl.plugins.frameworks_adapters.pytorch_adapter.FrameworkAdapterPlugin'
-MI = ModelInterface(model=model_unet, optimizer=optimizer_adam, framework_plugin=framework_adapter)
-
-# Save the initial model state
-initial_model = deepcopy(model_unet)
-
-# create an experimnet in federation
-experiment_name = 'kvasir_test_experiment'
-fl_experiment = FLExperiment(federation=federation, experiment_name=experiment_name)
-
-fl_experiment.start(model_provider=MI, 
-                    task_keeper=task_interface,
-                    data_loader=fed_dataset,
-                    rounds_to_train=2,
-                    opt_treatment='CONTINUE_GLOBAL')
-fl_experiment.stream_metrics()
-best_model = fl_experiment.get_best_model()
-fl_experiment.remove_experiment_data()
-best_model.inc.conv[0].weight
-validate(initial_model, fed_dataset.get_valid_loader(), 'cpu')
-validate(best_model, fed_dataset.get_valid_loader(), 'cpu')

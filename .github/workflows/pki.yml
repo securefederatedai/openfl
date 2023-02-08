@@ -4,8 +4,6 @@
 name: Private Key Infrastructure
 
 on:
-  push:
-    branches: [ develop ]
   pull_request:
     branches: [ develop ]
 

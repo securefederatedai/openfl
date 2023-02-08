@@ -1,0 +1,6 @@
+differential_privacy:
+  noise_multiplier: 0.1
+  clip_norm: 1.0
+  clip_frequency: 1
+  sample_rate: 0.5
+  delta: 0.00001

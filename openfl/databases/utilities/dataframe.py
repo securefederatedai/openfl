@@ -1,4 +1,4 @@
-# Copyright (C) 2020-2021 Intel Corporation
+# Copyright (C) 2020-2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Convenience Utilities for DataFrame."""
@@ -95,8 +95,7 @@ def _store(self, tensor_name: str = '_', origin: str = '_',
         idx = idx[0]
     else:
         idx = self.shape[0]
-    self.loc[idx] = \
-            [tensor_name, origin, str(fl_round), metric, tags, nparray]
+    self.loc[idx] = [tensor_name, origin, str(fl_round), metric, tags, nparray]
 
 
 def _retrieve(self, tensor_name: str = '_', origin: str = '_',

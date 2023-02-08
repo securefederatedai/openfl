@@ -4,8 +4,6 @@
 name: Straggler Handling Test
 
 on:
-  push:
-    branches: [ develop ]
   pull_request:
     branches: [ develop ]
 
@@ -14,8 +12,10 @@ permissions:
 
 jobs:
   build:
-
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+       os: ['ubuntu-latest', 'windows-latest']
+    runs-on: ${{ matrix.os }}
 
     steps:
     - uses: actions/checkout@v3
@@ -29,4 +29,4 @@ jobs:
         pip install .
     - name: Test Straggler Handling Interface
       run: |
-        bash tests/github/test_hello_federation.sh torch_cnn_mnist_straggler_check aggregator col1 col2 $(hostname --all-fqdns | awk '{print $1}') --rounds-to-train 3
+        python -m tests.github.test_hello_federation --template torch_cnn_mnist_straggler_check --fed_workspace aggregator --col1 col1 --col2 col2  --rounds-to-train 3

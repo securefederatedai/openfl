@@ -1,4 +1,4 @@
-# Copyright (C) 2020-2021 Intel Corporation
+# Copyright (C) 2020-2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 """Model interface tests module."""
 
@@ -10,7 +10,7 @@ from openfl.federated.task import TaskRunner
 
 @mock.patch('openfl.interface.model.utils')
 @mock.patch('openfl.interface.model.Plan')
-def test_get_model(Plan, utils):
+def test_get_model(Plan, utils):  # noqa: N803
     "Test get_module returns TaskRunner."
     plan_instance = mock.Mock()
     plan_instance.cols_data_paths = ['mock_col_name']

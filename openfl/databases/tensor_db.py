@@ -1,4 +1,4 @@
-# Copyright (C) 2020-2021 Intel Corporation
+# Copyright (C) 2020-2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """TensorDB Module."""
@@ -30,9 +30,17 @@ class TensorDB:
 
     def __init__(self) -> None:
         """Initialize."""
-        self.tensor_db = pd.DataFrame([], columns=[
-            'tensor_name', 'origin', 'round', 'report', 'tags', 'nparray'
-        ])
+        types_dict = {
+            'tensor_name': 'string',
+            'origin': 'string',
+            'round': 'int32',
+            'report': 'bool',
+            'tags': 'object',
+            'nparray': 'object'
+        }
+        self.tensor_db = pd.DataFrame(
+            {col: pd.Series(dtype=dtype) for col, dtype in types_dict.items()}
+        )
         self._bind_convenience_methods()
 
         self.mutex = Lock()
@@ -87,13 +95,7 @@ class TensorDB:
                     pd.DataFrame([
                         [tensor_name, origin, fl_round, report, tags, nparray]
                     ],
-                        columns=[
-                            'tensor_name',
-                            'origin',
-                            'round',
-                            'report',
-                            'tags',
-                            'nparray']
+                        columns=list(self.tensor_db.columns)
                     )
                 )
 

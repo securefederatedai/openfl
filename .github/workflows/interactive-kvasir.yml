@@ -4,8 +4,6 @@
 name: Interactive API - Pytorch Kvasir UNet
 
 on:
-  push:
-    branches: [ develop ]
   pull_request:
     branches: [ develop ]
 
@@ -15,7 +13,10 @@ permissions:
 jobs:
   build:
 
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+       os: ['ubuntu-latest', 'windows-latest']
+    runs-on: ${{ matrix.os }}
 
     steps:
     - uses: actions/checkout@v3
@@ -30,8 +31,6 @@ jobs:
     - name: Interactive API - pytorch_kvasir_unet
       run: |
         python setup.py build_grpc
-        pip install torch==1.7.1
-        pip install torchvision==0.8.2
-        cd tests/github/interactive_api_director/experiments/pytorch_kvasir_unet
-        ./run.sh
-        pkill fx
+        pip install torch==1.13.1
+        pip install torchvision==0.14.1
+        python -m tests.github.interactive_api_director.experiments.pytorch_kvasir_unet.run

@@ -4,8 +4,6 @@
 name: FeTS Challenge TaskRunner
 
 on:
-  push:
-    branches: [ develop ]
   pull_request:
     branches: [ develop ]
 
@@ -39,6 +37,7 @@ jobs:
         cd fets_challenge
         pwd
         pip install torch==1.8.2+cpu torchvision==0.9.2+cpu torchaudio===0.8.2 -f https://download.pytorch.org/whl/lts/1.8/torch_lts.html
+        pip install onnx==1.12.0
         pip install -e .
         # Download data and Split CSVs into training and validation
         python -c "from testing.test_full import test_generic_download_data, test_generic_constructTrainingCSV; test_generic_download_data(); test_generic_constructTrainingCSV()"
@@ -47,5 +46,5 @@ jobs:
         head -n 8 testing/data/train_3d_rad_segmentation.csv > /home/runner/work/openfl/openfl/seg_test_train.csv
         cd /home/runner/work/openfl/openfl
         ls
-        bash tests/github/test_fets_challenge.sh fets_challenge_seg_test aggregator col1 col2 $(hostname --all-fqdns | awk '{print $1}') --rounds-to-train 1
+        python -m tests.github.test_fets_challenge --template fets_challenge_seg_test --fed_workspace aggregator --col1 col1 --col2 col2 --rounds-to-train 1
         
