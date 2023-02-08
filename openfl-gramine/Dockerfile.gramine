@@ -31,16 +31,16 @@ ENV PYTHONPATH=/usr/local/lib/python3.8/site-packages/:/usr/lib/python3/dist-pac
 FROM base as local
 COPY . .
 RUN --mount=type=cache,target=/root/.cache/ \
-    pip install --upgrade pip && \
+    pip install --upgrade pip setuptools wheel && \
     pip install .
 
 FROM base AS remote
 ARG OPENFL_PATH
 RUN --mount=type=cache,target=/root/.cache/ \
-    pip install --upgrade pip && \
+    pip install --upgrade pip setuptools wheel && \
     pip install git+${OPENFL_PATH}
 
 FROM base AS default
 RUN --mount=type=cache,target=/root/.cache/ \
-    pip install --upgrade pip && \
+    pip install --upgrade pip setuptools wheel && \
     pip install openfl
