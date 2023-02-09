@@ -10,10 +10,10 @@ Propose it through GitHub [issues](https://github.com/intel/openfl/issues/new/ch
 
 To propose bugs, new features, or other code improvements:
 
-1.	Check open and closed [issues](https://github.com/intel/openfl/issues) and make sure there is no similar proposal
+1.	Check open and closed [issues](https://github.com/intel/openfl/issues) and make sure there is no similar proposal.
 2.	Open a [new issue](https://github.com/intel/openfl/issues/new/choose), select a relevant category (Bug report / Feature request / Report a security vulnerability) and describe your idea using the template. 
 3.	If you want to fix a bug or create this feature by yourself, prepare a contribution.
-	-	Format your code following the [flake8 style](link https://flake8.pycqa.org/en/latest/).
+	-	Format your code following the [flake8 style](https://flake8.pycqa.org/en/latest/).
 	-	Make sure that your code is original and corresponds to [OpenFL license](#license).
 	-	Sing your work - [see below](#sign-your-work). 
 	-	Create a [pull request](#formatting-of-pull-requests) and wait for feedback.
