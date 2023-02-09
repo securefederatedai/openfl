@@ -2,7 +2,7 @@
 
 We welcome contributions from the community. We believe that anyone can bring something valuable to OpenFL and help us to improve the project. This document explains how to contribute to OpenFL. 
 
-We accept various contributions from documentation improvement and bug fixing to major features proposals and roadmap [https://github.com/intel/openfl/blob/develop/ROADMAP.md] suggestions.
+We accept various contributions from documentation improvement and bug fixing to major features proposals and [roadmap](https://github.com/intel/openfl/blob/develop/ROADMAP.md) suggestions.
 
 Documentation improvement: review our [documentation](https://openfl.readthedocs.io/en/latest/install.html) and let us know if something is not clear or not relevant. 
 Propose your own formulations or even write new section explaining something that you know how works, but do not see in the documentation. 
