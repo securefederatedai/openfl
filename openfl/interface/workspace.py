@@ -577,15 +577,17 @@ def graminize_(context, signing_key: Path, enclave_size: str, tag: str,
 @workspace.command(name='participants')
 @option('-c', '--cert_path',
         help='Cert path where signing CA certs reside', required=False)
-def participants_(cert_path=None):
+@option('--no_cert', help='Add uncertified participants to plan', is_flag=True)
+def participants_(cert_path=None, no_cert=False):
     """Select a subset of registered collaborators for the experiment."""
-    participants(cert_path)
+    participants(cert_path, no_cert)
 
 
-def participants(cert_path=None):
+def participants(cert_path=None, no_cert=False):
     """Select a subset of collaborators from all regsitered collaborators."""
     from click import Choice
     from click import confirm
+    from click import edit
     from click import prompt as click_prompt
     from glob import glob
     from yaml import dump
@@ -598,25 +600,30 @@ def participants(cert_path=None):
     else:
         participant_certs = glob(f'{CERT_DIR}/client/col_*.crt')
 
-    total_participants = []
-    for cert in participant_certs:
-        total_participants.append(os.path.basename(os.path.normpath(cert)).split('.')[0][4:])
+    if participant_certs:
+        total_participants = []
+        for cert in participant_certs:
+            total_participants.append(os.path.basename(os.path.normpath(cert)).split('.')[0][4:])
 
-    collaborators_added = []
-    collaborators_to_add = True
+        collaborators_added = []
+        collaborators_to_add = True
 
-    while collaborators_to_add:
-        collaborator = click_prompt('Select collaborator for the experiment: ',
-                                    type=Choice(total_participants), show_choices=True)
-        collaborators_added.append(collaborator)
-        total_participants.remove(collaborator)
+        while collaborators_to_add:
+            collaborator = click_prompt('Select collaborator for the experiment: ',
+                                        type=Choice(total_participants), show_choices=True)
+            collaborators_added.append(collaborator)
+            total_participants.remove(collaborator)
 
-        if not confirm("Are there additional collaborators to add to the experiment?"):
-            collaborators_to_add = False
+            if not confirm('Are there additional collaborators to add to the experiment?'):
+                collaborators_to_add = False
 
-    cols_file = Path('plan/cols.yaml').absolute()
-    with open(cols_file, 'w', encoding='utf-8') as f:
-        dump({'collaborators': collaborators_added}, f)
+        cols_file = Path('plan/cols.yaml').absolute()
+        with open(cols_file, 'w', encoding='utf-8') as f:
+            dump({'collaborators': collaborators_added}, f)
+
+    if no_cert:
+        if confirm('Do you want to add participants (- participant_name) to the experiment?'):
+            edit(filename='plan/cols.yaml')
 
 
 @workspace.command(name='uninstall-cert')

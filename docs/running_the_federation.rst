@@ -1142,6 +1142,11 @@ If :code:`CERT_PATH` was used at the aggregator node to store CA signing certifi
 
        fx workspace participants -c CERT_PATH
 
+If users want to add uncertified participants, or manually want to edit the collaborator names for the experiment:
+
+    .. code-block:: console
+
+       fx workspace participants --no_cert
 
 .. _running_the_federation.start_nodes:
 
