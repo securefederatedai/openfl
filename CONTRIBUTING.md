@@ -34,7 +34,7 @@ OpenFL follows standard recommendations of PR formatting. Please find more detai
 
 ### Continuous Integration and Continuous Development
 
-OpenFL uses GitHub actions to perform all functional and unit tests. Before your contribution can be merge make sure that all your tests are passing. 
+OpenFL uses GitHub actions to perform all functional and unit tests. Before your contribution can be merged make sure that all your tests are passing. 
 For more information of what fails you can click on the “details” link near the pipeline that failed.
 
 ![CI/CD](docs/images/CI_details.png)
