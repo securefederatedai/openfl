@@ -214,7 +214,7 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
 
         # This will signal that the optimizer values are now present,
         # and can be loaded when the model is rebuilt
-        self.train_round_completed = True
+        self.training_round_completed = True
 
         # Return global_tensor_dict, local_tensor_dict
         return global_tensor_dict, local_tensor_dict
