@@ -26,7 +26,7 @@ Are you an expert in Federated Learning and want to contribute to our roadmap? Y
 
 ### Code format and style
 
-We use [flake8](link https://flake8.pycqa.org/en/latest/) for PEP8 style guide enforcement. This is run as a part of our CI/CD pipeline and it’s required prior a merge. 
+We use [flake8](https://flake8.pycqa.org/en/latest/) for PEP8 style guide enforcement. This is run as a part of our CI/CD pipeline and it’s required prior a merge. 
 
 ### Formatting of Pull Requests
 
@@ -34,7 +34,7 @@ OpenFL follows standard recommendations of PR formatting. Please find more detai
 
 ### Continuous Integration and Continuous Development
 
-OpenFL uses GitHub actions to perform all functional and unit tests. Before your contribution can be merge make sure that all your tests are passing. 
+OpenFL uses GitHub actions to perform all functional and unit tests. Before your contribution can be merged make sure that all your tests are passing. 
 For more information of what fails you can click on the “details” link near the pipeline that failed.
 
 ![CI/CD](docs/images/CI_details.png)
@@ -42,7 +42,7 @@ For more information of what fails you can click on the “details” link near 
 ### Writing the tests
 
 The OpenFL team recommend including tests for all new features contributions. Test can be found in the “Tests” directory. 
-The [Tests/OpenFL folder](link https://github.com/intel/openfl/tree/develop/tests/openfl) contains unit tests and the [Tests/GitHub folder](https://github.com/intel/openfl/tree/develop/tests/github) contains end-to-end and functional tests.
+The [Tests/OpenFL folder](https://github.com/intel/openfl/tree/develop/tests/openfl) contains unit tests and the [Tests/GitHub folder](https://github.com/intel/openfl/tree/develop/tests/github) contains end-to-end and functional tests.
 
 ### License
 
