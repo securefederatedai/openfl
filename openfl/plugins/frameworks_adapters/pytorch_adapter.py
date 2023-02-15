@@ -105,10 +105,10 @@ def _get_optimizer_state(optimizer):
 def state_dict_is_empty(state_dict):
     """Determine if the state is needed for the optimizer by recursively checking
     if all the values inside the 'state' dictionary are empty or not.
-    
+
     Args:
         state_dict: The optimizer state dictionary
-        
+
     Returns:
         True or False
     """
@@ -119,7 +119,7 @@ def state_dict_is_empty(state_dict):
             return False
         else:
             return not state_dict
-        
+
 
 def _derive_opt_state_dict(opt_state_dict):
     """Separate optimizer tensors from the tensor dictionary.
@@ -136,7 +136,7 @@ def _derive_opt_state_dict(opt_state_dict):
     derived_opt_state_dict = {}
 
     # Determine if state is needed for this optimizer.
-    if state_dict_is_empty(opt_state_dict['state']) == True:
+    if state_dict_is_empty(opt_state_dict['state']):
         derived_opt_state_dict['__opt_state_needed'] = 'false'
         return derived_opt_state_dict
 
