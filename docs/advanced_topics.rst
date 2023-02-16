@@ -12,6 +12,10 @@ Advanced Topics
 
     - :doc:`bash_autocomplete_activation`
 
+    Insights on |productName| Network bandwidth throttling performance:
+
+    - :doc:`perf_profile_bw`
+
 **Aggregator-Based Workflow**
 
     Learn to manage multiple Federation Learning plans (FL plan) in the same workspace:
