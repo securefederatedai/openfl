@@ -152,7 +152,7 @@ pipeline {
             steps {
                 rbheDocker(
                     image: 'intel/openfl',
-                    dockerfile: 'openfl-docker/Dockerfile.base',
+                    dockerFile: 'openfl-docker/Dockerfile.base',
                     latest: true,
                     tags: ['1.5'],
                     pushOn: /^(?:jenkins-v\d+.\d+)$/,
