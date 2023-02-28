@@ -1,3 +1,5 @@
+# Copyright (C) 2020-2023 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
 """Implementation of FedCurv algorithm."""
 
 from copy import deepcopy
@@ -8,6 +10,7 @@ import torch.nn.functional as F
 
 def register_buffer(module: torch.nn.Module, name: str, value: torch.Tensor):
     """Add a buffer to module.
+
     Args:
         module: Module
         name: Buffer name. Supports complex module names like 'model.conv1.bias'.
@@ -20,11 +23,13 @@ def register_buffer(module: torch.nn.Module, name: str, value: torch.Tensor):
 
 class FedCurv:
     """Federated Curvature class.
+
     Requires torch>=1.9.0.
     """
 
     def __init__(self, model: torch.nn.Module, importance: float):
         """Initialize.
+
         Args:
             model: Base model. Parameters of it are used in loss penalty calculation.
             importance: Lambda coefficient of FedCurv algorithm.
@@ -53,7 +58,7 @@ class FedCurv:
     def _update_params(self, model):
         self._params = deepcopy({n: p for n, p in model.named_parameters() if p.requires_grad})
 
-    def _diag_fisher(self, model, data_loader, device, loss_fn):
+    def _diag_fisher(self, model, data_loader, device='cpu', loss_fn='nll'):
         precision_matrices = {}
         for n, p in self._params.items():
             p.data.zero_()
@@ -68,7 +73,6 @@ class FedCurv:
             output = model(sample)
             if loss_fn == 'cross_entropy':
                 loss = F.cross_entropy(output, target)
-                # loss = F.cross_entropy(output, torch.max(target, 1)[1])
             else:
                 loss = F.nll_loss(F.log_softmax(output, dim=1), target)
             loss.backward()
@@ -81,8 +85,10 @@ class FedCurv:
 
     def get_penalty(self, model, device):
         """Calculate the penalty term for the loss function.
+
         Args:
             model(torch.nn.Module): Model that stores global u_t and v_t values as buffers.
+
         Returns:
             float: Penalty term.
         """
@@ -109,13 +115,15 @@ class FedCurv:
 
     def on_train_begin(self, model):
         """Pre-train steps.
+
         Args:
             model(torch.nn.Module): model for training.
         """
         self._update_params(model)
 
-    def on_train_end(self, model: torch.nn.Module, data_loader, device, loss_fn):
+    def on_train_end(self, model: torch.nn.Module, data_loader, device='cpu', loss_fn='nll'):
         """Post-train steps.
+
         Args:
             model(torch.nn.Module): Trained model.
             data_loader(Iterable): Train dataset iterator.
