@@ -21,28 +21,6 @@ def register_buffer(module: torch.nn.Module, name: str, value: torch.Tensor):
     mod.register_buffer(name, value)
 
 
-def get_buffer(module, target):
-    """Get module buffer.
-
-    Remove after pinning to a version
-    where https://github.com/pytorch/pytorch/pull/61429 is included.
-    Use module.get_buffer() instead.
-    """
-    module_path, _, buffer_name = target.rpartition('.')
-
-    mod: torch.nn.Module = module.get_submodule(module_path)
-
-    if not hasattr(mod, buffer_name):
-        raise AttributeError(f'{mod._get_name()} has no attribute `{buffer_name}`')
-
-    buffer: torch.Tensor = getattr(mod, buffer_name)
-
-    if buffer_name not in mod._buffers:
-        raise AttributeError('`' + buffer_name + '` is not a buffer')
-
-    return buffer
-
-
 class FedCurv:
     """Federated Curvature class.
 
@@ -80,7 +58,7 @@ class FedCurv:
     def _update_params(self, model):
         self._params = deepcopy({n: p for n, p in model.named_parameters() if p.requires_grad})
 
-    def _diag_fisher(self, model, data_loader, device):
+    def _diag_fisher(self, model, data_loader, device='cpu', loss_fn='nll'):
         precision_matrices = {}
         for n, p in self._params.items():
             p.data.zero_()
@@ -93,7 +71,10 @@ class FedCurv:
             sample = sample.to(device)
             target = target.to(device)
             output = model(sample)
-            loss = F.nll_loss(F.log_softmax(output, dim=1), target)
+            if loss_fn == 'cross_entropy':
+                loss = F.cross_entropy(output, target)
+            else:
+                loss = F.nll_loss(F.log_softmax(output, dim=1), target)
             loss.backward()
 
             for n, p in model.named_parameters():
@@ -102,7 +83,7 @@ class FedCurv:
 
         return precision_matrices
 
-    def get_penalty(self, model):
+    def get_penalty(self, model, device):
         """Calculate the penalty term for the loss function.
 
         Args:
@@ -117,11 +98,11 @@ class FedCurv:
         for name, param in model.named_parameters():
             if param.requires_grad:
                 u_global, v_global, w_global = (
-                    get_buffer(model, target).detach()
+                    model.get_buffer(target).detach().to(device)
                     for target in (f'{name}_u', f'{name}_v', f'{name}_w')
                 )
                 u_local, v_local, w_local = (
-                    getattr(self, name).detach()
+                    getattr(self, name).detach().to(device)
                     for name in (f'{name}_u', f'{name}_v', f'{name}_w')
                 )
                 u = u_global - u_local
@@ -140,7 +121,7 @@ class FedCurv:
         """
         self._update_params(model)
 
-    def on_train_end(self, model: torch.nn.Module, data_loader, device):
+    def on_train_end(self, model: torch.nn.Module, data_loader, device='cpu', loss_fn='nll'):
         """Post-train steps.
 
         Args:
@@ -149,7 +130,7 @@ class FedCurv:
             device(str): Model device.
             loss_fn(Callable): Train loss function.
         """
-        precision_matrices = self._diag_fisher(model, data_loader, device)
+        precision_matrices = self._diag_fisher(model, data_loader, device, loss_fn)
         for n, m in precision_matrices.items():
             u = m.data.to(device)
             v = m.data * model.get_parameter(n)
