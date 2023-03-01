@@ -83,7 +83,7 @@ class FedCurv:
 
         return precision_matrices
 
-    def get_penalty(self, model, device):
+    def get_penalty(self, model, device='cpu'):
         """Calculate the penalty term for the loss function.
 
         Args:
