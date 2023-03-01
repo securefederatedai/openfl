@@ -26,7 +26,15 @@ class RayExecutor:
         del ref_ctx
 
     def get_remote_clones(self):
-        clones = deepcopy(ray.get(self.remote_functions))
+        # clones = deepcopy(ray.get(self.remote_functions))
+        clones = []
+        while len(self.remote_functions):
+            ready_ids, self.remote_functions = ray.wait(self.remote_functions)
+            if len(ready_ids)>1:
+                for ids in ready_ids:
+                    clones.append(deepcopy(ray.get(ids[0])))
+            else:
+                clones.append(deepcopy(ray.get(ready_ids[0])))
         del self.remote_functions
         # Remove clones from ray object store
         for ctx in self.remote_contexts:
