@@ -6,6 +6,8 @@ This is a full example for training the Brain Tumor Segmentation 2020 ([BraTS202
 
 The files `src\dataloader.py` and `src\define_model.py` are where we define the TensorFlow [dataset loader](https://www.tensorflow.org/api_docs/python/tf/data/Dataset) and the 3D U-Net model. In `src\dataloader.py` we demonstrate how to use an out-of-memory data loader that pulls batches of data from files as needed.
 
+Additional note on Tensorflow version: `optimizer.get_weights()` has been removed in the recent versions of TF. Hence, TF version is fixed to 2.8 in the requirements file.
+
 ## Steps to run
 
 1. Download the [BraTS 2020 dataset](https://www.med.upenn.edu/cbica/brats2020/registration.html). It should be the one labeled **BraTS'20 Training Data: Segmentation Task**. 
@@ -148,8 +150,8 @@ $ cat plan/data.yaml
 # collaborator_name,data_directory_path
 
 # You'll need to shard as necessary
-# Symbolically link the ./data directory to whereever you have BraTS stored.
-# e.g. ln -s ~/data/MICCAI_BraTS2020_TrainingData ./data/one
+# Symbolically link the collaborator's ./data directory to whereever you have BraTS stored ($NEW_PATH).
+# e.g. ln -s ~/${NEW_PATH}/split_0 ./data/split_0
 
 one,${NEW_PATH}/split_0
 two,${NEW_PATH}/split_1
@@ -158,9 +160,14 @@ two,${NEW_PATH}/split_1
 
 where you replace `${NEW_PATH}` by the new directory path
 
-5. We are ready to train! Try executing the [Hello Federation](https://openfl.readthedocs.io/en/latest/running_the_federation.baremetal.html#hello-federation-your-first-federated-learning-training) steps. Make sure you have `openfl` installed in your Python virtual environment. All you have to do is to specify collaborator data paths to slice folders. We have combined all 'Hello Federation' steps in a single bash script, so it is easier to test:
+5. Update the `${NEW_PATH}` or the new directory path in tf_3dunet_model(https://github.com/securefederatedai/openfl/blob/develop/openfl-workspace/tf_3dunet_brats/src/tf_3dunet_model.py#L115).
+
+6. We are ready to train! Try executing the [Hello Federation](https://github.com/securefederatedai/openfl/blob/develop/tests/github/test_hello_federation.py) steps. Make sure you have `openfl` installed in your Python virtual environment. All you have to do is to specify collaborator data paths to slice folders. We have combined all 'Hello Federation' steps in a single python script, so it is easier to test:
+
+Note: Since the softlinks to the collaborator data directories have to be made once the workspace is created, users can edit the `create_collaborator` module after workspace import in [utils](https://github.com/securefederatedai/openfl/blob/develop/tests/github/utils.py) to create softlinks to data directories
 
 ```bash
-bash tests/github/test_hello_federation.sh tf_3dunet_brats fed_work12345alpha81671 one123dragons beta34unicorns localhost --col1-data-path $NEW_PATH/split_0 --col2-data-path $NEW_PATH/$SUBFOLDER/split_1 --rounds-to-train 5
+cd openfl
+python3 -m tests.github.test_hello_federation --template tf_3dunet_brats --fed_workspace aggregator --col1 one --col2 two --col1-data-path ${NEW_PATH}/split_0 --col2-data-path ${NEW_PATH}/split_1 --rounds-to-train 5
 ```
 The result of the execution of the command above is 5 completed training rounds. 
