@@ -6,7 +6,7 @@ This is a full example for training the Brain Tumor Segmentation 2020 ([BraTS202
 
 The files `src\dataloader.py` and `src\define_model.py` are where we define the TensorFlow [dataset loader](https://www.tensorflow.org/api_docs/python/tf/data/Dataset) and the 3D U-Net model. In `src\dataloader.py` we demonstrate how to use an out-of-memory data loader that pulls batches of data from files as needed.
 
-Additional note on Tensorflow version: `optimizer.get_weights()` has been removed in the recent versions of TF. Hence, TF version is fixed to 2.8 in the requirements file.
+Additional note on Tensorflow version: `optimizer.get_weights()` has been [removed in the recent versions of TF](https://github.com/keras-team/keras/issues/16983). Hence, TF version is fixed to 2.8 in the requirements file.
 
 ## Steps to run
 
