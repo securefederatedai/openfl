@@ -1,6 +1,5 @@
 # Copyright (C) 2020-2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-
 """openfl.experimental.interface.torch.aggregation_functions.weighted_average package."""
 
 import collections
@@ -53,8 +52,9 @@ class WeightedAverage:
                 # Remove __opt_state_needed from all state dictionary in list, and
                 # check if weightedaverage of optimizer can be taken.
                 for tensor in objects_list:
-                    assert tensor.pop("__opt_state_needed") == "true", "Optimizer is stateless, " +\
-                                                                        "WeightedAverage cannot be taken"
+                    error_msg = "Optimizer is stateless, WeightedAverage cannot be taken"
+                    assert tensor.pop("__opt_state_needed") == "true", error_msg
+
             tmp_list = []
             # # Take keys in order to rebuild the state dictionary taking keys back up
             for tensor in objects_list:

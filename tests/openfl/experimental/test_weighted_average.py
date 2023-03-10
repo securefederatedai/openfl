@@ -64,7 +64,7 @@ def take_optimizer_weighted_average(optimizer_state_dicts_list: List[Dict],
 
     tmp_list = []
     for optimizer_state_dict in optimizer_state_dicts_list:
-        tmp_list.append(np.array(list(value for value in optimizer_state_dict.values()),
+        tmp_list.append(np.array(list(optimizer_state_dict.values()),
                                  dtype=object))
 
     new_params = np.average(tmp_list, weights=weights_list, axis=0)
