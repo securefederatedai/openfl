@@ -180,15 +180,6 @@ def validate_datastore_cli(flow_obj, expected_flow_steps, num_rounds):
         "end": "This is the end of the flow\n",
     }
 
-    verify_stderr = {
-        "start": "",
-        "local_model_validation": "",
-        "train": "",
-        "join": "",
-        "end": "",
-        "aggregated_model_validation": "",
-    }
-
     # fetch data from metaflow
     from metaflow import Flow
 
@@ -230,19 +221,6 @@ def validate_datastore_cli(flow_obj, expected_flow_steps, num_rounds):
                 validate_flow_error.append(
                     f"{bcolors.FAIL}... Error : task stdout detected issues : {step} {task} {bcolors.ENDC} \n"
                 )
-
-            # if (
-            #     step.id == "start_and_init_collab"
-            #     or step.id == "start_and_init_aggregator"
-            # ):
-            #     if not verify_stderr.get(step.id) in task.stderr:
-            #         validate_flow_error.append(
-            #             f"{bcolors.FAIL}... Error : task stderr detected issues : {step} {task} {bcolors.ENDC} \n"
-            #         )
-            # elif not verify_stderr.get(step.id) == task.stderr:
-            #     validate_flow_error.append(
-            #         f"{bcolors.FAIL}... Error : task stderr detected issues : {step} {task} {bcolors.ENDC} \n"
-            #     )
 
         if (
             (func.aggregator_step == True)
