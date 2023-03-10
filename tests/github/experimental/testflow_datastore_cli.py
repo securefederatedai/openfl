@@ -1,9 +1,11 @@
+# Copyright (C) 2020-2023 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 import torch
 import torchvision
-import numpy as np
 
 from copy import deepcopy
 
@@ -45,7 +47,7 @@ mnist_test = torchvision.datasets.MNIST(
 )
 
 
-class bcolors:
+class Bcolors:
     HEADER = "\033[95m"
     OKBLUE = "\033[94m"
     OKCYAN = "\033[96m"
@@ -85,7 +87,7 @@ def inference(network, test_loader):
     return accuracy
 
 
-class TestFlow_datastore_and_cli(FLSpec):
+class TestFlowDatastoreAndCli(FLSpec):
     """
     Testflow for Dataflow and CLI Functionality
     """
@@ -105,7 +107,7 @@ class TestFlow_datastore_and_cli(FLSpec):
     @aggregator
     def start(self):
         print(
-            f"Testing FederatedFlow - Starting Test for Dataflow and CLI Functionality"
+            "Testing FederatedFlow - Starting Test for Dataflow and CLI Functionality"
         )
         self.collaborators = self.runtime.collaborators
         self.private = 10
@@ -117,7 +119,7 @@ class TestFlow_datastore_and_cli(FLSpec):
 
     @collaborator
     def aggregated_model_validation(self):
-        print(f"Performing aggregated model validation for collaborator")
+        print("Performing aggregated model validation for collaborator")
         self.agg_validation_score = inference(self.model, self.test_loader)
         self.next(self.train)
 
@@ -144,12 +146,12 @@ class TestFlow_datastore_and_cli(FLSpec):
     @collaborator
     def local_model_validation(self):
         self.local_validation_score = inference(self.model, self.test_loader)
-        print(f"Doing local model validation for collaborator")
+        print("Doing local model validation for collaborator")
         self.next(self.join, exclude=["training_completed"])
 
     @aggregator
     def join(self, inputs):
-        print(f"Executing join")
+        print("Executing join")
         self.current_round += 1
         if self.current_round < self.num_rounds:
             self.next(self.start)
@@ -158,16 +160,17 @@ class TestFlow_datastore_and_cli(FLSpec):
 
     @aggregator
     def end(self):
-        print(f"This is the end of the flow")
+        print("This is the end of the flow")
 
 
 def validate_datastore_cli(flow_obj, expected_flow_steps, num_rounds):
     """
     This function test the flow as below
-
     1. Verify datastore steps and expected steps are matching
-    2. Verify task stdout and task stderr verified through cli is as expected
-    3. Verify no of tasks executed is aligned with the total number of rounds and total number of collaborators
+    2. Verify task stdout and task stderr verified through \
+        cli is as expected
+    3. Verify no of tasks executed is aligned with the total \
+        number of rounds and total number of collaborators
     """
     validate_flow_error = []
 
@@ -183,7 +186,7 @@ def validate_datastore_cli(flow_obj, expected_flow_steps, num_rounds):
     # fetch data from metaflow
     from metaflow import Flow
 
-    cli_flow_obj = Flow("TestFlow_datastore_and_cli")
+    cli_flow_obj = Flow("TestFlowDatastoreAndCli")
     cli_flow_steps = list(list(cli_flow_obj)[0])
     cli_step_names = [step.id for step in cli_flow_steps]
 
@@ -199,17 +202,20 @@ def validate_datastore_cli(flow_obj, expected_flow_steps, num_rounds):
 
     if len(steps_present_in_cli) != len(expected_flow_steps):
         validate_flow_error.append(
-            f"{bcolors.FAIL}... Error : Number of steps fetched from Datastore through CLI do not match the Expected steps provided {bcolors.ENDC}  \n"
+            f"{Bcolors.FAIL}... Error : Number of steps fetched from \
+                Datastore through CLI do not match the Expected steps provided {Bcolors.ENDC}  \n"
         )
 
     if len(missing_steps_in_cli) != 0:
         validate_flow_error.append(
-            f"{bcolors.FAIL}... Error : Following steps missing from Datastore: {missing_steps_in_cli} {bcolors.ENDC}  \n"
+            f"{Bcolors.FAIL}... Error : Following steps missing from Datastore: \
+                {missing_steps_in_cli} {Bcolors.ENDC}  \n"
         )
 
     if len(extra_steps_in_cli) != 0:
         validate_flow_error.append(
-            f"{bcolors.FAIL}... Error : Following steps are extra in Datastore: {extra_steps_in_cli} {bcolors.ENDC}  \n"
+            f"{Bcolors.FAIL}... Error : Following steps are extra in Datastore: \
+                {extra_steps_in_cli} {Bcolors.ENDC}  \n"
         )
 
     for step in cli_flow_steps:
@@ -219,44 +225,49 @@ def validate_datastore_cli(flow_obj, expected_flow_steps, num_rounds):
             task_count = task_count + 1
             if verify_stdout.get(step.id) != task.stdout:
                 validate_flow_error.append(
-                    f"{bcolors.FAIL}... Error : task stdout detected issues : {step} {task} {bcolors.ENDC} \n"
+                    f"{Bcolors.FAIL}... Error : task stdout detected issues : \
+                        {step} {task} {Bcolors.ENDC} \n"
                 )
 
         if (
-            (func.aggregator_step == True)
+            (func.aggregator_step)
             and (task_count != num_rounds)
             and (func.__name__ != "end")
         ):
             validate_flow_error.append(
-                f"{bcolors.FAIL}... Error : More than one execution detected for Aggregator Step: {step} {bcolors.ENDC} \n"
+                f"{Bcolors.FAIL}... Error : More than one execution detected \
+                    for Aggregator Step: {step} {Bcolors.ENDC} \n"
             )
 
         if (
-            (func.aggregator_step == True)
+            (func.aggregator_step)
             and (task_count != 1)
             and (func.__name__ == "end")
         ):
             validate_flow_error.append(
-                f"{bcolors.FAIL}... Error : More than one execution detected for Aggregator Step: {step} {bcolors.ENDC} \n"
+                f"{Bcolors.FAIL}... Error : More than one execution detected \
+                    for Aggregator Step: {step} {Bcolors.ENDC} \n"
             )
 
-        if (func.collaborator_step == True) and (
+        if (func.collaborator_step) and (
             task_count != len(flow_obj.collaborators) * num_rounds
         ):
             validate_flow_error.append(
-                f"{bcolors.FAIL}... Error : Incorrect number of execution detected for Collaborator Step: {step}. Expected: {num_rounds*len(flow_obj.collaborators)} Actual: {task_count}{bcolors.ENDC} \n"
+                f"{Bcolors.FAIL}... Error : Incorrect number of execution \
+                    detected for Collaborator Step: {step}. \
+                        Expected: {num_rounds*len(flow_obj.collaborators)} \
+                        Actual: {task_count}{Bcolors.ENDC} \n"
             )
 
     if validate_flow_error:
         display_validate_errors(validate_flow_error)
     else:
-        print(
-            f"""{bcolors.OKGREEN}\n **** Summary of internal flow testing ****
-        No issues found and below are the tests that ran successfully 
-        1. Datastore steps and expected steps are matching
-        2. Task stdout and task stderr verified through metaflow cli is as expected
-        3. Number of tasks are aligned with number of rounds and number of collaborators {bcolors.ENDC}"""
-        )
+        print(f"""{Bcolors.OKGREEN}\n**** Summary of internal flow testing ****
+              No issues found and below are the tests that ran successfully
+              1. Datastore steps and expected steps are matching
+              2. Task stdout and task stderr verified through metaflow cli is as expected
+              3. Number of tasks are aligned with number of rounds and number\
+                  of collaborators {Bcolors.ENDC}""")
 
 
 def display_validate_errors(validate_flow_error):
@@ -264,10 +275,11 @@ def display_validate_errors(validate_flow_error):
     Function to display error that is captured during datastore and cli test
     """
     print(
-        f"{bcolors.OKBLUE}Testing FederatedFlow - Ending test for validatng the Datastore and Cli Testing {bcolors.ENDC}"
+        f"{Bcolors.OKBLUE}Testing FederatedFlow - Ending test for validatng \
+        the Datastore and Cli Testing {Bcolors.ENDC}"
     )
     print("".join(validate_flow_error))
-    print(f"{bcolors.FAIL}\n ... Test case failed ...  {bcolors.ENDC}")
+    print(f"{Bcolors.FAIL}\n ... Test case failed ...  {Bcolors.ENDC}")
 
 
 if __name__ == "__main__":
@@ -279,14 +291,14 @@ if __name__ == "__main__":
     collaborator_names = ["Portland", "Seattle", "Chandler", "Bangalore"]
     collaborators = [Collaborator(name=name) for name in collaborator_names]
 
-    for idx, collaborator in enumerate(collaborators):
+    for idx, collab in enumerate(collaborators):
         local_train = deepcopy(mnist_train)
         local_test = deepcopy(mnist_test)
-        local_train.data = mnist_train.data[idx :: len(collaborators)]
-        local_train.targets = mnist_train.targets[idx :: len(collaborators)]
-        local_test.data = mnist_test.data[idx :: len(collaborators)]
-        local_test.targets = mnist_test.targets[idx :: len(collaborators)]
-        collaborator.private_attributes = {
+        local_train.data = mnist_train.data[idx:: len(collaborators)]
+        local_train.targets = mnist_train.targets[idx:: len(collaborators)]
+        local_test.data = mnist_test.data[idx:: len(collaborators)]
+        local_test.targets = mnist_test.targets[idx:: len(collaborators)]
+        collab.private_attributes = {
             "train_loader": torch.utils.data.DataLoader(
                 local_train, batch_size=batch_size_train, shuffle=True
             ),
@@ -302,7 +314,7 @@ if __name__ == "__main__":
     num_rounds = 5
     model = None
     optimizer = None
-    flflow = TestFlow_datastore_and_cli(model, optimizer, num_rounds, checkpoint=True)
+    flflow = TestFlowDatastoreAndCli(model, optimizer, num_rounds, checkpoint=True)
     flflow.runtime = local_runtime
     flflow.run()
 
