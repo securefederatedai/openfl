@@ -44,7 +44,7 @@ def take_model_weighted_average(models_state_dicts_list: List[Dict],
     tmp_list = []
     for model_state_dict in models_state_dicts_list:
         tmp_list.append(np.array([value.detach() for value in model_state_dict.values()],
-                                    dtype=object))
+                                 dtype=object))
 
     new_params = np.average(tmp_list, weights=weights_list, axis=0)
 
@@ -64,8 +64,8 @@ def take_optimizer_weighted_average(optimizer_state_dicts_list: List[Dict],
 
     tmp_list = []
     for optimizer_state_dict in optimizer_state_dicts_list:
-        tmp_list.append(np.array([value for value in optimizer_state_dict.values()],
-                                    dtype=object))
+        tmp_list.append(np.array(list(value for value in optimizer_state_dict.values()),
+                                 dtype=object))
 
     new_params = np.average(tmp_list, weights=weights_list, axis=0)
 
@@ -85,7 +85,7 @@ def test_list_weighted_average():
     weighted_average = WeightedAverage()
 
     averaged_loss_using_class = weighted_average(deepcopy(float_element_list),
-                                                    weights_list)
+                                                 weights_list)
     averaged_loss_manually = np.average(deepcopy(float_element_list),
                                         weights=weights_list, axis=0)
 
@@ -102,9 +102,9 @@ def test_model_weighted_average():
     weighted_average = WeightedAverage()
 
     averaged_model_using_class = weighted_average(deepcopy(model_state_dicts_list),
-                                                    weights_list)
+                                                  weights_list)
     averaged_model_manually = take_model_weighted_average(deepcopy(model_state_dicts_list),
-                                                            weights_list)
+                                                          weights_list)
 
     assert all(averaged_model_using_class) == all(averaged_model_manually)
 
@@ -119,8 +119,8 @@ def test_optimizer_weighted_average():
     weighted_average = WeightedAverage()
 
     averaged_optimizer_using_class = weighted_average(deepcopy(optimizer_state_dicts_list),
-                                                        weights_list)
+                                                      weights_list)
     averaged_optimizer_manually = take_optimizer_weighted_average(
-                                    deepcopy(optimizer_state_dicts_list), weights_list)
+        deepcopy(optimizer_state_dicts_list), weights_list)
 
     assert all(averaged_optimizer_using_class) == all(averaged_optimizer_manually)

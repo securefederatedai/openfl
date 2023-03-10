@@ -53,8 +53,8 @@ class WeightedAverage:
                 # Remove __opt_state_needed from all state dictionary in list, and
                 # check if weightedaverage of optimizer can be taken.
                 for tensor in objects_list:
-                    assert tensor.pop("__opt_state_needed") == "true",
-                            "Optimizer is stateless, WeightedAverage cannot be taken"
+                    assert tensor.pop("__opt_state_needed") == "true", "Optimizer is stateless, " +\
+                                                                        "WeightedAverage cannot be taken"
             tmp_list = []
             # # Take keys in order to rebuild the state dictionary taking keys back up
             for tensor in objects_list:
