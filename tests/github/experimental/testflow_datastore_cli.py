@@ -11,9 +11,7 @@ from openfl.experimental.interface import FLSpec, Aggregator, Collaborator
 from openfl.experimental.runtime import LocalRuntime
 from openfl.experimental.placement import aggregator, collaborator
 
-n_epochs = 3
 batch_size_train = 64
-batch_size_test = 1000
 learning_rate = 0.01
 momentum = 0.5
 log_interval = 10
@@ -130,7 +128,6 @@ class TestFlow_datastore_and_cli(FLSpec):
         self.optimizer = optim.SGD(
             self.model.parameters(), lr=learning_rate, momentum=momentum
         )
-        train_losses = []
         for batch_idx, (data, target) in enumerate(self.train_loader):
             self.optimizer.zero_grad()
             output = self.model(data)
