@@ -32,11 +32,11 @@ class WeightedAverage:
             - List of Model state dictionaries , or
             - List of Metrics (Loss or accuracy), or
             - List of optimizer state dictionaries (following steps need to be performed)
-                1. Obtain optimizer state dictionary by invoking "_get_optimizer_state" 
+                1. Obtain optimizer state dictionary by invoking "_get_optimizer_state"
                    (openfl.federated.task.runner_pt._get_optimizer_state).
-                2. Create a list of optimizer state dictionary obtained in step - 1 
+                2. Create a list of optimizer state dictionary obtained in step - 1
                    Invoke WeightedAverage on this list.
-                3. Invoke "_set_optimizer_state" to set weighted average of optimizer 
+                3. Invoke "_set_optimizer_state" to set weighted average of optimizer
                    state back to optimizer (openfl.federated.task.runner_pt._set_optimizer_state).
             weights_list: Weight for each element in the list.
 
@@ -53,15 +53,14 @@ class WeightedAverage:
                 # Remove __opt_state_needed from all state dictionary in list, and
                 # check if weightedaverage of optimizer can be taken.
                 for tensor in objects_list:
-                    assert tensor.pop("__opt_state_needed") == "true", \
+                    assert tensor.pop("__opt_state_needed") == "true",
                         "Optimizer is stateless, WeightedAverage cannot be taken"
             tmp_list = []
             # # Take keys in order to rebuild the state dictionary taking keys back up
-            # input_state_dict_keys = objects_list[0].keys()
             for tensor in objects_list:
                 # Append values of each state dictionary in list
                 # If type(value) is Tensor then it needs to be detached
-                tmp_list.append(np.array([value.detach() if isinstance(value, pt.Tensor) else value \
+                tmp_list.append(np.array([value.detach() if isinstance(value, pt.Tensor) else value
                                           for value in tensor.values()], dtype=object))
             # Take weighted average of list of arrays
             # new_params passed is weighted average of each array in tmp_list

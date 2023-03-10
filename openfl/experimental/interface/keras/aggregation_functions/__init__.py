@@ -4,4 +4,4 @@
 
 from .weighted_average import WeightedAverage
 
-__all__ = ["WeightedAverage",]
+__all__ = ["WeightedAverage", ]

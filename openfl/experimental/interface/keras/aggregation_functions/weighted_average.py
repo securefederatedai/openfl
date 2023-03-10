@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 """openfl.experimental.interface.keras.aggregation_functions.weighted_average package."""
 
+
 class WeightedAverage:
     """Weighted average aggregation for keras or tensorflow."""
 

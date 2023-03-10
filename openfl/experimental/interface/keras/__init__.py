@@ -4,4 +4,4 @@
 
 from .aggregation_functions import WeightedAverage
 
-__all__ = ["WeightedAverage",]
+__all__ = ["WeightedAverage", ]
