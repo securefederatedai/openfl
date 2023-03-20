@@ -197,12 +197,7 @@ class LocalRuntime(Runtime):
                     to_exec()
             if self.backend == "ray":
                 clones = ray_executor.get_remote_clones()
-                FLSpec._clones.update(
-                    {
-                        col: obj
-                        for col, obj in zip(selected_collaborators, clones)
-                    }
-                )
+                FLSpec._clones.update(zip(selected_collaborators, clones))
                 del ray_executor
                 del clones
                 gc.collect()
