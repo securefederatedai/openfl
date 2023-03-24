@@ -3,6 +3,7 @@
 
 """openfl.experimental.interface.participants module."""
 
+import importlib
 from typing import Dict
 from typing import Any
 
@@ -38,13 +39,32 @@ class Participant:
         """
         self.private_attributes = attrs
 
+__shard_descriptor = None
 
 class Collaborator(Participant):
     """
     Defines a collaborator participant
     """
-    def __init__(self, **kwargs):
+    def __init__(self, shard_descriptor_path, **kwargs):
         super().__init__(**kwargs)
+
+        __shard_descriptor = globals()['__shard_descriptor']
+
+        # print (f"__shard_descriptor in globals(): {'__shard_descriptor' in globals()}")
+        # print (f"globals()['__shard_descriptor']: {globals()['__shard_descriptor']}")
+
+        if __shard_descriptor is None:
+            ShardDescriptor = importlib.import_module(shard_descriptor_path).ShardDescriptor
+            __shard_descriptor = ShardDescriptor()
+            globals()['__shard_descriptor'] = __shard_descriptor
+
+        self.__assign_private_attr()
+
+
+    def __assign_private_attr(self):
+        __shard_descriptor = globals()['__shard_descriptor']
+
+        self.private_attributes = __shard_descriptor.get()
 
 
 class Aggregator(Participant):

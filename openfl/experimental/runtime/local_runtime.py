@@ -18,7 +18,7 @@ from openfl.experimental.utilities import (
     filter_attributes,
     checkpoint,
 )
-from typing import List
+from typing import List, Dict
 from typing import Type
 from typing import Callable
 
@@ -182,11 +182,17 @@ class LocalRuntime(Runtime):
                 # for calling execute_task and also new runtime
                 # object will not contain private attributes of
                 # aggregator or other collaborators
+
+#####################################################################################################################
                 clone.runtime = LocalRuntime(backend="single_process")
                 for name, attr in self.__collaborators[
                     clone.input
                 ].private_attributes.items():
+
+                # for input in self.dataset_chunks:
+                    # for name, attr in self.dataset_chunks[input].items():
                     setattr(clone, name, attr)
+
                 to_exec = getattr(clone, f.__name__)
                 # write the clone to the object store
                 # ensure clone is getting latest _metaflow_interface

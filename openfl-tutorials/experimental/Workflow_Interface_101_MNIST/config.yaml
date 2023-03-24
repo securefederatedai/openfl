@@ -1,0 +1,6 @@
+shard_descriptor:
+   template: mnist_shard_descriptor.MnistShardDescriptor
+   params:
+       batch_size: 64
+       total_collaborators: 4
+
