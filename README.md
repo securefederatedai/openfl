@@ -90,19 +90,10 @@ Please join us for our bi-monthly community meetings starting December 1 & 2, 20
 Meet with some of the Intel team members behind OpenFL. <br>
 We will be going over our roadmap, open for Q&A, and welcome idea sharing. <br>
 
-2-time slots available:
+Calendar and links to a Community calls are [here](https://wiki.lfaidata.foundation/pages/viewpage.action?pageId=70648254)
 
-Europe
-Occurs every 2 months on the first Thursday of that month, 6 pm <br>
-https://intel.zoom.us/j/96858990725?pwd=ODJRVUhXNGNQU2YySTFqRi9qRXdtUT09 <br>
-Meeting ID: 968 5899 0725 <br>
-Passcode: 157568 <br>
+Subscribe to the OpenFL mail list openfl-announce@lists.lfaidata.foundation
 
-Asia Pacific
-Occurs every 2 months on the first Friday of that month, 10 AM GMT+8 <br>
-https://intel.zoom.us/j/98930263828?pwd=VkhIbVBtTG9xaHZCZ2dQNUdYSWpydz09 <br>
-Meeting ID: 989 3026 3828 <br>
-Passcode: 774320 <br>
 
 See you there!
 
