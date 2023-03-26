@@ -48,10 +48,7 @@ class Collaborator(Participant):
     def __init__(self, shard_descriptor_path, **kwargs):
         super().__init__(**kwargs)
 
-        __shard_descriptor = globals()['__shard_descriptor']
-
-        # print (f"__shard_descriptor in globals(): {'__shard_descriptor' in globals()}")
-        # print (f"globals()['__shard_descriptor']: {globals()['__shard_descriptor']}")
+        __shard_descriptor = globals().get("__shard_descriptor", None)
 
         if __shard_descriptor is None:
             ShardDescriptor = importlib.import_module(shard_descriptor_path).ShardDescriptor
@@ -62,7 +59,7 @@ class Collaborator(Participant):
 
 
     def __assign_private_attr(self):
-        __shard_descriptor = globals()['__shard_descriptor']
+        __shard_descriptor = globals().get("__shard_descriptor", None)
 
         self.private_attributes = __shard_descriptor.get()
 

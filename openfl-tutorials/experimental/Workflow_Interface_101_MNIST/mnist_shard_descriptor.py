@@ -12,8 +12,8 @@ class ShardDescriptor:
         if not hasattr(self, "dataset_chunks"):
             self.download()
 
-            n_collaborators, batch_size = self.read_config_file()
-            self.split_dataset(n_collaborators, batch_size)
+            n_collaborators, batch_size_train, batch_size_test = self.read_config_file()
+            self.split_dataset(n_collaborators, batch_size_train, batch_size_test)
 
 
     def read_config_file(self):
@@ -21,11 +21,12 @@ class ShardDescriptor:
             config = yaml.load(f, Loader=SafeLoader)
 
         total_collaborators = config["shard_descriptor"]["params"]["total_collaborators"]
-        batch_size = config["shard_descriptor"]["params"]["batch_size"]
-        return total_collaborators, batch_size
+        batch_size_train = config["shard_descriptor"]["params"]["batch_size_train"]
+        batch_size_test = config["shard_descriptor"]["params"]["batch_size_test"]
+        return total_collaborators, batch_size_train, batch_size_test
 
 
-    def split_dataset(self, n, batch_size):
+    def split_dataset(self, n, batch_size_train, batch_size_test):
         self.dataset_chunks = []
 
         for idx in range(n):
@@ -37,8 +38,8 @@ class ShardDescriptor:
             test.targets = self.mnist_test.targets[idx::n]
 
             self.dataset_chunks.append({
-                    "train_loader": DataLoader(train, batch_size=batch_size, shuffle=True),
-                    "test_loader": DataLoader(train, batch_size=batch_size, shuffle=True),
+                    "train_loader": DataLoader(train, batch_size=batch_size_train, shuffle=True),
+                    "test_loader": DataLoader(train, batch_size=batch_size_test, shuffle=True),
                 }
             )
 
