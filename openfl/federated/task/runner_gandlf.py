@@ -40,7 +40,7 @@ class GaNDLFTaskRunner(TaskRunner):
         super().__init__(**kwargs)
 
         # allow pass-through of a gandlf config as a file or a dict
-        if os.path.exists(gandlf_config_dict):
+        if isinstance(gandlf_config_dict, str) and os.path.exists(gandlf_config_dict):
             gandlf_config_dict = yaml.safe_load(open(gandlf_config_dict, "r"))
 
         (
