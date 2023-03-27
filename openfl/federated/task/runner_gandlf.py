@@ -6,7 +6,10 @@
 from copy import deepcopy
 
 import numpy as np
+import os
 import torch as pt
+from typing import Union
+import yaml
 
 from openfl.utilities import split_tensor_dict_for_holdouts
 from openfl.utilities import TensorKey
@@ -25,7 +28,7 @@ class GaNDLFTaskRunner(TaskRunner):
             self,
             train_csv: str = None,
             val_csv: str = None,
-            gandlf_config_dict: dict = None,
+            gandlf_config_dict: Union[str, dict] = None,
             device: str = None,
             **kwargs
     ):
@@ -35,6 +38,10 @@ class GaNDLFTaskRunner(TaskRunner):
             **kwargs: Additional parameters to pass to the functions
         """
         super().__init__(**kwargs)
+
+        # allow pass-through of a gandlf config as a file or a dict
+        if os.path.exists(gandlf_config_dict):
+            gandlf_config_dict = yaml.safe_load(open(gandlf_config_dict, "r"))
 
         (
             model,
