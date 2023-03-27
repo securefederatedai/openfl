@@ -18,14 +18,14 @@ from GANDLF.compute.training_loop import train_network
 from GANDLF.compute.forward_pass import validate_network
 
 
-class FeTSChallengeTaskRunner(TaskRunner):
-    """FeTSChallenge Model class for Federated Learning."""
+class GaNDLFTaskRunner(TaskRunner):
+    """GaNDLF Model class for Federated Learning."""
 
     def __init__(
             self,
             train_csv: str = None,
             val_csv: str = None,
-            fets_config_dict: dict = None,
+            gandlf_config_dict: dict = None,
             device: str = None,
             **kwargs
     ):
@@ -44,7 +44,7 @@ class FeTSChallengeTaskRunner(TaskRunner):
             scheduler,
             params,
         ) = create_pytorch_objects(
-            fets_config_dict, train_csv=train_csv, val_csv=val_csv, device=device
+            gandlf_config_dict, train_csv=train_csv, val_csv=val_csv, device=device
         )
         self.model = model
         self.optimizer = optimizer
