@@ -1,0 +1,6 @@
+shard_descriptor:
+    template: mnist_shard_descriptor.MnistShardDescriptor
+    params:
+        rank_worldsize: 3, 4
+        batch_size_train: 64
+        batch_size_test: 64

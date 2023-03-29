@@ -3,10 +3,11 @@
 
 """openfl.experimental.interface.participants module."""
 
+import yaml
 import importlib
 from typing import Dict
 from typing import Any
-
+from yaml.loader import SafeLoader
 
 class Participant:
     def __init__(self, name: str = ""):
@@ -39,29 +40,34 @@ class Participant:
         """
         self.private_attributes = attrs
 
-__shard_descriptor = None
 
 class Collaborator(Participant):
     """
     Defines a collaborator participant
     """
-    def __init__(self, shard_descriptor_path, **kwargs):
+    def __init__(self, config_filename, **kwargs):
         super().__init__(**kwargs)
 
-        __shard_descriptor = globals().get("__shard_descriptor", None)
+        filepath, class_name = self.read_config_file(config_filename).split(".")
 
-        if __shard_descriptor is None:
-            ShardDescriptor = importlib.import_module(shard_descriptor_path).ShardDescriptor
-            __shard_descriptor = ShardDescriptor()
-            globals()['__shard_descriptor'] = __shard_descriptor
+        shard_descriptor_module = importlib.import_module(filepath)
+        ShardDescriptor = getattr(shard_descriptor_module, class_name)
 
-        self.__assign_private_attr()
+        self.__shard_descriptor = ShardDescriptor(config_filename)
+
+        self.assign_private_attributes()
 
 
-    def __assign_private_attr(self):
-        __shard_descriptor = globals().get("__shard_descriptor", None)
+    def read_config_file(self, config_filename):
+        with open(config_filename, "r") as f:
+            config = yaml.load(f, Loader=SafeLoader)
 
-        self.private_attributes = __shard_descriptor.get()
+        return config["shard_descriptor"]["template"]
+
+
+    def assign_private_attributes(self):
+        self.private_attributes = self.__shard_descriptor.get()
+        del self.__shard_descriptor
 
 
 class Aggregator(Participant):
