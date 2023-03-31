@@ -59,7 +59,7 @@ class FLSpec:
             self._setup_aggregator()
             self._foreach_methods = []
             FLSpec._reset_clones()
-            FLSpec._create_clones(self, self.runtime.collaborators)
+            # FLSpec._create_clones(self, self.runtime.collaborators)
             # the start function can just be invoked locally
             if self._checkpoint:
                 print(f"Created flow {self.__class__.__name__}")

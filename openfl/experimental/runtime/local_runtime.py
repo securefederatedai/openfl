@@ -143,6 +143,10 @@ class LocalRuntime(Runtime):
         global final_attributes
 
         if "foreach" in kwargs:
+            # Creating clones
+            if len(FLSpec._clones) == 0:
+                FLSpec._create_clones(flspec_obj, self.collaborators)
+
             flspec_obj._foreach_methods.append(f.__name__)
             selected_collaborators = flspec_obj.__getattribute__(
                 kwargs["foreach"]
@@ -178,20 +182,19 @@ class LocalRuntime(Runtime):
                 ray_executor = RayExecutor()
             for col in selected_collaborators:
                 clone = FLSpec._clones[col]
+                collaborator = self.__collaborators[clone.input]
                 # Set new LocalRuntime for clone as it is required
                 # for calling execute_task and also new runtime
                 # object will not contain private attributes of
                 # aggregator or other collaborators
-
-#####################################################################################################################
                 clone.runtime = LocalRuntime(backend="single_process")
-                for name, attr in self.__collaborators[
-                    clone.input
-                ].private_attributes.items():
-
-                # for input in self.dataset_chunks:
-                    # for name, attr in self.dataset_chunks[input].items():
-                    setattr(clone, name, attr)
+                if self.backend == "single_process":
+                    # assign collaborator private attributes
+                    collaborator.assign_private_attributes()
+                    # set collaborator private attributes as 
+                    # clone attributes
+                    for name, attr in collaborator.private_attributes.items():
+                        setattr(clone, name, attr)
 
                 to_exec = getattr(clone, f.__name__)
                 # write the clone to the object store

@@ -5,6 +5,7 @@
 
 import yaml
 import importlib
+from copy import deepcopy
 from typing import Dict
 from typing import Any
 from yaml.loader import SafeLoader
@@ -45,29 +46,23 @@ class Collaborator(Participant):
     """
     Defines a collaborator participant
     """
-    def __init__(self, config_filename, **kwargs):
+    def __init__(self, config_filepath, **kwargs):
         super().__init__(**kwargs)
-
-        filepath, class_name = self.read_config_file(config_filename).split(".")
-
-        shard_descriptor_module = importlib.import_module(filepath)
-        ShardDescriptor = getattr(shard_descriptor_module, class_name)
-
-        self.__shard_descriptor = ShardDescriptor(config_filename)
-
-        self.assign_private_attributes()
-
-
-    def read_config_file(self, config_filename):
-        with open(config_filename, "r") as f:
-            config = yaml.load(f, Loader=SafeLoader)
-
-        return config["shard_descriptor"]["template"]
+        self.config_file = config_filepath
 
 
     def assign_private_attributes(self):
-        self.private_attributes = self.__shard_descriptor.get()
-        del self.__shard_descriptor
+        with open(self.config_file, "r") as f:
+            config = yaml.load(f, Loader=SafeLoader)
+
+        filepath, class_name = config["shard_descriptor"]["template"].split(".")
+    
+        shard_descriptor_module = importlib.import_module(filepath)
+        ShardDescriptor = getattr(shard_descriptor_module, class_name)
+
+        shard_descriptor = ShardDescriptor(self.config_file)
+        
+        self.private_attributes = deepcopy(shard_descriptor.get())
 
 
 class Aggregator(Participant):
