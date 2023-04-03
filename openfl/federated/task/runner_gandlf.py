@@ -6,7 +6,10 @@
 from copy import deepcopy
 
 import numpy as np
+import os
 import torch as pt
+from typing import Union
+import yaml
 
 from openfl.utilities import split_tensor_dict_for_holdouts
 from openfl.utilities import TensorKey
@@ -18,14 +21,14 @@ from GANDLF.compute.training_loop import train_network
 from GANDLF.compute.forward_pass import validate_network
 
 
-class FeTSChallengeTaskRunner(TaskRunner):
-    """FeTSChallenge Model class for Federated Learning."""
+class GaNDLFTaskRunner(TaskRunner):
+    """GaNDLF Model class for Federated Learning."""
 
     def __init__(
             self,
             train_csv: str = None,
             val_csv: str = None,
-            fets_config_dict: dict = None,
+            gandlf_config: Union[str, dict] = None,
             device: str = None,
             **kwargs
     ):
@@ -36,6 +39,10 @@ class FeTSChallengeTaskRunner(TaskRunner):
         """
         super().__init__(**kwargs)
 
+        # allow pass-through of a gandlf config as a file or a dict
+        if isinstance(gandlf_config, str) and os.path.exists(gandlf_config):
+            gandlf_config = yaml.safe_load(open(gandlf_config, "r"))
+
         (
             model,
             optimizer,
@@ -44,7 +51,7 @@ class FeTSChallengeTaskRunner(TaskRunner):
             scheduler,
             params,
         ) = create_pytorch_objects(
-            fets_config_dict, train_csv=train_csv, val_csv=val_csv, device=device
+            gandlf_config, train_csv=train_csv, val_csv=val_csv, device=device
         )
         self.model = model
         self.optimizer = optimizer
