@@ -5,8 +5,8 @@
 from .loader import DataLoader
 
 
-class FeTSChallengeDataLoaderWrapper(DataLoader):
-    """Federation Data Loader for FeTS Challenge Model."""
+class GaNDLFDataLoaderWrapper(DataLoader):
+    """Data Loader for the Generally Nuanced Deep Learning Framework (GaNDLF)."""
 
     def __init__(self, data_path, feature_shape):
         self.train_dataloader = None
