@@ -28,7 +28,7 @@ class GaNDLFTaskRunner(TaskRunner):
             self,
             train_csv: str = None,
             val_csv: str = None,
-            gandlf_config_dict: Union[str, dict] = None,
+            gandlf_config: Union[str, dict] = None,
             device: str = None,
             **kwargs
     ):
@@ -40,8 +40,8 @@ class GaNDLFTaskRunner(TaskRunner):
         super().__init__(**kwargs)
 
         # allow pass-through of a gandlf config as a file or a dict
-        if isinstance(gandlf_config_dict, str) and os.path.exists(gandlf_config_dict):
-            gandlf_config_dict = yaml.safe_load(open(gandlf_config_dict, "r"))
+        if isinstance(gandlf_config, str) and os.path.exists(gandlf_config):
+            gandlf_config = yaml.safe_load(open(gandlf_config, "r"))
 
         (
             model,
@@ -51,7 +51,7 @@ class GaNDLFTaskRunner(TaskRunner):
             scheduler,
             params,
         ) = create_pytorch_objects(
-            gandlf_config_dict, train_csv=train_csv, val_csv=val_csv, device=device
+            gandlf_config, train_csv=train_csv, val_csv=val_csv, device=device
         )
         self.model = model
         self.optimizer = optimizer
