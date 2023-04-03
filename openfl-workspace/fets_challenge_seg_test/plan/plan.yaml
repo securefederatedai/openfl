@@ -21,17 +21,17 @@ collaborator :
 
 data_loader :
   defaults : plan/defaults/data_loader.yaml
-  template : openfl.federated.data.loader_fets_challenge.FeTSChallengeDataLoaderWrapper
+  template : openfl.federated.data.loader_gandlf.GaNDLFDataLoaderWrapper
   settings :
     feature_shape : [32, 32, 32]
 
 task_runner :
-  template : openfl.federated.task.runner_fets_challenge.FeTSChallengeTaskRunner
+  template : openfl.federated.task.runner_gandlf.GaNDLFTaskRunner
   settings :
     train_csv           : seg_test_train.csv
     val_csv             : seg_test_val.csv
     device              : cpu
-    fets_config_dict  :
+    gandlf_config  :
       batch_size: 1
       clip_grad: null
       clip_mode: null
