@@ -50,7 +50,7 @@ single experiment, or experiment session (with the director / envoy infrastructu
 
 ### 1.5 Component standardization and framework interoperability
 
-Federated Learning is a [burgoening space](https://github.com/weimingwill/awesome-federated-learning#frameworks).
+Federated Learning is a [burgeoning space](https://github.com/weimingwill/awesome-federated-learning#frameworks).
 Most core FL infrastructure (model weight extraction, network protocols, and serialization designs) must be reimplemented ad hoc by each framework. 
 This causes community fragmentation and distracts from some of the bigger problems to be solved in federated learning. In the short term, we want to collaborate on standards for FL,
  first at the communication and storage layer, and make these components modular across other frameworks. Our aim is also to provide a library for FL algorithms, compression methods,
@@ -63,9 +63,9 @@ This causes community fragmentation and distracts from some of the bigger proble
 2. New use cases enabled by custom workflows
     * Standard ML Models (i.e. Tree-based algorithms)
 3. Federated evaluation documentation and examples
-4. Well defined aggregator / collaborator interfaces indended for building higher level projects on top of OpenFL
+4. Well defined aggregator / collaborator interfaces intended for building higher level projects on top of OpenFL
 5. Significantly improved documentation
-6. New OpenFL Security Repo for that extends OpenFL to provide governance, and end-to-end security for federated learning experiments
+6. New OpenFL Security Repo that extends OpenFL to provide governance, and end-to-end security for federated learning experiments
 
 ### OpenFL 2.0 (2023)
 1. Interface Cohesion
