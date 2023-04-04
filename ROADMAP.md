@@ -50,7 +50,7 @@ single experiment, or experiment session (with the director / envoy infrastructu
 
 ### 1.5 Component standardization and framework interoperability
 
-Federated Learning is a [burgoening space](https://github.com/weimingwill/awesome-federated-learning#frameworks).
+Federated Learning is a [burgeoning space](https://github.com/weimingwill/awesome-federated-learning#frameworks).
 Most core FL infrastructure (model weight extraction, network protocols, and serialization designs) must be reimplemented ad hoc by each framework. 
 This causes community fragmentation and distracts from some of the bigger problems to be solved in federated learning. In the short term, we want to collaborate on standards for FL,
  first at the communication and storage layer, and make these components modular across other frameworks. Our aim is also to provide a library for FL algorithms, compression methods,
@@ -58,19 +58,14 @@ This causes community fragmentation and distracts from some of the bigger proble
 
 ## Upcoming OpenFL releases
 
-### OpenFL 1.5 (Q1 2023)
-1. OpenFL Workflows Interface (Experimental)
+### OpenFL 1.6 (Q2 2023)
+1. Use the OpenFL Workflow Interface on distributed infrastructure with the [FederatedRuntime](https://openfl.readthedocs.io/en/latest/workflow_interface.html#runtimes-future-plans)
 2. New use cases enabled by custom workflows
-    * End-of-round validation with aggregator dataset
-    * ML Privacy Meter (i.e. measuring data leakage from collaborator models)
-    * Vertical Federated Learning
-    * Model Watermarking
-    * Differential Privacy
-3. Habana GPU Support
-4. Securing the director / envoy infrastructure
-    * Optional notification to plan participants to agree to experiment sent to their infrastructure
+    * Standard ML Models (i.e. Tree-based algorithms)
+3. Federated evaluation documentation and examples
+4. Well defined aggregator / collaborator interfaces intended for building higher level projects on top of OpenFL
 5. Significantly improved documentation
-6. New OpenFL Security Repo for that extends OpenFL to provide governance, and end-to-end security for federated learning experiments
+6. New OpenFL Security Repo that extends OpenFL to provide governance, and end-to-end security for federated learning experiments
 
 ### OpenFL 2.0 (2023)
 1. Interface Cohesion
