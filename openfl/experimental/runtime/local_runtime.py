@@ -100,6 +100,16 @@ class LocalRuntime(Runtime):
             collaborator.name: collaborator for collaborator in collaborators
         }
 
+    def initialize_collaborators(self):
+        """initialize collaborator private attributes"""
+        for collaborator in self.__collaborators.values():
+            collaborator.initialize_private_attributes()
+
+    def merge_collab_private_atts_to_clone(self, collaborator, clone):
+        """set collaborator private attributes as clone attributes"""
+        for name, attr in collaborator.private_attributes.items():
+            setattr(clone, name, attr)
+
     def restore_instance_snapshot(
             self,
             ctx: Type[FLSpec],
@@ -143,10 +153,6 @@ class LocalRuntime(Runtime):
         global final_attributes
 
         if "foreach" in kwargs:
-            # Creating clones
-            if len(FLSpec._clones) == 0:
-                FLSpec._create_clones(flspec_obj, self.collaborators)
-
             flspec_obj._foreach_methods.append(f.__name__)
             selected_collaborators = flspec_obj.__getattribute__(
                 kwargs["foreach"]
@@ -189,12 +195,9 @@ class LocalRuntime(Runtime):
                 # aggregator or other collaborators
                 clone.runtime = LocalRuntime(backend="single_process")
                 if self.backend == "single_process":
-                    # assign collaborator private attributes
-                    collaborator.assign_private_attributes()
                     # set collaborator private attributes as 
                     # clone attributes
-                    for name, attr in collaborator.private_attributes.items():
-                        setattr(clone, name, attr)
+                    self.merge_collab_private_atts_to_clone(collaborator, clone)
 
                 to_exec = getattr(clone, f.__name__)
                 # write the clone to the object store

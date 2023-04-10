@@ -34,6 +34,7 @@ class FLSpec:
     @classmethod
     def _create_clones(cls, instance: Type[FLSpec], names: List[str]) -> None:
         """Creates clones for instance for each collaborator in names"""
+        # assign collaborator private attributes
         cls._clones = {name: deepcopy(instance) for name in names}
 
     @classmethod
@@ -59,7 +60,8 @@ class FLSpec:
             self._setup_aggregator()
             self._foreach_methods = []
             FLSpec._reset_clones()
-            # FLSpec._create_clones(self, self.runtime.collaborators)
+            FLSpec._create_clones(self, self.runtime.collaborators)
+            self.runtime.initialize_collaborators()
             # the start function can just be invoked locally
             if self._checkpoint:
                 print(f"Created flow {self.__class__.__name__}")

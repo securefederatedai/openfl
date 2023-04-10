@@ -46,13 +46,13 @@ class Collaborator(Participant):
     """
     Defines a collaborator participant
     """
-    def __init__(self, config_filepath, **kwargs):
+    def __init__(self, collab_config, **kwargs):
         super().__init__(**kwargs)
-        self.config_file = config_filepath
+        self.__collaborator_config_file = collab_config
 
 
-    def assign_private_attributes(self):
-        with open(self.config_file, "r") as f:
+    def initialize_private_attributes(self):
+        with open(self.__collaborator_config_file, "r") as f:
             config = yaml.load(f, Loader=SafeLoader)
 
         filepath, class_name = config["shard_descriptor"]["template"].split(".")
@@ -60,8 +60,8 @@ class Collaborator(Participant):
         shard_descriptor_module = importlib.import_module(filepath)
         ShardDescriptor = getattr(shard_descriptor_module, class_name)
 
-        shard_descriptor = ShardDescriptor(self.config_file)
-        
+        shard_descriptor = ShardDescriptor(self.__collaborator_config_file)
+
         self.private_attributes = deepcopy(shard_descriptor.get())
 
 
