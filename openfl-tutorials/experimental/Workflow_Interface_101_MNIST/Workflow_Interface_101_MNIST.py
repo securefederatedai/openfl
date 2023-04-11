@@ -1,8 +1,10 @@
+from openfl.experimental.placement import aggregator, collaborator
+from openfl.experimental.runtime import LocalRuntime
+from openfl.experimental.interface import FLSpec
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 import torch
-import torchvision
 import numpy as np
 
 n_epochs = 3
@@ -16,19 +18,6 @@ random_seed = 1
 torch.backends.cudnn.enabled = False
 torch.manual_seed(random_seed)
 
-# mnist_train = torchvision.datasets.MNIST('files/', train=True, download=True,
-#                              transform=torchvision.transforms.Compose([
-#                                torchvision.transforms.ToTensor(),
-#                                torchvision.transforms.Normalize(
-#                                  (0.1307,), (0.3081,))
-#                              ]))
-
-# mnist_test = torchvision.datasets.MNIST('files/', train=False, download=True,
-#                              transform=torchvision.transforms.Compose([
-#                                torchvision.transforms.ToTensor(),
-#                                torchvision.transforms.Normalize(
-#                                  (0.1307,), (0.3081,))
-#                              ]))
 
 class Net(nn.Module):
     def __init__(self):
@@ -47,30 +36,24 @@ class Net(nn.Module):
         x = F.dropout(x, training=self.training)
         x = self.fc2(x)
         return F.log_softmax(x)
-    
-def inference(network,test_loader):
+
+
+def inference(network, test_loader):
     network.eval()
     test_loss = 0
     correct = 0
     with torch.no_grad():
-      for data, target in test_loader:
-        output = network(data)
-        test_loss += F.nll_loss(output, target, size_average=False).item()
-        pred = output.data.max(1, keepdim=True)[1]
-        correct += pred.eq(target.data.view_as(pred)).sum()
+        for data, target in test_loader:
+            output = network(data)
+            test_loss += F.nll_loss(output, target, size_average=False).item()
+            pred = output.data.max(1, keepdim=True)[1]
+            correct += pred.eq(target.data.view_as(pred)).sum()
     test_loss /= len(test_loader.dataset)
     print('\nTest set: Avg. loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n'.format(
-      test_loss, correct, len(test_loader.dataset),
-      100. * correct / len(test_loader.dataset)))
+        test_loss, correct, len(test_loader.dataset),
+        100. * correct / len(test_loader.dataset)))
     accuracy = float(correct / len(test_loader.dataset))
     return accuracy
-
-
-from copy import deepcopy
-
-from openfl.experimental.interface import FLSpec, Aggregator, Collaborator
-from openfl.experimental.runtime import LocalRuntime
-from openfl.experimental.placement import aggregator, collaborator
 
 
 def FedAvg(models):
@@ -78,16 +61,15 @@ def FedAvg(models):
     state_dicts = [model.state_dict() for model in models]
     state_dict = new_model.state_dict()
     for key in models[1].state_dict():
-        state_dict[key] = np.sum(
-            np.array([state[key] for state in state_dicts], dtype=object),
-            axis=0) / len(models)
+        state_dict[key] = np.sum(np.array([state[key]
+                                 for state in state_dicts], dtype=object), axis=0) / len(models)
     new_model.load_state_dict(state_dict)
     return new_model
 
 
 class FederatedFlow(FLSpec):
 
-    def __init__(self, model = None, optimizer = None, rounds=3, **kwargs):
+    def __init__(self, model=None, optimizer=None, rounds=2, **kwargs):
         super().__init__(**kwargs)
         if model is not None:
             self.model = model
@@ -95,7 +77,7 @@ class FederatedFlow(FLSpec):
         else:
             self.model = Net()
             self.optimizer = optim.SGD(self.model.parameters(), lr=learning_rate,
-                                   momentum=momentum)
+                                       momentum=momentum)
         self.rounds = rounds
 
     @aggregator
@@ -104,12 +86,12 @@ class FederatedFlow(FLSpec):
         self.collaborators = self.runtime.collaborators
         self.private = 10
         self.current_round = 0
-        self.next(self.aggregated_model_validation,foreach='collaborators',exclude=['private'])
+        self.next(self.aggregated_model_validation, foreach='collaborators', exclude=['private'])
 
     @collaborator
     def aggregated_model_validation(self):
         print(f'Performing aggregated model validation for collaborator {self.input}')
-        self.agg_validation_score = inference(self.model,self.test_loader)
+        self.agg_validation_score = inference(self.model, self.test_loader)
         print(f'{self.input} value of {self.agg_validation_score}')
         self.next(self.train)
 
@@ -120,80 +102,79 @@ class FederatedFlow(FLSpec):
                                    momentum=momentum)
         train_losses = []
         for batch_idx, (data, target) in enumerate(self.train_loader):
-          self.optimizer.zero_grad()
-          output = self.model(data)
-          loss = F.nll_loss(output, target)
-          loss.backward()
-          self.optimizer.step()
-          if batch_idx % log_interval == 0:
-            print('Train Epoch: 1 [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
-               batch_idx * len(data), len(self.train_loader.dataset),
-              100. * batch_idx / len(self.train_loader), loss.item()))
-            self.loss = loss.item()
-            torch.save(self.model.state_dict(), 'model.pth')
-            torch.save(self.optimizer.state_dict(), 'optimizer.pth')
+            self.optimizer.zero_grad()
+            output = self.model(data)
+            loss = F.nll_loss(output, target)
+            loss.backward()
+            self.optimizer.step()
+            if batch_idx % log_interval == 0:
+                print('Train Epoch: 1 [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
+                    batch_idx * len(data), len(self.train_loader.dataset),
+                    100. * batch_idx / len(self.train_loader), loss.item()))
+                self.loss = loss.item()
+                torch.save(self.model.state_dict(), 'model.pth')
+                torch.save(self.optimizer.state_dict(), 'optimizer.pth')
         self.training_completed = True
         self.next(self.local_model_validation)
 
     @collaborator
     def local_model_validation(self):
-        self.local_validation_score = inference(self.model,self.test_loader)
-        print(f'Doing local model validation for collaborator {self.input}: {self.local_validation_score}')
+        self.local_validation_score = inference(self.model, self.test_loader)
+        print(
+            f'Doing local model validation for collaborator {self.input}: {self.local_validation_score}')
         self.next(self.join, exclude=['training_completed'])
 
     @aggregator
-    def join(self,inputs):
-        self.average_loss = sum(input.loss for input in inputs)/len(inputs)
-        self.aggregated_model_accuracy = sum(input.agg_validation_score for input in inputs)/len(inputs)
-        self.local_model_accuracy = sum(input.local_validation_score for input in inputs)/len(inputs)
+    def join(self, inputs):
+        self.average_loss = sum(input.loss for input in inputs) / len(inputs)
+        self.aggregated_model_accuracy = sum(
+            input.agg_validation_score for input in inputs) / len(inputs)
+        self.local_model_accuracy = sum(
+            input.local_validation_score for input in inputs) / len(inputs)
         print(f'Average aggregated model validation values = {self.aggregated_model_accuracy}')
         print(f'Average training loss = {self.average_loss}')
         print(f'Average local model validation values = {self.local_model_accuracy}')
         self.model = FedAvg([input.model for input in inputs])
         self.optimizer = [input.optimizer for input in inputs][0]
         self.current_round += 1
+
         if self.current_round < self.rounds:
-            self.next(self.aggregated_model_validation, foreach='collaborators', exclude=['private'])
+            self.next(self.aggregated_model_validation,
+                      foreach='collaborators', exclude=['private'])
         else:
             self.next(self.end)
-        
+
     @aggregator
     def end(self):
-        print(f'This is the end of the flow')  
+        print(f'This is the end of the flow')
 
 
-# Setup participants
-aggregator_ = Aggregator()
-aggregator_.private_attributes = {}
+# collaborator configuration filepath prefix
+config_filepath_prefix = "/home/parth-wsl/env_collaborator_private_attribute_deplayed_execution/" + \
+    "env_collaborator_as_ray_actor/openfl/openfl-tutorials/experimental/Workflow_Interface_101_MNIST"
+
+# Aggregator details
+aggregator_name = "aggregator"
+aggregator_config_file = f"{config_filepath_prefix}/aggreagtor_config.yaml"
 
 # Setup collaborators with private attributes
-collaborator_names = ['Portland', 'Seattle', 'Chandler', 'Bangalore']
+collaborator_names = ['Portland', 'Seattle',]  # 'Chandler', 'Bangalore']
+collaborator_files = [
+    f"{config_filepath_prefix}/config_collaborator_one.yaml",
+    f"{config_filepath_prefix}/config_collaborator_two.yaml",
+    # f"{config_filepath_prefix}/config_collaborator_three.yaml",
+    # f"{config_filepath_prefix}/config_collaborator_four.yaml",
+]
 
-collaborators = []
-for collaborator_name, filename in zip(collaborator_names, ["config_collaborator_one.yaml",
-                                     "config_collaborator_two.yaml",
-                                     "config_collaborator_three.yaml",
-                                     "config_collaborator_four.yaml"]):
-    collaborators.append(Collaborator(name=collaborator_name, collab_config=filename))
-# for idx, collaborator in enumerate(collaborators):
-#     local_train = deepcopy(mnist_train)
-#     local_test = deepcopy(mnist_test)
-#     local_train.data = mnist_train.data[idx::len(collaborators)]
-#     local_train.targets = mnist_train.targets[idx::len(collaborators)]
-#     local_test.data = mnist_test.data[idx::len(collaborators)]
-#     local_test.targets = mnist_test.targets[idx::len(collaborators)]
-#     collaborator.private_attributes = {
-#             'train_loader': torch.utils.data.DataLoader(local_train,batch_size=batch_size_train, shuffle=True),
-#             'test_loader': torch.utils.data.DataLoader(local_test,batch_size=batch_size_train, shuffle=True)
-#     }
-
-local_runtime = LocalRuntime(aggregator=aggregator_, collaborators=collaborators, backend='single_process')
+local_runtime = LocalRuntime(aggregator={aggregator_name: aggregator_config_file, },
+                             collaborators=dict(zip(collaborator_names, collaborator_files)),
+                             backend='ray')  # single_process
 print(f'Local runtime collaborators = {local_runtime.collaborators}')
 
 
 model = None
 best_model = None
 optimizer = None
-flflow = FederatedFlow(model,optimizer)
+flflow = FederatedFlow(model, optimizer)
 flflow.runtime = local_runtime
 flflow.run()

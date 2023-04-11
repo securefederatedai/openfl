@@ -76,7 +76,7 @@ class FLSpec:
                         "\nLocalRuntime(...,backend='single_process')\n"
                         "\n or for more information about the original error,"
                         "\nPlease see the official Ray documentation"
-                        "\nhttps://docs.ray.io/en/latest/ray-core/objects/serialization.html"
+                        "\nhttps://docs.ray.io/en/releases-2.2.0/ray-core/objects/serialization.html"
                     )
                     raise SerializationError(str(e) + msg)
                 else:

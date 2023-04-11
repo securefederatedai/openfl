@@ -5,12 +5,14 @@
 
 from __future__ import annotations
 from copy import deepcopy
+import importlib
 import ray
 import gc
 from openfl.experimental.runtime import Runtime
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from openfl.experimental.interface import Aggregator, Collaborator, FLSpec
+
 from openfl.experimental.placement import RayExecutor
 from openfl.experimental.utilities import (
     aggregator_to_collaborator,
@@ -18,16 +20,15 @@ from openfl.experimental.utilities import (
     filter_attributes,
     checkpoint,
 )
-from typing import List, Dict
-from typing import Type
-from typing import Callable
+from typing import List, Any
+from typing import Dict, Type, Callable
 
 
 class LocalRuntime(Runtime):
     def __init__(
         self,
-        aggregator: Type[Aggregator] = None,
-        collaborators: List[Type[Collaborator]] = None,
+        aggregator: Dict = None,
+        collaborators: Dict = None,
         backend: str = "single_process",
         **kwargs,
     ) -> None:
@@ -70,11 +71,30 @@ class LocalRuntime(Runtime):
                 ray.init(dashboard_host=dh, dashboard_port=dp)
         self.backend = backend
         if aggregator is not None:
-            self.aggregator = aggregator
-        # List of envoys should be iterable, so that a subset can be selected at runtime
-        # The envoys is the superset of envoys that can be selected during the experiment
+            self.aggregator = [self.__get_aggregator_object(
+                config_file, name) for name, config_file in aggregator.items()][0]
+            self._aggregator.initialize_private_attributes()
+
         if collaborators is not None:
-            self.collaborators = collaborators
+            self.collaborators = [self.__get_collaborator_object(
+                collab_configfile, name) for name, collab_configfile in collaborators.items()]
+
+    def __get_aggregator_object(self, config_file: str, name: str) -> Aggregator:
+        interface_module = importlib.import_module("openfl.experimental.interface")
+        aggregator_class = getattr(interface_module, "Aggregator")
+
+        return aggregator_class(config_file, name=name)
+
+    def __get_collaborator_object(self, collab_config_file: str, name: str) -> Any:
+        """Get collaborator object based on localruntime backend"""
+        interface_module = importlib.import_module("openfl.experimental.interface")
+        collaborator_class = getattr(interface_module, "Collaborator")
+
+        if self.backend == "single_process":
+            return collaborator_class(collab_config_file, name=name)
+        else:
+            return ray.remote(collaborator_class).remote(collab_config_file,
+                                                         name=name)
 
     @property
     def aggregator(self) -> str:
@@ -96,19 +116,25 @@ class LocalRuntime(Runtime):
     @collaborators.setter
     def collaborators(self, collaborators: List[Type[Collaborator]]):
         """Set LocalRuntime collaborators"""
+        if self.backend == "single_process":
+            get_collab_name = lambda collab: collab.get_name()
+        else:
+            get_collab_name = lambda collab: ray.get(collab.get_name.remote())
+
         self.__collaborators = {
-            collaborator.name: collaborator for collaborator in collaborators
+            get_collab_name(collaborator): collaborator
+            for collaborator in collaborators
         }
 
     def initialize_collaborators(self):
         """initialize collaborator private attributes"""
-        for collaborator in self.__collaborators.values():
-            collaborator.initialize_private_attributes()
+        if self.backend == "single_process":
+            init_pa = lambda collab: collab.initialize_private_attributes()
+        else:
+            init_pa = lambda collab: collab.initialize_private_attributes.remote()
 
-    def merge_collab_private_atts_to_clone(self, collaborator, clone):
-        """set collaborator private attributes as clone attributes"""
-        for name, attr in collaborator.private_attributes.items():
-            setattr(clone, name, attr)
+        for collaborator in self.__collaborators.values():
+            init_pa(collaborator)
 
     def restore_instance_snapshot(
             self,
@@ -184,46 +210,49 @@ class LocalRuntime(Runtime):
                             delattr(clone, attr)
 
             func = None
-            if self.backend == "ray":
-                ray_executor = RayExecutor()
+            # if self.backend == "ray":
+            # ray_executor = RayExecutor()
             for col in selected_collaborators:
                 clone = FLSpec._clones[col]
-                collaborator = self.__collaborators[clone.input]
+                collaborator = self.__collaborators[col]
                 # Set new LocalRuntime for clone as it is required
                 # for calling execute_task and also new runtime
                 # object will not contain private attributes of
                 # aggregator or other collaborators
-                clone.runtime = LocalRuntime(backend="single_process")
+                clone.runtime = LocalRuntime(backend=self.backend)
                 if self.backend == "single_process":
-                    # set collaborator private attributes as 
-                    # clone attributes
-                    self.merge_collab_private_atts_to_clone(collaborator, clone)
+                    # assign collaborator private attributes
+                    collaborator.initialize_private_attributes()
+                    # collaborator.set_collaborator_attrs_to_clone(clone)
+                else:
+                    collaborator.initialize_private_attributes.remote()
 
-                to_exec = getattr(clone, f.__name__)
+                # to_exec = getattr(clone, f.__name__)
                 # write the clone to the object store
                 # ensure clone is getting latest _metaflow_interface
                 clone._metaflow_interface = flspec_obj._metaflow_interface
                 if self.backend == "ray":
-                    ray_executor.ray_call_put(clone, to_exec)
+                    # ray_executor.ray_call_put(clone, to_exec)
+                    clone = ray.get(collaborator.execute_func.remote(clone, f.__name__))
+                    FLSpec._clones.update({col: clone})
                 else:
-                    to_exec()
+                    collaborator.execute_func(clone, f.__name__)
             if self.backend == "ray":
-                clones = ray_executor.get_remote_clones()
-                FLSpec._clones.update(zip(selected_collaborators, clones))
-                del ray_executor
-                del clones
+                # clones = ray_executor.get_remote_clones()
+                # FLSpec._clones.update(zip(selected_collaborators, clones))
+                # del ray_executor
+                # del clones
                 gc.collect()
             for col in selected_collaborators:
                 clone = FLSpec._clones[col]
                 func = clone.execute_next
-                for attr in self.__collaborators[
-                    clone.input
-                ].private_attributes:
-                    if hasattr(clone, attr):
-                        self.__collaborators[clone.input].private_attributes[
-                            attr
-                        ] = getattr(clone, attr)
-                        delattr(clone, attr)
+                collaborator = self.__collaborators[col]
+
+                # if self.backend == "single_process":
+                #     collaborator.delete_collab_attrs_from_clone(clone)
+                # else:
+                #     clone = ray.get(collaborator.delete_collab_attrs_from_clone.remote(clone))
+
             # Restore the flspec_obj state if back-up is taken
             self.restore_instance_snapshot(flspec_obj, instance_snapshot)
             del instance_snapshot
