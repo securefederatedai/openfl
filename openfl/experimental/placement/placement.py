@@ -12,49 +12,6 @@ from openfl.experimental.utilities import (
 from typing import Callable
 
 
-class RayExecutor:
-    def __init__(self):
-        self.remote_functions = []
-        self.remote_contexts = []
-
-    def ray_call_put(self, ctx, func):
-        remote_to_exec = make_remote(func, num_gpus=func.num_gpus)
-        ref_ctx = ray.put(ctx)
-        self.remote_contexts.append(ref_ctx)
-        self.remote_functions.append(remote_to_exec.remote(ref_ctx, func.__name__))
-        del remote_to_exec
-        del ref_ctx
-
-    def get_remote_clones(self):
-        clones = deepcopy(ray.get(self.remote_functions))
-        del self.remote_functions
-        # Remove clones from ray object store
-        for ctx in self.remote_contexts:
-            ray.cancel(ctx)
-        return clones
-
-
-def make_remote(f: Callable, num_gpus: int) -> Callable:
-    """
-    Assign function to run in its own process using
-    Ray
-
-    Args:
-        num_gpus: Defines the number of GPUs to request for a task
-    """
-    f = ray.put(f)
-
-    @functools.wraps(f)
-    @ray.remote(num_gpus=num_gpus, max_calls=1)
-    def wrapper(*args, **kwargs):
-        f = getattr(args[0], args[1])
-        print(f"\nRunning {f.__name__} in a new process")
-        f()
-        return args[0]
-
-    return wrapper
-
-
 def aggregator(f: Callable = None) -> Callable:
     """
     Placement decorator that designates that the task will

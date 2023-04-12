@@ -3,10 +3,11 @@
 
 """openfl.experimental.interface.participants module."""
 
+import ray
 import yaml
 import importlib
 from yaml.loader import SafeLoader
-from typing import Dict, Any
+from typing import List, Dict, Any
 
 
 class Participant:
@@ -94,8 +95,7 @@ class Collaborator(Participant):
         f()
         self.__delete_collab_attrs_from_clone(ctx)
 
-        if ctx.runtime.backend == "ray":
-            return ctx
+        return ctx
 
 
 class Aggregator(Participant):
@@ -125,3 +125,20 @@ class Aggregator(Participant):
 
             self.private_attributes = shard_descriptor.get()
 
+
+class RayExecutor:
+    def __init__(self):
+        self.__remote_contexts = []
+
+    def ray_call_put(self, collaborator: Collaborator, ctx: Any,
+                     f_name: str) -> None:
+        self.__remote_contexts.append(
+            collaborator.execute_func.remote(ctx, f_name)
+        )
+
+    def get_remote_clones(self) -> List[Any]:
+        clones = ray.get(self.__remote_contexts)
+        del self.__remote_contexts
+        self.__remote_contexts = []
+
+        return clones

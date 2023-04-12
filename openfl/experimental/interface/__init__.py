@@ -4,6 +4,6 @@
 """openfl.experimental.interface package."""
 
 from .fl_spec import FLSpec, final_attributes
-from .participants import Aggregator, Collaborator
+from .participants import Aggregator, Collaborator, RayExecutor
 
-__all__ = ["FLSpec", "final_attributes", "Aggregator", "Collaborator"]
+__all__ = ["FLSpec", "final_attributes", "Aggregator", "Collaborator", "RayExecutor"]

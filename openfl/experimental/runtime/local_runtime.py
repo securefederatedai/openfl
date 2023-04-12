@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from openfl.experimental.interface import Aggregator, Collaborator, FLSpec
 
-from openfl.experimental.placement import RayExecutor
+# from openfl.experimental.interface import RayExecutor
 from openfl.experimental.utilities import (
     aggregator_to_collaborator,
     generate_artifacts,
@@ -210,8 +210,11 @@ class LocalRuntime(Runtime):
                             delattr(clone, attr)
 
             func = None
-            # if self.backend == "ray":
-            # ray_executor = RayExecutor()
+            if self.backend == "ray":
+                interface_module = importlib.import_module("openfl.experimental.interface")
+                RayExecutor = getattr(interface_module, "RayExecutor")
+
+                ray_executor = RayExecutor()
             for col in selected_collaborators:
                 clone = FLSpec._clones[col]
                 collaborator = self.__collaborators[col]
@@ -219,39 +222,25 @@ class LocalRuntime(Runtime):
                 # for calling execute_task and also new runtime
                 # object will not contain private attributes of
                 # aggregator or other collaborators
-                clone.runtime = LocalRuntime(backend=self.backend)
-                if self.backend == "single_process":
-                    # assign collaborator private attributes
-                    collaborator.initialize_private_attributes()
-                    # collaborator.set_collaborator_attrs_to_clone(clone)
-                else:
-                    collaborator.initialize_private_attributes.remote()
+                clone.runtime = LocalRuntime(backend="single_process")
 
-                # to_exec = getattr(clone, f.__name__)
                 # write the clone to the object store
                 # ensure clone is getting latest _metaflow_interface
                 clone._metaflow_interface = flspec_obj._metaflow_interface
                 if self.backend == "ray":
-                    # ray_executor.ray_call_put(clone, to_exec)
-                    clone = ray.get(collaborator.execute_func.remote(clone, f.__name__))
-                    FLSpec._clones.update({col: clone})
+                    ray_executor.ray_call_put(collaborator, clone, f.__name__)
                 else:
                     collaborator.execute_func(clone, f.__name__)
             if self.backend == "ray":
-                # clones = ray_executor.get_remote_clones()
-                # FLSpec._clones.update(zip(selected_collaborators, clones))
-                # del ray_executor
-                # del clones
+                clones = ray_executor.get_remote_clones()
+                FLSpec._clones.update(zip(selected_collaborators, clones))
+                del ray_executor
+                del clones
                 gc.collect()
             for col in selected_collaborators:
                 clone = FLSpec._clones[col]
                 func = clone.execute_next
                 collaborator = self.__collaborators[col]
-
-                # if self.backend == "single_process":
-                #     collaborator.delete_collab_attrs_from_clone(clone)
-                # else:
-                #     clone = ray.get(collaborator.delete_collab_attrs_from_clone.remote(clone))
 
             # Restore the flspec_obj state if back-up is taken
             self.restore_instance_snapshot(flspec_obj, instance_snapshot)

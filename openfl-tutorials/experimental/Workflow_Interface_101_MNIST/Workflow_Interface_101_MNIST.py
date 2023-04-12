@@ -1,3 +1,5 @@
+
+
 from openfl.experimental.placement import aggregator, collaborator
 from openfl.experimental.runtime import LocalRuntime
 from openfl.experimental.interface import FLSpec
@@ -7,9 +9,6 @@ import torch.optim as optim
 import torch
 import numpy as np
 
-n_epochs = 3
-batch_size_train = 64
-batch_size_test = 1000
 learning_rate = 0.01
 momentum = 0.5
 log_interval = 10
@@ -69,7 +68,7 @@ def FedAvg(models):
 
 class FederatedFlow(FLSpec):
 
-    def __init__(self, model=None, optimizer=None, rounds=2, **kwargs):
+    def __init__(self, model=None, optimizer=None, rounds=3, **kwargs):
         super().__init__(**kwargs)
         if model is not None:
             self.model = model
@@ -153,22 +152,21 @@ class FederatedFlow(FLSpec):
 config_filepath_prefix = "/home/parth-wsl/env_collaborator_private_attribute_deplayed_execution/" + \
     "env_collaborator_as_ray_actor/openfl/openfl-tutorials/experimental/Workflow_Interface_101_MNIST"
 
-# Aggregator details
-aggregator_name = "aggregator"
-aggregator_config_file = f"{config_filepath_prefix}/aggreagtor_config.yaml"
+# Aggregator dictionary
+aggregator_dict = {
+    "aggregator": f"{config_filepath_prefix}/aggreagtor_config.yaml",
+}
 
-# Setup collaborators with private attributes
-collaborator_names = ['Portland', 'Seattle',]  # 'Chandler', 'Bangalore']
-collaborator_files = [
-    f"{config_filepath_prefix}/config_collaborator_one.yaml",
-    f"{config_filepath_prefix}/config_collaborator_two.yaml",
-    # f"{config_filepath_prefix}/config_collaborator_three.yaml",
-    # f"{config_filepath_prefix}/config_collaborator_four.yaml",
-]
+# Collaborator dictionary
+collaborator_dict = {
+    "Portland": f"{config_filepath_prefix}/config_collaborator_one.yaml",
+    "Seattle": f"{config_filepath_prefix}/config_collaborator_two.yaml",
+    # "Chandler": f"{config_filepath_prefix}/config_collaborator_three.yaml",
+    # "Bangalore": f"{config_filepath_prefix}/config_collaborator_four.yaml",
+}
 
-local_runtime = LocalRuntime(aggregator={aggregator_name: aggregator_config_file, },
-                             collaborators=dict(zip(collaborator_names, collaborator_files)),
-                             backend='ray')  # single_process
+local_runtime = LocalRuntime(aggregator=aggregator_dict, collaborators=collaborator_dict,
+                             backend="ray")  # single_process
 print(f'Local runtime collaborators = {local_runtime.collaborators}')
 
 
