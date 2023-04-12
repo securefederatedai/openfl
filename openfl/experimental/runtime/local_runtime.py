@@ -13,7 +13,6 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from openfl.experimental.interface import Aggregator, Collaborator, FLSpec
 
-# from openfl.experimental.interface import RayExecutor
 from openfl.experimental.utilities import (
     aggregator_to_collaborator,
     generate_artifacts,
@@ -22,6 +21,24 @@ from openfl.experimental.utilities import (
 )
 from typing import List, Any
 from typing import Dict, Type, Callable
+
+
+class RayExecutor:
+    def __init__(self):
+        self.__remote_contexts = []
+
+    def ray_call_put(self, collaborator: Collaborator, ctx: Any,
+                     f_name: str) -> None:
+        self.__remote_contexts.append(
+            collaborator.execute_func.remote(ctx, f_name)
+        )
+
+    def get_remote_clones(self) -> List[Any]:
+        clones = ray.get(self.__remote_contexts)
+        del self.__remote_contexts
+        self.__remote_contexts = []
+
+        return clones
 
 
 class LocalRuntime(Runtime):
@@ -211,9 +228,6 @@ class LocalRuntime(Runtime):
 
             func = None
             if self.backend == "ray":
-                interface_module = importlib.import_module("openfl.experimental.interface")
-                RayExecutor = getattr(interface_module, "RayExecutor")
-
                 ray_executor = RayExecutor()
             for col in selected_collaborators:
                 clone = FLSpec._clones[col]
