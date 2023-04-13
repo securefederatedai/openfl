@@ -90,7 +90,6 @@ class LocalRuntime(Runtime):
         if aggregator is not None:
             self.aggregator = [self.__get_aggregator_object(
                 config_file, name) for name, config_file in aggregator.items()][0]
-            self._aggregator.initialize_private_attributes()
 
         if collaborators is not None:
             self.collaborators = [self.__get_collaborator_object(
@@ -142,6 +141,9 @@ class LocalRuntime(Runtime):
             get_collab_name(collaborator): collaborator
             for collaborator in collaborators
         }
+
+    def initialize_aggregator(self):
+        self._aggregator.initialize_private_attributes()
 
     def initialize_collaborators(self):
         """initialize collaborator private attributes"""

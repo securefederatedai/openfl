@@ -57,6 +57,7 @@ class FLSpec:
         if str(self._runtime) == "LocalRuntime":
             # Setup any necessary ShardDescriptors through the LocalEnvoys
             # Assume that first task always runs on the aggregator
+            self.runtime.initialize_aggregator()
             self._setup_aggregator()
             self._foreach_methods = []
             FLSpec._reset_clones()

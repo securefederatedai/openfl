@@ -148,10 +148,6 @@ class FederatedFlow(FLSpec):
         print(f'This is the end of the flow')
 
 
-# collaborator configuration filepath prefix
-config_filepath_prefix = "/home/parth-wsl/env_collaborator_private_attribute_deplayed_execution/" + \
-    "env_collaborator_as_ray_actor/openfl/openfl-tutorials/experimental/Workflow_Interface_101_MNIST"
-
 # Aggregator dictionary
 aggregator_dict = {
     "aggregator": f"{config_filepath_prefix}/aggreagtor_config.yaml",
@@ -159,10 +155,10 @@ aggregator_dict = {
 
 # Collaborator dictionary
 collaborator_dict = {
-    "Portland": f"{config_filepath_prefix}/config_collaborator_one.yaml",
-    "Seattle": f"{config_filepath_prefix}/config_collaborator_two.yaml",
-    # "Chandler": f"{config_filepath_prefix}/config_collaborator_three.yaml",
-    # "Bangalore": f"{config_filepath_prefix}/config_collaborator_four.yaml",
+    "Portland": f"config_collaborator_one.yaml",
+    "Seattle": f"config_collaborator_two.yaml",
+    # "Chandler": f"config_collaborator_three.yaml",
+    # "Bangalore": f"config_collaborator_four.yaml",
 }
 
 local_runtime = LocalRuntime(aggregator=aggregator_dict, collaborators=collaborator_dict,
