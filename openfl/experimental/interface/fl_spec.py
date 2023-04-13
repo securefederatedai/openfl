@@ -65,6 +65,13 @@ class FLSpec:
                 print(f"Created flow {self.__class__.__name__}")
             try:
                 self.start()
+                self.runtime.execute_task(
+                    self,
+                    self.execute_task_args[0],
+                    self.execute_task_args[1],
+                    self.execute_task_args[2],
+                    **self.execute_task_args[3],
+                )
             except Exception as e:
                 if "cannot pickle" in str(e) or "Failed to unpickle" in str(e):
                     msg = (
@@ -148,12 +155,12 @@ class FLSpec:
         elif collaborator_to_aggregator(f, parent_func):
             print("Sending state from collaborator to aggregator")
 
-    def next(self, f: Callable, **kwargs) -> None:
+    def next(self, next_func: Callable, **kwargs) -> None:
         """
         Next task in the flow to execute
 
         Args:
-            f: The next task that will be executed in the flow
+            next_func: The next task that will be executed in the flow
         """
 
         # Get the name and reference to the calling function
@@ -165,22 +172,16 @@ class FLSpec:
 
         # Take back-up of current state of self
         agg_to_collab_ss = []
-        if aggregator_to_collaborator(f, parent_func):
+        if aggregator_to_collaborator(next_func, parent_func):
             agg_to_collab_ss = self._capture_instance_snapshot(kwargs=kwargs)
 
         # Remove included / excluded attributes from next task
-        filter_attributes(self, f, **kwargs)
+        filter_attributes(self, next_func, **kwargs)
 
-        if self._is_at_transition_point(f, parent_func):
-            # Collaborator is done executing for now
-            return
+        self._display_transition_logs(next_func, parent_func)
 
-        self._display_transition_logs(f, parent_func)
+        # get the function to be executed
+        self.to_exec = getattr(self, next_func.__name__)
 
-        self._runtime.execute_task(
-            self,
-            f,
-            parent_func,
-            instance_snapshot=agg_to_collab_ss,
-            **kwargs,
-        )
+        # update parameters for execute_task function
+        self.execute_task_args = [next_func, parent_func, agg_to_collab_ss, kwargs]
