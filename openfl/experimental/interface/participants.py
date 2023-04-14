@@ -6,7 +6,7 @@
 import yaml
 import importlib
 from yaml.loader import SafeLoader
-from typing import List, Dict, Any
+from typing import Dict, Any
 
 
 class Participant:
@@ -82,9 +82,9 @@ class Collaborator(Participant):
             filepath, class_name = config["shard_descriptor"]["template"].split(".")
 
             shard_descriptor_module = importlib.import_module(filepath)
-            ShardDescriptor = getattr(shard_descriptor_module, class_name)
+            shard_descriptor_class = getattr(shard_descriptor_module, class_name)
 
-            shard_descriptor = ShardDescriptor(self.config_file)
+            shard_descriptor = shard_descriptor_class(self.config_file)
 
             self.private_attributes = shard_descriptor.get()
 
@@ -121,9 +121,8 @@ class Aggregator(Participant):
             filepath, class_name = shard_desc_template.split(".")
 
             shard_descriptor_module = importlib.import_module(filepath)
-            ShardDescriptor = getattr(shard_descriptor_module, class_name)
+            shard_descriptor_class = getattr(shard_descriptor_module, class_name)
 
-            shard_descriptor = ShardDescriptor(self.config_file)
+            shard_descriptor = shard_descriptor_class(self.config_file)
 
             self.private_attributes = shard_descriptor.get()
-
