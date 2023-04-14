@@ -65,7 +65,8 @@ class FLSpec:
             try:
                 self.start()
 
-                # execute_task_args will be updated in self.start() after the next function is executed
+                # execute_task_args will be updated in self.start()
+                # after the next function is executed
                 self.runtime.execute_task(
                     self,
                     self.execute_task_args[0],

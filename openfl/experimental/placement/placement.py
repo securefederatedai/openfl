@@ -27,7 +27,7 @@ class RayExecutor:
 
     def get_remote_clones(self):
         clones = deepcopy(ray.get(self.remote_functions))
-        self.remote_functions =[]
+        self.remote_functions = []
         # Remove clones from ray object store
         for ctx in self.remote_contexts:
             ray.cancel(ctx)
