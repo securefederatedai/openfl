@@ -3,7 +3,6 @@
 
 """openfl.experimental.interface.participants module."""
 
-import ray
 import yaml
 import importlib
 from yaml.loader import SafeLoader

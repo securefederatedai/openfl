@@ -2,7 +2,6 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import functools
-import ray
 from copy import deepcopy
 from openfl.experimental.utilities import (
     RedirectStdStreamContext,
