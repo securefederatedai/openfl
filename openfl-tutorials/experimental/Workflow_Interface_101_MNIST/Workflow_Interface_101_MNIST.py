@@ -1,4 +1,6 @@
+import os
 
+os.system("pip install -r ../requirements_workflow_interface.txt")
 
 from openfl.experimental.placement import aggregator, collaborator
 from openfl.experimental.runtime import LocalRuntime
@@ -150,19 +152,19 @@ class FederatedFlow(FLSpec):
 
 # Aggregator dictionary
 aggregator_dict = {
-    "aggregator": f"{config_filepath_prefix}/aggreagtor_config.yaml",
+    "aggregator": f"aggreagtor_config.yaml",
 }
 
 # Collaborator dictionary
 collaborator_dict = {
     "Portland": f"config_collaborator_one.yaml",
     "Seattle": f"config_collaborator_two.yaml",
-    # "Chandler": f"config_collaborator_three.yaml",
-    # "Bangalore": f"config_collaborator_four.yaml",
+    "Chandler": f"config_collaborator_three.yaml",
+    "Bangalore": f"config_collaborator_four.yaml",
 }
 
 local_runtime = LocalRuntime(aggregator=aggregator_dict, collaborators=collaborator_dict,
-                             backend="ray")  # single_process
+                             backend="single_process")  # ray
 print(f'Local runtime collaborators = {local_runtime.collaborators}')
 
 
