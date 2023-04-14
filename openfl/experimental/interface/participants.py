@@ -47,21 +47,24 @@ class Collaborator(Participant):
     """
     def __init__(self, config_file: str, **kwargs):
         """
-        Create collaborator single process object
+        Create collaborator object
         """
         super().__init__(**kwargs)
         self.config_file = config_file
 
     def get_name(self) -> str:
+        """Get collaborator name"""
         return self._name
 
     def __set_collaborator_attrs_to_clone(self, clone: Any) -> None:
+        """Set collaborator private attributes to clone"""
         # set collaborator private attributes as
         # clone attributes
         for name, attr in self.private_attributes.items():
             setattr(clone, name, attr)
 
     def __delete_collab_attrs_from_clone(self, clone: Any) -> None:
+        """Delete collaborator private attributes from clone"""
         # if clone has collaborator private attributes
         # then remove it
         for attr_name in self.private_attributes:
@@ -87,7 +90,7 @@ class Collaborator(Participant):
 
     def execute_func(self, ctx: Any, f: str) -> Any:
         """
-        Execute remote function f in ray
+        Execute remote function f
         """
         self.__set_collaborator_attrs_to_clone(ctx)
         f = getattr(ctx, f)

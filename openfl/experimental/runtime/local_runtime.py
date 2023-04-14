@@ -25,15 +25,24 @@ from typing import Dict, Type, Callable
 
 class RayExecutor:
     def __init__(self):
+        """Create RayExecutor object"""
         self.__remote_contexts = []
 
     def ray_call_put(self, collaborator: Collaborator, ctx: Any,
                      f_name: str) -> None:
+        """
+        Set collaborator private attributes to clone and,
+        execute f_name in context of clone (ctx)
+        """
         self.__remote_contexts.append(
             collaborator.execute_func.remote(ctx, f_name)
         )
 
     def get_remote_clones(self) -> List[Any]:
+        """
+        Get remove clones and delete ray references and,
+        from memory
+        """
         clones = ray.get(self.__remote_contexts)
         del self.__remote_contexts
         self.__remote_contexts = []
@@ -96,6 +105,7 @@ class LocalRuntime(Runtime):
                 collab_configfile, name) for name, collab_configfile in collaborators.items()]
 
     def __get_aggregator_object(self, config_file: str, name: str) -> Aggregator:
+        """Get aggregator object"""
         interface_module = importlib.import_module("openfl.experimental.interface")
         aggregator_class = getattr(interface_module, "Aggregator")
 
@@ -143,6 +153,7 @@ class LocalRuntime(Runtime):
         }
 
     def initialize_aggregator(self):
+        """initialize aggregator private attributes"""
         self._aggregator.initialize_private_attributes()
 
     def initialize_collaborators(self):
