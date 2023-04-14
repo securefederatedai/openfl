@@ -23,7 +23,6 @@ final_attributes = []
 
 
 class FLSpec:
-
     _clones = []
     _initial_state = None
 
@@ -65,6 +64,8 @@ class FLSpec:
                 print(f"Created flow {self.__class__.__name__}")
             try:
                 self.start()
+
+                # execute_task_args will be updated in self.start() after the next function is executed
                 self.runtime.execute_task(
                     self,
                     self.execute_task_args[0],
@@ -137,9 +138,7 @@ class FLSpec:
         if parent_func.__name__ in self._foreach_methods:
             self._foreach_methods.append(f.__name__)
             if should_transfer(f, parent_func):
-                print(
-                    f"Should transfer from {parent_func.__name__} to {f.__name__}"
-                )
+                print(f"Should transfer from {parent_func.__name__} to {f.__name__}")
                 self.execute_next = f.__name__
                 return True
         return False
@@ -155,7 +154,7 @@ class FLSpec:
         elif collaborator_to_aggregator(f, parent_func):
             print("Sending state from collaborator to aggregator")
 
-    def next(self, next_func: Callable, **kwargs) -> None:
+    def next(self, f: Callable, **kwargs) -> None:
         """
         Next task in the flow to execute
 
@@ -172,16 +171,16 @@ class FLSpec:
 
         # Take back-up of current state of self
         agg_to_collab_ss = []
-        if aggregator_to_collaborator(next_func, parent_func):
+        if aggregator_to_collaborator(f, parent_func):
             agg_to_collab_ss = self._capture_instance_snapshot(kwargs=kwargs)
 
         # Remove included / excluded attributes from next task
-        filter_attributes(self, next_func, **kwargs)
+        filter_attributes(self, f, **kwargs)
 
-        self._display_transition_logs(next_func, parent_func)
+        self._display_transition_logs(f, parent_func)
 
         # get the function to be executed
-        self.to_exec = getattr(self, next_func.__name__)
+        self.to_exec = getattr(self, f.__name__)
 
         # update parameters for execute_task function
-        self.execute_task_args = [next_func, parent_func, agg_to_collab_ss, kwargs]
+        self.execute_task_args = [f, parent_func, agg_to_collab_ss, kwargs]
