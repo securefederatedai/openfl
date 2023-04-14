@@ -160,7 +160,7 @@ class FLSpec:
         Next task in the flow to execute
 
         Args:
-            next_func: The next task that will be executed in the flow
+            f: The next task that will be executed in the flow
         """
 
         # Get the name and reference to the calling function
@@ -179,9 +179,6 @@ class FLSpec:
         filter_attributes(self, f, **kwargs)
 
         self._display_transition_logs(f, parent_func)
-
-        # get the function to be executed
-        self.to_exec = getattr(self, f.__name__)
 
         # update parameters for execute_task function
         self.execute_task_args = [f, parent_func, agg_to_collab_ss, kwargs]

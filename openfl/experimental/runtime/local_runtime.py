@@ -22,6 +22,7 @@ from openfl.experimental.utilities import (
 from typing import List
 from typing import Type
 from typing import Callable
+import importlib
 
 
 class LocalRuntime(Runtime):
@@ -140,22 +141,43 @@ class LocalRuntime(Runtime):
                 )
             else:
                 f, parent_func, instance_snapshot, kwargs = self.execute_agg_task(
-                    flspec_obj
+                    flspec_obj, f
                 )
         else:
             self.execute_end_task(flspec_obj, f)
 
-    def execute_agg_task(self, flspec_obj):
-        """Performs execution of aggregator task"""
-        flspec_obj.to_exec()
+    def execute_agg_task(self, flspec_obj, f):
+        """
+        Performs execution of aggregator task
+        Args:
+            flspec_obj : Reference to the FLSpec (flow) object
+            f          :  The task to be executed within the flow
+
+        Returns:
+            list: updated arguments to be executed
+        """
+
+        to_exec = getattr(flspec_obj, f.__name__)
+        to_exec()
         return flspec_obj.execute_task_args
 
     def execute_end_task(self, flspec_obj, f):
-        """Performs execution of end task"""
-        from openfl.experimental.interface import final_attributes
+        """
+        Performs execution of end task
+        Args:
+            flspec_obj : Reference to the FLSpec (flow) object
+            f          :  The task to be executed within the flow
+
+        Returns:
+            list: updated arguments to be executed
+        """
 
         global final_attributes
-        flspec_obj.to_exec()
+        final_attr_module = importlib.import_module("openfl.experimental.interface")
+        final_attributes = getattr(final_attr_module, "final_attributes")
+
+        to_exec = getattr(flspec_obj, f.__name__)
+        to_exec()
         checkpoint(flspec_obj, f)
         artifacts_iter, _ = generate_artifacts(ctx=flspec_obj)
         final_attributes = artifacts_iter()
@@ -172,9 +194,20 @@ class LocalRuntime(Runtime):
             4. Execution of all collaborator for each task
             5. Remove collaborator private attributes
             6. Execute the next function after transition
-        """
-        from openfl.experimental.interface import FLSpec
 
+        Args:
+            flspec_obj  :  Reference to the FLSpec (flow) object
+            f           :  The task to be executed within the flow
+            parent_func : The prior task executed in the flow
+            instance_snapshot : A prior FLSpec state that needs to be restored
+
+        Returns:
+            list: updated arguments to be executed
+        """
+
+        final_attr_module = importlib.import_module("openfl.experimental.interface")
+        FLSpec = getattr(final_attr_module, "FLSpec")
+        
         flspec_obj._foreach_methods.append(f.__name__)
         selected_collaborators = getattr(flspec_obj, kwargs["foreach"])
 
@@ -267,8 +300,17 @@ class LocalRuntime(Runtime):
         return flspec_obj.execute_task_args
 
     def filter_exclude_include(self, flspec_obj, f, selected_collaborators, **kwargs):
-        """This function filters exclude/include attributes"""
-        from openfl.experimental.interface import FLSpec
+        """
+        This function filters exclude/include attributes
+        Args:
+            flspec_obj  :  Reference to the FLSpec (flow) object
+            f           :  The task to be executed within the flow
+            selected_collaborators : all collaborators
+        """
+    
+        final_attr_module = importlib.import_module("openfl.experimental.interface")
+        FLSpec = getattr(final_attr_module, "FLSpec")
+        
 
         for col in selected_collaborators:
             clone = FLSpec._clones[col]
