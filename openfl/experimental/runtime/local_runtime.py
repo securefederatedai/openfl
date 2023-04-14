@@ -205,9 +205,8 @@ class LocalRuntime(Runtime):
             list: updated arguments to be executed
         """
 
-        final_attr_module = importlib.import_module("openfl.experimental.interface")
-        FLSpec = getattr(final_attr_module, "FLSpec")
-        
+        flspec_module = importlib.import_module("openfl.experimental.interface")
+        flspec_class = getattr(flspec_module, "FLSpec")
         flspec_obj._foreach_methods.append(f.__name__)
         selected_collaborators = getattr(flspec_obj, kwargs["foreach"])
 
@@ -216,7 +215,7 @@ class LocalRuntime(Runtime):
 
         # Remove aggregator private attributes
         for col in selected_collaborators:
-            clone = FLSpec._clones[col]
+            clone = flspec_class._clones[col]
             if aggregator_to_collaborator(f, parent_func):
                 for attr in self._aggregator.private_attributes:
                     self._aggregator.private_attributes[attr] = getattr(
@@ -230,7 +229,7 @@ class LocalRuntime(Runtime):
 
         # set runtime,collab private attributes and metaflowinterface
         for col in selected_collaborators:
-            clone = FLSpec._clones[col]
+            clone = flspec_class._clones[col]
             # Set new LocalRuntime for clone as it is required
             # new runtime object will not contain private attributes of
             # aggregator or other collaborators
@@ -253,7 +252,7 @@ class LocalRuntime(Runtime):
         while not_at_transition_point:
             # execute to_exec for for each collab
             for collab in selected_collaborators:
-                clone = FLSpec._clones[collab]
+                clone = flspec_class._clones[collab]
                 # get the function to be executed
                 to_exec = getattr(clone, f.__name__)
 
@@ -265,13 +264,13 @@ class LocalRuntime(Runtime):
             if self.backend == "ray":
                 # Execute the collab steps
                 clones = ray_executor.get_remote_clones()
-                FLSpec._clones.update(zip(selected_collaborators, clones))
+                flspec_class._clones.update(zip(selected_collaborators, clones))
 
             # update the next arguments
-            f, parent_func, _, kwargs = FLSpec._clones[collab].execute_task_args
+            f, parent_func, _, kwargs = flspec_class._clones[collab].execute_task_args
 
             # check for transition
-            if FLSpec._clones[collab]._is_at_transition_point(f, parent_func):
+            if flspec_class._clones[collab]._is_at_transition_point(f, parent_func):
                 not_at_transition_point = False
 
         # remove clones after transition
@@ -282,7 +281,7 @@ class LocalRuntime(Runtime):
 
         # Removes collaborator private attributes after transition
         for col in selected_collaborators:
-            clone = FLSpec._clones[col]
+            clone = flspec_class._clones[col]
             for attr in self.__collaborators[clone.input].private_attributes:
                 if hasattr(clone, attr):
                     self.__collaborators[clone.input].private_attributes[
@@ -296,7 +295,7 @@ class LocalRuntime(Runtime):
 
         g = getattr(flspec_obj, f.__name__)
         gc.collect()
-        g([FLSpec._clones[col] for col in selected_collaborators])
+        g([flspec_class._clones[col] for col in selected_collaborators])
         return flspec_obj.execute_task_args
 
     def filter_exclude_include(self, flspec_obj, f, selected_collaborators, **kwargs):
@@ -307,13 +306,12 @@ class LocalRuntime(Runtime):
             f           :  The task to be executed within the flow
             selected_collaborators : all collaborators
         """
-    
-        final_attr_module = importlib.import_module("openfl.experimental.interface")
-        FLSpec = getattr(final_attr_module, "FLSpec")
-        
+
+        flspec_module = importlib.import_module("openfl.experimental.interface")
+        flspec_class = getattr(flspec_module, "FLSpec")
 
         for col in selected_collaborators:
-            clone = FLSpec._clones[col]
+            clone = flspec_class._clones[col]
             clone.input = col
             if ("exclude" in kwargs and hasattr(clone, kwargs["exclude"][0])) or (
                 "include" in kwargs and hasattr(clone, kwargs["include"][0])
