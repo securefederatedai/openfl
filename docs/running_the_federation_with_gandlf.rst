@@ -11,7 +11,7 @@ This guide will show you how to take an existing GaNDLF experiment to a federate
 
 
 `Aggregator-Based Workflow`_
-    Define an experiment and distribute it manually. All participants can verify model code and [FL plan](https://openfl.readthedocs.io/en/latest/running_the_federation.html#federated-learning-plan-fl-plan-settings) prior to execution. The federation is terminated when the experiment is finished
+    Define an experiment and distribute it manually. All participants can verify model code and [FL plan](https://openfl.readthedocs.io/en/latest/running_the_federation.html#federated-learning-plan-fl-plan-settings) prior to executing the code/model. The federation is terminated when the experiment is finished, and appropriate statistics are generated.
 
 
 .. _running_the_federation_aggregator_based:
