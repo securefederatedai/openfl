@@ -32,7 +32,7 @@ An overview of this workflow is shown below.
 This workflow uses short-lived components in a federation, which is terminated when the experiment is finished. The components are as follows:
 
 - The *Collaborator* uses a local dataset to train a global model and sends the model updates to the *Aggregator*, which aggregates them to create the new global model.
-- The *Aggregator* is framework-agnostic, while the *Collaborator* can use any deep learning frameworks, such as `TensorFlow <https://www.tensorflow.org/>`_\* \  or `PyTorch <https://pytorch.org/>`_\*\, or `GaNDLF <https://github.com/mlcommons/GaNDLF>`
+- The *Aggregator* is framework-agnostic, while the *Collaborator* can use any deep learning frameworks, such as `TensorFlow <https://www.tensorflow.org/>`_\* \  or `PyTorch <https://pytorch.org/>`_\*\. `GaNDLF <https://github.com/mlcommons/GaNDLF>` provides a straightforward way to define complete model training pipelines for healthcare data, and is directly compatible with OpenFL.
 
 This guide will demonstrate how to take an existing GaNDLF configuration file (i.e. for segmentation), embed this within the Federated Learning plan (FL plan) along with the Python\*\  code that defines the model and the data loader. The FL plan is a `YAML <https://en.wikipedia.org/wiki/YAML>`_ file that defines the collaborators, aggregator, connections, models, data, and any other parameters that describe the training.
 
