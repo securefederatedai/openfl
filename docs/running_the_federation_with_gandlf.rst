@@ -3,9 +3,9 @@
 
 .. _running_the_federation_with_gandlf:
 
-******************************
-Run the Federation with GaNDLF
-******************************
+****************************************************
+Run the Federation with a model defined using GaNDLF
+****************************************************
 
 This guide will show you how to take an existing model using the [Generally Nuanced Deep Learning Framework (GaNDLF)](https://github.com/mlcommons/GaNDLF) experiment to a federated environment. 
 
