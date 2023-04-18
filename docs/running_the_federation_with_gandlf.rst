@@ -134,7 +134,7 @@ STEP 1: Install GaNDLF prerequisites and Create a Workspace
         pip install onnx==1.12.0
         pip install -e .
 
-3.     Create GaNDLF's Data CSVs for 3D Segmentation
+3.     Create GaNDLF's Data CSVs. The example below is for 3D Segmentation using the unit test data:
     .. code-block:: console
         
         python -c "from testing.test_full import test_generic_download_data, test_generic_constructTrainingCSV; test_generic_download_data(); test_generic_constructTrainingCSV()"
