@@ -124,15 +124,7 @@ STEP 1: Install GaNDLF prerequisites and Create a Workspace
 		fx
 
 
-2.     Install GaNDLF (if not already)  
-    .. code-block:: console
-
-        git clone https://github.com/mlcommons/GaNDLF.git
-        cd GaNDLF
-        git checkout 0.0.14
-        pip install torch==1.8.2+cpu torchvision==0.9.2+cpu torchaudio===0.8.2 -f https://download.pytorch.org/whl/lts/1.8/torch_lts.html
-        pip install onnx==1.12.0
-        pip install -e .
+2.     [Install GaNDLF from sources](https://mlcommons.github.io/GaNDLF/setup/#install-from-sources) (if not already).
 
 3.     Create GaNDLF's Data CSVs. The example below is for 3D Segmentation using the unit test data:
     .. code-block:: console
