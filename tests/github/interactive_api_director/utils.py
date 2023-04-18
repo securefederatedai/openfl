@@ -19,7 +19,7 @@ def start_director(cwd):
 
 def start_envoy(cwd):
     subprocess.check_call(
-        [sys.executable, '-m', 'pip', 'install', '-r', 'sd_requirements.txt'], cwd=cwd
+        [sys.executable, '-m', 'pip', 'install', '--user', '-r', 'sd_requirements.txt'], cwd=cwd
     )
     envoy = subprocess.Popen(
         'fx envoy start '
