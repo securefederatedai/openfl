@@ -26,10 +26,13 @@ jobs:
         python-version: "3.8"
     - name: Install dependencies
       run: |
+        python -m venv venv
+        source venv/bin/activate
         python -m pip install --upgrade pip
         pip install .
     - name: Interactive API - pytorch_kvasir_unet
       run: |
+        source venv/bin/activate
         python setup.py build_grpc
         pip install torch==1.13.1
         pip install torchvision==0.14.1
