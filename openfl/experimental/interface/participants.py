@@ -6,7 +6,7 @@
 import yaml
 import importlib
 from yaml.loader import SafeLoader
-from typing import Dict, Any
+from typing import Dict, Any, Callable
 
 
 class Participant:
@@ -73,13 +73,16 @@ class Collaborator(Participant):
 
     def initialize_private_attributes(self) -> None:
         """
-        Assign private attributes to collaborator object
+        Initialize private attributes to aggregator object
         """
         if len(self.private_attributes) <= 0:
             with open(self.config_file, "r") as f:
                 config = yaml.load(f, Loader=SafeLoader)
 
-            filepath, class_name = config["shard_descriptor"]["template"].split(".")
+        shard_desc_template = config["shard_descriptor"]["template"]
+
+        if shard_desc_template is not None:
+            filepath, class_name = shard_desc_template.split(".")
 
             shard_descriptor_module = importlib.import_module(filepath)
             shard_descriptor_class = getattr(shard_descriptor_module, class_name)
@@ -88,13 +91,14 @@ class Collaborator(Participant):
 
             self.private_attributes = shard_descriptor.get()
 
-    def execute_func(self, ctx: Any, f: str) -> Any:
+    def execute_func(self, ctx: Any, f_name: str, callback: Callable) -> Any:
         """
         Execute remote function f
         """
         self.__set_collaborator_attrs_to_clone(ctx)
-        f = getattr(ctx, f)
-        f()
+
+        callback(ctx, f_name)
+
         self.__delete_collab_attrs_from_clone(ctx)
 
         return ctx

@@ -29,13 +29,13 @@ class RayExecutor:
         self.__remote_contexts = []
 
     def ray_call_put(self, collaborator: Collaborator, ctx: Any,
-                     f_name: str) -> None:
+                     f_name: str, callback: Callable) -> None:
         """
         Set collaborator private attributes to clone and,
         execute f_name in context of clone (ctx)
         """
         self.__remote_contexts.append(
-            collaborator.execute_func.remote(ctx, f_name)
+            collaborator.execute_func.remote(ctx, f_name, callback)
         )
 
     def get_remote_clones(self) -> List[Any]:
@@ -178,112 +178,197 @@ class LocalRuntime(Runtime):
                 if not hasattr(ctx, name):
                     setattr(ctx, name, attr)
 
+    def execute_collaborator_steps(self, ctx: Any, f_name: str):
+        not_at_transition_point = True
+        while not_at_transition_point:
+            f = getattr(ctx, f_name)
+            f()
+
+            f, parent_func = ctx.execute_task_args[:2]
+            if ctx._is_at_transition_point(f, parent_func):
+                not_at_transition_point = False
+            f_name = f.__name__
+
     def execute_task(
         self,
         flspec_obj: Type[FLSpec],
         f: Callable,
         parent_func: Callable,
         instance_snapshot: List[Type[FLSpec]] = [],
-        **kwargs
+        **kwargs,
     ):
         """
-        Performs the execution of a task as defined by the
-        implementation and underlying backend (single_process, ray, etc)
-        on a single node
+        Defines which function to be executed based on name and kwargs
+        Updates the arguments and executes until end is not reached
 
         Args:
             flspec_obj:        Reference to the FLSpec (flow) object. Contains information
-                               about task sequence, flow attributes, that are needed to
-                               execute a future task
+                               about task sequence, flow attributes.
             f:                 The next task to be executed within the flow
             parent_func:       The prior task executed in the flow
             instance_snapshot: A prior FLSpec state that needs to be restored from
                                (i.e. restoring aggregator state after collaborator
                                execution)
         """
+
+        while f.__name__ != "end":
+            if "foreach" in kwargs:
+                f, parent_func, instance_snapshot, kwargs = self.execute_foreach_task(
+                    flspec_obj, f, parent_func, instance_snapshot, **kwargs
+                )
+            else:
+                f, parent_func, instance_snapshot, kwargs = self.execute_agg_task(
+                    flspec_obj, f
+                )
+        else:
+            self.execute_end_task(flspec_obj, f)
+
+    def execute_agg_task(self, flspec_obj, f):
+        """
+        Performs execution of aggregator task
+        Args:
+            flspec_obj : Reference to the FLSpec (flow) object
+            f          :  The task to be executed within the flow
+
+        Returns:
+            list: updated arguments to be executed
+        """
+
+        to_exec = getattr(flspec_obj, f.__name__)
+        to_exec()
+        return flspec_obj.execute_task_args
+
+    def execute_end_task(self, flspec_obj, f):
+        """
+        Performs execution of end task
+        Args:
+            flspec_obj : Reference to the FLSpec (flow) object
+            f          :  The task to be executed within the flow
+
+        Returns:
+            list: updated arguments to be executed
+        """
+
+        interface_module = importlib.import_module("openfl.experimental.interface")
+        final_attributes = getattr(interface_module, "final_attributes")
+
+        to_exec = getattr(flspec_obj, f.__name__)
+        to_exec()
+        checkpoint(flspec_obj, f)
+        artifacts_iter, _ = generate_artifacts(ctx=flspec_obj)
+        final_attributes = artifacts_iter()
+
+    def execute_foreach_task(
+        self, flspec_obj, f, parent_func, instance_snapshot, **kwargs
+    ):
+        """
+        Performs
+            1. Filter include/exclude
+            2. Remove aggregator private attributes
+            3. Set runtime, collab private attributes , metaflow_interface
+            4. Execution of all collaborator for each task
+            5. Remove collaborator private attributes
+            6. Execute the next function after transition
+
+        Args:
+            flspec_obj  :  Reference to the FLSpec (flow) object
+            f           :  The task to be executed within the flow
+            parent_func : The prior task executed in the flow
+            instance_snapshot : A prior FLSpec state that needs to be restored
+
+        Returns:
+            list: updated arguments to be executed
+        """
+
         from openfl.experimental.interface import (
             FLSpec,
-            final_attributes,
         )
 
-        global final_attributes
+        flspec_obj._foreach_methods.append(f.__name__)
+        selected_collaborators = getattr(flspec_obj, kwargs["foreach"])
 
-        if "foreach" in kwargs:
-            flspec_obj._foreach_methods.append(f.__name__)
-            selected_collaborators = flspec_obj.__getattribute__(
-                kwargs["foreach"]
-            )
+        # filter exclude/include attributes for clone
+        self.filter_exclude_include(flspec_obj, f, selected_collaborators, **kwargs)
 
-            for col in selected_collaborators:
-                clone = FLSpec._clones[col]
-                if (
-                    "exclude" in kwargs and hasattr(clone, kwargs["exclude"][0])
-                ) or (
-                    "include" in kwargs and hasattr(clone, kwargs["include"][0])
-                ):
-                    filter_attributes(clone, f, **kwargs)
-                artifacts_iter, _ = generate_artifacts(ctx=flspec_obj)
-                for name, attr in artifacts_iter():
-                    setattr(clone, name, deepcopy(attr))
-                clone._foreach_methods = flspec_obj._foreach_methods
+        # Remove aggregator private attributes from FLSpec._clones
+        for col in selected_collaborators:
+            clone = FLSpec._clones[col]
+            if aggregator_to_collaborator(f, parent_func):
+                for attr in self._aggregator.private_attributes:
+                    self._aggregator.private_attributes[attr] = getattr(
+                        flspec_obj, attr
+                    )
+                    if hasattr(clone, attr):
+                        delattr(clone, attr)
 
-            for col in selected_collaborators:
-                clone = FLSpec._clones[col]
-                clone.input = col
-                if aggregator_to_collaborator(f, parent_func):
-                    # remove private aggregator state
-                    for attr in self._aggregator.private_attributes:
-                        self._aggregator.private_attributes[attr] = getattr(
-                            flspec_obj, attr
-                        )
-                        if hasattr(clone, attr):
-                            delattr(clone, attr)
+        if self.backend == "ray":
+            ray_executor = RayExecutor()
+        # set runtime,collab private attributes and metaflowinterface
+        for col in selected_collaborators:
+            clone = FLSpec._clones[col]
+            # Set new LocalRuntime for clone as it is required
+            # new runtime object will not contain private attributes of
+            # aggregator or other collaborators
+            clone.runtime = LocalRuntime(backend="single_process")
 
-            func = None
+            # write the clone to the object store
+            # ensure clone is getting latest _metaflow_interface
+            clone._metaflow_interface = flspec_obj._metaflow_interface
+
+        for collab_name in selected_collaborators:
+            clone = FLSpec._clones[collab_name]
+            collaborator = self.__collaborators[collab_name]
+
             if self.backend == "ray":
-                ray_executor = RayExecutor()
-            for col in selected_collaborators:
-                clone = FLSpec._clones[col]
-                collaborator = self.__collaborators[col]
-                # Set new LocalRuntime for clone as it is required
-                # for calling execute_task and also new runtime
-                # object will not contain private attributes of
-                # aggregator or other collaborators
-                clone.runtime = LocalRuntime(backend="single_process")
-
-                # write the clone to the object store
-                # ensure clone is getting latest _metaflow_interface
-                clone._metaflow_interface = flspec_obj._metaflow_interface
-                if self.backend == "ray":
-                    ray_executor.ray_call_put(collaborator, clone, f.__name__)
-                else:
-                    collaborator.execute_func(clone, f.__name__)
+                ray_executor.ray_call_put(collaborator, clone, f.__name__, self.execute_collaborator_steps)
+            else:
+                collaborator.execute_func(clone, f.__name__, self.execute_collaborator_steps)
+        else:
             if self.backend == "ray":
                 clones = ray_executor.get_remote_clones()
                 FLSpec._clones.update(zip(selected_collaborators, clones))
+                f = getattr(
+                    clones[0], "execute_next"
+                )
                 del ray_executor
                 del clones
                 gc.collect()
-            for col in selected_collaborators:
-                clone = FLSpec._clones[col]
-                func = clone.execute_next
-                collaborator = self.__collaborators[col]
+            else:
+                f = getattr(clone, "execute_next")
 
-            # Restore the flspec_obj state if back-up is taken
-            self.restore_instance_snapshot(flspec_obj, instance_snapshot)
-            del instance_snapshot
+        # Restore the flspec_obj state if back-up is taken
+        self.restore_instance_snapshot(flspec_obj, instance_snapshot)
+        del instance_snapshot
 
-            g = getattr(flspec_obj, func)
-            # remove private collaborator state
-            gc.collect()
-            g([FLSpec._clones[col] for col in selected_collaborators])
-        else:
-            to_exec = getattr(flspec_obj, f.__name__)
-            to_exec()
-            if f.__name__ == "end":
-                checkpoint(flspec_obj, f)
-                artifacts_iter, _ = generate_artifacts(ctx=flspec_obj)
-                final_attributes = artifacts_iter()
+        g = getattr(flspec_obj, f)
+        gc.collect()
+        g([FLSpec._clones[col] for col in selected_collaborators])
+        return flspec_obj.execute_task_args
+
+    def filter_exclude_include(self, flspec_obj, f, selected_collaborators, **kwargs):
+        """
+        This function filters exclude/include attributes
+        Args:
+            flspec_obj  :  Reference to the FLSpec (flow) object
+            f           :  The task to be executed within the flow
+            selected_collaborators : all collaborators
+        """
+
+        from openfl.experimental.interface import (
+            FLSpec,
+        )
+
+        for col in selected_collaborators:
+            clone = FLSpec._clones[col]
+            clone.input = col
+            if ("exclude" in kwargs and hasattr(clone, kwargs["exclude"][0])) or (
+                "include" in kwargs and hasattr(clone, kwargs["include"][0])
+            ):
+                filter_attributes(clone, f, **kwargs)
+            artifacts_iter, _ = generate_artifacts(ctx=flspec_obj)
+            for name, attr in artifacts_iter():
+                setattr(clone, name, deepcopy(attr))
+            clone._foreach_methods = flspec_obj._foreach_methods
 
     def __repr__(self):
         return "LocalRuntime"

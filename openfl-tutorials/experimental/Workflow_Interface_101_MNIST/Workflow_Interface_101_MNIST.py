@@ -1,6 +1,5 @@
-import os
-
-os.system("pip install -r ../requirements_workflow_interface.txt")
+# import os
+# os.system("pip install -r ../requirements_workflow_interface.txt")
 
 from openfl.experimental.placement import aggregator, collaborator
 from openfl.experimental.runtime import LocalRuntime
@@ -149,28 +148,29 @@ class FederatedFlow(FLSpec):
     def end(self):
         print(f'This is the end of the flow')
 
+config_file_path = "/home/parth-wsl/env_test_integration/openfl_parth/openfl-tutorials/experimental/Workflow_Interface_101_MNIST"
 
 # Aggregator dictionary
 aggregator_dict = {
-    "aggregator": f"aggreagtor_config.yaml",
+    "aggregator": f"{config_file_path}/aggreagtor_config.yaml",
 }
 
 # Collaborator dictionary
 collaborator_dict = {
-    "Portland": f"config_collaborator_one.yaml",
-    "Seattle": f"config_collaborator_two.yaml",
-    "Chandler": f"config_collaborator_three.yaml",
-    "Bangalore": f"config_collaborator_four.yaml",
+    "Portland": f"{config_file_path}/config_collaborator_one.yaml",
+    "Seattle": f"{config_file_path}/config_collaborator_two.yaml",
+    "Chandler": f"{config_file_path}/config_collaborator_three.yaml",
+    "Bangalore": f"{config_file_path}/config_collaborator_four.yaml",
 }
 
 local_runtime = LocalRuntime(aggregator=aggregator_dict, collaborators=collaborator_dict,
-                             backend="single_process")  # ray
+                             backend="single_process")
 print(f'Local runtime collaborators = {local_runtime.collaborators}')
 
 
 model = None
 best_model = None
 optimizer = None
-flflow = FederatedFlow(model, optimizer)
+flflow = FederatedFlow(model, optimizer, checkpoint=True)
 flflow.runtime = local_runtime
 flflow.run()
