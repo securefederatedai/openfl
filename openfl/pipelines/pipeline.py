@@ -154,4 +154,4 @@ class TransformationPipeline:
 
     def is_lossy(self):
         """If any of the transformers are lossy, then the pipeline is lossy."""
-        return any([transformer.lossy for transformer in self.transformers])
+        return any(transformer.lossy for transformer in self.transformers)
