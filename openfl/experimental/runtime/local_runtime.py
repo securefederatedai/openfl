@@ -159,12 +159,12 @@ class LocalRuntime(Runtime):
     def initialize_collaborators(self):
         """initialize collaborator private attributes"""
         if self.backend == "single_process":
-            init_pa = lambda collab: collab.initialize_private_attributes()
+            init_private_attrs = lambda collab: collab.initialize_private_attributes()
         else:
-            init_pa = lambda collab: collab.initialize_private_attributes.remote()
+            init_private_attrs = lambda collab: collab.initialize_private_attributes.remote()
 
         for collaborator in self.__collaborators.values():
-            init_pa(collaborator)
+            init_private_attrs(collaborator)
 
     def restore_instance_snapshot(
             self,
@@ -179,6 +179,10 @@ class LocalRuntime(Runtime):
                     setattr(ctx, name, attr)
 
     def execute_collaborator_steps(self, ctx: Any, f_name: str):
+        """
+        Execute collaborator steps for each 
+        collaborator until at transition point
+        """
         not_at_transition_point = True
         while not_at_transition_point:
             f = getattr(ctx, f_name)
