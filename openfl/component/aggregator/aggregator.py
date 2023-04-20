@@ -933,9 +933,9 @@ class Aggregator:
         """Check that round is done."""
         tasks_for_round = self.assigner.get_all_tasks_for_round(self.round_number)
 
-        return all([
+        return all(
             self._is_task_done(
-                task_name) for task_name in tasks_for_round])
+                task_name) for task_name in tasks_for_round)
 
     def _log_big_warning(self):
         """Warn user about single collaborator cert mode."""
