@@ -97,30 +97,31 @@ class LocalRuntime(Runtime):
                 ray.init(dashboard_host=dh, dashboard_port=dp)
         self.backend = backend
         if aggregator is not None:
-            self.aggregator = [self.__get_aggregator_object(
-                config_file, name) for name, config_file in aggregator.items()][0]
+            self.aggregator = aggregator
 
         if collaborators is not None:
-            self.collaborators = [self.__get_collaborator_object(
-                collab_configfile, name) for name, collab_configfile in collaborators.items()]
+            if self.backend == "ray":
+                self.collaborators = [self.__get_collaborator_object(
+                    collaborator) for collaborator in collaborators]
+                del collaborators
+            else:
+                self.collaborators = collaborators
 
-    def __get_aggregator_object(self, config_file: str, name: str) -> Aggregator:
-        """Get aggregator object"""
-        interface_module = importlib.import_module("openfl.experimental.interface")
-        aggregator_class = getattr(interface_module, "Aggregator")
-
-        return aggregator_class(config_file, name=name)
-
-    def __get_collaborator_object(self, collab_config_file: str, name: str) -> Any:
+    def __get_collaborator_object(self, collaborator: Collaborator) -> Any:
         """Get collaborator object based on localruntime backend"""
         interface_module = importlib.import_module("openfl.experimental.interface")
         collaborator_class = getattr(interface_module, "Collaborator")
 
-        if self.backend == "single_process":
-            return collaborator_class(collab_config_file, name=name)
-        else:
-            return ray.remote(collaborator_class).remote(collab_config_file,
-                                                         name=name)
+        num_cpus = collaborator.private_attributes.get("num_cpus", 0)
+        num_gpus = collaborator.private_attributes.get("num_gpus", 0)
+
+        collaborator_actor = ray.remote(collaborator_class)
+        collaborator_actor = collaborator_actor.options(
+            num_cpus=num_cpus, num_gpus=num_gpus)
+
+        collabortor_obj = collaborator_actor.remote(name=collaborator.get_name())
+        collabortor_obj.private_attributes.remote(deepcopy(collaborator.private_attributes))
+        return collabortor_obj
 
     @property
     def aggregator(self) -> str:
@@ -327,18 +328,18 @@ class LocalRuntime(Runtime):
                 ray_executor.ray_call_put(collaborator, clone, f.__name__, self.execute_collaborator_steps)
             else:
                 collaborator.execute_func(clone, f.__name__, self.execute_collaborator_steps)
+
+        if self.backend == "ray":
+            clones = ray_executor.get_remote_clones()
+            FLSpec._clones.update(zip(selected_collaborators, clones))
+            f = getattr(
+                clones[0], "execute_next"
+            )
+            del ray_executor
+            del clones
+            gc.collect()
         else:
-            if self.backend == "ray":
-                clones = ray_executor.get_remote_clones()
-                FLSpec._clones.update(zip(selected_collaborators, clones))
-                f = getattr(
-                    clones[0], "execute_next"
-                )
-                del ray_executor
-                del clones
-                gc.collect()
-            else:
-                f = getattr(clone, "execute_next")
+            f = getattr(clone, "execute_next")
 
         # Restore the flspec_obj state if back-up is taken
         self.restore_instance_snapshot(flspec_obj, instance_snapshot)

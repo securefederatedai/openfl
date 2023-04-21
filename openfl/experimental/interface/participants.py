@@ -45,12 +45,11 @@ class Collaborator(Participant):
     """
     Defines a collaborator participant
     """
-    def __init__(self, config_file: str, **kwargs):
+    def __init__(self, **kwargs):
         """
         Create collaborator object
         """
         super().__init__(**kwargs)
-        self.config_file = config_file
 
     def get_name(self) -> str:
         """Get collaborator name"""
@@ -69,27 +68,19 @@ class Collaborator(Participant):
         # then remove it
         for attr_name in self.private_attributes:
             if hasattr(clone, attr_name):
+                self.private_attributes.update(
+                    {attr_name: getattr(clone, attr_name)}
+                )
                 delattr(clone, attr_name)
 
     def initialize_private_attributes(self) -> None:
         """
         Initialize private attributes to aggregator object
         """
-        if len(self.private_attributes) <= 0:
-            with open(self.config_file, "r") as f:
-                config = yaml.load(f, Loader=SafeLoader)
-
-        shard_desc_template = config["shard_descriptor"]["template"]
-
-        if shard_desc_template is not None:
-            filepath, class_name = shard_desc_template.split(".")
-
-            shard_descriptor_module = importlib.import_module(filepath)
-            shard_descriptor_class = getattr(shard_descriptor_module, class_name)
-
-            shard_descriptor = shard_descriptor_class(self.config_file)
-
-            self.private_attributes = shard_descriptor.get()
+        get_dataset = self.private_attributes.get("get_dataset", None)
+        collaborator_index = self.private_attributes.get("index")
+        if get_dataset is not None:
+            self.private_attributes.update(get_dataset(collaborator_index))
 
     def execute_func(self, ctx: Any, f_name: str, callback: Callable) -> Any:
         """
@@ -108,25 +99,13 @@ class Aggregator(Participant):
     """
     Defines an aggregator participant
     """
-    def __init__(self, config_file: str, **kwargs):
+    def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.config_file = config_file
 
     def initialize_private_attributes(self) -> None:
         """
         Assign private attributes to aggregator object
         """
-        if len(self.private_attributes) <= 0:
-            with open(self.config_file, "r") as f:
-                config = yaml.load(f, Loader=SafeLoader)
-
-        shard_desc_template = config["shard_descriptor"]["template"]
-        if shard_desc_template is not None:
-            filepath, class_name = shard_desc_template.split(".")
-
-            shard_descriptor_module = importlib.import_module(filepath)
-            shard_descriptor_class = getattr(shard_descriptor_module, class_name)
-
-            shard_descriptor = shard_descriptor_class(self.config_file)
-
-            self.private_attributes = shard_descriptor.get()
+        get_dataset = self.private_attributes.get("get_dataset", None)
+        if get_dataset is not None:
+            self.private_attributes.update(get_dataset())

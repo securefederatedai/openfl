@@ -1,5 +1,0 @@
-shard_descriptor:
-    template: null
-    params:
-        batch_size_train: null
-        batch_size_test: null
