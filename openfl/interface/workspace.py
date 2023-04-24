@@ -214,12 +214,18 @@ def import_(archive):
 
 
 @workspace.command(name='certify')
-def certify_():
+@option('-cdir', '--cert_dir',
+        help='The cert directory path where CA certs and keys will reside', required=False)
+@option('-c', '--cert_path',
+        help='The cert path where CA signing cert will reside', required=False)
+@option('-k', '--key_path',
+        help='The cert path where CA key path will reside', required=False)
+def certify_(cert_dir, cert_path, key_path):
     """Create certificate authority for federation."""
-    certify()
+    certify(cert_dir, cert_path, key_path)
 
 
-def certify():
+def certify(cert_dir=None, cert_path=None, key_path=None):
     """Create certificate authority for federation."""
     from cryptography.hazmat.primitives import serialization
 
@@ -233,20 +239,27 @@ def certify():
     echo('1.  Create Root CA')
     echo('1.1 Create Directories')
 
-    (CERT_DIR / 'ca/root-ca/private').mkdir(
+    if cert_dir:
+        cert_dir = Path(cert_dir).absolute()
+        (cert_dir / 'cert').mkdir(parents=True, exist_ok=True)
+        cert_dir_path = cert_dir / 'cert'
+    else:
+        cert_dir_path = CERT_DIR
+
+    (cert_dir_path / 'ca/root-ca/private').mkdir(
         parents=True, exist_ok=True, mode=0o700)
-    (CERT_DIR / 'ca/root-ca/db').mkdir(parents=True, exist_ok=True)
+    (cert_dir_path / 'ca/root-ca/db').mkdir(parents=True, exist_ok=True)
 
     echo('1.2 Create Database')
 
-    with open(CERT_DIR / 'ca/root-ca/db/root-ca.db', 'w', encoding='utf-8') as f:
+    with open(cert_dir_path / 'ca/root-ca/db/root-ca.db', 'w', encoding='utf-8') as f:
         pass  # write empty file
-    with open(CERT_DIR / 'ca/root-ca/db/root-ca.db.attr', 'w', encoding='utf-8') as f:
+    with open(cert_dir_path / 'ca/root-ca/db/root-ca.db.attr', 'w', encoding='utf-8') as f:
         pass  # write empty file
 
-    with open(CERT_DIR / 'ca/root-ca/db/root-ca.crt.srl', 'w', encoding='utf-8') as f:
+    with open(cert_dir_path / 'ca/root-ca/db/root-ca.crt.srl', 'w', encoding='utf-8') as f:
         f.write('01')  # write file with '01'
-    with open(CERT_DIR / 'ca/root-ca/db/root-ca.crl.srl', 'w', encoding='utf-8') as f:
+    with open(cert_dir_path / 'ca/root-ca/db/root-ca.crl.srl', 'w', encoding='utf-8') as f:
         f.write('01')  # write file with '01'
 
     echo('1.3 Create CA Request and Certificate')
@@ -257,12 +270,12 @@ def certify():
     root_private_key, root_cert = generate_root_cert()
 
     # Write root CA certificate to disk
-    with open(CERT_DIR / root_crt_path, 'wb') as f:
+    with open(cert_dir_path / root_crt_path, 'wb') as f:
         f.write(root_cert.public_bytes(
             encoding=serialization.Encoding.PEM,
         ))
 
-    with open(CERT_DIR / root_key_path, 'wb') as f:
+    with open(cert_dir_path / root_key_path, 'wb') as f:
         f.write(root_private_key.private_bytes(
             encoding=serialization.Encoding.PEM,
             format=serialization.PrivateFormat.TraditionalOpenSSL,
@@ -272,60 +285,85 @@ def certify():
     echo('2.  Create Signing Certificate')
     echo('2.1 Create Directories')
 
-    (CERT_DIR / 'ca/signing-ca/private').mkdir(
+    (cert_dir_path / 'ca/signing-ca/private').mkdir(
         parents=True, exist_ok=True, mode=0o700)
-    (CERT_DIR / 'ca/signing-ca/db').mkdir(parents=True, exist_ok=True)
+    (cert_dir_path / 'ca/signing-ca/db').mkdir(parents=True, exist_ok=True)
 
     echo('2.2 Create Database')
 
-    with open(CERT_DIR / 'ca/signing-ca/db/signing-ca.db', 'w', encoding='utf-8') as f:
+    with open(cert_dir_path / 'ca/signing-ca/db/signing-ca.db', 'w', encoding='utf-8') as f:
         pass  # write empty file
-    with open(CERT_DIR / 'ca/signing-ca/db/signing-ca.db.attr', 'w', encoding='utf-8') as f:
+    with open(cert_dir_path / 'ca/signing-ca/db/signing-ca.db.attr', 'w', encoding='utf-8') as f:
         pass  # write empty file
 
-    with open(CERT_DIR / 'ca/signing-ca/db/signing-ca.crt.srl', 'w', encoding='utf-8') as f:
+    with open(cert_dir_path / 'ca/signing-ca/db/signing-ca.crt.srl', 'w', encoding='utf-8') as f:
         f.write('01')  # write file with '01'
-    with open(CERT_DIR / 'ca/signing-ca/db/signing-ca.crl.srl', 'w', encoding='utf-8') as f:
+    with open(cert_dir_path / 'ca/signing-ca/db/signing-ca.crl.srl', 'w', encoding='utf-8') as f:
         f.write('01')  # write file with '01'
 
     echo('2.3 Create Signing Certificate CSR')
 
-    signing_csr_path = 'ca/signing-ca.csr'
-    signing_crt_path = 'ca/signing-ca.crt'
-    signing_key_path = 'ca/signing-ca/private/signing-ca.key'
-
     signing_private_key, signing_csr = generate_signing_csr()
 
     # Write Signing CA CSR to disk
-    with open(CERT_DIR / signing_csr_path, 'wb') as f:
+    signing_csr_path = 'ca/signing-ca.csr'
+    with open(cert_dir_path / signing_csr_path, 'wb') as f:
         f.write(signing_csr.public_bytes(
             encoding=serialization.Encoding.PEM,
         ))
 
-    with open(CERT_DIR / signing_key_path, 'wb') as f:
-        f.write(signing_private_key.private_bytes(
-            encoding=serialization.Encoding.PEM,
-            format=serialization.PrivateFormat.TraditionalOpenSSL,
-            encryption_algorithm=serialization.NoEncryption()
-        ))
+    if key_path:
+        key_path = Path(key_path).absolute()
+        signing_key_path = 'signing-ca.key'
+        with open(key_path / signing_key_path, 'wb') as f:
+            f.write(signing_private_key.private_bytes(
+                encoding=serialization.Encoding.PEM,
+                format=serialization.PrivateFormat.TraditionalOpenSSL,
+                encryption_algorithm=serialization.NoEncryption()
+            ))
+    else:
+        signing_key_path = 'ca/signing-ca/private/signing-ca.key'
+        with open(cert_dir_path / signing_key_path, 'wb') as f:
+            f.write(signing_private_key.private_bytes(
+                encoding=serialization.Encoding.PEM,
+                format=serialization.PrivateFormat.TraditionalOpenSSL,
+                encryption_algorithm=serialization.NoEncryption()
+            ))
 
     echo('2.4 Sign Signing Certificate CSR')
 
     signing_cert = sign_certificate(signing_csr, root_private_key, root_cert.subject, ca=True)
 
-    with open(CERT_DIR / signing_crt_path, 'wb') as f:
-        f.write(signing_cert.public_bytes(
-            encoding=serialization.Encoding.PEM,
-        ))
+    if cert_path:
+        cert_path = Path(cert_path).absolute()
+        signing_crt_path = 'signing-ca.crt'
+        with open(cert_path / signing_crt_path, 'wb') as f:
+            f.write(signing_cert.public_bytes(
+                encoding=serialization.Encoding.PEM,
+            ))
+    else:
+        signing_crt_path = 'ca/signing-ca.crt'
+        with open(cert_dir_path / signing_crt_path, 'wb') as f:
+            f.write(signing_cert.public_bytes(
+                encoding=serialization.Encoding.PEM,
+            ))
 
     echo('3   Create Certificate Chain')
 
     # create certificate chain file by combining root-ca and signing-ca
-    with open(CERT_DIR / 'cert_chain.crt', 'w', encoding='utf-8') as d:
-        with open(CERT_DIR / 'ca/root-ca.crt', encoding='utf-8') as s:
-            d.write(s.read())
-        with open(CERT_DIR / 'ca/signing-ca.crt') as s:
-            d.write(s.read())
+    if cert_path:
+        cert_chain_path = Path(cert_path).absolute()
+        with open(cert_chain_path / 'cert_chain.crt', 'w', encoding='utf-8') as d:
+            with open(cert_dir_path / 'ca/root-ca.crt', encoding='utf-8') as s:
+                d.write(s.read())
+            with open(cert_chain_path / 'signing-ca.crt') as s:
+                d.write(s.read())
+    else:
+        with open(cert_dir_path / 'cert_chain.crt', 'w', encoding='utf-8') as d:
+            with open(cert_dir_path / 'ca/root-ca.crt', encoding='utf-8') as s:
+                d.write(s.read())
+            with open(cert_dir_path / 'ca/signing-ca.crt') as s:
+                d.write(s.read())
 
     echo('\nDone.')
 
@@ -534,6 +572,79 @@ def graminize_(context, signing_key: Path, enclave_size: str, tag: str,
         save_image_command = f'docker save {tag} | gzip > {tag}.tar.gz'
         open_pipe(save_image_command)
         echo(f'\n ✔️ The image saved to file: {tag}.tar.gz')
+
+
+@workspace.command(name='participants')
+@option('-c', '--cert_path',
+        help='Cert path where signing CA certs reside', required=False)
+@option('--no_cert', help='Add uncertified participants to plan', is_flag=True)
+def participants_(cert_path=None, no_cert=False):
+    """Select a subset of registered collaborators for the experiment."""
+    participants(cert_path, no_cert)
+
+
+def participants(cert_path=None, no_cert=False):
+    """Select a subset of collaborators from all regsitered collaborators."""
+    from click import Choice
+    from click import confirm
+    from click import edit
+    from click import prompt as click_prompt
+    from glob import glob
+    from yaml import dump
+    from pathlib import Path
+    from openfl.interface.cli_helper import CERT_DIR
+
+    if cert_path:
+        cert_path = Path(cert_path).absolute()
+        participant_certs = glob(f'{cert_path}/col_*.crt')
+    else:
+        participant_certs = glob(f'{CERT_DIR}/client/col_*.crt')
+
+    if participant_certs:
+        total_participants = []
+        for cert in participant_certs:
+            total_participants.append(os.path.basename(os.path.normpath(cert)).split('.')[0][4:])
+
+        collaborators_added = []
+        collaborators_to_add = True
+
+        while collaborators_to_add:
+            collaborator = click_prompt('Select collaborator for the experiment: ',
+                                        type=Choice(total_participants), show_choices=True)
+            collaborators_added.append(collaborator)
+            total_participants.remove(collaborator)
+
+            if not confirm('Are there additional collaborators to add to the experiment?'):
+                collaborators_to_add = False
+
+        cols_file = Path('plan/cols.yaml').absolute()
+        with open(cols_file, 'w', encoding='utf-8') as f:
+            dump({'collaborators': collaborators_added}, f)
+
+    if no_cert:
+        if confirm('Do you want to add participants (- participant_name) to the experiment?'):
+            edit(filename='plan/cols.yaml')
+
+
+@workspace.command(name='uninstall-cert')
+@option('-c', '--cert_path',
+        help='The cert path where pki certs reside', required=True)
+@option('-k', '--key_path',
+        help='The key path where key reside', required=True)
+def _uninstall_cert(cert_path, key_path):
+    """Uninstall cert/key pair under a given directory."""
+    uninstall_cert(cert_path, key_path)
+
+
+def uninstall_cert(cert_path=None, key_path=None):
+    """Uninstall certs under a given directory."""
+    from openfl.utilities.utils import rmtree
+    from pathlib import Path
+
+    cert_path = Path(cert_path).absolute()
+    key_path = Path(key_path).absolute()
+    rmtree(cert_path, ignore_errors=True)
+    rmtree(key_path, ignore_errors=True)
 
 
 def apply_template_plan(prefix, template):

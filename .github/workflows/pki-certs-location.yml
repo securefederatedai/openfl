@@ -1,9 +1,11 @@
 # This workflow will install Python dependencies, run tests and lint with a single version of Python
 # For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
 
-name: Private Key Infrastructure
+name: Test PKI certs location
 
 on:
+  push:
+    branches: [ develop ]
   pull_request:
     branches: [ develop ]
 
@@ -11,26 +13,11 @@ permissions:
   contents: read
 
 jobs:
-  test_insecure_client:
-
-    runs-on: ubuntu-latest
-
-    steps:
-    - uses: actions/checkout@v3
-    - name: Set up Python 3.8
-      uses: actions/setup-python@v3
-      with:
-        python-version: "3.8"
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install .
-    - name: Test PKI
-      run: |
-        python tests/github/pki_insecure_client.py
-  test_wrong_common_name:
-  
-    runs-on: ubuntu-latest
+  build:
+    strategy:
+      matrix:
+       os: ['ubuntu-latest', 'windows-latest']
+    runs-on: ${{ matrix.os }}
 
     steps:
     - uses: actions/checkout@v3
@@ -42,7 +29,6 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install .
-    - name: Test PKI
+    - name: Test PKI certs location
       run: |
-        python tests/github/pki_wrong_cn.py
-
+        python -m tests.github.test_pki_cert_location --agg-cert-path ~/.openfl/agg --agg-key-path ~/.openfl/agg --col1-cert-path ~/.openfl/col1/ --col1-key-path ~/.openfl/col1 --col2-cert-path ~/.openfl/col2 --col2-key-path ~/.openfl/col2/

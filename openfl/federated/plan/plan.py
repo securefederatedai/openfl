@@ -498,11 +498,13 @@ class Plan:
     def get_client(self, collaborator_name, aggregator_uuid, federation_uuid,
                    root_certificate=None, private_key=None, certificate=None):
         """Get gRPC client for the specified collaborator."""
+        from openfl.interface.cli_helper import CERT_DIR
+
         common_name = collaborator_name
         if not root_certificate or not private_key or not certificate:
-            root_certificate = 'cert/cert_chain.crt'
-            certificate = f'cert/client/col_{common_name}.crt'
-            private_key = f'cert/client/col_{common_name}.key'
+            root_certificate = f'{CERT_DIR}/cert_chain.crt'
+            certificate = f'{CERT_DIR}/client/col_{common_name}.crt'
+            private_key = f'{CERT_DIR}/client/col_{common_name}.key'
 
         client_args = self.config['network'][SETTINGS]
 
@@ -522,12 +524,14 @@ class Plan:
 
     def get_server(self, root_certificate=None, private_key=None, certificate=None, **kwargs):
         """Get gRPC server of the aggregator instance."""
+        from openfl.interface.cli_helper import CERT_DIR
+
         common_name = self.config['network'][SETTINGS]['agg_addr'].lower()
 
         if not root_certificate or not private_key or not certificate:
-            root_certificate = 'cert/cert_chain.crt'
-            certificate = f'cert/server/agg_{common_name}.crt'
-            private_key = f'cert/server/agg_{common_name}.key'
+            root_certificate = f'{CERT_DIR}/cert_chain.crt'
+            certificate = f'{CERT_DIR}/server/agg_{common_name}.crt'
+            private_key = f'{CERT_DIR}/server/agg_{common_name}.key'
 
         server_args = self.config['network'][SETTINGS]
 

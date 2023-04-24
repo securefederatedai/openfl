@@ -801,6 +801,7 @@ However, continue with the following procedure for details in creating a federat
 
         - Ensures each node in the federation has a valid public key infrastructure (PKI) certificate.
         - Distributes the workspace from the aggregator node to the other collaborator nodes.
+        - Optionally, select a subset of registered/certified collaborators to participate in the federation. By default, all certified collaborators will be added.
 
 
     `STEP 3: Start the Federation`_
@@ -952,11 +953,26 @@ Setting Up the Certificate Authority
 
        fx workspace certify
 
+ By default, all certificates are stored under :code:`WORKSPACE_PATH/cert` folder inside workspace. To store certificates elsewhere:
+
+    .. code-block:: console
+
+       fx workspace certify -c CERT_PATH -k KEY_PATH -cdir CERT_DIR
+
+ where :code:`CERT_PATH` is the path where the CA signing certificate and the certificate chain will be stored for this node, 
+ :code:`KEY_PATH` is where the CA signing key path will be stored and :code:`CERT_DIR` is the directory where rest of CA certificates (e.g. root CA cert and key) will reside.
+
 3. Run the aggregator certificate creation command, replacing :code:`AFQDN` with the actual `fully qualified domain name (FQDN) <https://en.wikipedia.org/wiki/Fully_qualified_domain_name>`_ for the aggregator node.
 
     .. code-block:: console
 
        fx aggregator generate-cert-request --fqdn AFQDN
+
+   To store certificate under :code:`CERT_PATH` and key under :code:`KEY_PATH`:
+
+    .. code-block:: console
+
+       fx aggregator generate-cert-request --fqdn AFQDN -c CERT_PATH -k KEY_PATH
 
     .. note::
 
@@ -986,6 +1002,11 @@ Setting Up the Certificate Authority
 
        fx aggregator certify --fqdn AFQDN
 
+    If :code:`CERT_PATH` and :code:`KEY_PATH` was used to store CA signing certificate and signing key respectively, specify the same path here:
+
+    .. code-block:: console
+
+       fx aggregator certify --fqdn AFQDN -c CERT_PATH -k KEY_PATH
 
    .. note::
 
@@ -997,15 +1018,15 @@ Setting Up the Certificate Authority
 
 5. This node now has a signed security certificate as the aggregator for this new federation. You should have the following files.
 
-    +---------------------------+--------------------------------------------------+
-    | File Type                 | Filename                                         |
-    +===========================+==================================================+
-    | Certificate chain         | WORKSPACE.PATH/cert/cert_chain.crt               |
-    +---------------------------+--------------------------------------------------+
-    | Aggregator certificate    | WORKSPACE.PATH/cert/server/agg_{AFQDN}.crt       |
-    +---------------------------+--------------------------------------------------+
-    | Aggregator key            | WORKSPACE.PATH/cert/server/agg_{AFQDN}.key       |
-    +---------------------------+--------------------------------------------------+
+    +---------------------------+-----------------------------------------------------------------------------+
+    | File Type                 | Filename                                                                    |
+    +===========================+=============================================================================+
+    | Certificate chain         | WORKSPACE.PATH/cert/cert_chain.crt or CERT.PATH/cert_chain.crt              |
+    +---------------------------+-----------------------------------------------------------------------------+
+    | Aggregator certificate    | WORKSPACE.PATH/cert/server/agg_{AFQDN}.crt or CERT.PATH/agg_{AFQDN}.crt     |
+    +---------------------------+-----------------------------------------------------------------------------+
+    | Aggregator key            | WORKSPACE.PATH/cert/server/agg_{AFQDN}.key or KEY.PATH/agg_{AFQDN}.key      |
+    +---------------------------+-----------------------------------------------------------------------------+
 
     where **AFQDN** is the fully-qualified domain name of the aggregator node.
 
@@ -1049,21 +1070,27 @@ Importing the Workspace
 
        fx collaborator generate-cert-request -n {COL_LABEL}
 
+ To store certs under :code:`CERT_PATH_COL/` and key under :code:`KEY_PATH_COL/` other than :code:`WORKSPACE_PATH/cert`:
+
+    .. code-block:: console
+
+       fx collaborator generate-cert-request -n {COL_LABEL} -c {CERT_PATH_COL} -k {KEY_PATH_COL}
+    
+ where **CERT_PATH_COL** is the path where collaborator certificates (client) will be stored and **KEY_PATH_COL** is where the collaborator key is stored.
 
  The creation script will also ask you to specify the path to the data. For this example, enter the integer that represents which MNIST shard to use on this collaborator node. For the first collaborator node enter **1**. For the second collaborator node enter **2**.
 
  This will create the following files:
 
-    +-----------------------------+--------------------------------------------------------+
-    | File Type                   | Filename                                               |
-    +=============================+========================================================+
-    | Collaborator CSR            | WORKSPACE.PATH/cert/client/col_{COL_LABEL}.csr         |
-    +-----------------------------+--------------------------------------------------------+
-    | Collaborator key            | WORKSPACE.PATH/cert/client/col_{COL_LABEL}.key         |
-    +-----------------------------+--------------------------------------------------------+
-    | Collaborator CSR Package    | WORKSPACE.PATH/col_{COL_LABEL}_to_agg_cert_request.zip |
-    +-----------------------------+--------------------------------------------------------+
-
+    +-----------------------------+-------------------------------------------------------------------------------------+
+    | File Type                   | Filename                                                                            |
+    +=============================+=====================================================================================+
+    | Collaborator CSR            | WORKSPACE.PATH/cert/client/col_{COL_LABEL}.csr or CERT.PATH.COL/col_{COL_LABEL}.csr |
+    +-----------------------------+-------------------------------------------------------------------------------------+
+    | Collaborator key            | WORKSPACE.PATH/cert/client/col_{COL_LABEL}.key or KEY.PATH.COL/col_{COL_LABEL}.key  |
+    +-----------------------------+-------------------------------------------------------------------------------------+
+    | Collaborator CSR Package    | WORKSPACE.PATH/col_{COL_LABEL}_to_agg_cert_request.zip                              |
+    +-----------------------------+-------------------------------------------------------------------------------------+
 
 4. On the aggregator node (i.e., the certificate authority in this example), sign the Collaborator CSR Package from the collaborator nodes.
 
@@ -1073,6 +1100,12 @@ Importing the Workspace
 
    where :code:`/PATH/TO/col_{COL_LABEL}_to_agg_cert_request.zip` is the path to the Collaborator CSR Package containing the :code:`.csr` file from the collaborator node. The certificate authority will sign this certificate for use in the federation.
 
+   If :code:`CERT_PATH` and :code:`KEY_PATH` was used at the aggregator node to store CA signing certificate and signing key, specify the same path here:
+
+    .. code-block:: console
+
+       fx collaborator certify --request-pkg /PATH/TO/col_{COL_LABEL}_to_agg_cert_request.zip -n collaborator_name -c CERT_PATH -k KEY_PATH
+   
    The command packages the signed collaborator certificate, along with the **cert_chain.crt** file needed to verify certificate signatures, for transport back to the collaborator node:
 
     +---------------------------------+------------------------------------------------------------+
@@ -1087,7 +1120,33 @@ Importing the Workspace
 
        fx collaborator certify --import /PATH/TO/agg_to_col_{COL_LABEL}_signed_cert.zip
 
+   If :code:`CERT_PATH_COL` and :code:`KEY_PATH_COL` was used to store collaborator certificate and key for this node, specify the paths here:
 
+    .. code-block:: console
+
+       fx collaborator certify --import /PATH/TO/agg_to_col_{COL_LABEL}_signed_cert.zip -c CERT_PATH_COL -k KEY_PATH_COL
+
+.. _select_participants:
+
+**On the Aggregator Node:**
+
+OPTIONAL STEP: Users can select participants to take part in a federation. By default, all the participants (Collaborators) certified by the CA are added to the plan :code:`plan/cols.yaml` file. To select only a subset of participants out of the displayed names of all certified collaborators for the current federation:
+
+    .. code-block:: console
+
+       fx workspace participants
+
+If :code:`CERT_PATH` was used at the aggregator node to store CA signing certificate, specify the same path here:
+
+    .. code-block:: console
+
+       fx workspace participants -c CERT_PATH
+
+If users want to add uncertified participants, or manually want to edit the collaborator names for the experiment:
+
+    .. code-block:: console
+
+       fx workspace participants --no_cert
 
 .. _running_the_federation.start_nodes:
 
@@ -1102,6 +1161,12 @@ STEP 3: Start the Federation
     .. code-block:: console
 
        fx aggregator start
+
+   If :code:`CERT_PATH` and :code:`KEY_PATH` was used to store certificates for this node, specify the same path here:
+
+    .. code-block:: console
+
+       fx aggregator start -c ${CERT_PATH} -k ${KEY_PATH}
 
  Now, the Aggregator is running and waiting for Collaborators to connect.
 
@@ -1118,6 +1183,12 @@ STEP 3: Start the Federation
        fx collaborator start -n {COLLABORATOR_LABEL}
 
     where :code:`COLLABORATOR_LABEL` is the label for this Collaborator.
+
+    If :code:`CERT_PATH_COL` and :code:`KEY_PATH_COL` was used to store certificates for this node, specify the same path here:
+
+    .. code-block:: console
+
+       fx collaborator start -n {COLLABORATOR_LABEL} -c ${CERT_PATH_COL} -k ${KEY_PATH_COL}
 
     .. note::
 
@@ -1160,6 +1231,13 @@ Another way to access the trained model is by calling the API command directly f
 
 In fact, the :code:`get_model()` method returns a **TaskRunner** object loaded with the chosen model snapshot. Users may utilize the linked model as a regular Python object.
 
+If :code:`CERT_PATH` was used to store certificates for any node, uninstall them:
+
+.. code-block:: console
+
+    fx workspace uninstall-cert -c ${CERT_PATH} -k ${KEY_PATH}
+    fx aggregator uninstall-cert -c ${CERT_PATH} -k ${KEY_PATH}
+    fx collaborator uninstall-cert -c ${CERT_PATH_COL} -k ${KEY_PATH_COL}
 
 .. _running_the_federation_docker:
 
