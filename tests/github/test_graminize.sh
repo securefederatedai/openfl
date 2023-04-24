@@ -18,6 +18,22 @@ FQDN=localhost
 COL1_DATA_PATH=1
 COL2_DATA_PATH=2
 
+OPENFL_PATH=`pwd`
+
+# Getting additional options
+ADD_OPTS=$(getopt -o "h" -l "rounds-to-train:,data-shards:,help" -n test_graminize.sh -- "$@")
+eval set -- "$ADD_OPTS"
+while (($#)); do
+    case "${1:-}" in
+    (--rounds-to-train) ROUNDS_TO_TRAIN="$2" ; shift 2 ;;
+    (--data-shards) DATA_SHARDS="$2" ; shift 2 ;; # the larger this number, the smaller data shard will correspond to each collaborator
+    (-h|--help) help ; exit 0 ;;
+
+    (--)        shift ; break ;;
+    (*)         echo "Invalid option: ${1:-}"; exit 1 ;;
+    esac
+done
+
 # START
 # =====
 # Make sure you are in a Python virtual environment with the FL package installed.
@@ -31,14 +47,26 @@ FED_DIRECTORY=`pwd`  # Get the absolute directory path for the workspace
 # Initialize FL plan
 fx plan initialize -a ${FQDN}
 
+# Set rounds to train if given
+if [[ ! -z "${ROUNDS_TO_TRAIN-}" ]]
+then
+    sed -i "/rounds_to_train/c\    rounds_to_train: $ROUNDS_TO_TRAIN" plan/plan.yaml
+fi
+
+# Set rounds to train if given
+if [[ ! -z "${DATA_SHARDS-}" ]]
+then
+    sed -i "/collaborator_count/c\    collaborator_count: $DATA_SHARDS" plan/plan.yaml
+fi
+
 openssl genrsa -3 -out ${FED_DIRECTORY}/key.pem 3072
 
 # Build graminized app image
 if [ $REBUILD_IMAGES -gt 0 ]
 then
-fx workspace graminize -s ${FED_DIRECTORY}/key.pem --no-save --rebuild
+fx workspace graminize -s ${FED_DIRECTORY}/key.pem --no-save -e 1G --rebuild --openfl-path ${OPENFL_PATH}
 else
-fx workspace graminize -s ${FED_DIRECTORY}/key.pem --no-save
+fx workspace graminize -s ${FED_DIRECTORY}/key.pem --no-save -e 1G --openfl-path ${OPENFL_PATH}
 fi
 
 # CERTIFICATION PART------------------------------
@@ -141,5 +169,5 @@ docker logs --follow ${COL2}
 
 wait
 
-docker stop Aggregator ${COL1} ${COL2}
+docker ps -q --filter "ancestor=${FED_WORKSPACE}" | xargs -r docker stop
 # rm -rf ${FED_DIRECTORY}

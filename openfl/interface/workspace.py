@@ -18,6 +18,7 @@ from click import Path as ClickPath
 
 from openfl.utilities.path_check import is_directory_traversal
 from openfl.utilities.workspace import dump_requirements_file
+from openfl.utilities.click_types import REPOSITORY
 
 
 @group()
@@ -458,9 +459,22 @@ def dockerize_(context, base_image, save):
         default=True, type=bool,
         help='Dump the Docker image to an archive')
 @option('--rebuild', help='Build images with `--no-cache`', is_flag=True)
+@option('--openfl-path', required=False, type=REPOSITORY,
+        help='Path to OpenFL.\n'
+             'Could be either a local path or remote URL.\n'
+             'For the remote case, the branch can be specified after the "@" sign.\n'
+             'For example: https://github.com/intel/openfl.git@develop\n')
 @pass_context
-def graminize_(context, signing_key: Path, enclave_size: str, tag: str,
-               pip_install_options: Tuple[str], save: bool, rebuild: bool) -> None:
+def graminize_(
+    context,
+    signing_key: Path,
+    enclave_size: str,
+    tag: str,
+    pip_install_options: Tuple[str],
+    save: bool,
+    rebuild: bool,
+    openfl_path: str,
+) -> None:
     """
     Build gramine app inside a docker image.
 
@@ -501,7 +515,18 @@ def graminize_(context, signing_key: Path, enclave_size: str, tag: str,
 
     echo('\n 🐋 Building base gramine-openfl image...')
     base_dockerfile = SITEPACKS / 'openfl-gramine' / 'Dockerfile.gramine'
-    base_build_command = f'docker build {rebuild_option} -t gramine_openfl -f {base_dockerfile} .'
+
+    build_target = 'default'
+    if openfl_path is not None:
+        build_target = 'local' if Path(openfl_path).exists() else 'remote'
+
+    build_path = openfl_path if build_target == 'local' else '.'
+
+    base_build_command = (
+        f'docker build {rebuild_option} -t gramine_openfl -f {base_dockerfile} '
+        f'--target {build_target} '
+        f'--build-arg OPENFL_PATH={openfl_path} {build_path}'
+    )
     open_pipe(base_build_command)
     echo('\n ✔️ DONE: Building base gramine-openfl image')
 
