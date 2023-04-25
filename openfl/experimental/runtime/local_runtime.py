@@ -7,6 +7,7 @@ from __future__ import annotations
 from copy import deepcopy
 import importlib
 import ray
+import os
 import gc
 from openfl.experimental.runtime import Runtime
 from typing import TYPE_CHECKING
@@ -14,10 +15,12 @@ if TYPE_CHECKING:
     from openfl.experimental.interface import Aggregator, Collaborator, FLSpec
 
 from openfl.experimental.utilities import (
+    ResourcesNotAvailableError,
     aggregator_to_collaborator,
     generate_artifacts,
     filter_attributes,
     checkpoint,
+    get_number_of_gpus,
 )
 from typing import List, Any
 from typing import Dict, Type, Callable
@@ -101,27 +104,44 @@ class LocalRuntime(Runtime):
 
         if collaborators is not None:
             if self.backend == "ray":
-                self.collaborators = [self.__get_collaborator_object(
-                    collaborator) for collaborator in collaborators]
-                del collaborators
+                self.collaborators = self.__get_collaborator_object(collaborators)
             else:
                 self.collaborators = collaborators
 
-    def __get_collaborator_object(self, collaborator: Collaborator) -> Any:
+    def __get_collaborator_object(self, collaborators: List) -> Any:
         """Get collaborator object based on localruntime backend"""
+
+        total_available_cpus = os.cpu_count()
+        total_available_gpus = get_number_of_gpus()
+
+        total_required_gpus = sum([collaborator.num_gpus for collaborator in collaborators])
+        total_required_cpus = sum([collaborator.num_cpus for collaborator in collaborators])
+
+        if total_available_gpus < total_required_gpus:
+            raise ResourcesNotAvailableError(
+                    f"cannot assign more than available GPUs ({total_required_gpus} < {total_available_gpus})."
+                )
+        if total_available_cpus < total_required_cpus:
+            raise ResourcesNotAvailableError(
+                    f"cannot assign more than available CPUs ({total_required_cpus} < {total_available_cpus})."
+            )
         interface_module = importlib.import_module("openfl.experimental.interface")
         collaborator_class = getattr(interface_module, "Collaborator")
 
-        num_cpus = collaborator.private_attributes.get("num_cpus", 0)
-        num_gpus = collaborator.private_attributes.get("num_gpus", 0)
+        collaborator_ray_refs = []
+        for collaborator in collaborators:
+            num_cpus = collaborator.num_cpus
+            num_gpus = collaborator.num_gpus
 
-        collaborator_actor = ray.remote(collaborator_class)
-        collaborator_actor = collaborator_actor.options(
-            num_cpus=num_cpus, num_gpus=num_gpus)
+            collaborator_actor = ray.remote(collaborator_class).options(
+                num_cpus=num_cpus, num_gpus=num_gpus)
 
-        collabortor_obj = collaborator_actor.remote(name=collaborator.get_name())
-        collabortor_obj.private_attributes.remote(deepcopy(collaborator.private_attributes))
-        return collabortor_obj
+            collaborator_ray_refs.append(collaborator_actor.remote(
+                name=collaborator.get_name(),
+                private_attributes_callable=collaborator.private_attributes_callable,
+                **collaborator.kwargs
+            ))
+        return collaborator_ray_refs
 
     @property
     def aggregator(self) -> str:
@@ -301,7 +321,7 @@ class LocalRuntime(Runtime):
             if aggregator_to_collaborator(f, parent_func):
                 for attr in self._aggregator.private_attributes:
                     self._aggregator.private_attributes[attr] = getattr(
-                        flspec_obj, attr
+                        clone, attr
                     )
                     if hasattr(clone, attr):
                         delattr(clone, attr)
@@ -332,9 +352,7 @@ class LocalRuntime(Runtime):
         if self.backend == "ray":
             clones = ray_executor.get_remote_clones()
             FLSpec._clones.update(zip(selected_collaborators, clones))
-            f = getattr(
-                clones[0], "execute_next"
-            )
+            f = getattr(clones[0], "execute_next")
             del ray_executor
             del clones
             gc.collect()

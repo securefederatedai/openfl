@@ -45,15 +45,32 @@ class Collaborator(Participant):
     """
     Defines a collaborator participant
     """
-    def __init__(self, **kwargs):
+    def __init__(self, name: str = "", private_attributes_callable: Callable = None,
+                 num_cpus: int = 0, num_gpus: int = 0, **kwargs):
         """
         Create collaborator object
         """
-        super().__init__(**kwargs)
+        super().__init__(name=name)
+        self.num_cpus = num_cpus
+        self.num_gpus = num_gpus
+        self.kwargs = kwargs
+
+        if private_attributes_callable is not None:
+            if not callable(private_attributes_callable):
+                raise Exception("private_attributes_callable  parameter must be a callable")
+            else:
+                self.private_attributes_callable = private_attributes_callable
 
     def get_name(self) -> str:
         """Get collaborator name"""
         return self._name
+
+    def initialize_private_attributes(self) -> None:
+        """
+        Initialize private attributes to aggregator object
+        """
+        if hasattr(self, "private_attributes_callable"):
+            self.private_attributes = self.private_attributes_callable(**self.kwargs)
 
     def __set_collaborator_attrs_to_clone(self, clone: Any) -> None:
         """Set collaborator private attributes to clone"""
@@ -73,15 +90,6 @@ class Collaborator(Participant):
                 )
                 delattr(clone, attr_name)
 
-    def initialize_private_attributes(self) -> None:
-        """
-        Initialize private attributes to aggregator object
-        """
-        get_dataset = self.private_attributes.get("get_dataset", None)
-        collaborator_index = self.private_attributes.get("index")
-        if get_dataset is not None:
-            self.private_attributes.update(get_dataset(collaborator_index))
-
     def execute_func(self, ctx: Any, f_name: str, callback: Callable) -> Any:
         """
         Execute remote function f
@@ -99,13 +107,21 @@ class Aggregator(Participant):
     """
     Defines an aggregator participant
     """
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self, name: str = "", private_attributes_callable: Callable = None,
+                 **kwargs):
+        super().__init__(name=name)
+        self.kwargs = kwargs
+
+        if private_attributes_callable is not None:
+            if not callable(private_attributes_callable):
+                raise Exception("private_attributes_callable parameter must be a callable")
+            else:
+                self.private_attributes_callable = private_attributes_callable
 
     def initialize_private_attributes(self) -> None:
         """
         Assign private attributes to aggregator object
         """
-        get_dataset = self.private_attributes.get("get_dataset", None)
-        if get_dataset is not None:
-            self.private_attributes.update(get_dataset())
+        if hasattr(self, "private_attributes_callable"):
+            self.private_attributes = self.private_attributes_callable(**self.kwargs)
+

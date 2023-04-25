@@ -4,7 +4,7 @@
 import functools
 from openfl.experimental.utilities import (
     RedirectStdStreamContext,
-    GPUResourcesNotAvailableError,
+    ResourcesNotAvailableError,
     get_number_of_gpus,
 )
 from typing import Callable
@@ -34,7 +34,6 @@ def aggregator(f: Callable = None) -> Callable:
     f.collaborator_step = False
     if f.__doc__:
         f.__doc__ = "<Node: Aggregator>" + f.__doc__
-    f.num_gpus = 0
 
     @functools.wraps(f)
     def wrapper(*args, **kwargs):
@@ -47,11 +46,7 @@ def aggregator(f: Callable = None) -> Callable:
     return wrapper
 
 
-def collaborator(
-        f: Callable = None,
-        *,
-        num_gpus: float = 0
-) -> Callable:
+def collaborator(f: Callable = None) -> Callable:
     """
     Placement decorator that designates that the task will
     run at the collaborator node
@@ -76,9 +71,6 @@ def collaborator(
                   exclusive GPU access for the task.
     """
 
-    if f is None:
-        return functools.partial(collaborator, num_gpus=num_gpus)
-
     print(f'Collaborator step "{f.__name__}" registered')
     f.is_step = True
     f.decorators = []
@@ -88,12 +80,6 @@ def collaborator(
     f.collaborator_step = True
     if f.__doc__:
         f.__doc__ = "<Node: Collaborator>" + f.__doc__
-    total_gpus = get_number_of_gpus()
-    if total_gpus < num_gpus:
-        GPUResourcesNotAvailableError(
-            f"cannot assign more than available GPUs ({total_gpus} < {num_gpus})."
-        )
-    f.num_gpus = num_gpus
 
     @functools.wraps(f)
     def wrapper(*args, **kwargs):
