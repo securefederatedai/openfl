@@ -5,7 +5,7 @@ name: Pytest and code coverage
 
 on:
   pull_request:
-    branches: [ develop ]
+    branches: [ develop, code_coverage ]
 
 permissions:
   contents: read
