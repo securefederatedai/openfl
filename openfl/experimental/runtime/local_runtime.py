@@ -34,8 +34,8 @@ class RayExecutor:
     def ray_call_put(self, collaborator: Collaborator, ctx: Any,
                      f_name: str, callback: Callable) -> None:
         """
-        Set collaborator private attributes to clone and,
-        execute f_name in context of clone (ctx)
+        Execute f_name from inside collaborator class with the context 
+        of clone (ctx)
         """
         self.__remote_contexts.append(
             collaborator.execute_func.remote(ctx, f_name, callback)
@@ -43,8 +43,8 @@ class RayExecutor:
 
     def get_remote_clones(self) -> List[Any]:
         """
-        Get remove clones and delete ray references and,
-        from memory
+        Get remote clones and delete ray references of clone (ctx) and,
+        reclaim memory
         """
         clones = ray.get(self.__remote_contexts)
         del self.__remote_contexts
@@ -103,13 +103,13 @@ class LocalRuntime(Runtime):
             self.aggregator = aggregator
 
         if collaborators is not None:
-            if self.backend == "ray":
-                self.collaborators = self.__get_collaborator_object(collaborators)
-            else:
-                self.collaborators = collaborators
+            self.collaborators == self.__get_collaborator_object(collaborators)
 
     def __get_collaborator_object(self, collaborators: List) -> Any:
         """Get collaborator object based on localruntime backend"""
+
+        if self.backend == "single_process":
+            return collaborators
 
         total_available_cpus = os.cpu_count()
         total_available_gpus = get_number_of_gpus()

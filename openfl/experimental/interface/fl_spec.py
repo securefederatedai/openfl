@@ -34,7 +34,6 @@ class FLSpec:
     @classmethod
     def _create_clones(cls, instance: Type[FLSpec], names: List[str]) -> None:
         """Creates clones for instance for each collaborator in names"""
-        # assign collaborator private attributes
         cls._clones = {name: deepcopy(instance) for name in names}
 
     @classmethod
@@ -55,26 +54,27 @@ class FLSpec:
         )
         self._run_id = self._metaflow_interface.create_run()
         if str(self._runtime) == "LocalRuntime":
-            # Setup any necessary ShardDescriptors through the LocalEnvoys
-            # Assume that first task always runs on the aggregator
+            # Initialize aggregator private attributes
             self.runtime.initialize_aggregator()
             self._setup_aggregator()
             self._foreach_methods = []
             FLSpec._reset_clones()
             FLSpec._create_clones(self, self.runtime.collaborators)
+            # Initialize collaborator private attributes
             self.runtime.initialize_collaborators()
             # the start function can just be invoked locally
             if self._checkpoint:
                 print(f"Created flow {self.__class__.__name__}")
             try:
+                # Assume that first task always runs on the aggregator
                 self.start()
-                # execute_task_args will be updated in self.start()
-                # after the next function is executed
                 self.runtime.execute_task(
                     self,
                     *self.execute_task_args[:3],
                     **self.execute_task_args[3],
                 )
+                # execute_task_args will be updated in self.start()
+                # after the next function is executed
             except Exception as e:
                 if "cannot pickle" in str(e) or "Failed to unpickle" in str(e):
                     msg = (
@@ -183,5 +183,5 @@ class FLSpec:
 
         self._display_transition_logs(f, parent_func)
 
-        # update parameters for execute_task function
+        # update parameters required to execute execute_task function
         self.execute_task_args = [f, parent_func, agg_to_collab_ss, kwargs]

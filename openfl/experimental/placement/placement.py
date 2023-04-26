@@ -2,11 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import functools
-from openfl.experimental.utilities import (
-    RedirectStdStreamContext,
-    ResourcesNotAvailableError,
-    get_number_of_gpus,
-)
+from openfl.experimental.utilities import RedirectStdStreamContext
 from typing import Callable
 
 
@@ -70,6 +66,8 @@ def collaborator(f: Callable = None) -> Callable:
                   will result in sharing of GPUs between tasks. 1 >= results in
                   exclusive GPU access for the task.
     """
+    if f is None:
+        return functools.partial(collaborator)
 
     print(f'Collaborator step "{f.__name__}" registered')
     f.is_step = True

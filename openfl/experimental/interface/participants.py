@@ -3,9 +3,6 @@
 
 """openfl.experimental.interface.participants module."""
 
-import yaml
-import importlib
-from yaml.loader import SafeLoader
 from typing import Dict, Any, Callable
 
 
@@ -46,9 +43,27 @@ class Collaborator(Participant):
     Defines a collaborator participant
     """
     def __init__(self, name: str = "", private_attributes_callable: Callable = None,
-                 num_cpus: int = 0, num_gpus: int = 0, **kwargs):
+                 num_cpus: int = 0, num_gpus: int = 0.0, **kwargs):
         """
-        Create collaborator object
+        Create collaborator object with custom resources and a callable 
+        function to assign private attributes
+
+        Parameters:
+        name (str): Name of the collaborator. default=""
+
+        private_attributes_callable (Callable): A function which returns collaborator
+        private attributes for each collaborator. In case private_attributes are not 
+        required this can be omitted. default=None
+
+        num_cpus (int): Specifies how many cores to use for the collaborator step exection.
+        This will only be used if backend is set to ray. default=0
+
+        num_gpus (float): Specifies how many GPUs to use to accerlerate the collaborator 
+        step exection. This will only be used if backend is set to ray. default=0
+
+        kwargs (dict): Parameters required to call private_attributes_callable function.
+        The key of the dictionary must match the arguments to the private_attributes_callable.
+        default={}
         """
         super().__init__(name=name)
         self.num_cpus = num_cpus
@@ -67,22 +82,29 @@ class Collaborator(Participant):
 
     def initialize_private_attributes(self) -> None:
         """
-        Initialize private attributes to aggregator object
+        initialize private attributes of Collaborator object by invoking 
+        the callable specified by user
         """
         if hasattr(self, "private_attributes_callable"):
             self.private_attributes = self.private_attributes_callable(**self.kwargs)
 
     def __set_collaborator_attrs_to_clone(self, clone: Any) -> None:
-        """Set collaborator private attributes to clone"""
+        """
+        Set collaborator private attributes to FLSpec clone before transitioning 
+        from Aggregator step to collaborator steps
+        """
         # set collaborator private attributes as
         # clone attributes
         for name, attr in self.private_attributes.items():
             setattr(clone, name, attr)
 
     def __delete_collab_attrs_from_clone(self, clone: Any) -> None:
-        """Delete collaborator private attributes from clone"""
-        # if clone has collaborator private attributes
-        # then remove it
+        """
+        Remove collaborator private attributes from FLSpec clone before 
+        transitioning from Collaborator step to Aggregator step
+        """
+        # Update collaborator private attributes by taking latest 
+        # parameters from clone, then delete attributes from clone.
         for attr_name in self.private_attributes:
             if hasattr(clone, attr_name):
                 self.private_attributes.update(
@@ -120,7 +142,8 @@ class Aggregator(Participant):
 
     def initialize_private_attributes(self) -> None:
         """
-        Assign private attributes to aggregator object
+        initialize private attributes of Aggregator object by invoking 
+        the callable specified by user
         """
         if hasattr(self, "private_attributes_callable"):
             self.private_attributes = self.private_attributes_callable(**self.kwargs)
