@@ -136,7 +136,9 @@ class Aggregator(Participant):
         super().__init__(name=name)
         self.kwargs = kwargs
 
-        if private_attributes_callable is not None:
+        if private_attributes_callable is None:
+            self.private_attributes_callable = private_attributes_callable
+        else:
             if not callable(private_attributes_callable):
                 raise Exception("private_attributes_callable parameter must be a callable")
             else:
@@ -147,6 +149,6 @@ class Aggregator(Participant):
         initialize private attributes of Aggregator object by invoking 
         the callable specified by user
         """
-        if hasattr(self, "private_attributes_callable"):
+        if self.private_attributes_callable is not None:
             self.private_attributes = self.private_attributes_callable(**self.kwargs)
 
