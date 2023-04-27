@@ -49,12 +49,12 @@ def _search(self, tensor_name: str = None, origin: str = None,
         query_string = (' and ').join(query_string)
         df = self.query(query_string)
     if tags is not None:
-        if df is not None:
+        if not df.empty:
             df = df[df['tags'] == tags]
         else:
             df = self[self['tags'] == tags]
 
-    if df is not None:
+    if not df.empty:
         return df
     else:
         return self
@@ -87,7 +87,7 @@ def _store(self, tensor_name: str = '_', origin: str = '_',
         return
     idx = self[(self['tensor_name'] == tensor_name)
                & (self['origin'] == origin)
-               & (self['round'] == str(fl_round))
+               & (self['round'] == fl_round)
                & (self['tags'] == tags)].index
     if len(idx) > 0:
         if not overwrite:
@@ -95,7 +95,7 @@ def _store(self, tensor_name: str = '_', origin: str = '_',
         idx = idx[0]
     else:
         idx = self.shape[0]
-    self.loc[idx] = [tensor_name, origin, str(fl_round), metric, tags, nparray]
+    self.loc[idx] = np.array([tensor_name, origin, fl_round, metric, tags, nparray], dtype=object)
 
 
 def _retrieve(self, tensor_name: str = '_', origin: str = '_',
@@ -118,7 +118,7 @@ def _retrieve(self, tensor_name: str = '_', origin: str = '_',
 
     df = self[(self['tensor_name'] == tensor_name)
               & (self['origin'] == origin)
-              & (self['round'] == str(fl_round))
+              & (self['round'] == fl_round)
               & (self['report'] == metric)
               & (self['tags'] == tags)]['nparray']
 
