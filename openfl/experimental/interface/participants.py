@@ -70,7 +70,9 @@ class Collaborator(Participant):
         self.num_gpus = num_gpus
         self.kwargs = kwargs
 
-        if private_attributes_callable is not None:
+        if private_attributes_callable is None:
+            self.private_attributes_callable = private_attributes_callable
+        else:
             if not callable(private_attributes_callable):
                 raise Exception("private_attributes_callable  parameter must be a callable")
             else:
@@ -85,7 +87,7 @@ class Collaborator(Participant):
         initialize private attributes of Collaborator object by invoking 
         the callable specified by user
         """
-        if hasattr(self, "private_attributes_callable"):
+        if self.private_attributes_callable is not None:
             self.private_attributes = self.private_attributes_callable(**self.kwargs)
 
     def __set_collaborator_attrs_to_clone(self, clone: Any) -> None:
