@@ -1,4 +1,4 @@
-params:
+settings:
   cuda_devices: [0,2]
   
 optional_plugin_components:
@@ -8,7 +8,7 @@ optional_plugin_components:
 
 shard_descriptor:
   template: kvasir_shard_descriptor.KvasirShardDescriptor
-  params:
+  settings:
     data_folder: kvasir_data
     rank_worldsize: 1,10
     enforce_image_hw: '300,400'

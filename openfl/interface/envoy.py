@@ -66,9 +66,9 @@ def start_(shard_name, director_host, director_port, tls, envoy_config_path,
         },
         validators=[
             Validator('shard_descriptor.template', required=True),
-            Validator('params.cuda_devices', default=[]),
-            Validator('params.install_requirements', default=True),
-            Validator('params.review_experiment', default=False),
+            Validator('settings.cuda_devices', default=[]),
+            Validator('settings.install_requirements', default=True),
+            Validator('settings.review_experiment', default=False),
         ],
     )
 
@@ -80,7 +80,7 @@ def start_(shard_name, director_host, director_port, tls, envoy_config_path,
         config.certificate = Path(config.certificate).absolute()
 
     # Parse envoy parameters
-    envoy_params = config.get('params', {})
+    envoy_params = config.get('settings', {})
 
     # Build optional plugin components
     optional_plugins_section = config.get('optional_plugin_components')
@@ -91,7 +91,7 @@ def start_(shard_name, director_host, director_port, tls, envoy_config_path,
                 raise Exception('You should put a template'
                                 f'for plugin {plugin_name}')
             module_path, _, class_name = template.rpartition('.')
-            plugin_params = plugin_settings.get('params', {})
+            plugin_params = plugin_settings.get('settings', {})
 
             module = import_module(module_path)
             instance = getattr(module, class_name)(**plugin_params)
@@ -155,7 +155,7 @@ def shard_descriptor_from_config(shard_config: dict):
                         'descriptor template in the envoy config')
     class_name = template.split('.')[-1]
     module_path = '.'.join(template.split('.')[:-1])
-    params = shard_config.get('params', {})
+    params = shard_config.get('settings', {})
 
     module = import_module(module_path)
     instance = getattr(module, class_name)(**params)

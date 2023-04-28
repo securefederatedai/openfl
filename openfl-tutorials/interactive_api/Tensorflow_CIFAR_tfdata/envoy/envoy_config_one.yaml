@@ -1,9 +1,9 @@
-params:
+settings:
   cuda_devices: []
 
 optional_plugin_components: {}
 
 shard_descriptor:
   template: cifar10_shard_descriptor.CIFAR10ShardDescriptor
-  params:
+  settings:
     rank_worldsize: 1, 2
