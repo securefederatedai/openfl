@@ -9,6 +9,7 @@ import importlib
 import ray
 import os
 import gc
+import numpy as np
 from openfl.experimental.runtime import Runtime
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
@@ -21,6 +22,7 @@ from openfl.experimental.utilities import (
     filter_attributes,
     checkpoint,
     get_number_of_gpus,
+    check_resource_allocation,
 )
 from typing import List, Any
 from typing import Dict, Type, Callable
@@ -103,7 +105,7 @@ class LocalRuntime(Runtime):
             self.aggregator = aggregator
 
         if collaborators is not None:
-            self.collaborators == self.__get_collaborator_object(collaborators)
+            self.collaborators = self.__get_collaborator_object(collaborators)
 
     def __get_collaborator_object(self, collaborators: List) -> Any:
         """Get collaborator object based on localruntime backend"""
@@ -114,8 +116,11 @@ class LocalRuntime(Runtime):
         total_available_cpus = os.cpu_count()
         total_available_gpus = get_number_of_gpus()
 
-        total_required_gpus = sum([collaborator.num_gpus for collaborator in collaborators])
+        each_collab_gpu_usage = [collaborator.num_gpus for collaborator in collaborators]
+        total_required_gpus = sum(each_collab_gpu_usage)
         total_required_cpus = sum([collaborator.num_cpus for collaborator in collaborators])
+
+        check_resource_allocation(total_available_gpus, each_collab_gpu_usage)
 
         if total_available_gpus < total_required_gpus:
             raise ResourcesNotAvailableError(

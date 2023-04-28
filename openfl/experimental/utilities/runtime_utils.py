@@ -4,7 +4,9 @@
 """openfl.experimental.utilities package."""
 
 import inspect
+import numpy as np
 from types import MethodType
+from openfl.experimental.utilities import ResourcesAllocationError
 
 
 def parse_attrs(ctx, exclude=[], reserved_words=["next", "runtime", "input"]):
@@ -92,3 +94,18 @@ def checkpoint(ctx, parent_func, chkpnt_reserved_words=["next", "runtime"]):
             buffer_err=step_stderr,
         )
         print(f"Saved data artifacts for {parent_func.__name__}")
+
+def check_resource_allocation(num_gpus, each_collab_gpu_usage):
+    remaining_gpu_memory = []
+    for gpu in np.ones(num_gpus, dtype=int):
+        for i, collab_gpu_usage in enumerate(each_collab_gpu_usage):
+            if gpu < collab_gpu_usage:
+                remaining_gpu_memory.append(gpu)
+                each_collab_gpu_usage = each_collab_gpu_usage[i:]
+                break
+            else:
+                gpu -= collab_gpu_usage
+    if len(remaining_gpu_memory) > 1 or len(each_collab_gpu_usage) > 1:
+        raise ResourcesAllocationError(
+            "cannot assign GPU(s) in the given fashion."
+        )

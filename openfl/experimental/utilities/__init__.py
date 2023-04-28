@@ -12,6 +12,7 @@ from .transitions import (
 from .exceptions import (
         SerializationError,
         ResourcesNotAvailableError,
+        ResourcesAllocationError,
     )
 from .stream_redirect import (
     RedirectStdStreamBuffer,
@@ -24,6 +25,7 @@ from .runtime_utils import (
     generate_artifacts,
     filter_attributes,
     checkpoint,
+    check_resource_allocation,
 )
 
 
@@ -34,6 +36,7 @@ __all__ = [
     "collaborator_to_aggregator",
     "SerializationError",
     "ResourcesNotAvailableError",
+    "ResourcesAllocationError",
     "RedirectStdStreamBuffer",
     "RedirectStdStream",
     "RedirectStdStreamContext",
@@ -42,4 +45,5 @@ __all__ = [
     "generate_artifacts",
     "filter_attributes",
     "checkpoint",
+    "check_resource_allocation",
 ]
