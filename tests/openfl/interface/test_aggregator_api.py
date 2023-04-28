@@ -6,7 +6,7 @@ from unittest import mock
 from unittest import TestCase
 from pathlib import Path
 
-from openfl.interface.aggregator import start_
+from openfl.interface.aggregator import start_, _generate_cert_request, find_certificate_name
 
 
 @mock.patch('openfl.interface.aggregator.Plan')
@@ -62,3 +62,14 @@ def test_aggregator_start_illegal_cols(Plan, mock_is_directory_traversal):
     with TestCase.assertRaises(test_aggregator_start_illegal_cols, SystemExit):
         start_(['-p', plan_config,
                 '-c', cols_config], standalone_mode=False)
+
+
+def test_aggregator_generate_cert_request():
+    ret = _generate_cert_request([], standalone_mode=False)
+    assert ret is None
+
+
+@mock.patch('builtins.open', mock.mock_open(read_data='Subject: US=01234\n Subject: CN=56789\n '))
+def test_aggregator_find_certificate_name():
+    col_name = find_certificate_name('')
+    assert col_name == '56789'
