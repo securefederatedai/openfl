@@ -12,6 +12,7 @@ from click import pass_context
 from click import Path as ClickPath
 from click import style
 
+from openfl.federated import Plan
 from openfl.utilities import click_types
 from openfl.utilities.path_check import is_directory_traversal
 from openfl.utilities.utils import getfqdn_env
@@ -40,7 +41,8 @@ def start_(plan, authorized_cols, secure):
     """Start the aggregator service."""
     from pathlib import Path
 
-    from openfl.federated import Plan
+    # TODO: move this to header?
+    #  from openfl.federated import Plan
 
     if is_directory_traversal(plan):
         echo('Federated learning plan path is out of the openfl workspace scope.')
