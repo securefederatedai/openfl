@@ -6,7 +6,7 @@ from unittest import mock
 from unittest import TestCase
 from pathlib import Path
 
-from openfl.interface.aggregator import start_, _generate_cert_request, find_certificate_name
+from openfl.interface.aggregator import start_, _generate_cert_request, find_certificate_name, _certify
 
 
 @mock.patch('openfl.interface.aggregator.Plan')
@@ -26,8 +26,8 @@ def test_aggregator_start(Plan):
     Plan.parse.assert_called_once()
 
 
-@mock.patch('openfl.interface.aggregator.Plan')
 @mock.patch('openfl.interface.aggregator.is_directory_traversal')
+@mock.patch('openfl.interface.aggregator.Plan')
 def test_aggregator_start_illegal_plan(Plan, mock_is_directory_traversal):
     current_path = Path(__file__).resolve()
     plan_path = current_path.parent.joinpath('plan')
@@ -45,8 +45,8 @@ def test_aggregator_start_illegal_plan(Plan, mock_is_directory_traversal):
                 '-c', cols_config], standalone_mode=False)
 
 
-@mock.patch('openfl.interface.aggregator.Plan')
 @mock.patch('openfl.interface.aggregator.is_directory_traversal')
+@mock.patch('openfl.interface.aggregator.Plan')
 def test_aggregator_start_illegal_cols(Plan, mock_is_directory_traversal):
     current_path = Path(__file__).resolve()
     plan_path = current_path.parent.joinpath('plan')
@@ -73,3 +73,30 @@ def test_aggregator_generate_cert_request():
 def test_aggregator_find_certificate_name():
     col_name = find_certificate_name('')
     assert col_name == '56789'
+
+
+@mock.patch('openfl.cryptography.io.write_crt')
+@mock.patch('openfl.cryptography.ca.sign_certificate')
+@mock.patch('click.confirm')
+@mock.patch('openfl.cryptography.io.read_crt')
+@mock.patch('openfl.cryptography.io.read_key')
+@mock.patch('openfl.cryptography.io.read_csr')
+def test_aggregator_certify(mock_read_csr, mock_read_key, mock_read_crt,
+                            mock_confirm, mock_sign_certificate, mock_write_crt):
+    mock_read_csr.return_value = ['test_csr', 'test_csr_hash']
+    mock_read_key.return_value = mock.Mock()
+    mock_read_crt.return_value = mock.Mock()
+    mock_confirm.side_effect = [True, False]
+    mock_sign_certificate.return_value = mock.Mock()
+    mock_write_crt.return_value = mock.Mock()
+
+    # confirm 'Do you want to sign this certificate?' True
+    ret1 = _certify([], standalone_mode=False)
+    assert ret1 is None
+
+    # confirm 'Do you want to sign this certificate?' False
+    ret2 = _certify([], standalone_mode=False)
+    assert ret2 is None
+
+    ret3 = _certify(['-s'], standalone_mode=False)
+    assert ret3 is None
