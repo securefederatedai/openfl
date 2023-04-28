@@ -118,9 +118,9 @@ class LocalRuntime(Runtime):
 
         total_required_gpus = sum([collaborator.num_gpus for collaborator in collaborators])
         total_required_cpus = sum([collaborator.num_cpus for collaborator in collaborators])
-
-        check_resource_allocation(total_available_gpus, {collab.get_name(): collab.num_gpus 
-                                                         for collab in collaborators})
+        if total_required_gpus > 0:
+            check_resource_allocation(total_available_gpus, {collab.get_name(): collab.num_gpus 
+                                                             for collab in collaborators})
 
         if total_available_gpus < total_required_gpus:
             raise ResourcesNotAvailableError(

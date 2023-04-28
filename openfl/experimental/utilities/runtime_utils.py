@@ -3,6 +3,7 @@
 
 """openfl.experimental.utilities package."""
 
+import itertools
 import inspect
 import numpy as np
 from types import MethodType
@@ -96,17 +97,23 @@ def checkpoint(ctx, parent_func, chkpnt_reserved_words=["next", "runtime"]):
         print(f"Saved data artifacts for {parent_func.__name__}")
 
 def check_resource_allocation(num_gpus, each_collab_gpu_usage):
-    remaining_gpu_memory = []
+    remaining_gpu_memory = {}
     for gpu in np.ones(num_gpus, dtype=int):
         for i, (collab_name, collab_gpu_usage) in enumerate(each_collab_gpu_usage.items()):
-            if gpu < collab_gpu_usage:
-                remaining_gpu_memory.append({collab_name: gpu})
-                each_collab_gpu_usage = each_collab_gpu_usage[i:]
+            if gpu == 0:
                 break
+            if gpu < collab_gpu_usage: # and collab_gpu_usage > 0:
+                remaining_gpu_memory.update({collab_name: gpu})
+                print (f"each_collab_gpu_usage: {each_collab_gpu_usage}")
+                print (f"i: {i}")
+                each_collab_gpu_usage = dict(itertools.islice(each_collab_gpu_usage.items(), i))
             else:
                 gpu -= collab_gpu_usage
-    if len(remaining_gpu_memory) > 1 or len(each_collab_gpu_usage) > 1:
+    print (f"len(remaining_gpu_memory): {len(remaining_gpu_memory)}")
+    print (f"remaining_gpu_memory: {remaining_gpu_memory}")
+    print (f"len(each_collab_gpu_usage): {len(each_collab_gpu_usage)}")
+    if len(remaining_gpu_memory) > 0: # or len(each_collab_gpu_usage) > 1:
         raise ResourcesAllocationError(
-            f"Failed to allocate Collaborator {','.join(list(remaining_gpu_memory.keys()))}"
+            f"Failed to allocate Collaborator {list(remaining_gpu_memory.keys())} "
             + "to specified GPU. Please try allocating lesser GPU resources to collaborators"
         )
