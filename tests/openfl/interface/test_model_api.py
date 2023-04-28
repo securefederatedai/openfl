@@ -44,7 +44,7 @@ def test_get_model(Plan, utils):  # noqa: N803
 @mock.patch('openfl.interface.model.get_model')
 def test_model_save(mock_get_model):
     current_path = Path(__file__).resolve()
-    plan_path = current_path.parent.parent.joinpath('plan')
+    plan_path = current_path.parent.joinpath('plan')
     plan_config = plan_path.joinpath('plan.yaml')
     cols_config = plan_path.joinpath('cols.yaml')
     data_config = plan_path.joinpath('data.yaml')
