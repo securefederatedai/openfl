@@ -6,11 +6,12 @@ from unittest import mock
 from unittest import TestCase
 from pathlib import Path
 
-from openfl.interface.aggregator import start_, _generate_cert_request, find_certificate_name, _certify
+from openfl.interface.aggregator import start_, _generate_cert_request, \
+    find_certificate_name, _certify
 
 
 @mock.patch('openfl.interface.aggregator.Plan')
-def test_aggregator_start(Plan):
+def test_aggregator_start(Plan):  # noqa: N803
     current_path = Path(__file__).resolve()
     plan_path = current_path.parent.joinpath('plan')
     plan_config = plan_path.joinpath('plan.yaml')
@@ -28,7 +29,7 @@ def test_aggregator_start(Plan):
 
 @mock.patch('openfl.interface.aggregator.is_directory_traversal')
 @mock.patch('openfl.interface.aggregator.Plan')
-def test_aggregator_start_illegal_plan(Plan, mock_is_directory_traversal):
+def test_aggregator_start_illegal_plan(Plan, mock_is_directory_traversal):  # noqa: N803
     current_path = Path(__file__).resolve()
     plan_path = current_path.parent.joinpath('plan')
     plan_config = plan_path.joinpath('plan.yaml')
@@ -47,7 +48,7 @@ def test_aggregator_start_illegal_plan(Plan, mock_is_directory_traversal):
 
 @mock.patch('openfl.interface.aggregator.is_directory_traversal')
 @mock.patch('openfl.interface.aggregator.Plan')
-def test_aggregator_start_illegal_cols(Plan, mock_is_directory_traversal):
+def test_aggregator_start_illegal_cols(Plan, mock_is_directory_traversal):  # noqa: N803
     current_path = Path(__file__).resolve()
     plan_path = current_path.parent.joinpath('plan')
     plan_config = plan_path.joinpath('plan.yaml')
