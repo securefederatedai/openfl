@@ -10,35 +10,29 @@ from openfl.interface.aggregator import start_, _generate_cert_request, \
     find_certificate_name, _certify
 
 
-@mock.patch('openfl.interface.aggregator.Plan')
-def test_aggregator_start(Plan):  # noqa: N803
+@mock.patch('openfl.federated.Plan.parse')
+def test_aggregator_start(mock_parse):
     current_path = Path(__file__).resolve()
     plan_path = current_path.parent.joinpath('plan')
     plan_config = plan_path.joinpath('plan.yaml')
     cols_config = plan_path.joinpath('cols.yaml')
 
-    plan_instance = mock.Mock()
-    Plan.parse.return_value = plan_instance
-    plan_instance.get_server = mock.Mock()
+    mock_parse.return_value = mock.Mock()
 
-    start_(['-p', plan_config,
-            '-c', cols_config], standalone_mode=False)
-
-    Plan.parse.assert_called_once()
+    ret = start_(['-p', plan_config,
+                  '-c', cols_config], standalone_mode=False)
+    assert ret is None
 
 
 @mock.patch('openfl.interface.aggregator.is_directory_traversal')
-@mock.patch('openfl.interface.aggregator.Plan')
-def test_aggregator_start_illegal_plan(Plan, mock_is_directory_traversal):  # noqa: N803
+@mock.patch('openfl.federated.Plan.parse')
+def test_aggregator_start_illegal_plan(mock_parse, mock_is_directory_traversal):
     current_path = Path(__file__).resolve()
     plan_path = current_path.parent.joinpath('plan')
     plan_config = plan_path.joinpath('plan.yaml')
     cols_config = plan_path.joinpath('cols.yaml')
 
-    plan_instance = mock.Mock()
-    Plan.parse.return_value = plan_instance
-    plan_instance.get_server = mock.Mock()
-
+    mock_parse.return_value = mock.Mock()
     mock_is_directory_traversal.side_effect = [True, False]
 
     with TestCase.assertRaises(test_aggregator_start_illegal_plan, SystemExit):
@@ -47,17 +41,14 @@ def test_aggregator_start_illegal_plan(Plan, mock_is_directory_traversal):  # no
 
 
 @mock.patch('openfl.interface.aggregator.is_directory_traversal')
-@mock.patch('openfl.interface.aggregator.Plan')
-def test_aggregator_start_illegal_cols(Plan, mock_is_directory_traversal):  # noqa: N803
+@mock.patch('openfl.federated.Plan.parse')
+def test_aggregator_start_illegal_cols(mock_parse, mock_is_directory_traversal):
     current_path = Path(__file__).resolve()
     plan_path = current_path.parent.joinpath('plan')
     plan_config = plan_path.joinpath('plan.yaml')
     cols_config = plan_path.joinpath('cols.yaml')
 
-    plan_instance = mock.Mock()
-    Plan.parse.return_value = plan_instance
-    plan_instance.get_server = mock.Mock()
-
+    mock_parse.return_value = mock.Mock()
     mock_is_directory_traversal.side_effect = [False, True]
 
     with TestCase.assertRaises(test_aggregator_start_illegal_cols, SystemExit):
