@@ -29,7 +29,7 @@ We use a simple convolutional neural network and settings coming from [the exper
    - Navigate to the tutorial:
 
    ```sh
-   cd openfl/openfl-tutorials/interactive_api/PyTorch_FedProx_MedMNIST_2D
+   cd openfl/openfl-tutorials/interactive_api/PyTorch_FedProx_MedMNIST
    ```
 <br/>
 
