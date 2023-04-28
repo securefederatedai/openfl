@@ -42,7 +42,7 @@ def start_(plan, authorized_cols, secure):
     from pathlib import Path
 
     # TODO: move this to header?
-    #  from openfl.federated import Plan
+    #  from openfl.federated import Plan # noqa: E800
 
     if is_directory_traversal(plan):
         echo('Federated learning plan path is out of the openfl workspace scope.')
