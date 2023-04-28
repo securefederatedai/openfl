@@ -294,9 +294,9 @@ def run_experiment(collaborator_dict: dict, override_config: dict = None):
             collaborator = collaborators[col]
             collaborator.run_simulation()
 
-    # Set the weights for the final model
+    # Set the weights for the final model with the best tensor from aggregator
     model.rebuild_model(
-        rounds_to_train - 1, aggregator.last_tensor_dict, validation=True)
+        rounds_to_train - 1, aggregator.best_tensor_dict, validation=True)
     return model
 
 
@@ -309,3 +309,87 @@ def get_plan(fl_plan=None, indent=4, sort_keys=True):
         plan = fl_plan
     flat_plan_config = flatten(plan.config)
     return json.dumps(flat_plan_config, indent=indent, sort_keys=sort_keys)
+
+
+def run_evaluation(collaborator_dict: dict, override_config: dict = None, 
+                   update_plan_file: str = None, aggregator_tensor_dict: dict=None):
+    """
+    Core function that executes the evaluation.
+
+    Args:
+        collaborator_dict : dict {collaborator_name(str): FederatedModel}
+            This dictionary defines which collaborators will participate in the
+            experiment, as well as a reference to that collaborator's
+            federated model.
+        override_config : dict {flplan.key : flplan.value}
+            Override any of the plan parameters at runtime using this
+            dictionary. To get a list of the available options, execute
+            `fx.get_plan()`
+        update_plan_file : string
+            Using the new plan to perform evaluation
+        aggregator_tensor_dict : dict {}
+            Initialize tensor dict for aggregator
+
+    Returns:
+        final_federated_model : FederatedModel
+            The final model resulting from the federated learning experiment
+    """
+    from sys import path
+
+    if override_config is None:
+        override_config = {}
+
+    file = Path(__file__).resolve()
+    root = file.parent.resolve()  # interface root, containing command modules
+    work = Path.cwd().resolve()
+
+    path.append(str(root))
+    path.insert(0, str(work))
+
+    plan = None
+    if update_plan_file:
+        plan = Plan.parse(plan_config_path=Path(update_plan_file),
+                      resolve=False)
+
+    # Update the plan if necessary
+    plan = update_plan(override_config, plan=plan)
+    # Overwrite plan values
+    plan.authorized_cols = list(collaborator_dict)
+    tensor_pipe = plan.get_tensor_pipe()
+
+    # This must be set to the final index of the list (this is the last
+    # tensorflow session to get created)
+    plan.runner_ = list(collaborator_dict.values())[-1]
+    model = plan.runner_
+
+    # Initialize model weights
+    init_state_path = plan.config['aggregator']['settings']['init_state_path']
+    rounds_to_train = plan.config['aggregator']['settings']['rounds_to_train']
+    tensor_dict, holdout_params = split_tensor_dict_for_holdouts(
+        logger,
+        model.get_tensor_dict(False)
+    )
+
+    model_snap = utils.construct_model_proto(tensor_dict=tensor_dict,
+                                             round_number=0,
+                                             tensor_pipe=tensor_pipe)
+
+    logger.info(f'Creating Initial Weights File    🠆 {init_state_path}')
+
+    utils.dump_proto(model_proto=model_snap, fpath=init_state_path)
+
+    logger.info('Starting Experiment...')
+
+    aggregator = plan.get_aggregator(aggregator_tensor_dict)
+
+    # Create the collaborators
+    collaborators = {
+        collaborator: create_collaborator(
+            plan, collaborator, collaborator_dict[collaborator], aggregator
+        ) for collaborator in plan.authorized_cols
+    }
+
+    for _ in range(rounds_to_train):
+        for col in plan.authorized_cols:
+            collaborator = collaborators[col]
+            collaborator.run_simulation()
