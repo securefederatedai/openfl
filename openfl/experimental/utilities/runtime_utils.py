@@ -98,14 +98,15 @@ def checkpoint(ctx, parent_func, chkpnt_reserved_words=["next", "runtime"]):
 def check_resource_allocation(num_gpus, each_collab_gpu_usage):
     remaining_gpu_memory = []
     for gpu in np.ones(num_gpus, dtype=int):
-        for i, collab_gpu_usage in enumerate(each_collab_gpu_usage):
+        for i, (collab_name, collab_gpu_usage) in enumerate(each_collab_gpu_usage.items()):
             if gpu < collab_gpu_usage:
-                remaining_gpu_memory.append(gpu)
+                remaining_gpu_memory.append({collab_name: gpu})
                 each_collab_gpu_usage = each_collab_gpu_usage[i:]
                 break
             else:
                 gpu -= collab_gpu_usage
     if len(remaining_gpu_memory) > 1 or len(each_collab_gpu_usage) > 1:
         raise ResourcesAllocationError(
-            "cannot assign GPU(s) in the given fashion."
+            f"Failed to allocate Collaborator {','.join(list(remaining_gpu_memory.keys()))}"
+            + "to specified GPU. Please try allocating lesser GPU resources to collaborators"
         )
