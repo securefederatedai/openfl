@@ -6,8 +6,8 @@ from unittest import mock
 from unittest import TestCase
 from pathlib import Path
 
-from openfl.interface.aggregator import start_, _generate_cert_request, \
-    find_certificate_name, _certify
+from openfl.interface.aggregator import start_, _generate_cert_request
+from openfl.interface.aggregator import find_certificate_name, _certify
 
 
 @mock.patch('openfl.federated.Plan.parse')
