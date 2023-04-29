@@ -6,7 +6,7 @@ from unittest import mock
 from unittest import TestCase
 from pathlib import Path
 
-from openfl.interface.collaborator import start_
+from openfl.interface.collaborator import start_, register_data_path
 
 
 @mock.patch('openfl.federated.Plan.parse')
@@ -56,3 +56,10 @@ def test_collaborator_start_illegal_data(mock_parse, mock_is_directory_traversal
         start_(['-p', plan_config,
                 '-d', data_config,
                 '-n', 'one'], standalone_mode=False)
+
+
+@mock.patch('genericpath.isfile')
+def test_collaborator_register_data_path(mock_isfile):
+    mock_isfile.return_value = True
+    ret = register_data_path('one', 'path/data')
+    assert ret is None
