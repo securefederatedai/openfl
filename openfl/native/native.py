@@ -311,8 +311,8 @@ def get_plan(fl_plan=None, indent=4, sort_keys=True):
     return json.dumps(flat_plan_config, indent=indent, sort_keys=sort_keys)
 
 
-def run_evaluation(collaborator_dict: dict, override_config: dict = None, 
-                   update_plan_file: str = None, aggregator_tensor_dict: dict=None):
+def run_evaluation(collaborator_dict: dict, override_config: dict = None,
+                   update_plan_file: str = None, aggregator_tensor_dict: dict = None):
     """
     Core function that executes the evaluation.
 
@@ -349,7 +349,7 @@ def run_evaluation(collaborator_dict: dict, override_config: dict = None,
     plan = None
     if update_plan_file:
         plan = Plan.parse(plan_config_path=Path(update_plan_file),
-                      resolve=False)
+                          resolve=False)
 
     # Update the plan if necessary
     plan = update_plan(override_config, plan=plan)
