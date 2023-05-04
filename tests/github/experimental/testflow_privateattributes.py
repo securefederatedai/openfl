@@ -1,10 +1,11 @@
 # Copyright (C) 2020-2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
+import sys
+import numpy as np
 from openfl.experimental.interface import FLSpec, Aggregator, Collaborator
 from openfl.experimental.runtime import LocalRuntime
 from openfl.experimental.placement import aggregator, collaborator
-import numpy as np
 
 
 class bcolors:  # NOQA: N801
@@ -234,7 +235,11 @@ if __name__ == "__main__":
             )
         )
 
-    local_runtime = LocalRuntime(aggregator=aggregator, collaborators=collaborators)
+    backend = "single_process"
+    if len(sys.argv) > 1 and sys.argv[1] == "ray":
+        backend = "ray"
+
+    local_runtime = LocalRuntime(aggregator=aggregator, collaborators=collaborators, backend=backend)
     print(f"Local runtime collaborators = {local_runtime.collaborators}")
 
     flflow = TestFlowPrivateAttributes(checkpoint=True)
