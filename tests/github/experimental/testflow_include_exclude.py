@@ -39,9 +39,7 @@ class TestFlowIncludeExclude(FLSpec):
 
         self.exclude_agg_to_agg = 10
         self.include_agg_to_agg = 100
-        self.next(
-            self.test_include_exclude_agg_to_agg, exclude=["exclude_agg_to_agg"]
-        )
+        self.next(self.test_include_exclude_agg_to_agg, exclude=["exclude_agg_to_agg"])
 
     @aggregator
     def test_include_exclude_agg_to_agg(self):
@@ -201,39 +199,31 @@ class TestFlowIncludeExclude(FLSpec):
 
 if __name__ == "__main__":
     # Setup participants
-    # aggregator = Aggregator()
-    # aggregator.private_attributes = {}
+    aggregator = Aggregator()
 
-    "/home/parth-wsl/env_test_integration/openfl_parth/tests/github/experimental/testflow_include_exclude"
-
-    aggregator_dict = {
-        "aggregator": f"aggreagtor_config.yaml",
-    }
-
-
-    # Setup collaborators with private attributes
-    # collaborator_names = ["Portland", "Chandler", "Bangalore", "Delhi"]
-    # collaborators = [Collaborator(name=name) for name in collaborator_names]
-    collaborator_dict = {
-        "Portland": f"config_collaborator_one.yaml",
-        "Seattle": f"config_collaborator_two.yaml",
-        "Chandler": f"config_collaborator_three.yaml",
-        "Bangalore": f"config_collaborator_four.yaml",
-    }
-
+    # Setup collaborators
+    collaborator_names = ["Portland", "Chandler", "Bangalore", "Delhi"]
+    collaborators = []
+    for collaborator_name in enumerate(collaborator_names):
+        collaborators.append(
+            Collaborator(
+                name=collaborator_name,
+            )
+        )
 
     local_runtime = LocalRuntime(
-        aggregator=aggregator_dict, collaborators=collaborator_dict
+        aggregator=aggregator,
+        collaborators=collaborators,
     )
 
     if len(sys.argv) > 1:
-        if sys.argv[1] == 'ray':
+        if sys.argv[1] == "ray":
             local_runtime = LocalRuntime(
-                aggregator=aggregator_dict, collaborators=collaborator_dict, backend='ray'
+                aggregator=aggregator, collaborators=collaborators, backend="ray"
             )
 
     print(f"Local runtime collaborators = {local_runtime.collaborators}")
-    flflow = TestFlowIncludeExclude(checkpoint=False)
+    flflow = TestFlowIncludeExclude(checkpoint=True)
     flflow.runtime = local_runtime
     for i in range(5):
         print(f"Starting round {i}...")

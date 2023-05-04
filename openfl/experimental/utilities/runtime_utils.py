@@ -109,10 +109,7 @@ def check_resource_allocation(num_gpus, each_collab_gpu_usage):
                 each_collab_gpu_usage = dict(itertools.islice(each_collab_gpu_usage.items(), i))
             else:
                 gpu -= collab_gpu_usage
-    print (f"len(remaining_gpu_memory): {len(remaining_gpu_memory)}")
-    print (f"remaining_gpu_memory: {remaining_gpu_memory}")
-    print (f"len(each_collab_gpu_usage): {len(each_collab_gpu_usage)}")
-    if len(remaining_gpu_memory) > 0: # or len(each_collab_gpu_usage) > 1:
+    if len(remaining_gpu_memory) > 0:
         raise ResourcesAllocationError(
             f"Failed to allocate Collaborator {list(remaining_gpu_memory.keys())} "
             + "to specified GPU. Please try allocating lesser GPU resources to collaborators"

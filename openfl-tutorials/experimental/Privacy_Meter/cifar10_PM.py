@@ -345,8 +345,7 @@ class FederatedFlow(FLSpec):
             exclude=["private"],
         )
 
-    # @collaborator  # Uncomment if you want ro run on CPU
-    @collaborator(num_gpus=1)  # Assuming GPU(s) is available in the machine
+    @collaborator
     def aggregated_model_validation(self):
         print(
             (
@@ -359,8 +358,7 @@ class FederatedFlow(FLSpec):
         self.collaborator_name = self.input
         self.next(self.train)
 
-    # @collaborator  # Uncomment if you want ro run on CPU
-    @collaborator(num_gpus=1)  # Assuming GPU(s) is available on the machine
+    @collaborator
     def train(self):
         print(20 * "#")
         print(
@@ -417,8 +415,7 @@ class FederatedFlow(FLSpec):
         torch.cuda.empty_cache()
         self.next(self.local_model_validation)
 
-    # @collaborator  # Uncomment if you want ro run on CPU
-    @collaborator(num_gpus=1)  # Assuming GPU(s) is available in the machine
+    @collaborator
     def local_model_validation(self):
         print(
             (
@@ -456,8 +453,7 @@ class FederatedFlow(FLSpec):
         else:
             self.next(self.join, exclude=["training_completed"])
 
-    # @collaborator  # Uncomment if you want ro run on CPU
-    @collaborator(num_gpus=1)  # Assuming GPU(s) is available in the machine
+    @collaborator
     def audit(self):
         print(
             (
@@ -663,26 +659,24 @@ if __name__ == "__main__":
 
     # Setup participants
     aggregator = Aggregator()
-    aggregator.private_attributes = {}
 
-    # Setup collaborators with private attributes
     collaborator_names = ["Portland", "Seattle"]
 
-    collaborators = [Collaborator(name=name) for name in collaborator_names]
     if torch.cuda.is_available():
         device = torch.device(
             "cuda:0"
-        )  # This will enable Ray library to reserve available GPU(s) for the task
+        )
     else:
         device = torch.device("cpu")
 
+    # Download and setup the train, and test dataset
     transform = transforms.Compose([transforms.ToTensor()])
 
     cifar_train = CIFAR10(root="./data", train=True, download=True, transform=transform)
 
     cifar_test = CIFAR10(root="./data", train=False, download=True, transform=transform)
 
-    # split the dataset
+    # Split the dataset in train, test, and population dataset
     N_total_samples = len(cifar_test) + len(cifar_train)
     train_dataset_size = int(N_total_samples * args.train_dataset_ratio)
     test_dataset_size = int(N_total_samples * args.test_dataset_ratio)
@@ -717,22 +711,22 @@ if __name__ == "__main__":
         )
     )
 
-    # partition the dataset for clients
-    for idx, collab in enumerate(collaborators):
-
+    # Split train, test, and population dataset among collaborators
+    def callable_to_initialize_collaborator_private_attributes(
+            index, n_collaborators, train_ds, test_ds, population_ds, args):
         # construct the training and test and population dataset
-        local_train = deepcopy(train_dataset)
-        local_test = deepcopy(test_dataset)
-        local_population = deepcopy(population_dataset)
+        local_train = deepcopy(train_ds)
+        local_test = deepcopy(test_ds)
+        local_population = deepcopy(population_ds)
 
-        local_train.data = train_dataset.data[idx::len(collaborators)]
-        local_train.targets = train_dataset.targets[idx::len(collaborators)]
+        local_train.data = train_ds.data[index::n_collaborators]
+        local_train.targets = train_ds.targets[index::n_collaborators]
 
-        local_test.data = test_dataset.data[idx::len(collaborators)]
-        local_test.targets = test_dataset.targets[idx::len(collaborators)]
+        local_test.data = test_ds.data[index::n_collaborators]
+        local_test.targets = test_ds.targets[index::n_collaborators]
 
-        local_population.data = population_dataset.data[idx::len(collaborators)]
-        local_population.targets = population_dataset.targets[idx::len(collaborators)]
+        local_population.data = population_ds.data[index::n_collaborators]
+        local_population.targets = population_ds.targets[index::n_collaborators]
 
         # initialize pm report to track the privacy loss during the training
         local_pm_info = PM_report(
@@ -763,7 +757,7 @@ if __name__ == "__main__":
         Path(local_pm_info.log_dir).mkdir(parents=True, exist_ok=True)
         Path(global_pm_info.log_dir).mkdir(parents=True, exist_ok=True)
 
-        collab.private_attributes = {
+        return {
             "local_pm_info": local_pm_info,
             "global_pm_info": global_pm_info,
             "train_dataset": local_train,
@@ -776,6 +770,21 @@ if __name__ == "__main__":
                 local_test, batch_size=batch_size_test, shuffle=False
             ),
         }
+
+
+    collaborators = []
+    for idx, collab_name in enumerate(collaborator_names):
+        collaborators.append(
+            Collaborator(
+                name=collab_name,
+                private_attributes_callable=callable_to_initialize_collaborator_private_attributes,
+                # Set `num_gpus=0.5` to `num_gpus=0.0` to run on CPU
+                num_cpus=0.0, num_gpus=0.5,  # Assuming GPU is available in the machine
+                index=idx, n_collaborators=len(collaborator_names),
+                train_ds=train_dataset, test_ds=test_dataset,
+                population_ds=population_dataset, args=args
+            )
+        )
 
     # To activate the ray backend with parallel collaborator tasks run in their own process
     # and exclusive GPUs assigned to tasks, set LocalRuntime with backend='ray':
