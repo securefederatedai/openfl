@@ -400,10 +400,7 @@ class FederatedFlow(FLSpec):
             self.round += 1
             self.next(self.start)
 
-    # Uncomment below line if you are using the ray backend and
-    # do not have a GPU accessible
-    # @collaborator
-    @collaborator(num_gpus=1)  # Assuming GPU(s) is available in the machine
+    @collaborator
     def aggregated_model_validation(self):
         print(f"Performing aggregated model validation for collaborator {self.input}")
         self.model = self.model.to(self.device)
@@ -418,10 +415,7 @@ class FederatedFlow(FLSpec):
         self.collaborator_name = self.input
         self.next(self.train)
 
-    # Uncomment below line if you are using the ray backend and
-    # do not have a GPU accessible
-    # @collaborator
-    @collaborator(num_gpus=1)  # Assuming GPU(s) is available in the machine
+    @collaborator
     def train(self):
         print(f"Performing model training for collaborator {self.input}")
 
@@ -488,10 +482,7 @@ class FederatedFlow(FLSpec):
         torch.cuda.empty_cache()
         self.next(self.local_model_validation)
 
-    # Uncomment below line if you are using the ray backend and
-    # do not have a GPU accessible
-    # @collaborator
-    @collaborator(num_gpus=1)  # Assuming GPU(s) is available in the machine
+    @collaborator
     def local_model_validation(self):
         print(f"Performing local model validation for collaborator {self.input}")
         self.local_validation_score = inference(
@@ -602,9 +593,15 @@ if __name__ == "__main__":
 
     args = argparser.parse_args()
 
+    if torch.cuda.is_available():
+        device = torch.device(
+            "cuda:0"
+        )
+    else:
+        device = torch.device("cpu")
+
     # Setup participants
     aggregator = Aggregator()
-    aggregator.private_attributes = {}
 
     # Setup collaborators with private attributes
     collaborator_names = [
@@ -619,35 +616,38 @@ if __name__ == "__main__":
         "CostaRica",
         "Guadalajara",
     ]
-    collaborators = [Collaborator(name=name) for name in collaborator_names]
 
-    if torch.cuda.is_available():
-        device = torch.device(
-            "cuda:0"
-        )  # This will enable Ray library to reserve available GPU(s) for the task
-    else:
-        # Uncomment appropriate collaborator decorators in FederatedFlow class if
-        # you want the application to run on CPU
-        device = torch.device("cpu")
+    def callable_to_initialize_collaborator_private_attributes(index, n_collaborators,
+            batch_size, train_dataset, test_dataset):
+        train = deepcopy(train_dataset)
+        test = deepcopy(test_dataset)
+        train.data = train_dataset.data[index::n_collaborators]
+        train.targets = train_dataset.targets[index::n_collaborators]
+        test.data = test_dataset.data[index::n_collaborators]
+        test.targets = test_dataset.targets[index::n_collaborators]
 
-    for idx, collab in enumerate(collaborators):
-        local_train = deepcopy(mnist_train)
-        local_test = deepcopy(mnist_test)
-        local_train.data = mnist_train.data[idx::len(collaborators)]
-        local_train.targets = mnist_train.targets[idx::len(collaborators)]
-        local_test.data = mnist_test.data[idx::len(collaborators)]
-        local_test.targets = mnist_test.targets[idx::len(collaborators)]
-        collab.private_attributes = {
-            "train_loader": torch.utils.data.DataLoader(
-                local_train, batch_size=batch_size_train, shuffle=True
-            ),
-            "test_loader": torch.utils.data.DataLoader(
-                local_test, batch_size=batch_size_train, shuffle=True
-            ),
+        return {
+            "train_loader": torch.utils.data.DataLoader(train, batch_size=batch_size, shuffle=True),
+            "test_loader": torch.utils.data.DataLoader(test, batch_size=batch_size, shuffle=True),
         }
 
-    local_runtime = LocalRuntime(aggregator=aggregator, collaborators=collaborators)
+    collaborators = []
+    for idx, collaborator_name in enumerate(collaborator_names):
+        collaborators.append(
+            Collaborator(
+                name=collaborator_name,
+                private_attributes_callable=callable_to_initialize_collaborator_private_attributes,
+                # Set `num_gpus=0.1` to `num_gpus=0.0` in order to run this tutorial on CPU
+                num_cpus=0.0, num_gpus=0.1, # Assuming GPU(s) is available in the machine
+                index=idx, n_collaborators=len(collaborator_names),
+                batch_size=batch_size_train, train_dataset=mnist_train,
+                test_dataset=mnist_test
+            )
+        )
+
+    local_runtime = LocalRuntime(aggregator=aggregator, collaborators=collaborators, backend="ray")
     print(f"Local runtime collaborators = {local_runtime.collaborators}")
+
     best_model = None
     initial_model = Net()
     top_model_accuracy = 0
