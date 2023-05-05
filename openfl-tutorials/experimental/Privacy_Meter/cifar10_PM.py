@@ -712,6 +712,8 @@ if __name__ == "__main__":
     )
 
     # Split train, test, and population dataset among collaborators
+    # this function will be called before executing collaborator steps
+    # which will return private attributes dictionary for each collaborator
     def callable_to_initialize_collaborator_private_attributes(
             index, n_collaborators, train_ds, test_ds, population_ds, args):
         # construct the training and test and population dataset
@@ -778,17 +780,17 @@ if __name__ == "__main__":
             Collaborator(
                 name=collab_name,
                 private_attributes_callable=callable_to_initialize_collaborator_private_attributes,
-                # Set `num_gpus=0.5` to `num_gpus=0.0` to run on CPU
-                num_cpus=0.0, num_gpus=0.5,  # Assuming GPU is available in the machine
+                # If 1 GPU is available in the machine
+                # Set `num_gpus=0.0` to `num_gpus=0.5` to run on GPU with ray backend with 2 collaborators
+                num_cpus=0.0, num_gpus=0.0,
                 index=idx, n_collaborators=len(collaborator_names),
                 train_ds=train_dataset, test_ds=test_dataset,
                 population_ds=population_dataset, args=args
             )
         )
 
-    # To activate the ray backend with parallel collaborator tasks run in their own process
-    # and exclusive GPUs assigned to tasks, set LocalRuntime with backend='ray':
-    local_runtime = LocalRuntime(aggregator=aggregator, collaborators=collaborators)
+    # Set backend='ray' to use ray-backend
+    local_runtime = LocalRuntime(aggregator=aggregator, collaborators=collaborators, backend="single_process")
 
     print(f"Local runtime collaborators = {local_runtime.collaborators}")
 
