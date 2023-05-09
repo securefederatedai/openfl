@@ -39,7 +39,7 @@ log_interval = 10
 # Fixing the seed for result repeatation: remove below to stop repeatable runs
 # ----------------------------------
 random_seed = 5495300300540669060
-g_device = torch.Generator(device='cuda')
+g_device = torch.Generator(device="cuda")
 # Uncomment the line below to use g_cpu if not using cuda
 # g_device = torch.Generator() # noqa: E800
 # NOTE: remove below to stop repeatable runs
@@ -601,7 +601,6 @@ class FederatedFlow(FLSpec):
 
 
 if __name__ == "__main__":
-
     argparser = argparse.ArgumentParser(description=__doc__)
     argparser.add_argument(
         "--config_path", help="Absolute path to the flow configuration file"
@@ -615,9 +614,7 @@ if __name__ == "__main__":
     args = argparser.parse_args()
 
     if torch.cuda.is_available():
-        device = torch.device(
-            "cuda:0"
-        )
+        device = torch.device("cuda:0")
     else:
         device = torch.device("cpu")
 
@@ -638,8 +635,9 @@ if __name__ == "__main__":
         "Guadalajara",
     ]
 
-    def callable_to_initialize_collaborator_private_attributes(index, n_collaborators,
-            batch_size, train_dataset, test_dataset):
+    def callable_to_initialize_collaborator_private_attributes(
+        index, n_collaborators, batch_size, train_dataset, test_dataset
+    ):
         train = deepcopy(train_dataset)
         test = deepcopy(test_dataset)
         train.data = train_dataset.data[index::n_collaborators]
@@ -648,8 +646,12 @@ if __name__ == "__main__":
         test.targets = test_dataset.targets[index::n_collaborators]
 
         return {
-            "train_loader": torch.utils.data.DataLoader(train, batch_size=batch_size, shuffle=True),
-            "test_loader": torch.utils.data.DataLoader(test, batch_size=batch_size, shuffle=True),
+            "train_loader": torch.utils.data.DataLoader(
+                train, batch_size=batch_size, shuffle=True
+            ),
+            "test_loader": torch.utils.data.DataLoader(
+                test, batch_size=batch_size, shuffle=True
+            ),
         }
 
     collaborators = []
@@ -659,14 +661,19 @@ if __name__ == "__main__":
                 name=collaborator_name,
                 private_attributes_callable=callable_to_initialize_collaborator_private_attributes,
                 # Set `num_gpus=0.1` to `num_gpus=0.0` in order to run this tutorial on CPU
-                num_cpus=0.0, num_gpus=0.1, # Assuming GPU(s) is available in the machine
-                index=idx, n_collaborators=len(collaborator_names),
-                batch_size=batch_size_train, train_dataset=mnist_train,
-                test_dataset=mnist_test
+                num_cpus=0.0,
+                num_gpus=0.1,  # Assuming GPU(s) is available in the machine
+                index=idx,
+                n_collaborators=len(collaborator_names),
+                batch_size=batch_size_train,
+                train_dataset=mnist_train,
+                test_dataset=mnist_test,
             )
         )
 
-    local_runtime = LocalRuntime(aggregator=aggregator, collaborators=collaborators, backend="ray")
+    local_runtime = LocalRuntime(
+        aggregator=aggregator, collaborators=collaborators, backend="ray"
+    )
     print(f"Local runtime collaborators = {local_runtime.collaborators}")
 
     top_model_accuracy = 0

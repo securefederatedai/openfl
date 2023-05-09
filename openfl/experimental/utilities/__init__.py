@@ -10,10 +10,10 @@ from .transitions import (
     collaborator_to_aggregator,
 )
 from .exceptions import (
-        SerializationError,
-        ResourcesNotAvailableError,
-        ResourcesAllocationError,
-    )
+    SerializationError,
+    ResourcesNotAvailableError,
+    ResourcesAllocationError,
+)
 from .stream_redirect import (
     RedirectStdStreamBuffer,
     RedirectStdStream,

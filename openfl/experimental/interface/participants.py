@@ -45,20 +45,20 @@ class Collaborator(Participant):
     def __init__(self, name: str = "", private_attributes_callable: Callable = None,
                  num_cpus: int = 0, num_gpus: int = 0.0, **kwargs):
         """
-        Create collaborator object with custom resources and a callable 
+        Create collaborator object with custom resources and a callable
         function to assign private attributes
 
         Parameters:
         name (str): Name of the collaborator. default=""
 
         private_attributes_callable (Callable): A function which returns collaborator
-        private attributes for each collaborator. In case private_attributes are not 
+        private attributes for each collaborator. In case private_attributes are not
         required this can be omitted. default=None
 
         num_cpus (int): Specifies how many cores to use for the collaborator step exection.
         This will only be used if backend is set to ray. default=0
 
-        num_gpus (float): Specifies how many GPUs to use to accerlerate the collaborator 
+        num_gpus (float): Specifies how many GPUs to use to accerlerate the collaborator
         step exection. This will only be used if backend is set to ray. default=0
 
         kwargs (dict): Parameters required to call private_attributes_callable function.
@@ -84,7 +84,7 @@ class Collaborator(Participant):
 
     def initialize_private_attributes(self) -> None:
         """
-        initialize private attributes of Collaborator object by invoking 
+        initialize private attributes of Collaborator object by invoking
         the callable specified by user
         """
         if self.private_attributes_callable is not None:
@@ -92,7 +92,7 @@ class Collaborator(Participant):
 
     def __set_collaborator_attrs_to_clone(self, clone: Any) -> None:
         """
-        Set collaborator private attributes to FLSpec clone before transitioning 
+        Set collaborator private attributes to FLSpec clone before transitioning
         from Aggregator step to collaborator steps
         """
         # set collaborator private attributes as
@@ -102,10 +102,10 @@ class Collaborator(Participant):
 
     def __delete_collab_attrs_from_clone(self, clone: Any) -> None:
         """
-        Remove collaborator private attributes from FLSpec clone before 
+        Remove collaborator private attributes from FLSpec clone before
         transitioning from Collaborator step to Aggregator step
         """
-        # Update collaborator private attributes by taking latest 
+        # Update collaborator private attributes by taking latest
         # parameters from clone, then delete attributes from clone.
         for attr_name in self.private_attributes:
             if hasattr(clone, attr_name):
@@ -146,9 +146,8 @@ class Aggregator(Participant):
 
     def initialize_private_attributes(self) -> None:
         """
-        initialize private attributes of Aggregator object by invoking 
+        initialize private attributes of Aggregator object by invoking
         the callable specified by user
         """
         if self.private_attributes_callable is not None:
             self.private_attributes = self.private_attributes_callable(**self.kwargs)
-

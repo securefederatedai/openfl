@@ -146,7 +146,6 @@ def inference(network, test_loader, device):
 
 
 def optimizer_to_device(optimizer, device):
-
     """
     Sending the "torch.optim.Optimizer" object into the specified device
     for model training and inference
@@ -581,7 +580,6 @@ class FederatedFlow(FLSpec):
 
 
 if __name__ == "__main__":
-
     argparser = argparse.ArgumentParser(description=__doc__)
     argparser.add_argument(
         "--audit_dataset_ratio",
@@ -663,9 +661,7 @@ if __name__ == "__main__":
     collaborator_names = ["Portland", "Seattle"]
 
     if torch.cuda.is_available():
-        device = torch.device(
-            "cuda:0"
-        )
+        device = torch.device("cuda:0")
     else:
         device = torch.device("cpu")
 
@@ -693,9 +689,9 @@ if __name__ == "__main__":
     train_dataset.targets = Y[:train_dataset_size]
 
     test_dataset = deepcopy(cifar_test)
-    test_dataset.data = X[train_dataset_size:train_dataset_size + test_dataset_size]
+    test_dataset.data = X[train_dataset_size: train_dataset_size + test_dataset_size]
     test_dataset.targets = Y[
-        train_dataset_size:train_dataset_size + test_dataset_size
+        train_dataset_size: train_dataset_size + test_dataset_size
     ]
 
     population_dataset = deepcopy(cifar_test)
@@ -715,7 +711,8 @@ if __name__ == "__main__":
     # this function will be called before executing collaborator steps
     # which will return private attributes dictionary for each collaborator
     def callable_to_initialize_collaborator_private_attributes(
-            index, n_collaborators, train_ds, test_ds, population_ds, args):
+        index, n_collaborators, train_ds, test_ds, population_ds, args
+    ):
         # construct the training and test and population dataset
         local_train = deepcopy(train_ds)
         local_test = deepcopy(test_ds)
@@ -773,7 +770,6 @@ if __name__ == "__main__":
             ),
         }
 
-
     collaborators = []
     for idx, collab_name in enumerate(collaborator_names):
         collaborators.append(
@@ -781,16 +777,23 @@ if __name__ == "__main__":
                 name=collab_name,
                 private_attributes_callable=callable_to_initialize_collaborator_private_attributes,
                 # If 1 GPU is available in the machine
-                # Set `num_gpus=0.0` to `num_gpus=0.5` to run on GPU with ray backend with 2 collaborators
-                num_cpus=0.0, num_gpus=0.0,
-                index=idx, n_collaborators=len(collaborator_names),
-                train_ds=train_dataset, test_ds=test_dataset,
-                population_ds=population_dataset, args=args
+                # Set `num_gpus=0.0` to `num_gpus=0.5` to run on GPU
+                # with ray backend with 2 collaborators
+                num_cpus=0.0,
+                num_gpus=0.0,
+                index=idx,
+                n_collaborators=len(collaborator_names),
+                train_ds=train_dataset,
+                test_ds=test_dataset,
+                population_ds=population_dataset,
+                args=args,
             )
         )
 
     # Set backend='ray' to use ray-backend
-    local_runtime = LocalRuntime(aggregator=aggregator, collaborators=collaborators, backend="single_process")
+    local_runtime = LocalRuntime(
+        aggregator=aggregator, collaborators=collaborators, backend="single_process"
+    )
 
     print(f"Local runtime collaborators = {local_runtime.collaborators}")
 

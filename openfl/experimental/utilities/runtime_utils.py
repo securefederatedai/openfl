@@ -96,16 +96,17 @@ def checkpoint(ctx, parent_func, chkpnt_reserved_words=["next", "runtime"]):
         )
         print(f"Saved data artifacts for {parent_func.__name__}")
 
+
 def check_resource_allocation(num_gpus, each_collab_gpu_usage):
     remaining_gpu_memory = {}
     for gpu in np.ones(num_gpus, dtype=int):
         for i, (collab_name, collab_gpu_usage) in enumerate(each_collab_gpu_usage.items()):
             if gpu == 0:
                 break
-            if gpu < collab_gpu_usage: # and collab_gpu_usage > 0:
+            if gpu < collab_gpu_usage:  # and collab_gpu_usage > 0:
                 remaining_gpu_memory.update({collab_name: gpu})
-                print (f"each_collab_gpu_usage: {each_collab_gpu_usage}")
-                print (f"i: {i}")
+                print(f"each_collab_gpu_usage: {each_collab_gpu_usage}")
+                print(f"i: {i}")
                 each_collab_gpu_usage = dict(itertools.islice(each_collab_gpu_usage.items(), i))
             else:
                 gpu -= collab_gpu_usage

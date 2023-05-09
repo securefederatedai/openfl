@@ -242,7 +242,7 @@ def find_matched_references(collab_attr_list, all_collaborators):
     for attr_name in collab_attr_list:
         for i, curr_collab in enumerate(all_collaborators):
             # Compare the current collaborator with the collaborator(s) that come(s) after it.
-            for next_collab in all_collaborators[i + 1 :]:
+            for next_collab in all_collaborators[i + 1:]:
                 # Check if both collaborators have the current attribute
                 if hasattr(curr_collab, attr_name) and hasattr(next_collab, attr_name):
                     # Check if both collaborators are sharing same reference
@@ -336,13 +336,13 @@ def validate_agg_collab_references(all_collborators, agg_obj, agg_attrs):
 if __name__ == "__main__":
     # Setup participants
     aggregator = Aggregator()
-    
+
     # Setup collaborators private attributes via callable function
     collaborator_names = ["Portland", "Seattle", "Chandler", "Bangalore"]
 
     def callable_to_initialize_collaborator_private_attributes(index):
         return {"index": index + 1}
-    
+
     collaborators = []
     for idx, collaborator_name in enumerate(collaborator_names):
         collaborators.append(

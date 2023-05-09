@@ -9,9 +9,9 @@ import importlib
 import ray
 import os
 import gc
-import numpy as np
 from openfl.experimental.runtime import Runtime
 from typing import TYPE_CHECKING
+
 if TYPE_CHECKING:
     from openfl.experimental.interface import Aggregator, Collaborator, FLSpec
 
@@ -33,10 +33,11 @@ class RayExecutor:
         """Create RayExecutor object"""
         self.__remote_contexts = []
 
-    def ray_call_put(self, collaborator: Collaborator, ctx: Any,
-                     f_name: str, callback: Callable) -> None:
+    def ray_call_put(
+        self, collaborator: Collaborator, ctx: Any, f_name: str, callback: Callable
+    ) -> None:
         """
-        Execute f_name from inside collaborator class with the context 
+        Execute f_name from inside collaborator class with the context
         of clone (ctx)
         """
         self.__remote_contexts.append(
@@ -116,19 +117,27 @@ class LocalRuntime(Runtime):
         total_available_cpus = os.cpu_count()
         total_available_gpus = get_number_of_gpus()
 
-        total_required_gpus = sum([collaborator.num_gpus for collaborator in collaborators])
-        total_required_cpus = sum([collaborator.num_cpus for collaborator in collaborators])
+        total_required_gpus = sum(
+            [collaborator.num_gpus for collaborator in collaborators]
+        )
+        total_required_cpus = sum(
+            [collaborator.num_cpus for collaborator in collaborators]
+        )
         if total_required_gpus > 0:
-            check_resource_allocation(total_available_gpus, {collab.get_name(): collab.num_gpus 
-                                                             for collab in collaborators})
+            check_resource_allocation(
+                total_available_gpus,
+                {collab.get_name(): collab.num_gpus for collab in collaborators},
+            )
 
         if total_available_gpus < total_required_gpus:
             raise ResourcesNotAvailableError(
-                    f"cannot assign more than available GPUs ({total_required_gpus} < {total_available_gpus})."
-                )
+                f"cannot assign more than available GPUs \
+                    ({total_required_gpus} < {total_available_gpus})."
+            )
         if total_available_cpus < total_required_cpus:
             raise ResourcesNotAvailableError(
-                    f"cannot assign more than available CPUs ({total_required_cpus} < {total_available_cpus})."
+                f"cannot assign more than available CPUs \
+                    ({total_required_cpus} < {total_available_cpus})."
             )
         interface_module = importlib.import_module("openfl.experimental.interface")
         collaborator_class = getattr(interface_module, "Collaborator")
@@ -139,13 +148,16 @@ class LocalRuntime(Runtime):
             num_gpus = collaborator.num_gpus
 
             collaborator_actor = ray.remote(collaborator_class).options(
-                num_cpus=num_cpus, num_gpus=num_gpus)
+                num_cpus=num_cpus, num_gpus=num_gpus
+            )
 
-            collaborator_ray_refs.append(collaborator_actor.remote(
-                name=collaborator.get_name(),
-                private_attributes_callable=collaborator.private_attributes_callable,
-                **collaborator.kwargs
-            ))
+            collaborator_ray_refs.append(
+                collaborator_actor.remote(
+                    name=collaborator.get_name(),
+                    private_attributes_callable=collaborator.private_attributes_callable,
+                    **collaborator.kwargs,
+                )
+            )
         return collaborator_ray_refs
 
     @property
@@ -169,9 +181,14 @@ class LocalRuntime(Runtime):
     def collaborators(self, collaborators: List[Type[Collaborator]]):
         """Set LocalRuntime collaborators"""
         if self.backend == "single_process":
-            get_collab_name = lambda collab: collab.get_name()
+
+            def get_collab_name(collab):
+                return collab.get_name()
+
         else:
-            get_collab_name = lambda collab: ray.get(collab.get_name.remote())
+
+            def get_collab_name(collab):
+                return ray.get(collab.get_name.remote())
 
         self.__collaborators = {
             get_collab_name(collaborator): collaborator
@@ -185,17 +202,20 @@ class LocalRuntime(Runtime):
     def initialize_collaborators(self):
         """initialize collaborator private attributes"""
         if self.backend == "single_process":
-            init_private_attrs = lambda collab: collab.initialize_private_attributes()
+
+            def init_private_attrs(collab):
+                return collab.initialize_private_attributes()
+
         else:
-            init_private_attrs = lambda collab: collab.initialize_private_attributes.remote()
+
+            def init_private_attrs(collab):
+                return collab.initialize_private_attributes.remote()
 
         for collaborator in self.__collaborators.values():
             init_private_attrs(collaborator)
 
     def restore_instance_snapshot(
-            self,
-            ctx: Type[FLSpec],
-            instance_snapshot: List[Type[FLSpec]]
+        self, ctx: Type[FLSpec], instance_snapshot: List[Type[FLSpec]]
     ):
         """Restores attributes from backup (in instance snapshot) to ctx"""
         for backup in instance_snapshot:
@@ -206,7 +226,7 @@ class LocalRuntime(Runtime):
 
     def execute_collaborator_steps(self, ctx: Any, f_name: str):
         """
-        Execute collaborator steps for each 
+        Execute collaborator steps for each
         collaborator until at transition point
         """
         not_at_transition_point = True
@@ -279,8 +299,11 @@ class LocalRuntime(Runtime):
             list: updated arguments to be executed
         """
 
-        interface_module = importlib.import_module("openfl.experimental.interface")
-        final_attributes = getattr(interface_module, "final_attributes")
+        from openfl.experimental.interface import (
+            final_attributes,
+        )
+
+        global final_attributes
 
         to_exec = getattr(flspec_obj, f.__name__)
         to_exec()
@@ -325,9 +348,7 @@ class LocalRuntime(Runtime):
             clone = FLSpec._clones[col]
             if aggregator_to_collaborator(f, parent_func):
                 for attr in self._aggregator.private_attributes:
-                    self._aggregator.private_attributes[attr] = getattr(
-                        clone, attr
-                    )
+                    self._aggregator.private_attributes[attr] = getattr(clone, attr)
                     if hasattr(clone, attr):
                         delattr(clone, attr)
 
@@ -350,9 +371,13 @@ class LocalRuntime(Runtime):
             collaborator = self.__collaborators[collab_name]
 
             if self.backend == "ray":
-                ray_executor.ray_call_put(collaborator, clone, f.__name__, self.execute_collaborator_steps)
+                ray_executor.ray_call_put(
+                    collaborator, clone, f.__name__, self.execute_collaborator_steps
+                )
             else:
-                collaborator.execute_func(clone, f.__name__, self.execute_collaborator_steps)
+                collaborator.execute_func(
+                    clone, f.__name__, self.execute_collaborator_steps
+                )
 
         if self.backend == "ray":
             clones = ray_executor.get_remote_clones()

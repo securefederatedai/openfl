@@ -206,7 +206,7 @@ def find_matched_references(collab_attr_list, all_collaborators):
     for attr_name in collab_attr_list:
         for i, curr_collab in enumerate(all_collaborators):
             # Compare the current collaborator with the collaborator(s) that come(s) after it.
-            for next_collab in all_collaborators[i + 1 :]:
+            for next_collab in all_collaborators[i + 1:]:
                 # Check if both collaborators have the current attribute
                 if hasattr(curr_collab, attr_name) and hasattr(next_collab, attr_name):
                     # Check if both collaborators are sharing same reference

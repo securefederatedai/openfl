@@ -105,6 +105,7 @@ class TestFlowPrivateAttributes(FLSpec):
             )
 
         for input in enumerate(inputs):
+            collab = input[1].input
             if (
                 hasattr(input, "train_loader") is True
                 or hasattr(input, "test_loader") is True
@@ -114,7 +115,7 @@ class TestFlowPrivateAttributes(FLSpec):
                     "join_collaborator_attributes_found"
                 )
                 print(
-                    f"{bcolors.FAIL} ... Attribute test failed in Join - COllaborator: {collab}"
+                    f"{bcolors.FAIL} ... Attribute test failed in Join - Collaborator: {collab}"
                     + f" private attributes accessible {bcolors.ENDC}"
                 )
 
@@ -239,7 +240,9 @@ if __name__ == "__main__":
     if len(sys.argv) > 1 and sys.argv[1] == "ray":
         backend = "ray"
 
-    local_runtime = LocalRuntime(aggregator=aggregator, collaborators=collaborators, backend=backend)
+    local_runtime = LocalRuntime(
+        aggregator=aggregator, collaborators=collaborators, backend=backend
+    )
     print(f"Local runtime collaborators = {local_runtime.collaborators}")
 
     flflow = TestFlowPrivateAttributes(checkpoint=True)
