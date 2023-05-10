@@ -201,7 +201,8 @@ class FlowGraph(FlowGraph):
         self._postprocess()
 
     def _create_nodes(self, flow):
-        tree = ast.parse(getsource(flow)).body
+        module = __import__(flow.__module__)
+        tree = ast.parse(getsource(module)).body
         root = [
             n
             for n in tree
