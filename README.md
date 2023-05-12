@@ -45,7 +45,7 @@ Check out the [online documentation](https://openfl.readthedocs.io/en/latest/ind
 
 ## Requirements
 
-- Ubuntu Linux 16.04 or 18.04.
+- Ubuntu Linux 18.04+
 - Python 3.7+ (recommended to use with [Virtualenv](https://virtualenv.pypa.io/en/latest/)).
 
 OpenFL supports training with TensorFlow 2+ or PyTorch 1.3+ which should be installed separately. User can extend the list of supported Deep Learning frameworks if needed.
