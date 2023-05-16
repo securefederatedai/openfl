@@ -1,0 +1,17 @@
+apiVersion: v2
+name: openfl
+description: A Helm chart for OpenFL aggregator-based cluster on Kubernetes
+keywords:
+  - openfl
+  - securefederatedai
+  - federated-learning
+home: https://github.com/securefederatedai/openfl
+sources:
+  - https://github.com/securefederatedai/openfl
+type: application
+version: 0.1.0
+appVersion: "1.5"
+icon: https://raw.githubusercontent.com/securefederatedai/artwork/main/SVG/OpenFL%20Logo%20-%20icon%20color.svg
+maintainers:
+  - name: Aleksander Kantak
+    email: aleksander.kantak@intel.com
