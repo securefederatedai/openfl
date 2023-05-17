@@ -5,6 +5,8 @@
 For more details, please refer to the original paper:
 **MedMNIST v2: A Large-Scale Lightweight Benchmark for 2D and 3D Biomedical Image Classification** ([arXiv](https://arxiv.org/abs/2110.14795)), and [PyPI](https://pypi.org/project/medmnist/).
 
+This example differs from PyTorch_MedMNIST_2D in that it uses the FedProx Optimizer. For more information on FedProx see:
+**Federated Optimization in Heterogeneous Networks** ([arXiv](https://arxiv.org/abs/1812.06127)).
 
 ## I. About model and experiments
 
