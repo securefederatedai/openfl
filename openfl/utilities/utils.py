@@ -132,7 +132,7 @@ def split_tensor_dict_by_types(tensor_dict, keep_types):
     keep_dict = {}
     holdout_dict = {}
     for k, v in tensor_dict.items():
-        if any([np.issubdtype(v.dtype, type_) for type_ in keep_types]):
+        if any(np.issubdtype(v.dtype, type_) for type_ in keep_types):
             keep_dict[k] = v
         else:
             holdout_dict[k] = v

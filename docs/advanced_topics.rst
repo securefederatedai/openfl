@@ -49,6 +49,7 @@ Advanced Topics
    multiple_plans
    compression_settings
    overriding_agg_fn
+   straggler_handling_algorithms
    log_metric_callback
    supported_aggregation_algorithms
    overriding_plan_settings

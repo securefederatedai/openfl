@@ -3,9 +3,9 @@
 
 .. _workflow_interface:
 
-***************
+******************
 Workflow Interface
-***************
+******************
 
 **Important Note**
 
@@ -14,7 +14,7 @@ The OpenFL workflow interface is experimental, subject to change, and is current
 What is it?
 ===========
 
-A new OpenFL interface that gives significantly more flexility to researchers in the construction of federated learning experiments. It is heavily influenced by the interface and design of `Metaflow , the popular framework for data scientists originally developed at Netflix. There are several reasons we converged on Metaflow as inspiration for our work:
+A new OpenFL interface that gives significantly more flexility to researchers in the construction of federated learning experiments. It is heavily influenced by the interface and design of `Metaflow` , the popular framework for data scientists originally developed at Netflix. There are several reasons we converged on Metaflow as inspiration for our work:
 
 1. Clean expression of task sequence. Flows start with a `start` task, and end with `end`. The next task in the sequence is called by `self.next`.
 2. Easy selection of what should be sent between tasks using `include` or `exclude`
