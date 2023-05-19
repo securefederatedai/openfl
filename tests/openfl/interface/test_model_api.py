@@ -3,8 +3,11 @@
 """Model interface tests module."""
 
 from unittest import mock
+from unittest import TestCase
+from pathlib import Path
 
 from openfl import get_model
+from openfl.interface.model import save_
 from openfl.federated.task import TaskRunner
 
 
@@ -36,3 +39,22 @@ def test_get_model(Plan, utils):  # noqa: N803
     TaskRunner.set_tensor_dict.assert_called_once_with(tensor_dict, with_opt_vars=False)
 
     assert isinstance(result, TaskRunner)
+
+
+@mock.patch('openfl.interface.model.get_model')
+def test_model_save(mock_get_model):
+    current_path = Path(__file__).resolve()
+    plan_path = current_path.parent.joinpath('plan')
+    plan_config = plan_path.joinpath('plan.yaml')
+    cols_config = plan_path.joinpath('cols.yaml')
+    data_config = plan_path.joinpath('data.yaml')
+
+    mock_get_model.return_value = TaskRunner(data_loader=mock.Mock())
+
+    with TestCase.assertRaises(test_model_save, NotImplementedError):
+        save_(['-i', current_path,
+               '-p', plan_config,
+               '-c', cols_config,
+               '-d', data_config], standalone_mode=False)
+
+    mock_get_model.assert_called_once()
