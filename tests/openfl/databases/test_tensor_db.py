@@ -272,7 +272,7 @@ def test_get_aggregated_tensor_iterate_input(tensor_db):
     class Sum(AggregationFunction):
         def call(self, local_tensors, db_iterator, *_):
             for _ in db_iterator:
-                pass  # TODO: to coverage _iterate()
+                pass
             tensors = [local_tensor.tensor for local_tensor in local_tensors]
             return np.sum(tensors, axis=0)
 
@@ -289,7 +289,6 @@ def test_retrieve(tensor_db):
     ret = _retrieve(tensor_db.tensor_db, 'tensor_name', 'agg', 0, False, ('col1',))
 
     assert np.array_equal(ret, np.array([0, 1, 2, 3, 4]))
-    # TODO: this test is enabled by a fix in dataframe.py:121
 
 
 def test_retrieve_no_result(tensor_db):
@@ -297,7 +296,6 @@ def test_retrieve_no_result(tensor_db):
     ret = _retrieve(tensor_db.tensor_db)
 
     assert ret is None
-    # TODO: this test is enabled by a fix in dataframe.py:121
 
 
 def test_search(tensor_db):
@@ -312,14 +310,12 @@ def test_search_no_result(tensor_db):
     ret = _search(tensor_db.tensor_db, 'tensor_name', 'agg', 1, False, ('col3',))
 
     assert_frame_equal(ret, tensor_db.tensor_db)
-    # TODO: this test is enabled by a fix in dataframe.py:50
 
 
 def test_store(tensor_db):
     """Test that TensorDB's store method works correctly."""
     _store(tensor_db.tensor_db, 'tensor_name', 'agg', 0,
            False, ('col1',), np.array([5, 6, 7, 8, 9]))
-    # TODO: this test is enabled by fixes in dataframe.py:90 & 98
 
     assert np.array_equal(tensor_db.tensor_db.loc[0]['nparray'], np.array([5, 6, 7, 8, 9]))
 
@@ -337,7 +333,6 @@ def test_store_not_overwrite(tensor_db):
     origin_tensor = tensor_db.tensor_db.copy(deep=True)
     _store(tensor_db.tensor_db, 'tensor_name', 'agg', 0, False,
            ('col1',), np.array([5, 6, 7, 8, 9]), overwrite=False)
-    # TODO: this test is enabled by fixes in dataframe.py:90 & 98
 
     assert_frame_equal(origin_tensor, tensor_db.tensor_db)
 
@@ -346,6 +341,5 @@ def test_store_append_at_the_end(tensor_db):
     """Test that TensorDB's store method appends new tensor at the end."""
     _store(tensor_db.tensor_db, 'tensor_name', 'agg', 0, False,
            ('col3',), np.array([5, 6, 7, 8, 9]))
-    # TODO: this test is enabled by fixes in dataframe.py:90 & 98
 
     assert np.array_equal(tensor_db.tensor_db.loc[2]['nparray'], np.array([5, 6, 7, 8, 9]))
