@@ -1,4 +1,6 @@
-# Open Federated Learning (OpenFL) - An Open-Source Framework For Federated Learning
+<div align="center">
+  <img src="https://github.com/securefederatedai/artwork/blob/main/PNG/OpenFL%20Logo%20-%20color.png?raw=true">
+</div>
 
 [![PyPI - Python Version](https://img.shields.io/badge/python-3.7%20%7C%203.8%20%7C%203.9%20%7C%203.10-blue)](https://pypi.org/project/openfl/)
 [![Ubuntu CI status](https://github.com/intel/openfl/actions/workflows/ubuntu.yml/badge.svg)](https://github.com/intel/openfl/actions/workflows/ubuntu.yml)
@@ -45,7 +47,7 @@ Check out the [online documentation](https://openfl.readthedocs.io/en/latest/ind
 
 ## Requirements
 
-- Ubuntu Linux 16.04 or 18.04.
+- Ubuntu Linux 18.04+
 - Python 3.7+ (recommended to use with [Virtualenv](https://virtualenv.pypa.io/en/latest/)).
 
 OpenFL supports training with TensorFlow 2+ or PyTorch 1.3+ which should be installed separately. User can extend the list of supported Deep Learning frameworks if needed.

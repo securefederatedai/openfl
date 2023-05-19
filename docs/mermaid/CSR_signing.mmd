@@ -4,7 +4,7 @@ Title: Collaborator Certificate Signing Flow
   participant AC as Alice's Collaborator Node
   participant B as Bob
   participant BG as Bob's Certificate Signing System
-  A->>AC: Alice runs<br>`fx collaborator generate-cert-request`<br>to create .key and .csr file<br>
+  A->>AC: Alice runs<br>`fx collaborator generate-cert-request`<br>to create .key and .csr file
   AC->>A: PKI script outputs a hash to the screen
   A->>B: Alice sends the .csr to Bob
   B->>BG: Bob moves the .csr<br/> to the signing system with<br>`fx collaborator certify --request-pkg`
