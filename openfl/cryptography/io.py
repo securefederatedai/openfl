@@ -102,12 +102,28 @@ def read_csr(path: Path) -> Tuple[CertificateSigningRequest, str]:
     Returns:
         Cryptography CSR object
     """
-    hasher = sha384()
     with open(path, 'rb') as f:
         pem_data = f.read()
-        hasher.update(pem_data)
 
     csr = x509.load_pem_x509_csr(pem_data)
     # TODO: replace assert with exception / sys.exit
     assert (isinstance(csr, x509.CertificateSigningRequest))
-    return csr, hasher.hexdigest()
+    return csr, get_csr_hash(csr)
+
+
+def get_csr_hash(certificate: CertificateSigningRequest) -> str:
+    """
+    Get hash of cryptography certificate.
+
+    Args:
+        certificate : Cryptography CSR object
+
+    Returns:
+        Hash of cryptography certificate / csr
+    """
+    hasher = sha384()
+    encoded_bytes = certificate.public_bytes(
+        encoding=serialization.Encoding.PEM,
+    )
+    hasher.update(encoded_bytes)
+    return hasher.hexdigest()
