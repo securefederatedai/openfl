@@ -135,6 +135,7 @@ def generate_cert_request(collaborator_name, data_path, silent, skip_package):
     from openfl.cryptography.participant import generate_csr
     from openfl.cryptography.io import write_crt
     from openfl.cryptography.io import write_key
+    from openfl.cryptography.io import get_csr_hash
     from openfl.interface.cli_helper import CERT_DIR
 
     common_name = f'{collaborator_name}'.lower()
@@ -151,6 +152,10 @@ def generate_cert_request(collaborator_name, data_path, silent, skip_package):
 
     echo('  Moving COLLABORATOR certificate to: ' + style(
         f'{CERT_DIR}/{file_name}', fg='green'))
+
+    # Print csr hash before writing csr to disk
+    csr_hash = get_csr_hash(client_csr)
+    echo('The CSR Hash ' + style(f'{csr_hash}', fg='red'))
 
     # Write collaborator csr and key to disk
     write_crt(client_csr, CERT_DIR / 'client' / f'{file_name}.csr')
@@ -341,12 +346,14 @@ def certify(collaborator_name, silent, request_pkg=None, import_=False):
         if silent:
 
             echo(' Signing COLLABORATOR certificate')
+            echo(' Warning: manual check of certificate hashes is bypassed in silent mode.')
             signed_col_cert = sign_certificate(csr, signing_key, signing_crt.subject)
             write_crt(signed_col_cert, f'{cert_name}.crt')
             register_collaborator(CERT_DIR / 'client' / f'{file_name}.crt')
 
         else:
 
+            echo('Make sure the two hashes above are the same.')
             if confirm('Do you want to sign this certificate?'):
 
                 echo(' Signing COLLABORATOR certificate')
