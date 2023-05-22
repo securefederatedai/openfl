@@ -17,7 +17,6 @@ from click import pass_context
 from click import Path as ClickPath
 
 from openfl.utilities.path_check import is_directory_traversal
-from openfl.utilities.workspace import dump_requirements_file
 
 
 @group()
@@ -121,6 +120,7 @@ def export_(pip_install_options: Tuple[str]):
     """Export federated learning workspace."""
     from os import getcwd
     from os import makedirs
+    from os.path import isfile
     from os.path import basename
     from os.path import join
     from shutil import copy2
@@ -139,9 +139,6 @@ def export_(pip_install_options: Tuple[str]):
     except Exception:
         echo(f'Plan file "{plan_file}" not found. No freeze performed.')
 
-    # Dump requirements.txt
-    dump_requirements_file(prefixes=pip_install_options, keep_original_prefixes=True)
-
     archive_type = 'zip'
     archive_name = basename(getcwd())
     archive_file_name = archive_name + '.' + archive_type
@@ -158,7 +155,10 @@ def export_(pip_install_options: Tuple[str]):
     makedirs(f'{tmp_dir}/data', exist_ok=True)
     copytree('./src', f'{tmp_dir}/src', ignore=ignore)  # code
     copytree('./plan', f'{tmp_dir}/plan', ignore=ignore)  # plan
-    copy2('./requirements.txt', f'{tmp_dir}/requirements.txt')  # requirements
+    if isfile('./requirements.txt'):
+        copy2('./requirements.txt', f'{tmp_dir}/requirements.txt')  # requirements
+    else:
+        echo('No requirements.txt file found.')
 
     try:
         copy2('.workspace', tmp_dir)  # .workspace
