@@ -61,7 +61,8 @@ create_collaborator() {
 
     # Create collaborator certificate request
     cd ${COL_DIRECTORY}/${FED_WORKSPACE}
-    fx collaborator generate-cert-request -d ${DATA_PATH} -n ${COL} --silent # Remove '--silent' if you run this manually
+    fx collaborator create -d ${DATA_PATH} -n ${COL} --silent # Remove '--silent' if you run this manually
+    fx collaborator generate-cert-request -n ${COL} --silent # Remove '--silent' if you run this manually
 
     # Sign collaborator certificate 
     cd ${FED_DIRECTORY}  # Move back to the Aggregator

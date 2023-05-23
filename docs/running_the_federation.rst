@@ -1047,6 +1047,7 @@ Importing the Workspace
 
     .. code-block:: console
 
+       fx collaborator create -n {COL_LABEL} -d {DATA_PATH:optional}
        fx collaborator generate-cert-request -n {COL_LABEL}
 
 
