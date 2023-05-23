@@ -200,6 +200,8 @@ def init(workspace_template: str = 'default', log_level: str = 'INFO',
     aggregator.certify(agg_fqdn, silent=True)
     data_path = 1
     for col_name in col_names:
+        collaborator.create(
+            col_name, str(data_path), silent=True)
         collaborator.generate_cert_request(
             col_name, str(data_path), silent=True, skip_package=True)
         collaborator.certify(col_name, silent=True)
@@ -208,7 +210,7 @@ def init(workspace_template: str = 'default', log_level: str = 'INFO',
     setup_logging(level=log_level, log_file=log_file)
 
 
-def create_collaborator(plan, name, model, aggregator):
+def get_collaborator(plan, name, model, aggregator):
     """
     Create the collaborator.
 
@@ -282,9 +284,9 @@ def run_experiment(collaborator_dict: dict, override_config: dict = None):
 
     aggregator = plan.get_aggregator()
 
-    # Create the collaborators
+    # get the collaborators
     collaborators = {
-        collaborator: create_collaborator(
+        collaborator: get_collaborator(
             plan, collaborator, collaborator_dict[collaborator], aggregator
         ) for collaborator in plan.authorized_cols
     }
