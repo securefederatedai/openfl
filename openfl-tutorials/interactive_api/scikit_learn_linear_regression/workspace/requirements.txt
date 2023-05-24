@@ -1,0 +1,7 @@
+openfl>=1.2.1
+numpy>=1.13.3
+scikit-learn>=0.24.1
+matplotlib>=2.0.0
+mistune>=2.0.3 # not directly required, pinned by Snyk to avoid a vulnerability
+setuptools>=65.5.1 # not directly required, pinned by Snyk to avoid a vulnerability
+wheel>=0.38.0 # not directly required, pinned by Snyk to avoid a vulnerability
