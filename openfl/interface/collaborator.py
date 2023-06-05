@@ -68,8 +68,9 @@ def start_(plan, collaborator_name, data_config, secure):
         help='The data path to be associated with the collaborator')
 @option('-s', '--silent', help='Do not prompt', is_flag=True)
 def create_(collaborator_name, data_path, silent):
-    """Generate certificate request for the collaborator."""
+    """Creates a user for an experiment."""
     create(collaborator_name, data_path, silent)
+
 
 def create(collaborator_name, data_path, silent):
     """Creates a user for an experiment."""
