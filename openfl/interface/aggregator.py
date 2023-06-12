@@ -71,6 +71,7 @@ def generate_cert_request(fqdn):
     from openfl.cryptography.participant import generate_csr
     from openfl.cryptography.io import write_crt
     from openfl.cryptography.io import write_key
+    from openfl.cryptography.io import get_csr_hash
     from openfl.interface.cli_helper import CERT_DIR
 
     if fqdn is None:
@@ -90,6 +91,10 @@ def generate_cert_request(fqdn):
 
     echo('  Writing AGGREGATOR certificate key pair to: ' + style(
         f'{CERT_DIR}/server', fg='green'))
+
+    # Print csr hash before writing csr to disk
+    csr_hash = get_csr_hash(server_csr)
+    echo('The CSR Hash ' + style(f'{csr_hash}', fg='red'))
 
     # Write aggregator csr and key to disk
     write_crt(server_csr, CERT_DIR / 'server' / f'{file_name}.csr')
@@ -175,12 +180,14 @@ def certify(fqdn, silent):
 
     if silent:
 
+        echo(' Warning: manual check of certificate hashes is bypassed in silent mode.')
         echo(' Signing AGGREGATOR certificate')
         signed_agg_cert = sign_certificate(csr, signing_key, signing_crt.subject)
         write_crt(signed_agg_cert, crt_path_absolute_path)
 
     else:
 
+        echo('Make sure the two hashes above are the same.')
         if confirm('Do you want to sign this certificate?'):
 
             echo(' Signing AGGREGATOR certificate')

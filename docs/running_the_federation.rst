@@ -71,7 +71,7 @@ The *Director manager* sets up the *Director*, which is the central node of the 
 
 .. _plan_agreement_director:
 
-OPTIONAL STEP: Plan Agreement
+OPTIONAL STEP: Director's Plan Agreement
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 In order to carry out a secure federation, the Director must approve the FL Plan before starting the experiment. This check could be enforced with the use of the setting :code:`review_experiment: True` in director config. Refer to **director_config_review_exp.yaml** file under **PyTorch_Histology** interactive API example.
 After the Director approves the experiment, it starts the aggregator and sends the experiment archive to all the participanting Envoys for review.
@@ -143,7 +143,7 @@ The *Collaborator manager* sets up the *Envoys*, which are long-lived components
 
 .. _plan_agreement_envoy:
 
-OPTIONAL STEP: Plan Agreement
+OPTIONAL STEP: Envoy's Plan Agreement
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 In order to carry out a secure federation, each of the Envoys must approve the experiment before it is started, after the Director's approval. This check could be enforced with the use of the parameter :code:`review_experiment: True` in envoy config. Refer to **envoy_config_review_exp.yaml** file under **PyTorch_Histology** interactive API example.
 If any of the Envoys rejects the experiment, a :code:`set_experiment_failed` request is sent to the Director to stop the aggregator.
@@ -785,14 +785,14 @@ Bare Metal Approach
     See :ref:`install_package` for details.
 
 
-You can use the `"Hello Federation" bash script <https://github.com/intel/openfl/blob/develop/tests/github/test_hello_federation.sh>`_ to quickly create a federation (an aggregator node and two collaborator nodes) to test the project pipeline.
+You can use the `"Hello Federation" python script <https://github.com/intel/openfl/blob/develop/tests/github/test_hello_federation.py>`_ to quickly create a federation (an aggregator node and two collaborator nodes) to test the project pipeline.
 
-.. literalinclude:: ../tests/github/test_hello_federation.sh
-  :language: bash
+.. literalinclude:: ../tests/github/test_hello_federation.py
+  :language: python
 
 However, continue with the following procedure for details in creating a federation with an aggregator-based workflow.
 
-    `STEP 1: Create a Workspace on the Aggregator`_
+    `STEP 1: Create a Workspace`_
 
         - Creates a federated learning workspace on one of the nodes.
 
@@ -1047,6 +1047,7 @@ Importing the Workspace
 
     .. code-block:: console
 
+       fx collaborator create -n {COL_LABEL} -d {DATA_PATH:optional}
        fx collaborator generate-cert-request -n {COL_LABEL}
 
 
@@ -1198,7 +1199,7 @@ Option 2: Deploy Your Workspace in a Docker Container
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. note::
-    You have to set up a TaskRunner and run :code:`fx plan initialize` in the workspace directory. See `STEP 1: Create a Workspace on the Aggregator`_ for details.
+    You have to set up a TaskRunner and run :code:`fx plan initialize` in the workspace directory. See `STEP 1: Create a Workspace`_ for details.
 
 
 1. Build an image with the workspace you created.

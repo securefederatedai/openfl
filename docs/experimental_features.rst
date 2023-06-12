@@ -3,9 +3,9 @@
 
 .. _experimental_features:
 
-***************
+*********************
 Experimental Features
-***************
+*********************
 
 This section includes a set of experimental features that our team wants feedback on before adding them into core |productName|. 
 Experimental features are *not* ready for production. These features are under active development and intended to make their way into core |productName|, but there are several key considerations to make when building on top of these:

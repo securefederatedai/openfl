@@ -39,8 +39,8 @@ You could also add your custom metric logging function by defining the function 
         your code 
 
 
-Example of a Metric Callback
-============================
+Example of MLFlow's Metric Callback
+=====================================
 
 This example shows how to use MLFlow logger to log metrics:
 
@@ -104,8 +104,8 @@ Follow the steps below to write your custom callback function instead. As an exa
         template : src.mnist_utils.callback_name
 
 
-Example of a Metric Callback
-============================
+Example of TensorBoard's Metric Callback
+==========================================
 
 The following is an example of a log metric callback, which writes metric values to the TensorBoard.
 

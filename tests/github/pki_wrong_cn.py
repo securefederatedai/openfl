@@ -26,9 +26,14 @@ def prepare_workspace():
     ])
     for col in ['one', 'two']:
         subprocess.check_call([
-            'fx', 'collaborator', 'generate-cert-request',
+            'fx', 'collaborator', 'create',
             '-n', col,
             '-d', '1',
+            '-s'
+        ])
+        subprocess.check_call([
+            'fx', 'collaborator', 'generate-cert-request',
+            '-n', col,
             '-s', '-x'
         ])
         subprocess.check_call([

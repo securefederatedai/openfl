@@ -77,18 +77,67 @@ def test_get_tasks(collaborator_mock):
     assert results == (tasks, round_number, sleep_time, time_to_quit)
 
 
-def test_send_task_results(collaborator_mock):
+def test_do_task(collaborator_mock, tensor_key):
+    """Test that do_task works correctly."""
+    round_number = 0
+    nparray = numpy.array([0, 1, 2, 3, 4])
+    result = {tensor_key: nparray}, {tensor_key: nparray}
+
+    task = mock.Mock()
+    task.function_name = 'func_name'
+    task.name = 'task_name'
+    task.task_type = 'validate'
+
+    collaborator_mock.task_runner.TASK_REGISTRY = mock.MagicMock()
+    collaborator_mock.task_runner.TASK_REGISTRY.__getitem__.return_value = mock.Mock(
+        return_value=result)
+    collaborator_mock.task_runner.get_required_tensorkeys_for_function = mock.Mock(
+        return_value=[tensor_key])
+    collaborator_mock.send_task_results = mock.Mock()
+    collaborator_mock.do_task(task, round_number)
+
+    collaborator_mock.send_task_results.assert_called_with(result[0], round_number, task.name)
+
+
+def test_do_task_no_registry(collaborator_mock, tensor_key):
+    """Test that do_task works correctly when no TASK_REGISTRY in task_runner."""
+    round_number = 0
+    nparray = numpy.array([0, 1, 2, 3, 4])
+    tensor_key = tensor_key._replace(origin='GLOBAL')
+    result = {tensor_key: nparray}, {tensor_key: nparray}
+
+    task = mock.MagicMock()
+    task.function_name = 'func_name'
+    task.name = 'task_name'
+    task.task_type = 'validate'
+    task.__getitem__ = mock.Mock(side_effect=[task.function_name, {}])
+
+    del collaborator_mock.task_runner.TASK_REGISTRY
+    collaborator_mock.task_config = mock.MagicMock()
+    collaborator_mock.task_config.__getitem__ = mock.MagicMock(return_value=task)
+    collaborator_mock.task_runner.get_required_tensorkeys_for_function = mock.Mock(
+        return_value=[tensor_key])
+    collaborator_mock.task_runner.func_name = mock.Mock(return_value=result)
+    collaborator_mock.send_task_results = mock.Mock()
+    collaborator_mock.do_task(task, round_number)
+
+    collaborator_mock.send_task_results.assert_called_with(result[0], round_number, task.name)
+
+
+def test_send_task_results(collaborator_mock, tensor_key):
     """Test that send_task_results works correctly."""
     task_name = 'task_name'
-    tensor_dict = {}
+    tensor_key = tensor_key._replace(report=True)
+    tensor_dict = {tensor_key: 0}
     round_number = 0
     data_size = -1
-    collaborator_mock.nparray_to_named_tensor = mock.Mock()
+    collaborator_mock.nparray_to_named_tensor = mock.Mock(return_value=None)
     collaborator_mock.client.send_local_task_results = mock.Mock()
+    collaborator_mock.logger.metric = mock.Mock()
     collaborator_mock.send_task_results(tensor_dict, round_number, task_name)
 
     collaborator_mock.client.send_local_task_results.assert_called_with(
-        collaborator_mock.collaborator_name, round_number, task_name, data_size, [])
+        collaborator_mock.collaborator_name, round_number, task_name, data_size, [None])
 
 
 def test_send_task_results_train(collaborator_mock):
@@ -186,6 +235,29 @@ def test_get_data_for_tensorkey(collaborator_mock, tensor_key):
     """Test that get_data_for_tensorkey works correctly if data is not in db."""
     collaborator_mock.tensor_db.get_tensor_from_cache = mock.Mock(
         return_value=None)
+    collaborator_mock.get_aggregated_tensor_from_aggregator = mock.Mock()
+    collaborator_mock.get_data_for_tensorkey(tensor_key)
+    collaborator_mock.get_aggregated_tensor_from_aggregator.assert_called_with(
+        tensor_key, require_lossless=True)
+
+
+def test_get_data_for_tensorkey_locally(collaborator_mock, tensor_key):
+    """Test that get_data_for_tensorkey works correctly if found tensor locally."""
+    tensor_key = tensor_key._replace(round_number=1)
+    nparray = numpy.array([0, 1, 2, 3, 4])
+    collaborator_mock.tensor_db.get_tensor_from_cache = mock.Mock(
+        side_effect=[None, nparray])
+    ret = collaborator_mock.get_data_for_tensorkey(tensor_key)
+
+    assert numpy.array_equal(ret, nparray)
+
+
+def test_get_data_for_tensorkey_dependencies(collaborator_mock, tensor_key):
+    """Test that get_data_for_tensorkey works correctly if additional dependencies."""
+    tensor_key = tensor_key._replace(round_number=1)
+    collaborator_mock.tensor_db.get_tensor_from_cache = mock.Mock(
+        return_value=None)
+    collaborator_mock.tensor_codec.find_dependencies = mock.Mock(return_value=[tensor_key])
     collaborator_mock.get_aggregated_tensor_from_aggregator = mock.Mock()
     collaborator_mock.get_data_for_tensorkey(tensor_key)
     collaborator_mock.get_aggregated_tensor_from_aggregator.assert_called_with(

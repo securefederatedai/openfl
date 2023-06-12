@@ -4,12 +4,14 @@
 
 import numpy as np
 import pytest
+from pandas.testing import assert_frame_equal
 
 from openfl.interface.aggregation_functions import AggregationFunction
 from openfl.interface.aggregation_functions import WeightedAverage
 from openfl.databases.tensor_db import TensorDB
 from openfl.protocols import base_pb2
 from openfl.utilities.types import TensorKey
+from openfl.databases.utilities import ROUND_PLACEHOLDER, _retrieve, _search, _store
 
 
 @pytest.fixture
@@ -82,6 +84,20 @@ def test_clean_up(nparray, tensor_key):
 
     db.cache_tensor({tensor_key: nparray})
     db.tensor_db['round'] = 2
+    db.clean_up()
+    cached_nparray = db.get_tensor_from_cache(tensor_key)
+
+    assert cached_nparray is None
+
+
+def test_clean_up_round_placeholder(nparray, tensor_key):
+    """Test that clean_up remove old records."""
+    db = TensorDB()
+
+    db.cache_tensor({tensor_key: nparray})
+    db.cache_tensor({tensor_key: nparray})
+    db.tensor_db['round'][0] = ROUND_PLACEHOLDER
+    db.tensor_db['round'][1] = ROUND_PLACEHOLDER - 1
     db.clean_up()
     cached_nparray = db.get_tensor_from_cache(tensor_key)
 
@@ -226,3 +242,104 @@ def test_get_aggregated_tensor_new_aggregation_function(tensor_db):
         tensor_key, collaborator_weight_dict, Sum())
 
     assert np.array_equal(agg_nparray, np.array([2, 4, 6, 8, 10]))
+
+
+def test_get_aggregated_tensor_privileged_function(tensor_db):
+    """Test that get_aggregated_tensor works correctly with a privileged agg function."""
+    collaborator_weight_dict = {'col1': 0.1, 'col2': 0.9}
+
+    class PrivilegedSum(AggregationFunction):
+        def __init__(self):
+            super().__init__()
+            self._privileged = True
+
+        def call(self, local_tensors, *_):
+            tensors = [local_tensor.tensor for local_tensor in local_tensors]
+            return np.sum(tensors, axis=0)
+
+    tensor_key = TensorKey('tensor_name', 'agg', 0, False, ())
+
+    agg_nparray = tensor_db.get_aggregated_tensor(
+        tensor_key, collaborator_weight_dict, PrivilegedSum())
+
+    assert np.array_equal(agg_nparray, np.array([2, 4, 6, 8, 10]))
+
+
+def test_get_aggregated_tensor_iterate_input(tensor_db):
+    """Test that get_aggregated_tensor works correctly with db_iterator enabled."""
+    collaborator_weight_dict = {'col1': 0.1, 'col2': 0.9}
+
+    class Sum(AggregationFunction):
+        def call(self, local_tensors, db_iterator, *_):
+            for _ in db_iterator:
+                pass
+            tensors = [local_tensor.tensor for local_tensor in local_tensors]
+            return np.sum(tensors, axis=0)
+
+    tensor_key = TensorKey('tensor_name', 'agg', 0, False, ())
+
+    agg_nparray = tensor_db.get_aggregated_tensor(
+        tensor_key, collaborator_weight_dict, Sum())
+
+    assert np.array_equal(agg_nparray, np.array([2, 4, 6, 8, 10]))
+
+
+def test_retrieve(tensor_db):
+    """Test that TensorDB's retrieve method works correctly."""
+    ret = _retrieve(tensor_db.tensor_db, 'tensor_name', 'agg', 0, False, ('col1',))
+
+    assert np.array_equal(ret, np.array([0, 1, 2, 3, 4]))
+
+
+def test_retrieve_no_result(tensor_db):
+    """Test that TensorDB's retrieve method retrieves none."""
+    ret = _retrieve(tensor_db.tensor_db)
+
+    assert ret is None
+
+
+def test_search(tensor_db):
+    """Test that TensorDB's search method works correctly."""
+    ret = _search(tensor_db.tensor_db, 'tensor_name', 'agg', 0, False, ('col1',))
+
+    assert_frame_equal(ret, tensor_db.tensor_db.drop([1]))
+
+
+def test_search_no_result(tensor_db):
+    """Test that TensorDB's search method finds no result."""
+    ret = _search(tensor_db.tensor_db, 'tensor_name', 'agg', 1, False, ('col3',))
+
+    assert_frame_equal(ret, tensor_db.tensor_db)
+
+
+def test_store(tensor_db):
+    """Test that TensorDB's store method works correctly."""
+    _store(tensor_db.tensor_db, 'tensor_name', 'agg', 0,
+           False, ('col1',), np.array([5, 6, 7, 8, 9]))
+
+    assert np.array_equal(tensor_db.tensor_db.loc[0]['nparray'], np.array([5, 6, 7, 8, 9]))
+
+
+def test_store_no_nparray(tensor_db):
+    """Test that TensorDB's store method returns directly when no nparray provided."""
+    origin_tensor = tensor_db.tensor_db.copy(deep=True)
+    _store(tensor_db.tensor_db)
+
+    assert_frame_equal(origin_tensor, tensor_db.tensor_db)
+
+
+def test_store_not_overwrite(tensor_db):
+    """Test that TensorDB's store method changes nothing when disabling overwrite."""
+    origin_tensor = tensor_db.tensor_db.copy(deep=True)
+    _store(tensor_db.tensor_db, 'tensor_name', 'agg', 0, False,
+           ('col1',), np.array([5, 6, 7, 8, 9]), overwrite=False)
+
+    assert_frame_equal(origin_tensor, tensor_db.tensor_db)
+
+
+def test_store_append_at_the_end(tensor_db):
+    """Test that TensorDB's store method appends new tensor at the end."""
+    _store(tensor_db.tensor_db, 'tensor_name', 'agg', 0, False,
+           ('col3',), np.array([5, 6, 7, 8, 9]))
+
+    assert np.array_equal(tensor_db.tensor_db.loc[2]['nparray'], np.array([5, 6, 7, 8, 9]))
