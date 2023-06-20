@@ -376,8 +376,6 @@ class MetaflowInterface:
         """
         self.backend = backend
         self.flow_name = flow.__name__
-        self._graph = FlowGraph(flow)
-        self._steps = [getattr(flow, node.name) for node in self._graph]
         if backend == "ray":
             self.counter = Counter.remote()
         else:

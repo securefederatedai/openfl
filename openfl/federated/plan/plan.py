@@ -2,23 +2,30 @@
 # SPDX-License-Identifier: Apache-2.0
 
 """Plan module."""
-from hashlib import sha384
-from importlib import import_module
-from logging import getLogger
-from os.path import splitext
-from pathlib import Path
-
-from yaml import dump
-from yaml import safe_load
-from yaml import SafeDumper
-
-from openfl.interface.aggregation_functions import AggregationFunction
-from openfl.interface.aggregation_functions import WeightedAverage
-from openfl.component.assigner.custom_assigner import Assigner
-from openfl.interface.cli_helper import WORKSPACE
-from openfl.transport import AggregatorGRPCClient
-from openfl.transport import AggregatorGRPCServer
 from openfl.utilities.utils import getfqdn_env
+
+# from openfl.transport import AggregatorGRPCServer
+# from openfl.transport import AggregatorGRPCClient
+from openfl.experimental.transport import AggregatorGRPCServer
+from openfl.experimental.transport import AggregatorGRPCClient
+
+from openfl.interface.cli_helper import WORKSPACE
+from openfl.component.assigner.custom_assigner import Assigner
+from openfl.interface.aggregation_functions import WeightedAverage
+from openfl.interface.aggregation_functions import AggregationFunction
+from yaml import SafeDumper
+from yaml import safe_load
+from yaml import dump
+from pathlib import Path
+from os.path import splitext
+from logging import getLogger
+from importlib import import_module
+from hashlib import sha384
+import importlib
+import sys
+sys.path.append(
+    "/home/parth-wsl/env-ishant-code/openfl/openfl-workspace/experimental-wi/testflow.py")
+
 
 SETTINGS = 'settings'
 TEMPLATE = 'template'
@@ -83,7 +90,8 @@ class Plan:
         try:
 
             plan = Plan()
-            plan.config = Plan.load(plan_config_path)  # load plan configuration
+            # load plan configuration
+            plan.config = Plan.load(plan_config_path)
             plan.name = plan_config_path.name
             plan.files = [plan_config_path]  # collect all the plan files
 
@@ -258,10 +266,12 @@ class Plan:
         aggregation_functions_by_task = None
         assigner_function = None
         try:
-            aggregation_functions_by_task = self.restore_object('aggregation_function_obj.pkl')
+            aggregation_functions_by_task = self.restore_object(
+                'aggregation_function_obj.pkl')
             assigner_function = self.restore_object('task_assigner_obj.pkl')
         except Exception as exc:
-            self.logger.error(f'Failed to load aggregation and assigner functions: {exc}')
+            self.logger.error(
+                f'Failed to load aggregation and assigner functions: {exc}')
             self.logger.info('Using Task Runner API workflow')
         if assigner_function:
             self.assigner_ = Assigner(
@@ -312,18 +322,33 @@ class Plan:
 
     def get_aggregator(self, tensor_dict=None):
         """Get federation aggregator."""
-        defaults = self.config.get('aggregator',
+        import sys
+        sys.path.append("/home/parth-wsl/env-ishant-code/openfl/" +
+                        "openfl-workspace/experimental-wi/testflow.py")
+
+        defaults = self.config.get('experimental.aggregator', # modifying to not to get values from yaml file
                                    {
-                                       TEMPLATE: 'openfl.component.Aggregator',
+                                       TEMPLATE: 'openfl.experimental.component.Aggregator',
                                        SETTINGS: {}
                                    })
-
+        defaults[SETTINGS]['name'] = "agg"
         defaults[SETTINGS]['aggregator_uuid'] = self.aggregator_uuid
         defaults[SETTINGS]['federation_uuid'] = self.federation_uuid
         defaults[SETTINGS]['authorized_cols'] = self.authorized_cols
-        defaults[SETTINGS]['assigner'] = self.get_assigner()
+
+        testflow_module = importlib.import_module("testflow")
+        # TODO: Get checkpoint from plan.yaml
+        defaults[SETTINGS]['flow'] = getattr(testflow_module, "TestFlow")(
+            checkpoint=True)
+        defaults[SETTINGS]['runtime'] = getattr(
+            importlib.import_module("openfl.experimental.runtime"),
+            "FederatedRuntime"
+        )()
+        defaults[SETTINGS]['private_attrs_callable'] = getattr(
+            testflow_module, "aggregator_private_attrs")
+        defaults[SETTINGS]['private_attrs_kwargs'] = {}
+
         defaults[SETTINGS]['compression_pipeline'] = self.get_tensor_pipe()
-        defaults[SETTINGS]['straggler_handling_policy'] = self.get_straggler_handling_policy()
         log_metric_callback = defaults[SETTINGS].get('log_metric_callback')
 
         if log_metric_callback:
@@ -335,9 +360,38 @@ class Plan:
 
         defaults[SETTINGS]['log_metric_callback'] = log_metric_callback
         if self.aggregator_ is None:
-            self.aggregator_ = Plan.build(**defaults, initial_tensor_dict=tensor_dict)
+            self.aggregator_ = Plan.build(
+                **defaults, initial_tensor_dict=tensor_dict)
 
         return self.aggregator_
+
+        # defaults = self.config.get('aggregator',
+        #                            {
+        #                                TEMPLATE: 'openfl.component.Aggregator',
+        #                                SETTINGS: {}
+        #                            })
+
+        # defaults[SETTINGS]['aggregator_uuid'] = self.aggregator_uuid
+        # defaults[SETTINGS]['federation_uuid'] = self.federation_uuid
+        # defaults[SETTINGS]['authorized_cols'] = self.authorized_cols
+        # defaults[SETTINGS]['assigner'] = self.get_assigner()
+        # defaults[SETTINGS]['compression_pipeline'] = self.get_tensor_pipe()
+        # defaults[SETTINGS]['straggler_handling_policy'] = self.get_straggler_handling_policy()
+        # log_metric_callback = defaults[SETTINGS].get('log_metric_callback')
+
+        # if log_metric_callback:
+        #     if isinstance(log_metric_callback, dict):
+        #         log_metric_callback = Plan.import_(**log_metric_callback)
+        #     elif not callable(log_metric_callback):
+        #         raise TypeError(f'log_metric_callback should be callable object '
+        #                         f'or be import from code part, get {log_metric_callback}')
+
+        # defaults[SETTINGS]['log_metric_callback'] = log_metric_callback
+        # if self.aggregator_ is None:
+        #     self.aggregator_ = Plan.build(**defaults, initial_tensor_dict=tensor_dict)
+
+        # return self.aggregator_
+
 
     def get_tensor_pipe(self):
         """Get data tensor pipeline."""
@@ -443,10 +497,14 @@ class Plan:
     def get_collaborator(self, collaborator_name, root_certificate=None, private_key=None,
                          certificate=None, task_runner=None, client=None, shard_descriptor=None):
         """Get collaborator."""
+        import sys
+        sys.path.append("/home/parth-wsl/env-ishant-code/openfl/" +
+                        "openfl-workspace/experimental-wi/testflow.py")
+
         defaults = self.config.get(
-            'collaborator',
+            'experimental.collaborator',
             {
-                TEMPLATE: 'openfl.component.Collaborator',
+                TEMPLATE: 'openfl.experimental.component.Collaborator',
                 SETTINGS: {}
             }
         )
@@ -455,29 +513,8 @@ class Plan:
         defaults[SETTINGS]['aggregator_uuid'] = self.aggregator_uuid
         defaults[SETTINGS]['federation_uuid'] = self.federation_uuid
 
-        if task_runner is not None:
-            defaults[SETTINGS]['task_runner'] = task_runner
-        else:
-            # Here we support new interactive api as well as old task_runner subclassing interface
-            # If Task Runner class is placed incide openfl `task-runner` subpackage it is
-            # a part of the New API and it is a part of OpenFL kernel.
-            # If Task Runner is placed elsewhere, somewhere in user workspace, than it is
-            # a part of the old interface and we follow legacy initialization procedure.
-            if 'openfl.federated.task.task_runner' in self.config['task_runner']['template']:
-                # Interactive API
-                model_provider, task_keeper, data_loader = self.deserialize_interface_objects()
-                data_loader = self.initialize_data_loader(data_loader, shard_descriptor)
-                defaults[SETTINGS]['task_runner'] = self.get_core_task_runner(
-                    data_loader=data_loader,
-                    model_provider=model_provider,
-                    task_keeper=task_keeper)
-            else:
-                # TaskRunner subclassing API
-                data_loader = self.get_data_loader(collaborator_name)
-                defaults[SETTINGS]['task_runner'] = self.get_task_runner(data_loader)
-
         defaults[SETTINGS]['compression_pipeline'] = self.get_tensor_pipe()
-        defaults[SETTINGS]['task_config'] = self.config.get('tasks', {})
+
         if client is not None:
             defaults[SETTINGS]['client'] = client
         else:
@@ -489,6 +526,14 @@ class Plan:
                 private_key,
                 certificate
             )
+
+        testflow_module = importlib.import_module("testflow")
+        defaults[SETTINGS]['private_attrs_callable'] = getattr(
+            testflow_module, "collaborator_private_attrs")
+        defaults[SETTINGS]['private_attrs_kwargs'] = {
+            "collab_name": defaults[SETTINGS]['collaborator_name']
+        }
+
 
         if self.collaborator_ is None:
             self.collaborator_ = Plan.build(**defaults)
@@ -538,7 +583,8 @@ class Plan:
         server_args['certificate'] = certificate
         server_args['private_key'] = private_key
 
-        server_args['aggregator'] = self.get_aggregator()
+        aggregator_ = self.get_aggregator()
+        server_args['aggregator'] = aggregator_
 
         if self.server_ is None:
             self.server_ = AggregatorGRPCServer(**server_args)

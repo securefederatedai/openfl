@@ -3,8 +3,11 @@
 
 """openfl.experimental.utilities package."""
 
+import itertools
 import inspect
+import numpy as np
 from types import MethodType
+from openfl.experimental.utilities import ResourcesAllocationError
 
 
 def parse_attrs(ctx, exclude=[], reserved_words=["next", "runtime", "input"]):
@@ -92,3 +95,41 @@ def checkpoint(ctx, parent_func, chkpnt_reserved_words=["next", "runtime"]):
             buffer_err=step_stderr,
         )
         print(f"Saved data artifacts for {parent_func.__name__}")
+
+
+def check_resource_allocation(num_gpus, each_collab_gpu_usage):
+    remaining_gpu_memory = {}
+    for gpu in np.ones(num_gpus, dtype=int):
+        for i, (collab_name, collab_gpu_usage) in enumerate(each_collab_gpu_usage.items()):
+            if gpu == 0:
+                break
+            if gpu < collab_gpu_usage:  # and collab_gpu_usage > 0:
+                remaining_gpu_memory.update({collab_name: gpu})
+                print(f"each_collab_gpu_usage: {each_collab_gpu_usage}")
+                print(f"i: {i}")
+                each_collab_gpu_usage = dict(itertools.islice(each_collab_gpu_usage.items(), i))
+            else:
+                gpu -= collab_gpu_usage
+    if len(remaining_gpu_memory) > 0:
+        raise ResourcesAllocationError(
+            f"Failed to allocate Collaborator {list(remaining_gpu_memory.keys())} "
+            + "to specified GPU. Please try allocating lesser GPU resources to collaborators"
+        )
+
+
+def check_agg_resource_allocation(num_gpus, agg_gpu_usage):
+    remaining_gpu_memory = {}
+    for gpu in np.ones(num_gpus, dtype=int):
+        if gpu == 0:
+            break
+        if gpu < agg_gpu_usage:
+            remaining_gpu_memory.update({"aggregator": gpu})
+            break
+        else:
+            gpu -= agg_gpu_usage
+
+    if len(remaining_gpu_memory) > 0:
+        raise ResourcesAllocationError(
+            "Failed to allocate GPU resource to the aggregator. "
+            + "Please try allocating lesser GPU resources to the aggregator."
+        )

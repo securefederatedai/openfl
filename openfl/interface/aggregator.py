@@ -3,6 +3,8 @@
 """Aggregator module."""
 
 import sys
+import threading
+
 from logging import getLogger
 
 from click import echo
@@ -54,7 +56,12 @@ def start_(plan, authorized_cols, secure):
 
     logger.info('🧿 Starting the Aggregator Service.')
 
-    plan.get_server().serve()
+    agg_server = plan.get_server()
+
+    plan.aggregator_.agg_grpc_server_start = threading.Thread(target=agg_server.serve)
+    plan.aggregator_.start_flow_execution = threading.Thread(target=plan.aggregator_.run_flow_until_transition)
+    plan.aggregator_.agg_grpc_server_start.start()
+    plan.aggregator_.start_flow_execution.start()
 
 
 @aggregator.command(name='generate-cert-request')

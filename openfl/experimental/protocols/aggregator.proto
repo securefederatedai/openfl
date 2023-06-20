@@ -1,0 +1,121 @@
+// Copyright (C) 2020-2023 Intel Corporation
+// Licensed subject to the terms of the separately executed evaluation license agreement between Intel Corporation and you.
+
+syntax = "proto3";
+
+package openfl.experiment.aggregator;
+
+import "openfl/protocols/base.proto";
+
+
+service Aggregator {
+  rpc SendTaskResults(TaskResultsRequest) returns (TaskResultsResponse) {}
+  rpc GetTasks(GetTasksRequest) returns (GetTasksResponse) {}
+  // rpc GetAggregatedTensor(GetAggregatedTensorRequest) returns (GetAggregatedTensorResponse) {}
+  // rpc SendLocalTaskResults(stream DataStream) returns (SendLocalTaskResultsResponse) {}
+  // rpc GetMetricStream(GetMetricStreamRequest) returns (stream GetMetricStreamResponse) {}
+  // rpc GetTrainedModel(GetTrainedModelRequest) returns (TrainedModelResponse) {}
+  // rpc GetExperimentDescription(GetExperimentDescriptionRequest)
+    // returns (GetExperimentDescriptionResponse) {}
+}
+
+message MessageHeader {
+  string sender = 1;
+  string receiver = 2;
+  string federation_uuid = 3;
+  string single_col_cert_common_name = 4;
+}
+
+message TaskResultsRequest {
+  MessageHeader header = 1;
+  string collab_name = 2;
+  int32 round_number = 3;
+  string next_step = 4;
+  bytes execution_environment = 5;
+}
+
+message TaskResultsResponse {
+  MessageHeader header = 1;
+  bool response = 2;
+}
+
+message GetTasksRequest {
+  MessageHeader header = 1;
+}
+
+message GetTasksResponse {
+  MessageHeader header = 1;
+  int32 round_number = 2;
+  string function_name = 3;
+  bytes execution_environment = 4;
+  int32 sleep_time = 5;
+  bool quit = 6;
+}
+
+// message GetAggregatedTensorRequest {
+//   MessageHeader header = 1;
+//   string tensor_name = 2;
+//   int32 round_number = 3;
+//   bool report = 4;
+//   repeated string	tags = 5;
+//   bool require_lossless = 6;
+// }
+
+// // we'll actually send this as a data stream
+// message GetAggregatedTensorResponse {
+//   MessageHeader header = 1;
+//   int32 round_number = 2;
+//   NamedTensor tensor = 3;
+// }
+
+// // we'll actually send this as a data stream
+// message TaskResults {
+//   MessageHeader  header = 1;
+//   int32 round_number = 2;
+//   string task_name = 3;
+//   int32	data_size = 4;
+//   repeated NamedTensor tensors = 5;
+// }
+
+// message SendLocalTaskResultsResponse {
+//   MessageHeader header = 1;
+// }
+
+// // The same with director.proto
+// message GetMetricStreamRequest {
+//   string experiment_name = 1;
+// }
+
+// // The same with director.proto
+// message GetMetricStreamResponse {
+//   string metric_origin = 1;
+//   string task_name = 2;
+//   string metric_name = 3;
+//   float metric_value = 4;
+//   uint32 round = 5;
+// }
+
+// // The same with director.proto
+// message GetTrainedModelRequest {
+//   enum ModelType {
+//     BEST_MODEL = 0;
+//     LAST_MODEL = 1;
+//   }
+//   string experiment_name = 2;
+//   ModelType model_type = 3;
+// }
+
+// // The same with director.proto
+// message TrainedModelResponse {
+//   ModelProto model_proto = 1;
+// }
+
+// // The same with director.proto
+// message GetExperimentDescriptionRequest {
+//   string name = 1;
+// }
+
+// // The same with director.proto
+// message GetExperimentDescriptionResponse {
+//   ExperimentDescription experiment = 1;
+// }
