@@ -52,6 +52,9 @@ class BuildPyGRPC(build_py):
 
     def __init__(self, dist):
         """Create a sub-command to execute."""
+        print("&"*40)
+        print(f"dist: {dist}")
+        print("&"*40)
         self.subcommand = BuildPackageProtos(dist)
         super().__init__(dist)
 
@@ -66,6 +69,9 @@ class DevelopGRPC(develop):
 
     def __init__(self, dist):
         """Create a sub-command to execute."""
+        print("&"*40)
+        print(f"dist: {dist}")
+        print("&"*40)
         self.subcommand = BuildPackageProtos(dist)
         super().__init__(dist)
 
@@ -103,9 +109,14 @@ setup(
         'openfl.databases',
         'openfl.databases.utilities',
         'openfl.experimental',
+        'openfl.experimental.component',
+        'openfl.experimental.interface.cli',
         'openfl.experimental.interface',
         'openfl.experimental.placement',
         'openfl.experimental.runtime',
+        'openfl.experimental.protocols',
+        'openfl.experimental.transport',
+        'openfl.experimental.transport.grpc',
         'openfl.experimental.utilities',
         'openfl.federated',
         'openfl.federated.data',
@@ -182,11 +193,9 @@ setup(
         'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',
         'Programming Language :: Python :: 3.10',
-
-
     ],
     entry_points={
-        'console_scripts': ['fx=openfl.interface.cli:entry']
+        'console_scripts': ['fx=openfl.interface.cli:entry',]
     },
     cmdclass={
         'build_py': BuildPyGRPC,

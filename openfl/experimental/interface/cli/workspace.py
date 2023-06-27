@@ -31,7 +31,7 @@ def create_dirs(prefix):
     """Create workspace directories."""
     from shutil import copyfile
 
-    from openfl.interface.cli_helper import WORKSPACE
+    from openfl.experimental.interface.cli.cli_helper import WORKSPACE
 
     echo('Creating Workspace Directories')
 
@@ -48,8 +48,8 @@ def create_temp(prefix, template):
     """Create workspace templates."""
     from shutil import ignore_patterns
 
-    from openfl.interface.cli_helper import copytree
-    from openfl.interface.cli_helper import WORKSPACE
+    from openfl.experimental.interface.cli.cli_helper import copytree
+    from openfl.experimental.interface.cli.cli_helper import WORKSPACE
 
     echo('Creating Workspace Templates')
 
@@ -60,7 +60,7 @@ def create_temp(prefix, template):
 
 def get_templates():
     """Grab the default templates from the distribution."""
-    from openfl.interface.cli_helper import WORKSPACE
+    from openfl.experimental.interface.cli.cli_helper import WORKSPACE
 
     return [d.name for d in WORKSPACE.glob('*') if d.is_dir()
             and d.name not in ['__pycache__', 'workspace']]
@@ -84,8 +84,8 @@ def create(prefix, template):
     from subprocess import check_call
     from sys import executable
 
-    from openfl.interface.cli_helper import print_tree
-    from openfl.interface.cli_helper import OPENFL_USERDIR
+    from openfl.experimental.interface.cli.cli_helper import print_tree
+    from openfl.experimental.interface.cli.cli_helper import OPENFL_USERDIR
 
     if not OPENFL_USERDIR.exists():
         OPENFL_USERDIR.mkdir()
@@ -111,236 +111,236 @@ def create(prefix, template):
     print_tree(prefix, level=3)
 
 
-# @workspace.command(name='export')
-# @option('-o', '--pip-install-options', required=False,
-#         type=str, multiple=True, default=tuple,
-#         help='Options for remote pip install. '
-#              'You may pass several options in quotation marks alongside with arguments, '
-#              'e.g. -o "--find-links source.site"')
-# def export_(pip_install_options: Tuple[str]):
-#     """Export federated learning workspace."""
-#     from os import getcwd
-#     from os import makedirs
-#     from os.path import basename
-#     from os.path import join
-#     from shutil import copy2
-#     from shutil import copytree
-#     from shutil import ignore_patterns
-#     from shutil import make_archive
-#     from tempfile import mkdtemp
+@workspace.command(name='export')
+@option('-o', '--pip-install-options', required=False,
+        type=str, multiple=True, default=tuple,
+        help='Options for remote pip install. '
+             'You may pass several options in quotation marks alongside with arguments, '
+             'e.g. -o "--find-links source.site"')
+def export_(pip_install_options: Tuple[str]):
+    """Export federated learning workspace."""
+    from os import getcwd
+    from os import makedirs
+    from os.path import basename
+    from os.path import join
+    from shutil import copy2
+    from shutil import copytree
+    from shutil import ignore_patterns
+    from shutil import make_archive
+    from tempfile import mkdtemp
 
-#     from plan import freeze_plan
-#     from openfl.interface.cli_helper import WORKSPACE
-#     from openfl.utilities.utils import rmtree
+    from plan import freeze_plan
+    from openfl.experimental.interface.cli.cli_helper import WORKSPACE
+    from openfl.utilities.utils import rmtree
 
-#     plan_file = Path('plan/plan.yaml').absolute()
-#     try:
-#         freeze_plan(plan_file)
-#     except Exception:
-#         echo(f'Plan file "{plan_file}" not found. No freeze performed.')
+    plan_file = Path('plan/plan.yaml').absolute()
+    try:
+        freeze_plan(plan_file)
+    except Exception:
+        echo(f'Plan file "{plan_file}" not found. No freeze performed.')
 
-#     # Dump requirements.txt
-#     dump_requirements_file(prefixes=pip_install_options, keep_original_prefixes=True)
+    # Dump requirements.txt
+    dump_requirements_file(prefixes=pip_install_options, keep_original_prefixes=True)
 
-#     archive_type = 'zip'
-#     archive_name = basename(getcwd())
-#     archive_file_name = archive_name + '.' + archive_type
+    archive_type = 'zip'
+    archive_name = basename(getcwd())
+    archive_file_name = archive_name + '.' + archive_type
 
-#     # Aggregator workspace
-#     tmp_dir = join(mkdtemp(), 'openfl', archive_name)
+    # Aggregator workspace
+    tmp_dir = join(mkdtemp(), 'openfl', archive_name)
 
-#     ignore = ignore_patterns(
-#         '__pycache__', '*.crt', '*.key', '*.csr', '*.srl', '*.pem', '*.pbuf')
+    ignore = ignore_patterns(
+        '__pycache__', '*.crt', '*.key', '*.csr', '*.srl', '*.pem', '*.pbuf')
 
-#     # We only export the minimum required files to set up a collaborator
-#     makedirs(f'{tmp_dir}/save', exist_ok=True)
-#     makedirs(f'{tmp_dir}/logs', exist_ok=True)
-#     makedirs(f'{tmp_dir}/data', exist_ok=True)
-#     copytree('./src', f'{tmp_dir}/src', ignore=ignore)  # code
-#     copytree('./plan', f'{tmp_dir}/plan', ignore=ignore)  # plan
-#     copy2('./requirements.txt', f'{tmp_dir}/requirements.txt')  # requirements
+    # We only export the minimum required files to set up a collaborator
+    makedirs(f'{tmp_dir}/save', exist_ok=True)
+    makedirs(f'{tmp_dir}/logs', exist_ok=True)
+    makedirs(f'{tmp_dir}/data', exist_ok=True)
+    copytree('./src', f'{tmp_dir}/src', ignore=ignore)  # code
+    copytree('./plan', f'{tmp_dir}/plan', ignore=ignore)  # plan
+    copy2('./requirements.txt', f'{tmp_dir}/requirements.txt')  # requirements
 
-#     try:
-#         copy2('.workspace', tmp_dir)  # .workspace
-#     except FileNotFoundError:
-#         echo('\'.workspace\' file not found.')
-#         if confirm('Create a default \'.workspace\' file?'):
-#             copy2(WORKSPACE / 'workspace' / '.workspace', tmp_dir)
-#         else:
-#             echo('To proceed, you must have a \'.workspace\' '
-#                  'file in the current directory.')
-#             raise
+    try:
+        copy2('.workspace', tmp_dir)  # .workspace
+    except FileNotFoundError:
+        echo('\'.workspace\' file not found.')
+        if confirm('Create a default \'.workspace\' file?'):
+            copy2(WORKSPACE / 'workspace' / '.workspace', tmp_dir)
+        else:
+            echo('To proceed, you must have a \'.workspace\' '
+                 'file in the current directory.')
+            raise
 
-#     # Create Zip archive of directory
-#     echo('\n 🗜️ Preparing workspace distribution zip file')
-#     make_archive(archive_name, archive_type, tmp_dir)
-#     rmtree(tmp_dir)
-#     echo(f'\n ✔️ Workspace exported to archive: {archive_file_name}')
-
-
-# @workspace.command(name='import')
-# @option('--archive', required=True,
-#         help='Zip file containing workspace to import',
-#         type=ClickPath(exists=True))
-# def import_(archive):
-#     """Import federated learning workspace."""
-#     from os import chdir
-#     from os.path import basename
-#     from os.path import isfile
-#     from shutil import unpack_archive
-#     from subprocess import check_call
-#     from sys import executable
-
-#     archive = Path(archive).absolute()
-
-#     dir_path = basename(archive).split('.')[0]
-#     unpack_archive(archive, extract_dir=dir_path)
-#     chdir(dir_path)
-
-#     requirements_filename = 'requirements.txt'
-
-#     if isfile(requirements_filename):
-#         check_call([
-#             executable, '-m', 'pip', 'install', '--upgrade', 'pip'],
-#             shell=False)
-#         check_call([
-#             executable, '-m', 'pip', 'install', '-r', 'requirements.txt'],
-#             shell=False)
-#     else:
-#         echo('No ' + requirements_filename + ' file found.')
-
-#     echo(f'Workspace {archive} has been imported.')
-#     echo('You may need to copy your PKI certificates to join the federation.')
+    # Create Zip archive of directory
+    echo('\n 🗜️ Preparing workspace distribution zip file')
+    make_archive(archive_name, archive_type, tmp_dir)
+    rmtree(tmp_dir)
+    echo(f'\n ✔️ Workspace exported to archive: {archive_file_name}')
 
 
-# @workspace.command(name='certify')
-# def certify_():
-#     """Create certificate authority for federation."""
-#     certify()
+@workspace.command(name='import')
+@option('--archive', required=True,
+        help='Zip file containing workspace to import',
+        type=ClickPath(exists=True))
+def import_(archive):
+    """Import federated learning workspace."""
+    from os import chdir
+    from os.path import basename
+    from os.path import isfile
+    from shutil import unpack_archive
+    from subprocess import check_call
+    from sys import executable
+
+    archive = Path(archive).absolute()
+
+    dir_path = basename(archive).split('.')[0]
+    unpack_archive(archive, extract_dir=dir_path)
+    chdir(dir_path)
+
+    requirements_filename = 'requirements.txt'
+
+    if isfile(requirements_filename):
+        check_call([
+            executable, '-m', 'pip', 'install', '--upgrade', 'pip'],
+            shell=False)
+        check_call([
+            executable, '-m', 'pip', 'install', '-r', 'requirements.txt'],
+            shell=False)
+    else:
+        echo('No ' + requirements_filename + ' file found.')
+
+    echo(f'Workspace {archive} has been imported.')
+    echo('You may need to copy your PKI certificates to join the federation.')
 
 
-# def certify():
-#     """Create certificate authority for federation."""
-#     from cryptography.hazmat.primitives import serialization
-
-#     from openfl.cryptography.ca import generate_root_cert
-#     from openfl.cryptography.ca import generate_signing_csr
-#     from openfl.cryptography.ca import sign_certificate
-#     from openfl.interface.cli_helper import CERT_DIR
-
-#     echo('Setting Up Certificate Authority...\n')
-
-#     echo('1.  Create Root CA')
-#     echo('1.1 Create Directories')
-
-#     (CERT_DIR / 'ca/root-ca/private').mkdir(
-#         parents=True, exist_ok=True, mode=0o700)
-#     (CERT_DIR / 'ca/root-ca/db').mkdir(parents=True, exist_ok=True)
-
-#     echo('1.2 Create Database')
-
-#     with open(CERT_DIR / 'ca/root-ca/db/root-ca.db', 'w', encoding='utf-8') as f:
-#         pass  # write empty file
-#     with open(CERT_DIR / 'ca/root-ca/db/root-ca.db.attr', 'w', encoding='utf-8') as f:
-#         pass  # write empty file
-
-#     with open(CERT_DIR / 'ca/root-ca/db/root-ca.crt.srl', 'w', encoding='utf-8') as f:
-#         f.write('01')  # write file with '01'
-#     with open(CERT_DIR / 'ca/root-ca/db/root-ca.crl.srl', 'w', encoding='utf-8') as f:
-#         f.write('01')  # write file with '01'
-
-#     echo('1.3 Create CA Request and Certificate')
-
-#     root_crt_path = 'ca/root-ca.crt'
-#     root_key_path = 'ca/root-ca/private/root-ca.key'
-
-#     root_private_key, root_cert = generate_root_cert()
-
-#     # Write root CA certificate to disk
-#     with open(CERT_DIR / root_crt_path, 'wb') as f:
-#         f.write(root_cert.public_bytes(
-#             encoding=serialization.Encoding.PEM,
-#         ))
-
-#     with open(CERT_DIR / root_key_path, 'wb') as f:
-#         f.write(root_private_key.private_bytes(
-#             encoding=serialization.Encoding.PEM,
-#             format=serialization.PrivateFormat.TraditionalOpenSSL,
-#             encryption_algorithm=serialization.NoEncryption()
-#         ))
-
-#     echo('2.  Create Signing Certificate')
-#     echo('2.1 Create Directories')
-
-#     (CERT_DIR / 'ca/signing-ca/private').mkdir(
-#         parents=True, exist_ok=True, mode=0o700)
-#     (CERT_DIR / 'ca/signing-ca/db').mkdir(parents=True, exist_ok=True)
-
-#     echo('2.2 Create Database')
-
-#     with open(CERT_DIR / 'ca/signing-ca/db/signing-ca.db', 'w', encoding='utf-8') as f:
-#         pass  # write empty file
-#     with open(CERT_DIR / 'ca/signing-ca/db/signing-ca.db.attr', 'w', encoding='utf-8') as f:
-#         pass  # write empty file
-
-#     with open(CERT_DIR / 'ca/signing-ca/db/signing-ca.crt.srl', 'w', encoding='utf-8') as f:
-#         f.write('01')  # write file with '01'
-#     with open(CERT_DIR / 'ca/signing-ca/db/signing-ca.crl.srl', 'w', encoding='utf-8') as f:
-#         f.write('01')  # write file with '01'
-
-#     echo('2.3 Create Signing Certificate CSR')
-
-#     signing_csr_path = 'ca/signing-ca.csr'
-#     signing_crt_path = 'ca/signing-ca.crt'
-#     signing_key_path = 'ca/signing-ca/private/signing-ca.key'
-
-#     signing_private_key, signing_csr = generate_signing_csr()
-
-#     # Write Signing CA CSR to disk
-#     with open(CERT_DIR / signing_csr_path, 'wb') as f:
-#         f.write(signing_csr.public_bytes(
-#             encoding=serialization.Encoding.PEM,
-#         ))
-
-#     with open(CERT_DIR / signing_key_path, 'wb') as f:
-#         f.write(signing_private_key.private_bytes(
-#             encoding=serialization.Encoding.PEM,
-#             format=serialization.PrivateFormat.TraditionalOpenSSL,
-#             encryption_algorithm=serialization.NoEncryption()
-#         ))
-
-#     echo('2.4 Sign Signing Certificate CSR')
-
-#     signing_cert = sign_certificate(signing_csr, root_private_key, root_cert.subject, ca=True)
-
-#     with open(CERT_DIR / signing_crt_path, 'wb') as f:
-#         f.write(signing_cert.public_bytes(
-#             encoding=serialization.Encoding.PEM,
-#         ))
-
-#     echo('3   Create Certificate Chain')
-
-#     # create certificate chain file by combining root-ca and signing-ca
-#     with open(CERT_DIR / 'cert_chain.crt', 'w', encoding='utf-8') as d:
-#         with open(CERT_DIR / 'ca/root-ca.crt', encoding='utf-8') as s:
-#             d.write(s.read())
-#         with open(CERT_DIR / 'ca/signing-ca.crt') as s:
-#             d.write(s.read())
-
-#     echo('\nDone.')
+@workspace.command(name='certify')
+def certify_():
+    """Create certificate authority for federation."""
+    certify()
 
 
-# def _get_requirements_dict(txtfile):
-#     with open(txtfile, 'r', encoding='utf-8') as snapshot:
-#         snapshot_dict = {}
-#         for line in snapshot:
-#             try:
-#                 # 'pip freeze' generates requirements with exact versions
-#                 k, v = line.split('==')
-#                 snapshot_dict[k] = v
-#             except ValueError:
-#                 snapshot_dict[line] = None
-#         return snapshot_dict
+def certify():
+    """Create certificate authority for federation."""
+    from cryptography.hazmat.primitives import serialization
+
+    from openfl.cryptography.ca import generate_root_cert
+    from openfl.cryptography.ca import generate_signing_csr
+    from openfl.cryptography.ca import sign_certificate
+    from openfl.experimental.interface.cli.cli_helper import CERT_DIR
+
+    echo('Setting Up Certificate Authority...\n')
+
+    echo('1.  Create Root CA')
+    echo('1.1 Create Directories')
+
+    (CERT_DIR / 'ca/root-ca/private').mkdir(
+        parents=True, exist_ok=True, mode=0o700)
+    (CERT_DIR / 'ca/root-ca/db').mkdir(parents=True, exist_ok=True)
+
+    echo('1.2 Create Database')
+
+    with open(CERT_DIR / 'ca/root-ca/db/root-ca.db', 'w', encoding='utf-8') as f:
+        pass  # write empty file
+    with open(CERT_DIR / 'ca/root-ca/db/root-ca.db.attr', 'w', encoding='utf-8') as f:
+        pass  # write empty file
+
+    with open(CERT_DIR / 'ca/root-ca/db/root-ca.crt.srl', 'w', encoding='utf-8') as f:
+        f.write('01')  # write file with '01'
+    with open(CERT_DIR / 'ca/root-ca/db/root-ca.crl.srl', 'w', encoding='utf-8') as f:
+        f.write('01')  # write file with '01'
+
+    echo('1.3 Create CA Request and Certificate')
+
+    root_crt_path = 'ca/root-ca.crt'
+    root_key_path = 'ca/root-ca/private/root-ca.key'
+
+    root_private_key, root_cert = generate_root_cert()
+
+    # Write root CA certificate to disk
+    with open(CERT_DIR / root_crt_path, 'wb') as f:
+        f.write(root_cert.public_bytes(
+            encoding=serialization.Encoding.PEM,
+        ))
+
+    with open(CERT_DIR / root_key_path, 'wb') as f:
+        f.write(root_private_key.private_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PrivateFormat.TraditionalOpenSSL,
+            encryption_algorithm=serialization.NoEncryption()
+        ))
+
+    echo('2.  Create Signing Certificate')
+    echo('2.1 Create Directories')
+
+    (CERT_DIR / 'ca/signing-ca/private').mkdir(
+        parents=True, exist_ok=True, mode=0o700)
+    (CERT_DIR / 'ca/signing-ca/db').mkdir(parents=True, exist_ok=True)
+
+    echo('2.2 Create Database')
+
+    with open(CERT_DIR / 'ca/signing-ca/db/signing-ca.db', 'w', encoding='utf-8') as f:
+        pass  # write empty file
+    with open(CERT_DIR / 'ca/signing-ca/db/signing-ca.db.attr', 'w', encoding='utf-8') as f:
+        pass  # write empty file
+
+    with open(CERT_DIR / 'ca/signing-ca/db/signing-ca.crt.srl', 'w', encoding='utf-8') as f:
+        f.write('01')  # write file with '01'
+    with open(CERT_DIR / 'ca/signing-ca/db/signing-ca.crl.srl', 'w', encoding='utf-8') as f:
+        f.write('01')  # write file with '01'
+
+    echo('2.3 Create Signing Certificate CSR')
+
+    signing_csr_path = 'ca/signing-ca.csr'
+    signing_crt_path = 'ca/signing-ca.crt'
+    signing_key_path = 'ca/signing-ca/private/signing-ca.key'
+
+    signing_private_key, signing_csr = generate_signing_csr()
+
+    # Write Signing CA CSR to disk
+    with open(CERT_DIR / signing_csr_path, 'wb') as f:
+        f.write(signing_csr.public_bytes(
+            encoding=serialization.Encoding.PEM,
+        ))
+
+    with open(CERT_DIR / signing_key_path, 'wb') as f:
+        f.write(signing_private_key.private_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PrivateFormat.TraditionalOpenSSL,
+            encryption_algorithm=serialization.NoEncryption()
+        ))
+
+    echo('2.4 Sign Signing Certificate CSR')
+
+    signing_cert = sign_certificate(signing_csr, root_private_key, root_cert.subject, ca=True)
+
+    with open(CERT_DIR / signing_crt_path, 'wb') as f:
+        f.write(signing_cert.public_bytes(
+            encoding=serialization.Encoding.PEM,
+        ))
+
+    echo('3   Create Certificate Chain')
+
+    # create certificate chain file by combining root-ca and signing-ca
+    with open(CERT_DIR / 'cert_chain.crt', 'w', encoding='utf-8') as d:
+        with open(CERT_DIR / 'ca/root-ca.crt', encoding='utf-8') as s:
+            d.write(s.read())
+        with open(CERT_DIR / 'ca/signing-ca.crt') as s:
+            d.write(s.read())
+
+    echo('\nDone.')
+
+
+def _get_requirements_dict(txtfile):
+    with open(txtfile, 'r', encoding='utf-8') as snapshot:
+        snapshot_dict = {}
+        for line in snapshot:
+            try:
+                # 'pip freeze' generates requirements with exact versions
+                k, v = line.split('==')
+                snapshot_dict[k] = v
+            except ValueError:
+                snapshot_dict[line] = None
+        return snapshot_dict
 
 
 def _get_dir_hash(path):
@@ -374,7 +374,7 @@ def _get_dir_hash(path):
 #     import sys
 #     from shutil import copyfile
 
-#     from openfl.interface.cli_helper import SITEPACKS
+#     from openfl.experimental.interface.cli.cli_helper import SITEPACKS
 
 #     # Specify the Dockerfile.workspace loaction
 #     openfl_docker_dir = os.path.join(SITEPACKS, 'openfl-docker')
@@ -486,7 +486,7 @@ def _get_dir_hash(path):
 #         if process.returncode != 0:
 #             raise Exception('\n ❌ Execution failed\n')
 
-#     from openfl.interface.cli_helper import SITEPACKS
+#     from openfl.experimental.interface.cli.cli_helper import SITEPACKS
 
 #     # We can build for gramine-sgx and run with gramine-direct,
 #     # but not vice versa.
@@ -542,8 +542,8 @@ def apply_template_plan(prefix, template):
     This function unfolds default values from template plan configuration
     and writes the configuration to the current workspace.
     """
-    from openfl.federated.plan import Plan
-    from openfl.interface.cli_helper import WORKSPACE
+    from openfl.experimental.federated.plan import Plan
+    from openfl.experimental.interface.cli.cli_helper import WORKSPACE
 
     template_plan = Plan.parse(WORKSPACE / template / 'plan' / 'plan.yaml')
 

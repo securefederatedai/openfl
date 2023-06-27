@@ -2,6 +2,9 @@
 # SPDX-License-Identifier: Apache-2.0
 
 """Experimental Collaborator module."""
+import sys
+sys.path.append("src")
+
 import time
 import pickle
 
@@ -38,7 +41,7 @@ class Collaborator:
                  client: Any,
                  private_attrs_callable: Any = None,
                  private_attrs_kwargs: Dict = {},
-                 compression_pipeline: Any = None,
+                 compression_pipeline: Any = None, # No sure if keep it or not
                  **kwargs):
 
         self.collaborator_name = collaborator_name
@@ -88,6 +91,14 @@ class Collaborator:
                 delattr(clone, attr_name)
 
 
+    def call_checkpoint(self, ctx, f, sb):
+        """Call checkpoint gRPC."""
+        self.client.call_checkpoint(
+            self.collaborator_name,
+            pickle.dumps(ctx), pickle.dumps(f) #, pickle.dumps(sb)
+        )
+
+
     def run(self):
         """Run the collaborator."""
         while True:
@@ -97,7 +108,7 @@ class Collaborator:
             elif sleep_time > 0:
                 time.sleep(sleep_time)
             else:
-                self.logger.info(f'Received the following step: {next_step}')
+                self.logger.info(f"Received {next_step} step from Aggregator.")
                 f_name, ctx = self.do_task(next_step, clone)
                 self.send_task_results(f_name, ctx)
 
@@ -108,19 +119,16 @@ class Collaborator:
             step to Aggregator for continue execution.
         """
         self.logger.info(f"Sending results to aggregator...")
-        if self.client.send_task_results(
-            self.collaborator_name,
-            self.round_number,
-            next_step,
-            pickle.dumps(clone)
-        ):
-            self.logger.info(f"Result sent.")
+        self.client.send_task_results(
+            self.collaborator_name, self.round_number,
+            next_step, pickle.dumps(clone)
+        )
 
 
     def get_tasks(self):
         """Get tasks from the aggregator."""
-        # logging wait time to analyze training process
         self.logger.info('Waiting for tasks...')
+
         self.round_number, next_step, clone_bytes, sleep_time, \
             time_to_quit = self.client.get_tasks(self.collaborator_name)
 
@@ -135,10 +143,9 @@ class Collaborator:
         while not_at_transition_point:
             f = getattr(ctx, f_name)
             f()
+            # self.call_checkpoint(ctx, f, f._stream_buffer)
 
             _, f, parent_func = ctx.execute_task_args[:3]
-            self.logger.info(f"ctx._is_at_transition_point(f, parent_func): \
-                             {ctx._is_at_transition_point(f, parent_func)}")
             if ctx._is_at_transition_point(f, parent_func):
                 not_at_transition_point = False
 

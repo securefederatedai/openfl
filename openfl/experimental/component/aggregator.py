@@ -2,8 +2,11 @@
 # SPDX-License-Identifier: Apache-2.0
 
 """Experimental Aggregator module."""
+import time
 import queue
 import pickle
+import inspect
+from threading import Event
 from copy import deepcopy
 from logging import getLogger
 from typing import Any, Dict
@@ -33,6 +36,7 @@ class Aggregator:
     Note:
         \* - plan setting.
     """
+
     def __init__(
             self,
             name: str,
@@ -42,17 +46,18 @@ class Aggregator:
 
             flow: Any,
             runtime: FederatedRuntime,
+            checkpoint: bool = False,
             private_attrs_callable: Callable = None,
             private_attrs_kwargs: Dict = {},
 
             single_col_cert_common_name: Any = None,
-            compression_pipeline: Any = None, # TBD: Could be used later
+            compression_pipeline: Any = None,  # TBD: Could be used later
 
             write_logs: bool = False,
             log_metric_callback: Callable = None,
             **kwargs) -> None:
 
-        self.name = name
+        self.name = "aggregator"
         self.uuid = aggregator_uuid
         self.federation_uuid = federation_uuid
         self.authorized_cols = authorized_cols
@@ -68,12 +73,14 @@ class Aggregator:
 
         self.compression_pipeline = compression_pipeline
 
+        self.collaborators_counter = 0
         self.quit_job_sent_to = []
         self.time_to_quit = False
 
         self.logger = getLogger(__name__)
         self.write_logs = write_logs
         self.log_metric_callback = log_metric_callback
+        self.collaborator_task_results = Event()
 
         if self.write_logs:
             self.log_metric = write_metric
@@ -81,13 +88,17 @@ class Aggregator:
                 self.log_metric = log_metric_callback
                 self.logger.info(f'Using custom log metric: {self.log_metric}')
 
+        self.checkpoint = checkpoint
         self.flow = flow
         self.flow.runtime = runtime
         self.flow.runtime.aggregator = self.name
         self.flow.runtime.collaborators = self.authorized_cols
 
-        self.collaborator_tasks = queue.Queue()
+        self.collaborator_tasks_queue = {collab: queue.Queue() for collab
+                                         in self.authorized_cols}
+        # queue.Queue()
         self.connected_collaborators = []
+        self.collaborator_results_received = []
         self.private_attrs_callable = private_attrs_callable
         # FIXME: Save private_attrs_kwargs to self, or directly pass
         # private_attrs_kwargs to initialize_private_attributes ?
@@ -95,19 +106,50 @@ class Aggregator:
 
         self.initialize_private_attributes()
 
-
     def run_flow_until_transition(self):
         """
         Start the execution and run flow until transition.
         """
-        start_step = self.flow.run()
-        # self.clones_dict = clones_dict
-        next_step = self.do_task(start_step)
+        f_name = self.flow.run()
 
-        if isinstance(next_step, bool):
-            self.logger.info("Flow execution completed.")
-        else:
-            self.collaborator_tasks.put((next_step, self.clones))
+        while True:
+            next_step = self.do_task(f_name)
+
+            if self.time_to_quit:
+                self.logger.info("Flow execution completed.")
+                break
+
+            # Prepare queue for collaborator task, with clones
+            for k, v in self.collaborator_tasks_queue.items():
+                v.put((next_step, self.clones_dict[k]))
+
+            while not self.collaborator_task_results.is_set():
+                self.logger.info(f"Waiting for "
+                                 + f"{self.collaborators_counter}/{len(self.authorized_cols)}"
+                                 + " collaborators to send results.")
+                time.sleep(Aggregator._get_sleep_time())
+
+            self.collaborator_task_results.clear()
+            f_name = self.next_step
+            if hasattr(self, "instance_snapshot"):
+                self.flow.restore_instance_snapshot(self.flow, list(self.instance_snapshot))
+                delattr(self, "instance_snapshot")
+
+
+    def call_checkpoint(self, ctx, f):  # , sb):
+        """Perform checkpoint task."""
+        from openfl.experimental.interface import (
+            FLSpec,
+        )
+
+        if not isinstance(ctx, FLSpec):
+            ctx = pickle.loads(ctx)
+        if not isinstance(f, Callable):
+            f = pickle.loads(f)
+        # if isinstance(sb, bytes):
+        #     f._stream_buffer = pickle.loads(sb)
+
+        checkpoint(ctx, f)
 
 
     def initialize_private_attributes(self):
@@ -163,7 +205,6 @@ class Aggregator:
         return 10
 
 
-    # Get this logic checked by Sachin.
     def get_tasks(self, collaborator_name):
         """
         RPC called by a collaborator to determine which tasks to perform.
@@ -179,37 +220,43 @@ class Aggregator:
                 Function execution context for collaborator                    
         """
         if collaborator_name not in self.connected_collaborators:
+            self.logger.info(f"Collaborator {collaborator_name} is connected.")
             self.connected_collaborators.append(collaborator_name)
 
-        if self.collaborator_tasks.qsize() == 0:
+        while self.collaborator_tasks_queue[collaborator_name].qsize() == 0:
             # FIXME: 0, and '' instead of None is just for protobuf compatibility.
             #  Cleaner solution?
-            return 0, '', None, Aggregator._get_sleep_time(), self.time_to_quit
+            if not self.time_to_quit:
+                time.sleep(Aggregator._get_sleep_time())
+            else:
+                return 0, '', None, Aggregator._get_sleep_time(), self.time_to_quit
 
-        next_step, clones_dict = self.collaborator_tasks.get()
-
-        clone = deepcopy(clones_dict[collaborator_name])
-
-        # Cannot delete clone from dictionary there may be new collaborator
-        # steps which require clones
-        del clones_dict[collaborator_name]
-
-        if len(clones_dict) > 0:
-            self.collaborator_tasks.put((next_step, clones_dict))
+        next_step, clone = self.collaborator_tasks_queue[
+            collaborator_name].get()
 
         return 0, next_step, pickle.dumps(clone), 0, self.time_to_quit
 
 
-    def do_task(self, f_name, args=None):
-        """Execute aggregator steps until transition
-        """
+    def do_task(self, f_name):
+        """Execute aggregator steps until transition."""
         self.__set_attributes_to_clone(self.flow)
 
         not_at_transition_point = True
         while not_at_transition_point:
             f = getattr(self.flow, f_name)
-            f(args) if args else f()
-            args = None
+            args = inspect.signature(f)._parameters
+
+            if f.__name__ == "end":
+                f()
+                self.call_checkpoint(self.flow, f)
+                self.time_to_quit = True
+                not_at_transition_point = False
+                continue
+
+            f(list(self.clones_dict.values())) if len(args) > 0 else f()
+
+            if checkpoint:
+                self.call_checkpoint(self.flow, f)
 
             _, f, parent_func = self.flow.execute_task_args[:3]
             f_name = f.__name__
@@ -217,16 +264,10 @@ class Aggregator:
             if aggregator_to_collaborator(f, parent_func):
                 not_at_transition_point = False
                 if len(self.flow.execute_task_args) > 4:
-                    self.clones, self.instance_snapshot, self.kwargs = self.flow.execute_task_args[3:]
+                    self.clones_dict, self.instance_snapshot, self.kwargs = \
+                        self.flow.execute_task_args[3:]
                 else:
                     self.kwargs = self.flow.execute_task_args[3]
-
-            if f.__name__ == "end":
-                f = getattr(self.flow, f_name)
-                f()
-                checkpoint(self.flow, f)
-                self.time_to_quit = True
-                not_at_transition_point = False
 
         self.__delete_agg_attrs_from_clone(self.flow)
 
@@ -238,18 +279,20 @@ class Aggregator:
         After collaborator execution, collaborator will call this function via gRPc
             to send next function.
         """
-        self.logger.info(f"Aggregator step received from {collab_name}")
+        self.logger.info(f"Aggregator step received from {collab_name} for "
+                         + f"round number: {round_number}.")
 
+        # TODO: Think about taking values from collaborators.
+        # Do not take rn.
         self.round_number = round_number
         clone = pickle.loads(clone_bytes)
-        self.clones[clone.input] = clone
+        self.clones_dict[clone.input] = clone
+        self.next_step = next_step[0]
 
-        self.flow.restore_instance_snapshot(self.flow, self.instance_snapshot)
-        # FIXME: do_task should not be called from here.
-        # Cleaner solution?
-        self.do_task(next_step[0], list(self.clones.values()))
-
-        return True
+        self.collaborators_counter += 1
+        if self.collaborators_counter == len(self.authorized_cols):
+            self.collaborators_counter = 0
+            self.collaborator_task_results.set()
 
 
     def valid_collaborator_cn_and_id(self, cert_common_name,
@@ -283,8 +326,6 @@ class Aggregator:
     def all_quit_jobs_sent(self):
         """Assert all quit jobs are sent to collaborators."""
         return set(self.quit_job_sent_to) == set(self.authorized_cols)
-
-
 
 
 the_dragon = '''

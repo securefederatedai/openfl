@@ -11,6 +11,7 @@ import "openfl/protocols/base.proto";
 service Aggregator {
   rpc SendTaskResults(TaskResultsRequest) returns (TaskResultsResponse) {}
   rpc GetTasks(GetTasksRequest) returns (GetTasksResponse) {}
+  rpc CallCheckpoint(CheckpointRequest) returns (CheckpointResponse) {}
   // rpc GetAggregatedTensor(GetAggregatedTensorRequest) returns (GetAggregatedTensorResponse) {}
   // rpc SendLocalTaskResults(stream DataStream) returns (SendLocalTaskResultsResponse) {}
   // rpc GetMetricStream(GetMetricStreamRequest) returns (stream GetMetricStreamResponse) {}
@@ -36,7 +37,6 @@ message TaskResultsRequest {
 
 message TaskResultsResponse {
   MessageHeader header = 1;
-  bool response = 2;
 }
 
 message GetTasksRequest {
@@ -50,6 +50,17 @@ message GetTasksResponse {
   bytes execution_environment = 4;
   int32 sleep_time = 5;
   bool quit = 6;
+}
+
+message CheckpointRequest {
+  MessageHeader header = 1;
+  bytes execution_environment = 2;
+  bytes function = 3;
+  // bytes stream_buffer = 4;
+}
+
+message CheckpointResponse {
+  MessageHeader header = 1;
 }
 
 // message GetAggregatedTensorRequest {

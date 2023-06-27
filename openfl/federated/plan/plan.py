@@ -336,17 +336,22 @@ class Plan:
         defaults[SETTINGS]['federation_uuid'] = self.federation_uuid
         defaults[SETTINGS]['authorized_cols'] = self.authorized_cols
 
-        testflow_module = importlib.import_module("testflow")
+        testflow_module = importlib.import_module("src.mnist")
         # TODO: Get checkpoint from plan.yaml
-        defaults[SETTINGS]['flow'] = getattr(testflow_module, "TestFlow")(
-            checkpoint=True)
+        defaults[SETTINGS]['checkpoint'] = False
+        defaults[SETTINGS]['flow'] = getattr(testflow_module, "FederatedFlow")(
+            checkpoint=defaults[SETTINGS]['checkpoint']
+        )
         defaults[SETTINGS]['runtime'] = getattr(
             importlib.import_module("openfl.experimental.runtime"),
             "FederatedRuntime"
         )()
+
         defaults[SETTINGS]['private_attrs_callable'] = getattr(
             testflow_module, "aggregator_private_attrs")
-        defaults[SETTINGS]['private_attrs_kwargs'] = {}
+        defaults[SETTINGS]['private_attrs_kwargs'] = getattr(
+            testflow_module, "aggregator_kwargs"
+        )
 
         defaults[SETTINGS]['compression_pipeline'] = self.get_tensor_pipe()
         log_metric_callback = defaults[SETTINGS].get('log_metric_callback')
@@ -364,34 +369,6 @@ class Plan:
                 **defaults, initial_tensor_dict=tensor_dict)
 
         return self.aggregator_
-
-        # defaults = self.config.get('aggregator',
-        #                            {
-        #                                TEMPLATE: 'openfl.component.Aggregator',
-        #                                SETTINGS: {}
-        #                            })
-
-        # defaults[SETTINGS]['aggregator_uuid'] = self.aggregator_uuid
-        # defaults[SETTINGS]['federation_uuid'] = self.federation_uuid
-        # defaults[SETTINGS]['authorized_cols'] = self.authorized_cols
-        # defaults[SETTINGS]['assigner'] = self.get_assigner()
-        # defaults[SETTINGS]['compression_pipeline'] = self.get_tensor_pipe()
-        # defaults[SETTINGS]['straggler_handling_policy'] = self.get_straggler_handling_policy()
-        # log_metric_callback = defaults[SETTINGS].get('log_metric_callback')
-
-        # if log_metric_callback:
-        #     if isinstance(log_metric_callback, dict):
-        #         log_metric_callback = Plan.import_(**log_metric_callback)
-        #     elif not callable(log_metric_callback):
-        #         raise TypeError(f'log_metric_callback should be callable object '
-        #                         f'or be import from code part, get {log_metric_callback}')
-
-        # defaults[SETTINGS]['log_metric_callback'] = log_metric_callback
-        # if self.aggregator_ is None:
-        #     self.aggregator_ = Plan.build(**defaults, initial_tensor_dict=tensor_dict)
-
-        # return self.aggregator_
-
 
     def get_tensor_pipe(self):
         """Get data tensor pipeline."""
@@ -494,12 +471,13 @@ class Plan:
 
         return self.runner_
 
+    # mnist workspace hardcode
     def get_collaborator(self, collaborator_name, root_certificate=None, private_key=None,
                          certificate=None, task_runner=None, client=None, shard_descriptor=None):
         """Get collaborator."""
         import sys
         sys.path.append("/home/parth-wsl/env-ishant-code/openfl/" +
-                        "openfl-workspace/experimental-wi/testflow.py")
+                        "openfl-workspace/mnist/src")
 
         defaults = self.config.get(
             'experimental.collaborator',
@@ -527,18 +505,75 @@ class Plan:
                 certificate
             )
 
-        testflow_module = importlib.import_module("testflow")
+        testflow_module = importlib.import_module("src.mnist")
+
         defaults[SETTINGS]['private_attrs_callable'] = getattr(
             testflow_module, "collaborator_private_attrs")
-        defaults[SETTINGS]['private_attrs_kwargs'] = {
-            "collab_name": defaults[SETTINGS]['collaborator_name']
-        }
 
+        defaults[SETTINGS]['private_attrs_kwargs'] = getattr(
+            testflow_module, "collaborator_kwargs"
+        )
 
         if self.collaborator_ is None:
             self.collaborator_ = Plan.build(**defaults)
 
         return self.collaborator_
+
+    # testflow workflow hardcode
+    # def get_collaborator(self, collaborator_name, root_certificate=None, private_key=None,
+    #                      certificate=None, task_runner=None, client=None, shard_descriptor=None):
+    #     """Get collaborator."""
+    #     import sys
+    #     sys.path.append("/home/parth-wsl/env-ishant-code/openfl/" +
+    #                     "openfl-workspace/test/src/")
+
+    #     defaults = self.config.get(
+    #         'experimental.collaborator',
+    #         {
+    #             TEMPLATE: 'openfl.experimental.component.Collaborator',
+    #             SETTINGS: {}
+    #         }
+    #     )
+
+    #     defaults[SETTINGS]['collaborator_name'] = collaborator_name
+    #     defaults[SETTINGS]['aggregator_uuid'] = self.aggregator_uuid
+    #     defaults[SETTINGS]['federation_uuid'] = self.federation_uuid
+
+    #     defaults[SETTINGS]['compression_pipeline'] = self.get_tensor_pipe()
+
+    #     if client is not None:
+    #         defaults[SETTINGS]['client'] = client
+    #     else:
+    #         defaults[SETTINGS]['client'] = self.get_client(
+    #             collaborator_name,
+    #             self.aggregator_uuid,
+    #             self.federation_uuid,
+    #             root_certificate,
+    #             private_key,
+    #             certificate
+    #         )
+
+    #     # def collaborator_private_attrs(collab_name):
+    #     #     return {
+    #     #         "name": f"private attributes of {collab_name}"
+    #     #     }
+
+    #     testflow_module = importlib.import_module("src.testflow")
+
+    #     defaults[SETTINGS]['private_attrs_callable'] = getattr(
+    #         testflow_module, "collaborator_private_attrs")
+    #     # defaults[SETTINGS]['private_attrs_callable'] = collaborator_private_attrs
+    #     defaults[SETTINGS]['private_attrs_kwargs'] = {
+    #         "collab_name": defaults[SETTINGS]['collaborator_name']
+    #     }
+    #     # defaults[SETTINGS]['private_attrs_kwargs'] = {
+    #     #     "collab_name": defaults[SETTINGS]['collaborator_name']
+    #     # }
+
+    #     if self.collaborator_ is None:
+    #         self.collaborator_ = Plan.build(**defaults)
+
+    #     return self.collaborator_
 
     def get_client(self, collaborator_name, aggregator_uuid, federation_uuid,
                    root_certificate=None, private_key=None, certificate=None):

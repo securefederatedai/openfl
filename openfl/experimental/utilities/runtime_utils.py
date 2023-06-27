@@ -103,7 +103,7 @@ def check_resource_allocation(num_gpus, each_collab_gpu_usage):
         for i, (collab_name, collab_gpu_usage) in enumerate(each_collab_gpu_usage.items()):
             if gpu == 0:
                 break
-            if gpu < collab_gpu_usage:  # and collab_gpu_usage > 0:
+            if gpu < collab_gpu_usage:
                 remaining_gpu_memory.update({collab_name: gpu})
                 print(f"each_collab_gpu_usage: {each_collab_gpu_usage}")
                 print(f"i: {i}")

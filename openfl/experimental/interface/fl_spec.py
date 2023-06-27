@@ -32,7 +32,6 @@ class FLSpec:
     @classmethod
     def _create_clones(cls, instance: Type[FLSpec], names: List[str]) -> None:
         """Creates clones for instance for each collaborator in names"""
-        print(f"names: {names}")
         cls._clones = {name: deepcopy(instance) for name in names}
 
     @classmethod
@@ -89,7 +88,6 @@ class FLSpec:
         elif str(self._runtime) == "FederatedRuntime":
             self._foreach_methods = []
             return self.start.__name__
-            # return self.next(self.start)
         else:
             raise Exception("Runtime not implemented")
 
@@ -155,19 +153,7 @@ class FLSpec:
         Args:
             flspec_obj  :  Reference to the FLSpec (flow) object
             f           :  The task to be executed within the flow
-            selected_collaborators : all collaborators
         """
-        # for col in selected_collaborators:
-        #     clone = FLSpec._clones[col]
-        #     clone.input = col
-        #     if ("exclude" in kwargs and hasattr(clone, kwargs["exclude"][0])) or (
-        #         "include" in kwargs and hasattr(clone, kwargs["include"][0])
-        #     ):
-        #         filter_attributes(clone, f, **kwargs)
-        #     artifacts_iter, _ = generate_artifacts(ctx=self)
-        #     for name, attr in artifacts_iter():
-        #         setattr(clone, name, deepcopy(attr))
-        #     clone._foreach_methods = self._foreach_methods
         selected_collaborators = getattr(self, kwargs["foreach"])
 
         for col in selected_collaborators:
@@ -183,7 +169,7 @@ class FLSpec:
             clone._foreach_methods = self._foreach_methods
 
     def restore_instance_snapshot(
-        self, ctx: Type[FLSpec], instance_snapshot: List[Type[FLSpec]]
+        self, ctx: FLSpec, instance_snapshot: List[FLSpec]
     ):
         """Restores attributes from backup (in instance snapshot) to ctx"""
         for backup in instance_snapshot:
@@ -192,7 +178,7 @@ class FLSpec:
                 if not hasattr(ctx, name):
                     setattr(ctx, name, attr)
 
-    def get_clones(self, f, kwargs):
+    def get_clones(self, kwargs):
         """
         Create, and prepare clones
         """
@@ -218,34 +204,20 @@ class FLSpec:
         parent = inspect.stack()[1][3]
         parent_func = getattr(self, parent)
 
-        # Checkpoint current attributes (if checkpoint==True)
-        if self._checkpoint:
-            checkpoint(self, parent_func)
-            # if f.__name__ == "end":
-            #     checkpoint(self, f)
-
-        # Remove included / excluded attributes from next task
-        filter_attributes(self, f, **kwargs)
-
-        # if self._is_at_transition_point(f, parent_func):
-        #     # Collaborator is done executing for now
-        #     return
-
         agg_to_collab_ss = None
         if aggregator_to_collaborator(f, parent_func):
             agg_to_collab_ss = self._capture_instance_snapshot(kwargs=kwargs)
             if len(FLSpec._clones) == 0:
-                self.get_clones(f, kwargs)
+                self.get_clones(kwargs)
 
-        if f.collaborator_step and not f.aggregator_step: # and (not collaborator_to_aggregator(f, parent_func)):
+        # Remove included / excluded attributes from next task
+        filter_attributes(self, f, **kwargs)
+
+        if f.collaborator_step and not f.aggregator_step:
             self._foreach_methods.append(f.__name__)
 
         if "foreach" in kwargs:
             self.filter_exclude_include(f, **kwargs)
-
-        # This will be done by Collaborator before transitioning to Aggregator
-        # if collaborator_to_aggregator(f, parent_func):
-        #     self.restore_instance_snapshot(self, instance_snapshot)
 
         self._display_transition_logs(f, parent_func)
 

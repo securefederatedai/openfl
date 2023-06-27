@@ -289,21 +289,7 @@ class AggregatorGRPCClient:
         response = self.stub.SendTaskResults(request)
         self.validate_response(response, collaborator_name)
 
-        return response.response
-
-    # @_atomic_connection
-    # @_resend_data_on_reconnection
-    # def send_attendance(self, collaborator_name):
-    #     """Send Collaborator name to Aggregator"""
-    #     self._set_header(collaborator_name)
-    #     request = aggregator_pb2.AttendanceRequest(header=self.header)
-
-    #     self.logger.info(f"collaborator_name: {collaborator_name}")
-
-    #     response = self.stub.SendAttendance(request)
-    #     self.validate_response(response, collaborator_name)
-
-    #     return response.response
+        return response.header
 
     @_atomic_connection
     @_resend_data_on_reconnection
@@ -312,69 +298,81 @@ class AggregatorGRPCClient:
         self._set_header(collaborator_name)
         request = aggregator_pb2.GetTasksRequest(header=self.header)
 
-        # self.logger.info(f"type(self.stub): {type(self.stub)}")
-        # self.logger.info(f"type(request): {type(request)}")
-        # self.logger.info(f"request: {request}")
-
         response = self.stub.GetTasks(request)
         self.validate_response(response, collaborator_name)
 
         return response.round_number, response.function_name, \
             response.execution_environment, response.sleep_time, response.quit
-        # return response.tasks, response.round_number, response.sleep_time, response.quit
 
     @_atomic_connection
     @_resend_data_on_reconnection
-    def get_aggregated_tensor(self, collaborator_name, tensor_name, round_number,
-                              report, tags, require_lossless):
-        """Get aggregated tensor from the aggregator."""
+    def call_checkpoint(self, collaborator_name, clone_bytes, function): #, stream_buffer):
+        """Perform checkpoint for collaborator task."""
         self._set_header(collaborator_name)
-
-        request = aggregator_pb2.GetAggregatedTensorRequest(
+        request = aggregator_pb2.CheckpointRequest(
             header=self.header,
-            tensor_name=tensor_name,
-            round_number=round_number,
-            report=report,
-            tags=tags,
-            require_lossless=require_lossless
+            execution_environment=clone_bytes,
+            function=function,
+            # stream_buffer=stream_buffer
         )
-        response = self.stub.GetAggregatedTensor(request)
-        # also do other validation, like on the round_number
+
+        response = self.stub.CallCheckpoint(request)
         self.validate_response(response, collaborator_name)
 
-        return response.tensor
+        return response.header
 
-    @_atomic_connection
-    @_resend_data_on_reconnection
-    def send_local_task_results(self, collaborator_name, round_number,
-                                task_name, data_size, named_tensors):
-        """Send task results to the aggregator."""
-        self._set_header(collaborator_name)
-        request = aggregator_pb2.TaskResults(
-            header=self.header,
-            round_number=round_number,
-            task_name=task_name,
-            data_size=data_size,
-            tensors=named_tensors
-        )
+    # @_atomic_connection
+    # @_resend_data_on_reconnection
+    # def get_aggregated_tensor(self, collaborator_name, tensor_name, round_number,
+    #                           report, tags, require_lossless):
+    #     """Get aggregated tensor from the aggregator."""
+    #     self._set_header(collaborator_name)
 
-        # convert (potentially) long list of tensors into stream
-        stream = []
-        stream += utils.proto_to_datastream(request, self.logger)
-        response = self.stub.SendLocalTaskResults(iter(stream))
+    #     request = aggregator_pb2.GetAggregatedTensorRequest(
+    #         header=self.header,
+    #         tensor_name=tensor_name,
+    #         round_number=round_number,
+    #         report=report,
+    #         tags=tags,
+    #         require_lossless=require_lossless
+    #     )
+    #     response = self.stub.GetAggregatedTensor(request)
+    #     # also do other validation, like on the round_number
+    #     self.validate_response(response, collaborator_name)
 
-        # also do other validation, like on the round_number
-        self.validate_response(response, collaborator_name)
+    #     return response.tensor
 
-    def _get_trained_model(self, experiment_name, model_type):
-        """Get trained model RPC."""
-        get_model_request = self.stub.GetTrainedModelRequest(
-            experiment_name=experiment_name,
-            model_type=model_type,
-        )
-        model_proto_response = self.stub.GetTrainedModel(get_model_request)
-        tensor_dict, _ = utils.deconstruct_model_proto(
-            model_proto_response.model_proto,
-            NoCompressionPipeline(),
-        )
-        return tensor_dict
+    # @_atomic_connection
+    # @_resend_data_on_reconnection
+    # def send_local_task_results(self, collaborator_name, round_number,
+    #                             task_name, data_size, named_tensors):
+    #     """Send task results to the aggregator."""
+    #     self._set_header(collaborator_name)
+    #     request = aggregator_pb2.TaskResults(
+    #         header=self.header,
+    #         round_number=round_number,
+    #         task_name=task_name,
+    #         data_size=data_size,
+    #         tensors=named_tensors
+    #     )
+
+    #     # convert (potentially) long list of tensors into stream
+    #     stream = []
+    #     stream += utils.proto_to_datastream(request, self.logger)
+    #     response = self.stub.SendLocalTaskResults(iter(stream))
+
+    #     # also do other validation, like on the round_number
+    #     self.validate_response(response, collaborator_name)
+
+    # def _get_trained_model(self, experiment_name, model_type):
+    #     """Get trained model RPC."""
+    #     get_model_request = self.stub.GetTrainedModelRequest(
+    #         experiment_name=experiment_name,
+    #         model_type=model_type,
+    #     )
+    #     model_proto_response = self.stub.GetTrainedModel(get_model_request)
+    #     tensor_dict, _ = utils.deconstruct_model_proto(
+    #         model_proto_response.model_proto,
+    #         NoCompressionPipeline(),
+    #     )
+    #     return tensor_dict
