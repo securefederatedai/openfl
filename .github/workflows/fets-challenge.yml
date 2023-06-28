@@ -25,7 +25,7 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install torch==1.13.1+cpu torchvision==0.14.1+cpu torchaudio==0.13.1 --extra-index-url https://download.pytorch.org/whl/cpu
-        pip unisntall onnx -y
+        pip uninstall onnx -y
         pip install .
     - name: Setup FeTS Challenge Prerequisites
       uses: actions/checkout@master
