@@ -46,7 +46,7 @@ if __name__ == '__main__':
         for entry in iterator:
             print(entry)
             if re.match(r'.*\.csv$', entry.name):
-                shutil.copy(entry.path, Path.cwd().resolve())
+                shutil.copy(entry.path, Path.cwd().resolve() / 'data' / col1)
     # Initialize FL plan
     check_call(['fx', 'plan', 'initialize', '-a', fqdn])
     plan_path = Path('plan/plan.yaml')
@@ -91,11 +91,11 @@ if __name__ == '__main__':
         with os.scandir(workspace_root) as iterator:
             for entry in iterator:
                 if re.match('train.csv', entry.name):
-                    shutil.copy(entry.path, workspace_root / col1 / fed_workspace)
-                    shutil.copy(entry.path, workspace_root / col2 / fed_workspace)
+                    shutil.copy(entry.path, workspace_root / col1 / fed_workspace / 'data' / col1)
+                    shutil.copy(entry.path, workspace_root / col2 / fed_workspace / 'data' / col2)
                 if re.match('val.csv', entry.name):
-                    shutil.copy(entry.path, workspace_root / col1 / fed_workspace)
-                    shutil.copy(entry.path, workspace_root / col2 / fed_workspace)
+                    shutil.copy(entry.path, workspace_root / col1 / fed_workspace / 'data' / col1)
+                    shutil.copy(entry.path, workspace_root / col2 / fed_workspace / 'data' / col2)
 
 
     with ProcessPoolExecutor(max_workers=3) as executor:
