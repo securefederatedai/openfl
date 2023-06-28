@@ -68,11 +68,14 @@ if __name__ == '__main__':
     check_call(['fx', 'workspace', 'export'])
 
     certify_aggregator(fqdn)
-    if not Path('seg_test_train.csv').exists():
+    if not Path('train.csv').exists():
         with os.scandir('..') as iterator:
             for entry in iterator:
-                if re.match(r'^seg_test.*\.csv$', entry.name):
+                if re.match('train.csv', entry.name):
                     shutil.copy(entry.path, '.')
+                if re.match('val.csv', entry.name):
+                    shutil.copy(entry.path, '.')
+
     workspace_root = Path().resolve()
     create_collaborator(col1, workspace_root, col1_data_path, archive_name, fed_workspace)
     create_collaborator(col2, workspace_root, col2_data_path, archive_name, fed_workspace)
@@ -87,9 +90,13 @@ if __name__ == '__main__':
     else:
         with os.scandir(workspace_root) as iterator:
             for entry in iterator:
-                if re.match(r'^seg_test.*\.csv$', entry.name):
+                if re.match('train.csv', entry.name):
                     shutil.copy(entry.path, workspace_root / col1 / fed_workspace)
                     shutil.copy(entry.path, workspace_root / col2 / fed_workspace)
+                if re.match('val.csv', entry.name):
+                    shutil.copy(entry.path, workspace_root / col1 / fed_workspace)
+                    shutil.copy(entry.path, workspace_root / col2 / fed_workspace)
+
 
     with ProcessPoolExecutor(max_workers=3) as executor:
         executor.submit(exec, ['fx', 'aggregator', 'start'], workspace_root)

@@ -131,10 +131,10 @@ STEP 1: Install GaNDLF prerequisites and Create a Workspace
         
         python -c "from testing.test_full import test_generic_download_data, test_generic_constructTrainingCSV; test_generic_download_data(); test_generic_constructTrainingCSV()"
         # Creates training CSV
-        head -n 8 testing/data/train_3d_rad_segmentation.csv > seg_test_train.csv
-        head -n 1 testing/data/train_3d_rad_segmentation.csv > seg_test_val.csv
+        head -n 8 testing/data/train_3d_rad_segmentation.csv > train.csv
+        head -n 1 testing/data/train_3d_rad_segmentation.csv > val.csv
         # Creates validation CSV
-        tail -n +9 testing/data/train_3d_rad_segmentation.csv >> seg_test_val.csv
+        tail -n +9 testing/data/train_3d_rad_segmentation.csv >> val.csv
 
     .. note::
 
@@ -168,8 +168,8 @@ STEP 1: Install GaNDLF prerequisites and Create a Workspace
      .. code-block:: console
         # 'one' is the default name of the first collaborator in `plan/data.yaml`. 
         mkdir -p data/one
-        cp ~/GaNDLF/seg_test_train.csv data/one
-        cp ~/GaNDLF/seg_test_val.csv data/one
+        cp ~/GaNDLF/train.csv data/one
+        cp ~/GaNDLF/val.csv data/one
 
 6.  Create the FL plan and initialialize the model weights.
 
