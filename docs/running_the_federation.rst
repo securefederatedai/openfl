@@ -16,8 +16,6 @@ OpenFL currently offers two ways to set up and run experiments with a federation
 `Aggregator-Based Workflow`_
     Define an experiment and distribute it manually. All participants can verify model code and :ref:`FL plan <plan_settings>` prior to execution. The federation is terminated when the experiment is finished
 
-    
-
 
 .. _director_workflow:
 
