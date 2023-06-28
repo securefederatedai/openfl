@@ -324,7 +324,9 @@ class Plan:
         """Get federation aggregator."""
         import sys
         sys.path.append("/home/parth-wsl/env-ishant-code/openfl/" +
-                        "openfl-workspace/experimental-wi/testflow.py")
+                        "openfl-workspace/mnist/src/aggregator_private_attrs.py")
+        sys.path.append("/home/parth-wsl/env-ishant-code/openfl/" +
+                        "openfl-workspace/mnist/src/mnist.py")
 
         defaults = self.config.get('experimental.aggregator', # modifying to not to get values from yaml file
                                    {
@@ -336,21 +338,32 @@ class Plan:
         defaults[SETTINGS]['federation_uuid'] = self.federation_uuid
         defaults[SETTINGS]['authorized_cols'] = self.authorized_cols
 
-        testflow_module = importlib.import_module("src.mnist")
+        # testflow_module = importlib.import_module("src.mnist")
         # TODO: Get checkpoint from plan.yaml
         defaults[SETTINGS]['checkpoint'] = False
-        defaults[SETTINGS]['flow'] = getattr(testflow_module, "FederatedFlow")(
-            checkpoint=defaults[SETTINGS]['checkpoint']
-        )
+
+        # Get flow class, and initialize it here.
+        self.logger.info("Initialzing flow.")
+        defaults[SETTINGS]['flow'] = getattr(
+            importlib.import_module("src.mnist"),
+            "FederatedFlow"
+        )(checkpoint=defaults[SETTINGS]['checkpoint'])
+
+        # Initializing runtime - this will be moved to \
+        # experimental.component.aggregator.py
         defaults[SETTINGS]['runtime'] = getattr(
             importlib.import_module("openfl.experimental.runtime"),
             "FederatedRuntime"
         )()
 
+        # Getting aggregator private attrs function and it's arguments
         defaults[SETTINGS]['private_attrs_callable'] = getattr(
-            testflow_module, "aggregator_private_attrs")
+            importlib.import_module("src.aggregator_private_attrs"),
+            "aggregator_private_attrs"
+        )
         defaults[SETTINGS]['private_attrs_kwargs'] = getattr(
-            testflow_module, "aggregator_kwargs"
+            importlib.import_module("src.aggregator_private_attrs"),
+            "aggregator_kwargs"
         )
 
         defaults[SETTINGS]['compression_pipeline'] = self.get_tensor_pipe()
@@ -477,7 +490,7 @@ class Plan:
         """Get collaborator."""
         import sys
         sys.path.append("/home/parth-wsl/env-ishant-code/openfl/" +
-                        "openfl-workspace/mnist/src")
+                        "openfl-workspace/mnist/src/collaborator_private_attrs.py")
 
         defaults = self.config.get(
             'experimental.collaborator',
@@ -505,13 +518,17 @@ class Plan:
                 certificate
             )
 
-        testflow_module = importlib.import_module("src.mnist")
+        # testflow_module = importlib.import_module("src.mnist")
 
+        # Get collaborator private attribute function and it's arguments
         defaults[SETTINGS]['private_attrs_callable'] = getattr(
-            testflow_module, "collaborator_private_attrs")
+            importlib.import_module("src.collaborator_private_attrs"),
+            "collaborator_private_attrs"
+        )
 
         defaults[SETTINGS]['private_attrs_kwargs'] = getattr(
-            testflow_module, "collaborator_kwargs"
+            importlib.import_module("src.collaborator_private_attrs"),
+            "collaborator_kwargs"
         )
 
         if self.collaborator_ is None:

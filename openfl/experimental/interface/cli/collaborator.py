@@ -125,7 +125,9 @@ def register_data_path(collaborator_name, data_path=None, silent=False):
         echo("Data path is out of the openfl workspace scope.")
         sys.exit(1)
 
-    # Ask for the data directory
+    # TODO: To be confirmed from Sachin, before removing 
+    # the following functionality (Keerti)
+    # # Ask for the data directory
     default_data_path = f"data/{collaborator_name}"
     if not silent and data_path is None:
         dir_path = prompt(
@@ -145,29 +147,12 @@ def register_data_path(collaborator_name, data_path=None, silent=False):
     if isfile(data_yaml):
         d = Plan.load(Path(data_yaml).absolute())
 
-    # to be removed later
-    # separator = ','
-    # if isfile(data_yaml):
-    #     with open(data_yaml, 'r', encoding='utf-8') as f:
-    #         for line in f:
-    #             if separator in line:
-    #                 key, val = line.split(separator, maxsplit=1)
-    #                 d[key] = val.strip()
-
-    # d[collaborator_name] = dir_path
-
     d["collab"]["name"] = collaborator_name
 
     # Write the data.yaml
     if isfile(data_yaml):
         with open(data_yaml, "w", encoding="utf-8") as f:
             f.write(yaml.dump(d))
-    # TODO: to be removed
-    # # Write the data.yaml
-    # if isfile(data_yaml):
-    #     with open(data_yaml, 'w', encoding='utf-8') as f:
-    #         for key, val in d.items():
-    #             f.write(f'{key}{separator}{val}\n')
 
 
 @collaborator.command(name="generate-cert-request")

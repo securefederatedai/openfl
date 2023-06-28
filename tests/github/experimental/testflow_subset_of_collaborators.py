@@ -47,9 +47,7 @@ class TestFlowSubsetCollaborators(FLSpec):
         self.collaborators = self.runtime.collaborators
 
         # select subset of collaborators
-        self.subset_collabrators = self.collaborators[
-            : random.choice(self.random_ints)
-        ]
+        self.subset_collabrators = self.collaborators[: random.choice(self.random_ints)]
 
         print(
             f"... Executing flow for {len(self.subset_collabrators)} collaborators out of Total: "
@@ -84,15 +82,14 @@ class TestFlowSubsetCollaborators(FLSpec):
         End of the flow
 
         """
-        print(
-            f"End of the test case {TestFlowSubsetCollaborators.__name__} reached."
-        )
+        print(f"End of the test case {TestFlowSubsetCollaborators.__name__} reached.")
 
 
 if __name__ == "__main__":
+    # Setup participants
     aggregator = Aggregator()
-    aggregator.private_attributes = {}
 
+    # Setup collaborators private attributes via callable function
     collaborator_names = [
         "Portland",
         "Seattle",
@@ -103,26 +100,31 @@ if __name__ == "__main__":
         "London",
         "New York",
     ]
+
+    def callable_to_initialize_collaborator_private_attributes(collab_name):
+        return {"name": collab_name}
+
     collaborators = []
-    for name in collaborator_names:
-        temp_collab_obj = Collaborator(name=name)
-        temp_collab_obj.private_attributes = {"name": name}
-        collaborators.append(temp_collab_obj)
-        del temp_collab_obj
+    for idx, collaborator_name in enumerate(collaborator_names):
+        collaborators.append(
+            Collaborator(
+                name=collaborator_name,
+                private_attributes_callable=callable_to_initialize_collaborator_private_attributes,
+                collab_name=collaborator_name,
+            )
+        )
 
     local_runtime = LocalRuntime(
-        aggregator=aggregator, collaborators=collaborators
+        aggregator=aggregator,
+        collaborators=collaborators,
     )
-
     if len(sys.argv) > 1:
-        if sys.argv[1] == 'ray':
+        if sys.argv[1] == "ray":
             local_runtime = LocalRuntime(
-                aggregator=aggregator, collaborators=collaborators, backend='ray'
+                aggregator=aggregator, collaborators=collaborators, backend="ray"
             )
 
-    random_ints = random.sample(
-        range(1, len(collaborators) + 1), len(collaborators)
-    )
+    random_ints = random.sample(range(1, len(collaborators) + 1), len(collaborators))
     tc_pass_fail = {"passed": [], "failed": []}
     for round_num in range(len(collaborators)):
         print(f"{bcolors.OKBLUE}Starting round {round_num}...{bcolors.ENDC}")

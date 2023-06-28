@@ -104,6 +104,7 @@ class Aggregator:
         # private_attrs_kwargs to initialize_private_attributes ?
         self.private_attrs_kwargs = private_attrs_kwargs
 
+        self.logger.info("Initialiaing aggregator.")
         self.initialize_private_attributes()
 
     def run_flow_until_transition(self):

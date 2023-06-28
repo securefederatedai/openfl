@@ -2,8 +2,6 @@
 # SPDX-License-Identifier: Apache-2.0
 """Workspace module."""
 
-import os
-import subprocess
 import sys
 from pathlib import Path
 from typing import Tuple
@@ -75,6 +73,8 @@ def create_(prefix, template):
     if is_directory_traversal(prefix):
         echo('Workspace name or path is out of the openfl workspace scope.')
         sys.exit(1)
+    
+    print(get_templates())
     create(prefix, template)
 
 
@@ -330,6 +330,7 @@ def certify():
     echo('\nDone.')
 
 
+# FIXME: Function is not in use
 def _get_requirements_dict(txtfile):
     with open(txtfile, 'r', encoding='utf-8') as snapshot:
         snapshot_dict = {}
@@ -349,191 +350,6 @@ def _get_dir_hash(path):
     hash_.update(path.encode('utf-8'))
     hash_ = hash_.hexdigest()
     return hash_
-
-
-# @workspace.command(name='dockerize')
-# @option('-b', '--base_image', required=False,
-#         help='The tag for openfl base image',
-#         default='openfl')
-# @option('--save/--no-save',
-#         required=False,
-#         help='Save the Docker image into the workspace',
-#         default=True)
-# @pass_context
-# def dockerize_(context, base_image, save):
-#     """
-#     Pack the workspace as a Docker image.
-
-#     This command is the alternative to `workspace export`.
-#     It should be called after plan initialization from the workspace dir.
-
-#     User is expected to be in docker group.
-#     If your machine is behind a proxy, make sure you set it up in ~/.docker/config.json.
-#     """
-#     import docker
-#     import sys
-#     from shutil import copyfile
-
-#     from openfl.experimental.interface.cli.cli_helper import SITEPACKS
-
-#     # Specify the Dockerfile.workspace loaction
-#     openfl_docker_dir = os.path.join(SITEPACKS, 'openfl-docker')
-#     dockerfile_workspace = 'Dockerfile.workspace'
-#     # Apparently, docker's python package does not support
-#     # scenarios when the dockerfile is placed outside the build context
-#     copyfile(os.path.join(openfl_docker_dir, dockerfile_workspace), dockerfile_workspace)
-
-#     workspace_path = os.getcwd()
-#     workspace_name = os.path.basename(workspace_path)
-
-#     # Exporting the workspace
-#     context.invoke(export_)
-#     workspace_archive = workspace_name + '.zip'
-
-#     build_args = {
-#         'WORKSPACE_NAME': workspace_name,
-#         'BASE_IMAGE': base_image
-#     }
-
-#     cli = docker.APIClient()
-#     echo('Building the Docker image')
-#     try:
-#         for line in cli.build(
-#             path=str(workspace_path),
-#             tag=workspace_name,
-#             buildargs=build_args,
-#             dockerfile=dockerfile_workspace,
-#             timeout=3600,
-#             decode=True
-#         ):
-#             if 'stream' in line:
-#                 print(f'> {line["stream"]}', end='')
-#             elif 'error' in line:
-#                 echo('Failed to build the Docker image:')
-#                 echo(line)
-#                 sys.exit(1)
-#     finally:
-#         os.remove(workspace_archive)
-#         os.remove(dockerfile_workspace)
-#     echo('The workspace image has been built successfully!')
-
-#     # Saving the image to a tarball
-#     if save:
-#         workspace_image_tar = workspace_name + '_image.tar'
-#         echo('Saving the Docker image...')
-#         client = docker.from_env(timeout=3600)
-#         image = client.images.get(f'{workspace_name}')
-#         resp = image.save(named=True)
-#         with open(workspace_image_tar, 'wb') as f:
-#             for chunk in resp:
-#                 f.write(chunk)
-#         echo(f'{workspace_name} image saved to {workspace_path}/{workspace_image_tar}')
-
-
-# @workspace.command(name='graminize')
-# @option('-s', '--signing-key', required=False,
-#         type=lambda p: Path(p).absolute(), default='/',
-#         help='A 3072-bit RSA private key (PEM format) is required for signing the manifest.\n'
-#              'If a key is passed the gramine-sgx manifest fill be prepared.\n'
-#              'In option is ignored this command will build an image that can only run '
-#              'with gramine-direct (not in enclave).',
-#         )
-# @option('-e', '--enclave_size', required=False,
-#         type=str, default='16G',
-#         help='Memory size of the enclave, defined as number with size suffix. '
-#              'Must be a power-of-2.\n'
-#              'Default is 16G.'
-#         )
-# @option('-t', '--tag', required=False,
-#         type=str, multiple=False, default='',
-#         help='Tag of the built image.\n'
-#              'By default, the workspace name is used.'
-#         )
-# @option('-o', '--pip-install-options', required=False,
-#         type=str, multiple=True, default=tuple,
-#         help='Options for remote pip install. '
-#              'You may pass several options in quotation marks alongside with arguments, '
-#              'e.g. -o "--find-links source.site"')
-# @option('--save/--no-save', required=False,
-#         default=True, type=bool,
-#         help='Dump the Docker image to an archive')
-# @option('--rebuild', help='Build images with `--no-cache`', is_flag=True)
-# @pass_context
-# def graminize_(context, signing_key: Path, enclave_size: str, tag: str,
-#                pip_install_options: Tuple[str], save: bool, rebuild: bool) -> None:
-#     """
-#     Build gramine app inside a docker image.
-
-#     This command is the alternative to `workspace export`.
-#     It should be called after `fx plan initialize` inside the workspace dir.
-
-#     User is expected to be in docker group.
-#     If your machine is behind a proxy, make sure you set it up in ~/.docker/config.json.
-
-#     TODO:
-#     1. gramine-direct, check if a key is provided
-#     2. make a standalone function with `export` parametr
-#     """
-#     def open_pipe(command: str):
-#         echo(f'\n 📦 Executing command:\n{command}\n')
-#         process = subprocess.Popen(
-#             command,
-#             shell=True, stderr=subprocess.STDOUT,
-#             stdout=subprocess.PIPE)
-#         for line in process.stdout:
-#             echo(line)
-#         _ = process.communicate()  # pipe is already empty, used to get `returncode`
-#         if process.returncode != 0:
-#             raise Exception('\n ❌ Execution failed\n')
-
-#     from openfl.experimental.interface.cli.cli_helper import SITEPACKS
-
-#     # We can build for gramine-sgx and run with gramine-direct,
-#     # but not vice versa.
-#     sgx_build = signing_key.is_file()
-#     if sgx_build:
-#         echo('\n Building SGX-ready applecation')
-#     else:
-#         echo('\n Building gramine-direct applecation')
-#     rebuild_option = '--no-cache' if rebuild else ''
-
-#     os.environ['DOCKER_BUILDKIT'] = '1'
-
-#     echo('\n 🐋 Building base gramine-openfl image...')
-#     base_dockerfile = SITEPACKS / 'openfl-gramine' / 'Dockerfile.gramine'
-#     base_build_command = f'docker build {rebuild_option} -t gramine_openfl -f {base_dockerfile} .'
-#     open_pipe(base_build_command)
-#     echo('\n ✔️ DONE: Building base gramine-openfl image')
-
-#     workspace_path = Path.cwd()
-#     workspace_name = workspace_path.name
-
-#     if not tag:
-#         tag = workspace_name
-
-#     context.invoke(export_, pip_install_options=pip_install_options)
-#     workspace_archive = workspace_path / f'{workspace_name}.zip'
-
-#     grainized_ws_dockerfile = SITEPACKS / 'openfl-gramine' / 'Dockerfile.graminized.workspace'
-
-#     echo('\n 🐋 Building graminized workspace image...')
-#     signing_key = f'--secret id=signer-key,src={signing_key} ' if sgx_build else ''
-#     graminized_build_command = (
-#         f'docker build -t {tag} {rebuild_option} '
-#         '--build-arg BASE_IMAGE=gramine_openfl '
-#         f'--build-arg WORKSPACE_ARCHIVE={workspace_archive.relative_to(workspace_path)} '
-#         f'--build-arg SGX_ENCLAVE_SIZE={enclave_size} '
-#         f'--build-arg SGX_BUILD={int(sgx_build)} '
-#         f'{signing_key}'
-#         f'-f {grainized_ws_dockerfile} {workspace_path}')
-#     open_pipe(graminized_build_command)
-#     echo('\n ✔️ DONE: Building graminized workspace image')
-
-#     if save:
-#         echo('\n 💾 Saving the graminized workspace image...')
-#         save_image_command = f'docker save {tag} | gzip > {tag}.tar.gz'
-#         open_pipe(save_image_command)
-#         echo(f'\n ✔️ The image saved to file: {tag}.tar.gz')
 
 
 def apply_template_plan(prefix, template):

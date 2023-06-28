@@ -132,16 +132,6 @@ class Plan:
                     # TODO:need to replace with load
                     plan.cols_data_paths = safe_load(f)
 
-            # TODO: to be removed
-            # if data_config_path is not None:
-            #     data_config = open(data_config_path, 'r')
-            #     for line in data_config:
-            #         line = line.rstrip()
-            #         if len(line) > 0:
-            #             if line[0] != '#':
-            #                 collab, data_path = line.split(',', maxsplit=1)
-            #                 plan.cols_data_paths[collab] = data_path
-
             if resolve:
                 plan.resolve()
 
@@ -325,31 +315,39 @@ class Plan:
     def get_aggregator(self, tensor_dict=None):
         """Get federation aggregator."""
         defaults = self.config.get(
-            "aggregator", {TEMPLATE: "openfl.experimental.Aggregator", SETTINGS: {}}
+            "aggregator", {
+                TEMPLATE: "openfl.experimental.Aggregator",
+                SETTINGS: {}
+            }
         )
 
         defaults[SETTINGS]["aggregator_uuid"] = self.aggregator_uuid
         defaults[SETTINGS]["federation_uuid"] = self.federation_uuid
         defaults[SETTINGS]["authorized_cols"] = self.authorized_cols
 
-        # TODO: Keerti will modify this and get from plan.yaml file instead.
-        defaults[SETTINGS]["checkpoint"] = True
-        defaults[SETTINGS]["flow"] = Modification requred to come from yaml file
-        defaults[SETTINGS]["runtime"] = confirm with Sachin whether to pass from yaml file 
-        or to import in aggregator and create an object.
-        # 1. argumenets for callable private attr function is coming as kwargs 
-        # to Aggregator construtor
-
-        # 2. check if private_attributes_callable is a callable otherwise throw 
-        # TypeError, similar to log_metric_callback in line #354.
-
         defaults[SETTINGS]["compression_pipeline"] = self.get_tensor_pipe()
 
-        log_metric_callback = defaults[SETTINGS].get("log_metric_callback")
-        defaults[SETTINGS]["private_attributes_callable"] = self.config.get(
-            "aggregator"
-        )["callable_func"]["template"]
+        # defaults[SETTINGS][
+        #     "straggler_handling_policy"
+        # ] = self.get_straggler_handling_policy()
 
+        log_metric_callback = defaults[SETTINGS].get("log_metric_callback")
+
+        defaults[SETTINGS]["checkpoint"] = self.config.get("federated_flow")['checkpoint']
+        defaults[SETTINGS]["flow"] = self.flow_
+        private_attr_callable = {"template": self.config.get("aggregator")["callable_func"]["template"]}
+        
+        if private_attr_callable:
+            if isinstance(private_attr_callable, dict):
+                private_attr_callable = Plan.import_(**private_attr_callable)
+        if not callable(private_attr_callable):
+            raise TypeError(
+                f"private_attr_callable should be callable object "
+                f"or be import from code part, get {private_attr_callable}"
+            )
+
+        defaults[SETTINGS]["private_attributes_callable"] = private_attr_callable
+        
         if log_metric_callback:
             if isinstance(log_metric_callback, dict):
                 log_metric_callback = Plan.import_(**log_metric_callback)
@@ -471,7 +469,7 @@ class Plan:
         root_certificate=None,
         private_key=None,
         certificate=None,
-        task_runner=None,
+        # task_runner=None,
         client=None,
         shard_descriptor=None,
     ):
@@ -484,43 +482,23 @@ class Plan:
         defaults[SETTINGS]["aggregator_uuid"] = self.aggregator_uuid
         defaults[SETTINGS]["federation_uuid"] = self.federation_uuid
 
-        # Task runnner is not required.
-        if task_runner is not None:
-            defaults[SETTINGS]["task_runner"] = task_runner
-        else:
-            # Here we support new interactive api as well as old task_runner subclassing interface
-            # If Task Runner class is placed incide openfl `task-runner` subpackage it is
-            # a part of the New API and it is a part of OpenFL kernel.
-            # If Task Runner is placed elsewhere, somewhere in user workspace, than it is
-            # a part of the old interface and we follow legacy initialization procedure.
-            if (
-                "openfl.federated.task.task_runner"
-                in self.config["task_runner"]["template"]
-            ):
-                # Interactive API
-                (
-                    model_provider,
-                    task_keeper,
-                    data_loader,
-                ) = self.deserialize_interface_objects()
-                data_loader = self.initialize_data_loader(data_loader, shard_descriptor)
-                defaults[SETTINGS]["task_runner"] = self.get_core_task_runner(
-                    data_loader=data_loader,
-                    model_provider=model_provider,
-                    task_keeper=task_keeper,
-                )
-            else:
-                # TaskRunner subclassing API
-                data_loader = self.get_data_loader(collaborator_name)
-                defaults[SETTINGS]["task_runner"] = self.get_task_runner(data_loader)
-
         defaults[SETTINGS]["compression_pipeline"] = self.get_tensor_pipe()
-        # taks config is not required
-        defaults[SETTINGS]["task_config"] = self.config.get("tasks", {})
-        defaults[SETTINGS]["private_attributes_callable"] = self.cols_data_paths[
-            "collab"
-        ]["callable_func"]["template"]
+
         kwargs = self.cols_data_paths["collab"]["callable_func"]["settings"]
+        
+        private_attr_callable =  {"template":self.cols_data_paths["collab"]["callable_func"]['template']}
+        
+        if private_attr_callable:
+            if isinstance(private_attr_callable, dict):
+                private_attr_callable = Plan.import_(**private_attr_callable)
+        if not callable(private_attr_callable):
+            raise TypeError(
+                f"private_attr_callable should be callable object "
+                f"or be import from code part, get {private_attr_callable}"
+            )
+
+        defaults[SETTINGS]["private_attributes_callable"] = private_attr_callable
+
         if client is not None:
             defaults[SETTINGS]["client"] = client
         else:

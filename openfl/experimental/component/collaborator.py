@@ -57,6 +57,7 @@ class Collaborator:
 
         self.round_number = 0
 
+        self.logger.info("Initialiaing collaborator.")
         self.initialize_private_attributes()
 
 

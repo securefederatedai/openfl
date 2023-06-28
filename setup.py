@@ -109,6 +109,8 @@ setup(
         'openfl.databases',
         'openfl.databases.utilities',
         'openfl.experimental',
+        'openfl.experimental.federated',
+        'openfl.experimental.federated.plan',
         'openfl.experimental.component',
         'openfl.experimental.interface.cli',
         'openfl.experimental.interface',

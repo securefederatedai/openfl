@@ -3,7 +3,6 @@
 """Aggregator module."""
 
 import sys
-import threading
 from logging import getLogger
 
 from click import echo
@@ -41,7 +40,7 @@ def start_(plan, authorized_cols, secure):
     """Start the aggregator service."""
     from pathlib import Path
 
-    from openfl.federated import Plan
+    from openfl.experimental.federated import Plan
 
     if is_directory_traversal(plan):
         echo('Federated learning plan path is out of the openfl workspace scope.')
@@ -54,43 +53,8 @@ def start_(plan, authorized_cols, secure):
                       cols_config_path=Path(authorized_cols).absolute())
 
     logger.info('🧿 Starting the Aggregator Service.')
-
-    agg_server = plan.get_server()
-
-    plan.aggregator_.agg_grpc_server_start = threading.Thread(target=agg_server.serve)
-    plan.aggregator_.start_flow_execution = threading.Thread(target=plan.aggregator_.run_flow_until_transition)
-    plan.aggregator_.agg_grpc_server_start.start()
-    plan.aggregator_.start_flow_execution.start()
-
-# @aggregator.command(name='start')
-# @option('-p', '--plan', required=False,
-#         help='Federated learning plan [plan/plan.yaml]',
-#         default='plan/plan.yaml',
-#         type=ClickPath(exists=True))
-# @option('-c', '--authorized_cols', required=False,
-#         help='Authorized collaborator list [plan/cols.yaml]',
-#         default='plan/cols.yaml', type=ClickPath(exists=True))
-# @option('-s', '--secure', required=False,
-#         help='Enable Intel SGX Enclave', is_flag=True, default=False)
-# def start_(plan, authorized_cols, secure):
-#     """Start the aggregator service."""
-#     from pathlib import Path
-
-#     from openfl.experimental.federated import Plan
-
-#     if is_directory_traversal(plan):
-#         echo('Federated learning plan path is out of the openfl workspace scope.')
-#         sys.exit(1)
-#     if is_directory_traversal(authorized_cols):
-#         echo('Authorized collaborator list file path is out of the openfl workspace scope.')
-#         sys.exit(1)
-
-#     plan = Plan.parse(plan_config_path=Path(plan).absolute(),
-#                       cols_config_path=Path(authorized_cols).absolute())
-
-#     logger.info('🧿 Starting the Aggregator Service.')
-#     plan.get_flow()
-#     plan.get_server().serve()
+    plan.get_flow()
+    plan.get_server().serve()
 
 
 @aggregator.command(name='generate-cert-request')
@@ -135,18 +99,6 @@ def generate_cert_request(fqdn):
     # Write aggregator csr and key to disk
     write_crt(server_csr, CERT_DIR / 'server' / f'{file_name}.csr')
     write_key(server_private_key, CERT_DIR / 'server' / f'{file_name}.key')
-
-
-# # TODO: function not used
-# def find_certificate_name(file_name):
-#     """Search the CRT for the actual aggregator name."""
-#     # This loop looks for the collaborator name in the key
-#     with open(file_name, 'r', encoding='utf-8') as f:
-#         for line in f:
-#             if 'Subject: CN=' in line:
-#                 col_name = line.split('=')[-1].strip()
-#                 break
-#     return col_name
 
 
 @aggregator.command(name='certify')
