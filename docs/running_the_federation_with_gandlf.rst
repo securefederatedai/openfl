@@ -471,7 +471,7 @@ STEP 3: Start the Federation
 Post Experiment
 ^^^^^^^^^^^^^^^
 
-Experiment owners may access the final model in its native format. Once the model has been converted to its native format, inference can be done using [GaNDLF's inference API](https://mlcommons.github.io/GaNDLF/usage/#running-gandlf-traininginference).
+Experiment owners may access the final model in its native format. Once the model has been converted to its native format, inference can be done using `GaNDLF's inference API <https://mlcommons.github.io/GaNDLF/usage/#running-gandlf-traininginference>`.
 Among other training artifacts, the aggregator creates the last and best aggregated (highest validation score) model snapshots. One may convert a snapshot to the native format and save the model to disk by calling the following command from the workspace:
 
 .. code-block:: console
@@ -489,3 +489,7 @@ Another way to access the trained model is by calling the API command directly f
 
 In fact, the :code:`get_model()` method returns a **TaskRunner** object loaded with the chosen model snapshot. Users may utilize the linked model as a regular Python object.
 
+Running Inference with GaNDLF
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Now that you have generated the final federated model in pytorch format, you can use the model by following the `GaNDLF inference instructions <https://mlcommons.github.io/GaNDLF/usage/#inference>`
