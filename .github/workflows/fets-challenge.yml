@@ -46,5 +46,5 @@ jobs:
         head -n 8 testing/data/train_3d_rad_segmentation.csv > /home/runner/work/openfl/openfl/train.csv
         cd /home/runner/work/openfl/openfl
         ls
-        python -m tests.github.test_gandlf --template gandlf_seg_test --fed_workspace aggregator --col1 col1 --col2 col2 --rounds-to-train 1
+        python -m tests.github.test_gandlf --template gandlf_seg_test --fed_workspace aggregator --col1 one --col2 two --rounds-to-train 1
         
