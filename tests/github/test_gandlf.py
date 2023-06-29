@@ -74,7 +74,7 @@ if __name__ == '__main__':
             for entry in iterator:
                 if re.match('train.csv', entry.name):
                     shutil.copy(entry.path, '.')
-                if re.match('val.csv', entry.name):
+                if re.match('valid.csv', entry.name):
                     shutil.copy(entry.path, '.')
 
     workspace_root = Path().resolve()
@@ -97,7 +97,7 @@ if __name__ == '__main__':
                 if re.match('train.csv', entry.name):
                     shutil.copy(entry.path, workspace_root / col1 / fed_workspace / 'data' / col1)
                     shutil.copy(entry.path, workspace_root / col2 / fed_workspace / 'data' / col2)
-                if re.match('val.csv', entry.name):
+                if re.match('valid.csv', entry.name):
                     shutil.copy(entry.path, workspace_root / col1 / fed_workspace / 'data' / col1)
                     shutil.copy(entry.path, workspace_root / col2 / fed_workspace / 'data' / col2)
 
