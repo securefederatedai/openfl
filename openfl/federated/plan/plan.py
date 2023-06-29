@@ -65,18 +65,22 @@ class Plan:
 
     @staticmethod
     def parse(plan_config_path: Path, cols_config_path: Path = None,
-              data_config_path: Path = None, resolve=True):
+              data_config_path: Path = None, gandlf_config_path=None,
+              resolve=True):
         """
         Parse the Federated Learning plan.
 
         Args:
-            plan_config_path (string): The filepath to the federated learning
-                                       plan
-            cols_config_path (string): The filepath to the federation
-                                       collaborator list [optional]
-            data_config_path (string): The filepath to the federation
-                                       collaborator data configuration
-                                       [optional]
+            plan_config_path (string):     The filepath to the federated learning
+                                           plan
+            cols_config_path (string):     The filepath to the federation
+                                           collaborator list [optional]
+            data_config_path (string):     The filepath to the federation
+                                           collaborator data configuration
+                                           [optional]
+            override_config_path (string): The filepath to a yaml file
+                                           that overrides the configuration
+                                           [optional]
         Returns:
             A federated learning plan object
         """
@@ -119,6 +123,15 @@ class Plan:
                     defaults.update(plan.config[section])
 
                     plan.config[section] = defaults
+
+            if gandlf_config_path is not None:
+                Plan.logger.info(
+                    f'Importing GaNDLF Config into plan '
+                    f'from file [red]{gandlf_config_path}[/].',
+                    extra={'markup': True})
+
+                gandlf_config = Plan.load(Path(gandlf_config_path))
+                plan.config['task_runner']['settings']['gandlf_config'] = gandlf_config
 
             plan.authorized_cols = Plan.load(cols_config_path).get(
                 'collaborators', []
