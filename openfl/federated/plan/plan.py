@@ -65,7 +65,7 @@ class Plan:
 
     @staticmethod
     def parse(plan_config_path: Path, cols_config_path: Path = None,
-              data_config_path: Path = None, gandlf_config_path = None,
+              data_config_path: Path = None, gandlf_config_path=None,
               resolve=True):
         """
         Parse the Federated Learning plan.
@@ -132,7 +132,6 @@ class Plan:
 
                 gandlf_config = Plan.load(Path(gandlf_config_path))
                 plan.config['task_runner']['settings']['gandlf_config'] = gandlf_config
-
 
             plan.authorized_cols = Plan.load(cols_config_path).get(
                 'collaborators', []
