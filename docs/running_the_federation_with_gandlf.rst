@@ -7,11 +7,11 @@
 Run the Federation with a model defined using GaNDLF
 ****************************************************
 
-This guide will show you how to take an existing model using the [Generally Nuanced Deep Learning Framework (GaNDLF)](https://github.com/mlcommons/GaNDLF) experiment to a federated environment. 
+This guide will show you how to take an existing model using the `Generally Nuanced Deep Learning Framework (GaNDLF) <https://github.com/mlcommons/GaNDLF>`_ experiment to a federated environment. 
 
 
 `Aggregator-Based Workflow`_
-    Define an experiment and distribute it manually. All participants can verify model code and [FL plan](https://openfl.readthedocs.io/en/latest/running_the_federation.html#federated-learning-plan-fl-plan-settings) prior to executing the code/model. The federation is terminated when the experiment is finished, and appropriate statistics are generated.
+    Define an experiment and distribute it manually. All participants can verify model code and `FL plan <https://openfl.readthedocs.io/en/latest/running_the_federation.html#federated-learning-plan-fl-plan-settings>`_ prior to executing the code/model. The federation is terminated when the experiment is finished, and appropriate statistics are generated.
 
 
 .. _running_the_federation_aggregator_based_gandlf:
@@ -29,9 +29,9 @@ An overview of this workflow is shown below.
 This workflow uses short-lived components in a federation, which is terminated when the experiment is finished. The components are as follows:
 
 - The *Collaborator* uses a local dataset to train a global model and sends the model updates to the *Aggregator*, which aggregates them to create the new global model.
-- The *Aggregator* is framework-agnostic, while the *Collaborator* can use any deep learning frameworks, such as `TensorFlow <https://www.tensorflow.org/>`_\* \  or `PyTorch <https://pytorch.org/>`_\*\. `GaNDLF <https://github.com/mlcommons/GaNDLF>` provides a straightforward way to define complete model training pipelines for healthcare data, and is directly compatible with OpenFL.
+- The *Aggregator* is framework-agnostic, while the *Collaborator* can use any deep learning frameworks, such as `TensorFlow <https://www.tensorflow.org/>`_\* \  or `PyTorch <https://pytorch.org/>`_\*\. `GaNDLF <https://github.com/mlcommons/GaNDLF>`_ provides a straightforward way to define complete model training pipelines for healthcare data, and is directly compatible with OpenFL.
 
-This guide will demonstrate how to take an existing [GaNDLF model configuration](https://mlcommons.github.io/GaNDLF/getting_started/) (e.g., for segmentation), embed this within the Federated Learning plan (FL plan) along with the Python\*\  code that defines the model and the data loader. The FL plan is a `YAML <https://en.wikipedia.org/wiki/YAML>`_ file that defines the collaborators, aggregator, connections, models, data, and any other parameters that describe the training.
+This guide will demonstrate how to take an existing `GaNDLF model configuration <https://mlcommons.github.io/GaNDLF/getting_started/>`_ (e.g., for segmentation), embed this within the Federated Learning plan (FL plan) along with the Python\*\  code that defines the model and the data loader. The FL plan is a `YAML <https://en.wikipedia.org/wiki/YAML>`_ file that defines the collaborators, aggregator, connections, models, data, and any other parameters that describe the training.
 
 
 .. _plan_settings_gandlf:
@@ -121,7 +121,7 @@ STEP 1: Install GaNDLF prerequisites and Create a Workspace
 		fx
 
 
-2.     [Install GaNDLF from sources](https://mlcommons.github.io/GaNDLF/setup/#install-from-sources) (if not already).
+2.     `Install GaNDLF from sources <https://mlcommons.github.io/GaNDLF/setup/#install-from-sources>`_ (if not already).
 
 3.     Create GaNDLF's Data CSVs. The example below is for 3D Segmentation using the unit test data:
 
@@ -346,7 +346,7 @@ Importing the Workspace
 
 1. Copy the :ref:`workspace archive <workspace_export>` from the aggregator node to the collaborator nodes.
 
-2.     [Install GaNDLF from sources](https://mlcommons.github.io/GaNDLF/setup/#install-from-sources) (if not already).
+2.     `Install GaNDLF from sources <https://mlcommons.github.io/GaNDLF/setup/#install-from-sources>`_ (if not already).
 
 3. Import the workspace archive.
 
@@ -365,7 +365,7 @@ Importing the Workspace
        fx collaborator generate-cert-request -n {COL_LABEL} -d data/{COL_LABEL}
 
 
-The creation script will specify the path to the data. In this case, the GaNDLF Data Loader will look for **train.csv** and **valid.csv** at the path that's provided. Before running the experiment, you will need to configure both train.csv and valid.csv **manually for each collaborator** so that each collaborator has the correct datasets. For example, if the collaborator's name is `one`, collaborator one would load `data/one/train.csv` and `data/one/valid.csv` at experiment runtime, and collaborator two would load `data/two/train.csv` and `data/two/valid.csv`. 
+The creation script will specify the path to the data. In this case, the GaNDLF Data Loader will look for **train.csv** and **valid.csv** at the path that's provided. Before running the experiment, you will need to configure both train.csv and valid.csv **manually for each collaborator** so that each collaborator has the correct datasets. For example, if the collaborator's name is `one`, collaborator one would load :code:`data/one/train.csv` and :code:`data/one/valid.csv` at experiment runtime, and collaborator two would load :code:`data/two/train.csv` and :code:`data/two/valid.csv`. 
 
  This command will also create the following files:
 
@@ -470,7 +470,7 @@ STEP 3: Start the Federation
 Post Experiment
 ^^^^^^^^^^^^^^^
 
-Experiment owners may access the final model in its native format. Once the model has been converted to its native format, inference can be done using `GaNDLF's inference API <https://mlcommons.github.io/GaNDLF/usage/#running-gandlf-traininginference>`.
+Experiment owners may access the final model in its native format. Once the model has been converted to its native format, inference can be done using `GaNDLF's inference API <https://mlcommons.github.io/GaNDLF/usage/#running-gandlf-traininginference>`_.
 Among other training artifacts, the aggregator creates the last and best aggregated (highest validation score) model snapshots. One may convert a snapshot to the native format and save the model to disk by calling the following command from the workspace:
 
 .. code-block:: console
@@ -491,4 +491,4 @@ In fact, the :code:`get_model()` method returns a **TaskRunner** object loaded w
 Running Inference with GaNDLF
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Now that you have generated the final federated model in pytorch format, you can use the model by following the `GaNDLF inference instructions <https://mlcommons.github.io/GaNDLF/usage/#inference>`
+Now that you have generated the final federated model in pytorch format, you can use the model by following the `GaNDLF inference instructions <https://mlcommons.github.io/GaNDLF/usage/#inference>`_
