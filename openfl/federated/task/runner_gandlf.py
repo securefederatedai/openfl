@@ -26,8 +26,6 @@ class GaNDLFTaskRunner(TaskRunner):
 
     def __init__(
             self,
-            train_csv: str = None,
-            val_csv: str = None,
             gandlf_config: Union[str, dict] = None,
             device: str = None,
             **kwargs
@@ -40,6 +38,10 @@ class GaNDLFTaskRunner(TaskRunner):
         super().__init__(**kwargs)
 
         # allow pass-through of a gandlf config as a file or a dict
+
+        train_csv = self.data_loader.train_csv
+        val_csv = self.data_loader.val_csv
+
         if isinstance(gandlf_config, str) and os.path.exists(gandlf_config):
             gandlf_config = yaml.safe_load(open(gandlf_config, "r"))
 
