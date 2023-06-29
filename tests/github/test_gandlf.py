@@ -23,11 +23,11 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--template', default='keras_cnn_mnist')
     parser.add_argument('--fed_workspace', default='fed_work12345alpha81671')
-    parser.add_argument('--col1', default='one123dragons')
-    parser.add_argument('--col2', default='beta34unicorns')
+    parser.add_argument('--col1', default='one')
+    parser.add_argument('--col2', default='two')
     parser.add_argument('--rounds-to-train')
-    parser.add_argument('--col1-data-path', default='1')
-    parser.add_argument('--col2-data-path', default='2')
+    parser.add_argument('--col1-data-path', default='one')
+    parser.add_argument('--col2-data-path', default='two')
     parser.add_argument('--ujjwal', action='store_true')
 
     origin_dir = Path().resolve()
@@ -42,6 +42,7 @@ if __name__ == '__main__':
     shutil.rmtree(fed_workspace, ignore_errors=True)
     check_call(['fx', 'workspace', 'create', '--prefix', fed_workspace, '--template', template])
     os.chdir(fed_workspace)
+    Path(Path.cwd().resolve() / 'data' / col1).mkdir(exist_ok=True)
     with os.scandir(origin_dir) as iterator:
         for entry in iterator:
             print(entry)
@@ -79,6 +80,9 @@ if __name__ == '__main__':
     workspace_root = Path().resolve()
     create_collaborator(col1, workspace_root, col1_data_path, archive_name, fed_workspace)
     create_collaborator(col2, workspace_root, col2_data_path, archive_name, fed_workspace)
+
+    Path(workspace_root / col1 / fed_workspace / 'data' / col1).mkdir(exist_ok=True)
+    Path(workspace_root / col2 / fed_workspace / 'data' / col2).mkdir(exist_ok=True)
 
     if args.ujjwal:
         with os.scandir('/media/ujjwal/SSD4TB/sbutil/DatasetForTraining_Horizontal/') as iterator:
