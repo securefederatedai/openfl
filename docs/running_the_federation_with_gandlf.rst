@@ -14,7 +14,7 @@ This guide will show you how to take an existing model using the [Generally Nuan
     Define an experiment and distribute it manually. All participants can verify model code and [FL plan](https://openfl.readthedocs.io/en/latest/running_the_federation.html#federated-learning-plan-fl-plan-settings) prior to executing the code/model. The federation is terminated when the experiment is finished, and appropriate statistics are generated.
 
 
-.. _running_the_federation_aggregator_based:
+.. _running_the_federation_aggregator_based_gandlf:
 
 Aggregator-Based Workflow
 =========================
@@ -25,9 +25,6 @@ An overview of this workflow is shown below.
 
 .. centered:: Overview of the Aggregator-Based Workflow
 
-- `Bare Metal Approach`_
-- `Docker Approach`_
-
 
 This workflow uses short-lived components in a federation, which is terminated when the experiment is finished. The components are as follows:
 
@@ -37,8 +34,7 @@ This workflow uses short-lived components in a federation, which is terminated w
 This guide will demonstrate how to take an existing [GaNDLF model configuration](https://mlcommons.github.io/GaNDLF/getting_started/) (e.g., for segmentation), embed this within the Federated Learning plan (FL plan) along with the Python\*\  code that defines the model and the data loader. The FL plan is a `YAML <https://en.wikipedia.org/wiki/YAML>`_ file that defines the collaborators, aggregator, connections, models, data, and any other parameters that describe the training.
 
 
-.. _plan_settings:
-
+.. _plan_settings_gandlf:
 
 
 
@@ -74,14 +70,14 @@ Each task subsection contains the following:
     See an `example <https://github.com/intel/openfl/blob/develop/openfl/federated/task/runner.py>`_ of the :class:`TaskRunner <openfl.federated.TaskRunner>` class for details.
 
 
-.. _running_the_federation_manual:
+.. _running_the_federation_manual_gandlf:
 
 
-.. _simulate_a_federation:
+.. _simulate_a_federation_gandlf:
 
 
 Simulate a federation
--------------------
+---------------------
 
 .. note::
 
@@ -90,14 +86,15 @@ Simulate a federation
     See :ref:`install_package` for details.
 
 
-You can use the `"Hello Federation" bash script <https://github.com/intel/openfl/blob/develop/tests/github/test_hello_federation.sh>`_ to quickly create a federation (an aggregator node and two collaborator nodes) to test the project pipeline.
+You can use the `"Hello Federation" bash script <https://github.com/intel/openfl/blob/develop/tests/github/test_hello_federation.py>`_ to quickly create a federation (an aggregator node and two collaborator nodes) to test the project pipeline.
 
-.. literalinclude:: ../tests/github/test_hello_federation.sh
+.. literalinclude:: ../tests/github/test_hello_federation.py
   :language: bash
 
 However, continue with the following procedure for details in creating a federation with an aggregator-based workflow.
 
-    `STEP 1: Create a Workspace on the Aggregator`_
+    `STEP 1: Install GaNDLF prerequisites and Create a Workspace`_
+
 
         - Creates a federated learning workspace on one of the nodes.
 
@@ -111,11 +108,11 @@ However, continue with the following procedure for details in creating a federat
     `STEP 3: Start the Federation`_
 
 
-.. _creating_workspaces:
+.. _creating_workspaces_gandlf:
 
 
 STEP 1: Install GaNDLF prerequisites and Create a Workspace
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 1.	Start a Python 3.8 (>=3.7, <3.11) virtual environment and confirm |productName| is available.
 
@@ -127,6 +124,7 @@ STEP 1: Install GaNDLF prerequisites and Create a Workspace
 2.     [Install GaNDLF from sources](https://mlcommons.github.io/GaNDLF/setup/#install-from-sources) (if not already).
 
 3.     Create GaNDLF's Data CSVs. The example below is for 3D Segmentation using the unit test data:
+
     .. code-block:: console
         
         python -c "from testing.test_full import test_generic_download_data, test_generic_constructTrainingCSV; test_generic_download_data(); test_generic_constructTrainingCSV()"
@@ -166,6 +164,7 @@ STEP 1: Install GaNDLF prerequisites and Create a Workspace
 6.  Copy the GaNDLF Data CSVs into the default path for model initialization
 
      .. code-block:: console
+
         # 'one' is the default name of the first collaborator in `plan/data.yaml`. 
         mkdir -p data/one
         cp ~/GaNDLF/train.csv data/one
@@ -241,7 +240,7 @@ STEP 1: Install GaNDLF prerequisites and Create a Workspace
 
 
 
-.. _configure_the_federation:
+.. _configure_the_federation_gandlf:
 
 
 STEP 2: Configure the Federation
@@ -418,7 +417,7 @@ The creation script will specify the path to the data. In this case, the GaNDLF 
 
 
 
-.. _running_the_federation.start_nodes:
+.. _running_the_federation.start_nodes.gandlf:
 
 
 STEP 3: Start the Federation
