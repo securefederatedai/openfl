@@ -101,7 +101,6 @@ if __name__ == '__main__':
                     shutil.copy(entry.path, workspace_root / col1 / fed_workspace / 'data' / col1)
                     shutil.copy(entry.path, workspace_root / col2 / fed_workspace / 'data' / col2)
 
-
     with ProcessPoolExecutor(max_workers=3) as executor:
         executor.submit(exec, ['fx', 'aggregator', 'start'], workspace_root)
         time.sleep(5)
