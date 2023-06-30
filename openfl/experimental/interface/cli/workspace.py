@@ -132,7 +132,7 @@ def export_(pip_install_options: Tuple[str]):
     plan_file = Path('plan/plan.yaml').absolute()
     try:
         freeze_plan(plan_file)
-    except Exception:
+    except FileNotFoundError:
         echo(f'Plan file "{plan_file}" not found. No freeze performed.')
 
     # Dump requirements.txt

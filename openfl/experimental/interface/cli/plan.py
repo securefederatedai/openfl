@@ -103,11 +103,4 @@ def freeze_plan(plan_config):
     plan = Plan()
     plan.config = Plan.parse(Path(plan_config), resolve=False).config
 
-    init_state_path = plan.config['aggregator']['settings']['init_state_path']
-
-    if not Path(init_state_path).exists():
-        logger.info("Plan has not been initialized! Run 'fx plan"
-                    " initialize' before proceeding")
-        return
-
     Plan.dump(Path(plan_config), plan.config, freeze=True)
