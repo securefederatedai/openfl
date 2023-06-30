@@ -22,7 +22,6 @@ def plan(context):
     """Manage Federated Learning Plans."""
     context.obj['group'] = 'plan'
 
-
 @plan.command()
 @pass_context
 @option('-p', '--plan_config', required=False,
@@ -99,7 +98,7 @@ def freeze_plan(plan_config):
     """Dump the plan to YAML file."""
     from pathlib import Path
 
-    from openfl.federated import Plan
+    from openfl.experimental.federated import Plan
 
     plan = Plan()
     plan.config = Plan.parse(Path(plan_config), resolve=False).config

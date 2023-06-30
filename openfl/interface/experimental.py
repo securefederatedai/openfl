@@ -15,7 +15,6 @@ def experimental(context):
     """Manage Experimental Environment."""
     context.obj["group"] = "experimental"
 
-
 @experimental.command(name="activate")
 def activate():
     """Activate experimental environment."""

@@ -4,6 +4,8 @@ rm -rf my_federation/
 python -m pip install .
 python -m pip install .
 
+fx experimental activate
+
 export WORKSPACE_PATH=$(pwd)/my_federation
 export WORKSPACE_TEMPLATE=$1
 # export WORKSPACE_TEMPLATE=test

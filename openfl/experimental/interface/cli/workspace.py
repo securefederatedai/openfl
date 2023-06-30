@@ -24,7 +24,6 @@ def workspace(context):
     """Manage Experimental Federated Learning Workspaces."""
     context.obj['group'] = 'workspace'
 
-
 def create_dirs(prefix):
     """Create workspace directories."""
     from shutil import copyfile
@@ -41,7 +40,6 @@ def create_dirs(prefix):
 
     copyfile(WORKSPACE / 'workspace' / '.workspace', prefix / '.workspace')
 
-
 def create_temp(prefix, template):
     """Create workspace templates."""
     from shutil import ignore_patterns
@@ -55,14 +53,12 @@ def create_temp(prefix, template):
              ignore=ignore_patterns('__pycache__'))  # from template workspace
     apply_template_plan(prefix, template)
 
-
 def get_templates():
     """Grab the default templates from the distribution."""
     from openfl.experimental.interface.cli.cli_helper import WORKSPACE
 
     return [d.name for d in WORKSPACE.glob('*') if d.is_dir()
             and d.name not in ['__pycache__', 'workspace']]
-
 
 @workspace.command(name='create')
 @option('--prefix', required=True,
@@ -77,15 +73,16 @@ def create_(prefix, template):
     print(get_templates())
     create(prefix, template)
 
-
 def create(prefix, template):
 
     from os.path import isfile
     from subprocess import check_call
     from sys import executable
 
-    from openfl.experimental.interface.cli.cli_helper import print_tree
-    from openfl.experimental.interface.cli.cli_helper import OPENFL_USERDIR
+    from openfl.experimental.interface.cli.cli_helper import (
+        OPENFL_USERDIR,
+        print_tree
+    )
 
     if not OPENFL_USERDIR.exists():
         OPENFL_USERDIR.mkdir()
@@ -109,7 +106,6 @@ def create(prefix, template):
         check_call([executable, '-m', 'pip', 'freeze'], shell=False, stdout=f)
 
     print_tree(prefix, level=3)
-
 
 @workspace.command(name='export')
 @option('-o', '--pip-install-options', required=False,
@@ -177,7 +173,6 @@ def export_(pip_install_options: Tuple[str]):
     rmtree(tmp_dir)
     echo(f'\n ✔️ Workspace exported to archive: {archive_file_name}')
 
-
 @workspace.command(name='import')
 @option('--archive', required=True,
         help='Zip file containing workspace to import',
@@ -212,12 +207,10 @@ def import_(archive):
     echo(f'Workspace {archive} has been imported.')
     echo('You may need to copy your PKI certificates to join the federation.')
 
-
 @workspace.command(name='certify')
 def certify_():
     """Create certificate authority for federation."""
     certify()
-
 
 def certify():
     """Create certificate authority for federation."""
@@ -329,7 +322,6 @@ def certify():
 
     echo('\nDone.')
 
-
 # FIXME: Function is not in use
 def _get_requirements_dict(txtfile):
     with open(txtfile, 'r', encoding='utf-8') as snapshot:
@@ -343,14 +335,12 @@ def _get_requirements_dict(txtfile):
                 snapshot_dict[line] = None
         return snapshot_dict
 
-
 def _get_dir_hash(path):
     from hashlib import sha256
     hash_ = sha256()
     hash_.update(path.encode('utf-8'))
     hash_ = hash_.hexdigest()
     return hash_
-
 
 def apply_template_plan(prefix, template):
     """Copy plan file from template folder.

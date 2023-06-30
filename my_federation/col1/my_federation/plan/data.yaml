@@ -1,0 +1,5 @@
+# all keys under 'collaborators' corresponds to a specific colaborator name the corresponding dictionary has data_name,data_path pairs.
+# Note that in the mnist case we do not store the data locally,and the data_path is used to pass an integer that helps the data object
+# collaborator_name ,data_directory_path
+one,1
+col1,1

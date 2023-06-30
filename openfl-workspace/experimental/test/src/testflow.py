@@ -67,15 +67,3 @@ class TestFlow(FLSpec):
     @aggregator
     def end(self):
         print("this is end of the flow")
-
-
-def aggregator_private_attrs():
-    return {
-        "agg_pa": "Hi, I am aggregator"
-    }
-
-def collaborator_private_attrs(collab_name):
-    return {
-        "name": f"private attributes of {collab_name}"
-    }
-

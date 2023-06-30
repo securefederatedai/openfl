@@ -2,8 +2,8 @@
 # SPDX-License-Identifier: Apache-2.0
 
 """Experimental Collaborator module."""
-import sys
-sys.path.append("src")
+# import sys
+# sys.path.append("src")
 
 import time
 import pickle
@@ -39,35 +39,34 @@ class Collaborator:
                  aggregator_uuid: str,
                  federation_uuid: str,
                  client: Any,
-                 private_attrs_callable: Any = None,
-                 private_attrs_kwargs: Dict = {},
-                 compression_pipeline: Any = None, # No sure if keep it or not
+                 private_attributes_callable: Any = None,
+                 private_attributes_kwargs: Dict = {},
                  **kwargs):
 
+        # TODO: rename collaborator_name to just name
         self.collaborator_name = collaborator_name
         self.aggregator_uuid = aggregator_uuid
         self.federation_uuid = federation_uuid
+
         self.client = client
-        self.compression_pipeline = compression_pipeline or NoCompressionPipeline()
 
         self.logger = getLogger(__name__)
 
-        self.private_attrs_callable = private_attrs_callable
-        self.private_attrs_kwargs = private_attrs_kwargs
+        self.private_attrs_callable = private_attributes_callable
 
         self.round_number = 0
 
         self.logger.info("Initialiaing collaborator.")
-        self.initialize_private_attributes()
+        self.initialize_private_attributes(private_attributes_kwargs)
 
 
-    def initialize_private_attributes(self):
+    def initialize_private_attributes(self, kwrags):
         """
         Call private_attrs_callable function set 
             attributes to self.private_attrs
         """
         self.private_attrs = self.private_attrs_callable(
-            **self.private_attrs_kwargs
+            **kwrags
         )
 
 

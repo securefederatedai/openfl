@@ -3,6 +3,7 @@
 """Aggregator module."""
 
 import sys
+import threading
 from logging import getLogger
 
 from click import echo
@@ -25,7 +26,6 @@ def aggregator(context):
     """Manage Federated Learning Aggregator."""
     context.obj['group'] = 'aggregator'
 
-
 @aggregator.command(name='start')
 @option('-p', '--plan', required=False,
         help='Federated learning plan [plan/plan.yaml]',
@@ -40,7 +40,7 @@ def start_(plan, authorized_cols, secure):
     """Start the aggregator service."""
     from pathlib import Path
 
-    from openfl.experimental.federated import Plan
+    from openfl.experimental.federated.plan import Plan
 
     if is_directory_traversal(plan):
         echo('Federated learning plan path is out of the openfl workspace scope.')
@@ -53,9 +53,13 @@ def start_(plan, authorized_cols, secure):
                       cols_config_path=Path(authorized_cols).absolute())
 
     logger.info('🧿 Starting the Aggregator Service.')
-    plan.get_flow()
-    plan.get_server().serve()
 
+    agg_server = plan.get_server()
+
+    plan.aggregator_.agg_grpc_server_start = threading.Thread(target=agg_server.serve)
+    plan.aggregator_.start_flow_execution = threading.Thread(target=plan.aggregator_.run_flow_until_transition)
+    plan.aggregator_.agg_grpc_server_start.start()
+    plan.aggregator_.start_flow_execution.start()
 
 @aggregator.command(name='generate-cert-request')
 @option('--fqdn', required=False, type=click_types.FQDN,
@@ -64,7 +68,6 @@ def start_(plan, authorized_cols, secure):
         default=getfqdn_env())
 def _generate_cert_request(fqdn):
     generate_cert_request(fqdn)
-
 
 def generate_cert_request(fqdn):
     """Create aggregator certificate key pair."""

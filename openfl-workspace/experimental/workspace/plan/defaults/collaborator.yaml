@@ -1,5 +1,1 @@
-template : openfl.component.Collaborator
-settings :
-    opt_treatment     : 'CONTINUE_LOCAL'
-    delta_updates     : True
-    db_store_rounds   : 1
+template : openfl.experimental.component.Collaborator

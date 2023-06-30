@@ -10,10 +10,8 @@ from typing import Tuple
 
 import grpc
 
-from openfl.pipelines import NoCompressionPipeline
 from openfl.experimental.protocols import aggregator_pb2
 from openfl.experimental.protocols import aggregator_pb2_grpc
-from openfl.experimental.protocols import utils
 from openfl.utilities import check_equal
 
 from .grpc_channel_options import channel_options
@@ -320,59 +318,3 @@ class AggregatorGRPCClient:
         self.validate_response(response, collaborator_name)
 
         return response.header
-
-    # @_atomic_connection
-    # @_resend_data_on_reconnection
-    # def get_aggregated_tensor(self, collaborator_name, tensor_name, round_number,
-    #                           report, tags, require_lossless):
-    #     """Get aggregated tensor from the aggregator."""
-    #     self._set_header(collaborator_name)
-
-    #     request = aggregator_pb2.GetAggregatedTensorRequest(
-    #         header=self.header,
-    #         tensor_name=tensor_name,
-    #         round_number=round_number,
-    #         report=report,
-    #         tags=tags,
-    #         require_lossless=require_lossless
-    #     )
-    #     response = self.stub.GetAggregatedTensor(request)
-    #     # also do other validation, like on the round_number
-    #     self.validate_response(response, collaborator_name)
-
-    #     return response.tensor
-
-    # @_atomic_connection
-    # @_resend_data_on_reconnection
-    # def send_local_task_results(self, collaborator_name, round_number,
-    #                             task_name, data_size, named_tensors):
-    #     """Send task results to the aggregator."""
-    #     self._set_header(collaborator_name)
-    #     request = aggregator_pb2.TaskResults(
-    #         header=self.header,
-    #         round_number=round_number,
-    #         task_name=task_name,
-    #         data_size=data_size,
-    #         tensors=named_tensors
-    #     )
-
-    #     # convert (potentially) long list of tensors into stream
-    #     stream = []
-    #     stream += utils.proto_to_datastream(request, self.logger)
-    #     response = self.stub.SendLocalTaskResults(iter(stream))
-
-    #     # also do other validation, like on the round_number
-    #     self.validate_response(response, collaborator_name)
-
-    # def _get_trained_model(self, experiment_name, model_type):
-    #     """Get trained model RPC."""
-    #     get_model_request = self.stub.GetTrainedModelRequest(
-    #         experiment_name=experiment_name,
-    #         model_type=model_type,
-    #     )
-    #     model_proto_response = self.stub.GetTrainedModel(get_model_request)
-    #     tensor_dict, _ = utils.deconstruct_model_proto(
-    #         model_proto_response.model_proto,
-    #         NoCompressionPipeline(),
-    #     )
-    #     return tensor_dict

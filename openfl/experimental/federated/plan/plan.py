@@ -12,12 +12,12 @@ from yaml import dump
 from yaml import safe_load
 from yaml import SafeDumper
 
-from openfl.interface.aggregation_functions import AggregationFunction
-from openfl.interface.aggregation_functions import WeightedAverage
-from openfl.component.assigner.custom_assigner import Assigner
+# from openfl.interface.aggregation_functions import AggregationFunction
+# from openfl.interface.aggregation_functions import WeightedAverage
+# from openfl.component.assigner.custom_assigner import Assigner
 from openfl.experimental.interface.cli.cli_helper import WORKSPACE
-from openfl.transport import AggregatorGRPCClient
-from openfl.transport import AggregatorGRPCServer
+from openfl.experimental.transport import AggregatorGRPCClient
+from openfl.experimental.transport import AggregatorGRPCServer
 from openfl.utilities.utils import getfqdn_env
 
 SETTINGS = "settings"
@@ -213,21 +213,11 @@ class Plan:
 
         self.collaborator_ = None  # collaborator object
         self.aggregator_ = None  # aggregator object
-        self.assigner_ = None  # assigner object
-
-        self.loader_ = None  # data loader object
-        self.runner_ = None  # task runner object
 
         self.server_ = None  # gRPC server object
         self.client_ = None  # gRPC client object
 
-        self.pipe_ = None  # compression pipeline object
-
-        self.straggler_policy_ = None  # straggler handling policy
-
         self.hash_ = None
-        self.name_ = None
-        self.serializer_ = None
 
     @property
     def hash(self):  # NOQA
@@ -254,65 +244,7 @@ class Plan:
                 int(self.hash[:8], 16) % (60999 - 49152) + 49152
             )
 
-    def get_assigner(self):
-        """Get the plan task assigner."""
-        aggregation_functions_by_task = None
-        assigner_function = None
-        try:
-            aggregation_functions_by_task = self.restore_object(
-                "aggregation_function_obj.pkl"
-            )
-            assigner_function = self.restore_object("task_assigner_obj.pkl")
-        except Exception as exc:
-            self.logger.error(
-                f"Failed to load aggregation and assigner functions: {exc}"
-            )
-            self.logger.info("Using Task Runner API workflow")
-        if assigner_function:
-            self.assigner_ = Assigner(
-                assigner_function=assigner_function,
-                aggregation_functions_by_task=aggregation_functions_by_task,
-                authorized_cols=self.authorized_cols,
-                rounds_to_train=self.rounds_to_train,
-            )
-        else:
-            # Backward compatibility
-            defaults = self.config.get(
-                "assigner", {TEMPLATE: "openfl.component.Assigner", SETTINGS: {}}
-            )
-
-            defaults[SETTINGS]["authorized_cols"] = self.authorized_cols
-            defaults[SETTINGS]["rounds_to_train"] = self.rounds_to_train
-            defaults[SETTINGS]["tasks"] = self.get_tasks()
-
-            if self.assigner_ is None:
-                self.assigner_ = Plan.build(**defaults)
-
-        return self.assigner_
-
-    def get_tasks(self):
-        """Get federation tasks."""
-        tasks = self.config.get("tasks", {})
-        tasks.pop(DEFAULTS, None)
-        tasks.pop(SETTINGS, None)
-        for task in tasks:
-            aggregation_type = tasks[task].get("aggregation_type")
-            if aggregation_type is None:
-                aggregation_type = WeightedAverage()
-            elif isinstance(aggregation_type, dict):
-                if SETTINGS not in aggregation_type:
-                    aggregation_type[SETTINGS] = {}
-                aggregation_type = Plan.build(**aggregation_type)
-                if not isinstance(aggregation_type, AggregationFunction):
-                    raise NotImplementedError(
-                        f"""{task} task aggregation type does not implement an interface:
-    openfl.interface.aggregation_functions.AggregationFunction
-    """
-                    )
-            tasks[task]["aggregation_type"] = aggregation_type
-        return tasks
-
-    def get_aggregator(self, tensor_dict=None):
+    def get_aggregator(self):
         """Get federation aggregator."""
         defaults = self.config.get(
             "aggregator", {
@@ -325,29 +257,34 @@ class Plan:
         defaults[SETTINGS]["federation_uuid"] = self.federation_uuid
         defaults[SETTINGS]["authorized_cols"] = self.authorized_cols
 
-        defaults[SETTINGS]["compression_pipeline"] = self.get_tensor_pipe()
+        defaults[SETTINGS]["flow"] = self.get_flow()
+        defaults[SETTINGS]["checkpoint"] = self.config.get("federated_flow")["settings"]["checkpoint"]
 
-        # defaults[SETTINGS][
-        #     "straggler_handling_policy"
-        # ] = self.get_straggler_handling_policy()
+        import sys
+        sys.path.append("/home/parth-wsl/env-integration-with-keerti-code/openfl/" +
+                        "openfl-workspace/mnist/src/aggregator_private_attrs.py")
+
+        import importlib
+        private_attrs_callable = getattr(
+            importlib.import_module("src.aggregator_private_attrs"),
+            "aggregator_private_attrs"
+        )
+        defaults[SETTINGS]["private_attributes_kwargs"] = getattr(
+            importlib.import_module("src.aggregator_private_attrs"),
+            "aggregator_kwargs"
+        )
+
+        if private_attrs_callable:
+            if isinstance(private_attrs_callable, dict):
+                private_attrs_callable = Plan.import_(**private_attrs_callable)
+        if not callable(private_attrs_callable):
+            raise TypeError(
+                f"private_attrs_callable should be callable object "
+                f"or be import from code part, get {private_attrs_callable}"
+            )
+        defaults[SETTINGS]["private_attributes_callable"] = private_attrs_callable
 
         log_metric_callback = defaults[SETTINGS].get("log_metric_callback")
-
-        defaults[SETTINGS]["checkpoint"] = self.config.get("federated_flow")['checkpoint']
-        defaults[SETTINGS]["flow"] = self.flow_
-        private_attr_callable = {"template": self.config.get("aggregator")["callable_func"]["template"]}
-        
-        if private_attr_callable:
-            if isinstance(private_attr_callable, dict):
-                private_attr_callable = Plan.import_(**private_attr_callable)
-        if not callable(private_attr_callable):
-            raise TypeError(
-                f"private_attr_callable should be callable object "
-                f"or be import from code part, get {private_attr_callable}"
-            )
-
-        defaults[SETTINGS]["private_attributes_callable"] = private_attr_callable
-        
         if log_metric_callback:
             if isinstance(log_metric_callback, dict):
                 log_metric_callback = Plan.import_(**log_metric_callback)
@@ -356,112 +293,12 @@ class Plan:
                     f"log_metric_callback should be callable object "
                     f"or be import from code part, get {log_metric_callback}"
                 )
-
         defaults[SETTINGS]["log_metric_callback"] = log_metric_callback
+
         if self.aggregator_ is None:
-            self.aggregator_ = Plan.build(**defaults, initial_tensor_dict=tensor_dict)
+            self.aggregator_ = Plan.build(**defaults)
 
         return self.aggregator_
-
-    def get_tensor_pipe(self):
-        """Get data tensor pipeline."""
-        defaults = self.config.get(
-            "compression_pipeline",
-            {TEMPLATE: "openfl.pipelines.NoCompressionPipeline", SETTINGS: {}},
-        )
-
-        if self.pipe_ is None:
-            self.pipe_ = Plan.build(**defaults)
-
-        return self.pipe_
-
-    def get_straggler_handling_policy(self):
-        """Get straggler handling policy."""
-        template = "openfl.component.straggler_handling_functions.CutoffTimeBasedStragglerHandling"
-        defaults = self.config.get(
-            "straggler_handling_policy", {TEMPLATE: template, SETTINGS: {}}
-        )
-
-        if self.straggler_policy_ is None:
-            self.straggler_policy_ = Plan.build(**defaults)
-
-        return self.straggler_policy_
-
-    # legacy api (TaskRunner subclassing)
-    def get_data_loader(self, collaborator_name):
-        """Get data loader."""
-        defaults = self.config.get(
-            "data_loader", {TEMPLATE: "openfl.federation.DataLoader", SETTINGS: {}}
-        )
-
-        # TODO: to be removed
-        # defaults[SETTINGS]['data_path'] = self.cols_data_paths[
-        #     collaborator_name
-        # ]
-
-        defaults[SETTINGS]["data_path"] = self.cols_data_paths["collab"][
-            "callable_func"
-        ]["settings"]["index"]
-
-        if self.loader_ is None:
-            self.loader_ = Plan.build(**defaults)
-
-        return self.loader_
-
-    # Python interactive api
-    def initialize_data_loader(self, data_loader, shard_descriptor):
-        """Get data loader."""
-        data_loader.shard_descriptor = shard_descriptor
-        return data_loader
-
-    # legacy api (TaskRunner subclassing)
-    def get_task_runner(self, data_loader):
-        """Get task runner."""
-        defaults = self.config.get(
-            "task_runner", {TEMPLATE: "openfl.federation.TaskRunner", SETTINGS: {}}
-        )
-
-        defaults[SETTINGS]["data_loader"] = data_loader
-
-        if self.runner_ is None:
-            self.runner_ = Plan.build(**defaults)
-
-        return self.runner_
-
-    # Python interactive api
-    def get_core_task_runner(
-        self, data_loader=None, model_provider=None, task_keeper=None
-    ):
-        """Get task runner."""
-        defaults = self.config.get(
-            "task_runner",
-            {
-                TEMPLATE: "openfl.federated.task.task_runner.CoreTaskRunner",
-                SETTINGS: {},
-            },
-        )
-
-        # We are importing a CoreTaskRunner instance!!!
-        if self.runner_ is None:
-            self.runner_ = Plan.build(**defaults)
-
-        self.runner_.set_data_loader(data_loader)
-
-        self.runner_.set_model_provider(model_provider)
-        self.runner_.set_task_provider(task_keeper)
-
-        framework_adapter = Plan.build(
-            self.config["task_runner"]["required_plugin_components"][
-                "framework_adapters"
-            ],
-            {},
-        )
-
-        # This step initializes tensorkeys
-        # Which have no sens if task provider is not set up
-        self.runner_.set_framework_adapter(framework_adapter)
-
-        return self.runner_
 
     def get_collaborator(
         self,
@@ -469,35 +306,19 @@ class Plan:
         root_certificate=None,
         private_key=None,
         certificate=None,
-        # task_runner=None,
         client=None,
-        shard_descriptor=None,
     ):
         """Get collaborator."""
         defaults = self.config.get(
-            "collaborator", {TEMPLATE: "openfl.experimental.Collaborator", SETTINGS: {}}
+            "collaborator", {
+                TEMPLATE: "openfl.experimental.Collaborator",
+                SETTINGS: {}
+            }
         )
 
         defaults[SETTINGS]["collaborator_name"] = collaborator_name
         defaults[SETTINGS]["aggregator_uuid"] = self.aggregator_uuid
         defaults[SETTINGS]["federation_uuid"] = self.federation_uuid
-
-        defaults[SETTINGS]["compression_pipeline"] = self.get_tensor_pipe()
-
-        kwargs = self.cols_data_paths["collab"]["callable_func"]["settings"]
-        
-        private_attr_callable =  {"template":self.cols_data_paths["collab"]["callable_func"]['template']}
-        
-        if private_attr_callable:
-            if isinstance(private_attr_callable, dict):
-                private_attr_callable = Plan.import_(**private_attr_callable)
-        if not callable(private_attr_callable):
-            raise TypeError(
-                f"private_attr_callable should be callable object "
-                f"or be import from code part, get {private_attr_callable}"
-            )
-
-        defaults[SETTINGS]["private_attributes_callable"] = private_attr_callable
 
         if client is not None:
             defaults[SETTINGS]["client"] = client
@@ -511,8 +332,33 @@ class Plan:
                 certificate,
             )
 
+        import sys
+        sys.path.append("/home/parth-wsl/env-ishant-code/openfl/" +
+                        "openfl-workspace/mnist/src/collaborator_private_attrs.py")
+
+        import importlib
+        private_attrs_callable = getattr(
+            importlib.import_module("src.collaborator_private_attrs"),
+            "collaborator_private_attrs"
+        )
+        defaults[SETTINGS]["private_attributes_kwargs"] = getattr(
+            importlib.import_module("src.collaborator_private_attrs"),
+            "collaborator_kwargs"
+        )
+
+        if private_attrs_callable:
+            if isinstance(private_attrs_callable, dict):
+                private_attrs_callable = Plan.import_(**private_attrs_callable)
+        if not callable(private_attrs_callable):
+            raise TypeError(
+                f"private_attrs_callable should be callable object "
+                f"or be import from code part, get {private_attrs_callable}"
+            )
+
+        defaults[SETTINGS]["private_attributes_callable"] = private_attrs_callable
+
         if self.collaborator_ is None:
-            self.collaborator_ = Plan.build(**defaults, **kwargs)
+            self.collaborator_ = Plan.build(**defaults)
 
         return self.collaborator_
 
@@ -575,66 +421,13 @@ class Plan:
 
         return self.server_
 
-    def interactive_api_get_server(
-        self, *, tensor_dict, root_certificate, certificate, private_key, tls
-    ):
-        """Get gRPC server of the aggregator instance."""
-        server_args = self.config["network"][SETTINGS]
-
-        # patch certificates
-        server_args["root_certificate"] = root_certificate
-        server_args["certificate"] = certificate
-        server_args["private_key"] = private_key
-        server_args["tls"] = tls
-
-        server_args["aggregator"] = self.get_aggregator(tensor_dict)
-
-        if self.server_ is None:
-            self.server_ = AggregatorGRPCServer(**server_args)
-
-        return self.server_
-
-    def deserialize_interface_objects(self):
-        """Deserialize objects for TaskRunner."""
-        api_layer = self.config["api_layer"]
-        filenames = [
-            "model_interface_file",
-            "tasks_interface_file",
-            "dataloader_interface_file",
-        ]
-        return (
-            self.restore_object(api_layer["settings"][filename])
-            for filename in filenames
-        )
-
-    def get_serializer_plugin(self, **kwargs):
-        """Get serializer plugin.
-
-        This plugin is used for serialization of interfaces in new interactive API
-        """
-        if self.serializer_ is None:
-            if "api_layer" not in self.config:  # legacy API
-                return None
-            required_plugin_components = self.config["api_layer"][
-                "required_plugin_components"
-            ]
-            serializer_plugin = required_plugin_components["serializer_plugin"]
-            self.serializer_ = Plan.build(serializer_plugin, kwargs)
-        return self.serializer_
-
-    def restore_object(self, filename):
-        """Deserialize an object."""
-        serializer_plugin = self.get_serializer_plugin()
-        if serializer_plugin is None:
-            return None
-        obj = serializer_plugin.restore_object(filename)
-        return obj
-
     def get_flow(self):
         """instantiates federated flow object"""
         defaults = self.config.get(
-            "federated_flow",
-            {TEMPLATE: self.config["federated_flow"]["template"], SETTINGS: {}},
+            "federated_flow", {
+                TEMPLATE: self.config["federated_flow"]["template"],
+                SETTINGS: {}
+            },
         )
         for key in defaults[SETTINGS]:
             value_defaults = defaults[SETTINGS][key]
@@ -650,6 +443,6 @@ class Plan:
                             }
                             defaults[SETTINGS][key] = Plan.build(**value_defaults_data)
                     except:
-                        print("module doesn't exist")
+                        raise ImportError(f"Cannot import {value_defaults}.")
         self.flow_ = Plan.build(**defaults)
         return self.flow_

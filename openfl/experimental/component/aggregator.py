@@ -7,12 +7,9 @@ import queue
 import pickle
 import inspect
 from threading import Event
-from copy import deepcopy
 from logging import getLogger
 from typing import Any, Dict
 from typing import List, Callable
-
-from openfl.utilities.logs import write_metric
 
 from openfl.experimental.utilities import aggregator_to_collaborator
 from openfl.experimental.runtime import FederatedRuntime
@@ -39,21 +36,21 @@ class Aggregator:
 
     def __init__(
             self,
-            name: str,
+            # name: str,
             aggregator_uuid: str,
             federation_uuid: str,
             authorized_cols: List,
 
             flow: Any,
-            runtime: FederatedRuntime,
+            # runtime: FederatedRuntime,
             checkpoint: bool = False,
-            private_attrs_callable: Callable = None,
-            private_attrs_kwargs: Dict = {},
+            private_attributes_callable: Callable = None,
+            private_attributes_kwargs: Dict = {}, # this will automatically show up in kwargs
 
             single_col_cert_common_name: Any = None,
-            compression_pipeline: Any = None,  # TBD: Could be used later
+            # compression_pipeline: Any = None,  # TBD: Could be used later
 
-            write_logs: bool = False,
+            # write_logs: bool = False,
             log_metric_callback: Callable = None,
             **kwargs) -> None:
 
@@ -62,8 +59,13 @@ class Aggregator:
         self.federation_uuid = federation_uuid
         self.authorized_cols = authorized_cols
 
-        self.single_col_cert_common_name = single_col_cert_common_name
+        self.collaborators_counter = 0
+        self.quit_job_sent_to = []
+        self.time_to_quit = False
 
+        self.logger = getLogger(__name__)
+
+        self.single_col_cert_common_name = single_col_cert_common_name
         if self.single_col_cert_common_name is not None:
             self._log_big_warning()
         else:
@@ -71,41 +73,37 @@ class Aggregator:
             # Cleaner solution?
             self.single_col_cert_common_name = ''
 
-        self.compression_pipeline = compression_pipeline
-
-        self.collaborators_counter = 0
-        self.quit_job_sent_to = []
-        self.time_to_quit = False
-
-        self.logger = getLogger(__name__)
-        self.write_logs = write_logs
         self.log_metric_callback = log_metric_callback
         self.collaborator_task_results = Event()
 
-        if self.write_logs:
-            self.log_metric = write_metric
-            if self.log_metric_callback:
-                self.log_metric = log_metric_callback
-                self.logger.info(f'Using custom log metric: {self.log_metric}')
+        if self.log_metric_callback:
+            self.log_metric = log_metric_callback
+            self.logger.info(f'Using custom log metric: {self.log_metric}')
 
         self.checkpoint = checkpoint
         self.flow = flow
-        self.flow.runtime = runtime
+        self.flow.runtime = FederatedRuntime()
         self.flow.runtime.aggregator = self.name
         self.flow.runtime.collaborators = self.authorized_cols
 
         self.collaborator_tasks_queue = {collab: queue.Queue() for collab
                                          in self.authorized_cols}
-        # queue.Queue()
+
         self.connected_collaborators = []
         self.collaborator_results_received = []
-        self.private_attrs_callable = private_attrs_callable
-        # FIXME: Save private_attrs_kwargs to self, or directly pass
-        # private_attrs_kwargs to initialize_private_attributes ?
-        self.private_attrs_kwargs = private_attrs_kwargs
+        self.private_attrs_callable = private_attributes_callable
 
         self.logger.info("Initialiaing aggregator.")
-        self.initialize_private_attributes()
+        self.initialize_private_attributes(private_attributes_kwargs)
+
+    def initialize_private_attributes(self, kwargs):
+        """
+        Call private_attrs_callable function set 
+            attributes to self.private_attrs.
+        """
+        self.private_attrs = self.private_attrs_callable(
+            **kwargs
+        )
 
     def run_flow_until_transition(self):
         """
@@ -136,7 +134,6 @@ class Aggregator:
                 self.flow.restore_instance_snapshot(self.flow, list(self.instance_snapshot))
                 delattr(self, "instance_snapshot")
 
-
     def call_checkpoint(self, ctx, f):  # , sb):
         """Perform checkpoint task."""
         from openfl.experimental.interface import (
@@ -152,24 +149,12 @@ class Aggregator:
 
         checkpoint(ctx, f)
 
-
-    def initialize_private_attributes(self):
-        """
-        Call private_attrs_callable function set 
-            attributes to self.private_attrs.
-        """
-        self.private_attrs = self.private_attrs_callable(
-            **self.private_attrs_kwargs
-        )
-
-
     def __set_attributes_to_clone(self, clone):
         """
         Set private_attrs to clone as attributes.
         """
         for name, attr in self.private_attrs.items():
             setattr(clone, name, attr)
-
 
     def __delete_agg_attrs_from_clone(self, clone: Any) -> None:
         """
@@ -183,7 +168,6 @@ class Aggregator:
                 self.private_attrs.update({attr_name: getattr(clone, attr_name)})
                 delattr(clone, attr_name)
 
-
     def _log_big_warning(self):
         """Warn user about single collaborator cert mode."""
         self.logger.warning(
@@ -192,7 +176,6 @@ class Aggregator:
             f'SHOULD ONLY BE USED IN DEVELOPMENT SETTINGS!!!! YE HAVE BEEN'
             f' WARNED!!!'
         )
-
 
     @staticmethod
     def _get_sleep_time():
@@ -204,7 +187,6 @@ class Aggregator:
         """
         # Decrease sleep period for finer discretezation
         return 10
-
 
     def get_tasks(self, collaborator_name):
         """
@@ -236,7 +218,6 @@ class Aggregator:
             collaborator_name].get()
 
         return 0, next_step, pickle.dumps(clone), 0, self.time_to_quit
-
 
     def do_task(self, f_name):
         """Execute aggregator steps until transition."""
@@ -274,7 +255,6 @@ class Aggregator:
 
         return f_name if f_name != "end" else False
 
-
     def send_task_results(self, collab_name, round_number, next_step, clone_bytes):
         """
         After collaborator execution, collaborator will call this function via gRPc
@@ -294,7 +274,6 @@ class Aggregator:
         if self.collaborators_counter == len(self.authorized_cols):
             self.collaborators_counter = 0
             self.collaborator_task_results.set()
-
 
     def valid_collaborator_cn_and_id(self, cert_common_name,
                                      collaborator_common_name):
@@ -322,7 +301,6 @@ class Aggregator:
         else:
             return (cert_common_name == self.single_col_cert_common_name
                     and collaborator_common_name in self.authorized_cols)
-
 
     def all_quit_jobs_sent(self):
         """Assert all quit jobs are sent to collaborators."""

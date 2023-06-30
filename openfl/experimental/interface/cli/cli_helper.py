@@ -29,7 +29,6 @@ def pretty(o):
     for k, v in o.items():
         echo(style(f'{k:<{m}} : ', fg='blue') + style(f'{v}', fg='cyan'))   
 
-
 def tree(path):
     """Print current directory file tree."""
     echo(f'+ {path}')
@@ -43,7 +42,6 @@ def tree(path):
             echo(f'{space}f {path.name}')
         else:
             echo(f'{space}d {path.name}')
-
 
 def print_tree(dir_path: Path, level: int = -1,
                limit_to_directories: bool = False,
@@ -87,7 +85,6 @@ def print_tree(dir_path: Path, level: int = -1,
     if next(iterator, None):
         echo(f'... length_limit, {length_limit}, reached, counted:')
     echo(f'\n{directories} directories' + (f', {files} files' if files else ''))
-
 
 def copytree(src, dst, symlinks=False, ignore=None,
              ignore_dangling_symlinks=False, dirs_exist_ok=False):
@@ -158,7 +155,6 @@ def copytree(src, dst, symlinks=False, ignore=None,
 
     return _copytree()
 
-
 def get_workspace_parameter(name):
     """Get a parameter from the workspace config file (.workspace)."""
     # Update the .workspace file to show the current workspace plan
@@ -175,7 +171,6 @@ def get_workspace_parameter(name):
     else:
         return doc[name]
 
-
 def check_varenv(env: str = '', args: dict = None):
     """Update "args" (dictionary) with <env: env_value> if env has a defined value in the host."""
     if args is None:
@@ -185,7 +180,6 @@ def check_varenv(env: str = '', args: dict = None):
         args[env] = env_val
 
     return args
-
 
 def get_fx_path(curr_path=''):
     """Return the absolute path to fx binary."""
@@ -200,7 +194,6 @@ def get_fx_path(curr_path=''):
 
     return fx_path
 
-
 def remove_line_from_file(pkg, filename):
     """Remove line that contains `pkg` from the `filename` file."""
     with open(filename, 'r+', encoding='utf-8') as f:
@@ -210,7 +203,6 @@ def remove_line_from_file(pkg, filename):
             if pkg not in i:
                 f.write(i)
         f.truncate()
-
 
 def replace_line_in_file(line, line_num_to_replace, filename):
     """Replace line at `line_num_to_replace` with `line`."""

@@ -16,7 +16,6 @@ from openfl.experimental.utilities import (
     collaborator_to_aggregator,
     should_transfer,
     filter_attributes,
-    checkpoint,
 )
 from openfl.experimental.runtime import Runtime
 

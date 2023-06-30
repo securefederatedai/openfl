@@ -14,9 +14,7 @@ from click import Path as ClickPath
 from click import style
 
 from openfl.utilities.path_check import is_directory_traversal
-from pathlib import Path
-from openfl.experimental.federated.plan import Plan
-import yaml
+
 
 logger = getLogger(__name__)
 
@@ -26,7 +24,6 @@ logger = getLogger(__name__)
 def collaborator(context):
     """Manage Federated Learning Collaborators."""
     context.obj["group"] = "service"
-
 
 @collaborator.command(name="start")
 @option(
@@ -86,7 +83,6 @@ def start_(plan, collaborator_name, data_config, secure):
 
     plan.get_collaborator(collaborator_name).run()
 
-
 @collaborator.command(name="create")
 @option(
     "-n",
@@ -109,7 +105,6 @@ def create_(collaborator_name, data_path, silent):
     # TODO: There should be some association with the plan made here as well
     register_data_path(common_name, data_path=data_path, silent=silent)
 
-
 def register_data_path(collaborator_name, data_path=None, silent=False):
     """Register dataset path in the plan/data.yaml file.
 
@@ -122,19 +117,16 @@ def register_data_path(collaborator_name, data_path=None, silent=False):
     from os.path import isfile
 
     if data_path and is_directory_traversal(data_path):
-        echo("Data path is out of the openfl workspace scope.")
+        echo('Data path is out of the openfl workspace scope.')
         sys.exit(1)
 
-    # TODO: To be confirmed from Sachin, before removing 
-    # the following functionality (Keerti)
-    # # Ask for the data directory
-    default_data_path = f"data/{collaborator_name}"
+    # Ask for the data directory
+    default_data_path = f'data/{collaborator_name}'
     if not silent and data_path is None:
-        dir_path = prompt(
-            "\nWhere is the data (or what is the rank)"
-            " for collaborator " + style(f"{collaborator_name}", fg="green") + " ? ",
-            default=default_data_path,
-        )
+        dir_path = prompt('\nWhere is the data (or what is the rank)'
+                          ' for collaborator '
+                          + style(f'{collaborator_name}', fg='green')
+                          + ' ? ', default=default_data_path)
     elif data_path is not None:
         dir_path = data_path
     else:
@@ -143,17 +135,22 @@ def register_data_path(collaborator_name, data_path=None, silent=False):
 
     # Read the data.yaml file
     d = {}
-    data_yaml = "plan/data.yaml"
+    data_yaml = 'plan/data.yaml'
+    separator = ','
     if isfile(data_yaml):
-        d = Plan.load(Path(data_yaml).absolute())
+        with open(data_yaml, 'r', encoding='utf-8') as f:
+            for line in f:
+                if separator in line:
+                    key, val = line.split(separator, maxsplit=1)
+                    d[key] = val.strip()
 
-    d["collab"]["name"] = collaborator_name
+    d[collaborator_name] = dir_path
 
     # Write the data.yaml
     if isfile(data_yaml):
-        with open(data_yaml, "w", encoding="utf-8") as f:
-            f.write(yaml.dump(d))
-
+        with open(data_yaml, 'w', encoding='utf-8') as f:
+            for key, val in d.items():
+                f.write(f'{key}{separator}{val}\n')
 
 @collaborator.command(name="generate-cert-request")
 @option(
@@ -172,7 +169,6 @@ def register_data_path(collaborator_name, data_path=None, silent=False):
 def generate_cert_request_(collaborator_name, silent, skip_package):
     """Generate certificate request for the collaborator."""
     generate_cert_request(collaborator_name, silent, skip_package)
-
 
 def generate_cert_request(collaborator_name, silent, skip_package):
     """
@@ -252,12 +248,10 @@ def generate_cert_request(collaborator_name, silent, skip_package):
             " (typically hosted by the aggregator) for signing"
         )
 
-
 def find_certificate_name(file_name):
     """Parse the collaborator name."""
     col_name = str(file_name).split(os.sep)[-1].split(".")[0][4:]
     return col_name
-
 
 def register_collaborator(file_name):
     """Register the collaborator name in the cols.yaml list.
@@ -308,7 +302,6 @@ def register_collaborator(file_name):
             + style(f"{cols_file}", fg="green")
         )
 
-
 @collaborator.command(name="certify")
 @option(
     "-n",
@@ -335,7 +328,6 @@ def register_collaborator(file_name):
 def certify_(collaborator_name, silent, request_pkg, import_):
     """Certify the collaborator."""
     certify(collaborator_name, silent, request_pkg, import_)
-
 
 def certify(collaborator_name, silent, request_pkg=None, import_=False):
     """Sign/certify collaborator certificate key pair."""

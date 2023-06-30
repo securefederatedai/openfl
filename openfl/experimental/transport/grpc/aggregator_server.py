@@ -15,7 +15,6 @@ from grpc import StatusCode
 
 from openfl.experimental.protocols import aggregator_pb2
 from openfl.experimental.protocols import aggregator_pb2_grpc
-from openfl.experimental.protocols import utils
 from openfl.utilities import check_equal
 from openfl.utilities import check_is_in
 
@@ -200,67 +199,6 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
         return aggregator_pb2.CheckpointResponse(
             header=self.get_header(collaborator_name)
         )
-
-
-    # def GetAggregatedTensor(self, request, context):  # NOQA:N802
-    #     """
-    #     Request a job from aggregator.
-
-    #     Args:
-    #         request: The gRPC message request
-    #         context: The gRPC context
-
-    #     """
-    #     self.validate_collaborator(request, context)
-    #     self.check_request(request)
-    #     collaborator_name = request.header.sender
-    #     tensor_name = request.tensor_name
-    #     require_lossless = request.require_lossless
-    #     round_number = request.round_number
-    #     report = request.report
-    #     tags = tuple(request.tags)
-
-    #     named_tensor = self.aggregator.get_aggregated_tensor(
-    #         collaborator_name, tensor_name, round_number, report, tags, require_lossless)
-
-    #     return aggregator_pb2.GetAggregatedTensorResponse(
-    #         header=self.get_header(collaborator_name),
-    #         round_number=round_number,
-    #         tensor=named_tensor
-    #     )
-
-    # def SendLocalTaskResults(self, request, context):  # NOQA:N802
-    #     """
-    #     Request a model download from aggregator.
-
-    #     Args:
-    #         request: The gRPC message request
-    #         context: The gRPC context
-
-    #     """
-    #     try:
-    #         proto = aggregator_pb2.TaskResults()
-    #         proto = utils.datastream_to_proto(proto, request)
-    #     except RuntimeError:
-    #         raise RuntimeError(
-    #             'Empty stream message, reestablishing connection from client to resume training...'
-    #         )
-
-    #     self.validate_collaborator(proto, context)
-    #     # all messages get sanity checked
-    #     self.check_request(proto)
-
-    #     collaborator_name = proto.header.sender
-    #     task_name = proto.task_name
-    #     round_number = proto.round_number
-    #     data_size = proto.data_size
-    #     named_tensors = proto.tensors
-    #     self.aggregator.send_local_task_results(
-    #         collaborator_name, round_number, task_name, data_size, named_tensors)
-    #     # turn data stream into local model update
-    #     return aggregator_pb2.SendLocalTaskResultsResponse(
-    #         header=self.get_header(collaborator_name)
-    #     )
 
     def get_server(self):
         """Return gRPC server."""
