@@ -56,9 +56,9 @@ class Collaborator:
 
         self.round_number = 0
 
-        self.logger.info("Initialiaing collaborator.")
-        self.initialize_private_attributes(private_attributes_kwargs)
-
+        if self.private_attrs_callable is not None:
+            self.logger.info("Initialiaing collaborator.")
+            self.initialize_private_attributes(private_attributes_kwargs)
 
     def initialize_private_attributes(self, kwrags):
         """
@@ -69,14 +69,12 @@ class Collaborator:
             **kwrags
         )
 
-
     def __set_attributes_to_clone(self, clone):
         """
         Set private_attrs to clone as attributes.
         """
         for name, attr in self.private_attrs.items():
             setattr(clone, name, attr)
-
 
     def __delete_agg_attrs_from_clone(self, clone) -> None:
         """
@@ -90,14 +88,12 @@ class Collaborator:
                 self.private_attrs.update({attr_name: getattr(clone, attr_name)})
                 delattr(clone, attr_name)
 
-
     def call_checkpoint(self, ctx, f, sb):
         """Call checkpoint gRPC."""
         self.client.call_checkpoint(
             self.collaborator_name,
             pickle.dumps(ctx), pickle.dumps(f) #, pickle.dumps(sb)
         )
-
 
     def run(self):
         """Run the collaborator."""
@@ -112,7 +108,6 @@ class Collaborator:
                 f_name, ctx = self.do_task(next_step, clone)
                 self.send_task_results(f_name, ctx)
 
-
     def send_task_results(self, next_step, clone):
         """
         After collaborator is executed, send next aggregator
@@ -124,7 +119,6 @@ class Collaborator:
             next_step, pickle.dumps(clone)
         )
 
-
     def get_tasks(self):
         """Get tasks from the aggregator."""
         self.logger.info('Waiting for tasks...')
@@ -134,10 +128,10 @@ class Collaborator:
 
         return next_step, pickle.loads(clone_bytes), sleep_time, time_to_quit
 
-
     def do_task(self, f_name, ctx):
         """Run collaborator steps until transition."""
-        self.__set_attributes_to_clone(ctx)
+        if hasattr(self, "private_attrs"):
+            self.__set_attributes_to_clone(ctx)
 
         not_at_transition_point = True
         while not_at_transition_point:
@@ -151,7 +145,8 @@ class Collaborator:
 
             f_name = f.__name__
 
-        self.__delete_agg_attrs_from_clone(ctx)
+        if hasattr(self, "private_attrs"):
+            self.__delete_agg_attrs_from_clone(ctx)
 
         self.round_number += 1
         return f_name, ctx

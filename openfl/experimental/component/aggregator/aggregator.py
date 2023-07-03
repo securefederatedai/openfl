@@ -36,29 +36,26 @@ class Aggregator:
 
     def __init__(
             self,
-            # name: str,
             aggregator_uuid: str,
             federation_uuid: str,
             authorized_cols: List,
 
             flow: Any,
-            # runtime: FederatedRuntime,
+            rounds_to_train: int = 1,
             checkpoint: bool = False,
             private_attributes_callable: Callable = None,
-            private_attributes_kwargs: Dict = {}, # this will automatically show up in kwargs
+            private_attributes_kwargs: Dict = {},
 
             single_col_cert_common_name: Any = None,
-            # compression_pipeline: Any = None,  # TBD: Could be used later
 
-            # write_logs: bool = False,
             log_metric_callback: Callable = None,
             **kwargs) -> None:
 
-        self.name = "aggregator"
         self.uuid = aggregator_uuid
         self.federation_uuid = federation_uuid
         self.authorized_cols = authorized_cols
 
+        self.round_number = rounds_to_train
         self.collaborators_counter = 0
         self.quit_job_sent_to = []
         self.time_to_quit = False
@@ -76,14 +73,14 @@ class Aggregator:
         self.log_metric_callback = log_metric_callback
         self.collaborator_task_results = Event()
 
-        if self.log_metric_callback:
+        if self.log_metric_callback is not None:
             self.log_metric = log_metric_callback
             self.logger.info(f'Using custom log metric: {self.log_metric}')
 
         self.checkpoint = checkpoint
         self.flow = flow
         self.flow.runtime = FederatedRuntime()
-        self.flow.runtime.aggregator = self.name
+        self.flow.runtime.aggregator = "aggregator"
         self.flow.runtime.collaborators = self.authorized_cols
 
         self.collaborator_tasks_queue = {collab: queue.Queue() for collab
@@ -93,8 +90,9 @@ class Aggregator:
         self.collaborator_results_received = []
         self.private_attrs_callable = private_attributes_callable
 
-        self.logger.info("Initialiaing aggregator.")
-        self.initialize_private_attributes(private_attributes_kwargs)
+        if self.private_attrs_callable is not None:
+            self.logger.info("Initialiaing aggregator.")
+            self.initialize_private_attributes(private_attributes_kwargs)
 
     def initialize_private_attributes(self, kwargs):
         """
@@ -221,7 +219,8 @@ class Aggregator:
 
     def do_task(self, f_name):
         """Execute aggregator steps until transition."""
-        self.__set_attributes_to_clone(self.flow)
+        if hasattr(self, "private_attrs"):
+            self.__set_attributes_to_clone(self.flow)
 
         not_at_transition_point = True
         while not_at_transition_point:
@@ -251,7 +250,8 @@ class Aggregator:
                 else:
                     self.kwargs = self.flow.execute_task_args[3]
 
-        self.__delete_agg_attrs_from_clone(self.flow)
+        if hasattr(self, "private_attrs"):
+            self.__delete_agg_attrs_from_clone(self.flow)
 
         return f_name if f_name != "end" else False
 
