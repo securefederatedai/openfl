@@ -112,6 +112,8 @@ setup(
         'openfl.experimental.federated',
         'openfl.experimental.federated.plan',
         'openfl.experimental.component',
+        'openfl.experimental.component.aggregator',
+        'openfl.experimental.component.collaborator',
         'openfl.experimental.interface.cli',
         'openfl.experimental.interface',
         'openfl.experimental.placement',

@@ -1,12 +1,11 @@
 from openfl.experimental.interface import FLSpec
-from openfl.experimental.runtime import FederatedRuntime #, LocalRuntime
 from openfl.experimental.placement import aggregator, collaborator
-from openfl.experimental.interface import Aggregator, Collaborator
+
 
 class TestFlow(FLSpec):
-    def __init__(self, checkpoint: bool = False):
+    def __init__(self, rounds: int = 10, checkpoint: bool = False):
         super().__init__(checkpoint)
-        self.total_round_number = 10
+        self.total_round_number = rounds
         self.round_number = 0
 
     @aggregator
@@ -14,7 +13,7 @@ class TestFlow(FLSpec):
         self.collaborators = self.runtime.collaborators
         print("this is start of the flow")
         self.start_attr = "hi, I am still present"
-        self.next(self.aggregator_step_1) #, exclude=["start_attr",])
+        self.next(self.aggregator_step_1)
 
     @aggregator
     def aggregator_step_1(self):
@@ -57,7 +56,6 @@ class TestFlow(FLSpec):
 
     @aggregator
     def internal_loop(self):
-        print("*"*50)
         if self.round_number < self.total_round_number:
             self.round_number += 1
             self.next(self.aggregator_step_1)

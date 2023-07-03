@@ -92,7 +92,6 @@ def initialize(context, plan_config, cols_config, data_config,
     context.obj['plans'].append(f'{plan_config.stem}_{plan.hash[:8]}')
     logger.info(f"{context.obj['plans']}")
 
-
 # TODO: looks like Plan.method
 def freeze_plan(plan_config):
     """Dump the plan to YAML file."""

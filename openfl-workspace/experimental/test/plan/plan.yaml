@@ -3,11 +3,8 @@
 
 aggregator :
   defaults : plan/defaults/aggregator.yaml
-  template : openfl.component.Aggregator
+  template : openfl.experimental.component.aggregator.Aggregator
   settings :
-    init_state_path     : save/torch_cnn_mnist_init.pbuf
-    best_state_path     : save/torch_cnn_mnist_best.pbuf
-    last_state_path     : save/torch_cnn_mnist_last.pbuf
     rounds_to_train     : 10
     log_metric_callback :
       template : src.utils.write_metric
@@ -15,31 +12,16 @@ aggregator :
 
 collaborator :
   defaults : plan/defaults/collaborator.yaml
-  template : openfl.component.Collaborator
-  settings :
-    delta_updates    : false
-    opt_treatment    : RESET
+  template : openfl.experimental.component.collaborator.Collaborator
+  settings : {}
 
-data_loader :
-  defaults : plan/defaults/data_loader.yaml
-  template : src.ptmnist_inmemory.PyTorchMNISTInMemory
-  settings :
-    collaborator_count : 2
-    data_group_name    : mnist
-    batch_size         : 256
 
-task_runner :
-  defaults : plan/defaults/task_runner.yaml
-  template : src.pt_cnn.PyTorchCNN
+federated_flow:
+  template: src.testflow.TestFlow
+  settings:
+    rounds: 4
+    checkpoint: false
+
 
 network :
   defaults : plan/defaults/network.yaml
-
-assigner :
-  defaults : plan/defaults/assigner.yaml
-  
-tasks :
-  defaults : plan/defaults/tasks_torch.yaml
-
-compression_pipeline :
-  defaults : plan/defaults/compression_pipeline.yaml

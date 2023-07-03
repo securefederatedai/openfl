@@ -3,6 +3,6 @@ def collaborator_private_attrs(collab_name):
         "name": f"private attributes of {collab_name}"
     }
 
-collaborator_kwargs = {
-    "collab_name": collab_name
-}
+# collaborator_kwargs = {
+#     "collab_name": collab_name
+# }
