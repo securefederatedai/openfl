@@ -1,3 +1,6 @@
+# Copyright (C) 2020-2023 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
@@ -99,7 +102,6 @@ class FederatedFlow(FLSpec):
 
     @collaborator
     def aggregated_model_validation(self):
-        print("*******************************************", self.input)
         print(f"Performing aggregated model validation for collaborator {self.input}")
         self.agg_validation_score = inference(self.model, self.test_loader)
         print(f"{self.input} value of {self.agg_validation_score}")

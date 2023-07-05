@@ -1,7 +1,6 @@
 # Copyright (C) 2020-2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-# import sys
 from openfl.experimental.interface import FLSpec
 from openfl.experimental.placement import aggregator, collaborator
 
