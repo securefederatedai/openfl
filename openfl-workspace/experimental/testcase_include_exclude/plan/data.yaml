@@ -5,5 +5,6 @@
 # Note that in the mnist case we do not store the data locally, and the data_path is used to pass an integer that helps the data object
 # construct the shard of the mnist dataset to be use for this collaborator.
 
-# collaborator_name ,data_directory_path
-one,1
+col1:
+
+col2:

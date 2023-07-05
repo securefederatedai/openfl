@@ -78,7 +78,6 @@ def start_(plan, collaborator_name, data_config, secure):
 
     # TODO: Need to restructure data loader config file loader
 
-    echo(f"Data = {plan.cols_data_paths}")
     logger.info("🧿 Starting a Collaborator Service.")
 
     plan.get_collaborator(collaborator_name).run()
@@ -103,54 +102,55 @@ def create_(collaborator_name, data_path, silent):
     common_name = f"{collaborator_name}".lower()
 
     # TODO: There should be some association with the plan made here as well
-    register_data_path(common_name, data_path=data_path, silent=silent)
+    # register_data_path(common_name, data_path=data_path, silent=silent)
 
-def register_data_path(collaborator_name, data_path=None, silent=False):
-    """Register dataset path in the plan/data.yaml file.
+# TODO: Discuss with Sachin, and remove create command entirely.
+# def register_data_path(collaborator_name, data_path=None, silent=False):
+#     """Register dataset path in the plan/data.yaml file.
 
-    Args:
-        collaborator_name (str): The collaborator whose data path to be defined
-        data_path (str)        : Data path (optional)
-        silent (bool)          : Silent operation (don't prompt)
-    """
-    from click import prompt
-    from os.path import isfile
+#     Args:
+#         collaborator_name (str): The collaborator whose data path to be defined
+#         data_path (str)        : Data path (optional)
+#         silent (bool)          : Silent operation (don't prompt)
+#     """
+#     from click import prompt
+#     from os.path import isfile
 
-    if data_path and is_directory_traversal(data_path):
-        echo('Data path is out of the openfl workspace scope.')
-        sys.exit(1)
+#     if data_path and is_directory_traversal(data_path):
+#         echo('Data path is out of the openfl workspace scope.')
+#         sys.exit(1)
 
-    # Ask for the data directory
-    default_data_path = f'data/{collaborator_name}'
-    if not silent and data_path is None:
-        dir_path = prompt('\nWhere is the data (or what is the rank)'
-                          ' for collaborator '
-                          + style(f'{collaborator_name}', fg='green')
-                          + ' ? ', default=default_data_path)
-    elif data_path is not None:
-        dir_path = data_path
-    else:
-        # TODO: Need to figure out the default for this.
-        dir_path = default_data_path
+#     # Ask for the data directory
+#     default_data_path = f'data/{collaborator_name}'
+#     if not silent and data_path is None:
+#         dir_path = prompt('\nWhere is the data (or what is the rank)'
+#                           ' for collaborator '
+#                           + style(f'{collaborator_name}', fg='green')
+#                           + ' ? ', default=default_data_path)
+#     elif data_path is not None:
+#         dir_path = data_path
+#     else:
+#         # TODO: Need to figure out the default for this.
+#         dir_path = default_data_path
 
-    # Read the data.yaml file
-    d = {}
-    data_yaml = 'plan/data.yaml'
-    separator = ','
-    if isfile(data_yaml):
-        with open(data_yaml, 'r', encoding='utf-8') as f:
-            for line in f:
-                if separator in line:
-                    key, val = line.split(separator, maxsplit=1)
-                    d[key] = val.strip()
+#     # Read the data.yaml file
+#     d = {}
+#     data_yaml = 'plan/data.yaml'
+#     separator = ','
+#     if isfile(data_yaml):
+#         with open(data_yaml, 'r', encoding='utf-8') as f:
+#             for line in f:
+#                 if separator in line:
+#                     key, val = line.split(separator, maxsplit=1)
+#                     d[key] = val.strip()
 
-    d[collaborator_name] = dir_path
+#     d[collaborator_name] = dir_path
 
-    # Write the data.yaml
-    if isfile(data_yaml):
-        with open(data_yaml, 'w', encoding='utf-8') as f:
-            for key, val in d.items():
-                f.write(f'{key}{separator}{val}\n')
+#     # Write the data.yaml
+#     if isfile(data_yaml):
+#         with open(data_yaml, 'w', encoding='utf-8') as f:
+#             for key, val in d.items():
+#                 f.write(f'{key}{separator}{val}\n')
 
 @collaborator.command(name="generate-cert-request")
 @option(

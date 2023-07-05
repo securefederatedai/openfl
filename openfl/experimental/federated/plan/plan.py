@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 """Plan module."""
+import inspect
 from hashlib import sha384
 from importlib import import_module
 from logging import getLogger
@@ -12,9 +13,6 @@ from yaml import dump
 from yaml import safe_load
 from yaml import SafeDumper
 
-# from openfl.interface.aggregation_functions import AggregationFunction
-# from openfl.interface.aggregation_functions import WeightedAverage
-# from openfl.component.assigner.custom_assigner import Assigner
 from openfl.experimental.interface.cli.cli_helper import WORKSPACE
 from openfl.experimental.transport import AggregatorGRPCClient
 from openfl.experimental.transport import AggregatorGRPCServer
@@ -244,97 +242,6 @@ class Plan:
                 int(self.hash[:8], 16) % (60999 - 49152) + 49152
             )
 
-    # # # INCL_EXCL workspace get_aggregator function
-    # def get_aggregator(self):
-    #     """Get federation aggregator."""
-    #     defaults = self.config.get(
-    #         "aggregator", {
-    #             TEMPLATE: "openfl.experimental.Aggregator",
-    #             SETTINGS: {}
-    #         }
-    #     )
-
-    #     defaults[SETTINGS]["aggregator_uuid"] = self.aggregator_uuid
-    #     defaults[SETTINGS]["federation_uuid"] = self.federation_uuid
-    #     defaults[SETTINGS]["authorized_cols"] = self.authorized_cols
-
-    #     defaults[SETTINGS]["flow"] = self.get_flow()
-    #     defaults[SETTINGS]["checkpoint"] = self.config.get("federated_flow")["settings"]["checkpoint"]
-
-    #     log_metric_callback = defaults[SETTINGS].get("log_metric_callback")
-    #     if log_metric_callback:
-    #         if isinstance(log_metric_callback, dict):
-    #             log_metric_callback = Plan.import_(**log_metric_callback)
-    #         elif not callable(log_metric_callback):
-    #             raise TypeError(
-    #                 f"log_metric_callback should be callable object "
-    #                 f"or be import from code part, get {log_metric_callback}"
-    #             )
-    #     defaults[SETTINGS]["log_metric_callback"] = log_metric_callback
-
-    #     if self.aggregator_ is None:
-    #         self.aggregator_ = Plan.build(**defaults)
-
-    #     return self.aggregator_
-
-    # # # TEST workspace get_aggregator function
-    # def get_aggregator(self):
-    #     """Get federation aggregator."""
-    #     defaults = self.config.get(
-    #         "aggregator", {
-    #             TEMPLATE: "openfl.experimental.Aggregator",
-    #             SETTINGS: {}
-    #         }
-    #     )
-
-    #     defaults[SETTINGS]["aggregator_uuid"] = self.aggregator_uuid
-    #     defaults[SETTINGS]["federation_uuid"] = self.federation_uuid
-    #     defaults[SETTINGS]["authorized_cols"] = self.authorized_cols
-
-    #     defaults[SETTINGS]["flow"] = self.get_flow()
-    #     defaults[SETTINGS]["checkpoint"] = self.config.get("federated_flow")["settings"]["checkpoint"]
-
-    #     import sys
-    #     sys.path.append("/home/parth-wsl/env-integration-with-keerti-code/openfl/" +
-    #                     "openfl-workspace/test/src/aggregator_private_attrs.py")
-
-    #     import importlib
-    #     private_attrs_callable = getattr(
-    #         importlib.import_module("src.aggregator_private_attrs"),
-    #         "aggregator_private_attrs"
-    #     )
-    #     defaults[SETTINGS]["private_attributes_kwargs"] = getattr(
-    #         importlib.import_module("src.aggregator_private_attrs"),
-    #         "aggregator_kwargs"
-    #     )
-
-    #     if private_attrs_callable:
-    #         if isinstance(private_attrs_callable, dict):
-    #             private_attrs_callable = Plan.import_(**private_attrs_callable)
-    #     if not callable(private_attrs_callable):
-    #         raise TypeError(
-    #             f"private_attrs_callable should be callable object "
-    #             f"or be import from code part, get {private_attrs_callable}"
-    #         )
-    #     defaults[SETTINGS]["private_attributes_callable"] = private_attrs_callable
-
-    #     log_metric_callback = defaults[SETTINGS].get("log_metric_callback")
-    #     if log_metric_callback:
-    #         if isinstance(log_metric_callback, dict):
-    #             log_metric_callback = Plan.import_(**log_metric_callback)
-    #         elif not callable(log_metric_callback):
-    #             raise TypeError(
-    #                 f"log_metric_callback should be callable object "
-    #                 f"or be import from code part, get {log_metric_callback}"
-    #             )
-    #     defaults[SETTINGS]["log_metric_callback"] = log_metric_callback
-
-    #     if self.aggregator_ is None:
-    #         self.aggregator_ = Plan.build(**defaults)
-
-    #     return self.aggregator_
-
-    # # # MNIST workspace get_aggregator function
     def get_aggregator(self):
         """Get federation aggregator."""
         defaults = self.config.get(
@@ -348,32 +255,12 @@ class Plan:
         defaults[SETTINGS]["federation_uuid"] = self.federation_uuid
         defaults[SETTINGS]["authorized_cols"] = self.authorized_cols
 
+        private_attrs_callable, private_attrs_kwargs = self.get_private_attr("aggregator")
+        defaults[SETTINGS]["private_attributes_callable"] = private_attrs_callable
+        defaults[SETTINGS]["private_attributes_kwargs"] = private_attrs_kwargs
+
         defaults[SETTINGS]["flow"] = self.get_flow()
         defaults[SETTINGS]["checkpoint"] = self.config.get("federated_flow")["settings"]["checkpoint"]
-
-        import sys
-        sys.path.append("/home/parth-wsl/env-integration-with-keerti-code/openfl/" +
-                        "openfl-workspace/mnist/src/aggregator_private_attrs.py")
-
-        import importlib
-        private_attrs_callable = getattr(
-            importlib.import_module("src.aggregator_private_attrs"),
-            "aggregator_private_attrs"
-        )
-        defaults[SETTINGS]["private_attributes_kwargs"] = getattr(
-            importlib.import_module("src.aggregator_private_attrs"),
-            "aggregator_kwargs"
-        )
-
-        if private_attrs_callable:
-            if isinstance(private_attrs_callable, dict):
-                private_attrs_callable = Plan.import_(**private_attrs_callable)
-        if not callable(private_attrs_callable):
-            raise TypeError(
-                f"private_attrs_callable should be callable object "
-                f"or be import from code part, get {private_attrs_callable}"
-            )
-        defaults[SETTINGS]["private_attributes_callable"] = private_attrs_callable
 
         log_metric_callback = defaults[SETTINGS].get("log_metric_callback")
         if log_metric_callback:
@@ -391,69 +278,6 @@ class Plan:
 
         return self.aggregator_
 
-    # # # TEST workspace get_collaborator function
-    # def get_collaborator(
-    #     self,
-    #     collaborator_name,
-    #     root_certificate=None,
-    #     private_key=None,
-    #     certificate=None,
-    #     client=None,
-    # ):
-    #     """Get collaborator."""
-    #     defaults = self.config.get(
-    #         "collaborator", {
-    #             TEMPLATE: "openfl.experimental.Collaborator",
-    #             SETTINGS: {}
-    #         }
-    #     )
-
-    #     defaults[SETTINGS]["collaborator_name"] = collaborator_name
-    #     defaults[SETTINGS]["aggregator_uuid"] = self.aggregator_uuid
-    #     defaults[SETTINGS]["federation_uuid"] = self.federation_uuid
-
-    #     if client is not None:
-    #         defaults[SETTINGS]["client"] = client
-    #     else:
-    #         defaults[SETTINGS]["client"] = self.get_client(
-    #             collaborator_name,
-    #             self.aggregator_uuid,
-    #             self.federation_uuid,
-    #             root_certificate,
-    #             private_key,
-    #             certificate,
-    #         )
-
-    #     import sys
-    #     sys.path.append("/home/parth-wsl/env-ishant-code/openfl/" +
-    #                     "openfl-workspace/test/src/collaborator_private_attrs.py")
-
-    #     import importlib
-    #     private_attrs_callable = getattr(
-    #         importlib.import_module("src.collaborator_private_attrs"),
-    #         "collaborator_private_attrs"
-    #     )
-    #     defaults[SETTINGS]["private_attributes_kwargs"] = {
-    #         "collab_name": collaborator_name
-    #     }
-
-    #     if private_attrs_callable:
-    #         if isinstance(private_attrs_callable, dict):
-    #             private_attrs_callable = Plan.import_(**private_attrs_callable)
-    #     if not callable(private_attrs_callable):
-    #         raise TypeError(
-    #             f"private_attrs_callable should be callable object "
-    #             f"or be import from code part, get {private_attrs_callable}"
-    #         )
-
-    #     defaults[SETTINGS]["private_attributes_callable"] = private_attrs_callable
-
-    #     if self.collaborator_ is None:
-    #         self.collaborator_ = Plan.build(**defaults)
-
-    #     return self.collaborator_
-
-    # # # MNIST workspace get_collaborator function
     def get_collaborator(
         self,
         collaborator_name,
@@ -474,6 +298,11 @@ class Plan:
         defaults[SETTINGS]["aggregator_uuid"] = self.aggregator_uuid
         defaults[SETTINGS]["federation_uuid"] = self.federation_uuid
 
+        private_attrs_callable, private_attrs_kwargs = self.get_private_attr(collaborator_name)
+
+        defaults[SETTINGS]["private_attributes_callable"] = private_attrs_callable
+        defaults[SETTINGS]["private_attributes_kwargs"] = private_attrs_kwargs
+
         if client is not None:
             defaults[SETTINGS]["client"] = client
         else:
@@ -486,73 +315,10 @@ class Plan:
                 certificate,
             )
 
-        import sys
-        sys.path.append("/home/parth-wsl/env-ishant-code/openfl/" +
-                        "openfl-workspace/mnist/src/collaborator_private_attrs.py")
-
-        import importlib
-        private_attrs_callable = getattr(
-            importlib.import_module("src.collaborator_private_attrs"),
-            "collaborator_private_attrs"
-        )
-        defaults[SETTINGS]["private_attributes_kwargs"] = getattr(
-            importlib.import_module("src.collaborator_private_attrs"),
-            "collaborator_kwargs"
-        )
-
-        if private_attrs_callable:
-            if isinstance(private_attrs_callable, dict):
-                private_attrs_callable = Plan.import_(**private_attrs_callable)
-        if not callable(private_attrs_callable):
-            raise TypeError(
-                f"private_attrs_callable should be callable object "
-                f"or be import from code part, get {private_attrs_callable}"
-            )
-
-        defaults[SETTINGS]["private_attributes_callable"] = private_attrs_callable
-
         if self.collaborator_ is None:
             self.collaborator_ = Plan.build(**defaults)
 
         return self.collaborator_
-
-    # # # INCL_EXCL workspace get_collaborator function
-    # def get_collaborator(
-    #     self,
-    #     collaborator_name,
-    #     root_certificate=None,
-    #     private_key=None,
-    #     certificate=None,
-    #     client=None,
-    # ):
-    #     """Get collaborator."""
-    #     defaults = self.config.get(
-    #         "collaborator", {
-    #             TEMPLATE: "openfl.experimental.Collaborator",
-    #             SETTINGS: {}
-    #         }
-    #     )
-
-    #     defaults[SETTINGS]["collaborator_name"] = collaborator_name
-    #     defaults[SETTINGS]["aggregator_uuid"] = self.aggregator_uuid
-    #     defaults[SETTINGS]["federation_uuid"] = self.federation_uuid
-
-    #     if client is not None:
-    #         defaults[SETTINGS]["client"] = client
-    #     else:
-    #         defaults[SETTINGS]["client"] = self.get_client(
-    #             collaborator_name,
-    #             self.aggregator_uuid,
-    #             self.federation_uuid,
-    #             root_certificate,
-    #             private_key,
-    #             certificate,
-    #         )
-
-    #     if self.collaborator_ is None:
-    #         self.collaborator_ = Plan.build(**defaults)
-
-    #     return self.collaborator_
 
     def get_client(
         self,
@@ -621,6 +387,12 @@ class Plan:
                 SETTINGS: {}
             },
         )
+        defaults = self.import_kwargs_modules(defaults)
+
+        self.flow_ = Plan.build(**defaults)
+        return self.flow_
+
+    def import_kwargs_modules(self, defaults):
         for key in defaults[SETTINGS]:
             value_defaults = defaults[SETTINGS][key]
             if isinstance(value_defaults, str):
@@ -629,12 +401,55 @@ class Plan:
                     module_path = splitext(value_defaults)[0]
                     try:
                         if import_module(module_path):
+                            module = import_module(module_path)
                             value_defaults_data = {
                                 TEMPLATE: value_defaults,
                                 SETTINGS: {},
                             }
-                            defaults[SETTINGS][key] = Plan.build(**value_defaults_data)
+                            attr = getattr(module, class_name)
+
+                            if not inspect.isclass(attr):
+                                self.logger.info(
+                                    "Setting private attributes from variable"
+                                )
+                                defaults[SETTINGS][key] = attr
+                            else:
+                                self.logger.info("Setting private from class")
+                                defaults[SETTINGS][key] = Plan.build(
+                                    **value_defaults_data
+                                )
                     except:
                         raise ImportError(f"Cannot import {value_defaults}.")
-        self.flow_ = Plan.build(**defaults)
-        return self.flow_
+        return defaults
+
+    def get_private_attr(self, private_attr_name=None):
+        private_attrs_callable = None
+        private_attrs_kwargs = {}
+
+        from os.path import isfile
+        from openfl.experimental.federated.plan import Plan
+        from pathlib import Path
+
+        data_yaml = "plan/data.yaml"
+
+        if isfile(data_yaml):
+            d = Plan.load(Path(data_yaml).absolute())
+
+        if d.get(private_attr_name):
+            private_attrs_callable = {
+                "template": d.get(private_attr_name)["callable_func"]["template"]
+            }
+
+            private_attrs_kwargs = self.import_kwargs_modules(
+                d.get(private_attr_name)["callable_func"]
+            )["settings"]
+
+        if private_attrs_callable:
+            if isinstance(private_attrs_callable, dict):
+                private_attrs_callable = Plan.import_(**private_attrs_callable)
+            elif not callable(private_attrs_callable):
+                raise TypeError(
+                    f"private_attrs_callable should be callable object "
+                    f"or be import from code part, get {private_attrs_callable}"
+                )
+        return private_attrs_callable, private_attrs_kwargs

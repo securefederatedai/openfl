@@ -16,6 +16,7 @@ from openfl.experimental.utilities import (
     collaborator_to_aggregator,
     should_transfer,
     filter_attributes,
+    checkpoint
 )
 from openfl.experimental.runtime import Runtime
 
@@ -46,12 +47,11 @@ class FLSpec:
     def run(self) -> None:
         """Starts the execution of the flow"""
         # Submit flow to Runtime
-        self._metaflow_interface = MetaflowInterface(
-            self.__class__,
-            self.runtime.backend if str(self._runtime) == "LocalRuntime" else "single_process"
-        )
-        self._run_id = self._metaflow_interface.create_run()
         if str(self._runtime) == "LocalRuntime":
+            self._metaflow_interface = MetaflowInterface(
+                self.__class__, self.runtime.backend
+            )
+            self._run_id = self._metaflow_interface.create_run()
             # Initialize aggregator private attributes
             self.runtime.initialize_aggregator()
             self._foreach_methods = []

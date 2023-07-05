@@ -14,6 +14,10 @@ from typing import List, Callable
 from openfl.experimental.utilities import aggregator_to_collaborator
 from openfl.experimental.runtime import FederatedRuntime
 from openfl.experimental.utilities import checkpoint
+from openfl.experimental.utilities.metaflow_utils import (
+    SystemMutex,
+    MetaflowInterface
+)
 
 
 class Aggregator:
@@ -79,6 +83,11 @@ class Aggregator:
 
         self.checkpoint = checkpoint
         self.flow = flow
+        self.logger.info(f"MetaflowInterface creation")
+        self.flow._metaflow_interface = MetaflowInterface(
+            self.flow.__class__, "single_process"
+        )
+        self.flow._run_id = self.flow._metaflow_interface.create_run()
         self.flow.runtime = FederatedRuntime()
         self.flow.runtime.aggregator = "aggregator"
         self.flow.runtime.collaborators = self.authorized_cols
@@ -86,6 +95,7 @@ class Aggregator:
         self.collaborator_tasks_queue = {collab: queue.Queue() for collab
                                          in self.authorized_cols}
 
+        self.__private_attrs = {}
         self.connected_collaborators = []
         self.collaborator_results_received = []
         self.private_attrs_callable = private_attributes_callable
@@ -97,9 +107,9 @@ class Aggregator:
     def initialize_private_attributes(self, kwargs):
         """
         Call private_attrs_callable function set 
-            attributes to self.private_attrs.
+            attributes to self.__private_attrs.
         """
-        self.private_attrs = self.private_attrs_callable(
+        self.__private_attrs = self.private_attrs_callable(
             **kwargs
         )
 
@@ -132,27 +142,38 @@ class Aggregator:
                 self.flow.restore_instance_snapshot(self.flow, list(self.instance_snapshot))
                 delattr(self, "instance_snapshot")
 
-    def call_checkpoint(self, ctx, f):  # , sb):
+    def call_checkpoint(self, ctx, f, sb: bytes = None, rw: List[str] = []):
         """Perform checkpoint task."""
-        from openfl.experimental.interface import (
-            FLSpec,
-        )
+        if self.checkpoint:
+            # with SystemMutex("critical_section_1"):
+            from openfl.experimental.interface import (
+                FLSpec,
+            )
 
-        if not isinstance(ctx, FLSpec):
-            ctx = pickle.loads(ctx)
-        if not isinstance(f, Callable):
-            f = pickle.loads(f)
-        # if isinstance(sb, bytes):
-        #     f._stream_buffer = pickle.loads(sb)
+            if not isinstance(ctx, FLSpec):
+                ctx = pickle.loads(ctx)
+                # Updating metaflow interface object
+                ctx._metaflow_interface = self.flow._metaflow_interface
+            if not isinstance(f, Callable):
+                f = pickle.loads(f)
+            if isinstance(sb, bytes):
+                setattr(f.__func__, "_stream_buffer", pickle.loads(sb))
 
-        checkpoint(ctx, f)
+            if "next" not in rw:
+                rw.append("next")
+            if "runtime" not in rw:
+                rw.append("runtime")
+
+            checkpoint(ctx, f, chkpnt_reserved_words=rw)
 
     def __set_attributes_to_clone(self, clone):
         """
         Set private_attrs to clone as attributes.
         """
-        for name, attr in self.private_attrs.items():
-            setattr(clone, name, attr)
+        # if hasattr(self, "private_attrs"):
+        if len(self.__private_attrs) > 0:
+            for name, attr in self.__private_attrs.items():
+                setattr(clone, name, attr)
 
     def __delete_agg_attrs_from_clone(self, clone: Any) -> None:
         """
@@ -161,10 +182,12 @@ class Aggregator:
         """
         # Update aggregator private attributes by taking latest
         # parameters from clone, then delete attributes from clone.
-        for attr_name in self.private_attrs:
-            if hasattr(clone, attr_name):
-                self.private_attrs.update({attr_name: getattr(clone, attr_name)})
-                delattr(clone, attr_name)
+        # if hasattr(self, "private_attrs"):
+        if len(self.__private_attrs) > 0:
+            for attr_name in self.__private_attrs:
+                if hasattr(clone, attr_name):
+                    self.__private_attrs.update({attr_name: getattr(clone, attr_name)})
+                    delattr(clone, attr_name)
 
     def _log_big_warning(self):
         """Warn user about single collaborator cert mode."""
@@ -219,8 +242,7 @@ class Aggregator:
 
     def do_task(self, f_name):
         """Execute aggregator steps until transition."""
-        if hasattr(self, "private_attrs"):
-            self.__set_attributes_to_clone(self.flow)
+        self.__set_attributes_to_clone(self.flow)
 
         not_at_transition_point = True
         while not_at_transition_point:
@@ -229,15 +251,14 @@ class Aggregator:
 
             if f.__name__ == "end":
                 f()
-                self.call_checkpoint(self.flow, f)
+                self.call_checkpoint(self.flow, f, list(self.__private_attrs.keys()))
                 self.time_to_quit = True
                 not_at_transition_point = False
                 continue
 
             f(list(self.clones_dict.values())) if len(args) > 0 else f()
 
-            if checkpoint:
-                self.call_checkpoint(self.flow, f)
+            self.call_checkpoint(self.flow, f, list(self.__private_attrs.keys()))
 
             _, f, parent_func = self.flow.execute_task_args[:3]
             f_name = f.__name__
@@ -250,8 +271,7 @@ class Aggregator:
                 else:
                     self.kwargs = self.flow.execute_task_args[3]
 
-        if hasattr(self, "private_attrs"):
-            self.__delete_agg_attrs_from_clone(self.flow)
+        self.__delete_agg_attrs_from_clone(self.flow)
 
         return f_name if f_name != "end" else False
 

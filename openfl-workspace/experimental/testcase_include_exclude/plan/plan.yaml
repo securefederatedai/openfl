@@ -17,10 +17,9 @@ collaborator :
 
 
 federated_flow:
-  template: src.testflow.TestFlow
+  template: src.testflow_include_exclude.TestFlowIncludeExclude
   settings:
-    rounds: 4
-    checkpoint: false
+    checkpoint: true
 
 
 network :

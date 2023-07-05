@@ -50,8 +50,7 @@ message CheckpointRequest {
   MessageHeader header = 1;
   bytes execution_environment = 2;
   bytes function = 3;
-  // required to fix checkpoint rpc
-  // bytes stream_buffer = 4;
+  bytes stream_buffer = 4;
 }
 
 message CheckpointResponse {

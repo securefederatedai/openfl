@@ -1,9 +1,9 @@
-# Copyright (C) 2020-2021 Intel Corporation
+# Copyright (C) 2020-2023 Intel Corporation
 # Licensed subject to the terms of the separately executed evaluation license agreement between Intel Corporation and you.
 
 aggregator :
   defaults : plan/defaults/aggregator.yaml
-  template : openfl.experimental.component.aggregator.Aggregator
+  template : openfl.experimental.component.Aggregator
   settings :
     rounds_to_train     : 10
     log_metric_callback :
@@ -12,14 +12,17 @@ aggregator :
 
 collaborator :
   defaults : plan/defaults/collaborator.yaml
-  template : openfl.experimental.component.collaborator.Collaborator
+  template : openfl.experimental.component.Collaborator
   settings : {}
 
 
 federated_flow:
-  template: src.testflow_include_exclude.TestFlowIncludeExclude
+  template: src.flow.FederatedFlow_MNIST_Watermarking
   settings:
-    checkpoint: false
+    model: null
+    optimizer: null
+    n_rounds: 4
+    checkpoint: true
 
 
 network :

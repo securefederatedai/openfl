@@ -105,8 +105,6 @@ def check_resource_allocation(num_gpus, each_collab_gpu_usage):
                 break
             if gpu < collab_gpu_usage:
                 remaining_gpu_memory.update({collab_name: gpu})
-                print(f"each_collab_gpu_usage: {each_collab_gpu_usage}")
-                print(f"i: {i}")
                 each_collab_gpu_usage = dict(itertools.islice(each_collab_gpu_usage.items(), i))
             else:
                 gpu -= collab_gpu_usage

@@ -56,6 +56,7 @@ class Collaborator:
 
         self.round_number = 0
 
+        self.__private_attrs = {}
         if self.private_attrs_callable is not None:
             self.logger.info("Initialiaing collaborator.")
             self.initialize_private_attributes(private_attributes_kwargs)
@@ -63,9 +64,9 @@ class Collaborator:
     def initialize_private_attributes(self, kwrags):
         """
         Call private_attrs_callable function set 
-            attributes to self.private_attrs
+            attributes to self.__private_attrs
         """
-        self.private_attrs = self.private_attrs_callable(
+        self.__private_attrs = self.private_attrs_callable(
             **kwrags
         )
 
@@ -73,8 +74,9 @@ class Collaborator:
         """
         Set private_attrs to clone as attributes.
         """
-        for name, attr in self.private_attrs.items():
-            setattr(clone, name, attr)
+        if len(self.__private_attrs) > 0:
+            for name, attr in self.__private_attrs.items():
+                setattr(clone, name, attr)
 
     def __delete_agg_attrs_from_clone(self, clone) -> None:
         """
@@ -83,16 +85,18 @@ class Collaborator:
         """
         # Update aggregator private attributes by taking latest
         # parameters from clone, then delete attributes from clone.
-        for attr_name in self.private_attrs:
-            if hasattr(clone, attr_name):
-                self.private_attrs.update({attr_name: getattr(clone, attr_name)})
-                delattr(clone, attr_name)
+        if len(self.__private_attrs) > 0:
+            for attr_name in self.__private_attrs:
+                if hasattr(clone, attr_name):
+                    self.__private_attrs.update({attr_name: getattr(clone, attr_name)})
+                    delattr(clone, attr_name)
 
     def call_checkpoint(self, ctx, f, sb):
         """Call checkpoint gRPC."""
         self.client.call_checkpoint(
             self.collaborator_name,
-            pickle.dumps(ctx), pickle.dumps(f) #, pickle.dumps(sb)
+            pickle.dumps(ctx), pickle.dumps(f), pickle.dumps(sb),
+            list(self.__private_attrs.keys())
         )
 
     def run(self):
@@ -130,14 +134,13 @@ class Collaborator:
 
     def do_task(self, f_name, ctx):
         """Run collaborator steps until transition."""
-        if hasattr(self, "private_attrs"):
-            self.__set_attributes_to_clone(ctx)
+        self.__set_attributes_to_clone(ctx)
 
         not_at_transition_point = True
         while not_at_transition_point:
             f = getattr(ctx, f_name)
             f()
-            # self.call_checkpoint(ctx, f, f._stream_buffer)
+            self.call_checkpoint(ctx, f, f._stream_buffer)
 
             _, f, parent_func = ctx.execute_task_args[:3]
             if ctx._is_at_transition_point(f, parent_func):
@@ -145,8 +148,7 @@ class Collaborator:
 
             f_name = f.__name__
 
-        if hasattr(self, "private_attrs"):
-            self.__delete_agg_attrs_from_clone(ctx)
+        self.__delete_agg_attrs_from_clone(ctx)
 
         self.round_number += 1
         return f_name, ctx

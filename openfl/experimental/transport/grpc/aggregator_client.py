@@ -304,14 +304,26 @@ class AggregatorGRPCClient:
 
     @_atomic_connection
     @_resend_data_on_reconnection
-    def call_checkpoint(self, collaborator_name, clone_bytes, function): #, stream_buffer):
+    def call_checkpoint(self, collaborator_name, clone_bytes, function, stream_buffer, private_attrs):
         """Perform checkpoint for collaborator task."""
         self._set_header(collaborator_name)
+
+        # Remove private attributes from context
+        if len(private_attrs) > 0:
+            import pickle
+
+            ctx = pickle.loads(clone_bytes)
+            for attr in private_attrs:
+                if hasattr(ctx, attr):
+                    delattr(ctx, attr)
+
+            clone_bytes = pickle.dumps(ctx)
+
         request = aggregator_pb2.CheckpointRequest(
             header=self.header,
             execution_environment=clone_bytes,
             function=function,
-            # stream_buffer=stream_buffer
+            stream_buffer=stream_buffer,
         )
 
         response = self.stub.CallCheckpoint(request)
