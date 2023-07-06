@@ -127,11 +127,11 @@ class Collaborator(Participant):
         """
         self.__set_collaborator_attrs_to_clone(ctx)
 
-        f = callback(ctx, f_name)
+        callback(ctx, f_name)
 
         self.__delete_collab_attrs_from_clone(ctx)
 
-        return ctx, f
+        return ctx
 
 
 class Aggregator(Participant):
@@ -225,9 +225,9 @@ class Aggregator(Participant):
         self.__set_agg_attrs_to_clone(ctx)
 
         if clones is not None:
-            f = callback(ctx, f_name, clones)
+            callback(ctx, f_name, clones)
         else:
-            f = callback(ctx, f_name)
+            callback(ctx, f_name)
 
         self.__delete_agg_attrs_from_clone(ctx)
 

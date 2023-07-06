@@ -97,37 +97,23 @@ def checkpoint(ctx, parent_func, chkpnt_reserved_words=["next", "runtime"]):
         print(f"Saved data artifacts for {parent_func.__name__}")
 
 
-def check_resource_allocation(num_gpus, each_collab_gpu_usage):
+def check_resource_allocation(num_gpus, each_participant_gpu_usage):
     remaining_gpu_memory = {}
     for gpu in np.ones(num_gpus, dtype=int):
-        for i, (collab_name, collab_gpu_usage) in enumerate(each_collab_gpu_usage.items()):
+        for i, (participant_name, participant_gpu_usage) in enumerate(
+            each_participant_gpu_usage.items()
+        ):
             if gpu == 0:
                 break
-            if gpu < collab_gpu_usage:
-                remaining_gpu_memory.update({collab_name: gpu})
-                each_collab_gpu_usage = dict(itertools.islice(each_collab_gpu_usage.items(), i))
+            if gpu < participant_gpu_usage:
+                remaining_gpu_memory.update({participant_name: gpu})
+                each_participant_gpu_usage = dict(itertools.islice(
+                    each_participant_gpu_usage.items(), i)
+                )
             else:
-                gpu -= collab_gpu_usage
+                gpu -= participant_gpu_usage
     if len(remaining_gpu_memory) > 0:
         raise ResourcesAllocationError(
-            f"Failed to allocate Collaborator {list(remaining_gpu_memory.keys())} "
-            + "to specified GPU. Please try allocating lesser GPU resources to collaborators"
-        )
-
-
-def check_agg_resource_allocation(num_gpus, agg_gpu_usage):
-    remaining_gpu_memory = {}
-    for gpu in np.ones(num_gpus, dtype=int):
-        if gpu == 0:
-            break
-        if gpu < agg_gpu_usage:
-            remaining_gpu_memory.update({"aggregator": gpu})
-            break
-        else:
-            gpu -= agg_gpu_usage
-
-    if len(remaining_gpu_memory) > 0:
-        raise ResourcesAllocationError(
-            "Failed to allocate GPU resource to the aggregator. "
-            + "Please try allocating lesser GPU resources to the aggregator."
+            f"Failed to allocate Participant {list(remaining_gpu_memory.keys())} "
+            + "to specified GPU. Please try allocating lesser GPU resources to participants"
         )

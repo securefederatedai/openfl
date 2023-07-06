@@ -26,7 +26,6 @@ from .runtime_utils import (
     filter_attributes,
     checkpoint,
     check_resource_allocation,
-    check_agg_resource_allocation,
 )
 
 
@@ -47,5 +46,4 @@ __all__ = [
     "filter_attributes",
     "checkpoint",
     "check_resource_allocation",
-    "check_agg_resource_allocation",
 ]

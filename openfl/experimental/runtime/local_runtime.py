@@ -23,7 +23,6 @@ from openfl.experimental.utilities import (
     checkpoint,
     get_number_of_gpus,
     check_resource_allocation,
-    check_agg_resource_allocation,
 )
 from typing import List, Any
 from typing import Dict, Type, Callable
@@ -128,9 +127,9 @@ class LocalRuntime(Runtime):
         agg_gpus = aggregator.num_gpus
 
         if agg_gpus > 0:
-            check_agg_resource_allocation(
+            check_resource_allocation(
                 total_available_gpus,
-                agg_gpus,
+                {aggregator.get_name(): agg_gpus},
             )
 
         if total_available_gpus < agg_gpus:
@@ -325,6 +324,7 @@ class LocalRuntime(Runtime):
         """
         parent_func = None
         instance_snapshot = None
+        self.join_step = False
 
         while f.__name__ != "end":
             if "foreach" in kwargs:
@@ -352,22 +352,30 @@ class LocalRuntime(Runtime):
         Returns:
             flspec_obj: updated FLSpec (flow) object
         """
+        from openfl.experimental.interface import FLSpec
         aggregator = self._aggregator
+        clones = None
+
+        if self.join_step:
+            clones = [FLSpec._clones[col] for col in self.selected_collaborators]
+            self.join_step = False
 
         if self.backend == "ray":
             ray_executor = RayExecutor()
-
             ray_executor.ray_call_put(
-                aggregator, flspec_obj, f.__name__, self.execute_agg_steps
+                aggregator, flspec_obj,
+                f.__name__, self.execute_agg_steps,
+                clones
             )
-
             flspec_obj = ray_executor.ray_call_get()[0]
             del ray_executor
-            gc.collect()
-
         else:
-            aggregator.execute_func(flspec_obj, f.__name__, self.execute_agg_steps)
+            aggregator.execute_func(
+                flspec_obj, f.__name__, self.execute_agg_steps,
+                clones
+            )
 
+        gc.collect()
         return flspec_obj
 
     def execute_collab_task(
@@ -397,6 +405,7 @@ class LocalRuntime(Runtime):
 
         flspec_obj._foreach_methods.append(f.__name__)
         selected_collaborators = getattr(flspec_obj, kwargs["foreach"])
+        self.selected_collaborators = selected_collaborators
 
         # filter exclude/include attributes for clone
         self.filter_exclude_include(flspec_obj, f, selected_collaborators, **kwargs)
@@ -429,34 +438,18 @@ class LocalRuntime(Runtime):
         if self.backend == "ray":
             clones = ray_executor.ray_call_get()
             FLSpec._clones.update(zip(selected_collaborators, clones))
-            f = getattr(clones[0], "execute_next")
+            clone = clones[0]
             del clones
-        else:
-            f = getattr(clone, "execute_next")
+
+        flspec_obj.execute_task_args = clone.execute_task_args
 
         # Restore the flspec_obj state if back-up is taken
         self.restore_instance_snapshot(flspec_obj, instance_snapshot)
         del instance_snapshot
 
-        g = getattr(flspec_obj, f)
-        aggregator = self._aggregator
-
-        if self.backend == "ray":
-            ray_executor.ray_call_put(
-                aggregator, flspec_obj,
-                g.__name__, self.execute_agg_steps,
-                [FLSpec._clones[col] for col in selected_collaborators]
-            )
-            flspec_obj = ray_executor.ray_call_get()[0]
-            del ray_executor
-        else:
-            aggregator.execute_func(
-                flspec_obj, g.__name__,
-                self.execute_agg_steps,
-                [FLSpec._clones[col] for col in selected_collaborators]
-            )
-
         gc.collect()
+        # Setting the join_step to indicate to aggregator to collect clones
+        self.join_step = True
         return flspec_obj
 
     def filter_exclude_include(self, flspec_obj, f, selected_collaborators, **kwargs):

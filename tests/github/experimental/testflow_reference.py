@@ -318,7 +318,7 @@ def validate_agg_collab_references(all_collborators, agg_obj, agg_attrs):
         agg_attr_id = id(getattr(agg_obj, attr))
         for collab in all_collborators:
             collab_attr_id = id(getattr(collab, attr))
-            if agg_attr_id == collab_attr_id:
+            if agg_attr_id is collab_attr_id:
                 attr_ref_flag = True
                 mis_matched_ref.get(collab).append(attr)
 
@@ -369,6 +369,6 @@ if __name__ == "__main__":
     testflow = TestFlowReference(checkpoint=True)
     testflow.runtime = local_runtime
 
-    for i in range(2):
+    for i in range(5):
         print(f"Starting round {i}...")
         testflow.run()
