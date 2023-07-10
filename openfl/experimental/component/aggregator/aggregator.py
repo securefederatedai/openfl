@@ -83,7 +83,7 @@ class Aggregator:
 
         self.checkpoint = checkpoint
         self.flow = flow
-        self.logger.info(f"MetaflowInterface creation")
+        self.logger.info(f"MetaflowInterface creation.")
         self.flow._metaflow_interface = MetaflowInterface(
             self.flow.__class__, "single_process"
         )
@@ -113,6 +113,7 @@ class Aggregator:
             **kwargs
         )
 
+    # TODO: rename the method.
     def run_flow_until_transition(self):
         """
         Start the execution and run flow until transition.
@@ -163,6 +164,8 @@ class Aggregator:
                 rw.append("next")
             if "runtime" not in rw:
                 rw.append("runtime")
+            if "input" not in rw:
+                rw.append("input")
 
             checkpoint(ctx, f, chkpnt_reserved_words=rw)
 

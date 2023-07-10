@@ -11,8 +11,6 @@ import pickle
 from typing import Any, Dict
 from logging import getLogger
 
-from openfl.pipelines import NoCompressionPipeline
-
 
 class Collaborator:
     r"""The Collaborator object class.
@@ -43,8 +41,7 @@ class Collaborator:
                  private_attributes_kwargs: Dict = {},
                  **kwargs):
 
-        # TODO: rename collaborator_name to just name
-        self.collaborator_name = collaborator_name
+        self.name = collaborator_name
         self.aggregator_uuid = aggregator_uuid
         self.federation_uuid = federation_uuid
 
@@ -94,7 +91,7 @@ class Collaborator:
     def call_checkpoint(self, ctx, f, sb):
         """Call checkpoint gRPC."""
         self.client.call_checkpoint(
-            self.collaborator_name,
+            self.name,
             pickle.dumps(ctx), pickle.dumps(f), pickle.dumps(sb),
             list(self.__private_attrs.keys())
         )
@@ -119,7 +116,7 @@ class Collaborator:
         """
         self.logger.info(f"Sending results to aggregator...")
         self.client.send_task_results(
-            self.collaborator_name, self.round_number,
+            self.name, self.round_number,
             next_step, pickle.dumps(clone)
         )
 
@@ -128,7 +125,7 @@ class Collaborator:
         self.logger.info('Waiting for tasks...')
 
         self.round_number, next_step, clone_bytes, sleep_time, \
-            time_to_quit = self.client.get_tasks(self.collaborator_name)
+            time_to_quit = self.client.get_tasks(self.name)
 
         return next_step, pickle.loads(clone_bytes), sleep_time, time_to_quit
 
