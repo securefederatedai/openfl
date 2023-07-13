@@ -19,11 +19,8 @@ from openfl.experimental.utilities import (
 )
 from openfl.experimental.runtime import Runtime
 
-final_attributes = []
-
 
 class FLSpec:
-
     _clones = []
     _initial_state = None
 
@@ -56,25 +53,21 @@ class FLSpec:
         if str(self._runtime) == "LocalRuntime":
             # Initialize aggregator private attributes
             self.runtime.initialize_aggregator()
-            self._setup_aggregator()
             self._foreach_methods = []
             FLSpec._reset_clones()
             FLSpec._create_clones(self, self.runtime.collaborators)
             # Initialize collaborator private attributes
             self.runtime.initialize_collaborators()
-            # the start function can just be invoked locally
             if self._checkpoint:
                 print(f"Created flow {self.__class__.__name__}")
             try:
-                # Assume that first task always runs on the aggregator
-                self.start()
-                self.runtime.execute_task(
+                # Execute all Participant (Aggregator & Collaborator) tasks and
+                # retrieve the final attributes
+                # start step is the first task & invoked on aggregator through runtime.execute_task
+                final_attributes = self.runtime.execute_task(
                     self,
-                    *self.execute_task_args[:3],
-                    **self.execute_task_args[3],
+                    self.start,
                 )
-                # execute_task_args will be updated in self.start()
-                # after the next function is executed
             except Exception as e:
                 if "cannot pickle" in str(e) or "Failed to unpickle" in str(e):
                     msg = (
@@ -96,11 +89,6 @@ class FLSpec:
             raise Exception("Submission to remote runtime not available yet")
         else:
             raise Exception("Runtime not implemented")
-
-    def _setup_aggregator(self):
-        """Sets aggregator private attributes as self attributes"""
-        for name, attr in self.runtime._aggregator.private_attributes.items():
-            setattr(self, name, attr)
 
     @property
     def runtime(self) -> Type[Runtime]:
@@ -141,9 +129,7 @@ class FLSpec:
         if parent_func.__name__ in self._foreach_methods:
             self._foreach_methods.append(f.__name__)
             if should_transfer(f, parent_func):
-                print(
-                    f"Should transfer from {parent_func.__name__} to {f.__name__}"
-                )
+                print(f"Should transfer from {parent_func.__name__} to {f.__name__}")
                 self.execute_next = f.__name__
                 return True
         return False

@@ -10,7 +10,7 @@ import ray
 import os
 import gc
 from openfl.experimental.runtime import Runtime
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 if TYPE_CHECKING:
     from openfl.experimental.interface import Aggregator, Collaborator, FLSpec
@@ -34,17 +34,23 @@ class RayExecutor:
         self.__remote_contexts = []
 
     def ray_call_put(
-        self, collaborator: Collaborator, ctx: Any, f_name: str, callback: Callable
+        self, participant: Any, ctx: Any, f_name: str, callback: Callable,
+        clones: Optional[Any] = None
     ) -> None:
         """
-        Execute f_name from inside collaborator class with the context
+        Execute f_name from inside participant (Aggregator or Collaborator) class with the context
         of clone (ctx)
         """
-        self.__remote_contexts.append(
-            collaborator.execute_func.remote(ctx, f_name, callback)
-        )
+        if clones is not None:
+            self.__remote_contexts.append(
+                participant.execute_func.remote(ctx, f_name, callback, clones)
+            )
+        else:
+            self.__remote_contexts.append(
+                participant.execute_func.remote(ctx, f_name, callback)
+            )
 
-    def get_remote_clones(self) -> List[Any]:
+    def ray_call_get(self) -> List[Any]:
         """
         Get remote clones and delete ray references of clone (ctx) and,
         reclaim memory
@@ -103,10 +109,53 @@ class LocalRuntime(Runtime):
                 ray.init(dashboard_host=dh, dashboard_port=dp)
         self.backend = backend
         if aggregator is not None:
-            self.aggregator = aggregator
+            self.aggregator = self.__get_aggregator_object(aggregator)
 
         if collaborators is not None:
             self.collaborators = self.__get_collaborator_object(collaborators)
+
+    def __get_aggregator_object(self, aggregator: Type[Aggregator]) -> Any:
+        """Get aggregator object based on localruntime backend"""
+
+        if self.backend == "single_process":
+            return aggregator
+
+        total_available_cpus = os.cpu_count()
+        total_available_gpus = get_number_of_gpus()
+
+        agg_cpus = aggregator.num_cpus
+        agg_gpus = aggregator.num_gpus
+
+        if agg_gpus > 0:
+            check_resource_allocation(
+                total_available_gpus,
+                {aggregator.get_name(): agg_gpus},
+            )
+
+        if total_available_gpus < agg_gpus:
+            raise ResourcesNotAvailableError(
+                f"cannot assign more than available GPUs \
+                    ({agg_gpus} < {total_available_gpus})."
+            )
+        if total_available_cpus < agg_cpus:
+            raise ResourcesNotAvailableError(
+                f"cannot assign more than available CPUs \
+                    ({agg_cpus} < {total_available_cpus})."
+            )
+
+        interface_module = importlib.import_module("openfl.experimental.interface")
+        aggregator_class = getattr(interface_module, "Aggregator")
+
+        aggregator_actor = ray.remote(aggregator_class).options(
+            num_cpus=agg_cpus, num_gpus=agg_gpus
+        )
+        aggregator_actor_ref = aggregator_actor.remote(
+            name=aggregator.get_name(),
+            private_attributes_callable=aggregator.private_attributes_callable,
+            **aggregator.kwargs,
+        )
+
+        return aggregator_actor_ref
 
     def __get_collaborator_object(self, collaborators: List) -> Any:
         """Get collaborator object based on localruntime backend"""
@@ -181,12 +230,9 @@ class LocalRuntime(Runtime):
     def collaborators(self, collaborators: List[Type[Collaborator]]):
         """Set LocalRuntime collaborators"""
         if self.backend == "single_process":
-
             def get_collab_name(collab):
                 return collab.get_name()
-
         else:
-
             def get_collab_name(collab):
                 return ray.get(collab.get_name.remote())
 
@@ -197,17 +243,17 @@ class LocalRuntime(Runtime):
 
     def initialize_aggregator(self):
         """initialize aggregator private attributes"""
-        self._aggregator.initialize_private_attributes()
+        if self.backend == "single_process":
+            self._aggregator.initialize_private_attributes()
+        else:
+            self._aggregator.initialize_private_attributes.remote()
 
     def initialize_collaborators(self):
         """initialize collaborator private attributes"""
         if self.backend == "single_process":
-
             def init_private_attrs(collab):
                 return collab.initialize_private_attributes()
-
         else:
-
             def init_private_attrs(collab):
                 return collab.initialize_private_attributes.remote()
 
@@ -224,10 +270,28 @@ class LocalRuntime(Runtime):
                 if not hasattr(ctx, name):
                     setattr(ctx, name, attr)
 
-    def execute_collaborator_steps(self, ctx: Any, f_name: str):
+    def execute_agg_steps(self, ctx: Any, f_name: str, clones: Optional[Any] = None):
         """
-        Execute collaborator steps for each
-        collaborator until at transition point
+        Execute aggregator steps until at transition point
+        """
+        if clones is not None:
+            f = getattr(ctx, f_name)
+            f(clones)
+        else:
+            not_at_transition_point = True
+            while not_at_transition_point:
+                f = getattr(ctx, f_name)
+                f()
+
+                f, parent_func = ctx.execute_task_args[:2]
+                if aggregator_to_collaborator(f, parent_func) or f.__name__ == "end":
+                    not_at_transition_point = False
+
+                f_name = f.__name__
+
+    def execute_collab_steps(self, ctx: Any, f_name: str):
+        """
+        Execute collaborator steps until at transition point
         """
         not_at_transition_point = True
         while not_at_transition_point:
@@ -237,15 +301,14 @@ class LocalRuntime(Runtime):
             f, parent_func = ctx.execute_task_args[:2]
             if ctx._is_at_transition_point(f, parent_func):
                 not_at_transition_point = False
+
             f_name = f.__name__
 
     def execute_task(
         self,
         flspec_obj: Type[FLSpec],
         f: Callable,
-        parent_func: Callable,
-        instance_snapshot: List[Type[FLSpec]] = [],
-        **kwargs,
+        **kwargs
     ):
         """
         Defines which function to be executed based on name and kwargs
@@ -255,23 +318,29 @@ class LocalRuntime(Runtime):
             flspec_obj:        Reference to the FLSpec (flow) object. Contains information
                                about task sequence, flow attributes.
             f:                 The next task to be executed within the flow
-            parent_func:       The prior task executed in the flow
-            instance_snapshot: A prior FLSpec state that needs to be restored from
-                               (i.e. restoring aggregator state after collaborator
-                               execution)
+
+        Returns:
+            artifacts_iter: Iterator with updated sequence of values
         """
+        parent_func = None
+        instance_snapshot = None
+        self.join_step = False
 
         while f.__name__ != "end":
             if "foreach" in kwargs:
-                f, parent_func, instance_snapshot, kwargs = self.execute_foreach_task(
+                flspec_obj = self.execute_collab_task(
                     flspec_obj, f, parent_func, instance_snapshot, **kwargs
                 )
             else:
-                f, parent_func, instance_snapshot, kwargs = self.execute_agg_task(
-                    flspec_obj, f
-                )
+                flspec_obj = self.execute_agg_task(flspec_obj, f)
+            f, parent_func, instance_snapshot, kwargs = flspec_obj.execute_task_args
         else:
-            self.execute_end_task(flspec_obj, f)
+            flspec_obj = self.execute_agg_task(flspec_obj, f)
+            f = flspec_obj.execute_task_args[0]
+
+            checkpoint(flspec_obj, f)
+            artifacts_iter, _ = generate_artifacts(ctx=flspec_obj)
+            return artifacts_iter()
 
     def execute_agg_task(self, flspec_obj, f):
         """
@@ -281,47 +350,44 @@ class LocalRuntime(Runtime):
             f          :  The task to be executed within the flow
 
         Returns:
-            list: updated arguments to be executed
+            flspec_obj: updated FLSpec (flow) object
         """
+        from openfl.experimental.interface import FLSpec
+        aggregator = self._aggregator
+        clones = None
 
-        to_exec = getattr(flspec_obj, f.__name__)
-        to_exec()
-        return flspec_obj.execute_task_args
+        if self.join_step:
+            clones = [FLSpec._clones[col] for col in self.selected_collaborators]
+            self.join_step = False
 
-    def execute_end_task(self, flspec_obj, f):
-        """
-        Performs execution of end task
-        Args:
-            flspec_obj : Reference to the FLSpec (flow) object
-            f          :  The task to be executed within the flow
+        if self.backend == "ray":
+            ray_executor = RayExecutor()
+            ray_executor.ray_call_put(
+                aggregator, flspec_obj,
+                f.__name__, self.execute_agg_steps,
+                clones
+            )
+            flspec_obj = ray_executor.ray_call_get()[0]
+            del ray_executor
+        else:
+            aggregator.execute_func(
+                flspec_obj, f.__name__, self.execute_agg_steps,
+                clones
+            )
 
-        Returns:
-            list: updated arguments to be executed
-        """
+        gc.collect()
+        return flspec_obj
 
-        from openfl.experimental.interface import (
-            final_attributes,
-        )
-
-        global final_attributes
-
-        to_exec = getattr(flspec_obj, f.__name__)
-        to_exec()
-        checkpoint(flspec_obj, f)
-        artifacts_iter, _ = generate_artifacts(ctx=flspec_obj)
-        final_attributes = artifacts_iter()
-
-    def execute_foreach_task(
+    def execute_collab_task(
         self, flspec_obj, f, parent_func, instance_snapshot, **kwargs
     ):
         """
         Performs
             1. Filter include/exclude
-            2. Remove aggregator private attributes
-            3. Set runtime, collab private attributes , metaflow_interface
-            4. Execution of all collaborator for each task
-            5. Remove collaborator private attributes
-            6. Execute the next function after transition
+            2. Set runtime, collab private attributes , metaflow_interface
+            3. Execution of all collaborator for each task
+            4. Remove collaborator private attributes
+            5. Execute the next function after transition
 
         Args:
             flspec_obj  :  Reference to the FLSpec (flow) object
@@ -330,7 +396,7 @@ class LocalRuntime(Runtime):
             instance_snapshot : A prior FLSpec state that needs to be restored
 
         Returns:
-            list: updated arguments to be executed
+            flspec_obj: updated FLSpec (flow) object
         """
 
         from openfl.experimental.interface import (
@@ -339,18 +405,10 @@ class LocalRuntime(Runtime):
 
         flspec_obj._foreach_methods.append(f.__name__)
         selected_collaborators = getattr(flspec_obj, kwargs["foreach"])
+        self.selected_collaborators = selected_collaborators
 
         # filter exclude/include attributes for clone
         self.filter_exclude_include(flspec_obj, f, selected_collaborators, **kwargs)
-
-        # Remove aggregator private attributes from FLSpec._clones
-        for col in selected_collaborators:
-            clone = FLSpec._clones[col]
-            if aggregator_to_collaborator(f, parent_func):
-                for attr in self._aggregator.private_attributes:
-                    self._aggregator.private_attributes[attr] = getattr(clone, attr)
-                    if hasattr(clone, attr):
-                        delattr(clone, attr)
 
         if self.backend == "ray":
             ray_executor = RayExecutor()
@@ -372,31 +430,27 @@ class LocalRuntime(Runtime):
 
             if self.backend == "ray":
                 ray_executor.ray_call_put(
-                    collaborator, clone, f.__name__, self.execute_collaborator_steps
+                    collaborator, clone, f.__name__, self.execute_collab_steps
                 )
             else:
-                collaborator.execute_func(
-                    clone, f.__name__, self.execute_collaborator_steps
-                )
+                collaborator.execute_func(clone, f.__name__, self.execute_collab_steps)
 
         if self.backend == "ray":
-            clones = ray_executor.get_remote_clones()
+            clones = ray_executor.ray_call_get()
             FLSpec._clones.update(zip(selected_collaborators, clones))
-            f = getattr(clones[0], "execute_next")
-            del ray_executor
+            clone = clones[0]
             del clones
-            gc.collect()
-        else:
-            f = getattr(clone, "execute_next")
+
+        flspec_obj.execute_task_args = clone.execute_task_args
 
         # Restore the flspec_obj state if back-up is taken
         self.restore_instance_snapshot(flspec_obj, instance_snapshot)
         del instance_snapshot
 
-        g = getattr(flspec_obj, f)
         gc.collect()
-        g([FLSpec._clones[col] for col in selected_collaborators])
-        return flspec_obj.execute_task_args
+        # Setting the join_step to indicate to aggregator to collect clones
+        self.join_step = True
+        return flspec_obj
 
     def filter_exclude_include(self, flspec_obj, f, selected_collaborators, **kwargs):
         """
