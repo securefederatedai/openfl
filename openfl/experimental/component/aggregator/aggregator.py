@@ -15,7 +15,6 @@ from openfl.experimental.utilities import aggregator_to_collaborator
 from openfl.experimental.runtime import FederatedRuntime
 from openfl.experimental.utilities import checkpoint
 from openfl.experimental.utilities.metaflow_utils import (
-    SystemMutex,
     MetaflowInterface
 )
 
@@ -132,8 +131,9 @@ class Aggregator:
                 v.put((next_step, self.clones_dict[k]))
 
             while not self.collaborator_task_results.is_set():
+                # Waiting for selected collaborators to send the results.
                 self.logger.info(f"Waiting for "
-                                 + f"{self.collaborators_counter}/{len(self.authorized_cols)}"
+                                 + f"{self.collaborators_counter}/{len(self.selected_collaborators)}"
                                  + " collaborators to send results.")
                 time.sleep(Aggregator._get_sleep_time())
 
@@ -259,7 +259,20 @@ class Aggregator:
                 not_at_transition_point = False
                 continue
 
-            f(list(self.clones_dict.values())) if len(args) > 0 else f()
+            if len(args) > 0:
+                # Get clone for each selected collaborator only
+                if len(self.selected_collaborators) != len(self.clones_dict):
+                    selected_clones = {}
+                    for name, clone in self.clones_dict.items():
+                        if name in self.selected_collaborators:
+                            selected_clones[name] = clone
+                else:
+                    selected_clones = self.clones_dict
+
+                # Call the join function with selected collaborators
+                # clones are arguments
+                f(list(selected_clones.values()))
+            else: f()
 
             self.call_checkpoint(self.flow, f, list(self.__private_attrs.keys()))
 
@@ -271,6 +284,8 @@ class Aggregator:
                 if len(self.flow.execute_task_args) > 4:
                     self.clones_dict, self.instance_snapshot, self.kwargs = \
                         self.flow.execute_task_args[3:]
+
+                    self.selected_collaborators = getattr(self.flow, self.kwargs["foreach"])
                 else:
                     self.kwargs = self.flow.execute_task_args[3]
 
@@ -294,7 +309,8 @@ class Aggregator:
         self.next_step = next_step[0]
 
         self.collaborators_counter += 1
-        if self.collaborators_counter == len(self.authorized_cols):
+        # No need to wait for all collaborators
+        if self.collaborators_counter == len(self.selected_collaborators):
             self.collaborators_counter = 0
             self.collaborator_task_results.set()
 

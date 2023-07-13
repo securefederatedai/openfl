@@ -53,12 +53,3 @@ def collaborator_private_attrs(
             test, batch_size=batch_size, shuffle=True
         ),
     }
-
-
-# collaborator_kwargs = {
-#     "index": 0,
-#     "n_collaborators": 2,
-#     "batch_size": 64,
-#     "train_dataset": mnist_train,
-#     "test_dataset": mnist_test,
-# }
