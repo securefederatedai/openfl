@@ -91,7 +91,6 @@ class TestFlowDatastoreAndCli(FLSpec):
     """
     Testflow for Dataflow and CLI Functionality
     """
-
     def __init__(self, model=None, optimizer=None, rounds=3, **kwargs):
         super().__init__(**kwargs)
         if model is not None:
