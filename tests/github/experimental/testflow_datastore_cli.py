@@ -285,7 +285,6 @@ def display_validate_errors(validate_flow_error):
 if __name__ == "__main__":
     # Setup participants
     aggregator_ = Aggregator()
-    aggregator_.private_attributes = {}
 
     # Setup collaborators with private attributes
     collaborator_names = ["Portland", "Seattle", "Chandler", "Bangalore"]
