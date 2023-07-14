@@ -42,7 +42,7 @@ def build_model(latent_dim, num_encoder_tokens, num_decoder_tokens, **kwargs):
     model = keras.Model([encoder_inputs, decoder_inputs], decoder_outputs)
 
     model.compile(
-        optimizer='rmsprop', loss='categorical_crossentropy', metrics=['accuracy']
+        optimizer=keras.optimizers.legacy.RMSprop(), loss='categorical_crossentropy', metrics=['accuracy']
     )
 
     return model
