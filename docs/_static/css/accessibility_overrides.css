@@ -4,8 +4,11 @@
     font-size: 100%;
   }
 
-
   /* links */
+
+  a{
+    color:var(--classic-blue);
+  }
 
   [role=main] a,
   footer a:not([class*=btn-neutral]){
@@ -17,6 +20,18 @@
   footer a:not([class*=btn-neutral]):hover{
     color: var(--cobalt);
   }
+
+  .rst-versions.shift-up a{
+    color:var(--classic-blue-tint2);
+  }
+
+  /* read the docs meta information in toggle content */
+  
+  .rst-versions .rst-other-versions{
+    color:var(--carbon-tint1);
+  }
+  
+  /* end read the docs meta information in toggle content */
 
   /* end links */
 
@@ -43,8 +58,16 @@
     margin-bottom:1.5rem;
   }
 
-  /* flow content */
+  /* search results */
 
+  #search-results .context{
+    color:var(--black);
+  }
+
+
+  /* end search results */
+
+  /* flow content */
 
   p {
     line-height: inherit;
@@ -126,7 +149,7 @@
   /* end sidebar */
 
 
-  /* =notes and similar */
+  /* notes and similar */
 
   .rst-content .note .admonition-title,
   .rst-content .note .wy-alert-title,
@@ -155,7 +178,7 @@
   .rst-content .wy-alert.wy-alert-info .admonition-title,
   .wy-alert.wy-alert-info .rst-content .admonition-title,
   .wy-alert.wy-alert-info .wy-alert-title{
-    background: var(--blue-steel);
+    background: var(--blue-steel-shade1);
   }
 
   /* code and code blocks */
@@ -175,6 +198,5 @@
   .rst-content pre.literal-block{
     font-size:0.875rem;
   }
-
 
 }
