@@ -7,7 +7,7 @@ DEFAULT_DEVICE='CPU'
 
 if [[ $DEFAULT_DEVICE == 'CPU' ]]
 then
-    export JAX_PLATFORMS="CPU" # Force XLA to use CPU
+    export JAX_PLATFORMS="cpu" # Force XLA to use CPU
     export CUDA_VISIBLE_DEVICES='-1' # Force TF to use CPU
 else
     export XLA_PYTHON_CLIENT_PREALLOCATE=false
