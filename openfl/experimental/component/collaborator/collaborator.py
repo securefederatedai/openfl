@@ -4,7 +4,7 @@
 """Experimental Collaborator module."""
 # import sys
 # sys.path.append("src")
-
+import sys
 import time
 import pickle
 
@@ -101,7 +101,7 @@ class Collaborator:
         while True:
             next_step, clone, sleep_time, time_to_quit = self.get_tasks()
             if time_to_quit:
-                break
+                sys.exit(0)
             elif sleep_time > 0:
                 time.sleep(sleep_time)
             else:

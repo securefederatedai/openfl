@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 """Experimental Aggregator module."""
+import sys
 import time
 import queue
 import pickle
@@ -124,11 +125,14 @@ class Aggregator:
 
             if self.time_to_quit:
                 self.logger.info("Flow execution completed.")
-                break
+                sys.exit(0)
 
             # Prepare queue for collaborator task, with clones
             for k, v in self.collaborator_tasks_queue.items():
-                v.put((next_step, self.clones_dict[k]))
+                if k in self.selected_collaborators:
+                    v.put((next_step, self.clones_dict[k]))
+                else:
+                    self.logger.info(f"Tasks will not be sent to {k}")
 
             while not self.collaborator_task_results.is_set():
                 # Waiting for selected collaborators to send the results.

@@ -8,23 +8,23 @@
 col1:
   callable_func:
     settings:
-      collab_name: Col1
+      collab_name: col1
     template: src.collaborator_private_attrs.callable_to_initialize_collaborator_private_attributes
 
 col2:
   callable_func:
     settings:
-      collab_name: Col2
+      collab_name: col2
     template: src.collaborator_private_attrs.callable_to_initialize_collaborator_private_attributes
 
 col3:
   callable_func:
     settings:
-      collab_name: Col3
+      collab_name: col3
     template: src.collaborator_private_attrs.callable_to_initialize_collaborator_private_attributes
 
 col4:
   callable_func:
     settings:
-      collab_name: Col4
+      collab_name: col4
     template: src.collaborator_private_attrs.callable_to_initialize_collaborator_private_attributes
