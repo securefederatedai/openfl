@@ -8,6 +8,7 @@ import queue
 import pickle
 import inspect
 from threading import Event
+from copy import deepcopy
 from logging import getLogger
 from typing import Any, Dict
 from typing import List, Callable
@@ -147,7 +148,8 @@ class Aggregator:
                 self.flow.restore_instance_snapshot(self.flow, list(self.instance_snapshot))
                 delattr(self, "instance_snapshot")
 
-    def call_checkpoint(self, ctx, f, sb: bytes = None, rw: List[str] = []):
+    def call_checkpoint(self, ctx: Any, f: Callable, stream_buffer: bytes = None,
+                        reserved_attributes: List[str] = []):
         """Perform checkpoint task."""
         if self.checkpoint:
             # with SystemMutex("critical_section_1"):
@@ -161,17 +163,14 @@ class Aggregator:
                 ctx._metaflow_interface = self.flow._metaflow_interface
             if not isinstance(f, Callable):
                 f = pickle.loads(f)
-            if isinstance(sb, bytes):
-                setattr(f.__func__, "_stream_buffer", pickle.loads(sb))
+            if isinstance(stream_buffer, bytes):
+                setattr(f.__func__, "_stream_buffer", pickle.loads(stream_buffer))
 
-            if "next" not in rw:
-                rw.append("next")
-            if "runtime" not in rw:
-                rw.append("runtime")
-            if "input" not in rw:
-                rw.append("input")
+            for attr in reserved_attributes:
+                if hasattr(ctx, attr):
+                    setattr(ctx, attr, "Private attributes: Not Available.")
 
-            checkpoint(ctx, f, chkpnt_reserved_words=rw)
+            checkpoint(ctx, f)
 
     def __set_attributes_to_clone(self, clone):
         """
@@ -258,7 +257,8 @@ class Aggregator:
 
             if f.__name__ == "end":
                 f()
-                self.call_checkpoint(self.flow, f, list(self.__private_attrs.keys()))
+                self.call_checkpoint(deepcopy(self.flow), f,
+                                     reserved_attributes=list(self.__private_attrs.keys()))
                 self.time_to_quit = True
                 not_at_transition_point = False
                 continue
@@ -278,7 +278,8 @@ class Aggregator:
                 f(list(selected_clones.values()))
             else: f()
 
-            self.call_checkpoint(self.flow, f, list(self.__private_attrs.keys()))
+            self.call_checkpoint(deepcopy(self.flow), f,
+                                 reserved_attributes=list(self.__private_attrs.keys()))
 
             _, f, parent_func = self.flow.execute_task_args[:3]
             f_name = f.__name__

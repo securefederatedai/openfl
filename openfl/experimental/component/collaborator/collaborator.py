@@ -8,7 +8,7 @@ import sys
 import time
 import pickle
 
-from typing import Any, Dict
+from typing import Any, Callable, Dict
 from logging import getLogger
 
 
@@ -88,11 +88,11 @@ class Collaborator:
                     self.__private_attrs.update({attr_name: getattr(clone, attr_name)})
                     delattr(clone, attr_name)
 
-    def call_checkpoint(self, ctx, f, sb):
+    def call_checkpoint(self, ctx: Any, f: Callable, stream_buffer: Any):
         """Call checkpoint gRPC."""
         self.client.call_checkpoint(
             self.name,
-            pickle.dumps(ctx), pickle.dumps(f), pickle.dumps(sb),
+            pickle.dumps(ctx), pickle.dumps(f), pickle.dumps(stream_buffer),
             list(self.__private_attrs.keys())
         )
 

@@ -272,7 +272,7 @@ class AggregatorGRPCClient:
 
     @_atomic_connection
     @_resend_data_on_reconnection
-    def send_task_results(self, collaborator_name, round_number, next_step, \
+    def send_task_results(self, collaborator_name, round_number, next_step,
                           clone_bytes):
         """Send next function name to aggregator."""
         self._set_header(collaborator_name)
@@ -315,7 +315,7 @@ class AggregatorGRPCClient:
             ctx = pickle.loads(clone_bytes)
             for attr in private_attrs:
                 if hasattr(ctx, attr):
-                    delattr(ctx, attr)
+                    setattr(ctx, attr, "Private attributes: Not Available.")
 
             clone_bytes = pickle.dumps(ctx)
 
