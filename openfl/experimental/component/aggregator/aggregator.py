@@ -10,7 +10,7 @@ import inspect
 from threading import Event
 from copy import deepcopy
 from logging import getLogger
-from typing import Any, Dict
+from typing import Any, Dict, Tuple
 from typing import List, Callable
 
 from openfl.experimental.utilities import aggregator_to_collaborator
@@ -105,7 +105,7 @@ class Aggregator:
             self.logger.info("Initialiaing aggregator.")
             self.initialize_private_attributes(private_attributes_kwargs)
 
-    def initialize_private_attributes(self, kwargs):
+    def initialize_private_attributes(self, kwargs: Dict) -> None:
         """
         Call private_attrs_callable function set 
             attributes to self.__private_attrs.
@@ -115,7 +115,7 @@ class Aggregator:
         )
 
     # TODO: rename the method.
-    def run_flow_until_transition(self):
+    def run_flow_until_transition(self) -> None:
         """
         Start the execution and run flow until transition.
         """
@@ -149,7 +149,7 @@ class Aggregator:
                 delattr(self, "instance_snapshot")
 
     def call_checkpoint(self, ctx: Any, f: Callable, stream_buffer: bytes = None,
-                        reserved_attributes: List[str] = []):
+                        reserved_attributes: List[str] = []) -> None:
         """Perform checkpoint task."""
         if self.checkpoint:
             # with SystemMutex("critical_section_1"):
@@ -172,7 +172,7 @@ class Aggregator:
 
             checkpoint(ctx, f)
 
-    def __set_attributes_to_clone(self, clone):
+    def __set_attributes_to_clone(self, clone: Any) -> None:
         """
         Set private_attrs to clone as attributes.
         """
@@ -195,7 +195,7 @@ class Aggregator:
                     self.__private_attrs.update({attr_name: getattr(clone, attr_name)})
                     delattr(clone, attr_name)
 
-    def _log_big_warning(self):
+    def _log_big_warning(self) -> None:
         """Warn user about single collaborator cert mode."""
         self.logger.warning(
             f'\n{the_dragon}\nYOU ARE RUNNING IN SINGLE COLLABORATOR CERT MODE! THIS IS'
@@ -205,7 +205,7 @@ class Aggregator:
         )
 
     @staticmethod
-    def _get_sleep_time():
+    def _get_sleep_time() -> int:
         """
         Sleep 10 seconds.
 
@@ -215,7 +215,7 @@ class Aggregator:
         # Decrease sleep period for finer discretezation
         return 10
 
-    def get_tasks(self, collaborator_name):
+    def get_tasks(self, collaborator_name: str) -> Tuple:
         """
         RPC called by a collaborator to determine which tasks to perform.
 
@@ -246,7 +246,7 @@ class Aggregator:
 
         return 0, next_step, pickle.dumps(clone), 0, self.time_to_quit
 
-    def do_task(self, f_name):
+    def do_task(self, f_name: str) -> Any:
         """Execute aggregator steps until transition."""
         self.__set_attributes_to_clone(self.flow)
 
@@ -298,7 +298,8 @@ class Aggregator:
 
         return f_name if f_name != "end" else False
 
-    def send_task_results(self, collab_name, round_number, next_step, clone_bytes):
+    def send_task_results(self, collab_name: str, round_number: int, next_step: str,
+                          clone_bytes: bytes) -> None:
         """
         After collaborator execution, collaborator will call this function via gRPc
             to send next function.
@@ -319,8 +320,8 @@ class Aggregator:
             self.collaborators_counter = 0
             self.collaborator_task_results.set()
 
-    def valid_collaborator_cn_and_id(self, cert_common_name,
-                                     collaborator_common_name):
+    def valid_collaborator_cn_and_id(self, cert_common_name: str,
+                                     collaborator_common_name: str) -> bool:
         """
         Determine if the collaborator certificate and ID are valid for this federation.
 
@@ -346,7 +347,7 @@ class Aggregator:
             return (cert_common_name == self.single_col_cert_common_name
                     and collaborator_common_name in self.authorized_cols)
 
-    def all_quit_jobs_sent(self):
+    def all_quit_jobs_sent(self) -> bool:
         """Assert all quit jobs are sent to collaborators."""
         return set(self.quit_job_sent_to) == set(self.authorized_cols)
 
