@@ -74,7 +74,7 @@ class KerasCNN(KerasTaskRunner):
         model.add(Dense(num_classes, activation='softmax'))
 
         model.compile(loss=ke.losses.categorical_crossentropy,
-                      optimizer=ke.optimizers.Adam(),
+                      optimizer=ke.optimizers.legacy.Adam(),
                       metrics=['accuracy'])
 
         # initialize the optimizer variables
