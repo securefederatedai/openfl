@@ -1,16 +1,12 @@
 # Copyright (C) 2020-2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-
-from openfl.experimental.interface.fl_spec import FLSpec
-
-from openfl.experimental.placement.placement import aggregator, collaborator
-from metaflow import Flow, Step
-import threading
-import random
 import sys
 import time
-import os
-import shutil
+import threading
+from metaflow import Flow
+
+from openfl.experimental.interface.fl_spec import FLSpec
+from openfl.experimental.placement.placement import aggregator, collaborator
 
 
 class bcolors:  # NOQA: N801
@@ -83,7 +79,6 @@ class TestFlowSubsetCollaborators(FLSpec):
 
 
 def testcase():
-    # TODO: Finish coding test cases here.
     while True:
         if not TestFlowSubsetCollaborators.EXECUTED:
             time.sleep(10)
@@ -142,7 +137,8 @@ def testcase():
                 f"{bcolors.FAIL}\n {tc_pass_fail_len} Test "
                 + f"case(s) failed ... {bcolors.ENDC}"
             )
-        sys.exit(0)
+        break
+    sys.exit(0)
 
-t = threading.Thread(target=testcase, args=())
+t = threading.Thread(target=testcase)
 t.start()

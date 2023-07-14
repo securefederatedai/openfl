@@ -11,6 +11,12 @@ col1:
       index: 1
     template: src.collaborator_private_attrs.collaborator_private_attrs
 
+col2:
+  callable_func:
+    settings:
+      index: 2
+    template: src.collaborator_private_attrs.collaborator_private_attrs
+
 aggregator:
   callable_func:
     settings: {}

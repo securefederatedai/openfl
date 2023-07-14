@@ -2,9 +2,6 @@
 # SPDX-License-Identifier: Apache-2.0
 
 """Experimental Collaborator module."""
-# import sys
-# sys.path.append("src")
-import sys
 import time
 import pickle
 
@@ -101,7 +98,7 @@ class Collaborator:
         while True:
             next_step, clone, sleep_time, time_to_quit = self.get_tasks()
             if time_to_quit:
-                sys.exit(0)
+                break
             elif sleep_time > 0:
                 time.sleep(sleep_time)
             else:

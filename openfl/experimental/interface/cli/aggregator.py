@@ -3,6 +3,7 @@
 """Aggregator module."""
 
 import sys
+import time
 import threading
 from logging import getLogger
 
@@ -56,10 +57,11 @@ def start_(plan, authorized_cols, secure):
 
     agg_server = plan.get_server()
 
-    plan.aggregator_.agg_grpc_server_start = threading.Thread(target=agg_server.serve)
+    plan.aggregator_.agg_grpc_server = threading.Thread(target=agg_server.serve)
     plan.aggregator_.start_flow_execution = threading.Thread(target=plan.aggregator_.run_flow_until_transition)
-    plan.aggregator_.agg_grpc_server_start.start()
+    plan.aggregator_.agg_grpc_server.start()
     plan.aggregator_.start_flow_execution.start()
+
 
 @aggregator.command(name='generate-cert-request')
 @option('--fqdn', required=False, type=click_types.FQDN,
@@ -68,6 +70,7 @@ def start_(plan, authorized_cols, secure):
         default=getfqdn_env())
 def _generate_cert_request(fqdn):
     generate_cert_request(fqdn)
+
 
 def generate_cert_request(fqdn):
     """Create aggregator certificate key pair."""
