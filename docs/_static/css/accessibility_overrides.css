@@ -6,7 +6,7 @@
 
   /* links */
 
-  a{
+  .wy-breadcrumbs a{
     color:var(--classic-blue);
   }
 
