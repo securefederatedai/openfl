@@ -28,8 +28,6 @@ class TestFlowSubsetCollaborators(FLSpec):
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
 
-    EXECUTED = False
-
     @aggregator
     def start(self):
         """
@@ -75,70 +73,60 @@ class TestFlowSubsetCollaborators(FLSpec):
         End of the flow
         """
         print(f"End of the test case {TestFlowSubsetCollaborators.__name__} reached.")
-        TestFlowSubsetCollaborators.EXECUTED = True
-
+        testcase()
 
 def testcase():
-    while True:
-        if not TestFlowSubsetCollaborators.EXECUTED:
-            time.sleep(10)
-            continue
-        tc_pass_fail = {
-            "passed": [], "failed": []
-        }
-        subset_collaborators = ["col1", "col2"]
-        f = Flow("TestFlowSubsetCollaborators/")
-        r = f.latest_run
-        # Collaborator test_valid_collaborators step
-        step = list(r)[2]
-        # Aggregator join step
-        join = list(r)[1]
+    tc_pass_fail = {
+        "passed": [], "failed": []
+    }
+    subset_collaborators = ["col1", "col2"]
+    f = Flow("TestFlowSubsetCollaborators/")
+    r = f.latest_run
+    # Collaborator test_valid_collaborators step
+    step = list(r)[2]
+    # Aggregator join step
+    join = list(r)[1]
 
-        # Check which collaborators were executed in the flow
-        collaborators_ran = list(join)[0].data.collaborators_ran
+    # Check which collaborators were executed in the flow
+    collaborators_ran = list(join)[0].data.collaborators_ran
 
-        if len(list(step)) != len(subset_collaborators):
-            tc_pass_fail["failed"].append(
-                f"{bcolors.FAIL}...Flow only ran for {len(list(step))} "
-                + f"instead of the {len(subset_collaborators)} expected "
-                + f"collaborators- Testcase Failed.{bcolors.ENDC} "
-            )
-        else:
-            tc_pass_fail["passed"].append(
-                f"{bcolors.OKGREEN}Found {len(list(step))} tasks for each of the "
-                + f"{len(subset_collaborators)} collaborators - "
-                + f"Testcase Passed.{bcolors.ENDC}"
-            )
-        passed = True
-        for collaborator_name in subset_collaborators:
-            if collaborator_name not in collaborators_ran:
-                passed = False
-                tc_pass_fail["failed"].append(
-                    f"{bcolors.FAIL}...Flow did not execute for "
-                    + f"collaborator {collaborator_name}"
-                    + f" - Testcase Failed.{bcolors.ENDC}"
-                )
-
-        if passed:
-            tc_pass_fail["passed"].append(
-                f"{bcolors.OKGREEN}Flow executed for all collaborators"
-                + f"- Testcase Passed.{bcolors.ENDC}"
-            )
-        for values in tc_pass_fail.values():
-            print(*values, sep="\n")
-
-        print(
-            f"{bcolors.OKBLUE}Testing FederatedFlow - Ending test for validating "
-            + f"the subset of collaborators. {bcolors.ENDC}"
+    if len(list(step)) != len(subset_collaborators):
+        tc_pass_fail["failed"].append(
+            f"{bcolors.FAIL}...Flow only ran for {len(list(step))} "
+            + f"instead of the {len(subset_collaborators)} expected "
+            + f"collaborators- Testcase Failed.{bcolors.ENDC} "
         )
-        if tc_pass_fail.get("failed"):
-            tc_pass_fail_len = len(tc_pass_fail.get("failed"))
-            raise AssertionError(
-                f"{bcolors.FAIL}\n {tc_pass_fail_len} Test "
-                + f"case(s) failed ... {bcolors.ENDC}"
+    else:
+        tc_pass_fail["passed"].append(
+            f"{bcolors.OKGREEN}Found {len(list(step))} tasks for each of the "
+            + f"{len(subset_collaborators)} collaborators - "
+            + f"Testcase Passed.{bcolors.ENDC}"
+        )
+    passed = True
+    for collaborator_name in subset_collaborators:
+        if collaborator_name not in collaborators_ran:
+            passed = False
+            tc_pass_fail["failed"].append(
+                f"{bcolors.FAIL}...Flow did not execute for "
+                + f"collaborator {collaborator_name}"
+                + f" - Testcase Failed.{bcolors.ENDC}"
             )
-        break
-    sys.exit(0)
 
-t = threading.Thread(target=testcase)
-t.start()
+    if passed:
+        tc_pass_fail["passed"].append(
+            f"{bcolors.OKGREEN}Flow executed for all collaborators"
+            + f"- Testcase Passed.{bcolors.ENDC}"
+        )
+    for values in tc_pass_fail.values():
+        print(*values, sep="\n")
+
+    print(
+        f"{bcolors.OKBLUE}Testing FederatedFlow - Ending test for validating "
+        + f"the subset of collaborators. {bcolors.ENDC}"
+    )
+    if tc_pass_fail.get("failed"):
+        tc_pass_fail_len = len(tc_pass_fail.get("failed"))
+        raise AssertionError(
+            f"{bcolors.FAIL}\n {tc_pass_fail_len} Test "
+            + f"case(s) failed ... {bcolors.ENDC}"
+        )
