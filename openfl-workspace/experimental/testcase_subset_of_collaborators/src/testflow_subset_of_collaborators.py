@@ -1,8 +1,5 @@
 # Copyright (C) 2020-2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-import sys
-import time
-import threading
 from metaflow import Flow
 
 from openfl.experimental.interface.fl_spec import FLSpec
@@ -83,12 +80,12 @@ def testcase():
     f = Flow("TestFlowSubsetCollaborators/")
     r = f.latest_run
     # Collaborator test_valid_collaborators step
-    step = list(r)[2]
+    step = list(r)[1]
     # Aggregator join step
-    join = list(r)[1]
+    join = list(r)[0]
 
-    # Check which collaborators were executed in the flow
     collaborators_ran = list(join)[0].data.collaborators_ran
+    print(f"collaborators_ran: {collaborators_ran}")
 
     if len(list(step)) != len(subset_collaborators):
         tc_pass_fail["failed"].append(
