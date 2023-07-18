@@ -13,7 +13,7 @@ outputs = layers.Dense(10, name="predictions")(x2)
 model = keras.Model(inputs=inputs, outputs=outputs)
 
 # Instantiate an optimizer.
-optimizer = keras.optimizers.SGD(learning_rate=1e-3)
+optimizer = keras.optimizers.legacy.SGD(learning_rate=1e-3)
 # Instantiate a loss function.
 loss_fn = keras.losses.SparseCategoricalCrossentropy(from_logits=True)
 model.compile(optimizer, loss_fn)
