@@ -5,7 +5,7 @@ aggregator :
   defaults : plan/defaults/aggregator.yaml
   template : openfl.experimental.component.Aggregator
   settings :
-    rounds_to_train     : 10
+    rounds_to_train     : 1
     log_metric_callback :
       template : src.utils.write_metric
 
