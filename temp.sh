@@ -23,7 +23,7 @@ fx aggregator certify --fqdn $(hostname --fqdn)
 
 fx workspace export
 
-# 1st collaborator
+# # 1st collaborator
 cd ${WORKSPACE_PATH}
 mkdir col1
 cd col1
@@ -38,7 +38,7 @@ fx collaborator generate-cert-request -n col1
 
 cd ../../
 
-# On Aggregator Node
+# # On Aggregator Node
 fx collaborator certify --request-pkg ${WORKSPACE_PATH}/col1/my_federation/col_col1_to_agg_cert_request.zip
 
 cd ${WORKSPACE_PATH}/col1/my_federation
@@ -47,7 +47,7 @@ fx collaborator certify --import ${WORKSPACE_PATH}/agg_to_col_col1_signed_cert.z
 
 cd ../..
 
-# 2nd collaborator
+# # 2nd collaborator
 cd ${WORKSPACE_PATH}
 mkdir col2
 cd col2
@@ -62,7 +62,7 @@ fx collaborator generate-cert-request -n col2
 
 cd ../../
 
-# On Aggregator Node
+# # On Aggregator Node
 fx collaborator certify --request-pkg ${WORKSPACE_PATH}/col2/my_federation/col_col2_to_agg_cert_request.zip
 
 cd ${WORKSPACE_PATH}/col2/my_federation
@@ -74,7 +74,7 @@ fx collaborator certify --import ${WORKSPACE_PATH}/agg_to_col_col2_signed_cert.z
 # # #    uncomment col3, and col4
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
 
-# 3rd collaborator
+# # 3rd collaborator
 # cd ${WORKSPACE_PATH}
 # mkdir col3
 # cd col3
@@ -89,7 +89,7 @@ fx collaborator certify --import ${WORKSPACE_PATH}/agg_to_col_col2_signed_cert.z
 
 # cd ../../
 
-# On Aggregator Node
+# # On Aggregator Node
 # fx collaborator certify --request-pkg ${WORKSPACE_PATH}/col3/my_federation/col_col3_to_agg_cert_request.zip
 
 # cd ${WORKSPACE_PATH}/col3/my_federation
@@ -98,7 +98,7 @@ fx collaborator certify --import ${WORKSPACE_PATH}/agg_to_col_col2_signed_cert.z
 
 # cd ../..
 
-# 4th collaborator
+# # 4th collaborator
 # cd ${WORKSPACE_PATH}
 # mkdir col4
 # cd col4
@@ -123,4 +123,3 @@ fx collaborator certify --import ${WORKSPACE_PATH}/agg_to_col_col2_signed_cert.z
 cd ${WORKSPACE_PATH}
 
 fx aggregator start
-

@@ -118,7 +118,7 @@ class FederatedFlow_MNIST_Watermarking(FLSpec):
         **kwargs,
     ):
         super().__init__(**kwargs)
-        
+
         if model is not None:
             self.model = model
             self.optimizer = optimizer
