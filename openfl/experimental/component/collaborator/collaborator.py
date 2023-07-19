@@ -48,8 +48,6 @@ class Collaborator:
 
         self.private_attrs_callable = private_attributes_callable
 
-        self.round_number = 0
-
         self.__private_attrs = {}
         if self.private_attrs_callable is not None:
             self.logger.info("Initialiaing collaborator.")
@@ -144,7 +142,6 @@ class Collaborator:
 
         self.__delete_agg_attrs_from_clone(ctx)
 
-        self.round_number += 1
         return f_name, ctx
 
 
