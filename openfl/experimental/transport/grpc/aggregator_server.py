@@ -144,8 +144,8 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
         next_step = request.next_step,
         execution_environment = request.execution_environment
 
-        res = self.aggregator.send_task_results(
-            collaborator_name, round_number, next_step, execution_environment
+        _ = self.aggregator.send_task_results(
+            collaborator_name, round_number[0], next_step, execution_environment
         )
 
         return aggregator_pb2.TaskResultsResponse(
