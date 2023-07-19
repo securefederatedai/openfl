@@ -74,51 +74,51 @@ fx collaborator certify --import ${WORKSPACE_PATH}/agg_to_col_col2_signed_cert.z
 # # #    uncomment col3, and col4
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
 
-# # 3rd collaborator
-cd ${WORKSPACE_PATH}
-mkdir col3
-cd col3
+# # # 3rd collaborator
+# cd ${WORKSPACE_PATH}
+# mkdir col3
+# cd col3
 
-fx workspace import --archive ../my_federation.zip
+# fx workspace import --archive ../my_federation.zip
 
-cd my_federation
+# cd my_federation
 
-fx collaborator create -n col3
+# fx collaborator create -n col3
 
-fx collaborator generate-cert-request -n col3
+# fx collaborator generate-cert-request -n col3
 
-cd ../../
+# cd ../../
 
-# # On Aggregator Node
-fx collaborator certify --request-pkg ${WORKSPACE_PATH}/col3/my_federation/col_col3_to_agg_cert_request.zip
+# # # On Aggregator Node
+# fx collaborator certify --request-pkg ${WORKSPACE_PATH}/col3/my_federation/col_col3_to_agg_cert_request.zip
 
-cd ${WORKSPACE_PATH}/col3/my_federation
+# cd ${WORKSPACE_PATH}/col3/my_federation
 
-fx collaborator certify --import ${WORKSPACE_PATH}/agg_to_col_col3_signed_cert.zip
+# fx collaborator certify --import ${WORKSPACE_PATH}/agg_to_col_col3_signed_cert.zip
 
-cd ../..
+# cd ../..
 
-# # 4th collaborator
-cd ${WORKSPACE_PATH}
-mkdir col4
-cd col4
+# # # 4th collaborator
+# cd ${WORKSPACE_PATH}
+# mkdir col4
+# cd col4
 
-fx workspace import --archive ../my_federation.zip
+# fx workspace import --archive ../my_federation.zip
 
-cd my_federation
+# cd my_federation
 
-fx collaborator create -n col4
+# fx collaborator create -n col4
 
-fx collaborator generate-cert-request -n col4
+# fx collaborator generate-cert-request -n col4
 
-cd ../../
+# cd ../../
 
-# # On Aggregator Node
-fx collaborator certify --request-pkg ${WORKSPACE_PATH}/col4/my_federation/col_col4_to_agg_cert_request.zip
+# # # On Aggregator Node
+# fx collaborator certify --request-pkg ${WORKSPACE_PATH}/col4/my_federation/col_col4_to_agg_cert_request.zip
 
-cd ${WORKSPACE_PATH}/col4/my_federation
+# cd ${WORKSPACE_PATH}/col4/my_federation
 
-fx collaborator certify --import ${WORKSPACE_PATH}/agg_to_col_col4_signed_cert.zip
+# fx collaborator certify --import ${WORKSPACE_PATH}/agg_to_col_col4_signed_cert.zip
 
 cd ${WORKSPACE_PATH}
 
