@@ -13,13 +13,13 @@ cd ${WORKSPACE_PATH}
 
 pip install -r requirements.txt
 
-fx plan initialize -a $(hostname --fqdn)
+fx plan initialize -a localhost
 
 fx workspace certify
 
-fx aggregator generate-cert-request --fqdn $(hostname --fqdn)
+fx aggregator generate-cert-request --fqdn localhost
 
-fx aggregator certify --fqdn $(hostname --fqdn)
+fx aggregator certify --fqdn localhost
 
 fx workspace export
 
