@@ -2,11 +2,12 @@
 # SPDX-License-Identifier: Apache-2.0
 """Experimental CLI."""
 
-import os
 from pathlib import Path
-
+from logging import getLogger
 from click import group
 from click import pass_context
+
+logger = getLogger(__name__)
 
 
 @group()
@@ -15,11 +16,27 @@ def experimental(context):
     """Manage Experimental Environment."""
     context.obj["group"] = "experimental"
 
+
 @experimental.command(name="activate")
 def activate():
     """Activate experimental environment."""
     settings = Path("~").expanduser().joinpath(
-        ".openfl", "experimental").resolve()
+        ".openfl").resolve()
+    settings.mkdir(parents=False, exist_ok=True)
+    settings = settings.joinpath("experimental").resolve()
+
+    from subprocess import check_call
+    from sys import executable
+
+    rf = Path('experimental-requirements.txt').resolve()
+
+    if rf.is_file():
+        check_call(
+            [executable, '-m', 'pip', 'install', '-r', rf],
+            shell=False
+        )
+    else:
+        logger.warning(f"Requirements file {rf} not found.")
 
     with open(settings, "w") as f:
         f.write("experimental")
