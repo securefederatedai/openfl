@@ -20,7 +20,7 @@ col2:
   callable_func:
     settings:
       batch_size: 32
-      index: 1
+      index: 2
       n_collaborators: 2
       test_dataset: src.collaborator_private_attrs.train_dataset
       train_dataset: src.collaborator_private_attrs.test_dataset
