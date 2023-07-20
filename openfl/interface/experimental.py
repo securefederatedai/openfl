@@ -27,8 +27,10 @@ def activate():
 
     from subprocess import check_call
     from sys import executable
+    import openfl
 
-    rf = Path('experimental-requirements.txt').resolve()
+    rf = Path(openfl.__file__).parent.parent.resolve().joinpath(
+        "openfl-workspace", "experimental", "experimental-requirements.txt").resolve()
 
     if rf.is_file():
         check_call(
