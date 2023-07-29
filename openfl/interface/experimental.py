@@ -30,7 +30,7 @@ def activate():
     import openfl
 
     rf = Path(openfl.__file__).parent.parent.resolve().joinpath(
-        "openfl-workspace", "experimental", "experimental-requirements.txt").resolve()
+        "openfl-tutorials", "experimental", "requirements_workflow_interface.txt").resolve()
 
     if rf.is_file():
         check_call(

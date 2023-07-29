@@ -5,12 +5,8 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 import torch
-import torchvision
 
-from copy import deepcopy
-
-from openfl.experimental.interface import FLSpec, Aggregator, Collaborator
-from openfl.experimental.runtime import LocalRuntime
+from openfl.experimental.interface import FLSpec
 from openfl.experimental.placement import aggregator, collaborator
 
 batch_size_train = 64
@@ -21,30 +17,6 @@ log_interval = 10
 random_seed = 1
 torch.backends.cudnn.enabled = False
 torch.manual_seed(random_seed)
-
-mnist_train = torchvision.datasets.MNIST(
-    "files/",
-    train=True,
-    download=True,
-    transform=torchvision.transforms.Compose(
-        [
-            torchvision.transforms.ToTensor(),
-            torchvision.transforms.Normalize((0.1307,), (0.3081,)),
-        ]
-    ),
-)
-
-mnist_test = torchvision.datasets.MNIST(
-    "files/",
-    train=False,
-    download=True,
-    transform=torchvision.transforms.Compose(
-        [
-            torchvision.transforms.ToTensor(),
-            torchvision.transforms.Normalize((0.1307,), (0.3081,)),
-        ]
-    ),
-)
 
 
 class Bcolors:
@@ -91,7 +63,6 @@ class TestFlowDatastoreAndCli(FLSpec):
     """
     Testflow for Dataflow and CLI Functionality
     """
-
     def __init__(self, model=None, optimizer=None, rounds=3, **kwargs):
         super().__init__(**kwargs)
         if model is not None:
@@ -162,6 +133,17 @@ class TestFlowDatastoreAndCli(FLSpec):
     @aggregator
     def end(self):
         print("This is the end of the flow")
+
+        expected_flow_steps = [
+            "start",
+            "aggregated_model_validation",
+            "train",
+            "local_model_validation",
+            "join",
+        ]  # List to verify expected steps
+        validate_datastore_cli(
+            self, expected_flow_steps, self.num_rounds
+        )  # Function to validate datastore and cli
 
 
 def validate_datastore_cli(flow_obj, expected_flow_steps, num_rounds):
@@ -281,63 +263,3 @@ def display_validate_errors(validate_flow_error):
     )
     print("".join(validate_flow_error))
     print(f"{Bcolors.FAIL}\n ... Test case failed ...  {Bcolors.ENDC}")
-
-
-if __name__ == "__main__":
-    # Setup participants
-    aggregator = Aggregator()
-
-    collaborator_names = ["Portland", "Seattle", "Chandler", "Bangalore"]
-
-    def callable_to_initialize_collaborator_private_attributes(
-        index, n_collaborators, batch_size_train, train_dataset, test_dataset
-    ):
-        local_train = deepcopy(train_dataset)
-        local_test = deepcopy(test_dataset)
-        local_train.data = train_dataset.data[index:: n_collaborators]
-        local_train.targets = train_dataset.targets[index:: n_collaborators]
-        local_test.data = test_dataset.data[index:: n_collaborators]
-        local_test.targets = test_dataset.targets[index:: n_collaborators]
-        return {
-            "train_loader": torch.utils.data.DataLoader(
-                local_train, batch_size=batch_size_train, shuffle=True
-            ),
-            "test_loader": torch.utils.data.DataLoader(
-                local_test, batch_size=batch_size_train, shuffle=True
-            ),
-        }
-
-    # Setup collaborators private attributes via callable function
-    collaborators = []
-    for idx, collaborator_name in enumerate(collaborator_names):
-        collaborators.append(
-            Collaborator(
-                name=collaborator_name,
-                private_attributes_callable=callable_to_initialize_collaborator_private_attributes,
-                index=idx, n_collaborators=len(collaborator_names), batch_size_train=64,
-                train_dataset=mnist_train, test_dataset=mnist_test
-            )
-        )
-
-    local_runtime = LocalRuntime(
-        aggregator=aggregator, collaborators=collaborators, backend='ray'
-    )
-    print(f"Local runtime collaborators = {local_runtime.collaborators}")
-    num_rounds = 5
-    model = None
-    optimizer = None
-    flflow = TestFlowDatastoreAndCli(model, optimizer, num_rounds, checkpoint=True)
-    flflow.runtime = local_runtime
-    flflow.run()
-
-    expected_flow_steps = [
-        "start",
-        "aggregated_model_validation",
-        "train",
-        "local_model_validation",
-        "join",
-        "end",
-    ]  # List to verify expected steps
-    validate_datastore_cli(
-        flflow, expected_flow_steps, num_rounds
-    )  # Function to validate datastore and cli

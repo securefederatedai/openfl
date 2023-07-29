@@ -56,11 +56,14 @@ def start_(plan, authorized_cols, secure):
     logger.info('🧿 Starting the Aggregator Service.')
 
     agg_server = plan.get_server()
+    agg_server.is_server_started = False
+    agg_grpc_server = threading.Thread(target=agg_server.serve)
+    agg_grpc_server.start()
 
-    plan.aggregator_.agg_grpc_server = threading.Thread(target=agg_server.serve)
-    plan.aggregator_.start_flow_execution = threading.Thread(target=plan.aggregator_.run_flow_until_transition)
-    plan.aggregator_.agg_grpc_server.start()
-    plan.aggregator_.start_flow_execution.start()
+    while True:
+        if agg_server.is_server_started:
+            plan.aggregator_.run_flow()
+            break
 
 
 @aggregator.command(name='generate-cert-request')

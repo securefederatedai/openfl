@@ -29,13 +29,17 @@ class Aggregator:
         authorized_cols (list of str): The list of IDs of enrolled collaborators.
 
         flow (Any): Flow class.
-        runtime (FederatedRuntime): FedeatedRuntime object.
+        rounds_to_train (int): External loop rounds.
+        checkpoint (bool): Whether to save checkpoint or noe (default=False).
+        private_attrs_callable (Callable): Function for Aggregator private attriubtes (default=None).
+        private_attrs_kwargs (Dict): Arguments to call private_attrs_callable (default={}).
 
-        private_attrs_callable (Callable): Function for Aggregator private attriubtes.
-        private_attrs_kwargs (Dict): Arguments to call private_attrs_callable.        
+        single_col_cert_common_name (str): TODO:
 
-    Note:
-        \* - plan setting.
+        log_metric_callback (Callable): TODO:
+
+    Returns:
+        None
     """
 
     def __init__(
@@ -50,20 +54,10 @@ class Aggregator:
             private_attributes_callable: Callable = None,
             private_attributes_kwargs: Dict = {},
 
-            single_col_cert_common_name: Any = None,
+            single_col_cert_common_name: str = None,
 
             log_metric_callback: Callable = None,
             **kwargs) -> None:
-
-        self.uuid = aggregator_uuid
-        self.federation_uuid = federation_uuid
-        self.authorized_cols = authorized_cols
-
-        self.round_number = rounds_to_train
-        self.current_round = 1
-        self.collaborators_counter = 0
-        self.quit_job_sent_to = []
-        self.time_to_quit = False
 
         self.logger = getLogger(__name__)
 
@@ -76,14 +70,29 @@ class Aggregator:
             self.single_col_cert_common_name = ''
 
         self.log_metric_callback = log_metric_callback
-        self.collaborator_task_results = Event()
-
-        if self.log_metric_callback is not None:
+        if log_metric_callback is not None:
             self.log_metric = log_metric_callback
             self.logger.info(f'Using custom log metric: {self.log_metric}')
 
-        self.checkpoint = checkpoint
+        self.uuid = aggregator_uuid
+        self.federation_uuid = federation_uuid
+        self.authorized_cols = authorized_cols
+
+        self.round_number = rounds_to_train
+        self.current_round = 1
+        self.collaborators_counter = 0
+        self.quit_job_sent_to = []
+        self.time_to_quit = False
+
+        # Event to inform aggregator that collaborators have sent the results
+        self.collaborator_task_results = Event()
+        # A queue for each task
+        self.__collaborator_tasks_queue = {collab: queue.Queue() for collab
+                                         in self.authorized_cols}
+
         self.flow = flow
+        self.checkpoint = checkpoint
+        self.flow._foreach_methods = []
         self.logger.info(f"MetaflowInterface creation.")
         self.flow._metaflow_interface = MetaflowInterface(
             self.flow.__class__, "single_process"
@@ -93,92 +102,28 @@ class Aggregator:
         self.flow.runtime.aggregator = "aggregator"
         self.flow.runtime.collaborators = self.authorized_cols
 
-        self.collaborator_tasks_queue = {collab: queue.Queue() for collab
-                                         in self.authorized_cols}
-
+        self.__private_attrs_callable = private_attributes_callable
         self.__private_attrs = {}
         self.connected_collaborators = []
         self.collaborator_results_received = []
-        self.private_attrs_callable = private_attributes_callable
 
-        if self.private_attrs_callable is not None:
-            self.logger.info("Initialiaing aggregator.")
-            self.initialize_private_attributes(private_attributes_kwargs)
+        if self.__private_attrs_callable is not None:
+            self.logger.info("Initializing aggregator private attributes...")
+            self.__initialize_private_attributes(private_attributes_kwargs)
 
-    def initialize_private_attributes(self, kwargs: Dict) -> None:
+    def __initialize_private_attributes(self, kwargs: Dict) -> None:
         """
         Call private_attrs_callable function set 
             attributes to self.__private_attrs.
         """
-        self.__private_attrs = self.private_attrs_callable(
+        self.__private_attrs = self.__private_attrs_callable(
             **kwargs
         )
-
-    # TODO: rename the method.
-    def run_flow_until_transition(self) -> None:
-        """
-        Start the execution and run flow until transition.
-        """
-        f_name = self.flow.run()
-
-        self.logger.info(f"Starting round {self.current_round}...")
-        while True:
-            next_step = self.do_task(f_name)
-
-            if self.time_to_quit:
-                self.logger.info("Flow execution completed.")
-                self.quit_job_sent_to = self.authorized_cols
-                break
-
-            # Prepare queue for collaborator task, with clones
-            for k, v in self.collaborator_tasks_queue.items():
-                if k in self.selected_collaborators:
-                    v.put((next_step, self.clones_dict[k]))
-                else:
-                    self.logger.info(f"Tasks will not be sent to {k}")
-
-            while not self.collaborator_task_results.is_set():
-                # Waiting for selected collaborators to send the results.
-                self.logger.info(f"Waiting for "
-                                 + f"{self.collaborators_counter}/{len(self.selected_collaborators)}"
-                                 + " collaborators to send results.")
-                time.sleep(Aggregator._get_sleep_time())
-
-            self.collaborator_task_results.clear()
-            f_name = self.next_step
-            if hasattr(self, "instance_snapshot"):
-                self.flow.restore_instance_snapshot(self.flow, list(self.instance_snapshot))
-                delattr(self, "instance_snapshot")
-
-    def call_checkpoint(self, ctx: Any, f: Callable, stream_buffer: bytes = None,
-                        reserved_attributes: List[str] = []) -> None:
-        """Perform checkpoint task."""
-        if self.checkpoint:
-            # with SystemMutex("critical_section_1"):
-            from openfl.experimental.interface import (
-                FLSpec,
-            )
-
-            if not isinstance(ctx, FLSpec):
-                ctx = pickle.loads(ctx)
-                # Updating metaflow interface object
-                ctx._metaflow_interface = self.flow._metaflow_interface
-            if not isinstance(f, Callable):
-                f = pickle.loads(f)
-            if isinstance(stream_buffer, bytes):
-                setattr(f.__func__, "_stream_buffer", pickle.loads(stream_buffer))
-
-            for attr in reserved_attributes:
-                if hasattr(ctx, attr):
-                    setattr(ctx, attr, "Private attributes: Not Available.")
-
-            checkpoint(ctx, f)
 
     def __set_attributes_to_clone(self, clone: Any) -> None:
         """
         Set private_attrs to clone as attributes.
         """
-        # if hasattr(self, "private_attrs"):
         if len(self.__private_attrs) > 0:
             for name, attr in self.__private_attrs.items():
                 setattr(clone, name, attr)
@@ -190,7 +135,6 @@ class Aggregator:
         """
         # Update aggregator private attributes by taking latest
         # parameters from clone, then delete attributes from clone.
-        # if hasattr(self, "private_attrs"):
         if len(self.__private_attrs) > 0:
             for attr_name in self.__private_attrs:
                 if hasattr(clone, attr_name):
@@ -217,85 +161,192 @@ class Aggregator:
         # Decrease sleep period for finer discretezation
         return 10
 
+    def run_flow(self) -> None:
+        """
+        Start the execution and run flow until transition.
+        """
+        # Start function will be the first step if any flow
+        f_name = "start"
+
+        self.logger.info(f"Starting round {self.current_round}...")
+        while True:
+            next_step = self.do_task(f_name)
+
+            if self.time_to_quit:
+                self.logger.info("Flow execution completed.")
+                self.quit_job_sent_to = self.authorized_cols
+                break
+
+            # Prepare queue for collaborator task, with clones
+            for k, v in self.__collaborator_tasks_queue.items():
+                if k in self.selected_collaborators:
+                    v.put((next_step, self.clones_dict[k]))
+                else:
+                    self.logger.info(f"Tasks will not be sent to {k}")
+
+            while not self.collaborator_task_results.is_set():
+                # Waiting for selected collaborators to send the results.
+                self.logger.info(f"Waiting for "
+                                 + f"{self.collaborators_counter}/{len(self.selected_collaborators)}"
+                                 + " collaborators to send results.")
+                time.sleep(Aggregator._get_sleep_time())
+
+            self.collaborator_task_results.clear()
+            f_name = self.next_step
+            if hasattr(self, "instance_snapshot"):
+                self.flow.restore_instance_snapshot(self.flow, list(self.instance_snapshot))
+                delattr(self, "instance_snapshot")
+
+    def call_checkpoint(self, ctx: Any, f: Callable, stream_buffer: bytes = None,
+                        reserved_attributes: List[str] = []) -> None:
+        """
+        Perform checkpoint task.
+
+        Args:
+            ctx (FLSpec / bytes): Collaborator FLSpec object for which checkpoint is to be performed.
+            f (Callable / bytes): Collaborator Step (Function) which is to be checkpointed.
+            stream_buffer (bytes): Captured object for output and error (default=None).
+            reserved_attributes (List[str]): List of attribute names which is to be excluded
+                from checkpoint (default=[]).
+
+        Returns:
+            None
+        """
+        if self.checkpoint:
+            from openfl.experimental.interface import (
+                FLSpec,
+            )
+
+            # Check if arguments are pickled, if yes then unpickle
+            if not isinstance(ctx, FLSpec):
+                ctx = pickle.loads(ctx)
+                # Updating metaflow interface object
+                ctx._metaflow_interface = self.flow._metaflow_interface
+            if not isinstance(f, Callable):
+                f = pickle.loads(f)
+            if isinstance(stream_buffer, bytes):
+                # Set stream buffer as function parameter
+                setattr(f.__func__, "_stream_buffer", pickle.loads(stream_buffer))
+
+            # Replce reserved attribute values with string
+            for attr in reserved_attributes:
+                if hasattr(ctx, attr):
+                    setattr(ctx, attr, "Private attributes: Not Available.")
+
+            checkpoint(ctx, f)
+
     def get_tasks(self, collaborator_name: str) -> Tuple:
         """
         RPC called by a collaborator to determine which tasks to perform.
+        Tasks will only be sent to selected collaborators.
 
         Args:
-            collaborator_name: str
-                Requested collaborator name
+            collaborator_name (str): Collaborator name which requested tasks.
 
         Returns:
-            next_step: str
-                next function to be executed by collaborator
-            clone_bytes: bytes
-                Function execution context for collaborator                    
+            next_step (str): Next function to be executed by collaborator
+            clone_bytes (bytes): Function execution context for collaborator
         """
+        # If requesting collaborator is not registered as connected collaborator,
+        # then register it
         if collaborator_name not in self.connected_collaborators:
             self.logger.info(f"Collaborator {collaborator_name} is connected.")
             self.connected_collaborators.append(collaborator_name)
 
-        while self.collaborator_tasks_queue[collaborator_name].qsize() == 0:
-            # FIXME: 0, and '' instead of None is just for protobuf compatibility.
-            #  Cleaner solution?
-            if not self.time_to_quit:
-                time.sleep(Aggregator._get_sleep_time())
-            else:
+        # If queue of requesting collaborator is empty
+        while self.__collaborator_tasks_queue[collaborator_name].qsize() == 0:
+            # If it is time to then inform the collaborator
+            if self.time_to_quit:
                 self.logger.info(f'Sending signal to collaborator {collaborator_name} to shutdown...')
+                # FIXME: 0, and '' instead of None is just for protobuf compatibility.
+                #  Cleaner solution?
                 return 0, '', None, Aggregator._get_sleep_time(), self.time_to_quit
 
-        next_step, clone = self.collaborator_tasks_queue[
+            # If not time to quit then sleep for 10 seconds
+            time.sleep(Aggregator._get_sleep_time())
+
+        # Get collaborator step, and clone for requesting collaborator
+        next_step, clone = self.__collaborator_tasks_queue[
             collaborator_name].get()
 
+        # Returs tasks to collaborator
         return self.current_round, next_step, pickle.dumps(clone), 0, self.time_to_quit
 
     def do_task(self, f_name: str) -> Any:
-        """Execute aggregator steps until transition."""
+        """
+        Execute aggregator steps until transition.
+
+        Args:
+            f_name (str): Aggregator step
+
+        Returns:
+            string / None: Next collaborator function or None end of the flow.
+        """
+        # Set aggregator private attributes to flow object
         self.__set_attributes_to_clone(self.flow)
 
         not_at_transition_point = True
+        # Run a loop to execute flow steps until not_at_transition_point is False
         while not_at_transition_point:
             f = getattr(self.flow, f_name)
+            # Get the list of parameters of function f
             args = inspect.signature(f)._parameters
 
             if f.__name__ == "end":
                 f()
-                # TODO: Think of different approach than deep-copying the
-                # flow object.
+                # Take the checkpoint of "end" step
                 self.call_checkpoint(deepcopy(self.flow), f,
-                                     reserved_attributes=list(self.__private_attrs.keys()))
+                                        reserved_attributes=list(self.__private_attrs.keys()))
+                # Check if all rounds of external loop is executed
                 if self.current_round is self.round_number:
-                    not_at_transition_point = False
+                    # All rounds execute, it is time to quit
                     self.time_to_quit = True
+                    # It is time to quit - Break the loop
+                    not_at_transition_point = False
+                # Start next round of execution
                 else:
                     self.current_round += 1
                     self.logger.info(f"Starting round {self.current_round}...")
                     f_name = "start"
                 continue
 
+            # If function requires arguments then it is join step of the flow
             if len(args) > 0:
-                # Get clone for each selected collaborator only
+                # Check if total number of collaborators and number of selected collaborators
+                # are the same
                 if len(self.selected_collaborators) != len(self.clones_dict):
-                    selected_clones = {}
+                    # Create list of selected collaborator clones
+                    selected_clones = []
                     for name, clone in self.clones_dict.items():
+                        # Check if collaboraotr is in the list of selected collaborators
                         if name in self.selected_collaborators:
-                            selected_clones[name] = clone
+                            selected_clones.append(clone)
                 else:
-                    selected_clones = self.clones_dict
+                    # Number of selected collaborators, and number of total collaborators
+                    # are same
+                    selected_clones = list(self.clones_dict.values())
 
                 # Call the join function with selected collaborators
                 # clones are arguments
-                f(list(selected_clones.values()))
+                f(selected_clones)
+            # TODO: Try to remove this else
             else: f()
 
+            # Take the checkpoint of executed step
+            # TODO: Think of different approach than deep-copying the
+            # flow object.
             self.call_checkpoint(deepcopy(self.flow), f,
                                  reserved_attributes=list(self.__private_attrs.keys()))
 
+            # Next function in the flow
             _, f, parent_func = self.flow.execute_task_args[:3]
             f_name = f.__name__
 
+            self.flow._display_transition_logs(f, parent_func)
+
+            # Transition check
             if aggregator_to_collaborator(f, parent_func):
-                not_at_transition_point = False
+                # TODO: Add a comment here
                 if len(self.flow.execute_task_args) > 4:
                     self.clones_dict, self.instance_snapshot, self.kwargs = \
                         self.flow.execute_task_args[3:]
@@ -304,32 +355,49 @@ class Aggregator:
                 else:
                     self.kwargs = self.flow.execute_task_args[3]
 
+                # Transition encountered, break the loop
+                not_at_transition_point = False
+
+        # Delete private attributes from flow object
         self.__delete_agg_attrs_from_clone(self.flow)
 
-        return f_name if f_name != "end" else False
+        return f_name if f_name != "end" else None
 
     def send_task_results(self, collab_name: str, round_number: int, next_step: str,
                           clone_bytes: bytes) -> None:
         """
         After collaborator execution, collaborator will call this function via gRPc
             to send next function.
+
+        Args:
+            collab_name (str): Collaborator name which is sending results
+            round_number (int): Round number for which collaborator is sending results
+            next_step (str): Next aggregator step in the flow
+            clone_bytes (bytes): Collaborator FLSpec object
+
+        Returns:
+            None
         """
         self.logger.info(f"Aggregator step received from {collab_name} for "
                          + f"round number: {round_number}.")
 
+        # Log a warning if collaborator is sending results for old round
         if round_number is not self.current_round:
             self.logger.warning(f"Collaborator sent {round_number} results, aggregator "
                                 + f"is executing {self.current_round}")
         else:
             self.logger.info(f"Collaborator sent task results for round {self.current_round}")
+        # Unpickle the clone (FLSpec object)
         clone = pickle.loads(clone_bytes)
+        # Update the clone in clones_dict dictionary
         self.clones_dict[clone.input] = clone
         self.next_step = next_step[0]
 
         self.collaborators_counter += 1
-        # No need to wait for all collaborators
-        if self.collaborators_counter == len(self.selected_collaborators):
+        # If selected collaborator have sent the results
+        if self.collaborators_counter is len(self.selected_collaborators):
             self.collaborators_counter = 0
+            # Set the event to inform aggregator to resume the flow execution
             self.collaborator_task_results.set()
 
     def valid_collaborator_cn_and_id(self, cert_common_name: str,
@@ -344,7 +412,6 @@ class Aggregator:
         Returns:
             bool: True means the collaborator common name matches the name in
                   the security certificate.
-
         """
         # if self.test_mode_whitelist is None, then the common_name must
         # match collaborator_common_name and be in authorized_cols

@@ -242,7 +242,7 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
 
         self.logger.info('Starting Aggregator gRPC Server')
         self.server.start()
-
+        self.is_server_started = True
         try:
             while not self.aggregator.all_quit_jobs_sent():
                 sleep(5)

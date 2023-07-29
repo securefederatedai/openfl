@@ -1,4 +1,4 @@
-# Copyright (C) 2020-2021 Intel Corporation
+# Copyright (C) 2020-2023 Intel Corporation
 # Licensed subject to the terms of the separately executed evaluation license agreement between Intel Corporation and you.
 
 aggregator :
@@ -17,11 +17,9 @@ collaborator :
 
 
 federated_flow:
-  template: src.flow.FederatedFlow
+  template: src.testflow_datastore_cli.TestFlowDatastoreAndCli
   settings:
-    model: src.flow.Net
-    optimizer: null
-    rounds: 4
+    rounds: 1
     checkpoint: true
 
 

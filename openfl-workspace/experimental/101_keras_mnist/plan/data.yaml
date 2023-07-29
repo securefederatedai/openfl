@@ -12,8 +12,8 @@ col1:
       batch_size: 32
       index: 0
       n_collaborators: 2
-      test_dataset: src.collaborator_private_attrs.train_dataset
-      train_dataset: src.collaborator_private_attrs.test_dataset
+      test_dataset: src.collaborator_private_attrs.test_dataset
+      train_dataset: src.collaborator_private_attrs.train_dataset
     template: src.collaborator_private_attrs.collaborator_private_attrs
 
 col2:
@@ -22,6 +22,6 @@ col2:
       batch_size: 32
       index: 1
       n_collaborators: 2
-      test_dataset: src.collaborator_private_attrs.train_dataset
-      train_dataset: src.collaborator_private_attrs.test_dataset
+      test_dataset: src.collaborator_private_attrs.test_dataset
+      train_dataset: src.collaborator_private_attrs.train_dataset
     template: src.collaborator_private_attrs.collaborator_private_attrs

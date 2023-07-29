@@ -5,6 +5,7 @@
 import time
 import pickle
 
+from copy import deepcopy
 from typing import Any, Callable, Dict, Tuple
 from logging import getLogger
 
@@ -22,8 +23,7 @@ class Collaborator:
 
         private_attrs_callable (Callable): Function for Collaborator 
         private attriubtes.
-        private_attrs_kwargs (Dict): Arguments to call private_attrs_callable.        
-        compression_pipeline: The compression pipeline (Defaults to None).
+        private_attrs_kwargs (Dict): Arguments to call private_attrs_callable.
 
     Note:
         \* - Plan setting.
@@ -46,19 +46,19 @@ class Collaborator:
 
         self.logger = getLogger(__name__)
 
-        self.private_attrs_callable = private_attributes_callable
+        self.__private_attrs_callable = private_attributes_callable
 
         self.__private_attrs = {}
-        if self.private_attrs_callable is not None:
+        if self.__private_attrs_callable is not None:
             self.logger.info("Initialiaing collaborator.")
-            self.initialize_private_attributes(private_attributes_kwargs)
+            self.__initialize_private_attributes(private_attributes_kwargs)
 
-    def initialize_private_attributes(self, kwrags: Dict) -> None:
+    def __initialize_private_attributes(self, kwrags: Dict) -> None:
         """
         Call private_attrs_callable function set 
             attributes to self.__private_attrs
         """
-        self.__private_attrs = self.private_attrs_callable(
+        self.__private_attrs = self.__private_attrs_callable(
             **kwrags
         )
 
@@ -84,10 +84,20 @@ class Collaborator:
                     delattr(clone, attr_name)
 
     def call_checkpoint(self, ctx: Any, f: Callable, stream_buffer: Any) -> None:
-        """Call checkpoint gRPC."""
+        """
+        Call checkpoint gRPC.
+
+        Args:
+            ctx (FLSpec): FLSPec object.
+            f (Callable): Flow step which is be checkpointed.
+            stream_buffer (Any): Captured object for output and error.
+
+        Returns:
+            None
+        """
         self.client.call_checkpoint(
             self.name,
-            pickle.dumps(ctx), pickle.dumps(f), pickle.dumps(stream_buffer),
+            deepcopy(ctx), pickle.dumps(f), pickle.dumps(stream_buffer),
             list(self.__private_attrs.keys())
         )
 
@@ -135,6 +145,8 @@ class Collaborator:
             self.call_checkpoint(ctx, f, f._stream_buffer)
 
             _, f, parent_func = ctx.execute_task_args[:3]
+            ctx._display_transition_logs(f, parent_func)
+
             if ctx._is_at_transition_point(f, parent_func):
                 not_at_transition_point = False
 
@@ -143,76 +155,3 @@ class Collaborator:
         self.__delete_agg_attrs_from_clone(ctx)
 
         return f_name, ctx
-
-
-the_dragon = '''
-
- ,@@.@@+@@##@,@@@@.`@@#@+  *@@@@ #@##@  `@@#@# @@@@@   @@    @@@@` #@@@ :@@ `@#`@@@#.@
-  @@ #@ ,@ +. @@.@* #@ :`   @+*@ .@`+.   @@ *@::@`@@   @@#  @@  #`;@`.@@ @@@`@`#@* +:@`
-  @@@@@ ,@@@  @@@@  +@@+    @@@@ .@@@    @@ .@+:@@@:  .;+@` @@ ,;,#@` @@ @@@@@ ,@@@* @
-  @@ #@ ,@`*. @@.@@ #@ ,;  `@+,@#.@.*`   @@ ,@::@`@@` @@@@# @@`:@;*@+ @@ @`:@@`@ *@@ `
- .@@`@@,+@+;@.@@ @@`@@;*@  ;@@#@:*@+;@  `@@;@@ #@**@+;@ `@@:`@@@@  @@@@.`@+ .@ +@+@*,@
-  `` ``     ` ``  .     `     `      `     `    `  .` `  ``   ``    ``   `       .   `
-
-
-
-                                            .**
-                                      ;`  `****:
-                                     @**`*******
-                         ***        +***********;
-                        ,@***;` .*:,;************
-                        ;***********@@***********
-                        ;************************,
-                        `*************************
-                         *************************
-                         ,************************
-                          **#*********************
-                          *@****`     :**********;
-                          +**;          .********.
-                          ;*;            `*******#:                       `,:
-                                          ****@@@++::                ,,;***.
-                                          *@@@**;#;:         +:      **++*,
-                                          @***#@@@:          +*;     ,****
-                                          @*@+****           ***`     ****,
-                                         ,@#******.  ,       ****     **;,**.
-                                         * ******** :,       ;*:*+    **  :,**
-                                        #  ********::      *,.*:**`   *      ,*;
-                                        .  *********:      .+,*:;*:   :      `:**
-                                       ;   :********:       ***::**   `       ` **
-                                       +   :****::***  ,    *;;::**`             :*
-                                      ``   .****::;**:::    *;::::*;              ;*
-                                      *     *****::***:.    **::::**               ;:
-                                      #     *****;:****     ;*::;***               ,*`
-                                      ;     ************`  ,**:****;               ::*
-                                      :     *************;:;*;*++:                   *.
-                                      :     *****************;*                      `*
-                                     `.    `*****************;  :                     *.
-                                     .`    .*+************+****;:                     :*
-                                     `.    :;+***********+******;`    :              .,*
-                                      ;    ::*+*******************. `::              .`:.
-                                      +    :::**********************;;:`                *
-                                      +    ,::;*************;:::*******.                *
-                                      #    `:::+*************:::;********  :,           *
-                                      @     :::***************;:;*********;:,           *
-                                      @     ::::******:*********************:         ,:*
-                                      @     .:::******:;*********************,         :*
-                                      #      :::******::******###@*******;;****        *,
-                                      #      .::;*****::*****#****@*****;:::***;  ``  **
-                                      *       ::;***********+*****+#******::*****,,,,**
-                                      :        :;***********#******#******************
-                                      .`       `;***********#******+****+************
-                                      `,        ***#**@**+***+*****+**************;`
-                                       ;         *++**#******#+****+`      `.,..
-                                       +         `@***#*******#****#
-                                       +          +***@********+**+:
-                                       *         .+**+;**;;;**;#**#
-                                      ,`         ****@         +*+:
-                                      #          +**+         :+**
-                                      @         ;**+,       ,***+
-                                      #      #@+****      *#****+
-                                     `;     @+***+@      `#**+#++
-                                     #      #*#@##,      .++:.,#
-                                    `*      @#            +.
-                                  @@@
-                                 # `@
-                                  ,                                                        '''

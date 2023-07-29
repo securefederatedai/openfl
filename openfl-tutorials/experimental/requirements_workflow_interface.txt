@@ -1,7 +1,6 @@
 dill==0.3.6
 chardet
 charset-normalizer
--i https://download.pytorch.org/whl/cpu
-torch==1.13.1+cpu
--i https://download.pytorch.org/whl/cpu
-torchvision==0.14.1+cpu
+torch==1.13.1
+torchvision==0.14.1
+tensorflow==2.7.0

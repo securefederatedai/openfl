@@ -85,8 +85,7 @@ class FLSpec:
             for name, attr in final_attributes:
                 setattr(self, name, attr)
         elif str(self._runtime) == "FederatedRuntime":
-            self._foreach_methods = []
-            return self.start.__name__
+            pass
         else:
             raise Exception("Runtime not implemented")
 
@@ -215,8 +214,6 @@ class FLSpec:
             if str(self._runtime) == "FederatedRuntime":
                 if len(FLSpec._clones) == 0:
                     self.get_clones(kwargs)
-
-        self._display_transition_logs(f, parent_func)
 
         # Remove included / excluded attributes from next task
         filter_attributes(self, f, **kwargs)
