@@ -103,7 +103,7 @@ def update_plan(override_config, plan=None, resolve=True):
         else:
             # TODO: We probably need to validate the new key somehow
             logger.info(f'Did not find {key} in config. Make sure it should exist. Creating...')
-        if type(val) == list:
+        if type(val) is list:
             for idx, v in enumerate(val):
                 flat_plan_config[f'{key}.{idx}'] = v
         else:
