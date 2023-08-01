@@ -163,7 +163,7 @@ setup(
         'jupyterlab',
         'numpy',
         'pandas',
-        'protobuf==3.19.6',
+        'protobuf==3.20.0',
         'requests',
         'rich',
         'scikit-learn',

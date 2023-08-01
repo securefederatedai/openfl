@@ -3,22 +3,22 @@
 
 from openfl.experimental.interface import FLSpec
 from openfl.experimental.placement import aggregator, collaborator
-from keras.layers import Flatten, Dense, Dropout, Conv2D, MaxPool2D
-from keras.models import Sequential
+from tensorflow.keras.layers import Flatten, Dense, Dropout, Conv2D, MaxPool2D
+from tensorflow.keras.models import Sequential
 import numpy as np
+
 
 nb_classes = 10
 model = Sequential([
-        Conv2D(filters=32, kernel_size=(3, 3), activation="relu", input_shape=(28, 28, 1)),
-        MaxPool2D(),
-        Flatten(),
-        Dense(512, activation="relu"),
-        Dropout(0.2),
-        Dense(512, activation="relu"),
-        Dropout(0.2),
-        Dense(nb_classes, activation="softmax"),
-    ]
-)
+    Conv2D(filters=32, kernel_size=(3, 3), activation="relu", input_shape=(28, 28, 1)),
+    MaxPool2D(),
+    Flatten(),
+    Dense(512, activation="relu"),
+    Dropout(0.2),
+    Dense(512, activation="relu"),
+    Dropout(0.2),
+    Dense(nb_classes, activation="softmax"),
+])
 model.compile(optimizer="sgd", loss="categorical_crossentropy", metrics=["accuracy"])
 
 
@@ -62,7 +62,7 @@ class KerasMNISTFlow(FLSpec):
     @collaborator
     def aggregated_model_validation(self):
         print(f'Performing aggregated model validation for collaborator {self.input}')
-        self.agg_validation_score = inference(self.model,self.test_loader, self.batch_size)
+        self.agg_validation_score = inference(self.model, self.test_loader, self.batch_size)
         print(f'{self.input} value of {self.agg_validation_score}')
         self.next(self.train)
 

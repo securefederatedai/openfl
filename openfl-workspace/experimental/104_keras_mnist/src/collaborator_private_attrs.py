@@ -1,7 +1,7 @@
 # Copyright (C) 2020-2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-from keras.datasets import mnist
-from keras.utils import np_utils
+from tensorflow.keras.datasets import mnist
+from tensorflow.keras.utils import to_categorical
 
 
 nb_classes = 10
@@ -16,11 +16,12 @@ X_test /= 255.0
 print("Training matrix shape", X_train.shape)
 print("Testing matrix shape", X_test.shape)
 
-Y_train = np_utils.to_categorical(y_train, nb_classes)
-Y_test = np_utils.to_categorical(y_test, nb_classes)
+Y_train = to_categorical(y_train, nb_classes)
+Y_test = to_categorical(y_test, nb_classes)
 
 train_dataset = (X_train, Y_train)
 test_dataset = (X_test, Y_test)
+
 
 def collaborator_private_attrs(n_collaborators, index, train_dataset, test_dataset, batch_size):
     from openfl.utilities.data_splitters import EqualNumPyDataSplitter

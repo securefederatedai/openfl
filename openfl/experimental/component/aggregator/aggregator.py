@@ -9,15 +9,13 @@ import inspect
 from threading import Event
 from copy import deepcopy
 from logging import getLogger
-from typing import Any, Dict, Tuple
-from typing import List, Callable
+from typing import Any, Callable
+from typing import Dict, List, Tuple
 
 from openfl.experimental.utilities import aggregator_to_collaborator
 from openfl.experimental.runtime import FederatedRuntime
 from openfl.experimental.utilities import checkpoint
-from openfl.experimental.utilities.metaflow_utils import (
-    MetaflowInterface
-)
+from openfl.experimental.utilities.metaflow_utils import MetaflowInterface
 
 
 class Aggregator:
@@ -34,14 +32,9 @@ class Aggregator:
         private_attrs_callable (Callable): Function for Aggregator private attriubtes (default=None).
         private_attrs_kwargs (Dict): Arguments to call private_attrs_callable (default={}).
 
-        single_col_cert_common_name (str): TODO:
-
-        log_metric_callback (Callable): TODO:
-
     Returns:
         None
     """
-
     def __init__(
             self,
             aggregator_uuid: str,
