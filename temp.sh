@@ -28,6 +28,7 @@ cd ${WORKSPACE_PATH}
 mkdir col1
 cd col1
 
+# echo "==========================================================================================="
 fx workspace import --archive ../my_federation.zip
 
 cd my_federation

@@ -1,6 +1,5 @@
 dill==0.3.6
 chardet
 charset-normalizer
-torch==1.13.1
-torchvision==0.14.1
-tensorflow==2.7.0
+metaflow==2.7.15
+ray==2.2.0

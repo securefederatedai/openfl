@@ -119,7 +119,11 @@ class Aggregator:
         """
         if len(self.__private_attrs) > 0:
             for name, attr in self.__private_attrs.items():
+                self.logger.info(f'++++ {name} ++++'*20)
+                self.logger.info(f'id(attr): {id(attr)}')
                 setattr(clone, name, attr)
+                self.logger.info(f'id(clone.attr): {id(getattr(clone, name))}')
+                self.logger.info('++++ '*20)
 
     def __delete_agg_attrs_from_clone(self, clone: Any) -> None:
         """
@@ -288,8 +292,11 @@ class Aggregator:
             if f.__name__ == "end":
                 f()
                 # Take the checkpoint of "end" step
-                self.call_checkpoint(deepcopy(self.flow), f,
-                                        reserved_attributes=list(self.__private_attrs.keys()))
+                self.__delete_agg_attrs_from_clone(self.flow)
+                self.call_checkpoint(self.flow, f)
+                self.__set_attributes_to_clone(self.flow)
+                # self.call_checkpoint(deepcopy(self.flow), f,
+                #                         reserved_attributes=list(self.__private_attrs.keys()))
                 # Check if all rounds of external loop is executed
                 if self.current_round is self.round_number:
                     # All rounds execute, it is time to quit

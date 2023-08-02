@@ -71,7 +71,6 @@ def initialize(context, plan_config, cols_config, data_config,
     # #         exit('You must specify either a feature
     # #         shape or authorized collaborator
     # #         list in order for the script to determine the input layer shape')
-    print(plan.cols_data_paths)
 
     plan_origin = Plan.parse(plan_config, resolve=False).config
 
