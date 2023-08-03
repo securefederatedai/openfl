@@ -121,7 +121,7 @@ class Aggregator:
             for name, attr in self.__private_attrs.items():
                 setattr(clone, name, attr)
 
-    def __delete_agg_attrs_from_clone(self, clone: Any) -> None:
+    def __delete_agg_attrs_from_clone(self, clone: Any, replace_str: str = None) -> None:
         """
         Remove aggregator private attributes from FLSpec clone before
         transition from Aggregator step to collaborator steps.
@@ -132,7 +132,10 @@ class Aggregator:
             for attr_name in self.__private_attrs:
                 if hasattr(clone, attr_name):
                     self.__private_attrs.update({attr_name: getattr(clone, attr_name)})
-                    delattr(clone, attr_name)
+                    if replace_str:
+                        setattr(clone, attr_name, replace_str)
+                    else:
+                        delattr(clone, attr_name)
 
     def _log_big_warning(self) -> None:
         """Warn user about single collaborator cert mode."""
@@ -221,11 +224,6 @@ class Aggregator:
                 # Set stream buffer as function parameter
                 setattr(f.__func__, "_stream_buffer", pickle.loads(stream_buffer))
 
-            # Replce reserved attribute values with string
-            for attr in reserved_attributes:
-                if hasattr(ctx, attr):
-                    setattr(ctx, attr, "Private attributes: Not Available.")
-
             checkpoint(ctx, f)
 
     def get_tasks(self, collaborator_name: str) -> Tuple:
@@ -288,7 +286,7 @@ class Aggregator:
             if f.__name__ == "end":
                 f()
                 # Take the checkpoint of "end" step
-                self.__delete_agg_attrs_from_clone(self.flow)
+                self.__delete_agg_attrs_from_clone(self.flow, "Private attributes: Not Available.")
                 self.call_checkpoint(self.flow, f)
                 self.__set_attributes_to_clone(self.flow)
                 # self.call_checkpoint(deepcopy(self.flow), f,

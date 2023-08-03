@@ -83,7 +83,7 @@ class Collaborator:
             for name, attr in self.__private_attrs.items():
                 setattr(clone, name, attr)
 
-    def __delete_agg_attrs_from_clone(self, clone: Any) -> None:
+    def __delete_agg_attrs_from_clone(self, clone: Any, replace_str: str = None) -> None:
         """
         Remove aggregator private attributes from FLSpec clone before
         transition from Aggregator step to collaborator steps
@@ -101,7 +101,10 @@ class Collaborator:
             for attr_name in self.__private_attrs:
                 if hasattr(clone, attr_name):
                     self.__private_attrs.update({attr_name: getattr(clone, attr_name)})
-                    delattr(clone, attr_name)
+                    if replace_str:
+                        setattr(clone, attr_name, replace_str)
+                    else:
+                        delattr(clone, attr_name)
 
     def call_checkpoint(self, ctx: Any, f: Callable, stream_buffer: Any) -> None:
         """
@@ -117,8 +120,7 @@ class Collaborator:
         """
         self.client.call_checkpoint(
             self.name,
-            deepcopy(ctx), pickle.dumps(f), pickle.dumps(stream_buffer),
-            list(self.__private_attrs.keys())
+            pickle.dumps(ctx), pickle.dumps(f), pickle.dumps(stream_buffer)
         )
 
     def run(self) -> None:
@@ -200,7 +202,9 @@ class Collaborator:
             f = getattr(ctx, f_name)
             f()
             # Checkpoint the function
+            self.__delete_agg_attrs_from_clone(ctx, "Private attributes: Not Available.")
             self.call_checkpoint(ctx, f, f._stream_buffer)
+            self.__set_attributes_to_clone(ctx)
 
             _, f, parent_func = ctx.execute_task_args[:3]
             # Display transition logs if transition
