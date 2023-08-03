@@ -6,6 +6,7 @@
 import sys
 import io
 from copy import deepcopy
+import termcolor
 
 
 class RedirectStdStreamBuffer:
@@ -44,6 +45,7 @@ class RedirectStdStream(object):
         self.__stdBuffer = buffer
 
     def write(self, message):
+        message = f"\33[94m{message}\33[0m"
         self.__stdDestination.write(message)
         self.__stdBuffer.write(message)
 
