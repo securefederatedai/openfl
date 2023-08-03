@@ -154,7 +154,6 @@ class Aggregator:
         Returns:
             sleep_time: int
         """
-        # Decrease sleep period for finer discretezation
         return 10
 
     def run_flow(self) -> None:
@@ -169,7 +168,7 @@ class Aggregator:
             next_step = self.do_task(f_name)
 
             if self.time_to_quit:
-                self.logger.info("Flow execution completed.")
+                self.logger.info('Experiment Completed.')
                 self.quit_job_sent_to = self.authorized_cols
                 break
 
@@ -244,6 +243,10 @@ class Aggregator:
             self.logger.info(f"Collaborator {collaborator_name} is connected.")
             self.connected_collaborators.append(collaborator_name)
 
+        self.logger.debug(
+            f'Aggregator GetTasks function reached from collaborator {collaborator_name}...'
+        )
+
         # If queue of requesting collaborator is empty
         while self.__collaborator_tasks_queue[collaborator_name].qsize() == 0:
             # If it is time to then inform the collaborator
@@ -260,7 +263,9 @@ class Aggregator:
         next_step, clone = self.__collaborator_tasks_queue[
             collaborator_name].get()
 
-        # Returs tasks to collaborator
+        self.logger.info(
+            f'Sending tasks to collaborator {collaborator_name} for round {self.current_round}'
+        )
         return self.current_round, next_step, pickle.dumps(clone), 0, self.time_to_quit
 
     def do_task(self, f_name: str) -> Any:
@@ -372,15 +377,17 @@ class Aggregator:
         Returns:
             None
         """
-        self.logger.info(f"Aggregator step received from {collab_name} for "
-                         + f"round number: {round_number}.")
-
         # Log a warning if collaborator is sending results for old round
         if round_number is not self.current_round:
-            self.logger.warning(f"Collaborator sent {round_number} results, aggregator "
-                                + f"is executing {self.current_round}")
+            self.logger.warning(
+                f'Collaborator {collab_name} is reporting results'
+                f' for the wrong round: {round_number}. Ignoring...'
+            )
         else:
-            self.logger.info(f"Collaborator sent task results for round {self.current_round}")
+            self.logger.info(
+                f'Collaborator {collab_name} is sending task results '
+                f'for round {round_number}'
+            )
         # Unpickle the clone (FLSpec object)
         clone = pickle.loads(clone_bytes)
         # Update the clone in clones_dict dictionary

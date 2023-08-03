@@ -5,7 +5,6 @@
 import time
 import pickle
 
-from copy import deepcopy
 from typing import Any, Callable
 from typing import Dict, Tuple
 from logging import getLogger
@@ -50,7 +49,7 @@ class Collaborator:
 
         self.__private_attrs = {}
         if self.__private_attrs_callable is not None:
-            self.logger.info("Initialiaing collaborator.")
+            self.logger.info("Initializing collaborator.")
             self.__initialize_private_attributes(private_attributes_kwargs)
 
     def __initialize_private_attributes(self, kwrags: Dict) -> None:
@@ -140,9 +139,11 @@ class Collaborator:
             elif sleep_time > 0:
                 time.sleep(sleep_time)
             else:
-                self.logger.info(f"Received {next_step} step from Aggregator.")
+                self.logger.info(f'Received the following tasks: {next_step}.')
                 f_name, ctx = self.do_task(next_step, clone)
                 self.send_task_results(f_name, ctx)
+
+        self.logger.info('End of Federation reached. Exiting...')
 
     def send_task_results(self, next_step: str, clone: Any) -> None:
         """
@@ -156,7 +157,8 @@ class Collaborator:
         Returns:
             None
         """
-        self.logger.info(f"Sending results to aggregator...")
+        self.logger.info(
+        f'Round {self.round_number}, collaborator {self.name} is sending results.')
         self.client.send_task_results(
             self.name, self.round_number,
             next_step, pickle.dumps(clone)
@@ -176,7 +178,6 @@ class Collaborator:
             time_to_quit (bool): True if end of reached
         """
         self.logger.info('Waiting for tasks...')
-
         self.round_number, next_step, clone_bytes, sleep_time, \
             time_to_quit = self.client.get_tasks(self.name)
 
