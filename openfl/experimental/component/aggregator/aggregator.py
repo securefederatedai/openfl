@@ -119,11 +119,7 @@ class Aggregator:
         """
         if len(self.__private_attrs) > 0:
             for name, attr in self.__private_attrs.items():
-                self.logger.info(f'++++ {name} ++++'*20)
-                self.logger.info(f'id(attr): {id(attr)}')
                 setattr(clone, name, attr)
-                self.logger.info(f'id(clone.attr): {id(getattr(clone, name))}')
-                self.logger.info('++++ '*20)
 
     def __delete_agg_attrs_from_clone(self, clone: Any) -> None:
         """
