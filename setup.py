@@ -168,7 +168,7 @@ setup(
         'rich',
         'scikit-learn',
         'tensorboard',
-        'tensorboardX',
+        'tensorboardX<=2.6',
         'tqdm',
     ],
     setup_requires=['grpcio-tools~=1.48.2'],
