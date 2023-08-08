@@ -192,8 +192,7 @@ class Aggregator:
                 self.flow.restore_instance_snapshot(self.flow, list(self.instance_snapshot))
                 delattr(self, "instance_snapshot")
 
-    def call_checkpoint(self, ctx: Any, f: Callable, stream_buffer: bytes = None,
-                        reserved_attributes: List[str] = []) -> None:
+    def call_checkpoint(self, ctx: Any, f: Callable, stream_buffer: bytes = None) -> None:
         """
         Perform checkpoint task.
 
@@ -294,8 +293,6 @@ class Aggregator:
                 self.__delete_agg_attrs_from_clone(self.flow, "Private attributes: Not Available.")
                 self.call_checkpoint(self.flow, f)
                 self.__set_attributes_to_clone(self.flow)
-                # self.call_checkpoint(deepcopy(self.flow), f,
-                #                         reserved_attributes=list(self.__private_attrs.keys()))
                 # Check if all rounds of external loop is executed
                 if self.current_round is self.round_number:
                     # All rounds execute, it is time to quit
@@ -333,8 +330,7 @@ class Aggregator:
 
             self.__delete_agg_attrs_from_clone(self.flow, "Private attributes: Not Available.")
             # Take the checkpoint of executed step
-            self.call_checkpoint(self.flow, f,
-                                 reserved_attributes=list(self.__private_attrs.keys()))
+            self.call_checkpoint(self.flow, f)
             self.__set_attributes_to_clone(self.flow)
 
             # Next function in the flow
