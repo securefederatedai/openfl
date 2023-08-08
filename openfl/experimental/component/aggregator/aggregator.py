@@ -333,7 +333,7 @@ class Aggregator:
 
             self.__delete_agg_attrs_from_clone(self.flow, "Private attributes: Not Available.")
             # Take the checkpoint of executed step
-            self.call_checkpoint(deepcopy(self.flow), f,
+            self.call_checkpoint(self.flow, f,
                                  reserved_attributes=list(self.__private_attrs.keys()))
             self.__set_attributes_to_clone(self.flow)
 
