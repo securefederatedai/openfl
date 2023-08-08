@@ -331,11 +331,11 @@ class Aggregator:
             # TODO: Try to remove this else
             else: f()
 
+            self.__delete_agg_attrs_from_clone(self.flow, "Private attributes: Not Available.")
             # Take the checkpoint of executed step
-            # TODO: Think of different approach than deep-copying the
-            # flow object.
             self.call_checkpoint(deepcopy(self.flow), f,
                                  reserved_attributes=list(self.__private_attrs.keys()))
+            self.__set_attributes_to_clone(self.flow)
 
             # Next function in the flow
             _, f, parent_func = self.flow.execute_task_args[:3]
