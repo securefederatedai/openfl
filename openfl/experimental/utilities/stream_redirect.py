@@ -6,7 +6,6 @@
 import sys
 import io
 from copy import deepcopy
-import termcolor
 
 
 class RedirectStdStreamBuffer:
