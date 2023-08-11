@@ -255,8 +255,8 @@ def validate_datastore_cli(flow_obj, expected_flow_steps, num_rounds):
               No issues found and below are the tests that ran successfully
               1. Datastore steps and expected steps are matching
               2. Task stdout and task stderr verified through metaflow cli is as expected
-              3. Number of tasks are aligned with number of rounds and number\
-                  of collaborators {Bcolors.ENDC}""")
+              3. Number of tasks are aligned with number of rounds and number """
+              f"""of collaborators {Bcolors.ENDC}""")
 
 
 def display_validate_errors(validate_flow_error):
