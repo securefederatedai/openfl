@@ -115,7 +115,7 @@ def create(prefix, template):
     requirements_filename = 'requirements.txt'
 
     if not isfile(f'{str(prefix)}/plan/data.yaml'):
-        echo(style('Note that plan/data.yaml is not present.', fg='yello'))
+        echo(style('Note that plan/data.yaml is not present.', fg='yellow'))
 
     if isfile(f'{str(prefix)}/{requirements_filename}'):
         check_call([
@@ -154,7 +154,7 @@ def export_(pip_install_options: Tuple[str]):
     from openfl.utilities.utils import rmtree
 
     echo(style('This command will archive the contents of \'plan\' and \'src\' directory, user should review'
-               + ' that these does not contain any information which is private and not to be shared.', fg='yello'))
+               + ' that these does not contain any information which is private and not to be shared.', fg='yellow'))
 
     plan_file = Path('plan/plan.yaml').absolute()
     try:

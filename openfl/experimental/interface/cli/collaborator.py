@@ -25,6 +25,7 @@ def collaborator(context):
     """Manage Federated Learning Collaborators."""
     context.obj["group"] = "service"
 
+
 @collaborator.command(name="start")
 @option(
     "-p",
@@ -76,14 +77,14 @@ def start_(plan, collaborator_name, data_config, secure):
         data_config_path=Path(data_config).absolute(),
     )
 
-    # TODO: Need to restructure data loader config file loader
-
     if not os.path.exists(data_config):
-        logger.warning('🧿 Starting the Collaborator Service without data.yaml.')
-    else:
-        logger.info('🧿 Starting the Collaborator Service.')
+        logger.warning(f'Aggregator private attributes are set to None as'
+                       f' not {data_config} found in workspace.')
+
+    logger.info('🧿 Starting the Collaborator Service.')
 
     plan.get_collaborator(collaborator_name).run()
+
 
 @collaborator.command(name="create")
 @option(
@@ -155,6 +156,7 @@ def create_(collaborator_name, data_path, silent):
 #             for key, val in d.items():
 #                 f.write(f'{key}{separator}{val}\n')
 
+
 @collaborator.command(name="generate-cert-request")
 @option(
     "-n",
@@ -172,6 +174,7 @@ def create_(collaborator_name, data_path, silent):
 def generate_cert_request_(collaborator_name, silent, skip_package):
     """Generate certificate request for the collaborator."""
     generate_cert_request(collaborator_name, silent, skip_package)
+
 
 def generate_cert_request(collaborator_name, silent, skip_package):
     """
@@ -251,10 +254,12 @@ def generate_cert_request(collaborator_name, silent, skip_package):
             " (typically hosted by the aggregator) for signing"
         )
 
+
 def find_certificate_name(file_name):
     """Parse the collaborator name."""
     col_name = str(file_name).split(os.sep)[-1].split(".")[0][4:]
     return col_name
+
 
 def register_collaborator(file_name):
     """Register the collaborator name in the cols.yaml list.
@@ -305,6 +310,7 @@ def register_collaborator(file_name):
             + style(f"{cols_file}", fg="green")
         )
 
+
 @collaborator.command(name="certify")
 @option(
     "-n",
@@ -331,6 +337,7 @@ def register_collaborator(file_name):
 def certify_(collaborator_name, silent, request_pkg, import_):
     """Certify the collaborator."""
     certify(collaborator_name, silent, request_pkg, import_)
+
 
 def certify(collaborator_name, silent, request_pkg=None, import_=False):
     """Sign/certify collaborator certificate key pair."""

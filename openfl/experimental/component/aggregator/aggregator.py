@@ -35,6 +35,7 @@ class Aggregator:
     Returns:
         None
     """
+
     def __init__(
             self,
             aggregator_uuid: str,
@@ -81,7 +82,7 @@ class Aggregator:
         self.collaborator_task_results = Event()
         # A queue for each task
         self.__collaborator_tasks_queue = {collab: queue.Queue() for collab
-                                         in self.authorized_cols}
+                                           in self.authorized_cols}
 
         self.flow = flow
         self.checkpoint = checkpoint
@@ -250,7 +251,8 @@ class Aggregator:
         while self.__collaborator_tasks_queue[collaborator_name].qsize() == 0:
             # If it is time to then inform the collaborator
             if self.time_to_quit:
-                self.logger.info(f'Sending signal to collaborator {collaborator_name} to shutdown...')
+                self.logger.info(
+                    f'Sending signal to collaborator {collaborator_name} to shutdown...')
                 # FIXME: 0, and '' instead of None is just for protobuf compatibility.
                 #  Cleaner solution?
                 return 0, '', None, Aggregator._get_sleep_time(), self.time_to_quit
@@ -326,7 +328,8 @@ class Aggregator:
                 # clones are arguments
                 f(selected_clones)
             # TODO: Try to remove this else
-            else: f()
+            else:
+                f()
 
             self.__delete_agg_attrs_from_clone(self.flow, "Private attributes: Not Available.")
             # Take the checkpoint of executed step

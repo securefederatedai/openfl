@@ -62,7 +62,12 @@ def start_(plan, authorized_cols, secure):
     if not os.path.exists('plan/data.yaml'):
         logger.warning('Aggregator private attributes are set to None as not plan/data.yaml found in workspace.')
     else:
-        if data.yaml is present and no aggregator section is present
+        import yaml
+        from yaml.loader import SafeLoader
+        with open('plan/data.yaml') as f:
+            data =  yaml.load(f, Loader=SafeLoader)
+            if data.get("aggregator", None) == None:
+                logger.warning('Aggregator private attributes are set to None as aggregator section in plan/data.yaml is not mentioned.')
 
     agg_server = plan.get_server()
     agg_server.is_server_started = False
