@@ -1,4 +1,4 @@
-rm -rf build/ my_federation/ $(find /home/ -type d -name .metaflow)
+rm -rf build/ my_federation/ $(find /home/$USER -type d -name .metaflow)
 
 python -m pip install .
 

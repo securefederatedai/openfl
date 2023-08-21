@@ -9,7 +9,6 @@ from pathlib import Path
 from subprocess import check_call
 from concurrent.futures import ProcessPoolExecutor
 from sys import executable
-import shutil
 from openfl.utilities.utils import rmtree
 from tests.github.experimental.workspace.utils import create_collaborator
 from tests.github.experimental.workspace.utils import create_certified_workspace
@@ -24,7 +23,8 @@ if __name__ == '__main__':
         for entry in iterator:
             if entry.name not in ['__init__.py', 'workspace', 'default']:
                 workspace_choice.append(entry.name)
-    parser.add_argument('--template', default='testcase_include_exclude', choices=workspace_choice)
+    parser.add_argument('--custom_template')
+    parser.add_argument('--template')
     parser.add_argument('--fed_workspace', default='fed_work12345alpha81671')
     parser.add_argument('--col', action='append', default=[])
     parser.add_argument('--rounds-to-train')
@@ -35,26 +35,19 @@ if __name__ == '__main__':
     archive_name = f'{fed_workspace}.zip'
     fqdn = socket.getfqdn()
     template = args.template
+    custom_template = args.custom_template
     rounds_to_train = args.rounds_to_train
     collaborators = args.col
     # START
     # =====
     # Make sure you are in a Python virtual environment with the FL package installed.
 
-    source_directory = origin_dir / 'tests'/'github'/'experimental'/'workspace' / template
-    destination_directory = origin_dir / 'openfl-workspace' / 'experimental' / template
-    if os.path.exists(destination_directory):
-        shutil.rmtree(destination_directory)
-
-    # Copy template to the destination directory
-    shutil.copytree(src=source_directory, dst=destination_directory)
-
-    check_call([executable, '-m', 'pip', 'install', '.'])
-
     # Activate experimental
     check_call(['fx', 'experimental', 'activate'])
 
-    create_certified_workspace(fed_workspace, template, fqdn, rounds_to_train)
+    create_certified_workspace(
+        fed_workspace, custom_template, template, fqdn, rounds_to_train
+    )
     certify_aggregator(fqdn)
 
     # Get the absolute directory path for the workspace
@@ -82,9 +75,6 @@ if __name__ == '__main__':
 
     os.chdir(origin_dir)
     rmtree(workspace_root)
-
-    # Remove template to the destination directory
-    shutil.rmtree(destination_directory)
 
     # Deactivate experimental
     check_call(['fx', 'experimental', 'deactivate'])

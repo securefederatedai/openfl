@@ -39,6 +39,7 @@ def aggregator(context):
         help='Enable Intel SGX Enclave', is_flag=True, default=False)
 def start_(plan, authorized_cols, secure):
     """Start the aggregator service."""
+    import os
     from pathlib import Path
 
     from openfl.experimental.federated.plan import Plan
@@ -53,7 +54,15 @@ def start_(plan, authorized_cols, secure):
     plan = Plan.parse(plan_config_path=Path(plan).absolute(),
                       cols_config_path=Path(authorized_cols).absolute())
 
+#    if not os.path.exists('plan/data.yaml'):
+#        logger.warning('🧿 Starting the Aggregator Service without private .')
+#    else:
     logger.info('🧿 Starting the Aggregator Service.')
+
+    if not os.path.exists('plan/data.yaml'):
+        logger.warning('Aggregator private attributes are set to None as not plan/data.yaml found in workspace.')
+    else:
+        if data.yaml is present and no aggregator section is present
 
     agg_server = plan.get_server()
     agg_server.is_server_started = False

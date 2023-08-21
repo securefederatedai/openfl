@@ -78,7 +78,10 @@ def start_(plan, collaborator_name, data_config, secure):
 
     # TODO: Need to restructure data loader config file loader
 
-    logger.info("🧿 Starting a Collaborator Service.")
+    if not os.path.exists(data_config):
+        logger.warning('🧿 Starting the Collaborator Service without data.yaml.')
+    else:
+        logger.info('🧿 Starting the Collaborator Service.')
 
     plan.get_collaborator(collaborator_name).run()
 

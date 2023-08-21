@@ -9,6 +9,7 @@ from typing import Tuple
 from click import Choice
 from click import confirm
 from click import echo
+from click import style
 from click import group
 from click import option
 from click import pass_context
@@ -23,6 +24,7 @@ from openfl.utilities.workspace import dump_requirements_file
 def workspace(context):
     """Manage Experimental Federated Learning Workspaces."""
     context.obj['group'] = 'workspace'
+
 
 def create_dirs(prefix):
     """Create workspace directories."""
@@ -40,6 +42,7 @@ def create_dirs(prefix):
 
     copyfile(WORKSPACE / 'workspace' / '.workspace', prefix / '.workspace')
 
+
 def create_temp(prefix, template):
     """Create workspace templates."""
     from shutil import ignore_patterns
@@ -48,10 +51,13 @@ def create_temp(prefix, template):
     from openfl.experimental.interface.cli.cli_helper import WORKSPACE
 
     echo('Creating Workspace Templates')
+    # Use the specified template if it's a Path, otherwise use WORKSPACE/template
+    source = template if isinstance(template, Path) else WORKSPACE / template
 
-    copytree(src=WORKSPACE / template, dst=prefix, dirs_exist_ok=True,
+    copytree(src=source, dst=prefix, dirs_exist_ok=True,
              ignore=ignore_patterns('__pycache__'))  # from template workspace
     apply_template_plan(prefix, template)
+
 
 def get_templates():
     """Grab the default templates from the distribution."""
@@ -60,21 +66,35 @@ def get_templates():
     return [d.name for d in WORKSPACE.glob('*') if d.is_dir()
             and d.name not in ['__pycache__', 'workspace']]
 
+
 @workspace.command(name='create')
 @option('--prefix', required=True,
         help='Workspace name or path', type=ClickPath())
-@option('--template', required=True, type=Choice(get_templates()))
-def create_(prefix, template):
+@option('--custom_template', required=False, type=ClickPath(exists=True))
+@option('--template', required=False, type=Choice(get_templates()))
+def create_(prefix, custom_template, template):
     """Create the experimental workspace."""
     if is_directory_traversal(prefix):
         echo('Workspace name or path is out of the openfl workspace scope.')
         sys.exit(1)
-    
-    print(get_templates())
+
+    if custom_template and template:
+        raise ValueError(
+            'Please provide either custom_template or template, not both.'
+        )
+
+    if not custom_template and not template:
+        raise ValueError(
+            'Please provide either custom_template or template.'
+        )
+
+    template = Path(custom_template).resolve() if custom_template else template
+
     create(prefix, template)
 
-def create(prefix, template):
 
+def create(prefix, template):
+    """Create federated learning workspace."""
     from os.path import isfile
     from subprocess import check_call
     from sys import executable
@@ -94,6 +114,9 @@ def create(prefix, template):
 
     requirements_filename = 'requirements.txt'
 
+    if not isfile(f'{str(prefix)}/plan/data.yaml'):
+        echo(style('Note that plan/data.yaml is not present.', fg='yello'))
+
     if isfile(f'{str(prefix)}/{requirements_filename}'):
         check_call([
             executable, '-m', 'pip', 'install', '-r',
@@ -106,6 +129,7 @@ def create(prefix, template):
         check_call([executable, '-m', 'pip', 'freeze'], shell=False, stdout=f)
 
     print_tree(prefix, level=3)
+
 
 @workspace.command(name='export')
 @option('-o', '--pip-install-options', required=False,
@@ -128,6 +152,9 @@ def export_(pip_install_options: Tuple[str]):
     from plan import freeze_plan
     from openfl.experimental.interface.cli.cli_helper import WORKSPACE
     from openfl.utilities.utils import rmtree
+
+    echo(style('This command will archive the contents of \'plan\' and \'src\' directory, user should review'
+               + ' that these does not contain any information which is private and not to be shared.', fg='yello'))
 
     plan_file = Path('plan/plan.yaml').absolute()
     try:
@@ -173,6 +200,7 @@ def export_(pip_install_options: Tuple[str]):
     rmtree(tmp_dir)
     echo(f'\n ✔️ Workspace exported to archive: {archive_file_name}')
 
+
 @workspace.command(name='import')
 @option('--archive', required=True,
         help='Zip file containing workspace to import',
@@ -207,10 +235,12 @@ def import_(archive):
     echo(f'Workspace {archive} has been imported.')
     echo('You may need to copy your PKI certificates to join the federation.')
 
+
 @workspace.command(name='certify')
 def certify_():
     """Create certificate authority for federation."""
     certify()
+
 
 def certify():
     """Create certificate authority for federation."""
@@ -323,6 +353,8 @@ def certify():
     echo('\nDone.')
 
 # FIXME: Function is not in use
+
+
 def _get_requirements_dict(txtfile):
     with open(txtfile, 'r', encoding='utf-8') as snapshot:
         snapshot_dict = {}
@@ -335,12 +367,14 @@ def _get_requirements_dict(txtfile):
                 snapshot_dict[line] = None
         return snapshot_dict
 
+
 def _get_dir_hash(path):
     from hashlib import sha256
     hash_ = sha256()
     hash_.update(path.encode('utf-8'))
     hash_ = hash_.hexdigest()
     return hash_
+
 
 def apply_template_plan(prefix, template):
     """Copy plan file from template folder.
@@ -351,6 +385,9 @@ def apply_template_plan(prefix, template):
     from openfl.experimental.federated.plan import Plan
     from openfl.experimental.interface.cli.cli_helper import WORKSPACE
 
-    template_plan = Plan.parse(WORKSPACE / template / 'plan' / 'plan.yaml')
+    # Use the specified template if it's a Path, otherwise use WORKSPACE/template
+    source = template if isinstance(template, Path) else WORKSPACE / template
+
+    template_plan = Plan.parse(source / 'plan' / 'plan.yaml')
 
     Plan.dump(prefix / 'plan' / 'plan.yaml', template_plan.config)

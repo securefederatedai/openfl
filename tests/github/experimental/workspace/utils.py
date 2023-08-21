@@ -46,9 +46,17 @@ def create_collaborator(col, workspace_root, archive_name, fed_workspace):
     )
 
 
-def create_certified_workspace(path, template, fqdn, rounds_to_train):
+def create_certified_workspace(path, custom_template, template, fqdn, rounds_to_train):
     shutil.rmtree(path, ignore_errors=True)
-    check_call(['fx', 'workspace', 'create', '--prefix', path, '--template', template])
+    if template is not None:
+        check_call(
+            ['fx', 'workspace', 'create', '--prefix', path, '--template', template]
+        )
+    else:
+        check_call(
+            ['fx', 'workspace', 'create', '--prefix', path,
+             '--custom_template', custom_template]
+        )
     os.chdir(path)
 
     # Initialize FL plan
