@@ -729,38 +729,44 @@ Configurable Settings
 - :class:`Aggregator <openfl.component.Aggregator>`
     `openfl.component.Aggregator <https://github.com/intel/openfl/blob/develop/openfl/component/aggregator/aggregator.py>`_
     Defines the settings for the aggregator which is the model-owner in the experiment. While models can be trained from scratch, in many cases the federation performs fine-tuning of a previously trained model. For this reason, pre-trained weights for the model are stored in protobuf files on the aggregator node and passed to collaborator nodes during initialization. The settings for aggregator include:
-        `init_state_path` : (str:path) Defines the protobuf file path for initial weights that the experiment can start with.
-        `best_state_path` : (str:path) Defines the protobuf file path for best state weights that the experiment got so far.
-        `last_state_path` : (str:path) Defines the protobuf file path for the weights that the last experiment ended with.
-        `rounds_to_train` : (int) Specifies the number of rounds in a federation. A federated learning round is defined as one complete iteration when the collaborators train the model and send the updated model weights back to the aggregator to form a new global model. Within a round, collaborators can train the model for multiple iterations called epochs.
-        `write_logs` : (boolean) Metric logging callback feature. By default, logging is done through `tensorboard <https://www.tensorflow.org/tensorboard/get_started>`_ but users can also use custom metric logging function for each task.      
+
+ - :code:`init_state_path`: (str:path) Defines the protobuf file path for initial weights that the experiment can start with.
+ - :code:`best_state_path`: (str:path) Defines the protobuf file path for best state weights that the experiment got so far.
+ - :code:`last_state_path`: (str:path) Defines the protobuf file path for the weights that the last experiment ended with.
+ - :code:`rounds_to_train`: (int) Specifies the number of rounds in a federation. A federated learning round is defined as one complete iteration when the collaborators train the model and send the updated model weights back to the aggregator to form a new global model. Within a round, collaborators can train the model for multiple iterations called epochs.
+ - :code:`write_logs`: (boolean) Metric logging callback feature. By default, logging is done through `tensorboard <https://www.tensorflow.org/tensorboard/get_started>`_ but users can also use custom metric logging function for each task.      
+
 
 - :class:`Collaborator <openfl.component.Collaborator>`
     `openfl.component.Collaborator <https://github.com/intel/openfl/blob/develop/openfl/component/collaborator/collaborator.py>`_
     Defines the settings for the collaborator which is the data owner in the experiment. The settings for collaborator include:
-        `delta_updates` : (boolean) Tells if collaborators should send delta updates for the locally tuned models. If set to False, whole checkpoints will be sent.
-        `opt_treatment` : (str) Defines the optimizer state treatment policy. Valid options are : 
-                            'RESET' - reinitialize optimizer for every round (default)
-                            'CONTINUE_LOCAL' - keep local optimizer state for every round
-                            'CONTINUE_GLOBAL' - aggregate optimizer state for every round
+
+ - :code:`delta_updates`: (boolean) Tells if collaborators should send delta updates for the locally tuned models. If set to False, whole checkpoints will be sent.
+ - :code:`opt_treatment`: (str) Defines the optimizer state treatment policy. Valid options are : 'RESET' - reinitialize optimizer for every round (default), 'CONTINUE_LOCAL' - keep local optimizer state for every round, 'CONTINUE_GLOBAL' - aggregate optimizer state for every round.
+
 
 - :class:`Data Loader <openfl.federated.data.loader.DataLoader>`
     `openfl.federated.data.loader.DataLoader <https://github.com/intel/openfl/blob/develop/openfl/federated/data/loader.py>`_
     Defines the data loader class that provides access to local dataset. It implements a train loader and a validation loader that takes in the train dataset and the validation dataset respectively. The settings for the dataloader include:
-        `collaborator_count` : (int) The number of collaborators participating in the federation
-        `data_group_name` : (str) The name of the dataset
-        `batch_size` : (int) The size of the training or validation batch
+
+ - :code:`collaborator_count`: (int) The number of collaborators participating in the federation
+ - :code:`data_group_name`: (str) The name of the dataset
+ - :code:`batch_size`: (int) The size of the training or validation batch
+
 
 - :class:`Task Runner <openfl.federated.task.runner.TaskRunner>`
     `openfl.federated.task.runner.TaskRunner <https://github.com/intel/openfl/blob/develop/openfl/federated/task/runner.py>`_
     Defines how to extract and set back the tensors from model weights and optimizer dictionary. Depending on different AI frameworks like PyTorch and Tensorflow, users can select pre-defined task runner methods.
 
+
 - :class:`Assigner <openfl.component.Assigner>`
     `openfl.component.Assigner <https://github.com/intel/openfl/blob/develop/openfl/component/assigner/assigner.py>`_
-    Defines the task that are sent to the collaborators from the aggregator. There are three default tasks that could be given to each Collaborator: 
-        `aggregated_model_validation` : (str) Perform validation on aggregated global model sent by the aggregator.
-        `train` : (str) Perform training on the global model.
-        `locally_tuned_model_validation` : (str) Perform validation on the model that was locally trained by the collaborator.
+    Defines the task that are sent to the collaborators from the aggregator. There are three default tasks that could be given to each Collaborator:
+ 
+ - :code:`aggregated_model_validation`: (str) Perform validation on aggregated global model sent by the aggregator.
+ - :code:`train`: (str) Perform training on the global model.
+ - :code:`locally_tuned_model_validation`: (str) Perform validation on the model that was locally trained by the collaborator.
+
 
 Each YAML top-level section contains the following subsections:
 
