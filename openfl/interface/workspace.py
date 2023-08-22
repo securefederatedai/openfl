@@ -99,7 +99,7 @@ def create(prefix, template):
     if isfile(f'{str(prefix)}/{requirements_filename}'):
         check_call([
             executable, '-m', 'pip', 'install', '-r',
-            f'{prefix}/requirements.txt', '--user'], shell=False)
+            f'{prefix}/requirements.txt'], shell=False)
         echo(f'Successfully installed packages from {prefix}/requirements.txt.')
     else:
         echo('No additional requirements for workspace defined. Skipping...')
