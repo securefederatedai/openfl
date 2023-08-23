@@ -36,6 +36,12 @@ jobs:
         .\env\Scripts\activate
         python -m pip install --upgrade pip
         pip install .
-    - name: Test TaskRunner API
+    - name: Test TaskRunner API windows
+      if: matrix.os == 'windows-latest'
+      run: |
+        .\env\Scripts\activate
+        python -m tests.github.test_hello_federation --template keras_cnn_mnist --fed_workspace aggregator --col1 col1 --col2 col2 --rounds-to-train 3
+    - name: Test TaskRunner API ubuntu
+      if: matrix.os == 'ubuntu-latest'
       run: |
         python -m tests.github.test_hello_federation --template keras_cnn_mnist --fed_workspace aggregator --col1 col1 --col2 col2 --rounds-to-train 3
