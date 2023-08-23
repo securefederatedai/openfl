@@ -33,7 +33,7 @@ jobs:
       if: matrix.os == 'windows-latest'
       run: |
         python -m venv env
-        . env/Scripts/activate
+        .\venv\Scripts\activate
         python -m pip install --upgrade pip
         pip install .
     - name: Test TaskRunner API
