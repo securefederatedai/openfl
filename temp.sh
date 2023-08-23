@@ -7,7 +7,7 @@ export WORKSPACE_TEMPLATE=$1
 
 fx experimental activate
 
-fx workspace create --prefix ${WORKSPACE_PATH} --template ${WORKSPACE_TEMPLATE}
+fx workspace create --prefix ${WORKSPACE_PATH} --custom_template ${WORKSPACE_TEMPLATE}
 
 cd ${WORKSPACE_PATH}
 
@@ -33,8 +33,6 @@ fx workspace import --archive ../my_federation.zip
 
 cd my_federation
 
-fx collaborator create -n col1
-
 fx collaborator generate-cert-request -n col1
 
 cd ../../
@@ -56,8 +54,6 @@ cd col2
 fx workspace import --archive ../my_federation.zip
 
 cd my_federation
-
-fx collaborator create -n col2
 
 fx collaborator generate-cert-request -n col2
 
@@ -84,8 +80,6 @@ fx collaborator certify --import ${WORKSPACE_PATH}/agg_to_col_col2_signed_cert.z
 
 # cd my_federation
 
-# fx collaborator create -n col3
-
 # fx collaborator generate-cert-request -n col3
 
 # cd ../../
@@ -107,8 +101,6 @@ fx collaborator certify --import ${WORKSPACE_PATH}/agg_to_col_col2_signed_cert.z
 # fx workspace import --archive ../my_federation.zip
 
 # cd my_federation
-
-# fx collaborator create -n col4
 
 # fx collaborator generate-cert-request -n col4
 

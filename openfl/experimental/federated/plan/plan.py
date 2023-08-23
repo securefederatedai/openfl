@@ -122,14 +122,6 @@ class Plan:
 
             plan.authorized_cols = Plan.load(cols_config_path).get("collaborators", [])
 
-            # TODO: Does this need to be a YAML file? Probably want to use key
-            #  value as the plan hash
-            plan.cols_data_paths = {}
-            if data_config_path is not None:
-                with open(data_config_path, "r", encoding="utf-8") as f:
-                    # TODO:need to replace with load
-                    plan.cols_data_paths = safe_load(f)
-
             if resolve:
                 plan.resolve()
 
@@ -260,7 +252,8 @@ class Plan:
         defaults[SETTINGS]["private_attributes_kwargs"] = private_attrs_kwargs
 
         defaults[SETTINGS]["flow"] = self.get_flow()
-        defaults[SETTINGS]["checkpoint"] = self.config.get("federated_flow")["settings"]["checkpoint"]
+        defaults[SETTINGS]["checkpoint"] = self.config.get(
+            "federated_flow")["settings"]["checkpoint"]
 
         log_metric_callback = defaults[SETTINGS].get("log_metric_callback")
         if log_metric_callback:
@@ -418,7 +411,7 @@ class Plan:
                                 defaults[SETTINGS][key] = Plan.build(
                                     **value_defaults_data
                                 )
-                    except:
+                    except Exception:
                         raise ImportError(f"Cannot import {value_defaults}.")
         return defaults
 
@@ -426,30 +419,30 @@ class Plan:
         private_attrs_callable = None
         private_attrs_kwargs = {}
 
-        from os.path import isfile
+        import os
         from openfl.experimental.federated.plan import Plan
         from pathlib import Path
 
         data_yaml = "plan/data.yaml"
 
-        if isfile(data_yaml):
+        if os.path.exists(data_yaml) and os.path.isfile(data_yaml):
             d = Plan.load(Path(data_yaml).absolute())
 
-        if d.get(private_attr_name):
-            private_attrs_callable = {
-                "template": d.get(private_attr_name)["callable_func"]["template"]
-            }
+            if d.get(private_attr_name, None):
+                private_attrs_callable = {
+                    "template": d.get(private_attr_name)["callable_func"]["template"]
+                }
 
-            private_attrs_kwargs = self.import_kwargs_modules(
-                d.get(private_attr_name)["callable_func"]
-            )["settings"]
+                private_attrs_kwargs = self.import_kwargs_modules(
+                    d.get(private_attr_name)["callable_func"]
+                )["settings"]
 
-        if private_attrs_callable:
-            if isinstance(private_attrs_callable, dict):
-                private_attrs_callable = Plan.import_(**private_attrs_callable)
-            elif not callable(private_attrs_callable):
-                raise TypeError(
-                    f"private_attrs_callable should be callable object "
-                    f"or be import from code part, get {private_attrs_callable}"
-                )
-        return private_attrs_callable, private_attrs_kwargs
+                if isinstance(private_attrs_callable, dict):
+                    private_attrs_callable = Plan.import_(**private_attrs_callable)
+                elif not callable(private_attrs_callable):
+                    raise TypeError(
+                        f"private_attrs_callable should be callable object "
+                        f"or be import from code part, get {private_attrs_callable}"
+                    )
+                return private_attrs_callable, private_attrs_kwargs
+        return None, None

@@ -3,7 +3,6 @@
 """Aggregator module."""
 
 import sys
-import time
 import threading
 from logging import getLogger
 
@@ -26,6 +25,7 @@ logger = getLogger(__name__)
 def aggregator(context):
     """Manage Federated Learning Aggregator."""
     context.obj['group'] = 'aggregator'
+
 
 @aggregator.command(name='start')
 @option('-p', '--plan', required=False,
@@ -54,20 +54,21 @@ def start_(plan, authorized_cols, secure):
     plan = Plan.parse(plan_config_path=Path(plan).absolute(),
                       cols_config_path=Path(authorized_cols).absolute())
 
-#    if not os.path.exists('plan/data.yaml'):
-#        logger.warning('🧿 Starting the Aggregator Service without private .')
-#    else:
     logger.info('🧿 Starting the Aggregator Service.')
 
     if not os.path.exists('plan/data.yaml'):
-        logger.warning('Aggregator private attributes are set to None as not plan/data.yaml found in workspace.')
+        logger.warning(
+            'Aggregator private attributes are set to None as plan/data.yaml not found'
+            + ' in workspace.')
     else:
         import yaml
         from yaml.loader import SafeLoader
-        with open('plan/data.yaml') as f:
-            data =  yaml.load(f, Loader=SafeLoader)
-            if data.get("aggregator", None) == None:
-                logger.warning('Aggregator private attributes are set to None as aggregator section in plan/data.yaml is not mentioned.')
+        with open('plan/data.yaml', 'r') as f:
+            data = yaml.load(f, Loader=SafeLoader)
+            if data.get("aggregator", None) is None:
+                logger.warning(
+                    'Aggregator private attributes are set to None as no aggregator'
+                    + ' attributes found in plan/data.yaml.')
 
     agg_server = plan.get_server()
     agg_server.is_server_started = False

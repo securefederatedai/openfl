@@ -18,10 +18,10 @@ class Collaborator:
         aggregator_uuid (str): The unique id for the client.
         federation_uuid (str): The unique id for the federation.
 
-        client (AggregatorGRPCClient): GRPC Client to connect to 
+        client (AggregatorGRPCClient): GRPC Client to connect to
         Aggregator Server.
 
-        private_attrs_callable (Callable): Function for Collaborator 
+        private_attrs_callable (Callable): Function for Collaborator
         private attriubtes.
         private_attrs_kwargs (Dict): Arguments to call private_attrs_callable.
 
@@ -54,7 +54,7 @@ class Collaborator:
 
     def __initialize_private_attributes(self, kwrags: Dict) -> None:
         """
-        Call private_attrs_callable function set 
+        Call private_attrs_callable function set
             attributes to self.__private_attrs
 
         Args:
@@ -72,7 +72,7 @@ class Collaborator:
         Set private_attrs to clone as attributes.
 
         Args:
-            clone (FLSpec): Clone to which private attributes are to be 
+            clone (FLSpec): Clone to which private attributes are to be
             set
 
         Returns:
@@ -88,7 +88,7 @@ class Collaborator:
         transition from Aggregator step to collaborator steps
 
         Args:
-            clone (FLSpec): Clone from which private attributes are to be 
+            clone (FLSpec): Clone from which private attributes are to be
             removed
 
         Returns:
@@ -157,8 +157,8 @@ class Collaborator:
         Returns:
             None
         """
-        self.logger.info(
-        f'Round {self.round_number}, collaborator {self.name} is sending results.')
+        self.logger.info(f'Round {self.round_number}, '
+                         f'collaborator {self.name} is sending results.')
         self.client.send_task_results(
             self.name, self.round_number,
             next_step, pickle.dumps(clone)
@@ -178,8 +178,8 @@ class Collaborator:
             time_to_quit (bool): True if end of reached
         """
         self.logger.info('Waiting for tasks...')
-        self.round_number, next_step, clone_bytes, sleep_time, \
-            time_to_quit = self.client.get_tasks(self.name)
+        temp = self.client.get_tasks(self.name)
+        self.round_number, next_step, clone_bytes, sleep_time, time_to_quit = temp
 
         return next_step, pickle.loads(clone_bytes), sleep_time, time_to_quit
 

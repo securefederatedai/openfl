@@ -128,7 +128,7 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
             self.logger
         )
 
-    def SendTaskResults(self, request, context):
+    def SendTaskResults(self, request, context):  # NOQA:N802
         """
         <FIND OUT WHAT COMMENT TO PUT HERE>.
 
@@ -176,7 +176,7 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
             quit=q
         )
 
-    def CallCheckpoint(self, request, context):
+    def CallCheckpoint(self, request, context):  # NOQA:N802
         """
         Request aggregator to perform a checkpoint
         for a given function.

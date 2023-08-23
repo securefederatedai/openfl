@@ -299,8 +299,8 @@ class AggregatorGRPCClient:
         response = self.stub.GetTasks(request)
         self.validate_response(response, collaborator_name)
 
-        return response.round_number, response.function_name, \
-            response.execution_environment, response.sleep_time, response.quit
+        return (response.round_number, response.function_name,
+                response.execution_environment, response.sleep_time, response.quit)
 
     @_atomic_connection
     @_resend_data_on_reconnection

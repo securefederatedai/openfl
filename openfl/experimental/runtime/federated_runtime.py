@@ -4,20 +4,15 @@
 """ openfl.experimental.runtime package LocalRuntime class."""
 
 from __future__ import annotations
-from copy import deepcopy
-import gc
 from openfl.experimental.runtime import Runtime
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from openfl.experimental.interface import Aggregator, Collaborator, FLSpec
+    from openfl.experimental.interface import Aggregator
+    from openfl.experimental.interface import Collaborator
 
-from openfl.experimental.utilities import (
-    generate_artifacts,
-    filter_attributes,
-    checkpoint,
-)
-from typing import List, Type, Callable
+from typing import List
+from typing import Type
 
 
 class FederatedRuntime(Runtime):

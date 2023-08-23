@@ -226,7 +226,7 @@ class FLSpec:
                 self.filter_exclude_include(f, **kwargs)
             # if "foreach" in kwargs:
                 self.execute_task_args = (self, f, parent_func, FLSpec._clones,
-                                        agg_to_collab_ss, kwargs)
+                                          agg_to_collab_ss, kwargs)
             else:
                 self.execute_task_args = (self, f, parent_func, kwargs)
 

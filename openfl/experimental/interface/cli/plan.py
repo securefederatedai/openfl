@@ -22,6 +22,7 @@ def plan(context):
     """Manage Federated Learning Plans."""
     context.obj['group'] = 'plan'
 
+
 @plan.command()
 @pass_context
 @option('-p', '--plan_config', required=False,
@@ -32,7 +33,7 @@ def plan(context):
         default='plan/cols.yaml', type=ClickPath(exists=True))
 @option('-d', '--data_config', required=False,
         help='The data set/shard configuration file [plan/data.yaml]',
-        default='plan/data.yaml', type=ClickPath(exists=True))
+        default='plan/data.yaml')
 @option('-a', '--aggregator_address', required=False,
         help='The FQDN of the federation agregator')
 @option('-f', '--feature_shape', required=False,
@@ -91,7 +92,7 @@ def initialize(context, plan_config, cols_config, data_config,
     context.obj['plans'].append(f'{plan_config.stem}_{plan.hash[:8]}')
     logger.info(f"{context.obj['plans']}")
 
-# TODO: looks like Plan.method
+
 def freeze_plan(plan_config):
     """Dump the plan to YAML file."""
     from pathlib import Path

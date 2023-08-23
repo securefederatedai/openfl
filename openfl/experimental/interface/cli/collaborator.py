@@ -36,28 +36,20 @@ def collaborator(context):
     type=ClickPath(exists=True),
 )
 @option(
-    "-d",
-    "--data_config",
-    required=False,
-    help="The data set/shard configuration file [plan/data.yaml]",
-    default="plan/data.yaml",
-    type=ClickPath(exists=True),
-)
-@option(
     "-n",
     "--collaborator_name",
     required=True,
     help="The certified common name of the collaborator",
 )
 @option(
-    "-s",
-    "--secure",
+    '-s',
+    '--secure',
     required=False,
-    help="Enable Intel SGX Enclave",
+    help='Enable Intel SGX Enclave',
     is_flag=True,
-    default=False,
+    default=False
 )
-def start_(plan, collaborator_name, data_config, secure):
+def start_(plan, collaborator_name, secure, data_config="plan/data.yaml"):
     """Start a collaborator service."""
     from pathlib import Path
 
@@ -78,83 +70,21 @@ def start_(plan, collaborator_name, data_config, secure):
     )
 
     if not os.path.exists(data_config):
-        logger.warning(f'Aggregator private attributes are set to None as'
-                       f' not {data_config} found in workspace.')
+        logger.warning('Collaborator private attributes are set to None as'
+                       f' {data_config} not found in workspace.')
+    else:
+        import yaml
+        from yaml.loader import SafeLoader
+        with open(data_config, 'r') as f:
+            data = yaml.load(f, Loader=SafeLoader)
+            if data.get(collaborator_name, None) is None:
+                logger.warning(
+                    f'Collaborator private attributes are set to None as no attributes'
+                    f' for {collaborator_name} found in {data_config}.')
 
     logger.info('🧿 Starting the Collaborator Service.')
 
     plan.get_collaborator(collaborator_name).run()
-
-
-@collaborator.command(name="create")
-@option(
-    "-n",
-    "--collaborator_name",
-    required=True,
-    help="The certified common name of the collaborator",
-)
-@option(
-    "-d", "--data_path", help="The data path to be associated with the collaborator"
-)
-@option("-s", "--silent", help="Do not prompt", is_flag=True)
-def create_(collaborator_name, data_path, silent):
-    """Creates a user for an experiment."""
-    if data_path and is_directory_traversal(data_path):
-        echo("Data path is out of the openfl workspace scope.")
-        sys.exit(1)
-
-    common_name = f"{collaborator_name}".lower()
-
-    # TODO: There should be some association with the plan made here as well
-    # register_data_path(common_name, data_path=data_path, silent=silent)
-
-# TODO: Discuss with Sachin, and remove create command entirely.
-# def register_data_path(collaborator_name, data_path=None, silent=False):
-#     """Register dataset path in the plan/data.yaml file.
-
-#     Args:
-#         collaborator_name (str): The collaborator whose data path to be defined
-#         data_path (str)        : Data path (optional)
-#         silent (bool)          : Silent operation (don't prompt)
-#     """
-#     from click import prompt
-#     from os.path import isfile
-
-#     if data_path and is_directory_traversal(data_path):
-#         echo('Data path is out of the openfl workspace scope.')
-#         sys.exit(1)
-
-#     # Ask for the data directory
-#     default_data_path = f'data/{collaborator_name}'
-#     if not silent and data_path is None:
-#         dir_path = prompt('\nWhere is the data (or what is the rank)'
-#                           ' for collaborator '
-#                           + style(f'{collaborator_name}', fg='green')
-#                           + ' ? ', default=default_data_path)
-#     elif data_path is not None:
-#         dir_path = data_path
-#     else:
-#         # TODO: Need to figure out the default for this.
-#         dir_path = default_data_path
-
-#     # Read the data.yaml file
-#     d = {}
-#     data_yaml = 'plan/data.yaml'
-#     separator = ','
-#     if isfile(data_yaml):
-#         with open(data_yaml, 'r', encoding='utf-8') as f:
-#             for line in f:
-#                 if separator in line:
-#                     key, val = line.split(separator, maxsplit=1)
-#                     d[key] = val.strip()
-
-#     d[collaborator_name] = dir_path
-
-#     # Write the data.yaml
-#     if isfile(data_yaml):
-#         with open(data_yaml, 'w', encoding='utf-8') as f:
-#             for key, val in d.items():
-#                 f.write(f'{key}{separator}{val}\n')
 
 
 @collaborator.command(name="generate-cert-request")

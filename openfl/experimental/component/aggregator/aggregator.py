@@ -7,7 +7,6 @@ import queue
 import pickle
 import inspect
 from threading import Event
-from copy import deepcopy
 from logging import getLogger
 from typing import Any, Callable
 from typing import Dict, List, Tuple
@@ -29,7 +28,8 @@ class Aggregator:
         flow (Any): Flow class.
         rounds_to_train (int): External loop rounds.
         checkpoint (bool): Whether to save checkpoint or noe (default=False).
-        private_attrs_callable (Callable): Function for Aggregator private attriubtes (default=None).
+        private_attrs_callable (Callable): Function for Aggregator private attriubtes
+        (default=None).
         private_attrs_kwargs (Dict): Arguments to call private_attrs_callable (default={}).
 
     Returns:
@@ -87,7 +87,7 @@ class Aggregator:
         self.flow = flow
         self.checkpoint = checkpoint
         self.flow._foreach_methods = []
-        self.logger.info(f"MetaflowInterface creation.")
+        self.logger.info("MetaflowInterface creation.")
         self.flow._metaflow_interface = MetaflowInterface(
             self.flow.__class__, "single_process"
         )
@@ -107,7 +107,7 @@ class Aggregator:
 
     def __initialize_private_attributes(self, kwargs: Dict) -> None:
         """
-        Call private_attrs_callable function set 
+        Call private_attrs_callable function set
             attributes to self.__private_attrs.
         """
         self.__private_attrs = self.__private_attrs_callable(
@@ -182,8 +182,9 @@ class Aggregator:
 
             while not self.collaborator_task_results.is_set():
                 # Waiting for selected collaborators to send the results.
-                self.logger.info(f"Waiting for "
-                                 + f"{self.collaborators_counter}/{len(self.selected_collaborators)}"
+                len_sel_collabs = len(self.selected_collaborators)
+                self.logger.info("Waiting for "
+                                 + f"{self.collaborators_counter}/{len_sel_collabs}"
                                  + " collaborators to send results.")
                 time.sleep(Aggregator._get_sleep_time())
 
@@ -198,7 +199,8 @@ class Aggregator:
         Perform checkpoint task.
 
         Args:
-            ctx (FLSpec / bytes): Collaborator FLSpec object for which checkpoint is to be performed.
+            ctx (FLSpec / bytes): Collaborator FLSpec object for which checkpoint is to be
+            performed.
             f (Callable / bytes): Collaborator Step (Function) which is to be checkpointed.
             stream_buffer (bytes): Captured object for output and error (default=None).
             reserved_attributes (List[str]): List of attribute names which is to be excluded
@@ -346,8 +348,8 @@ class Aggregator:
             if aggregator_to_collaborator(f, parent_func):
                 # TODO: Add a comment here
                 if len(self.flow.execute_task_args) > 4:
-                    self.clones_dict, self.instance_snapshot, self.kwargs = \
-                        self.flow.execute_task_args[3:]
+                    temp = self.flow.execute_task_args[3:]
+                    self.clones_dict, self.instance_snapshot, self.kwargs = temp
 
                     self.selected_collaborators = getattr(self.flow, self.kwargs["foreach"])
                 else:
