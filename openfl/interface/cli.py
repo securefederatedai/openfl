@@ -43,7 +43,7 @@ def setup_logging(level='info', log_file=None):
 
     console = Console(width=160)
     handlers.append(RichHandler(console=console))
-    basicConfig(level=level, format=u'%(message)s',
+    basicConfig(level=level, format='%(message)s',
                 datefmt='[%X]', handlers=handlers)
 
 
