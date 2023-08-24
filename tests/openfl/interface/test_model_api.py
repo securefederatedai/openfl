@@ -6,7 +6,6 @@ from unittest import mock
 from unittest import TestCase
 from pathlib import Path
 
-from openfl.interface.model import get_model
 from openfl.interface.model import save_
 from openfl.federated.task import TaskRunner
 
