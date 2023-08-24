@@ -204,7 +204,7 @@ def import_(archive):
             executable, '-m', 'pip', 'install', '--upgrade', 'pip'],
             shell=False)
         check_call([
-            executable, '-m', 'pip', 'install', '--user', '-e', '-r', 'requirements.txt'],
+            executable, '-m', 'pip', 'install', '--user', '-r', 'requirements.txt'],
             shell=False)
     else:
         echo('No ' + requirements_filename + ' file found.')
