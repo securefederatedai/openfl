@@ -57,13 +57,6 @@ class FrameworkAdapterPlugin(FrameworkAdapterPluginInterface):
             logger.warn('Applying hotfix for model serialization.'
                         'Please consider updating to tensorflow>=2.8 to silence this warning.')
             make_keras_picklable()
-        if version.parse(tf.__version__) >= version.parse('2.13'):
-            def build(self, var_list):
-                pass
-
-            cls = Optimizer
-            cls.build = build
-            print("Overriding keras optimizer build function")
             
 
     @staticmethod

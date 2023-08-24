@@ -94,8 +94,6 @@ def create(prefix, template):
     if not OPENFL_USERDIR.exists():
         OPENFL_USERDIR.mkdir()
 
-    print(f'numpy in system modules? {str(sys.modules).find("numpy")}')
-
     prefix = Path(prefix).absolute()
 
     create_dirs(prefix)
