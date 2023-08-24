@@ -22,6 +22,7 @@ class FrameworkAdapterPlugin(FrameworkAdapterPluginInterface):
         # Source: https://github.com/tensorflow/tensorflow/issues/34697
         import tensorflow as tf
         from tensorflow.keras.models import Model
+        from tensorflow.keras.optimizers.legacy import Optimizer
         from tensorflow.python.keras.layers import deserialize
         from tensorflow.python.keras.layers import serialize
         from tensorflow.python.keras.saving import saving_utils
@@ -56,6 +57,14 @@ class FrameworkAdapterPlugin(FrameworkAdapterPluginInterface):
             logger.warn('Applying hotfix for model serialization.'
                         'Please consider updating to tensorflow>=2.8 to silence this warning.')
             make_keras_picklable()
+        if version.parse(tf.__version__) >= version.parse('2.13'):
+            def build(self, var_list):
+                pass
+
+            cls = Optimizer
+            cls.build = build
+            print("Overriding keras optimizer build function")
+            
 
     @staticmethod
     def get_tensor_dict(model, optimizer=None, suffix=''):
