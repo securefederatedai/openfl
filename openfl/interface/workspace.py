@@ -23,6 +23,7 @@ def workspace(context):
     """Manage Federated Learning Workspaces."""
     context.obj['group'] = 'workspace'
 
+
 def is_directory_traversal(directory: Union[str, Path]) -> bool:
     """Check for directory traversal."""
     cwd = os.path.abspath(os.getcwd())
@@ -30,6 +31,7 @@ def is_directory_traversal(directory: Union[str, Path]) -> bool:
     requested_path = os.path.abspath(requested_path)
     common_prefix = os.path.commonprefix([requested_path, cwd])
     return common_prefix != cwd
+
 
 def create_dirs(prefix):
     """Create workspace directories."""
@@ -86,7 +88,6 @@ def create(prefix, template):
     from os.path import isfile
     from subprocess import check_call
     from sys import executable
-    import sys
 
     from openfl.interface.cli_helper import print_tree
     from openfl.interface.cli_helper import OPENFL_USERDIR
@@ -211,7 +212,7 @@ def import_(archive):
             executable, '-m', 'pip', 'install', '--upgrade', 'pip'],
             shell=False)
         check_call([
-            executable, '-m', 'pip', 'install', '--user', '-r', 'requirements.txt'],
+            executable, '-m', 'pip', 'install', '-r', 'requirements.txt'],
             shell=False)
     else:
         echo('No ' + requirements_filename + ' file found.')

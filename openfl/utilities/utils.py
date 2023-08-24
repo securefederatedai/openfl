@@ -65,6 +65,7 @@ def is_api_adress(address: str) -> bool:
     except ValueError:
         return False
 
+
 def add_log_level(level_name, level_num, method_name=None):
     """
     Add a new logging level to the logging module.

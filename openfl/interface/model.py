@@ -76,7 +76,6 @@ def get_model(
     from openfl.protocols import utils
     from openfl.utilities.workspace import set_directory
 
-
     # Here we change cwd to the experiment workspace folder
     # because plan.yaml usually contains relative paths to components.
     workspace_path = Path(plan_config).resolve().parent.parent

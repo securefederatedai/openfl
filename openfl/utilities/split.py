@@ -1,5 +1,9 @@
+# Copyright (C) 2020-2023 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+"""split tensors module."""
 
 import numpy as np
+
 
 def split_tensor_dict_into_floats_and_non_floats(tensor_dict):
     """
@@ -89,4 +93,3 @@ def split_tensor_dict_for_holdouts(logger, tensor_dict,
     holdout_tensors = {**holdout_tensors, **not_supported_tensors_dict}
 
     return tensors_to_send, holdout_tensors
-
