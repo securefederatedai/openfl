@@ -158,7 +158,7 @@ setup(
         'tqdm',
     ],
     setup_requires=['grpcio-tools~=1.56.2'],
-    python_requires='>=3.8, <=3.12',
+    python_requires='>=3.8, <=3.11',
     project_urls={
         'Bug Tracker': 'https://github.com/intel/openfl/issues',
         'Documentation': 'https://openfl.readthedocs.io/en/stable/',
@@ -183,7 +183,6 @@ setup(
         'Programming Language :: Python :: 3.9',
         'Programming Language :: Python :: 3.10',
         'Programming Language :: Python :: 3.11',
-        'Programming Language :: Python :: 3.12',
 
     ],
     entry_points={
