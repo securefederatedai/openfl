@@ -19,7 +19,7 @@ import openfl.interface.workspace as workspace
 from openfl.federated import Plan
 from openfl.protocols import utils
 from openfl.utilities import add_log_level
-from openfl.utilities import split_tensor_dict_for_holdouts
+from openfl.utilities.split import split_tensor_dict_for_holdouts
 
 logger = getLogger(__name__)
 
