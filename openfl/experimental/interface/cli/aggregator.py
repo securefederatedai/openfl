@@ -54,8 +54,6 @@ def start_(plan, authorized_cols, secure):
     plan = Plan.parse(plan_config_path=Path(plan).absolute(),
                       cols_config_path=Path(authorized_cols).absolute())
 
-    logger.info('🧿 Starting the Aggregator Service.')
-
     if not os.path.exists('plan/data.yaml'):
         logger.warning(
             'Aggregator private attributes are set to None as plan/data.yaml not found'
@@ -69,6 +67,8 @@ def start_(plan, authorized_cols, secure):
                 logger.warning(
                     'Aggregator private attributes are set to None as no aggregator'
                     + ' attributes found in plan/data.yaml.')
+
+    logger.info('🧿 Starting the Aggregator Service.')
 
     agg_server = plan.get_server()
     agg_server.is_server_started = False
@@ -191,14 +191,12 @@ def certify(fqdn, silent):
     crt_path_absolute_path = Path(CERT_DIR / f'{cert_name}.crt').absolute()
 
     if silent:
-
         echo(' Warning: manual check of certificate hashes is bypassed in silent mode.')
         echo(' Signing AGGREGATOR certificate')
         signed_agg_cert = sign_certificate(csr, signing_key, signing_crt.subject)
         write_crt(signed_agg_cert, crt_path_absolute_path)
 
     else:
-
         echo('Make sure the two hashes above are the same.')
         if confirm('Do you want to sign this certificate?'):
 
