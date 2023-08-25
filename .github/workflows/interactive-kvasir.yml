@@ -29,17 +29,8 @@ jobs:
         python -m pip install --upgrade pip
         pip install .
     - name: Interactive API - pytorch_kvasir_unet
-      if: matrix.os == 'ubuntu-latest'
       run: |
         python setup.py build_grpc
         pip install torch==1.13.1
         pip install torchvision==0.14.1
-        python -m tests.github.interactive_api_director.experiments.pytorch_kvasir_unet.run
-    - name: Interactive API - pytorch_kvasir_unet
-      if: matrix.os == 'windows-latest'
-      run: |
-        python setup.py build_grpc
-        pip install torch==1.13.1
-        pip install torchvision==0.14.1
-        chcp 65001
         python -m tests.github.interactive_api_director.experiments.pytorch_kvasir_unet.run
