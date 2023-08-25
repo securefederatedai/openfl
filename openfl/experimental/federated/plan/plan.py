@@ -143,6 +143,21 @@ class Plan:
             raise
 
     @staticmethod
+    def accept_args(cls):
+        """
+        Determines whether a class's constructor (__init__ method) accepts
+        variable positional arguments (*args).
+
+        Returns:
+            Boolean: True or False
+        """
+        init_signature = inspect.signature(cls.__init__)
+        for param in init_signature.parameters.values():
+            if param.kind == param.VAR_POSITIONAL:
+                return True
+        return False
+
+    @staticmethod
     def build(template, settings, **override):
         """
         Create an instance of a openfl Component or Federated DataLoader/TaskRunner.
@@ -166,9 +181,13 @@ class Plan:
         Plan.logger.debug(f"Override [red]🡆[/] {override}", extra={"markup": True})
 
         settings.update(**override)
-
         module = import_module(module_path)
-        instance = getattr(module, class_name)(**settings)
+
+        if Plan.accept_args(getattr(module, class_name)):
+            args = list(settings.values())
+            instance = getattr(module, class_name)(*args)
+        else:
+            instance = getattr(module, class_name)(**settings)
 
         return instance
 
@@ -386,33 +405,32 @@ class Plan:
         return self.flow_
 
     def import_kwargs_modules(self, defaults):
-        for key in defaults[SETTINGS]:
-            value_defaults = defaults[SETTINGS][key]
-            if isinstance(value_defaults, str):
-                class_name = splitext(value_defaults)[1].strip(".")
-                if class_name:
-                    module_path = splitext(value_defaults)[0]
-                    try:
-                        if import_module(module_path):
-                            module = import_module(module_path)
-                            value_defaults_data = {
-                                TEMPLATE: value_defaults,
-                                SETTINGS: {},
-                            }
-                            attr = getattr(module, class_name)
+        def import_nested_settings(settings):
+            for key, value in settings.items():
+                if isinstance(value, dict):
+                    settings[key] = import_nested_settings(value)
+                elif isinstance(value, str):
+                    class_name = splitext(value)[1].strip(".")
+                    if class_name:
+                        module_path = splitext(value)[0]
+                        try:
+                            if import_module(module_path):
+                                module = import_module(module_path)
+                                value_defaults_data = {
+                                    'template': value,
+                                    'settings': settings.get('settings', {}),
+                                }
+                                attr = getattr(module, class_name)
 
-                            if not inspect.isclass(attr):
-                                self.logger.info(
-                                    "Setting private attributes from variable"
-                                )
-                                defaults[SETTINGS][key] = attr
-                            else:
-                                self.logger.info("Setting private from class")
-                                defaults[SETTINGS][key] = Plan.build(
-                                    **value_defaults_data
-                                )
-                    except Exception:
-                        raise ImportError(f"Cannot import {value_defaults}.")
+                                if not inspect.isclass(attr):
+                                    settings[key] = attr
+                                else:
+                                    settings = Plan.build(**value_defaults_data)
+                        except ImportError:
+                            raise ImportError(f"Cannot import {value}.")
+            return settings
+
+        defaults[SETTINGS] = import_nested_settings(defaults[SETTINGS])
         return defaults
 
     def get_private_attr(self, private_attr_name=None):

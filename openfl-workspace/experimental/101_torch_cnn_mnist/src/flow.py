@@ -1,6 +1,8 @@
 # Copyright (C) 2020-2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
+from openfl.experimental.interface import FLSpec
+from openfl.experimental.placement import aggregator, collaborator
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
@@ -59,11 +61,7 @@ def inference(network, test_loader):
     return accuracy
 
 
-from openfl.experimental.interface import FLSpec
-from openfl.experimental.placement import aggregator, collaborator
-
-
-def FedAvg(models):
+def fedavg(models):
     new_model = models[0]
     state_dicts = [model.state_dict() for model in models]
     state_dict = new_model.state_dict()
@@ -75,7 +73,7 @@ def FedAvg(models):
     return new_model
 
 
-class FederatedFlow(FLSpec):
+class MNISTFlow(FLSpec):
     def __init__(self, model=None, optimizer=None, rounds=3, **kwargs):
         super().__init__(**kwargs)
         if model is not None:
@@ -90,7 +88,7 @@ class FederatedFlow(FLSpec):
 
     @aggregator
     def start(self):
-        print(f"Performing initialization for model")
+        print("Performing initialization for model")
         self.collaborators = self.runtime.collaborators
         self.private = 10
         self.current_round = 0
@@ -138,7 +136,8 @@ class FederatedFlow(FLSpec):
     def local_model_validation(self):
         self.local_validation_score = inference(self.model, self.test_loader)
         print(
-            f"Doing local model validation for collaborator {self.input}: {self.local_validation_score}"
+            "Doing local model validation "
+            + f"for collaborator {self.input}: {self.local_validation_score}"
         )
         self.next(self.join, exclude=["training_completed"])
 
@@ -152,11 +151,12 @@ class FederatedFlow(FLSpec):
             input.local_validation_score for input in inputs
         ) / len(inputs)
         print(
-            f"Average aggregated model validation values = {self.aggregated_model_accuracy}"
+            "Average aggregated model "
+            + f"validation values = {self.aggregated_model_accuracy}"
         )
         print(f"Average training loss = {self.average_loss}")
         print(f"Average local model validation values = {self.local_model_accuracy}")
-        self.model = FedAvg([input.model for input in inputs])
+        self.model = fedavg([input.model for input in inputs])
         self.optimizer = [input.optimizer for input in inputs][0]
         self.next(self.internal_loop)
 
@@ -174,4 +174,4 @@ class FederatedFlow(FLSpec):
 
     @aggregator
     def end(self):
-        print(f"This is the end of the flow")
+        print("This is the end of the flow")

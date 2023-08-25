@@ -17,9 +17,11 @@ collaborator :
 
 
 federated_flow:
-  template: src.flow.FederatedFlow
+  template: src.flow.MNISTFlow
   settings:
-    model: src.flow.Net
+    model:
+      template: src.flow.Net
+      settings: {}
     optimizer: null
     rounds: 4
     checkpoint: true
