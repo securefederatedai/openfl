@@ -16,9 +16,8 @@ from click import option
 from click import pass_context
 from click import style
 import time
-
-from openfl.utilities import add_log_level
 import sys
+from openfl.utilities import add_log_level
 
 
 def setup_logging(level='info', log_file=None):

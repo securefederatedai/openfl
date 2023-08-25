@@ -14,9 +14,7 @@ from click import pass_context
 from click import Path as ClickPath
 from dynaconf import Validator
 
-from openfl.component.director import Director
 from openfl.interface.cli_helper import WORKSPACE
-from openfl.transport import DirectorGRPCServer
 from openfl.utilities import merge_configs
 from openfl.utilities.path_check import is_directory_traversal
 from openfl.interface.cli import review_plan_callback
@@ -47,6 +45,10 @@ def director(context):
         help='Path to a signed certificate')
 def start(director_config_path, tls, root_certificate, private_key, certificate):
     """Start the director service."""
+
+    from openfl.component.director import Director
+    from openfl.transport import DirectorGRPCServer
+
     director_config_path = Path(director_config_path).absolute()
     logger.info('🧿 Starting the Director Service.')
     if is_directory_traversal(director_config_path):
