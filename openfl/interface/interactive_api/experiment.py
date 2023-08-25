@@ -83,11 +83,10 @@ class FLExperiment:
         if not self.experiment_submitted:
             self.logger.error(
                 'The experiment was not submitted to a Director service.'
-                .encode('utf-8')
             )
             self.logger.error(
                 'Report the experiment first: '
-                'use the Experiment.start() method.'.encode('utf-8'))
+                'use the Experiment.start() method.')
             return False
         return True
 
@@ -131,7 +130,7 @@ class FLExperiment:
 
             warning_msg += f'\nReturn {self.current_model_status} model'
 
-            self.logger.warning(warning_msg.encode('utf-8'))
+            self.logger.warning(warning_msg)
 
         else:
             self.task_runner_stub.rebuild_model(tensor_dict, validation=True, device='cpu')
@@ -149,7 +148,6 @@ class FLExperiment:
                 f'collaborator {metric_message_dict["metric_origin"]} '
                 f'{metric_message_dict["task_name"]} result '
                 f'{metric_message_dict["metric_name"]}:\t{metric_message_dict["metric_value"]:f}'
-                .encode('utf-8')
             )
 
             if tensorboard_logs:
@@ -177,7 +175,7 @@ class FLExperiment:
         else:
             log_message += 'failed.'
 
-        self.logger.info(log_message.encode('utf-8'))
+        self.logger.info(log_message)
 
     def prepare_workspace_distribution(self, model_provider, task_keeper, data_loader,
                                        task_assigner,
@@ -247,7 +245,7 @@ class FLExperiment:
             pip_install_options
         )
 
-        self.logger.info('Starting experiment!'.encode('utf-8'))
+        self.logger.info('Starting experiment!')
         self.plan.resolve()
         initial_tensor_dict = self._get_initial_tensor_dict(model_provider)
         try:
@@ -261,10 +259,10 @@ class FLExperiment:
             self.remove_workspace_archive()
 
         if response.accepted:
-            self.logger.info('Experiment was submitted to the director!'.encode('utf-8'))
+            self.logger.info('Experiment was submitted to the director!')
             self.experiment_submitted = True
         else:
-            self.logger.info('Experiment could not be submitted to the director.'.encode('utf-8'))
+            self.logger.info('Experiment could not be submitted to the director.')
 
     def define_task_assigner(self, task_keeper, rounds_to_train):
         """Define task assigner by registered tasks."""
