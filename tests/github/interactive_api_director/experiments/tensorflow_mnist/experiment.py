@@ -111,7 +111,11 @@ def run():
 
     # create an experimnet in federation
     experiment_name = 'mnist_test_experiment'
-    fl_experiment = FLExperiment(federation=federation, experiment_name=experiment_name)
+    fl_experiment = FLExperiment(
+            federation=federation,
+            experiment_name=experiment_name,
+            serializer_plugin='openfl.plugins.interface_serializer.'
+                              'keras_serializer.KerasSerializer')
     # If I use autoreload I got a pickling error
 
     # The following command zips the workspace and python requirements to be transfered to collaborator nodes
