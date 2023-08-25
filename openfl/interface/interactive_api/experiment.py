@@ -22,7 +22,7 @@ from openfl.federated import Plan
 from openfl.interface.cli import setup_logging
 from openfl.interface.cli_helper import WORKSPACE
 from openfl.native import update_plan
-from openfl.utilities import split_tensor_dict_for_holdouts
+from openfl.utilities.split import split_tensor_dict_for_holdouts
 from openfl.utilities.workspace import dump_requirements_file
 
 
@@ -81,7 +81,9 @@ class FLExperiment:
     def _assert_experiment_submitted(self):
         """Assure experiment is sent to director and accepted."""
         if not self.experiment_submitted:
-            self.logger.error('The experiment was not submitted to a Director service.')
+            self.logger.error(
+                'The experiment was not submitted to a Director service.'
+            )
             self.logger.error(
                 'Report the experiment first: '
                 'use the Experiment.start() method.')
@@ -145,7 +147,8 @@ class FLExperiment:
                 f'Round {metric_message_dict["round"]}, '
                 f'collaborator {metric_message_dict["metric_origin"]} '
                 f'{metric_message_dict["task_name"]} result '
-                f'{metric_message_dict["metric_name"]}:\t{metric_message_dict["metric_value"]:f}')
+                f'{metric_message_dict["metric_name"]}:\t{metric_message_dict["metric_value"]:f}'
+            )
 
             if tensorboard_logs:
                 self.write_tensorboard_metric(metric_message_dict)

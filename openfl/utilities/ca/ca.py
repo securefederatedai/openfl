@@ -17,8 +17,8 @@ from subprocess import check_call
 
 from click import confirm
 
-from openfl.component.ca.downloader import download_step_bin
-from openfl.component.ca.downloader import download_step_ca_bin
+from openfl.utilities.ca.downloader import download_step_bin
+from openfl.utilities.ca.downloader import download_step_ca_bin
 
 logger = getLogger(__name__)
 
