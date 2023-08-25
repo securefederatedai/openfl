@@ -55,11 +55,11 @@ class Plan:
             frozen_yaml_path = Path(
                 f'{yaml_path.parent}/{yaml_path.stem}_{plan.hash[:8]}.yaml')
             if frozen_yaml_path.exists():
-                Plan.logger.info(f'{yaml_path.name} is already frozen')
+                Plan.logger.info(f'{yaml_path.name} is already frozen'.encode('utf8'))
                 return
             frozen_yaml_path.write_text(dump(config))
             frozen_yaml_path.chmod(0o400)
-            Plan.logger.info(f'{yaml_path.name} frozen successfully')
+            Plan.logger.info(f'{yaml_path.name} frozen successfully'.encode('utf8'))
         else:
             yaml_path.write_text(dump(config))
 
@@ -109,7 +109,7 @@ class Plan:
                     if resolve:
                         Plan.logger.info(
                             f'Loading DEFAULTS for section [red]{section}[/] '
-                            f'from file [red]{defaults}[/].',
+                            f'from file [red]{defaults}[/].'.encode("utf-8"),
                             extra={'markup': True})
 
                     defaults = Plan.load(Path(defaults))
@@ -127,7 +127,7 @@ class Plan:
             if gandlf_config_path is not None:
                 Plan.logger.info(
                     f'Importing GaNDLF Config into plan '
-                    f'from file [red]{gandlf_config_path}[/].',
+                    f'from file [red]{gandlf_config_path}[/].'.encode('utf-8'),
                     extra={'markup': True})
 
                 gandlf_config = Plan.load(Path(gandlf_config_path))
@@ -154,7 +154,7 @@ class Plan:
 
                 Plan.logger.info(
                     f'Parsing Federated Learning Plan : [green]SUCCESS[/] : '
-                    f'[blue]{plan_config_path}[/].',
+                    f'[blue]{plan_config_path}[/].'.encode('utf-8'),
                     extra={'markup': True})
                 Plan.logger.info(dump(plan.config))
 
@@ -162,7 +162,8 @@ class Plan:
 
         except Exception:
             Plan.logger.exception(f'Parsing Federated Learning Plan : '
-                                  f'[red]FAILURE[/] : [blue]{plan_config_path}[/].',
+                                  f'[red]FAILURE[/] : [blue]{plan_config_path}[/].'
+                                  .encode('utf-8'),
                                   extra={'markup': True})
             raise
 
@@ -182,11 +183,11 @@ class Plan:
         module_path = splitext(template)[0]
 
         Plan.logger.info(f'Building [red]🡆[/] Object [red]{class_name}[/] '
-                         f'from [red]{module_path}[/] Module.',
+                         f'from [red]{module_path}[/] Module.'.encode('utf-8'),
                          extra={'markup': True})
-        Plan.logger.debug(f'Settings [red]🡆[/] {settings}',
+        Plan.logger.debug(f'Settings [red]🡆[/] {settings}'.encode('utf-8'),
                           extra={'markup': True})
-        Plan.logger.debug(f'Override [red]🡆[/] {override}',
+        Plan.logger.debug(f'Override [red]🡆[/] {override}'.encode('utf-8'),
                           extra={'markup': True})
 
         settings.update(**override)
@@ -210,7 +211,7 @@ class Plan:
         class_name = splitext(template)[1].strip('.')
         module_path = splitext(template)[0]
         Plan.logger.info(f'Importing [red]🡆[/] Object [red]{class_name}[/] '
-                         f'from [red]{module_path}[/] Module.',
+                         f'from [red]{module_path}[/] Module.'.encode('utf-8'),
                          extra={'markup': True})
         module = import_module(module_path)
         instance = getattr(module, class_name)
@@ -245,7 +246,7 @@ class Plan:
     def hash(self):  # NOQA
         """Generate hash for this instance."""
         self.hash_ = sha384(dump(self.config).encode('utf-8'))
-        Plan.logger.info(f'FL-Plan hash is [blue]{self.hash_.hexdigest()}[/]',
+        Plan.logger.info(f'FL-Plan hash is [blue]{self.hash_.hexdigest()}[/]'.encode('utf-8'),
                          extra={'markup': True})
 
         return self.hash_.hexdigest()
@@ -274,8 +275,11 @@ class Plan:
             aggregation_functions_by_task = self.restore_object('aggregation_function_obj.pkl')
             assigner_function = self.restore_object('task_assigner_obj.pkl')
         except Exception as exc:
-            self.logger.error(f'Failed to load aggregation and assigner functions: {exc}')
-            self.logger.info('Using Task Runner API workflow')
+            self.logger.error(
+                f'Failed to load aggregation and assigner functions: {exc}'
+                .encode('utf-8')
+            )
+            self.logger.info('Using Task Runner API workflow'.encode('utf-8'))
         if assigner_function:
             self.assigner_ = Assigner(
                 assigner_function=assigner_function,

@@ -51,7 +51,7 @@ def run():
     fl_experiment.start(model_provider=MI,
                         task_keeper=task_interface,
                         data_loader=fed_dataset,
-                        rounds_to_train=2,
+                        rounds_to_train=1,
                         opt_treatment='CONTINUE_GLOBAL')
     fl_experiment.stream_metrics()
     best_model = fl_experiment.get_best_model()
