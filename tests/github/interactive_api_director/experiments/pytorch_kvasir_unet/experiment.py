@@ -124,7 +124,7 @@ class KvasirSD(DataInterface):
         train_sampler = SubsetRandomSampler(self.train_indeces)
         return DataLoader(
             self._shard_dataset,
-            num_workers=8,
+            num_workers=1,
             batch_size=self.kwargs['train_bs'],
             sampler=train_sampler
         )
@@ -136,7 +136,7 @@ class KvasirSD(DataInterface):
         val_sampler = SubsetRandomSampler(self.val_indeces)
         return DataLoader(
             self._shard_dataset,
-            num_workers=8,
+            num_workers=1,
             batch_size=self.kwargs['valid_bs'],
             sampler=val_sampler
         )
