@@ -15,7 +15,6 @@ from click import pass_context
 from click import Path as ClickPath
 from dynaconf import Validator
 
-from openfl.component.envoy.envoy import Envoy
 from openfl.interface.cli import review_plan_callback
 from openfl.interface.cli_helper import WORKSPACE
 from openfl.utilities import click_types
@@ -52,6 +51,9 @@ def envoy(context):
 def start_(shard_name, director_host, director_port, tls, envoy_config_path,
            root_certificate, private_key, certificate):
     """Start the Envoy."""
+
+    from openfl.component.envoy.envoy import Envoy
+
     logger.info('🧿 Starting the Envoy.')
     if is_directory_traversal(envoy_config_path):
         click.echo('The shard config path is out of the openfl workspace scope.')

@@ -1,4 +1,4 @@
-tensorflow==2.11.1
+tensorflow==2.13
 tensorflow-datasets==4.6.0
 jax
 --find-links https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
