@@ -20,11 +20,7 @@ def create_collaborator(col, workspace_root, archive_name, fed_workspace):
         cwd=col_path
     )
 
-    # Create collaborator certificate request
-    check_call(
-        ['fx', 'collaborator', 'create', '-n', col, '--silent'],
-        cwd=col_path / fed_workspace
-    )
+    # Create collaborator certificate request and
     # Remove '--silent' if you run this manually
     check_call(
         ['fx', 'collaborator', 'generate-cert-request', '-n', col, '--silent'],
@@ -95,9 +91,6 @@ def create_signed_cert_for_collaborator(col, data_path):
     '''
     print(f'Certifying collaborator {col} with data path {data_path}...')
     # Create collaborator certificate request
-    check_call([
-        'fx', 'collaborator', 'create', '-d', data_path, '-n', col, '--silent'
-    ])
     check_call([
         'fx', 'collaborator', 'generate-cert-request', '-n', col, '--silent'
     ])

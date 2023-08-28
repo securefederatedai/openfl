@@ -72,7 +72,7 @@ class Aggregator:
         self.federation_uuid = federation_uuid
         self.authorized_cols = authorized_cols
 
-        self.round_number = rounds_to_train
+        self.rounds_to_train = rounds_to_train
         self.current_round = 1
         self.collaborators_counter = 0
         self.quit_job_sent_to = []
@@ -298,7 +298,7 @@ class Aggregator:
                 self.call_checkpoint(self.flow, f)
                 self.__set_attributes_to_clone(self.flow)
                 # Check if all rounds of external loop is executed
-                if self.current_round is self.round_number:
+                if self.current_round is self.rounds_to_train:
                     # All rounds execute, it is time to quit
                     self.time_to_quit = True
                     # It is time to quit - Break the loop
@@ -310,28 +310,25 @@ class Aggregator:
                     f_name = "start"
                 continue
 
+            selected_clones = ()
             # If function requires arguments then it is join step of the flow
             if len(args) > 0:
                 # Check if total number of collaborators and number of selected collaborators
                 # are the same
                 if len(self.selected_collaborators) != len(self.clones_dict):
                     # Create list of selected collaborator clones
-                    selected_clones = []
+                    selected_clones = ([],)
                     for name, clone in self.clones_dict.items():
                         # Check if collaboraotr is in the list of selected collaborators
                         if name in self.selected_collaborators:
-                            selected_clones.append(clone)
+                            selected_clones[0].append(clone)
                 else:
                     # Number of selected collaborators, and number of total collaborators
                     # are same
-                    selected_clones = list(self.clones_dict.values())
-
-                # Call the join function with selected collaborators
-                # clones are arguments
-                f(selected_clones)
-            # TODO: Try to remove this else
-            else:
-                f()
+                    selected_clones = (list(self.clones_dict.values()),)
+            # Call the join function with selected collaborators
+            # clones are arguments
+            f(*selected_clones)
 
             self.__delete_agg_attrs_from_clone(self.flow, "Private attributes: Not Available.")
             # Take the checkpoint of executed step
@@ -346,7 +343,8 @@ class Aggregator:
 
             # Transition check
             if aggregator_to_collaborator(f, parent_func):
-                # TODO: Add a comment here
+                # Extract clones, instance snapshot and kwargs when reached
+                # foreach loop first time
                 if len(self.flow.execute_task_args) > 4:
                     temp = self.flow.execute_task_args[3:]
                     self.clones_dict, self.instance_snapshot, self.kwargs = temp
