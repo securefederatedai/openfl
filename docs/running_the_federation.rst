@@ -730,9 +730,9 @@ Configurable Settings
     `openfl.component.Aggregator <https://github.com/intel/openfl/blob/develop/openfl/component/aggregator/aggregator.py>`_
     Defines the settings for the aggregator which is the model-owner in the experiment. While models can be trained from scratch, in many cases the federation performs fine-tuning of a previously trained model. For this reason, pre-trained weights for the model are stored in protobuf files on the aggregator node and passed to collaborator nodes during initialization. The settings for aggregator include:
 
- - :code:`init_state_path`: (str:path) Defines the protobuf file path for initial weights that the experiment can start with.
- - :code:`best_state_path`: (str:path) Defines the protobuf file path for best state weights that the experiment got so far.
- - :code:`last_state_path`: (str:path) Defines the protobuf file path for the weights that the last experiment ended with.
+ - :code:`init_state_path`: (str:path) Defines the weight protobuf file path where the experiment's initial weights will be loaded from. These weights will be generated with the `fx plan initialize` command.
+ - :code:`best_state_path`: (str:path) Defines the weight protobuf file path that will be saved to for the highest accuracy model during the experiment.
+ - :code:`last_state_path`: (str:path)  Defines the weight protobuf file path that will be saved to during the last round completed in each experiment.
  - :code:`rounds_to_train`: (int) Specifies the number of rounds in a federation. A federated learning round is defined as one complete iteration when the collaborators train the model and send the updated model weights back to the aggregator to form a new global model. Within a round, collaborators can train the model for multiple iterations called epochs.
  - :code:`write_logs`: (boolean) Metric logging callback feature. By default, logging is done through `tensorboard <https://www.tensorflow.org/tensorboard/get_started>`_ but users can also use custom metric logging function for each task.      
 
@@ -741,7 +741,7 @@ Configurable Settings
     `openfl.component.Collaborator <https://github.com/intel/openfl/blob/develop/openfl/component/collaborator/collaborator.py>`_
     Defines the settings for the collaborator which is the data owner in the experiment. The settings for collaborator include:
 
- - :code:`delta_updates`: (boolean) Tells if collaborators should send delta updates for the locally tuned models. If set to False, whole checkpoints will be sent.
+ - :code:`delta_updates`: (boolean) Determines whether the difference in model weights between the current and previous round will be sent (True), or if whole checkpoints will be sent (False). Setting to delta_updates to True leads to higher sparsity in model weights sent across, which may improve compression ratios.
  - :code:`opt_treatment`: (str) Defines the optimizer state treatment policy. Valid options are : 'RESET' - reinitialize optimizer for every round (default), 'CONTINUE_LOCAL' - keep local optimizer state for every round, 'CONTINUE_GLOBAL' - aggregate optimizer state for every round.
 
 
@@ -756,7 +756,7 @@ Configurable Settings
 
 - :class:`Task Runner <openfl.federated.task.runner.TaskRunner>`
     `openfl.federated.task.runner.TaskRunner <https://github.com/intel/openfl/blob/develop/openfl/federated/task/runner.py>`_
-    Defines how to extract and set back the tensors from model weights and optimizer dictionary. Depending on different AI frameworks like PyTorch and Tensorflow, users can select pre-defined task runner methods.
+    Defines the model, training/validation functions, and how to extract and set the tensors from model weights and optimizer dictionary. Depending on different AI frameworks like PyTorch and Tensorflow, users can select pre-defined task runner methods.
 
 
 - :class:`Assigner <openfl.component.Assigner>`
