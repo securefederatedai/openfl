@@ -218,19 +218,38 @@ After the flow has started running, you can use the Metaflow Client to get inter
 
 .. code-block:: python
     
-   from metaflow import Flow, Run, Task, Step
-   
+   from metaflow import Metaflow, Flow, Step, Task
+
+   # Initialize Metaflow object and obtain list of executed flows:
+   m = Metaflow()
+   list(m)
+   > [Flow('FederatedFlow'), Flow('AggregatorValidationFlow'), Flow('FederatedFlow_MNIST_Watermarking')]
+
    # The name of the flow is the name of the class
-   flow = Flow('FederatedFlow')
-   run = flow.latest_run
+   # Identify the Flow name
+   flow_name = 'FederatedFlow'
+
+   # List all instances of Federatedflow executed under distinct run IDs
+   flow = Flow(flow_name)
+   list(flow)
+   > [Run('FederatedFlow/1692946840822001'),
+      Run('FederatedFlow/1692946796234386'),
+      Run('FederatedFlow/1692902602941163'),
+      Run('FederatedFlow/1692902559123920'),]
+
+   # To Retrieve the latest run of the Federatedflow
+   run = Flow(flow_name).latest_run
+   print(run)
+   > Run('FederatedFlow/1692946840822001')
+
    list(run)
-   > [Step('FederatedFlow/1671152854447797/end'),
-      Step('FederatedFlow/1671152854447797/join'),
-      Step('FederatedFlow/1671152854447797/local_model_validation'),
-      Step('FederatedFlow/1671152854447797/train'),
-      Step('FederatedFlow/1671152854447797/aggregated_model_validation'),
-      Step('FederatedFlow/1671152854447797/start')]
-   step = Step('FederatedFlow/1671152854447797/aggregated_model_validation')
+   > [Step('FederatedFlow/1692946840822001/end'),
+      Step('FederatedFlow/1692946840822001/join'),
+      Step('FederatedFlow/1692946840822001/local_model_validation'),
+      Step('FederatedFlow/1692946840822001/train'),
+      Step('FederatedFlow/1692946840822001/aggregated_model_validation'),
+      Step('FederatedFlow/1692946840822001/start')]
+   step = Step('FederatedFlow/1692946840822001/aggregated_model_validation')
    for task in step:
        if task.data.input == 'Portland':
            print(task.data)
@@ -259,6 +278,37 @@ And if we wanted to get log or error message for that task, you can just run:
      ...
    print(portland_task.stderr)
    > [No output]
+
+Also, If we wanted to get the best model and the last model, you can just run:
+
+.. code-block:: python
+
+    # Choose the specific step containing the desired models (e.g., 'join' step):
+    step = Step('FederatedFlow/1692946840822001/join')
+    list(step)
+    > [Task('FederatedFlow/1692946840822001/join/12'),--> Round 3
+       Task('FederatedFlow/1692946840822001/join/9'), --> Round 2
+       Task('FederatedFlow/1692946840822001/join/6'), --> Round 1
+       Task('FederatedFlow/1692946840822001/join/3')] --> Round 0
+
+    """The sequence of tasks represents each round, with the most recent task corresponding to the final round and the preceding tasks indicating the previous rounds 
+    in chronological order.
+    To determine the best model, analyze the command line logs and model accuracy for each round. Then, provide the corresponding task ID associated with that Task"""
+    task = Task('FederatedFlow/1692946840822001/join/9')
+
+    # Access the best model and its associated data
+    best_model = task.data.model
+    best_local_model_accuracy = task.data.local_model_accuracy
+    best_aggregated_model_accuracy = t.data.aggregated_model_accuracy
+
+    # To retrieve the last model, select the most recent Task i.e last round.
+    task = Task('FederatedFlow/1692946840822001/join/12')
+    last_model = task.data.model
+
+    # Save the chosen models using a suitable framework (e.g., PyTorch in this example):
+    import torch
+    torch.save(last_model.state_dict(), PATH)
+    torch.save(best_model.state_dict(), PATH)
 
 While this information is useful for debugging, depending on your workflow it may require significant disk space. For this reason, `checkpoint` is disabled by default.
 
