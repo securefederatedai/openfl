@@ -139,11 +139,11 @@ class Collaborator:
             elif sleep_time > 0:
                 time.sleep(sleep_time)
             else:
-                self.logger.info(f'Received the following tasks: {next_step}.')
+                self.logger.info(f"Received the following tasks: {next_step}.")
                 f_name, ctx = self.do_task(next_step, clone)
                 self.send_task_results(f_name, ctx)
 
-        self.logger.info('End of Federation reached. Exiting...')
+        self.logger.info("End of Federation reached. Exiting...")
 
     def send_task_results(self, next_step: str, clone: Any) -> None:
         """
@@ -157,8 +157,8 @@ class Collaborator:
         Returns:
             None
         """
-        self.logger.info(f'Round {self.round_number}, '
-                         f'collaborator {self.name} is sending results.')
+        self.logger.info(f"Round {self.round_number},"
+                         f" collaborator {self.name} is sending results.")
         self.client.send_task_results(
             self.name, self.round_number,
             next_step, pickle.dumps(clone)
@@ -177,7 +177,7 @@ class Collaborator:
             sleep_time (int): Sleep for given seconds if not ready yet
             time_to_quit (bool): True if end of reached
         """
-        self.logger.info('Waiting for tasks...')
+        self.logger.info("Waiting for tasks...")
         temp = self.client.get_tasks(self.name)
         self.round_number, next_step, clone_bytes, sleep_time, time_to_quit = temp
 

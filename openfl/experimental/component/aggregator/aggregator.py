@@ -59,14 +59,14 @@ class Aggregator:
         if self.single_col_cert_common_name is not None:
             self._log_big_warning()
         else:
-            # FIXME: '' instead of None is just for protobuf compatibility.
+            # FIXME: "" instead of None is just for protobuf compatibility.
             # Cleaner solution?
-            self.single_col_cert_common_name = ''
+            self.single_col_cert_common_name = ""
 
         self.log_metric_callback = log_metric_callback
         if log_metric_callback is not None:
             self.log_metric = log_metric_callback
-            self.logger.info(f'Using custom log metric: {self.log_metric}')
+            self.logger.info(f"Using custom log metric: {self.log_metric}")
 
         self.uuid = aggregator_uuid
         self.federation_uuid = federation_uuid
@@ -99,6 +99,7 @@ class Aggregator:
         self.__private_attrs_callable = private_attributes_callable
         self.__private_attrs = {}
         self.connected_collaborators = []
+        self.tasks_sent_to_collaborators = 0
         self.collaborator_results_received = []
 
         if self.__private_attrs_callable is not None:
@@ -141,10 +142,10 @@ class Aggregator:
     def _log_big_warning(self) -> None:
         """Warn user about single collaborator cert mode."""
         self.logger.warning(
-            f'\n{the_dragon}\nYOU ARE RUNNING IN SINGLE COLLABORATOR CERT MODE! THIS IS'
-            f' NOT PROPER PKI AND '
-            f'SHOULD ONLY BE USED IN DEVELOPMENT SETTINGS!!!! YE HAVE BEEN'
-            f' WARNED!!!'
+            f"\n{the_dragon}\nYOU ARE RUNNING IN SINGLE COLLABORATOR CERT MODE! THIS IS"
+            f" NOT PROPER PKI AND "
+            f"SHOULD ONLY BE USED IN DEVELOPMENT SETTINGS!!!! YE HAVE BEEN"
+            f" WARNED!!!"
         )
 
     @staticmethod
@@ -169,7 +170,7 @@ class Aggregator:
             next_step = self.do_task(f_name)
 
             if self.time_to_quit:
-                self.logger.info('Experiment Completed.')
+                self.logger.info("Experiment Completed.")
                 self.quit_job_sent_to = self.authorized_cols
                 break
 
@@ -181,11 +182,22 @@ class Aggregator:
                     self.logger.info(f"Tasks will not be sent to {k}")
 
             while not self.collaborator_task_results.is_set():
-                # Waiting for selected collaborators to send the results.
                 len_sel_collabs = len(self.selected_collaborators)
-                self.logger.info("Waiting for "
-                                 + f"{self.collaborators_counter}/{len_sel_collabs}"
-                                 + " collaborators to send results.")
+                len_connected_collabs = len(self.connected_collaborators)
+                if len_connected_collabs != len_sel_collabs:
+                    # Waiting for collaborators to connect.
+                    self.logger.info("Waiting for "
+                                     + f"{len_connected_collabs}/{len_sel_collabs}"
+                                     + " collaborators to connect...")
+                elif self.tasks_sent_to_collaborators != len_sel_collabs:
+                    self.logger.info("Waiting for "
+                                     + f"{self.tasks_sent_to_collaborators}/{len_sel_collabs}"
+                                     + " to make requests for tasks...")
+                else:
+                    # Waiting for selected collaborators to send the results.
+                    self.logger.info("Waiting for "
+                                     + f"{self.collaborators_counter}/{len_sel_collabs}"
+                                     + " collaborators to send results...")
                 time.sleep(Aggregator._get_sleep_time())
 
             self.collaborator_task_results.clear()
@@ -246,7 +258,7 @@ class Aggregator:
             self.connected_collaborators.append(collaborator_name)
 
         self.logger.debug(
-            f'Aggregator GetTasks function reached from collaborator {collaborator_name}...'
+            f"Aggregator GetTasks function reached from collaborator {collaborator_name}..."
         )
 
         # If queue of requesting collaborator is empty
@@ -254,10 +266,10 @@ class Aggregator:
             # If it is time to then inform the collaborator
             if self.time_to_quit:
                 self.logger.info(
-                    f'Sending signal to collaborator {collaborator_name} to shutdown...')
-                # FIXME: 0, and '' instead of None is just for protobuf compatibility.
+                    f"Sending signal to collaborator {collaborator_name} to shutdown...")
+                # FIXME: 0, and "" instead of None is just for protobuf compatibility.
                 #  Cleaner solution?
-                return 0, '', None, Aggregator._get_sleep_time(), self.time_to_quit
+                return 0, "", None, Aggregator._get_sleep_time(), self.time_to_quit
 
             # If not time to quit then sleep for 10 seconds
             time.sleep(Aggregator._get_sleep_time())
@@ -266,9 +278,9 @@ class Aggregator:
         next_step, clone = self.__collaborator_tasks_queue[
             collaborator_name].get()
 
-        self.logger.info(
-            f'Sending tasks to collaborator {collaborator_name} for round {self.current_round}'
-        )
+        self.tasks_sent_to_collaborators += 1
+        self.logger.info("Sending tasks to collaborator"
+                         + f" {collaborator_name} for round {self.current_round}...")
         return self.current_round, next_step, pickle.dumps(clone), 0, self.time_to_quit
 
     def do_task(self, f_name: str) -> Any:
@@ -379,13 +391,13 @@ class Aggregator:
         # Log a warning if collaborator is sending results for old round
         if round_number is not self.current_round:
             self.logger.warning(
-                f'Collaborator {collab_name} is reporting results'
-                f' for the wrong round: {round_number}. Ignoring...'
+                f"Collaborator {collab_name} is reporting results"
+                f" for the wrong round: {round_number}. Ignoring..."
             )
         else:
             self.logger.info(
-                f'Collaborator {collab_name} is sending task results '
-                f'for round {round_number}'
+                f"Collaborator {collab_name} sent task results"
+                f" for round {round_number}."
             )
         # Unpickle the clone (FLSpec object)
         clone = pickle.loads(clone_bytes)
@@ -399,6 +411,9 @@ class Aggregator:
             self.collaborators_counter = 0
             # Set the event to inform aggregator to resume the flow execution
             self.collaborator_task_results.set()
+            # Empty tasks_sent_to_collaborators list for next time.
+            if self.tasks_sent_to_collaborators == len(self.selected_collaborators):
+                self.tasks_sent_to_collaborators = 0
 
     def valid_collaborator_cn_and_id(self, cert_common_name: str,
                                      collaborator_common_name: str) -> bool:
@@ -415,9 +430,9 @@ class Aggregator:
         """
         # if self.test_mode_whitelist is None, then the common_name must
         # match collaborator_common_name and be in authorized_cols
-        # FIXME: '' instead of None is just for protobuf compatibility.
+        # FIXME: "" instead of None is just for protobuf compatibility.
         #  Cleaner solution?
-        if self.single_col_cert_common_name == '':
+        if self.single_col_cert_common_name == "":
             return (cert_common_name == collaborator_common_name
                     and collaborator_common_name in self.authorized_cols)
         # otherwise, common_name must be in whitelist and
@@ -431,7 +446,7 @@ class Aggregator:
         return set(self.quit_job_sent_to) == set(self.authorized_cols)
 
 
-the_dragon = '''
+the_dragon = """
 
  ,@@.@@+@@##@,@@@@.`@@#@+  *@@@@ #@##@  `@@#@# @@@@@   @@    @@@@` #@@@ :@@ `@#`@@@#.@
   @@ #@ ,@ +. @@.@* #@ :`   @+*@ .@`+.   @@ *@::@`@@   @@#  @@  #`;@`.@@ @@@`@`#@* +:@`
@@ -501,4 +516,4 @@ the_dragon = '''
                                     `*      @#            +.
                                   @@@
                                  # `@
-                                  ,                                                        '''
+                                  ,                                                        """
