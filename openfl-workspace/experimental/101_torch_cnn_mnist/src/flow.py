@@ -1,14 +1,14 @@
 # Copyright (C) 2020-2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-from openfl.experimental.interface import FLSpec
-from openfl.experimental.placement import aggregator, collaborator
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 import torch
 import numpy as np
 
+from openfl.experimental.interface import FLSpec
+from openfl.experimental.placement import aggregator, collaborator
 
 learning_rate = 0.01
 momentum = 0.5
@@ -18,23 +18,32 @@ random_seed = 1
 torch.backends.cudnn.enabled = False
 torch.manual_seed(random_seed)
 
+convolutional_block = nn.Sequential
+sequential_block = nn.Sequential
+conv2d1 = nn.Conv2d
+conv2d2 = nn.Conv2d(10, 20, 5)
+maxpool2d1 = nn.MaxPool2d
+maxpool2d2 = nn.MaxPool2d(2)
+relu = nn.ReLU()
+dropout2d = nn.Dropout2d()
+
 
 class Net(nn.Module):
-    def __init__(self):
+    def __init__(self, convolutional_block,
+                 in_features: int, out_features: int):
         super(Net, self).__init__()
-        self.conv1 = nn.Conv2d(1, 10, kernel_size=5)
-        self.conv2 = nn.Conv2d(10, 20, kernel_size=5)
-        self.conv2_drop = nn.Dropout2d()
-        self.fc1 = nn.Linear(320, 50)
-        self.fc2 = nn.Linear(50, 10)
+        self.conv_block = convolutional_block
+        self.linear_block = nn.Sequential(
+            nn.Linear(320, in_features),
+            nn.ReLU(),
+            nn.Dropout(),
+            nn.Linear(in_features, out_features)
+        )
 
     def forward(self, x):
-        x = F.relu(F.max_pool2d(self.conv1(x), 2))
-        x = F.relu(F.max_pool2d(self.conv2_drop(self.conv2(x)), 2))
+        x = self.conv_block(x)
         x = x.view(-1, 320)
-        x = F.relu(self.fc1(x))
-        x = F.dropout(x, training=self.training)
-        x = self.fc2(x)
+        x = self.linear_block(x)
         return F.log_softmax(x)
 
 
@@ -50,13 +59,11 @@ def inference(network, test_loader):
             correct += pred.eq(target.data.view_as(pred)).sum()
     test_loss /= len(test_loader.dataset)
     print(
-        "\nTest set: Avg. loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n".format(
-            test_loss,
-            correct,
-            len(test_loader.dataset),
-            100.0 * correct / len(test_loader.dataset),
-        )
+        f"\nTest set: Avg. loss: {test_loss:.4f}, Accuracy: "
+        + f"{correct}/{len(test_loader.dataset)} "
+        + f"({100.0 * correct / len(test_loader.dataset):.0f}%)\n"
     )
+
     accuracy = float(correct / len(test_loader.dataset))
     return accuracy
 
@@ -119,13 +126,12 @@ class MNISTFlow(FLSpec):
             self.optimizer.step()
             if batch_idx % log_interval == 0:
                 print(
-                    "Train Epoch: 1 [{}/{} ({:.0f}%)]\tLoss: {:.6f}".format(
-                        batch_idx * len(data),
-                        len(self.train_loader.dataset),
-                        100.0 * batch_idx / len(self.train_loader),
-                        loss.item(),
-                    )
+                    f"Train Epoch: 1 [{batch_idx * len(data)}/"
+                    + f"{len(self.train_loader.dataset)} ("
+                    + f"{100.0 * batch_idx / len(self.train_loader):.0f}%)"
+                    + f"]\tLoss: {loss.item():.6f}"
                 )
+
                 self.loss = loss.item()
                 torch.save(self.model.state_dict(), "model.pth")
                 torch.save(self.optimizer.state_dict(), "optimizer.pth")
@@ -136,8 +142,8 @@ class MNISTFlow(FLSpec):
     def local_model_validation(self):
         self.local_validation_score = inference(self.model, self.test_loader)
         print(
-            "Doing local model validation "
-            + f"for collaborator {self.input}: {self.local_validation_score}"
+            "Doing local model validation for collaborator "
+            + f"{self.input}: {self.local_validation_score}"
         )
         self.next(self.join, exclude=["training_completed"])
 
@@ -151,8 +157,7 @@ class MNISTFlow(FLSpec):
             input.local_validation_score for input in inputs
         ) / len(inputs)
         print(
-            "Average aggregated model "
-            + f"validation values = {self.aggregated_model_accuracy}"
+            f"Average aggregated model validation values = {self.aggregated_model_accuracy}"
         )
         print(f"Average training loss = {self.average_loss}")
         print(f"Average local model validation values = {self.local_model_accuracy}")
