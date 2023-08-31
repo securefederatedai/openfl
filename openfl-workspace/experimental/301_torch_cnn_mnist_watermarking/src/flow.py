@@ -49,28 +49,24 @@ def train_model(model, optimizer, data_loader, entity, round_number, log=False):
 
         train_loss += loss.item() * len(X)
         if batch_idx % log_interval == 0 and log:
-            print(
-                "{:<20} Train Epoch: {:<3} [{:<3}/{:<4} ({:<.0f}%)] Loss: {:<.6f}".format(
-                    entity,
-                    round_number,
-                    batch_idx * len(X),
-                    len(data_loader.dataset),
-                    100.0 * batch_idx / len(data_loader),
-                    loss.item(),
-                )
-            )
+            print(f"{entity:<20} Train Epoch: {round_number:<3}"
+                  + f" [{batch_idx * len(X):<3}/{len(data_loader.dataset):<4}"
+                  + f" ({100.0 * batch_idx / len(data_loader):<.0f}%)]"
+                  + f" Loss: {loss.item():<.6f}")
     train_loss /= len(data_loader.dataset)
     return train_loss
 
-def FedAvg(agg_model, models):
+
+def fedavg(agg_model, models):
     state_dicts = [model.state_dict() for model in models]
     state_dict = agg_model.state_dict()
     for key in models[0].state_dict():
-        state_dict[key] = np.sum(np.array([state[key] for state in state_dicts], dtype=object), axis=0) / len(
-            models
-        )
+        state_dict[key] = np.sum(
+            np.array([state[key] for state in state_dicts], dtype=object),
+            axis=0) / len(models)
     agg_model.load_state_dict(state_dict)
     return agg_model
+
 
 class Net(nn.Module):
     def __init__(self, dropout=0.0):
@@ -102,11 +98,12 @@ class Net(nn.Module):
         return F.log_softmax(out, 1)
 
 
-class FederatedFlow_MNIST_Watermarking(FLSpec):
+class FederatedFlow_MNIST_Watermarking(FLSpec):  # NOQA N801
     """
     This Flow demonstrates Watermarking on a Deep Learning Model in Federated Learning
     Ref: WAFFLE: Watermarking in Federated Learning (https://arxiv.org/abs/2008.07298)
     """
+
     def __init__(
         self,
         model=None,
@@ -146,7 +143,7 @@ class FederatedFlow_MNIST_Watermarking(FLSpec):
         """
         This is the start of the Flow.
         """
-        print(f"<Agg>: Start of flow ... ")
+        print("<Agg>: Start of flow ... ")
         self.collaborators = self.runtime.collaborators
 
         self.next(self.watermark_pretrain)
@@ -174,13 +171,9 @@ class FederatedFlow_MNIST_Watermarking(FLSpec):
                     self.model, self.watermark_data_loader
                 )
 
-                print(
-                    "<Agg>: Watermark Pretraining: Round: {:<3} Loss: {:<.6f} Acc: {:<.6f}".format(
-                        i,
-                        watermark_pretrain_loss,
-                        watermark_pretrain_validation_score,
-                    )
-                )
+                print(f"<Agg>: Watermark Pretraining: Round: {i:<3}"
+                      + f" Loss: {watermark_pretrain_loss:<.6f}"
+                      + f" Acc: {watermark_pretrain_validation_score:<.6f}")
 
             self.watermark_pretraining_completed = True
 
@@ -195,9 +188,9 @@ class FederatedFlow_MNIST_Watermarking(FLSpec):
         Perform Aggregated Model validation on Collaborators.
         """
         self.agg_validation_score = inference(self.model, self.test_loader)
-        print(
-            f"<Collab: {self.input}> Aggregated Model validation score = {self.agg_validation_score}"
-        )
+        print(f"<Collab: {self.input}>"
+              + f" Aggregated Model validation score = {self.agg_validation_score}"
+              )
 
         self.next(self.train)
 
@@ -216,7 +209,7 @@ class FederatedFlow_MNIST_Watermarking(FLSpec):
             self.model,
             self.optimizer,
             self.train_loader,
-            "<Collab: {:<20}".format(self.input + ">"),
+            f"<Collab: {self.input}>",
             self.round_number,
             log=True,
         )
@@ -247,7 +240,7 @@ class FederatedFlow_MNIST_Watermarking(FLSpec):
             input.local_validation_score for input in inputs
         ) / len(inputs)
 
-        print(f"<Agg>: Joining models from collaborators...")
+        print("<Agg>: Joining models from collaborators...")
 
         print(
             f"   Aggregated model validation score = {self.aggregated_model_accuracy}"
@@ -255,7 +248,7 @@ class FederatedFlow_MNIST_Watermarking(FLSpec):
         print(f"   Average training loss = {self.average_loss}")
         print(f"   Average local model validation values = {self.local_model_accuracy}")
 
-        self.model = FedAvg(self.model, [input.model for input in inputs])
+        self.model = fedavg(self.model, [input.model for input in inputs])
 
         self.next(self.watermark_retrain)
 
@@ -271,7 +264,8 @@ class FederatedFlow_MNIST_Watermarking(FLSpec):
 
         retrain_round = 0
 
-        # Perform re-training until (accuracy >= acc_threshold) or (retrain_round > number of retrain_epochs)
+        # Perform re-training until (accuracy >= acc_threshold) or
+        # (retrain_round > number of retrain_epochs)
         self.watermark_retrain_validation_score = inference(
             self.model, self.watermark_data_loader
         )
@@ -290,17 +284,12 @@ class FederatedFlow_MNIST_Watermarking(FLSpec):
                 self.model, self.watermark_data_loader
             )
 
-            print(
-                "<Agg>: Watermark Retraining: Train Epoch: {:<3} Retrain Round: {:<3} Loss: {:<.6f}, Acc: {:<.6f}".format(
-                    self.round_number,
-                    retrain_round,
-                    self.watermark_retrain_train_loss,
-                    self.watermark_retrain_validation_score,
-                )
-            )
-
+            print(f"<Agg>: Watermark Retraining: Train Epoch: {self.round_number:<3}"
+                  + f" Retrain Round: {retrain_round:<3}"
+                  + f" Loss: {self.watermark_retrain_train_loss:<.6f},"
+                  + f" Acc: {self.watermark_retrain_validation_score:<.6f}")
             retrain_round += 1
-        
+
         if self.round_number < self.n_rounds:
             self.round_number += 1
             self.next(self.start)
@@ -312,4 +301,4 @@ class FederatedFlow_MNIST_Watermarking(FLSpec):
         """
         This is the last step in the Flow.
         """
-        print(f"This is the end of the flow")
+        print("This is the end of the flow")

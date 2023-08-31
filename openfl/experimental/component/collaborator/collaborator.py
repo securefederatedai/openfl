@@ -158,7 +158,7 @@ class Collaborator:
             None
         """
         self.logger.info(f"Round {self.round_number},"
-                         f" collaborator {self.name} is sending results.")
+                         f" collaborator {self.name} is sending results...")
         self.client.send_task_results(
             self.name, self.round_number,
             next_step, pickle.dumps(clone)

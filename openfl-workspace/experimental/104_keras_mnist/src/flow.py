@@ -22,7 +22,7 @@ model = Sequential([
 model.compile(optimizer="sgd", loss="categorical_crossentropy", metrics=["accuracy"])
 
 
-def FedAvg(models):
+def fedavg(models):
     new_model = models[0]
     state_dicts = [model.weights for model in models]
     state_dict = new_model.weights
@@ -81,8 +81,8 @@ class KerasMNISTFlow(FLSpec):
     @collaborator
     def local_model_validation(self):
         self.local_validation_score = inference(self.model, self.test_loader, self.batch_size)
-        print(
-            f'Doing local model validation for collaborator {self.input}: {self.local_validation_score}')
+        print(f'Doing local model validation for collaborator {self.input}:'
+              + f' {self.local_validation_score}')
         self.next(self.join)
 
     @aggregator
@@ -96,7 +96,7 @@ class KerasMNISTFlow(FLSpec):
         print(f'Average training loss = {self.average_loss}')
         print(f'Average local model validation values = {self.local_model_accuracy}')
         print("Taking FedAvg of models of all collaborators")
-        self.model = FedAvg([input.model for input in inputs])
+        self.model = fedavg([input.model for input in inputs])
 
         self.next(self.internal_loop)
 
@@ -110,4 +110,4 @@ class KerasMNISTFlow(FLSpec):
 
     @aggregator
     def end(self):
-        print(f'This is the end of the flow')
+        print('This is the end of the flow')

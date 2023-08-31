@@ -184,7 +184,7 @@ class Aggregator:
             while not self.collaborator_task_results.is_set():
                 len_sel_collabs = len(self.selected_collaborators)
                 len_connected_collabs = len(self.connected_collaborators)
-                if len_connected_collabs != len_sel_collabs:
+                if len_connected_collabs < len_sel_collabs:
                     # Waiting for collaborators to connect.
                     self.logger.info("Waiting for "
                                      + f"{len_connected_collabs}/{len_sel_collabs}"

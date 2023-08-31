@@ -1,3 +1,6 @@
+# Copyright (C) 2020-2023 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 from openfl.experimental.interface import FLSpec
 from openfl.experimental.placement import aggregator, collaborator
 
@@ -77,4 +80,4 @@ class VerticalFlow(FLSpec):
 
     @aggregator
     def end(self):
-        print(f'This is the end of the flow')
+        print('This is the end of the flow')

@@ -11,10 +11,10 @@ import matplotlib.pyplot as plt
 import PIL.Image as Image
 import imagen as ig
 import numbergen as ng
-import os
 
 
 watermark_dir = "./files/watermark-dataset/MWAFFLE/"
+
 
 def generate_watermark(
     x_size=28, y_size=28, num_class=10, num_samples_per_class=10, img_dir=watermark_dir
@@ -77,10 +77,9 @@ def generate_watermark(
 
         for i in range(num_samples_per_class):
             base = np.random.rand(x_size, y_size)
-            # base = np.zeros((x_input, y_input))
             base[
-                x_offset : x_offset + pat.shape[0],
-                y_offset : y_offset + pat.shape[1],
+                x_offset: x_offset + pat.shape[0],
+                y_offset: y_offset + pat.shape[1],
             ] += pat
             d = np.ones((x_size, x_size))
             img = np.minimum(base, d)
@@ -101,8 +100,9 @@ if watermark_path.exists() and watermark_path.is_dir():
     )
     pass
 else:
-    print(f"Generating Watermark dataset... ")
+    print("Generating Watermark dataset... ")
     generate_watermark()
+
 
 class WatermarkDataset(torch.utils.data.Dataset):
     def __init__(self, images_dir, label_dir=None, transforms=None):
@@ -150,10 +150,12 @@ def get_watermark_transforms():
         ]
     )
 
+
 watermark_data = WatermarkDataset(
     images_dir=watermark_dir,
     transforms=get_watermark_transforms(),
 )
+
 
 def aggregator_private_attrs(watermark_data, batch_size):
     return {
@@ -165,4 +167,3 @@ def aggregator_private_attrs(watermark_data, batch_size):
         "watermark_acc_threshold": 0.98,
         "watermark_pretraining_completed": False,
     }
-

@@ -36,10 +36,8 @@ def plan(context):
         default='plan/data.yaml')
 @option('-a', '--aggregator_address', required=False,
         help='The FQDN of the federation agregator')
-@option('-f', '--feature_shape', required=False,
-        help='The input shape to the model')
 def initialize(context, plan_config, cols_config, data_config,
-               aggregator_address, feature_shape):
+               aggregator_address):
     """
     Initialize Data Science plan.
 
@@ -63,15 +61,6 @@ def initialize(context, plan_config, cols_config, data_config,
     plan = Plan.parse(plan_config_path=plan_config,
                       cols_config_path=cols_config,
                       data_config_path=data_config)
-
-    # TODO:  Is this part really needed?  Why would we need to collaborator
-    #  name to know the input shape to the model?
-
-    # if  feature_shape is None:
-    #     if  cols_config is None:
-    #         exit('You must specify either a feature
-    #         shape or authorized collaborator
-    #         list in order for the script to determine the input layer shape')
 
     plan_origin = Plan.parse(plan_config, resolve=False).config
 

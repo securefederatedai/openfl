@@ -39,7 +39,7 @@ class Net(nn.Module):
         return F.log_softmax(x)
 
 
-def FedAvg(models, weights=None):
+def fedavg(models, weights=None):
     new_model = models[0]
     state_dicts = [model.state_dict() for model in models]
     state_dict = new_model.state_dict()
@@ -61,10 +61,9 @@ def inference(network, test_loader):
             pred = output.data.max(1, keepdim=True)[1]
             correct += pred.eq(target.data.view_as(pred)).sum()
     test_loss /= len(test_loader.dataset)
-    print('\nTest set: Avg. loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n'.format(
-        test_loss, correct, len(test_loader.dataset),
-        100. * correct / len(test_loader.dataset)))
-    accuracy = float(correct / len(test_loader.dataset))
+    accuracy = 100. * correct / len(test_loader.dataset)
+    print(f'\nTest set: Avg. loss: {test_loss:.4f},'
+          + f' Accuracy: {correct}/{len(test_loader.dataset)} ({accuracy:.0f}%)\n')
     return accuracy
 
 
@@ -83,7 +82,7 @@ class AggregatorValidationFlow(FLSpec):
 
     @aggregator
     def start(self):
-        print(f'Performing initialization for model')
+        print('Performing initialization for model')
         self.collaborators = self.runtime.collaborators
         self.private = 10
         self.current_round = 0
@@ -108,10 +107,10 @@ class AggregatorValidationFlow(FLSpec):
             loss.backward()
             self.optimizer.step()
             if batch_idx % log_interval == 0:
-                print('Train Epoch: 1 [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
-                    batch_idx * len(data), len(self.train_loader.dataset),
-                    100. * batch_idx / len(self.train_loader), loss.item()))
                 self.loss = loss.item()
+                accuracy = 100. * batch_idx / len(self.train_loader)
+                print(f'Train Epoch: 1 [{batch_idx * len(data)}/{len(self.train_loader.dataset)}'
+                      + f' ({accuracy:.0f}%)]\tLoss: {self.loss:.6f}')
                 torch.save(self.model.state_dict(), 'model.pth')
                 torch.save(self.optimizer.state_dict(), 'optimizer.pth')
         self.training_completed = True
@@ -120,8 +119,8 @@ class AggregatorValidationFlow(FLSpec):
     @collaborator
     def local_model_validation(self):
         self.local_validation_score = inference(self.model, self.test_loader)
-        print(
-            f'Doing local model validation for collaborator {self.input}: {self.local_validation_score}')
+        print(f'Doing local model validation for collaborator {self.input}:'
+              + f' {self.local_validation_score}')
         self.next(self.join, exclude=['training_completed'])
 
     @aggregator
@@ -147,9 +146,9 @@ class AggregatorValidationFlow(FLSpec):
         # Give highest accuracy model (on held out aggregator data) 2x the importance
         relative_model_weights[highest_accuracy_model_idx] = 2
         print(f'Aggregator validation score: {highest_accuracy}')
-        print(
-            f'Highest accuracy model sent from {inputs[highest_accuracy_model_idx].input}. Receiving 2x weight in updated model')
-        self.model = FedAvg([input.model for input in inputs], weights=relative_model_weights)
+        print(f'Highest accuracy model sent from {inputs[highest_accuracy_model_idx].input}.'
+              + ' Receiving 2x weight in updated model')
+        self.model = fedavg([input.model for input in inputs], weights=relative_model_weights)
         self.optimizer = [input.optimizer for input in inputs][0]
         self.current_round += 1
         if self.current_round < self.rounds:
@@ -160,4 +159,4 @@ class AggregatorValidationFlow(FLSpec):
 
     @aggregator
     def end(self):
-        print(f'This is the end of the flow')
+        print('This is the end of the flow')

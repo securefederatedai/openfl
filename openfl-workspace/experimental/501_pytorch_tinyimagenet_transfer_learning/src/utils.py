@@ -1,7 +1,7 @@
 # Copyright (C) 2020-2021 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-from tensorflow.summary import SummaryWriter
+from torch.utils.tensorboard import SummaryWriter
 
 
 writer = None
