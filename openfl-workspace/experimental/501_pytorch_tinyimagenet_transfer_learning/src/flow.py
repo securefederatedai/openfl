@@ -344,6 +344,7 @@ def inference(network, test_loader):
 
 
 def fedavg(models):
+    models = [model.to('cpu') for model in models]
     new_model = models[0]
     state_dicts = [model.state_dict() for model in models]
     state_dict = new_model.state_dict()
