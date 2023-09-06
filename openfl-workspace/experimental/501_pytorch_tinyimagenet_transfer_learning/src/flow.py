@@ -344,7 +344,6 @@ def inference(network, test_loader):
 
 
 def fedavg(models):
-    models = [model.to('cpu') for model in models]
     new_model = models[0]
     state_dicts = [model.state_dict() for model in models]
     state_dict = new_model.state_dict()
@@ -433,7 +432,7 @@ class TinyImageNetFlow(FLSpec):
         )
         print(f"Average training loss = {self.average_loss}")
         print(f"Average local model validation values = {self.local_model_accuracy}")
-        self.model = fedavg([input.model for input in inputs])
+        self.model = fedavg([input.model.to("cpu") for input in inputs])
         self.next(self.internal_loop)
 
     @aggregator
