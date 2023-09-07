@@ -51,6 +51,7 @@ class RedirectStdStream(object):
     def flush(self):
         pass
 
+
 class RedirectStdStreamContext:
     """
     Context Manager that enables redirection of stdout & stderr
