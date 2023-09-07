@@ -284,11 +284,15 @@ def display_validate_errors(validate_flow_error):
 
 if __name__ == "__main__":
     # Setup participants
-    aggregator = Aggregator()
+    aggregator_ = Aggregator()
+    aggregator_.private_attributes = {}
 
     # Setup collaborators with private attributes
     collaborator_names = ["Portland", "Seattle", "Chandler", "Bangalore"]
-    def callable_to_initialize_collaborator_private_attributes(n_collaborators, index, train_dataset, test_dataset, batch_size):
+
+    def callable_to_initialize_collaborator_private_attributes(
+        n_collaborators, index, train_dataset, test_dataset, batch_size
+    ):
         local_train = deepcopy(train_dataset)
         local_test = deepcopy(test_dataset)
         local_train.data = mnist_train.data[index::n_collaborators]
@@ -316,7 +320,7 @@ if __name__ == "__main__":
         )
 
     local_runtime = LocalRuntime(
-        aggregator=aggregator, collaborators=collaborators, backend="ray"
+        aggregator=aggregator_, collaborators=collaborators, backend="ray"
     )
     print(f"Local runtime collaborators = {local_runtime.collaborators}")
     num_rounds = 5
