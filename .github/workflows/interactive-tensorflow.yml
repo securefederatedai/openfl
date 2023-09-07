@@ -27,5 +27,5 @@ jobs:
     - name: Interactive API - tensorflow_mnist
       run: |
         python setup.py build_grpc
-        pip install tensorflow==2.8
+        pip install tensorflow==2.13
         python -m tests.github.interactive_api_director.experiments.tensorflow_mnist.run

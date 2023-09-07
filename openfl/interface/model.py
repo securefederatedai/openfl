@@ -11,12 +11,6 @@ from click import Path as ClickPath
 from logging import getLogger
 from pathlib import Path
 
-from openfl.federated import Plan
-from openfl.federated import TaskRunner
-from openfl.protocols import utils
-from openfl.pipelines import NoCompressionPipeline
-from openfl.utilities.workspace import set_directory
-
 logger = getLogger(__name__)
 
 
@@ -68,7 +62,7 @@ def get_model(
     cols_config: str,
     data_config: str,
     model_protobuf_path: str
-) -> TaskRunner:
+):
     """
     Initialize TaskRunner and load it with provided model.pbuf.
 
@@ -76,6 +70,11 @@ def get_model(
     The reason for this behavior is the flexibility of the TaskRunner interface and
     the diversity of the ways we store models in our template workspaces.
     """
+
+    from openfl.federated import Plan
+    from openfl.pipelines import NoCompressionPipeline
+    from openfl.protocols import utils
+    from openfl.utilities.workspace import set_directory
 
     # Here we change cwd to the experiment workspace folder
     # because plan.yaml usually contains relative paths to components.

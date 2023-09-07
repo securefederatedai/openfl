@@ -6,7 +6,7 @@ import os
 import subprocess
 import sys
 from pathlib import Path
-from typing import Tuple
+from typing import Tuple, Union
 
 from click import Choice
 from click import confirm
@@ -16,14 +16,21 @@ from click import option
 from click import pass_context
 from click import Path as ClickPath
 
-from openfl.utilities.path_check import is_directory_traversal
-
 
 @group()
 @pass_context
 def workspace(context):
     """Manage Federated Learning Workspaces."""
     context.obj['group'] = 'workspace'
+
+
+def is_directory_traversal(directory: Union[str, Path]) -> bool:
+    """Check for directory traversal."""
+    cwd = os.path.abspath(os.getcwd())
+    requested_path = os.path.relpath(directory, start=cwd)
+    requested_path = os.path.abspath(requested_path)
+    common_prefix = os.path.commonprefix([requested_path, cwd])
+    return common_prefix != cwd
 
 
 def create_dirs(prefix):
@@ -54,7 +61,6 @@ def create_temp(prefix, template):
 
     copytree(src=WORKSPACE / template, dst=prefix, dirs_exist_ok=True,
              ignore=ignore_patterns('__pycache__'))  # from template workspace
-    apply_template_plan(prefix, template)
 
 
 def get_templates():
@@ -106,6 +112,8 @@ def create(prefix, template):
     prefix_hash = _get_dir_hash(str(prefix.absolute()))
     with open(OPENFL_USERDIR / f'requirements.{prefix_hash}.txt', 'w', encoding='utf-8') as f:
         check_call([executable, '-m', 'pip', 'freeze'], shell=False, stdout=f)
+
+    apply_template_plan(prefix, template)
 
     print_tree(prefix, level=3)
 

@@ -37,7 +37,7 @@ extensions = [
     'sphinx-prompt',
     'sphinx_substitution_extensions',
     'sphinx.ext.ifconfig',
-    'sphinxcontrib.kroki'
+    'sphinxcontrib.mermaid'
 ]
 
 # -- Project information -----------------------------------------------------

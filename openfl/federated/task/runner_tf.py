@@ -7,7 +7,7 @@ import numpy as np
 import tensorflow.compat.v1 as tf
 from tqdm import tqdm
 
-from openfl.utilities import split_tensor_dict_for_holdouts
+from openfl.utilities.split import split_tensor_dict_for_holdouts
 from openfl.utilities import TensorKey
 from .runner import TaskRunner
 
