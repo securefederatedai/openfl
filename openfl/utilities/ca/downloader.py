@@ -67,5 +67,6 @@ def _download(url, prefix, confirmation):
     if confirmation:
         confirm('CA binaries will be downloaded now', default=True, abort=True)
     name = url.split('/')[-1]
-    urllib.request.urlretrieve(url, f'{prefix}/{name}')
+    # nosec: private function definition with static urls
+    urllib.request.urlretrieve(url, f'{prefix}/{name}') #nosec
     shutil.unpack_archive(f'{prefix}/{name}', f'{prefix}/step')

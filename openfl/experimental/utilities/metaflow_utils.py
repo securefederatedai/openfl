@@ -25,7 +25,8 @@ from metaflow.mflog import RUNTIME_LOG_SOURCE
 from metaflow.task import MetaDatum
 import fcntl
 import hashlib
-from dill.source import getsource
+from dill.source import getsource #nosec
+# getsource only used to determine structure of FlowGraph
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from openfl.experimental.interface import FLSpec
@@ -62,7 +63,8 @@ class SystemMutex:
         self.name = name
 
     def __enter__(self):
-        lock_id = hashlib.new('md5', self.name.encode("utf8"), usedforsecurity=False).hexdigest()
+        lock_id = hashlib.new('md5', self.name.encode("utf8"), usedforsecurity=False).hexdigest() #nosec
+        # MD5sum used for concurrency purposes, not security
         self.fp = open(f"/tmp/.lock-{lock_id}.lck", "wb")
         fcntl.flock(self.fp.fileno(), fcntl.LOCK_EX)
 

@@ -3,7 +3,7 @@
 """Workspace module."""
 
 import os
-import subprocess
+import subprocess #nosec
 import sys
 from pathlib import Path
 from typing import Tuple, Union
@@ -86,7 +86,7 @@ def create_(prefix, template):
 def create(prefix, template):
     """Create federated learning workspace."""
     from os.path import isfile
-    from subprocess import check_call
+    from subprocess import check_call #nosec
     from sys import executable
 
     from openfl.interface.cli_helper import print_tree
@@ -196,7 +196,7 @@ def import_(archive):
     from os.path import basename
     from os.path import isfile
     from shutil import unpack_archive
-    from subprocess import check_call
+    from subprocess import check_call #nosec
     from sys import executable
 
     archive = Path(archive).absolute()
