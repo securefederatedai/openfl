@@ -30,7 +30,7 @@ def start(ip, port):
     """Start the Jupyter Lab from the tutorials directory."""
     from os import environ
     from os import sep
-    from subprocess import check_call
+    from subprocess import check_call #nosec
     from sys import executable
 
     from openfl.interface.cli_helper import TUTORIALS
