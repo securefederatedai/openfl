@@ -109,6 +109,7 @@ setup(
         'openfl.databases',
         'openfl.databases.utilities',
         'openfl.experimental',
+        'openfl.experimental.workspace_creator',
         'openfl.experimental.federated',
         'openfl.experimental.federated.plan',
         'openfl.experimental.component',

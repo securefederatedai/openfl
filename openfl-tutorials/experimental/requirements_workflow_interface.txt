@@ -1,3 +1,4 @@
+nbdev
 dill==0.3.6
 chardet
 charset-normalizer
