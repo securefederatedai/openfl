@@ -2,7 +2,6 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import os
-from copy import deepcopy
 from pathlib import Path
 from shutil import copytree
 from glob import glob
@@ -16,42 +15,100 @@ def convert_to_python(notebook_path: str, output_path: str):
 
 
 def build_tags_lib(script_path: Path, tags: dict):
-    tags_dict = deepcopy(tags)
-
     with open(script_path, "r") as f:
         for lineno, line in enumerate(f.readlines(), start=1):
             line = line.strip()
             if line != "" and line in tags.keys():
-                tags_dict[line].append(lineno)
+                tags[line].append(lineno)
             elif line != "" and line[:-3].strip() in tags.keys():
-                tags_dict[line[:-3].strip()].append(lineno)
+                tags[line[:-3].strip()].append(lineno)
 
-    return tags_dict
+
+def write_src_files(script_path: Path, workspace_dir: Path, tags: dict):
+    for value in tags:
+        filepath = workspace_dir.joinpath(value[0]).resolve()
+        if str(filepath).endswith("yaml"):
+            continue
+        line_ranges = value[1:]
+        lines_to_read = []
+        # Open the file and read lines
+        with open(script_path, 'r') as file:
+            current_range = None  # To keep track of the current range being processed
+
+            for i, line in enumerate(file):
+                if current_range is None:
+                    # Check if we are within a range
+                    if line_ranges and i == line_ranges[0]:
+                        current_range = (line_ranges.pop(0), line_ranges.pop(0))
+
+                if current_range is not None:
+                    lines_to_read.append(line)
+
+                    # Check if we've reached the end of the current range
+                    if i == current_range[1]:
+                        current_range = None
+
+        with open(filepath, "a") as f:
+            for line in lines_to_read:
+                f.write(line)
+
+
+def write_data_yaml(script_path: Path, workspace_dir: Path, tags: dict):
+    import ast
+
+    with open(script_path, "r") as f:
+        # Parse the code snippet using ast
+        tree = ast.parse(f.read())
+
+        # Extract the keyword arguments and their values passed to the Collaborator constructor
+        arguments_and_values = {}
+        for node in ast.walk(tree):
+            if (
+                isinstance(node, ast.Call)
+                and isinstance(node.func, ast.Name)
+                and node.func.id == 'Collaborator'
+            ):
+                for kw in node.keywords:
+                    argument = kw.arg
+                    value = None
+
+                    # Extract the value using a custom function
+                    if isinstance(kw.value, ast.NameConstant):
+                        value = kw.value.value
+                    elif isinstance(kw.value, ast.Num):
+                        value = kw.value.n
+                    elif isinstance(kw.value, ast.Str):
+                        value = kw.value.s
+
+                    arguments_and_values[argument] = value
+    print(arguments_and_values)
 
 
 def main(script_path: Path, workspace_output_dir: Path, template_workspace_dir: Path):
-    # tags = ["pip requirements", "Collaborator private attributes",
-    #         "Aggregator private attributes", "Flow Class", "n Collaborators",
-    #         "FLSpec object"]
     tags = {
-        "# Collaborator private attributes": ["collaborator_private_attrs.py", ],
-        "# Aggregator private attributes": ["aggregator_private_attrs.py", ],
+        "# Collaborator private attributes": ["src/collaborator_private_attrs.py", ],
+        "# Aggregator private attributes": ["src/aggregator_private_attrs.py", ],
         "# pip requirements": ["requirements.txt", ],
-        "# n Collaborators": ["data.yaml", ],
-        "# Flow Class": ["flow.py", ],
-        "# FLSpec object": ["plan.yaml", ],
+        "# n Collaborators": ["plan/data.yaml", ],
+        "# Flow Class": ["src/flow.py", ],
+        "# FLSpec object": ["plan/plan.yaml", ],
     }
 
-    python_script_path = workspace_output_dir.joinpath(f"{script_path.name}").resolve()
-    print(f"Copying workspace template to {python_script_path}...")
-    copytree(str(template_workspace_dir), str(python_script_path))
+    workspace_output_dir = workspace_output_dir.joinpath(f"{script_path.name}").resolve()
+    print(f"Copying workspace template to {workspace_output_dir}...")
+    copytree(str(template_workspace_dir), str(workspace_output_dir))
 
     print("Converting notebook to python script...")
-    python_script_path = convert_to_python(script_path, python_script_path)
+    python_script_path = convert_to_python(script_path, workspace_output_dir)
 
     print("Build tag libraries...")
-    tags_dict = build_tags_lib(python_script_path, tags)
-    print(tags_dict)
+    build_tags_lib(python_script_path, tags)
+
+    print("Finding objects...")
+    write_src_files(python_script_path, workspace_output_dir, list(tags.values()))
+
+    print("Writing data.yaml...")
+    write_data_yaml(python_script_path, workspace_output_dir, tags["# n Collaborators"])
 
 
 if __name__ == "__main__":
