@@ -117,11 +117,11 @@ if __name__ == "__main__":
     from argparse import ArgumentParser
 
     parser = ArgumentParser()
-    parser.add_argument("-l", required=True, type=str, help="Absolute path to jupyter notebook"
+    parser.add_argument("-l", required=True, type=str, help="Absolute path of jupyter notebook"
                         + " script")
     parser.add_argument("-o", required=True, type=str, help="Output directory for generated"
                         + " workspace")
-    parser.add_argument("-t", required=True, type=str, help="Absolute path to template workspace")
+    parser.add_argument("-t", required=True, type=str, help="Absolute path of template workspace")
 
     parsed_args = parser.parse_args()
 
@@ -130,7 +130,7 @@ if __name__ == "__main__":
     template_workspace_directory = Path(parsed_args.t).resolve()
 
     if not notebook_path.exists() and not notebook_path.is_file():
-        raise FileNotFoundError(f"Python script not found {str(notebook_path)}")
+        raise FileNotFoundError(f"Jupyter notebook not found: {str(notebook_path)}")
 
     workspace_output_directory.mkdir(parents=True, exist_ok=True)
 
