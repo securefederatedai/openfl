@@ -61,26 +61,28 @@ def write_data_yaml(script_path: Path, workspace_dir: Path, tags: dict):
         tree = ast.parse(f.read())
 
         # Extract the keyword arguments and their values passed to the Collaborator constructor
-        arguments_and_values = {}
+        arguments_and_values = {
+            "Collaborator": {}, "Aggregator": {}
+        }
         for node in ast.walk(tree):
             if (
                 isinstance(node, ast.Call)
                 and isinstance(node.func, ast.Name)
-                and node.func.id == 'Collaborator'
+                and (node.func.id == "Collaborator" or node.func.id == "Aggregator")
             ):
                 for kw in node.keywords:
                     argument = kw.arg
                     value = None
 
                     # Extract the value using a custom function
-                    if isinstance(kw.value, ast.NameConstant):
+                    if isinstance(kw.value, ast.NameConstant):  # Binary
                         value = kw.value.value
-                    elif isinstance(kw.value, ast.Num):
+                    elif isinstance(kw.value, ast.Num):  # Integer
                         value = kw.value.n
-                    elif isinstance(kw.value, ast.Str):
+                    elif isinstance(kw.value, ast.Str):  # String
                         value = kw.value.s
 
-                    arguments_and_values[argument] = value
+                    arguments_and_values[node.func.id][argument] = value
     print(arguments_and_values)
 
 
