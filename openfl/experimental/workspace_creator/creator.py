@@ -17,11 +17,11 @@ def convert_to_python(notebook_path: str, output_path: str):
 def build_tags_lib(script_path: Path, tags: dict):
     with open(script_path, "r") as f:
         for lineno, line in enumerate(f.readlines(), start=1):
-            line = line.strip()
-            if line != "" and line in tags.keys():
-                tags[line].append(lineno)
-            elif line != "" and line[:-3].strip() in tags.keys():
-                tags[line[:-3].strip()].append(lineno)
+            line = line.strip().lower()
+            if line != "" and line[:-6].strip() in tags.keys():
+                tags[line[:-6].strip()].append(lineno)
+            elif line != "" and line[:-4].strip() in tags.keys():
+                tags[line[:-4].strip()].append(lineno)
 
 
 def write_src_files(script_path: Path, workspace_dir: Path, tags: dict):
@@ -54,6 +54,16 @@ def write_src_files(script_path: Path, workspace_dir: Path, tags: dict):
 
 
 def write_data_yaml(script_path: Path, workspace_dir: Path, tags: dict):
+    filepath, line_ranges = workspace_dir.joinpath(tags[0]).resolve(), tags[1:]
+    with open(script_path, "r") as f:
+        lines_read = []
+        data = f.readlines()
+        for i in range(0, len(line_ranges), 2):
+            start, end = line_ranges[i], line_ranges[i + 1]
+            for line in data[start:end + 1]:
+                lines_read.append(line)
+    print(f"lines_read: {lines_read}")
+
     import ast
 
     with open(script_path, "r") as f:
@@ -81,6 +91,11 @@ def write_data_yaml(script_path: Path, workspace_dir: Path, tags: dict):
                         value = kw.value.n
                     elif isinstance(kw.value, ast.Str):  # String
                         value = kw.value.s
+                    else:
+                        if value is None and node.func.id == "Collaborator":
+                            value = "src.collaborator_private_attrs.<name of the variable>"  # TODO
+                        elif value is None and node.func.id == "Aggregator":
+                            value = "src.aggregator_private_attrs.<name of the variable>"  # TODO
 
                     arguments_and_values[node.func.id][argument] = value
     print(arguments_and_values)
@@ -88,12 +103,12 @@ def write_data_yaml(script_path: Path, workspace_dir: Path, tags: dict):
 
 def main(script_path: Path, workspace_output_dir: Path, template_workspace_dir: Path):
     tags = {
-        "# Collaborator private attributes": ["src/collaborator_private_attrs.py", ],
-        "# Aggregator private attributes": ["src/aggregator_private_attrs.py", ],
+        "# collaborator private attributes": ["src/collaborator_private_attrs.py", ],
+        "# aggregator private attributes": ["src/aggregator_private_attrs.py", ],
         "# pip requirements": ["requirements.txt", ],
-        "# n Collaborators": ["plan/data.yaml", ],
-        "# Flow Class": ["src/flow.py", ],
-        "# FLSpec object": ["plan/plan.yaml", ],
+        "# n collaborators": ["plan/data.yaml", ],
+        "# flow class": ["src/flow.py", ],
+        "# flspec object": ["plan/plan.yaml", ],
     }
 
     workspace_output_dir = workspace_output_dir.joinpath(f"{script_path.name}").resolve()
@@ -105,12 +120,13 @@ def main(script_path: Path, workspace_output_dir: Path, template_workspace_dir: 
 
     print("Build tag libraries...")
     build_tags_lib(python_script_path, tags)
+    print(tags)
 
-    print("Finding objects...")
-    write_src_files(python_script_path, workspace_output_dir, list(tags.values()))
+    # print("Finding objects...")
+    # write_src_files(python_script_path, workspace_output_dir, list(tags.values()))
 
-    print("Writing data.yaml...")
-    write_data_yaml(python_script_path, workspace_output_dir, tags["# n Collaborators"])
+    # print("Writing data.yaml...")
+    # write_data_yaml(python_script_path, workspace_output_dir, tags["# n collaborators"])
 
 
 if __name__ == "__main__":
