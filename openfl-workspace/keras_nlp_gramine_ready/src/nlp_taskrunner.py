@@ -70,5 +70,4 @@ class KerasNLP(KerasTaskRunner):
 
         self.model.summary(print_fn=self.logger.info)
 
-        if self.data_loader is not None:
-            self.logger.info(f'Train Set Size : {self.get_train_data_size()}')
+        self.logger.info(f'Train Set Size : {self.get_train_data_size()}')

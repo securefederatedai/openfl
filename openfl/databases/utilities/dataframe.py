@@ -34,7 +34,7 @@ def _search(self, tensor_name: str = None, origin: str = None,
             pd.DataFrame : New dataframe that matches the search query from
                            the tensor_db dataframe
     """
-    df = None
+    df = pd.DataFrame()
     query_string = []
     if tensor_name is not None:
         query_string.append(f"(tensor_name == '{tensor_name}')")
