@@ -463,22 +463,21 @@ class FederatedFlow(FLSpec):
                 last_iter=(batch_idx == (len(self.train_loader) - 1)),
             )
 
-            if self.dp_params is not None:
-                if batch_idx % self.dp_params["clip_frequency"] == 0 or (
-                    batch_idx == (len(self.train_loader) - 1)
-                ):
-                    if self.clip_test:
-                        optimizer_after_step_params = [
-                            param.data
-                            for param in self.optimizer.param_groups()[0]["params"]
-                        ]
-                        clip_testing_on_optimizer_parameters(
-                            optimizer_before_step_params,
-                            optimizer_after_step_params,
-                            self.collaborator_name,
-                            self.round,
-                            self.device,
-                        )
+            if batch_idx % self.dp_params["clip_frequency"] == 0 or (
+                batch_idx == (len(self.train_loader) - 1)
+            ):
+                if self.clip_test:
+                    optimizer_after_step_params = [
+                        param.data
+                        for param in self.optimizer.param_groups()[0]["params"]
+                    ]
+                    clip_testing_on_optimizer_parameters(
+                        optimizer_before_step_params,
+                        optimizer_after_step_params,
+                        self.collaborator_name,
+                        self.round,
+                        self.device,
+                    )
 
             train_losses.append(loss.item())
 
