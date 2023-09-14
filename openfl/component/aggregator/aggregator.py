@@ -834,10 +834,6 @@ class Aggregator:
                     'metric_value': agg_results.item(),
                     'round': round_number}
 
-                if agg_results is None:
-                    self.logger.warning(
-                        f'Aggregated metric {agg_tensor_name} could not be collected '
-                        f'for round {self.round_number}. Skipping reporting for this round')
                 if agg_function:
                     self.logger.metric(f'Round {round_number}, aggregator: {task_name} '
                                        f'{agg_function} {agg_tensor_name}:\t{agg_results:f}')
