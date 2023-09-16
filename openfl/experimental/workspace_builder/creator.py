@@ -2,6 +2,8 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import os
+import ast
+import yaml
 from pathlib import Path
 from shutil import copytree
 from glob import glob
@@ -54,26 +56,44 @@ def write_src_files(script_path: Path, workspace_dir: Path, tags: dict):
 
 
 def write_data_yaml(script_path: Path, workspace_dir: Path, tags: dict):
+    # Read code mentioned in between "# n collaborators starts/ends".
+    # write collaborator names with settings as empty dictionary, and template as None.
     filepath, line_ranges = workspace_dir.joinpath(tags[0]).resolve(), tags[1:]
     with open(script_path, "r") as f:
-        lines_read = []
+        last_line = None
         data = f.readlines()
         for i in range(0, len(line_ranges), 2):
             start, end = line_ranges[i], line_ranges[i + 1]
-            for line in data[start:end + 1]:
-                lines_read.append(line)
-    print(f"lines_read: {lines_read}")
+            for line in data[start:end]:
+                # Ignore commented lines
+                if line.strip() != "" and not line.strip().startswith("#"):
+                    # execute it to get list of collaborator names.
+                    exec(line)
+                    last_line = line
 
-    import ast
+    # last line of the code (ignoring the comments) in between "# n collaborators starts/ends",
+    # should be list of collaborators
+    list_of_collaborator_names = vars()[last_line.split('=')[0].strip()]
 
+    # Building dictionary for data.yaml
+    data = {}
+    for collab_name in list_of_collaborator_names:
+        data[collab_name] = {
+            "callable_func": {
+                "settings": {}, "template": None
+            }
+        }
+    data["aggregator"] = {
+        "callable_func": {
+            "settings": {}, "template": None
+        }
+    }
     with open(script_path, "r") as f:
         # Parse the code snippet using ast
         tree = ast.parse(f.read())
 
-        # Extract the keyword arguments and their values passed to the Collaborator constructor
-        arguments_and_values = {
-            "Collaborator": {}, "Aggregator": {}
-        }
+        # Extract the keyword arguments and their values passed to the
+        # Collaborator/Aggregator constructor
         for node in ast.walk(tree):
             if (
                 isinstance(node, ast.Call)
@@ -84,8 +104,11 @@ def write_data_yaml(script_path: Path, workspace_dir: Path, tags: dict):
                     argument = kw.arg
                     value = None
 
-                    # Extract the value using a custom function
-                    if isinstance(kw.value, ast.NameConstant):  # Binary
+                    if argument == "name" or argument == "num_cpus" or argument == "num_gpus":
+                        print(f"\tIgnoring argument {argument}...")
+                        continue
+                    # Extract the value
+                    if isinstance(kw.value, ast.NameConstant):  # Boolean
                         value = kw.value.value
                     elif isinstance(kw.value, ast.Num):  # Integer
                         value = kw.value.n
@@ -93,12 +116,25 @@ def write_data_yaml(script_path: Path, workspace_dir: Path, tags: dict):
                         value = kw.value.s
                     else:
                         if value is None and node.func.id == "Collaborator":
-                            value = "src.collaborator_private_attrs.<name of the variable>"  # TODO
+                            # TODO
+                            value = "src.collaborator_private_attrs.<name of the variable>"
                         elif value is None and node.func.id == "Aggregator":
-                            value = "src.aggregator_private_attrs.<name of the variable>"  # TODO
+                            # TODO
+                            value = "src.aggregator_private_attrs.<name of the variable>"
 
-                    arguments_and_values[node.func.id][argument] = value
-    print(arguments_and_values)
+                    for collab_name in list_of_collaborator_names:
+                        if node.func.id == "Collaborator":
+                            if argument == "private_attributes_callable":
+                                data[collab_name]["callable_func"]["template"] = value
+                            else:
+                                data[collab_name]["callable_func"]["settings"][argument] = value
+                        elif node.func.id == "Aggregator":
+                            if argument == "private_attributes_callable":
+                                data["aggregator"]["callable_func"]["template"] = value
+                            else:
+                                data["aggregator"]["callable_func"]["settings"][argument] = value
+    with open(filepath, "w") as f:
+        yaml.safe_dump(data, f)
 
 
 def main(script_path: Path, workspace_output_dir: Path, template_workspace_dir: Path):
@@ -118,15 +154,16 @@ def main(script_path: Path, workspace_output_dir: Path, template_workspace_dir: 
     print("Converting notebook to python script...")
     python_script_path = convert_to_python(script_path, workspace_output_dir)
 
-    print("Build tag libraries...")
+    print("Build tags library...")
     build_tags_lib(python_script_path, tags)
-    print(tags)
 
-    # print("Finding objects...")
-    # write_src_files(python_script_path, workspace_output_dir, list(tags.values()))
+    print("Writing python scripts for workspace...")
+    write_src_files(python_script_path, workspace_output_dir, list(tags.values()))
 
-    # print("Writing data.yaml...")
-    # write_data_yaml(python_script_path, workspace_output_dir, tags["# n collaborators"])
+    print("Writing data.yaml...")
+    write_data_yaml(python_script_path, workspace_output_dir, tags["# n collaborators"])
+
+    print("# TODO: Writing plan.yaml...")
 
 
 if __name__ == "__main__":
