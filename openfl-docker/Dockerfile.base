@@ -3,7 +3,7 @@
 
 # If your machine is behind a proxy, make sure you set it up in ~/.docker/config.json
 
-FROM ubuntu:22.10
+FROM ubuntu:22.04
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 ARG INSTALL_SOURCES="yes"
