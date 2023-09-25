@@ -169,10 +169,13 @@ A :code:`Runtime` defines where the flow will be executed, who the participants 
     for idx, collaborator_name in enumerate(collaborator_names):
         collaborators.append(
             Collaborator(
-                name=collaborator_name, num_cpus=0, num_gpus=0,
+                name=collaborator_name,
                 private_attributes_callable=callable_to_initialize_collaborator_private_attributes,
-                index=idx, n_collaborators=len(collaborator_names),
-                train_dataset=mnist_train, test_dataset=mnist_test, batch_size=64
+                index=idx, 
+                n_collaborators=len(collaborator_names),
+                train_dataset=mnist_train, 
+                test_dataset=mnist_test, 
+                batch_size=64
             )
         )
 
@@ -211,22 +214,50 @@ And that's it! This will run an instance of the :code:`FederatedFlow` on a singl
 Runtime Backends
 ================
 
-The Runtime defines where code will run, but the Runtime has a :code:`Backend` - which defines the underlying implementation of *how* the flow will be executed. :code:`'single_process'` is the default in the :code:`LocalRuntime`: it executes all code sequentially within a single python process, and is well suited to run both on high spec and low spec hardware. For users with large servers or multiple GPUs they wish to take advantage of, we also provide a `Ray <https://github.com/ray-project/ray>` backend. The Ray backend enables parallel task execution for collaborators, and optionally allows users to request dedicated GPUs for collaborator tasks in the placement decorator, as follows:
+The Runtime defines where code will run, but the Runtime has a :code:`Backend` - which defines the underlying implementation of *how* the flow will be executed. :code:`single_process` is the default in the :code:`LocalRuntime`: it executes all code sequentially within a single python process, and is well suited to run both on high spec and low spec hardware
+
+For users with large servers or multiple GPUs they wish to take advantage of, we also provide a "code:`ray` `<https://github.com/ray-project/ray>` backend. The Ray backend enables parallel task execution for collaborators, and optionally allows users to request dedicated CPU / GPUs for Participants by using the :code:`num_cpus`and :code:`num_gpus` arguments while instantiating the Participant in following manner:
 
 .. code-block:: python
     
-    ExampleDedicatedGPUFlow(FLSpec):
-        ...
-        # We request one dedicated GPU for this task 
-        @collaborator(num_gpus=1)
-        def training(self):
-            print(f'CUDA_VISIBLE_DEVICES: {os.environ["CUDA_VISIBLE_DEVICES"]}'))
-            self.loss = train_func(self.model, self.train_loader)
-            self.next(self.validation)    
-        ...
-    
+    # Aggregator
+    aggregator_ = Aggregator()
+
+    collaborator_names = ["Portland", "Seattle", "Chandler", "Bangalore"]
+
+    def callable_to_initialize_collaborator_private_attributes(index, n_collaborators, batch_size, train_dataset, test_dataset):
+        train = deepcopy(train_dataset)
+        test = deepcopy(test_dataset)
+        train.data = train_dataset.data[index::n_collaborators]
+        train.targets = train_dataset.targets[index::n_collaborators]
+        test.data = test_dataset.data[index::n_collaborators]
+        test.targets = test_dataset.targets[index::n_collaborators]
+
+        return {
+            "train_loader": torch.utils.data.DataLoader(train, batch_size=batch_size, shuffle=True),
+            "test_loader": torch.utils.data.DataLoader(test, batch_size=batch_size, shuffle=True),
+        }
+
+    # Setup collaborators private attributes via callable function
+    collaborators = []
+    for idx, collaborator_name in enumerate(collaborator_names):
+        collaborators.append(
+            Collaborator(
+                name=collaborator_name,
+                num_gpus=0.25, # Number of the GPU allocated to Participant
+                private_attributes_callable=callable_to_initialize_collaborator_private_attributes,
+                index=idx, 
+                n_collaborators=len(collaborator_names),
+                train_dataset=mnist_train, 
+                test_dataset=mnist_test, 
+                batch_size=64
+            )
+        )
+
      # The Ray Backend will now be used for local execution
      local_runtime = LocalRuntime(aggregator=aggregator, collaborators=collaborators, backend='ray')
+
+In the above example, we have used :code:`num_gpus=0.25` while instantiating Collaborator to specify that each participant shall use 1/4th of GPU - this results in one GPU being dedicated for a total of 4 collaborators. Users can tune these arguments based on their Federated Learning requirements and available hardware resources. Configurations where one Participant is shared across GPUs is not supported. For e.g. trying to run 5 participants on 2 GPU hardware with :code:`num_gpus=0.4` will not work since 80% of each GPU is allocated to 2 collaborators and 5th collaborator does not have any available GPU remaining for use
 
 Debugging with the Metaflow Client
 ==================================
