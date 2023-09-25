@@ -183,6 +183,7 @@ Let's break this down, starting with the :code:`Aggregator` and :code:`Collabora
 In the above :code:`FederatedFlow`, each collaborator accesses train and test datasets via *private attributes* :code:`train_loader` and :code:`test_loader`. These *private attributes* need to be set using a (user defined) callback function while instantiating the participant. Participant *private attributes* are returned by the callback function in form of a dictionary, where the key is the name of the attribute and the value is the object
 
 In this example callback function :code:`callable_to_initialize_collaborator_private_attributes()` returns the collaborator private attributes :code:`train_loader` and :code:`test_loader` respectively that are accessed by collaborator steps (:code:`aggregated_model_validation`, :code:`train` and :code:`local_model_validation`). Some important points to remember while creating callback function and private attributes are: 
+
    - Callback Function needs to  be defined by the user and should return the *private attributes* required by the participant in form of a dictionary value pair 
    - In above example multiple collaborators have the same callback function. Depending on the Federated Learning requirements, user can specify unique callback functions also for each Participant
    - Callback function can be provided with any parameters required as arguments. In this example, parameters essential for the callback function, namely 
