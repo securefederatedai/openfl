@@ -146,30 +146,55 @@ A :code:`Runtime` defines where the flow will be executed, who the participants 
 
 .. code-block:: python
     
-    # Setup participants
-    aggregator = Aggregator()
-    aggregator.private_attributes = {}
+    # Aggregator
+    aggregator_ = Aggregator()
 
-    # Setup collaborators with private attributes
-    collaborator_names = ['Portland', 'Seattle', 'Chandler','Bangalore']
-    collaborators = [Collaborator(name=name) for name in collaborator_names]
-    for idx, collaborator in enumerate(collaborators):
-        local_train = deepcopy(mnist_train)
-        local_test = deepcopy(mnist_test)
-        local_train.data = mnist_train.data[idx::len(collaborators)]
-        local_train.targets = mnist_train.targets[idx::len(collaborators)]
-        local_test.data = mnist_test.data[idx::len(collaborators)]
-        local_test.targets = mnist_test.targets[idx::len(collaborators)]
-        collaborator.private_attributes = {
-                'train_loader': torch.utils.data.DataLoader(local_train,batch_size=batch_size_train, shuffle=True),
-                'test_loader': torch.utils.data.DataLoader(local_test,batch_size=batch_size_train, shuffle=True)
+    collaborator_names = ["Portland", "Seattle", "Chandler", "Bangalore"]
+
+    def callable_to_initialize_collaborator_private_attributes(index, n_collaborators, batch_size, train_dataset, test_dataset):
+        train = deepcopy(train_dataset)
+        test = deepcopy(test_dataset)
+        train.data = train_dataset.data[index::n_collaborators]
+        train.targets = train_dataset.targets[index::n_collaborators]
+        test.data = test_dataset.data[index::n_collaborators]
+        test.targets = test_dataset.targets[index::n_collaborators]
+
+        return {
+            "train_loader": torch.utils.data.DataLoader(train, batch_size=batch_size, shuffle=True),
+            "test_loader": torch.utils.data.DataLoader(test, batch_size=batch_size, shuffle=True),
         }
 
-    # This is equivalent to:
-    # local_runtime = LocalRuntime(aggregator=aggregator, collaborators=collaborators, backend='single_process')
-    local_runtime = LocalRuntime(aggregator=aggregator, collaborators=collaborators)
+    # Setup collaborators private attributes via callable function
+    collaborators = []
+    for idx, collaborator_name in enumerate(collaborator_names):
+        collaborators.append(
+            Collaborator(
+                name=collaborator_name, num_cpus=0, num_gpus=0,
+                private_attributes_callable=callable_to_initialize_collaborator_private_attributes,
+                index=idx, n_collaborators=len(collaborator_names),
+                train_dataset=mnist_train, test_dataset=mnist_test, batch_size=64
+            )
+        )
 
-Let's break this down, starting with the :code:`Aggregator` and :code:`Collaborator` placeholders. These placeholders represent the nodes where tasks will be executed. Each participant placeholder has its own set of :code:`private_attributes`; a dictionary where the key is the name of the attribute, and the value is the object. In the above example, each of the four collaborators ('Portland', 'Seattle', 'Chandler', and 'Bangalore'), have a :code:`train_loader` and `test_loader` that they can access. These private attributes can be named anything, and do not necessarily need to be the same across each participant. 
+    local_runtime = LocalRuntime(aggregator=aggregator_, collaborators=collaborators)
+
+Let's break this down, starting with the :code:`Aggregator` and :code:`Collaborator` components that represent the Participants in Federated Learning. Each participant has its own set of *private attributes* that represent the information / data specific to its role or requirements. As the name suggests these *private attributes* are accessible only to the particular participant, and are appropriately inserted into current state when transferring from aggregator to collaborator and filtered out when transferring from collaborator to aggregator
+
+In the above :code:`FederatedFlow`, each collaborator accesses train and test datasets via *private attributes* :code:`train_loader` and :code:`test_loader` attributes in collaborator steps and need to be set using a (user defined) callback function while instantiating the participant. Participant *private attributes* are returned by the callback function in form of a dictionary, where the key is the name of the attribute and the value is the object
+
+In this example callback function :code:`callable_to_initialize_collaborator_private_attributes()` returns the collaborator private attributes :code:`train_loader` and :code:`test_loader` respectively that are accessed by collaborator steps (:code:`aggregated_model_validation`, :code:`train` and :code:`local_model_validation`). Some important points to remember while creating callback function and private attributes are: 
+   - Callback Function needs to  be defined by the user and should return the *private attributes* required by the participant in form of a dictionary value pair 
+   - In above example multiple collaborators have the same callback function. Depending on the Federated Learning requirements, user can specify unique callback functions also for each Participant
+   - Callback function can be provided with any parameters required as arguments. In this example, parameters essential for the callback function, namely 
+        * :code:`index`: Index of the particular collaborator needed to shard the dataset
+        * :code:`n_collaborators`: Total number of collaborators in which the dataset is sharded
+        * :code:`batch_size`: For the train and test loaders
+        * :code:`train_dataset`: Train Dataset to be sharded between n_collaborators 
+        * :code:`test_dataset`: Test Dataset to be sharded between n_collaborators
+    are supplied with corresponding values bearing *same names* during the instantiation of the Collaborator
+   - Callback function needs to be specified by user while instantiating the participant
+   - Callback function is invoked by the OpenFL runtime at the time participant is created and once created these attributes cannot be modified
+   - Private attributes are accessible only in the Participant steps
 
 Now let's see how the runtime for a flow is assigned, and the flow gets run:
 
