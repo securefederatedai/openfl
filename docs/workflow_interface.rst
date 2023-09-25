@@ -216,7 +216,7 @@ Runtime Backends
 
 The Runtime defines where code will run, but the Runtime has a :code:`Backend` - which defines the underlying implementation of *how* the flow will be executed. :code:`single_process` is the default in the :code:`LocalRuntime`: it executes all code sequentially within a single python process, and is well suited to run both on high spec and low spec hardware
 
-For users with large servers or multiple GPUs they wish to take advantage of, we also provide a "code:`ray` `<https://github.com/ray-project/ray>` backend. The Ray backend enables parallel task execution for collaborators, and optionally allows users to request dedicated CPU / GPUs for Participants by using the :code:`num_cpus`and :code:`num_gpus` arguments while instantiating the Participant in following manner:
+For users with large servers or multiple GPUs they wish to take advantage of, we also provide a :code:`ray` `<https://github.com/ray-project/ray>` backend. The Ray backend enables parallel task execution for collaborators, and optionally allows users to request dedicated CPU / GPUs for Participants by using the :code:`num_cpus` and :code:`num_gpus` arguments while instantiating the Participant in following manner:
 
 .. code-block:: python
     
@@ -226,18 +226,8 @@ For users with large servers or multiple GPUs they wish to take advantage of, we
     collaborator_names = ["Portland", "Seattle", "Chandler", "Bangalore"]
 
     def callable_to_initialize_collaborator_private_attributes(index, n_collaborators, batch_size, train_dataset, test_dataset):
-        train = deepcopy(train_dataset)
-        test = deepcopy(test_dataset)
-        train.data = train_dataset.data[index::n_collaborators]
-        train.targets = train_dataset.targets[index::n_collaborators]
-        test.data = test_dataset.data[index::n_collaborators]
-        test.targets = test_dataset.targets[index::n_collaborators]
-
-        return {
-            "train_loader": torch.utils.data.DataLoader(train, batch_size=batch_size, shuffle=True),
-            "test_loader": torch.utils.data.DataLoader(test, batch_size=batch_size, shuffle=True),
-        }
-
+        ... 
+        
     # Setup collaborators private attributes via callable function
     collaborators = []
     for idx, collaborator_name in enumerate(collaborator_names):
