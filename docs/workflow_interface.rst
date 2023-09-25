@@ -182,19 +182,20 @@ Let's break this down, starting with the :code:`Aggregator` and :code:`Collabora
 
 In the above :code:`FederatedFlow`, each collaborator accesses train and test datasets via *private attributes* :code:`train_loader` and :code:`test_loader`. These *private attributes* need to be set using a (user defined) callback function while instantiating the participant. Participant *private attributes* are returned by the callback function in form of a dictionary, where the key is the name of the attribute and the value is the object
 
-In this example callback function :code:`callable_to_initialize_collaborator_private_attributes()` returns the collaborator private attributes :code:`train_loader` and :code:`test_loader` respectively that are accessed by collaborator steps (:code:`aggregated_model_validation`, :code:`train` and :code:`local_model_validation`). Some important points to remember while creating callback function and private attributes are: 
+In this example callback function :code:`callable_to_initialize_collaborator_private_attributes()` returns the collaborator private attributes :code:`train_loader` and :code:`test_loader` that are accessed by collaborator steps (:code:`aggregated_model_validation`, :code:`train` and :code:`local_model_validation`). Some important points to remember while creating callback function and private attributes are: 
 
    - Callback Function needs to  be defined by the user and should return the *private attributes* required by the participant in form of a dictionary value pair 
-   - In above example multiple collaborators have the same callback function. Depending on the Federated Learning requirements, user can specify unique callback functions also for each Participant
-   - Callback function can be provided with any parameters required as arguments. In this example, parameters essential for the callback function, namely 
+   - In above example multiple collaborators have the same callback function. Depending on the Federated Learning requirements, user can specify unique callback functions for each Participant
+   - If no Callback Function is specified then the Participant shall not have any *private attributes*
+   - Callback function can be provided with any parameters required as arguments. In this example, parameters essential for the callback function are supplied with corresponding values bearing *same names* during the instantiation of the Collaborator
+
         * :code:`index`: Index of the particular collaborator needed to shard the dataset
         * :code:`n_collaborators`: Total number of collaborators in which the dataset is sharded
         * :code:`batch_size`: For the train and test loaders
         * :code:`train_dataset`: Train Dataset to be sharded between n_collaborators 
         * :code:`test_dataset`: Test Dataset to be sharded between n_collaborators
-    are supplied with corresponding values bearing *same names* during the instantiation of the Collaborator
-   - Callback function needs to be specified by user while instantiating the participant
-   - Callback function is invoked by the OpenFL runtime at the time participant is created and once created these attributes cannot be modified
+          
+   - Callback function needs to be specified by user while instantiating the participant. Callback function is invoked by the OpenFL runtime at the time participant is created and once created these attributes cannot be modified
    - Private attributes are accessible only in the Participant steps
 
 Now let's see how the runtime for a flow is assigned, and the flow gets run:
