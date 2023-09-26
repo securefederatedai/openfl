@@ -9,11 +9,11 @@ import os
 import sys
 import shutil
 import signal
-import subprocess #nosec
+import subprocess  # nosec
 import time
 from logging import getLogger
 from pathlib import Path
-from subprocess import check_call #nosec
+from subprocess import check_call  # nosec
 
 from click import confirm
 
