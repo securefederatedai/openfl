@@ -83,7 +83,7 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
             if not self.aggregator.valid_collaborator_cn_and_id(
                     common_name, collaborator_common_name):
                 # Random delay in authentication failures
-                sleep(5 * random()) #nosec
+                sleep(5 * random())  # nosec
                 context.abort(
                     StatusCode.UNAUTHENTICATED,
                     f'Invalid collaborator. CN: |{common_name}| '
