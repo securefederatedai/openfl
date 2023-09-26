@@ -241,6 +241,24 @@ class LocalRuntime(Runtime):
             for collaborator in collaborators
         }
 
+    def get_collaborator_kwargs(self, collaborator_name: str):
+        """
+        Returns kwargs of collaborator
+
+        Args:
+            collaborator_name: Collaborator name for which kwargs is to be returned
+
+        Returns:
+            kwargs: Collaborator private_attributes_callable function name, and
+             arguments required to call it.
+        """
+        collab = self.__collaborators[collaborator_name]
+        callable_name = collab.private_attributes_callable.__name__
+        kwargs = collab.kwargs
+        kwargs["private_attributes_callable"] = callable_name
+
+        return kwargs
+
     def initialize_aggregator(self):
         """initialize aggregator private attributes"""
         if self.backend == "single_process":

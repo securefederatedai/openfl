@@ -239,90 +239,52 @@ class WorkspaceBuilder:
         for t in self.available_modules_in_exported_script:
             t = getattr(self.exported_script_module, t)
             if isinstance(t, federated_flow_class):
-                collaborators_names = t._runtime.collaborators
+                runtime = t._runtime
+                collaborators_names = runtime.collaborators
                 break
-
-        if "collaborators_names" not in locals():
-            raise Exception(f"Unable to find {self.flow_class_name} instance")
 
         data_yaml = self.created_workspace_path.joinpath("plan", "data.yaml").resolve()
         data = self.__read_yaml(data_yaml)
         if data is None:
             data = {}
 
-        for collab_name in collaborators_names:
-            data[collab_name] = {
+        aggregator = runtime._aggregator
+        private_attrs_callable = aggregator.private_attributes_callable
+        if private_attrs_callable is not None:
+            data["aggregator"] = {
                 "callable_func": {
                     "settings": {},
-                    "template": ""
+                    "template": f"src.{self.script_name}.{private_attrs_callable.__name__}"
                 }
             }
-
-        def update_dictionary(args: dict, data: dict, expected_args: Any, args_passed_to_initialize: Any, component: str = "aggregator", dtype: str = "args"):
-            for idx, (k, v) in enumerate(args.items()):
-                if k in ("name", "num_cpus", "num_gpus"):
-                    continue
-                if dtype == "args":
-                    v = getattr(self.exported_script_module, k, None)
-                    if v != None and not isinstance(v, (int, str, bool)):
-                        v = f"src.{self.script_name}.{k}"
-                    k = expected_args[idx]
-                elif dtype == "kwargs":
-                    if v != None and not isinstance(v, (int, bool)) and v in dir(self.exported_script_module):
-                        v = getattr(self.exported_script_module,
-                                    args_passed_to_initialize["kwargs"][k])
-                        if not isinstance(v, (int, str, bool)):
-                            v = f"src.{self.script_name}.{args_passed_to_initialize['kwargs'][k]}"
-                    elif v != None and type(v) not in (int, bool) and v not in dir(self.exported_script_module):
-                        print(f"WARNING: This needs to double checked by user: {k, v}")
-                if k == "private_attributes_callable":
-                    data[component]["callable_func"]["template"] = v
+            arguments_passed_to_initialize = self.__extract_class_initializing_args("Aggregator")[
+                "kwargs"]
+            agg_kwargs = aggregator.kwargs
+            for key, value in agg_kwargs.items():
+                if isinstance(value, (int, str, bool)):
+                    data["aggregator"]["callable_func"]["settings"][key] = value
                 else:
-                    data[component]["callable_func"]["settings"].update({
-                        k: v
-                    })
+                    arg = arguments_passed_to_initialize[key]
+                    data["aggregator"]["callable_func"]["settings"][key] = f"src.{self.script_name}.{arg}"
 
-        self.aggregator_expected_arguments = self.__get_class_arguments("Aggregator")
-        self.arguments_passed_to_initialize = self.__extract_class_initializing_args("Aggregator")
-
-        pos_args = self.arguments_passed_to_initialize["args"]
-        if len(pos_args) > 0:
-            if "aggregator" not in data:
-                data["aggregator"] = {
-                    "callable_func": {
-                        "settings": {},
-                        "template": ""
-                    }
-                }
-            update_dictionary(pos_args, data, self.aggregator_expected_arguments, None,
-                              "aggregator", dtype="args")
-
-        kw_args = self.arguments_passed_to_initialize["kwargs"]
-        if len(kw_args) > 0:
-            if "aggregator" not in data:
-                data["aggregator"] = {
-                    "callable_func": {
-                        "settings": {},
-                        "template": ""
-                    }
-                }
-            update_dictionary(kw_args, data, self.aggregator_expected_arguments,
-                              self.arguments_passed_to_initialize, "aggregator", dtype="kwargs")
-
-        self.collaborator_expected_arguments = self.__get_class_arguments("Collaborator")
-        self.arguments_passed_to_initialize = self.__extract_class_initializing_args(
-            "Collaborator")
-
-        pos_args = self.arguments_passed_to_initialize["args"]
-        kw_args = self.arguments_passed_to_initialize["kwargs"]
-
+        arguments_passed_to_initialize = self.__extract_class_initializing_args("Collaborator")[
+            "kwargs"]
         for collab_name in collaborators_names:
-            if len(pos_args) > 0:
-                update_dictionary(pos_args, data, self.collaborator_expected_arguments, None,
-                                  collab_name, dtype="args")
-
-            if len(kw_args) > 0:
-                update_dictionary(kw_args, data, self.collaborator_expected_arguments,
-                                  self.arguments_passed_to_initialize, collab_name, dtype="kwargs")
+            if collab_name not in data:
+                data[collab_name] = {
+                    "callable_func": {
+                        "settings": {},
+                        "template": None
+                    }
+                }
+            kw_args = runtime.get_collaborator_kwargs(collab_name)
+            for key, value in kw_args.items():
+                if key == "private_attributes_callable":
+                    data[collab_name]["callable_func"]["template"] = f"src.{self.script_name}.{private_attrs_callable.__name__}"
+                elif isinstance(value, (int, str, bool)):
+                    data[collab_name]["callable_func"]["settings"][key] = value
+                else:
+                    arg = arguments_passed_to_initialize[key]
+                    data[collab_name]["callable_func"]["settings"][key] = f"src.{self.script_name}.{arg}"
 
         self.__write_yaml(data_yaml, data)
