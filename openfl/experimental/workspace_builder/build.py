@@ -280,7 +280,7 @@ class WorkspaceBuilder:
             kw_args = runtime.get_collaborator_kwargs(collab_name)
             for key, value in kw_args.items():
                 if key == "private_attributes_callable":
-                    data[collab_name]["callable_func"]["template"] = f"src.{self.script_name}.{private_attrs_callable.__name__}"
+                    data[collab_name]["callable_func"]["template"] = f"src.{self.script_name}.{value}"
                 elif isinstance(value, (int, str, bool)):
                     data[collab_name]["callable_func"]["settings"][key] = value
                 else:
