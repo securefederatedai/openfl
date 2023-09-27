@@ -30,12 +30,12 @@ class WorkspaceBuilder:
         self.created_workspace_path = Path(copytree(self.template_workspace_path,
                                                     self.output_dir.joinpath(self.notebook_path.name)))
         self.logger.info(f"Copied template workspace to {self.created_workspace_path}")
-        print_tree(self.created_workspace_path, level=2)
 
         self.logger.info("Converting jupter notebook to python script...")
         self.script_path = Path(self.__convert_to_python(
             self.notebook_path, self.created_workspace_path.joinpath("src"),
             f"{export_filename}.py")).resolve()
+        print_tree(self.created_workspace_path, level=2)
 
         self.script_name = self.script_path.name.split(".")[0].strip()
         self.__comment_flow_execution()
