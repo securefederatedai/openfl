@@ -656,7 +656,8 @@ if __name__ == "__main__":
     args = argparser.parse_args()
 
     # Setup participants
-    aggregator = Aggregator()
+    # Set `num_gpus=0.0` to `num_gpus=0.3` to run on GPU
+    aggregator = Aggregator(num_gpus=0.0)
 
     collaborator_names = ["Portland", "Seattle"]
 
@@ -777,7 +778,7 @@ if __name__ == "__main__":
                 name=collab_name,
                 private_attributes_callable=callable_to_initialize_collaborator_private_attributes,
                 # If 1 GPU is available in the machine
-                # Set `num_gpus=0.0` to `num_gpus=0.5` to run on GPU
+                # Set `num_gpus=0.0` to `num_gpus=0.3` to run on GPU
                 # with ray backend with 2 collaborators
                 num_cpus=0.0,
                 num_gpus=0.0,
