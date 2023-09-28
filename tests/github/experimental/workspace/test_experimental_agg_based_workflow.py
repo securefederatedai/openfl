@@ -8,7 +8,6 @@ import argparse
 from pathlib import Path
 from subprocess import check_call
 from concurrent.futures import ProcessPoolExecutor
-from sys import executable
 from openfl.utilities.utils import rmtree
 from tests.github.experimental.workspace.utils import create_collaborator
 from tests.github.experimental.workspace.utils import create_certified_workspace

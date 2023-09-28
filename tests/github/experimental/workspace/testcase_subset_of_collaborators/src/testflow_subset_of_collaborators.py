@@ -22,6 +22,7 @@ class TestFlowSubsetCollaborators(FLSpec):
     """
     Testflow to validate working of Subset Collaborators in Federated Flow.
     """
+
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
 
@@ -51,7 +52,8 @@ class TestFlowSubsetCollaborators(FLSpec):
         """
         set the collaborator name
         """
-        print(f"executing collaborator step test_valid_collaborators for collaborator {self.name}.")
+        print("executing collaborator step test_valid_collaborators for "
+              + f"collaborator {self.name}.")
         self.collaborator_ran = self.name
         self.next(self.join)
 
@@ -71,6 +73,7 @@ class TestFlowSubsetCollaborators(FLSpec):
         """
         print(f"End of the test case {TestFlowSubsetCollaborators.__name__} reached.")
         testcase()
+
 
 def testcase():
     tc_pass_fail = {
