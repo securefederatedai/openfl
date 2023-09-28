@@ -1,7 +1,6 @@
 # Copyright (C) 2020-2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-import os
 import yaml
 import ast
 import astor
@@ -22,7 +21,8 @@ class WorkspaceBuilder:
 
     Args:
         notebook_path: Absolute path of jupyter notebook.
-        export_filename: Name of python script to be converted (should be same as "#| default_exp").
+        export_filename: Name of python script to be converted
+        (should be same as "#| default_exp").
         output_dir: Output directory for new generated workspace.
         template_workspace_path: Path to template workspace provided with OpenFL.
 
@@ -39,8 +39,8 @@ class WorkspaceBuilder:
         self.template_workspace_path = Path(template_workspace_path).resolve()
 
         # Copy template workspace to output directory
-        self.created_workspace_path = Path(copytree(self.template_workspace_path,
-                                                    self.output_dir.joinpath(self.notebook_path.name)))
+        self.created_workspace_path = Path(copytree(
+            self.template_workspace_path, self.output_dir.joinpath(self.notebook_path.name)))
         self.logger.info(f"Copied template workspace to {self.created_workspace_path}")
 
         self.logger.info("Converting jupter notebook to python script...")
@@ -145,33 +145,34 @@ class WorkspaceBuilder:
             tree = ast.parse(s.read())
 
             for node in ast.walk(tree):
-                if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == class_name:
-                    # We found an instantiation of the class
-                    for arg in node.args:
-                        # Iterate through positional arguments
-                        if isinstance(arg, ast.Name):
-                            # Use the variable name as the argument value
-                            instantiation_args["args"][arg.id] = arg.id
-                        elif isinstance(arg, ast.Constant):
-                            instantiation_args["args"][arg.s] = astor.to_source(arg)
-                        else:
-                            instantiation_args["args"][arg.arg] = astor.to_source(arg).strip()
+                if isinstance(node, ast.Call) and isinstance(node.func, ast.Name):
+                    if node.func.id == class_name:
+                        # We found an instantiation of the class
+                        for arg in node.args:
+                            # Iterate through positional arguments
+                            if isinstance(arg, ast.Name):
+                                # Use the variable name as the argument value
+                                instantiation_args["args"][arg.id] = arg.id
+                            elif isinstance(arg, ast.Constant):
+                                instantiation_args["args"][arg.s] = astor.to_source(arg)
+                            else:
+                                instantiation_args["args"][arg.arg] = astor.to_source(arg).strip()
 
-                    for kwarg in node.keywords:
-                        # Iterate through keyword arguments
-                        value = astor.to_source(kwarg.value).strip()
+                        for kwarg in node.keywords:
+                            # Iterate through keyword arguments
+                            value = astor.to_source(kwarg.value).strip()
 
-                        # If paranthese or brackets around the value is found
-                        # and it's not tuple or list remove paranthese or brackets
-                        if value.startswith("(") and "," not in value:
-                            value = value.lstrip("(").rstrip(")")
-                        if value.startswith("[") and "," not in value:
-                            value = value.lstrip("[").rstrip("]")
-                        try:
-                            value = ast.literal_eval(value)
-                        except Exception:
-                            pass
-                        instantiation_args["kwargs"][kwarg.arg] = value
+                            # If paranthese or brackets around the value is found
+                            # and it's not tuple or list remove paranthese or brackets
+                            if value.startswith("(") and "," not in value:
+                                value = value.lstrip("(").rstrip(")")
+                            if value.startswith("[") and "," not in value:
+                                value = value.lstrip("[").rstrip("]")
+                            try:
+                                value = ast.literal_eval(value)
+                            except Exception:
+                                pass
+                            instantiation_args["kwargs"][kwarg.arg] = value
 
         return instantiation_args
 
@@ -246,7 +247,7 @@ class WorkspaceBuilder:
 
         plan = self.created_workspace_path.joinpath("plan", "plan.yaml").resolve()
         data = self.__read_yaml(plan)
-        if data == None:
+        if data is None:
             data["federated_flow"] = {
                 "settings": {},
                 "template": ""
@@ -258,11 +259,11 @@ class WorkspaceBuilder:
             for idx, (k, v) in enumerate(args.items()):
                 if dtype == "args":
                     v = getattr(self.exported_script_module, str(k), None)
-                    if v != None and type(v) not in (int, str, bool):
+                    if v is not None and type(v) not in (int, str, bool):
                         v = f"src.{self.script_name}.{k}"
                     k = self.flow_class_expected_arguments[idx]
                 elif dtype == "kwargs":
-                    if v != None and type(v) not in (int, str, bool):
+                    if v is not None and type(v) not in (int, str, bool):
                         v = f"src.{self.script_name}.{k}"
                 data["federated_flow"]["settings"].update({
                     k: v
@@ -327,7 +328,8 @@ class WorkspaceBuilder:
                     data["aggregator"]["callable_func"]["settings"][key] = value
                 else:
                     arg = arguments_passed_to_initialize[key]
-                    data["aggregator"]["callable_func"]["settings"][key] = f"src.{self.script_name}.{arg}"
+                    value = f"src.{self.script_name}.{arg}"
+                    data["aggregator"]["callable_func"]["settings"][key] = value
 
         # Find arguments expected by Collaborator
         arguments_passed_to_initialize = self.__extract_class_initializing_args("Collaborator")[
@@ -344,11 +346,13 @@ class WorkspaceBuilder:
             kw_args = runtime.get_collaborator_kwargs(collab_name)
             for key, value in kw_args.items():
                 if key == "private_attributes_callable":
-                    data[collab_name]["callable_func"]["template"] = f"src.{self.script_name}.{value}"
+                    value = f"src.{self.script_name}.{value}"
+                    data[collab_name]["callable_func"]["template"] = value
                 elif isinstance(value, (int, str, bool)):
                     data[collab_name]["callable_func"]["settings"][key] = value
                 else:
                     arg = arguments_passed_to_initialize[key]
-                    data[collab_name]["callable_func"]["settings"][key] = f"src.{self.script_name}.{arg}"
+                    value = f"src.{self.script_name}.{arg}"
+                    data[collab_name]["callable_func"]["settings"][key] = value
 
         self.__write_yaml(data_yaml, data)

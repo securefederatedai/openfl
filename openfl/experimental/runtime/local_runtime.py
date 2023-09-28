@@ -254,9 +254,10 @@ class LocalRuntime(Runtime):
         """
         collab = self.__collaborators[collaborator_name]
         kwargs = {}
-        if hasattr(collab, "private_attributes_callable") and collab.private_attributes_callable is not None:
-            kwargs.update(collab.kwargs)
-            kwargs["private_attributes_callable"] = collab.private_attributes_callable.__name__
+        if hasattr(collab, "private_attributes_callable"):
+            if collab.private_attributes_callable is not None:
+                kwargs.update(collab.kwargs)
+                kwargs["private_attributes_callable"] = collab.private_attributes_callable.__name__
 
         return kwargs
 
