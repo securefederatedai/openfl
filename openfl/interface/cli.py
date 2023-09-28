@@ -241,7 +241,7 @@ def entry():
     path.append(str(root))
     path.insert(0, str(work))
 
-    for module in root.glob('*.py'): # load command modules
+    for module in root.glob('*.py'):  # load command modules
 
         package = module.parent
         module = module.name.split('.')[0]

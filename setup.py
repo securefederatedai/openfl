@@ -52,9 +52,6 @@ class BuildPyGRPC(build_py):
 
     def __init__(self, dist):
         """Create a sub-command to execute."""
-        print("&"*40)
-        print(f"dist: {dist}")
-        print("&"*40)
         self.subcommand = BuildPackageProtos(dist)
         super().__init__(dist)
 
@@ -69,9 +66,6 @@ class DevelopGRPC(develop):
 
     def __init__(self, dist):
         """Create a sub-command to execute."""
-        print("&"*40)
-        print(f"dist: {dist}")
-        print("&"*40)
         self.subcommand = BuildPackageProtos(dist)
         super().__init__(dist)
 
