@@ -8,7 +8,6 @@ import astor
 import inspect
 import importlib
 
-from typing import Any
 from shutil import copytree
 from logging import getLogger
 from pathlib import Path
@@ -18,6 +17,19 @@ from openfl.experimental.interface.cli.cli_helper import print_tree
 
 
 class WorkspaceBuilder:
+    """
+    Convert a LocalRuntime Jupyter Notebook to Aggregator based FederatedRuntime Workflow.
+
+    Args:
+        notebook_path: Absolute path of jupyter notebook.
+        export_filename: Name of python script to be converted (should be same as "#| default_exp").
+        output_dir: Output directory for new generated workspace.
+        template_workspace_path: Path to template workspace provided with OpenFL.
+
+    Returns:
+        None
+    """
+
     def __init__(self, notebook_path: str, export_filename: str, ouput_dir: str,
                  template_workspace_path: str) -> None:
         self.logger = getLogger(__name__)
@@ -37,7 +49,9 @@ class WorkspaceBuilder:
             f"{export_filename}.py")).resolve()
         print_tree(self.created_workspace_path, level=2)
 
+        # Generated python script name without .py extension
         self.script_name = self.script_path.name.split(".")[0].strip()
+        # Comment flow.run() so when script is imported flow does not start executing
         self.__comment_flow_execution()
         # This is required as Ray created actors too many actors when backend="ray"
         self.__change_runtime()
@@ -48,6 +62,9 @@ class WorkspaceBuilder:
         return Path(output_path).joinpath(export_filename).resolve()
 
     def __comment_flow_execution(self):
+        """
+        In the python script search for ".run()" and comment it
+        """
         with open(self.script_path, "r+") as f:
             data = f.readlines()
         for idx, line in enumerate(data):
@@ -57,6 +74,9 @@ class WorkspaceBuilder:
             f.writelines(data)
 
     def __change_runtime(self):
+        """
+        Change the LocalRuntime backend from ray to single_process
+        """
         with open(self.script_path, "r") as f:
             data = f.read()
 
@@ -69,14 +89,20 @@ class WorkspaceBuilder:
             f.write(data)
 
     def __get_class_arguments(self, class_name):
+        """
+        Given the class name returns expected class arguments
+        """
+        # Import python script if not already
         if not hasattr(self, "exported_script_module"):
             self.__import_exported_script()
 
+        # Find class from imported python script module
         for idx, attr in enumerate(self.available_modules_in_exported_script):
             if attr == class_name:
                 cls = getattr(self.exported_script_module,
                               self.available_modules_in_exported_script[idx])
 
+        # If class not found
         if "cls" not in locals():
             raise Exception(f"{class_name} not found.")
 
@@ -84,16 +110,22 @@ class WorkspaceBuilder:
             # Check if the class has an __init__ method
             if "__init__" in cls.__dict__:
                 init_signature = inspect.signature(cls.__init__)
-                # Extract the parameter names (excluding 'self')
+                # Extract the parameter names (excluding 'self', 'args', and 'kwargs')
                 arg_names = [param for param in init_signature.parameters if param not in (
                     "self", "args", "kwargs")]
                 return arg_names
-        print(f"{cls} is not a class")
+            return []
+        self.logger.error(f"{cls} is not a class")
 
     def __get_class_name_and_sourcecode_from_parent_class(self, parent_class):
+        """
+        Provided the parent_class name returns derived class source code and name.
+        """
+        # Import python script if not already
         if not hasattr(self, "exported_script_module"):
             self.__import_exported_script()
 
+        # Going though all attributes in imported python script
         for attr in self.available_modules_in_exported_script:
             t = getattr(self.exported_script_module, attr)
             if inspect.isclass(t) and t != parent_class and issubclass(t, parent_class):
@@ -102,6 +134,9 @@ class WorkspaceBuilder:
         return None, None
 
     def __extract_class_initializing_args(self, class_name):
+        """
+        Provided name of the class returns expected arguments and it's values in form of dictionary
+        """
         instantiation_args = {
             "args": {}, "kwargs": {}
         }
@@ -125,6 +160,9 @@ class WorkspaceBuilder:
                     for kwarg in node.keywords:
                         # Iterate through keyword arguments
                         value = astor.to_source(kwarg.value).strip()
+
+                        # If paranthese or brackets around the value is found
+                        # and it's not tuple or list remove paranthese or brackets
                         if value.startswith("(") and "," not in value:
                             value = value.lstrip("(").rstrip(")")
                         if value.startswith("[") and "," not in value:
@@ -138,13 +176,15 @@ class WorkspaceBuilder:
         return instantiation_args
 
     def __import_exported_script(self):
+        """
+        Imports generated python script with help of importlib
+        """
+        import sys
         import importlib
 
-        current_dir = os.getcwd()
-        os.chdir(self.script_path.parent)
+        sys.path.append(self.script_path.parent)
         self.exported_script_module = importlib.import_module(self.script_name)
         self.available_modules_in_exported_script = dir(self.exported_script_module)
-        os.chdir(current_dir)
 
     def __read_yaml(self, path):
         with open(path, "r") as y:
@@ -157,6 +197,10 @@ class WorkspaceBuilder:
     # Have to do generate_requirements before anything else
     # because these !pip commands needs to be removed from python script
     def generate_requirements(self):
+        """
+        Finds pip libraries mentioned in exported python script and append in
+        workspace/requirements.txt
+        """
         data = None
         with open(self.script_path, "r") as f:
             requirements = []
@@ -166,7 +210,7 @@ class WorkspaceBuilder:
                 line = line.strip()
                 if "pip install" in line:
                     line_nos.append(i)
-                    # Avoid commented lines, installation from requirements.txt file, or openfl.git
+                    # Avoid commented lines, libraries from *.txt file, or openfl.git
                     # installation
                     if not line.startswith("#") and "-r" not in line and "openfl.git" not in line:
                         requirements.append(f"{line.split(' ')[-1].strip()}\n")
@@ -174,21 +218,29 @@ class WorkspaceBuilder:
         requirements_filepath = str(
             self.created_workspace_path.joinpath("requirements.txt").resolve())
 
+        # Write libraries found in requirements.txt
         with open(requirements_filepath, "a") as f:
             f.writelines(requirements)
 
         # Delete pip requirements from python script
+        # if not we won't be able to import python script.
         with open(self.script_path, "w") as f:
             for i, line in enumerate(data):
                 if i not in line_nos:
                     f.write(line)
 
     def generate_plan_yaml(self):
+        """
+        Generates plan.yaml
+        """
         flspec = getattr(
             importlib.import_module("openfl.experimental.interface"), "FLSpec"
         )
+        # Get flow classname
         _, self.flow_class_name = self.__get_class_name_and_sourcecode_from_parent_class(flspec)
+        # Get expected arguments of flow class
         self.flow_class_expected_arguments = self.__get_class_arguments(self.flow_class_name)
+        # Get provided arguments to flow class
         self.arguments_passed_to_initialize = self.__extract_class_initializing_args(
             self.flow_class_name)
 
@@ -216,17 +268,24 @@ class WorkspaceBuilder:
                     k: v
                 })
 
+        # Find positional arguments of flow class and it's values
         pos_args = self.arguments_passed_to_initialize["args"]
         update_dictionary(pos_args, data, dtype="args")
+        # Find kwargs of flow class and it's values
         kw_args = self.arguments_passed_to_initialize["kwargs"]
         update_dictionary(kw_args, data, dtype="kwargs")
 
         self.__write_yaml(plan, data)
 
     def generate_data_yaml(self):
+        """
+        Generates data.yaml
+        """
+        # Import python script if not already
         if not hasattr(self, "exported_script_module"):
             self.__import_exported_script()
 
+        # If flow classname is not yet found
         if not hasattr(self, "flow_class_name"):
             flspec = getattr(
                 importlib.import_module("openfl.experimental.interface"), "FLSpec"
@@ -234,8 +293,9 @@ class WorkspaceBuilder:
             _, self.flow_class_name = self.__get_class_name_and_sourcecode_from_parent_class(
                 flspec)
 
+        # Import flow class
         federated_flow_class = getattr(self.exported_script_module, self.flow_class_name)
-        # Find federated_flow._runtime.collaborators
+        # Find federated_flow._runtime and federated_flow._runtime.collaborators
         for t in self.available_modules_in_exported_script:
             t = getattr(self.exported_script_module, t)
             if isinstance(t, federated_flow_class):
@@ -248,6 +308,7 @@ class WorkspaceBuilder:
         if data is None:
             data = {}
 
+        # Find aggregator details
         aggregator = runtime._aggregator
         private_attrs_callable = aggregator.private_attributes_callable
         if private_attrs_callable is not None:
@@ -257,6 +318,7 @@ class WorkspaceBuilder:
                     "template": f"src.{self.script_name}.{private_attrs_callable.__name__}"
                 }
             }
+            # Find arguments expected by Aggregator
             arguments_passed_to_initialize = self.__extract_class_initializing_args("Aggregator")[
                 "kwargs"]
             agg_kwargs = aggregator.kwargs
@@ -267,6 +329,7 @@ class WorkspaceBuilder:
                     arg = arguments_passed_to_initialize[key]
                     data["aggregator"]["callable_func"]["settings"][key] = f"src.{self.script_name}.{arg}"
 
+        # Find arguments expected by Collaborator
         arguments_passed_to_initialize = self.__extract_class_initializing_args("Collaborator")[
             "kwargs"]
         for collab_name in collaborators_names:
@@ -277,6 +340,7 @@ class WorkspaceBuilder:
                         "template": None
                     }
                 }
+            # Find collaborator details
             kw_args = runtime.get_collaborator_kwargs(collab_name)
             for key, value in kw_args.items():
                 if key == "private_attributes_callable":
