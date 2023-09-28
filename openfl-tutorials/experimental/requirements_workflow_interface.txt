@@ -1,6 +1,7 @@
-nbdev
 dill==0.3.6
 chardet
 charset-normalizer
 metaflow==2.7.15
 ray==2.2.0
+nbdev==2.3.12
+astor==0.8.1
