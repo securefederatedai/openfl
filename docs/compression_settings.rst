@@ -33,13 +33,15 @@ The following are the compression pipelines supported in |productName|:
         - *Sparsity Transform* (p=0.1), which by default retains only the(p*100)% absolute values of greatest magnitude. 
         - *KMeans Transform* (k=6), which applies the KMeans algorithm to the sparse array with *k* centroids
         - *GZIP Transform*
-        
+
 ``KCPipeline``
     A **lossy** pipeline consisting of two transformations: 
     
         - *KMeans Transform* (k=6), which applies the KMeans algorithm to the original weight array with *k* centroids
         - *GZIP Transform* 
 
+``EdenPipeline``
+    A **lossy** unbiased compression. See `the paper <https://proceedings.mlr.press/v162/vargaftik22a.html>`_ for further details.
 
 Demonstration of a Compression Pipeline
 =======================================
