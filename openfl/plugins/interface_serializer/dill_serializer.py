@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 """Dill serializer plugin."""
 
-import dill
+import dill  # nosec
 
 from .serializer_interface import Serializer
 
@@ -24,4 +24,4 @@ class DillSerializer(Serializer):
     def restore_object(filename):
         """Load and deserialize an object."""
         with open(filename, 'rb') as f:
-            return dill.load(f)
+            return dill.load(f)  # nosec
