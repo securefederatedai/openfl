@@ -10,7 +10,7 @@ import sys
 import time
 from contextlib import contextmanager
 from pathlib import Path
-from subprocess import check_call
+from subprocess import check_call  # nosec
 from sys import executable
 from typing import Optional
 from typing import Tuple
