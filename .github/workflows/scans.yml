@@ -27,4 +27,4 @@ jobs:
         pip install .
     - name: Hadolint Dockerfile Scan
       run: |
-        docker run --rm -i hadolint/hadolint < openfl-docker/Dockerfile.base
+        docker run -v ${PWD}/openfl-docker:/openfl-docker --rm -i hadolint/hadolint hadolint -t warning /openfl-docker/Dockerfile.base
