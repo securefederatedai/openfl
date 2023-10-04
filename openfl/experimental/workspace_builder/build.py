@@ -183,7 +183,7 @@ class WorkspaceBuilder:
         import sys
         import importlib
 
-        sys.path.append(self.script_path.parent)
+        sys.path.append(str(self.script_path.parent))
         self.exported_script_module = importlib.import_module(self.script_name)
         self.available_modules_in_exported_script = dir(self.exported_script_module)
 
