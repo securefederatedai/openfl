@@ -3,6 +3,6 @@ torch==1.13.1
 torchvision==0.13.1
 opacus==1.2.0
 matplotlib==3.6.0
-pillow==9.3.0
+pillow==10.0.1
 pyyaml==6.0
 cloudpickle
