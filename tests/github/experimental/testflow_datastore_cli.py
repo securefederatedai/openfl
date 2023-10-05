@@ -91,7 +91,6 @@ class TestFlowDatastoreAndCli(FLSpec):
     """
     Testflow for Dataflow and CLI Functionality
     """
-
     def __init__(self, model=None, optimizer=None, rounds=3, **kwargs):
         super().__init__(**kwargs)
         if model is not None:
@@ -269,14 +268,12 @@ def validate_datastore_cli(flow_obj, expected_flow_steps, num_rounds):
     if validate_flow_error:
         display_validate_errors(validate_flow_error)
     else:
-        print(
-            f"""{Bcolors.OKGREEN}\n**** Summary of internal flow testing ****
+        print(f"""{Bcolors.OKGREEN}\n**** Summary of internal flow testing ****
               No issues found and below are the tests that ran successfully
               1. Datastore steps and expected steps are matching
               2. Task stdout and task stderr verified through metaflow cli is as expected
-              3. Number of tasks are aligned with number of rounds and number
-                 of collaborators {Bcolors.ENDC}"""
-        )
+              3. Number of tasks are aligned with number of rounds and number\
+                  of collaborators {Bcolors.ENDC}""")
 
 
 def display_validate_errors(validate_flow_error):
