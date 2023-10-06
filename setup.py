@@ -102,7 +102,7 @@ setup(
         'openfl.databases',
         'openfl.databases.utilities',
         'openfl.experimental',
-        'openfl.experimental.workspace_builder',
+        'openfl.experimental.workspace_export',
         'openfl.experimental.federated',
         'openfl.experimental.federated.plan',
         'openfl.experimental.component',
@@ -200,7 +200,7 @@ setup(
 
     ],
     entry_points={
-        'console_scripts': ['fx=openfl.interface.cli:entry',]
+        'console_scripts': ['fx=openfl.interface.cli:entry']
     },
     cmdclass={
         'build_py': BuildPyGRPC,

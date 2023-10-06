@@ -6,6 +6,7 @@ import sys
 import os
 from pathlib import Path
 from typing import Tuple
+from logging import getLogger
 
 from click import Choice
 from click import confirm
@@ -18,6 +19,8 @@ from click import Path as ClickPath
 
 from openfl.utilities.path_check import is_directory_traversal
 from openfl.utilities.workspace import dump_requirements_file
+
+logger = getLogger(__name__)
 
 
 @group()
@@ -71,27 +74,69 @@ def get_templates():
 @workspace.command(name='create')
 @option('--prefix', required=True,
         help='Workspace name or path', type=ClickPath())
-@option('--custom_template', required=False, type=ClickPath(exists=True))
+@option('--custom_template', required=False,
+        help='Path to custom template', type=ClickPath(exists=True))
+@option('--notebook', required=False,
+        help='Path to jupyter notebook', type=ClickPath(exists=True))
+@option('--template_output_dir', required=False, default="/tmp/",
+        help='Destination directory to save your Jupyter Notebook workspace default=/tmp.',
+        type=ClickPath(exists=True))
 @option('--template', required=False, type=Choice(get_templates()))
-def create_(prefix, custom_template, template):
+def create_(prefix, custom_template, template, notebook, template_output_dir):
     """Create the experimental workspace."""
     if is_directory_traversal(prefix):
         echo('Workspace name or path is out of the openfl workspace scope.')
         sys.exit(1)
 
-    if custom_template and template:
+    if custom_template and template and notebook:
         raise ValueError(
-            'Please provide either custom_template or template, not both.'
+            'Please provide either `template`, `custom_template` or '
+            + '`notebook`. Not all are necessary'
+        )
+    elif (
+            (custom_template and template)
+            or (template and notebook)
+            or (custom_template and notebook)):
+        raise ValueError(
+            'Please provide only one of the following options: '
+            + '`template`, `custom_template`, or `notebook`.'
         )
 
-    if not custom_template and not template:
+    if not (custom_template or template or notebook):
         raise ValueError(
-            'Please provide either custom_template or template.'
+            'Please provide one of the following options: '
+            + '`template`, `custom_template`, or `notebook`.'
         )
 
-    template = Path(custom_template).resolve() if custom_template else template
+    if notebook:
+        if not template_output_dir:
+            raise ValueError(
+                'Please provide output_dir which is Destination directory to '
+                + 'save your Jupyter Notebook workspace.'
+            )
 
-    create(prefix, template)
+        from openfl.experimental.workspace_export import WorkspaceExport
+        from openfl.experimental.interface.cli.cli_helper import WORKSPACE
+
+        template_workspace_path = WORKSPACE / 'template_workspace'
+        WorkspaceExport.export(
+            notebook_path=notebook, output_dir=template_output_dir,
+            template_workspace_path=template_workspace_path
+        )
+
+        create(prefix, os.path.join(template_output_dir, os.path.basename(notebook)))
+
+        logger.warning(
+            'The user should review the generated workspace for completeness '
+            + 'before proceeding')
+
+    else:
+        template = (
+            Path(custom_template).resolve()
+            if custom_template
+            else template
+        )
+        create(prefix, template)
 
 
 def create(prefix, template):

@@ -1,11 +1,14 @@
 # Copyright (C) 2020-2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+"""Workspace Builder module."""
 
+import re
 import yaml
 import ast
 import astor
 import inspect
 import importlib
+import nbformat
 
 from shutil import copytree
 from logging import getLogger
@@ -15,27 +18,26 @@ from nbdev.export import nb_export
 from openfl.experimental.interface.cli.cli_helper import print_tree
 
 
-class WorkspaceBuilder:
+class WorkspaceExport:
     """
     Convert a LocalRuntime Jupyter Notebook to Aggregator based FederatedRuntime Workflow.
 
     Args:
         notebook_path: Absolute path of jupyter notebook.
-        export_filename: Name of python script to be converted
-        (should be same as "#| default_exp").
-        output_dir: Output directory for new generated workspace.
         template_workspace_path: Path to template workspace provided with OpenFL.
+        output_dir: Output directory for new generated workspace (default="/tmp").
 
     Returns:
         None
     """
-
-    def __init__(self, notebook_path: str, export_filename: str, ouput_dir: str,
-                 template_workspace_path: str) -> None:
+    def __init__(self,
+                 notebook_path: str,
+                 template_workspace_path: str,
+                 output_dir: str = "/tmp") -> None:
         self.logger = getLogger(__name__)
 
         self.notebook_path = Path(notebook_path).resolve()
-        self.output_dir = Path(ouput_dir).resolve()
+        self.output_dir = Path(output_dir).resolve()
         self.template_workspace_path = Path(template_workspace_path).resolve()
 
         # Copy template workspace to output directory
@@ -44,6 +46,7 @@ class WorkspaceBuilder:
         self.logger.info(f"Copied template workspace to {self.created_workspace_path}")
 
         self.logger.info("Converting jupter notebook to python script...")
+        export_filename = self.__get_exp_name()
         self.script_path = Path(self.__convert_to_python(
             self.notebook_path, self.created_workspace_path.joinpath("src"),
             f"{export_filename}.py")).resolve()
@@ -56,6 +59,20 @@ class WorkspaceBuilder:
         # This is required as Ray created actors too many actors when backend="ray"
         self.__change_runtime()
 
+    def __get_exp_name(self):
+        """Fetch the experiment name from the Jupyter notebook."""
+        with open(str(self.notebook_path), "r") as f:
+            notebook_content = nbformat.read(f, as_version=nbformat.NO_CONVERT)
+
+        for cell in notebook_content.cells:
+            if cell.cell_type == "code":
+                code = cell.source
+                match = re.search(r"#\s*\|\s*default_exp\s+(\w+)", code)
+                if match:
+                    self.logger.info(f"Retrieved {match.group(1)} from default_exp")
+                    return match.group(1)
+        return None
+
     def __convert_to_python(self, notebook_path: Path, output_path: Path, export_filename):
         nb_export(notebook_path, output_path)
 
@@ -65,7 +82,7 @@ class WorkspaceBuilder:
         """
         In the python script search for ".run()" and comment it
         """
-        with open(self.script_path, "r+") as f:
+        with open(self.script_path, "r") as f:
             data = f.readlines()
         for idx, line in enumerate(data):
             if ".run()" in line:
@@ -195,6 +212,26 @@ class WorkspaceBuilder:
         with open(path, "w") as y:
             yaml.safe_dump(data, y)
 
+    @classmethod
+    def export(cls, notebook_path: str, template_workspace_path: str,
+               output_dir: str = "/tmp") -> None:
+        """
+        Exports workspace to `output_dir`.
+
+        Args:
+            notebook_path: Jupyter notebook path.
+            output_dir: Path for generated workspace directory.
+            template_workspace_path: Path to template workspace provided with OpenFL
+            (default="/tmp").
+
+        Returns:
+            None
+        """
+        instance = cls(notebook_path, template_workspace_path, output_dir)
+        instance.generate_requirements()
+        instance.generate_plan_yaml()
+        instance.generate_data_yaml()
+
     # Have to do generate_requirements before anything else
     # because these !pip commands needs to be removed from python script
     def generate_requirements(self):
@@ -300,7 +337,11 @@ class WorkspaceBuilder:
         for t in self.available_modules_in_exported_script:
             t = getattr(self.exported_script_module, t)
             if isinstance(t, federated_flow_class):
+                if not hasattr(t, "_runtime"):
+                    raise Exception("Unable to locate LocalRuntime instantiation")
                 runtime = t._runtime
+                if not hasattr(runtime, "collaborators"):
+                    raise Exception("LocalRuntime instance does not have collaborators")
                 collaborators_names = runtime.collaborators
                 break
 
