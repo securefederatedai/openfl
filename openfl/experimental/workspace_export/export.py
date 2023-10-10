@@ -32,17 +32,20 @@ class WorkspaceExport:
     """
     def __init__(self,
                  notebook_path: str,
-                 template_workspace_path: str,
-                 output_dir: str = "/tmp") -> None:
+                 output_workspace: str) -> None:
         self.logger = getLogger(__name__)
 
         self.notebook_path = Path(notebook_path).resolve()
-        self.output_dir = Path(output_dir).resolve()
-        self.template_workspace_path = Path(template_workspace_path).resolve()
+        self.output_workspace_path = Path(output_workspace).resolve()
+        self.output_workspace_path.parent.mkdir(parents=True, exist_ok=True)
+
+        self.template_workspace_path = Path(f"{__file__}").parent.parent.parent.parent.joinpath(
+            "openfl-workspace", "experimental", "template_workspace"
+        ).resolve(strict=True)
 
         # Copy template workspace to output directory
         self.created_workspace_path = Path(copytree(
-            self.template_workspace_path, self.output_dir.joinpath(self.notebook_path.name)))
+            self.template_workspace_path, self.output_workspace_path))
         self.logger.info(f"Copied template workspace to {self.created_workspace_path}")
 
         self.logger.info("Converting jupter notebook to python script...")
@@ -213,8 +216,7 @@ class WorkspaceExport:
             yaml.safe_dump(data, y)
 
     @classmethod
-    def export(cls, notebook_path: str, template_workspace_path: str,
-               output_dir: str = "/tmp") -> None:
+    def export(cls, notebook_path: str, output_workspace: str) -> None:
         """
         Exports workspace to `output_dir`.
 
@@ -227,7 +229,7 @@ class WorkspaceExport:
         Returns:
             None
         """
-        instance = cls(notebook_path, template_workspace_path, output_dir)
+        instance = cls(notebook_path, output_workspace)
         instance.generate_requirements()
         instance.generate_plan_yaml()
         instance.generate_data_yaml()

@@ -78,9 +78,9 @@ def get_templates():
         help='Path to custom template', type=ClickPath(exists=True))
 @option('--notebook', required=False,
         help='Path to jupyter notebook', type=ClickPath(exists=True))
-@option('--template_output_dir', required=False, default="/tmp/",
-        help='Destination directory to save your Jupyter Notebook workspace default=/tmp.',
-        type=ClickPath(exists=True))
+@option('--template_output_dir', required=False,
+        help='Destination directory to save your Jupyter Notebook workspace.',
+        type=ClickPath(exists=False, file_okay=False, dir_okay=True))
 @option('--template', required=False, type=Choice(get_templates()))
 def create_(prefix, custom_template, template, notebook, template_output_dir):
     """Create the experimental workspace."""
@@ -111,25 +111,21 @@ def create_(prefix, custom_template, template, notebook, template_output_dir):
     if notebook:
         if not template_output_dir:
             raise ValueError(
-                'Please provide output_dir which is Destination directory to '
+                'Please provide output_workspace which is Destination directory to '
                 + 'save your Jupyter Notebook workspace.'
             )
 
         from openfl.experimental.workspace_export import WorkspaceExport
-        from openfl.experimental.interface.cli.cli_helper import WORKSPACE
 
-        template_workspace_path = WORKSPACE / 'template_workspace'
         WorkspaceExport.export(
-            notebook_path=notebook, output_dir=template_output_dir,
-            template_workspace_path=template_workspace_path
+            notebook_path=notebook, output_workspace=template_output_dir,
         )
 
-        create(prefix, os.path.join(template_output_dir, os.path.basename(notebook)))
+        create(prefix, template_output_dir)
 
         logger.warning(
             'The user should review the generated workspace for completeness '
             + 'before proceeding')
-
     else:
         template = (
             Path(custom_template).resolve()
