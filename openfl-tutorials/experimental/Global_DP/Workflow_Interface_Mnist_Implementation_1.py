@@ -618,7 +618,8 @@ if __name__ == "__main__":
         device = torch.device("cpu")
 
     # Setup participants
-    aggregator = Aggregator()
+    # Set `num_gpus=0.09` to `num_gpus=0.0` in order to run this tutorial on CPU
+    aggregator = Aggregator(num_gpus=0.09)  # Assuming GPU(s) is available in the machine
 
     # Collaborator names
     collaborator_names = [
@@ -659,9 +660,9 @@ if __name__ == "__main__":
             Collaborator(
                 name=collaborator_name,
                 private_attributes_callable=callable_to_initialize_collaborator_private_attributes,
-                # Set `num_gpus=0.1` to `num_gpus=0.0` in order to run this tutorial on CPU
+                # Set `num_gpus=0.09` to `num_gpus=0.0` in order to run this tutorial on CPU
                 num_cpus=0.0,
-                num_gpus=0.1,  # Assuming GPU(s) is available in the machine
+                num_gpus=0.09,  # Assuming GPU(s) is available in the machine
                 index=idx,
                 n_collaborators=len(collaborator_names),
                 batch_size=batch_size_train,
