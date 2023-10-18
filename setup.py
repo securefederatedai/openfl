@@ -80,12 +80,12 @@ with open('README.md', encoding='utf-8') as f:
 
 setup(
     name='openfl',
-    version='1.5',
+    version='1.5.1',
     author='Intel Corporation',
     description='Federated Learning for the Edge',
     long_description=long_description,
     long_description_content_type='text/markdown',
-    url='https://github.com/intel/openfl',
+    url='https://github.com/securefederatedai/openfl',
     packages=[
         'openfl',
         'openfl.component',
