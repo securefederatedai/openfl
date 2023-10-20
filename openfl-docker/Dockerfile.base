@@ -10,10 +10,12 @@ ARG INSTALL_SOURCES="yes"
 
 WORKDIR /zlib
 #zlib install to 1.2.13
-RUN apt-get update && apt-get install -y --no-install-recommends wget build-essential
+RUN apt-get update && apt-get install -y --no-install-recommends --fix-missing wget build-essential
 RUN wget --no-check-certificate https://github.com/madler/zlib/archive/refs/tags/v1.2.13.tar.gz && tar -xvf ./v1.2.13.tar.gz && cd zlib-1.2.13 && ./configure --prefix=/usr && make && make install
 RUN rm -rf zlib-1.2.13 && rm -rf v1.2.13.tar.gz
-#RUN apt-get -y remove wget build-essential
+RUN apt-get remove --purge -y wget build-essential && \
+    apt-get autoclean -y && \
+    apt-get auto-remove -y
 
 WORKDIR /thirdparty
 
@@ -21,7 +23,7 @@ RUN dpkg --get-selections | grep -v deinstall | awk '{print $1}' > base_packages
     rm -rf /var/lib/apt/lists/*
 
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
+    apt-get install -y --no-install-recommends --fix-missing \
         openssh-server=\* \
         python3.10=\* \
         python3-distutils=\* \
