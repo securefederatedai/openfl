@@ -309,7 +309,7 @@ def get_dataset(base_model_name = "roberta-base", padding_side = "right"):
 
 def main():
     args = get_arguments()
-    fx.init('torch_cnn_mnist')
+    fx.init('torch_llm')
     base_model_name = "roberta-base"
     padding_side = "right"
     fl_data = get_dataset(base_model_name, padding_side)
