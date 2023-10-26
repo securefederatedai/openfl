@@ -284,6 +284,10 @@ class LLMTaskRunner(PyTorchTaskRunner):
 
 def get_arguments():
     parser = argparse.ArgumentParser()
+    parser.add_argument("--local_rank",
+                        type=int,
+                        default=-1,
+                        help="local_rank for distributed training on gpus")
     # Include DeepSpeed configuration arguments
     parser = deepspeed.add_config_arguments(parser)
 

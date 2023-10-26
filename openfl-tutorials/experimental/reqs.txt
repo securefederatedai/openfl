@@ -1,3 +1,4 @@
+-i https://download.pytorch.org/whl/cu113
 openfl @ git+https://github.com/psfoley/openfl@develop
 sentencepiece
 accelerate
