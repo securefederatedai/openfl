@@ -10,7 +10,58 @@ For example: HPU_pytorch_tinyimagenet.ipynb placed under workspace folder contai
 
  <br/>
 
- ## **I. AWS DL1 Instance Setup**
+
+ ## **I. Intel Developer Cloud Setup**
+This example was test on the Intel Developer Cloud utilizing Gaudi2 instance. 
+
+For accessing the Gaudi2 instances on the Intel Developer Cloud follow the instructions [here](https://developer.habana.ai/intel-developer-cloud/)
+
+The Gaudi instance in the Intel Developer Cloud comes SynapseAI SW Stack for Gaudi2 installed. Skip sections (**II. , III.***)
+
+Further more our testing was done using the habana based Docker container built using the following Dockerfile base:
+
+```
+
+FROM vault.habana.ai/gaudi-docker/1.10.0/ubuntu20.04/habanalabs/pytorch-installer-2.0.1/latest
+
+ENV HABANA_VISIBLE_DEVICES=all
+ENV OMPI_MCA_btl_vader_single_copy_mechanism=none
+
+```
+
+This base container comes with HPU Pytorch packages already installed.  Hence you could skip step: **IV.** below. 
+
+Build the above container and then launch it using:
+
+```
+docker run  --net host -id --name openfl_gaudi_run  Container_Image bash
+```
+
+Then access the container bash shell using:
+
+```
+docker exec -it openfl_gaudi_run bash
+
+```
+
+Once inside the container, clone the openfl repo using:
+
+```
+https://github.com/securefederatedai/openfl.git
+```
+
+Then install the openfl package:
+
+```
+pip install openfl
+```
+
+Then follow instruction in section **V. HPU Adaptations For PyTorch Examples** below.
+
+
+<br/>
+
+ ## **II. AWS DL1 Instance Setup**
 
  This example was tested on AWS EC2 instance created by following the instructions mentioned [here](https://docs.habana.ai/en/latest/AWS_EC2_DL1_and_PyTorch_Quick_Start/AWS_EC2_DL1_and_PyTorch_Quick_Start.html) . 
  
@@ -18,7 +69,7 @@ For example: HPU_pytorch_tinyimagenet.ipynb placed under workspace folder contai
 
  <br/>
 
- ## **II. Set Up SynapseAI SW Stack**
+ ## **III. Set Up SynapseAI SW Stack**
 
  - To perform an installation of the full driver and SynapseAI software stack independently on the EC2 instance, run the following command:
  
@@ -33,7 +84,7 @@ You can refer the [Habana docs](https://docs.habana.ai/en/latest/Installation_Gu
 
 <br/>
 
- ## **III. HPU Pytorch Installation**
+ ## **IV. HPU Pytorch Installation**
 
  For this example make sure to install the PyTorch package provided by Habana. These packages are optimized for Habana Gaudi HPU. Installing public PyTorch packages is not supported.
  Habana PyTorch packages consist of:
@@ -69,7 +120,7 @@ The default virtual environment folder is $HOME/habanalabs-venv. To override the
 
  </br>
 
- ## **IV. HPU Adaptations For PyTorch Examples**
+ ## **V. HPU Adaptations For PyTorch Examples**
 
 The following set of code additions are required in the workspace notebook to run a model on Habana. The following steps cover Eager and Lazy modes of execution.
 
@@ -113,7 +164,7 @@ Refer [getting started with PyTorch](https://www.intel.com/content/www/us/en/dev
 <br/>
 
 
-## **V. How to run this tutorial (without TLS and locally as a simulation):**
+## **VI. How to run this tutorial (without TLS and locally as a simulation):**
 <br/>
 
 ### 0. If you haven't done so already, install OpenFL in the virtual environment created during Habana setup, and upgrade pip:
