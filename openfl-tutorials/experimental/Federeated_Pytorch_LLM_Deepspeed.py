@@ -316,7 +316,7 @@ def main():
                 LLMTaskRunner(
                     base_model_name,
                     data_loader=data_slice,
-                    metric=metric, args
+                    metric=metric, args=args
                 )
                 for data_slice in fl_data.split(num_collaborators)]
     collaborators = {'one':collaborator_models[0],'two':collaborator_models[1]}#, 'three':collaborator_models[2]}
