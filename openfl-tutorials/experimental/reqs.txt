@@ -1,6 +1,6 @@
 openfl @ git+https://github.com/psfoley/openfl@develop
 sentencepiece
-torch==1.12.1+cu113
+torch==2.0.0
 accelerate
 jupyter
 huggingface_hub
