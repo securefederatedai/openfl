@@ -1,4 +1,4 @@
-openfl @ https://github.com/psfoley/openfl.git
+openfl @ git+https://github.com/psfoley/openfl@develop
 sentencepiece
 accelerate
 jupyter
