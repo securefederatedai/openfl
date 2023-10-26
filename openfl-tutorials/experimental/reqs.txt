@@ -1,6 +1,7 @@
--i https://download.pytorch.org/whl/cu113
 openfl @ git+https://github.com/psfoley/openfl@develop
 sentencepiece
+-i https://download.pytorch.org/whl/cu113
+torch==1.12.1+cu113
 accelerate
 jupyter
 huggingface_hub
