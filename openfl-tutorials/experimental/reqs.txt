@@ -1,0 +1,12 @@
+openfl @ https://github.com/psfoley/openfl.git
+sentencepiece
+accelerate
+jupyter
+huggingface_hub
+peft
+transformers
+datasets
+evaluate
+seqeval
+torchvision
+
