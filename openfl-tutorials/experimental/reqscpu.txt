@@ -1,4 +1,5 @@
 sentencepiece
+torch==2.0.0
 accelerate
 jupyter
 huggingface_hub
@@ -9,5 +10,4 @@ evaluate
 seqeval
 torchvision
 deepspeed
--i https://download.pytorch.org/whl/cu113
-torch==1.12.1+cu113
+cpu-only
