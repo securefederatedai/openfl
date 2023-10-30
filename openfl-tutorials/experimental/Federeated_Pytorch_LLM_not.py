@@ -86,10 +86,10 @@ class GlueMrpcFederatedDataset(DataLoader):
         return self.train_set.get_shape()
     
     def get_train_loader(self, num_batches=None):
-        return DataLoader(self.train_set, batch_size=self.batch_size, collate_fn=data_collator)
+        return DataLoader(self.train_set, batch_size=self.batch_size, collate_fn=self.data_collator)
     
     def get_valid_loader(self):
-        return DataLoader(self.valid_set, batch_size=self.batch_size, collate_fn=data_collator)
+        return DataLoader(self.valid_set, batch_size=self.batch_size, collate_fn=self.data_collator)
     
     def get_train_data_size(self):
         return len(self.train_set)
