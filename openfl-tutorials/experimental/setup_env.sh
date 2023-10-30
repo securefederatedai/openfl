@@ -1,10 +1,8 @@
-vname=meta-env
-rm -rf ~/workspace/$vname
-python3.8 -m venv ~/workspace/$vname
-
-source ~/workspace/$vname/bin/activate
-pip install -U pip --no-cache
-pip install -r reqstorch.txt
+conda remove -n speed --all -y
+conda create -n speed pytorch torchvision torchaudio pytorch-cuda=11.8 -c pytorch -c nvidia
+conda install -c nvidia cuda-compiler
+source /home/oamontoy/miniconda3/bin/activate speed 
+pip install -U pip
 #pip install -r reqs.txt
 #cd ../..
 #pip install .

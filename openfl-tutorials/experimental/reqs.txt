@@ -7,5 +7,4 @@ transformers
 datasets
 evaluate
 seqeval
-torchvision
 deepspeed
