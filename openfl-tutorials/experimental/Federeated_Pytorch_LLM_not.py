@@ -104,6 +104,7 @@ class LLMTaskRunner(PyTorchTaskRunner):
     ):
         kwargs["data_loader"] = data_loader
         super().__init__(device, **kwargs)
+        self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
         self.base_model_name = base_model_name
         self.metric = metric
         self._init_model()
@@ -123,6 +124,7 @@ class LLMTaskRunner(PyTorchTaskRunner):
             bias="lora_only",
         )
         self.model = get_peft_model(model, peft_config)
+        self.model.to(self.device)
 
     def _init_optimizer(self):
         ALL_LAYERNORM_LAYERS = [nn.LayerNorm]
@@ -200,6 +202,7 @@ class LLMTaskRunner(PyTorchTaskRunner):
 
         with pt.no_grad():
             for sample in loader:
+                sample.to(self.device)
                 samples = sample["input_ids"].shape[0]
                 total_samples += samples
                 output = self.model(**sample)
@@ -239,6 +242,7 @@ class LLMTaskRunner(PyTorchTaskRunner):
         """
         losses = []
         for sample in batch_generator:
+            sample.to(self.device)
             self.model.zero_grad()
             output = self.model(**sample)
             loss = output.loss
