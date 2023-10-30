@@ -307,7 +307,7 @@ def get_dataset(base_model_name = "roberta-base", padding_side = "right"):
     train_set = GlueMrpc.from_dict(tokenized_datasets['train'].to_dict())
     valid_set = GlueMrpc.from_dict(tokenized_datasets['test'].to_dict())
         
-    fl_data = GlueMrpcFederatedDataset(train_set, valid_set, batch_size=32)
+    fl_data = GlueMrpcFederatedDataset(train_set, valid_set, batch_size=32, data_collator=data_collator)
     return fl_data
 
 def main():
