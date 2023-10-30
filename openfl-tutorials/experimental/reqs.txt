@@ -8,3 +8,5 @@ datasets
 evaluate
 seqeval
 deepspeed
+torch
+torchvision

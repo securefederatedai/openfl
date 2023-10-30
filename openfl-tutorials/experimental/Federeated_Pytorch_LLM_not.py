@@ -77,7 +77,7 @@ class GlueMrpcFederatedDataset(DataLoader):
             GlueMrpcFederatedDataset(
                 self.train_set.select(train_split[i]),
                 self.valid_set.select(valid_split[i]),
-                self.batch_size
+                self.batch_size, self.data_collator
             )
             for i in range(num_collaborators)
         ]
