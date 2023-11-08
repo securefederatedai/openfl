@@ -17,9 +17,9 @@ For accessing the Gaudi2 instances on the Intel Developer Cloud follow the instr
 
 The Gaudi instance in the Intel Developer Cloud comes SynapseAI SW Stack for Gaudi2 installed. Skip sections (**II. , III.***)
 
-Further more our testing was done using the habana based Docker container built using the fololowing Dockerfile base:
+Further more our testing was done using the habana based Docker container built using the Dockerfile base discussed below:
 
-Let's consider the following Dockerfile name Dockerfile_Habana:
+Let's create a Dockerfile with the following content and name it Dockerfile_Habana:
 
 ```
 
@@ -80,7 +80,7 @@ pip list | grep openfl
 
 ``` 
 
-if not install it using:
+if not, then install it using:
 
 ```
 pip install openfl

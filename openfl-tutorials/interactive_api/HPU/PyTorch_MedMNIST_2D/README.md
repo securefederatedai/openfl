@@ -30,7 +30,9 @@ For accessing the Gaudi2 instances on the Intel Developer Cloud follow the instr
 
 The Gaudi instance in the Intel Developer Cloud comes SynapseAI SW Stack for Gaudi2 installed. Skip sections (**II. , III.***)
 
-Further more our testing was done using the habana based Docker container built using the following Dockerfile base:
+Further more our testing was done using the habana based Docker container built using the Dockerfile base discussed below:
+
+Let's create a Dockerfile with the following content and name it Dockerfile_Habana:
 
 ```
 
@@ -39,14 +41,34 @@ FROM vault.habana.ai/gaudi-docker/1.10.0/ubuntu20.04/habanalabs/pytorch-installe
 ENV HABANA_VISIBLE_DEVICES=all
 ENV OMPI_MCA_btl_vader_single_copy_mechanism=none
 
+ENV DEBIAN_FRONTEND="noninteractive"  TZ=Etc/UTC
+RUN apt-get update && apt-get install -y tzdata bash-completion \
+        #RUN apt update && apt-get install -y tzdata bash-completion \
+        python3-pip openssh-server vim git iputils-ping net-tools curl bc gawk \
+        && rm -rf /var/lib/apt/lists/*
+
+
+RUN pip install numpy \
+        && pip install jupyterlab \
+        && pip install matplotlib \
+        && pip install openfl
+
+
+RUN git clone https://github.com/securefederatedai/openfl.git /root/openfl
+
+WORKDIR /root
+
 ```
 
-This base container comes with HPU Pytorch packages already installed.  Hence you could skip step: **IV.** below. 
+This base container comes with HPU Pytorch packages already installed.  Hence you could skip step: **IV.** below.
 
 Build the above container and then launch it using:
 
 ```
-docker run  --net host -id --name openfl_gaudi_run  Container_Image bash
+export Container_Image="myrepo_name:gaudi-docker-ubuntu20.04-openfl"
+
+docker build -t ${container_image}  -f Dockerfile_Habana .
+docker run  --net host -id --name openfl_gaudi_run  ${Container_Image} bash
 ```
 
 Then access the container bash shell using:
@@ -56,20 +78,28 @@ docker exec -it openfl_gaudi_run bash
 
 ```
 
-Once inside the container, clone the openfl repo using:
+Once inside the container, ensure openfl repo is cloned!
+
+otherwise clone the openfl repo using:
 
 ```
-https://github.com/securefederatedai/openfl.git
+git clone https://github.com/securefederatedai/openfl.git
 ```
 
-Then install the openfl package:
+Then check if the openfl package is installed
+
+```
+pip list | grep openfl
+
+```
+
+if not, then install it using:
 
 ```
 pip install openfl
 ```
 
 Then follow instruction in section **V. HPU Adaptations For PyTorch Examples** below.
-
 
 <br/>
 
