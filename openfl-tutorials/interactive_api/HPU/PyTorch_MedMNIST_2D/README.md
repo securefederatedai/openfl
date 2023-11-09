@@ -65,10 +65,10 @@ This base container comes with HPU Pytorch packages already installed.  Hence yo
 Build the above container and then launch it using:
 
 ```
-export Container_Image="myrepo_name:gaudi-docker-ubuntu20.04-openfl"
+export GAUDI_DOCKER_IMAGE="gaudi-docker-ubuntu20.04-openfl"
 
-docker build -t ${container_image}  -f Dockerfile_Habana .
-docker run  --net host -id --name openfl_gaudi_run  ${Container_Image} bash
+docker build -t ${GAUDI_DOCKER_IMAGE} -f Dockerfile_Habana .
+docker run  --net host -id --name openfl_gaudi_run  ${GAUDI_DOCKER_IMAGE} bash
 ```
 
 Then access the container bash shell using:
