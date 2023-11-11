@@ -38,8 +38,10 @@ def plan(context):
         help='The FQDN of the federation agregator')
 @option('-f', '--feature_shape', required=False,
         help='The input shape to the model')
+@option('-g', '--gandlf_config', required=False,
+        help='GaNDLF Configuration File Path')
 def initialize(context, plan_config, cols_config, data_config,
-               aggregator_address, feature_shape):
+               aggregator_address, feature_shape, gandlf_config):
     """
     Initialize Data Science plan.
 
@@ -50,7 +52,7 @@ def initialize(context, plan_config, cols_config, data_config,
 
     from openfl.federated import Plan
     from openfl.protocols import utils
-    from openfl.utilities import split_tensor_dict_for_holdouts
+    from openfl.utilities.split import split_tensor_dict_for_holdouts
     from openfl.utilities.utils import getfqdn_env
 
     for p in [plan_config, cols_config, data_config]:
@@ -64,7 +66,8 @@ def initialize(context, plan_config, cols_config, data_config,
 
     plan = Plan.parse(plan_config_path=plan_config,
                       cols_config_path=cols_config,
-                      data_config_path=data_config)
+                      data_config_path=data_config,
+                      gandlf_config_path=gandlf_config)
 
     init_state_path = plan.config['aggregator']['settings']['init_state_path']
 

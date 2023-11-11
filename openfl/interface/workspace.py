@@ -3,10 +3,10 @@
 """Workspace module."""
 
 import os
-import subprocess
+import subprocess  # nosec
 import sys
 from pathlib import Path
-from typing import Tuple
+from typing import Tuple, Union
 
 from click import Choice
 from click import confirm
@@ -16,15 +16,21 @@ from click import option
 from click import pass_context
 from click import Path as ClickPath
 
-from openfl.utilities.path_check import is_directory_traversal
-from openfl.utilities.workspace import dump_requirements_file
-
 
 @group()
 @pass_context
 def workspace(context):
     """Manage Federated Learning Workspaces."""
     context.obj['group'] = 'workspace'
+
+
+def is_directory_traversal(directory: Union[str, Path]) -> bool:
+    """Check for directory traversal."""
+    cwd = os.path.abspath(os.getcwd())
+    requested_path = os.path.relpath(directory, start=cwd)
+    requested_path = os.path.abspath(requested_path)
+    common_prefix = os.path.commonprefix([requested_path, cwd])
+    return common_prefix != cwd
 
 
 def create_dirs(prefix):
@@ -55,7 +61,6 @@ def create_temp(prefix, template):
 
     copytree(src=WORKSPACE / template, dst=prefix, dirs_exist_ok=True,
              ignore=ignore_patterns('__pycache__'))  # from template workspace
-    apply_template_plan(prefix, template)
 
 
 def get_templates():
@@ -81,7 +86,7 @@ def create_(prefix, template):
 def create(prefix, template):
     """Create federated learning workspace."""
     from os.path import isfile
-    from subprocess import check_call
+    from subprocess import check_call  # nosec
     from sys import executable
 
     from openfl.interface.cli_helper import print_tree
@@ -108,6 +113,8 @@ def create(prefix, template):
     with open(OPENFL_USERDIR / f'requirements.{prefix_hash}.txt', 'w', encoding='utf-8') as f:
         check_call([executable, '-m', 'pip', 'freeze'], shell=False, stdout=f)
 
+    apply_template_plan(prefix, template)
+
     print_tree(prefix, level=3)
 
 
@@ -121,6 +128,7 @@ def export_(pip_install_options: Tuple[str]):
     """Export federated learning workspace."""
     from os import getcwd
     from os import makedirs
+    from os.path import isfile
     from os.path import basename
     from os.path import join
     from shutil import copy2
@@ -139,9 +147,6 @@ def export_(pip_install_options: Tuple[str]):
     except Exception:
         echo(f'Plan file "{plan_file}" not found. No freeze performed.')
 
-    # Dump requirements.txt
-    dump_requirements_file(prefixes=pip_install_options, keep_original_prefixes=True)
-
     archive_type = 'zip'
     archive_name = basename(getcwd())
     archive_file_name = archive_name + '.' + archive_type
@@ -158,7 +163,10 @@ def export_(pip_install_options: Tuple[str]):
     makedirs(f'{tmp_dir}/data', exist_ok=True)
     copytree('./src', f'{tmp_dir}/src', ignore=ignore)  # code
     copytree('./plan', f'{tmp_dir}/plan', ignore=ignore)  # plan
-    copy2('./requirements.txt', f'{tmp_dir}/requirements.txt')  # requirements
+    if isfile('./requirements.txt'):
+        copy2('./requirements.txt', f'{tmp_dir}/requirements.txt')  # requirements
+    else:
+        echo('No requirements.txt file found.')
 
     try:
         copy2('.workspace', tmp_dir)  # .workspace
@@ -188,7 +196,7 @@ def import_(archive):
     from os.path import basename
     from os.path import isfile
     from shutil import unpack_archive
-    from subprocess import check_call
+    from subprocess import check_call  # nosec
     from sys import executable
 
     archive = Path(archive).absolute()

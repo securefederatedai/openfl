@@ -834,10 +834,6 @@ class Aggregator:
                     'metric_value': agg_results.item(),
                     'round': round_number}
 
-                if agg_results is None:
-                    self.logger.warning(
-                        f'Aggregated metric {agg_tensor_name} could not be collected '
-                        f'for round {self.round_number}. Skipping reporting for this round')
                 if agg_function:
                     self.logger.metric(f'Round {round_number}, aggregator: {task_name} '
                                        f'{agg_function} {agg_tensor_name}:\t{agg_results:f}')
@@ -933,9 +929,9 @@ class Aggregator:
         """Check that round is done."""
         tasks_for_round = self.assigner.get_all_tasks_for_round(self.round_number)
 
-        return all([
+        return all(
             self._is_task_done(
-                task_name) for task_name in tasks_for_round])
+                task_name) for task_name in tasks_for_round)
 
     def _log_big_warning(self):
         """Warn user about single collaborator cert mode."""

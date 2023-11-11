@@ -1,0 +1,9 @@
+params:
+  cuda_devices: []
+
+optional_plugin_components: {}
+
+shard_descriptor:
+  template: regression_shard_descriptor.RegressionShardDescriptor
+  params:
+    rank_worldsize: 1, 2

@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 """Assigner tests module."""
 
-from unittest import mock
+from unittest import mock, TestCase
 
 import pytest
 
@@ -49,3 +49,21 @@ def test_get_all_tasks_for_round(assigner):
     tasks = assigner.get_all_tasks_for_round('test')
 
     assert isinstance(tasks, list)
+
+
+class TestNotImplError(TestCase):
+
+    def test_define_task_assignments(self):
+        # TODO: define_task_assignments is defined as a mock in multiple fixtures,
+        # which leads the function to behave as a mock here and other tests.
+        pass
+
+    def test_get_tasks_for_collaborator(self):
+        with self.assertRaises(NotImplementedError):
+            assigner = Assigner(None, None, None)
+            assigner.get_tasks_for_collaborator('col1', 0)
+
+    def test_get_collaborators_for_task(self):
+        with self.assertRaises(NotImplementedError):
+            assigner = Assigner(None, None, None)
+            assigner.get_collaborators_for_task('task_name', 0)

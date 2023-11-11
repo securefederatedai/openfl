@@ -143,7 +143,7 @@ class LogNormalNumPyDataSplitter(NumPyDataSplitter):
                 slice_end = slice_start + self.min_samples_per_class
                 print(f'Assigning {slice_start}:{slice_end} of class {label} to {col} col...')
                 idx[col] += list(label_idx[slice_start:slice_end])
-        if any([len(i) != samples_per_col for i in idx]):
+        if any(len(i) != samples_per_col for i in idx):
             raise SystemError(f'''All collaborators should have {samples_per_col} elements
 but distribution is {[len(i) for i in idx]}''')
 

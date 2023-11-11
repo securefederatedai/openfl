@@ -61,6 +61,24 @@ def start_(plan, collaborator_name, data_config, secure):
     plan.get_collaborator(collaborator_name).run()
 
 
+@collaborator.command(name='create')
+@option('-n', '--collaborator_name', required=True,
+        help='The certified common name of the collaborator')
+@option('-d', '--data_path',
+        help='The data path to be associated with the collaborator')
+@option('-s', '--silent', help='Do not prompt', is_flag=True)
+def create_(collaborator_name, data_path, silent):
+    """Creates a user for an experiment."""
+    if data_path and is_directory_traversal(data_path):
+        echo('Data path is out of the openfl workspace scope.')
+        sys.exit(1)
+
+    common_name = f'{collaborator_name}'.lower()
+
+    # TODO: There should be some association with the plan made here as well
+    register_data_path(common_name, data_path=data_path, silent=silent)
+
+
 def register_data_path(collaborator_name, data_path=None, silent=False):
     """Register dataset path in the plan/data.yaml file.
 
@@ -103,30 +121,26 @@ def register_data_path(collaborator_name, data_path=None, silent=False):
     d[collaborator_name] = dir_path
 
     # Write the data.yaml
-    with open(data_yaml, 'w', encoding='utf-8') as f:
-        for key, val in d.items():
-            f.write(f'{key}{separator}{val}\n')
+    if isfile(data_yaml):
+        with open(data_yaml, 'w', encoding='utf-8') as f:
+            for key, val in d.items():
+                f.write(f'{key}{separator}{val}\n')
 
 
 @collaborator.command(name='generate-cert-request')
 @option('-n', '--collaborator_name', required=True,
         help='The certified common name of the collaborator')
-@option('-d', '--data_path',
-        help='The data path to be associated with the collaborator')
 @option('-s', '--silent', help='Do not prompt', is_flag=True)
 @option('-x', '--skip-package',
         help='Do not package the certificate signing request for export',
         is_flag=True)
 def generate_cert_request_(collaborator_name,
-                           data_path, silent, skip_package):
+                           silent, skip_package):
     """Generate certificate request for the collaborator."""
-    if data_path and is_directory_traversal(data_path):
-        echo('Data path is out of the openfl workspace scope.')
-        sys.exit(1)
-    generate_cert_request(collaborator_name, data_path, silent, skip_package)
+    generate_cert_request(collaborator_name, silent, skip_package)
 
 
-def generate_cert_request(collaborator_name, data_path, silent, skip_package):
+def generate_cert_request(collaborator_name, silent, skip_package):
     """
     Create collaborator certificate key pair.
 
@@ -135,6 +149,7 @@ def generate_cert_request(collaborator_name, data_path, silent, skip_package):
     from openfl.cryptography.participant import generate_csr
     from openfl.cryptography.io import write_crt
     from openfl.cryptography.io import write_key
+    from openfl.cryptography.io import get_csr_hash
     from openfl.interface.cli_helper import CERT_DIR
 
     common_name = f'{collaborator_name}'.lower()
@@ -151,6 +166,10 @@ def generate_cert_request(collaborator_name, data_path, silent, skip_package):
 
     echo('  Moving COLLABORATOR certificate to: ' + style(
         f'{CERT_DIR}/{file_name}', fg='green'))
+
+    # Print csr hash before writing csr to disk
+    csr_hash = get_csr_hash(client_csr)
+    echo('The CSR Hash ' + style(f'{csr_hash}', fg='red'))
 
     # Write collaborator csr and key to disk
     write_crt(client_csr, CERT_DIR / 'client' / f'{file_name}.csr')
@@ -191,9 +210,6 @@ def generate_cert_request(collaborator_name, data_path, silent, skip_package):
              f' request created')
         echo('This file should be sent to the certificate authority'
              ' (typically hosted by the aggregator) for signing')
-
-    # TODO: There should be some association with the plan made here as well
-    register_data_path(common_name, data_path=data_path, silent=silent)
 
 
 def find_certificate_name(file_name):
@@ -341,12 +357,14 @@ def certify(collaborator_name, silent, request_pkg=None, import_=False):
         if silent:
 
             echo(' Signing COLLABORATOR certificate')
+            echo(' Warning: manual check of certificate hashes is bypassed in silent mode.')
             signed_col_cert = sign_certificate(csr, signing_key, signing_crt.subject)
             write_crt(signed_col_cert, f'{cert_name}.crt')
             register_collaborator(CERT_DIR / 'client' / f'{file_name}.crt')
 
         else:
 
+            echo('Make sure the two hashes above are the same.')
             if confirm('Do you want to sign this certificate?'):
 
                 echo(' Signing COLLABORATOR certificate')
