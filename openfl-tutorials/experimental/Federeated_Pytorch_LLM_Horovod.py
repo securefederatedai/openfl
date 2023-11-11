@@ -1,25 +1,28 @@
-
+import argparse
 from typing import Any, Mapping
+
+import horovod.torch as hvd
 import numpy as np
-import openfl.native as fx
 import torch
 import torch as pt
+import torch.nn as nn
 from datasets import Dataset, load_dataset, load_metric
-from openfl.federated import PyTorchTaskRunner
-from openfl.federated.task.runner_pt import change_tags
-from openfl.utilities import Metric, TensorKey
-from openfl.utilities.data_splitters import EqualNumPyDataSplitter
 from peft import LoraConfig, TaskType, get_peft_model
 from peft.utils import get_peft_model_state_dict, set_peft_model_state_dict
 from torch.nn import BCEWithLogitsLoss, CrossEntropyLoss, MSELoss
 from torch.optim import AdamW
 from torch.utils.data import DataLoader
 from tqdm import tqdm
-import torch.nn as nn
+
+import openfl.native as fx
+from openfl.federated import PyTorchTaskRunner
+from openfl.federated.task.runner_pt import change_tags
+from openfl.utilities import Metric, TensorKey
+from openfl.utilities.data_splitters import EqualNumPyDataSplitter
+from transformers import (AutoModelForSequenceClassification, AutoTokenizer,
+                          DataCollatorWithPadding, get_scheduler)
 from transformers.trainer_pt_utils import get_parameter_names
-from transformers import (AutoModelForSequenceClassification,
-                          AutoTokenizer, DataCollatorWithPadding, get_scheduler)
-import argparse
+
 
 def get_glue_mrpc_dataset(tokenizer):
     dataset = load_dataset("glue", "mrpc")
@@ -44,32 +47,40 @@ def get_glue_mrpc_dataset(tokenizer):
     data_collator = DataCollatorWithPadding(tokenizer=tokenizer, padding="longest")
     return data_collator, tokenized_datasets
 
+
 class GlueMrpc(Dataset):
     """
     Has 5.8k pairs of sentences with annotations if the two sentences are equivalent
-    """    
+    """
+
     def get_shape(self):
-        
-        if not hasattr(self, 'saved_shape'):
-            self.saved_shape = max([len(i) for i in self.data['input_ids']])
+        if not hasattr(self, "saved_shape"):
+            self.saved_shape = max([len(i) for i in self.data["input_ids"]])
         return self.saved_shape
+
 
 class GlueMrpcFederatedDataset(DataLoader):
     def __init__(self, train_set, valid_set, batch_size, data_collator=None):
         self.data_splitter = EqualNumPyDataSplitter(shuffle=True)
-        if isinstance(train_set,Dataset):
+        if isinstance(train_set, Dataset):
             self.train_set = GlueMrpc.from_dict(train_set.to_dict())
         else:
             self.train_set = train_set
-            
-        if isinstance(valid_set,Dataset):
+
+        if isinstance(valid_set, Dataset):
             self.valid_set = GlueMrpc.from_dict(valid_set.to_dict())
         else:
-            self.valid_set = valid_set            
-            
+            self.valid_set = valid_set
+
         self.batch_size = batch_size
         self.data_collator = data_collator
-    
+        self.train_sampler = torch.utils.data.distributed.DistributedSampler(
+            self.train_set, num_replicas=hvd.size(), rank=hvd.rank()
+        )
+        self.test_sampler = torch.utils.data.distributed.DistributedSampler(
+            self.valid_set, num_replicas=hvd.size(), rank=hvd.rank()
+        )
+
     def split(self, num_collaborators):
         train_split = self.data_splitter.split(self.train_set, num_collaborators)
         valid_split = self.data_splitter.split(self.valid_set, num_collaborators)
@@ -77,38 +88,49 @@ class GlueMrpcFederatedDataset(DataLoader):
             GlueMrpcFederatedDataset(
                 self.train_set.select(train_split[i]),
                 self.valid_set.select(valid_split[i]),
-                self.batch_size, self.data_collator
+                self.batch_size,
+                self.data_collator,
             )
             for i in range(num_collaborators)
         ]
-    
+
     def get_feature_shape(self):
         return self.train_set.get_shape()
-    
+
     def get_train_loader(self, num_batches=None):
-        return DataLoader(self.train_set, batch_size=self.batch_size, collate_fn=self.data_collator)
-    
+        return DataLoader(
+            self.train_set, batch_size=self.batch_size, collate_fn=self.data_collator, #sampler=self.train_sampler
+        )
+
     def get_valid_loader(self):
-        return DataLoader(self.valid_set, batch_size=self.batch_size, collate_fn=self.data_collator)
-    
+        return DataLoader(
+            self.valid_set, batch_size=self.batch_size, collate_fn=self.data_collator, #sampler=self.test_sampler
+        )
+
     def get_train_data_size(self):
         return len(self.train_set)
-    
+
     def get_valid_data_size(self):
         return len(self.valid_set)
-    
+
 
 class LLMTaskRunner(PyTorchTaskRunner):
     def __init__(
-        self, base_model_name, data_loader, device=None, metric=None, args=None, **kwargs
+        self,
+        base_model_name,
+        data_loader,
+        device=None,
+        metric=None,
+        args=None,
+        **kwargs,
     ):
         kwargs["data_loader"] = data_loader
         super().__init__(device, **kwargs)
-        self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
         self.base_model_name = base_model_name
         self.metric = metric
         self._init_model()
         self._init_optimizer()
+
         self.save_models = []
 
     def _init_model(self):
@@ -125,6 +147,7 @@ class LLMTaskRunner(PyTorchTaskRunner):
         )
         self.model = get_peft_model(model, peft_config)
         self.model.to(self.device)
+        hvd.broadcast_parameters(self.model.state_dict(), root_rank=0)
 
     def _init_optimizer(self):
         ALL_LAYERNORM_LAYERS = [nn.LayerNorm]
@@ -149,15 +172,14 @@ class LLMTaskRunner(PyTorchTaskRunner):
                 "weight_decay": 0.0,
             },
         ]
-        self.optimizer = AdamW(optimizer_grouped_parameters, lr=0.001)
+        optimizer = AdamW(optimizer_grouped_parameters, lr=0.001)
         self.lr_scheduler = get_scheduler(
             name="linear",
-            optimizer=self.optimizer,
+            optimizer=optimizer,
             num_warmup_steps=0,
             num_training_steps=len(self.data_loader.train_set) * 5,
         )
-
-        self.training_round_completed = False
+        self.optimizer = hvd.DistributedOptimizer(optimizer)
         self.initialize_tensorkeys_for_functions()
 
     def train(self):
@@ -190,7 +212,6 @@ class LLMTaskRunner(PyTorchTaskRunner):
         self.save_models.append(input_tensor_dict.copy())
         self.rebuild_model(round_num, input_tensor_dict, validation=True)
         self.model.eval()
-        
 
         self.model.to(self.device)
         val_score = 0
@@ -202,14 +223,15 @@ class LLMTaskRunner(PyTorchTaskRunner):
 
         with pt.no_grad():
             for sample in loader:
-                sample.to(self.device)
                 samples = sample["input_ids"].shape[0]
                 total_samples += samples
                 output = self.model(**sample)
                 # get the index of the max log-probability
                 logits = output.logits
                 predictions = torch.argmax(logits, dim=-1)
-                self.metric.add_batch(predictions=predictions, references=sample["labels"])
+                self.metric.add_batch(
+                    predictions=predictions, references=sample["labels"]
+                )
         val_score = self.metric.compute()["accuracy"]
 
         origin = col_name
@@ -242,14 +264,12 @@ class LLMTaskRunner(PyTorchTaskRunner):
         """
         losses = []
         for sample in batch_generator:
-            sample.to(self.device)
             self.model.zero_grad()
             output = self.model(**sample)
             loss = output.loss
-            loss.backward()
+            self.model.backward(loss)
             torch.nn.utils.clip_grad_norm_(self.model.parameters(), 1.0)
-            self.optimizer.step()
-            self.lr_scheduler.step()
+            self.model.step()
             losses.append(loss.detach().cpu().numpy())
         loss = np.mean(losses)
         if self.model.config.problem_type == "regression":
@@ -290,59 +310,64 @@ class LLMTaskRunner(PyTorchTaskRunner):
         }
         pt.save(pickle_dict, filepath)
 
-def get_arguments():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--local_rank",
-                        type=int,
-                        default=-1,
-                        help="local_rank for distributed training on gpus")
-    # Include DeepSpeed configuration arguments
 
-    args = parser.parse_args()
-
-    return args
-
-def get_dataset(base_model_name = "roberta-base", padding_side = "right"):
-    tokenizer = AutoTokenizer.from_pretrained(base_model_name, padding_side=padding_side)
+def get_dataset(base_model_name="roberta-base", padding_side="right"):
+    tokenizer = AutoTokenizer.from_pretrained(
+        base_model_name, padding_side=padding_side
+    )
     if getattr(tokenizer, "pad_token_id") is None:
         tokenizer.pad_token_id = tokenizer.eos_token_id
     data_collator, tokenized_datasets = get_glue_mrpc_dataset(tokenizer)
 
-    train_set = GlueMrpc.from_dict(tokenized_datasets['train'].to_dict())
-    valid_set = GlueMrpc.from_dict(tokenized_datasets['test'].to_dict())
-        
-    fl_data = GlueMrpcFederatedDataset(train_set, valid_set, batch_size=32, data_collator=data_collator)
+    train_set = GlueMrpc.from_dict(tokenized_datasets["train"].to_dict())
+    valid_set = GlueMrpc.from_dict(tokenized_datasets["test"].to_dict())
+
+    fl_data = GlueMrpcFederatedDataset(train_set, valid_set, batch_size=32)
     return fl_data
 
+
 def main():
-    args = get_arguments()
-    fx.init('torch_llm')
+    hvd.init()
+    if torch.cuda.is_available():
+        torch.cuda.set_device(hvd.local_rank())
+        
+    if hvd.local_rank() == 0:
+        fx.init("torch_llm")
+        
     base_model_name = "roberta-base"
     padding_side = "right"
     fl_data = get_dataset(base_model_name, padding_side)
-    metric = load_metric('glue', "mrpc")
+    metric = load_metric("glue", "mrpc")
 
     num_collaborators = 2
+
     collaborator_models = [
-                LLMTaskRunner(
-                    base_model_name,
-                    data_loader=data_slice,
-                    metric=metric, args=args
-                )
-                for data_slice in fl_data.split(num_collaborators)]
-    collaborators = {'one':collaborator_models[0],'two':collaborator_models[1]}#, 'three':collaborator_models[2]}
+        LLMTaskRunner(base_model_name, data_loader=data_slice, metric=metric)
+        for data_slice in fl_data.split(num_collaborators)
+    ]
+    collaborators = {
+        "one": collaborator_models[0],
+        "two": collaborator_models[1],
+    }  # , 'three':collaborator_models[2]}
 
     # %%
-    #Original TinyImageNet dataset
-    print(f'Original training data size: {len(fl_data.train_set)}')
-    print(f'Original validation data size: {len(fl_data.valid_set)}\n')
+    # Original TinyImageNet dataset
+    print(f"Original training data size: {len(fl_data.train_set)}")
+    print(f"Original validation data size: {len(fl_data.valid_set)}\n")
 
-    #Collaborator one's data
+    # Collaborator one's data
     for i, model in enumerate(collaborator_models):
-        print(f'Collaborator {i}\'s training data size: {len(model.data_loader.train_set)}')
-        print(f'Collaborator {i}\'s validation data size: {len(model.data_loader.valid_set)}\n')
-    final_fl_model = fx.run_experiment(collaborators,{'aggregator.settings.rounds_to_train':10,"tasks.train.kwargs.epochs":2})
-    
+        print(
+            f"Collaborator {i}'s training data size: {len(model.data_loader.train_set)}"
+        )
+        print(
+            f"Collaborator {i}'s validation data size: {len(model.data_loader.valid_set)}\n"
+        )
+    final_fl_model = fx.run_experiment(
+        collaborators,
+        {"aggregator.settings.rounds_to_train": 10, "tasks.train.kwargs.epochs": 2},
+    )
+
 
 if __name__ == "__main__":
     main()

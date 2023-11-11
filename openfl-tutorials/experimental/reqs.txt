@@ -7,6 +7,6 @@ transformers
 datasets
 evaluate
 seqeval
-deepspeed
+horovod
 torch
 torchvision

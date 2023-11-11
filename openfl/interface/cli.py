@@ -242,6 +242,30 @@ def entry():
     except Exception as e:
         error_handler(e)
 
+def dummy_entry():
+    """Entry point of the Command-Line Interface."""
+    from importlib import import_module
+    from pathlib import Path
+    from sys import path
+
+    file = Path(__file__).resolve()
+    root = file.parent.resolve()  # interface root, containing command modules
+    work = Path.cwd().resolve()
+    path.append(str(root))
+    path.insert(0, str(work))
+
+    for module in root.glob('*.py'):  # load command modules
+
+        package = module.parent
+        module = module.name.split('.')[0]
+
+        if module.count('__init__') or module.count('cli'):
+            continue
+
+        command_group = import_module(module, package)
+
+        cli.add_command(command_group.__getattribute__(module))
+        
 
 if __name__ == '__main__':
     entry()
