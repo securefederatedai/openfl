@@ -20,9 +20,12 @@ from tqdm import tqdm
 from openfl.federated import PyTorchTaskRunner
 from openfl.federated.task.runner_pt import change_tags
 from openfl.utilities import Metric, TensorKey
-from transformers import (AutoModelForSequenceClassification, get_scheduler)
+from transformers import AutoModelForSequenceClassification, get_scheduler
 from transformers.trainer_pt_utils import get_parameter_names
 from datasets import Dataset, load_dataset, load_metric
+from .ptglue_inmemory import GlueMrpcFederatedDataLoader
+import subprocess
+import json
 
 
 class LLMTaskRunner(PyTorchTaskRunner):
@@ -42,7 +45,6 @@ class LLMTaskRunner(PyTorchTaskRunner):
         self.metric = load_metric("glue", "mrpc")
         self._init_model()
         self._init_optimizer()
-        
 
         self.save_models = []
 
@@ -60,7 +62,7 @@ class LLMTaskRunner(PyTorchTaskRunner):
         )
         self.model = get_peft_model(model, peft_config)
         self.model.to(self.device)
-        if self.kwargs.get('use_horovod'):
+        if self.kwargs.get("use_horovod"):
             hvd.broadcast_parameters(self.model.state_dict(), root_rank=0)
 
     def _init_optimizer(self):
@@ -93,7 +95,7 @@ class LLMTaskRunner(PyTorchTaskRunner):
             num_warmup_steps=0,
             num_training_steps=len(self.data_loader.train_set) * 5,
         )
-        if self.kwargs.get('use_horovod'):
+        if self.kwargs.get("use_horovod"):
             self.optimizer = hvd.DistributedOptimizer(optimizer)
         self.initialize_tensorkeys_for_functions()
 
@@ -124,47 +126,92 @@ class LLMTaskRunner(PyTorchTaskRunner):
             local_output_dict:   Tensors to maintain in the local TensorDB
 
         """
-        self.save_models.append(input_tensor_dict.copy())
-        self.rebuild_model(round_num, input_tensor_dict, validation=True)
-        self.model.eval()
+        if kwargs.get("use_horovod"):
+            checkpoint = torch.load(kwargs["state_path"])
+            self.model.load_state_dict(checkpoint["model_state_dict"])
+            self.optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
+            use_tqdm = checkpoint["use_tqdm"]
+            kwargs.update(checkpoint["kwargs"])
 
-        self.model.to(self.device)
-        val_score = 0
-        total_samples = 0
+            self.model.eval()
+            self.model.to(self.device)
+            val_score = 0
+            total_samples = 0
 
-        loader = self.data_loader.get_valid_loader()
-        if use_tqdm:
-            loader = tqdm(loader, desc="validate")
+            loader = self.data_loader.get_valid_loader()
+            if use_tqdm:
+                loader = tqdm(loader, desc="validate")
 
-        with pt.no_grad():
-            for sample in loader:
-                samples = sample["input_ids"].shape[0]
-                total_samples += samples
-                output = self.model(**sample)
-                # get the index of the max log-probability
-                logits = output.logits
-                predictions = torch.argmax(logits, dim=-1)
-                self.metric.add_batch(
-                    predictions=predictions, references=sample["labels"]
-                )
-        val_score = self.metric.compute()["accuracy"]
-
-        origin = col_name
-        suffix = "validate"
-        if kwargs["apply"] == "local":
-            suffix += "_local"
+            with pt.no_grad():
+                for sample in loader:
+                    samples = sample["input_ids"].shape[0]
+                    total_samples += samples
+                    output = self.model(**sample)
+                    # get the index of the max log-probability
+                    logits = output.logits
+                    predictions = torch.argmax(logits, dim=-1)
+                    self.metric.add_batch(
+                        predictions=predictions, references=sample["labels"]
+                    )
+            val_score = self.metric.compute()["accuracy"]
+            return val_score
         else:
-            suffix += "_agg"
-        tags = ("metric",)
-        tags = change_tags(tags, add_field=suffix)
-        # TODO figure out a better way to pass in metric for this pytorch
-        #  validate function
-        output_tensor_dict = {
-            TensorKey("acc", origin, round_num, True, tags): np.array(val_score)
-        }
+            self.save_models.append(input_tensor_dict.copy())
+            self.rebuild_model(round_num, input_tensor_dict, validation=True)
+            state_path = f"col:{col_name}_rnd:{round_num}_state.pt"
+            data_path = self.data_loader.data_path
+            torch.save(
+                {
+                    "model_state_dict": self.model.state_dict(),
+                    "optimizer_state_dict": self.optimizer.state_dict(),
+                    "kwargs": kwargs,
+                },
+                state_path,
+            )
+            horovod_kwags = {
+                "col_name": col_name,
+                "round_num": round_num,
+                "input_tensor_dict": None,
+                "use_tqdm": use_tqdm,
+                "use_horovod": True,
+            }
+            result = subprocess.run(
+                [
+                    "horovodrun",
+                    "-np",
+                    "6",
+                    "python",
+                    "src.pt_model",
+                    "--data_path",
+                    data_path,
+                    "--state_path",
+                    state_path,
+                    "-kwargs",
+                    json.dumps(horovod_kwags),
+                ],
+                shell=True,
+                capture_output=True,
+                text=True,
+            )
 
-        # Empty list represents metrics that should only be stored locally
-        return output_tensor_dict, {}
+            print(result.stdout)
+
+            origin = col_name
+            suffix = "validate"
+            if kwargs["apply"] == "local":
+                suffix += "_local"
+            else:
+                suffix += "_agg"
+            tags = ("metric",)
+            tags = change_tags(tags, add_field=suffix)
+            # TODO figure out a better way to pass in metric for this pytorch
+            #  validate function
+            output_tensor_dict = {
+                TensorKey("acc", origin, round_num, True, tags): np.array(val_score)
+            }
+
+            # Empty list represents metrics that should only be stored locally
+            return output_tensor_dict, {}
 
     def train_epoch(self, batch_generator) -> Metric:
         """Train single epoch.
@@ -224,3 +271,44 @@ class LLMTaskRunner(PyTorchTaskRunner):
             optimizer_state_dict_key: self.optimizer.state_dict(),
         }
         pt.save(pickle_dict, filepath)
+
+
+def get_args():
+    """
+    Get command-line arguments for a script.
+
+    Parameters:
+    - data_path (str): Path to the data.
+    - model_path (str): Path to the model.
+
+    Returns:
+    - args (Namespace): A namespace containing the parsed arguments.
+    """
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Your script description here.")
+    parser.add_argument(
+        "--data_path", type=str, help="Path to the data.", required=True
+    )
+    parser.add_argument(
+        "--state_path", type=str, help="Path to the model.", required=True
+    )
+    parser.add_argument("--kwargs", type=str, help="Path to the model.", required=True)
+    parser.add_argument("--func", type=str, help="Path to the model.", required=True)
+
+    args = parser.parse_args()
+    return args
+
+
+def main():
+    args = get_args()
+    data_loader = GlueMrpcFederatedDataLoader(data_path=args.data_path)
+    taskrunner = LLMTaskRunner(data_loader)
+    func = getattr(taskrunner, args.func)
+    kwargs = json.loads(args.kwargs)
+    kwargs.update({'data_path':args.data_path, 'state_path':args.state_path})
+    return func(json.loads(args.kwargs))
+
+
+if __name__ == "__main__":
+    main()
