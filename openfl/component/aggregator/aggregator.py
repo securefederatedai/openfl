@@ -58,8 +58,7 @@ class Aggregator:
                  **kwargs):
         """Initialize."""
         #INITIALIZE WANDB WITH CORRECT NAME
-        #The following variable, my_aggregator_name, can be changed to whatever you want. Right now I suppose that the name of the collaborators of the federation is in the format 
-DATASETNAME_ENV_NUMBER
+        #The following variable, my_aggregator_name, can be changed to whatever you want. Right now I suppose that the name of the collaborators of the federation is in the format DATASETNAME_ENV_NUMBER
         my_aggregator_name = '_'.join(set(element.split('_')[0] for element in authorized_cols))
         if LOG_WANDB:
             wandb.init(project="my_project", entity="my_group", group=f"{my_aggregator_name}", tags=["my_tag"],
