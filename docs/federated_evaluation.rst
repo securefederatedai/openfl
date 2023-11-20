@@ -34,7 +34,7 @@ In order to adapt this template for federated evaluation, the following modifica
 
 .. code-block:: yaml
 
-    # Copyright (C) 2023 Intel Corporation
+    # Copyright (C) 2020-2023 Intel Corporation
     # Licensed subject to the terms of the separately executed evaluation license agreement between Intel Corporation and you.
     
     aggregator :
