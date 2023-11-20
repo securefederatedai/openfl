@@ -4,3 +4,4 @@ tensorboard
 wheel>=0.38.0 # not directly required, pinned by Snyk to avoid a vulnerability
 matplotlib
 imagen @ git+https://github.com/pyviz-topics/imagen.git@master
+param==1.13.0
