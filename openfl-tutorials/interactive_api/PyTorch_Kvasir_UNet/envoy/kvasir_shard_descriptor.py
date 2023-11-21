@@ -11,6 +11,8 @@ from PIL import Image
 from openfl.interface.interactive_api.shard_descriptor import ShardDataset
 from openfl.interface.interactive_api.shard_descriptor import ShardDescriptor
 from openfl.utilities import validate_file_hash
+from openfl.utilities.dataset_spoilers import corrupt_shard
+from openfl.utilities.dataset_spoilers import spoil_targets_random_choice
 
 
 class KvasirShardDataset(ShardDataset):
@@ -55,6 +57,7 @@ class KvasirShardDataset(ShardDataset):
         return len(self.images_names)
 
 
+@corrupt_shard(spoil_targets_random_choice)
 class KvasirShardDescriptor(ShardDescriptor):
     """Shard descriptor class."""
 
