@@ -1,4 +1,6 @@
 import time
+import sys
+
 import tensorflow as tf
 # Create a federation
 from openfl.interface.interactive_api.federation import Federation
@@ -11,6 +13,8 @@ from tests.github.interactive_api_director.experiments.tensorflow_mnist.settings
 from tests.github.interactive_api_director.experiments.tensorflow_mnist.settings import val_acc_metric
 from tests.github.interactive_api_director.experiments.tensorflow_mnist.envoy.shard_descriptor import MNISTShardDescriptor
 from copy import deepcopy
+
+sys.stdout.reconfigure(encoding='utf-8')
 
 
 def run():
