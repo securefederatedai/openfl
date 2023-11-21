@@ -18,7 +18,6 @@ from grpc import aio
 from grpc import ssl_server_credentials
 
 from openfl.pipelines import NoCompressionPipeline
-from openfl.protocols import base_pb2
 from openfl.protocols import director_pb2
 from openfl.protocols import director_pb2_grpc
 from openfl.protocols.utils import construct_model_proto
@@ -178,20 +177,12 @@ class DirectorGRPCServer(director_pb2_grpc.DirectorServicer):
         """RPC for retrieving trained models."""
         logger.info('Request GetTrainedModel has got!')
 
-        if request.model_type == director_pb2.GetTrainedModelRequest.BEST_MODEL:
-            model_type = 'best'
-        elif request.model_type == director_pb2.GetTrainedModelRequest.LAST_MODEL:
-            model_type = 'last'
-        else:
-            logger.error('Incorrect model type')
-            return director_pb2.TrainedModelResponse()
-
         caller = self.get_caller(context)
 
-        trained_model_dict = self.director.get_trained_model(
+        trained_model_dict = await self.director.get_trained_model(
             experiment_name=request.experiment_name,
             caller=caller,
-            model_type=model_type
+            model_type=request.model_type
         )
 
         if trained_model_dict is None:
@@ -318,7 +309,7 @@ class DirectorGRPCServer(director_pb2_grpc.DirectorServicer):
     async def GetExperimentsList(self, request, context):  # NOQA:N802
         """Get list of experiments description."""
         caller = self.get_caller(context)
-        experiments = self.director.get_experiments_list(caller)
+        experiments = await self.director.get_experiments_list(caller)
         experiment_list = [
             director_pb2.ExperimentListItem(**exp)
             for exp in experiments
@@ -330,53 +321,6 @@ class DirectorGRPCServer(director_pb2_grpc.DirectorServicer):
     async def GetExperimentDescription(self, request, context):  # NOQA:N802
         """Get an experiment description."""
         caller = self.get_caller(context)
-        experiment = self.director.get_experiment_description(caller, request.name)
-        models_statuses = [
-            base_pb2.DownloadStatus(
-                name=ms['name'],
-                status=ms['status']
-            )
-            for ms in experiment['download_statuses']['models']
-        ]
-        logs_statuses = [
-            base_pb2.DownloadStatus(
-                name=ls['name'],
-                status=ls['status']
-            )
-            for ls in experiment['download_statuses']['logs']
-        ]
-        download_statuses = base_pb2.DownloadStatuses(
-            models=models_statuses,
-            logs=logs_statuses,
-        )
-        collaborators = [
-            base_pb2.CollaboratorDescription(
-                name=col['name'],
-                status=col['status'],
-                progress=col['progress'],
-                round=col['round'],
-                current_task=col['current_task'],
-                next_task=col['next_task']
-            )
-            for col in experiment['collaborators']
-        ]
-        tasks = [
-            base_pb2.TaskDescription(
-                name=task['name'],
-                description=task['description']
-            )
-            for task in experiment['tasks']
-        ]
+        experiment = await self.director.get_experiment_description(caller, request.name)
 
-        return director_pb2.GetExperimentDescriptionResponse(
-            experiment=base_pb2.ExperimentDescription(
-                name=experiment['name'],
-                status=experiment['status'],
-                progress=experiment['progress'],
-                current_round=experiment['current_round'],
-                total_rounds=experiment['total_rounds'],
-                download_statuses=download_statuses,
-                collaborators=collaborators,
-                tasks=tasks,
-            ),
-        )
+        return director_pb2.GetExperimentDescriptionResponse(experiment=experiment)
