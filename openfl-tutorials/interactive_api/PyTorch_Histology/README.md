@@ -45,11 +45,10 @@ pip install -r requirements.txt
 ```
 
 Optional: Run a second envoy in an additional terminal:
-  - Ensure step 2 is complete for this terminal as well.
-  - Run the second envoy:
+  - Copy `envoy` folder to another place and follow the same process as above:
 ```sh
-cd envoy
-./start_envoy.sh env_two envoy_config.yaml
+cd envoy2
+./start_envoy.sh env_two envoy_config_2.yaml
 ```
 
 <br/>

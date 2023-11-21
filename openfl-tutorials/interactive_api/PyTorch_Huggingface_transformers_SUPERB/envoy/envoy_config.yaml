@@ -1,4 +1,4 @@
-params:
+settings:
   cuda_devices: [0]
 
 optional_plugin_components:
@@ -8,5 +8,5 @@ optional_plugin_components:
 
 shard_descriptor:
   template: superb_shard_descriptor.SuperbShardDescriptor
-  params:
+  settings:
     rank_worldsize: 1, 1000
