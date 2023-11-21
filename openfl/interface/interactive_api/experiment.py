@@ -18,6 +18,7 @@ from openfl.interface.aggregation_functions import WeightedAverage
 from openfl.component.assigner.tasks import Task
 from openfl.component.assigner.tasks import TrainTask
 from openfl.component.assigner.tasks import ValidateTask
+from openfl.component.director.experiment import Status
 from openfl.federated import Plan
 from openfl.interface.cli import setup_logging
 from openfl.interface.cli_helper import WORKSPACE
@@ -152,6 +153,9 @@ class FLExperiment:
 
             if tensorboard_logs:
                 self.write_tensorboard_metric(metric_message_dict)
+
+        if self.federation.dir_client.get_experiment_status(self.experiment_name) is Status.FAILED:
+            raise SystemExit('Experiment has been failed. For details, see Director/Envoy logs.')
 
     def write_tensorboard_metric(self, metric: dict) -> None:
         """Write metric callback."""

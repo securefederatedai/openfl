@@ -54,6 +54,7 @@ def run():
                         rounds_to_train=1,
                         opt_treatment='CONTINUE_GLOBAL')
     fl_experiment.stream_metrics()
+    print('METRICS STREAMING HAS ENDED')  # remove before merging
     best_model = fl_experiment.get_best_model()
     fl_experiment.remove_experiment_data()
     best_model.inc.conv[0].weight
