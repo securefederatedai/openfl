@@ -206,6 +206,7 @@ class FlowGraph(FlowGraph):
     def _create_nodes(self, flow):
         module = __import__(flow.__module__)
         tree = ast.parse(getsource(module)).body
+        # tree = ast.parse(getsource(flow)).body
         root = [
             n
             for n in tree
@@ -379,8 +380,6 @@ class MetaflowInterface:
         """
         self.backend = backend
         self.flow_name = flow.__name__
-        self._graph = FlowGraph(flow)
-        self._steps = [getattr(flow, node.name) for node in self._graph]
         if backend == "ray":
             self.counter = Counter.remote()
         else:
