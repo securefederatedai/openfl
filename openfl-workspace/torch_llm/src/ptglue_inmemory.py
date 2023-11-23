@@ -5,7 +5,12 @@
 
 
 from transformers import AutoTokenizer
-from .glue_utils import get_glue_mrpc_dataset, GlueMrpc
+import sys
+import os
+
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(os.path.dirname(SCRIPT_DIR))
+from src.glue_utils import get_glue_mrpc_dataset, GlueMrpc
 from openfl.federated import PyTorchDataLoader
 import argparse
 from typing import Any, Mapping
@@ -60,6 +65,9 @@ class GlueMrpcFederatedDataLoader(DataLoader):
             self.valid_set = valid_set
         
         self.data_path = data_path
+        self.batch_size = batch_size
+        self.data_collator = data_collator
+        self.datasave_path = f'temp_dataset_{self.data_path}'
         if kwargs.get('collaborator_count'):
             self.collaborator_count = kwargs['collaborator_count']
             data_path = int(data_path)
@@ -69,11 +77,16 @@ class GlueMrpcFederatedDataLoader(DataLoader):
             valid_set = self.valid_set.select(valid_idx)
             self.train_set = GlueMrpc.from_dict(train_set.to_dict())
             self.valid_set = GlueMrpc.from_dict(valid_set.to_dict())
+            self.train_set.save_to_disk(f'{self.datasave_path}_train')
+            self.valid_set.save_to_disk(f'{self.datasave_path}_valid')
 
-        self.batch_size = batch_size
-        self.data_collator = data_collator
         if kwargs.get('use_horovod'):
             hvd.init()
+            from datasets import load_from_disk
+            train_set = load_from_disk(f'{self.datasave_path}_train')
+            valid_set = load_from_disk(f'{self.datasave_path}_valid')
+            self.train_set = GlueMrpc.from_dict(train_set.to_dict())
+            self.valid_set = GlueMrpc.from_dict(valid_set.to_dict())
             self.train_sampler = torch.utils.data.distributed.DistributedSampler(
                 self.train_set, num_replicas=hvd.size(), rank=hvd.rank()
             )

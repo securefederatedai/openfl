@@ -23,17 +23,24 @@ from transformers import (AutoModelForSequenceClassification, AutoTokenizer,
                           DataCollatorWithPadding, get_scheduler)
 from transformers.trainer_pt_utils import get_parameter_names
 import sys
-#sys.path.append('openfl/openfl-workspace/torch_llm')
+sys.path.append('openfl/openfl-workspace/torch_llm')
+from src.pt_model import LLMTaskRunner
+from src.ptglue_inmemory import GlueMrpcFederatedDataLoader
+import openfl.interface.workspace as workspace
+import os
+WORKSPACE_PREFIX = os.path.join(os.path.expanduser('~'), '.local', 'workspace')
 
 
 def main():
-    fx.init('torch_llm')
-    from src.pt_model import LLMTaskRunner
-    from src.ptglue_inmemory import GlueMrpcFederatedDataLoader
+    log_level = 'INFO'
+    log_file = None
+    workspace.create(WORKSPACE_PREFIX, 'torch_llm')
+    os.chdir(WORKSPACE_PREFIX)
+    fx.setup_logging(level=log_level, log_file=log_file)
     num_collaborators = 2
 
     collaborator_models = [
-        LLMTaskRunner(data_loader=GlueMrpcFederatedDataLoader(data_slice, 32))
+        LLMTaskRunner(data_loader=GlueMrpcFederatedDataLoader(data_slice, 32, collaborator_count=num_collaborators))
         for data_slice in range(1,3)
     ]
     collaborators = {
@@ -51,7 +58,7 @@ def main():
         )
     final_fl_model = fx.run_experiment(
         collaborators,
-        {"aggregator.settings.rounds_to_train": 10, "tasks.train.kwargs.epochs": 2},
+        {"aggregator.settings.rounds_to_train": 5, "tasks.train.kwargs.epochs": 1},
     )
 
 
