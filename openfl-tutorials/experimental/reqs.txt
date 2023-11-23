@@ -7,6 +7,5 @@ transformers[torch,cpu]
 datasets
 evaluate
 seqeval
-horovod[pytorch]
 torch
 torchvision
