@@ -8,4 +8,5 @@ datasets
 evaluate
 seqeval
 torch
+horovod
 torchvision
