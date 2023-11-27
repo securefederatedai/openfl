@@ -65,11 +65,12 @@ Looking for the Open Flash Library project also referred to as OpenFL? Find it `
    :maxdepth: 2
 
    contributing_guidelines/contributing
+   openfl_api
 
 
-.. Indices and tables
-.. ==================
+Indices and tables
+==================
 
-.. * :ref:`genindex`
-.. * :ref:`modindex`
+* :ref:`genindex`
+* :ref:`modindex`
 .. * :ref:`search`
