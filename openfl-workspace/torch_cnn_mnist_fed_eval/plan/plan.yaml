@@ -8,7 +8,9 @@ aggregator :
     init_state_path     : save/torch_cnn_mnist_init.pbuf
     best_state_path     : save/torch_cnn_mnist_best.pbuf
     last_state_path     : save/torch_cnn_mnist_last.pbuf
+    ######### SET ROUNDS TO 1 #############
     rounds_to_train     : 1
+    #######################################
     log_metric_callback :
       template : src.mnist_utils.write_metric
 
@@ -35,6 +37,7 @@ network :
   defaults : plan/defaults/network.yaml
 
 assigner :
+  ######### SET ASSIGNER TO ONLY INCLUDE AGGREGATED MODEL VALIDATION #############
   template : openfl.component.RandomGroupedAssigner
   settings :
     task_groups  :
@@ -42,14 +45,17 @@ assigner :
         percentage : 1.0
         tasks      :
           - aggregated_model_validation
+  ################################################################################
   
 tasks :
+  ######### SET AGGREGATED MODEL VALIDATION AS ONLY TASK #############
   aggregated_model_validation:
     function : validate
     kwargs   :
       apply   : global
       metrics :
         - acc
+  ####################################################################
 
 compression_pipeline :
   defaults : plan/defaults/compression_pipeline.yaml
