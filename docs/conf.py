@@ -37,8 +37,11 @@ extensions = [
     'sphinx-prompt',
     'sphinx_substitution_extensions',
     'sphinx.ext.ifconfig',
-    'sphinxcontrib.mermaid'
+    'sphinxcontrib.mermaid',
+    'sphinx.ext.autodoc',
+    'sphinx.ext.autosummary'
 ]
+autosummary_generate = True  # Turn on sphinx.ext.autosummary
 
 # -- Project information -----------------------------------------------------
 
@@ -64,6 +67,9 @@ rst_prolog = '''
 
 napoleon_google_docstring = True
 
+# Config the returns section to behave like the Args section
+napoleon_custom_sections = [('Returns', 'params_style')]
+
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
 
@@ -71,7 +77,7 @@ templates_path = ['_templates']
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = ['_build', 'Thumbs.db',
-                    '.DS_Store', 'tutorials/*', 'graveyard/*']
+                    '.DS_Store', 'tutorials/*', 'graveyard/*','_build', '_templates']
 # add temporary unused files
 exclude_patterns.extend(['modules.rst',
                          'install.singularity.rst',
