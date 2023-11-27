@@ -10,20 +10,17 @@ class StaticGroupedAssigner(Assigner):
     r"""
     The task assigner maintains a list of tasks.
 
-    Also it decides the policy for
-    which collaborator should run those tasks
-    There may be many types of policies implemented, but a natural place to
-    start is with a:
+    Also it decides the policy for which collaborator should run those tasks
+    There may be many types of policies implemented, but a natural place to start is with a:
 
-    StaticGroupedAssigner  - Given a set of task groups, and a list of
-                             collaborators for that group, assign tasks for
-                             of collaborators in the federation. After assigning
-                             the tasks to collaborator, those tasks
-                             should be carried out each round (no reassignment
-                             between rounds)
-    GroupedAssigner -        Given task groups and a list of collaborators that
-                             belong to that task group, carry out tasks for
-                             each round of experiment
+        - StaticGroupedAssigner : 
+            Given a set of task groups, and a list of
+            collaborators for that group, assign tasks for of collaborators in the federation. 
+            After assigning the tasks to collaborator, those tasks should be carried 
+            out each round (no reassignment between rounds).
+        - GroupedAssigner : 
+            Given task groups and a list of collaborators that
+            belong to that task group, carry out tasks for each round of experiment.
 
     Args:
         task_groups* (list of obj): task groups to assign.

@@ -15,21 +15,19 @@ class RandomGroupedAssigner(Assigner):
 
     Also it decides the policy for
     which collaborator should run those tasks
-    There may be many types of policies implemented, but a natural place to
-    start is with a:
+    There may be many types of policies implemented, but a natural place to start is with a:
 
-    RandomGroupedAssigner  - Given a set of task groups, and a percentage,
-                             assign that task group to that percentage
-                             of collaborators in the federation. After
-                             assigning the tasks to collaborator, those
-                             tasks should be carried out each round (no
-                             reassignment between rounds)
-    GroupedAssigner -        Given task groups and a list of collaborators
-                             that belong to that task group,
-                             carry out tasks for each round of experiment
+        - RandomGroupedAssigner : 
+            Given a set of task groups, and a percentage,
+            assign that task group to that percentage of collaborators in the federation.
+            After assigning the tasks to collaborator, those tasks should be carried 
+            out each round (no reassignment between rounds).
+        - GroupedAssigner : 
+            Given task groups and a list of collaborators that belong to that task group,
+            carry out tasks for each round of experiment.
 
     Args:
-        task_groups* (list of object): task groups to assign.
+        task_groups* (list of object) : task groups to assign.
 
     Note:
         \* - Plan setting.
