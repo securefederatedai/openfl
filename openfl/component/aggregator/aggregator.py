@@ -23,17 +23,17 @@ class Aggregator:
     r"""An Aggregator is the central node in federated learning.
 
     Args:
-        aggregator_uuid (str): Aggregation ID.
-        federation_uuid (str): Federation ID.
-        authorized_cols (list of str): The list of IDs of enrolled collaborators.
-        init_state_path* (str): The location of the initial weight file.
-        last_state_path* (str): The file location to store the latest weight.
-        best_state_path* (str): The file location to store the weight of the best model.
-        db_store_rounds* (int): Rounds to store in TensorDB.
-
-    Note:
+        aggregator_uuid (int) : Aggregation ID.
+        federation_uuid (str) : Federation ID.
+        authorized_cols (list of str) : The list of IDs of enrolled collaborators.
+        init_state_path* (str) : The location of the initial weight file.
+        last_state_path* (str) : The file location to store the latest weight.
+        best_state_path* (str) : The file location to store the weight of the best model.
+        db_store_rounds* (int) : Rounds to store in TensorDB.
+        
+    Note: 
         \* - plan setting.
-    """
+    """   
 
     def __init__(self,
 
@@ -264,15 +264,13 @@ class Aggregator:
         RPC called by a collaborator to determine which tasks to perform.
 
         Args:
-            collaborator_name: str
-                Requested collaborator name
+            collaborator_name (str) : Requested collaborator name
 
         Returns:
-            tasks: list[str]
-                List of tasks to be performed by the requesting collaborator
-                for the current round.
-            sleep_time: int
-            time_to_quit: bool
+            tasks (list_of_str) : List of tasks to be performed by the requesting collaborator for the current round.
+            round_number (int) : Actual round number.
+            sleep_time (int) : Sleep time.
+            time_to_quit (bool) : bool value for quit.
         """
         self.logger.debug(
             f'Aggregator GetTasks function reached from collaborator {collaborator_name}...'
@@ -345,16 +343,17 @@ class Aggregator:
             that matches the request.
 
         Args:
-            collaborator_name : str
-                Requested tensor key collaborator name
-            tensor_name: str
-            require_lossless: bool
-            round_number: int
-            report: bool
+            collaborator_name (str) : Requested tensor key collaborator name
+            tensor_name (str) : Name of the tensor.
+            require_lossless (bool) : bool value for lossless.
+            round_number (int) :  Actual round number.
+            report (bool): bool value for report.
             tags: tuple[str, ...]
         Returns:
-            named_tensor : protobuf NamedTensor
-                the tensor requested by the collaborator
+            named_tensor (protobuf) :  NamedTensor, the tensor requested by the collaborator
+        
+        Raises:
+            ValueError: if Aggregator does not have an aggregated tensor for {tensor_key}.
         """
         self.logger.debug(f'Retrieving aggregated tensor {tensor_name},{round_number},{tags} '
                           f'for collaborator {collaborator_name}')
@@ -495,11 +494,11 @@ class Aggregator:
         Transmits collaborator's task results to the aggregator.
 
         Args:
-            collaborator_name: str
-            task_name: str
-            round_number: int
-            data_size: int
-            named_tensors: protobuf NamedTensor
+            collaborator_name (str) : Collaborator name.
+            task_name (str) : Task name.
+            round_number (int) : Actual round number.
+            data_size (int) : Data size.
+            named_tensors (protobuf) : Named Tensor.
         Returns:
              None
         """
