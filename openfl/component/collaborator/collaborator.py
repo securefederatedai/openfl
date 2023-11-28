@@ -173,7 +173,15 @@ class Collaborator:
                 break
 
     def get_tasks(self):
-        """Get tasks from the aggregator."""
+        """
+        Get tasks from the aggregator.
+
+        Returns:
+            tasks (list_of_str) : List of tasks.
+            round_number (int) : Actual round number.
+            sleep_time (int) : Sleep time.
+            time_to_quit (bool) : bool value for quit.
+        """
         # logging wait time to analyze training process
         self.logger.info('Waiting for tasks...')
         tasks, round_number, sleep_time, time_to_quit = self.client.get_tasks(
@@ -182,7 +190,14 @@ class Collaborator:
         return tasks, round_number, sleep_time, time_to_quit
 
     def do_task(self, task, round_number):
-        """Do the specified task."""
+        """
+        Do the specified task.
+        
+        Args:
+            task (list_of_str) : List of tasks.
+            round_number (int) : Actual round number.
+        
+        """
         # map this task to an actual function name and kwargs
         if hasattr(self.task_runner, 'TASK_REGISTRY'):
             func_name = task.function_name
@@ -240,7 +255,7 @@ class Collaborator:
             # those are parameters that the eperiment owner registered for
             # the task.
             # There is another set of parameters that created on the
-            # collaborator side, for instance, local processing unit identifier:s
+            # collaborator side, for instance, local processing unit identifiers:
             if (self.device_assignment_policy is DevicePolicy.CUDA_PREFERRED
                     and len(self.cuda_devices) > 0):
                 kwargs['device'] = f'cuda:{self.cuda_devices[0]}'
@@ -267,17 +282,27 @@ class Collaborator:
         self.send_task_results(global_output_tensor_dict, round_number, task_name)
 
     def get_numpy_dict_for_tensorkeys(self, tensor_keys):
-        """Get tensor dictionary for specified tensorkey set."""
+        """
+        Get tensor dictionary for specified tensorkey set.
+        
+        Args:
+            tensor_keys (namedtuple) : Tensorkeys that will be resolved locally or 
+                                   remotely. May be the product of other tensors.
+
+        """
         return {k.tensor_name: self.get_data_for_tensorkey(k) for k in tensor_keys}
 
     def get_data_for_tensorkey(self, tensor_key):
         """
         Resolve the tensor corresponding to the requested tensorkey.
 
-        Args
-        ----
-        tensor_key:         Tensorkey that will be resolved locally or
-                            remotely. May be the product of other tensors
+        Args:
+            tensor_key (namedtuple) : Tensorkey that will be resolved locally or
+                         remotely. May be the product of other tensors.
+
+        Returns:
+            nparray : The decompressed tensor associated with the requested
+                      tensor key.
         """
         # try to get from the store
         tensor_name, origin, round_number, report, tags = tensor_key
@@ -355,24 +380,19 @@ class Collaborator:
         Return the decompressed tensor associated with the requested tensor key.
 
         If the key requests a compressed tensor (in the tag), the tensor will
-        be decompressed before returning
+        be decompressed before returning.
         If the key specifies an uncompressed tensor (or just omits a compressed
-        tag), the decompression operation will be skipped
+        tag), the decompression operation will be skipped.
 
-        Args
-        ----
-        tensor_key  :               The requested tensor
-        require_lossless:   Should compression of the tensor be allowed
-                                    in flight?
-                                    For the initial model, it may affect
-                                    convergence to apply lossy
-                                    compression. And metrics shouldn't be
-                                    compressed either
+        Args:
+            tensor_key (namedtuple) : The requested tensor
+            require_lossless (bool) : Should compression of the tensor be allowed
+                                      in flight? For the initial model, it may affect
+                                      convergence to apply lossy compression.
+                                      And metrics shouldn't be compressed either.
 
-        Returns
-        -------
-        nparray     : The decompressed tensor associated with the requested
-                      tensor key
+        Returns:
+            nparray : The decompressed tensor associated with the requested tensor key.
         """
         tensor_name, origin, round_number, report, tags = tensor_key
 
@@ -390,7 +410,14 @@ class Collaborator:
         return nparray
 
     def send_task_results(self, tensor_dict, round_number, task_name):
-        """Send task results to the aggregator."""
+        """
+        Send task results to the aggregator.
+        
+        Args:
+            tensor_dict (dict) : Tensor dictionary. 
+            round_number (int):  Actual round number.
+            task_name (string) : Task name.
+        """
         named_tensors = [
             self.nparray_to_named_tensor(k, v) for k, v in tensor_dict.items()
         ]
@@ -425,6 +452,15 @@ class Collaborator:
         Construct the NamedTensor Protobuf.
 
         Includes logic to create delta, compress tensors with the TensorCodec, etc.
+
+        Args:
+            tensor_key (namedtuple) : Tensorkey that will be resolved locally or
+                                      remotely. May be the product of other tensors.
+            nparray : The decompressed tensor associated with the requested
+                      tensor key.
+
+        Returns:
+            named_tensor (protobuf) : The tensor constructed from the nparray.    
         """
         # if we have an aggregated tensor, we can make a delta
         tensor_name, origin, round_number, report, tags = tensor_key
@@ -479,7 +515,15 @@ class Collaborator:
         return named_tensor
 
     def named_tensor_to_nparray(self, named_tensor):
-        """Convert named tensor to a numpy array."""
+        """
+        Convert named tensor to a numpy array.
+        
+        Args:
+            named_tensor (protobuf): The tensor to convert to nparray.
+
+        Returns:
+            decompressed_nparray (nparray): The nparray converted.
+        """
         # do the stuff we do now for decompression and frombuffer and stuff
         # This should probably be moved back to protoutils
         raw_bytes = named_tensor.data_bytes
