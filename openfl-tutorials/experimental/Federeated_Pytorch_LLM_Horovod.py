@@ -1,46 +1,42 @@
-import argparse
-from typing import Any, Mapping
-
-import horovod.torch as hvd
-import numpy as np
-import torch
-import torch as pt
-import torch.nn as nn
-from datasets import Dataset, load_dataset, load_metric
-from peft import LoraConfig, TaskType, get_peft_model
-from peft.utils import get_peft_model_state_dict, set_peft_model_state_dict
-from torch.nn import BCEWithLogitsLoss, CrossEntropyLoss, MSELoss
-from torch.optim import AdamW
-from torch.utils.data import DataLoader
-from tqdm import tqdm
 
 import openfl.native as fx
-from openfl.federated import PyTorchTaskRunner
-from openfl.federated.task.runner_pt import change_tags
-from openfl.utilities import Metric, TensorKey
-from openfl.utilities.data_splitters import EqualNumPyDataSplitter
-from transformers import (AutoModelForSequenceClassification, AutoTokenizer,
-                          DataCollatorWithPadding, get_scheduler)
-from transformers.trainer_pt_utils import get_parameter_names
 import sys
-sys.path.append('openfl/openfl-workspace/torch_llm')
+
+sys.path.append("openfl/openfl-workspace/torch_llm")
 from src.pt_model import LLMTaskRunner
 from src.ptglue_inmemory import GlueMrpcFederatedDataLoader
 import openfl.interface.workspace as workspace
 import os
-WORKSPACE_PREFIX = os.path.join(os.path.expanduser('~'), '.local', 'workspace')
+import shutil
+
+WORKSPACE_PREFIX = os.path.join(os.path.expanduser("~"), ".local", "workspace")
+
+# Run openfl-tutorials/experimental/setup_env.shsetup_env.sh in your venv to setup horovod dependancies
+# set up the venv in each node
+# make dir ~/.local/workspace in each node
+# horovod requires password less ssh login, you can learn how to set it up here: http://www.linuxproblem.org/art_9.html
+
+# You should set the following ENVIROMENTAL VARIABLES for horovod
+#OPENFL_HOROVOD_DEMO_NP=STR with number of processes to run eg. "4"
+#OPENFL_HOROVOD_DEMO_NICS=STR with the common network interface name to use with all nodes eg. "en01"
+#OPENFL_HOROVOD_DEMO_LOCALHOSTIP=STR with the IP address of the local node eg. "ip1"
+#OPENFL_HOROVOD_DEMO_HOSTS=STR with the IP address of the each node and number of slots eg. "ip1:2,ip2,2"
 
 
 def main():
-    log_level = 'INFO'
+    log_level = "INFO"
     log_file = None
-    workspace.create(WORKSPACE_PREFIX, 'torch_llm')
+    workspace.create(WORKSPACE_PREFIX, "torch_llm")
     os.chdir(WORKSPACE_PREFIX)
     fx.setup_logging(level=log_level, log_file=log_file)
     num_collaborators = 1
 
     collaborator_models = [
-        LLMTaskRunner(data_loader=GlueMrpcFederatedDataLoader(data_slice, 32, collaborator_count=num_collaborators))
+        LLMTaskRunner(
+            data_loader=GlueMrpcFederatedDataLoader(
+                data_slice, 32, collaborator_count=num_collaborators
+            )
+        )
         for data_slice in range(num_collaborators)
     ]
     collaborators = {

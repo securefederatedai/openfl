@@ -2,7 +2,6 @@
 # SPDX-License-Identifier: Apache-2.0
 
 """You may copy this file as the starting point of your own model."""
-import argparse
 from typing import Any, Mapping
 
 import horovod.torch as hvd
@@ -22,7 +21,7 @@ from openfl.federated.task.runner_pt import change_tags
 from openfl.utilities import Metric, TensorKey
 from transformers import AutoModelForSequenceClassification, get_scheduler
 from transformers.trainer_pt_utils import get_parameter_names
-from datasets import Dataset, load_dataset, load_metric
+from datasets import load_metric
 import sys
 import os
 
@@ -32,13 +31,14 @@ from src.ptglue_inmemory import InHorovodGlueMrpcFederatedDataLoader
 import subprocess
 import json
 from logging import getLogger
-import time
 
 logger = getLogger(__name__)
 
-NP="4"
-NETWORK_INTERFACES="enx00e04c681005"
-HOSTS="10.72.4.20:2,10.72.4.30:2"
+NP = os.environ.get('OPENFL_HOROVOD_DEMO_NP','4')
+NETWORK_INTERFACES = os.environ.get('OPENFL_HOROVOD_DEMO_NICS','localhost')
+LOCAL_HOST = os.environ.get('OPENFL_HOROVOD_DEMO_LOCALHOSTIP','localhost')
+HOSTS = os.environ.get('OPENFL_HOROVOD_DEMO_HOSTS','localhost:4')
+
 
 class LLMTaskRunner(PyTorchTaskRunner):
     def __init__(
@@ -57,11 +57,43 @@ class LLMTaskRunner(PyTorchTaskRunner):
         self.metric = load_metric("glue", "mrpc")
         self._init_model()
         self._init_optimizer()
-        
-        self.save_models = []
+        self.propogate_dataset()
+
+    def propogate_dataset(self):
+        self.remote_hosts = [
+            i.split(":")[0] for i in HOSTS.split(",") if i.split(":")[0] != LOCAL_HOST
+        ]
+        for rem_host in self.remote_hosts:
+            result = subprocess.run(
+                [
+                    "scp",
+                    "-r",
+                    os.getcwd() + f"/temp_dataset_{self.data_loader.data_path}_train",
+                    rem_host
+                    + ":"
+                    + os.getcwd()
+                    + f"/temp_dataset_{self.data_loader.data_path}_train",
+                ],
+                capture_output=True,
+            )
+            if result.returncode != 0:
+                raise RuntimeError(result.stderr)
+            result = subprocess.run(
+                [
+                    "scp",
+                    "-r",
+                    os.getcwd() + f"/temp_dataset_{self.data_loader.data_path}_valid",
+                    rem_host
+                    + ":"
+                    + os.getcwd()
+                    + f"/temp_dataset_{self.data_loader.data_path}_valid",
+                ],
+                capture_output=True,
+            )
+            if result.returncode != 0:
+                raise RuntimeError(result.stderr)
 
     def _init_model(self):
-        
         model = AutoModelForSequenceClassification.from_pretrained(
             self.base_model_name, return_dict=True
         )
@@ -75,9 +107,6 @@ class LLMTaskRunner(PyTorchTaskRunner):
         )
         self.model = get_peft_model(model, peft_config)
         self.model.to(self.device)
-        if self.kwargs.get("use_horovod"):
-            #hvd.broadcast_parameters(self.model.state_dict(), root_rank=0)
-            hvd.broadcast_parameters(self.state_dict(), root_rank=0)
 
     def _init_optimizer(self):
         ALL_LAYERNORM_LAYERS = [nn.LayerNorm]
@@ -109,8 +138,6 @@ class LLMTaskRunner(PyTorchTaskRunner):
             num_warmup_steps=0,
             num_training_steps=len(self.data_loader.train_set) * 5,
         )
-        if self.kwargs.get("use_horovod"):
-            self.optimizer = hvd.DistributedOptimizer(self.optimizer)
         self.initialize_tensorkeys_for_functions()
 
     def train(self):
@@ -121,6 +148,50 @@ class LLMTaskRunner(PyTorchTaskRunner):
 
     def load_state_dict(self, state_dict: Mapping[str, Any], strict: bool = True):
         return set_peft_model_state_dict(self.model, state_dict)
+    
+    def save_modelstate(self, col_name, round_num, func_name, kwargs):
+            state_path = f"col:{col_name}_rnd:{round_num}_state_{func_name}.pt"
+            out_path = f"col:{col_name}_rnd:{round_num}_out_{func_name}.pt"
+            data_path = self.data_loader.data_path
+            torch.save(
+                {
+                    "model_state_dict": self.state_dict(),
+                    "optimizer_state_dict": self.optimizer.state_dict(),
+                    "kwargs": kwargs,
+                    "lr_scheduler": self.lr_scheduler.state_dict(),
+                },
+                state_path,
+            )
+            return state_path, out_path, data_path
+        
+    def launch_horovod(self, data_path, state_path, out_path, horovod_kwags):
+            result = subprocess.run(
+                [
+                    "horovodrun",
+                    "-np",
+                    NP,
+                    "--network-interfaces",
+                    NETWORK_INTERFACES,
+                    "-H",
+                    HOSTS,
+                    "python",
+                    "src/pt_model.py",
+                    "--data_path",
+                    str(data_path),
+                    "--state_path",
+                    state_path,
+                    "--batch_size",
+                    str(self.data_loader.batch_size),
+                    "--kwargs",
+                    json.dumps(horovod_kwags),
+                    "--func",
+                    "validate",
+                    "--out_path",
+                    out_path,
+                ],
+                capture_output=True,
+            )
+            return result
 
     def validate(
         self, col_name, round_num, input_tensor_dict, use_tqdm=False, **kwargs
@@ -140,19 +211,9 @@ class LLMTaskRunner(PyTorchTaskRunner):
             local_output_dict:   Tensors to maintain in the local TensorDB
 
         """
-        self.save_models.append(input_tensor_dict.copy())
         self.rebuild_model(round_num, input_tensor_dict, validation=True)
-        state_path = f"col:{col_name}_rnd:{round_num}_state_validate.pt"
-        out_path = f"col:{col_name}_rnd:{round_num}_out_validate.pt"
-        data_path = self.data_loader.data_path
-        torch.save(
-            {
-                "model_state_dict": self.state_dict(),
-                "optimizer_state_dict": self.optimizer.state_dict(),
-                "kwargs": kwargs,
-            },
-            state_path,
-        )
+        state_path, out_path, data_path = self.save_modelstate(col_name, round_num, 'validate', kwargs)
+        self.propogate_modelstate(state_path)
         horovod_kwags = {
             "col_name": col_name,
             "round_num": round_num,
@@ -160,35 +221,13 @@ class LLMTaskRunner(PyTorchTaskRunner):
             "use_tqdm": use_tqdm,
             "use_horovod": True,
         }
-        result = subprocess.run(
-            [
-                "horovodrun",
-                "-np",
-                NP,
-                "--network-interfaces",NETWORK_INTERFACES,
-                "-H",HOSTS,
-                "python",
-                "src/pt_model.py",
-                "--data_path",
-                str(data_path),
-                "--state_path",
-                state_path,
-                "--batch_size",
-                str(self.data_loader.batch_size),
-                "--kwargs",
-                json.dumps(horovod_kwags),
-                "--func",
-                "validate",
-                "--out_path",
-                out_path,
-            ],
-            capture_output=True,
-        )
-
-        val_score = torch.load(out_path)["output"]
-
+        result = self.launch_horovod(data_path, state_path, out_path, horovod_kwags)
+        
         if result.returncode != 0:
             raise RuntimeError(result.stderr)
+        
+        val_score = torch.load(out_path)["output"]
+        
         origin = col_name
         suffix = "validate"
         if kwargs["apply"] == "local":
@@ -225,19 +264,8 @@ class LLMTaskRunner(PyTorchTaskRunner):
             local_output_dict:   Tensors to maintain in the local TensorDB
         """
         self.rebuild_model(round_num, input_tensor_dict)
-        # set to "training" mode
-        state_path = f"col:{col_name}_rnd:{round_num}_state_train_batches.pt"
-        out_path = f"col:{col_name}_rnd:{round_num}_out_train_batches.pt"
-        data_path = self.data_loader.data_path
-        torch.save(
-            {
-                "model_state_dict": self.state_dict(),
-                "optimizer_state_dict": self.optimizer.state_dict(),
-                "kwargs": kwargs,
-                "lr_scheduler": self.lr_scheduler.state_dict(),
-            },
-            state_path,
-        )
+        state_path, out_path, data_path = self.save_modelstate(col_name, round_num, 'validate', kwargs)
+        self.propogate_modelstate(state_path)
         horovod_kwags = {
             "col_name": col_name,
             "round_num": round_num,
@@ -245,30 +273,7 @@ class LLMTaskRunner(PyTorchTaskRunner):
             "use_tqdm": use_tqdm,
             "use_horovod": True,
         }
-        result = subprocess.run(
-            [
-                "horovodrun",
-                "-np",
-                NP,
-                "--network-interfaces",NETWORK_INTERFACES,
-                "-H",HOSTS,
-                "python",
-                "src/pt_model.py",
-                "--data_path",
-                str(data_path),
-                "--state_path",
-                state_path,
-                "--batch_size",
-                str(self.data_loader.batch_size),
-                "--kwargs",
-                json.dumps(horovod_kwags),
-                "--func",
-                "train_batches",
-                "--out_path",
-                out_path,
-            ],
-            capture_output=True,
-        )
+        result = self.launch_horovod(data_path, state_path, out_path, horovod_kwags)
         if result.returncode != 0:
             raise RuntimeError(result.stderr)
 
@@ -284,9 +289,7 @@ class LLMTaskRunner(PyTorchTaskRunner):
         origin = col_name
         tags = ("trained",)
         output_metric_dict = {
-            TensorKey(
-                metric.name, origin, round_num, True, ("metric",)
-            ): metric.value
+            TensorKey(metric.name, origin, round_num, True, ("metric",)): metric.value
         }
 
         # output model tensors (Doesn't include TensorKey)
@@ -309,9 +312,7 @@ class LLMTaskRunner(PyTorchTaskRunner):
         # for the updated model parameters.
         # This ensures they will be resolved locally
         next_local_tensorkey_model_dict = {
-            TensorKey(
-                tensor_name, origin, round_num + 1, False, ("model",)
-            ): nparray
+            TensorKey(tensor_name, origin, round_num + 1, False, ("model",)): nparray
             for tensor_name, nparray in local_model_dict.items()
         }
 
@@ -340,6 +341,20 @@ class LLMTaskRunner(PyTorchTaskRunner):
 
         # Return global_tensor_dict, local_tensor_dict
         return global_tensor_dict, local_tensor_dict
+    
+    def propogate_modelstate(self, state_path):
+        for rem_host in self.remote_hosts:
+            result = subprocess.run(
+                [
+                    "scp",
+                    "-r",
+                    os.getcwd() + f"/{state_path}",
+                    rem_host + ":" + os.getcwd() + f"/{state_path}",
+                ],
+                capture_output=True,
+            )
+            if result.returncode != 0:
+                raise RuntimeError(result.stderr)
 
     def train_epoch(self, batch_generator) -> Metric:
         """Train single epoch.
@@ -394,8 +409,17 @@ class LLMTaskRunner(PyTorchTaskRunner):
             optimizer_state_dict_key: self.optimizer.state_dict(),
         }
         pt.save(pickle_dict, filepath)
-        
+
+
 class InHorovodLLMTaskRunner(LLMTaskRunner):
+    
+    def load_state(self, kwargs):
+            checkpoint = torch.load(kwargs["state_path"])
+            self.load_state_dict(checkpoint["model_state_dict"])
+            self.optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
+            self.lr_scheduler.load_state_dict(checkpoint["lr_scheduler"])
+            kwargs.update(checkpoint["kwargs"])
+            
     def train_batches(
         self, col_name, round_num, input_tensor_dict, use_tqdm=False, epochs=1, **kwargs
     ):
@@ -414,11 +438,7 @@ class InHorovodLLMTaskRunner(LLMTaskRunner):
             global_output_dict:  Tensors to send back to the aggregator
             local_output_dict:   Tensors to maintain in the local TensorDB
         """
-        checkpoint = torch.load(kwargs["state_path"])
-        self.load_state_dict(checkpoint["model_state_dict"])
-        self.optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
-        self.lr_scheduler.load_state_dict(checkpoint["lr_scheduler"])
-        kwargs.update(checkpoint["kwargs"])
+        self.load_state(kwargs)
 
         self.train()
         self.to(self.device)
@@ -430,7 +450,6 @@ class InHorovodLLMTaskRunner(LLMTaskRunner):
             metric = self.train_epoch(loader)
         metric = hvd.allreduce(torch.from_numpy(metric))
         if hvd.rank() == 0:
-
             if self.model.config.problem_type == "regression":
                 loss_fct = MSELoss()
             elif self.model.config.problem_type == "single_label_classification":
@@ -448,6 +467,7 @@ class InHorovodLLMTaskRunner(LLMTaskRunner):
                 kwargs["out_path"],
             )
             
+
     def validate(
         self, col_name, round_num, input_tensor_dict, use_tqdm=False, **kwargs
     ):
@@ -466,10 +486,8 @@ class InHorovodLLMTaskRunner(LLMTaskRunner):
             local_output_dict:   Tensors to maintain in the local TensorDB
 
         """
-        checkpoint = torch.load(kwargs["state_path"])
-        self.load_state_dict(checkpoint["model_state_dict"])
-        self.optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
-        kwargs.update(checkpoint["kwargs"])
+        self.load_state(kwargs)
+        
         self.model.eval()
         self.model.to(self.device)
         val_score = 0
@@ -491,13 +509,12 @@ class InHorovodLLMTaskRunner(LLMTaskRunner):
                     predictions=predictions, references=sample["labels"]
                 )
                 samples_run += len(sample)
-                
+
         val_score = np.asarray(self.metric.compute()["accuracy"])
         result = hvd.allreduce(torch.from_numpy(val_score))
-        
+
         if hvd.rank() == 0:
             torch.save({"output": result}, kwargs["out_path"])
-    
 
 
 def get_args():
