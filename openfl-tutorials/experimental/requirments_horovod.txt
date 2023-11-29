@@ -1,0 +1,11 @@
+sentencepiece
+accelerate
+jupyter
+huggingface_hub
+peft
+transformers[torch]
+datasets
+evaluate
+seqeval
+torch
+torchvision
