@@ -36,7 +36,7 @@ import time
 
 logger = getLogger(__name__)
 
-NP=4
+NP="4"
 NETWORK_INTERFACES="enx00e04c681005"
 HOSTS="10.72.4.20:2,10.72.4.30:2"
 

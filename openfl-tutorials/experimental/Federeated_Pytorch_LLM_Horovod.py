@@ -37,15 +37,14 @@ def main():
     workspace.create(WORKSPACE_PREFIX, 'torch_llm')
     os.chdir(WORKSPACE_PREFIX)
     fx.setup_logging(level=log_level, log_file=log_file)
-    num_collaborators = 2
+    num_collaborators = 1
 
     collaborator_models = [
         LLMTaskRunner(data_loader=GlueMrpcFederatedDataLoader(data_slice, 32, collaborator_count=num_collaborators))
-        for data_slice in range(1,3)
+        for data_slice in range(num_collaborators)
     ]
     collaborators = {
         "one": collaborator_models[0],
-        "two": collaborator_models[1],
     }
 
     # Collaborator one's data
