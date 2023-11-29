@@ -169,7 +169,7 @@ class LLMTaskRunner(PyTorchTaskRunner):
             )
             return state_path, out_path, data_path
         
-    def launch_horovod(self, data_path, state_path, out_path, horovod_kwags):
+    def launch_horovod(self, data_path, state_path, out_path, function_name, horovod_kwags):
             result = subprocess.run(
                 [
                     "horovodrun",
@@ -190,7 +190,7 @@ class LLMTaskRunner(PyTorchTaskRunner):
                     "--kwargs",
                     json.dumps(horovod_kwags),
                     "--func",
-                    "validate",
+                    function_name,
                     "--out_path",
                     out_path,
                 ],
@@ -225,7 +225,7 @@ class LLMTaskRunner(PyTorchTaskRunner):
             "input_tensor_dict": None,
             "use_tqdm": use_tqdm,
         }
-        result = self.launch_horovod(data_path, state_path, out_path, horovod_kwags)
+        result = self.launch_horovod(data_path, state_path, out_path, 'validate', horovod_kwags, )
         
         if result.returncode != 0:
             raise RuntimeError(result.stderr)
@@ -276,7 +276,7 @@ class LLMTaskRunner(PyTorchTaskRunner):
             "input_tensor_dict": None,
             "use_tqdm": use_tqdm,
         }
-        result = self.launch_horovod(data_path, state_path, out_path, horovod_kwags)
+        result = self.launch_horovod(data_path, state_path, out_path, 'train_batches', horovod_kwags)
         if result.returncode != 0:
             raise RuntimeError(result.stderr)
 
