@@ -7,7 +7,7 @@ from src.pt_model import LLMTaskRunner
 from src.ptglue_inmemory import GlueMrpcFederatedDataLoader
 import openfl.interface.workspace as workspace
 import os
-import shutil
+import subprocess
 
 WORKSPACE_PREFIX = os.path.join(os.path.expanduser("~"), ".local", "workspace")
 
@@ -22,12 +22,51 @@ WORKSPACE_PREFIX = os.path.join(os.path.expanduser("~"), ".local", "workspace")
 #OPENFL_HOROVOD_DEMO_LOCALHOSTIP=STR with the IP address of the local node eg. "ip1"
 #OPENFL_HOROVOD_DEMO_HOSTS=STR with the IP address of the each node and number of slots eg. "ip1:2,ip2,2"
 
+NP = os.environ.get('OPENFL_HOROVOD_DEMO_NP','4')
+NETWORK_INTERFACES = os.environ.get('OPENFL_HOROVOD_DEMO_NICS','localhost')
+LOCAL_HOST = os.environ.get('OPENFL_HOROVOD_DEMO_LOCALHOSTIP','localhost')
+HOSTS = os.environ.get('OPENFL_HOROVOD_DEMO_HOSTS','localhost:4')
+
+print('NP:', NP)
+print('NETWORK_INTERFACES:', NETWORK_INTERFACES)
+print('LOCAL_HOST:', LOCAL_HOST)
+print('HOSTS:', HOSTS)
+
+def propogate_workspace():
+    remote_hosts = [
+        i.split(":")[0] for i in HOSTS.split(",") if i.split(":")[0] != LOCAL_HOST
+    ]
+    for rem_host in remote_hosts:
+        result = subprocess.run(
+            [
+                "scp",
+                "-r",
+                WORKSPACE_PREFIX,
+                rem_host
+                + ":" +
+                WORKSPACE_PREFIX.replace('workspace',''),
+            ],
+            capture_output=True,
+        )
+        print([
+                "scp",
+                "-r",
+                WORKSPACE_PREFIX,
+                rem_host
+                + ":" +
+                WORKSPACE_PREFIX,
+            ])
+        if result.returncode != 0:
+            raise RuntimeError(result.stderr)
 
 def main():
+    print(WORKSPACE_PREFIX)
     log_level = "INFO"
     log_file = None
     workspace.create(WORKSPACE_PREFIX, "torch_llm")
     os.chdir(WORKSPACE_PREFIX)
+    sys.path.append(WORKSPACE_PREFIX)
+    propogate_workspace()
     fx.setup_logging(level=log_level, log_file=log_file)
     num_collaborators = 1
 
