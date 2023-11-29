@@ -10,14 +10,14 @@ import torch
 from datasets import Dataset, load_dataset
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
-
+from transformers import (AutoModelForSequenceClassification, AutoTokenizer,
+                          DataCollatorWithPadding, get_scheduler)
 from openfl.utilities.data_splitters import EqualNumPyDataSplitter
 from transformers import DataCollatorWithPadding
 
 logger = getLogger(__name__)
 
 writer = None
-
 
 def get_writer():
     """Create global writer object."""
@@ -65,3 +65,15 @@ class GlueMrpc(Dataset):
             self.saved_shape = max([len(i) for i in self.data["input_ids"]])
         return self.saved_shape
 
+
+def get_dataset(base_model_name="roberta-base", padding_side="right"):
+    tokenizer = AutoTokenizer.from_pretrained(
+        base_model_name, padding_side=padding_side
+    )
+    if getattr(tokenizer, "pad_token_id") is None:
+        tokenizer.pad_token_id = tokenizer.eos_token_id
+    data_collator, tokenized_datasets = get_glue_mrpc_dataset(tokenizer)
+
+    train_set = GlueMrpc.from_dict(tokenized_datasets["train"].to_dict())
+    valid_set = GlueMrpc.from_dict(tokenized_datasets["test"].to_dict())
+    return train_set, valid_set, data_collator

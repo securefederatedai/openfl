@@ -28,7 +28,7 @@ import os
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.dirname(SCRIPT_DIR))
-from src.ptglue_inmemory import GlueMrpcFederatedDataLoader
+from src.ptglue_inmemory import InHorovodGlueMrpcFederatedDataLoader
 import subprocess
 import json
 from logging import getLogger
@@ -36,26 +36,9 @@ import time
 
 logger = getLogger(__name__)
 
-class timer:
-    def __init__(self) -> None:
-        self.clock_time = time.perf_counter()
-
-    def tic(self):
-        self.clock_time = time.perf_counter()
-
-    def toc(self):
-        return time.perf_counter() - self.clock_time
-
-    def ttoc(self):
-        val = self.toc()
-        self.tic()
-        return val
-
-    def ptoc(self, message=None):
-        print(message, self.toc())
-
-    def pttoc(self, message=None):
-        print(message, self.ttoc())
+NP=4
+NETWORK_INTERFACES="enx00e04c681005"
+HOSTS="10.72.4.20:2,10.72.4.30:2"
 
 class LLMTaskRunner(PyTorchTaskRunner):
     def __init__(
@@ -72,12 +55,8 @@ class LLMTaskRunner(PyTorchTaskRunner):
         self.base_model_name = base_model_name
         self.kwargs = kwargs
         self.metric = load_metric("glue", "mrpc")
-        self.timer = timer()
-        self.timer.tic()
         self._init_model()
-        logger.info(f'init model: {self.timer.ttoc()}')
         self._init_optimizer()
-        logger.info(f'init optimizer: {self.timer.ttoc()}')
         
         self.save_models = []
 
@@ -161,120 +140,71 @@ class LLMTaskRunner(PyTorchTaskRunner):
             local_output_dict:   Tensors to maintain in the local TensorDB
 
         """
-        if kwargs.get("use_horovod"):
-            htim = timer()
-            print(f"{hvd.rank()}:{hvd.size()} loading data")
-            checkpoint = torch.load(kwargs["state_path"])
-            self.load_state_dict(checkpoint["model_state_dict"])
-            self.optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
-            kwargs.update(checkpoint["kwargs"])
-            print(f'{hvd.rank()}:{hvd.size()} hval load: {htim.ttoc()}')
-            print(f"{hvd.rank()}:{hvd.size()} setup model")
-            self.model.eval()
-            self.model.to(self.device)
-            val_score = 0
-            total_samples = 0
-
-            print(f"start dataloader")
-            loader = self.data_loader.get_valid_loader()
-            if use_tqdm:
-                loader = tqdm(loader, desc="validate")
-            print(f'{hvd.rank()}:{hvd.size()} hval dataloader: {htim.ttoc()}')
-            print(f"{hvd.rank()}:{hvd.size()} validating")
-            samples_run = 0
-            with pt.no_grad():
-                for sample in loader:
-                    samples = sample["input_ids"].shape[0]
-                    total_samples += samples
-                    output = self.model(**sample)
-                    # get the index of the max log-probability
-                    logits = output.logits
-                    predictions = torch.argmax(logits, dim=-1)
-                    self.metric.add_batch(
-                        predictions=predictions, references=sample["labels"]
-                    )
-                    samples_run += len(sample)
-                    
-            print(f'{hvd.rank()}:{hvd.size()} hval loop: {htim.ttoc()}')
-            print(f"{hvd.rank()}:{hvd.size()} get accuracy")
-            val_score = np.asarray(self.metric.compute()["accuracy"])
-            result = hvd.allreduce(torch.from_numpy(val_score))
-            print(f"{hvd.rank()}:{hvd.size()} for local rank", hvd.rank(), val_score)
-            
-            print(f'{hvd.rank()}:{hvd.size()} samples run++++++++++++++++++++++++++++: {samples_run}')
-            if hvd.rank() == 0:
-                print(f"{hvd.rank()}:{hvd.size()} mean of the big array is %f" % result)
-                torch.save({"output": result}, kwargs["out_path"])
-                print(f'{hvd.rank()}:{hvd.size()} hval save: {htim.ttoc()}')
-        else:
-            self.timer.tic()
-            self.save_models.append(input_tensor_dict.copy())
-            self.rebuild_model(round_num, input_tensor_dict, validation=True)
-            state_path = f"col:{col_name}_rnd:{round_num}_state_validate.pt"
-            out_path = f"col:{col_name}_rnd:{round_num}_out_validate.pt"
-            data_path = self.data_loader.data_path
-            logger.info(f'validation misc: {self.timer.ttoc()}')
-            torch.save(
-                {
-                    "model_state_dict": self.state_dict(),
-                    "optimizer_state_dict": self.optimizer.state_dict(),
-                    "kwargs": kwargs,
-                },
+        self.save_models.append(input_tensor_dict.copy())
+        self.rebuild_model(round_num, input_tensor_dict, validation=True)
+        state_path = f"col:{col_name}_rnd:{round_num}_state_validate.pt"
+        out_path = f"col:{col_name}_rnd:{round_num}_out_validate.pt"
+        data_path = self.data_loader.data_path
+        torch.save(
+            {
+                "model_state_dict": self.state_dict(),
+                "optimizer_state_dict": self.optimizer.state_dict(),
+                "kwargs": kwargs,
+            },
+            state_path,
+        )
+        horovod_kwags = {
+            "col_name": col_name,
+            "round_num": round_num,
+            "input_tensor_dict": None,
+            "use_tqdm": use_tqdm,
+            "use_horovod": True,
+        }
+        result = subprocess.run(
+            [
+                "horovodrun",
+                "-np",
+                NP,
+                "--network-interfaces",NETWORK_INTERFACES,
+                "-H",HOSTS,
+                "python",
+                "src/pt_model.py",
+                "--data_path",
+                str(data_path),
+                "--state_path",
                 state_path,
-            )
-            horovod_kwags = {
-                "col_name": col_name,
-                "round_num": round_num,
-                "input_tensor_dict": None,
-                "use_tqdm": use_tqdm,
-                "use_horovod": True,
-            }
-            logger.info(f'validation save: {self.timer.ttoc()}')
-            result = subprocess.run(
-                [
-                    "horovodrun",
-                    "-np",
-                    "2",
-                    "-H","localhost:2,"
-                    "python",
-                    "src/pt_model.py",
-                    "--data_path",
-                    str(data_path),
-                    "--state_path",
-                    state_path,
-                    "--batch_size",
-                    str(self.data_loader.batch_size),
-                    "--kwargs",
-                    json.dumps(horovod_kwags),
-                    "--func",
-                    "validate",
-                    "--out_path",
-                    out_path,
-                ],
-                capture_output=True,
-            )
-            logger.info(f'validation process: {self.timer.ttoc()}')
+                "--batch_size",
+                str(self.data_loader.batch_size),
+                "--kwargs",
+                json.dumps(horovod_kwags),
+                "--func",
+                "validate",
+                "--out_path",
+                out_path,
+            ],
+            capture_output=True,
+        )
 
-            val_score = torch.load(out_path)["output"]
+        val_score = torch.load(out_path)["output"]
 
-            if result.returncode != 0:
-                raise RuntimeError(result.stderr)
-            origin = col_name
-            suffix = "validate"
-            if kwargs["apply"] == "local":
-                suffix += "_local"
-            else:
-                suffix += "_agg"
-            tags = ("metric",)
-            tags = change_tags(tags, add_field=suffix)
-            # TODO figure out a better way to pass in metric for this pytorch
-            #  validate function
-            output_tensor_dict = {
-                TensorKey("acc", origin, round_num, True, tags): np.array(val_score)
-            }
+        if result.returncode != 0:
+            raise RuntimeError(result.stderr)
+        origin = col_name
+        suffix = "validate"
+        if kwargs["apply"] == "local":
+            suffix += "_local"
+        else:
+            suffix += "_agg"
+        tags = ("metric",)
+        tags = change_tags(tags, add_field=suffix)
+        # TODO figure out a better way to pass in metric for this pytorch
+        #  validate function
+        output_tensor_dict = {
+            TensorKey("acc", origin, round_num, True, tags): np.array(val_score)
+        }
 
-            # Empty list represents metrics that should only be stored locally
-            return output_tensor_dict, {}
+        # Empty list represents metrics that should only be stored locally
+        return output_tensor_dict, {}
 
     def train_batches(
         self, col_name, round_num, input_tensor_dict, use_tqdm=False, epochs=1, **kwargs
@@ -294,161 +224,122 @@ class LLMTaskRunner(PyTorchTaskRunner):
             global_output_dict:  Tensors to send back to the aggregator
             local_output_dict:   Tensors to maintain in the local TensorDB
         """
-        if kwargs.get("use_horovod"):
-            checkpoint = torch.load(kwargs["state_path"])
-            self.load_state_dict(checkpoint["model_state_dict"])
-            self.optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
-            self.lr_scheduler.load_state_dict(checkpoint["lr_scheduler"])
-            kwargs.update(checkpoint["kwargs"])
-
-            self.train()
-            self.to(self.device)
-            for epoch in range(epochs):
-                self.logger.info(f"Run {epoch} epoch of {round_num} round")
-                loader = self.data_loader.get_train_loader()
-                if use_tqdm:
-                    loader = tqdm.tqdm(loader, desc="train epoch")
-                metric = self.train_epoch(loader)
-            metric = hvd.allreduce(torch.from_numpy(metric))
-            if hvd.rank() == 0:
-                print("mean of the big array is %f" % metric)
-
-                if self.model.config.problem_type == "regression":
-                    loss_fct = MSELoss()
-                elif self.model.config.problem_type == "single_label_classification":
-                    loss_fct = CrossEntropyLoss()
-                elif self.model.config.problem_type == "multi_label_classification":
-                    loss_fct = BCEWithLogitsLoss()
-                torch.save(
-                    {
-                        "output": metric,
-                        "model_state_dict": self.state_dict(),
-                        "optimizer_state_dict": self.optimizer.state_dict(),
-                        "loss_fct_name": loss_fct._get_name(),
-                        "lr_scheduler": self.lr_scheduler.state_dict(),
-                    },
-                    kwargs["out_path"],
-                )
-        else:
-            self.timer.tic()
-            self.rebuild_model(round_num, input_tensor_dict)
-            # set to "training" mode
-            state_path = f"col:{col_name}_rnd:{round_num}_state_train_batches.pt"
-            out_path = f"col:{col_name}_rnd:{round_num}_out_train_batches.pt"
-            data_path = self.data_loader.data_path
-            logger.info(f'train misc: {self.timer.ttoc()}')
-            torch.save(
-                {
-                    "model_state_dict": self.state_dict(),
-                    "optimizer_state_dict": self.optimizer.state_dict(),
-                    "kwargs": kwargs,
-                    "lr_scheduler": self.lr_scheduler.state_dict(),
-                },
+        self.rebuild_model(round_num, input_tensor_dict)
+        # set to "training" mode
+        state_path = f"col:{col_name}_rnd:{round_num}_state_train_batches.pt"
+        out_path = f"col:{col_name}_rnd:{round_num}_out_train_batches.pt"
+        data_path = self.data_loader.data_path
+        torch.save(
+            {
+                "model_state_dict": self.state_dict(),
+                "optimizer_state_dict": self.optimizer.state_dict(),
+                "kwargs": kwargs,
+                "lr_scheduler": self.lr_scheduler.state_dict(),
+            },
+            state_path,
+        )
+        horovod_kwags = {
+            "col_name": col_name,
+            "round_num": round_num,
+            "input_tensor_dict": None,
+            "use_tqdm": use_tqdm,
+            "use_horovod": True,
+        }
+        result = subprocess.run(
+            [
+                "horovodrun",
+                "-np",
+                NP,
+                "--network-interfaces",NETWORK_INTERFACES,
+                "-H",HOSTS,
+                "python",
+                "src/pt_model.py",
+                "--data_path",
+                str(data_path),
+                "--state_path",
                 state_path,
-            )
-            horovod_kwags = {
-                "col_name": col_name,
-                "round_num": round_num,
-                "input_tensor_dict": None,
-                "use_tqdm": use_tqdm,
-                "use_horovod": True,
-            }
-            logger.info(f'train save: {self.timer.ttoc()}')
-            result = subprocess.run(
-                [
-                    "horovodrun",
-                    "-np",
-                    "2",
-                    "-H","localhost:2,",
-                    "python",
-                    "src/pt_model.py",
-                    "--data_path",
-                    str(data_path),
-                    "--state_path",
-                    state_path,
-                    "--batch_size",
-                    str(self.data_loader.batch_size),
-                    "--kwargs",
-                    json.dumps(horovod_kwags),
-                    "--func",
-                    "train_batches",
-                    "--out_path",
-                    out_path,
-                ],
-                capture_output=True,
-            )
-            logger.info(f'train process: {self.timer.ttoc()}')
-            if result.returncode != 0:
-                raise RuntimeError(result.stderr)
+                "--batch_size",
+                str(self.data_loader.batch_size),
+                "--kwargs",
+                json.dumps(horovod_kwags),
+                "--func",
+                "train_batches",
+                "--out_path",
+                out_path,
+            ],
+            capture_output=True,
+        )
+        if result.returncode != 0:
+            raise RuntimeError(result.stderr)
 
-            checkpoint = torch.load(out_path)
-            metric = checkpoint["output"]
-            loss_fct_name = checkpoint["loss_fct_name"]
-            metric = Metric(name=loss_fct_name, value=np.array(metric))
-            self.load_state_dict(checkpoint["model_state_dict"])
-            self.optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
-            self.lr_scheduler.load_state_dict(checkpoint["lr_scheduler"])
+        checkpoint = torch.load(out_path)
+        metric = checkpoint["output"]
+        loss_fct_name = checkpoint["loss_fct_name"]
+        metric = Metric(name=loss_fct_name, value=np.array(metric))
+        self.load_state_dict(checkpoint["model_state_dict"])
+        self.optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
+        self.lr_scheduler.load_state_dict(checkpoint["lr_scheduler"])
 
-            # Output metric tensors (scalar)
-            origin = col_name
-            tags = ("trained",)
-            output_metric_dict = {
-                TensorKey(
-                    metric.name, origin, round_num, True, ("metric",)
-                ): metric.value
-            }
+        # Output metric tensors (scalar)
+        origin = col_name
+        tags = ("trained",)
+        output_metric_dict = {
+            TensorKey(
+                metric.name, origin, round_num, True, ("metric",)
+            ): metric.value
+        }
 
-            # output model tensors (Doesn't include TensorKey)
-            output_model_dict = self.get_tensor_dict(with_opt_vars=True)
-            global_model_dict, local_model_dict = split_tensor_dict_for_holdouts(
-                self.logger, output_model_dict, **self.tensor_dict_split_fn_kwargs
-            )
+        # output model tensors (Doesn't include TensorKey)
+        output_model_dict = self.get_tensor_dict(with_opt_vars=True)
+        global_model_dict, local_model_dict = split_tensor_dict_for_holdouts(
+            self.logger, output_model_dict, **self.tensor_dict_split_fn_kwargs
+        )
 
-            # Create global tensorkeys
-            global_tensorkey_model_dict = {
-                TensorKey(tensor_name, origin, round_num, False, tags): nparray
-                for tensor_name, nparray in global_model_dict.items()
-            }
-            # Create tensorkeys that should stay local
-            local_tensorkey_model_dict = {
-                TensorKey(tensor_name, origin, round_num, False, tags): nparray
-                for tensor_name, nparray in local_model_dict.items()
-            }
-            # The train/validate aggregated function of the next round will look
-            # for the updated model parameters.
-            # This ensures they will be resolved locally
-            next_local_tensorkey_model_dict = {
-                TensorKey(
-                    tensor_name, origin, round_num + 1, False, ("model",)
-                ): nparray
-                for tensor_name, nparray in local_model_dict.items()
-            }
+        # Create global tensorkeys
+        global_tensorkey_model_dict = {
+            TensorKey(tensor_name, origin, round_num, False, tags): nparray
+            for tensor_name, nparray in global_model_dict.items()
+        }
+        # Create tensorkeys that should stay local
+        local_tensorkey_model_dict = {
+            TensorKey(tensor_name, origin, round_num, False, tags): nparray
+            for tensor_name, nparray in local_model_dict.items()
+        }
+        # The train/validate aggregated function of the next round will look
+        # for the updated model parameters.
+        # This ensures they will be resolved locally
+        next_local_tensorkey_model_dict = {
+            TensorKey(
+                tensor_name, origin, round_num + 1, False, ("model",)
+            ): nparray
+            for tensor_name, nparray in local_model_dict.items()
+        }
 
-            global_tensor_dict = {**output_metric_dict, **global_tensorkey_model_dict}
-            local_tensor_dict = {
-                **local_tensorkey_model_dict,
-                **next_local_tensorkey_model_dict,
-            }
+        global_tensor_dict = {**output_metric_dict, **global_tensorkey_model_dict}
+        local_tensor_dict = {
+            **local_tensorkey_model_dict,
+            **next_local_tensorkey_model_dict,
+        }
 
-            # Update the required tensors if they need to be pulled from the
-            # aggregator
-            # TODO this logic can break if different collaborators have different
-            # roles between rounds.
-            # For example, if a collaborator only performs validation in the first
-            # round but training in the second, it has no way of knowing the
-            # optimizer state tensor names to request from the aggregator because
-            # these are only created after training occurs. A work around could
-            # involve doing a single epoch of training on random data to get the
-            # optimizer names, and then throwing away the model.
-            if self.opt_treatment == "CONTINUE_GLOBAL":
-                self.initialize_tensorkeys_for_functions(with_opt_vars=True)
+        # Update the required tensors if they need to be pulled from the
+        # aggregator
+        # TODO this logic can break if different collaborators have different
+        # roles between rounds.
+        # For example, if a collaborator only performs validation in the first
+        # round but training in the second, it has no way of knowing the
+        # optimizer state tensor names to request from the aggregator because
+        # these are only created after training occurs. A work around could
+        # involve doing a single epoch of training on random data to get the
+        # optimizer names, and then throwing away the model.
+        if self.opt_treatment == "CONTINUE_GLOBAL":
+            self.initialize_tensorkeys_for_functions(with_opt_vars=True)
 
-            # This will signal that the optimizer values are now present,
-            # and can be loaded when the model is rebuilt
-            self.training_round_completed = True
+        # This will signal that the optimizer values are now present,
+        # and can be loaded when the model is rebuilt
+        self.training_round_completed = True
 
-            # Return global_tensor_dict, local_tensor_dict
-            return global_tensor_dict, local_tensor_dict
+        # Return global_tensor_dict, local_tensor_dict
+        return global_tensor_dict, local_tensor_dict
 
     def train_epoch(self, batch_generator) -> Metric:
         """Train single epoch.
@@ -503,6 +394,110 @@ class LLMTaskRunner(PyTorchTaskRunner):
             optimizer_state_dict_key: self.optimizer.state_dict(),
         }
         pt.save(pickle_dict, filepath)
+        
+class InHorovodLLMTaskRunner(LLMTaskRunner):
+    def train_batches(
+        self, col_name, round_num, input_tensor_dict, use_tqdm=False, epochs=1, **kwargs
+    ):
+        """Train batches.
+
+        Train the model on the requested number of batches.
+
+        Args:
+            col_name:            Name of the collaborator
+            round_num:           What round is it
+            input_tensor_dict:   Required input tensors (for model)
+            use_tqdm (bool):     Use tqdm to print a progress bar (Default=True)
+            epochs:              The number of epochs to train
+
+        Returns:
+            global_output_dict:  Tensors to send back to the aggregator
+            local_output_dict:   Tensors to maintain in the local TensorDB
+        """
+        checkpoint = torch.load(kwargs["state_path"])
+        self.load_state_dict(checkpoint["model_state_dict"])
+        self.optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
+        self.lr_scheduler.load_state_dict(checkpoint["lr_scheduler"])
+        kwargs.update(checkpoint["kwargs"])
+
+        self.train()
+        self.to(self.device)
+        for epoch in range(epochs):
+            self.logger.info(f"Run {epoch} epoch of {round_num} round")
+            loader = self.data_loader.get_train_loader()
+            if use_tqdm:
+                loader = tqdm.tqdm(loader, desc="train epoch")
+            metric = self.train_epoch(loader)
+        metric = hvd.allreduce(torch.from_numpy(metric))
+        if hvd.rank() == 0:
+
+            if self.model.config.problem_type == "regression":
+                loss_fct = MSELoss()
+            elif self.model.config.problem_type == "single_label_classification":
+                loss_fct = CrossEntropyLoss()
+            elif self.model.config.problem_type == "multi_label_classification":
+                loss_fct = BCEWithLogitsLoss()
+            torch.save(
+                {
+                    "output": metric,
+                    "model_state_dict": self.state_dict(),
+                    "optimizer_state_dict": self.optimizer.state_dict(),
+                    "loss_fct_name": loss_fct._get_name(),
+                    "lr_scheduler": self.lr_scheduler.state_dict(),
+                },
+                kwargs["out_path"],
+            )
+            
+    def validate(
+        self, col_name, round_num, input_tensor_dict, use_tqdm=False, **kwargs
+    ):
+        """Validate.
+
+        Run validation of the model on the local data.
+
+        Args:
+            col_name:            Name of the collaborator
+            round_num:           What round is it
+            input_tensor_dict:   Required input tensors (for model)
+            use_tqdm (bool):     Use tqdm to print a progress bar (Default=True)
+
+        Returns:
+            global_output_dict:  Tensors to send back to the aggregator
+            local_output_dict:   Tensors to maintain in the local TensorDB
+
+        """
+        checkpoint = torch.load(kwargs["state_path"])
+        self.load_state_dict(checkpoint["model_state_dict"])
+        self.optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
+        kwargs.update(checkpoint["kwargs"])
+        self.model.eval()
+        self.model.to(self.device)
+        val_score = 0
+        total_samples = 0
+
+        loader = self.data_loader.get_valid_loader()
+        if use_tqdm:
+            loader = tqdm(loader, desc="validate")
+        samples_run = 0
+        with pt.no_grad():
+            for sample in loader:
+                samples = sample["input_ids"].shape[0]
+                total_samples += samples
+                output = self.model(**sample)
+                # get the index of the max log-probability
+                logits = output.logits
+                predictions = torch.argmax(logits, dim=-1)
+                self.metric.add_batch(
+                    predictions=predictions, references=sample["labels"]
+                )
+                samples_run += len(sample)
+                
+        val_score = np.asarray(self.metric.compute()["accuracy"])
+        result = hvd.allreduce(torch.from_numpy(val_score))
+        
+        if hvd.rank() == 0:
+            torch.save({"output": result}, kwargs["out_path"])
+    
 
 
 def get_args():
@@ -537,16 +532,11 @@ def get_args():
 
 
 def main():
-    tic = timer()
     args = get_args()
-    print("getting GlueMrpcFederatedDataLoader")
-    data_loader = GlueMrpcFederatedDataLoader(
+    data_loader = InHorovodGlueMrpcFederatedDataLoader(
         data_path=args.data_path, batch_size=args.batch_size, use_horovod=True
     )
-    print(f'inside dataloader: {tic.ttoc()}')
-    print("getting taskrunner")
-    taskrunner = LLMTaskRunner(data_loader, use_horovod=True)
-    print(f'inside llmtaskrunner: {tic.ttoc()}')
+    taskrunner = InHorovodLLMTaskRunner(data_loader, use_horovod=True)
     func = getattr(taskrunner, args.func)
     kwargs = json.loads(args.kwargs)
     kwargs.update(
@@ -556,16 +546,9 @@ def main():
             "out_path": args.out_path,
         }
     )
-    print("running function")
     p = func(**kwargs)
-    print(f'inside process: {tic.ttoc()}')
     return p
 
 
 if __name__ == "__main__":
-    print("in main")
     main()
-
-#horovodrun -np 4 -H localhost:4 python src/pt_model.py --data_path 1 --state_path col:one_rnd:0_state_validate.pt --batch_size 32 --func validate --out_path col:one_rnd:0_out_validate.pt --kwargs '{"col_name": "one", "round_num": "0", "input_tensor_dict": "null", "use_tqdm": "false", "use_horovod": "true"}'
-
-#horovodrun -np 2 -H localhost:1,10.72.4.30:1 python src/pt_model.py --data_path 1 --state_path col:one_rnd:0_state_validate.pt --batch_size 32 --func validate --out_path col:one_rnd:0_out_validate.pt --kwargs '{"col_name": "one", "round_num": "0", "input_tensor_dict": "null", "use_tqdm": "false", "use_horovod": "true"}'
