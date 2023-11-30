@@ -28,7 +28,22 @@ DEFAULT_RETRY_TIMEOUT_IN_SECONDS = 5
 
 
 class Envoy:
-    """Envoy class."""
+    """
+    Envoy class. The Envoy is a long-lived entity that runs on collaborator nodes connected to the Director.
+    
+    Args:
+        shard_name (str) :
+        director_host (str) :
+        shard_descriptor (Type[ShardDescriptor]) :
+        root_certificate (Optional[Union[Path, str]]) :
+        private_key (Optional[Union[Path, str]]) :
+        certificate (Optional[Union[Path, str]]) :
+        tls (bool) :
+        install_requirements (bool) :
+        cuda_devices (Union[tuple, list]) :
+        cuda_device_monitor (Optional[Type[CUDADeviceMonitor]]) :
+        review_plan_callback (Union[None, Callable]) :
+    """
 
     def __init__(
             self, *,
