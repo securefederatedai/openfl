@@ -461,14 +461,6 @@ class Director:
 
 
 def _get_model_download_statuses(experiment) -> List[dict]:
-    """_summary_
-
-    Args:
-        experiment (_type_): _description_
-
-    Returns:
-        List[dict]: _description_
-    """    
     best_model_status = 'ready' if experiment.aggregator.best_tensor_dict else 'pending'
     last_model_status = 'ready' if experiment.aggregator.last_tensor_dict else 'pending'
     model_statuses = [{
