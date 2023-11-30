@@ -5,7 +5,7 @@
 |productName| API
 *************************************************
 
-Welcome to the (|productName|) API reference:
+Welcome to the |productName| API reference:
 
 .. autosummary::
    :toctree: _autosummary
@@ -20,13 +20,3 @@ Welcome to the (|productName|) API reference:
    openfl.component.straggler_handling_functions
 
    - :doc:`openfl.component`
-
-..   openfl.component.aggregator.aggregator.Aggregator <_autosummary/openfl.component.aggregator.aggregator.Aggregator>
-..   openfl.component.director.director.Director <_autosummary/openfl.component.director.director.Director>
-
-..   openfl.component.director
-..   openfl.component.aggregator
-
-.. #  - :doc:`component`
-.. #  - :doc:`component.aggregator`
-.. #  - :doc:`component.assigner`
