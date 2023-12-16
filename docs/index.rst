@@ -23,13 +23,47 @@ Training of statistical models may be done with any deep learning framework, suc
 Looking for the Open Flash Library project also referred to as OpenFL? Find it [here](https://www.openfl.org/)!
 
 .. toctree::
-   :maxdepth: 2
-   :caption: Contents:
+   :caption: ABOUT
+   :maxdepth: 3
+   :hidden:
 
-   manual
-   openfl
-   troubleshooting
-   notices_and_disclaimers
+   about/introduction
+   about/features
+   about/releases
+   about/blogs_publications
+   about/license
+
+.. toctree::
+   :caption: GET STARTED
+   :maxdepth: 3
+   :hidden:
+
+   get_started/installation
+   get_started/quickstart
+   get_started/examples
+
+.. toctree::
+   :caption: DEVELOPER GUIDE
+   :maxdepth: 3
+   :hidden:
+
+   developer_guide/manual
+   developer_guide/openfl_structure
+ 
+.. toctree::
+   :caption: DEVELOPER REFERENCE
+   :maxdepth: 3
+   :hidden:
+
+   developer_ref/api_documentation
+   developer_ref/troubleshooting
+
+.. toctree::
+   :caption: CONTRIBUTING GUIDELINES
+   :maxdepth: 3
+   :hidden:
+
+   contribution_guidelines/contributing
 
 
 .. Indices and tables
