@@ -15,9 +15,11 @@ import torch
 from datasets import Dataset
 from src.glue_utils import GlueMrpc, get_dataset
 from torch.utils.data import DataLoader
-
+from datasets import load_from_disk
 from openfl.utilities.data_splitters import EqualNumPyDataSplitter
+from logging import getLogger
 
+logger = getLogger(__name__)
 
 class GlueMrpcFederatedDataLoader(DataLoader):
     def __init__(self, data_path, batch_size, **kwargs):
@@ -93,15 +95,14 @@ class GlueMrpcFederatedDataLoader(DataLoader):
 
 class InHorovodGlueMrpcFederatedDataLoader(GlueMrpcFederatedDataLoader):
     def __init__(self, data_path, batch_size, **kwargs):
+        logger.info('get dataset')
         train_set, valid_set, data_collator = get_dataset()
 
         self.data_path = data_path
         self.batch_size = batch_size
         self.data_collator = data_collator
         self.datasave_path = f"temp_dataset_{self.data_path}"
-        hvd.init()
-        from datasets import load_from_disk
-
+        logger.info('load from disk')
         train_set = load_from_disk(f"{self.datasave_path}_train")
         valid_set = load_from_disk(f"{self.datasave_path}_valid")
         self.train_set = GlueMrpc.from_dict(train_set.to_dict())
