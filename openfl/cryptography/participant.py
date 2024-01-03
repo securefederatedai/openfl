@@ -15,7 +15,16 @@ from cryptography.x509.oid import NameOID
 
 def generate_csr(common_name: str,
                  server: bool = False) -> Tuple[RSAPrivateKey, CertificateSigningRequest]:
-    """Issue certificate signing request for server and client."""
+    """
+    Issue a Certificate Signing Request (CSR) for a server or a client.
+
+    Args:
+        common_name (str): The common name for the certificate.
+        server (bool, optional): A flag to indicate if the CSR is for a server. If False, the CSR is for a client. Defaults to False.
+
+    Returns:
+        Tuple[RSAPrivateKey, CertificateSigningRequest]: The private key and the CSR.
+    """
     # Generate private key
     private_key = rsa.generate_private_key(
         public_exponent=65537,
