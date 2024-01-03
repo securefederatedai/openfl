@@ -21,7 +21,15 @@ from cryptography.x509.oid import NameOID
 
 
 def generate_root_cert(days_to_expiration: int = 365) -> Tuple[RSAPrivateKey, Certificate]:
-    """Generate_root_certificate."""
+    """
+    Generate a root certificate and its corresponding private key.
+
+    Args:
+        days_to_expiration (int, optional): The number of days until the certificate expires. Defaults to 365.
+
+    Returns:
+        Tuple[RSAPrivateKey, Certificate]: The private key and the certificate.
+    """
     now = datetime.datetime.utcnow()
     expiration_delta = days_to_expiration * datetime.timedelta(1, 0, 0)
 
@@ -64,7 +72,12 @@ def generate_root_cert(days_to_expiration: int = 365) -> Tuple[RSAPrivateKey, Ce
 
 
 def generate_signing_csr() -> Tuple[RSAPrivateKey, CertificateSigningRequest]:
-    """Generate signing CSR."""
+    """
+    Generate a Certificate Signing Request (CSR) and its corresponding private key.
+
+    Returns:
+        Tuple[RSAPrivateKey, CertificateSigningRequest]: The private key and the CSR.
+    """
     # Generate private key
     signing_private_key = rsa.generate_private_key(
         public_exponent=65537,
@@ -98,15 +111,18 @@ def sign_certificate(csr: CertificateSigningRequest, issuer_private_key: RSAPriv
                      issuer_name: Name, days_to_expiration: int = 365,
                      ca: bool = False) -> Certificate:
     """
-    Sign the incoming CSR request.
+    Sign a incoming Certificate Signing Request (CSR) with the issuer's private key.
 
     Args:
-        csr                : Certificate Signing Request object
-        issuer_private_key : Root CA private key if the request is for the signing
-                             CA; Signing CA private key otherwise
-        issuer_name        : x509 Name
-        days_to_expiration : int (365 days by default)
-        ca                 : Is this a certificate authority
+        csr (CertificateSigningRequest): The CSR to be signed.
+        issuer_private_key (RSAPrivateKey): Root CA private key if the request is for the signing
+                             CA; Signing CA private key otherwise.
+        issuer_name (Name): The name of the issuer.
+        days_to_expiration (int, optional): The number of days until the certificate expires. Defaults to 365.
+        ca (bool, optional): Whether the certificate is for a certificate authority (CA). Defaults to False.
+
+    Returns:
+        Certificate: The signed certificate.
     """
     now = datetime.datetime.utcnow()
     expiration_delta = days_to_expiration * datetime.timedelta(1, 0, 0)
