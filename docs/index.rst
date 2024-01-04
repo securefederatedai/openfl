@@ -20,6 +20,8 @@ Training of statistical models may be done with any deep learning framework, suc
 
 |productName| is a community supported project, originally developed by Intel Labs and the Intel Internet of Things Group. The team would like to encourage any contributions, notes, or requests to improve the documentation.
 
+Looking for the Open Flash Library project also referred to as OpenFL? Find it [here](https://www.openfl.org/)!
+
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
