@@ -35,6 +35,7 @@ Explore new and experimental features:
    install
    running_the_federation
    running_the_federation_with_gandlf
+   federated_evaluation
    source/utilities/utilities
    advanced_topics
    source/workflow/running_the_federation.tutorial
