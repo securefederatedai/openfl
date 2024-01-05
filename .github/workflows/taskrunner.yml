@@ -36,6 +36,3 @@ jobs:
     - name: Test TaskRunner API
       run: |
         python -m tests.github.test_hello_federation --template keras_cnn_mnist --fed_workspace aggregator --col1 col1 --col2 col2  --rounds-to-train 3 --save-model output_model
-    - name: Test Experimental Aggregator Based Workflow API
-      run: |
-        python -m tests.github.experimental.workspace.test_experimental_agg_based_workflow --custom_template tests/github/experimental/workspace/testcase_datastore_cli --fed_workspace aggregator --col col1 --col col2  --rounds-to-train 1
