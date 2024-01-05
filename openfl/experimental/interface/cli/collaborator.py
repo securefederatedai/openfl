@@ -75,7 +75,7 @@ def start_(plan, collaborator_name, secure, data_config="plan/data.yaml"):
     else:
         import yaml
         from yaml.loader import SafeLoader
-        collaborator_name=collaborator_name.lower()
+        collaborator_name = collaborator_name.lower()
         with open(data_config, 'r') as f:
             data = yaml.load(f, Loader=SafeLoader)
             if data.get(collaborator_name, None) is None:
