@@ -104,11 +104,10 @@ class TestFlowPrivateAttributes(FLSpec):
                 + f" not accessible {bcolors.ENDC}"
             )
 
-        for input in enumerate(inputs):
-            collab = input[1].input
+        for idx, collab in enumerate(inputs):
             if (
-                hasattr(input, "train_loader") is True
-                or hasattr(input, "test_loader") is True
+                hasattr(collab, "train_loader") is True
+                or hasattr(collab, "test_loader") is True
             ):
                 # Error - we are able to access collaborator attributes
                 TestFlowPrivateAttributes.error_list.append(
