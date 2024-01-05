@@ -1,6 +1,5 @@
-
 Federated Evaluation with OpenFL
-==============================
+=================================
 
 Introduction to Federated Evaluation
 -------------------------------------
@@ -20,7 +19,7 @@ In general pipeline is as follows:
 4. **Aggregation**: The aggregator collects and aggregates these metrics to assess overall model performance.
 
 Example Using the Task Runner API (Aggregator-based Workflow)
-----------------------------------------------
+-------------------------------------------------------------------
 
 To demonstrate usage of the task runner API (aggregator-based workflow) for federated evaluation, consider the `Hello Federation example <https://github.com/securefederatedai/openfl/blob/develop/tests/github/test_hello_federation.py>`_. This sample script creates a simple federation with two collaborator nodes and one aggregator node, and executes based on a user specified workspace template. We provide a ``torch_cnn_mnist_fed_eval`` template, which is a federated evaluation template adapted from ``torch_cnn_mnist``. 
 
