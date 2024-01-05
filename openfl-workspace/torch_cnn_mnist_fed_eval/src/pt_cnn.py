@@ -6,7 +6,6 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import torch.optim as optim
 import tqdm
 
 from openfl.federated import PyTorchTaskRunner
@@ -96,7 +95,6 @@ class PyTorchCNN(PyTorchTaskRunner):
             print(self)
         self.to(device)
 
-
     def forward(self, x):
         """Forward pass of the model.
 
@@ -166,7 +164,6 @@ class PyTorchCNN(PyTorchTaskRunner):
 
         # Empty list represents metrics that should only be stored locally
         return output_tensor_dict, {}
-
 
     def save_native(self, filepath):
         """
