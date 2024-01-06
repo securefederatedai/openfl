@@ -73,7 +73,7 @@ class TestFlowSubsetCollaborators(FLSpec):
 
         """
         print("inside join")
-        self.collaborators_ran = [input.collaborator_ran for input in inputs]
+        self.collaborators_ran = [i.collaborator_ran for i in inputs]
         self.next(self.end)
 
     @aggregator
@@ -140,6 +140,8 @@ if __name__ == "__main__":
 
         subset_collaborators = testflow_subset_collaborators.subset_collabrators
         collaborators_ran = testflow_subset_collaborators.collaborators_ran
+        # We now convert names to lowercase
+        collaborators_ran = list(map(str.lower, collaborators_ran))
         random_ints = testflow_subset_collaborators.random_ints
         random_ints.remove(len(subset_collaborators))
 
@@ -161,6 +163,8 @@ if __name__ == "__main__":
                 + f"Testcase Passed.{bcolors.ENDC}"
             )
         passed = True
+        print(f'subset_collaborators = {subset_collaborators}')
+        print(f'collaborators_ran = {collaborators_ran}')
         for collaborator_name in subset_collaborators:
             if collaborator_name not in collaborators_ran:
                 passed = False
