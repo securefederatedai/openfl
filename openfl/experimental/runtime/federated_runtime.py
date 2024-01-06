@@ -11,10 +11,26 @@ if TYPE_CHECKING:
 
 
 class FederatedRuntime(Runtime):
+    """Class for a federated runtime, derived from the Runtime class.
+
+    Attributes:
+        aggregator (Type[Aggregator]): The aggregator participant.
+        collaborators (List[Type[Collaborator]]): The list of collaborator participants.
+    """
+        
     def __init__(
             self,
             aggregator: Type[Aggregator],
             collaborators: List[Type[Collaborator]] = None
     ) -> None:
-        """Use remote federated infrastructure to run the flow"""
+        """Initializes the FederatedRuntime object with an aggregator and an optional list of collaborators.
+        Use remote federated infrastructure to run the flow.
+        
+        Args:
+            aggregator (Type[Aggregator]): The aggregator participant.
+            collaborators (List[Type[Collaborator]], optional): The list of collaborator participants. Defaults to None.
+
+        Raises:
+            NotImplementedError: FederatedRuntime will be implemented in the future.
+        """
         raise NotImplementedError("FederatedRuntime will be implemented in the future")

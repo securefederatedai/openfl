@@ -13,11 +13,26 @@ from typing import Callable
 
 
 class RayExecutor:
+    """Class for executing tasks using Ray.
+
+    Attributes:
+        remote_functions (list): The list of remote functions to be executed.
+        remote_contexts (list): The list of contexts for the remote functions.
+    """
+        
     def __init__(self):
+        """Initializes the RayExecutor object."""
+
         self.remote_functions = []
         self.remote_contexts = []
 
     def ray_call_put(self, ctx, func):
+        """Calls a remote function and puts the context into the Ray object store.
+
+        Args:
+            ctx: The context to be put into the Ray object store.
+            func: The remote function to be called.
+        """
         remote_to_exec = make_remote(func, num_gpus=func.num_gpus)
         ref_ctx = ray.put(ctx)
         self.remote_contexts.append(ref_ctx)
@@ -26,6 +41,11 @@ class RayExecutor:
         del ref_ctx
 
     def get_remote_clones(self):
+        """Retrieves the remote clones.
+
+        Returns:
+            clones (list): A list of deep copied remote clones.
+        """
         clones = deepcopy(ray.get(self.remote_functions))
         del self.remote_functions
         # Remove clones from ray object store
@@ -35,12 +55,14 @@ class RayExecutor:
 
 
 def make_remote(f: Callable, num_gpus: int) -> Callable:
-    """
-    Assign function to run in its own process using
-    Ray
+    """Assigns a function to run in its own process using Ray.
 
     Args:
-        num_gpus: Defines the number of GPUs to request for a task
+        f (Callable): The function to be assigned.
+        num_gpus (int): The number of GPUs to request for a task.
+
+    Returns:
+        Callable: The wrapped function.
     """
     f = ray.put(f)
 
@@ -56,9 +78,8 @@ def make_remote(f: Callable, num_gpus: int) -> Callable:
 
 
 def aggregator(f: Callable = None) -> Callable:
-    """
-    Placement decorator that designates that the task will
-    run at the aggregator node
+    """Placement decorator that designates that the task will
+    run at the aggregator node.
 
     Usage:
     class MyFlow(FLSpec):
@@ -68,6 +89,11 @@ def aggregator(f: Callable = None) -> Callable:
            ...
         ...
 
+    Args:
+        f (Callable, optional): The function to be decorated.
+
+    Returns:
+        Callable: The decorated function.
     """
 
     print(f'Aggregator step "{f.__name__}" registered')
@@ -97,9 +123,8 @@ def collaborator(
         *,
         num_gpus: float = 0
 ) -> Callable:
-    """
-    Placement decorator that designates that the task will
-    run at the collaborator node
+    """Placement decorator that designates that the task will
+    run at the collaborator node.
 
     Usage:
     class MyFlow(FLSpec):
@@ -114,11 +139,15 @@ def collaborator(
         ...
 
     Args:
-        num_gpus: [Applicable for Ray backend only]
+        f (Callable, optional): The function to be decorated.
+        num_gpus (float, optional): [Applicable for Ray backend only]
                   Defines how many GPUs will be made available
                   to the task (Default = 0). Selecting a value < 1 (0.0-1.0]
                   will result in sharing of GPUs between tasks. 1 >= results in
                   exclusive GPU access for the task.
+    
+    Returns:
+        Callable: The decorated function.
     """
 
     if f is None:

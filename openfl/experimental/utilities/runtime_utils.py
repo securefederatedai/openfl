@@ -8,7 +8,16 @@ from types import MethodType
 
 
 def parse_attrs(ctx, exclude=[], reserved_words=["next", "runtime", "input"]):
-    """Returns ctx attributes and artifacts"""
+    """Parses the context to get its attributes and artifacts, excluding those specified.
+
+    Args:
+        ctx (any): The context to parse.
+        exclude (list, optional): A list of attribute names to exclude. Defaults to an empty list.
+        reserved_words (list, optional): A list of reserved words to exclude. Defaults to ["next", "runtime", "input"].
+
+    Returns:
+        tuple: A tuple containing a list of attribute names and a list of valid artifacts (pairs of attribute names and values).
+    """
     # TODO Persist attributes to local disk, database, object store, etc. here
     cls_attrs = []
     valid_artifacts = []
@@ -27,7 +36,15 @@ def parse_attrs(ctx, exclude=[], reserved_words=["next", "runtime", "input"]):
 
 
 def generate_artifacts(ctx, reserved_words=["next", "runtime", "input"]):
-    """Returns ctx artifacts, and artifacts_iter method"""
+    """Generates artifacts from the given context, excluding specified reserved words.
+
+    Args:
+        ctx (any): The context to generate artifacts from.
+        reserved_words (list, optional): A list of reserved words to exclude. Defaults to ["next", "runtime", "input"].
+
+    Returns:
+        tuple: A tuple containing a generator of artifacts and a list of attribute names.
+    """
     cls_attrs, valid_artifacts = parse_attrs(ctx, reserved_words=reserved_words)
 
     def artifacts_iter():
@@ -41,8 +58,16 @@ def generate_artifacts(ctx, reserved_words=["next", "runtime", "input"]):
 
 def filter_attributes(ctx, f, **kwargs):
     """
-    Filter out explicitly included / excluded attributes from the next task
-    in the flow.
+    Filters out attributes from the next task in the flow based on inclusion or exclusion.
+
+    Args:
+        ctx (any): The context to filter attributes from.
+        f (function): The next task function in the flow.
+        **kwargs: Optional arguments that specify the 'include' or 'exclude' lists.
+
+    Raises:
+        RuntimeError: If both 'include' and 'exclude' are present, or if an attribute in 'include' or 'exclude' is not 
+            found in the context's attributes.
     """
 
     _, cls_attrs = generate_artifacts(ctx=ctx)
@@ -72,7 +97,12 @@ def filter_attributes(ctx, f, **kwargs):
 
 def checkpoint(ctx, parent_func, chkpnt_reserved_words=["next", "runtime"]):
     """
-    [Optionally] save current state for the task just executed task
+    Optionally saves the current state for the task just executed.
+
+    Args:
+        ctx (any): The context to checkpoint.
+        parent_func (function): The function that was just executed.
+        chkpnt_reserved_words (list, optional): A list of reserved words to exclude from checkpointing. Defaults to ["next", "runtime"].
     """
 
     # Extract the stdout & stderr from the buffer
