@@ -5,4 +5,9 @@ from torch.cuda import device_count
 
 
 def get_number_of_gpus() -> int:
+    """Gets the number of GPUs available.
+
+    Returns:
+        int: The number of GPUs available.
+    """
     return device_count()

@@ -24,6 +24,14 @@ from typing import Callable
 
 
 class LocalRuntime(Runtime):
+    """Class for a local runtime, derived from the Runtime class.
+
+    Attributes:
+        aggregator (Type[Aggregator]): The aggregator participant.
+        __collaborators (dict): The collaborators, stored as a dictionary of names to participants.
+        backend (str): The backend that will execute the tasks.
+    """
+        
     def __init__(
         self,
         aggregator: Type[Aggregator] = None,
@@ -31,31 +39,31 @@ class LocalRuntime(Runtime):
         backend: str = "single_process",
         **kwargs,
     ) -> None:
-        """
-        Use single node to run the flow
+        """Initializes the LocalRuntime object to run the flow on a single node, with an optional aggregator, 
+        an optional list of collaborators, an optional backend, and additional keyword arguments.
 
         Args:
-            aggregator:    The aggregator instance that holds private attributes
-            collaborators: A list of collaborators; each with their own private attributes
-            backend:       The backend that will execute the tasks. Available options are:
+            aggregator (Type[Aggregator], optional): The aggregator instance that holds private attributes.
+            collaborators (List[Type[Collaborator]], optional): A list of collaborators; each with their own private attributes.
+            backend (str, optional): The backend that will execute the tasks. Defaults to "single_process". 
+                Available options are:
 
-                           'single_process': (default) Executes every task within the same process
+                'single_process': (default) Executes every task within the same process
 
-                           'ray':            Executes tasks using the Ray library. Each participant
-                                             runs tasks in their own isolated process. Also
-                                             supports GPU isolation using Ray's 'num_gpus'
-                                             argument, which can be passed in through the
-                                             collaborator placement decorator.
+                'ray': Executes tasks using the Ray library. Each participant runs tasks in their own isolated process. 
+                Also supports GPU isolation using Ray's 'num_gpus' argument, which can be passed in through the collaborator 
+                placement decorator.
 
-                                             Example:
-                                             @collaborator(num_gpus=1)
-                                             def some_collaborator_task(self):
-                                                 ...
-
-
-                                             By selecting num_gpus=1, the task is guaranteed
-                                             exclusive GPU access. If the system has one GPU,
-                                             collaborator tasks will run sequentially.
+                Example:
+                @collaborator(num_gpus=1)
+                def some_collaborator_task(self):
+                ...
+                
+                By selecting num_gpus=1, the task is guaranteed exclusive GPU access. If the system has one GPU, collaborator 
+                tasks will run sequentially.
+        
+        Raises:
+            ValueError: If the provided backend value is not 'ray' or 'single_process'.
         """
         super().__init__()
         if backend not in ["ray", "single_process"]:
@@ -78,24 +86,38 @@ class LocalRuntime(Runtime):
 
     @property
     def aggregator(self) -> str:
-        """Returns name of _aggregator"""
+        """Gets the name of the aggregator.
+
+        Returns:
+            str: The name of the aggregator.
+        """
         return self._aggregator.name
 
     @aggregator.setter
     def aggregator(self, aggregator: Type[Aggregator]):
-        """Set LocalRuntime _aggregator"""
+        """Set LocalRuntime _aggregator.
+        
+        Args:
+            aggregator (Type[Aggregator]): The aggregator to be set.
+        """
         self._aggregator = aggregator
 
     @property
     def collaborators(self) -> List[str]:
-        """
-        Return names of collaborators. Don't give direct access to private attributes
+        """Return names of collaborators. Don't give direct access to private attributes.
+
+        Returns:
+            List[str]: The names of the collaborators.
         """
         return list(self.__collaborators.keys())
 
     @collaborators.setter
     def collaborators(self, collaborators: List[Type[Collaborator]]):
-        """Set LocalRuntime collaborators"""
+        """Set LocalRuntime collaborators.
+        
+        Args:
+            collaborators (List[Type[Collaborator]]): The collaborators to be set.
+        """
         self.__collaborators = {
             collaborator.name: collaborator for collaborator in collaborators
         }
@@ -105,7 +127,12 @@ class LocalRuntime(Runtime):
             ctx: Type[FLSpec],
             instance_snapshot: List[Type[FLSpec]]
     ):
-        """Restores attributes from backup (in instance snapshot) to ctx"""
+        """Restores attributes from backup (in instance snapshot) to context (ctx).
+        
+        Args:
+            ctx (Type[FLSpec]): The context to restore the snapshot to.
+            instance_snapshot (List[Type[FLSpec]]): The snapshot of the instance to be restored.
+        """
         for backup in instance_snapshot:
             artifacts_iter, _ = generate_artifacts(ctx=backup)
             for name, attr in artifacts_iter():
@@ -120,20 +147,18 @@ class LocalRuntime(Runtime):
         instance_snapshot: List[Type[FLSpec]] = [],
         **kwargs
     ):
-        """
-        Performs the execution of a task as defined by the
+        """Performs the execution of a task as defined by the
         implementation and underlying backend (single_process, ray, etc)
-        on a single node
+        on a single node.
 
         Args:
-            flspec_obj:        Reference to the FLSpec (flow) object. Contains information
-                               about task sequence, flow attributes, that are needed to
-                               execute a future task
-            f:                 The next task to be executed within the flow
-            parent_func:       The prior task executed in the flow
-            instance_snapshot: A prior FLSpec state that needs to be restored from
-                               (i.e. restoring aggregator state after collaborator
-                               execution)
+            flspec_obj (Type[FLSpec]): Reference to the FLSpec (flow) object. Contains information
+                about task sequence, flow attributes, that are needed to execute a future task.
+            f (Callable): The next task to be executed within the flow.
+            parent_func (Callable): The prior task executed in the flow.
+            instance_snapshot (List[Type[FLSpec]], optional): A prior FLSpec state that needs to be 
+                restored from (i.e. restoring aggregator state after collaborator execution).
+            **kwargs: Additional keyword arguments.
         """
         from openfl.experimental.interface import (
             FLSpec,
@@ -229,4 +254,9 @@ class LocalRuntime(Runtime):
                 final_attributes = artifacts_iter()
 
     def __repr__(self):
+        """Returns the string representation of the LocalRuntime object.
+
+        Returns:
+            str: The string representation of the LocalRuntime object.
+        """
         return "LocalRuntime"
