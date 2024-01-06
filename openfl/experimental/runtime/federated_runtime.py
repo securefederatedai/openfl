@@ -16,51 +16,27 @@ from typing import List, Type
 
 
 class FederatedRuntime(Runtime):
+    """Class for a federated runtime, derived from the Runtime class.
 
+    Attributes:
+        aggregator (Type[Aggregator]): The aggregator participant.
+        collaborators (List[Type[Collaborator]]): The list of collaborator participants.
+    """
+        
     def __init__(
         self,
         aggregator: str = None,
         collaborators: List[str] = None,
         **kwargs,
     ) -> None:
-        """
-        Use single node to run the flow
-
+        """Initializes the FederatedRuntime object with an aggregator and an optional list of collaborators.
+        Use remote federated infrastructure to run the flow.
+        
         Args:
-            aggregator:    Name of the aggregator.
-            collaborators: List of collaborator names.
+            aggregator (Type[Aggregator]): The aggregator participant.
+            collaborators (List[Type[Collaborator]], optional): The list of collaborator participants. Defaults to None.
 
-        Returns:
-            None
+        Raises:
+            NotImplementedError: FederatedRuntime will be implemented in the future.
         """
-        super().__init__()
-        if aggregator is not None:
-            self.aggregator = aggregator
-
-        if collaborators is not None:
-            self.collaborators = collaborators
-
-    @property
-    def aggregator(self) -> str:
-        """Returns name of _aggregator"""
-        return self._aggregator
-
-    @aggregator.setter
-    def aggregator(self, aggregator_name: Type[Aggregator]):
-        """Set LocalRuntime _aggregator"""
-        self._aggregator = aggregator_name
-
-    @property
-    def collaborators(self) -> List[str]:
-        """
-        Return names of collaborators. Don't give direct access to private attributes
-        """
-        return self.__collaborators
-
-    @collaborators.setter
-    def collaborators(self, collaborators: List[Type[Collaborator]]):
-        """Set LocalRuntime collaborators"""
-        self.__collaborators = collaborators
-
-    def __repr__(self):
-        return "FederatedRuntime"
+        raise NotImplementedError("FederatedRuntime will be implemented in the future")
