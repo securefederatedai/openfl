@@ -6,8 +6,8 @@ import os
 import horovod.torch as hvd
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.dirname(SCRIPT_DIR))
-from src.ptglue_inmemory import InHorovodGlueMrpcFederatedDataLoader
-from src.InHorovodLLMTaskRunner import InHorovodLLMTaskRunner
+from src.ptglue_inmemory import GlueMrpcDataLoader
+from src.InHorovodLLMTrainer import LLMTrainer
 import json
 from logging import getLogger
 import traceback
@@ -54,11 +54,11 @@ def main():
         logger.info('getting arguments')
         args = get_args()
         logger.info('loading data')
-        data_loader = InHorovodGlueMrpcFederatedDataLoader(
+        data_loader = GlueMrpcDataLoader(
             data_path=args.data_path, batch_size=args.batch_size
         )
         logger.info('get taskrunner')
-        taskrunner = InHorovodLLMTaskRunner(data_loader)
+        taskrunner = LLMTrainer(data_loader)
         func = getattr(taskrunner, args.func)
         kwargs = json.loads(args.kwargs)
         kwargs.update(

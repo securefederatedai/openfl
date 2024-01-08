@@ -93,7 +93,7 @@ class GlueMrpcFederatedDataLoader(DataLoader):
         return len(self.valid_set)
 
 
-class InHorovodGlueMrpcFederatedDataLoader(GlueMrpcFederatedDataLoader):
+class GlueMrpcDataLoader(GlueMrpcFederatedDataLoader):
     def __init__(self, data_path, batch_size, **kwargs):
         logger.info('get dataset')
         train_set, valid_set, data_collator = get_dataset()

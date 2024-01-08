@@ -21,7 +21,7 @@ from src.model_utils import _init_model, _init_optimizer
 import torch.nn as nn
 
 
-class InHorovodLLMTaskRunner(nn.Module):
+class LLMTrainer(nn.Module):
     def __init__(
         self,
         data_loader,
