@@ -1,16 +1,14 @@
 .. # Copyright (C) 2020-2023 Intel Corporation
 .. # SPDX-License-Identifier: Apache-2.0
 
-.. _install_software_root:
+.. _openfl_examples:
 
 =====================
-Examples
+Examples for Running Federation
 =====================
 
 Depending on how you want to set up |productName|, choose one of the following installation procedure.
 
-
-.. _install_package:
 
 *********************************
 Python Native
