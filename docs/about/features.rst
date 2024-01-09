@@ -11,11 +11,7 @@ Features
 Running a Federation
 ***************************
 
-OpenFL currently offers three ways to set up and run experiments with a federation: 
-the Task Runner API, the Interactive API, and the experimental workflow interface. 
-The Interactive API introduces a new and more convenient way to set up a federation and brings “long-lived” components in a federation (“Director” and “Envoy”), 
-while the Task Runner API workflow is advised for scenarios where the workload needs to be verified prior to execution. In contrast, the experimental workflow interface 
-is introduce to provide significant flexility to researchers and developers in the construction of federated learning experiments.
+|productName| has multiple options for setting up a federation and running experiments, depending on the users needs. 
 
 Task Runner
     Define an experiment and distribute it manually. All participants can verify model code and FL plan prior to execution. 
@@ -106,9 +102,7 @@ FedCurv
 ***************************
 Federated Evaluation
 ***************************
-Evaluate the accuracy and performance of your model on data distributed across decentralized nodes without comprimising data privacy and security.
-
-`For more info <features_index/fed_eval.html>`_
+Evaluate the accuracy and performance of your model on data distributed across decentralized nodes without comprimising data privacy and security. `For more info <features_index/fed_eval.html>`_
 
     .. toctree::
         :hidden:

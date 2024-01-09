@@ -16,12 +16,12 @@ Establish a federation with |productName|:
 
 Customize the federation:
 
-- :doc:`source/utilities/utilities`
+- :doc:`utilities`
 - :doc:`advanced_topics`
 
 Get familiar with the APIs:
 
-- :doc:`source/workflow/running_the_federation.tutorial`
+- :doc:`running_the_federation.tutorial`
 
 Explore new and experimental features:
 
