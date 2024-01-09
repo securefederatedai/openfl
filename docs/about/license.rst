@@ -5,4 +5,5 @@
 License
 ==========
 
-This project is licensed under `Apache License Version 2.0 <https://github.com/nammbash/openfl/blob/startuppage/LICENSE>`_. By contributing to the project, you agree to the license and copyright terms therein and release your contribution under these terms.
+This project is licensed under `Apache License Version 2.0 <https://github.com/kta-intel/openfl/tree/kta/documentation_update>`_. 
+By contributing to the project, you agree to the license and copyright terms therein and release your contribution under these terms.

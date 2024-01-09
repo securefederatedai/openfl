@@ -8,7 +8,7 @@ Quick Start
 =====================
 
 |productName| has a variety of APIs to choose from when setting up and running a federation. 
-In this quick start guide, we will demonstrate how to run a simple federated learning example using the Task Runner API
+In this quick start guide, we will demonstrate how to run a simple federated learning example using the Task Runner API and Hello Federation script
 
 .. note::
 
@@ -29,7 +29,7 @@ Hello Federation
 
 We will use the `"Hello Federation" python script <https://github.com/intel/openfl/blob/develop/tests/github/test_hello_federation.py>`_ to quickly create a federation (an aggregator node and two collaborator nodes) to test the project pipeline.
 
-.. literalinclude:: ../tests/github/test_hello_federation.py
+.. literalinclude:: ../../tests/github/test_hello_federation.py
   :language: python
 
 Run the script
