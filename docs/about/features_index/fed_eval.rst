@@ -32,69 +32,7 @@ This script can be directly executed as follows:
 In order to adapt this template for federated evaluation, the following modifications were made to ``plan.yaml``:
 
 .. literalinclude:: ../../../openfl-workspace/torch_cnn_mnist_fed_eval/plan/plan.yaml
-  :text:
 
-    .. # Copyright (C) 2020-2023 Intel Corporation
-    .. # Licensed subject to the terms of the separately executed evaluation license agreement between Intel Corporation and you.
-    
-    .. aggregator :
-    ..   defaults : plan/defaults/aggregator.yaml
-    ..   template : openfl.component.Aggregator
-    ..   settings :
-    ..     init_state_path     : save/torch_cnn_mnist_init.pbuf
-    ..     best_state_path     : save/torch_cnn_mnist_best.pbuf
-    ..     last_state_path     : save/torch_cnn_mnist_last.pbuf
-    ..     ########################
-    ..     rounds_to_train     : 1
-    ..     ########################
-    ..     log_metric_callback :
-    ..       template : src.mnist_utils.write_metric
-    
-    .. collaborator :
-    ..   defaults : plan/defaults/collaborator.yaml
-    ..   template : openfl.component.Collaborator
-    ..   settings :
-    ..     delta_updates    : false
-    ..     opt_treatment    : RESET
-    
-    .. data_loader :
-    ..   defaults : plan/defaults/data_loader.yaml
-    ..   template : src.ptmnist_inmemory.PyTorchMNISTInMemory
-    ..   settings :
-    ..     collaborator_count : 2
-    ..     data_group_name    : mnist
-    ..     batch_size         : 256
-    
-    .. task_runner :
-    ..   defaults : plan/defaults/task_runner.yaml
-    ..   template : src.pt_cnn.PyTorchCNN
-    
-    .. network :
-    ..   defaults : plan/defaults/network.yaml
-    
-    .. assigner :
-    ..   ########################
-    ..   template : openfl.component.RandomGroupedAssigner
-    ..   settings :
-    ..     task_groups  :
-    ..       - name       : validate
-    ..         percentage : 1.0
-    ..         tasks      :
-    ..           - aggregated_model_validation
-    ..   ########################
-      
-    .. tasks :
-    ..   ########################
-    ..   aggregated_model_validation:
-    ..     function : validate
-    ..     kwargs   :
-    ..       apply   : global
-    ..       metrics :
-    ..         - acc
-    ..   ########################
-    
-    .. compression_pipeline :
-    ..   defaults : plan/defaults/compression_pipeline.yaml
 Key Changes for Federated Evaluation:
 
 1. **aggregator.settings.rounds_to_train**: Set to 1

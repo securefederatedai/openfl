@@ -7,21 +7,17 @@
 Task Runner API: Federated PyTorch MNIST
 =====================
 
-    `STEP 1: Create a Workspace`_
+In this tutorial, we will set up a federation and train a basic PyTorch model on the MNIST dataset using the task runner API.
+See `full notebook<https://github.com/securefederatedai/openfl/blob/f1657abe88632d542504d6d71ca961de9333913f/openfl-tutorials/Federated_Pytorch_MNIST_Tutorial.ipynb>`_.
 
-        - Creates a federated learning workspace on one of the nodes.
+.. note::
 
+    Ensure you have installed the |productName| package.
 
-    `STEP 2: Configure the Federation`_
-
-        - Ensures each node in the federation has a valid public key infrastructure (PKI) certificate.
-        - Distributes the workspace from the aggregator node to the other collaborator nodes.
-
-
-    `STEP 3: Start the Federation`_
+    See :ref:`install_package` for details.
 
 
-Install dependencies if not already installed
+Install additional dependencies if not already installed
 
 .. code-block:: console
 
@@ -41,7 +37,7 @@ Install dependencies if not already installed
     from openfl.federated import FederatedModel,FederatedDataSet
 
 After importing the required packages, the next step is setting up our openfl workspace. 
-To do this, simply run the fx.init() command as follows:
+To do this, simply run the ``fx.init()`` command as follows:
 
 .. code-block:: python
 
@@ -74,6 +70,7 @@ The dataset should be composed of a numpy array. We start with a simple fully co
     valid_labels = one_hot(valid_labels,10)
 
 .. code-block:: python
+
     feature_shape = train_images.shape[1]
     classes       = 10
 
@@ -124,7 +121,7 @@ Here we can define metric logging function. It should has the following signatur
     #Create a federated model using the pytorch class, lambda optimizer function, and loss function
     fl_model = FederatedModel(build_model=Net,optimizer=optimizer,loss_fn=cross_entropy,data_loader=fl_data)
 
-The FederatedModel object is a wrapper around your Keras, Tensorflow or PyTorch model that makes it compatible with openfl. 
+The ``FederatedModel`` object is a wrapper around your Keras, Tensorflow or PyTorch model that makes it compatible with openfl. 
 It provides built in federated training and validation functions that we will see used below. 
 Using it's setup function, collaborator models and datasets can be automatically defined for the experiment.
 
@@ -151,7 +148,7 @@ Using it's setup function, collaborator models and datasets can be automatically
     #print(f'Collaborator three\'s training data size: {len(collaborator_models[2].data_loader.X_train)}')
     #print(f'Collaborator three\'s validation data size: {len(collaborator_models[2].data_loader.X_valid)}')
 
-We can see the current plan values by running the fx.get_plan() function
+We can see the current plan values by running the ``fx.get_plan()`` function
 
 .. code-block:: python 
 

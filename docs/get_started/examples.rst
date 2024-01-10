@@ -17,19 +17,40 @@ is introduce to provide significant flexility to researchers and developers in t
 *********************************
 Task Runner API
 *********************************
-`For more info <features_index/taskrunner.html>`_
+See :ref:`taskrunner_pytorch_mnist`
+
+    .. toctree::
+        :hidden:
+        :maxdepth: 1
+
+        examples/taskrunner_pytorch_mnist
 
 *********************************
 Interactive API
 *********************************
-TODO
+See :ref:`interaction_tensorflow_mnist`
+
+    .. toctree::
+        :hidden:
+        :maxdepth: 1
+
+        examples/interactive_tensorflow_mnist
 
 *********************************
 Workflow Interface
 *********************************
-TODO
+See :ref:`workflowinterface_pytorch_mnist`
+
+    .. toctree::
+        :hidden:
+        :maxdepth: 1
+
+        examples/workflowinterface_pytorch_mnist
 
 *********************************
 Python Native
 *********************************
 TODO
+
+
+See `repo <https://github.com/securefederatedai/openfl/tree/develop/openfl-tutorials>`_ for full list of tutorials

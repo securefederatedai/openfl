@@ -64,7 +64,7 @@ Perform this procedure on every node in the federation.
 
 5. Run the :code:`fx` command in the virtual environment to confirm |productName| is installed.
 
-   .. figure:: images/fx_help.png
+   .. figure:: ../images/fx_help.png
       :scale: 70 %
 
 .. centered:: Output of the fx Command
