@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# Copyright (C) 2020-2022 TU Darmstadt
+# Copyright (C) 2022-2024 TU Darmstadt
 # SPDX-License-Identifier: Apache-2.0
 
 # -----------------------------------------------------------
@@ -66,7 +66,8 @@ def poison_data(samples_to_poison, labels_to_poison, pdr=0.5):
     poisons a given local dataset, consisting of samples and labels, s.t.,
     the given ratio of this image consists of samples for the backdoor behavior
     :param samples_to_poison tensor containing all samples of the local dataset
-    :labels_to_poison tensor containing all labels
+    :param labels_to_poison tensor containing all labels
+    :param pdr poisoned data rate
     :return poisoned local dataset (samples, labels)
     """
     if pdr == 0:
@@ -223,8 +224,8 @@ def scale_update_of_model(to_scale, global_model, scaling_factor):
     """
     Scales the update of a local model (thus the difference between global and local model)
     :param to_scale: local model as state dict
-    :global_model
-    :scaling factor
+    :pram global_model
+    :param scaling factor
     :return scaled local model as state dict
     """
     print(f'Scale Model by {scaling_factor}')
@@ -244,7 +245,8 @@ def create_cluster_map_from_labels(expected_number_of_labels, clustering_labels)
     Converts a list of labels into a dictionary where each label is the key and
     the values are lists/np arrays of the indices from the samples that received
     the respective label
-    :param expected_number_of_labels number of samples whose labels are contained in clustering_labels
+    :param expected_number_of_labels number of samples whose labels are contained in
+    clustering_labels
     :param clustering_labels list containing the labels of each sample
     :return dictionary of clusters
     """
@@ -371,7 +373,7 @@ class FederatedFlow(FLSpec):
     def collect_models(self, inputs):
         # Following the CrowdGuard paper, this should be executed within SGX
         
-        self.all_models = {input.collaborator_name: input.model.cpu() for input in inputs}
+        self.all_models = {i.collaborator_name: i.model.cpu() for i in inputs}
         self.next(self.local_validation, foreach="collaborators")
 
     @collaborator
@@ -412,8 +414,7 @@ class FederatedFlow(FLSpec):
         # Following the CrowdGuard paper, this should be executed within SGX
         
         all_names = list(self.all_models.keys())
-        all_votes_by_name = {input.collaborator_name: input.votes_of_this_client for input in
-                             inputs}
+        all_votes_by_name = {i.collaborator_name: i.votes_of_this_client for i in inputs}
 
         all_models = [self.all_models[name] for name in all_names]
         binary_votes = [[all_votes_by_name[own_name][val_name] for val_name in all_names] for
