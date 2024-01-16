@@ -7,9 +7,9 @@ Features
 
 .. _running_a_federation:
 
-***************************
+---------------------
 Running a Federation
-***************************
+---------------------
 
 |productName| has multiple options for setting up a federation and running experiments, depending on the users needs. 
 
@@ -57,18 +57,18 @@ Python Native
 
 .. _aggregation_algorithms:
 
-***************************
+-----------------------
 Aggregation Algorithms
-***************************
+-----------------------
 
 FedAvg
     Paper: `McMahan et al., 2017 <https://arxiv.org/pdf/1602.05629.pdf>`_
-    Default aggregation algorithm in OpenFL. Multiplies local model weights with relative data size and averages this multiplication result.
+    Default aggregation algorithm in |productName|. Multiplies local model weights with relative data size and averages this multiplication result.
 
 FedProx
     Paper: `Li et al., 2020 <https://arxiv.org/abs/1812.06127>`_
 
-    FedProx in OpenFL is implemented as a custom optimizer for PyTorch/TensorFlow. In order to use FedProx, do the following:
+    FedProx in |productName| is implemented as a custom optimizer for PyTorch/TensorFlow. In order to use FedProx, do the following:
 
     1. PyTorch:
 
@@ -86,7 +86,7 @@ FedProx
 FedOpt
     Paper: `Reddi et al., 2020 <https://arxiv.org/abs/2003.00295>`_
 
-    FedOpt in OpenFL: :ref:`adaptive_aggregation_functions`
+    FedOpt in |productName|: :ref:`adaptive_aggregation_functions`
 
 FedCurv
     Paper: `Shoham et al., 2019 <https://arxiv.org/abs/1910.07796>`_
@@ -99,9 +99,9 @@ FedCurv
 
 .. _federated_evaluation:
 
-***************************
+---------------------
 Federated Evaluation
-***************************
+---------------------
 Evaluate the accuracy and performance of your model on data distributed across decentralized nodes without comprimising data privacy and security. `For more info <features_index/fed_eval.html>`_
 
     .. toctree::
@@ -109,7 +109,15 @@ Evaluate the accuracy and performance of your model on data distributed across d
         :maxdepth: 1
 
         features_index/fed_eval
+
+---------------------
+Privacy Meter
+---------------------
+Quantitatively audit data privacy in statistical and machine learning algorithms
+
+    .. toctree::
+        :hidden:
+        :maxdepth: 1
+
+        features_index/privacy_meter
     
-.. toctree
-..    overview.how_can_intel_protect_federated_learning
-..    overview.what_is_intel_federated_learning

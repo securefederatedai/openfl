@@ -10,7 +10,7 @@ Overview
 
    This project is continually being developed and improved. Expect changes to this manual, the project code, and the project design.
    
-Open Federated Learning (OpenFL) is a Python\*\  3 project developed by Intel Internet of Things Group (IOTG) and Intel Labs.
+Open Federated Learning (|productName|) is a Python\*\  3 project developed by Intel Internet of Things Group (IOTG) and Intel Labs.
 
 .. figure:: ../images/ct_vs_fl.png
 

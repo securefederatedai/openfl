@@ -7,9 +7,9 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-*********************************************************************
+=====================================================================
 Welcome to the Open Federated Learning (|productName|) Documentation!
-*********************************************************************
+=====================================================================
 
 Open Federated Learning (|productName|) is a Python\* \ 3 library for federated learning that enables organizations to collaboratively train a model without sharing sensitive information.
 
@@ -24,8 +24,7 @@ Looking for the Open Flash Library project also referred to as OpenFL? Find it `
 
 .. toctree::
    :caption: ABOUT
-   :maxdepth: 3
-   :hidden:
+   :maxdepth: 2
 
    about/introduction
    about/features
@@ -35,8 +34,7 @@ Looking for the Open Flash Library project also referred to as OpenFL? Find it `
 
 .. toctree::
    :caption: GET STARTED
-   :maxdepth: 3
-   :hidden:
+   :maxdepth: 2
 
    get_started/installation
    get_started/quickstart
@@ -44,24 +42,21 @@ Looking for the Open Flash Library project also referred to as OpenFL? Find it `
 
 .. toctree::
    :caption: DEVELOPER GUIDE
-   :maxdepth: 3
-   :hidden:
+   :maxdepth: 2
 
    developer_guide/manual
    developer_guide/openfl_structure
  
 .. toctree::
    :caption: DEVELOPER REFERENCE
-   :maxdepth: 3
-   :hidden:
+   :maxdepth: 2
 
    developer_ref/api_documentation
    developer_ref/troubleshooting
 
 .. toctree::
    :caption: CONTRIBUTING GUIDELINES
-   :maxdepth: 3
-   :hidden:
+   :maxdepth: 2
 
    contribution_guidelines/contributing
 

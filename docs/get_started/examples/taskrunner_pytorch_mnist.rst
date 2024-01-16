@@ -3,12 +3,12 @@
 
 .. _taskrunner_pytorch_mnist:
 
-=====================
+==========================================
 Task Runner API: Federated PyTorch MNIST
-=====================
+==========================================
 
 In this tutorial, we will set up a federation and train a basic PyTorch model on the MNIST dataset using the task runner API.
-See `full notebook<https://github.com/securefederatedai/openfl/blob/f1657abe88632d542504d6d71ca961de9333913f/openfl-tutorials/Federated_Pytorch_MNIST_Tutorial.ipynb>`_.
+See `full notebook <https://github.com/securefederatedai/openfl/blob/f1657abe88632d542504d6d71ca961de9333913f/openfl-tutorials/Federated_Pytorch_MNIST_Tutorial.ipynb>`_.
 
 .. note::
 
