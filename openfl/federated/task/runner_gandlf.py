@@ -45,6 +45,13 @@ class GaNDLFTaskRunner(TaskRunner):
         if isinstance(gandlf_config, str) and os.path.exists(gandlf_config):
             gandlf_config = yaml.safe_load(open(gandlf_config, "r"))
 
+        # if we are here, the assumption is that GaNDLF is present in the environment
+        try:
+            from GANDLF.parseConfig import parseConfig as gandlf_config_parser
+            gandlf_config = gandlf_config_parser(gandlf_config)
+        except Exception:
+            self.logger.info("WARNING: GaNDLF doesn't seem to have been correctly installed")
+
         (
             model,
             optimizer,
