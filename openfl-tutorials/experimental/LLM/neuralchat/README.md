@@ -39,7 +39,7 @@ git clone https://github.com/abachaa/MedQuAD.git
 From here, we provide a preprocessing code to prepare the dataset to be readily ingestible by the fine-tuning pipeline
 
 ```sh
-python preprocessing data
+python preprocess_dataset.py
 ```
 
 ## 5: Running the tutorial
