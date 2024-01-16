@@ -1,5 +1,0 @@
-intel-extension-for-transformers==1.2.2
-dill==0.3.6
-metaflow==2.7.15
-ray==2.2.0
-numpy==1.26.2
