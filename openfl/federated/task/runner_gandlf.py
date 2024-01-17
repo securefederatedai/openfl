@@ -38,6 +38,8 @@ class GaNDLFTaskRunner(TaskRunner):
         """
         super().__init__(**kwargs)
 
+        assert gandlf_config is not None, "gandlf_config must be specified"
+
         # allow pass-through of a gandlf config as a file or a dict
 
         train_csv = self.data_loader.train_csv
@@ -47,8 +49,6 @@ class GaNDLFTaskRunner(TaskRunner):
             gandlf_config = yaml.safe_load(open(gandlf_config, "r"))
 
         try:
-            self.logger.info("Trying GANDLF.parseConfig.")
-            self.logger.info(gandlf_config)
             gandlf_config = parseConfig(gandlf_config)
         except Exception:
             self.logger.info("WARNING: GANDLF.parseConfig did not work as expected.")
