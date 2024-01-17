@@ -51,9 +51,14 @@ jobs:
         export WORKSPACE_PATH=./my_federation
         fx workspace create --prefix ${WORKSPACE_PATH} --template ${WORKSPACE_TEMPLATE}
         cd ${WORKSPACE_PATH}
+        mkdir one
+        mkdir two
+        cp /home/runner/work/openfl/openfl/*.csv ./data/one/
+        cp /home/runner/work/openfl/openfl/*.csv ./data/two/
         ## from docs
         fx plan initialize --gandlf_config testing/config_segmentation.yaml
         cd /home/runner/work/openfl/openfl
+        mkdir data
         ls
         python -m tests.github.test_gandlf --template gandlf_seg_test --fed_workspace aggregator --col1 one --col2 two --rounds-to-train 1
         
