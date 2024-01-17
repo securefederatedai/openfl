@@ -46,7 +46,6 @@ class GaNDLFTaskRunner(TaskRunner):
         if isinstance(gandlf_config, str) and os.path.exists(gandlf_config):
             gandlf_config = yaml.safe_load(open(gandlf_config, "r"))
 
-        # if we are here, the assumption is that GaNDLF is present in the environment
         try:
             gandlf_config = parseConfig(gandlf_config)
         except Exception:
