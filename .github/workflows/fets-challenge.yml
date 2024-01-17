@@ -51,8 +51,8 @@ jobs:
         export WORKSPACE_PATH=./my_federation
         fx workspace create --prefix ${WORKSPACE_PATH} --template ${WORKSPACE_TEMPLATE}
         cd ${WORKSPACE_PATH}
-        mkdir one
-        mkdir two
+        mkdir ./data/one
+        mkdir ./data/two
         cp /home/runner/work/openfl/openfl/*.csv ./data/one/
         cp /home/runner/work/openfl/openfl/*.csv ./data/two/
         ## from docs
