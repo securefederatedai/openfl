@@ -46,6 +46,12 @@ jobs:
         tail -n +9 testing/data/train_3d_rad_segmentation.csv >> /home/runner/work/openfl/openfl/valid.csv
         head -n 8 testing/data/train_3d_rad_segmentation.csv > /home/runner/work/openfl/openfl/train.csv
         echo "Initialize OpenFL plan"
+        ## from docs
+        export WORKSPACE_TEMPLATE=gandlf_seg_test
+        export WORKSPACE_PATH=./my_federation
+        fx workspace create --prefix ${WORKSPACE_PATH} --template ${WORKSPACE_TEMPLATE}
+        cd ${WORKSPACE_PATH}
+        ## from docs
         fx plan initialize --gandlf_config testing/config_segmentation.yaml
         cd /home/runner/work/openfl/openfl
         ls
