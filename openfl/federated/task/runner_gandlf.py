@@ -38,7 +38,7 @@ class GaNDLFTaskRunner(TaskRunner):
         """
         super().__init__(**kwargs)
 
-        assert gandlf_config is not None, "gandlf_config must be specified"
+        assert bool(gandlf_config), "gandlf_config must be specified"
 
         # allow pass-through of a gandlf config as a file or a dict
 
