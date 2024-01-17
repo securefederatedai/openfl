@@ -47,6 +47,8 @@ class GaNDLFTaskRunner(TaskRunner):
             gandlf_config = yaml.safe_load(open(gandlf_config, "r"))
 
         try:
+            self.logger.info("Trying GANDLF.parseConfig.")
+            self.logger.info(gandlf_config)
             gandlf_config = parseConfig(gandlf_config)
         except Exception:
             self.logger.info("WARNING: GANDLF.parseConfig did not work as expected.")
