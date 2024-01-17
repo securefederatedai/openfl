@@ -27,23 +27,27 @@ jobs:
         pip install torch==2.1.0+cpu torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cpu
         pip install .
     - name: Setup FeTS Challenge Prerequisites
-      uses: actions/checkout@master
-      with:
-          repository: MLCommons/GaNDLF
-          ref: master
-          fetch-depth: 1
-          path: fets_challenge
+      run:
+        echo "Installing GaNDLF"
+        git clone https://github.com/MLCommons/GaNDLF.git ./gandlf
+        cd gandlf
+        git fetch --tags
+        echo "Checkout the latest GaNDLF tag"
+        latestTag=$(git describe --tags "$(git rev-list --tags --max-count=1)")
+        git checkout $latestTag
     - name: FeTS Challenge Task Runner Test
       run: |
-        cd fets_challenge
+        cd gandlf
         pwd
         pip install -e .
         pip uninstall onnx -y
-        # Download data and Split CSVs into training and validation
+        echo "Download data and Split CSVs into training and validation"
         python -c "from testing.test_full import test_generic_download_data, test_generic_constructTrainingCSV; test_generic_download_data(); test_generic_constructTrainingCSV()"
         head -n 1 testing/data/train_3d_rad_segmentation.csv > /home/runner/work/openfl/openfl/valid.csv
         tail -n +9 testing/data/train_3d_rad_segmentation.csv >> /home/runner/work/openfl/openfl/valid.csv
         head -n 8 testing/data/train_3d_rad_segmentation.csv > /home/runner/work/openfl/openfl/train.csv
+        echo "Initialize OpenFL plan"
+        fx plan initialize --gandlf_config testing/config_segmentation.yaml
         cd /home/runner/work/openfl/openfl
         ls
         python -m tests.github.test_gandlf --template gandlf_seg_test --fed_workspace aggregator --col1 one --col2 two --rounds-to-train 1
