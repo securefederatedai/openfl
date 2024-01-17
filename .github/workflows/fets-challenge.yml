@@ -26,9 +26,8 @@ jobs:
         python -m pip install --upgrade pip
         pip install torch==2.1.0+cpu torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cpu
         pip install .
-    - name: Setup FeTS Challenge Prerequisites
-      run:
-        echo "Installing GaNDLF"
+    - name: Install GaNDLF
+      run: |
         git clone https://github.com/MLCommons/GaNDLF.git ./gandlf
         cd gandlf
         git fetch --tags
