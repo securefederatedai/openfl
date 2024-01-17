@@ -19,6 +19,7 @@ from .runner import TaskRunner
 from GANDLF.compute.generic import create_pytorch_objects
 from GANDLF.compute.training_loop import train_network
 from GANDLF.compute.forward_pass import validate_network
+from GANDLF.parseConfig import parseConfig
 
 
 class GaNDLFTaskRunner(TaskRunner):
@@ -47,10 +48,9 @@ class GaNDLFTaskRunner(TaskRunner):
 
         # if we are here, the assumption is that GaNDLF is present in the environment
         try:
-            from GANDLF.parseConfig import parseConfig as gandlf_config_parser
-            gandlf_config = gandlf_config_parser(gandlf_config)
+            gandlf_config = parseConfig(gandlf_config)
         except Exception:
-            self.logger.info("WARNING: GaNDLF doesn't seem to have been correctly installed")
+            self.logger.info("WARNING: GaNDLF.parseConfig did not work as expected.")
 
         (
             model,
