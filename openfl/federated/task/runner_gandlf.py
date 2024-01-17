@@ -50,7 +50,7 @@ class GaNDLFTaskRunner(TaskRunner):
         try:
             gandlf_config = parseConfig(gandlf_config)
         except Exception:
-            self.logger.info("WARNING: GaNDLF.parseConfig did not work as expected.")
+            self.logger.info("WARNING: GANDLF.parseConfig did not work as expected.")
 
         (
             model,
