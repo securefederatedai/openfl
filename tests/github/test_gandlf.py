@@ -28,7 +28,7 @@ if __name__ == '__main__':
     parser.add_argument('--rounds-to-train')
     parser.add_argument('--col1-data-path', default='data/one')
     parser.add_argument('--col2-data-path', default='data/two')
-    parser.add_argument('--gandlf_config', action='store_true', default=None)
+    parser.add_argument('--gandlf_config', default=None)
     parser.add_argument('--ujjwal', action='store_true')
 
     origin_dir = Path().resolve()
