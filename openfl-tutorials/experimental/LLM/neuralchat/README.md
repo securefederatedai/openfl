@@ -10,41 +10,9 @@ Intel's [Neural-Chat-v3](https://huggingface.co/Intel/neural-chat-7b-v3) is a fi
 
 Additional details in the fine-tuning can be found [here](https://medium.com/intel-analytics-software/the-practice-of-supervised-finetuning-and-direct-preference-optimization-on-habana-gaudi2-a1197d8a3cd3).
 
-## 3. Installing dependencies
+## 3. Running the tutorial
 
-In this tutorial, we will be fine-tuning Intel's neuralchat-7b model using OpenFL and Intel(R) Extension for Transformers
-
-Start by installing Intel(R) Extension for Transformers (for stability, we will use v1.2.2) and OpenFL
-
-```sh
-pip install intel-extension-for-transformers==1.2.2
-pip install openfl
-```
-
-From here, we can install requirements needed to run OpenFL's workflow interface and Intel(R) Extension for Transformer's Neural Chat framework
-
-```sh
-pip install -r requirements_neural_chat.txt
-pip install -r requirements_workflow_interface.txt
-```
-
-## 4. Acquiring and preprocessing dataset
-
-We can clone the dataset directly from the MedQuAD repository
-
-```sh
-git clone https://github.com/abachaa/MedQuAD.git
-```
-
-From here, we provide a preprocessing code to prepare the dataset to be readily ingestible by the fine-tuning pipeline
-
-```sh
-python preprocess_dataset.py
-```
-
-## 5: Running the tutorial
-
-You are now ready to follow along in the tutorial notebook: `Workflow_Interface_NeuralChat.ipynb`
+Follow along step-by-step in the [notebook](Workflow_Interface_NeuralChat.ipynb) to learn how to fine-tune neural-chat-7b on the MedQuAD dataset
 
 ## Reference:
 ```

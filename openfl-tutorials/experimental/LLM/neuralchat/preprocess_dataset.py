@@ -1,9 +1,17 @@
-import xml.etree.ElementTree as ET
+# Copyright (C) 2020-2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+import xml.etree.ElementTree as et
 import json
 import os
 import math
 
+
 def xml_to_json(input_base_folder, output_folder):
+
+    if not os.path.exists(input_base_folder):
+        raise SystemExit(f"The folder '{input_base_folder}' does not exist.")
+    
     train_data = []
     test_data = []
     train_count, test_count = 0, 0
@@ -38,9 +46,10 @@ def xml_to_json(input_base_folder, output_folder):
         f.write(f"Training data pairs: {train_count}\n")
         f.write(f"Test data pairs: {test_count}\n")
 
+
 def process_xml_file(folder, xml_file):
     xml_path = os.path.join(folder, xml_file)
-    tree = ET.parse(xml_path)
+    tree = et.parse(xml_path)
     root = tree.getroot()
 
     data = []
@@ -65,12 +74,7 @@ def process_xml_file(folder, xml_file):
 
     return data, count
 
+
 def save_json(data, filename):
     with open(filename, 'w', encoding='utf-8') as f:
         json.dump(data, f, ensure_ascii=False, indent=4)
-
-# User input for folder paths
-input_base_folder = "./MedQuAD/"
-output_folder = "./"
-
-xml_to_json(input_base_folder, output_folder)
