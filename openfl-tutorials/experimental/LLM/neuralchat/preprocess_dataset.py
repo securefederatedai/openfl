@@ -11,7 +11,7 @@ def xml_to_json(input_base_folder, output_folder):
 
     if not os.path.exists(input_base_folder):
         raise SystemExit(f"The folder '{input_base_folder}' does not exist.")
- 
+
     train_data = []
     test_data = []
     train_count, test_count = 0, 0
