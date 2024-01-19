@@ -47,7 +47,7 @@ class RedirectStdStream(object):
     def write(self, message):
         self.__stdDestination.write(message)
         self.__stdBuffer.write(message)
-    
+
     def flush(self):
         pass
 

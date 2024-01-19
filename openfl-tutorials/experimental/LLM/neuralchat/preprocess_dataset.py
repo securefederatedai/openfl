@@ -1,7 +1,7 @@
 # Copyright (C) 2020-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-import xml.etree.ElementTree as et
+import xml.etree.ElementTree as ETree
 import json
 import os
 import math
@@ -11,12 +11,12 @@ def xml_to_json(input_base_folder, output_folder):
 
     if not os.path.exists(input_base_folder):
         raise SystemExit(f"The folder '{input_base_folder}' does not exist.")
-    
+ 
     train_data = []
     test_data = []
     train_count, test_count = 0, 0
 
-    subfolders = ["1_CancerGov_QA", "2_GARD_QA", "3_GHR_QA", "4_MPlus_Health_Topics_QA", 
+    subfolders = ["1_CancerGov_QA", "2_GARD_QA", "3_GHR_QA", "4_MPlus_Health_Topics_QA",
                   "5_NIDDK_QA", "6_NINDS_QA", "7_SeniorHealth_QA", "8_NHLBI_QA_XML", "9_CDC_QA"]
 
     for subfolder in subfolders:
@@ -49,7 +49,7 @@ def xml_to_json(input_base_folder, output_folder):
 
 def process_xml_file(folder, xml_file):
     xml_path = os.path.join(folder, xml_file)
-    tree = et.parse(xml_path)
+    tree = ETree.parse(xml_path)
     root = tree.getroot()
 
     data = []
@@ -63,7 +63,7 @@ def process_xml_file(folder, xml_file):
 
         question = question.strip()
         answer = answer.strip().replace('\n', ' ').replace('  ', ' ')
-        
+
         json_obj = {
             "instruction": question,
             "input": "",
