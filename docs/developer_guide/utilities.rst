@@ -7,19 +7,19 @@ Open Federated Learning (|productName|) Utilities
 
 The following are utilities available in Open Federated Learning (|productName|).
 
-:doc:`pki`
+:doc:`utilities/pki`
     Use the Public Key Infrastructure (PKI) solution workflows to certify the nodes in your federation.
     
-:doc:`splitters_data`
+:doc:`utilities/splitters_data`
     Split your data to run your federation from a single dataset.
 
-:doc:`timeouts`
+:doc:`utilities/timeouts`
     Decorate methods to enforce timeout on it's execution.
 
 .. toctree::
    :maxdepth: 1
    :hidden:
 
-   pki
-   splitters_data
-   timeouts
+   utilities/pki
+   utilities/splitters_data
+   utilities/timeouts

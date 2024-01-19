@@ -1,11 +1,11 @@
-.. # Copyright (C) 2020-2023 Intel Corporation
+.. # Copyright (C) 2020-2024 Intel Corporation
 .. # SPDX-License-Identifier: Apache-2.0
 
 .. _openfl_examples:
 
-===============================
-Examples for Running Federation
-===============================
+=================================
+Examples for Running a Federation
+=================================
 
 |productName| currently offers three ways to set up and run experiments with a federation: 
 the Task Runner API, the Interactive API, and the experimental workflow interface. 
@@ -16,6 +16,8 @@ is introduce to provide significant flexility to researchers and developers in t
 -------------------------
 Task Runner API
 -------------------------
+Formulate the experiment as a series of tasks, or a flow.
+
 See :ref:`taskrunner_pytorch_mnist`
 
 .. toctree::
@@ -27,6 +29,8 @@ See :ref:`taskrunner_pytorch_mnist`
 -------------------------
 Interactive API
 -------------------------
+Setup long-lived components to run many experiments in series.
+
 See :ref:`interactive_tensorflow_mnist`
 
 .. toctree::
@@ -38,6 +42,8 @@ See :ref:`interactive_tensorflow_mnist`
 -------------------------
 Workflow Interface
 -------------------------
+Formulate the experiment as a series of tasks, or a flow. 
+
 See :ref:`workflowinterface_pytorch_mnist`
 
 .. toctree::
@@ -46,10 +52,7 @@ See :ref:`workflowinterface_pytorch_mnist`
 
     examples/workflowinterface_pytorch_mnist
 
--------------------------
-Python Native
--------------------------
-TODO
 
+.. note:: 
 
-See `repo <https://github.com/securefederatedai/openfl/tree/develop/openfl-tutorials>`_ for full list of tutorials
+    Please visit `repository <https://github.com/securefederatedai/openfl/tree/develop/openfl-tutorials>`_ for a full list of tutorials

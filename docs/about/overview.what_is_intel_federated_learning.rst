@@ -11,7 +11,7 @@ attacks that are well documented in the literature. With Intel\ :sup:`®` \ SGX 
 every node in the federation, risks are mitigated even if the nodes are
 not fully-controlled by the federation owner.
 
-.. figure:: images/trusted_fl.png
+.. figure:: ../images/trusted_fl.png
 
 .. centered:: Intel\ :sup:`®` \ Federated Learning
 
@@ -31,6 +31,6 @@ ran the expected code within the enclave. Attestation can either
 be done via a trusted Intel server or by the developers own server.
 This stops attackers from injecting their own code into the federated training.
 
-.. figure:: images/why_intel_fl.png
+.. figure:: ../images/why_intel_fl.png
 
 .. centered:: Why Intel\ :sup:`®` \ Federated Learning

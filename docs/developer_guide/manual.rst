@@ -5,14 +5,9 @@
 Manual
 ******
 
-What is Open Federated Learning (|productName|):
+Establish a federation using GaNDLF
 
-- :doc:`overview`
-
-Establish a federation with |productName|:
-
-- :doc:`install`
-- :doc:`running_the_federation`
+- :doc:`running_the_federation_with_gandlf`
 
 Customize the federation:
 
@@ -31,9 +26,6 @@ Explore new and experimental features:
    :maxdepth: 2
    :hidden:
 
-   overview
-   install
-   running_the_federation
    running_the_federation_with_gandlf
    utilities
    advanced_topics

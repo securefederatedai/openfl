@@ -1,7 +1,7 @@
 .. # Copyright (C) 2020-2023 Intel Corporation
 .. # SPDX-License-Identifier: Apache-2.0
 
-.. __running_the_task_runner:
+.. _running_the_task_runner:
 
 ================
 Task Runner API
@@ -96,7 +96,7 @@ Each YAML top-level section contains the following subsections:
 
 The following is an example of a **plan.yaml**:
 
-.. literalinclude:: ../openfl-workspace/torch_cnn_mnist/plan/plan.yaml
+.. literalinclude:: ../../../openfl-workspace/torch_cnn_mnist/plan/plan.yaml
   :language: yaml
 
 
@@ -267,7 +267,7 @@ STEP 2: Configure the Federation
 
 The objectives in this step:
 
-    - Ensure each node in the federation has a valid public key infrastructure (PKI) certificate. See :doc:`/source/utilities/pki` for details on available workflows.
+    - Ensure each node in the federation has a valid public key infrastructure (PKI) certificate. See :doc:`../../developer_guide/utilities/pki` for details on available workflows.
     - Distribute the workspace from the aggregator node to the other collaborator nodes.
 
 
@@ -565,7 +565,7 @@ Option 2: Deploy Your Workspace in a Docker Container
 
         The FL plan should be initialized with the FQDN of the node where the aggregator container will be running.
 
-3. Generate public key infrastructure (PKI) certificates for all collaborators and the aggregator. See :doc:`/source/utilities/pki` for details.
+3. Generate public key infrastructure (PKI) certificates for all collaborators and the aggregator. See :doc:`../../developer_guide/utilities/pki` for details.
 
 4. `STEP 3: Start the Federation`_.
 

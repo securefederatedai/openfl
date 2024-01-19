@@ -1,4 +1,4 @@
-.. # Copyright (C) 2020-2023 Intel Corporation
+.. # Copyright (C) 2020-2024 Intel Corporation
 .. # SPDX-License-Identifier: Apache-2.0
 
 ==========
@@ -20,18 +20,16 @@ Task Runner
 
     .. toctree::
         :hidden:
-        :maxdepth: 1
 
         features_index/taskrunner
 
 Interactive
     Setup long-lived components to run many experiments in series. Recommended for FL research when many changes to model, dataloader, or hyperparameters are expected.
-    Formerly known as the aggregator-based workflow.
+    Formerly known as the director-based workflow.
     `For more info <features_index/interactive.html>`_
 
     .. toctree::
         :hidden:
-        :maxdepth: 1
 
         features_index/interactive
 
@@ -42,18 +40,8 @@ Workflow Interface (Experimental)
 
     .. toctree::
         :hidden:
-        :maxdepth: 1
 
         features_index/workflowinterface
-
-Python Native
-    `For more info <features_index/pynative.html>`_
-
-    .. toctree::
-        :hidden:
-        :maxdepth: 1
-
-        features_index/pynative
 
 .. _aggregation_algorithms:
 
@@ -102,22 +90,24 @@ FedCurv
 ---------------------
 Federated Evaluation
 ---------------------
+
 Evaluate the accuracy and performance of your model on data distributed across decentralized nodes without comprimising data privacy and security. `For more info <features_index/fed_eval.html>`_
 
-    .. toctree::
-        :hidden:
-        :maxdepth: 1
+.. toctree::
+    :hidden:
 
-        features_index/fed_eval
+    features_index/fed_eval
+
+.. _privacy_meter:
 
 ---------------------
 Privacy Meter
 ---------------------
-Quantitatively audit data privacy in statistical and machine learning algorithms
 
-    .. toctree::
-        :hidden:
-        :maxdepth: 1
+Quantitatively audit data privacy in statistical and machine learning algorithms. `For more info <features_index/privacy_meter.html>`_
+    
+.. toctree::
+    :hidden:
 
-        features_index/privacy_meter
+    features_index/privacy_meter
     

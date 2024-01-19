@@ -21,7 +21,7 @@ Aggregator-Based Workflow
 
 An overview of this workflow is shown below.
 
-.. figure:: /images/openfl_flow.png
+.. figure:: ../images/openfl_flow.png
 
 .. centered:: Overview of the Aggregator-Based Workflow
 
@@ -88,7 +88,7 @@ Simulate a federation
 
 You can use the `"Hello Federation" bash script <https://github.com/intel/openfl/blob/develop/tests/github/test_hello_federation.py>`_ to quickly create a federation (an aggregator node and two collaborator nodes) to test the project pipeline.
 
-.. literalinclude:: ../tests/github/test_hello_federation.py
+.. literalinclude:: ../../tests/github/test_hello_federation.py
   :language: bash
 
 However, continue with the following procedure for details in creating a federation with an aggregator-based workflow.
@@ -197,7 +197,7 @@ STEP 1: Install GaNDLF prerequisites and Create a Workspace
     
     The following is an example of the GaNDLF Segmentation Test **plan.yaml**. Notice the **task_runner/settings/gandlf_config** block where the GaNDLF configuration file is embedded:
     
-    .. literalinclude:: ../openfl-workspace/gandlf_seg_test/plan/plan.yaml
+    .. literalinclude:: ../../openfl-workspace/gandlf_seg_test/plan/plan.yaml
       :language: yaml
 
 
@@ -248,7 +248,7 @@ STEP 2: Configure the Federation
 
 The objectives in this step:
 
-    - Ensure each node in the federation has a valid public key infrastructure (PKI) certificate. See :doc:`/source/utilities/pki` for details on available workflows.
+    - Ensure each node in the federation has a valid public key infrastructure (PKI) certificate. See :doc:`utilities/pki` for details on available workflows.
     - Distribute the workspace from the aggregator node to the other collaborator nodes.
 
 

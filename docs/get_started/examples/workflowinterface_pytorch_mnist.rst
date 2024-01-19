@@ -139,7 +139,7 @@ and is then used as the list of participants to run the task listed in `self.nex
 The model, optimizer, and anything that is not explicitly excluded from the next function will be passed from the `start` 
 function on the aggregator to the `aggregated_model_validation` task on the collaborator. Where the tasks run is determined by the placement decorator that precedes each task definition (`@aggregator` or `@collaborator`). Once each of the collaborators (defined in the runtime) complete the `aggregated_model_validation` task, they pass their current state onto the `train` task, from `train` to `local_model_validation`, and then finally to `join` at the aggregator. It is in `join` that an average is taken of the model weights, and the next round can begin.\n",
 
-.. figure:: ../images/workflowinterface.png
+.. figure:: ../../images/workflow_interface.png
 
 .. code-block:: python
 

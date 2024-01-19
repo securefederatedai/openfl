@@ -9,9 +9,10 @@ Interactive API: MNIST Classification Tutorial
 In this tutorial, we will set up a federation and train a basic TensoFlow model on the MNIST dataset using the interactive API.
 See `full tutorial <https://github.com/securefederatedai/openfl/tree/f1657abe88632d542504d6d71ca961de9333913f/openfl-tutorials/interactive_api/Tensorflow_MNIST>`_.
 
-About the dataset
-It is a dataset of 60,000 small square 28×28 pixel grayscale images of handwritten single digits
-between 0 and 9. More info at `wiki <https://en.wikipedia.org/wiki/MNIST_database>'_.
+**About the dataset**
+
+It is a dataset of 60,000 small square 28x28 pixel grayscale images of handwritten single digits
+between 0 and 9. More info at `wiki <https://en.wikipedia.org/wiki/MNIST_database>`_.
 
 .. note::
 
@@ -41,6 +42,7 @@ Clone the OpenFL repository:
 Navigate to the tutorial:
 
 .. code-block:: console
+    
     cd openfl/openfl-tutorials/interactive_api/Tensorflow_MNIST
 
 -----------------------------------
@@ -80,6 +82,7 @@ Step 4: Run the federation
 In the third terminal (or forth terminal, if you chose to do two envoys) run the `Tensorflow_MNIST.ipynb` Jupyter Notebook:
 
 .. code-block:: console
+
     cd workspace
     jupyter lab Tensorflow_MNIST.ipynb
 
@@ -276,6 +279,7 @@ Register dataset
 Create Mnist federated dataset
 
 .. code-block:: python
+
     fed_dataset = MnistFedDataset(train_bs=64, valid_bs=512)
 
 Define and register FL tasks

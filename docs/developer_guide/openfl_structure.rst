@@ -7,21 +7,21 @@
 
 Learn about the short-lived and long-lived components that compose Open Federated Learning (|productName|):
 
-- :doc:`components`
+- :doc:`structure/components`
 
 Understand the procedure calls to the Director service.
 
-- :doc:`communication`
+- :doc:`structure/communication`
 
 Learn about the plugin framework that makes |productName| flexible and extensible for your use:
 
-- :doc:`plugins`
+- :doc:`structure/plugins`
 
 
 .. toctree::
    :maxdepth: 4
    :hidden:
 
-   components
-   communication
-   plugins
+   structure/components
+   structure/communication
+   structure/plugins

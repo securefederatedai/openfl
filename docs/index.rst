@@ -1,4 +1,4 @@
-.. # Copyright (C) 2020-2023 Intel Corporation
+.. # Copyright (C) 2020-2024 Intel Corporation
 .. # SPDX-License-Identifier: Apache-2.0.
 
 
@@ -23,16 +23,19 @@ Training of statistical models may be done with any deep learning framework, suc
 Looking for the Open Flash Library project also referred to as OpenFL? Find it `here <https://www.openfl.org/>`_!
 
 .. toctree::
+   :hidden:
    :caption: ABOUT
    :maxdepth: 2
 
-   about/introduction
+   about/overview
    about/features
    about/releases
    about/blogs_publications
    about/license
+   about/notices_and_disclaimers
 
 .. toctree::
+   :hidden:
    :caption: GET STARTED
    :maxdepth: 2
 
@@ -41,6 +44,7 @@ Looking for the Open Flash Library project also referred to as OpenFL? Find it `
    get_started/examples
 
 .. toctree::
+   :hidden:
    :caption: DEVELOPER GUIDE
    :maxdepth: 2
 
@@ -48,6 +52,7 @@ Looking for the Open Flash Library project also referred to as OpenFL? Find it `
    developer_guide/openfl_structure
  
 .. toctree::
+   :hidden:
    :caption: DEVELOPER REFERENCE
    :maxdepth: 2
 
@@ -55,10 +60,11 @@ Looking for the Open Flash Library project also referred to as OpenFL? Find it `
    developer_ref/troubleshooting
 
 .. toctree::
+   :hidden:
    :caption: CONTRIBUTING GUIDELINES
    :maxdepth: 2
 
-   contribution_guidelines/contributing
+   contributing_guidelines/contributing
 
 
 .. Indices and tables

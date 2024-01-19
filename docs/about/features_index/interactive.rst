@@ -32,7 +32,7 @@ Follow the procedure in the director-based workflow to become familiar with the 
 
 An overview of this workflow is shown below.
 
-.. figure:: ./source/openfl/director_workflow.svg
+.. figure:: ../../source/openfl/director_workflow.svg
 
 .. centered:: Overview of the Director-Based Workflow
 

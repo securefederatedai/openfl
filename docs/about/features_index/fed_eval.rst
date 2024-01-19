@@ -1,3 +1,6 @@
+.. # Copyright (C) 2020-2024 Intel Corporation
+.. # SPDX-License-Identifier: Apache-2.0
+
 Federated Evaluation with |productName|
 =======================================
 
@@ -7,7 +10,7 @@ Introduction to Federated Evaluation
 Model evaluation is an essential part of the machine learning development cycle. In a traditional centralized learning system, all evaluation data is collected on a localized server. Because of this, centralized evaluation of machine learning models is a fairly straightforward task. However, in a federated learning system, data is distributed across multiple decentralized devices or nodes. In an effort to preserve the security and privacy of the distributed data, it is infeasible to simply aggregate all the data into a centralized system. Federated evaluation offers a solution by assessing the model at the client side and aggregating the accuracy without ever having to share the data. This is crucial for ensuring the model's effectiveness and reliability in diverse and real-world environments while respecting privacy and data locality
 
 |productName|'s Support for Federated Evaluation
------------------------------------------
+-------------------------------------------------
 
 |productName|, a flexible framework for Federated Learning, has the capability to perform federated evaluation by modifying the federation plan. In this document, we will show how OpenFL can facilitate this process through its task runner API (aggregator-based workflow), where the model evaluation is distributed across various collaborators before being sent to the aggregator. For the task runner API, this involves minor modifications to the ``plan.yaml`` file, which defines the workflow and tasks for the federation. In particular, the federation plan should be defined to run for one forward pass and perform only aggregated model validation
 
@@ -19,7 +22,7 @@ In general pipeline is as follows:
 4. **Aggregation**: The aggregator collects and aggregates these metrics to assess overall model performance.
 
 Example Using the Task Runner API (Aggregator-based Workflow)
-----------------------------------------------
+--------------------------------------------------------------
 
 To demonstrate usage of the task runner API (aggregator-based workflow) for federated evaluation, consider the `Hello Federation example <https://github.com/securefederatedai/openfl/blob/develop/tests/github/test_hello_federation.py>`_. This sample script creates a simple federation with two collaborator nodes and one aggregator node, and executes based on a user specified workspace template. We provide a ``torch_cnn_mnist_fed_eval`` template, which is a federated evaluation template adapted from ``torch_cnn_mnist``. 
 
