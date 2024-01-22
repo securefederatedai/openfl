@@ -34,8 +34,12 @@ class RayExecutor:
         self.__remote_contexts = []
 
     def ray_call_put(
-        self, participant: Any, ctx: Any, f_name: str, callback: Callable,
-        clones: Optional[Any] = None
+        self,
+        participant: Any,
+        ctx: Any,
+        f_name: str,
+        callback: Callable,
+        clones: Optional[Any] = None,
     ) -> None:
         """
         Execute f_name from inside participant (Aggregator or Collaborator) class with the context
@@ -60,6 +64,124 @@ class RayExecutor:
         self.__remote_contexts = []
 
         return clones
+
+
+def ray_group_assign(collaborators, collaborators_per_group=3, max_concurrency=1):
+    # This function takes the list of collaborators and the collaborators per group and assigns the collaborators to resource groups which share cuda context,
+    # it returns a list of GroupMembers, that is a utility class that manages the collaborator and in which group it is in. This maintians compatablility with current runtime execution without having to manage the groups manually.
+    
+    class GroupMember:
+        # Utility class that maintains compatability with runtime execution,
+        # It takes the collaborator_actor, and the name of a collaborator. it takes care of managing which group the collaborator is a member of. 
+        # It also assigns attributes for each funtion in the Collaborator interface in conjuntion with RemoteHelper to maintain compatability with RayExecutor.
+        def __init__(self, collaborator_actor, collaborator):
+            interface_module = importlib.import_module(
+                "openfl.experimental.interface"
+            )
+            collaborator_class = getattr(interface_module, "Collaborator")
+            all_methods = [
+                method
+                for method in dir(collaborator_class)
+                if callable(getattr(collaborator_class, method))
+            ]
+            external_methods = [
+                method for method in all_methods if (method[0] != "_")
+            ]
+            self.collaborator_actor = collaborator_actor
+            self.collaborator = collaborator
+            for method in external_methods:
+                setattr(
+                    self,
+                    method,
+                    RemoteHelper(
+                        self.collaborator_actor, self.collaborator, method
+                    ),
+                )
+                
+    class RemoteHelper:
+        # Utility class to maintain compatability with RayExecutor,
+        # It takes the collaborator_actor, the name of a collaborator and the name of the funtion, it returns a lambda funtion that uses collaborator_actor.execute_from_col which
+        # runs a given funtion from the given collaborator, the inputs of the funtion are *args, **kwargs
+        # once ray_grouped replaces the current ray runtime this class can be replaced with a funtion that returns the lambda funtion, using a funtion is necesary because this is used
+        # in setting multiple funtions in a loop and lambda takes the reference to self.f_name and not the value so we need to change scope to avoid self.f_name from changing as the loop progresses
+        def __init__(self, collaborator_actor, collaborator, f_name) -> None:
+            self.f_name = f_name
+            self.collaborator_actor = collaborator_actor
+            self.collaborator = collaborator
+            self.f = lambda *args, **kwargs,: self.collaborator_actor.execute_from_col.remote(
+                self.collaborator, self.f_name, *args, **kwargs
+            )
+
+        def remote(self, *args, **kwargs):
+            return self.f(*args, *kwargs)
+                
+    collaborator_ray_refs = []
+
+    times_called = 0
+    # logic to sort collaborators by gpus, if collaborators have the same number of gpu then they are sorted by cpu
+    cpu_magnitude = len(str(abs(max([i.num_cpus for i in collaborators]))))
+    min_gpu = min([i.num_gpus for i in collaborators])
+    min_gpu = max(min_gpu,0.0001)
+    collaborators_sorted_by_gpucpu = sorted(collaborators, key=lambda x:x.num_gpus/min_gpu*10**cpu_magnitude+x.num_cpus)
+    initializations = []
+    
+    for collaborator in collaborators_sorted_by_gpucpu:
+        #initialize actor group
+        if times_called % collaborators_per_group == 0:
+            max_num_cpus = max([i.num_cpus for i in collaborators_sorted_by_gpucpu[times_called:times_called+collaborators_per_group]])
+            max_num_gpus = max([i.num_gpus for i in collaborators_sorted_by_gpucpu[times_called:times_called+collaborators_per_group]])
+            print(f'creating actor with {max_num_cpus}, {max_num_gpus}')
+            collaborator_actor = (
+                ray.remote(RayGroup)
+                .options(num_cpus=max_num_cpus, num_gpus=max_num_gpus, max_concurrency=max_concurrency)
+                .remote()
+            )
+        # add collaborator to actor group
+        initializations.append(collaborator_actor.append.remote(
+            collaborator.get_name(),
+            private_attributes_callable=collaborator.private_attributes_callable,
+            **collaborator.kwargs,
+        ))
+
+        times_called += 1
+
+        # append GroupMember to output list
+        collaborator_ray_refs.append(
+            GroupMember(collaborator_actor, collaborator.get_name())
+        )
+    # Wait for all collaborators to be created on actors 
+    ray.get(initializations)
+    
+
+    return collaborator_ray_refs
+
+
+class RayGroup:
+    # Ray actor that contains a group of collaborators, has funtion execute_from_col that takes a name of collaborator, funtion name and *args, **kwargs, to run the given funtion in the given collaborator
+    
+    def __init__(self):
+        self.collaborators = {}
+
+    def append(
+        self,
+        name: str = "",
+        private_attributes_callable: Callable = None,
+        **kwargs,
+    ):
+        interface_module = importlib.import_module("openfl.experimental.interface")
+        collaborator_class = getattr(interface_module, "Collaborator")
+        self.collaborators[name] = collaborator_class(
+            name=name,
+            private_attributes_callable=private_attributes_callable,
+            **kwargs,
+        )
+
+    def execute_from_col(self, name, internal_f_name, *args, **kwargs):
+        f = getattr(self.collaborators[name], internal_f_name)
+        return f(*args, **kwargs)
+
+    def get_collaborator(self, name):
+        return self.collaborators[name]
 
 
 class LocalRuntime(Runtime):
@@ -97,22 +219,27 @@ class LocalRuntime(Runtime):
                                              collaborator tasks will run sequentially.
         """
         super().__init__()
-        if backend not in ["ray", "single_process"]:
+        if backend not in ["ray", "single_process", "ray_grouped"]:
             raise ValueError(
                 f"Invalid 'backend' value '{backend}', accepted values are "
-                + "'ray', or 'single_process'"
+                + "'ray', 'ray_grouped', or 'single_process'"
             )
-        if backend == "ray":
+        if backend.find("ray") != -1:
             if not ray.is_initialized():
                 dh = kwargs.get("dashboard_host", "127.0.0.1")
                 dp = kwargs.get("dashboard_port", 5252)
                 ray.init(dashboard_host=dh, dashboard_port=dp)
+                
+                self.collaborators_per_group = kwargs.get('collaborators_per_group', 3)
+                self.max_concurrency = kwargs.get('max_concurrency', 1)
         self.backend = backend
         if aggregator is not None:
             self.aggregator = self.__get_aggregator_object(aggregator)
 
         if collaborators is not None:
             self.collaborators = self.__get_collaborator_object(collaborators)
+            
+        
 
     def __get_aggregator_object(self, aggregator: Type[Aggregator]) -> Any:
         """Get aggregator object based on localruntime backend"""
@@ -164,15 +291,27 @@ class LocalRuntime(Runtime):
             return collaborators
 
         total_available_cpus = os.cpu_count()
+        total_required_cpus = sum(
+            [collaborator.num_cpus for collaborator in collaborators]
+        )
+        if total_available_cpus < total_required_cpus:
+            raise ResourcesNotAvailableError(
+                f"cannot assign more than available CPUs \
+                    ({total_required_cpus} < {total_available_cpus})."
+            )
+
+        if self.backend == "ray_grouped":
+            collaborator_ray_refs = ray_group_assign(collaborators, collaborators_per_group=self.collaborators_per_group, max_concurrency=self.max_concurrency)
+            return collaborator_ray_refs
+
         total_available_gpus = get_number_of_gpus()
 
         total_required_gpus = sum(
             [collaborator.num_gpus for collaborator in collaborators]
         )
-        total_required_cpus = sum(
-            [collaborator.num_cpus for collaborator in collaborators]
-        )
+
         if total_required_gpus > 0:
+            # TODO this funtion doesn't work, see definition for details
             check_resource_allocation(
                 total_available_gpus,
                 {collab.get_name(): collab.num_gpus for collab in collaborators},
@@ -182,11 +321,6 @@ class LocalRuntime(Runtime):
             raise ResourcesNotAvailableError(
                 f"cannot assign more than available GPUs \
                     ({total_required_gpus} < {total_available_gpus})."
-            )
-        if total_available_cpus < total_required_cpus:
-            raise ResourcesNotAvailableError(
-                f"cannot assign more than available CPUs \
-                    ({total_required_cpus} < {total_available_cpus})."
             )
         interface_module = importlib.import_module("openfl.experimental.interface")
         collaborator_class = getattr(interface_module, "Collaborator")
@@ -230,9 +364,12 @@ class LocalRuntime(Runtime):
     def collaborators(self, collaborators: List[Type[Collaborator]]):
         """Set LocalRuntime collaborators"""
         if self.backend == "single_process":
+
             def get_collab_name(collab):
                 return collab.get_name()
+
         else:
+
             def get_collab_name(collab):
                 return ray.get(collab.get_name.remote())
 
@@ -246,16 +383,19 @@ class LocalRuntime(Runtime):
         if self.backend == "single_process":
             self._aggregator.initialize_private_attributes()
         else:
-            self._aggregator.initialize_private_attributes.remote()
+            ray.get(self._aggregator.initialize_private_attributes.remote())
 
     def initialize_collaborators(self):
         """initialize collaborator private attributes"""
         if self.backend == "single_process":
+
             def init_private_attrs(collab):
                 return collab.initialize_private_attributes()
+
         else:
+
             def init_private_attrs(collab):
-                return collab.initialize_private_attributes.remote()
+                return ray.get(collab.initialize_private_attributes.remote())
 
         for collaborator in self.__collaborators.values():
             init_private_attrs(collaborator)
@@ -304,12 +444,7 @@ class LocalRuntime(Runtime):
 
             f_name = f.__name__
 
-    def execute_task(
-        self,
-        flspec_obj: Type[FLSpec],
-        f: Callable,
-        **kwargs
-    ):
+    def execute_task(self, flspec_obj: Type[FLSpec], f: Callable, **kwargs):
         """
         Defines which function to be executed based on name and kwargs
         Updates the arguments and executes until end is not reached
@@ -360,19 +495,16 @@ class LocalRuntime(Runtime):
             clones = [FLSpec._clones[col] for col in self.selected_collaborators]
             self.join_step = False
 
-        if self.backend == "ray":
+        if self.backend.find("ray") != -1:
             ray_executor = RayExecutor()
             ray_executor.ray_call_put(
-                aggregator, flspec_obj,
-                f.__name__, self.execute_agg_steps,
-                clones
+                aggregator, flspec_obj, f.__name__, self.execute_agg_steps, clones
             )
             flspec_obj = ray_executor.ray_call_get()[0]
             del ray_executor
         else:
             aggregator.execute_func(
-                flspec_obj, f.__name__, self.execute_agg_steps,
-                clones
+                flspec_obj, f.__name__, self.execute_agg_steps, clones
             )
 
         gc.collect()
@@ -410,7 +542,7 @@ class LocalRuntime(Runtime):
         # filter exclude/include attributes for clone
         self.filter_exclude_include(flspec_obj, f, selected_collaborators, **kwargs)
 
-        if self.backend == "ray":
+        if self.backend.find("ray") != -1:
             ray_executor = RayExecutor()
         # set runtime,collab private attributes and metaflowinterface
         for col in selected_collaborators:
@@ -428,14 +560,14 @@ class LocalRuntime(Runtime):
             clone = FLSpec._clones[collab_name]
             collaborator = self.__collaborators[collab_name]
 
-            if self.backend == "ray":
+            if self.backend.find("ray") != -1:
                 ray_executor.ray_call_put(
                     collaborator, clone, f.__name__, self.execute_collab_steps
                 )
             else:
                 collaborator.execute_func(clone, f.__name__, self.execute_collab_steps)
 
-        if self.backend == "ray":
+        if self.backend.find("ray") != -1:
             clones = ray_executor.ray_call_get()
             FLSpec._clones.update(zip(selected_collaborators, clones))
             clone = clones[0]
