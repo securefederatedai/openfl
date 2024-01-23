@@ -59,5 +59,5 @@ jobs:
         # fx plan initialize --gandlf_config ../testing/config_segmentation.yaml
         cd /home/runner/work/openfl/openfl
         ls
-        python -m tests.github.test_gandlf --template gandlf_seg_test --fed_workspace aggregator --col1 one --col2 two --rounds-to-train 1 --gandlf_config ../testing/config_segmentation.yaml
+        python -m tests.github.test_gandlf --template gandlf_seg_test --fed_workspace aggregator --col1 one --col2 two --rounds-to-train 1 --gandlf_config "$(pwd)/../testing/config_segmentation.yaml"
         
