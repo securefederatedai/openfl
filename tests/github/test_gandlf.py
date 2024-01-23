@@ -51,7 +51,8 @@ if __name__ == '__main__':
                 shutil.copy(entry.path, Path.cwd().resolve() / 'data' / col1)
     # Initialize FL plan
     if args.gandlf_config:
-        check_call(['fx', 'plan', 'initialize', '-a', fqdn, '--gandlf_config', str(args.gandlf_config)])
+        check_call(['fx', 'plan', 'initialize', '-a', fqdn, 
+                    '--gandlf_config', str(args.gandlf_config)])
     else:
         check_call(['fx', 'plan', 'initialize', '-a', fqdn])
     plan_path = Path('plan/plan.yaml')
