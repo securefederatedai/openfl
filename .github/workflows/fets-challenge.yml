@@ -45,7 +45,7 @@ jobs:
         head -n 1 testing/data/train_3d_rad_segmentation.csv > /home/runner/work/openfl/openfl/valid.csv
         tail -n +9 testing/data/train_3d_rad_segmentation.csv >> /home/runner/work/openfl/openfl/valid.csv
         head -n 8 testing/data/train_3d_rad_segmentation.csv > /home/runner/work/openfl/openfl/train.csv
-        cp testing/config_segmentation.yaml ${WORKSPACE_PATH}/config_segmentation.yaml
+        cp testing/config_segmentation.yaml /home/runner/work/openfl/openfl/config_segmentation.yaml
         echo "Initialize OpenFL plan"
         ## from docs
         export WORKSPACE_TEMPLATE=gandlf_seg_test
@@ -60,6 +60,6 @@ jobs:
         # fx plan initialize --gandlf_config ../testing/config_segmentation.yaml
         cd /home/runner/work/openfl/openfl
         ls
-        file "${WORKSPACE_PATH}/config_segmentation.yaml"
-        python -m tests.github.test_gandlf --template gandlf_seg_test --fed_workspace aggregator --col1 one --col2 two --rounds-to-train 1 --gandlf_config "${WORKSPACE_PATH}/config_segmentation.yaml"
+        file "/home/runner/work/openfl/openfl/config_segmentation.yaml"
+        python -m tests.github.test_gandlf --template gandlf_seg_test --fed_workspace aggregator --col1 one --col2 two --rounds-to-train 1 --gandlf_config "/home/runner/work/openfl/openfl/config_segmentation.yaml"
         
