@@ -93,14 +93,11 @@ def ray_group_assign(collaborators, collaborators_per_group=3, max_concurrency=1
                 collaborator_actor: The collaborator actor.
                 collaborator: The collaborator.
             """
-            interface_module = importlib.import_module(
-                "openfl.experimental.interface"
-            )
-            collaborator_class = getattr(interface_module, "Collaborator")
+            from openfl.experimental.interface import Collaborator
             all_methods = [
                 method
-                for method in dir(collaborator_class)
-                if callable(getattr(collaborator_class, method))
+                for method in dir(Collaborator)
+                if callable(getattr(Collaborator, method))
             ]
             external_methods = [
                 method for method in all_methods if (method[0] != "_")
@@ -223,9 +220,8 @@ class RayGroup:
             private_attributes_callable (Callable): A callable that sets the private attributes of the collaborator.
             **kwargs: Additional keyword arguments.
         """
-        interface_module = importlib.import_module("openfl.experimental.interface")
-        collaborator_class = getattr(interface_module, "Collaborator")
-        self.collaborators[name] = collaborator_class(
+        from openfl.experimental.interface import Collaborator
+        self.collaborators[name] = Collaborator(
             name=name,
             private_attributes_callable=private_attributes_callable,
             **kwargs,
