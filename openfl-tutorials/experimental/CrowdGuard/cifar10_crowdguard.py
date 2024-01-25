@@ -278,9 +278,8 @@ def determine_biggest_cluster(clustering):
 class FederatedFlow(FLSpec):
     def __init__(self, model, optimizers, device="cpu", total_rounds=10, top_model_accuracy=0,
                  pmr=0.25, aggregation_algorithm='FedAVG', **kwargs, ):
-        assert aggregation_algorithm in ['FedAVG', 'CrowdGuard'], f'Unsupported Aggregation ' \
-                                                                  f'Algorithm: ' \
-                                                                  f'{aggregation_algorithm}'
+        if aggregation_algorithm not in ['FedAVG', 'CrowdGuard']:
+            raise Exception(f'Unsupported Aggregation Algorithm: {aggregation_algorithm}')
         super().__init__(**kwargs)
         self.aggregation_algorithm = aggregation_algorithm
         self.model = model
@@ -372,7 +371,7 @@ class FederatedFlow(FLSpec):
     @aggregator
     def collect_models(self, inputs):
         # Following the CrowdGuard paper, this should be executed within SGX
-        
+
         self.all_models = {i.collaborator_name: i.model.cpu() for i in inputs}
         self.next(self.local_validation, foreach="collaborators")
 
@@ -412,7 +411,7 @@ class FederatedFlow(FLSpec):
     @aggregator
     def defend(self, inputs):
         # Following the CrowdGuard paper, this should be executed within SGX
-        
+
         all_names = list(self.all_models.keys())
         all_votes_by_name = {i.collaborator_name: i.votes_of_this_client for i in inputs}
 
@@ -528,9 +527,9 @@ if __name__ == '__main__':
     # Prepare local datasets
     transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize(MEAN, STD_DEV), ])
     cifar_train = datasets.CIFAR10(root="./data", train=True, download=True, transform=transform)
-    cifar_train = [x for x in cifar_train]
+    cifar_train = list(cifar_train)
     cifar_test = datasets.CIFAR10(root="./data", train=False, download=True, transform=transform)
-    cifar_test = [x for x in cifar_test]
+    cifar_test = list(cifar_test)
     X = torch.stack([x[0] for x in cifar_train] + [x[0] for x in cifar_test])
     Y = torch.LongTensor(
         np.stack(np.array([x[1] for x in cifar_train] + [x[1] for x in cifar_test])))
@@ -558,14 +557,14 @@ if __name__ == '__main__':
 
     for idx, collab in enumerate(collaborators):
         # construct the training and test and population dataset
-        benign_training_X = train_dataset_data[idx::len(collaborators)]
-        benign_training_Y = train_dataset_targets[idx::len(collaborators)]
+        benign_training_x = train_dataset_data[idx::len(collaborators)]
+        benign_training_y = train_dataset_targets[idx::len(collaborators)]
 
         if 'malicious' in collab.name:
-            local_train_data, local_train_targets = poison_data(benign_training_X,
-                                                                benign_training_Y)
+            local_train_data, local_train_targets = poison_data(benign_training_x,
+                                                                benign_training_y)
         else:
-            local_train_data, local_train_targets = benign_training_X, benign_training_Y
+            local_train_data, local_train_targets = benign_training_x, benign_training_y
 
         local_test_data = test_dataset_data[idx::len(collaborators)]
         local_test_targets = test_dataset_targets[idx::len(collaborators)]

@@ -185,11 +185,11 @@ class CrowdGuardClientValidation:
                         expected_predictions = sample_idx + 1
                     else:
                         expected_predictions = number_of_previous_samples + target.shape[0]
-                    assert_msg = f'{len(predictions)} vs. {sample_idx} ({idx} {batch_id} ' \
-                                 f'{layer_output_index} {number_of_previous_samples})'
+                    assert_msg = f'{len(predictions)} vs. {sample_idx} ({idx} {batch_id} '
+                    assert_msg += f'{layer_output_index} {number_of_previous_samples})'
                     assert len(predictions) == expected_predictions, assert_msg
-                    assert_msg = f'{len(predictions[sample_idx])} {layer_output_index} ' \
-                                 f'{sample_idx} {batch_id} {idx} {number_of_previous_samples}'
+                    assert_msg = f'{len(predictions[sample_idx])} {layer_output_index} '
+                    assert_msg += f'{sample_idx} {batch_id} {idx} {number_of_previous_samples}'
                     assert len(predictions[sample_idx]) == layer_output_index, assert_msg
                     value = layer_output_values[idx].clone().detach().cpu()
                     predictions[sample_idx].append(value)
