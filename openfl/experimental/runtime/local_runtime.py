@@ -67,14 +67,32 @@ class RayExecutor:
 
 
 def ray_group_assign(collaborators, collaborators_per_group=3, max_concurrency=1):
-    # This function takes the list of collaborators and the collaborators per group and assigns the collaborators to resource groups which share cuda context,
-    # it returns a list of GroupMembers, that is a utility class that manages the collaborator and in which group it is in. This maintians compatablility with current runtime execution without having to manage the groups manually.
+    """
+    Assigns collaborators to resource groups which share a CUDA context.
+
+    Args:
+        collaborators (list): The list of collaborators.
+        collaborators_per_group (int, optional): The number of collaborators per group. Defaults to 3.
+        max_concurrency (int, optional): The maximum concurrency. Defaults to 1.
+
+    Returns:
+        list: A list of GroupMember instances.
+    """
     
     class GroupMember:
-        # Utility class that maintains compatability with runtime execution,
-        # It takes the collaborator_actor, and the name of a collaborator. it takes care of managing which group the collaborator is a member of. 
-        # It also assigns attributes for each funtion in the Collaborator interface in conjuntion with RemoteHelper to maintain compatability with RayExecutor.
+        """
+        A utility class that manages the collaborator and its group.
+
+        This class maintains compatibility with runtime execution by assigning attributes for each function in the Collaborator interface in conjunction with RemoteHelper.
+        """
         def __init__(self, collaborator_actor, collaborator):
+            """
+            Initializes a new instance of the GroupMember class.
+
+            Args:
+                collaborator_actor: The collaborator actor.
+                collaborator: The collaborator.
+            """
             interface_module = importlib.import_module(
                 "openfl.experimental.interface"
             )
@@ -99,12 +117,22 @@ def ray_group_assign(collaborators, collaborators_per_group=3, max_concurrency=1
                 )
                 
     class RemoteHelper:
-        # Utility class to maintain compatability with RayExecutor,
-        # It takes the collaborator_actor, the name of a collaborator and the name of the funtion, it returns a lambda funtion that uses collaborator_actor.execute_from_col which
-        # runs a given funtion from the given collaborator, the inputs of the funtion are *args, **kwargs
+        """
+        A utility class to maintain compatibility with RayExecutor.
+
+        This class returns a lambda function that uses collaborator_actor.execute_from_col to run a given function from the given collaborator.
+        """
         # once ray_grouped replaces the current ray runtime this class can be replaced with a funtion that returns the lambda funtion, using a funtion is necesary because this is used
         # in setting multiple funtions in a loop and lambda takes the reference to self.f_name and not the value so we need to change scope to avoid self.f_name from changing as the loop progresses
         def __init__(self, collaborator_actor, collaborator, f_name) -> None:
+            """
+            Initializes a new instance of the RemoteHelper class.
+
+            Args:
+                collaborator_actor: The collaborator actor.
+                collaborator: The collaborator.
+                f_name (str): The name of the function.
+            """
             self.f_name = f_name
             self.collaborator_actor = collaborator_actor
             self.collaborator = collaborator
@@ -113,6 +141,16 @@ def ray_group_assign(collaborators, collaborators_per_group=3, max_concurrency=1
             )
 
         def remote(self, *args, **kwargs):
+            """
+            Executes the function with the given arguments and keyword arguments.
+
+            Args:
+                *args: The arguments to pass to the function.
+                **kwargs: The keyword arguments to pass to the function.
+
+            Returns:
+                The result of the function execution.
+            """
             return self.f(*args, *kwargs)
                 
     collaborator_ray_refs = []
@@ -157,17 +195,34 @@ def ray_group_assign(collaborators, collaborators_per_group=3, max_concurrency=1
 
 
 class RayGroup:
-    # Ray actor that contains a group of collaborators, has funtion execute_from_col that takes a name of collaborator, funtion name and *args, **kwargs, to run the given funtion in the given collaborator
+    """
+    A Ray actor that manages a group of collaborators.
+
+    This class allows for the execution of functions from a specified collaborator 
+    using the execute_from_col method. The collaborators are stored in a dictionary 
+    where the key is the collaborator's name.
+    """
     
     def __init__(self):
+        """
+        Initializes a new instance of the RayGroup class.
+        """
         self.collaborators = {}
-
+        
     def append(
         self,
         name: str = "",
         private_attributes_callable: Callable = None,
         **kwargs,
     ):
+        """
+        Appends a new collaborator to the group.
+
+        Args:
+            name (str): The name of the collaborator.
+            private_attributes_callable (Callable): A callable that sets the private attributes of the collaborator.
+            **kwargs: Additional keyword arguments.
+        """
         interface_module = importlib.import_module("openfl.experimental.interface")
         collaborator_class = getattr(interface_module, "Collaborator")
         self.collaborators[name] = collaborator_class(
@@ -175,12 +230,33 @@ class RayGroup:
             private_attributes_callable=private_attributes_callable,
             **kwargs,
         )
-
+    
     def execute_from_col(self, name, internal_f_name, *args, **kwargs):
+        """
+        Executes a function from a specified collaborator.
+
+        Args:
+            name (str): The name of the collaborator.
+            internal_f_name (str): The name of the function to execute.
+            *args: Additional arguments to pass to the function.
+            **kwargs: Additional keyword arguments to pass to the function.
+
+        Returns:
+            The result of the function execution.
+        """
         f = getattr(self.collaborators[name], internal_f_name)
         return f(*args, **kwargs)
 
     def get_collaborator(self, name):
+        """
+        Retrieves a collaborator from the group by name.
+
+        Args:
+            name (str): The name of the collaborator.
+
+        Returns:
+            The collaborator instance.
+        """
         return self.collaborators[name]
 
 
