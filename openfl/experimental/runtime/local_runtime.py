@@ -291,10 +291,10 @@ class LocalRuntime(Runtime):
                                              collaborator tasks will run sequentially.
         """
         super().__init__()
-        if backend not in ["ray", "single_process", "ray_grouped"]:
+        if backend not in ["ray", "single_process"]:
             raise ValueError(
                 f"Invalid 'backend' value '{backend}', accepted values are "
-                + "'ray', 'ray_grouped', or 'single_process'"
+                + "'ray', or 'single_process'"
             )
         if backend.find("ray") != -1:
             if not ray.is_initialized():
@@ -372,48 +372,9 @@ class LocalRuntime(Runtime):
                     ({total_required_cpus} < {total_available_cpus})."
             )
 
-        if self.backend == "ray_grouped":
+        if self.backend == "ray":
             collaborator_ray_refs = ray_group_assign(collaborators, collaborators_per_group=self.collaborators_per_group, max_concurrency=self.max_concurrency)
             return collaborator_ray_refs
-
-        total_available_gpus = get_number_of_gpus()
-
-        total_required_gpus = sum(
-            [collaborator.num_gpus for collaborator in collaborators]
-        )
-
-        if total_required_gpus > 0:
-            # TODO this funtion doesn't work, see definition for details
-            check_resource_allocation(
-                total_available_gpus,
-                {collab.get_name(): collab.num_gpus for collab in collaborators},
-            )
-
-        if total_available_gpus < total_required_gpus:
-            raise ResourcesNotAvailableError(
-                f"cannot assign more than available GPUs \
-                    ({total_required_gpus} < {total_available_gpus})."
-            )
-        interface_module = importlib.import_module("openfl.experimental.interface")
-        collaborator_class = getattr(interface_module, "Collaborator")
-
-        collaborator_ray_refs = []
-        for collaborator in collaborators:
-            num_cpus = collaborator.num_cpus
-            num_gpus = collaborator.num_gpus
-
-            collaborator_actor = ray.remote(collaborator_class).options(
-                num_cpus=num_cpus, num_gpus=num_gpus
-            )
-
-            collaborator_ray_refs.append(
-                collaborator_actor.remote(
-                    name=collaborator.get_name(),
-                    private_attributes_callable=collaborator.private_attributes_callable,
-                    **collaborator.kwargs,
-                )
-            )
-        return collaborator_ray_refs
 
     @property
     def aggregator(self) -> str:
