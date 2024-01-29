@@ -26,6 +26,7 @@ from CrowdGuardClientValidation import CrowdGuardClientValidation
 from openfl.experimental.interface import Aggregator, Collaborator, FLSpec
 from openfl.experimental.placement import aggregator, collaborator
 from openfl.experimental.runtime import LocalRuntime
+from urllib.request import urlretrieve
 
 warnings.filterwarnings("ignore")
 
@@ -38,6 +39,7 @@ TOTAL_CLIENT_NUMBER = 4
 PMR = 0.25
 NUMBER_OF_MALICIOUS_CLIENTS = max(1, int(TOTAL_CLIENT_NUMBER * PMR)) if PMR > 0 else 0
 NUMBER_OF_BENIGN_CLIENTS = TOTAL_CLIENT_NUMBER - NUMBER_OF_MALICIOUS_CLIENTS
+PRETRAINED_MODEL_FILE = 'pretrained_cifar.pt'
 
 # set the random seed for repeatable results
 RANDOM_SEED = 10
@@ -46,6 +48,11 @@ VOTE_FOR_BENIGN = 1
 VOTE_FOR_POISONED = 0
 STD_DEV = torch.from_numpy(np.array([0.2023, 0.1994, 0.2010]))
 MEAN = torch.from_numpy(np.array([0.4914, 0.4822, 0.4465]))
+
+
+def download_pretrained_model():
+    urlretrieve('https://huggingface.co/prieger/cifar10/resolve/main/pretrained_cifar.pt?'
+                'download=true', PRETRAINED_MODEL_FILE)
 
 
 def trigger_single_image(image):
@@ -191,7 +198,7 @@ def test(network, test_loader, device, mode='Benign', move_to_cpu_afterward=True
     print(
         (
             f"{mode} {test_train} set: Avg. loss: {test_loss}, "
-            f"Accuracy: {correct}/{len(test_loader.dataset)} ({100.0 * accuracy}%)"
+            f"Accuracy: {correct}/{len(test_loader.dataset)} ({100.0 * accuracy:5.03f}%)"
         )
     )
     if move_to_cpu_afterward:
@@ -510,6 +517,8 @@ if __name__ == '__main__':
     )
 
     args = argparser.parse_args()
+    
+    download_pretrained_model()
 
     # Setup participants
     aggregator_object = Aggregator()
