@@ -146,7 +146,7 @@ def ray_group_assign(collaborators, number_of_actors=3):
                 **kwargs: The keyword arguments to pass to the function.
 
             Returns:
-                The result of the function execution.
+                The result of the function execution. 
             """
             return self.f(*args, *kwargs)
                 
