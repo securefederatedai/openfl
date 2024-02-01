@@ -105,18 +105,14 @@ def initialize(context, plan_config, cols_config, data_config,
 
     utils.dump_proto(model_proto=model_snap, fpath=init_state_path)
 
-    plan_origin = Plan.parse(plan_config, resolve=False).config
-
-    if (plan_origin['network']['settings']['agg_addr'] == 'auto'
+    if (plan.config['network']['settings']['agg_addr'] == 'auto'
             or aggregator_address):
-        plan_origin['network']['settings']['agg_addr'] = aggregator_address or getfqdn_env()
+        plan.config['network']['settings']['agg_addr'] = aggregator_address or getfqdn_env()
 
         logger.warn(f'Patching Aggregator Addr in Plan'
-                    f" 🠆 {plan_origin['network']['settings']['agg_addr']}")
+                    f" 🠆 {plan.config['network']['settings']['agg_addr']}")
 
-        Plan.dump(plan_config, plan_origin)
-
-    plan.config = plan_origin
+        Plan.dump(plan_config, plan.config)
 
     # Record that plan with this hash has been initialized
     if 'plans' not in context.obj:
