@@ -132,6 +132,7 @@ class Plan:
 
                 gandlf_config = Plan.load(Path(gandlf_config_path))
                 plan.config['task_runner']['settings']['gandlf_config'] = gandlf_config
+                plan.config['task_runner']['settings']['gandlf_config']['output_dir'] = '.'
 
             plan.authorized_cols = Plan.load(cols_config_path).get(
                 'collaborators', []
