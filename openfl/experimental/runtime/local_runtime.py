@@ -73,7 +73,8 @@ def ray_group_assign(collaborators, number_of_actors=3):
 
     Args:
         collaborators (list): The list of collaborators.
-        number_of_actors (int, optional): Number of actors to distribute collaborators to. Defaults to 3.
+        number_of_actors (int, optional): Number of actors to distribute collaborators to.
+        Defaults to 3.
 
     Returns:
         list: A list of GroupMember instances.
@@ -83,7 +84,8 @@ def ray_group_assign(collaborators, number_of_actors=3):
         """
         A utility class that manages the collaborator and its group.
 
-        This class maintains compatibility with runtime execution by assigning attributes for each function in the Collaborator interface in conjunction with RemoteHelper.
+        This class maintains compatibility with runtime execution by assigning attributes for each
+        function in the Collaborator interface in conjunction with RemoteHelper.
         """
 
         def __init__(self, collaborator_actor, collaborator):
@@ -115,11 +117,15 @@ def ray_group_assign(collaborators, number_of_actors=3):
         """
         A utility class to maintain compatibility with RayExecutor.
 
-        This class returns a lambda function that uses collaborator_actor.execute_from_col to run a given function from the given collaborator.
+        This class returns a lambda function that uses collaborator_actor.execute_from_col to run
+        a given function from the given collaborator.
         """
 
-        # once ray_grouped replaces the current ray runtime this class can be replaced with a funtion that returns the lambda funtion, using a funtion is necesary because this is used
-        # in setting multiple funtions in a loop and lambda takes the reference to self.f_name and not the value so we need to change scope to avoid self.f_name from changing as the loop progresses
+        # once ray_grouped replaces the current ray runtime this class can be replaced with a
+        # funtion that returns the lambda funtion, using a funtion is necesary because this is used
+        # in setting multiple funtions in a loop and lambda takes the reference to self.f_name and
+        # not the value so we need to change scope to avoid self.f_name from changing as the loop
+        # progresses
         def __init__(self, collaborator_actor, collaborator, f_name) -> None:
             """
             Initializes a new instance of the RemoteHelper class.
@@ -154,7 +160,8 @@ def ray_group_assign(collaborators, number_of_actors=3):
     collaborator_ray_refs = []
     collaborators_per_group = math.ceil(len(collaborators) / number_of_actors)
     times_called = 0
-    # logic to sort collaborators by gpus, if collaborators have the same number of gpu then they are sorted by cpu
+    # logic to sort collaborators by gpus, if collaborators have the same number of gpu then they
+    # are sorted by cpu
     cpu_magnitude = len(str(abs(max([i.num_cpus for i in collaborators]))))
     min_gpu = min([i.num_gpus for i in collaborators])
     min_gpu = max(min_gpu, 0.0001)
@@ -171,7 +178,7 @@ def ray_group_assign(collaborators, number_of_actors=3):
                 [
                     i.num_cpus
                     for i in collaborators_sorted_by_gpucpu[
-                        times_called : times_called + collaborators_per_group
+                        times_called: times_called + collaborators_per_group
                     ]
                 ]
             )
@@ -179,7 +186,7 @@ def ray_group_assign(collaborators, number_of_actors=3):
                 [
                     i.num_gpus
                     for i in collaborators_sorted_by_gpucpu[
-                        times_called : times_called + collaborators_per_group
+                        times_called: times_called + collaborators_per_group
                     ]
                 ]
             )
@@ -238,7 +245,8 @@ class RayGroup:
 
         Args:
             name (str): The name of the collaborator.
-            private_attributes_callable (Callable): A callable that sets the private attributes of the collaborator.
+            private_attributes_callable (Callable): A callable that sets the private attributes of
+            the collaborator.
             **kwargs: Additional keyword arguments.
         """
         from openfl.experimental.interface import Collaborator
