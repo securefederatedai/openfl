@@ -64,5 +64,6 @@ jobs:
         cd /home/runner/work/openfl/openfl
         ls
         file "/home/runner/work/openfl/openfl/config_segmentation.yaml"
+        sed -i 's/# n_channels: 3/num_channels: 3/g' "/home/runner/work/openfl/openfl/config_segmentation.yaml"
         python -m tests.github.test_gandlf --template gandlf_seg_test --fed_workspace aggregator --col1 one --col2 two --rounds-to-train 1 --gandlf_config "/home/runner/work/openfl/openfl/config_segmentation.yaml"
         
