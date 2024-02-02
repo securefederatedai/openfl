@@ -14,3 +14,5 @@ venv/*
 *.crt
 *.key
 .eggs
+eggs/*
+*.pyi
