@@ -43,9 +43,9 @@ jobs:
         cat ./GANDLF/version.py
         echo "Download data and Split CSVs into training and validation"
         python -c "from testing.test_full import test_generic_download_data, test_generic_constructTrainingCSV; test_generic_download_data(); test_generic_constructTrainingCSV()"
-        head -n 1 testing/data/train_3d_rad_segmentation.csv > /home/runner/work/openfl/openfl/valid.csv
-        tail -n +9 testing/data/train_3d_rad_segmentation.csv >> /home/runner/work/openfl/openfl/valid.csv
-        head -n 8 testing/data/train_3d_rad_segmentation.csv > /home/runner/work/openfl/openfl/train.csv
+        head -n 1 testing/data/train_2d_rad_segmentation.csv > /home/runner/work/openfl/openfl/valid.csv
+        tail -n +9 testing/data/train_2d_rad_segmentation.csv >> /home/runner/work/openfl/openfl/valid.csv
+        head -n 8 testing/data/train_2d_rad_segmentation.csv > /home/runner/work/openfl/openfl/train.csv
         cp testing/config_segmentation.yaml /home/runner/work/openfl/openfl/config_segmentation.yaml
         echo "DEBUG display the config file"
         cat /home/runner/work/openfl/openfl/config_segmentation.yaml
@@ -64,6 +64,5 @@ jobs:
         cd /home/runner/work/openfl/openfl
         ls
         file "/home/runner/work/openfl/openfl/config_segmentation.yaml"
-        sed -i 's/128,128/32,32,32/g' /home/runner/work/openfl/openfl/config_segmentation.yaml
         python -m tests.github.test_gandlf --template gandlf_seg_test --fed_workspace aggregator --col1 one --col2 two --rounds-to-train 1 --gandlf_config "/home/runner/work/openfl/openfl/config_segmentation.yaml"
         
