@@ -19,6 +19,7 @@ from .runner import TaskRunner
 from GANDLF.compute.generic import create_pytorch_objects
 from GANDLF.compute.training_loop import train_network
 from GANDLF.compute.forward_pass import validate_network
+from GANDLF.parseConfig import parseConfig
 
 
 class GaNDLFTaskRunner(TaskRunner):
@@ -56,6 +57,8 @@ class GaNDLFTaskRunner(TaskRunner):
         """
         super().__init__(**kwargs)
 
+        assert bool(gandlf_config), "gandlf_config must be specified"
+
         # allow pass-through of a gandlf config as a file or a dict
 
         train_csv = self.data_loader.train_csv
@@ -63,6 +66,11 @@ class GaNDLFTaskRunner(TaskRunner):
 
         if isinstance(gandlf_config, str) and os.path.exists(gandlf_config):
             gandlf_config = yaml.safe_load(open(gandlf_config, "r"))
+
+        try:
+            gandlf_config = parseConfig(gandlf_config)
+        except Exception:
+            self.logger.info("WARNING: GANDLF.parseConfig did not work as expected.")
 
         (
             model,
