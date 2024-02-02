@@ -107,8 +107,8 @@ def initialize(context, plan_config, cols_config, data_config,
     utils.dump_proto(model_proto=model_snap, fpath=init_state_path)
 
     plan_origin = Plan.parse(plan_config_path=plan_config,
-                      gandlf_config_path=gandlf_config,
-                      resolve=False)
+                             gandlf_config_path=gandlf_config,
+                             resolve=False)
 
     if (plan_origin.config['network']['settings']['agg_addr'] == 'auto'
             or aggregator_address):
