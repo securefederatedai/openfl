@@ -131,7 +131,7 @@ class Plan:
                     extra={'markup': True})
 
                 gandlf_config = Plan.load(Path(gandlf_config_path))
-                ## check for defaults
+                # check for defaults
                 gandlf_config['output_dir'] = gandlf_config.get('output_dir', '.')
 
             plan.authorized_cols = Plan.load(cols_config_path).get(
