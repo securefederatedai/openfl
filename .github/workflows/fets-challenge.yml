@@ -64,6 +64,11 @@ jobs:
         cd /home/runner/work/openfl/openfl
         ls
         file "/home/runner/work/openfl/openfl/config_segmentation.yaml"
+        ## for 2d data, only a single change is needed in the gandlf config
         sed -i 's/# n_channels: 3/num_channels: 3/g' "/home/runner/work/openfl/openfl/config_segmentation.yaml"
+        ## for 3d data, the following changes are needed in the gandlf config -- commented out for now
+        # sed -i 's/dimension: 2/dimension: 3/g' "/home/runner/work/openfl/openfl/config_segmentation.yaml"
+        # sed -i 's/0,255/0,1/g' "/home/runner/work/openfl/openfl/config_segmentation.yaml"
+        # sed -i 's/128,128/32,32,32/g' "/home/runner/work/openfl/openfl/config_segmentation.yaml"
         python -m tests.github.test_gandlf --template gandlf_seg_test --fed_workspace aggregator --col1 one --col2 two --rounds-to-train 1 --gandlf_config "/home/runner/work/openfl/openfl/config_segmentation.yaml"
         
