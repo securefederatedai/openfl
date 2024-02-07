@@ -249,9 +249,15 @@ cd envoy
 
 ```sh
 cd workspace
-jupyter lab pytorch_tinyimagenet.ipynb
+jupyter lab --allow-root  hpu_pytorch_tinyimagenet.ipynb
 ```
-- A Jupyter Server URL will appear in your terminal. In your browser, proceed to that link. Once the webpage loads, click on the pytorch_tinyimagenet.ipynb file. 
+When running on remote host inside a docker container as the case of Gaudi2, one need to port forward jupyter lab to your local host. On your local terminal port formal 
+
+```sh
+ssh -NL 8888:127.0.0.1:8888 gaudi2_host
+```
+
+- A Jupyter Server URL will appear in your terminal. In your local browser, proceed to that link. Once the webpage loads, click on the pytorch_tinyimagenet.ipynb file. 
 - To run the experiment, select the icon that looks like two triangles to "Restart Kernel and Run All Cells". 
 - You will notice activity in your terminals as the experiment runs, and when the experiment is finished the director terminal will display a message that the experiment has finished successfully.  
 

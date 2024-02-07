@@ -23,7 +23,7 @@ Let's create a Dockerfile with the following content and name it Dockerfile_Haba
 
 ```
 
-FROM vault.habana.ai/gaudi-docker/1.10.0/ubuntu20.04/habanalabs/pytorch-installer-2.0.1/latest
+FROM vault.habana.ai/gaudi-docker/1.12.0/ubuntu20.04/habanalabs/pytorch-installer-2.0.1:latest
 
 ENV HABANA_VISIBLE_DEVICES=all
 ENV OMPI_MCA_btl_vader_single_copy_mechanism=none
@@ -215,7 +215,7 @@ Refer [getting started with PyTorch](https://www.intel.com/content/www/us/en/dev
    - Navigate to the tutorial:
     
    ```sh
-   cd openfl/openfl-tutorials/interactive_api/PyTorch_Kvasir_UNet
+   cd openfl/openfl-tutorials/interactive_api/HPU/PyTorch_Kvasir_UNet
    ```
 
 <br/>
@@ -255,9 +255,15 @@ Optional: Run a second envoy in an additional terminal:
 
 ```sh
 cd workspace
-jupyter lab PyTorch_Kvasir_UNet.ipynb
+jupyter lab --allow-root PyTorch_Kvasir_UNet.ipynb
 ```
-- A Jupyter Server URL will appear in your terminal. In your browser, proceed to that link. Once the webpage loads, click on the PyTorch_Kvasir_UNet.ipynb file. 
+
+When running on remote host inside a docker container as the case of Gaudi2, one need to port forward jupyter lab to your local host. On your local terminal port formal 
+
+```sh
+ssh -NL 8888:127.0.0.1:8888 gaudi2_host
+```
+- A Jupyter Server URL will appear in your terminal. In your local browser, proceed to that link. Once the webpage loads, click on the PyTorch_Kvasir_UNet.ipynb file. 
 - To run the experiment, select the icon that looks like two triangles to "Restart Kernel and Run All Cells". 
 - You will notice activity in your terminals as the experiment runs, and when the experiment is finished the director terminal will display a message that the experiment has finished successfully.  
  
