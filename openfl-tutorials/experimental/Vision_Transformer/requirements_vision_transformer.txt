@@ -1,4 +1,4 @@
 torch==2.0.1
 torchvision==0.15.2
 medmnist==2.2.2
-transformers==4.30.1
+transformers==4.36.0
