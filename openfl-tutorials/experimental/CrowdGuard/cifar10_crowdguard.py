@@ -517,7 +517,7 @@ if __name__ == '__main__':
     )
 
     args = argparser.parse_args()
-    
+
     download_pretrained_model()
 
     # Setup participants
