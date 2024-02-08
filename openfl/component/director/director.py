@@ -110,7 +110,7 @@ class Director:
         aggregator = self.experiments_registry[experiment_name].aggregator
 
         if aggregator.last_tensor_dict is None:
-            logger.error('Aggregator have no aggregated model to return')
+            logger.error('Aggregator has no aggregated model to return')
             return None
 
         if model_type == 'best':

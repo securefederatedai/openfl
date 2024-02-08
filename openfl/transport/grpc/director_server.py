@@ -118,13 +118,13 @@ class DirectorGRPCServer(director_pb2_grpc.DirectorServicer):
                 require_client_auth=True
             )
             self.server.add_secure_port(self.listen_uri, server_credentials)
-        logger.info(f'Starting server on {self.listen_uri}')
+        logger.info(f'Starting director server on {self.listen_uri}')
         await self.server.start()
         await self.server.wait_for_termination()
 
     async def UpdateShardInfo(self, request, context):  # NOQA:N802
         """Receive acknowledge shard info."""
-        logger.info(f'UpdateShardInfo request has got: {request.shard_info}')
+        logger.info(f'Updating shard info: {request.shard_info}')
         dict_shard_info = MessageToDict(
             request.shard_info,
             preserving_proto_field_name=True
@@ -136,7 +136,6 @@ class DirectorGRPCServer(director_pb2_grpc.DirectorServicer):
 
     async def SetNewExperiment(self, stream, context):  # NOQA:N802
         """Request to set new experiment."""
-        logger.info(f'SetNewExperiment request has got {stream}')
         # TODO: add streaming reader
         data_file_path = self.root_dir / str(uuid.uuid4())
         with open(data_file_path, 'wb') as data_file:
@@ -144,7 +143,7 @@ class DirectorGRPCServer(director_pb2_grpc.DirectorServicer):
                 if request.experiment_data.size == len(request.experiment_data.npbytes):
                     data_file.write(request.experiment_data.npbytes)
                 else:
-                    raise Exception('Bad request')
+                    raise Exception('Could not register new experiment')
 
         tensor_dict = None
         if request.model_proto:
@@ -160,23 +159,23 @@ class DirectorGRPCServer(director_pb2_grpc.DirectorServicer):
             experiment_archive_path=data_file_path
         )
 
-        logger.info('Send response')
+        logger.info('Experiment {request.name} registered')
         return director_pb2.SetNewExperimentResponse(accepted=is_accepted)
 
     async def GetExperimentStatus(self, request, context):  # NOQA: N802
         """Get experiment status and update if experiment was approved."""
-        logger.info('GetExperimentStatus request received')
+        logger.debug('GetExperimentStatus request received')
         caller = self.get_caller(context)
         experiment_status = await self.director.get_experiment_status(
             experiment_name=request.experiment_name,
             caller=caller
         )
-        logger.info('Send response')
+        logger.debug('Sending GetExperimentStatus response')
         return director_pb2.GetExperimentStatusResponse(experiment_status=experiment_status)
 
     async def GetTrainedModel(self, request, context):  # NOQA:N802
         """RPC for retrieving trained models."""
-        logger.info('Request GetTrainedModel has got!')
+        logger.debug('Received request for trained model...')
 
         if request.model_type == director_pb2.GetTrainedModelRequest.BEST_MODEL:
             model_type = 'best'
@@ -199,6 +198,8 @@ class DirectorGRPCServer(director_pb2_grpc.DirectorServicer):
 
         model_proto = construct_model_proto(trained_model_dict, 0, NoCompressionPipeline())
 
+        logger.debug('Sending trained model')
+
         return director_pb2.TrainedModelResponse(model_proto=model_proto)
 
     async def GetExperimentData(self, request, context):  # NOQA:N802
@@ -217,15 +218,15 @@ class DirectorGRPCServer(director_pb2_grpc.DirectorServicer):
 
     async def WaitExperiment(self, request, context):  # NOQA:N802
         """Request for wait an experiment."""
-        logger.info(f'Request WaitExperiment has got from envoy {request.collaborator_name}!')
+        logger.debug(f'Request WaitExperiment received from envoy {request.collaborator_name}')
         experiment_name = await self.director.wait_experiment(request.collaborator_name)
-        logger.info(f'Experiment {experiment_name} is ready for {request.collaborator_name}')
+        logger.debug(f'Experiment {experiment_name} is ready for {request.collaborator_name}')
 
         return director_pb2.WaitExperimentResponse(experiment_name=experiment_name)
 
     async def GetDatasetInfo(self, request, context):  # NOQA:N802
         """Request the info about target and sample shapes in the dataset."""
-        logger.info('Request GetDatasetInfo has got!')
+        logger.debug('Received request for dataset info...')
 
         sample_shape, target_shape = self.director.get_dataset_info()
         shard_info = director_pb2.ShardInfo(
@@ -233,11 +234,13 @@ class DirectorGRPCServer(director_pb2_grpc.DirectorServicer):
             target_shape=target_shape
         )
         resp = director_pb2.GetDatasetInfoResponse(shard_info=shard_info)
+
+        logger.debug('Sending dataset info')
         return resp
 
     async def GetMetricStream(self, request, context):  # NOQA:N802
         """Request to stream metrics from the aggregator to frontend."""
-        logger.info(f'Request GetMetricStream for {request.experiment_name} experiment has got!')
+        logger.info(f'Getting metrics for {request.experiment_name}...')
 
         caller = self.get_caller(context)
         async for metric_dict in self.director.stream_metrics(
@@ -265,7 +268,7 @@ class DirectorGRPCServer(director_pb2_grpc.DirectorServicer):
         response = director_pb2.SetExperimentFailedResponse()
         if self.get_caller(context) != CLIENT_ID_DEFAULT:
             return response
-        logger.error(f'Collaborator {request.collaborator_name} was failed with error code:'
+        logger.error(f'Collaborator {request.collaborator_name} failed with error code:'
                      f' {request.error_code}, error_description: {request.error_description}'
                      f'Stopping experiment.')
         self.director.set_experiment_failed(
@@ -277,7 +280,7 @@ class DirectorGRPCServer(director_pb2_grpc.DirectorServicer):
 
     async def UpdateEnvoyStatus(self, request, context):  # NOQA:N802
         """Accept health check from envoy."""
-        logger.debug(f'Request UpdateEnvoyStatus has got: {request}')
+        logger.debug(f'Updating envoy status: {request}')
         cuda_devices_info = [
             MessageToDict(message, preserving_proto_field_name=True)
             for message in request.cuda_devices
