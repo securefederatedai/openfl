@@ -3,13 +3,19 @@
 ## **How to run this tutorial (without TLC and locally as a simulation):**
 <br/>
 
+Before we dive in, let's clarify some terms. XPU is a term coined by Intel to describe their line of computing devices, which includes CPUs, GPUs, FPGAs, and other accelerators. In this tutorial, we will be focusing on the Intel® Data Center GPU Max Series model, a powerful GPU that is part of Intel's XPU lineup.
+
 ### 0a. If you haven't done so already, create a virtual environment, install OpenFL, and upgrade pip:
   - For help with this step, visit the "Install the Package" section of the [OpenFL installation instructions](https://openfl.readthedocs.io/en/latest/install.html#install-the-package).
 
 <br/>
 
 ### 0b. Quick XPU Setup
-  For a successful setup, please follow the steps outlined in the Installation Guide. This guide provides detailed information on system requirements and the installation process for the Intel® Extension for PyTorch. For a deeper understanding of features, APIs, and technical details, refer to the Intel® Extension for PyTorch* Documentation.
+  In this tutorial, when we refer to XPU, we are specifically referring to the Intel® Data Center GPU Max Series. When using the Intel® Extension for PyTorch* package, selecting the device as 'xpu' will refer to this Intel® Data Center GPU Max Series.
+  
+  For a successful setup, please follow the steps outlined in the [Installation Guide](https://intel.github.io/intel-extension-for-pytorch/xpu/2.1.10+xpu/tutorials/installation.html). This guide provides detailed information on system requirements and the installation process for the Intel® Extension for PyTorch. For a deeper understanding of features, APIs, and technical details, refer to the [Intel® Extension for PyTorch* Documentation](https://intel.github.io/intel-extension-for-pytorch/xpu/2.1.10+xpu/index.html).
+
+Hardware Prerequisite: Intel® Data Center GPU Max Series.
 
 This Jupyter Notebook has been tested and confirmed to work with the following versions:
 
