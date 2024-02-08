@@ -185,7 +185,7 @@ class Envoy:
 
         # TODO: Need to restructure data loader config file loader
         logger.info(f'Data = {plan.cols_data_paths}')
-        logger.info('🧿 Starting atheCollaborator Service.')
+        logger.info('🧿 Starting  the Collaborator Service.')
 
         col = plan.get_collaborator(self.name, self.root_certificate, self.private_key,
                                     self.certificate, shard_descriptor=self.shard_descriptor)
