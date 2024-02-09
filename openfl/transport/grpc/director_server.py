@@ -159,7 +159,7 @@ class DirectorGRPCServer(director_pb2_grpc.DirectorServicer):
             experiment_archive_path=data_file_path
         )
 
-        logger.info('Experiment {request.name} registered')
+        logger.info(f'Experiment {request.name} registered')
         return director_pb2.SetNewExperimentResponse(accepted=is_accepted)
 
     async def GetExperimentStatus(self, request, context):  # NOQA: N802

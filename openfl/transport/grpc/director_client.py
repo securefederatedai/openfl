@@ -207,7 +207,7 @@ class DirectorClient:
     def set_new_experiment(self, name, col_names, arch_path,
                            initial_tensor_dict=None):
         """Send the new experiment to director to launch."""
-        logger.info('Submitting new experiment {name} to director')
+        logger.info(f'Submitting new experiment {name} to director')
         if initial_tensor_dict:
             model_proto = construct_model_proto(initial_tensor_dict, 0, NoCompressionPipeline())
             experiment_info_gen = self._get_experiment_info(

@@ -52,13 +52,13 @@ class Director:
         self.install_requirements = install_requirements
 
     def acknowledge_shard(self, shard_info: dict) -> bool:
-        """Save shard info to shard registry if it's acceptable."""
+        """Save shard info to shard registry if accepted."""
         is_accepted = False
         if (self.sample_shape != shard_info['sample_shape']
                 or self.target_shape != shard_info['target_shape']):
-            logger.info('Request was not accepted')
+            logger.info(f'Director did not accept shard for {shard_info["node_info"]["name"]}')
             return is_accepted
-        logger.info('Request was accepted')
+        logger.info(f'Director accepted shard for {shard_info["node_info"]["name"]}')
         self._shard_registry[shard_info['node_info']['name']] = {
             'shard_info': shard_info,
             'is_online': True,
