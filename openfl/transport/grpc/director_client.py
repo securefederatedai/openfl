@@ -60,7 +60,7 @@ class ShardDirectorClient:
     def report_shard_info(self, shard_descriptor: Type[ShardDescriptor],
                           cuda_devices: tuple) -> bool:
         """Report shard info to the director."""
-        logger.info(f'Sending {self.shard_name} info to director')
+        logger.info(f'Sending {self.shard_name} shard info to director')
         # True considered as successful registration
         shard_info = director_pb2.ShardInfo(
             shard_description=shard_descriptor.dataset_description,

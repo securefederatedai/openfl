@@ -185,7 +185,7 @@ class Envoy:
 
         # TODO: Need to restructure data loader config file loader
         logger.info(f'Data = {plan.cols_data_paths}')
-        logger.info('🧿 Starting  the Collaborator Service.')
+        logger.info('🧿 Starting the Collaborator Service.')
 
         col = plan.get_collaborator(self.name, self.root_certificate, self.private_key,
                                     self.certificate, shard_descriptor=self.shard_descriptor)
@@ -203,8 +203,8 @@ class Envoy:
             sys.exit(1)
         else:
             if is_accepted:
+                logger.info(f'Shard was accepted by director')
                 # Shard accepted for participation in the federation
-                logger.info('Shard accepted')
                 self._health_check_future = self.executor.submit(self.send_health_check)
                 self.run()
             else:
