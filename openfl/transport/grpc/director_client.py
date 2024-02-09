@@ -107,7 +107,7 @@ class ShardDirectorClient:
             error_description: str = ''
     ):
         """Set the experiment failed."""
-        logger.info(f'Experiment {experiment_name} failed'}
+        logger.info(f'Experiment {experiment_name} failed')
         request = director_pb2.SetExperimentFailedRequest(
             experiment_name=experiment_name,
             collaborator_name=self.shard_name,
