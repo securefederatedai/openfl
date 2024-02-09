@@ -131,6 +131,8 @@ class Plan:
                     extra={'markup': True})
 
                 gandlf_config = Plan.load(Path(gandlf_config_path))
+                # check for some defaults
+                gandlf_config['output_dir'] = gandlf_config.get('output_dir', '.')
                 plan.config['task_runner']['settings']['gandlf_config'] = gandlf_config
 
             plan.authorized_cols = Plan.load(cols_config_path).get(
