@@ -243,7 +243,7 @@ class Director:
 
     def get_envoys(self) -> list:
         """Get a status information about envoys."""
-        logger.info(f'Shard registry: {self._shard_registry}')
+        logger.debug(f'Shard registry: {self._shard_registry}')
         for envoy_info in self._shard_registry.values():
             envoy_info['is_online'] = (
                 time.time() < envoy_info.get('last_updated', 0)

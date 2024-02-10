@@ -133,7 +133,7 @@ class Envoy:
 
     def send_health_check(self):
         """Send health check to the director."""
-        logger.info('Sending health check to director.')
+        logger.debug('Sending envoy node status to director.')
         timeout = DEFAULT_RETRY_TIMEOUT_IN_SECONDS
         while True:
             cuda_devices_info = self._get_cuda_device_info()
@@ -184,7 +184,7 @@ class Envoy:
         plan = Plan.parse(plan_config_path=Path(plan))
 
         # TODO: Need to restructure data loader config file loader
-        logger.info(f'Data = {plan.cols_data_paths}')
+        logger.debug(f'Data = {plan.cols_data_paths}')
         logger.info('🧿 Starting the Collaborator Service.')
 
         col = plan.get_collaborator(self.name, self.root_certificate, self.private_key,
