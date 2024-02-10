@@ -203,7 +203,7 @@ class Envoy:
             sys.exit(1)
         else:
             if is_accepted:
-                logger.info(f'Shard was accepted by director')
+                logger.info('Shard was accepted by director')
                 # Shard accepted for participation in the federation
                 self._health_check_future = self.executor.submit(self.send_health_check)
                 self.run()
