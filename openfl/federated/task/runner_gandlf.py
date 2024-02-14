@@ -19,7 +19,7 @@ from .runner import TaskRunner
 from GANDLF.compute.generic import create_pytorch_objects
 from GANDLF.compute.training_loop import train_network
 from GANDLF.compute.forward_pass import validate_network
-from GANDLF.parseConfig import parseConfig
+from GANDLF.config_manager import ConfigManager
 
 
 class GaNDLFTaskRunner(TaskRunner):
@@ -68,9 +68,9 @@ class GaNDLFTaskRunner(TaskRunner):
             gandlf_config = yaml.safe_load(open(gandlf_config, "r"))
 
         try:
-            gandlf_config = parseConfig(gandlf_config)
+            gandlf_config = ConfigManager(gandlf_config)
         except Exception:
-            self.logger.info("WARNING: GANDLF.parseConfig did not work as expected.")
+            self.logger.info("WARNING: GANDLF.config_manager.ConfigManager did not work.")
 
         (
             model,
