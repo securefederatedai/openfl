@@ -51,7 +51,7 @@ class GaNDLFTaskRunner(TaskRunner):
         try:
             gandlf_config = ConfigManager(gandlf_config)
         except Exception:
-            self.logger.info("WARNING: GANDLF.config_manager.ConfigManager did not work as expected.")
+            self.logger.info("WARNING: GANDLF.config_manager.ConfigManager did not work.")
 
         (
             model,
