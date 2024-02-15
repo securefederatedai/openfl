@@ -68,6 +68,9 @@ class RedirectStdStream(object):
         self.__stdDestination.write(message)
         self.__stdBuffer.write(message)
 
+    def flush(self):
+        pass
+
 
 class RedirectStdStreamContext:
     """Context Manager that enables redirection of stdout and stderr.

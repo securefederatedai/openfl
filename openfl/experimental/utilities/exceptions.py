@@ -1,12 +1,12 @@
 # Copyright (C) 2020-2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
+
 class SerializationError(Exception):
     """Raised when there is an error in serialization process."""
 
     def __init__(self, *args: object) -> None:
-        """
-        Initializes the SerializationError with the provided arguments.
+        """Initializes the SerializationError with the provided arguments.
 
         Args:
             *args (object): Variable length argument list.
@@ -15,11 +15,27 @@ class SerializationError(Exception):
         pass
 
 
-class GPUResourcesNotAvailableError(Exception):
-    """Raised when the required GPU resources are not available."""
+class ResourcesNotAvailableError(Exception):
+    """Exception raised when the required resources are not available."""
 
     def __init__(self, *args: object) -> None:
-        """Initializes the GPUResourcesNotAvailableError with the provided arguments.
+        """Initializes the ResourcesNotAvailableError with the provided
+        arguments.
+
+        Args:
+            *args (object): Variable length argument list.
+        """
+        super().__init__(*args)
+        pass
+
+
+class ResourcesAllocationError(Exception):
+    """Exception raised when there is an error in the resources allocation
+    process."""
+
+    def __init__(self, *args: object) -> None:
+        """Initializes the ResourcesAllocationError with the provided
+        arguments.
 
         Args:
             *args (object): Variable length argument list.

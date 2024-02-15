@@ -1,10 +1,8 @@
 # Copyright (C) 2020-2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-
 """openfl.experimental.interface.participants module."""
 
-from typing import Dict
-from typing import Any
+from typing import Any, Callable, Dict, Optional
 
 
 class Participant:
@@ -48,37 +46,254 @@ class Participant:
         will be filtered out prior to the task's state being transfered.
 
         Args:
-            attrs (Dict[str, Any]): dictionary of ATTRIBUTE_NAME (str) -> object that will be accessible
-                   within the participant's task.
+            attrs (Dict[str, Any]): dictionary of ATTRIBUTE_NAME (str) ->
+                object that will be accessible within the participant's task.
 
-                   Example:
-                   {'train_loader' : torch.utils.data.DataLoader(...)}
+                Example:
+                {'train_loader' : torch.utils.data.DataLoader(...)}
 
-                   In any task performed by this participant performed within the flow,
-                   this attribute could be referenced with self.train_loader
+                In any task performed by this participant performed within the
+                flow, this attribute could be referenced with self.train_loader
         """
         self.private_attributes = attrs
 
 
 class Collaborator(Participant):
-    """Class for a collaborator participant, derived from the Participant class."""
+    """Class for a collaborator participant, derived from the Participant
+    class.
 
-    def __init__(self, **kwargs):
-        """Initializes the Collaborator object with variable length arguments.
+    Attributes:
+        name (str): Name of the collaborator.
+        private_attributes_callable (Callable): A function which returns
+            collaborator private attributes for each collaborator.
+        num_cpus (int): Specifies how many cores to use for the collaborator
+            step execution.
+        num_gpus (float): Specifies how many GPUs to use to accelerate the
+            collaborator step execution.
+        kwargs (dict): Parameters required to call private_attributes_callable
+            function.
+    """
+
+    def __init__(self,
+                 name: str = "",
+                 private_attributes_callable: Callable = None,
+                 num_cpus: int = 0,
+                 num_gpus: int = 0.0,
+                 **kwargs):
+        """Initializes the Collaborator object.
+
+        Create collaborator object with custom resources and a callable
+        function to assign private attributes.
 
         Args:
-            **kwargs: Variable length argument list.
+            name (str, optional): Name of the collaborator. Defaults to "".
+            private_attributes_callable (Callable, optional): A function which
+                returns collaborator private attributes for each collaborator.
+                In case private_attributes are not required this can be
+                omitted. Defaults to None.
+            num_cpus (int, optional): Specifies how many cores to use for the
+                collaborator step execution. This will only be used if backend
+                is set to ray. Defaults to 0.
+            num_gpus (float, optional): Specifies how many GPUs to use to
+                accelerate the collaborator step execution. This will only be
+                used if backend is set to ray. Defaults to 0.0.
+            **kwargs (dict): Parameters required to call
+                private_attributes_callable function. The key of the
+                dictionary must match the arguments to the
+                private_attributes_callable. Defaults to {}.
         """
-        super().__init__(**kwargs)
+        super().__init__(name=name)
+        self.num_cpus = num_cpus
+        self.num_gpus = num_gpus
+        self.kwargs = kwargs
+
+        if private_attributes_callable is None:
+            self.private_attributes_callable = private_attributes_callable
+        else:
+            if not callable(private_attributes_callable):
+                raise Exception(
+                    "private_attributes_callable  parameter must be a callable"
+                )
+            else:
+                self.private_attributes_callable = private_attributes_callable
+
+    def get_name(self) -> str:
+        """Gets the name of the collaborator.
+
+        Returns:
+            str: The name of the collaborator.
+        """
+        return self._name
+
+    def initialize_private_attributes(self) -> None:
+        """Initialize private attributes of Collaborator object by invoking the
+        callable specified by user."""
+        if self.private_attributes_callable is not None:
+            self.private_attributes = self.private_attributes_callable(
+                **self.kwargs)
+        elif private_attrs:
+            self.private_attributes = private_attrs
+
+    def __set_collaborator_attrs_to_clone(self, clone: Any) -> None:
+        """Set collaborator private attributes to FLSpec clone before
+        transitioning from Aggregator step to collaborator steps.
+
+        Args:
+            clone (Any): The clone to set attributes to.
+        """
+        # set collaborator private attributes as
+        # clone attributes
+        for name, attr in self.private_attributes.items():
+            setattr(clone, name, attr)
+
+    def __delete_collab_attrs_from_clone(self, clone: Any) -> None:
+        """Remove collaborator private attributes from FLSpec clone before
+        transitioning from Collaborator step to Aggregator step.
+
+        Args:
+            clone (Any): The clone to remove attributes from.
+        """
+        # Update collaborator private attributes by taking latest
+        # parameters from clone, then delete attributes from clone.
+        for attr_name in self.private_attributes:
+            if hasattr(clone, attr_name):
+                self.private_attributes.update(
+                    {attr_name: getattr(clone, attr_name)})
+                delattr(clone, attr_name)
+
+    def execute_func(self, ctx: Any, f_name: str, callback: Callable) -> Any:
+        """Execute remote function f.
+
+        Args:
+            ctx (Any): The context to execute the function in.
+            f_name (str): The name of the function to execute.
+            callback (Callable): The callback to execute after the function.
+
+        Returns:
+            Any: The result of the function execution.
+        """
+        self.__set_collaborator_attrs_to_clone(ctx)
+
+        callback(ctx, f_name)
+
+        self.__delete_collab_attrs_from_clone(ctx)
+
+        return ctx
 
 
 class Aggregator(Participant):
-    """Class for an aggregator participant, derived from the Participant class."""
+    """Class for an aggregator participant, derived from the Participant
+    class."""
 
-    def __init__(self, **kwargs):
-        """Initializes the Aggregator object with variable length arguments.
+    def __init__(self,
+                 name: str = "",
+                 private_attributes_callable: Callable = None,
+                 num_cpus: int = 0,
+                 num_gpus: int = 0.0,
+                 **kwargs):
+        """Initializes the Aggregator object.
+
+        Create aggregator object with custom resources and a callable
+        function to assign private attributes.
 
         Args:
-            **kwargs: Variable length argument list.
+            name (str, optional): Name of the aggregator. Defaults to "".
+            private_attributes_callable (Callable, optional): A function which
+                returns aggregator private attributes. In case
+                private_attributes are not required this can be omitted.
+                Defaults to None.
+            num_cpus (int, optional): Specifies how many cores to use for the
+                aggregator step execution. This will only be used if backend
+                is set to ray. Defaults to 0.
+            num_gpus (float, optional): Specifies how many GPUs to use to
+                accelerate the aggregator step execution. This will only be
+                used if backend is set to ray. Defaults to 0.0.
+            **kwargs: Parameters required to call private_attributes_callable
+                function. The key of the dictionary must match the arguments
+                to the private_attributes_callable. Defaults to {}.
         """
-        super().__init__(**kwargs)
+        super().__init__(name=name)
+        self.num_cpus = num_cpus
+        self.num_gpus = num_gpus
+        self.kwargs = kwargs
+
+        if private_attributes_callable is None:
+            self.private_attributes_callable = private_attributes_callable
+        else:
+            if not callable(private_attributes_callable):
+                raise Exception(
+                    "private_attributes_callable parameter must be a callable")
+            else:
+                self.private_attributes_callable = private_attributes_callable
+
+    def get_name(self) -> str:
+        """Gets the name of the aggregator.
+
+        Returns:
+            str: The name of the aggregator.
+        """
+        return self.name
+
+    def initialize_private_attributes(self) -> None:
+        """Initialize private attributes of Aggregator object by invoking the
+        callable specified by user."""
+        if self.private_attributes_callable is not None:
+            self.private_attributes = self.private_attributes_callable(
+                **self.kwargs)
+        elif private_attrs:
+            self.private_attributes = private_attrs
+
+    def __set_agg_attrs_to_clone(self, clone: Any) -> None:
+        """Set aggregator private attributes to FLSpec clone before transition
+        from Aggregator step to collaborator steps.
+
+        Args:
+            clone (Any): The clone to set attributes to.
+        """
+        # set aggregator private attributes as
+        # clone attributes
+        for name, attr in self.private_attributes.items():
+            setattr(clone, name, attr)
+
+    def __delete_agg_attrs_from_clone(self, clone: Any) -> None:
+        """Remove aggregator private attributes from FLSpec clone before
+        transition from Aggregator step to collaborator steps.
+
+        Args:
+            clone (Any): The clone to remove attributes from.
+        """
+        # Update aggregator private attributes by taking latest
+        # parameters from clone, then delete attributes from clone.
+        for attr_name in self.private_attributes:
+            if hasattr(clone, attr_name):
+                self.private_attributes.update(
+                    {attr_name: getattr(clone, attr_name)})
+                delattr(clone, attr_name)
+
+    def execute_func(self,
+                     ctx: Any,
+                     f_name: str,
+                     callback: Callable,
+                     clones: Optional[Any] = None) -> Any:
+        """Executes remote function f.
+
+        Args:
+            ctx (Any): The context to execute the function in.
+            f_name (str): The name of the function to execute.
+            callback (Callable): The callback to execute after the function.
+            clones (Optional[Any], optional): The clones to use in the
+                function. Defaults to None.
+
+        Returns:
+            Any: The result of the function execution.
+        """
+        self.__set_agg_attrs_to_clone(ctx)
+
+        if clones is not None:
+            callback(ctx, f_name, clones)
+        else:
+            callback(ctx, f_name)
+
+        self.__delete_agg_attrs_from_clone(ctx)
+
+        return ctx

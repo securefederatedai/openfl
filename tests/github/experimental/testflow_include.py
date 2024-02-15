@@ -87,9 +87,7 @@ class TestFlowInclude(FLSpec):
                 + f"{bcolors.ENDC}"
             )
         else:
-            TestFlowInclude.include_error_list.append(
-                "test_include_agg_to_collab"
-            )
+            TestFlowInclude.include_error_list.append("test_include_agg_to_collab")
             print(
                 f"{bcolors.FAIL} ... Include test failed in test_include_agg_to_collab "
                 + f"{bcolors.ENDC}"
@@ -119,9 +117,7 @@ class TestFlowInclude(FLSpec):
                 + f"{bcolors.ENDC}"
             )
         else:
-            TestFlowInclude.include_error_list.append(
-                "test_include_collab_to_collab"
-            )
+            TestFlowInclude.include_error_list.append("test_include_collab_to_collab")
             print(
                 f"{bcolors.FAIL} ... Include test failed in test_include_collab_to_collab "
                 + f"{bcolors.ENDC}"
@@ -154,23 +150,15 @@ class TestFlowInclude(FLSpec):
             )
 
         if validation:
-            print(
-                f"{bcolors.OKGREEN} ... Include test passed in join {bcolors.ENDC}"
-            )
+            print(f"{bcolors.OKGREEN} ... Include test passed in join {bcolors.ENDC}")
         else:
             TestFlowInclude.include_error_list.append("join")
-            print(
-                f"{bcolors.FAIL} ... Include test failed in join {bcolors.ENDC}"
-            )
+            print(f"{bcolors.FAIL} ... Include test failed in join {bcolors.ENDC}")
 
-        print(
-            f"\n{bcolors.UNDERLINE}Include attribute test summary: {bcolors.ENDC}\n"
-        )
+        print(f"\n{bcolors.UNDERLINE}Include attribute test summary: {bcolors.ENDC}\n")
 
         if TestFlowInclude.include_error_list:
-            validated_include_variables = ",".join(
-                TestFlowInclude.include_error_list
-            )
+            validated_include_variables = ",".join(TestFlowInclude.include_error_list)
             print(
                 f"{bcolors.FAIL} ...Test case failed for {validated_include_variables} "
                 + f"{bcolors.ENDC}"
@@ -199,20 +187,22 @@ class TestFlowInclude(FLSpec):
 if __name__ == "__main__":
     # Setup participants
     aggregator = Aggregator()
-    aggregator.private_attributes = {}
 
-    # Setup collaborators with private attributes
+    # Setup collaborators
     collaborator_names = ["Portland", "Chandler", "Bangalore", "Delhi"]
-    collaborators = [Collaborator(name=name) for name in collaborator_names]
+    collaborators = []
+    for collaborator_name in collaborator_names:
+        collaborators.append(Collaborator(name=collaborator_name))
 
     local_runtime = LocalRuntime(
-        aggregator=aggregator, collaborators=collaborators
+        aggregator=aggregator,
+        collaborators=collaborators,
     )
 
     if len(sys.argv) > 1:
-        if sys.argv[1] == 'ray':
+        if sys.argv[1] == "ray":
             local_runtime = LocalRuntime(
-                aggregator=aggregator, collaborators=collaborators, backend='ray'
+                aggregator=aggregator, collaborators=collaborators, backend="ray"
             )
 
     print(f"Local runtime collaborators = {local_runtime.collaborators}")

@@ -65,7 +65,6 @@ class TestFlowReference(FLSpec):
 
     @aggregator
     def test_create_agg_attr(self):
-
         """
         Create different types of objects.
         """
@@ -93,7 +92,6 @@ class TestFlowReference(FLSpec):
 
     @collaborator
     def test_create_collab_attr(self):
-
         """
         Modify the attirbutes of aggregator to validate the references.
         Create different types of objects.
@@ -109,16 +107,14 @@ class TestFlowReference(FLSpec):
         self.collab_attr_str_one = "Test string data in collab " + self.input
         self.collab_attr_list_one = [1, 2, 5, 6, 7, 8]
         self.collab_attr_dict_one = {key: key for key in range(5)}
-        self.collab_attr_file_one = io.StringIO(
-            "Test file data in collaborator"
-        )
+        self.collab_attr_file_one = io.StringIO("Test file data in collaborator")
         self.collab_attr_math_one = math.sqrt(self.index)
         self.collab_attr_complex_num_one = complex(self.index, self.index)
         self.collab_attr_log_one = logging.getLogger(
             "Test logger data in collaborator " + self.input
         )
 
-        # append self attributes of collaborators
+        # append attributes of collaborator
         TestFlowReference.step_one_collab_attrs.append(self)
 
         if len(TestFlowReference.step_one_collab_attrs) >= 2:
@@ -180,7 +176,7 @@ class TestFlowReference(FLSpec):
 
         all_shared_attr = ""
         print(f"\n{bcolors.UNDERLINE}Reference test summary: {bcolors.ENDC}\n")
-        for key, val in TestFlowReference.all_ref_error_dict.items():
+        for val in TestFlowReference.all_ref_error_dict.values():
             all_shared_attr = all_shared_attr + ",".join(val)
         if all_shared_attr:
             print(
@@ -230,33 +226,36 @@ def filter_attrs(attr_list):
     return valid_attrs
 
 
-def find_matched_references(collab_attr_list, all_collborators):
+def find_matched_references(collab_attr_list, all_collaborators):
     """
     Iterate attributes of collborator and capture the duplicate reference
+    return: dict: {
+                    'Portland': ['failed attributes'], 'Seattle': [],
+                  }
     """
     matched_ref_dict = {}
-    previous_collaborator = ""
-    # Initialize dictionary with collborator as key and value as empty list
-    # to hold duplicated attr list
-    for collborator_name in all_collborators:
-        matched_ref_dict[collborator_name.input] = []
+    for i in range(len(all_collaborators)):
+        matched_ref_dict[all_collaborators[i].input] = []
 
-    # Iterate the attributes and get duplicate attribute id
-    for attr in collab_attr_list:
-        di = {attr: []}
-        for collab in all_collborators:
-            attr_id = id(getattr(collab, attr))
-            collaborator_name = collab.input
-            if attr_id not in di.get(attr):
-                di.get(attr).append(attr_id)
-            else:
-                # append the dict with collabartor as key and attrs as value having same reference
-                matched_ref_dict.get(collaborator_name).append(attr)
-                print(
-                    f"{bcolors.FAIL} ... Reference test failed - {collaborator_name} sharing same "
-                    + f"{attr} reference with {previous_collaborator} {bcolors.ENDC}"
-                )
-            previous_collaborator = collaborator_name
+    # For each attribute in the collaborator attribute list, check if any of the collaborator
+    # attributes are shared with another collaborator
+    for attr_name in collab_attr_list:
+        for i, curr_collab in enumerate(all_collaborators):
+            # Compare the current collaborator with the collaborator(s) that come(s) after it.
+            for next_collab in all_collaborators[i + 1:]:
+                # Check if both collaborators have the current attribute
+                if hasattr(curr_collab, attr_name) and hasattr(next_collab, attr_name):
+                    # Check if both collaborators are sharing same reference
+                    if getattr(curr_collab, attr_name) is getattr(
+                        next_collab, attr_name
+                    ):
+                        matched_ref_dict[curr_collab.input].append(attr_name)
+                        print(
+                            f"{bcolors.FAIL} ... Reference test failed - {curr_collab.input} \
+                                sharing same "
+                            + f"{attr_name} reference with {next_collab.input} {bcolors.ENDC}"
+                        )
+
     return matched_ref_dict
 
 
@@ -274,9 +273,9 @@ def validate_collab_references(matched_ref_dict):
     if collborators_sharing_ref:
         for collab in collborators_sharing_ref:
             if collab not in TestFlowReference.all_ref_error_dict:
-                TestFlowReference.all_ref_error_dict[
+                TestFlowReference.all_ref_error_dict[collab] = matched_ref_dict.get(
                     collab
-                ] = matched_ref_dict.get(collab)
+                )
 
     if not reference_flag:
         print(
@@ -291,9 +290,7 @@ def validate_agg_attr_ref(agg_attrs, agg_obj):
     """
     attr_flag = False
     for attr in agg_attrs:
-        if TestFlowReference.agg_attr_dict.get(attr) == id(
-            getattr(agg_obj, attr)
-        ):
+        if TestFlowReference.agg_attr_dict.get(attr) == id(getattr(agg_obj, attr)):
             attr_flag = True
     if not attr_flag:
         print(
@@ -308,7 +305,6 @@ def validate_agg_attr_ref(agg_attrs, agg_obj):
 
 
 def validate_agg_collab_references(all_collborators, agg_obj, agg_attrs):
-
     """
     Iterate attributes of aggregator and collborator to capture the mismatched references.
     """
@@ -322,7 +318,7 @@ def validate_agg_collab_references(all_collborators, agg_obj, agg_attrs):
         agg_attr_id = id(getattr(agg_obj, attr))
         for collab in all_collborators:
             collab_attr_id = id(getattr(collab, attr))
-            if agg_attr_id == collab_attr_id:
+            if agg_attr_id is collab_attr_id:
                 attr_ref_flag = True
                 mis_matched_ref.get(collab).append(attr)
 
@@ -338,35 +334,40 @@ def validate_agg_collab_references(all_collborators, agg_obj, agg_attrs):
 
 
 if __name__ == "__main__":
-
     # Setup participants
     aggregator = Aggregator()
-    aggregator.private_attributes = {}
 
-    ref_exception_list = []
+    # Setup collaborators private attributes via callable function
+    collaborator_names = ["Portland", "Seattle", "Chandler", "Bangalore"]
 
-    # Setup collaborators with private attributes
-    collaborator_names = ["Portland", "Seattle"]  # , 'Chandler', 'Bangalore']
-    collaborators = [Collaborator(name=name) for name in collaborator_names]
-    collaborator.private_attributes = {}
+    def callable_to_initialize_collaborator_private_attributes(index):
+        return {"index": index + 1}
+
+    collaborators = []
+    for idx, collaborator_name in enumerate(collaborator_names):
+        collaborators.append(
+            Collaborator(
+                name=collaborator_name,
+                private_attributes_callable=callable_to_initialize_collaborator_private_attributes,
+                index=idx,
+            )
+        )
 
     local_runtime = LocalRuntime(
-        aggregator=aggregator, collaborators=collaborators
+        aggregator=aggregator,
+        collaborators=collaborators,
     )
 
     if len(sys.argv) > 1:
-        if sys.argv[1] == 'ray':
+        if sys.argv[1] == "ray":
             local_runtime = LocalRuntime(
-                aggregator=aggregator, collaborators=collaborators, backend='ray'
+                aggregator=aggregator, collaborators=collaborators, backend="ray"
             )
 
     print(f"Local runtime collaborators = {local_runtime.collaborators}")
 
     testflow = TestFlowReference(checkpoint=True)
     testflow.runtime = local_runtime
-
-    for idx, collab in enumerate(collaborators):
-        collab.private_attributes = {"index": idx + 1}
 
     for i in range(2):
         print(f"Starting round {i}...")
