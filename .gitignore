@@ -13,5 +13,5 @@ venv/*
 *.crt
 *.key
 .eggs
-eggs
+eggs/*
 *.pyi
