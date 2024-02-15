@@ -3,7 +3,7 @@
 ## **How to run this tutorial (without TLC and locally as a simulation):**
 <br/>
 
-Before we dive in, let's clarify some terms. XPU is a term coined by Intel to describe their line of computing devices, which includes CPUs, GPUs, FPGAs, and other accelerators. In this tutorial, we will be focusing on the Intel® Data Center GPU Max Series model, a powerful GPU that is part of Intel's XPU lineup.
+Before we dive in, let's clarify some terms. XPU is a term coined by Intel to describe their line of computing devices, which includes CPUs, GPUs, FPGAs, and other accelerators. In this tutorial, we will be focusing on the Intel® Data Center GPU Max Series model, a GPU that is part of Intel's XPU lineup.
 
 ### 0a. If you haven't done so already, create a virtual environment, install OpenFL, and upgrade pip:
   - For help with this step, visit the "Install the Package" section of the [OpenFL installation instructions](https://openfl.readthedocs.io/en/latest/install.html#install-the-package).
@@ -27,7 +27,7 @@ These versions were obtained from official Intel® channels.
 
 Additionally, the XPU driver version used in testing was:
 
-  - XPU_Driver==803
+  - [XPU_Driver==803](https://dgpu-docs.intel.com/driver/installation.html)
   
 
 <br/>
