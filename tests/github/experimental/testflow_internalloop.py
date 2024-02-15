@@ -223,7 +223,7 @@ if __name__ == "__main__":
         "New York",
     ]
     collaborators = []
-    for collaborator_name in enumerate(collaborator_names):
+    for collaborator_name in collaborator_names:
         collaborators.append(Collaborator(name=collaborator_name))
 
     local_runtime = LocalRuntime(aggregator=aggregator, collaborators=collaborators)
