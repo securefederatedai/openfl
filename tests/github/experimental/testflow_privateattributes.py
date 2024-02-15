@@ -1,10 +1,11 @@
 # Copyright (C) 2020-2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
+import sys
+import numpy as np
 from openfl.experimental.interface import FLSpec, Aggregator, Collaborator
 from openfl.experimental.runtime import LocalRuntime
 from openfl.experimental.placement import aggregator, collaborator
-import numpy as np
 
 
 class bcolors:  # NOQA: N801
@@ -72,9 +73,7 @@ class TestFlowPrivateAttributes(FLSpec):
 
         self.exclude_collab_to_collab = 2
         self.include_collab_to_collab = 22
-        self.next(
-            self.collaborator_step_b, exclude=["exclude_collab_to_collab"]
-        )
+        self.next(self.collaborator_step_b, exclude=["exclude_collab_to_collab"])
 
     @collaborator
     def collaborator_step_b(self):
@@ -105,17 +104,17 @@ class TestFlowPrivateAttributes(FLSpec):
                 + f" not accessible {bcolors.ENDC}"
             )
 
-        for input in enumerate(inputs):
+        for idx, collab in enumerate(inputs):
             if (
-                hasattr(input, "train_loader") is True
-                or hasattr(input, "test_loader") is True
+                hasattr(collab, "train_loader") is True
+                or hasattr(collab, "test_loader") is True
             ):
                 # Error - we are able to access collaborator attributes
                 TestFlowPrivateAttributes.error_list.append(
                     "join_collaborator_attributes_found"
                 )
                 print(
-                    f"{bcolors.FAIL} ... Attribute test failed in Join - COllaborator: {collab}"
+                    f"{bcolors.FAIL} ... Attribute test failed in Join - Collaborator: {collab}"
                     + f" private attributes accessible {bcolors.ENDC}"
                 )
 
@@ -175,10 +174,7 @@ def validate_collab_private_attr(self, private_attr, step_name):
 
 def validate_agg_private_attrs(self, private_attr_1, private_attr_2, step_name):
     # Collaborator should only be able to access its own attributes
-    if (
-        hasattr(self, private_attr_1) is False
-        or hasattr(self, private_attr_2) is False
-    ):
+    if hasattr(self, private_attr_1) is False or hasattr(self, private_attr_2) is False:
         TestFlowPrivateAttributes.error_list.append(
             step_name + "collab_attributes_not_found"
         )
@@ -199,13 +195,17 @@ def validate_agg_private_attrs(self, private_attr_1, private_attr_2, step_name):
 
 
 if __name__ == "__main__":
-    # Setup Aggregator with private attributes
+    # Setup Aggregator with private attributes via callable function
     aggregator = Aggregator()
-    aggregator.private_attributes = {
-        "test_loader": np.random.rand(10, 28, 28)  # Random data
-    }
 
-    # Setup collaborators with private attributes
+    def callable_to_initialize_aggregator_private_attributes():
+        return {"test_loader": np.random.rand(10, 28, 28)}  # Random data
+
+    aggregator = Aggregator(
+        name="agg",
+        private_attributes_callable=callable_to_initialize_aggregator_private_attributes,
+    )
+    # Setup collaborators with private attributes via callable function
     collaborator_names = [
         "Portland",
         "Seattle",
@@ -218,19 +218,33 @@ if __name__ == "__main__":
         "Beijing",
         "Tokyo",
     ]
-    collaborators = [Collaborator(name=name) for name in collaborator_names]
-    for idx, collab in enumerate(collaborators):
-        collab.private_attributes = {
+
+    def callable_to_initialize_collaborator_private_attributes(index):
+        return {
             "train_loader": np.random.rand(idx * 50, 28, 28),
             "test_loader": np.random.rand(idx * 10, 28, 28),
         }
 
+    collaborators = []
+    for idx, collaborator_name in enumerate(collaborator_names):
+        collaborators.append(
+            Collaborator(
+                name=collaborator_name,
+                private_attributes_callable=callable_to_initialize_collaborator_private_attributes,
+                index=idx,
+            )
+        )
+
+    backend = "single_process"
+    if len(sys.argv) > 1 and sys.argv[1] == "ray":
+        backend = "ray"
+
     local_runtime = LocalRuntime(
-        aggregator=aggregator, collaborators=collaborators
+        aggregator=aggregator, collaborators=collaborators, backend=backend
     )
     print(f"Local runtime collaborators = {local_runtime.collaborators}")
 
-    flflow = TestFlowPrivateAttributes(checkpoint=False)
+    flflow = TestFlowPrivateAttributes(checkpoint=True)
     flflow.runtime = local_runtime
     for i in range(5):
         print(f"Starting round {i}...")
