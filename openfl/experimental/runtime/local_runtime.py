@@ -178,7 +178,7 @@ def ray_group_assign(collaborators, num_actors=1):
                 [
                     i.num_cpus
                     for i in collaborators_sorted_by_gpucpu[
-                        times_called : times_called + collaborators_per_group
+                        times_called: times_called + collaborators_per_group
                     ]
                 ]
             )
@@ -186,7 +186,7 @@ def ray_group_assign(collaborators, num_actors=1):
                 [
                     i.num_gpus
                     for i in collaborators_sorted_by_gpucpu[
-                        times_called : times_called + collaborators_per_group
+                        times_called: times_called + collaborators_per_group
                     ]
                 ]
             )

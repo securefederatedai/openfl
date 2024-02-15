@@ -104,7 +104,7 @@ class TestFlowPrivateAttributes(FLSpec):
                 + f" not accessible {bcolors.ENDC}"
             )
 
-        for idx,collab in enumerate(inputs):
+        for idx, collab in enumerate(inputs):
             if (
                 hasattr(collab, "train_loader") is True
                 or hasattr(collab, "test_loader") is True
