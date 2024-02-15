@@ -67,13 +67,13 @@ class RayExecutor:
         return clones
 
 
-def ray_group_assign(collaborators, number_of_actors=3):
+def ray_group_assign(collaborators, num_actors=1):
     """
     Assigns collaborators to resource groups which share a CUDA context.
 
     Args:
         collaborators (list): The list of collaborators.
-        number_of_actors (int, optional): Number of actors to distribute collaborators to.
+        num_actors (int, optional): Number of actors to distribute collaborators to.
         Defaults to 3.
 
     Returns:
@@ -158,7 +158,7 @@ def ray_group_assign(collaborators, number_of_actors=3):
             return self.f(*args, *kwargs)
 
     collaborator_ray_refs = []
-    collaborators_per_group = math.ceil(len(collaborators) / number_of_actors)
+    collaborators_per_group = math.ceil(len(collaborators) / num_actors)
     times_called = 0
     # logic to sort collaborators by gpus, if collaborators have the same number of gpu then they
     # are sorted by cpu
@@ -178,7 +178,7 @@ def ray_group_assign(collaborators, number_of_actors=3):
                 [
                     i.num_cpus
                     for i in collaborators_sorted_by_gpucpu[
-                        times_called: times_called + collaborators_per_group
+                        times_called : times_called + collaborators_per_group
                     ]
                 ]
             )
@@ -186,7 +186,7 @@ def ray_group_assign(collaborators, number_of_actors=3):
                 [
                     i.num_gpus
                     for i in collaborators_sorted_by_gpucpu[
-                        times_called: times_called + collaborators_per_group
+                        times_called : times_called + collaborators_per_group
                     ]
                 ]
             )
@@ -304,11 +304,20 @@ class LocalRuntime(Runtime):
 
                            'single_process': (default) Executes every task within the same process
 
-                           'ray':            Executes tasks using the Ray library. Each participant
-                                             runs tasks in their own isolated process. Also
-                                             supports GPU isolation using Ray's 'num_gpus'
-                                             argument, which can be passed in through the
-                                             collaborator placement decorator.
+                           'ray':            Executes tasks using the Ray library. We use ray
+                                             actors called RayGroups to runs tasks in their own
+                                             isolated process. Each participant is distributed
+                                             into a ray group. The RayGroups run concurrently
+                                             while participants in the group run serially.
+                                             The default is 1 RayGroup and can be changed by using
+                                             the num_actors=1 kwarg. By using more RayGroups more
+                                             concurency is allowed with the trade off being that
+                                             each RayGroup has extra memory overhead in the form
+                                             of extra CUDA CONTEXTS.
+
+                                             Also the ray runtime supports GPU isolation using
+                                             Ray's 'num_gpus' argument, which can be passed in
+                                             through the collaborator placement decorator.
 
                                              Example:
                                              @collaborator(num_gpus=1)
@@ -319,6 +328,7 @@ class LocalRuntime(Runtime):
                                              By selecting num_gpus=1, the task is guaranteed
                                              exclusive GPU access. If the system has one GPU,
                                              collaborator tasks will run sequentially.
+
         """
         super().__init__()
         if backend not in ["ray", "single_process"]:
@@ -332,7 +342,7 @@ class LocalRuntime(Runtime):
                 dp = kwargs.get("dashboard_port", 5252)
                 ray.init(dashboard_host=dh, dashboard_port=dp)
 
-            self.number_of_actors = kwargs.get("number_of_actors", 3)
+            self.num_actors = kwargs.get("num_actors", 1)
         self.backend = backend
         if aggregator is not None:
             self.aggregator = self.__get_aggregator_object(aggregator)
@@ -401,7 +411,7 @@ class LocalRuntime(Runtime):
 
         if self.backend == "ray":
             collaborator_ray_refs = ray_group_assign(
-                collaborators, number_of_actors=self.number_of_actors
+                collaborators, num_actors=self.num_actors
             )
             return collaborator_ray_refs
 
