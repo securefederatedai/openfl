@@ -10,12 +10,7 @@ import numpy as np
 import torch
 import torch as pt
 import torch.nn as nn
-from datasets import load_metric
-from peft import LoraConfig, TaskType, get_peft_model
 from peft.utils import get_peft_model_state_dict, set_peft_model_state_dict
-from torch.optim import AdamW
-from transformers import AutoModelForSequenceClassification, get_scheduler
-from transformers.trainer_pt_utils import get_parameter_names
 
 from openfl.federated import PyTorchTaskRunner
 from openfl.federated.task.runner_pt import change_tags
@@ -32,15 +27,16 @@ from src.model_utils import _init_model, _init_optimizer
 
 logger = getLogger(__name__)
 
-NP = os.environ.get('OPENFL_HOROVOD_DEMO_NP','4')
-NETWORK_INTERFACES = os.environ.get('OPENFL_HOROVOD_DEMO_NICS','localhost')
-LOCAL_HOST = os.environ.get('OPENFL_HOROVOD_DEMO_LOCALHOSTIP','localhost')
-HOSTS = os.environ.get('OPENFL_HOROVOD_DEMO_HOSTS','localhost:4')
+NP = os.environ.get("OPENFL_HOROVOD_DEMO_NP", "4")
+NETWORK_INTERFACES = os.environ.get("OPENFL_HOROVOD_DEMO_NICS", "localhost")
+LOCAL_HOST = os.environ.get("OPENFL_HOROVOD_DEMO_LOCALHOSTIP", "localhost")
+HOSTS = os.environ.get("OPENFL_HOROVOD_DEMO_HOSTS", "localhost:4")
 
-print('NP:', NP)
-print('NETWORK_INTERFACES:', NETWORK_INTERFACES)
-print('LOCAL_HOST:', LOCAL_HOST)
-print('HOSTS:', HOSTS)
+print("NP:", NP)
+print("NETWORK_INTERFACES:", NETWORK_INTERFACES)
+print("LOCAL_HOST:", LOCAL_HOST)
+print("HOSTS:", HOSTS)
+
 
 class LLMTaskRunner(PyTorchTaskRunner):
     def __init__(
@@ -57,7 +53,9 @@ class LLMTaskRunner(PyTorchTaskRunner):
         self.base_model_name = base_model_name
         self.kwargs = kwargs
         self.model = _init_model(base_model_name, device)
-        self.optimizer, self.lr_scheduler = _init_optimizer(self.model, len(self.data_loader.train_set))
+        self.optimizer, self.lr_scheduler = _init_optimizer(
+            self.model, len(self.data_loader.train_set)
+        )
         self.initialize_tensorkeys_for_functions()
 
     def train(self):
@@ -68,49 +66,51 @@ class LLMTaskRunner(PyTorchTaskRunner):
 
     def load_state_dict(self, state_dict: Mapping[str, Any], strict: bool = True):
         return set_peft_model_state_dict(self.model, state_dict)
-    
+
     def save_modelstate(self, col_name, round_num, func_name, kwargs):
-            state_path = f"col-{col_name}_rnd-{round_num}_state_{func_name}.pt"
-            state_path = os.path.join(os.getcwd(),state_path)
-            out_path = f"col-{col_name}_rnd-{round_num}_out_{func_name}.pt"
-            out_path = os.path.join(os.getcwd(),out_path)
-            data_path = self.data_loader.data_path
-            torch.save(
-                {
-                    "model_state_dict": self.state_dict(),
-                    "optimizer_state_dict": self.optimizer.state_dict(),
-                    "kwargs": kwargs,
-                    "lr_scheduler": self.lr_scheduler.state_dict(),
-                },
-                state_path,
-            )
-            return state_path, out_path, data_path
-        
-    def launch_horovod(self, data_path, state_path, out_path, function_name, horovod_kwags):
+        state_path = f"col-{col_name}_rnd-{round_num}_state_{func_name}.pt"
+        state_path = os.path.join(os.getcwd(), state_path)
+        out_path = f"col-{col_name}_rnd-{round_num}_out_{func_name}.pt"
+        out_path = os.path.join(os.getcwd(), out_path)
+        data_path = self.data_loader.data_path
+        torch.save(
+            {
+                "model_state_dict": self.state_dict(),
+                "optimizer_state_dict": self.optimizer.state_dict(),
+                "kwargs": kwargs,
+                "lr_scheduler": self.lr_scheduler.state_dict(),
+            },
+            state_path,
+        )
+        return state_path, out_path, data_path
+
+    def launch_horovod(
+        self, data_path, state_path, out_path, function_name, horovod_kwags
+    ):
         arg_list = [
-                "horovodrun",
-                "-np",
-                NP,
-                "--network-interfaces",
-                NETWORK_INTERFACES,
-                "--verbose",
-                "-H",
-                HOSTS,
-                "python",
-                os.path.join(os.getcwd(),"src/InHorovodrun.py"),
-                "--data_path",
-                str(data_path),
-                "--state_path",
-                state_path,
-                "--batch_size",
-                str(self.data_loader.batch_size),
-                "--kwargs",
-                json.dumps(horovod_kwags),
-                "--func",
-                function_name,
-                "--out_path",
-                out_path,
-            ]
+            "horovodrun",
+            "-np",
+            NP,
+            "--network-interfaces",
+            NETWORK_INTERFACES,
+            "--verbose",
+            "-H",
+            HOSTS,
+            "python",
+            os.path.join(os.getcwd(), "src/InHorovodrun.py"),
+            "--data_path",
+            str(data_path),
+            "--state_path",
+            state_path,
+            "--batch_size",
+            str(self.data_loader.batch_size),
+            "--kwargs",
+            json.dumps(horovod_kwags),
+            "--func",
+            function_name,
+            "--out_path",
+            out_path,
+        ]
         print(arg_list)
         result = subprocess.run(
             arg_list,
@@ -137,15 +137,23 @@ class LLMTaskRunner(PyTorchTaskRunner):
 
         """
         self.rebuild_model(round_num, input_tensor_dict, validation=True)
-        state_path, out_path, data_path = self.save_modelstate(col_name, round_num, 'validate', kwargs)
+        state_path, out_path, data_path = self.save_modelstate(
+            col_name, round_num, "validate", kwargs
+        )
         horovod_kwags = {
             "col_name": col_name,
             "round_num": round_num,
             "input_tensor_dict": None,
             "use_tqdm": use_tqdm,
         }
-        result = self.launch_horovod(data_path, state_path, out_path, 'validate', horovod_kwags, )
-        
+        result = self.launch_horovod(
+            data_path,
+            state_path,
+            out_path,
+            "validate",
+            horovod_kwags,
+        )
+
         if result.returncode != 0:
             self.logger.info(f"{result.stdout}")
             self.logger.info(f"{result.stderr}")
@@ -153,9 +161,9 @@ class LLMTaskRunner(PyTorchTaskRunner):
         else:
             self.logger.info(f"{result.stdout}")
             self.logger.info(f"{result.stderr}")
-        
+
         val_score = torch.load(out_path)["output"]
-        
+
         origin = col_name
         suffix = "validate"
         if kwargs["apply"] == "local":
@@ -192,14 +200,18 @@ class LLMTaskRunner(PyTorchTaskRunner):
             local_output_dict:   Tensors to maintain in the local TensorDB
         """
         self.rebuild_model(round_num, input_tensor_dict)
-        state_path, out_path, data_path = self.save_modelstate(col_name, round_num, 'train_batches', kwargs)
+        state_path, out_path, data_path = self.save_modelstate(
+            col_name, round_num, "train_batches", kwargs
+        )
         horovod_kwags = {
             "col_name": col_name,
             "round_num": round_num,
             "input_tensor_dict": None,
             "use_tqdm": use_tqdm,
         }
-        result = self.launch_horovod(data_path, state_path, out_path, 'train_batches', horovod_kwags)
+        result = self.launch_horovod(
+            data_path, state_path, out_path, "train_batches", horovod_kwags
+        )
         if result.returncode != 0:
             raise RuntimeError(result.stderr)
 

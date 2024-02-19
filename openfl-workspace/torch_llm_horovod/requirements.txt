@@ -6,10 +6,9 @@ accelerate
 jupyter
 huggingface_hub
 peft
-transformers
+transformers[torch]
 datasets
 evaluate
 seqeval
 horovod
-torch
 torchvision

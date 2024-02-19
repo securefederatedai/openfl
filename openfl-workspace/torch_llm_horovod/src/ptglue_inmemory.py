@@ -21,7 +21,35 @@ from logging import getLogger
 
 logger = getLogger(__name__)
 
-class GlueMrpcFederatedDataLoader(DataLoader):
+
+class BaseDataLoader(DataLoader):
+    def get_feature_shape(self):
+        return self.train_set.get_shape()
+
+    def get_train_loader(self, num_batches=None):
+        return DataLoader(
+            self.train_set,
+            batch_size=self.batch_size,
+            collate_fn=self.data_collator,
+            sampler=self.train_sampler,
+        )
+
+    def get_valid_loader(self):
+        return DataLoader(
+            self.valid_set,
+            batch_size=self.batch_size,
+            collate_fn=self.data_collator,
+            sampler=self.test_sampler,
+        )
+
+    def get_train_data_size(self):
+        return len(self.train_set)
+
+    def get_valid_data_size(self):
+        return len(self.valid_set)
+
+
+class GlueMrpcFederatedDataLoader(BaseDataLoader):
     def __init__(self, data_path, batch_size, **kwargs):
         train_set, valid_set, data_collator = get_dataset()
         self.data_splitter = EqualNumPyDataSplitter(shuffle=False)
@@ -67,42 +95,17 @@ class GlueMrpcFederatedDataLoader(DataLoader):
 
         self.num_classes = 2
 
-    def get_feature_shape(self):
-        return self.train_set.get_shape()
 
-    def get_train_loader(self, num_batches=None):
-        return DataLoader(
-            self.train_set,
-            batch_size=self.batch_size,
-            collate_fn=self.data_collator,
-            sampler=self.train_sampler,
-        )
-
-    def get_valid_loader(self):
-        return DataLoader(
-            self.valid_set,
-            batch_size=self.batch_size,
-            collate_fn=self.data_collator,
-            sampler=self.test_sampler,
-        )
-
-    def get_train_data_size(self):
-        return len(self.train_set)
-
-    def get_valid_data_size(self):
-        return len(self.valid_set)
-
-
-class GlueMrpcDataLoader(GlueMrpcFederatedDataLoader):
+class GlueMrpcDataLoader(BaseDataLoader):
     def __init__(self, data_path, batch_size, **kwargs):
-        logger.info('get dataset')
+        logger.info("get dataset")
         train_set, valid_set, data_collator = get_dataset()
 
         self.data_path = data_path
         self.batch_size = batch_size
         self.data_collator = data_collator
         self.datasave_path = f"temp_dataset_{self.data_path}"
-        logger.info('load from disk')
+        logger.info("load from disk")
         train_set = load_from_disk(f"{self.datasave_path}_train")
         valid_set = load_from_disk(f"{self.datasave_path}_valid")
         self.train_set = GlueMrpc.from_dict(train_set.to_dict())

@@ -9,8 +9,8 @@ Before running the Horovod example, ensure that the following prerequisites are 
 ## Setting up Horovod Dependencies
 To set up the Horovod dependencies, follow these steps:
 
-1. Run the `setup_env.sh` script located in `openfl-tutorials/experimental/setup_env.sh` within your virtual environment (venv).
-2. Run the `setup_horovod_fed.sh` script to create aggregator and collaborator workspaces.
+1. Run the `setup_env.sh` script located in `openfl-workspace/torch_llm_horovod/setup_env.sh` within your virtual environment (venv).
+2. Create aggregator and collaborator workspaces. See [Running the experiment](#running-the-experiment)
 3. Ensure that the collaborator workspace is present in each node with the same file structure.
 4. Make sure the dataset is available in each node.
 
