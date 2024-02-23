@@ -1,17 +1,21 @@
 # Copyright (C) 2020-2021 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-import sys
+import json
 import os
+import sys
+import traceback
+from logging import getLogger
+
 import horovod.torch as hvd
+
+import openfl.native as fx
+
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.dirname(SCRIPT_DIR))
-from src.ptglue_inmemory import GlueMrpcDataLoader
-from src.InHorovodLLMTrainer import LLMTrainer
-import json
-from logging import getLogger
-import traceback
-import openfl.native as fx
+from src.InHorovodLLMTrainer import LLMTrainer  # noqa: E402
+from src.ptglue_inmemory import GlueMrpcDataLoader  # noqa: E402
+
 
 def get_args():
     """
@@ -46,18 +50,18 @@ def get_args():
 
 def main():
     logger = getLogger(__name__)
-    fx.setup_logging(level='INFO', log_file=None)
+    fx.setup_logging(level="INFO", log_file=None)
     try:
-        logger.info(f"starting horovod")
+        logger.info("starting horovod")
         hvd.init()
         logger.info(f"started global node:local node, {hvd.rank()}, {hvd.local_rank()}")
-        logger.info('getting arguments')
+        logger.info("getting arguments")
         args = get_args()
-        logger.info('loading data')
+        logger.info("loading data")
         data_loader = GlueMrpcDataLoader(
             data_path=args.data_path, batch_size=args.batch_size
         )
-        logger.info('get taskrunner')
+        logger.info("get taskrunner")
         taskrunner = LLMTrainer(data_loader)
         func = getattr(taskrunner, args.func)
         kwargs = json.loads(args.kwargs)
@@ -71,7 +75,7 @@ def main():
         logger.info(f"running funtion {args.func}")
         p = func(**kwargs)
         return p
-    except:
+    except RuntimeError:
         logger.error(traceback.print_exc())
 
 

@@ -1,24 +1,28 @@
+# Copyright (C) 2020-2021 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+"""You may copy this file as the starting point of your own model."""
+
 import os
 import sys
+from typing import Any, Mapping
 
 import horovod.torch as hvd
 import numpy as np
 import torch
 import torch as pt
+import torch.nn as nn
 import tqdm
 from datasets import load_metric
+from peft.utils import get_peft_model_state_dict, set_peft_model_state_dict
 from torch.nn import BCEWithLogitsLoss, CrossEntropyLoss, MSELoss
-from tqdm import tqdm
 
 from openfl.utilities import Metric
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.dirname(SCRIPT_DIR))
-from typing import Any, Mapping
 
-from peft.utils import get_peft_model_state_dict, set_peft_model_state_dict
-from src.model_utils import _init_model, _init_optimizer
-import torch.nn as nn
+from src.model_utils import _init_model, _init_optimizer  # noqa: E402
 
 
 class LLMTrainer(nn.Module):
@@ -38,33 +42,35 @@ class LLMTrainer(nn.Module):
         self.device = device
         self.metric = load_metric("glue", "mrpc")
         self.model = _init_model(base_model_name, device)
-        self.optimizer, self.lr_scheduler = _init_optimizer(self.model, len(self.data_loader.train_set))
-        
+        self.optimizer, self.lr_scheduler = _init_optimizer(
+            self.model, len(self.data_loader.train_set)
+        )
+
     def train(self):
         return self.model.train()
-        
+
     def state_dict(self):
         return get_peft_model_state_dict(self.model)
 
     def load_state_dict(self, state_dict: Mapping[str, Any], strict: bool = True):
         return set_peft_model_state_dict(self.model, state_dict)
-        
+
     def load_state(self, kwargs):
-        print('loading data',os.getcwd())
+        print("loading data", os.getcwd())
         if hvd.rank() == 0:
             checkpoint = torch.load(kwargs["state_path"])
             self.load_state_dict(checkpoint["model_state_dict"])
             self.optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
             self.lr_scheduler.load_state_dict(checkpoint["lr_scheduler"])
             kwargs.update(checkpoint["kwargs"])
-            print('loaded')
-        print('kwags broadcast')
+            print("loaded")
+        print("kwags broadcast")
         kwargs = hvd.broadcast_object(kwargs, root_rank=0)
-        print('optimizer broadcast')
+        print("optimizer broadcast")
         optim_state = hvd.broadcast_object(self.optimizer.state_dict(), root_rank=0)
-        print('model broadcast')
+        print("model broadcast")
         state_dict = hvd.broadcast_object(self.state_dict(), root_rank=0)
-        print('scheduler broadcast')
+        print("scheduler broadcast")
         lr_scheduler_state_dict = hvd.broadcast_object(
             self.lr_scheduler.state_dict(), root_rank=0
         )
@@ -73,9 +79,7 @@ class LLMTrainer(nn.Module):
             self.lr_scheduler.load_state_dict(lr_scheduler_state_dict)
             self.optimizer.load_state_dict(optim_state)
 
-    def train_batches(
-        self, round_num, use_tqdm=False, epochs=1, **kwargs
-    ):
+    def train_batches(self, round_num, use_tqdm=False, epochs=1, **kwargs):
         """Train batches.
 
         Train the model on the requested number of batches.
@@ -119,9 +123,7 @@ class LLMTrainer(nn.Module):
                 kwargs["out_path"],
             )
 
-    def validate(
-        self, round_num, use_tqdm=False, **kwargs
-    ):
+    def validate(self, round_num, use_tqdm=False, **kwargs):
         """Validate.
 
         Run validation of the model on the local data.
@@ -145,7 +147,7 @@ class LLMTrainer(nn.Module):
         total_samples = 0
         loader = self.data_loader.get_valid_loader()
         if use_tqdm:
-            loader = tqdm(loader, desc="validate")
+            loader = tqdm.tqdm(loader, desc="validate")
         samples_run = 0
         with pt.no_grad():
             for sample in loader:

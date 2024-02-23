@@ -2,14 +2,16 @@
 # SPDX-License-Identifier: Apache-2.0
 
 """You may copy this file as the starting point of your own model."""
+import json
 import os
+import subprocess
 import sys
+from logging import getLogger
 from typing import Any, Mapping
 
 import numpy as np
 import torch
 import torch as pt
-import torch.nn as nn
 from peft.utils import get_peft_model_state_dict, set_peft_model_state_dict
 
 from openfl.federated import PyTorchTaskRunner
@@ -19,11 +21,8 @@ from openfl.utilities.split import split_tensor_dict_for_holdouts
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.dirname(SCRIPT_DIR))
-import json
-import subprocess
-from logging import getLogger
 
-from src.model_utils import _init_model, _init_optimizer
+from src.model_utils import _init_model, _init_optimizer  # noqa: E402
 
 logger = getLogger(__name__)
 

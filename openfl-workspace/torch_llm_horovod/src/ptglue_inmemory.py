@@ -6,18 +6,20 @@
 
 import os
 import sys
+from logging import getLogger
+
+import horovod.torch as hvd
+import torch
+from datasets import Dataset, load_from_disk
+from torch.utils.data import DataLoader
+
+from openfl.utilities.data_splitters import EqualNumPyDataSplitter
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.dirname(SCRIPT_DIR))
 
-import horovod.torch as hvd
-import torch
-from datasets import Dataset
-from src.glue_utils import GlueMrpc, get_dataset
-from torch.utils.data import DataLoader
-from datasets import load_from_disk
-from openfl.utilities.data_splitters import EqualNumPyDataSplitter
-from logging import getLogger
+
+from src.glue_utils import GlueMrpc, get_dataset  # noqa: E402
 
 logger = getLogger(__name__)
 

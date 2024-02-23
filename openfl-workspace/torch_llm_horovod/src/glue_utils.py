@@ -5,31 +5,27 @@
 
 from logging import getLogger
 
-import horovod.torch as hvd
-import torch
 from datasets import Dataset, load_dataset
-from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
-from transformers import (AutoModelForSequenceClassification, AutoTokenizer,
-                          DataCollatorWithPadding, get_scheduler)
-from openfl.utilities.data_splitters import EqualNumPyDataSplitter
-from transformers import DataCollatorWithPadding
+from transformers import AutoTokenizer, DataCollatorWithPadding
 
 logger = getLogger(__name__)
 
 writer = None
 
+
 def get_writer():
     """Create global writer object."""
     global writer
     if not writer:
-        writer = SummaryWriter('./logs/llm', flush_secs=5)
+        writer = SummaryWriter("./logs/llm", flush_secs=5)
 
 
 def write_metric(node_name, task_name, metric_name, metric, round_number):
     """Write metric callback."""
     get_writer()
-    writer.add_scalar(f'{node_name}/{task_name}/{metric_name}', metric, round_number)
+    writer.add_scalar(f"{node_name}/{task_name}/{metric_name}", metric, round_number)
+
 
 def get_glue_mrpc_dataset(tokenizer):
     dataset = load_dataset("glue", "mrpc")

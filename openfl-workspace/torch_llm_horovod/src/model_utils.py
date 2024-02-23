@@ -2,17 +2,15 @@
 # SPDX-License-Identifier: Apache-2.0
 
 """You may copy this file as the starting point of your own model."""
+import os
+import sys
+from logging import getLogger
+
 import torch.nn as nn
 from peft import LoraConfig, TaskType, get_peft_model
 from torch.optim import AdamW
 from transformers import AutoModelForSequenceClassification, get_scheduler
 from transformers.trainer_pt_utils import get_parameter_names
-import sys
-import os
-
-SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-sys.path.append(os.path.dirname(SCRIPT_DIR))
-from logging import getLogger
 
 logger = getLogger(__name__)
 
