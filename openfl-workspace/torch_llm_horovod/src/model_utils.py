@@ -17,6 +17,7 @@ logger = getLogger(__name__)
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.dirname(SCRIPT_DIR))
+ALL_LAYERNORM_LAYERS = [nn.LayerNorm]
 
 
 def _init_model(base_model_name="roberta-base", device=None):
@@ -37,7 +38,6 @@ def _init_model(base_model_name="roberta-base", device=None):
 
 
 def _init_optimizer(model, num_training_steps):
-    ALL_LAYERNORM_LAYERS = [nn.LayerNorm]
     decay_parameters = get_parameter_names(model, ALL_LAYERNORM_LAYERS)
     decay_parameters = [name for name in decay_parameters if "bias" not in name]
 
