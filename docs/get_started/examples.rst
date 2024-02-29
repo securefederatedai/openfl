@@ -40,7 +40,7 @@ See :ref:`interactive_tensorflow_mnist`
     examples/interactive_tensorflow_mnist
 
 -------------------------
-Workflow Interface
+Workflow Interface (Experimental)
 -------------------------
 Formulate the experiment as a series of tasks, or a flow. 
 

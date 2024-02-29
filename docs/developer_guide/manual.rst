@@ -16,7 +16,7 @@ Customize the federation:
 
 Get familiar with the APIs:
 
-- :doc:`running_the_federation.tutorial`
+- `Open Federated Learning (OpenFL) Tutorials <https://github.com/securefederatedai/openfl/tree/develop/openfl-tutorials>`_
 
 Explore new and experimental features:
 
