@@ -35,13 +35,17 @@ extensions = [
     'sphinx_rtd_theme',
     'sphinx.ext.autosectionlabel',
     'sphinx-prompt',
+    'sphinx_copybutton',
     'sphinx_substitution_extensions',
     'sphinx.ext.ifconfig',
     'sphinxcontrib.mermaid',
     'sphinx.ext.autodoc',
-    'sphinx.ext.autosummary'
+    'sphinx.ext.autosummary',
+    'recommonmark'
 ]
 autosummary_generate = True  # Turn on sphinx.ext.autosummary
+
+source_suffix = ['.rst', '.md']
 
 # -- Project information -----------------------------------------------------
 
@@ -70,9 +74,9 @@ napoleon_google_docstring = True
 # Config the returns section to behave like the Args section
 napoleon_custom_sections = [('Returns', 'params_style')]
 
-# This code extends Sphinx's GoogleDocstring class to support 'Keys', 'Attributes', 
-# and 'Class Attributes' sections in docstrings. Allows for more detailed and structured 
-# documentation of Python classes and their attributes.
+# This code extends Sphinx's GoogleDocstring class to support 'Keys',
+# 'Attributes', and 'Class Attributes' sections in docstrings. Allows for more
+# detailed and structured documentation of Python classes and their attributes.
 from sphinx.ext.napoleon.docstring import GoogleDocstring
 
 # Define new sections and their corresponding parse methods
@@ -86,6 +90,7 @@ new_sections = {
 for section, title in new_sections.items():
     setattr(GoogleDocstring, f'_parse_{section}_section',
             lambda self, section: self._format_fields(title, self._consume_fields()))
+
 
 # Patch the parse method to include new sections
 def patched_parse(self):
@@ -103,8 +108,9 @@ templates_path = ['_templates']
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = ['_build', 'Thumbs.db',
+exclude_patterns = ['_build', 'Thumbs.db', 'README.md', 'structurizer_dsl/README.md',
                     '.DS_Store', 'tutorials/*', 'graveyard/*', '_templates']
+
 # add temporary unused files
 exclude_patterns.extend(['modules.rst',
                          'install.singularity.rst',
@@ -125,3 +131,7 @@ html_theme = 'sphinx_rtd_theme'
 html_static_path = ['_static']
 html_style = 'css/Intel_One_Mono_Font_Theme.css'
 autosectionlabel_prefix_document = True
+
+
+def setup(app):
+    app.add_css_file('css/custom.css')
