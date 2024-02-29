@@ -19,11 +19,8 @@ from openfl.experimental.utilities import (
 )
 from openfl.experimental.runtime import Runtime
 
-final_attributes = []
-
 
 class FLSpec:
-
     _clones = []
     _initial_state = None
 
@@ -39,7 +36,7 @@ class FLSpec:
     @classmethod
     def _reset_clones(cls):
         """Reset clones"""
-        cls._clones = []
+        cls._clones = {}
 
     @classmethod
     def save_initial_state(cls, instance: Type[FLSpec]) -> None:
@@ -54,17 +51,23 @@ class FLSpec:
         )
         self._run_id = self._metaflow_interface.create_run()
         if str(self._runtime) == "LocalRuntime":
-            # Setup any necessary ShardDescriptors through the LocalEnvoys
-            # Assume that first task always runs on the aggregator
-            self._setup_aggregator()
+            # Initialize aggregator private attributes
+            self.runtime.initialize_aggregator()
             self._foreach_methods = []
             FLSpec._reset_clones()
             FLSpec._create_clones(self, self.runtime.collaborators)
-            # the start function can just be invoked locally
+            # Initialize collaborator private attributes
+            self.runtime.initialize_collaborators()
             if self._checkpoint:
                 print(f"Created flow {self.__class__.__name__}")
             try:
-                self.start()
+                # Execute all Participant (Aggregator & Collaborator) tasks and
+                # retrieve the final attributes
+                # start step is the first task & invoked on aggregator through runtime.execute_task
+                final_attributes = self.runtime.execute_task(
+                    self,
+                    self.start,
+                )
             except Exception as e:
                 if "cannot pickle" in str(e) or "Failed to unpickle" in str(e):
                     msg = (
@@ -74,7 +77,8 @@ class FLSpec:
                         "\nLocalRuntime(...,backend='single_process')\n"
                         "\n or for more information about the original error,"
                         "\nPlease see the official Ray documentation"
-                        "\nhttps://docs.ray.io/en/latest/ray-core/objects/serialization.html"
+                        "\nhttps://docs.ray.io/en/releases-2.2.0/ray-core/\
+                        objects/serialization.html"
                     )
                     raise SerializationError(str(e) + msg)
                 else:
@@ -85,11 +89,6 @@ class FLSpec:
             raise Exception("Submission to remote runtime not available yet")
         else:
             raise Exception("Runtime not implemented")
-
-    def _setup_aggregator(self):
-        """Sets aggregator private attributes as self attributes"""
-        for name, attr in self.runtime._aggregator.private_attributes.items():
-            setattr(self, name, attr)
 
     @property
     def runtime(self) -> Type[Runtime]:
@@ -130,9 +129,7 @@ class FLSpec:
         if parent_func.__name__ in self._foreach_methods:
             self._foreach_methods.append(f.__name__)
             if should_transfer(f, parent_func):
-                print(
-                    f"Should transfer from {parent_func.__name__} to {f.__name__}"
-                )
+                print(f"Should transfer from {parent_func.__name__} to {f.__name__}")
                 self.execute_next = f.__name__
                 return True
         return False
@@ -171,16 +168,7 @@ class FLSpec:
         # Remove included / excluded attributes from next task
         filter_attributes(self, f, **kwargs)
 
-        if self._is_at_transition_point(f, parent_func):
-            # Collaborator is done executing for now
-            return
-
         self._display_transition_logs(f, parent_func)
 
-        self._runtime.execute_task(
-            self,
-            f,
-            parent_func,
-            instance_snapshot=agg_to_collab_ss,
-            **kwargs,
-        )
+        # update parameters required to execute execute_task function
+        self.execute_task_args = [f, parent_func, agg_to_collab_ss, kwargs]
