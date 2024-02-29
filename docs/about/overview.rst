@@ -12,7 +12,7 @@ Overview
    
 Open Federated Learning (OpenFL) is a Python\*\  3 project developed by Intel Internet of Things Group (IOTG) and Intel Labs.
 
-.. figure:: images/ct_vs_fl.png
+.. figure:: ../images/ct_vs_fl.png
 
 .. centered:: Federated Learning
 
@@ -30,7 +30,7 @@ or classified secrets (`McMahan, 2016 <https://arxiv.org/abs/1602.05629>`_;
 `Sheller et al., 2020 <https://www.nature.com/articles/s41598-020-69250-1>`_).
 In federated learning, the model moves to meet the data rather than the data moving to meet the model. The movement of data across the federation are the model parameters and their updates.
 
-.. figure:: images/diagram_fl_new.png
+.. figure:: ../images/diagram_fl_new.png
 
 .. centered:: Federated Learning
 

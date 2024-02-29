@@ -1,4 +1,4 @@
-# Copyright (C) 2020-2023 Intel Corporation
+# Copyright (C) 2020-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 sphinx-rtd-theme
 sphinx-prompt 
@@ -6,3 +6,4 @@ sphinx_substitution_extensions
 sphinxcontrib-mermaid
 pygments>=2.7.4 # not directly required, pinned by Snyk to avoid a vulnerability
 sphinx>=3.0.4 # not directly required, pinned by Snyk to avoid a vulnerability
+recommonmark

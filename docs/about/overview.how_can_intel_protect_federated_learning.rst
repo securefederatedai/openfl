@@ -15,7 +15,7 @@ without a `cryptographic key <https://en.wikipedia.org/wiki/Cryptographic_key_ty
 access to the CPU cannot access the enclave without the authorized key.
 
 
-.. figure:: images/sgx.png
+.. figure:: ../images/sgx.png
    :alt: Intel\ :sup:`®` \ Software Guard Extensions
    :scale: 50%
 
@@ -39,7 +39,7 @@ to change their existing applications. Several commercial implementations
 of SGX-enabled LibOSes have been created by our partners, including
 `Fortanix <https://fortanix.com>`_ and `SContain <https://scontain.com>`_.
 
-.. figure:: images/graphene.png
+.. figure:: ../images/graphene.png
   :alt: graphene
   :scale: 40%
 

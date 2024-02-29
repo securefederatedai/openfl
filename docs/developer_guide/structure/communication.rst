@@ -14,7 +14,7 @@ Director-Envoy Communication
 
 The following diagram depicts a typical process of establishing a Federation and registering an experiment.  
 
-.. mermaid:: director_envoy.mmd
+.. mermaid:: ../../mermaid/director_envoy.mmd
     :caption: Basic Scenario of Director-Envoy Communication
     :align: center
 
@@ -23,7 +23,7 @@ Director Side Envoy Representation and Related Remote Procedure Calls
 
 This diagram shows possible interactions with Envoy handles on the Director side.
 
-.. mermaid:: envoy_representation_and_RPCs.mmd
+.. mermaid:: ../../mermaid/envoy_representation_and_RPCs.mmd
     :caption: Communications Altering or Requesting Envoy-Related Information
     :align: center
 
@@ -32,6 +32,6 @@ Director Side Experiment Representation and Related Remote Procedure Calls
 
 This diagram shows possible interactions with Experiment handles on the Director side.
 
-.. mermaid:: experiment_representation_and_RPCs.mmd
+.. mermaid:: ../../mermaid/experiment_representation_and_RPCs.mmd
     :caption: Communications Altering or Requesting Experiment-Related Information
     :align: center

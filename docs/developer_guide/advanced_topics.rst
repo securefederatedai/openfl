@@ -10,48 +10,47 @@ Advanced Topics
 
     Speed up activating Open Federated Learning (|productName|) commands:
 
-    - :doc:`bash_autocomplete_activation`
+    - :doc:`advanced_topics/bash_autocomplete_activation`
 
 **Aggregator-Based Workflow**
 
     Learn to manage multiple Federation Learning plans (FL plan) in the same workspace:
 
-    - :doc:`multiple_plans`
+    - :doc:`advanced_topics/multiple_plans`
 
     Reduce the amount of data transferred in a federation through compression pipelines available in |productName|:
 
-    - :doc:`compression_settings`
+    - :doc:`advanced_topics/compression_settings`
     
     Customize the aggregation function for each task:
     
-    - :doc:`overriding_agg_fn`
+    - :doc:`advanced_topics/overriding_agg_fn`
 
     Customize straggler handling function:
 
-    - :doc:`straggler_handling_algorithms`
+    - :doc:`advanced_topics/straggler_handling_algorithms`
 
 **Director-Based Workflow**
 
     Customize the logging function for each task:
 
-    - :doc:`log_metric_callback`
+    - :doc:`advanced_topics/log_metric_callback`
 
     Update plan settings:
 
-    - :doc:`overriding_plan_settings`
+    - :doc:`advanced_topics/overriding_plan_settings`
 
 
 .. toctree::
-   :maxdepth: 4
+   :maxdepth: 1
    :hidden:
 
-   bash_autocomplete_activation
-   multiple_plans
-   compression_settings
-   overriding_agg_fn
-   straggler_handling_algorithms
-   log_metric_callback
-   supported_aggregation_algorithms
-   overriding_plan_settings
+   advanced_topics/bash_autocomplete_activation
+   advanced_topics/multiple_plans
+   advanced_topics/compression_settings
+   advanced_topics/overriding_agg_fn
+   advanced_topics/straggler_handling_algorithms
+   advanced_topics/log_metric_callback
+   advanced_topics/overriding_plan_settings
    
    
