@@ -60,7 +60,7 @@ class ShardDirectorClient:
     def report_shard_info(self, shard_descriptor: Type[ShardDescriptor],
                           cuda_devices: tuple) -> bool:
         """Report shard info to the director."""
-        logger.info('Send report UpdateShardInfo')
+        logger.info(f'Sending {self.shard_name} shard info to director')
         # True considered as successful registration
         shard_info = director_pb2.ShardInfo(
             shard_description=shard_descriptor.dataset_description,
@@ -80,9 +80,9 @@ class ShardDirectorClient:
 
     def wait_experiment(self):
         """Wait an experiment data from the director."""
-        logger.info('Send WaitExperiment request')
+        logger.info('Waiting for an experiment to run...')
         response = self.stub.WaitExperiment(self._get_experiment_data())
-        logger.info(f'WaitExperiment response has received: {response}')
+        logger.info(f'New experiment received: {response}')
         experiment_name = response.experiment_name
         if not experiment_name:
             raise Exception('No experiment')
@@ -91,7 +91,7 @@ class ShardDirectorClient:
 
     def get_experiment_data(self, experiment_name):
         """Get an experiment data from the director."""
-        logger.info(f'Request experiment {experiment_name}')
+        logger.info(f'Getting experiment data for {experiment_name}...')
         request = director_pb2.GetExperimentDataRequest(
             experiment_name=experiment_name,
             collaborator_name=self.shard_name
@@ -107,6 +107,7 @@ class ShardDirectorClient:
             error_description: str = ''
     ):
         """Set the experiment failed."""
+        logger.info(f'Experiment {experiment_name} failed')
         request = director_pb2.SetExperimentFailedRequest(
             experiment_name=experiment_name,
             collaborator_name=self.shard_name,
@@ -206,7 +207,7 @@ class DirectorClient:
     def set_new_experiment(self, name, col_names, arch_path,
                            initial_tensor_dict=None):
         """Send the new experiment to director to launch."""
-        logger.info('SetNewExperiment')
+        logger.info(f'Submitting new experiment {name} to director')
         if initial_tensor_dict:
             model_proto = construct_model_proto(initial_tensor_dict, 0, NoCompressionPipeline())
             experiment_info_gen = self._get_experiment_info(
@@ -238,7 +239,7 @@ class DirectorClient:
 
     def get_experiment_status(self, experiment_name):
         """Check if the experiment was accepted by the director"""
-        logger.info('Get Experiment Status')
+        logger.info('Getting experiment Status...')
         request = director_pb2.GetExperimentStatusRequest(experiment_name=experiment_name)
         resp = self.stub.GetExperimentStatus(request)
         return resp

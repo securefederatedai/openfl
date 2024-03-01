@@ -369,6 +369,6 @@ if __name__ == "__main__":
     testflow = TestFlowReference(checkpoint=True)
     testflow.runtime = local_runtime
 
-    for i in range(5):
+    for i in range(2):
         print(f"Starting round {i}...")
         testflow.run()

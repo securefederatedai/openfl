@@ -85,7 +85,9 @@ def checkpoint(ctx, parent_func, chkpnt_reserved_words=["next", "runtime"]):
     if ctx._checkpoint:
         # all objects will be serialized using Metaflow interface
         print(f"Saving data artifacts for {parent_func.__name__}")
-        artifacts_iter, _ = generate_artifacts(ctx=ctx, reserved_words=chkpnt_reserved_words)
+        artifacts_iter, _ = generate_artifacts(
+            ctx=ctx, reserved_words=chkpnt_reserved_words
+        )
         task_id = ctx._metaflow_interface.create_task(parent_func.__name__)
         ctx._metaflow_interface.save_artifacts(
             artifacts_iter(),
@@ -97,8 +99,19 @@ def checkpoint(ctx, parent_func, chkpnt_reserved_words=["next", "runtime"]):
         print(f"Saved data artifacts for {parent_func.__name__}")
 
 
-def check_resource_allocation(num_gpus, each_participant_gpu_usage):
+def old_check_resource_allocation(num_gpus, each_participant_gpu_usage):
     remaining_gpu_memory = {}
+    # TODO for each GPU the funtion tries see if all participant usages fit into a GPU, it it
+    # doesn't it removes that
+    # participant from the participant list, and adds it to the remaining_gpu_memory dict. So any
+    # sum of GPU requirements above 1
+    # triggers this.
+    # But at this point the funtion will raise an error because remaining_gpu_memory is never
+    # cleared.
+    # The participant list should remove the participant if it fits in the gpu and save the
+    # partipant if it doesn't and continue
+    # to the next GPU to see if it fits in that one, only if we run out of GPUs should this
+    # funtion raise an error.
     for gpu in np.ones(num_gpus, dtype=int):
         for i, (participant_name, participant_gpu_usage) in enumerate(
             each_participant_gpu_usage.items()
@@ -107,13 +120,42 @@ def check_resource_allocation(num_gpus, each_participant_gpu_usage):
                 break
             if gpu < participant_gpu_usage:
                 remaining_gpu_memory.update({participant_name: gpu})
-                each_participant_gpu_usage = dict(itertools.islice(
-                    each_participant_gpu_usage.items(), i)
+                each_participant_gpu_usage = dict(
+                    itertools.islice(each_participant_gpu_usage.items(), i)
                 )
             else:
                 gpu -= participant_gpu_usage
     if len(remaining_gpu_memory) > 0:
         raise ResourcesAllocationError(
             f"Failed to allocate Participant {list(remaining_gpu_memory.keys())} "
+            + "to specified GPU. Please try allocating lesser GPU resources to participants"
+        )
+
+
+def check_resource_allocation(num_gpus, each_participant_gpu_usage):
+    # copy participant dict
+    need_assigned = each_participant_gpu_usage.copy()
+    # cycle through all available GPU availability
+    for gpu in np.ones(num_gpus, dtype=int):
+        # buffer to cycle though since need_assigned will change sizes as we assign participants
+        current_dict = need_assigned.copy()
+        for i, (participant_name, participant_gpu_usage) in enumerate(
+            current_dict.items()
+        ):
+            if gpu == 0:
+                break
+            if gpu < participant_gpu_usage:
+                # participant doesn't fitm break to next GPU
+                break
+            else:
+                # if participant fits remove from need_assigned
+                need_assigned.pop(participant_name)
+                gpu -= participant_gpu_usage
+
+    # raise error if after going though all gpus there are still participants that needed to be
+    # assigned
+    if len(need_assigned) > 0:
+        raise ResourcesAllocationError(
+            f"Failed to allocate Participant {list(need_assigned.keys())} "
             + "to specified GPU. Please try allocating lesser GPU resources to participants"
         )

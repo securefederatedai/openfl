@@ -62,7 +62,9 @@ class FLSpec:
             if self._checkpoint:
                 print(f"Created flow {self.__class__.__name__}")
             try:
-                # Execute all participant tasks and retrieve the final attributes
+                # Execute all Participant (Aggregator & Collaborator) tasks and
+                # retrieve the final attributes
+                # start step is the first task & invoked on aggregator through runtime.execute_task
                 final_attributes = self.runtime.execute_task(
                     self,
                     self.start,

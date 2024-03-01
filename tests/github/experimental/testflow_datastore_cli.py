@@ -290,42 +290,41 @@ def display_validate_errors(validate_flow_error):
 
 if __name__ == "__main__":
     # Setup participants
-    aggregator = Aggregator()
+    aggregator_ = Aggregator()
 
     collaborator_names = ["Portland", "Seattle", "Chandler", "Bangalore"]
 
     def callable_to_initialize_collaborator_private_attributes(
-        index, n_collaborators, batch_size_train, train_dataset, test_dataset
+        n_collaborators, index, train_dataset, test_dataset, batch_size
     ):
         local_train = deepcopy(train_dataset)
         local_test = deepcopy(test_dataset)
-        local_train.data = train_dataset.data[index:: n_collaborators]
-        local_train.targets = train_dataset.targets[index:: n_collaborators]
-        local_test.data = test_dataset.data[index:: n_collaborators]
-        local_test.targets = test_dataset.targets[index:: n_collaborators]
+        local_train.data = mnist_train.data[index::n_collaborators]
+        local_train.targets = mnist_train.targets[index::n_collaborators]
+        local_test.data = mnist_test.data[index::n_collaborators]
+        local_test.targets = mnist_test.targets[index::n_collaborators]
         return {
             "train_loader": torch.utils.data.DataLoader(
-                local_train, batch_size=batch_size_train, shuffle=True
+                local_train, batch_size=batch_size, shuffle=True
             ),
             "test_loader": torch.utils.data.DataLoader(
-                local_test, batch_size=batch_size_train, shuffle=True
+                local_test, batch_size=batch_size, shuffle=True
             ),
         }
 
-    # Setup collaborators private attributes via callable function
     collaborators = []
     for idx, collaborator_name in enumerate(collaborator_names):
         collaborators.append(
             Collaborator(
-                name=collaborator_name,
+                name=collaborator_name, num_cpus=0, num_gpus=0.0,
                 private_attributes_callable=callable_to_initialize_collaborator_private_attributes,
-                index=idx, n_collaborators=len(collaborator_names), batch_size_train=64,
-                train_dataset=mnist_train, test_dataset=mnist_test
+                n_collaborators=len(collaborator_names), index=idx, train_dataset=mnist_train,
+                test_dataset=mnist_test, batch_size=32
             )
         )
 
     local_runtime = LocalRuntime(
-        aggregator=aggregator, collaborators=collaborators, backend='ray'
+        aggregator=aggregator_, collaborators=collaborators, backend="ray"
     )
     print(f"Local runtime collaborators = {local_runtime.collaborators}")
     num_rounds = 5

@@ -598,7 +598,7 @@ if __name__ == "__main__":
 
     # Setup participants
     # Set `num_gpus=0.09` to `num_gpus=0.0` in order to run this tutorial on CPU
-    aggregator = Aggregator(num_gpus=0.09)  # Assuming GPU(s) is available in the machine
+    aggregator = Aggregator(num_gpus=0.09)
 
     # Setup collaborators with private attributes
     collaborator_names = [
