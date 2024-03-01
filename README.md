@@ -68,17 +68,17 @@ echo $(hostname --all-fqdns |  awk '{print tolower($1)}') # Find  the right FQDN
 ```
 ```bash
 export FQDN=<FQDN> # Enter your FQDN here
-export no_proxy= localhost,<local machine IP>,<FQDN>
+export no_proxy=localhost,<local machine IP>,<FQDN>
 ```
 ### Step 1: Setup Federation Workspace & Certificate Authority(CA)
-#### _Step 1a: Create a Federation workspace with necessary dependencies & initialize  [FL Plan](https://openfl.readthedocs.io/en/latest/running_the_federation.html#plan-settings.)_
+#### _Step 1a: Create a federation workspace with necessary dependencies & initialize  [FL Plan](https://openfl.readthedocs.io/en/latest/about/features_index/taskrunner.html#federated-learning-plan-fl-plan-settings)_
 ```bash
 cd ${HOME}
 fx workspace create --prefix "my_federation_workspace" --template keras_cnn_mnist #setup workspace with keras_cnn_mnist as model.
 cd "my_federation_workspace"
 fx plan initialize # initialize the workspace with FLPlan settings.
 ```
-#### _Step 1b: Assign Current Workspace as the Certificate Authority._
+#### _Step 1b: Assign current workspace as the Certificate Authority._
 ```bash
 fx workspace certify    # (Sets up aggregator as certificate authority(CA) populates cert folder)
 ```
@@ -118,7 +118,7 @@ fx collaborator start -n cob_1
 conda activate fedai && cd ${HOME}/my_federation_workspace
 fx collaborator start -n cob_2
 ```
-### Expected Output in Aggregator Terminal
+### Expected output in Aggregator terminal
 ```bash
 INFO     Starting round 9...                                                                                                        aggregator.py:897
 INFO     Sending tasks to collaborator cob_2 for round 9                                                                            aggregator.py:329
@@ -147,7 +147,7 @@ INFO     Sending signal to collaborator cob_1 to shutdown...                    
 INFO     Sending signal to collaborator cob_2 to shutdown...                                                                        aggregator.py:283
 ✔️ OK
 ```
-### Expected Output in Collaborator1 or Collaborator2 Terminals
+### Expected output in Collaborator1 or Collaborator2 terminals
 ```
  INFO     Using TaskRunner subclassing API                                                                                         collaborator.py:253
 157/157 [==============================] - 1s 6ms/step - loss: 0.0416 - accuracy: 0.9872
