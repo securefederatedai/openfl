@@ -533,7 +533,6 @@ class LocalRuntime(Runtime):
 
             f_name = f.__name__
 
-
     def execute_task(self, flspec_obj: Type[FLSpec], f: Callable, **kwargs):
         """
         Defines which function to be executed based on name and kwargs
