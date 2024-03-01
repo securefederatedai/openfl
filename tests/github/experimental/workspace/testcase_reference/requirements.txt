@@ -1,0 +1,4 @@
+torch==1.13.1
+torchvision==0.14.1
+tensorboard
+wheel>=0.38.0 # not directly required, pinned by Snyk to avoid a vulnerability

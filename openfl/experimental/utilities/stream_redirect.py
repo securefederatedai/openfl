@@ -1,10 +1,9 @@
 # Copyright (C) 2020-2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-
 """openfl.experimental.utilities.stream_redirect module."""
 
-import sys
 import io
+import sys
 from copy import deepcopy
 
 
@@ -17,7 +16,8 @@ class RedirectStdStreamBuffer:
     """
 
     def __init__(self):
-        """Initializes the RedirectStdStreamBuffer with empty stdout and stderr buffers."""
+        """Initializes the RedirectStdStreamBuffer with empty stdout and stderr
+        buffers."""
         self._stdoutbuff = io.StringIO()
         self._stderrbuff = io.StringIO()
 
@@ -25,9 +25,9 @@ class RedirectStdStreamBuffer:
         """Returns the contents of stdout and stderr buffers.
 
         Returns:
-            tuple: A tuple containing the contents of stdout and stderr buffers.
+            tuple: A tuple containing the contents of stdout and stderr
+                buffers.
         """
-
         self._stdoutbuff.seek(0)
         self._stderrbuff.seek(0)
 
@@ -41,8 +41,8 @@ class RedirectStdStreamBuffer:
 
 
 class RedirectStdStream(object):
-    """Class used to intercept stdout and stderr, so that
-    stdout and stderr is written to buffer as well as terminal.
+    """Class used to intercept stdout and stderr, so that stdout and stderr is
+    written to buffer as well as terminal.
 
     Attributes:
         __stdDestination (io.TextIOWrapper): Destination for standard outputs.
@@ -65,6 +65,7 @@ class RedirectStdStream(object):
         Args:
             message (str): The message to write.
         """
+        message = f"\33[94m{message}\33[0m"
         self.__stdDestination.write(message)
         self.__stdBuffer.write(message)
 
@@ -80,7 +81,8 @@ class RedirectStdStreamContext:
     """
 
     def __init__(self):
-        """Initializes the RedirectStdStreamContext with a RedirectStdStreamBuffer."""
+        """Initializes the RedirectStdStreamContext with a
+        RedirectStdStreamBuffer."""
         self.stdstreambuffer = RedirectStdStreamBuffer()
 
     def __enter__(self):
@@ -91,8 +93,11 @@ class RedirectStdStreamContext:
         """
         self.__old_stdout = sys.stdout
         self.__old_stderr = sys.stderr
-        sys.stdout = RedirectStdStream(self.stdstreambuffer._stdoutbuff, sys.stdout)
-        sys.stderr = RedirectStdStream(self.stdstreambuffer._stderrbuff, sys.stderr)
+        sys.stdout = RedirectStdStream(self.stdstreambuffer._stdoutbuff,
+                                       sys.stdout)
+        sys.stderr = RedirectStdStream(self.stdstreambuffer._stderrbuff,
+                                       sys.stderr)
+
         return self.stdstreambuffer
 
     def __exit__(self, et, ev, tb):

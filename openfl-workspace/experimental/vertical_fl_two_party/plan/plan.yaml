@@ -1,0 +1,27 @@
+# Copyright (C) 2020-2023 Intel Corporation
+# Licensed subject to the terms of the separately executed evaluation license agreement between Intel Corporation and you.
+
+aggregator :
+  defaults : plan/defaults/aggregator.yaml
+  template : openfl.experimental.component.aggregator.Aggregator
+  settings :
+    rounds_to_train     : 10
+    log_metric_callback :
+      template : src.utils.write_metric
+
+
+collaborator :
+  defaults : plan/defaults/collaborator.yaml
+  template : openfl.experimental.component.collaborator.Collaborator
+  settings : {}
+
+
+federated_flow:
+  template: src.workflow_interface_vertical_fl_two_party.VerticalTwoPartyFlow
+  settings:
+    batch_num: 0
+    checkpoint: True
+
+
+network :
+  defaults : plan/defaults/network.yaml

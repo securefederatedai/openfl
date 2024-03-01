@@ -77,7 +77,7 @@ def filter_attributes(ctx, f, **kwargs):
     if "include" in kwargs and "exclude" in kwargs:
         raise RuntimeError("'include' and 'exclude' should not both be present")
     elif "include" in kwargs:
-        assert type(kwargs["include"]) is list
+        assert isinstance(kwargs["include"], list)
         for in_attr in kwargs["include"]:
             if in_attr not in cls_attrs:
                 raise RuntimeError(
@@ -87,7 +87,7 @@ def filter_attributes(ctx, f, **kwargs):
             if attr not in kwargs["include"]:
                 delattr(ctx, attr)
     elif "exclude" in kwargs:
-        assert type(kwargs["exclude"]) is list
+        assert isinstance(kwargs["exclude"], list)
         for in_attr in kwargs["exclude"]:
             if in_attr not in cls_attrs:
                 raise RuntimeError(

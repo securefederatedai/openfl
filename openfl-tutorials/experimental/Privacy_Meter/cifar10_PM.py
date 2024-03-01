@@ -656,8 +656,9 @@ if __name__ == "__main__":
     args = argparser.parse_args()
 
     # Setup participants
-    # Set `num_gpus=0.0` to `num_gpus=0.3` to run on GPU
-    aggregator = Aggregator(num_gpus=0.0)
+    # If running with GPU and 1 GPU is available then
+    # Set `num_gpus=0.3` to run on GPU
+    aggregator = Aggregator()
 
     collaborator_names = ["Portland", "Seattle"]
 
