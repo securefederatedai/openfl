@@ -1,0 +1,58 @@
+// Copyright (C) 2020-2023 Intel Corporation
+// Licensed subject to the terms of the separately executed evaluation license agreement between Intel Corporation and you.
+
+syntax = "proto3";
+
+package openfl.experiment.aggregator;
+
+import "openfl/protocols/base.proto";
+
+
+service Aggregator {
+  rpc SendTaskResults(TaskResultsRequest) returns (TaskResultsResponse) {}
+  rpc GetTasks(GetTasksRequest) returns (GetTasksResponse) {}
+  rpc CallCheckpoint(CheckpointRequest) returns (CheckpointResponse) {}
+}
+
+message MessageHeader {
+  string sender = 1;
+  string receiver = 2;
+  string federation_uuid = 3;
+  string single_col_cert_common_name = 4;
+}
+
+message TaskResultsRequest {
+  MessageHeader header = 1;
+  string collab_name = 2;
+  int32 round_number = 3;
+  string next_step = 4;
+  bytes execution_environment = 5;
+}
+
+message TaskResultsResponse {
+  MessageHeader header = 1;
+}
+
+message GetTasksRequest {
+  MessageHeader header = 1;
+}
+
+message GetTasksResponse {
+  MessageHeader header = 1;
+  int32 round_number = 2;
+  string function_name = 3;
+  bytes execution_environment = 4;
+  int32 sleep_time = 5;
+  bool quit = 6;
+}
+
+message CheckpointRequest {
+  MessageHeader header = 1;
+  bytes execution_environment = 2;
+  bytes function = 3;
+  bytes stream_buffer = 4;
+}
+
+message CheckpointResponse {
+  MessageHeader header = 1;
+}

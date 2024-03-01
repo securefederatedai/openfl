@@ -10,7 +10,7 @@ from typing import Callable, Optional
 class Participant:
     def __init__(self, name: str = ""):
         self.private_attributes = {}
-        self._name = name
+        self._name = name.lower()
 
     @property
     def name(self):
@@ -18,7 +18,7 @@ class Participant:
 
     @name.setter
     def name(self, name: str):
-        self._name = name
+        self._name = name.lower()
 
     def private_attributes(self, attrs: Dict[str, Any]) -> None:
         """
@@ -43,8 +43,15 @@ class Collaborator(Participant):
     """
     Defines a collaborator participant
     """
-    def __init__(self, name: str = "", private_attributes_callable: Callable = None,
-                 num_cpus: int = 0, num_gpus: int = 0.0, **kwargs):
+
+    def __init__(
+        self,
+        name: str = "",
+        private_attributes_callable: Callable = None,
+        num_cpus: int = 0,
+        num_gpus: int = 0.0,
+        **kwargs
+    ):
         """
         Create collaborator object with custom resources and a callable
         function to assign private attributes
@@ -75,7 +82,9 @@ class Collaborator(Participant):
             self.private_attributes_callable = private_attributes_callable
         else:
             if not callable(private_attributes_callable):
-                raise Exception("private_attributes_callable  parameter must be a callable")
+                raise Exception(
+                    "private_attributes_callable  parameter must be a callable"
+                )
             else:
                 self.private_attributes_callable = private_attributes_callable
 
@@ -110,9 +119,7 @@ class Collaborator(Participant):
         # parameters from clone, then delete attributes from clone.
         for attr_name in self.private_attributes:
             if hasattr(clone, attr_name):
-                self.private_attributes.update(
-                    {attr_name: getattr(clone, attr_name)}
-                )
+                self.private_attributes.update({attr_name: getattr(clone, attr_name)})
                 delattr(clone, attr_name)
 
     def execute_func(self, ctx: Any, f_name: str, callback: Callable) -> Any:

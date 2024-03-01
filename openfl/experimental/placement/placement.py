@@ -20,7 +20,6 @@ def aggregator(f: Callable = None) -> Callable:
         ...
 
     """
-
     print(f'Aggregator step "{f.__name__}" registered')
     f.is_step = True
     f.decorators = []

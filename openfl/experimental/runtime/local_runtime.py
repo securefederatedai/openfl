@@ -328,7 +328,6 @@ class LocalRuntime(Runtime):
                                              By selecting num_gpus=1, the task is guaranteed
                                              exclusive GPU access. If the system has one GPU,
                                              collaborator tasks will run sequentially.
-
         """
         super().__init__()
         if backend not in ["ray", "single_process"]:
@@ -436,12 +435,10 @@ class LocalRuntime(Runtime):
     def collaborators(self, collaborators: List[Type[Collaborator]]):
         """Set LocalRuntime collaborators"""
         if self.backend == "single_process":
-
             def get_collab_name(collab):
                 return collab.get_name()
 
         else:
-
             def get_collab_name(collab):
                 return ray.get(collab.get_name.remote())
 
@@ -449,6 +446,26 @@ class LocalRuntime(Runtime):
             get_collab_name(collaborator): collaborator
             for collaborator in collaborators
         }
+
+    def get_collaborator_kwargs(self, collaborator_name: str):
+        """
+        Returns kwargs of collaborator
+
+        Args:
+            collaborator_name: Collaborator name for which kwargs is to be returned
+
+        Returns:
+            kwargs: Collaborator private_attributes_callable function name, and
+             arguments required to call it.
+        """
+        collab = self.__collaborators[collaborator_name]
+        kwargs = {}
+        if hasattr(collab, "private_attributes_callable"):
+            if collab.private_attributes_callable is not None:
+                kwargs.update(collab.kwargs)
+                kwargs["private_attributes_callable"] = collab.private_attributes_callable.__name__
+
+        return kwargs
 
     def initialize_aggregator(self):
         """initialize aggregator private attributes"""
@@ -560,7 +577,6 @@ class LocalRuntime(Runtime):
             flspec_obj: updated FLSpec (flow) object
         """
         from openfl.experimental.interface import FLSpec
-
         aggregator = self._aggregator
         clones = None
 

@@ -421,19 +421,20 @@ class MetaflowInterface:
         Returns:
             task_id [int]
         """
-        # May need a lock here
-        if self.backend == "ray":
-            with SystemMutex("critical_section"):
+        with SystemMutex("critical_section"):
+            if self.backend == "ray":
                 task_id = ray.get(self.counter.get_counter.remote())
                 self.local_metadata._task_id_seq = task_id
                 self.local_metadata.new_task_id(self.run_id, task_name)
                 return ray.get(self.counter.increment.remote())
-        else:
-            task_id = self.counter
-            self.local_metadata._task_id_seq = task_id
-            self.local_metadata.new_task_id(self.run_id, task_name)
-            self.counter += 1
-            return self.counter
+            else:
+                # Keeping single_process in critical_section
+                # because gRPC calls may cause problems.
+                task_id = self.counter
+                self.local_metadata._task_id_seq = task_id
+                self.local_metadata.new_task_id(self.run_id, task_name)
+                self.counter += 1
+                return self.counter
 
     def save_artifacts(
         self,
