@@ -18,8 +18,10 @@ def xml_to_json(input_base_folder, subfolders, output_folder, verify_hash=1):
     train_count, test_count = 0, 0
 
     if verify_hash == 1:
-        verify_aggregated_MedQuAD_hashes(input_base_folder, subfolders,
-                                         expected_hash='9d645c469ba37eb9ec2e121ae6ac90fbebccfb91f2aff7ffaabc0531f2ede54ab4c91bea775922e5910b276340c040e8')
+        expected_hash = ('9d645c469ba37eb9ec2e121ae6ac90fbebccfb91f2aff7f'
+                         'faabc0531f2ede54ab4c91bea775922e5910b276340c040e8')
+        verify_aggregated_hashes(input_base_folder, subfolders,
+                                 expected_hash=expected_hash)
 
     for subfolder in subfolders:
         folder_path = os.path.join(input_base_folder, subfolder)
@@ -49,7 +51,7 @@ def xml_to_json(input_base_folder, subfolders, output_folder, verify_hash=1):
     with open(os.path.join(output_folder, 'data_counts.txt'), 'w') as f:
         f.write(f"Training data pairs: {train_count}\n")
         f.write(f"Test data pairs: {test_count}\n")
-        
+
     print("Preprocessing complete")
 
 
@@ -95,10 +97,10 @@ def compute_hash(file_path, hash_name='sha384'):
     return hash_func.hexdigest()
 
 
-def verify_aggregated_MedQuAD_hashes(input_base_folder, dir_list, expected_hash):
+def verify_aggregated_hashes(input_base_folder, dir_list, expected_hash):
     """Verify the aggregated hash of all files against a single, hardcoded hash."""
     aggregated_hash_func = hashlib.sha384()
-    
+
     for sub_directory in dir_list:
         directory = os.path.join(input_base_folder, sub_directory)
         if os.path.isdir(directory):
@@ -115,7 +117,7 @@ def verify_aggregated_MedQuAD_hashes(input_base_folder, dir_list, expected_hash)
 
     # Compare the aggregated hash with the expected, hardcoded hash
     if aggregated_hash != expected_hash:
-        raise SystemError("Verification failed. Downloaded hash doesn\'t match expected file hash.")
+        raise SystemError(
+            "Verification failed. Downloaded hash doesn\'t match expected hash.")
     else:
         print("Verification passed")
-    
