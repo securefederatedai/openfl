@@ -19,6 +19,7 @@ RUN apt-get clean && \
 FROM base as python-dev
 
 ARG PYTHON=python3.10
+ARG PIP=pip3.10
 ARG PYTHON_VER=3.10.13
 
 RUN apt-get update && \
@@ -50,7 +51,9 @@ RUN cd /tmp/Python-${PYTHON_VER} && \
     make altinstall && \
     ldconfig /opt/Python${PYTHON_VER}
 
-RUN ln -sf /usr/local/bin/${PYTHON} /usr/local/bin/python && \
+RUN ln -sf /usr/local/bin/${PIP} /usr/local/bin/pip && \
+    ln -sf /usr/local/bin/${PIP} /usr/local/bin/pip3 && \
+    ln -sf /usr/local/bin/${PYTHON} /usr/local/bin/python && \
     ln -sf /usr/local/bin/${PYTHON} /usr/local/bin/python3
 
 FROM base as python-base
@@ -58,9 +61,7 @@ FROM base as python-base
 ARG PYTHON=python3.10
 
 COPY --from=python-dev /usr/local/lib/${PYTHON} /usr/local/lib/${PYTHON}
-COPY --from=python-dev /usr/local/bin/${PYTHON} /usr/local/bin/${PYTHON}
-COPY --from=python-dev /usr/local/bin/python3 /usr/local/bin/python3
-COPY --from=python-dev /usr/local/bin/python /usr/local/bin/python
+COPY --from=python-dev /usr/local/bin /usr/local/bin
 
 FROM python-base as openfl
 
@@ -110,10 +111,10 @@ RUN apt-get update && \
 WORKDIR /openfl
 COPY . .
 
-# Install pip
-RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py && python get-pip.py && rm -rf get-pip.py
-RUN pip install --no-cache-dir . && \
-    pip uninstall -y setuptools
+# Install OpenFL
+RUN pip install --no-cache-dir install --upgrade pip setuptools
+RUN pip install --no-cache-dir .
+
 WORKDIR /thirdparty
 RUN if [ "$INSTALL_SOURCES" = "yes" ]; then \
     pip install --no-cache-dir pip-licenses; \
