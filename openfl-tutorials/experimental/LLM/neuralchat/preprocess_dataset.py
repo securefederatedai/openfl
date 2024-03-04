@@ -8,7 +8,7 @@ import math
 import hashlib
 
 
-def xml_to_json(input_base_folder, output_folder, verify_hash=1):
+def xml_to_json(input_base_folder, subfolders, output_folder, verify_hash=1):
 
     if not os.path.exists(input_base_folder):
         raise SystemExit(f"The folder '{input_base_folder}' does not exist.")
@@ -17,11 +17,9 @@ def xml_to_json(input_base_folder, output_folder, verify_hash=1):
     test_data = []
     train_count, test_count = 0, 0
 
-    subfolders = ["1_CancerGov_QA", "2_GARD_QA", "3_GHR_QA", "4_MPlus_Health_Topics_QA",
-                  "5_NIDDK_QA", "6_NINDS_QA", "7_SeniorHealth_QA", "8_NHLBI_QA_XML", "9_CDC_QA"]
-
     if verify_hash == 1:
-        verify_hashes(input_base_folder, subfolders)
+        verify_aggregated_MedQuAD_hashes(input_base_folder, subfolders,
+                                         expected_hash='9d645c469ba37eb9ec2e121ae6ac90fbebccfb91f2aff7ffaabc0531f2ede54ab4c91bea775922e5910b276340c040e8')
 
     for subfolder in subfolders:
         folder_path = os.path.join(input_base_folder, subfolder)
@@ -88,38 +86,36 @@ def save_json(data, filename):
         json.dump(data, f, ensure_ascii=False, indent=4)
 
 
-def compute_hash(file_path, hash_name='sha256'):
-    """Compute the hash of a single file."""
+def compute_hash(file_path, hash_name='sha384'):
+    """Compute the hash of a single file using SHA-384."""
     hash_func = getattr(hashlib, hash_name)()
     with open(file_path, 'rb') as f:
-        for chunk in iter(lambda: f.read(4096), b''):
+        for chunk in iter(lambda: f.read(8192), b''):
             hash_func.update(chunk)
     return hash_func.hexdigest()
 
 
-def verify_hashes(input_base_folder, dir_list, hash_file='./hashes.txt'):
-    """Verify the hashes of files against the saved hash records."""
-    # Load the saved hashes
-    saved_hashes = {}
-    with open(hash_file, 'r') as f:
-        for line in f:
-            if line.startswith('Directory:'):
-                directory = line.strip().split(": ")[1]
-            elif line.strip():
-                file_path, file_hash = line.strip().split(': ')
-                saved_hashes[file_path] = file_hash
-
-    # Verify each file's hash
+def verify_aggregated_MedQuAD_hashes(input_base_folder, dir_list, expected_hash):
+    """Verify the aggregated hash of all files against a single, hardcoded hash."""
+    aggregated_hash_func = hashlib.sha384()
+    
     for sub_directory in dir_list:
         directory = os.path.join(input_base_folder, sub_directory)
         if os.path.isdir(directory):
             for root, _, files in os.walk(directory):
                 for file in files:
                     file_path = os.path.join(root, file)
-                    current_hash = compute_hash(file_path)
-                    if file_path in saved_hashes and saved_hashes[file_path] != current_hash:
-                        raise SystemError(f"Verification failed for {file_path}. The file may be corrupted or tampered with.")
+                    file_hash = compute_hash(file_path)
+                    aggregated_hash_func.update(file_hash.encode('utf-8'))
         else:
             raise SystemError(f"{directory} does not exist")
-    print("Verification passed")
+
+    # Compute the aggregated hash
+    aggregated_hash = aggregated_hash_func.hexdigest()
+
+    # Compare the aggregated hash with the expected, hardcoded hash
+    if aggregated_hash != expected_hash:
+        raise SystemError("Verification failed. Downloaded hash doesn\'t match expected file hash.")
+    else:
+        print("Verification passed")
     
