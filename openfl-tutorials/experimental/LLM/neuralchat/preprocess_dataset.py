@@ -122,3 +122,4 @@ def verify_hashes(input_base_folder, dir_list, hash_file='./hashes.txt'):
         else:
             raise SystemError(f"{directory} does not exist")
     print("Verification passed")
+    
