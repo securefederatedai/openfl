@@ -23,19 +23,23 @@ logger = logging.getLogger(__name__)
 
 
 class Director:
-    """
-    Director class. The Director is the central node of the federation (Director-Based Workflow).
+    """Director class. The Director is the central node of the federation (Director-Based Workflow).
     
-    Args:
-        tls (bool) :
-        root_certificate (Union[Path, str]) :
-        private_key (Union[Path, str]) :
-        certificate (Union[Path, str]) :
-        sample_shape (list) :
-        target_shape (list) :
-        review_plan_callback (Union[None, Callable]) :
-        envoy_health_check_period (int) :
-        install_requirements (bool) :
+    Attributes:
+        tls (bool): A flag indicating if TLS should be used for connections.
+        root_certificate (Union[Path, str]): The path to the root certificate for TLS.
+        private_key (Union[Path, str]): The path to the private key for TLS.
+        certificate (Union[Path, str]): The path to the certificate for TLS.
+        sample_shape (list): The shape of the sample data.
+        target_shape (list): The shape of the target data.
+        review_plan_callback (Union[None, Callable]): A callback function for reviewing the plan.
+        envoy_health_check_period (int): The period for health check of envoys in seconds.
+        install_requirements (bool): A flag indicating if the requirements should be installed.
+        _shard_registry (dict): A dictionary to store the shard registry.
+        experiments_registry (ExperimentsRegistry): An object of ExperimentsRegistry to store the experiments.
+        col_exp_queues (defaultdict): A defaultdict to store the experiment queues for collaborators.
+        col_exp (dict): A dictionary to store the experiments for collaborators.
+        logger (Logger): A logger for logging activities.
     """
 
     def __init__(
@@ -50,7 +54,19 @@ class Director:
             envoy_health_check_period: int = 60,
             install_requirements: bool = False
     ) -> None:
-        """Initialize a director object."""
+        """Initialize the Director object.
+
+        Args:
+            tls (bool, optional): A flag indicating if TLS should be used for connections. Defaults to True.
+            root_certificate (Union[Path, str], optional): The path to the root certificate for TLS. Defaults to None.
+            private_key (Union[Path, str], optional): The path to the private key for TLS. Defaults to None.
+            certificate (Union[Path, str], optional): The path to the certificate for TLS. Defaults to None.
+            sample_shape (list, optional): The shape of the sample data. Defaults to None.
+            target_shape (list, optional): The shape of the target data. Defaults to None.
+            review_plan_callback (Union[None, Callable], optional): A callback function for reviewing the plan. Defaults to None.
+            envoy_health_check_period (int, optional): The period for health check of envoys in seconds. Defaults to 60.
+            install_requirements (bool, optional): A flag indicating if the requirements should be installed. Defaults to False.
+        """
         self.sample_shape, self.target_shape = sample_shape, target_shape
         self._shard_registry = {}
         self.tls = tls
@@ -65,14 +81,13 @@ class Director:
         self.install_requirements = install_requirements
 
     def acknowledge_shard(self, shard_info: dict) -> bool:
-        """
-        Save shard info to shard registry if it's acceptable.
+        """Save shard info to shard registry if it's acceptable.
 
         Args:
-            shard_info (dict) : The shard info dictionary should be able to store registries. 
+            shard_info (dict): The shard info dictionary should be able to store registries. 
 
         Returns:
-            is_accepted (bool) : Bool value to accept o deny the addition of the shard info.
+            is_accepted (bool): Bool value to accept o deny the addition of the shard info.
         """
         is_accepted = False
         if (self.sample_shape != shard_info['sample_shape']
@@ -98,15 +113,14 @@ class Director:
             collaborator_names: Iterable[str],
             experiment_archive_path: Path,
     ) -> bool:
-        """
-        Set new experiment.
+        """Set new experiment.
         
         Args:
-            experiment_name (str) : String id for experiment.
-            sender_name (str) : The name of the sender.
-            tensor_dict (dict) : Dictionary of tensors.
-            collaborator_names (Iterable[str]) : Names of collaborators.
-            experiment_archive_path (Path) : Path of the experiment.
+            experiment_name (str): String id for experiment.
+            sender_name (str): The name of the sender.
+            tensor_dict (dict): Dictionary of tensors.
+            collaborator_names (Iterable[str]): Names of collaborators.
+            experiment_archive_path (Path): Path of the experiment.
 
         Returns:
             bool : Boolean returned if the experiment register was successful.
@@ -126,16 +140,14 @@ class Director:
             self,
             experiment_name: str,
             caller: str):
-        """
-        Get experiment status.
+        """Get experiment status.
 
         Args:
-            experiment_name (str) : String id for experiment.
-            caller (str) : String id for experiment owner.
+            experiment_name (str): String id for experiment.
+            caller (str): String id for experiment owner.
 
         Returns:
             str: The status of the experiment can be one of the following:
-
                 - PENDING = 'pending'
                 - FINISHED = 'finished'
                 - IN_PROGRESS = 'in_progress'
@@ -149,19 +161,18 @@ class Director:
         return self.experiments_registry[experiment_name].status
 
     def get_trained_model(self, experiment_name: str, caller: str, model_type: str):
-        """
-        Get trained model.
+        """Get trained model.
 
         Args:
-            experiment_name (str) : String id for experiment.
-            caller (str) : String id for experiment owner.
-            model_type (str) : The type of the model.
+            experiment_name (str): String id for experiment.
+            caller (str): String id for experiment owner.
+            model_type (str): The type of the model.
 
         Returns:
             None: One of the following: [No experiment data in the stash] or [Aggregator have no aggregated model to return]
                 or [Unknown model type required].
-            dict: Dictionary of tensors from the aggregator when the model type is
-                  'best' or 'last'.     
+            dict: Dictionary of tensors from the aggregator when the model type is 
+                'best' or 'last'.     
         """
         if (experiment_name not in self.experiments_registry
                 or caller not in self.experiments_registry[experiment_name].users):
@@ -183,11 +194,10 @@ class Director:
             return None
 
     def get_experiment_data(self, experiment_name: str) -> Path:
-        """
-        Get experiment data.
+        """Get experiment data.
 
         Args:
-            experiment_name (str) : String id for experiment.
+            experiment_name (str): String id for experiment.
 
         Returns:
             str: Path of archive.
@@ -195,11 +205,10 @@ class Director:
         return self.experiments_registry[experiment_name].archive_path
 
     async def wait_experiment(self, envoy_name: str) -> str:
-        """
-        Wait an experiment.
+        """Wait an experiment.
 
         Args:
-            envoy_name (str) : The name of the envoy.
+            envoy_name (str): The name of the envoy.
 
         Returns:
             str: The name of the experiment on the queue. 
@@ -228,15 +237,14 @@ class Director:
         return [shard_status['shard_info'] for shard_status in self._shard_registry.values()]
 
     async def stream_metrics(self, experiment_name: str, caller: str):
-        """
-        Stream metrics from the aggregator.
+        """Stream metrics from the aggregator.
 
         This method takes next metric dictionary from the aggregator's queue
         and returns it to the caller.
 
         Args:
-            experiment_name (str) : String id for experiment.
-            caller (str) : String id for experiment owner.
+            experiment_name (str): String id for experiment.
+            caller (str): String id for experiment owner.
 
         Returns:
             metric_dict: {'metric_origin','task_name','metric_name','metric_value','round'}
@@ -268,28 +276,25 @@ class Director:
             yield None
 
     def remove_experiment_data(self, experiment_name: str, caller: str):
-        """        
-        Remove experiment data from stash.
+        """Remove experiment data from stash.
         
         Args:
-            experiment_name (str) : String id for experiment.
-            caller (str) : String id for experiment owner.
+            experiment_name (str): String id for experiment.
+            caller (str): String id for experiment owner.
         """
         if (experiment_name in self.experiments_registry
                 and caller in self.experiments_registry[experiment_name].users):
             self.experiments_registry.remove(experiment_name)
 
     def set_experiment_failed(self, *, experiment_name: str, collaborator_name: str):
-        """
-        Envoys Set experiment failed RPC.
+        """Envoys Set experiment failed RPC.
         
         Args:
-            experiment_name (str) : String id for experiment.
-            collaborator_name (str) : String id for collaborator.
+            experiment_name (str): String id for experiment.
+            collaborator_name (str): String id for collaborator.
 
         Return:
             None
-        
         """
         
         """
@@ -318,8 +323,7 @@ class Director:
             is_experiment_running: bool,
             cuda_devices_status: list = None,
     ) -> int:
-        """
-        Accept health check from envoy.
+        """Accept health check from envoy.
 
         Args:
             envoy_name (str): String id for envoy.
@@ -348,8 +352,7 @@ class Director:
         return self.envoy_health_check_period
 
     def get_envoys(self) -> list:
-        """
-        Get a status information about envoys.
+        """Get a status information about envoys.
 
         Returns:
             list: List with the status information about envoys.
@@ -366,11 +369,10 @@ class Director:
         return self._shard_registry.values()
 
     def get_experiments_list(self, caller: str) -> list:
-        """
-        Get experiments list for specific user.
+        """Get experiments list for specific user.
         
         Args:
-            caller (str) : String id for experiment owner.
+            caller (str): String id for experiment owner.
         Returns:
             list: List with the info of the experiment for specific user.
         """
@@ -396,8 +398,7 @@ class Director:
         return result
 
     def get_experiment_description(self, caller: str, name: str) -> dict:
-        """
-        Get a experiment information by name for specific user.
+        """Get a experiment information by name for specific user.
 
         Args:
             caller (str): String id for experiment owner.
