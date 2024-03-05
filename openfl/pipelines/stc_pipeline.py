@@ -12,26 +12,30 @@ from .pipeline import Transformer
 
 
 class SparsityTransformer(Transformer):
-    """A transformer class to sparsify input data."""
+    """A transformer class to sparsify input data.
 
+    Attributes:
+        p (float): The sparsity ratio.
+        lossy (bool): A flag indicating if the transformation is lossy.
+    """
+    
     def __init__(self, p=0.01):
         """Initialize.
 
         Args:
-            p (float): sparsity ratio (Default=0.01)
+            p (float, optional): The sparsity ratio. Defaults to 0.01.
         """
         self.lossy = True
         self.p = p
 
     def forward(self, data, **kwargs):
-        """
-        Sparsify data and pass over only non-sparsified elements by reducing the array size.
+        """Sparsify data and pass over only non-sparsified elements by reducing the array size.
 
         Args:
             data: an numpy array from the model tensor_dict.
 
         Returns:
-            sparse_data: a flattened, sparse representation of the input tensor
+            sparse_data: a flattened, sparse representation of the input tensor.
             metadata: dictionary to store a list of meta information.
         """
         metadata = {'int_list': list(data.shape)}
@@ -51,7 +55,7 @@ class SparsityTransformer(Transformer):
         Args:
             data: an numpy array with non-zero values.
             metadata: dictionary to contain information for recovering back
-             to original data array.
+                to original data array.
 
         Returns:
             recovered_data: an numpy array with original shape.
@@ -87,7 +91,11 @@ class SparsityTransformer(Transformer):
 
 
 class TernaryTransformer(Transformer):
-    """A transformer class to ternerize input data."""
+    """A transformer class to ternarize input data.
+
+    Attributes:
+        lossy (bool): A flag indicating if the transformation is lossy.
+    """
 
     def __init__(self):
         """Initialize."""
@@ -116,10 +124,13 @@ class TernaryTransformer(Transformer):
 
         Args:
             data: an numpy array with non-zero values.
+            metadata: dictionary to contain information for recovering back
+                to original data array.
 
         Returns:
-            metadata: dictionary to contain information for recovering back to original data array.
-            data (return): an numpy array with original numerical type.
+            metadata: dictionary to contain information for recovering back 
+                to original data array.
+            data: an numpy array with original numerical type.
         """
         # TODO
         import copy
@@ -135,12 +146,11 @@ class TernaryTransformer(Transformer):
         """Create look-up table for conversion between floating and integer types.
 
         Args:
-            np_array:
+            np_array: A numpy array. 
 
         Returns:
-            int_array:
-            int_to_float_map:
-
+            int_array: The input numpy float array converted to an integer array.
+            int_to_float_map: The dictionary mapping integers to floats.
         """
         flatten_array = np_array.reshape(-1)
         unique_value_array = np.unique(flatten_array)
@@ -159,7 +169,11 @@ class TernaryTransformer(Transformer):
 
 
 class GZIPTransformer(Transformer):
-    """A transformer class to losslessly compress data."""
+    """GZIP transformer class for losslessly compressing data.
+
+    Attributes:
+        lossy (bool): A flag indicating if the transformation is lossy.
+    """
 
     def __init__(self):
         """Initialize."""
@@ -169,12 +183,12 @@ class GZIPTransformer(Transformer):
         """Compress data into numpy of float32.
 
         Args:
-            data: an numpy array with non-zero values
+            data: an numpy array with non-zero values.
 
         Returns:
-            compressed_bytes :
-            metadata: dictionary to contain information for recovering back to original data array
-
+            compressed_bytes: The compressed data.
+            metadata: dictionary to contain information for recovering back 
+                to original data array
         """
         bytes_ = data.astype(np.float32).tobytes()
         compressed_bytes = gz.compress(bytes_)
@@ -185,11 +199,12 @@ class GZIPTransformer(Transformer):
         """Decompress data into numpy of float32.
 
         Args:
-            data: an numpy array with non-zero values
-            metadata: dictionary to contain information for recovering back to original data array
+            data: an numpy array with non-zero values.
+            metadata: dictionary to contain information for recovering back 
+                to original data array.
 
         Returns:
-            data:
+            data: A numpy array with the original numerical type after decompression.
         """
         decompressed_bytes_ = gz.decompress(data)
         data = np.frombuffer(decompressed_bytes_, dtype=np.float32)
@@ -197,17 +212,22 @@ class GZIPTransformer(Transformer):
 
 
 class STCPipeline(TransformationPipeline):
-    """A pipeline class to compress data lossly using sparsity and ternerization methods."""
+    """A pipeline class to compress data lossly using sparsity and ternarization methods.
+
+    Attributes:
+        p (float): The sparsity factor.
+    """
 
     def __init__(self, p_sparsity=0.1, n_clusters=6, **kwargs):
         """Initialize a pipeline of transformers.
 
         Args:
-            p_sparsity (float): Sparsity factor (Default=0.01)
-            n_cluster (int): Number of K-Means clusters (Default=6)
+            p_sparsity (float, optional): The sparsity factor. Defaults to 0.1.
+            n_clusters (int, optional): The number of K-mean clusters. Defaults to 6.
+            **kwargs: Additional keyword arguments for the pipeline.
 
         Returns:
-            Data compression transformer pipeline object
+            Data compression transformer pipeline object.
         """
         # instantiate each transformer
         self.p = p_sparsity
