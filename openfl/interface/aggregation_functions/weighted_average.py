@@ -20,7 +20,7 @@ class WeightedAverage(AggregationFunction):
         """Aggregate tensors.
 
         Args:
-            local_tensors(list[openfl.utilities.LocalTensor]): List of local tensors to aggregate.
+            local_tensors (list[openfl.utilities.LocalTensor]): List of local tensors to aggregate.
             db_iterator: iterator over history of all tensors. Columns:
                 - 'tensor_name': name of the tensor.
                     Examples for `torch.nn.Module`s: 'conv1.weight', 'fc2.bias'.

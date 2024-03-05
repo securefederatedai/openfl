@@ -25,7 +25,11 @@ logger = logging.getLogger(__name__)
 @group()
 @pass_context
 def director(context):
-    """Manage Federated Learning Director."""
+    """Manage Federated Learning Director.
+
+    Args:
+        context (click.core.Context): Click context.
+    """
     context.obj['group'] = 'director'
 
 
@@ -44,7 +48,15 @@ def director(context):
         type=ClickPath(exists=True), default=None,
         help='Path to a signed certificate')
 def start(director_config_path, tls, root_certificate, private_key, certificate):
-    """Start the director service."""
+    """Start the director service.
+
+    Args:
+        director_config_path (str): The director config file path.
+        tls (bool): Use TLS or not.
+        root_certificate (str): Path to a root CA cert.
+        private_key (str): Path to a private key.
+        certificate (str): Path to a signed certificate.
+    """
 
     from openfl.component.director import Director
     from openfl.transport import DirectorGRPCServer
@@ -119,7 +131,11 @@ def start(director_config_path, tls, root_certificate, private_key, certificate)
 @option('-p', '--director-path', required=True,
         help='The director path', type=ClickPath())
 def create(director_path):
-    """Create a director workspace."""
+    """Create a director workspace.
+    
+    Args:
+        director_path (str): The director path.
+    """
     if is_directory_traversal(director_path):
         click.echo('The director path is out of the openfl workspace scope.')
         sys.exit(1)

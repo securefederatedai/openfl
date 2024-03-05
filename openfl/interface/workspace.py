@@ -20,12 +20,23 @@ from click import Path as ClickPath
 @group()
 @pass_context
 def workspace(context):
-    """Manage Federated Learning Workspaces."""
+    """Manage Federated Learning Workspaces.
+
+    Args:
+        context: The context in which the command is being invoked.
+    """
     context.obj['group'] = 'workspace'
 
 
 def is_directory_traversal(directory: Union[str, Path]) -> bool:
-    """Check for directory traversal."""
+    """Check for directory traversal.
+
+    Args:
+        directory (Union[str, Path]): The directory to check.
+
+    Returns:
+        bool: True if directory traversal is detected, False otherwise.
+    """
     cwd = os.path.abspath(os.getcwd())
     requested_path = os.path.relpath(directory, start=cwd)
     requested_path = os.path.abspath(requested_path)
@@ -34,7 +45,11 @@ def is_directory_traversal(directory: Union[str, Path]) -> bool:
 
 
 def create_dirs(prefix):
-    """Create workspace directories."""
+    """Create workspace directories.
+
+    Args:
+        prefix: The prefix for the directories to be created.
+    """
     from shutil import copyfile
 
     from openfl.interface.cli_helper import WORKSPACE
@@ -51,7 +66,12 @@ def create_dirs(prefix):
 
 
 def create_temp(prefix, template):
-    """Create workspace templates."""
+    """Create workspace templates.
+
+    Args:
+        prefix: The prefix for the directories to be created.
+        template: The template to use for creating the workspace.
+    """
     from shutil import ignore_patterns
 
     from openfl.interface.cli_helper import copytree
@@ -64,7 +84,11 @@ def create_temp(prefix, template):
 
 
 def get_templates():
-    """Grab the default templates from the distribution."""
+    """Grab the default templates from the distribution.
+
+    Returns:
+        list: A list of default templates.
+    """
     from openfl.interface.cli_helper import WORKSPACE
 
     return [d.name for d in WORKSPACE.glob('*') if d.is_dir()
@@ -76,7 +100,12 @@ def get_templates():
         help='Workspace name or path', type=ClickPath())
 @option('--template', required=True, type=Choice(get_templates()))
 def create_(prefix, template):
-    """Create the workspace."""
+    """Create the workspace.
+
+    Args:
+        prefix: The prefix for the directories to be created.
+        template: The template to use for creating the workspace.
+    """
     if is_directory_traversal(prefix):
         echo('Workspace name or path is out of the openfl workspace scope.')
         sys.exit(1)
@@ -84,7 +113,12 @@ def create_(prefix, template):
 
 
 def create(prefix, template):
-    """Create federated learning workspace."""
+    """Create federated learning workspace.
+
+    Args:
+        prefix: The prefix for the directories to be created.
+        template: The template to use for creating the workspace.
+    """
     from os.path import isfile
     from subprocess import check_call  # nosec
     from sys import executable
@@ -125,7 +159,11 @@ def create(prefix, template):
              'You may pass several options in quotation marks alongside with arguments, '
              'e.g. -o "--find-links source.site"')
 def export_(pip_install_options: Tuple[str]):
-    """Export federated learning workspace."""
+    """Export federated learning workspace.
+
+    Args:
+        pip_install_options (Tuple[str]): Options for remote pip install.
+    """
     from os import getcwd
     from os import makedirs
     from os.path import isfile
@@ -191,7 +229,11 @@ def export_(pip_install_options: Tuple[str]):
         help='Zip file containing workspace to import',
         type=ClickPath(exists=True))
 def import_(archive):
-    """Import federated learning workspace."""
+    """Import federated learning workspace.
+
+    Args:
+        archive: The archive file containing the workspace to import.
+    """
     from os import chdir
     from os.path import basename
     from os.path import isfile
@@ -339,6 +381,14 @@ def certify():
 
 
 def _get_requirements_dict(txtfile):
+    """Get requirements from a text file.
+
+    Args:
+        txtfile (str): The text file containing the requirements.
+
+    Returns:
+        snapshot_dict (dict): A dictionary containing the requirements.
+    """
     with open(txtfile, 'r', encoding='utf-8') as snapshot:
         snapshot_dict = {}
         for line in snapshot:
@@ -352,6 +402,14 @@ def _get_requirements_dict(txtfile):
 
 
 def _get_dir_hash(path):
+    """Get the hash of a directory.
+
+    Args:
+        path (str): The path of the directory.
+
+    Returns:
+        str: The hash of the directory.
+    """
     from hashlib import sha256
     hash_ = sha256()
     hash_.update(path.encode('utf-8'))
@@ -369,14 +427,18 @@ def _get_dir_hash(path):
         default=True)
 @pass_context
 def dockerize_(context, base_image, save):
-    """
-    Pack the workspace as a Docker image.
+    """Pack the workspace as a Docker image.
 
     This command is the alternative to `workspace export`.
     It should be called after plan initialization from the workspace dir.
 
     User is expected to be in docker group.
     If your machine is behind a proxy, make sure you set it up in ~/.docker/config.json.
+
+    Args:
+        context: The context in which the command is being invoked.
+        base_image (str): The tag for openfl base image.
+        save (bool): Whether to save the Docker image into the workspace.
     """
     import docker
     import sys
@@ -469,8 +531,7 @@ def dockerize_(context, base_image, save):
 @pass_context
 def graminize_(context, signing_key: Path, enclave_size: str, tag: str,
                pip_install_options: Tuple[str], save: bool, rebuild: bool) -> None:
-    """
-    Build gramine app inside a docker image.
+    """Build gramine app inside a docker image.
 
     This command is the alternative to `workspace export`.
     It should be called after `fx plan initialize` inside the workspace dir.
@@ -481,6 +542,15 @@ def graminize_(context, signing_key: Path, enclave_size: str, tag: str,
     TODO:
     1. gramine-direct, check if a key is provided
     2. make a standalone function with `export` parametr
+
+    Args:
+        context: The context in which the command is being invoked.
+        signing_key (Path): A 3072-bit RSA private key (PEM format) is required for signing the manifest.
+        enclave_size (str): Memory size of the enclave, defined as number with size suffix.
+        tag (str): Tag of the built image.
+        pip_install_options (Tuple[str]): Options for remote pip install.
+        save (bool): Whether to dump the Docker image to an archive.
+        rebuild (bool): Whether to build images with `--no-cache`.
     """
     def open_pipe(command: str):
         echo(f'\n 📦 Executing command:\n{command}\n')
@@ -549,6 +619,10 @@ def apply_template_plan(prefix, template):
 
     This function unfolds default values from template plan configuration
     and writes the configuration to the current workspace.
+
+    Args:
+        prefix: The prefix for the directories to be created.
+        template: The template to use for creating the workspace.
     """
     from openfl.federated.plan import Plan
     from openfl.interface.cli_helper import WORKSPACE
