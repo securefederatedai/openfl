@@ -19,7 +19,11 @@ logger = getLogger(__name__)
 @group()
 @pass_context
 def plan(context):
-    """Manage Federated Learning Plans."""
+    """Manage Federated Learning Plans.
+
+    Args:
+        context (click.core.Context): Click context.
+    """
     context.obj['group'] = 'plan'
 
 
@@ -42,11 +46,18 @@ def plan(context):
         help='GaNDLF Configuration File Path')
 def initialize(context, plan_config, cols_config, data_config,
                aggregator_address, feature_shape, gandlf_config):
-    """
-    Initialize Data Science plan.
+    """Initialize Data Science plan.
 
-    Create a protocol buffer file of the initial model weights for
-     the federation.
+    Create a protocol buffer file of the initial model weights for the federation.
+
+    Args:
+        context (click.core.Context): Click context.
+        plan_config (str): Federated learning plan.
+        cols_config (str): Authorized collaborator list.
+        data_config (str): The data set/shard configuration file.
+        aggregator_address (str): The FQDN of the federation aggregator.
+        feature_shape (str): The input shape to the model.
+        gandlf_config (str): GaNDLF Configuration File Path.
     """
     from pathlib import Path
 
@@ -127,7 +138,11 @@ def initialize(context, plan_config, cols_config, data_config,
 
 # TODO: looks like Plan.method
 def freeze_plan(plan_config):
-    """Dump the plan to YAML file."""
+    """Dump the plan to YAML file.
+
+    Args:
+        plan_config (str): Federated learning plan.
+    """
     from pathlib import Path
 
     from openfl.federated import Plan
@@ -150,11 +165,14 @@ def freeze_plan(plan_config):
         help='Federated learning plan [plan/plan.yaml]',
         default='plan/plan.yaml', type=ClickPath(exists=True))
 def freeze(plan_config):
-    """
-    Finalize the Data Science plan.
+    """Finalize the Data Science plan.
 
     Create a new plan file that embeds its hash in the file name
-    (plan.yaml -> plan_{hash}.yaml) and changes the permissions to read only
+    (plan.yaml -> plan_{hash}.yaml) and changes the permissions to read only.
+
+    Args:
+        plan_config (str): Federated learning plan.
+
     """
     if is_directory_traversal(plan_config):
         echo('Plan config path is out of the openfl workspace scope.')
@@ -163,7 +181,12 @@ def freeze(plan_config):
 
 
 def switch_plan(name):
-    """Switch the FL plan to this one."""
+    """Switch the FL plan to this one.
+    
+    Args:
+        name (str): Name of the Federated learning plan.
+
+    """
     from shutil import copyfile
     from os.path import isfile
 
@@ -203,7 +226,11 @@ def switch_plan(name):
         help='Name of the Federated learning plan',
         default='default', type=str)
 def switch_(name):
-    """Switch the current plan to this plan."""
+    """Switch the current plan to this plan.
+    
+    Args:
+        name (str): Name of the Federated learning plan.
+    """
     switch_plan(name)
 
 
@@ -212,7 +239,11 @@ def switch_(name):
         help='Name of the Federated learning plan',
         default='default', type=str)
 def save_(name):
-    """Save the current plan to this plan and switch."""
+    """Save the current plan to this plan and switch.
+    
+    Args:
+        name (str): Name of the Federated learning plan.
+    """
     from os import makedirs
     from shutil import copyfile
 
@@ -231,7 +262,11 @@ def save_(name):
         help='Name of the Federated learning plan',
         default='default', type=str)
 def remove_(name):
-    """Remove this plan."""
+    """Remove this plan.
+    
+    Args:
+        name (str): Name of the Federated learning plan.
+    """
     from shutil import rmtree
 
     if name != 'default':

@@ -22,7 +22,11 @@ logger = getLogger(__name__)
 @group()
 @pass_context
 def aggregator(context):
-    """Manage Federated Learning Aggregator."""
+    """Manage Federated Learning Aggregator.
+
+    Args:
+        context (click.Context): The context passed from the CLI.
+    """
     context.obj['group'] = 'aggregator'
 
 
@@ -37,7 +41,13 @@ def aggregator(context):
 @option('-s', '--secure', required=False,
         help='Enable Intel SGX Enclave', is_flag=True, default=False)
 def start_(plan, authorized_cols, secure):
-    """Start the aggregator service."""
+    """Start the aggregator service.
+    
+    Args:
+        plan (str): Path to the federated learning plan.
+        authorized_cols (str): Path to the authorized collaborator list.
+        secure (bool): Flag to enable Intel SGX Enclave.
+    """
     from pathlib import Path
 
     from openfl.federated import Plan
@@ -63,11 +73,20 @@ def start_(plan, authorized_cols, secure):
              f' aggregator node [{getfqdn_env()}]',
         default=getfqdn_env())
 def _generate_cert_request(fqdn):
+    """Create aggregator certificate key pair.
+
+    Args:
+        fqdn (str): The fully qualified domain name of aggregator node.
+    """
     generate_cert_request(fqdn)
 
 
 def generate_cert_request(fqdn):
-    """Create aggregator certificate key pair."""
+    """Create aggregator certificate key pair.
+
+    Args:
+        fqdn (str): The fully qualified domain name of aggregator node.
+    """
     from openfl.cryptography.participant import generate_csr
     from openfl.cryptography.io import write_crt
     from openfl.cryptography.io import write_key
@@ -103,7 +122,14 @@ def generate_cert_request(fqdn):
 
 # TODO: function not used
 def find_certificate_name(file_name):
-    """Search the CRT for the actual aggregator name."""
+    """Search the CRT for the actual aggregator name.
+
+    Args:
+        file_name (str): The name of the file to search.
+
+    Returns:
+        str: The name of the aggregator found in the CRT.
+    """
     # This loop looks for the collaborator name in the key
     with open(file_name, 'r', encoding='utf-8') as f:
         for line in f:
@@ -119,11 +145,22 @@ def find_certificate_name(file_name):
         default=getfqdn_env())
 @option('-s', '--silent', help='Do not prompt', is_flag=True)
 def _certify(fqdn, silent):
+    """Sign/certify the aggregator certificate key pair.
+
+    Args:
+        fqdn (str): The fully qualified domain name of aggregator node.
+        silent (bool): Flag to enable silent mode.
+    """
     certify(fqdn, silent)
 
 
 def certify(fqdn, silent):
-    """Sign/certify the aggregator certificate key pair."""
+    """Sign/certify the aggregator certificate key pair.
+
+    Args:
+        fqdn (str): The fully qualified domain name of aggregator node.
+        silent (bool): Flag to enable silent mode.
+    """
     from pathlib import Path
 
     from click import confirm
