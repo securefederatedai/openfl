@@ -15,25 +15,34 @@ from .pipeline import Transformer
 
 
 class KmeansTransformer(Transformer):
-    """A K-means transformer class to quantize input data."""
+    """K-means transformer class for quantizing input data.
+
+    This class is a transformer that uses the K-means method for quantization.
+    
+    Attributes:
+        n_cluster (int): The number of clusters for the K-means.
+        lossy (bool): Indicates if the transformer is lossy.
+    """
 
     def __init__(self, n_cluster=6):
-        """Class initializer.
+        """Initialize KmeansTransformer.
 
         Args:
-            n_cluster (int): Number of clusters for the K-means
+            n_cluster (int, optional): The number of clusters for the K-means. Defaults to 6.
         """
         self.lossy = True
         self.n_cluster = n_cluster
 
     def forward(self, data, **kwargs):
-        """
-        Quantize data into n_cluster levels of values.
+        """Quantize data into n_cluster levels of values.
 
         Args:
-            data: an numpy array from the model tensor_dict
-            data: an numpy array being quantized
-            **kwargs: Variable arguments to pass
+            data: The data to be quantized.
+            **kwargs: Variable arguments to pass.
+
+        Returns:
+            int_array: The quantized data.
+            metadata: The metadata for the quantization.
         """
         metadata = {'int_list': list(data.shape)}
         # clustering
@@ -58,11 +67,11 @@ class KmeansTransformer(Transformer):
         """Recover data array back to the original numerical type and the shape.
 
         Args:
-            data: an flattened numpy array
-            metadata: dictionary to contain information for recovering ack to original data array
+            data: The flattened numpy array.
+            metadata: The dictionary containing information for recovering to original data array.
 
         Returns:
-            data: Numpy array with original numerical type and shape
+            data: The numpy array with original numerical type and shape.
         """
         # convert back to float
         # TODO
@@ -80,11 +89,11 @@ class KmeansTransformer(Transformer):
         """Create look-up table for conversion between floating and integer types.
 
         Args:
-            np_array: A Numpy array
+            np_array: A Numpy array.
 
         Returns:
-            int_array: The input Numpy float array converted to an integer array
-            int_to_float_map
+            int_array: The input Numpy float array converted to an integer array.
+            int_to_float_map: The dictionary mapping integers to floats.
         """
         flatten_array = np_array.reshape(-1)
         unique_value_array = np.unique(flatten_array)
@@ -103,20 +112,25 @@ class KmeansTransformer(Transformer):
 
 
 class GZIPTransformer(Transformer):
-    """A GZIP transformer class to losslessly compress data."""
+    """GZIP transformer class for losslessly compressing data.
+    
+    Attributes:
+        lossy (bool): Indicates if the transformer is lossy.
+    """
 
     def __init__(self):
-        """Initialize."""
+        """Initialize GZIPTransformer."""
         self.lossy = False
 
     def forward(self, data, **kwargs):
         """Compress data into bytes.
 
         Args:
-            data: A Numpy array
+            data: A Numpy array.
 
         Returns:
-            GZIP compressed data object
+            compressed_bytes_: The GZIP compressed data object.
+            metadata: An empty dictionary.
         """
         bytes_ = data.astype(np.float32).tobytes()
         compressed_bytes_ = gz.compress(bytes_)
@@ -128,11 +142,11 @@ class GZIPTransformer(Transformer):
 
         Args:
             data: Compressed GZIP data
-            metadata:
+            metadata: An empty dictionary.
             **kwargs: Additional parameters to pass to the function
 
         Returns:
-            data: Numpy array
+            data: The decompressed data as a numpy array.
         """
         decompressed_bytes_ = gz.decompress(data)
         data = np.frombuffer(decompressed_bytes_, dtype=np.float32)
@@ -140,17 +154,20 @@ class GZIPTransformer(Transformer):
 
 
 class KCPipeline(TransformationPipeline):
-    """A pipeline class to compress data lossly using k-means and GZIP methods."""
+    """A pipeline class to compress data lossly using k-means and GZIP methods.
+    
+    Attributes:
+        p (float): The amount of sparsity for compression.
+        n_cluster (int): The number of K-mean clusters.
+    """
 
     def __init__(self, p_sparsity=0.01, n_clusters=6, **kwargs):
         """Initialize a pipeline of transformers.
 
         Args:
-            p_sparsity (float): Amount of sparsity for compression (Default = 0.01)
-            n_clusters (int): Number of K-mean cluster
-
-        Return:
-            Transformer class object
+            p_sparsity (float, optional): The amount of sparsity for compression. Defaults to 0.01.
+            n_clusters (int, optional): The number of K-mean clusters. Defaults to 6.
+            **kwargs: Additional keyword arguments.
         """
         # instantiate each transformer
         self.p = p_sparsity
