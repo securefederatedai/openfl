@@ -26,11 +26,29 @@ logger = logging.getLogger(__name__)
 
 
 class ShardDirectorClient:
-    """The internal director client class."""
+    """The internal director client class.
+    
+    This class communicates with the director to manage the shard's participation in the federation.
+
+    Attributes:
+        shard_name (str): The name of the shard.
+        stub (director_pb2_grpc.DirectorStub): The gRPC stub for communication with the director.
+
+    """
 
     def __init__(self, *, director_host, director_port, shard_name, tls=True,
                  root_certificate=None, private_key=None, certificate=None) -> None:
-        """Initialize a shard director client object."""
+        """Initialize a shard director client object.
+        
+        Args:
+            director_host (str): The host of the director.
+            director_port (int): The port of the director.
+            shard_name (str): The name of the shard.
+            tls (bool): Whether to use TLS for the connection.
+            root_certificate (str): The path to the root certificate for the TLS connection.
+            private_key (str): The path to the private key for the TLS connection.
+            certificate (str): The path to the certificate for the TLS connection.
+        """
         self.shard_name = shard_name
         director_addr = f'{director_host}:{director_port}'
         logger.info(f'Director address: {director_addr}')
@@ -59,7 +77,15 @@ class ShardDirectorClient:
 
     def report_shard_info(self, shard_descriptor: Type[ShardDescriptor],
                           cuda_devices: tuple) -> bool:
-        """Report shard info to the director."""
+        """Report shard info to the director.
+        
+        Args:
+            shard_descriptor (Type[ShardDescriptor]): The descriptor of the shard.
+            cuda_devices (tuple): The CUDA devices available on the shard.
+
+        Returns:
+            acknowledgement (bool): Whether the report was accepted by the director.
+        """
         logger.info('Send report UpdateShardInfo')
         # True considered as successful registration
         shard_info = director_pb2.ShardInfo(
@@ -79,7 +105,11 @@ class ShardDirectorClient:
         return acknowledgement.accepted
 
     def wait_experiment(self):
-        """Wait an experiment data from the director."""
+        """Wait an experiment data from the director.
+        
+        Returns:
+            experiment_name (str): The name of the experiment.
+        """
         logger.info('Send WaitExperiment request')
         response = self.stub.WaitExperiment(self._get_experiment_data())
         logger.info(f'WaitExperiment response has received: {response}')
@@ -90,7 +120,15 @@ class ShardDirectorClient:
         return experiment_name
 
     def get_experiment_data(self, experiment_name):
-        """Get an experiment data from the director."""
+        """Get an experiment data from the director.
+        
+        Args:
+            experiment_name (str): The name of the experiment.
+
+        Returns:
+            data_stream (grpc._channel._MultiThreadedRendezvous): The data stream of the experiment data.
+
+        """
         logger.info(f'Request experiment {experiment_name}')
         request = director_pb2.GetExperimentDataRequest(
             experiment_name=experiment_name,
@@ -106,7 +144,13 @@ class ShardDirectorClient:
             error_code: int = 1,
             error_description: str = ''
     ):
-        """Set the experiment failed."""
+        """Set the experiment failed.
+        
+        Args:
+            experiment_name (str): The name of the experiment.
+            error_code (int, optional): The error code. Defaults to 1.
+            error_description (str, optional): The description of the error. Defaults to ''.
+        """
         request = director_pb2.SetExperimentFailedRequest(
             experiment_name=experiment_name,
             collaborator_name=self.shard_name,
@@ -116,7 +160,11 @@ class ShardDirectorClient:
         self.stub.SetExperimentFailed(request)
 
     def _get_experiment_data(self):
-        """Generate the experiment data request."""
+        """Generate the experiment data request.
+        
+        Returns:
+            director_pb2.WaitExperimentRequest: The request for experiment data.
+        """
         return director_pb2.WaitExperimentRequest(collaborator_name=self.shard_name)
 
     def send_health_check(
@@ -125,7 +173,16 @@ class ShardDirectorClient:
             is_experiment_running: bool,
             cuda_devices_info: List[dict] = None,
     ) -> int:
-        """Send envoy health check."""
+        """Send envoy health check.
+        
+        Args:
+            envoy_name (str): The name of the envoy.
+            is_experiment_running (bool): Whether an experiment is currently running.
+            cuda_devices_info (List[dict], optional): Information about the CUDA devices. Defaults to None.
+
+        Returns:
+            health_check_period (int): The period for health checks.
+        """
         status = director_pb2.UpdateEnvoyStatusRequest(
             name=envoy_name,
             is_experiment_running=is_experiment_running,
@@ -158,7 +215,13 @@ class ShardDirectorClient:
 
 
 class DirectorClient:
-    """Director client class for users."""
+    """Director client class for users.
+    
+    This class communicates with the director to manage the user's participation in the federation.
+
+    Attributes:
+        stub (director_pb2_grpc.DirectorStub): The gRPC stub for communication with the director.
+    """
 
     def __init__(
             self, *,
@@ -170,7 +233,17 @@ class DirectorClient:
             private_key: str,
             certificate: str,
     ) -> None:
-        """Initialize director client object."""
+        """Initialize director client object.
+        
+        Args:
+            client_id (str): The ID of the client.
+            director_host (str): The host of the director.
+            director_port (int): The port of the director.
+            tls (bool): Whether to use TLS for the connection.
+            root_certificate (str): The path to the root certificate for the TLS connection.
+            private_key (str): The path to the private key for the TLS connection.
+            certificate (str): The path to the certificate for the TLS connection.
+        """
         director_addr = f'{director_host}:{director_port}'
         if not tls:
             if not client_id:
@@ -205,7 +278,17 @@ class DirectorClient:
 
     def set_new_experiment(self, name, col_names, arch_path,
                            initial_tensor_dict=None):
-        """Send the new experiment to director to launch."""
+        """Send the new experiment to director to launch.
+        
+        Args:
+            name (str): The name of the experiment.
+            col_names (List[str]): The names of the collaborators.
+            arch_path (str): The path to the architecture.
+            initial_tensor_dict (dict, optional): The initial tensor dictionary. Defaults to None.
+
+        Returns:
+            resp (director_pb2.SetNewExperimentResponse): The response from the director.
+        """
         logger.info('SetNewExperiment')
         if initial_tensor_dict:
             model_proto = construct_model_proto(initial_tensor_dict, 0, NoCompressionPipeline())
@@ -219,6 +302,19 @@ class DirectorClient:
             return resp
 
     def _get_experiment_info(self, arch_path, name, col_names, model_proto):
+        """Generate the experiment data request.
+
+        This method generates a stream of experiment data to be sent to the director.
+
+        Args:
+            arch_path (str): The path to the architecture.
+            name (str): The name of the experiment.
+            col_names (List[str]): The names of the collaborators.
+            model_proto (ModelProto): The initial model.
+
+        Yields:
+            director_pb2.ExperimentInfo: The experiment data.
+        """
         with open(arch_path, 'rb') as arch:
             max_buffer_size = 2 * 1024 * 1024
             chunk = arch.read(max_buffer_size)
@@ -237,19 +333,38 @@ class DirectorClient:
                 chunk = arch.read(max_buffer_size)
 
     def get_experiment_status(self, experiment_name):
-        """Check if the experiment was accepted by the director"""
+        """Check if the experiment was accepted by the director.
+        
+        Args:
+            experiment_name (str): The name of the experiment.
+
+        Returns:
+            resp (director_pb2.GetExperimentStatusResponse): The response from the director.
+        """
         logger.info('Get Experiment Status')
         request = director_pb2.GetExperimentStatusRequest(experiment_name=experiment_name)
         resp = self.stub.GetExperimentStatus(request)
         return resp
 
     def get_dataset_info(self):
-        """Request the dataset info from the director."""
+        """Request the dataset info from the director.
+
+        Returns:
+            Tuple[List[int], List[int]]: The sample shape and target shape of the dataset.
+        """
         resp = self.stub.GetDatasetInfo(director_pb2.GetDatasetInfoRequest())
         return resp.shard_info.sample_shape, resp.shard_info.target_shape
 
     def _get_trained_model(self, experiment_name, model_type):
-        """Get trained model RPC."""
+        """Get trained model RPC.
+        
+        Args:
+            experiment_name (str): The name of the experiment.
+            model_type (director_pb2.GetTrainedModelRequest.ModelType): The type of the model.
+
+        Returns:
+            tensor_dict (Dict[str, numpy.ndarray]): The trained model.
+        """
         get_model_request = director_pb2.GetTrainedModelRequest(
             experiment_name=experiment_name,
             model_type=model_type,
@@ -262,17 +377,38 @@ class DirectorClient:
         return tensor_dict
 
     def get_best_model(self, experiment_name):
-        """Get best model method."""
+        """Get best model method.
+        
+        Args:
+            experiment_name (str): The name of the experiment.
+
+        Returns:
+            Dict[str, numpy.ndarray]: The best model.
+        """
         model_type = director_pb2.GetTrainedModelRequest.BEST_MODEL
         return self._get_trained_model(experiment_name, model_type)
 
     def get_last_model(self, experiment_name):
-        """Get last model method."""
+        """Get last model method.
+
+        Args:
+            experiment_name (str): The name of the experiment.
+
+        Returns:
+            Dict[str, numpy.ndarray]: The last model.
+        """
         model_type = director_pb2.GetTrainedModelRequest.LAST_MODEL
         return self._get_trained_model(experiment_name, model_type)
 
     def stream_metrics(self, experiment_name):
-        """Stream metrics RPC."""
+        """Stream metrics RPC.
+
+        Args:
+            experiment_name (str): The name of the experiment.
+
+        Yields:
+            Dict[str, Any]: The metrics.
+        """
         request = director_pb2.GetMetricStreamRequest(experiment_name=experiment_name)
         for metric_message in self.stub.GetMetricStream(request):
             yield {
@@ -284,13 +420,27 @@ class DirectorClient:
             }
 
     def remove_experiment_data(self, name):
-        """Remove experiment data RPC."""
+        """Remove experiment data RPC.
+
+        Args:
+            name (str): The name of the experiment.
+
+        Returns:
+            bool: Whether the removal was acknowledged.
+        """
         request = director_pb2.RemoveExperimentRequest(experiment_name=name)
         response = self.stub.RemoveExperimentData(request)
         return response.acknowledgement
 
     def get_envoys(self, raw_result=False):
-        """Get envoys info."""
+        """Get envoys info.
+
+        Args:
+            raw_result (bool, optional): Whether to return the raw result. Defaults to False.
+
+        Returns:
+            result (Union[director_pb2.GetEnvoysResponse, Dict[str, Dict[str, Any]]]): The envoys info.
+        """
         envoys = self.stub.GetEnvoys(director_pb2.GetEnvoysRequest())
         if raw_result:
             return envoys
@@ -310,14 +460,25 @@ class DirectorClient:
         return result
 
     def get_experiments_list(self):
-        """Get experiments list."""
+        """Get experiments list.
+        
+        Returns:
+            List[str]: The list of experiments.
+        """
         response = self.stub.GetExperimentsList(
             director_pb2.GetExperimentsListRequest()
         )
         return response.experiments
 
     def get_experiment_description(self, name):
-        """Get experiment info."""
+        """Get experiment info.
+
+        Args:
+            name (str): The name of the experiment.
+
+        Returns:
+            director_pb2.ExperimentDescription: The description of the experiment.
+        """
         response = self.stub.GetExperimentDescription(
             director_pb2.GetExperimentDescriptionRequest(name=name)
         )
