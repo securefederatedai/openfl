@@ -9,29 +9,37 @@ from .runner import TaskRunner
 
 
 class FederatedModel(TaskRunner):
-    """
-    A wrapper that adapts to Tensorflow and Pytorch models to a federated context.
+    """A wrapper that adapts to Tensorflow and Pytorch models to a federated context.
 
-    Args:
-        model : tensorflow/keras (function) , pytorch (class)
+    This class provides methods to manage and manipulate federated models.
+
+    Attributes:
+        build_model (function or class): tensorflow/keras (function) , pytorch (class). 
             For keras/tensorflow model, expects a function that returns the
-            model definition
+            model definition.
             For pytorch models, expects a class (not an instance) containing
-            the model definition and forward function
-        optimizer : lambda function (only required for pytorch)
+            the model definition and forward function.
+        lambda_opt (function): Lambda function for the optimizer (only required for pytorch).
             The optimizer should be definied within a lambda function. This
             allows the optimizer to be attached to the federated models spawned
             for each collaborator.
-        loss_fn : pytorch loss_fun (only required for pytorch)
+        model (Model): The built model.
+        optimizer (Optimizer): Optimizer for the model.
+        runner (TaskRunner): Task runner for the model.
+        loss_fn (Loss): PyTorch Loss function for the model (only required for pytorch).
+        tensor_dict_split_fn_kwargs (dict): Keyword arguments for the tensor dict split function.
     """
 
     def __init__(self, build_model, optimizer=None, loss_fn=None, **kwargs):
-        """Initialize.
-
+        """Initializes the FederatedModel object.
+        
+        Sets up the initial state of the FederatedModel object, initializing various components needed for the federated model.
+        
         Args:
-            model:    build_model function
-            **kwargs: Additional parameters to pass to the function
-
+            build_model (function or class): Function that returns the model definition or Class containing the model definition and forward function.
+            optimizer (function, optional): Lambda function defining the optimizer. Defaults to None.
+            loss_fn (function, optional): PyTorch loss function. Defaults to None.
+            **kwargs: Additional parameters to pass to the function.
         """
         super().__init__(**kwargs)
 
@@ -67,7 +75,13 @@ class FederatedModel(TaskRunner):
         self.initialize_tensorkeys_for_functions()
 
     def __getattribute__(self, attr):
-        """Direct call into self.runner methods if necessary."""
+        """Direct call into self.runner methods if necessary.
+        Args:
+            attr (str): Attribute name.
+
+        Returns:
+            attribute: Requested attribute from the runner or the class itself.
+        """
         if attr in ['reset_opt_vars', 'initialize_globals',
                     'set_tensor_dict', 'get_tensor_dict',
                     'get_required_tensorkeys_for_function',
@@ -79,14 +93,14 @@ class FederatedModel(TaskRunner):
         return super(FederatedModel, self).__getattribute__(attr)
 
     def setup(self, num_collaborators, **kwargs):
-        """
-        Create new models for all of the collaborators in the experiment.
+        """Create new models for all of the collaborators in the experiment.
 
         Args:
-            num_collaborators:  Number of experiment collaborators
+            num_collaborators (int): Number of experiment collaborators.
+            **kwargs: Additional parameters to pass to the function.
 
         Returns:
-            List of models
+            List[FederatedModel]: List of models for each collaborator.
         """
         return [
             FederatedModel(
