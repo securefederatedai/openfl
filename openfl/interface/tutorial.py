@@ -17,7 +17,11 @@ logger = getLogger(__name__)
 @group()
 @pass_context
 def tutorial(context):
-    """Manage Jupyter notebooks."""
+    """Manage Jupyter notebooks.
+
+    Args:
+        context (click.core.Context): Click context.
+    """
     context.obj['group'] = 'tutorial'
 
 
@@ -27,7 +31,12 @@ def tutorial(context):
 @option('-port', '--port', required=False, type=IntRange(1, 65535),
         help='The port the Jupyter Lab server will listen on')
 def start(ip, port):
-    """Start the Jupyter Lab from the tutorials directory."""
+    """Start the Jupyter Lab from the tutorials directory.
+    
+    Args:
+        ip (str): IP address the Jupyter Lab that should start.
+        port (int): The port the Jupyter Lab server will listen on.
+    """
     from os import environ
     from os import sep
     from subprocess import check_call  # nosec

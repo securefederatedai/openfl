@@ -34,7 +34,7 @@ class PrivilegedAggregationFunction(AggregationFunction):
         """Aggregate tensors.
 
         Args:
-            local_tensors(list[openfl.utilities.LocalTensor]): List of local tensors to aggregate.
+            local_tensors (list[openfl.utilities.LocalTensor]): List of local tensors to aggregate.
             tensor_db: Raw TensorDB dataframe (for write access). Columns:
                 - 'tensor_name': name of the tensor.
                     Examples for `torch.nn.Module`s: 'conv1.weight', 'fc2.bias'.
