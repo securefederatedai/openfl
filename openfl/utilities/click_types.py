@@ -8,24 +8,60 @@ from openfl.utilities import utils
 
 
 class FqdnParamType(click.ParamType):
-    """Domain Type for click arguments."""
+    """Domain Type for click arguments.
+
+    This class is used to validate that a command line argument is a fully qualified domain name.
+
+    Attributes:
+        name (str): The name of the parameter type.
+    """
 
     name = 'fqdn'
 
     def convert(self, value, param, ctx):
-        """Validate value, if value is valid, return it."""
+        """Validate value, if value is valid, return it.
+
+        Args:
+            value (str): The value to validate.
+            param (click.core.Option): The option that this value was supplied to.
+            ctx (click.core.Context): The context for the parameter.
+
+        Returns:
+            str: The value, if it is valid.
+
+        Raises:
+            value (click.exceptions.BadParameter): If the value is not a valid domain name.
+        """
         if not utils.is_fqdn(value):
             self.fail(f'{value} is not a valid domain name', param, ctx)
         return value
 
 
 class IpAddressParamType(click.ParamType):
-    """IpAddress Type for click arguments."""
+    """IpAddress Type for click arguments.
+
+    This class is used to validate that a command line argument is an IP address.
+
+    Attributes:
+        name (str): The name of the parameter type.
+    """
 
     name = 'IpAddress type'
 
     def convert(self, value, param, ctx):
-        """Validate value, if value is valid, return it."""
+        """Validate value, if value is valid, return it.
+
+        Args:
+            value (str): The value to validate.
+            param (click.core.Option): The option that this value was supplied to.
+            ctx (click.core.Context): The context for the parameter.
+
+        Returns:
+            str: The value, if it is valid.
+
+        Raises:
+            click.exceptions.BadParameter: If the value is not a valid IP address.
+        """
         if not utils.is_api_adress(value):
             self.fail(f'{value} is not a valid ip adress name', param, ctx)
         return value

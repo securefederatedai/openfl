@@ -30,14 +30,16 @@ CA_CONFIG_JSON = Path('config/ca.json')
 
 
 def get_token(name, ca_url, ca_path='.'):
-    """
-    Create authentication token.
+    """Generate an authentication token.
 
     Args:
-        name: common name for following certificate
-                    (aggregator fqdn or collaborator name)
-        ca_url: full url of CA server
-        ca_path: path to ca folder
+        name (str): Common name for the following certificate
+            (aggregator fqdn or collaborator name).
+        ca_url (str): Full URL of the CA server.
+        ca_path (str, optional): Path to the CA folder. Defaults to '.'.
+
+    Returns:
+        str: The generated authentication token.
     """
     ca_path = Path(ca_path)
     step_config_dir = ca_path / CA_STEP_CONFIG_DIR
@@ -72,7 +74,14 @@ def get_token(name, ca_url, ca_path='.'):
 
 
 def get_ca_bin_paths(ca_path):
-    """Get paths of step binaries."""
+    """Get the paths of the step binaries.
+
+    Args:
+        ca_path (str): Path to the CA directory.
+
+    Returns:
+        tuple: Paths to the step and step-ca binaries.
+    """
     ca_path = Path(ca_path)
     step = None
     step_ca = None
@@ -93,7 +102,14 @@ def get_ca_bin_paths(ca_path):
 
 
 def certify(name, cert_path: Path, token_with_cert, ca_path: Path):
-    """Create an envoy workspace."""
+    """Create a certificate for a given name.
+
+    Args:
+        name (str): Name for the certificate.
+        cert_path (Path): Path to store the certificate.
+        token_with_cert (str): Authentication token with certificate.
+        ca_path (Path): Path to the CA directory.
+    """
     os.makedirs(cert_path, exist_ok=True)
 
     token, root_certificate = token_with_cert.split(TOKEN_DELIMITER)
@@ -114,20 +130,22 @@ def certify(name, cert_path: Path, token_with_cert, ca_path: Path):
 
 
 def remove_ca(ca_path):
-    """Kill step-ca process and rm ca directory."""
+    """Remove the CA directory and kill the step-ca process.
+
+    Args:
+        ca_path (str): Path to the CA directory.
+    """
     _check_kill_process('step-ca')
     shutil.rmtree(ca_path, ignore_errors=True)
 
 
 def install(ca_path, ca_url, password):
-    """
-    Create certificate authority for federation.
+    """Create a certificate authority for the federation.
 
     Args:
-        ca_path: path to ca directory
-        ca_url: url for ca server like: 'host:port'
-        password: Simple password for encrypting root private keys
-
+        ca_path (str): Path to the CA directory.
+        ca_url (str): URL for the CA server. Like: 'host:port'
+        password (str): Password for encrypting root private keys.
     """
     logger.info('Creating CA')
 
@@ -148,14 +166,28 @@ def install(ca_path, ca_url, password):
 
 
 def run_ca(step_ca, pass_file, ca_json):
-    """Run CA server."""
+    """Run the CA server.
+
+    Args:
+        step_ca (str): Path to the step-ca binary.
+        pass_file (str): Path to the password file.
+        ca_json (str): Path to the CA configuration JSON file.
+    """
     if _check_kill_process('step-ca', confirmation=True):
         logger.info('Up CA server')
         check_call(f'{step_ca} --password-file {pass_file} {ca_json}', shell=True)
 
 
 def _check_kill_process(pstring, confirmation=False):
-    """Kill process by name."""
+    """Kill a process by its name.
+
+    Args:
+        pstring (str): Name of the process.
+        confirmation (bool, optional): If True, ask for confirmation before killing the process. Defaults to False.
+
+    Returns:
+        bool: True if the process was killed, False otherwise.
+    """
     pids = []
     proc = subprocess.Popen(f'ps ax | grep {pstring} | grep -v grep',
                             shell=True, stdout=subprocess.PIPE)
@@ -175,7 +207,13 @@ def _check_kill_process(pstring, confirmation=False):
 
 
 def _create_ca(ca_path: Path, ca_url: str, password: str):
-    """Create a ca workspace."""
+    """Create a certificate authority workspace.
+
+    Args:
+        ca_path (Path): Path to the CA directory.
+        ca_url (str): URL for the CA server.
+        password (str): Password for encrypting root private keys.
+    """
     import os
     pki_dir = ca_path / CA_PKI_DIR
     step_config_dir = ca_path / CA_STEP_CONFIG_DIR
@@ -215,6 +253,11 @@ def _create_ca(ca_path: Path, ca_url: str, password: str):
 
 
 def _configure(step_config_dir):
+    """Configure the certificate authority.
+
+    Args:
+        step_config_dir (str): Path to the step configuration directory.
+    """
     conf_file = step_config_dir / CA_CONFIG_JSON
     with open(conf_file, 'r+', encoding='utf-8') as f:
         data = json.load(f)

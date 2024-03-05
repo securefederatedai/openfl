@@ -15,7 +15,18 @@ from .base_optimizer import Optimizer
 class NumPyAdam(Optimizer):
     """Adam optimizer implementation.
 
+    Implements the Adam optimization algorithm using NumPy. 
+    Adam is an algorithm for first-order gradient-based optimization of stochastic objective functions, based on adaptive estimates of lower-order moments.
+
     Original paper: https://openreview.net/forum?id=ryQu7f-RZ
+
+    Attributes:
+        params (dict, optional): Parameters to be stored for optimization.
+        model_interface: Model interface instance to provide parameters.
+        learning_rate (float): Tuning parameter that determines the step size at each iteration.
+        betas (tuple): Coefficients used for computing running averages of gradient and its square.
+        initial_accumulator_value (float): Initial value for gradients and squared gradients.
+        epsilon (float): Value for computational stability.
     """
 
     def __init__(
@@ -28,18 +39,23 @@ class NumPyAdam(Optimizer):
         initial_accumulator_value: float = 0.0,
         epsilon: float = 1e-8,
     ) -> None:
-        """Initialize.
+        """Initialize the Adam optimizer.
 
         Args:
-            params: Parameters to be stored for optimization.
-            model_interface: Model interface instance to provide parameters.
-            learning_rate: Tuning parameter that determines
-                the step size at each iteration.
-            betas: Coefficients used for computing running
-                averages of gradient and its square.
-            initial_accumulator_value: Initial value for gradients
-                and squared gradients.
-            epsilon: Value for computational stability.
+            params (dict, optional): Parameters to be stored for optimization. Defaults to None.
+            model_interface: Model interface instance to provide parameters. Defaults to None.
+            learning_rate (float, optional): Tuning parameter that determines the step size at each iteration. Defaults to 0.01.
+            betas (tuple, optional): Coefficients used for computing running averages of gradient and its square. Defaults to (0.9, 0.999).
+            initial_accumulator_value (float, optional): Initial value for gradients and squared gradients. Defaults to 0.0.
+            epsilon (float, optional): Value for computational stability. Defaults to 1e-8.
+
+        Raises:
+            ValueError: If both params and model_interface are None.
+            ValueError: If learning_rate is less than 0.
+            ValueError: If betas[0] is not in [0, 1).
+            ValueError: If betas[1] is not in [0, 1).
+            ValueError: If initial_accumulator_value is less than 0.
+            ValueError: If epsilon is less than or equal to 0.
         """
         super().__init__()
 
@@ -83,25 +99,37 @@ class NumPyAdam(Optimizer):
                                                                 self.initial_accumulator_value)
 
     def _update_first_moment(self, grad_name: str, grad: np.ndarray) -> None:
-        """Update gradients first moment."""
+        """Update gradients first moment.
+
+        Args:
+            grad_name (str): The name of the gradient.
+            grad (np.ndarray): The gradient values.
+        """
         self.grads_first_moment[grad_name] = (self.beta_1
                                               * self.grads_first_moment[grad_name]
                                               + ((1.0 - self.beta_1) * grad))
 
     def _update_second_moment(self, grad_name: str, grad: np.ndarray) -> None:
-        """Update gradients second moment."""
+        """Update gradients second moment.
+
+        Args:
+            grad_name (str): The name of the gradient.
+            grad (np.ndarray): The gradient values.
+        """
         self.grads_second_moment[grad_name] = (self.beta_2
                                                * self.grads_second_moment[grad_name]
                                                + ((1.0 - self.beta_2) * grad**2))
 
     def step(self, gradients: Dict[str, np.ndarray]) -> None:
-        """
-        Perform a single step for parameter update.
+        """Perform a single step for parameter update.
 
         Implement Adam optimizer weights update rule.
 
         Args:
-            gradients: Partial derivatives with respect to optimized parameters.
+            gradients (dict): Partial derivatives with respect to optimized parameters.
+
+        Raises:
+            KeyError: If a key in gradients does not exist in optimized parameters.
         """
         for grad_name in gradients:
             if grad_name not in self.grads_first_moment:
