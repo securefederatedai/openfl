@@ -13,7 +13,21 @@ from torch.optim.optimizer import required
 class FedProxOptimizer(Optimizer):
     """FedProx optimizer.
 
+    Implements the FedProx optimization algorithm using PyTorch. 
+    FedProx is a federated learning optimization algorithm designed to handle non-IID data. 
+    It introduces a proximal term to the federated averaging algorithm to reduce the impact 
+    of devices with outlying updates.
+
     Paper: https://arxiv.org/pdf/1812.06127.pdf
+
+    Attributes:
+        params: Parameters to be stored for optimization.
+        lr: Learning rate.
+        mu: Proximal term coefficient.
+        momentum: Momentum factor.
+        dampening: Dampening for momentum.
+        weight_decay: Weight decay (L2 penalty).
+        nesterov: Enables Nesterov momentum.
     """
 
     def __init__(self,
@@ -24,7 +38,23 @@ class FedProxOptimizer(Optimizer):
                  dampening=0,
                  weight_decay=0,
                  nesterov=False):
-        """Initialize."""
+        """Initialize the FedProx optimizer.
+
+        Args:
+            params: Parameters to be stored for optimization.
+            lr: Learning rate.
+            mu: Proximal term coefficient. Defaults to 0.0.
+            momentum: Momentum factor. Defaults to 0.
+            dampening: Dampening for momentum. Defaults to 0.
+            weight_decay: Weight decay (L2 penalty). Defaults to 0.
+            nesterov: Enables Nesterov momentum. Defaults to False
+
+        Raises:
+            ValueError: If momentum is less than 0.
+            ValueError: If learning rate is less than 0.
+            ValueError: If weight decay is less than 0.
+            ValueError: If mu is less than 0.
+        """
         if momentum < 0.0:
             raise ValueError(f'Invalid momentum value: {momentum}')
         if lr is not required and lr < 0.0:
@@ -48,7 +78,11 @@ class FedProxOptimizer(Optimizer):
         super(FedProxOptimizer, self).__init__(params, defaults)
 
     def __setstate__(self, state):
-        """Set optimizer state."""
+        """Set optimizer state.
+
+        Args:
+            state: State dictionary.
+        """
         super(FedProxOptimizer, self).__setstate__(state)
         for group in self.param_groups:
             group.setdefault('nesterov', False)
@@ -57,9 +91,11 @@ class FedProxOptimizer(Optimizer):
     def step(self, closure=None):
         """Perform a single optimization step.
 
-        Arguments:
-            closure (callable, optional): A closure that reevaluates the model
-                and returns the loss.
+        Args:
+            closure (callable, optional): A closure that reevaluates the model and returns the loss.
+
+        Returns:
+            Loss value if closure is provided. None otherwise.
         """
         loss = None
         if closure is not None:
@@ -96,17 +132,50 @@ class FedProxOptimizer(Optimizer):
         return loss
 
     def set_old_weights(self, old_weights):
-        """Set the global weights parameter to `old_weights` value."""
+        """Set the global weights parameter to `old_weights` value.
+
+        Args:
+            old_weights: The old weights to be set.
+        """
         for param_group in self.param_groups:
             param_group['w_old'] = old_weights
 
 
 class FedProxAdam(Optimizer):
-    """FedProxAdam optimizer."""
+    """FedProxAdam optimizer.
+
+    Implements the FedProx optimization algorithm with Adam optimizer.
+
+    Attributes:
+        params: Parameters to be stored for optimization.
+        mu: Proximal term coefficient.
+        lr: Learning rate.
+        betas: Coefficients used for computing running averages of gradient and its square.
+        eps: Value for computational stability.
+        weight_decay: Weight decay (L2 penalty).
+        amsgrad: Whether to use the AMSGrad variant of this algorithm.
+    """
 
     def __init__(self, params, mu=0, lr=1e-3, betas=(0.9, 0.999), eps=1e-8,
                  weight_decay=0, amsgrad=False):
-        """Initialize."""
+        """Initialize the FedProxAdam optimizer.
+
+        Args:
+            params: Parameters to be stored for optimization.
+            mu: Proximal term coefficient. Defaults to 0.
+            lr: Learning rate. Defaults to 1e-3.
+            betas: Coefficients used for computing running averages of gradient and its square. Defaults to (0.9, 0.999).
+            eps: Value for computational stability. Defaults to 1e-8.
+            weight_decay: Weight decay (L2 penalty). Defaults to 0.
+            amsgrad: Whether to use the AMSGrad variant of this algorithm. Defaults to False.
+
+        Raises:
+            ValueError: If learning rate is less than 0.
+            ValueError: If betas[0] is not in [0, 1).
+            ValueError: If betas[1] is not in [0, 1).
+            ValueError: If weight decay is less than 0.
+            ValueError: If mu is less than 0.
+        """
         if not 0.0 <= lr:
             raise ValueError(f'Invalid learning rate: {lr}')
         if not 0.0 <= eps:
@@ -124,13 +193,21 @@ class FedProxAdam(Optimizer):
         super(FedProxAdam, self).__init__(params, defaults)
 
     def __setstate__(self, state):
-        """Set optimizer state."""
+        """Set optimizer state.
+
+        Args:
+            state: State dictionary.
+        """
         super(FedProxAdam, self).__setstate__(state)
         for group in self.param_groups:
             group.setdefault('amsgrad', False)
 
     def set_old_weights(self, old_weights):
-        """Set the global weights parameter to `old_weights` value."""
+        """Set the global weights parameter to `old_weights` value.
+
+        Args:
+            old_weights: The old weights to be set.
+        """
         for param_group in self.param_groups:
             param_group['w_old'] = old_weights
 
@@ -139,8 +216,10 @@ class FedProxAdam(Optimizer):
         """Perform a single optimization step.
 
         Args:
-            closure (callable, optional): A closure that reevaluates the model
-                and returns the loss.
+            closure (callable, optional): A closure that reevaluates the model and returns the loss.
+
+        Returns:
+            Loss value if closure is provided. None otherwise.
         """
         loss = None
         if closure is not None:
@@ -221,7 +300,24 @@ class FedProxAdam(Optimizer):
              eps: float,
              mu: float,
              w_old):
-        """Updtae optimizer parameters."""
+        """Update optimizer parameters.
+
+        Args:
+            params: Parameters to be stored for optimization.
+            grads: Gradients.
+            exp_avgs: Exponential moving average of gradient values.
+            exp_avg_sqs: Exponential moving average of squared gradient values.
+            max_exp_avg_sqs: Maintains max of all exp. moving avg. of sq. grad. values.
+            state_steps: Steps for each param group update.
+            amsgrad: Whether to use the AMSGrad variant of this algorithm.
+            beta1 (float): Coefficient used for computing running averages of gradient.
+            beta2 (float): Coefficient used for computing running averages of squared gradient.
+            lr (float): Learning rate.
+            weight_decay (float): Weight decay (L2 penalty).
+            eps (float): Value for computational stability.
+            mu (float): Proximal term coefficient.
+            w_old: The old weights.
+        """
         for i, param in enumerate(params):
             w_old_p = w_old[i]
             grad = grads[i]
