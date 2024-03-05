@@ -7,8 +7,7 @@ from .assigner import Assigner
 
 
 class StaticGroupedAssigner(Assigner):
-    r"""
-    The task assigner maintains a list of tasks.
+    r"""The task assigner maintains a list of tasks.
 
     Also it decides the policy for which collaborator should run those tasks
     There may be many types of policies implemented, but a natural place to start is with a:
@@ -22,20 +21,35 @@ class StaticGroupedAssigner(Assigner):
             Given task groups and a list of collaborators that
             belong to that task group, carry out tasks for each round of experiment.
 
-    Args:
-        task_groups* (list of obj): task groups to assign.
+    Attributes:
+        task_groups* (list of object): Task groups to assign.
 
-    Note:
+    .. note::
         \* - Plan setting.
     """
 
     def __init__(self, task_groups, **kwargs):
-        """Initialize."""
+        """Initializes the StaticGroupedAssigner.
+
+        Args:
+            task_groups (list of object): Task groups to assign.
+            **kwargs: Additional keyword arguments.
+        """
         self.task_groups = task_groups
         super().__init__(**kwargs)
 
     def define_task_assignments(self):
-        """All of the logic to set up the map of tasks to collaborators is done here."""
+        """Define task assignments for each round and collaborator.
+
+        This method uses the assigner function to assign tasks to collaborators for each round. 
+        It also maps tasks to their respective aggregation functions.
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
         cols_amount = sum([
             len(group['collaborators']) for group in self.task_groups
         ])
@@ -83,9 +97,25 @@ class StaticGroupedAssigner(Assigner):
                     self.collaborators_for_task[task][round_] += group_col_list
 
     def get_tasks_for_collaborator(self, collaborator_name, round_number):
-        """Get tasks for the collaborator specified."""
+        """Get tasks for a specific collaborator in a specific round.
+
+        Args:
+            collaborator_name (str): Name of the collaborator.
+            round_number (int): Round number.
+
+        Returns:
+            list: List of tasks for the collaborator in the specified round.
+        """
         return self.collaborator_tasks[collaborator_name][round_number]
 
     def get_collaborators_for_task(self, task_name, round_number):
-        """Get collaborators for the task specified."""
+        """Get collaborators for a specific task in a specific round.
+
+        Args:
+            task_name (str): Name of the task.
+            round_number (int): Round number.
+
+        Returns:
+            list: List of collaborators for the task in the specified round.
+        """
         return self.collaborators_for_task[task_name][round_number]

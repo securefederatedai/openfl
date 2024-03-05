@@ -16,7 +16,12 @@ from openfl.utilities import TensorKey
 
 
 class DevicePolicy(Enum):
-    """Device assignment policy."""
+    """Device assignment policy.
+
+    Attributes:
+        CPU_ONLY (int): Assigns tasks to CPU only.
+        CUDA_PREFERRED (int): Prefers CUDA for task assignment if available.
+    """
 
     CPU_ONLY = 1
 
@@ -26,14 +31,10 @@ class DevicePolicy(Enum):
 class OptTreatment(Enum):
     """Optimizer Methods.
 
-    - RESET tells each collaborator to reset the optimizer state at the beginning
-    of each round.
-
-    - CONTINUE_LOCAL tells each collaborator to continue with the local optimizer
-    state from the previous round.
-
-    - CONTINUE_GLOBAL tells each collaborator to continue with the federally
-    averaged optimizer state from the previous round.
+    Attributes:
+        RESET (int): Resets the optimizer state at the beginning of each round.
+        CONTINUE_LOCAL (int): Continues with the local optimizer state from the previous round.
+        CONTINUE_GLOBAL (int): Continues with the federally averaged optimizer state from the previous round.
     """
 
     RESET = 1
@@ -44,26 +45,21 @@ class OptTreatment(Enum):
 class Collaborator:
     r"""The Collaborator object class.
 
-    Args:
-        collaborator_name (string): The common name for the collaborator
-        aggregator_uuid: The unique id for the client
-        federation_uuid: The unique id for the federation
-        model: The model
-        opt_treatment* (string): The optimizer state treatment (Defaults to
-            "CONTINUE_GLOBAL", which is aggreagated state from previous round.)
-
-        compression_pipeline: The compression pipeline (Defaults to None)
-
-        num_batches_per_round (int): Number of batches per round
-                                     (Defaults to None)
-
-        delta_updates* (bool): True = Only model delta gets sent.
-                               False = Whole model gets sent to collaborator.
-                               Defaults to False.
-
-        single_col_cert_common_name: (Defaults to None)
-
-    Note:
+    Attributes:
+        collaborator_name (str): The common name for the collaborator.
+        aggregator_uuid (str): The unique id for the client.
+        federation_uuid (str): The unique id for the federation.
+        client (object): The client object.
+        task_runner (object): The task runner object.
+        task_config (dict): The task configuration.
+        opt_treatment (str)*: The optimizer state treatment.
+        device_assignment_policy (str): The device assignment policy.
+        delta_updates (bool)*: If True, only model delta gets sent. If False, whole model gets sent to collaborator.
+        compression_pipeline (object): The compression pipeline.
+        db_store_rounds (int): The number of rounds to store in the database.
+        single_col_cert_common_name (str): The common name for the single column certificate.
+    
+    .. note::
         \* - Plan setting.
     """
 
@@ -80,7 +76,22 @@ class Collaborator:
                  compression_pipeline=None,
                  db_store_rounds=1,
                  **kwargs):
-        """Initialize."""
+        """Initialize the Collaborator object.
+
+        Args:
+            collaborator_name (str): The common name for the collaborator.
+            aggregator_uuid (str): The unique id for the client.
+            federation_uuid (str): The unique id for the federation.
+            client (object): The client object.
+            task_runner (object): The task runner object.
+            task_config (dict): The task configuration.
+            opt_treatment (str, optional): The optimizer state treatment. Defaults to 'RESET'.
+            device_assignment_policy (str, optional): The device assignment policy. Defaults to 'CPU_ONLY'.
+            delta_updates (bool, optional): If True, only model delta gets sent. If False, whole model gets sent to collaborator. Defaults to False.
+            compression_pipeline (object, optional): The compression pipeline. Defaults to None.
+            db_store_rounds (int, optional): The number of rounds to store in the database. Defaults to 1.
+            **kwargs: Variable length argument list.
+        """
         self.single_col_cert_common_name = None
 
         if self.single_col_cert_common_name is None:
@@ -124,10 +135,10 @@ class Collaborator:
         self.task_runner.set_optimizer_treatment(self.opt_treatment.name)
 
     def set_available_devices(self, cuda: Tuple[str] = ()):
-        """
-        Set available CUDA devices.
+        """Set available CUDA devices.
 
-        Cuda tuple contains string indeces, ('1', '3').
+        Args:
+            cuda (Tuple[str]): Tuple containing string indices of available CUDA devices, ('1', '3').
         """
         self.cuda_devices = cuda
 
@@ -150,12 +161,11 @@ class Collaborator:
         self.logger.info('End of Federation reached. Exiting...')
 
     def run_simulation(self):
-        """
-        Specific function for the simulation.
+        """Specific function for the simulation.
 
-        After the tasks have
-        been performed for a roundquit, and then the collaborator object will
-        be reinitialized after the next round
+        After the tasks have been performed for a roundquit, 
+        and then the collaborator object will be reinitialized 
+        after the next round.
         """
         while True:
             tasks, round_number, sleep_time, time_to_quit = self.get_tasks()
@@ -173,14 +183,13 @@ class Collaborator:
                 break
 
     def get_tasks(self):
-        """
-        Get tasks from the aggregator.
+        """Get tasks from the aggregator.
 
-        Returns:
-            tasks (list_of_str) : List of tasks.
-            round_number (int) : Actual round number.
-            sleep_time (int) : Sleep time.
-            time_to_quit (bool) : bool value for quit.
+       Returns:
+            tasks (list_of_str): List of tasks.
+            round_number (int): Actual round number.
+            sleep_time (int): Sleep time.
+            time_to_quit (bool): bool value for quit.
         """
         # logging wait time to analyze training process
         self.logger.info('Waiting for tasks...')
@@ -190,13 +199,11 @@ class Collaborator:
         return tasks, round_number, sleep_time, time_to_quit
 
     def do_task(self, task, round_number):
-        """
-        Do the specified task.
-        
+        """Perform the specified task.
+
         Args:
-            task (list_of_str) : List of tasks.
-            round_number (int) : Actual round number.
-        
+            task (list_of_str): List of tasks.
+            round_number (int): Actual round number.
         """
         # map this task to an actual function name and kwargs
         if hasattr(self.task_runner, 'TASK_REGISTRY'):
@@ -282,27 +289,24 @@ class Collaborator:
         self.send_task_results(global_output_tensor_dict, round_number, task_name)
 
     def get_numpy_dict_for_tensorkeys(self, tensor_keys):
-        """
-        Get tensor dictionary for specified tensorkey set.
+        """Get tensor dictionary for specified tensorkey set.
         
         Args:
-            tensor_keys (namedtuple) : Tensorkeys that will be resolved locally or 
-                                   remotely. May be the product of other tensors.
-
+            tensor_keys (namedtuple): Tensorkeys that will be resolved locally or 
+                remotely. May be the product of other tensors.
         """
         return {k.tensor_name: self.get_data_for_tensorkey(k) for k in tensor_keys}
 
     def get_data_for_tensorkey(self, tensor_key):
-        """
-        Resolve the tensor corresponding to the requested tensorkey.
+        """Resolve the tensor corresponding to the requested tensorkey.
 
         Args:
-            tensor_key (namedtuple) : Tensorkey that will be resolved locally or
-                         remotely. May be the product of other tensors.
+            tensor_key (namedtuple): Tensorkey that will be resolved locally or
+            remotely. May be the product of other tensors.
 
         Returns:
-            nparray : The decompressed tensor associated with the requested
-                      tensor key.
+            nparray: The decompressed tensor associated with the requested
+                tensor key.
         """
         # try to get from the store
         tensor_name, origin, round_number, report, tags = tensor_key
@@ -376,8 +380,7 @@ class Collaborator:
 
     def get_aggregated_tensor_from_aggregator(self, tensor_key,
                                               require_lossless=False):
-        """
-        Return the decompressed tensor associated with the requested tensor key.
+        """Return the decompressed tensor associated with the requested tensor key.
 
         If the key requests a compressed tensor (in the tag), the tensor will
         be decompressed before returning.
@@ -385,11 +388,10 @@ class Collaborator:
         tag), the decompression operation will be skipped.
 
         Args:
-            tensor_key (namedtuple) : The requested tensor
-            require_lossless (bool) : Should compression of the tensor be allowed
-                                      in flight? For the initial model, it may affect
-                                      convergence to apply lossy compression.
-                                      And metrics shouldn't be compressed either.
+            tensor_key (namedtuple): The requested tensor.
+            require_lossless (bool): Should compression of the tensor be allowed
+                in flight? For the initial model, it may affect convergence to apply 
+                lossy compression. And metrics shouldn't be compressed either.
 
         Returns:
             nparray : The decompressed tensor associated with the requested tensor key.
@@ -410,13 +412,12 @@ class Collaborator:
         return nparray
 
     def send_task_results(self, tensor_dict, round_number, task_name):
-        """
-        Send task results to the aggregator.
+        """Send task results to the aggregator.
         
         Args:
-            tensor_dict (dict) : Tensor dictionary. 
+            tensor_dict (dict): Tensor dictionary. 
             round_number (int):  Actual round number.
-            task_name (string) : Task name.
+            task_name (string): Task name.
         """
         named_tensors = [
             self.nparray_to_named_tensor(k, v) for k, v in tensor_dict.items()
@@ -448,16 +449,15 @@ class Collaborator:
             self.collaborator_name, round_number, task_name, data_size, named_tensors)
 
     def nparray_to_named_tensor(self, tensor_key, nparray):
-        """
-        Construct the NamedTensor Protobuf.
+        """Construct the NamedTensor Protobuf.
 
         Includes logic to create delta, compress tensors with the TensorCodec, etc.
 
         Args:
-            tensor_key (namedtuple) : Tensorkey that will be resolved locally or
-                                      remotely. May be the product of other tensors.
-            nparray : The decompressed tensor associated with the requested
-                      tensor key.
+            tensor_key (namedtuple): Tensorkey that will be resolved locally or
+                remotely. May be the product of other tensors.
+            nparray: The decompressed tensor associated with the requested
+                tensor key.
 
         Returns:
             named_tensor (protobuf) : The tensor constructed from the nparray.    
@@ -515,8 +515,7 @@ class Collaborator:
         return named_tensor
 
     def named_tensor_to_nparray(self, named_tensor):
-        """
-        Convert named tensor to a numpy array.
+        """Convert named tensor to a numpy array.
         
         Args:
             named_tensor (protobuf): The tensor to convert to nparray.

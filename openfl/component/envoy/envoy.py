@@ -28,21 +28,23 @@ DEFAULT_RETRY_TIMEOUT_IN_SECONDS = 5
 
 
 class Envoy:
-    """
-    Envoy class. The Envoy is a long-lived entity that runs on collaborator nodes connected to the Director.
+    """Envoy class. The Envoy is a long-lived entity that runs on collaborator nodes connected to the Director.
     
-    Args:
-        shard_name (str) :
-        director_host (str) :
-        shard_descriptor (Type[ShardDescriptor]) :
-        root_certificate (Optional[Union[Path, str]]) :
-        private_key (Optional[Union[Path, str]]) :
-        certificate (Optional[Union[Path, str]]) :
-        tls (bool) :
-        install_requirements (bool) :
-        cuda_devices (Union[tuple, list]) :
-        cuda_device_monitor (Optional[Type[CUDADeviceMonitor]]) :
-        review_plan_callback (Union[None, Callable]) :
+    Attributes:
+        name (str): The name of the shard.
+        root_certificate (Union[Path, str]): The path to the root certificate for TLS.
+        private_key (Union[Path, str]): The path to the private key for TLS.
+        certificate (Union[Path, str]): The path to the certificate for TLS.
+        director_client (ShardDirectorClient): The director client.
+        shard_descriptor (Type[ShardDescriptor]): The shard descriptor.
+        cuda_devices (tuple): The CUDA devices.
+        install_requirements (bool): A flag indicating if the requirements should be installed.
+        review_plan_callback (Union[None, Callable]): A callback function for reviewing the plan.
+        cuda_device_monitor (Optional[Type[CUDADeviceMonitor]]): The CUDA device monitor.
+        executor (ThreadPoolExecutor): The executor for running tasks.
+        running_experiments (dict): A dictionary to store the running experiments.
+        is_experiment_running (bool): A flag indicating if an experiment is running.
+        _health_check_future (object): The future object for the health check.
     """
 
     def __init__(
@@ -60,7 +62,22 @@ class Envoy:
             cuda_device_monitor: Optional[Type[CUDADeviceMonitor]] = None,
             review_plan_callback: Union[None, Callable] = None,
     ) -> None:
-        """Initialize a envoy object."""
+        """Initialize a envoy object.
+        
+        Args:
+            shard_name (str): The name of the shard.
+            director_host (str): The host of the director.
+            director_port (int): The port of the director.
+            shard_descriptor (Type[ShardDescriptor]): The shard descriptor.
+            root_certificate (Optional[Union[Path, str]], optional): The path to the root certificate for TLS. Defaults to None.
+            private_key (Optional[Union[Path, str]], optional): The path to the private key for TLS. Defaults to None.
+            certificate (Optional[Union[Path, str]], optional): The path to the certificate for TLS. Defaults to None.
+            tls (bool, optional): A flag indicating if TLS should be used for connections. Defaults to True.
+            install_requirements (bool, optional): A flag indicating if the requirements should be installed. Defaults to True.
+            cuda_devices (Union[tuple, list], optional): The CUDA devices. Defaults to ().
+            cuda_device_monitor (Optional[Type[CUDADeviceMonitor]], optional): The CUDA device monitor. Defaults to None.
+            review_plan_callback (Union[None, Callable], optional): A callback function for reviewing the plan. Defaults to None.
+        """
         self.name = shard_name
         self.root_certificate = Path(
             root_certificate).absolute() if root_certificate is not None else None
@@ -137,6 +154,14 @@ class Envoy:
 
     @staticmethod
     def _save_data_stream_to_file(data_stream):
+        """Save data stream to file.
+
+        Args:
+            data_stream: The data stream to save.
+
+        Returns:
+            Path: The path to the saved data file.
+        """
         data_file_path = Path(str(uuid.uuid4())).absolute()
         with open(data_file_path, 'wb') as data_file:
             for response in data_stream:
@@ -167,6 +192,11 @@ class Envoy:
             time.sleep(timeout)
 
     def _get_cuda_device_info(self):
+        """Get CUDA device info.
+
+        Returns:
+            list: A list of dictionaries containing info about each CUDA device.
+        """
         cuda_devices_info = None
         try:
             if self.cuda_device_monitor is not None:
@@ -195,7 +225,11 @@ class Envoy:
         return cuda_devices_info
 
     def _run_collaborator(self, plan='plan/plan.yaml'):
-        """Run the collaborator for the experiment running."""
+        """Run the collaborator for the experiment running.
+
+        Args:
+            plan (str, optional): The path to the plan. Defaults to 'plan/plan.yaml'.
+        """
         plan = Plan.parse(plan_config_path=Path(plan))
 
         # TODO: Need to restructure data loader config file loader
