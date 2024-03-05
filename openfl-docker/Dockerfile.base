@@ -20,47 +20,40 @@ FROM base as python-dev
 
 ARG PYTHON=python3.10
 ARG PIP=pip3.10
-ARG PYTHON_VER=3.10.13
 
 RUN apt-get update && \
     apt-get install --no-install-recommends --fix-missing -y \
-      build-essential \
-      ca-certificates \
       curl \
-      libbz2-dev \
-      libffi-dev \
-      libgdbm-dev \
-      liblzma-dev \
-      libncurses5-dev \
-      libnss3-dev \
-      libreadline-dev \
-      libsqlite3-dev \
-      libssl-dev \
-      make \
-      pkg-config \
-      zlib1g-dev
+      gpg-agent \
+      software-properties-common && \
+    add-apt-repository -y ppa:deadsnakes/ppa && \
+    apt-get update && \
+    DEBIAN_FRONTEND=noninteractive \
+    apt-get install --no-install-recommends --fix-missing -y \
+      ${PYTHON} \
+      ${PYTHON}-distutils && \
+    curl -s https://bootstrap.pypa.io/get-pip.py | ${PYTHON} && \
+    apt-get purge -y \
+      curl \
+      gpg-agent \
+      software-properties-common && \
+    apt-get autoclean && \
+    apt-get autoremove -y && \
+    rm -rf /var/lib/apt/lists/*
 
-RUN curl https://www.python.org/ftp/python/${PYTHON_VER}/Python-${PYTHON_VER}.tar.xz -o /tmp/Python-${PYTHON_VER}.tar.xz && \
-     cd /tmp/ && \
-     tar -xf Python-${PYTHON_VER}.tar.xz && \
-     rm -rf Python-${PYTHON_VER}.tar.xz
-
-RUN cd /tmp/Python-${PYTHON_VER} && \
-    ./configure --enable-optimizations && \
-    make -s -j${nproc} && \
-    make altinstall && \
-    ldconfig /opt/Python${PYTHON_VER}
-
-RUN ln -sf /usr/local/bin/${PIP} /usr/local/bin/pip && \
-    ln -sf /usr/local/bin/${PIP} /usr/local/bin/pip3 && \
-    ln -sf /usr/local/bin/${PYTHON} /usr/local/bin/python && \
-    ln -sf /usr/local/bin/${PYTHON} /usr/local/bin/python3
+RUN ln -sf /usr/bin/${PYTHON} /usr/bin/python && \
+    ln -sf /usr/bin/${PYTHON} /usr/bin/python3 && \
+    ln -sf /usr/local/bin/${PIP} /usr/local/bin/pip && \
+    ln -sf /usr/local/bin/${PIP} /usr/local/bin/pip3
 
 FROM base as python-base
 
 ARG PYTHON=python3.10
 
+COPY --from=python-dev /usr/lib/x86_64-linux-gnu /usr/lib/x86_64-linux-gnu
+COPY --from=python-dev /usr/lib/${PYTHON} /usr/lib/${PYTHON}
 COPY --from=python-dev /usr/local/lib/${PYTHON} /usr/local/lib/${PYTHON}
+COPY --from=python-dev /usr/bin /usr/bin
 COPY --from=python-dev /usr/local/bin /usr/local/bin
 
 FROM python-base as openfl
@@ -77,8 +70,6 @@ RUN rm -rf zlib-1.2.13 && rm -rf v1.2.13.tar.gz
 RUN apt-get remove --purge -y wget build-essential && \
     apt-get autoclean -y && \
     apt-get auto-remove -y
-
-WORKDIR /thirdparty
 
 RUN dpkg --get-selections | grep -v deinstall | awk '{print $1}' > base_packages.txt  && \
     rm -rf /var/lib/apt/lists/*
