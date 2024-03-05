@@ -20,10 +20,24 @@ from .grpc_channel_options import channel_options
 
 
 class ConstantBackoff:
-    """Constant Backoff policy."""
+    """Constant Backoff policy.
+    
+    This class implements a backoff policy that waits for a constant amount of time between retries.
+
+    Attributes:
+        reconnect_interval (int): The interval between connection attempts.
+        logger (Logger): The logger to use for reporting connection attempts.
+        uri (str): The URI to connect to.
+    """
 
     def __init__(self, reconnect_interval, logger, uri):
-        """Initialize Constant Backoff."""
+        """Initialize Constant Backoff.
+        
+        Args:
+            reconnect_interval (int): The interval between connection attempts.
+            logger (Logger): The logger to use for reporting connection attempts.
+            uri (str): The URI to connect to.
+        """
         self.reconnect_interval = reconnect_interval
         self.logger = logger
         self.uri = uri
@@ -37,19 +51,40 @@ class ConstantBackoff:
 class RetryOnRpcErrorClientInterceptor(
     grpc.UnaryUnaryClientInterceptor, grpc.StreamUnaryClientInterceptor
 ):
-    """Retry gRPC connection on failure."""
+    """Retry gRPC connection on failure.
+    
+    This class implements a gRPC client interceptor that retries failed RPC calls.
+
+    Attributes:
+        sleeping_policy (ConstantBackoff): The backoff policy to use between retries.
+        status_for_retry (Tuple[grpc.StatusCode]): The gRPC status codes that should trigger a retry.
+    """
 
     def __init__(
             self,
             sleeping_policy,
             status_for_retry: Optional[Tuple[grpc.StatusCode]] = None,
     ):
-        """Initialize function for gRPC retry."""
+        """Initialize function for gRPC retry.
+        
+        Args:
+            sleeping_policy (ConstantBackoff): The backoff policy to use between retries.
+            status_for_retry (Tuple[grpc.StatusCode], optional): The gRPC status codes that should trigger a retry.
+        """
         self.sleeping_policy = sleeping_policy
         self.status_for_retry = status_for_retry
 
     def _intercept_call(self, continuation, client_call_details, request_or_iterator):
-        """Intercept the call to the gRPC server."""
+        """Intercept the call to the gRPC server.
+
+        Args:
+            continuation (function): The original RPC call.
+            client_call_details (grpc.ClientCallDetails): The details of the call.
+            request_or_iterator (object): The request message for the RPC call.
+
+        Returns:
+            response (grpc.Call): The result of the RPC call.
+        """
         while True:
             response = continuation(client_call_details, request_or_iterator)
 
@@ -68,13 +103,31 @@ class RetryOnRpcErrorClientInterceptor(
                 return response
 
     def intercept_unary_unary(self, continuation, client_call_details, request):
-        """Wrap intercept call for unary->unary RPC."""
+        """Wrap intercept call for unary->unary RPC.
+        
+        Args:
+            continuation (function): The original RPC call.
+            client_call_details (grpc.ClientCallDetails): The details of the call.
+            request (object): The request message for the RPC call.
+
+        Returns:
+            grpc.Call: The result of the RPC call.
+        """
         return self._intercept_call(continuation, client_call_details, request)
 
     def intercept_stream_unary(
             self, continuation, client_call_details, request_iterator
     ):
-        """Wrap intercept call for stream->unary RPC."""
+        """Wrap intercept call for stream->unary RPC.
+        
+        Args:
+            continuation (function): The original RPC call.
+            client_call_details (grpc.ClientCallDetails): The details of the call.
+            request_iterator (iterator): The request messages for the RPC call.
+
+        Returns:
+            grpc.Call: The result of the RPC call.
+        """
         return self._intercept_call(continuation, client_call_details, request_iterator)
 
 
@@ -108,7 +161,21 @@ def _resend_data_on_reconnection(func):
 
 
 class AggregatorGRPCClient:
-    """Client to the aggregator over gRPC-TLS."""
+    """Client to the aggregator over gRPC-TLS.
+    
+    This class implements a gRPC client for communicating with an aggregator over a secure (TLS) connection.
+
+    Attributes:
+        uri (str): The URI of the aggregator.
+        tls (bool): Whether to use TLS for the connection.
+        disable_client_auth (bool): Whether to disable client-side authentication.
+        root_certificate (str): The path to the root certificate for the TLS connection.
+        certificate (str): The path to the client's certificate for the TLS connection.
+        private_key (str): The path to the client's private key for the TLS connection.
+        aggregator_uuid (str): The UUID of the aggregator.
+        federation_uuid (str): The UUID of the federation.
+        single_col_cert_common_name (str): The common name on the collaborator's certificate.    
+    """
 
     def __init__(self,
                  agg_addr,
@@ -122,7 +189,21 @@ class AggregatorGRPCClient:
                  federation_uuid=None,
                  single_col_cert_common_name=None,
                  **kwargs):
-        """Initialize."""
+        """Initialize.
+        
+        Args:
+            agg_addr (str): The address of the aggregator.
+            agg_port (int): The port of the aggregator.
+            tls (bool): Whether to use TLS for the connection.
+            disable_client_auth (bool): Whether to disable client-side authentication.
+            root_certificate (str): The path to the root certificate for the TLS connection.
+            certificate (str): The path to the client's certificate for the TLS connection.
+            private_key (str): The path to the client's private key for the TLS connection.
+            aggregator_uuid (str,optional): The UUID of the aggregator.
+            federation_uuid (str, optional): The UUID of the federation.
+            single_col_cert_common_name (str, optional): The common name on the collaborator's certificate.
+            **kwargs: Additional keyword arguments.
+        """
         self.uri = f'{agg_addr}:{agg_port}'
         self.tls = tls
         self.disable_client_auth = disable_client_auth
@@ -165,35 +246,31 @@ class AggregatorGRPCClient:
         )
 
     def create_insecure_channel(self, uri):
-        """
-        Set an insecure gRPC channel (i.e. no TLS) if desired.
+        """Set an insecure gRPC channel (i.e. no TLS) if desired.
 
         Warns user that this is not recommended.
 
         Args:
-            uri: The uniform resource identifier fo the insecure channel
+            uri (str): The uniform resource identifier for the insecure channel
 
         Returns:
-            An insecure gRPC channel object
-
+            grpc.Channel: An insecure gRPC channel object
         """
         return grpc.insecure_channel(uri, options=channel_options)
 
     def create_tls_channel(self, uri, root_certificate, disable_client_auth,
                            certificate, private_key):
-        """
-        Set an secure gRPC channel (i.e. TLS).
+        """Set an secure gRPC channel (i.e. TLS).
 
         Args:
-            uri: The uniform resource identifier fo the insecure channel
-            root_certificate: The Certificate Authority filename
-            disable_client_auth (boolean): True disabled client-side
-             authentication (not recommended, throws warning to user)
-            certificate: The client certficate filename from the collaborator
-             (signed by the certificate authority)
+            uri (str): The uniform resource identifier for the secure channel.
+            root_certificate (str): The Certificate Authority filename.
+            disable_client_auth (bool): True disables client-side authentication (not recommended, throws warning to user).
+            certificate (str): The client certificate filename from the collaborator (signed by the certificate authority).
+            private_key (str): The private key filename for the client certificate.
 
         Returns:
-            An insecure gRPC channel object
+            grpc.Channel: A secure gRPC channel object
         """
         with open(root_certificate, 'rb') as f:
             root_certificate_b = f.read()
@@ -218,6 +295,11 @@ class AggregatorGRPCClient:
             uri, credentials, options=channel_options)
 
     def _set_header(self, collaborator_name):
+        """Set the header for gRPC messages.
+
+        Args:
+            collaborator_name (str): The name of the collaborator.
+        """
         self.header = aggregator_pb2.MessageHeader(
             sender=collaborator_name,
             receiver=self.aggregator_uuid,
@@ -226,7 +308,12 @@ class AggregatorGRPCClient:
         )
 
     def validate_response(self, reply, collaborator_name):
-        """Validate the aggregator response."""
+        """Validate the aggregator response.
+
+        Args:
+            reply (aggregator_pb2.MessageReply): The reply from the aggregator.
+            collaborator_name (str): The name of the collaborator.
+        """
         # check that the message was intended to go to this collaborator
         check_equal(reply.header.receiver, collaborator_name, self.logger)
         check_equal(reply.header.sender, self.aggregator_uuid, self.logger)
@@ -275,7 +362,15 @@ class AggregatorGRPCClient:
     @_atomic_connection
     @_resend_data_on_reconnection
     def get_tasks(self, collaborator_name):
-        """Get tasks from the aggregator."""
+        """Get tasks from the aggregator.
+
+        Args:
+            collaborator_name (str): The name of the collaborator.
+
+        Returns:
+            Tuple[List[str], int, int, bool]: A tuple containing a list of tasks, the round number, 
+                the sleep time, and a boolean indicating whether to quit.
+        """
         self._set_header(collaborator_name)
         request = aggregator_pb2.GetTasksRequest(header=self.header)
         response = self.stub.GetTasks(request)
@@ -287,7 +382,19 @@ class AggregatorGRPCClient:
     @_resend_data_on_reconnection
     def get_aggregated_tensor(self, collaborator_name, tensor_name, round_number,
                               report, tags, require_lossless):
-        """Get aggregated tensor from the aggregator."""
+        """Get aggregated tensor from the aggregator.
+
+        Args:
+            collaborator_name (str): The name of the collaborator.
+            tensor_name (str): The name of the tensor.
+            round_number (int): The round number.
+            report (str): The report.
+            tags (List[str]): The tags.
+            require_lossless (bool): Whether lossless compression is required.
+
+        Returns:
+            aggregator_pb2.TensorProto: The aggregated tensor.
+        """
         self._set_header(collaborator_name)
 
         request = aggregator_pb2.GetAggregatedTensorRequest(
@@ -308,7 +415,15 @@ class AggregatorGRPCClient:
     @_resend_data_on_reconnection
     def send_local_task_results(self, collaborator_name, round_number,
                                 task_name, data_size, named_tensors):
-        """Send task results to the aggregator."""
+        """Send task results to the aggregator.
+
+        Args:
+            collaborator_name (str): The name of the collaborator.
+            round_number (int): The round number.
+            task_name (str): The name of the task.
+            data_size (int): The size of the data.
+            named_tensors (List[aggregator_pb2.NamedTensorProto]): The list of named tensors.
+        """
         self._set_header(collaborator_name)
         request = aggregator_pb2.TaskResults(
             header=self.header,
@@ -327,7 +442,15 @@ class AggregatorGRPCClient:
         self.validate_response(response, collaborator_name)
 
     def _get_trained_model(self, experiment_name, model_type):
-        """Get trained model RPC."""
+        """Get trained model RPC.
+
+        Args:
+            experiment_name (str): The name of the experiment.
+            model_type (str): The type of the model.
+
+        Returns:
+            Dict[str, numpy.ndarray]: The trained model.
+        """
         get_model_request = self.stub.GetTrainedModelRequest(
             experiment_name=experiment_name,
             model_type=model_type,
