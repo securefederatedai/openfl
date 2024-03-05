@@ -21,14 +21,17 @@ from tqdm import tqdm
 
 
 def getfqdn_env(name: str = '') -> str:
-    """
-    Get the system FQDN, with priority given to environment variables.
+    """Get the system FQDN, with priority given to environment variables.
+
+    This function retrieves the fully qualified domain name (FQDN) of the system. 
+    If the 'FQDN' environment variable is set, its value is returned. Otherwise, 
+    the FQDN is determined based on the system's hostname.
 
     Args:
-        name: The name from which to extract the FQDN.
+        name (str, optional): The name from which to extract the FQDN. Defaults to ''.
 
     Returns:
-        The FQDN of the system.
+        str: The FQDN of the system.
     """
     fqdn = os.environ.get('FQDN', None)
     if fqdn is not None:
@@ -37,7 +40,18 @@ def getfqdn_env(name: str = '') -> str:
 
 
 def is_fqdn(hostname: str) -> bool:
-    """https://en.m.wikipedia.org/wiki/Fully_qualified_domain_name."""
+    """Check if a hostname is a fully qualified domain name.
+
+    This function checks if a hostname is a fully qualified domain name (FQDN) 
+    according to the rules specified on Wikipedia.
+    https://en.m.wikipedia.org/wiki/Fully_qualified_domain_name.
+
+    Args:
+        hostname (str): The hostname to check.
+
+    Returns:
+        bool: `True` if the hostname is a FQDN, `False` otherwise.
+    """
     if not 1 < len(hostname) < 253:
         return False
 
@@ -58,7 +72,16 @@ def is_fqdn(hostname: str) -> bool:
 
 
 def is_api_adress(address: str) -> bool:
-    """Validate ip address value."""
+    """Validate IP address value.
+
+    This function checks if a string is a valid IP address.
+
+    Args:
+        address (str): The string to check.
+
+    Returns:
+        bool: `True` if the string is a valid IP address, `False` otherwise.
+    """
     try:
         ipaddress.ip_address(address)
         return True
@@ -67,14 +90,16 @@ def is_api_adress(address: str) -> bool:
 
 
 def add_log_level(level_name, level_num, method_name=None):
-    """
-    Add a new logging level to the logging module.
+    """Add a new logging level to the logging module.
+
+    This function adds a new logging level to the logging module with a 
+    specified name, value, and method name.
 
     Args:
-        level_name: name of log level.
-        level_num: log level value.
-        method_name: log method wich will use new log level (default = level_name.lower())
-
+        level_name (str): The name of the new logging level.
+        level_num (int): The value of the new logging level.
+        method_name (str, optional): The name of the method to use for 
+            the new logging level. Defaults to None.
     """
     if not method_name:
         method_name = level_name.lower()
@@ -95,13 +120,17 @@ def add_log_level(level_name, level_num, method_name=None):
 def validate_file_hash(file_path, expected_hash, chunk_size=8192):
     """Validate SHA384 hash for file specified.
 
+    This function validates the SHA384 hash of a file against an expected hash.
+
     Args:
-        file_path(path-like): path-like object giving the pathname
-            (absolute or relative to the current working directory)
-            of the file to be opened or an integer file descriptor of the file to be wrapped.
-        expected_hash(str): hash string to compare with.
-        hasher(_Hash): hash algorithm. Default value: `hashlib.sha384()`
-        chunk_size(int): Buffer size for file reading.
+        file_path (str): The path to the file to validate. 
+            (absolute or relative to the current working directory) of the file 
+            to be opened or an integer file descriptor of the file to be wrapped.
+        expected_hash (str): The expected SHA384 hash of the file.
+        chunk_size (int, optional): The size of the chunks to read from the file. Defaults to 8192.
+
+    Raises:
+        SystemError: If the hash of the file does not match the expected hash.
     """
     h = hashlib.sha384()
     with open(file_path, 'rb') as file:
@@ -117,7 +146,13 @@ def validate_file_hash(file_path, expected_hash, chunk_size=8192):
 
 
 def tqdm_report_hook():
-    """Visualize downloading."""
+    """Visualize downloading.
+
+    This function creates a progress bar for visualizing the progress of a download.
+
+    Returns:
+        Callable: A function that updates the progress bar.
+    """
 
     def report_hook(pbar, count, block_size, total_size):
         """Update progressbar."""
@@ -135,7 +170,18 @@ def merge_configs(
         value_transform: Optional[List[Tuple[str, Callable]]] = None,
         **kwargs,
 ) -> Dynaconf:
-    """Create Dynaconf settings, merge its with `overwrite_dict` and validate result."""
+    """Create Dynaconf settings, merge its with `overwrite_dict` and validate result.
+
+    This function creates a Dynaconf settings object, merges it with an optional dictionary, applies an optional value transformation, and validates the result.
+
+    Args:
+        overwrite_dict (Optional[dict], optional): A dictionary to merge with the settings. Defaults to None.
+        value_transform (Optional[List[Tuple[str, Callable]]], optional): A list of tuples, each containing a key and a function to apply to the value of that key. Defaults to None.
+        **kwargs: Additional keyword arguments to pass to the Dynaconf constructor.
+
+    Returns:
+        Dynaconf: The merged and validated settings.
+    """
     settings = Dynaconf(**kwargs, YAML_LOADER='safe_load')
     if overwrite_dict:
         for key, value in overwrite_dict.items():
@@ -152,10 +198,18 @@ def merge_configs(
 def change_tags(tags, *, add_field=None, remove_field=None) -> Tuple[str, ...]:
     """Change tensor tags to add or remove fields.
 
+    This function adds or removes fields from tensor tags.
+
     Args:
-        tags(tuple): tensor tags.
-        add_field(str): add a new tensor tag field.
-        remove_field(str): remove a tensor tag field.
+        tags (Tuple[str, ...]): The tensor tags.
+        add_field (str, optional): A new tensor tag field to add. Defaults to None.
+        remove_field (str, optional): A tensor tag field to remove. Defaults to None.
+
+    Returns:
+        Tuple[str, ...]: The modified tensor tags.
+
+    Raises:
+        Exception: If `remove_field` is not in `tags`.
     """
     tags = list(set(tags))
 
@@ -172,6 +226,18 @@ def change_tags(tags, *, add_field=None, remove_field=None) -> Tuple[str, ...]:
 
 
 def rmtree(path, ignore_errors=False):
+    """Remove a directory tree.
+
+    This function removes a directory tree. If a file in the directory tree is read-only, 
+    its read-only attribute is cleared before it is removed.
+
+    Args:
+        path (str): The path to the directory tree to remove.
+        ignore_errors (bool, optional): Whether to ignore errors. Defaults to False.
+
+    Returns:
+        str: The path to the removed directory tree.
+    """
     def remove_readonly(func, path, _):
         "Clear the readonly bit and reattempt the removal"
         if os.name == 'nt':

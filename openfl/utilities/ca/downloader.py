@@ -23,7 +23,11 @@ FILE_EXTENSIONS = {
 
 
 def get_system_and_architecture():
-    """Get system and architecture of machine."""
+    """Get the system and architecture of the machine.
+
+    Returns:
+        tuple: The system and architecture of the machine.
+    """
     uname_res = platform.uname()
     system = uname_res.system.lower()
 
@@ -34,12 +38,11 @@ def get_system_and_architecture():
 
 
 def download_step_bin(prefix='.', confirmation=True):
-    """
-    Download step binaries.
+    """Download step binaries.
 
     Args:
-        prefix: folder path to download
-        confirmation: request user confirmation or not
+        prefix (str, optional): Folder path to download. Defaults to '.'.
+        confirmation (bool, optional): Request user confirmation or not. Defaults to True.
     """
     system, arch = get_system_and_architecture()
     ext = FILE_EXTENSIONS[system]
@@ -49,12 +52,11 @@ def download_step_bin(prefix='.', confirmation=True):
 
 
 def download_step_ca_bin(prefix='.', confirmation=True):
-    """
-    Download step-ca binaries.
+    """Download step-ca binaries.
 
     Args:
-        prefix: folder path to download
-        confirmation: request user confirmation or not
+        prefix (str, optional): Folder path to download. Defaults to '.'.
+        confirmation (bool, optional): Request user confirmation or not. Defaults to True.
     """
     system, arch = get_system_and_architecture()
     ext = FILE_EXTENSIONS[system]
@@ -64,6 +66,13 @@ def download_step_ca_bin(prefix='.', confirmation=True):
 
 
 def _download(url, prefix, confirmation):
+    """Download a file from a URL.
+
+    Args:
+        url (str): URL of the file to download.
+        prefix (str): Folder path to download.
+        confirmation (bool): Request user confirmation or not.
+    """
     if confirmation:
         confirm('CA binaries will be downloaded now', default=True, abort=True)
     name = url.split('/')[-1]

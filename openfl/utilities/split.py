@@ -6,18 +6,17 @@ import numpy as np
 
 
 def split_tensor_dict_into_floats_and_non_floats(tensor_dict):
-    """
-    Split the tensor dictionary into float and non-floating point values.
+    """Split the tensor dictionary into float and non-floating point values.
 
-    Splits a tensor dictionary into float and non-float values.
+    This function splits a tensor dictionary into two dictionaries: one containing 
+    all the floating point tensors and the other containing all the non-floating point tensors.
 
     Args:
-        tensor_dict: A dictionary of tensors
+        tensor_dict (dict): A dictionary of tensors.
 
     Returns:
-        Two dictionaries: the first contains all of the floating point tensors
-        and the second contains all of the non-floating point tensors
-
+        Tuple[dict, dict]: The first dictionary contains all of the floating point tensors 
+            and the second dictionary contains all of the non-floating point tensors.
     """
     float_dict = {}
     non_float_dict = {}
@@ -30,16 +29,15 @@ def split_tensor_dict_into_floats_and_non_floats(tensor_dict):
 
 
 def split_tensor_dict_by_types(tensor_dict, keep_types):
-    """
-    Split the tensor dictionary into supported and not supported types.
+    """Split the tensor dictionary into supported and not supported types.
 
     Args:
-        tensor_dict: A dictionary of tensors
-        keep_types: An iterable of supported types
-    Returns:
-        Two dictionaries: the first contains all of the supported tensors
-        and the second contains all of the not supported tensors
+        tensor_dict (dict): A dictionary of tensors.
+        keep_types (Iterable[type]): An iterable of supported types.
 
+    Returns:
+        Tuple[dict, dict]: The first dictionary contains all of the supported tensors 
+            and the second dictionary contains all of the not supported tensors.
     """
     keep_dict = {}
     holdout_dict = {}
@@ -54,21 +52,22 @@ def split_tensor_dict_by_types(tensor_dict, keep_types):
 def split_tensor_dict_for_holdouts(logger, tensor_dict,
                                    keep_types=(np.floating, np.integer),
                                    holdout_tensor_names=()):
-    """
-    Split a tensor according to tensor types.
+    """Split a tensor according to tensor types.
+
+    This function splits a tensor dictionary into two dictionaries: one containing 
+    the tensors to send and the other containing the holdout tensors.
 
     Args:
-        logger: The log object
-        tensor_dict: A dictionary of tensors
-        keep_types: A list of types to keep in dictionary of tensors
-        holdout_tensor_names: A list of tensor names to extract from the
-         dictionary of tensors
+        logger (Logger): The logger to use for reporting warnings.
+        tensor_dict (dict): A dictionary of tensors.
+        keep_types (Tuple[type, ...], optional): A tuple of types to keep in the dictionary 
+            of tensors. Defaults to (np.floating, np.integer).
+        holdout_tensor_names (Iterable[str], optional): An iterable of tensor names to extract 
+            from the dictionary of tensors. Defaults to ().
 
     Returns:
-        Two dictionaries: the first is the original tensor dictionary minus
-        the holdout tenors and the second is a tensor dictionary with only the
-        holdout tensors
-
+        Tuple[dict, dict]: The first dictionary is the original tensor dictionary minus the 
+            holdout tensors and the second dictionary is a tensor dictionary with only the holdout tensors.
     """
     # initialization
     tensors_to_send = tensor_dict.copy()
