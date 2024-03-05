@@ -66,11 +66,15 @@ class FrameworkAdapterPlugin(FrameworkAdapterPluginInterface):
 
     @staticmethod
     def get_tensor_dict(model, optimizer=None, suffix=''):
-        """
-        Extract tensor dict from a model and an optimizer.
+        """Extract tensor dict from a model and an optimizer.
+
+        Args:
+            model (object): The model object.
+            optimizer (object, optional): The optimizer object. Defaults to None.
+            suffix (str, optional): The suffix for the weight dictionary keys. Defaults to ''.
 
         Returns:
-        dict {weight name: numpy ndarray}
+            model_weights (dict): A dictionary with weight name as key and numpy ndarray as value.
         """
         model_weights = _get_weights_dict(model, suffix)
 
@@ -86,12 +90,16 @@ class FrameworkAdapterPlugin(FrameworkAdapterPluginInterface):
 
     @staticmethod
     def set_tensor_dict(model, tensor_dict, optimizer=None, device='cpu'):
-        """
-        Set the model weights with a tensor dictionary.
+        """Set the model weights with a tensor dictionary.
 
         Args:
-            tensor_dict: the tensor dictionary
-            with_opt_vars (bool): True = include the optimizer's status.
+            model (object): The model object.
+            tensor_dict (dict): The tensor dictionary.
+            optimizer (object, optional): The optimizer object. Defaults to None.
+            device (str, optional): The device to be used. Defaults to 'cpu'.
+
+        Returns:
+            None
         """
         model_weight_names = [weight.name for weight in model.weights]
         model_weights_dict = {
@@ -110,18 +118,14 @@ class FrameworkAdapterPlugin(FrameworkAdapterPluginInterface):
 
 
 def _get_weights_dict(obj, suffix=''):
-    """
-    Get the dictionary of weights.
+    """Get the dictionary of weights.
 
-    Parameters
-    ----------
-    obj : Model or Optimizer
-        The target object that we want to get the weights.
+    Args:
+        obj (Model or Optimizer): The target object that we want to get the weights.
+        suffix (str, optional): The suffix for the weight dictionary keys. Defaults to ''.
 
-    Returns
-    -------
-    dict
-        The weight dictionary.
+    Returns:
+        weights_dict (dict): The weight dictionary.
     """
     weights_dict = {}
     weight_names = [weight.name for weight in obj.weights]
@@ -134,11 +138,8 @@ def _get_weights_dict(obj, suffix=''):
 def _set_weights_dict(obj, weights_dict):
     """Set the object weights with a dictionary.
 
-    The obj can be a model or an optimizer.
-
     Args:
-        obj (Model or Optimizer): The target object that we want to set
-        the weights.
+        obj (Model or Optimizer): The target object that we want to set the weights.
         weights_dict (dict): The weight dictionary.
 
     Returns:

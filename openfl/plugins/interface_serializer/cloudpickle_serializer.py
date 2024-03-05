@@ -16,12 +16,27 @@ class CloudpickleSerializer(Serializer):
 
     @staticmethod
     def serialize(object_, filename):
-        """Serialize an object and save to disk."""
+        """Serialize an object and save to disk.
+                
+        Args:
+            object_ (object): The object to be serialized.
+            filename (str): The name of the file where the serialized object will be saved.
+
+        Returns:
+            None
+        """
         with open(filename, 'wb') as f:
             cloudpickle.dump(object_, f)
 
     @staticmethod
     def restore_object(filename):
-        """Load and deserialize an object."""
+        """Load and deserialize an object.
+        
+        Args:
+            filename (str): The name of the file where the serialized object is saved.
+
+        Returns:
+            object: The deserialized object.
+        """
         with open(filename, 'rb') as f:
             return cloudpickle.load(f)
