@@ -12,11 +12,15 @@ Welcome to the |productName| API reference:
    :template: custom-module-template.rst
    :recursive:
 
-   openfl.component.aggregator
-   openfl.component.assigner
-   openfl.component.collaborator
-   openfl.component.director
-   openfl.component.envoy
-   openfl.component.straggler_handling_functions
-
-   - :doc:`openfl.component`
+- :doc:`source/api/openfl_component`
+- :doc:`source/api/openfl_cryptography`
+- :doc:`source/api/openfl_databases`
+- :doc:`source/api/openfl_experimental`
+- :doc:`source/api/openfl_federated`
+- :doc:`source/api/openfl_interface`
+- :doc:`source/api/openfl_native`
+- :doc:`source/api/openfl_pipelines`
+- :doc:`source/api/openfl_plugins`
+- :doc:`source/api/openfl_protocols`
+- :doc:`source/api/openfl_transport`
+- :doc:`source/api/openfl_utilities`
