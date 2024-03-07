@@ -20,12 +20,14 @@ from openfl.databases.utilities import _search, _store, _retrieve, ROUND_PLACEHO
 
 
 class TensorDB:
-    """
-    The TensorDB stores a tensor key and the data that it corresponds to.
+    """The TensorDB stores a tensor key and the data that it corresponds to.
 
-    It is built on top of a pandas dataframe
-    for it's easy insertion, retreival and aggregation capabilities. Each
-    collaborator and aggregator has its own TensorDB.
+    It is built on top of a pandas dataframe for it's easy insertion, retreival 
+    and aggregation capabilities. Each collaborator and aggregator has its own TensorDB.
+
+    Attributes:
+        tensor_db: A pandas DataFrame that stores the tensor key and the data that it corresponds to. 
+        mutex: A threading Lock object used to ensure thread-safe operations on the tensor_db Dataframe. 
     """
 
     def __init__(self) -> None:
@@ -46,10 +48,7 @@ class TensorDB:
         self.mutex = Lock()
 
     def _bind_convenience_methods(self):
-        """
-        Bind convenience methods for the TensorDB dataframe 
-        to make storage, retrieval, and search easier.
-        """
+        """Bind convenience methods for the TensorDB dataframe to make storage, retrieval, and search easier."""
         if not hasattr(self.tensor_db, 'store'):
             self.tensor_db.store = MethodType(_store, self.tensor_db)
         if not hasattr(self.tensor_db, 'retrieve'):
@@ -58,8 +57,7 @@ class TensorDB:
             self.tensor_db.search = MethodType(_search, self.tensor_db)
 
     def __repr__(self) -> str:
-        """
-        Returns the string representation of the TensorDB object.
+        """Returns the string representation of the TensorDB object.
         
         Returns:
             content (str): The string representation of the TensorDB object.
@@ -69,8 +67,7 @@ class TensorDB:
             return f'TensorDB contents:\n{content}'
 
     def __str__(self) -> str:
-        """
-        Returns the string representation of the TensorDB object.
+        """Returns the string representation of the TensorDB object.
     
         Returns:
         __repr__ (str): The string representation of the TensorDB object.
@@ -78,8 +75,7 @@ class TensorDB:
         return self.__repr__()
 
     def clean_up(self, remove_older_than: int = 1) -> None:
-        """
-        Removes old entries from the database to prevent it from becoming too large and slow.
+        """Removes old entries from the database to prevent it from becoming too large and slow.
     
         Args:
             remove_older_than (int, optional): Entries older than this number of rounds are removed. Defaults to 1.
@@ -96,8 +92,7 @@ class TensorDB:
         ].reset_index(drop=True)
 
     def cache_tensor(self, tensor_key_dict: Dict[TensorKey, np.ndarray]) -> None:
-        """
-        Insert a tensor into TensorDB (dataframe).
+        """Insert a tensor into TensorDB (dataframe).
 
         Args:
             tensor_key_dict (Dict[TensorKey, np.ndarray]): A dictionary where the key is a TensorKey and the value is a numpy array.
@@ -122,8 +117,7 @@ class TensorDB:
             )
 
     def get_tensor_from_cache(self, tensor_key: TensorKey) -> Optional[np.ndarray]:
-        """
-        Perform a lookup of the tensor_key in the TensorDB.
+        """Perform a lookup of the tensor_key in the TensorDB.
 
         Args:
             tensor_key (TensorKey): The key of the tensor to look up.
@@ -147,23 +141,20 @@ class TensorDB:
     def get_aggregated_tensor(self, tensor_key: TensorKey, collaborator_weight_dict: dict,
                               aggregation_function: AggregationFunction
                               ) -> Optional[np.ndarray]:
-        """
-        Determine whether all of the collaborator tensors are present for a given tensor key.
+        """Determine whether all of the collaborator tensors are present for a given tensor key.
 
         Args:
             tensor_key (TensorKey): The tensor key to be resolved. If origin 'agg_uuid' is
-                        present, can be returned directly. Otherwise must compute weighted 
-                        average of all collaborators.
+                present, can be returned directly. Otherwise must compute weighted average of all collaborators.
             collaborator_weight_dict (dict): A dictionary where the keys are collaborator 
-                        names and the values are their respective weights.
+                names and the values are their respective weights.
             aggregation_function (AggregationFunction): Call the underlying numpy aggregation
-                        function to use to compute the weighted average. Default is just the 
-                        weighted average.
+                function to use to compute the weighted average. Default is just the weighted average.
+        
         Returns:
             agg_nparray Optional[np.ndarray]: weighted_nparray The weighted average if all 
-                        collaborator values are present. Otherwise, returns None.
+                collaborator values are present. Otherwise, returns None.
             None: if not all values are present.
-
         """
         if len(collaborator_weight_dict) != 0:
             assert np.abs(1.0 - sum(collaborator_weight_dict.values())) < 0.01, (
@@ -228,8 +219,7 @@ class TensorDB:
         return np.array(agg_nparray)
 
     def _iterate(self, order_by: str = 'round', ascending: bool = False) -> Iterator[pd.Series]:
-        """
-        Returns an iterator over the rows of the TensorDB, sorted by a specified column.
+        """Returns an iterator over the rows of the TensorDB, sorted by a specified column.
     
         Args:
             order_by (str, optional): The column to sort by. Defaults to 'round'.
