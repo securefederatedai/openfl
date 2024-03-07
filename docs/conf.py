@@ -31,9 +31,9 @@ sys.path.insert(0, os.path.abspath('../'))
 # import sphinxcontrib.napoleon # NOQA:E800
 
 extensions = [
+    'sphinx.ext.napoleon',
     'sphinx_rtd_theme',
     'sphinx.ext.autosectionlabel',
-    'sphinx.ext.napoleon',
     'sphinx-prompt',
     'sphinx_substitution_extensions',
     'sphinx.ext.ifconfig',
@@ -69,6 +69,33 @@ napoleon_google_docstring = True
 
 # Config the returns section to behave like the Args section
 napoleon_custom_sections = [('Returns', 'params_style')]
+
+# This code extends Sphinx's GoogleDocstring class to support 'Keys', 'Attributes', 
+# and 'Class Attributes' sections in docstrings. Allows for more detailed and structured 
+# documentation of Python classes and their attributes.
+from sphinx.ext.napoleon.docstring import GoogleDocstring
+
+# Define new sections and their corresponding parse methods
+new_sections = {
+    'keys': 'Keys',
+    'attributes': 'Attributes',
+    'class attributes': 'Class Attributes'
+}
+
+# Add new sections to GoogleDocstring class
+for section, title in new_sections.items():
+    setattr(GoogleDocstring, f'_parse_{section}_section',
+            lambda self, section: self._format_fields(title, self._consume_fields()))
+
+# Patch the parse method to include new sections
+def patched_parse(self):
+    for section in new_sections:
+        self._sections[section] = getattr(self, f'_parse_{section}_section')
+    self._unpatched_parse()
+
+# Apply the patch
+GoogleDocstring._unpatched_parse = GoogleDocstring._parse
+GoogleDocstring._parse = patched_parse
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
