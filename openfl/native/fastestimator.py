@@ -15,18 +15,21 @@ from openfl.utilities.split import split_tensor_dict_for_holdouts
 
 
 class FederatedFastEstimator:
-    """
-    A wrapper for fastestimator.estimator that allows running in federated mode.
+    """A wrapper for fastestimator.estimator that allows running in federated mode.
+
+    Attributes:
+        estimator: The FastEstimator to be used.
+        logger: A logger to record events.
+        rounds: The number of rounds to train.
     """
 
     def __init__(self, estimator, override_config: dict = None, **kwargs):
-        """
-        Initializes a new instance of the FederatedFastEstimator class.
+        """Initializes a new instance of the FederatedFastEstimator class.
 
-            Args:
-                estimator : The FastEstimator to be used.
-                override_config (dict, optional): A dictionary to override the default configuration. Defaults to None.
-                **kwargs : Additional keyword arguments.
+        Args:
+            estimator: The FastEstimator to be used.
+            override_config (dict, optional): A dictionary to override the default configuration. Defaults to None.
+            **kwargs: Additional keyword arguments.
         """
         self.estimator = estimator
         self.logger = getLogger(__name__)
@@ -35,9 +38,7 @@ class FederatedFastEstimator:
             fx.update_plan(override_config)
 
     def fit(self):
-        """
-        Runs the estimator in federated mode.
-        """
+        """Runs the estimator in federated mode."""
         import fastestimator as fe
         from fastestimator.trace.io.best_model_saver import BestModelSaver
         from sys import path
@@ -165,8 +166,7 @@ class FederatedFastEstimator:
 
 
 def split_data(train, eva, test, rank, collaborator_count):
-    """
-    Split data into N parts, where N is the collaborator count.
+    """Split data into N parts, where N is the collaborator count.
 
     Args:
         train : The training data.

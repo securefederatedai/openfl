@@ -27,8 +27,7 @@ WORKSPACE_PREFIX = os.path.join(os.path.expanduser('~'), '.local', 'workspace')
 
 
 def setup_plan(log_level='CRITICAL'):
-    """
-    Dump the plan with all defaults and overrides set.
+    """Dump the plan with all defaults and overrides set.
 
     Args:
         log_level (str, optional): The log level Whether to save the plan to disk. 
@@ -53,15 +52,14 @@ def setup_plan(log_level='CRITICAL'):
 
 
 def flatten(config, return_complete=False):
-    """
-    Flatten nested config.
+    """Flatten nested config.
+    
     Args:
         config (dict): The configuration dictionary to flatten.
         return_complete (bool, optional): Whether to return the complete flattened config. Defaults to False.
 
     Returns:
         flattened_config (dict): The flattened configuration dictionary.
-    
     """
     flattened_config = flatten_json.flatten(config, '.')
     if not return_complete:
@@ -77,8 +75,7 @@ def flatten(config, return_complete=False):
 
 
 def update_plan(override_config, plan=None, resolve=True):
-    """
-    Updates the plan with the provided override and saves it to disk.
+    """Updates the plan with the provided override and saves it to disk.
 
     For a list of available override options, call `fx.get_plan()`
 
@@ -127,8 +124,7 @@ def update_plan(override_config, plan=None, resolve=True):
 
 
 def unflatten(config, separator='.'):
-    """
-    Unfolds `config` settings that have `separator` in their names.
+    """Unfolds `config` settings that have `separator` in their names.
 
     Args:
         config (dict): The flattened configuration dictionary to unfold.
@@ -142,8 +138,8 @@ def unflatten(config, separator='.'):
 
 
 def setup_logging(level='INFO', log_file=None):
-    """
-    Initializes logging settings.
+    """Initializes logging settings.
+    
     Args:
         level (str, optional): The log level. Defaults to 'INFO'.
         log_file (str, optional): The name of the file to log to.
@@ -180,21 +176,20 @@ def setup_logging(level='INFO', log_file=None):
 
 def init(workspace_template: str = 'default', log_level: str = 'INFO',
          log_file: str = None, agg_fqdn: str = None, col_names=None):
-    """
-    Initializes the openfl package.
+    """Initializes the openfl package.
 
     It performs the following tasks:
 
-         1. Creates a workspace in ~/.local/workspace (Equivalent to `fx
-         workspace create --prefix ~/.local/workspace --template
-         $workspace_template)
-         2. Setup certificate authority (equivalent to `fx workspace certify`)
-         3. Setup aggregator PKI (equivalent to `fx aggregator
-         generate-cert-request` followed by `fx aggregator certify`)
-         4. Setup list of collaborators (col_names) and their PKI. (Equivalent
-         to running `fx collaborator generate-cert-request` followed by `fx
-         collaborator certify` for each of the collaborators in col_names)
-         5. Setup logging
+        1. Creates a workspace in ~/.local/workspace (Equivalent to `fx
+        workspace create --prefix ~/.local/workspace --template
+        $workspace_template)
+        2. Setup certificate authority (equivalent to `fx workspace certify`)
+        3. Setup aggregator PKI (equivalent to `fx aggregator
+        generate-cert-request` followed by `fx aggregator certify`)
+        4. Setup list of collaborators (col_names) and their PKI. (Equivalent
+        to running `fx collaborator generate-cert-request` followed by `fx
+        collaborator certify` for each of the collaborators in col_names)
+        5. Setup logging
 
     Args:
         workspace_template (str): The template that should be used as the basis for 
@@ -234,8 +229,7 @@ def init(workspace_template: str = 'default', log_level: str = 'INFO',
 
 
 def get_collaborator(plan, name, model, aggregator):
-    """
-    Create the collaborator.
+    """Create the collaborator.
 
     Using the same plan object to create multiple collaborators leads to
     identical collaborator objects. This function can be removed once
@@ -249,7 +243,6 @@ def get_collaborator(plan, name, model, aggregator):
 
     Returns:
         Collaborator: The created collaborator.
-
     """
     plan = copy(plan)
 
@@ -257,8 +250,7 @@ def get_collaborator(plan, name, model, aggregator):
 
 
 def run_experiment(collaborator_dict: dict, override_config: dict = None):
-    """
-    Core function that executes the FL Plan.
+    """Core function that executes the FL Plan.
 
     Args:
         collaborator_dict (dict): A dictionary mapping collaborator names to their federated models.
@@ -336,8 +328,7 @@ def run_experiment(collaborator_dict: dict, override_config: dict = None):
 
 
 def get_plan(fl_plan=None, indent=4, sort_keys=True):
-    """
-    Returns a string representation of the current Plan.
+    """Returns a string representation of the current Plan.
     
     Args:
         fl_plan (Plan): The plan to get a string representation of. If None, a new plan is set up. Defaults to None.
