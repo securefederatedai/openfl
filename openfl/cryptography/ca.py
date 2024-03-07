@@ -21,8 +21,7 @@ from cryptography.x509.oid import NameOID
 
 
 def generate_root_cert(days_to_expiration: int = 365) -> Tuple[RSAPrivateKey, Certificate]:
-    """
-    Generate a root certificate and its corresponding private key.
+    """Generate a root certificate and its corresponding private key.
 
     Args:
         days_to_expiration (int, optional): The number of days until the certificate expires. Defaults to 365.
@@ -72,8 +71,7 @@ def generate_root_cert(days_to_expiration: int = 365) -> Tuple[RSAPrivateKey, Ce
 
 
 def generate_signing_csr() -> Tuple[RSAPrivateKey, CertificateSigningRequest]:
-    """
-    Generate a Certificate Signing Request (CSR) and its corresponding private key.
+    """Generate a Certificate Signing Request (CSR) and its corresponding private key.
 
     Returns:
         Tuple[RSAPrivateKey, CertificateSigningRequest]: The private key and the CSR.
@@ -110,13 +108,12 @@ def generate_signing_csr() -> Tuple[RSAPrivateKey, CertificateSigningRequest]:
 def sign_certificate(csr: CertificateSigningRequest, issuer_private_key: RSAPrivateKey,
                      issuer_name: Name, days_to_expiration: int = 365,
                      ca: bool = False) -> Certificate:
-    """
-    Sign a incoming Certificate Signing Request (CSR) with the issuer's private key.
+    """Sign a incoming Certificate Signing Request (CSR) with the issuer's private key.
 
     Args:
         csr (CertificateSigningRequest): The CSR to be signed.
         issuer_private_key (RSAPrivateKey): Root CA private key if the request is for the signing
-                             CA; Signing CA private key otherwise.
+            CA; Signing CA private key otherwise.
         issuer_name (Name): The name of the issuer.
         days_to_expiration (int, optional): The number of days until the certificate expires. Defaults to 365.
         ca (bool, optional): Whether the certificate is for a certificate authority (CA). Defaults to False.

@@ -18,8 +18,7 @@ from cryptography.x509.base import CertificateSigningRequest
 
 
 def read_key(path: Path) -> RSAPrivateKey:
-    """
-    Reads a private key from a file.
+    """Reads a private key from a file.
     
     Args:
         path (Path): The path to the file containing the private key.
@@ -37,8 +36,7 @@ def read_key(path: Path) -> RSAPrivateKey:
 
 
 def write_key(key: RSAPrivateKey, path: Path) -> None:
-    """
-    Writes a private key to a file.
+    """Writes a private key to a file.
     
     Args:
         key (RSAPrivateKey): The private key to write.
@@ -56,8 +54,7 @@ def write_key(key: RSAPrivateKey, path: Path) -> None:
 
 
 def read_crt(path: Path) -> Certificate:
-    """
-    Reads a signed TLS certificate from a file.
+    """Reads a signed TLS certificate from a file.
     
     Args:
         path (Path): The path to the file containing the certificate.
@@ -75,8 +72,7 @@ def read_crt(path: Path) -> Certificate:
 
 
 def write_crt(certificate: Certificate, path: Path) -> None:
-    """
-    Writes a cryptography certificate / CSR to a file.
+    """Writes a cryptography certificate / CSR to a file.
 
     Args:
         certificate (Certificate): cryptography csr / certificate object to write.
@@ -89,8 +85,7 @@ def write_crt(certificate: Certificate, path: Path) -> None:
 
 
 def read_csr(path: Path) -> Tuple[CertificateSigningRequest, str]:
-    """
-    Reads a Certificate Signing Request (CSR) from a file.
+    """Reads a Certificate Signing Request (CSR) from a file.
     
     Args:
         path (Path): The path to the file containing the CSR.
@@ -108,8 +103,7 @@ def read_csr(path: Path) -> Tuple[CertificateSigningRequest, str]:
 
 
 def get_csr_hash(certificate: CertificateSigningRequest) -> str:
-    """
-    Computes the SHA-384 hash of a certificate.
+    """Computes the SHA-384 hash of a certificate.
     
     Args:
         certificate (CertificateSigningRequest): The certificate to compute the hash of.
