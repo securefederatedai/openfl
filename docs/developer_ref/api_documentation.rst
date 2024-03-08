@@ -24,3 +24,10 @@ Welcome to the |productName| API reference:
 - :doc:`../source/api/openfl_protocols`
 - :doc:`../source/api/openfl_transport`
 - :doc:`../source/api/openfl_utilities`
+
+
+Indices and tables
+==================
+
+* :ref:`genindex`
+* :ref:`modindex`
