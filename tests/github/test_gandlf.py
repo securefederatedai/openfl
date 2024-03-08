@@ -28,6 +28,7 @@ if __name__ == '__main__':
     parser.add_argument('--rounds-to-train')
     parser.add_argument('--col1-data-path', default='data/one')
     parser.add_argument('--col2-data-path', default='data/two')
+    parser.add_argument('--gandlf_config', default=None)
     parser.add_argument('--ujjwal', action='store_true')
 
     origin_dir = Path().resolve()
@@ -49,7 +50,11 @@ if __name__ == '__main__':
             if re.match(r'.*\.csv$', entry.name):
                 shutil.copy(entry.path, Path.cwd().resolve() / 'data' / col1)
     # Initialize FL plan
-    check_call(['fx', 'plan', 'initialize', '-a', fqdn])
+    if args.gandlf_config:
+        check_call(['fx', 'plan', 'initialize', '-a', fqdn,
+                    '--gandlf_config', str(args.gandlf_config)])
+    else:
+        check_call(['fx', 'plan', 'initialize', '-a', fqdn])
     plan_path = Path('plan/plan.yaml')
     try:
         rounds_to_train = int(rounds_to_train)

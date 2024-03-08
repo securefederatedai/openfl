@@ -27,7 +27,6 @@ class RedirectStdStreamBuffer:
         Returns:
             tuple: A tuple containing the contents of stdout and stderr buffers.
         """
-
         self._stdoutbuff.seek(0)
         self._stderrbuff.seek(0)
 
@@ -60,6 +59,7 @@ class RedirectStdStream(object):
         self.__stdBuffer = buffer
 
     def write(self, message):
+        message = f"\33[94m{message}\33[0m"
         """Writes the message to the standard destination and buffer.
 
         Args:
@@ -68,6 +68,9 @@ class RedirectStdStream(object):
         self.__stdDestination.write(message)
         self.__stdBuffer.write(message)
 
+    def flush(self):
+        pass
+
 
 class RedirectStdStreamContext:
     """Context Manager that enables redirection of stdout and stderr.
@@ -75,7 +78,6 @@ class RedirectStdStreamContext:
     Attributes:
         stdstreambuffer (RedirectStdStreamBuffer): Buffer for standard outputs.
     """
-
     def __init__(self):
         """Initializes the RedirectStdStreamContext with a RedirectStdStreamBuffer."""
         self.stdstreambuffer = RedirectStdStreamBuffer()
@@ -90,6 +92,7 @@ class RedirectStdStreamContext:
         self.__old_stderr = sys.stderr
         sys.stdout = RedirectStdStream(self.stdstreambuffer._stdoutbuff, sys.stdout)
         sys.stderr = RedirectStdStream(self.stdstreambuffer._stderrbuff, sys.stderr)
+
         return self.stdstreambuffer
 
     def __exit__(self, et, ev, tb):

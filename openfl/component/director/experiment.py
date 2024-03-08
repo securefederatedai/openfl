@@ -153,7 +153,7 @@ class Experiment:
                 self.archive_path.unlink(missing_ok=True)
                 return False
 
-        logger.debug("Experiment Review succeed")
+        logger.debug("Experiment Review succeeded")
         return True
 
     def _create_aggregator_grpc_server(

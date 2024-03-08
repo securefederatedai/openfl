@@ -15,9 +15,13 @@ class SerializationError(Exception):
         pass
 
 
-class GPUResourcesNotAvailableError(Exception):
-    """Raised when the required GPU resources are not available."""
+class ResourcesNotAvailableError(Exception):
+    def __init__(self, *args: object) -> None:
+        super().__init__(*args)
+        pass
 
+
+class ResourcesAllocationError(Exception):
     def __init__(self, *args: object) -> None:
         """Initializes the GPUResourcesNotAvailableError with the provided arguments.
 

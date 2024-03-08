@@ -23,7 +23,7 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install metaflow==2.7.15 ray==2.1.0 torch
+        pip install -r tests/github/experimental/requirements_experimental_localruntime_tests.txt
         pip install .
     - name: Workflow - Exclude Test (Single Process Backend)
       run: |
@@ -80,3 +80,6 @@ jobs:
     - name: Workflow - Collaborator Subset (Ray Backend)
       run: |
         python tests/github/experimental/testflow_subset_of_collaborators.py ray
+    - name: Test Experimental Aggregator Based Workflow API
+      run: |
+        python -m tests.github.experimental.workspace.test_experimental_agg_based_workflow --custom_template tests/github/experimental/workspace/testcase_datastore_cli --fed_workspace aggregator --col col1 --col col2  --rounds-to-train 1

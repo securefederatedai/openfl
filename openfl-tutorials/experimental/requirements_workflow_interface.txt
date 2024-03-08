@@ -1,4 +1,9 @@
 dill==0.3.6
+chardet
+charset-normalizer
 metaflow==2.7.15
-ray==2.2.0
-numpy==1.21.6
+nbdev==2.3.12
+astor==0.8.1
+ray==2.9.2
+torch
+torchvision

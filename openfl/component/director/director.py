@@ -92,9 +92,9 @@ class Director:
         is_accepted = False
         if (self.sample_shape != shard_info['sample_shape']
                 or self.target_shape != shard_info['target_shape']):
-            logger.info('Request was not accepted')
+            logger.info(f'Director did not accept shard for {shard_info["node_info"]["name"]}')
             return is_accepted
-        logger.info('Request was accepted')
+        logger.info(f'Director accepted shard for {shard_info["node_info"]["name"]}')
         self._shard_registry[shard_info['node_info']['name']] = {
             'shard_info': shard_info,
             'is_online': True,
@@ -182,7 +182,7 @@ class Director:
         aggregator = self.experiments_registry[experiment_name].aggregator
 
         if aggregator.last_tensor_dict is None:
-            logger.error('Aggregator have no aggregated model to return')
+            logger.error('Aggregator has no aggregated model to return')
             return None
 
         if model_type == 'best':
@@ -357,7 +357,7 @@ class Director:
         Returns:
             list: List with the status information about envoys.
         """
-        logger.info(f'Shard registry: {self._shard_registry}')
+        logger.debug(f'Shard registry: {self._shard_registry}')
         for envoy_info in self._shard_registry.values():
             envoy_info['is_online'] = (
                 time.time() < envoy_info.get('last_updated', 0)
