@@ -29,15 +29,14 @@ class FederatedRuntime(Runtime):
         collaborators: List[str] = None,
         **kwargs,
     ) -> None:
-        """
-        Use single node to run the flow
+        """Initializes the FederatedRuntime object.
+        
+        Use single node to run the flow.
 
         Args:
-            aggregator:    Name of the aggregator.
-            collaborators: List of collaborator names.
-
-        Returns:
-            None
+            aggregator (str, optional): Name of the aggregator. Defaults to None.
+            collaborators (List[str], optional): List of collaborator names. Defaults to None.
+            **kwargs: Additional keyword arguments.
         """
         super().__init__()
         if aggregator is not None:
@@ -48,24 +47,36 @@ class FederatedRuntime(Runtime):
 
     @property
     def aggregator(self) -> str:
-        """Returns name of _aggregator"""
+        """Returns name of _aggregator."""
         return self._aggregator
 
     @aggregator.setter
     def aggregator(self, aggregator_name: Type[Aggregator]):
-        """Set LocalRuntime _aggregator"""
+        """Set LocalRuntime _aggregator.
+        
+        Args:
+            aggregator_name (Type[Aggregator]): The name of the aggregator to set.
+        """
         self._aggregator = aggregator_name
 
     @property
     def collaborators(self) -> List[str]:
-        """
-        Return names of collaborators. Don't give direct access to private attributes
+        """Return names of collaborators. 
+        
+        Don't give direct access to private attributes.
+        
+        Returns:
+            List[str]: The names of the collaborators.
         """
         return self.__collaborators
 
     @collaborators.setter
     def collaborators(self, collaborators: List[Type[Collaborator]]):
-        """Set LocalRuntime collaborators"""
+        """Set LocalRuntime collaborators.
+        
+        Args:
+            collaborators (List[Type[Collaborator]]): The list of collaborators to set.
+        """
         self.__collaborators = collaborators
 
     def __repr__(self):

@@ -39,9 +39,12 @@ extensions = [
     'sphinx.ext.ifconfig',
     'sphinxcontrib.mermaid',
     'sphinx.ext.autodoc',
-    'sphinx.ext.autosummary'
+    'sphinx.ext.autosummary',
+    'recommonmark'
 ]
 autosummary_generate = True  # Turn on sphinx.ext.autosummary
+
+source_suffix = ['.rst', '.md']
 
 # -- Project information -----------------------------------------------------
 
@@ -96,6 +99,10 @@ def patched_parse(self):
 # Apply the patch
 GoogleDocstring._unpatched_parse = GoogleDocstring._parse
 GoogleDocstring._parse = patched_parse
+
+# Add any paths that contain templates here, relative to this directory.
+templates_path = ['_templates']
+
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
@@ -121,3 +128,6 @@ html_theme = 'sphinx_rtd_theme'
 html_static_path = ['_static']
 html_style = 'css/Intel_One_Mono_Font_Theme.css'
 autosectionlabel_prefix_document = True
+
+def setup(app):
+    app.add_css_file('css/custom.css')

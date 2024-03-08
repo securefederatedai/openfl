@@ -182,12 +182,16 @@ class FLSpec:
             print("Sending state from collaborator to aggregator")
 
     def filter_exclude_include(self, f, **kwargs):
-        """
-        This function filters exclude/include attributes
+        """Filters exclude/include attributes for a given task within the flow.
 
         Args:
-            flspec_obj  :  Reference to the FLSpec (flow) object
-            f           :  The task to be executed within the flow
+            f (Callable): The task to be executed within the flow.
+            **kwargs (dict): Additional keyword arguments. These should include:
+                - "foreach" (str): The attribute name that contains the list of selected collaborators.
+                - "exclude" (list, optional): List of attribute names to exclude. 
+                    If an attribute name is present in this list and the clone has this attribute, it will be filtered out.
+                - "include" (list, optional): List of attribute names to include. 
+                    If an attribute name is present in this list and the clone has this attribute, it will be included.
         """
         selected_collaborators = getattr(self, kwargs["foreach"])
 
@@ -206,7 +210,12 @@ class FLSpec:
     def restore_instance_snapshot(
         self, ctx: FLSpec, instance_snapshot: List[FLSpec]
     ):
-        """Restores attributes from backup (in instance snapshot) to ctx"""
+        """Restores attributes from backup (in instance snapshot) to ctx.
+        
+        Args:
+            ctx (FLSpec): The context to restore the attributes to.
+            instance_snapshot (List[FLSpec]): The list of FLSpec instances that serve as the backup.
+        """
         for backup in instance_snapshot:
             artifacts_iter, _ = generate_artifacts(ctx=backup)
             for name, attr in artifacts_iter():
