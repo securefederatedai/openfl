@@ -56,7 +56,7 @@ Looking for the Open Flash Library project also referred to as OpenFL? Find it `
    :caption: DEVELOPER REFERENCE
    :maxdepth: 2
 
-   developer_ref/api_documentation
+   developer_ref/openfl_api
    developer_ref/troubleshooting
 
 .. toctree::
@@ -64,8 +64,7 @@ Looking for the Open Flash Library project also referred to as OpenFL? Find it `
    :caption: CONTRIBUTING GUIDELINES
    :maxdepth: 2
 
-   contributing_guidelines/contributing
-   openfl_api
+   contributing_guidelines/contributing   
 
 
 Indices and tables
