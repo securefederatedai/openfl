@@ -35,6 +35,7 @@ extensions = [
     'sphinx.ext.autosectionlabel',
     'sphinx.ext.napoleon',
     'sphinx-prompt',
+    'sphinx_copybutton',
     'sphinx_substitution_extensions',
     'sphinx.ext.ifconfig',
     'sphinxcontrib.mermaid',

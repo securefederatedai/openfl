@@ -7,20 +7,16 @@
 Task Runner API
 ================
 
+Let's take a deeper dive into the Task Runner API. If you haven't already, we suggest checking out the :ref:`quick_start` for a primer on doing a simple experiment on a single node.
 
-An overview of this workflow is shown below.
+Transitioning from a local experiment to a true, distributed federation can be understood best with the following diagram. 
 
 .. figure:: ../../images/openfl_flow.png
 
-.. centered:: Overview of the Aggregator-Based Workflow
+.. centered:: Overview of a Task Runner experiment distributed across multiple nodes
+:
 
-There are two ways to run federation without Director:
-
-- `Bare Metal Approach`_
-- `Docker Approach`_
-
-
-This workflow uses short-lived components in a federation, which is terminated when the experiment is finished. The components are as follows:
+The Task Runner API uses short-lived components in a federation, which is terminated when the experiment is finished. The components are as follows:
 
 - The *Collaborator* uses a local dataset to train a global model and the *Aggregator* receives model updates from *Collaborators* and aggregates them to create the new global model.
 - The *Aggregator* is framework-agnostic, while the *Collaborator* can use any deep learning frameworks, such as `TensorFlow <https://www.tensorflow.org/>`_\* \  or `PyTorch <https://pytorch.org/>`_\*\.
@@ -504,8 +500,8 @@ In fact, the :code:`get_model()` method returns a **TaskRunner** object loaded w
 .. _running_the_federation_docker:
 
 
-Docker Approach
----------------
+Running inside Docker
+---------------------
 
 There are two ways you can run |productName| with Docker\*\.
 
