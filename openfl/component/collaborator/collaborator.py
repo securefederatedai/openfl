@@ -14,6 +14,8 @@ from openfl.pipelines import TensorCodec
 from openfl.protocols import utils
 from openfl.utilities import TensorKey
 
+import wandb
+LOG_WANDB = True
 
 class DevicePolicy(Enum):
     """Device assignment policy."""
@@ -133,6 +135,14 @@ class Collaborator:
 
     def run(self):
         """Run the collaborator."""
+        if LOG_WANDB:
+            wandb.init(project="my_project", entity="my_group", tags=["my_tags"],
+                       config={
+                           "num_clients": 4,
+                           "rounds": 100,
+                       },
+                       name=self.collaborator_name
+)
         while True:
             tasks, round_number, sleep_time, time_to_quit = self.get_tasks()
             if time_to_quit:
@@ -148,6 +158,8 @@ class Collaborator:
                 self.tensor_db.clean_up(self.db_store_rounds)
 
         self.logger.info('End of Federation reached. Exiting...')
+        if LOG_WANDB:
+            wandb.finish()
 
     def run_simulation(self):
         """

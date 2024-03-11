@@ -18,6 +18,8 @@ from openfl.utilities import TaskResultKey
 from openfl.utilities import TensorKey
 from openfl.utilities.logs import write_metric
 
+import wandb
+LOG_WANDB = True
 
 class Aggregator:
     r"""An Aggregator is the central node in federated learning.
@@ -55,6 +57,17 @@ class Aggregator:
                  log_metric_callback=None,
                  **kwargs):
         """Initialize."""
+        #INITIALIZE WANDB WITH CORRECT NAME
+        #The following variable, my_aggregator_name, can be changed to whatever you want. Right now I suppose that the name of the collaborators of the federation is in the format DATASETNAME_ENV_NUMBER
+        my_aggregator_name = '_'.join(set(element.split('_')[0] for element in authorized_cols))
+        if LOG_WANDB:
+            wandb.init(project="my_project", entity="my_group", group=f"{my_aggregator_name}", tags=["my_tag"],
+                       config={
+                           "num_clients": 4,
+                           "rounds": 100
+                       },
+                       name=f"Aggregator_{my_aggregator_name}"
+)
         self.round_number = 0
         self.single_col_cert_common_name = single_col_cert_common_name
 
@@ -837,6 +850,8 @@ class Aggregator:
                 if agg_function:
                     self.logger.metric(f'Round {round_number}, aggregator: {task_name} '
                                        f'{agg_function} {agg_tensor_name}:\t{agg_results:f}')
+                    if LOG_WANDB:
+                        wandb.log({f"{task_name} {agg_tensor_name}": float(f"{agg_results}")}, step=round_number)
                 else:
                     self.logger.metric(f'Round {round_number}, aggregator: {task_name} '
                                        f'{agg_tensor_name}:\t{agg_results:f}')
@@ -893,6 +908,8 @@ class Aggregator:
         # TODO This needs to be fixed!
         if self._time_to_quit():
             self.logger.info('Experiment Completed. Cleaning up...')
+            if LOG_WANDB:
+                wandb.finish()
         else:
             self.logger.info(f'Starting round {self.round_number}...')
 
