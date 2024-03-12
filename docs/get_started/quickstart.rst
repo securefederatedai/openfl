@@ -297,7 +297,8 @@ Each function is passed a dataloader, and returns a :code:`Metric` associated wi
 Defining your own data loader
 *****************************
 
-Now let's look at the OpenFL :code:`PyTorchDataLoader` and see how by subclassing it we are able to split the MNIST dataset across collaborators for training. You'll find the follow defined in :code:`src/dataloader.py`.
+Now let's look at the OpenFL :code:`PyTorchDataLoader` and see how by subclassing it we are able to split the MNIST dataset across collaborators for training. You'll find the following defined in :code:`src/dataloader.py`.
+
 
 .. code-block:: python
 
