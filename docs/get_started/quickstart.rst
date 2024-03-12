@@ -289,6 +289,7 @@ If you continue scrolling down in :code:`src/taskrunner.py`, you'll see two func
                 val_score += pred.eq(target).sum().cpu().numpy()
         
         accuracy = val_score / total_samples
+        return Metric(name='accuracy', value=np.array(accuracy))
 
 Each function is passed a dataloader, and returns a :code:`Metric` associated with that task. In this example the :code:`train_` function returns the Cross Entropy Loss for an epoch, and the :code:`validate_` function returns the accuracy. You'll see these metrics reported when running the collaborator locally, and the aggregator will report the average metrics coming from all collaborators. 
 
