@@ -229,7 +229,7 @@ Now that you've run your first federation, let's see how to use replace the mode
             x = self.fc2(x)
             return x
 
-:code:`PyTorchTaskRunner` inherits from :code:`nn.module`, so changing your deep learning model is as easy as copying the network layers (i.e. :code:`self.conv1`, etc.) into the :code:`__init__` function, and then defining your `forward` function. You'll notice that unlike PyTorch, the optimizer is also defined in this :code:`__init__` function. This is so the model AND optimizer weights can be distributed as part of the federation.  
+:code:`PyTorchTaskRunner` inherits from :code:`nn.module`, so changing your deep learning model is as easy as modifying the network layers (i.e. :code:`self.conv1`, etc.) into the :code:`__init__` function, and then defining your :code:`forward` function. You'll notice that unlike PyTorch, the optimizer is also defined in this :code:`__init__` function. This is so the model AND optimizer weights can be distributed as part of the federation.  
 
 ******************************************
 Defining your own train and validate tasks
@@ -329,7 +329,7 @@ Now let's look at the OpenFL :code:`PyTorchDataLoader` and see how by subclassin
     
             self.num_classes = num_classes
 
-This example uses the classic MNIST dataset for digit recognition. For in-memory datasets, the :code:`data_path` is passed a number to determine which slice of the dataset the collaborator should receive. By initializing the :code:`train_loader` (:code:`self.train_loader = self.get_train_loader()`) and the :code:`val_loader` (:code:`self.val_loader=self.get_valid_loader()`), these dataloader will then be able to be passed into the :code:`train_` and :code:`validate_` functions defined above.
+This example uses the classic MNIST dataset for digit recognition. For in-memory datasets, the :code:`data_path` is passed a number to determine which slice of the dataset the collaborator should receive. By initializing the :code:`train_loader` (:code:`self.train_loader = self.get_train_loader()`) and the :code:`val_loader` (:code:`self.val_loader = self.get_valid_loader()`), these dataloader will then be able to be passed into the :code:`train_` and :code:`validate_` functions defined above.
 
 ***************************************
 Changing the number of federated rounds
@@ -347,14 +347,14 @@ Now that we've seen how to change the code, let's explore the Federated Learning
         last_state_path: save/torch_cnn_mnist_last.pbuf
         log_metric_callback:
           template: src.utils.write_metric
-        rounds_to_train: 10 # Change this value to train to a different number of rounds
+        rounds_to_train: 10 # Change this value to train for a different number of rounds
         write_logs: true
 
 *****************************************************
 Starting a new federation after making custom changes
 *****************************************************
 
-Now that you've change you've changed a few things, you can rerun the federation. Copying the below text will reinitialize your plan with new model weights (assuming your model structure has changed), and relaunch the aggregator and two collaborators:
+Now that you've changed a few things, you can rerun the federation. Copying the below text will reinitialize your plan with new model weights, and relaunch the aggregator and two collaborators:
 
 .. code-block:: console
 

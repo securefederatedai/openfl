@@ -9,7 +9,7 @@ Task Runner API
 
 Let's take a deeper dive into the Task Runner API. If you haven't already, we suggest checking out the :ref:`quick_start` for a primer on doing a simple experiment on a single node.
 
-Transitioning from a local experiment to a true, distributed federation can be understood best with the following diagram. 
+The steps to transition from a local experiment to a distributed federation can be understood best with the following diagram.
 
 .. figure:: ../../images/openfl_flow.png
 
