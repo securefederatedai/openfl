@@ -5,6 +5,7 @@
 
 from .runtime import Runtime
 from .local_runtime import LocalRuntime
+from .federated_runtime import FederatedRuntime
 
 
-__all__ = ["LocalRuntime", "Runtime"]
+__all__ = ["FederatedRuntime", "LocalRuntime", "Runtime"]

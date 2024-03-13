@@ -50,9 +50,7 @@ class TestFlowInternalLoop(FLSpec):
         """
 
         self.agg_mean_value = np.mean(self.model)
-        print(
-            f"<Collab>: {self.input} Mean of Agg model: {self.agg_mean_value} "
-        )
+        print(f"<Collab>: {self.input} Mean of Agg model: {self.agg_mean_value} ")
         self.next(self.collab_model_update)
 
     @collaborator
@@ -78,9 +76,7 @@ class TestFlowInternalLoop(FLSpec):
         """
         Joining inputs from collaborators
         """
-        self.agg_mean = sum(input.local_mean_value for input in inputs) / len(
-            inputs
-        )
+        self.agg_mean = sum(input.local_mean_value for input in inputs) / len(inputs)
         print(f"Aggregated mean : {self.agg_mean}")
         self.next(self.internal_loop)
 
@@ -212,12 +208,10 @@ def display_validate_errors(validate_flow_error):
 
 
 if __name__ == "__main__":
-
     # Setup participants
     aggregator = Aggregator()
-    aggregator.private_attributes = {}
 
-    # Setup collaborators with private attributes
+    # Setup collaborators
     collaborator_names = [
         "Portland",
         "Seattle",
@@ -228,16 +222,16 @@ if __name__ == "__main__":
         "London",
         "New York",
     ]
-    collaborators = [Collaborator(name=name) for name in collaborator_names]
+    collaborators = []
+    for collaborator_name in collaborator_names:
+        collaborators.append(Collaborator(name=collaborator_name))
 
-    local_runtime = LocalRuntime(
-        aggregator=aggregator, collaborators=collaborators
-    )
+    local_runtime = LocalRuntime(aggregator=aggregator, collaborators=collaborators)
 
     if len(sys.argv) > 1:
-        if sys.argv[1] == 'ray':
+        if sys.argv[1] == "ray":
             local_runtime = LocalRuntime(
-                aggregator=aggregator, collaborators=collaborators, backend='ray'
+                aggregator=aggregator, collaborators=collaborators, backend="ray"
             )
 
     print(f"Local runtime collaborators = {local_runtime.collaborators}")

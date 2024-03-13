@@ -85,9 +85,7 @@ class TestFlowExclude(FLSpec):
                 + f"{bcolors.ENDC}"
             )
         else:
-            TestFlowExclude.exclude_error_list.append(
-                "test_exclude_agg_to_collab"
-            )
+            TestFlowExclude.exclude_error_list.append("test_exclude_agg_to_collab")
             print(
                 f"{bcolors.FAIL} ... Exclude test failed in test_exclude_agg_to_collab "
                 + f"{bcolors.ENDC}"
@@ -119,9 +117,7 @@ class TestFlowExclude(FLSpec):
                 + f"{bcolors.ENDC}"
             )
         else:
-            TestFlowExclude.exclude_error_list.append(
-                "test_exclude_collab_to_collab"
-            )
+            TestFlowExclude.exclude_error_list.append("test_exclude_collab_to_collab")
             print(
                 f"{bcolors.FAIL} ... Exclude test failed in test_exclude_collab_to_collab "
                 + f"{bcolors.ENDC}"
@@ -154,23 +150,15 @@ class TestFlowExclude(FLSpec):
             )
 
         if validation:
-            print(
-                f"{bcolors.OKGREEN} ... Exclude test passed in join {bcolors.ENDC}"
-            )
+            print(f"{bcolors.OKGREEN} ... Exclude test passed in join {bcolors.ENDC}")
         else:
             TestFlowExclude.exclude_error_list.append("join")
-            print(
-                f"{bcolors.FAIL} ... Exclude test failed in join {bcolors.ENDC}"
-            )
+            print(f"{bcolors.FAIL} ... Exclude test failed in join {bcolors.ENDC}")
 
-        print(
-            f"\n{bcolors.UNDERLINE}Exclude attribute test summary: {bcolors.ENDC}\n"
-        )
+        print(f"\n{bcolors.UNDERLINE}Exclude attribute test summary: {bcolors.ENDC}\n")
 
         if TestFlowExclude.exclude_error_list:
-            validated_exclude_variables = ", ".join(
-                TestFlowExclude.exclude_error_list
-            )
+            validated_exclude_variables = ", ".join(TestFlowExclude.exclude_error_list)
             print(
                 f"{bcolors.FAIL}...Test case failed for {validated_exclude_variables} "
                 + f"{bcolors.ENDC}"
@@ -199,20 +187,19 @@ class TestFlowExclude(FLSpec):
 if __name__ == "__main__":
     # Setup participants
     aggregator = Aggregator()
-    aggregator.private_attributes = {}
 
-    # Setup collaborators with private attributes
+    # Setup collaborators
     collaborator_names = ["Portland", "Chandler", "Bangalore", "Delhi"]
-    collaborators = [Collaborator(name=name) for name in collaborator_names]
+    collaborators = []
+    for collaborator_name in collaborator_names:
+        collaborators.append(Collaborator(name=collaborator_name))
 
-    local_runtime = LocalRuntime(
-        aggregator=aggregator, collaborators=collaborators
-    )
+    local_runtime = LocalRuntime(aggregator=aggregator, collaborators=collaborators)
 
     if len(sys.argv) > 1:
-        if sys.argv[1] == 'ray':
+        if sys.argv[1] == "ray":
             local_runtime = LocalRuntime(
-                aggregator=aggregator, collaborators=collaborators, backend='ray'
+                aggregator=aggregator, collaborators=collaborators, backend="ray"
             )
 
     print(f"Local runtime collaborators = {local_runtime.collaborators}")
