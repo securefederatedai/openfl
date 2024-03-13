@@ -32,20 +32,24 @@ def simple_accuracy(preds, labels):
 class simple_acc(datasets.Metric):
     def _info(self):
         return datasets.MetricInfo(
-            description='_DESCRIPTION',
-            citation='_CITATION',
-            inputs_description='_KWARGS_DESCRIPTION',
+            description="_DESCRIPTION",
+            citation="_CITATION",
+            inputs_description="_KWARGS_DESCRIPTION",
             features=datasets.Features(
                 {
-                    "predictions": datasets.Value("int64" if self.config_name != "stsb" else "float32"),
-                    "references": datasets.Value("int64" if self.config_name != "stsb" else "float32"),
+                    "predictions": datasets.Value(
+                        "int64" if self.config_name != "stsb" else "float32"
+                    ),
+                    "references": datasets.Value(
+                        "int64" if self.config_name != "stsb" else "float32"
+                    ),
                 }
             ),
             codebase_urls=[],
             reference_urls=[],
             format="numpy",
         )
-    
+
     def _compute(self, predictions, references):
         return {"accuracy": simple_accuracy(predictions, references)}
 
