@@ -58,11 +58,7 @@ def main():
         logger.info("getting arguments")
         args = get_args()
         logger.info("loading data")
-<<<<<<< HEAD
         data_loader = EmotionDataLoader(
-=======
-        data_loader = GlueMrpcDataLoader(
->>>>>>> e6f3f5fd4462307b2c9431184190167aa43d962f
             data_path=args.data_path, batch_size=args.batch_size
         )
         logger.info("get taskrunner")
