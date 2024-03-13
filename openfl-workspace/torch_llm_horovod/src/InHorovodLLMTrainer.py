@@ -29,7 +29,7 @@ def simple_accuracy(preds, labels):
     return float((preds == labels).mean())
 
 
-class simple_acc(datasets.Metric):
+class SimpleAcc(datasets.Metric):
     def _info(self):
         return datasets.MetricInfo(
             description="_DESCRIPTION",
@@ -70,7 +70,7 @@ class LLMTrainer(nn.Module):
         self.kwargs = kwargs
         self.device = device
 
-        self.metric = simple_acc()
+        self.metric = SimpleAcc()
         self.model = _init_model(base_model_name, device)
         self.optimizer, self.lr_scheduler = _init_optimizer(
             self.model, len(self.data_loader.train_set)
