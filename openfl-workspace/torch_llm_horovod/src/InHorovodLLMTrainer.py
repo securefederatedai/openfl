@@ -13,7 +13,7 @@ import torch
 import torch as pt
 import torch.nn as nn
 import tqdm
-from datasets import load_metric
+import datasets
 from peft.utils import get_peft_model_state_dict, set_peft_model_state_dict
 from torch.nn import BCEWithLogitsLoss, CrossEntropyLoss, MSELoss
 
@@ -23,6 +23,31 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.dirname(SCRIPT_DIR))
 
 from src.model_utils import _init_model, _init_optimizer  # noqa: E402
+
+
+def simple_accuracy(preds, labels):
+    return float((preds == labels).mean())
+
+
+class simple_acc(datasets.Metric):
+    def _info(self):
+        return datasets.MetricInfo(
+            description='_DESCRIPTION',
+            citation='_CITATION',
+            inputs_description='_KWARGS_DESCRIPTION',
+            features=datasets.Features(
+                {
+                    "predictions": datasets.Value("int64" if self.config_name != "stsb" else "float32"),
+                    "references": datasets.Value("int64" if self.config_name != "stsb" else "float32"),
+                }
+            ),
+            codebase_urls=[],
+            reference_urls=[],
+            format="numpy",
+        )
+    
+    def _compute(self, predictions, references):
+        return {"accuracy": simple_accuracy(predictions, references)}
 
 
 class LLMTrainer(nn.Module):
@@ -40,7 +65,8 @@ class LLMTrainer(nn.Module):
         self.base_model_name = base_model_name
         self.kwargs = kwargs
         self.device = device
-        self.metric = load_metric("glue", "mrpc")
+
+        self.metric = simple_acc()
         self.model = _init_model(base_model_name, device)
         self.optimizer, self.lr_scheduler = _init_optimizer(
             self.model, len(self.data_loader.train_set)
