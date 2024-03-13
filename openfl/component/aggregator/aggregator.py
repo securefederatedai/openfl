@@ -40,6 +40,7 @@ class Aggregator:
                  aggregator_uuid,
                  federation_uuid,
                  authorized_cols,
+                 cn_mapping,
 
                  init_state_path,
                  best_state_path,
@@ -75,6 +76,7 @@ class Aggregator:
 
         # if the collaborator requests a delta, this value is set to true
         self.authorized_cols = authorized_cols
+        self.cn_mapping = cn_mapping
         self.uuid = aggregator_uuid
         self.federation_uuid = federation_uuid
         self.assigner = assigner
@@ -225,7 +227,7 @@ class Aggregator:
         # FIXME: '' instead of None is just for protobuf compatibility.
         #  Cleaner solution?
         if self.single_col_cert_common_name == '':
-            return (cert_common_name == collaborator_common_name
+            return (cert_common_name == self.cn_mapping[collaborator_common_name]
                     and collaborator_common_name in self.authorized_cols)
         # otherwise, common_name must be in whitelist and
         # collaborator_common_name must be in authorized_cols

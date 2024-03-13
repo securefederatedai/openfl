@@ -137,6 +137,7 @@ def register_data_path(collaborator_name, data_path=None, silent=False):
 def generate_cert_request_(collaborator_name,
                            silent, skip_package):
     """Generate certificate request for the collaborator."""
+    # TODO: this should take an extra argument: common_name
     generate_cert_request(collaborator_name, silent, skip_package)
 
 
@@ -304,7 +305,7 @@ def certify(collaborator_name, silent, request_pkg=None, import_=False):
     from openfl.utilities.utils import rmtree
 
     common_name = f'{collaborator_name}'.lower()
-
+    # TODO: read and parse CSR and use the actual CN
     if not import_:
         if request_pkg:
             Path(f'{CERT_DIR}/client').mkdir(parents=True, exist_ok=True)
