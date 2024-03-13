@@ -68,7 +68,7 @@ def get_templates():
     from openfl.interface.cli_helper import WORKSPACE
 
     return [d.name for d in WORKSPACE.glob('*') if d.is_dir()
-            and d.name not in ['__pycache__', 'workspace']]
+            and d.name not in ['__pycache__', 'workspace', 'experimental']]
 
 
 @workspace.command(name='create')

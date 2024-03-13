@@ -37,8 +37,11 @@ extensions = [
     'sphinx-prompt',
     'sphinx_substitution_extensions',
     'sphinx.ext.ifconfig',
-    'sphinxcontrib.mermaid'
+    'sphinxcontrib.mermaid',
+    'recommonmark'
 ]
+
+source_suffix = ['.rst', '.md']
 
 # -- Project information -----------------------------------------------------
 
@@ -92,3 +95,7 @@ html_theme = 'sphinx_rtd_theme'
 html_static_path = ['_static']
 html_style = 'css/Intel_One_Mono_Font_Theme.css'
 autosectionlabel_prefix_document = True
+
+
+def setup(app):
+    app.add_css_file('css/custom.css')

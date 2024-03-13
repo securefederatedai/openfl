@@ -13,7 +13,11 @@ import torch
 import torch as pt
 import torch.nn as nn
 import tqdm
+<<<<<<< HEAD
 import datasets
+=======
+from datasets import load_metric
+>>>>>>> e6f3f5fd4462307b2c9431184190167aa43d962f
 from peft.utils import get_peft_model_state_dict, set_peft_model_state_dict
 from torch.nn import BCEWithLogitsLoss, CrossEntropyLoss, MSELoss
 
@@ -65,8 +69,12 @@ class LLMTrainer(nn.Module):
         self.base_model_name = base_model_name
         self.kwargs = kwargs
         self.device = device
+<<<<<<< HEAD
 
         self.metric = simple_acc()
+=======
+        self.metric = load_metric("glue", "mrpc")
+>>>>>>> e6f3f5fd4462307b2c9431184190167aa43d962f
         self.model = _init_model(base_model_name, device)
         self.optimizer, self.lr_scheduler = _init_optimizer(
             self.model, len(self.data_loader.train_set)
