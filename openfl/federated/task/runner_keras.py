@@ -24,11 +24,16 @@ with catch_warnings():
 
 
 class KerasTaskRunner(TaskRunner):
-    """The base model for Keras models in the federation."""
+    """The base model for Keras models in the federation.
+   
+    Attributes:
+        model (ke.Model): The Keras model.
+        model_tensor_names (list): List of model tensor names.
+        required_tensorkeys_for_function (dict): A map of all of the required tensors for each of the public functions in KerasTaskRunner.
+   """
 
     def __init__(self, **kwargs):
-        """
-        Initialize.
+        """Initializes the KerasTaskRunner instance.
 
         Args:
             **kwargs: Additional parameters to pass to the function
@@ -45,12 +50,12 @@ class KerasTaskRunner(TaskRunner):
         ke.backend.clear_session()
 
     def rebuild_model(self, round_num, input_tensor_dict, validation=False):
-        """
-        Parse tensor names and update weights of model. Handles the optimizer treatment.
+        """Parse tensor names and update weights of model. Handles the optimizer treatment.
 
-        Returns
-        -------
-        None
+        Args:
+            round_num (int): The round number.
+            input_tensor_dict (dict): The input tensor dictionary.
+            validation (bool, optional): If True, validate the model. Defaults to False.
         """
         if self.opt_treatment == 'RESET':
             self.reset_opt_vars()
@@ -63,16 +68,22 @@ class KerasTaskRunner(TaskRunner):
 
     def train(self, col_name, round_num, input_tensor_dict,
               metrics, epochs=1, batch_size=1, **kwargs):
-        """
-        Perform the training.
-
+        """Perform the training.
         Is expected to perform draws randomly, without replacement until data is exausted.
         Then data is replaced and shuffled and draws continue.
 
-        Returns
-        -------
-        dict
-            'TensorKey: nparray'
+        Args:
+            col_name (str): The collaborator name.
+            round_num (int): The round number.
+            input_tensor_dict (dict): The input tensor dictionary.
+            metrics (list): List of metrics.
+            epochs (int, optional): Number of epochs to train. Defaults to 1.
+            batch_size (int, optional): Batch size. Defaults to 1.
+            **kwargs: Additional parameters.
+
+        Returns:
+            global_tensor_dict (dict): Dictionary of 'TensorKey: nparray'.
+            local_tensor_dict (dict): Dictionary of 'TensorKey: nparray'.
         """
         if metrics is None:
             raise KeyError('metrics must be defined')
@@ -147,16 +158,15 @@ class KerasTaskRunner(TaskRunner):
 
     def train_iteration(self, batch_generator, metrics: list = None, **kwargs):
         """Train single epoch.
-
         Override this function for custom training.
 
         Args:
-            batch_generator: Generator of training batches.
-                Each batch is a tuple of N train images and N train labels
-                where N is the batch size of the DataLoader of the current TaskRunner instance.
+            batch_generator (generator): Generator of training batches.
+            metrics (list, optional): Names of metrics to save. Defaults to None.
+            **kwargs: Additional parameters.
 
-            epochs: Number of epochs to train.
-            metrics: Names of metrics to save.
+        Returns:
+            results (list): List of Metric objects.
         """
         if metrics is None:
             metrics = []
@@ -186,17 +196,17 @@ class KerasTaskRunner(TaskRunner):
         return results
 
     def validate(self, col_name, round_num, input_tensor_dict, **kwargs):
-        """
-        Run the trained model on validation data; report results.
+        """Run the trained model on validation data; report results.
 
-        Parameters
-        ----------
-        input_tensor_dict : either the last aggregated or locally trained model
+        Args:
+            col_name (str): The collaborator name.
+            round_num (int): The round number.
+            input_tensor_dict (dict): The input tensor dictionary. Either the last aggregated or locally trained model
+            **kwargs: Additional parameters.
 
-        Returns
-        -------
-        output_tensor_dict : {TensorKey: nparray} (these correspond to acc,
-         precision, f1_score, etc.)
+        Returns:
+            output_tensor_dict (dict): Dictionary of 'TensorKey: nparray'. These correspond to acc, precision, f1_score, etc.
+            dict: Empty dictionary.
         """
         if 'batch_size' in kwargs:
             batch_size = kwargs['batch_size']
@@ -241,45 +251,44 @@ class KerasTaskRunner(TaskRunner):
         return output_tensor_dict, {}
 
     def save_native(self, filepath):
-        """Save model."""
+        """Save model.
+
+        Args:
+            filepath (str): The file path to save the model.
+        """
         self.model.save(filepath)
 
     def load_native(self, filepath):
-        """Load model."""
+        """Load model.
+        
+        Args:
+            filepath (str): The file path to load the model.
+        """
         self.model = ke.models.load_model(filepath)
 
     @staticmethod
     def _get_weights_names(obj):
-        """
-        Get the list of weight names.
+        """Get the list of weight names.
 
-        Parameters
-        ----------
-        obj : Model or Optimizer
-            The target object that we want to get the weights.
+        Args:
+            obj (Model or Optimizer): The target object that we want to get the weights.
 
-        Returns
-        -------
-        dict
-            The weight name list
+        Returns:
+            weight_names (list): The weight name list.
         """
         weight_names = [weight.name for weight in obj.weights]
         return weight_names
 
     @staticmethod
     def _get_weights_dict(obj, suffix=''):
-        """
-        Get the dictionary of weights.
+        """Get the dictionary of weights.
 
-        Parameters
-        ----------
-        obj : Model or Optimizer
-            The target object that we want to get the weights.
+        Args:
+            obj (Model or Optimizer): The target object that we want to get the weights.
+            suffix (str, optional): Suffix for weight names. Defaults to ''.
 
-        Returns
-        -------
-        dict
-            The weight dictionary.
+        Returns:
+            weights_dict (dict): The weight dictionary.
         """
         weights_dict = {}
         weight_names = [weight.name for weight in obj.weights]
@@ -292,33 +301,23 @@ class KerasTaskRunner(TaskRunner):
     def _set_weights_dict(obj, weights_dict):
         """Set the object weights with a dictionary.
 
-        The obj can be a model or an optimizer.
-
         Args:
-            obj (Model or Optimizer): The target object that we want to set
-            the weights.
+            obj (Model or Optimizer): The target object that we want to set the weights.
             weights_dict (dict): The weight dictionary.
-
-        Returns:
-            None
         """
         weight_names = [weight.name for weight in obj.weights]
         weight_values = [weights_dict[name] for name in weight_names]
         obj.set_weights(weight_values)
 
     def get_tensor_dict(self, with_opt_vars, suffix=''):
-        """
-        Get the model weights as a tensor dictionary.
+        """Get the model weights as a tensor dictionary.
 
-        Parameters
-        ----------
-        with_opt_vars : bool
-            If we should include the optimizer's status.
-        suffix : string
-            Universally
+        Args:
+            with_opt_vars (bool): If we should include the optimizer's status.
+            suffix (str): Universally.
 
         Returns:
-            dict: The tensor dictionary.
+            model_weights (dict): The tensor dictionary.
         """
         model_weights = self._get_weights_dict(self.model, suffix)
 
@@ -332,11 +331,10 @@ class KerasTaskRunner(TaskRunner):
         return model_weights
 
     def set_tensor_dict(self, tensor_dict, with_opt_vars):
-        """
-        Set the model weights with a tensor dictionary.
+        """Set the model weights with a tensor dictionary.
 
         Args:
-            tensor_dict: the tensor dictionary
+            tensor_dict (dict): The tensor dictionary.
             with_opt_vars (bool): True = include the optimizer's status.
         """
         if with_opt_vars is False:
@@ -364,33 +362,22 @@ class KerasTaskRunner(TaskRunner):
             self._set_weights_dict(self.model.optimizer, opt_weights_dict)
 
     def reset_opt_vars(self):
-        """
-        Reset optimizer variables.
-
-        Resets the optimizer variables
-
-        """
+        """Resets the optimizer variables."""
         for var in self.model.optimizer.variables():
             var.assign(tf.zeros_like(var))
         self.logger.debug('Optimizer variables reset')
 
     def set_required_tensorkeys_for_function(self, func_name,
                                              tensor_key, **kwargs):
-        """
-        Set the required tensors for specified function that could be called as part of a task.
-
+        """Set the required tensors for specified function that could be called as part of a task.
+        
         By default, this is just all of the layers and optimizer of the model.
-         Custom tensors should be added to this function
+        Custom tensors should be added to this function.
 
-        Parameters
-        ----------
-        func_name: string
-        tensor_key: TensorKey (namedtuple)
-        **kwargs: Any function arguments {}
-
-        Returns
-        -------
-        None
+        Args:
+            func_name (str): The function name.
+            tensor_key (TensorKey): The tensor key.
+            **kwargs: Any function arguments.
         """
         # TODO there should be a way to programmatically iterate through all
         #  of the methods in the class and declare the tensors.
@@ -405,19 +392,16 @@ class KerasTaskRunner(TaskRunner):
             self.required_tensorkeys_for_function[func_name].append(tensor_key)
 
     def get_required_tensorkeys_for_function(self, func_name, **kwargs):
-        """
-        Get the required tensors for specified function that could be called as part of a task.
-
+        """Get the required tensors for specified function that could be called as part of a task.
+        
         By default, this is just all of the layers and optimizer of the model.
 
-        Parameters
-        ----------
-        None
+        Args:
+            func_name (str): The function name.
+            **kwargs: Any function arguments.
 
-        Returns
-        -------
-        List
-            [TensorKey]
+        Returns:
+            list: List of TensorKey objects.
         """
         if func_name == 'validate':
             local_model = 'apply=' + str(kwargs['apply'])
@@ -426,20 +410,10 @@ class KerasTaskRunner(TaskRunner):
             return self.required_tensorkeys_for_function[func_name]
 
     def update_tensorkeys_for_functions(self):
-        """
-        Update the required tensors for all publicly accessible methods \
-            that could be called as part of a task.
-
+        """Update the required tensors for all publicly accessible methods that could be called as part of a task.
+        
         By default, this is just all of the layers and optimizer of the model.
         Custom tensors should be added to this function
-
-        Parameters
-        ----------
-        None
-
-        Returns
-        -------
-        None
         """
         # TODO complete this function. It is only needed for opt_treatment,
         #  and making the model stateless
@@ -467,20 +441,13 @@ class KerasTaskRunner(TaskRunner):
         ]
 
     def initialize_tensorkeys_for_functions(self, with_opt_vars=False):
-        """
-        Set the required tensors for all publicly accessible methods \
-            that could be called as part of a task.
-
+        """Set the required tensors for all publicly accessible methods that could be called as part of a task.
+        
         By default, this is just all of the layers and optimizer of the model.
         Custom tensors should be added to this function
 
-        Parameters
-        ----------
-        None
-
-        Returns
-        -------
-        None
+        Args:
+            with_opt_vars (bool, optional): If True, include the optimizer's status. Defaults to False.
         """
         # TODO there should be a way to programmatically iterate through all
         #  of the methods in the class and declare the tensors.

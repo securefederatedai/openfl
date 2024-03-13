@@ -20,7 +20,18 @@ logger = logging.getLogger(__name__)
 
 
 class ExperimentWorkspace:
-    """Experiment workspace context manager."""
+    """Experiment workspace context manager.
+
+    This class is a context manager for creating a workspace for an experiment.
+
+    Attributes:
+        experiment_name (str): The name of the experiment.
+        data_file_path (Path): The path to the data file for the experiment.
+        install_requirements (bool): Whether to install the requirements for the experiment.
+        cwd (Path): The current working directory.
+        experiment_work_dir (Path): The working directory for the experiment.
+        remove_archive (bool): Whether to remove the archive after the experiment.
+    """
 
     def __init__(
             self,
@@ -29,7 +40,14 @@ class ExperimentWorkspace:
             install_requirements: bool = False,
             remove_archive: bool = True
     ) -> None:
-        """Initialize workspace context manager."""
+        """Initialize workspace context manager.
+
+        Args:
+            experiment_name (str): The name of the experiment.
+            data_file_path (Path): The path to the data file for the experiment.
+            install_requirements (bool, optional): Whether to install the requirements for the experiment. Defaults to False.
+            remove_archive (bool, optional): Whether to remove the archive after the experiment. Defaults to True.
+        """
         self.experiment_name = experiment_name
         self.data_file_path = data_file_path
         self.install_requirements = install_requirements
@@ -95,7 +113,18 @@ def dump_requirements_file(
         keep_original_prefixes: bool = True,
         prefixes: Optional[Union[Tuple[str], str]] = None,
 ) -> None:
-    """Prepare and save requirements.txt."""
+    """Prepare and save requirements.txt.
+
+    This function prepares a requirements.txt file and saves it to a specified path.
+
+    Args:
+        path (Union[str, Path], optional): The path to save the requirements.txt file. 
+            Defaults to './requirements.txt'.
+        keep_original_prefixes (bool, optional): Whether to keep the original prefixes 
+            in the requirements.txt file. Defaults to True.
+        prefixes (Optional[Union[Tuple[str], str]], optional): The prefixes to add to 
+            the requirements.txt file. Defaults to None.
+    """
     from pip._internal.operations import freeze
     path = Path(path).absolute()
 
@@ -131,7 +160,14 @@ def dump_requirements_file(
 
 
 def _is_package_versioned(package: str) -> bool:
-    """Check if the package has a version."""
+    """Check if a package has a version.
+
+    Args:
+        package (str): The package to check.
+
+    Returns:
+        bool: `True` if the package has a version, `False` otherwise.
+    """
     return ('==' in package
             and package not in ['pkg-resources==0.0.0', 'pkg_resources==0.0.0']
             and '-e ' not in package
@@ -140,11 +176,10 @@ def _is_package_versioned(package: str) -> bool:
 
 @contextmanager
 def set_directory(path: Path):
-    """
-    Sets provided path as the cwd within the context.
+    """Set the current working directory within the context.
 
     Args:
-        path (Path): The path to the cwd
+        path (Path): The path to set as the current working directory.
 
     Yields:
         None

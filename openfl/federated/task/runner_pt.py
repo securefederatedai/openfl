@@ -20,7 +20,16 @@ from .runner import TaskRunner
 
 
 class PyTorchTaskRunner(nn.Module, TaskRunner):
-    """PyTorch Model class for Federated Learning."""
+    """PyTorch Model class for Federated Learning.
+
+    Attributes:
+        device (str): Compute device (default="cpu")
+        required_tensorkeys_for_function (dict): A map of all the required tensors for each of the public functions in PyTorchTaskRunner.
+        optimizer (Optimizer): The optimizer for the model.
+        loss_fn (function): The loss function for the model.
+        training_round_completed (bool): Flag to check if training round is completed.
+        tensor_dict_split_fn_kwargs (dict): Arguments for the tensor dictionary split function.
+    """
 
     def __init__(
             self,
@@ -29,11 +38,13 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
             optimizer=None,
             **kwargs
     ):
-        """Initialize.
+        """Initializes the PyTorchTaskRunner object.
 
         Args:
-            device (string): Compute device (default="cpu")
-            **kwargs: Additional parameters to pass to the functions
+            device (str): Compute device (default="cpu").
+            loss_fn (function): The loss function for the model.
+            optimizer (Optimizer): The optimizer for the model.
+            **kwargs: Additional parameters to pass to the functions.
         """
         super().__init__()
         TaskRunner.__init__(self, **kwargs)
@@ -58,8 +69,12 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
         })
 
     def rebuild_model(self, round_num, input_tensor_dict, validation=False):
-        """
-        Parse tensor names and update weights of model. Handles the optimizer treatment.
+        """Parse tensor names and update weights of model. Handles the optimizer treatment.
+
+        Args:
+            round_num (int): The current round number
+            input_tensor_dict (dict): The input tensor dictionary
+            validation (bool): Flag to check if it's validation
 
         Returns:
             None
@@ -80,15 +95,15 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
         Run validation of the model on the local data.
 
         Args:
-            col_name:            Name of the collaborator
-            round_num:           What round is it
-            input_tensor_dict:   Required input tensors (for model)
-            use_tqdm (bool):     Use tqdm to print a progress bar (Default=True)
+            col_name (str): Name of the collaborator.
+            round_num (int): What round is it.
+            input_tensor_dict (dict): Required input tensors (for model).
+            use_tqdm (bool): Use tqdm to print a progress bar (Default=True).
+            **kwargs: Additional parameters.
 
         Returns:
-            global_output_dict:  Tensors to send back to the aggregator
-            local_output_dict:   Tensors to maintain in the local TensorDB
-
+            global_output_dict (dict):  Tensors to send back to the aggregator.
+            local_output_dict (dict):   Tensors to maintain in the local TensorDB.
         """
         self.rebuild_model(round_num, input_tensor_dict, validation=True)
         self.eval()
@@ -137,15 +152,16 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
         Train the model on the requested number of batches.
 
         Args:
-            col_name:            Name of the collaborator
-            round_num:           What round is it
-            input_tensor_dict:   Required input tensors (for model)
-            use_tqdm (bool):     Use tqdm to print a progress bar (Default=True)
-            epochs:              The number of epochs to train
+            col_name (str): Name of the collaborator.
+            round_num (int): What round is it.
+            input_tensor_dict (dict): Required input tensors (for model).
+            use_tqdm (bool): Use tqdm to print a progress bar (Default=True).
+            epochs (int): The number of epochs to train.
+            **kwargs: Additional parameters.
 
         Returns:
-            global_output_dict:  Tensors to send back to the aggregator
-            local_output_dict:   Tensors to maintain in the local TensorDB
+            global_output_dict (dict):  Tensors to send back to the aggregator.
+            local_output_dict (dict):   Tensors to maintain in the local TensorDB.
         """
         self.rebuild_model(round_num, input_tensor_dict)
         # set to "training" mode
@@ -224,11 +240,10 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
 
         Args:
             with_opt_vars (bool): Return the tensor dictionary including the
-                                  optimizer tensors (Default=False)
+                optimizer tensors (Default=False)
 
         Returns:
-            dict: Tensor dictionary {**dict, **optimizer_dict}
-
+            state (dict): Tensor dictionary {**dict, **optimizer_dict}
         """
         # Gets information regarding tensor model layers and optimizer state.
         # FIXME: self.parameters() instead? Unclear if load_state_dict() or
@@ -245,7 +260,14 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
         return state
 
     def _get_weights_names(self, with_opt_vars=False):
-        # Gets information regarding tensor model layers and optimizer state.
+        """Get information regarding tensor model layers and optimizer state.
+
+        Args:
+            with_opt_vars (bool): Flag to check if optimizer variables are included (Default=False).
+
+        Returns:
+            state (list): List of state keys.
+        """
         # FIXME: self.parameters() instead? Unclear if load_state_dict() or
         # simple assignment is better
         # for now, state dict gives us names which is good
@@ -263,10 +285,9 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
         """Set the tensor dictionary.
 
         Args:
-            tensor_dict: The tensor dictionary
-            with_opt_vars (bool): Return the tensor dictionary including the
-                                  optimizer tensors (Default=False)
-
+            tensor_dict (dict): The tensor dictionary.
+            with_opt_vars (bool): Return the tensor dictionary including the 
+                optimizer tensors (Default=False).
         """
         # Sets tensors for model layers and optimizer state.
         # FIXME: self.parameters() instead? Unclear if load_state_dict() or
@@ -295,20 +316,23 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
             assert len(tensor_dict) == 0
 
     def get_optimizer(self):
-        """Get the optimizer of this instance."""
+        """Get the optimizer of this instance.
+        
+        Returns:
+            Optimizer: The optimizer of the instance.
+        """
         return self.optimizer
 
     def get_required_tensorkeys_for_function(self, func_name, **kwargs):
-        """
-        Get the required tensors for specified function that could be called \
-        as part of a task. By default, this is just all of the layers and \
-        optimizer of the model.
+        """Get the required tensors for specified function that could be called
+        as part of a task. By default, this is just all of the layers and optimizer 
+        of the model.
 
         Args:
-            func_name
+            func_name (str): The function name.
 
         Returns:
-            list : [TensorKey]
+            list : [TensorKey].
         """
         if func_name == 'validate':
             local_model = 'apply=' + str(kwargs['apply'])
@@ -323,7 +347,8 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
         Custom tensors should be added to this function.
 
         Args:
-            None
+            with_opt_vars (bool): Flag to check if optimizer variables are included.
+                Defaults to False.
 
         Returns:
             None
@@ -387,19 +412,15 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
 
     def load_native(self, filepath, model_state_dict_key='model_state_dict',
                     optimizer_state_dict_key='optimizer_state_dict', **kwargs):
-        """
-        Load model and optimizer states from a pickled file specified by \
-        filepath. model_/optimizer_state_dict args can be specified if needed. \
+        """Load model and optimizer states from a pickled file specified by
+        filepath. model_/optimizer_state_dict args can be specified if needed.
         Uses pt.load().
 
         Args:
-            filepath (string)                 : Path to pickle file created
-                                                by pt.save().
-            model_state_dict_key (string)     : key for model state dict
-                                                in pickled file.
-            optimizer_state_dict_key (string) : key for optimizer state dict
-                                                in picked file.
-            kwargs                            : unused
+            filepath (str): Path to pickle file created by pt.save().
+            model_state_dict_key (str): key for model state dict in pickled file.
+            optimizer_state_dict_key (str): key for optimizer state dict in picked file.
+            **kwargs: Additional parameters.
 
         Returns:
             None
@@ -410,19 +431,15 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
 
     def save_native(self, filepath, model_state_dict_key='model_state_dict',
                     optimizer_state_dict_key='optimizer_state_dict', **kwargs):
-        """
-        Save model and optimizer states in a picked file specified by the \
-        filepath. model_/optimizer_state_dicts are stored in the keys provided. \
+        """Save model and optimizer states in a picked file specified by the
+        filepath. model_/optimizer_state_dicts are stored in the keys provided.
         Uses pt.save().
 
         Args:
-            filepath (string)                 : Path to pickle file to be
-                                                created by pt.save().
-            model_state_dict_key (string)     : key for model state dict
-                                                in pickled file.
-            optimizer_state_dict_key (string) : key for optimizer state
-                                                dict in picked file.
-            kwargs                            : unused
+            filepath (str): Path to pickle file to be created by pt.save().
+            model_state_dict_key (str): key for model state dict in pickled file.
+            optimizer_state_dict_key (str): key for optimizer state dict in picked file.
+            **kwargs: Additional parameters.
 
         Returns:
             None
@@ -434,11 +451,12 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
         pt.save(pickle_dict, filepath)
 
     def reset_opt_vars(self):
-        """
-        Reset optimizer variables.
+        """Reset optimizer variables.
 
         Resets the optimizer variables
 
+        Returns:
+            None
         """
         pass
 
@@ -448,8 +466,9 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
         Override this function in order to use custom training.
 
         Args:
-            batch_generator: Train dataset batch generator. Yields (samples, targets) tuples of
+            batch_generator (Iterator): Train dataset batch generator. Yields (samples, targets) tuples of
             size = `self.data_loader.batch_size`.
+        
         Returns:
             Metric: An object containing name and np.ndarray value.
         """
@@ -476,8 +495,10 @@ def _derive_opt_state_dict(opt_state_dict):
     expand_derived_opt_state_dict.
 
     Args:
-        opt_state_dict: The optimizer state dictionary
+        opt_state_dict (dict): The optimizer state dictionary.
 
+    Returns:
+        derived_opt_state_dict (dict): Derived optimizer state dictionary.
     """
     derived_opt_state_dict = {}
 
@@ -561,10 +582,11 @@ def expand_derived_opt_state_dict(derived_opt_state_dict, device):
     prefix, "__opt_state_0_0_", certain to be present.
 
     Args:
-        derived_opt_state_dict: Optimizer state dictionary
+        derived_opt_state_dict (dict): Optimizer state dictionary.
+        device (str): The device to be used.
 
     Returns:
-        dict: Optimizer state dictionary
+        opt_state_dict (dict): Optimizer state dictionary.
     """
     state_subkeys_and_tags = []
     for key in derived_opt_state_dict:
@@ -611,7 +633,10 @@ def _get_optimizer_state(optimizer):
     """Return the optimizer state.
 
     Args:
-        optimizer
+        optimizer (Optimizer): The optimizer for the model.
+
+    Returns:
+        derived_opt_state_dict (dict): Derived optimizer state dictionary.
     """
     opt_state_dict = deepcopy(optimizer.state_dict())
 
@@ -632,10 +657,12 @@ def _set_optimizer_state(optimizer, device, derived_opt_state_dict):
     """Set the optimizer state.
 
     Args:
-        optimizer:
-        device:
-        derived_opt_state_dict:
+        optimizer (Optimizer): The optimizer for the model.
+        device (str): The device to be used.
+        derived_opt_state_dict (dict): Derived optimizer state dictionary.
 
+    Returns:
+        None
     """
     temp_state_dict = expand_derived_opt_state_dict(
         derived_opt_state_dict, device)
@@ -656,8 +683,10 @@ def to_cpu_numpy(state):
     """Send data to CPU as Numpy array.
 
     Args:
-        state
+        state (dict): The state dictionary.
 
+    Returns:
+        state (dict): State dictionary with values as numpy arrays.
     """
     # deep copy so as to decouple from active model
     state = deepcopy(state)

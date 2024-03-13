@@ -17,7 +17,11 @@ logger = getLogger(__name__)
 @group()
 @pass_context
 def model(context):
-    """Manage Federated Learning Models."""
+    """Manage Federated Learning Models.
+
+    Args:
+        context (click.core.Context): Click context.
+    """
     context.obj['group'] = 'model'
 
 
@@ -39,8 +43,15 @@ def model(context):
         help='The data set/shard configuration file [plan/data.yaml]',
         default='plan/data.yaml', type=ClickPath(exists=True))
 def save_(context, plan_config, cols_config, data_config, model_protobuf_path, output_filepath):
-    """
-    Save the model in native format (PyTorch / Keras).
+    """Save the model in native format (PyTorch / Keras).
+
+    Args:
+        context (click.core.Context): Click context.
+        plan_config (str): Federated learning plan.
+        cols_config (str): Authorized collaborator list.
+        data_config (str): The data set/shard configuration file.
+        model_protobuf_path (str): The model protobuf to convert.
+        output_filepath (str): Filename the model will be saved to in native format.
     """
     output_filepath = Path(output_filepath).absolute()
     if output_filepath.exists():
@@ -63,12 +74,20 @@ def get_model(
     data_config: str,
     model_protobuf_path: str
 ):
-    """
-    Initialize TaskRunner and load it with provided model.pbuf.
+    """Initialize TaskRunner and load it with provided model.pbuf.
 
     Contrary to its name, this function returns a TaskRunner instance.
     The reason for this behavior is the flexibility of the TaskRunner interface and
     the diversity of the ways we store models in our template workspaces.
+    
+    Args:
+        plan_config (str): Federated learning plan.
+        cols_config (str): Authorized collaborator list.
+        data_config (str): The data set/shard configuration file.
+        model_protobuf_path (str): The model protobuf to convert.
+
+    Returns:
+        task_runner (instance): TaskRunner instance.
     """
 
     from openfl.federated import Plan

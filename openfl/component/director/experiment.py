@@ -30,7 +30,20 @@ class Status:
 
 
 class Experiment:
-    """Experiment class."""
+    """Experiment class.
+    
+    Attributes:
+            name (str): The name of the experiment.
+            archive_path (Union[Path, str]): The path to the experiment archive.
+            collaborators (List[str]): The list of collaborators.
+            sender (str): The name of the sender.
+            init_tensor_dict (dict): The initial tensor dictionary.
+            plan_path (Union[Path, str]): The path to the plan.
+            users (Iterable[str]): The list of users.
+            status (str): The status of the experiment.
+            aggregator (object): The aggregator object.
+            run_aggregator_atask (object): The run aggregator async task object.
+    """
 
     def __init__(
             self, *,
@@ -42,7 +55,17 @@ class Experiment:
             plan_path: Union[Path, str] = 'plan/plan.yaml',
             users: Iterable[str] = None,
     ) -> None:
-        """Initialize an experiment object."""
+        """Initialize an experiment object.
+        
+        Args:
+            name (str): The name of the experiment.
+            archive_path (Union[Path, str]): The path to the experiment archive.
+            collaborators (List[str]): The list of collaborators.
+            sender (str): The name of the sender.
+            init_tensor_dict (dict): The initial tensor dictionary.
+            plan_path (Union[Path, str], optional): The path to the plan. Defaults to 'plan/plan.yaml'.
+            users (Iterable[str], optional): The list of users. Defaults to None.
+        """
         self.name = name
         self.archive_path = Path(archive_path).absolute()
         self.collaborators = collaborators
@@ -62,7 +85,15 @@ class Experiment:
             certificate: Union[Path, str] = None,
             install_requirements: bool = False,
     ):
-        """Run experiment."""
+        """Run experiment.
+        
+        Args:
+            tls (bool, optional): A flag indicating if TLS should be used for connections. Defaults to True.
+            root_certificate (Union[Path, str], optional): The path to the root certificate for TLS. Defaults to None.
+            private_key (Union[Path, str], optional): The path to the private key for TLS. Defaults to None.
+            certificate (Union[Path, str], optional): The path to the certificate for TLS. Defaults to None.
+            install_requirements (bool, optional): A flag indicating if the requirements should be installed. Defaults to False.
+        """
         self.status = Status.IN_PROGRESS
         try:
             logger.info(f'New experiment {self.name} for '
@@ -94,7 +125,14 @@ class Experiment:
             logger.exception(f'Experiment "{self.name}" failed with error: {e}.')
 
     async def review_experiment(self, review_plan_callback: Callable) -> bool:
-        """Get plan approve in console."""
+        """Get plan approve in console.
+        
+        Args:
+            review_plan_callback (Callable): A callback function for reviewing the plan.
+
+        Returns:
+            bool: True if the plan was approved, False otherwise.
+        """
         logger.debug("Experiment Review starts")
         # Extract the workspace for review (without installing requirements)
         with ExperimentWorkspace(
@@ -125,6 +163,17 @@ class Experiment:
             private_key: Union[Path, str] = None,
             certificate: Union[Path, str] = None,
     ) -> AggregatorGRPCServer:
+        """Create an aggregator gRPC server.
+
+        Args:
+            tls (bool, optional): A flag indicating if TLS should be used for connections. Defaults to True.
+            root_certificate (Union[Path, str], optional): The path to the root certificate for TLS. Defaults to None.
+            private_key (Union[Path, str], optional): The path to the private key for TLS. Defaults to None.
+            certificate (Union[Path, str], optional): The path to the certificate for TLS. Defaults to None.
+
+        Returns:
+            AggregatorGRPCServer: The created aggregator gRPC server.
+        """
         plan = Plan.parse(plan_config_path=self.plan_path)
         plan.authorized_cols = list(self.collaborators)
 
@@ -140,7 +189,11 @@ class Experiment:
 
     @staticmethod
     async def _run_aggregator_grpc_server(aggregator_grpc_server: AggregatorGRPCServer) -> None:
-        """Run aggregator."""
+        """Run aggregator.
+        
+        Args:
+            aggregator_grpc_server (AggregatorGRPCServer): The aggregator gRPC server to run.
+        """
         logger.info('🧿 Starting the Aggregator Service.')
         grpc_server = aggregator_grpc_server.get_server()
         grpc_server.start()
@@ -171,23 +224,39 @@ class ExperimentsRegistry:
 
     @property
     def active_experiment(self) -> Union[Experiment, None]:
-        """Get active experiment."""
+        """Get active experiment.
+        
+        Returns:
+            Union[Experiment, None]: The active experiment if exists, None otherwise.
+        """
         if self.__active_experiment_name is None:
             return None
         return self.__dict[self.__active_experiment_name]
 
     @property
     def pending_experiments(self) -> List[str]:
-        """Get queue of not started experiments."""
+        """Get queue of not started experiments.
+        
+        Returns:
+            List[str]: The list of pending experiments.
+        """
         return self.__pending_experiments
 
     def add(self, experiment: Experiment) -> None:
-        """Add experiment to queue of not started experiments."""
+        """Add experiment to queue of not started experiments.
+        
+         Args:
+            experiment (Experiment): The experiment to add.
+        """
         self.__dict[experiment.name] = experiment
         self.__pending_experiments.append(experiment.name)
 
     def remove(self, name: str) -> None:
-        """Remove experiment from everywhere."""
+        """Remove experiment from everywhere.
+        
+        Args:
+            name (str): The name of the experiment to remove.
+        """
         if self.__active_experiment_name == name:
             self.__active_experiment_name = None
         if name in self.__pending_experiments:
@@ -198,15 +267,37 @@ class ExperimentsRegistry:
             del self.__dict[name]
 
     def __getitem__(self, key: str) -> Experiment:
-        """Get experiment by name."""
+        """Get experiment by name.
+        
+        Args:
+            key (str): The name of the experiment.
+
+        Returns:
+            Experiment: The experiment with the given name.
+        """
         return self.__dict[key]
 
     def get(self, key: str, default=None) -> Experiment:
-        """Get experiment by name."""
+        """Get experiment by name.
+        
+        Args:
+            key (str): The name of the experiment.
+            default (optional): The default value to return if the experiment does not exist.
+
+        Returns:
+            Experiment: The experiment with the given name, or the default value if the experiment does not exist.
+        """
         return self.__dict.get(key, default)
 
     def get_user_experiments(self, user: str) -> List[Experiment]:
-        """Get list of experiments for specific user."""
+        """Get list of experiments for specific user.
+        
+        Args:
+            user (str): The name of the user.
+
+        Returns:
+            List[Experiment]: The list of experiments for the specific user.
+        """
         return [
             exp
             for exp in self.__dict.values()
@@ -214,7 +305,14 @@ class ExperimentsRegistry:
         ]
 
     def __contains__(self, key: str) -> bool:
-        """Check if experiment exists."""
+        """Check if experiment exists.
+        
+        Args:
+            key (str): The name of the experiment.
+
+        Returns:
+            bool: True if the experiment exists, False otherwise.
+        """
         return key in self.__dict
 
     def finish_active(self) -> None:

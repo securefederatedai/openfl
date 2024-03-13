@@ -15,12 +15,14 @@ class FrameworkAdapterPlugin(FrameworkAdapterPluginInterface):
 
     @staticmethod
     def get_tensor_dict(model, optimizer=None):
-        """
-        Extract tensor dict from a model.params and model.opt_state (optimizer).
+        """Extract tensor dict from a model.params and model.opt_state (optimizer).
+
+        Args:
+            model (object): The model object.
+            optimizer (object, optional): The optimizer object. Defaults to None.
 
         Returns:
-        dict {weight name: numpy ndarray}
-
+            params_dict (dict): A dictionary with weight name as key and numpy ndarray as value.
         """
 
         # Convert PyTree Structure DeviceArray to Numpy
@@ -42,14 +44,17 @@ class FrameworkAdapterPlugin(FrameworkAdapterPluginInterface):
 
     @staticmethod
     def set_tensor_dict(model, tensor_dict, optimizer=None, device='cpu'):
-        """
-        Set the `model.params and model.opt_state` with a flattened tensor dictionary.
+        """Set the `model.params and model.opt_state` with a flattened tensor dictionary.
         Choice of JAX platform (device) cpu/gpu/gpu is initialized at start.
+
         Args:
-            tensor_dict: flattened {weight name: numpy ndarray} tensor dictionary
+            model (object): The model object.
+            tensor_dict (dict): Flattened dictionary with weight name as key and numpy ndarray as value.
+            optimizer (object, optional): The optimizer object. Defaults to None.
+            device (str, optional): The device to be used. Defaults to 'cpu'.
 
         Returns:
-            None
+            None    
         """
 
         tensor_dict = jax.tree_util.tree_map(jnp.array, tensor_dict)
@@ -61,6 +66,14 @@ class FrameworkAdapterPlugin(FrameworkAdapterPluginInterface):
 
 
 def _get_opt_vars(x):
+    """Helper function to filter out unwanted variables.
+
+    Args:
+        x (str): The variable name.
+
+    Returns:
+        bool: True if the variable is wanted, False otherwise.
+    """
     return False if x.startswith('_') or x in ['index', 'count'] else True
 
 
@@ -70,10 +83,10 @@ def _set_weights_dict(obj, weights_dict, prefix=''):
     The obj can be a model or an optimizer.
 
     Args:
-        obj (Model or Optimizer): The target object that we want to set
-        the weights.
+        obj (Model or Optimizer): The target object that we want to set the weights.
         weights_dict (dict): The weight dictionary.
-
+        prefix (str, optional): The prefix for the weight dictionary keys. Defaults to ''.
+        
     Returns:
         None
     """
@@ -90,8 +103,20 @@ def _set_weights_dict(obj, weights_dict, prefix=''):
 
 
 def _update_weights(state_dict, tensor_dict, prefix, suffix=None):
-    # Re-assignment of the state variable(s) is restricted.
-    # Instead update the nested layers weights iteratively.
+    """Helper function to update the weights of the state dictionary.
+    
+    Re-assignment of the state variable(s) is restricted.
+    Instead update the nested layers weights iteratively.
+
+    Args:
+        state_dict (dict): The state dictionary.
+        tensor_dict (dict): The tensor dictionary.
+        prefix (str): The prefix for the weight dictionary keys.
+        suffix (str, optional): The suffix for the weight dictionary keys. Defaults to None.
+
+    Returns:
+        None
+    """
     dict_prefix = f'{prefix}_{suffix}' if suffix is not None else f'{prefix}'
     for layer_name, param_obj in state_dict.items():
         for param_name, value in param_obj.items():
@@ -101,18 +126,14 @@ def _update_weights(state_dict, tensor_dict, prefix, suffix=None):
 
 
 def _get_weights_dict(obj, prefix):
-    """
-    Get the dictionary of weights.
+    """Get the dictionary of weights.
 
-    Parameters
-    ----------
-    obj : Model or Optimizer
-        The target object that we want to get the weights.
+    Args:
+        obj (Model or Optimizer): The target object that we want to get the weights.
+        prefix (str): The prefix for the weight dictionary keys.
 
-    Returns
-    -------
-    dict
-        The weight dictionary.
+    Returns:
+        flat_params (dict): The weight dictionary.
     """
     weights_dict = {prefix: obj}
     # Flatten the dictionary with a given separator for

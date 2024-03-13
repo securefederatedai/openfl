@@ -12,32 +12,49 @@ from typing import Callable
 
 class Runtime:
     def __init__(self):
-        """
-        Base interface for runtimes that can run FLSpec flows
-
-        """
+        """Initializes the Runtime object. This serves as a base interface for runtimes that can run FLSpec flows."""
         pass
 
     @property
     def aggregator(self):
-        """Returns name of aggregator"""
+        """Returns the name of the aggregator.
+
+        Raises:
+            NotImplementedError: If the method is not implemented in a subclass.
+        """
         raise NotImplementedError
 
     @aggregator.setter
     def aggregator(self, aggregator: Aggregator):
-        """Set Runtime aggregator"""
+        """Sets the aggregator of the Runtime.
+
+        Args:
+            aggregator (Aggregator): The aggregator to be set.
+
+        Raises:
+            NotImplementedError: If the method is not implemented in a subclass.
+        """
         raise NotImplementedError
 
     @property
     def collaborators(self):
-        """
-        Return names of collaborators. Don't give direct access to private attributes
+        """Return the names of the collaborators. Don't give direct access to private attributes
+
+        Raises:
+            NotImplementedError: If the method is not implemented in a subclass.
         """
         raise NotImplementedError
 
     @collaborators.setter
     def collaborators(self, collaborators: List[Collaborator]):
-        """Set Runtime collaborators"""
+        """Sets the collaborators of the Runtime.
+
+        Args:
+            collaborators (List[Collaborator]): The collaborators to be set.
+
+        Raises:
+            NotImplementedError: If the method is not implemented in a subclass.
+        """
         raise NotImplementedError
 
     def execute_task(
@@ -48,18 +65,19 @@ class Runtime:
         instance_snapshot: List[FLSpec] = [],
         **kwargs
     ):
-        """
-        Performs the execution of a task as defined by the
-        implementation and underlying backend (single_process, ray, etc)
+        """Performs the execution of a task as defined by the implementation 
+        and underlying backend (single_process, ray, etc).
 
         Args:
-            flspec_obj:        Reference to the FLSpec (flow) object. Contains information
-                               about task sequence, flow attributes, that are needed to
-                               execute a future task
-            f:                 The next task to be executed within the flow
-            parent_func:       The prior task executed in the flow
-            instance_snapshot: A prior FLSpec state that needs to be restored from
-                               (i.e. restoring aggregator state after collaborator
-                               execution)
+            flspec_obj (FLSpec): Reference to the FLSpec (flow) object. Contains information
+                about task sequence, flow attributes, that are needed to execute a future task.
+            f (Callable): The next task to be executed within the flow.
+            parent_func (Callable): The prior task executed in the flow.
+            instance_snapshot (List[FLSpec], optional): A prior FLSpec state that needs to be 
+            restored from (i.e. restoring aggregator state after collaborator execution).
+            **kwargs: Additional keyword arguments.
+
+        Raises:
+            NotImplementedError: If the method is not implemented in a subclass.
         """
         raise NotImplementedError

@@ -7,20 +7,24 @@ import numpy as np
 
 
 class Transformer:
-    """Data transformation class."""
+    """Base class for data transformation.
 
+    This class defines the basic structure of a data transformer. 
+    It should be subclassed when implementing new types of data transformations.
+    """
     def forward(self, data, **kwargs):
         """Forward pass data transformation.
 
         Implement the data transformation.
+        This method should be overridden by all subclasses.
 
         Args:
-            data:
+            data: The data to be transformed.
             **kwargs: Additional parameters to pass to the function
 
         Returns:
-            transformed_data
-            metadata
+            transformed_data: The transformed data.
+            metadata: The metadata for the transformation.
         """
         raise NotImplementedError
 
@@ -29,35 +33,36 @@ class Transformer:
 
         Implement the data transformation needed when going the opposite
         direction to the forward method.
+        This method should be overridden by all subclasses.
 
         Args:
-            data:
-            metadata:
-            **kwargs: Additional parameters to pass to the function
+            data: The transformed data.
+            metadata: The metadata for the transformation.
+            **kwargs: Additional keyword arguments for the transformation.
 
         Returns:
-            transformed_data
+            transformed_data: The original data before the transformation.
         """
         raise NotImplementedError
 
 
 class Float32NumpyArrayToBytes(Transformer):
-    """Converts float32 Numpy array to Bytes array."""
+    """Transformer class for converting float32 Numpy arrays to bytes arrays."""
 
     def __init__(self):
-        """Initialize."""
+        """Initialize Float32NumpyArrayToBytes."""
         self.lossy = False
 
     def forward(self, data, **kwargs):
-        """Forward pass.
+        """Convert a float32 Numpy array to bytes.
 
         Args:
-            data:
-            **kwargs: Additional arguments to pass to the function
+            data: The float32 Numpy array to be converted.
+            **kwargs: Additional keyword arguments for the conversion.
 
         Returns:
-            data_bytes:
-            metadata:
+            data_bytes: The data converted to bytes.
+            metadata: The metadata for the conversion.
         """
         # TODO: Warn when this casting is being performed.
         if data.dtype != np.float32:
@@ -69,15 +74,14 @@ class Float32NumpyArrayToBytes(Transformer):
         return data_bytes, metadata
 
     def backward(self, data, metadata, **kwargs):
-        """Backward pass.
+        """Convert bytes back to a float32 Numpy array.
 
         Args:
-            data:
-            metadata:
+            data: The data in bytes.
+            metadata: The metadata for the conversion.
 
         Returns:
-            Numpy Array
-
+            The data converted back to a float32 Numpy array.
         """
         array_shape = tuple(metadata['int_list'])
         flat_array = np.frombuffer(data, dtype=np.float32)
@@ -89,17 +93,22 @@ class Float32NumpyArrayToBytes(Transformer):
 class TransformationPipeline:
     """Data Transformer Pipeline Class.
 
+    This class is a pipeline of transformers that transform data in a sequential manner.
+
     A sequential pipeline to transform (e.x. compress) data (e.x. layer of
     model_weights) as well as return metadata (if needed) for the
     reconstruction process carried out by the backward method.
+    
+    Attributes:
+        transformers (list): The list of transformers in the pipeline.
     """
 
     def __init__(self, transformers, **kwargs):
-        """Initialize.
+        """Initialize TransformationPipeline.
 
         Args:
-            transformers:
-            **kwargs: Additional parameters to pass to the function
+            transformers (list): The list of transformers in the pipeline.
+            **kwargs: Additional keyword arguments for the pipeline.
         """
         self.transformers = transformers
 
@@ -107,13 +116,12 @@ class TransformationPipeline:
         """Forward pass of pipeline data transformer.
 
         Args:
-            data: Data to transform
-            **kwargs: Additional parameters to pass to the function
+            data: The data to be transformed.
+            **kwargs: Additional keyword arguments for the transformation.
 
         Returns:
-            data:
-            transformer_metadata:
-
+            data: The transformed data.
+            transformer_metadata: The metadata for the transformation.
         """
         transformer_metadata = []
 
@@ -139,13 +147,12 @@ class TransformationPipeline:
         """Backward pass of pipeline data transformer.
 
         Args:
-            data: Data to transform
-            transformer_metadata:
-            **kwargs: Additional parameters to pass to the function
+            data: The transformed data.
+            transformer_metadata: The metadata for the transformation.
+            **kwargs: Additional keyword arguments for the transformation.
 
         Returns:
-            data:
-
+            The original data before the transformation.
         """
         for transformer in self.transformers[::-1]:
             data = transformer.backward(
@@ -153,5 +160,9 @@ class TransformationPipeline:
         return data
 
     def is_lossy(self):
-        """If any of the transformers are lossy, then the pipeline is lossy."""
+        """If any of the transformers are lossy, then the pipeline is lossy.
+        
+        Returns:
+            True if any of the transformers in the pipeline are lossy, False otherwise.
+        """
         return any(transformer.lossy for transformer in self.transformers)

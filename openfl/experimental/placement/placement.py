@@ -7,9 +7,8 @@ from typing import Callable
 
 
 def aggregator(f: Callable = None) -> Callable:
-    """
-    Placement decorator that designates that the task will
-    run at the aggregator node
+    """Placement decorator that designates that the task will
+    run at the aggregator node.
 
     Usage:
     class MyFlow(FLSpec):
@@ -19,6 +18,11 @@ def aggregator(f: Callable = None) -> Callable:
            ...
         ...
 
+    Args:
+        f (Callable, optional): The function to be decorated.
+
+    Returns:
+        Callable: The decorated function.
     """
     print(f'Aggregator step "{f.__name__}" registered')
     f.is_step = True
@@ -42,9 +46,8 @@ def aggregator(f: Callable = None) -> Callable:
 
 
 def collaborator(f: Callable = None) -> Callable:
-    """
-    Placement decorator that designates that the task will
-    run at the collaborator node
+    """Placement decorator that designates that the task will
+    run at the collaborator node.
 
     Usage:
     class MyFlow(FLSpec):
@@ -59,11 +62,15 @@ def collaborator(f: Callable = None) -> Callable:
         ...
 
     Args:
-        num_gpus: [Applicable for Ray backend only]
+        f (Callable, optional): The function to be decorated.
+        num_gpus (float, optional): [Applicable for Ray backend only]
                   Defines how many GPUs will be made available
                   to the task (Default = 0). Selecting a value < 1 (0.0-1.0]
                   will result in sharing of GPUs between tasks. 1 >= results in
                   exclusive GPU access for the task.
+    
+    Returns:
+        Callable: The decorated function.
     """
     if f is None:
         return functools.partial(collaborator)

@@ -10,11 +10,14 @@ def model_proto_to_bytes_and_metadata(model_proto):
     """Convert the model protobuf to bytes and metadata.
 
     Args:
-        model_proto: Protobuf of the model
+        model_proto: The protobuf of the model.
 
     Returns:
-        bytes_dict: Dictionary of the bytes contained in the model protobuf
-        metadata_dict: Dictionary of the meta data in the model protobuf
+        bytes_dict: A dictionary where the keys are tensor names and the values are 
+            the corresponding tensor data in bytes.
+        metadata_dict: A dictionary where the keys are tensor names and the values are 
+            the corresponding tensor metadata.
+        round_number: The round number for the model.
     """
     bytes_dict = {}
     metadata_dict = {}
@@ -40,7 +43,20 @@ def model_proto_to_bytes_and_metadata(model_proto):
 
 def bytes_and_metadata_to_model_proto(bytes_dict, model_id, model_version,
                                       is_delta, metadata_dict):
-    """Convert bytes and metadata to model protobuf."""
+    """Convert bytes and metadata to model protobuf.
+
+    Args:
+        bytes_dict: A dictionary where the keys are tensor names and the values are the 
+            corresponding tensor data in bytes.
+        model_id: The ID of the model.
+        model_version: The version of the model.
+        is_delta: A flag indicating whether the model is a delta model.
+        metadata_dict: A dictionary where the keys are tensor names and the values are the 
+            corresponding tensor metadata.
+
+    Returns:
+        model_proto: The protobuf of the model.
+    """
     model_header = ModelHeader(id=model_id, version=model_version, is_delta=is_delta)  # NOQA:F821
 
     tensor_protos = []
@@ -74,7 +90,17 @@ def bytes_and_metadata_to_model_proto(bytes_dict, model_id, model_version,
 
 
 def construct_named_tensor(tensor_key, nparray, transformer_metadata, lossless):
-    """Construct named tensor."""
+    """Construct named tensor.
+
+    Args:
+        tensor_key: The key of the tensor.
+        nparray: The numpy array representing the tensor data.
+        transformer_metadata: The transformer metadata for the tensor.
+        lossless: A flag indicating whether the tensor is lossless.
+
+    Returns:
+        named_tensor: The named tensor.
+    """
     metadata_protos = []
     for metadata in transformer_metadata:
         if metadata.get('int_to_float') is not None:
@@ -111,7 +137,19 @@ def construct_named_tensor(tensor_key, nparray, transformer_metadata, lossless):
 
 
 def construct_proto(tensor_dict, model_id, model_version, is_delta, compression_pipeline):
-    """Construct proto."""
+    """Construct proto.
+
+    Args:
+        tensor_dict: A dictionary where the keys are tensor names and the values are the 
+            corresponding tensors.
+        model_id: The ID of the model.
+        model_version: The version of the model.
+        is_delta: A flag indicating whether the model is a delta model.
+        compression_pipeline: The compression pipeline for the model.
+
+    Returns:
+        model_proto: The protobuf of the model.
+    """
     # compress the arrays in the tensor_dict, and form the model proto
     # TODO: Hold-out tensors from the compression pipeline.
     bytes_dict = {}
@@ -129,7 +167,17 @@ def construct_proto(tensor_dict, model_id, model_version, is_delta, compression_
 
 
 def construct_model_proto(tensor_dict, round_number, tensor_pipe):
-    """Construct model proto from tensor dict."""
+    """Construct model proto from tensor dict.
+
+    Args:
+        tensor_dict: A dictionary where the keys are tensor names and the values are the 
+            corresponding tensors.
+        round_number: The round number for the model.
+        tensor_pipe: The tensor pipe for the model.
+
+    Returns:
+        model_proto: The protobuf of the model.
+    """
     # compress the arrays in the tensor_dict, and form the model proto
     # TODO: Hold-out tensors from the tensor compression pipeline.
     named_tensors = []
@@ -147,7 +195,20 @@ def construct_model_proto(tensor_dict, round_number, tensor_pipe):
 
 
 def deconstruct_model_proto(model_proto, compression_pipeline):
-    """Deconstruct model proto."""
+    """Deconstruct model proto.
+
+    This function takes a model protobuf and a compression pipeline, 
+    and deconstructs the protobuf into a dictionary of tensors and a round number.
+
+    Args:
+        model_proto: The protobuf of the model.
+        compression_pipeline: The compression pipeline for the model.
+
+    Returns:
+        tensor_dict: A dictionary where the keys are tensor names and the values are the 
+            corresponding tensors.
+        round_number: The round number for the model.
+    """
     # extract the tensor_dict and metadata
     bytes_dict, metadata_dict, round_number = model_proto_to_bytes_and_metadata(model_proto)
 
@@ -164,12 +225,16 @@ def deconstruct_model_proto(model_proto, compression_pipeline):
 def deconstruct_proto(model_proto, compression_pipeline):
     """Deconstruct the protobuf.
 
+    This function takes a model protobuf and a compression pipeline, and deconstructs the 
+    protobuf into a dictionary of tensors.
+
     Args:
-        model_proto: The protobuf of the model
-        compression_pipeline: The compression pipeline object
+        model_proto: The protobuf of the model.
+        compression_pipeline: The compression pipeline for the model.
 
     Returns:
-        protobuf: A protobuf of the model
+        tensor_dict: A dictionary where the keys are tensor names and the values are the 
+            corresponding tensors.
     """
     # extract the tensor_dict and metadata
     bytes_dict, metadata_dict = model_proto_to_bytes_and_metadata(model_proto)
@@ -188,10 +253,10 @@ def load_proto(fpath):
     """Load the protobuf.
 
     Args:
-        fpath: The filepath for the protobuf
+        fpath: The file path of the protobuf.
 
     Returns:
-        protobuf: A protobuf of the model
+        model: The protobuf of the model.
     """
     with open(fpath, 'rb') as f:
         loaded = f.read()
@@ -203,9 +268,8 @@ def dump_proto(model_proto, fpath):
     """Dump the protobuf to a file.
 
     Args:
-        model_proto: The protobuf of the model
-        fpath: The filename to save the model protobuf
-
+        model_proto: The protobuf of the model.
+        fpath: The file path to dump the protobuf.
     """
     s = model_proto.SerializeToString()
     with open(fpath, 'wb') as f:
@@ -216,12 +280,12 @@ def datastream_to_proto(proto, stream, logger=None):
     """Convert the datastream to the protobuf.
 
     Args:
-        model_proto: The protobuf of the model
-        stream: The data stream from the remote connection
-        logger: (Optional) The log object
+        proto: The protobuf to be filled with the data stream.
+        stream: The data stream.
+        logger (optional): The logger for logging information.
 
     Returns:
-        protobuf: A protobuf of the model
+        proto: The protobuf filled with the data stream.
     """
     npbytes = b''
     for chunk in stream:
@@ -240,11 +304,12 @@ def proto_to_datastream(proto, logger, max_buffer_size=(2 * 1024 * 1024)):
     """Convert the protobuf to the datastream for the remote connection.
 
     Args:
-        model_proto: The protobuf of the model
-        logger: The log object
-        max_buffer_size: The buffer size (Default= 2*1024*1024)
-    Returns:
-        reply: The message for the remote connection.
+        proto: The protobuf to be converted into a data stream.
+        logger: The logger for logging information.
+        max_buffer_size (optional): The maximum buffer size for the data stream. Defaults to 2*1024*1024.
+
+    Yields:
+        reply: Chunks of the data stream for the remote connection.
     """
     npbytes = proto.SerializeToString()
     data_size = len(npbytes)
@@ -258,5 +323,13 @@ def proto_to_datastream(proto, logger, max_buffer_size=(2 * 1024 * 1024)):
 
 
 def get_headers(context) -> dict:
-    """Get headers from context."""
+    """Get headers from context.
+
+    Args:
+        context: The context containing the headers.
+
+    Returns:
+        headers: A dictionary where the keys are header names and the 
+            values are the corresponding header values.
+    """
     return {header[0]: header[1] for header in context.invocation_metadata()}

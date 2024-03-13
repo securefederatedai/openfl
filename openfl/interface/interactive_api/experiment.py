@@ -27,7 +27,16 @@ from openfl.utilities.workspace import dump_requirements_file
 
 
 class ModelStatus:
-    """Model statuses."""
+    """Model statuses.
+
+    This class defines the various statuses a model can have during an experiment.
+
+    Attributes:
+        INITIAL (str): Initial status of the model.
+        BEST (str): Status indicating the model with the best score.
+        LAST (str): Status indicating the last model used in the experiment.
+        RESTORED (str): Status indicating a model that has been restored.
+    """
 
     INITIAL = 'initial'
     BEST = 'best'
@@ -36,7 +45,21 @@ class ModelStatus:
 
 
 class FLExperiment:
-    """Central class for FL experiment orchestration."""
+    """Central class for FL experiment orchestration.
+
+    This class is responsible for orchestrating the federated learning experiment. It manages
+    the experiment's lifecycle and interacts with the federation.
+
+    Attributes:
+        federation: The federation that this experiment is part of.
+        experiment_name (str): The name of the experiment.
+        summary_writer (SummaryWriter): The summary writer.
+        serializer_plugin (str): The serializer plugin to use.
+        experiment_submitted (bool): Whether the experiment has been submitted.
+        is_validate_task_exist (bool): Whether a validate task exists.
+        logger (Logger): The logger to use.
+        plan (Plan): The plan for the experiment.
+    """
 
     def __init__(
             self,
@@ -45,11 +68,15 @@ class FLExperiment:
             serializer_plugin: str = 'openfl.plugins.interface_serializer.'
                                      'cloudpickle_serializer.CloudpickleSerializer'
     ) -> None:
-        """
-        Initialize an experiment inside a federation.
+        """Initialize an experiment inside a federation.
 
         Experiment makes sense in a scope of some machine learning problem.
         Information about the data on collaborators is contained on the federation level.
+
+        Args:
+            federation: The federation that this experiment is part of.
+            experiment_name (str, optional): The name of the experiment. Defaults to None.
+            serializer_plugin (str, optional): The serializer plugin. Defaults to 'openfl.plugins.interface_serializer.cloudpickle_serializer.CloudpickleSerializer'.
         """
         self.federation = federation
         self.experiment_name = experiment_name or 'test-' + time.strftime('%Y%m%d-%H%M%S')
@@ -118,7 +145,19 @@ class FLExperiment:
         return self._rebuild_model(tensor_dict, upcoming_model_status=ModelStatus.LAST)
 
     def _rebuild_model(self, tensor_dict, upcoming_model_status=ModelStatus.BEST):
-        """Use tensor dict to update model weights."""
+        """Use tensor dict to update model weights.
+
+        This method updates the model weights using the provided tensor dictionary. If the tensor
+        dictionary is empty, it logs a warning and returns the current model. Otherwise, it rebuilds
+        the model with the new weights and updates the current model status.
+
+        Args:
+            tensor_dict (dict): A dictionary containing tensor names as keys and tensor values as values.
+            upcoming_model_status (ModelStatus, optional): The upcoming status of the model. Defaults to ModelStatus.BEST.
+
+        Returns:
+            The updated model.
+        """
         if len(tensor_dict) == 0:
             warning_msg = ('No tensors received from director\n'
                            'Possible reasons:\n'
@@ -180,7 +219,22 @@ class FLExperiment:
     def prepare_workspace_distribution(self, model_provider, task_keeper, data_loader,
                                        task_assigner,
                                        pip_install_options: Tuple[str] = ()):
-        """Prepare an archive from a user workspace."""
+        """Prepare an archive from a user workspace.
+
+        This method serializes interface objects and saves them to disk, 
+        dumps the prepared plan, prepares a requirements file to restore 
+        the Python environment, and compresses the workspace to restore it on a collaborator.
+
+        Args:
+            model_provider: The model provider object.
+            task_keeper: The task keeper object.
+            data_loader: The data loader object.
+            task_assigner: The task assigner object.
+            pip_install_options (tuple, optional): A tuple of options for pip install. Defaults to an empty tuple.
+
+        Returns:
+            None
+        """
         # Save serialized python objects to disc
         self._serialize_interface_objects(model_provider, task_keeper, data_loader, task_assigner)
         # Save the prepared plan
@@ -202,30 +256,29 @@ class FLExperiment:
               opt_treatment: str = 'RESET',
               device_assignment_policy: str = 'CPU_ONLY',
               pip_install_options: Tuple[str] = ()) -> None:
-        """
-        Prepare workspace distribution and send to Director.
+        """Prepare workspace distribution and send to Director.
 
         A successful call of this function will result in sending the experiment workspace
         to the Director service and experiment start.
 
-        Parameters:
-        model_provider - Model Interface instance.
-        task_keeper - Task Interface instance.
-        data_loader - Data Interface instance.
-        rounds_to_train - required number of training rounds for the experiment.
-        delta_updates - [bool] Tells if collaborators should send delta updates
-            for the locally tuned models. If set to False, whole checkpoints will be sent.
-        opt_treatment - Optimizer state treatment policy.
-            Valid options: 'RESET' - reinitialize optimizer for every round,
-            'CONTINUE_LOCAL' - keep local optimizer state,
-            'CONTINUE_GLOBAL' - aggregate optimizer state.
-        device_assignment_policy - device assignment policy.
-            Valid options: 'CPU_ONLY' - device parameter passed to tasks
-            will always be 'cpu',
-            'CUDA_PREFERRED' - enable passing CUDA device identifiers to tasks
-            by collaborators, works with cuda-device-monitor plugin equipped Envoys.
-        pip_install_options - tuple of options for the remote `pip install` calls,
-            example: ('-f some.website', '--no-index')
+        Args:
+            model_provider: Model Interface instance.
+            task_keeper: Task Interface instance.
+            data_loader: Data Interface instance.
+            rounds_to_train (int): Required number of training rounds for the experiment.
+            task_assigner (optional): Task assigner instance. Defaults to None.
+            override_config (dict, optional): Configuration to override the default settings. Defaults to None.
+            delta_updates (bool, optional): Flag to indicate if delta updates should be sent. Defaults to False.
+            opt_treatment (str, optional): Optimizer state treatment policy. Defaults to 'RESET'.
+                Valid options: 'RESET' - reinitialize optimizer for every round,
+                'CONTINUE_LOCAL' - keep local optimizer state,
+                'CONTINUE_GLOBAL' - aggregate optimizer state.
+            device_assignment_policy (str, optional): Device assignment policy. Defaults to 'CPU_ONLY'.
+                Valid options: 'CPU_ONLY' - device parameter passed to tasks will always be 'cpu',
+                'CUDA_PREFERRED' - enable passing CUDA device identifiers to tasks by collaborators, 
+                works with cuda-device-monitor plugin equipped Envoys.
+            pip_install_options (Tuple[str], optional): Options for the remote `pip install` calls. Defaults to ().
+                example: ('-f some.website', '--no-index')
         """
         if not task_assigner:
             task_assigner = self.define_task_assigner(task_keeper, rounds_to_train)
@@ -265,7 +318,28 @@ class FLExperiment:
             self.logger.info('Experiment could not be submitted to the director.')
 
     def define_task_assigner(self, task_keeper, rounds_to_train):
-        """Define task assigner by registered tasks."""
+        """Define task assigner by registered tasks.
+
+        This method defines a task assigner based on the registered tasks. 
+        It checks if there are 'train' and 'validate' tasks among the 
+        registered tasks and defines the task assigner accordingly. If there are 
+        both 'train' and 'validate' tasks, the task assigner assigns these tasks 
+        to each collaborator. If there are only 'validate' tasks, the task assigner 
+        assigns only these tasks to each collaborator. 
+        If there are no 'train' or 'validate' tasks, an exception is raised.
+
+        Args:
+            task_keeper: The task keeper object that holds the registered tasks.
+            rounds_to_train (int): The number of rounds to train.
+
+        Returns:
+            assigner: A function that assigns tasks to each collaborator.
+
+        Raises:
+            Exception: If there are no 'train' tasks and rounds_to_train is not 1.
+            Exception: If there are no 'validate' tasks.
+            Exception: If there are no 'train' or 'validate' tasks.
+        """
         tasks = task_keeper.get_registered_tasks()
         is_train_task_exist = False
         self.is_validate_task_exist = False
@@ -305,7 +379,17 @@ class FLExperiment:
             raise Exception('You should define train and validate tasks!')
 
     def restore_experiment_state(self, model_provider):
-        """Restore accepted experiment object."""
+        """Restores the state of an accepted experiment object.
+
+        This method restores the state of an accepted experiment object by 
+        getting the core task runner from the plan and setting the current 
+        model status to RESTORED. It also sets the experiment_submitted 
+        attribute to True.
+
+        Args:
+            model_provider: The provider of the model used in the experiment.
+
+        """
         self.task_runner_stub = self.plan.get_core_task_runner(model_provider=model_provider)
         self.current_model_status = ModelStatus.RESTORED
         self.experiment_submitted = True
@@ -346,7 +430,19 @@ class FLExperiment:
         del self.arch_path
 
     def _get_initial_tensor_dict(self, model_provider):
-        """Extract initial weights from the model."""
+        """Extracts initial weights from the model.
+
+        This method extracts the initial weights from the model by getting the 
+        core task runner from the plan and setting the current model status to 
+        INITIAL. It then splits the tensor dictionary for holdouts and returns 
+        the tensor dictionary.
+
+        Args:
+            model_provider: The provider of the model used in the experiment.
+
+        Returns:
+            dict: The tensor dictionary.
+        """
         self.task_runner_stub = self.plan.get_core_task_runner(model_provider=model_provider)
         self.current_model_status = ModelStatus.INITIAL
         tensor_dict, _ = split_tensor_dict_for_holdouts(
@@ -365,7 +461,25 @@ class FLExperiment:
                       dataloader_interface_file='loader_obj.pkl',
                       aggregation_function_interface_file='aggregation_function_obj.pkl',
                       task_assigner_file='task_assigner_obj.pkl'):
-        """Fill plan.yaml file using user provided setting."""
+        """Fills the plan.yaml file using user-provided settings.
+
+        It sets up the network, aggregator, collaborator, data loader, task runner, 
+        and API layer according to the user's specifications.
+
+        Args:
+            model_provider: The provider of the model used in the experiment.
+            data_loader: The data loader to be used in the experiment.
+            rounds_to_train (int): The number of rounds to train.
+            delta_updates (bool): Whether to use delta updates.
+            opt_treatment (str): The optimization treatment to be used.
+            device_assignment_policy (str): The device assignment policy to be used.
+            override_config (dict, optional): The configuration to override the default settings.
+            model_interface_file (str, optional): The file for the model interface. Defaults to 'model_obj.pkl'.
+            tasks_interface_file (str, optional): The file for the tasks interface. Defaults to 'tasks_obj.pkl'.
+            dataloader_interface_file (str, optional): The file for the data loader interface. Defaults to 'loader_obj.pkl'.
+            aggregation_function_interface_file (str, optional): The file for the aggregation function interface. Defaults to 'aggregation_function_obj.pkl'.
+            task_assigner_file (str, optional): The file for the task assigner. Defaults to 'task_assigner_obj.pkl'.
+        """
 
         # Seems like we still need to fill authorized_cols list
         # So aggregator know when to start sending tasks
@@ -428,7 +542,17 @@ class FLExperiment:
             data_loader,
             task_assigner
     ):
-        """Save python objects to be restored on collaborators."""
+        """Save python objects to be restored on collaborators.
+
+        This method serializes the provided python objects and saves them for later use. The objects
+        are serialized using the serializer plugin specified in the plan configuration.
+
+        Args:
+            model_provider: The ModelInterface instance to be serialized.
+            task_keeper: The TaskKeeper instance to be serialized.
+            data_loader: The DataInterface instance to be serialized.
+            task_assigner: The task assigner to be serialized.
+        """
         serializer = self.plan.build(
             self.plan.config['api_layer']['required_plugin_components']['serializer_plugin'], {})
         framework_adapter = Plan.build(model_provider.framework_plugin, {})
@@ -448,8 +572,10 @@ class FLExperiment:
 
 
 class TaskKeeper:
-    """
-    Task keeper class.
+    """Task keeper class.
+    
+    This class is responsible for managing tasks in a federated learning experiment. It keeps track of
+    registered tasks, their settings, and aggregation functions.
 
     Task should accept the following entities that exist on collaborator nodes:
     1. model - will be rebuilt with relevant weights for every task by `TaskRunner`
@@ -458,6 +584,13 @@ class TaskKeeper:
     4. optimizer (optional)
 
     Task returns a dictionary {metric name: metric value for this task}
+    
+    Attributes:
+        task_registry (dict): A dictionary mapping task names to callable functions.
+        task_contract (dict): A dictionary mapping task names to their contract.
+        task_settings (dict): A dictionary mapping task names to their settings.
+        aggregation_functions (dict): A dictionary mapping task names to their aggregation functions.
+        _tasks (dict): A dictionary mapping task aliases to Task objects.
     """
 
     def __init__(self) -> None:
@@ -474,8 +607,7 @@ class TaskKeeper:
         self._tasks: Dict[str, Task] = {}
 
     def register_fl_task(self, model, data_loader, device, optimizer=None, round_num=None):
-        """
-        Register FL tasks.
+        """Register FL tasks.
 
         The task contract should be set up by providing variable names:
         [model, data_loader, device] - necessarily
@@ -497,9 +629,28 @@ class TaskKeeper:
             ...
             return {'metric_name': metric, 'metric_name_2': metric_2,}
         `
+
+        Args:
+            model: The model to be used in the task.
+            data_loader: The data loader to be used in the task.
+            device: The device to be used in the task.
+            optimizer (optional): The optimizer to be used in the task. Defaults to None.
+            round_num (optional): The round number for the task. Defaults to None.
         """
-        # The highest level wrapper for allowing arguments for the decorator
+        
         def decorator_with_args(training_method):
+            """A high-level wrapper that allows arguments for the decorator.
+
+            This function is a decorator that wraps a training method. It saves the 
+            task and the contract for later serialization. It also defines tasks based 
+            on whether an optimizer is provided.
+
+            Args:
+                training_method: The training method to be wrapped.
+
+            Returns:
+                function: The wrapped training method.
+            """
             # We could pass hooks to the decorator
             # @functools.wraps(training_method)
 
@@ -536,13 +687,15 @@ class TaskKeeper:
         return decorator_with_args
 
     def add_kwargs(self, **task_kwargs):
-        """
-        Register tasks settings.
+        """Register tasks settings.
 
         Warning! We do not actually need to register additional kwargs,
         we ust serialize them.
         This one is a decorator because we need task name and
         to be consistent with the main registering method
+
+        Args:
+            **task_kwargs: Keyword arguments for the task settings.
         """
         # The highest level wrapper for allowing arguments for the decorator
         def decorator_with_args(training_method):
@@ -562,9 +715,6 @@ class TaskKeeper:
         containing logic from workspace-related libraries
         that are not present on director yet.
 
-        Args:
-            aggregation_function: Aggregation function.
-
         You might need to override default FedAvg aggregation with built-in aggregation types:
             - openfl.interface.aggregation_functions.GeometricMedian
             - openfl.interface.aggregation_functions.Median
@@ -572,6 +722,9 @@ class TaskKeeper:
         See more details on `Overriding the aggregation function`_ documentation page.
         .. _Overriding the aggregation function:
             https://openfl.readthedocs.io/en/latest/overriding_agg_fn.html
+
+        Args:
+            aggregation_function: The aggregation function to be used for the task.
         """
         def decorator_with_args(training_method):
             if not isinstance(aggregation_function, AggregationFunction):
@@ -582,7 +735,11 @@ class TaskKeeper:
         return decorator_with_args
 
     def get_registered_tasks(self) -> Dict[str, Task]:
-        """Return registered tasks."""
+        """Return registered tasks.
+        
+        Returns:
+            A dictionary mapping task names to Task objects.
+        """
         return self._tasks
 
 
@@ -591,49 +748,67 @@ TaskInterface = TaskKeeper
 
 
 class ModelInterface:
-    """
-    Registers model graph and optimizer.
+    """Registers model graph and optimizer.
 
-    To be serialized and sent to collaborator nodes
+    This class is responsible for managing the model and optimizer in a federated learning experiment.
 
+    To be serialized and sent to collaborator nodes.
     This is the place to determine correct framework adapter
-        as they are needed to fill the model graph with trained tensors.
+    as they are needed to fill the model graph with trained tensors.
 
     There is no support for several models / optimizers yet.
+
+    Attributes:
+        model: The model to be used in the experiment.
+        optimizer: The optimizer to be used in the experiment.
+        framework_plugin: The framework plugin to be used in the experiment.
     """
 
     def __init__(self, model, optimizer, framework_plugin) -> None:
-        """
-        Initialize model keeper.
+        """Initialize model keeper.
 
         Tensors in provided graphs will be used for
         initialization of the global model.
 
-        Arguments:
-        model: Union[tuple, graph]
-        optimizer: Union[tuple, optimizer]
+        Args:
+            model (Union[Path, str]) : The model to be used in the experiment.
+            optimizer (Union[tuple, optimizer]) : The optimizer to be used in the experiment.
+            framework_plugin: The framework plugin to be used in the experiment.
         """
         self.model = model
         self.optimizer = optimizer
         self.framework_plugin = framework_plugin
 
     def provide_model(self):
-        """Retrieve model."""
+        """Retrieve model.
+
+        Returns:
+            The model used in the experiment.
+        """
         return self.model
 
     def provide_optimizer(self):
-        """Retrieve optimizer."""
+        """Retrieve optimizer.
+
+        Returns:
+            The optimizer used in the experiment.
+        """
         return self.optimizer
 
 
 class DataInterface:
-    """
-    The class to define dataloaders.
+    """The class to define dataloaders.
+
+    This class is responsible for managing the data loaders in a federated learning experiment.
 
     In the future users will have to adapt `unified data interface hook`
-        in their dataloaders.
+    in their dataloaders.
     For now, we can provide `data_path` variable on every collaborator node
-        at initialization time for dataloader customization
+    at initialization time for dataloader customization.
+
+    Attributes:
+        kwargs (dict): The keyword arguments for the data loaders.
+        shard_descriptor: The shard descriptor for the dataloader.
     """
 
     def __init__(self, **kwargs):
@@ -642,16 +817,22 @@ class DataInterface:
 
     @property
     def shard_descriptor(self):
-        """Return shard descriptor."""
+        """Return shard descriptor.
+
+        Returns:
+            The shard descriptor for the data loaders.
+        """
         return self._shard_descriptor
 
     @shard_descriptor.setter
     def shard_descriptor(self, shard_descriptor):
-        """
-        Describe per-collaborator procedures or sharding.
+        """Describe per-collaborator procedures or sharding.
 
         This method will be called during a collaborator initialization.
         Local shard_descriptor  will be set by Envoy.
+
+        Args:
+            shard_descriptor: The shard descriptor for the data loaders.
         """
         self._shard_descriptor = shard_descriptor
         raise NotImplementedError

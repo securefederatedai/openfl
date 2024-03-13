@@ -25,7 +25,21 @@ logger = logging.getLogger(__name__)
 
 
 class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
-    """gRPC server class for the Aggregator."""
+    """gRPC server class for the Aggregator.
+    
+    This class implements a gRPC server for the Aggregator, allowing it to communicate with collaborators.
+
+    Attributes:
+        aggregator (Aggregator): The aggregator that this server is serving.
+        uri (str): The URI that the server is serving on.
+        tls (bool): Whether to use TLS for the connection.
+        disable_client_auth (bool): Whether to disable client-side authentication.
+        root_certificate (str): The path to the root certificate for the TLS connection.
+        certificate (str): The path to the server's certificate for the TLS connection.
+        private_key (str): The path to the server's private key for the TLS connection.
+        server (grpc.Server): The gRPC server.
+        server_credentials (grpc.ServerCredentials): The server's credentials.
+    """
 
     def __init__(self,
                  aggregator,
@@ -36,20 +50,17 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
                  certificate=None,
                  private_key=None,
                  **kwargs):
-        """
-        Class initializer.
+        """Initialize the AggregatorGRPCServer.
 
         Args:
-            aggregator: The aggregator
-        Args:
-            fltask (FLtask): The gRPC service task.
-            tls (bool): To disable the TLS. (Default: True)
-            disable_client_auth (bool): To disable the client side
-            authentication. (Default: False)
-            root_certificate (str): File path to the CA certificate.
-            certificate (str): File path to the server certificate.
-            private_key (str): File path to the private key.
-            kwargs (dict): Additional arguments to pass into function
+            aggregator (Aggregator): The aggregator that this server is serving.
+            agg_port (int): The port that the server is serving on.
+            tls (bool): Whether to use TLS for the connection.
+            disable_client_auth (bool): Whether to disable client-side authentication.
+            root_certificate (str): The path to the root certificate for the TLS connection.
+            certificate (str): The path to the server's certificate for the TLS connection.
+            private_key (str): The path to the server's private key for the TLS connection.
+            **kwargs: Additional keyword arguments.   
         """
         self.aggregator = aggregator
         self.uri = f'[::]:{agg_port}'
@@ -64,17 +75,16 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
         self.logger = logging.getLogger(__name__)
 
     def validate_collaborator(self, request, context):
-        """
-        Validate the collaborator.
+        """Validate the collaborator.
 
+        This method checks that the collaborator who sent the request is authorized to do so.
+        
         Args:
-            request: The gRPC message request
-            context: The gRPC context
+            request (aggregator_pb2.MessageHeader): The request from the collaborator.
+            context (grpc.ServicerContext): The context of the request.
 
         Raises:
-            ValueError: If the collaborator or collaborator certificate is not
-             valid then raises error.
-
+            grpc.RpcError: If the collaborator or collaborator certificate is not authorized.
         """
         if self.tls:
             common_name = context.auth_context()[
@@ -90,12 +100,15 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
                     f'collaborator_common_name: |{collaborator_common_name}|')
 
     def get_header(self, collaborator_name):
-        """
-        Compose and return MessageHeader.
+        """Compose and return MessageHeader.
+
+        This method creates a MessageHeader for a message to the specified collaborator.
 
         Args:
-            collaborator_name : str
-                The collaborator the message is intended for
+            collaborator_name (str): The name of the collaborator to send the message to.
+
+        Returns:
+            aggregator_pb2.MessageHeader: The header for the message.
         """
         return aggregator_pb2.MessageHeader(
             sender=self.aggregator.uuid,
@@ -105,12 +118,15 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
         )
 
     def check_request(self, request):
-        """
-        Validate request header matches expected values.
+        """Validate request header matches expected values.
+
+        This method checks that the request is valid and was sent by an authorized collaborator.
 
         Args:
-            request : protobuf
-                Request sent from a collaborator that requires validation
+            request (aggregator_pb2.MessageHeader): Request sent from a collaborator that requires validation.
+        
+        Raises:
+            ValueError: If the request is not valid.        
         """
         # TODO improve this check. the sender name could be spoofed
         check_is_in(request.header.sender, self.aggregator.authorized_cols, self.logger)
@@ -130,13 +146,16 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
         )
 
     def GetTasks(self, request, context):  # NOQA:N802
-        """
-        Request a job from aggregator.
+        """Request a job from aggregator.
+
+        This method handles a request from a collaborator for a job.
 
         Args:
-            request: The gRPC message request
-            context: The gRPC context
+            request (aggregator_pb2.GetTasksRequest): The request from the collaborator.
+            context (grpc.ServicerContext): The context of the request.
 
+        Returns:
+            aggregator_pb2.GetTasksResponse: The response to the request.
         """
         self.validate_collaborator(request, context)
         self.check_request(request)
@@ -172,13 +191,16 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
         )
 
     def GetAggregatedTensor(self, request, context):  # NOQA:N802
-        """
-        Request a job from aggregator.
+        """Request a job from aggregator.
+
+        This method handles a request from a collaborator for an aggregated tensor.
 
         Args:
-            request: The gRPC message request
-            context: The gRPC context
+            request (aggregator_pb2.GetAggregatedTensorRequest): The request from the collaborator.
+            context (grpc.ServicerContext): The context of the request.
 
+        Returns:
+            aggregator_pb2.GetAggregatedTensorResponse: The response to the request.
         """
         self.validate_collaborator(request, context)
         self.check_request(request)
@@ -199,13 +221,16 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
         )
 
     def SendLocalTaskResults(self, request, context):  # NOQA:N802
-        """
-        Request a model download from aggregator.
+        """Request a model download from aggregator.
+
+        This method handles a request from a collaborator to send the results of a local task.
 
         Args:
-            request: The gRPC message request
-            context: The gRPC context
+            request (aggregator_pb2.SendLocalTaskResultsRequest): The request from the collaborator.
+            context (grpc.ServicerContext): The context of the request.
 
+        Returns:
+            aggregator_pb2.SendLocalTaskResultsResponse: The response to the request.
         """
         try:
             proto = aggregator_pb2.TaskResults()
@@ -232,7 +257,13 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
         )
 
     def get_server(self):
-        """Return gRPC server."""
+        """Return gRPC server.
+        
+        This method creates a gRPC server if it does not already exist and returns it.
+
+        Returns:
+            grpc.Server: The gRPC server.
+        """
         self.server = server(ThreadPoolExecutor(max_workers=cpu_count()),
                              options=channel_options)
 
@@ -268,7 +299,10 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
         return self.server
 
     def serve(self):
-        """Start an aggregator gRPC service."""
+        """Start an aggregator gRPC service.
+        
+        This method starts the gRPC server and handles requests until all quit jobs havebeen sent.
+        """
         self.get_server()
 
         self.logger.info('Starting Aggregator gRPC Server')

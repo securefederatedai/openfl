@@ -21,7 +21,12 @@ from openfl.utilities import add_log_level
 
 
 def setup_logging(level='info', log_file=None):
-    """Initialize logging settings."""
+    """Initialize logging settings.
+
+    Args:
+        level (str, optional): Logging verbosity level. Defaults to 'info'.
+        log_file (str, optional): The log file. Defaults to None.
+    """
     import logging
     from logging import basicConfig
 
@@ -63,16 +68,34 @@ class CLI(Group):
     """CLI class."""
 
     def __init__(self, name=None, commands=None, **kwargs):
-        """Initialize."""
+        """Initialize CLI object.
+
+        Args:
+            name (str, optional): Name of the CLI group. Defaults to None.
+            commands (dict, optional): Commands for the CLI group. Defaults to None.
+            **kwargs: Arbitrary keyword arguments.
+        """
         super(CLI, self).__init__(name, commands, **kwargs)
         self.commands = commands or {}
 
     def list_commands(self, ctx):
-        """Display all available commands."""
+        """Display all available commands.
+
+        Args:
+            ctx (click.core.Context): Click context.
+
+        Returns:
+            dict: Available commands.
+        """
         return self.commands
 
     def format_help(self, ctx, formatter):
-        """Dislpay user-friendly help."""
+        """Display user-friendly help.
+
+        Args:
+            ctx (click.core.Context): Click context.
+            formatter (click.formatting.HelpFormatter): Click help formatter.
+        """
         show_header()
         uses = [
             f'{ctx.command_path}',
@@ -134,7 +157,13 @@ class CLI(Group):
 @option('--no-warnings', is_flag=True, help='Disable third-party warnings.')
 @pass_context
 def cli(context, log_level, no_warnings):
-    """Command-line Interface."""
+    """Command-line Interface.
+
+    Args:
+        context (click.core.Context): Click context.
+        log_level (str): Logging verbosity level.
+        no_warnings (bool): Flag to disable third-party warnings.
+    """
     import os
     from sys import argv
 
@@ -156,7 +185,13 @@ def cli(context, log_level, no_warnings):
 @cli.result_callback()
 @pass_context
 def end(context, result, **kwargs):
-    """Print the result of the operation."""
+    """Print the result of the operation.
+
+    Args:
+        context (click.core.Context): Click context.
+        result: Result of the operation.
+        **kwargs: Arbitrary keyword arguments.
+    """
     if context.obj['fail']:
         echo('\n ❌ :(')
     else:
@@ -167,12 +202,21 @@ def end(context, result, **kwargs):
 @pass_context
 @argument('subcommand', required=False)
 def help_(context, subcommand):
-    """Display help."""
+    """Display help.
+
+    Args:
+        context (click.core.Context): Click context.
+        subcommand (str, optional): Subcommand to display help for. Defaults to None.
+    """
     pass
 
 
 def error_handler(error):
-    """Handle the error."""
+    """Handle the error.
+
+    Args:
+        error (Exception): Error to handle.
+    """
     if 'cannot import' in str(error):
         if 'TensorFlow' in str(error):
             echo(style('EXCEPTION', fg='red', bold=True) + ' : ' + style(
@@ -188,7 +232,15 @@ def error_handler(error):
 
 
 def review_plan_callback(file_name, file_path):
-    """Review plan callback for Director and Envoy."""
+    """Review plan callback for Director and Envoy.
+
+    Args:
+        file_name (str): Name of the file to review.
+        file_path (str): Path of the file to review.
+
+    Returns:
+        bool: True if the file is accepted, False otherwise.
+    """
     echo(style(
         f'Please review the contents of {file_name} before proceeding...',
         fg='green',
