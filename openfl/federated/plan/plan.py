@@ -135,9 +135,15 @@ class Plan:
                 gandlf_config['output_dir'] = gandlf_config.get('output_dir', '.')
                 plan.config['task_runner']['settings']['gandlf_config'] = gandlf_config
 
-            plan.authorized_cols = Plan.load(cols_config_path).get(
+            cols_info = Plan.load(cols_config_path).get(
                 'collaborators', []
             )
+            if isinstance(cols_info, list):
+                plan.cn_mapping = {col: col for col in cols_info}
+                plan.authorized_cols = cols_info
+            else:
+                plan.cn_mapping = cols_info
+                plan.authorized_cols = list(cols_info.keys())
 
             # TODO: Does this need to be a YAML file? Probably want to use key
             #  value as the plan hash
@@ -223,6 +229,7 @@ class Plan:
         """Initialize."""
         self.config = {}  # dictionary containing patched plan definition
         self.authorized_cols = []  # authorized collaborator list
+        self.cn_mapping = {}  # expected cert common name for each collaborator
         self.cols_data_paths = {}  # collaborator data paths dict
 
         self.collaborator_ = None  # collaborator object
@@ -338,6 +345,7 @@ class Plan:
         defaults[SETTINGS]['aggregator_uuid'] = self.aggregator_uuid
         defaults[SETTINGS]['federation_uuid'] = self.federation_uuid
         defaults[SETTINGS]['authorized_cols'] = self.authorized_cols
+        defaults[SETTINGS]['cn_mapping'] = self.cn_mapping
         defaults[SETTINGS]['assigner'] = self.get_assigner()
         defaults[SETTINGS]['compression_pipeline'] = self.get_tensor_pipe()
         defaults[SETTINGS]['straggler_handling_policy'] = self.get_straggler_handling_policy()
