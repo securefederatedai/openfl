@@ -27,14 +27,23 @@ def write_metric(node_name, task_name, metric_name, metric, round_number):
     writer.add_scalar(f"{node_name}/{task_name}/{metric_name}", metric, round_number)
 
 
-def get_glue_mrpc_dataset(tokenizer):
-    dataset = load_dataset("glue", "mrpc")
+def get_emotion_dataset(tokenizer):
+    dataset = load_dataset("dair-ai/emotion", cache_dir="dataset", revision="9ce6303")
+
+    assert (
+        dataset["train"]._fingerprint == "cbee262593e53bad"
+    ), "The hash for the train dataset doesn't match"
+    assert (
+        dataset["test"]._fingerprint == "742f5ef1ea3947e2"
+    ), "The hash for the test dataset doesn't match"
+    assert (
+        dataset["validation"]._fingerprint == "7e98c3be2fbf8e9e"
+    ), "The hash for the validation dataset doesn't match"
 
     def tokenize_function(examples):
         # max_length=None => use the model max length (it's actually the default)
         outputs = tokenizer(
-            examples["sentence1"],
-            examples["sentence2"],
+            examples["text"],
             truncation=True,
             max_length=None,
         )
@@ -43,7 +52,7 @@ def get_glue_mrpc_dataset(tokenizer):
     tokenized_datasets = dataset.map(
         tokenize_function,
         batched=True,
-        remove_columns=["idx", "sentence1", "sentence2"],
+        remove_columns=["text"],
     )
     tokenized_datasets = tokenized_datasets.rename_column("label", "labels")
     tokenized_datasets.set_format("torch")
@@ -51,7 +60,7 @@ def get_glue_mrpc_dataset(tokenizer):
     return data_collator, tokenized_datasets
 
 
-class GlueMrpc(Dataset):
+class EmotionDataset(Dataset):
     """
     Has 5.8k pairs of sentences with annotations if the two sentences are equivalent
     """
@@ -68,8 +77,8 @@ def get_dataset(base_model_name="roberta-base", padding_side="right"):
     )
     if getattr(tokenizer, "pad_token_id") is None:
         tokenizer.pad_token_id = tokenizer.eos_token_id
-    data_collator, tokenized_datasets = get_glue_mrpc_dataset(tokenizer)
+    data_collator, tokenized_datasets = get_emotion_dataset(tokenizer)
 
-    train_set = GlueMrpc.from_dict(tokenized_datasets["train"].to_dict())
-    valid_set = GlueMrpc.from_dict(tokenized_datasets["test"].to_dict())
+    train_set = EmotionDataset.from_dict(tokenized_datasets["train"].to_dict())
+    valid_set = EmotionDataset.from_dict(tokenized_datasets["test"].to_dict())
     return train_set, valid_set, data_collator

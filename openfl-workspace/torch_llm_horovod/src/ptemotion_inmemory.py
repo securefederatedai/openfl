@@ -19,7 +19,7 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.dirname(SCRIPT_DIR))
 
 
-from src.glue_utils import GlueMrpc, get_dataset  # noqa: E402
+from src.emotion_utils import EmotionDataset, get_dataset  # noqa: E402
 
 logger = getLogger(__name__)
 
@@ -51,17 +51,17 @@ class BaseDataLoader(DataLoader):
         return len(self.valid_set)
 
 
-class GlueMrpcFederatedDataLoader(BaseDataLoader):
+class EmotionFederatedDataLoader(BaseDataLoader):
     def __init__(self, data_path, batch_size, **kwargs):
         train_set, valid_set, data_collator = get_dataset()
         self.data_splitter = EqualNumPyDataSplitter(shuffle=False)
         if isinstance(train_set, Dataset):
-            self.train_set = GlueMrpc.from_dict(train_set.to_dict())
+            self.train_set = EmotionDataset.from_dict(train_set.to_dict())
         else:
             self.train_set = train_set
 
         if isinstance(valid_set, Dataset):
-            self.valid_set = GlueMrpc.from_dict(valid_set.to_dict())
+            self.valid_set = EmotionDataset.from_dict(valid_set.to_dict())
         else:
             self.valid_set = valid_set
 
@@ -80,8 +80,8 @@ class GlueMrpcFederatedDataLoader(BaseDataLoader):
             )[data_path - 1]
             train_set = self.train_set.select(train_idx)
             valid_set = self.valid_set.select(valid_idx)
-            self.train_set = GlueMrpc.from_dict(train_set.to_dict())
-            self.valid_set = GlueMrpc.from_dict(valid_set.to_dict())
+            self.train_set = EmotionDataset.from_dict(train_set.to_dict())
+            self.valid_set = EmotionDataset.from_dict(valid_set.to_dict())
             self.train_set.save_to_disk(f"{self.datasave_path}_train")
             self.valid_set.save_to_disk(f"{self.datasave_path}_valid")
             self.train_sampler = None
@@ -98,7 +98,7 @@ class GlueMrpcFederatedDataLoader(BaseDataLoader):
         self.num_classes = 2
 
 
-class GlueMrpcDataLoader(BaseDataLoader):
+class EmotionDataLoader(BaseDataLoader):
     def __init__(self, data_path, batch_size, **kwargs):
         logger.info("get dataset")
         train_set, valid_set, data_collator = get_dataset()
@@ -110,8 +110,8 @@ class GlueMrpcDataLoader(BaseDataLoader):
         logger.info("load from disk")
         train_set = load_from_disk(f"{self.datasave_path}_train")
         valid_set = load_from_disk(f"{self.datasave_path}_valid")
-        self.train_set = GlueMrpc.from_dict(train_set.to_dict())
-        self.valid_set = GlueMrpc.from_dict(valid_set.to_dict())
+        self.train_set = EmotionDataset.from_dict(train_set.to_dict())
+        self.valid_set = EmotionDataset.from_dict(valid_set.to_dict())
         self.train_sampler = torch.utils.data.distributed.DistributedSampler(
             self.train_set, num_replicas=hvd.size(), rank=hvd.rank()
         )
