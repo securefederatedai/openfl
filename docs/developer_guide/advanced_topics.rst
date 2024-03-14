@@ -12,7 +12,7 @@ Advanced Topics
 
     - :doc:`advanced_topics/bash_autocomplete_activation`
 
-**Aggregator-Based Workflow**
+**Task Runner API**
 
     Learn to manage multiple Federation Learning plans (FL plan) in the same workspace:
 
@@ -30,7 +30,7 @@ Advanced Topics
 
     - :doc:`advanced_topics/straggler_handling_algorithms`
 
-**Director-Based Workflow**
+**Interactive API**
 
     Customize the logging function for each task:
 
