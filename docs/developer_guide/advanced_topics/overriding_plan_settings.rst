@@ -7,7 +7,7 @@
 Updating plan settings
 ***********************
 
-With the director-based workflow, you can use custom plan settings before starting the experiment. Changing plan settings in command line interface is straightforward by modifying plan.yaml.
+With the Interactive API, you can use custom plan settings before starting the experiment. Changing plan settings in command line interface is straightforward by modifying plan.yaml.
 When using Python API or Director Envoy based interactive API, **override_config** can be used to update plan settings. 
 
 

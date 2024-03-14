@@ -13,7 +13,7 @@ Running a Federation
 
 |productName| has multiple options for setting up a federation and running experiments, depending on the users needs. 
 
-Task Runner
+Task Runner API
     Define an experiment and distribute it manually. All participants can verify model code and FL plan prior to execution. 
     The federation is terminated when the experiment is finished. Formerly known as the aggregator-based workflow.
     `For more info <features_index/taskrunner.html>`_
@@ -23,7 +23,7 @@ Task Runner
 
         features_index/taskrunner
 
-Interactive
+Interactive API
     Setup long-lived components to run many experiments in series. Recommended for FL research when many changes to model, dataloader, or hyperparameters are expected.
     Formerly known as the director-based workflow.
     `For more info <features_index/interactive.html>`_
@@ -33,7 +33,7 @@ Interactive
 
         features_index/interactive
 
-Workflow Interface (Experimental)
+Workflow API (Experimental)
     Formulate the experiment as a series of tasks, or a flow. Every flow begins with the start task and concludes with end.
     Heavily influenced by the interface and design of Netflix's Metaflow, the popular framework for data scientists. 
     `For more info <features_index/workflowinterface.html>`_

@@ -7,19 +7,19 @@
 Interactive API
 ================
 
-A director-based workflow uses long-lived components in a federation. These components continue to be available to distribute more experiments in the federation.
+A Interactive API uses long-lived components in a federation. These components continue to be available to distribute more experiments in the federation.
 
 - The *Director* is the central node of the federation. This component starts an *Aggregator* for each experiment, sends data to connected collaborator nodes, and provides updates on the status.
 - The *Envoy* runs on collaborator nodes connected to the *Director*. When the *Director* starts an experiment, the *Envoy* starts the *Collaborator* to train the global model.
 
 
-The director-based workflow comprises the following roles and their tasks:
+The Interactive API comprises the following roles and their tasks:
 
     - `Director Manager: Set Up the Director`_
     - `Collaborator Manager: Set Up the Envoy`_
     - `Experiment Manager: Describe an Experiment`_
 
-Follow the procedure in the director-based workflow to become familiar with the setup required and APIs provided for each role in the federation: *Experiment manager (Data scientist)*, *Director manager*, and *Collaborator manager*.
+Follow the procedure in the Interactive API to become familiar with the setup required and APIs provided for each role in the federation: *Experiment manager (Data scientist)*, *Director manager*, and *Collaborator manager*.
 
 - *Experiment manager* (or Data scientist) is a person or group of people using OpenFL.
 - *Director Manager* is ML model creator's representative controlling Director.
@@ -34,7 +34,7 @@ An overview of this workflow is shown below.
 
 .. figure:: ../../source/openfl/director_workflow.svg
 
-.. centered:: Overview of the Director-Based Workflow
+.. centered:: Overview of the Interactive API
 
 
 .. # Copyright (C) 2020-2023 Intel Corporation

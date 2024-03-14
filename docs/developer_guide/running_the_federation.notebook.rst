@@ -4,14 +4,14 @@
 .. _running_notebook:
 
 **********************************
-Aggregator-Based Workflow Tutorial
+Task Runner API Tutorial
 **********************************
 
 You will start a Jupyter\* \  lab server and receive a URL you can use to access the tutorials. Jupyter notebooks are provided for PyTorch\* \  and TensorFlow\* \  that simulate a federation on a local machine.
 
 .. note::
 
-	Follow the procedure to become familiar with the APIs used in aggregator-based workflow and conventions such as *FL Plans*, *Aggregators*, and *Collaborators*. 
+	Follow the procedure to become familiar with the APIs used in the Task Runner API and conventions such as *FL Plans*, *Aggregators*, and *Collaborators*. 
 	
 
 Start the Tutorials
@@ -41,7 +41,7 @@ Start the Tutorials
  - :code:`Federated PyTorch TinyImageNet`: workspace with a MobileNet-V2 `PyTorch <https://pytorch.org/>`_ model that will download the `Tiny-ImageNet <https://www.kaggle.com/c/tiny-imagenet/>`_ dataset and train in a federation.
 
 
-Familiarize with the API Concepts in an Aggregator-Based Worklow
+Familiarize with the API Concepts in the Task Runner API
 ================================================================
 
 Step 1: Enable the |productName| Python API

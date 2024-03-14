@@ -8,9 +8,9 @@ Examples for Running a Federation
 =================================
 
 |productName| currently offers three ways to set up and run experiments with a federation: 
-the Task Runner API, the Interactive API, and the experimental workflow interface. 
+the Task Runner API, the Interactive API, and the experimental Workflow API. 
 The Interactive API introduces a convenient way to set up a federation and brings “long-lived” components in a federation (“Director” and “Envoy”), 
-while the Task Runner API workflow is advised for scenarios where the workload needs to be verified prior to execution. In contrast, the experimental workflow interface 
+while the Task Runner API workflow is advised for scenarios where the workload needs to be verified prior to execution. In contrast, the experimental Workflow API 
 is introduce to provide significant flexility to researchers and developers in the construction of federated learning experiments.
 
 -------------------------
@@ -39,9 +39,9 @@ See :ref:`interactive_tensorflow_mnist`
 
     examples/interactive_tensorflow_mnist
 
--------------------------
-Workflow Interface (Experimental)
--------------------------
+----------------------------
+Workflow API (Experimental)
+----------------------------
 Formulate the experiment as a series of tasks, or a flow. 
 
 See :ref:`workflowinterface_pytorch_mnist`
