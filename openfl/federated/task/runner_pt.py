@@ -8,7 +8,7 @@ from typing import Iterator
 from typing import Tuple
 
 import numpy as np
-import torch as pt
+import torch 
 import torch.nn as nn
 import tqdm
 
@@ -40,7 +40,7 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
         if device:
             self.device = device
         else:
-            self.device = pt.device('cuda' if pt.cuda.is_available() else 'cpu')
+            self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
         # This is a map of all the required tensors for each of the public
         # functions in PyTorchTaskRunner
@@ -73,9 +73,9 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
         else:
             self.set_tensor_dict(input_tensor_dict, with_opt_vars=False)
 
-    def validate(self, col_name, round_num, input_tensor_dict,
+    def validate_task(self, col_name, round_num, input_tensor_dict,
                  use_tqdm=False, **kwargs):
-        """Validate.
+        """Validate Task.
 
         Run validation of the model on the local data.
 
@@ -100,18 +100,8 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
         if use_tqdm:
             loader = tqdm.tqdm(loader, desc='validate')
 
-        with pt.no_grad():
-            for data, target in loader:
-                samples = target.shape[0]
-                total_samples += samples
-                data, target = pt.tensor(data).to(self.device), pt.tensor(
-                    target).to(self.device, dtype=pt.int64)
-                output = self(data)
-                # get the index of the max log-probability
-                pred = output.argmax(dim=1, keepdim=True)
-                target_categorical = target.argmax(dim=1, keepdim=True)
-                val_score += pred.eq(target_categorical).sum().cpu().numpy()
-
+        metric = self.validate_(loader)
+        
         origin = col_name
         suffix = 'validate'
         if kwargs['apply'] == 'local':
@@ -123,16 +113,19 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
         # TODO figure out a better way to pass in metric for this pytorch
         #  validate function
         output_tensor_dict = {
-            TensorKey('acc', origin, round_num, True, tags):
-                np.array(val_score / total_samples)
+            TensorKey(
+                metric.name, origin, round_num, True, tags
+            ): metric.value
         }
 
         # Empty list represents metrics that should only be stored locally
         return output_tensor_dict, {}
 
-    def train_batches(self, col_name, round_num, input_tensor_dict,
+
+
+    def train_task(self, col_name, round_num, input_tensor_dict,
                       use_tqdm=False, epochs=1, **kwargs):
-        """Train batches.
+        """Train batches task.
 
         Train the model on the requested number of batches.
 
@@ -156,7 +149,7 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
             loader = self.data_loader.get_train_loader()
             if use_tqdm:
                 loader = tqdm.tqdm(loader, desc='train epoch')
-            metric = self.train_epoch(loader)
+            metric = self.train_(loader)
         # Output metric tensors (scalar)
         origin = col_name
         tags = ('trained',)
@@ -281,7 +274,7 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
         # Grabbing keys from model's state_dict helps to confirm we have
         # everything
         for k in self.state_dict():
-            new_state[k] = pt.from_numpy(tensor_dict.pop(k)).to(device)
+            new_state[k] = torch.from_numpy(tensor_dict.pop(k)).to(device)
 
         # set model state
         self.load_state_dict(new_state)
@@ -310,7 +303,7 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
         Returns:
             list : [TensorKey]
         """
-        if func_name == 'validate':
+        if func_name == 'validate_task':
             local_model = 'apply=' + str(kwargs['apply'])
             return self.required_tensorkeys_for_function[func_name][local_model]
         else:
@@ -348,19 +341,19 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
                 **self.tensor_dict_split_fn_kwargs
             )
 
-        self.required_tensorkeys_for_function['train_batches'] = [
+        self.required_tensorkeys_for_function['train_task'] = [
             TensorKey(tensor_name, 'GLOBAL', 0, False, ('model',))
             for tensor_name in global_model_dict]
-        self.required_tensorkeys_for_function['train_batches'] += [
+        self.required_tensorkeys_for_function['train_task'] += [
             TensorKey(tensor_name, 'LOCAL', 0, False, ('model',))
             for tensor_name in local_model_dict]
 
-        self.required_tensorkeys_for_function['train'] = [
+        self.required_tensorkeys_for_function['train_task'] = [
             TensorKey(
                 tensor_name, 'GLOBAL', 0, False, ('model',)
             ) for tensor_name in global_model_dict
         ]
-        self.required_tensorkeys_for_function['train'] += [
+        self.required_tensorkeys_for_function['train_task'] += [
             TensorKey(
                 tensor_name, 'LOCAL', 0, False, ('model',)
             ) for tensor_name in local_model_dict
@@ -368,19 +361,19 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
 
         # Validation may be performed on local or aggregated (global) model,
         # so there is an extra lookup dimension for kwargs
-        self.required_tensorkeys_for_function['validate'] = {}
+        self.required_tensorkeys_for_function['validate_task'] = {}
         # TODO This is not stateless. The optimizer will not be
-        self.required_tensorkeys_for_function['validate']['apply=local'] = [
+        self.required_tensorkeys_for_function['validate_task']['apply=local'] = [
             TensorKey(tensor_name, 'LOCAL', 0, False, ('trained',))
             for tensor_name in {
                 **global_model_dict_val,
                 **local_model_dict_val
             }]
-        self.required_tensorkeys_for_function['validate']['apply=global'] = [
+        self.required_tensorkeys_for_function['validate_task']['apply=global'] = [
             TensorKey(tensor_name, 'GLOBAL', 0, False, ('model',))
             for tensor_name in global_model_dict_val
         ]
-        self.required_tensorkeys_for_function['validate']['apply=global'] += [
+        self.required_tensorkeys_for_function['validate_task']['apply=global'] += [
             TensorKey(tensor_name, 'LOCAL', 0, False, ('model',))
             for tensor_name in local_model_dict_val
         ]
@@ -394,7 +387,7 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
 
         Args:
             filepath (string)                 : Path to pickle file created
-                                                by pt.save().
+                                                by torch.save().
             model_state_dict_key (string)     : key for model state dict
                                                 in pickled file.
             optimizer_state_dict_key (string) : key for optimizer state dict
@@ -404,7 +397,7 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
         Returns:
             None
         """
-        pickle_dict = pt.load(filepath)
+        pickle_dict = torch.load(filepath)
         self.load_state_dict(pickle_dict[model_state_dict_key])
         self.optimizer.load_state_dict(pickle_dict[optimizer_state_dict_key])
 
@@ -413,11 +406,11 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
         """
         Save model and optimizer states in a picked file specified by the \
         filepath. model_/optimizer_state_dicts are stored in the keys provided. \
-        Uses pt.save().
+        Uses torch.save().
 
         Args:
             filepath (string)                 : Path to pickle file to be
-                                                created by pt.save().
+                                                created by torch.save().
             model_state_dict_key (string)     : key for model state dict
                                                 in pickled file.
             optimizer_state_dict_key (string) : key for optimizer state
@@ -431,18 +424,17 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
             model_state_dict_key: self.state_dict(),
             optimizer_state_dict_key: self.optimizer.state_dict()
         }
-        pt.save(pickle_dict, filepath)
+        torch.save(pickle_dict, filepath)
 
     def reset_opt_vars(self):
-        """
-        Reset optimizer variables.
+        """Reset optimizer variables.
 
-        Resets the optimizer variables
+        Resets the optimizer state variables.
 
         """
         pass
 
-    def train_epoch(self, batch_generator: Iterator[Tuple[np.ndarray, np.ndarray]]) -> Metric:
+    def train_(self, train_dataloader: Iterator[Tuple[np.ndarray, np.ndarray]]) -> Metric:
         """Train single epoch.
 
         Override this function in order to use custom training.
@@ -455,7 +447,7 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
         """
         losses = []
         for data, target in batch_generator:
-            data, target = pt.tensor(data).to(self.device), pt.tensor(
+            data, target = torch.tensor(data).to(self.device), torch.tensor(
                 target).to(self.device)
             self.optimizer.zero_grad()
             output = self(data)
@@ -465,6 +457,36 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
             losses.append(loss.detach().cpu().numpy())
         loss = np.mean(losses)
         return Metric(name=self.loss_fn.__name__, value=np.array(loss))
+
+
+    def validate_(self, validation_dataloader: Iterator[Tuple[np.ndarray, np.ndarray]]) -> Metric:
+
+        """
+        Perform validation on PyTorch Model
+
+        Override this function for your own custom validation function
+
+        Args:
+            validation_data_loader: Validation dataset batch generator. Yields (samples, targets) tuples
+        Returns:
+            Metric: An object containing name and np.ndarray value
+        """
+
+        total_samples = 0
+        val_score = 0
+        with torch.no_grad():
+            for data, target in validation_dataloader:
+                samples = target.shape[0]
+                total_samples += samples
+                data, target = torch.tensor(data).to(self.device), torch.tensor(
+                    target).to(self.device, dtype=torch.int64)
+                output = self(data)
+                # get the index of the max log-probability
+                pred = output.argmax(dim=1)
+                val_score += pred.eq(target).sum().cpu().numpy()
+        
+        accuracy = val_score / total_samples
+        return Metric(name='accuracy', value=np.array(accuracy))
 
 
 def _derive_opt_state_dict(opt_state_dict):
@@ -506,10 +528,10 @@ def _derive_opt_state_dict(opt_state_dict):
         for state_subkey in example_state_subkeys:
             assert (isinstance(
                 opt_state_dict['state'][example_state_key][state_subkey],
-                pt.Tensor)
+                torch.Tensor)
                 == isinstance(
                     opt_state_dict['state'][state_key][state_subkey],
-                    pt.Tensor))
+                    torch.Tensor))
 
     state_subkeys = list(opt_state_dict['state'][example_state_key].keys())
 
@@ -519,7 +541,7 @@ def _derive_opt_state_dict(opt_state_dict):
     for state_subkey in state_subkeys:
         if isinstance(
                 opt_state_dict['state'][example_state_key][state_subkey],
-                pt.Tensor
+                torch.Tensor
         ):
             state_subkey_tags.append('istensor')
         else:
@@ -592,7 +614,7 @@ def expand_derived_opt_state_dict(derived_opt_state_dict, device):
             for subkey, tag in state_subkeys_and_tags:
                 flat_key = f'__opt_state_{this_id}_{tag}_{subkey}'
                 if tag == 'istensor':
-                    new_v = pt.from_numpy(derived_opt_state_dict.pop(flat_key))
+                    new_v = torch.from_numpy(derived_opt_state_dict.pop(flat_key))
                 else:
                     # Here (for currrently supported optimizers) the subkey
                     # should be 'step' and the length of array should be one.
@@ -664,7 +686,7 @@ def to_cpu_numpy(state):
 
     for k, v in state.items():
         # When restoring, we currently assume all values are tensors.
-        if not pt.is_tensor(v):
+        if not torch.is_tensor(v):
             raise ValueError('We do not currently support non-tensors '
                              'coming from model.state_dict()')
         # get as a numpy array, making sure is on cpu

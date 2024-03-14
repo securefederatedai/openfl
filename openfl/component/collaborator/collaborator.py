@@ -234,7 +234,7 @@ class Collaborator:
             # New interactive python API
             # New `Core` TaskRunner contains registry of tasks
             func = self.task_runner.TASK_REGISTRY[func_name]
-            self.logger.info('Using Interactive Python API')
+            self.logger.debug('Using Interactive Python API')
 
             # So far 'kwargs' contained parameters read from the plan
             # those are parameters that the eperiment owner registered for
@@ -250,7 +250,7 @@ class Collaborator:
             # TaskRunner subclassing API
             # Tasks are defined as methods of TaskRunner
             func = getattr(self.task_runner, func_name)
-            self.logger.info('Using TaskRunner subclassing API')
+            self.logger.debug('Using TaskRunner subclassing API')
 
         global_output_tensor_dict, local_output_tensor_dict = func(
             col_name=self.collaborator_name,

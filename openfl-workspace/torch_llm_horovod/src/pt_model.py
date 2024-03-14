@@ -117,7 +117,7 @@ class LLMTaskRunner(PyTorchTaskRunner):
         )
         return result
 
-    def validate(
+    def validate_task(
         self, col_name, round_num, input_tensor_dict, use_tqdm=False, **kwargs
     ):
         """Validate.
@@ -180,7 +180,7 @@ class LLMTaskRunner(PyTorchTaskRunner):
         # Empty list represents metrics that should only be stored locally
         return output_tensor_dict, {}
 
-    def train_batches(
+    def train_task(
         self, col_name, round_num, input_tensor_dict, use_tqdm=False, epochs=1, **kwargs
     ):
         """Train batches.
