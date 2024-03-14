@@ -141,7 +141,7 @@ def validate_folder_hash(folder_path, expected_hash, chunk_size=8192):
      
     h = hashlib.sha384()
     for root, _, files in os.walk(folder_path):
-        for file in files:
+        for file in sorted(files):
             file_path = os.path.join(root, file)
             with open(file_path, 'rb') as file:
                 # Reading is buffered, so we can read smaller chunks.
