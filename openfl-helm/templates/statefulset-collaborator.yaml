@@ -1,0 +1,53 @@
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "openfl.fullnameCollaborator" . }}
+  labels:
+    {{- include "openfl.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.collaboratorReplicaCount }}
+  selector:
+    matchLabels:
+      {{- include "openfl.selectorLabelsCollaborator" . | nindent 6 }}
+  serviceName: "{{ include "openfl.fullnameCollaborator" . }}"
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "openfl.selectorLabelsCollaborator" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "openfl.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: {{- range .Values.container.command }}
+            - {{ . | quote }} {{- end }}
+          args: {{- range .Values.container.args }}
+            - {{ . | quote }} {{- end }}
+          resources:
+            {{- toYaml .Values.resourcesCollaborator | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

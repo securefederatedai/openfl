@@ -1,0 +1,61 @@
+Running example federated learning based on keras_cnn_mnist template:
+
+1. Prepare the workspace.
+$ kubectl exec -it {{ include "openfl.fullnameAggregator" . }}-0 -- bash -c "
+fx workspace create --prefix /openfl/my_federation --template keras_cnn_mnist
+sed -i 's/    agg_port:.*/    agg_port: {{ .Values.aggregatorPort }}/g' /openfl/my_federation/plan/plan.yaml
+cd /openfl/my_federation ; fx plan initialize ; fx workspace certify ; fx aggregator generate-cert-request ; fx aggregator certify -s ; fx workspace export
+"
+
+2. Propagate workspace across federation members.
+$ kubectl cp {{ .Release.Namespace }}/{{ include "openfl.fullnameAggregator" . }}-0:/openfl/my_federation/my_federation.zip ./my_federation.zip
+for x in {0..{{ sub .Values.collaboratorReplicaCount 1 }}}; do
+kubectl cp ./my_federation.zip {{ .Release.Namespace }}/{{ include "openfl.fullnameCollaborator" . }}-${x}:/openfl/my_federation.zip
+done
+
+3. Initialize collaborators.
+$ for x in {0..{{ sub .Values.collaboratorReplicaCount 1 }}}; do
+kubectl exec -it {{ include "openfl.fullnameCollaborator" . }}-${x} -- bash -c "
+export COLLABORATOR_ID=\$(hostname | awk -F- '{print \$NF}')
+cd /openfl ; fx workspace import --archive my_federation.zip ; cd my_federation ; fx collaborator generate-cert-request -s -n \${COLLABORATOR_ID}"
+done
+
+4. Copy signing requests from collaborators to the aggregator.
+$ for x in {0..{{ sub .Values.collaboratorReplicaCount 1 }}}; do
+REQUEST=col_${x}_to_agg_cert_request.zip
+kubectl cp {{ .Release.Namespace }}/{{ include "openfl.fullnameCollaborator" . }}-${x}:/openfl/my_federation/$REQUEST $REQUEST
+kubectl cp $REQUEST {{ .Release.Namespace }}/{{ include "openfl.fullnameAggregator" . }}-0:/openfl/my_federation/$REQUEST
+done
+
+5. Sign requests on the aggregator.
+$ kubectl exec -it {{ include "openfl.fullnameAggregator" . }}-0 -- bash -c "
+cd /openfl/my_federation
+for x in {0..{{ sub .Values.collaboratorReplicaCount 1 }}}; do
+fx collaborator certify -s --request-pkg col_\${x}_to_agg_cert_request.zip
+done"
+
+6. Copy signed requests from the aggregator to collaborators.
+$ for x in {0..{{ sub .Values.collaboratorReplicaCount 1 }}}; do
+REQUEST=agg_to_col_${x}_signed_cert.zip
+kubectl cp {{ .Release.Namespace }}/{{ include "openfl.fullnameAggregator" . }}-0:/openfl/my_federation/$REQUEST $REQUEST
+kubectl cp $REQUEST {{ .Release.Namespace }}/{{ include "openfl.fullnameCollaborator" . }}-${x}:/openfl/my_federation/$REQUEST
+done
+
+7. Import signed certs on collaborators.
+$ for x in {0..{{ sub .Values.collaboratorReplicaCount 1 }}}; do
+kubectl exec -it {{ include "openfl.fullnameCollaborator" . }}-${x} -- bash -c "
+export COLLABORATOR_ID=\$(hostname | awk -F- '{print \$NF}')
+cd /openfl/my_federation ; fx collaborator certify --import agg_to_col_\${COLLABORATOR_ID}_signed_cert.zip"
+done
+
+8. Start a tmux / screen session with {{ add .Values.collaboratorReplicaCount 1 }} panes. Run each of the components below in a separate pane.
+
+9. Start the aggregator.
+$ kubectl exec -it {{ include "openfl.fullnameAggregator" . }}-0 -- bash -c "
+cd /openfl/my_federation ; fx aggregator start"
+
+10. Start the collaborators. Repeat the steps from below for N={0..{{ sub .Values.collaboratorReplicaCount 1 }}} manually, each in a separate pane.
+$ kubectl exec -it {{ include "openfl.fullnameCollaborator" . }}-${N} -- bash -c "
+export COLLABORATOR_ID=\$(hostname | awk -F- '{print \$NF}')
+sed -i \"s|\${COLLABORATOR_ID},data/\${COLLABORATOR_ID}|\${COLLABORATOR_ID},\${COLLABORATOR_ID}|\" /openfl/my_federation/plan/data.yaml
+cd /openfl/my_federation ; fx collaborator start -n \${COLLABORATOR_ID}"
