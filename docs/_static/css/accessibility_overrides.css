@@ -196,6 +196,8 @@
   .rst-content .linenodiv pre,
   .rst-content div[class^=highlight] pre,
   .rst-content pre.literal-block{
+    word-break: break-all;
+    white-space: pre-wrap;
     font-size:0.875rem;
   }
 
