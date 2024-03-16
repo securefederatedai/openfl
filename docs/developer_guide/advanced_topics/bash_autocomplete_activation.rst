@@ -24,14 +24,14 @@ STEP 2: Create the fx-autocomplete.sh Script
    
    .. code-block:: console
 
-      _FX_COMPLETE=bash_source fx > ~/.fx-autocomplete.sh
+      $ _FX_COMPLETE=bash_source fx > ~/.fx-autocomplete.sh
 
    
 2. Check that the script was created properly.
 
    .. code-block:: console
 
-      cat ~/.fx-autocomplete.sh
+      $ cat ~/.fx-autocomplete.sh
 
  The output should look like the example below (Click==8.0.1), but could be different depend on `Click <https://click.palletsprojects.com/en/8.0.x/>`_ version:
    
@@ -74,7 +74,7 @@ Perform this command every time you open a new terminal window.
 
    .. code-block:: console
 
-      source ~/.fx-autocomplete.sh
+      $ source ~/.fx-autocomplete.sh
 
 
 To save time, add the script into **.bashrc** so the script is activated when you log in.
@@ -83,13 +83,13 @@ To save time, add the script into **.bashrc** so the script is activated when yo
 
    .. code-block:: console
 
-      nano ~/.bashrc
+      $ nano ~/.bashrc
 
 2. Add the script.
 
    .. code-block:: bash
    
-      . ~/.fx-autocomplete.sh
+      $ . ~/.fx-autocomplete.sh
 
 3. Save your changes.
 

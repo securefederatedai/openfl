@@ -30,20 +30,20 @@ Split terminal into 3 (1 terminal for the director, 1 for the envoy, and 1 for t
 
 .. code-block:: console
 
-    source venv/bin/activate
+    $ source venv/bin/activate
 
 Clone the OpenFL repository:
 
 .. code-block:: console
 
-    git clone https://github.com/securefederatedai/openfl.git
+    $ git clone https://github.com/securefederatedai/openfl.git
 
 
 Navigate to the tutorial:
 
 .. code-block:: console
     
-    cd openfl/openfl-tutorials/interactive_api/Tensorflow_MNIST
+    $ cd openfl/openfl-tutorials/interactive_api/Tensorflow_MNIST
 
 -----------------------------------
 Step 2: Setting up Director
@@ -52,8 +52,8 @@ In the first terminal, run the director:
 
 .. code-block:: console
     
-    cd director
-    ./start_director.sh
+    $ cd director
+    $ ./start_director.sh
 
 -----------------------------------
 Step 3: Setting up Envoy
@@ -62,8 +62,8 @@ In the second terminal, run the envoy:
 
 .. code-block:: console
     
-    cd envoy
-    ./start_envoy.sh env_one envoy_config_one.yaml
+    $ cd envoy
+    $ ./start_envoy.sh env_one envoy_config_one.yaml
 
 Optional: Run a second envoy in an additional terminal:
 
@@ -73,8 +73,8 @@ Optional: Run a second envoy in an additional terminal:
 
 .. code-block:: console
     
-    cd envoy
-    ./start_envoy.sh env_two envoy_config_two.yaml
+    $ cd envoy
+    $ ./start_envoy.sh env_two envoy_config_two.yaml
 
 -----------------------------------
 Step 4: Run the federation
@@ -83,8 +83,8 @@ In the third terminal (or forth terminal, if you chose to do two envoys) run the
 
 .. code-block:: console
 
-    cd workspace
-    jupyter lab Tensorflow_MNIST.ipynb
+    $ cd workspace
+    $ jupyter lab Tensorflow_MNIST.ipynb
 
 
 **Notebook walkthrough:**
@@ -95,7 +95,7 @@ Install additional dependencies if not already installed
 
 .. code-block:: console
 
-    pip install tensorflow==2.8
+    $ pip install tensorflow==2.8
 
 Import:
 

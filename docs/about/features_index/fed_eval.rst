@@ -30,7 +30,7 @@ This script can be directly executed as follows:
 
 .. code-block:: console
 
-    python test_hello_federation.py --template torch_cnn_mnist_fed_eval
+    $ python test_hello_federation.py --template torch_cnn_mnist_fed_eval
     
 In order to adapt this template for federated evaluation, the following modifications were made to ``plan.yaml``:
 

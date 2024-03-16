@@ -27,13 +27,13 @@ Perform this procedure on every node in the federation.
 
    .. code-block:: console
 
-      python3 -m venv venv
+      $ python3 -m venv venv
 
 3. Activate the virtual environment.
 
    .. code-block:: console
 
-      source venv/bin/activate
+      $ source venv/bin/activate
 
 4. Install the |productName| package.
 
@@ -41,7 +41,7 @@ Perform this procedure on every node in the federation.
     
         .. code-block:: console
         
-            python -m pip install openfl
+            $ python -m pip install openfl
    
     B. Installation from source:
 
@@ -49,16 +49,16 @@ Perform this procedure on every node in the federation.
         
             .. code-block:: console
             
-                git clone https://github.com/intel/openfl.git 
+                $ git clone https://github.com/intel/openfl.git 
 
 
         #. Install build tools, before installing |productName|: 
 
             .. code-block:: console
             
-                python -m pip install -U pip setuptools wheel
-                cd openfl/
-                python -m pip install .
+                $ python -m pip install -U pip setuptools wheel
+                $ cd openfl/
+                $ python -m pip install .
 
 
 
@@ -101,12 +101,12 @@ Follow this procedure to download or build a Docker\*\  image of |productName|, 
 
 	.. code-block:: console
 
-	   docker pull intel/openfl
+	   $ docker pull intel/openfl
    
 	If you prefer to build an image from a specific commit or branch, perform the following commands:
 
 	.. code-block:: console
 
-	   git clone https://github.com/intel/openfl.git
-	   cd openfl
-	   docker build -f openfl-docker/Dockerfile.base .
+	   $ git clone https://github.com/intel/openfl.git
+	   $ cd openfl
+	   $ docker build -f openfl-docker/Dockerfile.base .

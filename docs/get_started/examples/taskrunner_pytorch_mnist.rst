@@ -21,7 +21,7 @@ Install additional dependencies if not already installed
 
 .. code-block:: console
 
-    pip install torch torchvision
+    $ pip install torch torchvision
 
 .. code-block:: python
 

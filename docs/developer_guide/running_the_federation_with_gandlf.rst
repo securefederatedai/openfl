@@ -127,12 +127,12 @@ STEP 1: Install GaNDLF prerequisites and Create a Workspace
 
     .. code-block:: console
         
-        python -c "from testing.test_full import test_generic_download_data, test_generic_constructTrainingCSV; test_generic_download_data(); test_generic_constructTrainingCSV()"
+        $ python -c "from testing.test_full import test_generic_download_data, test_generic_constructTrainingCSV; test_generic_download_data(); test_generic_constructTrainingCSV()"
         # Creates training CSV
-        head -n 8 testing/data/train_3d_rad_segmentation.csv > train.csv
-        head -n 1 testing/data/train_3d_rad_segmentation.csv > val.csv
+        $ head -n 8 testing/data/train_3d_rad_segmentation.csv > train.csv
+        $ head -n 1 testing/data/train_3d_rad_segmentation.csv > val.csv
         # Creates validation CSV
-        tail -n +9 testing/data/train_3d_rad_segmentation.csv >> val.csv
+        $ tail -n +9 testing/data/train_3d_rad_segmentation.csv >> val.csv
 
     .. note::
 
@@ -145,30 +145,30 @@ STEP 1: Install GaNDLF prerequisites and Create a Workspace
 
     .. code-block:: console
 
-        export WORKSPACE_TEMPLATE=gandlf_seg_test
-        export WORKSPACE_PATH=${HOME}/my_federation
+        $ export WORKSPACE_TEMPLATE=gandlf_seg_test
+        $ export WORKSPACE_PATH=${HOME}/my_federation
 
 4.  Create a workspace directory for the new federation project.
 
     .. code-block:: console
 
-       fx workspace create --prefix ${WORKSPACE_PATH} --template ${WORKSPACE_TEMPLATE}
+       $ fx workspace create --prefix ${WORKSPACE_PATH} --template ${WORKSPACE_TEMPLATE}
 
 
 5.  Change to the workspace directory.
 
     .. code-block:: console
 
-        cd ${WORKSPACE_PATH}
+        $ cd ${WORKSPACE_PATH}
 
 6.  Copy the GaNDLF Data CSVs into the default path for model initialization
 
      .. code-block:: console
 
         # 'one' is the default name of the first collaborator in `plan/data.yaml`. 
-        mkdir -p data/one
-        cp ~/GaNDLF/train.csv data/one
-        cp ~/GaNDLF/val.csv data/one
+        $ mkdir -p data/one
+        $ cp ~/GaNDLF/train.csv data/one
+        $ cp ~/GaNDLF/val.csv data/one
 
 6.  Create the FL plan and initialialize the model weights.
 
@@ -177,13 +177,13 @@ STEP 1: Install GaNDLF prerequisites and Create a Workspace
 
     .. code-block:: console
 
-	fx plan initialize
+	$ fx plan initialize
 
     Alternatively, to use your own GaNDLF configuration file, you can import it into the plan with the following command:
 
     .. code-block:: console
 
-	fx plan initialize --gandlf_config ${PATH_TO_GANDLF_CONFIG}.yaml
+	$ fx plan initialize --gandlf_config ${PATH_TO_GANDLF_CONFIG}.yaml
 
 
     The FL plan is described by the **plan.yaml** file located in the **plan** directory of the workspace. OpenFL aims to make it as easy as possible to take an existing GaNDLF experiment and make it run across a federation. 
@@ -209,19 +209,19 @@ STEP 1: Install GaNDLF prerequisites and Create a Workspace
 
 		.. code-block:: console
 
-			fx plan initialize -a aggregator-hostname.internal-domain.com
+			$ fx plan initialize -a aggregator-hostname.internal-domain.com
 
 	- OPTION 2: override the apparent FQDN of the system by setting an FQDN environment variable.
 
 		.. code-block:: console
 
-			export FQDN=x.x.x.x
+			$ export FQDN=x.x.x.x
 
 		and initializing the FL plan
 
 		.. code-block:: console
 
-			fx plan initialize
+			$ fx plan initialize
 
 
 .. note::
@@ -262,7 +262,7 @@ Setting Up the Certificate Authority
 
     .. code-block:: console
 
-       cd WORKSPACE_PATH
+       $ cd WORKSPACE_PATH
 
 2. Set up the aggregator node as the `certificate authority <https://en.wikipedia.org/wiki/Certificate_authority>`_ for the federation.
 
@@ -270,13 +270,13 @@ Setting Up the Certificate Authority
 
     .. code-block:: console
 
-       fx workspace certify
+       $ fx workspace certify
 
 3. Run the aggregator certificate creation command, replacing :code:`AFQDN` with the actual `fully qualified domain name (FQDN) <https://en.wikipedia.org/wiki/Fully_qualified_domain_name>`_ for the aggregator node.
 
     .. code-block:: console
 
-       fx aggregator generate-cert-request --fqdn AFQDN
+       $ fx aggregator generate-cert-request --fqdn AFQDN
 
     .. note::
 
@@ -284,7 +284,7 @@ Setting Up the Certificate Authority
 
            .. code-block:: console
 
-              hostname --all-fqdns | awk '{print $1}'
+              $ hostname --all-fqdns | awk '{print $1}'
 
    .. note::
 
@@ -292,20 +292,20 @@ Setting Up the Certificate Authority
 
         .. code-block:: console
 
-            export FQDN=x.x.x.x
-            fx aggregator generate-cert-request 
+            $ export FQDN=x.x.x.x
+            $ fx aggregator generate-cert-request 
 
       If you omit the :code:`--fdqn` parameter, then :code:`fx` will automatically use the FQDN of the current node assuming the node has been correctly set with a static address.
 
         .. code-block:: console
 
-            fx aggregator generate-cert-request
+            $ fx aggregator generate-cert-request
 
 4. Run the aggregator certificate signing command, replacing :code:`AFQDN` with the actual `fully qualified domain name (FQDN) <https://en.wikipedia.org/wiki/Fully_qualified_domain_name>`_ for the aggregator node.
 
     .. code-block:: console
 
-       fx aggregator certify
+       $ fx aggregator certify
 
 
 5. This node now has a signed security certificate as the aggregator for this new federation. You should have the following files.
@@ -331,7 +331,7 @@ Exporting the Workspace
 
     .. code-block:: console
 
-       fx workspace export
+       $ fx workspace export
 
    The :code:`export` command will archive the current workspace (with a :code:`zip` file extension) and create a **requirements.txt** of the current Python\*\ packages in the virtual environment. 
 
@@ -352,7 +352,7 @@ Importing the Workspace
 
     .. code-block:: console
 
-       fx workspace import --archive WORKSPACE.zip
+       $ fx workspace import --archive WORKSPACE.zip
 
  where **WORKSPACE.zip** is the name of the workspace archive. This will unzip the workspace to the current directory and install the required Python packages within the current virtual environment.
 
@@ -362,7 +362,7 @@ Importing the Workspace
 
     .. code-block:: console
 
-       fx collaborator generate-cert-request -n {COL_LABEL} -d data/{COL_LABEL}
+       $ fx collaborator generate-cert-request -n {COL_LABEL} -d data/{COL_LABEL}
 
 
 The creation script will specify the path to the data. In this case, the GaNDLF Data Loader will look for **train.csv** and **valid.csv** at the path that's provided. Before running the experiment, you will need to configure both train.csv and valid.csv **manually for each collaborator** so that each collaborator has the correct datasets. For example, if the collaborator's name is `one`, collaborator one would load :code:`data/one/train.csv` and :code:`data/one/valid.csv` at experiment runtime, and collaborator two would load :code:`data/two/train.csv` and :code:`data/two/valid.csv`. 
@@ -383,14 +383,14 @@ The creation script will specify the path to the data. In this case, the GaNDLF 
 
     .. code-block:: console
 
-       scp WORKSPACE.PATH/col_{COL_LABEL}_to_agg_cert_request.zip AGGREGATOR_NODE:WORKSPACE_PATH/
+       $ scp WORKSPACE.PATH/col_{COL_LABEL}_to_agg_cert_request.zip AGGREGATOR_NODE:WORKSPACE_PATH/
 
 
 6. On the aggregator node (i.e., the certificate authority in this example), sign the Collaborator CSR Package from the collaborator nodes.
 
     .. code-block:: console
 
-       fx collaborator certify --request-pkg /PATH/TO/col_{COL_LABEL}_to_agg_cert_request.zip
+       $ fx collaborator certify --request-pkg /PATH/TO/col_{COL_LABEL}_to_agg_cert_request.zip
 
    where :code:`/PATH/TO/col_{COL_LABEL}_to_agg_cert_request.zip` is the path to the Collaborator CSR Package containing the :code:`.csr` file from the collaborator node. The certificate authority will sign this certificate for use in the federation.
 
@@ -406,14 +406,14 @@ The creation script will specify the path to the data. In this case, the GaNDLF 
 
     .. code-block:: console
 
-       scp WORKSPACE.PATH/agg_to_col_{COL_LABEL}_signed_cert.zip COLLABORATOR_NODE:WORKSPACE_PATH/
+       $ scp WORKSPACE.PATH/agg_to_col_{COL_LABEL}_signed_cert.zip COLLABORATOR_NODE:WORKSPACE_PATH/
 
 
 8. On the collaborator node, import the signed certificate and certificate chain into your workspace.
 
     .. code-block:: console
 
-       fx collaborator certify --import /PATH/TO/agg_to_col_{COL_LABEL}_signed_cert.zip
+       $ fx collaborator certify --import /PATH/TO/agg_to_col_{COL_LABEL}_signed_cert.zip
 
 
 
@@ -429,7 +429,7 @@ STEP 3: Start the Federation
 
     .. code-block:: console
 
-       fx aggregator start
+       $ fx aggregator start
 
  Now, the Aggregator is running and waiting for Collaborators to connect.
 
@@ -443,7 +443,7 @@ STEP 3: Start the Federation
 
     .. code-block:: console
 
-       fx collaborator start -n {COLLABORATOR_LABEL}
+       $ fx collaborator start -n {COLLABORATOR_LABEL}
 
     where :code:`COLLABORATOR_LABEL` is the label for this Collaborator.
 
@@ -475,7 +475,7 @@ Among other training artifacts, the aggregator creates the last and best aggrega
 
 .. code-block:: console
 
-    fx model save -i model_protobuf_path.pth -o save_model_path
+    $ fx model save -i model_protobuf_path.pth -o save_model_path
 
 In order for this command to succeed, the **TaskRunner** used in the experiment must implement a :code:`save_native()` method.
 

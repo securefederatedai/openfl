@@ -48,7 +48,7 @@ Demonstration of a Compression Pipeline
 
 The example template, **keras_cnn_with_compression**, uses the ``KCPipeline`` with six centroids for KMeans. To gain a better understanding of how experiments perform with greater or fewer centroids, you can modify the **n_clusters** parameter in the template **plan.yaml**:
 
-    .. code-block:: console
+    .. code-block:: yaml
     
        compression_pipeline :
          defaults : plan/defaults/compression_pipeline.yaml
