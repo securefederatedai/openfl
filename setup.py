@@ -155,7 +155,7 @@ setup(
         'cloudpickle',
         'cryptography>=3.4.6',
         'docker',
-        'dynaconf==3.1.7',
+        'dynaconf==3.2.5',
         'flatten_json',
         'grpcio>=1.56.2',
         'ipykernel',
