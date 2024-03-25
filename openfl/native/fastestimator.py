@@ -11,7 +11,7 @@ from openfl.federated import Plan
 from openfl.federated.data import FastEstimatorDataLoader
 from openfl.federated.task import FastEstimatorTaskRunner
 from openfl.protocols import utils
-from openfl.utilities import split_tensor_dict_for_holdouts
+from openfl.utilities.split import split_tensor_dict_for_holdouts
 
 
 class FederatedFastEstimator:

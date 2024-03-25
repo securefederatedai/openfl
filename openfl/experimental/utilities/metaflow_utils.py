@@ -25,7 +25,8 @@ from metaflow.mflog import RUNTIME_LOG_SOURCE
 from metaflow.task import MetaDatum
 import fcntl
 import hashlib
-from dill.source import getsource
+from dill.source import getsource  # nosec
+# getsource only used to determine structure of FlowGraph
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from openfl.experimental.interface import FLSpec
@@ -62,7 +63,9 @@ class SystemMutex:
         self.name = name
 
     def __enter__(self):
-        lock_id = hashlib.new('md5', self.name.encode("utf8"), usedforsecurity=False).hexdigest()
+        lock_id = hashlib.new('md5', self.name.encode("utf8"),
+                              usedforsecurity=False).hexdigest()  # nosec
+        # MD5sum used for concurrency purposes, not security
         self.fp = open(f"/tmp/.lock-{lock_id}.lck", "wb")
         fcntl.flock(self.fp.fileno(), fcntl.LOCK_EX)
 
@@ -376,8 +379,6 @@ class MetaflowInterface:
         """
         self.backend = backend
         self.flow_name = flow.__name__
-        self._graph = FlowGraph(flow)
-        self._steps = [getattr(flow, node.name) for node in self._graph]
         if backend == "ray":
             self.counter = Counter.remote()
         else:
@@ -420,19 +421,20 @@ class MetaflowInterface:
         Returns:
             task_id [int]
         """
-        # May need a lock here
-        if self.backend == "ray":
-            with SystemMutex("critical_section"):
+        with SystemMutex("critical_section"):
+            if self.backend == "ray":
                 task_id = ray.get(self.counter.get_counter.remote())
                 self.local_metadata._task_id_seq = task_id
                 self.local_metadata.new_task_id(self.run_id, task_name)
                 return ray.get(self.counter.increment.remote())
-        else:
-            task_id = self.counter
-            self.local_metadata._task_id_seq = task_id
-            self.local_metadata.new_task_id(self.run_id, task_name)
-            self.counter += 1
-            return self.counter
+            else:
+                # Keeping single_process in critical_section
+                # because gRPC calls may cause problems.
+                task_id = self.counter
+                self.local_metadata._task_id_seq = task_id
+                self.local_metadata.new_task_id(self.run_id, task_name)
+                self.counter += 1
+                return self.counter
 
     def save_artifacts(
         self,

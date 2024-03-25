@@ -4,13 +4,94 @@
 #### The name of the file/example that contain HPU adaptations start with "HPU". 
 For example: PyTorch_Kvasir_UNet.ipynb placed under workspace folder contains the required HPU adaptations.
 
- All the execution steps mention in last section (**V. How to run this tutorial**) remain same for HPU examples but as pre-requisite it needs some additional environment setup and Habana supported package installations which is explained below from **section I to IV**.
+ All the execution steps mention in last section (**V. How to run this tutorial**) remain same for HPU examples but as pre-requisite it needs some additional environment setup and Habana supported package installations which is explained below from **section I to V**.
 
  **Note:** By default these experiments utilize 1 HPU device
 
  <br/>
 
- ## **I. AWS DL1 Instance Setup**
+ ## **I. Intel Developer Cloud Setup**
+This example was test on the Intel Developer Cloud utilizing Gaudi2 instance. 
+
+For accessing the Gaudi2 instances on the Intel Developer Cloud follow the instructions [here](https://developer.habana.ai/intel-developer-cloud/)
+
+The Gaudi instance in the Intel Developer Cloud comes SynapseAI SW Stack for Gaudi2 installed. Skip sections (**II. , III.***)
+
+Further more our testing was done using the habana based Docker container built using the Dockerfile base discussed below:
+
+Let's create a Dockerfile with the following content and name it Dockerfile_Habana:
+
+```
+
+FROM vault.habana.ai/gaudi-docker/1.12.0/ubuntu20.04/habanalabs/pytorch-installer-2.0.1:latest
+
+ENV HABANA_VISIBLE_DEVICES=all
+ENV OMPI_MCA_btl_vader_single_copy_mechanism=none
+
+ENV DEBIAN_FRONTEND="noninteractive"  TZ=Etc/UTC
+RUN apt-get update && apt-get install -y tzdata bash-completion \
+        #RUN apt update && apt-get install -y tzdata bash-completion \
+        python3-pip openssh-server vim git iputils-ping net-tools curl bc gawk \
+        && rm -rf /var/lib/apt/lists/*
+
+
+RUN pip install numpy \
+        && pip install jupyterlab \
+        && pip install matplotlib \
+        && pip install openfl
+
+
+RUN git clone https://github.com/securefederatedai/openfl.git /root/openfl
+
+WORKDIR /root
+ 
+```
+
+This base container comes with HPU Pytorch packages already installed.  Hence you could skip step: **IV.** below. 
+
+Build the above container and then launch it using:
+
+```
+export GAUDI_DOCKER_IMAGE="gaudi-docker-ubuntu20.04-openfl"
+
+docker build -t ${GAUDI_DOCKER_IMAGE} -f Dockerfile_Habana .
+docker run  --net host -id --name openfl_gaudi_run  ${GAUDI_DOCKER_IMAGE} bash
+```
+
+Then access the container bash shell using:
+
+```
+docker exec -it openfl_gaudi_run bash
+
+```
+
+Once inside the container, ensure openfl repo is cloned!
+
+otherwise clone the openfl repo using:
+
+```
+git clone https://github.com/securefederatedai/openfl.git
+```
+
+Then check if the openfl package is installed 
+
+```
+pip list | grep openfl 
+
+``` 
+
+if not, then install it using:
+
+```
+pip install openfl
+```
+
+Then follow instruction in section **V. HPU Adaptations For PyTorch Examples** below.
+
+
+<br/>
+
+ ## **II. AWS DL1 Instance Setup**
 
  This example was tested on AWS EC2 instance created by following the instructions mentioned [here](https://docs.habana.ai/en/latest/AWS_EC2_DL1_and_PyTorch_Quick_Start/AWS_EC2_DL1_and_PyTorch_Quick_Start.html) . 
  
@@ -18,7 +99,7 @@ For example: PyTorch_Kvasir_UNet.ipynb placed under workspace folder contains th
 
  <br/>
 
- ## **II. Set Up SynapseAI SW Stack**
+ ## **III. Set Up SynapseAI SW Stack**
 
  - To perform an installation of the full driver and SynapseAI software stack independently on the EC2 instance, run the following command:
  
@@ -33,7 +114,7 @@ You can refer the [Habana docs](https://docs.habana.ai/en/latest/Installation_Gu
 
 <br/>
 
- ## **III. HPU Pytorch Installation**
+ ## **IV. HPU Pytorch Installation**
 
  For this example make sure to install the PyTorch package provided by Habana. These packages are optimized for Habana Gaudi HPU. Installing public PyTorch packages is not supported.
  Habana PyTorch packages consist of:
@@ -69,7 +150,7 @@ The default virtual environment folder is `$HOME/habanalabs-venv`. To override t
 
  </br>
 
- ## **IV. HPU Adaptations For PyTorch Examples**
+ ## **V. HPU Adaptations For PyTorch Examples**
 
 The following set of code additions are required in the workspace notebook to run a model on Habana. The following steps cover Eager and Lazy modes of execution.
 
@@ -112,7 +193,7 @@ Refer [getting started with PyTorch](https://www.intel.com/content/www/us/en/dev
 
 <br/>
 
-## **V. How to run this tutorial (without TLC and locally as a simulation):**
+## **VI. How to run this tutorial (without TLC and locally as a simulation):**
 <br/>
 
 ### 0. If you haven't done so already, create a virtual environment, install OpenFL, and upgrade pip:
@@ -134,7 +215,7 @@ Refer [getting started with PyTorch](https://www.intel.com/content/www/us/en/dev
    - Navigate to the tutorial:
     
    ```sh
-   cd openfl/openfl-tutorials/interactive_api/PyTorch_Kvasir_UNet
+   cd openfl/openfl-tutorials/interactive_api/HPU/PyTorch_Kvasir_UNet
    ```
 
 <br/>
@@ -174,9 +255,15 @@ Optional: Run a second envoy in an additional terminal:
 
 ```sh
 cd workspace
-jupyter lab PyTorch_Kvasir_UNet.ipynb
+jupyter lab --allow-root PyTorch_Kvasir_UNet.ipynb
 ```
-- A Jupyter Server URL will appear in your terminal. In your browser, proceed to that link. Once the webpage loads, click on the PyTorch_Kvasir_UNet.ipynb file. 
+
+When running on remote host inside a docker container as the case of Gaudi2, one need to port forward jupyter lab to your local host. On your local terminal port formal 
+
+```sh
+ssh -NL 8888:127.0.0.1:8888 gaudi2_host
+```
+- A Jupyter Server URL will appear in your terminal. In your local browser, proceed to that link. Once the webpage loads, click on the PyTorch_Kvasir_UNet.ipynb file. 
 - To run the experiment, select the icon that looks like two triangles to "Restart Kernel and Run All Cells". 
 - You will notice activity in your terminals as the experiment runs, and when the experiment is finished the director terminal will display a message that the experiment has finished successfully.  
  

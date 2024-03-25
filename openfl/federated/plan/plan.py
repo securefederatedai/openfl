@@ -65,18 +65,22 @@ class Plan:
 
     @staticmethod
     def parse(plan_config_path: Path, cols_config_path: Path = None,
-              data_config_path: Path = None, resolve=True):
+              data_config_path: Path = None, gandlf_config_path=None,
+              resolve=True):
         """
         Parse the Federated Learning plan.
 
         Args:
-            plan_config_path (string): The filepath to the federated learning
-                                       plan
-            cols_config_path (string): The filepath to the federation
-                                       collaborator list [optional]
-            data_config_path (string): The filepath to the federation
-                                       collaborator data configuration
-                                       [optional]
+            plan_config_path (string):     The filepath to the federated learning
+                                           plan
+            cols_config_path (string):     The filepath to the federation
+                                           collaborator list [optional]
+            data_config_path (string):     The filepath to the federation
+                                           collaborator data configuration
+                                           [optional]
+            override_config_path (string): The filepath to a yaml file
+                                           that overrides the configuration
+                                           [optional]
         Returns:
             A federated learning plan object
         """
@@ -119,6 +123,17 @@ class Plan:
                     defaults.update(plan.config[section])
 
                     plan.config[section] = defaults
+
+            if gandlf_config_path is not None:
+                Plan.logger.info(
+                    f'Importing GaNDLF Config into plan '
+                    f'from file [red]{gandlf_config_path}[/].',
+                    extra={'markup': True})
+
+                gandlf_config = Plan.load(Path(gandlf_config_path))
+                # check for some defaults
+                gandlf_config['output_dir'] = gandlf_config.get('output_dir', '.')
+                plan.config['task_runner']['settings']['gandlf_config'] = gandlf_config
 
             plan.authorized_cols = Plan.load(cols_config_path).get(
                 'collaborators', []
@@ -261,7 +276,9 @@ class Plan:
             aggregation_functions_by_task = self.restore_object('aggregation_function_obj.pkl')
             assigner_function = self.restore_object('task_assigner_obj.pkl')
         except Exception as exc:
-            self.logger.error(f'Failed to load aggregation and assigner functions: {exc}')
+            self.logger.error(
+                f'Failed to load aggregation and assigner functions: {exc}'
+            )
             self.logger.info('Using Task Runner API workflow')
         if assigner_function:
             self.assigner_ = Assigner(

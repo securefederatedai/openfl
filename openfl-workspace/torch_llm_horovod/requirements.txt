@@ -1,0 +1,14 @@
+torch
+tensorboard
+wheel>=0.38.0 # not directly required, pinned by Snyk to avoid a vulnerability
+sentencepiece
+accelerate
+jupyter
+huggingface_hub
+peft
+transformers[torch]
+datasets
+evaluate
+seqeval
+horovod
+torchvision

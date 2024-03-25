@@ -38,8 +38,10 @@ def plan(context):
         help='The FQDN of the federation agregator')
 @option('-f', '--feature_shape', required=False,
         help='The input shape to the model')
+@option('-g', '--gandlf_config', required=False,
+        help='GaNDLF Configuration File Path')
 def initialize(context, plan_config, cols_config, data_config,
-               aggregator_address, feature_shape):
+               aggregator_address, feature_shape, gandlf_config):
     """
     Initialize Data Science plan.
 
@@ -50,7 +52,7 @@ def initialize(context, plan_config, cols_config, data_config,
 
     from openfl.federated import Plan
     from openfl.protocols import utils
-    from openfl.utilities import split_tensor_dict_for_holdouts
+    from openfl.utilities.split import split_tensor_dict_for_holdouts
     from openfl.utilities.utils import getfqdn_env
 
     for p in [plan_config, cols_config, data_config]:
@@ -61,10 +63,13 @@ def initialize(context, plan_config, cols_config, data_config,
     plan_config = Path(plan_config).absolute()
     cols_config = Path(cols_config).absolute()
     data_config = Path(data_config).absolute()
+    if gandlf_config is not None:
+        gandlf_config = Path(gandlf_config).absolute()
 
     plan = Plan.parse(plan_config_path=plan_config,
                       cols_config_path=cols_config,
-                      data_config_path=data_config)
+                      data_config_path=data_config,
+                      gandlf_config_path=gandlf_config)
 
     init_state_path = plan.config['aggregator']['settings']['init_state_path']
 
@@ -76,7 +81,6 @@ def initialize(context, plan_config, cols_config, data_config,
     #         exit('You must specify either a feature
     #         shape or authorized collaborator
     #         list in order for the script to determine the input layer shape')
-    print(plan.cols_data_paths)
 
     collaborator_cname = list(plan.cols_data_paths)[0]
 
@@ -102,23 +106,26 @@ def initialize(context, plan_config, cols_config, data_config,
 
     utils.dump_proto(model_proto=model_snap, fpath=init_state_path)
 
-    plan_origin = Plan.parse(plan_config, resolve=False).config
+    plan_origin = Plan.parse(plan_config_path=plan_config,
+                             gandlf_config_path=gandlf_config,
+                             resolve=False)
 
-    if (plan_origin['network']['settings']['agg_addr'] == 'auto'
+    if (plan_origin.config['network']['settings']['agg_addr'] == 'auto'
             or aggregator_address):
-        plan_origin['network']['settings']['agg_addr'] = aggregator_address or getfqdn_env()
+        plan_origin.config['network']['settings']['agg_addr'] = aggregator_address or getfqdn_env()
 
         logger.warn(f'Patching Aggregator Addr in Plan'
-                    f" 🠆 {plan_origin['network']['settings']['agg_addr']}")
+                    f" 🠆 {plan_origin.config['network']['settings']['agg_addr']}")
 
-        Plan.dump(plan_config, plan_origin)
+        Plan.dump(plan_config, plan_origin.config)
 
-    plan.config = plan_origin
+    if gandlf_config is not None:
+        Plan.dump(plan_config, plan_origin.config)
 
     # Record that plan with this hash has been initialized
     if 'plans' not in context.obj:
         context.obj['plans'] = []
-    context.obj['plans'].append(f'{plan_config.stem}_{plan.hash[:8]}')
+    context.obj['plans'].append(f'{plan_config.stem}_{plan_origin.hash[:8]}')
     logger.info(f"{context.obj['plans']}")
 
 

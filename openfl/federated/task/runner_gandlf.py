@@ -11,7 +11,7 @@ import torch as pt
 from typing import Union
 import yaml
 
-from openfl.utilities import split_tensor_dict_for_holdouts
+from openfl.utilities.split import split_tensor_dict_for_holdouts
 from openfl.utilities import TensorKey
 
 from .runner import TaskRunner
@@ -19,6 +19,7 @@ from .runner import TaskRunner
 from GANDLF.compute.generic import create_pytorch_objects
 from GANDLF.compute.training_loop import train_network
 from GANDLF.compute.forward_pass import validate_network
+from GANDLF.config_manager import ConfigManager
 
 
 class GaNDLFTaskRunner(TaskRunner):
@@ -26,8 +27,6 @@ class GaNDLFTaskRunner(TaskRunner):
 
     def __init__(
             self,
-            train_csv: str = None,
-            val_csv: str = None,
             gandlf_config: Union[str, dict] = None,
             device: str = None,
             **kwargs
@@ -39,9 +38,20 @@ class GaNDLFTaskRunner(TaskRunner):
         """
         super().__init__(**kwargs)
 
+        assert bool(gandlf_config), "gandlf_config must be specified"
+
         # allow pass-through of a gandlf config as a file or a dict
+
+        train_csv = self.data_loader.train_csv
+        val_csv = self.data_loader.val_csv
+
         if isinstance(gandlf_config, str) and os.path.exists(gandlf_config):
             gandlf_config = yaml.safe_load(open(gandlf_config, "r"))
+
+        try:
+            gandlf_config = ConfigManager(gandlf_config)
+        except Exception:
+            self.logger.info("WARNING: GANDLF.config_manager.ConfigManager did not work.")
 
         (
             model,

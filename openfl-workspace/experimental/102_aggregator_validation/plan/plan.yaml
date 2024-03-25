@@ -1,0 +1,31 @@
+# Copyright (C) 2020-2021 Intel Corporation
+# Licensed subject to the terms of the separately executed evaluation license agreement between Intel Corporation and you.
+
+aggregator :
+  defaults : plan/defaults/aggregator.yaml
+  template : openfl.experimental.component.Aggregator
+  settings :
+    rounds_to_train     : 1
+    log_metric_callback :
+      template : src.utils.write_metric
+
+
+collaborator :
+  defaults : plan/defaults/collaborator.yaml
+  template : openfl.experimental.component.Collaborator
+  settings : {}
+
+
+federated_flow:
+  template: src.flow.AggregatorValidationFlow
+  settings:
+    model:
+      template: src.flow.Net
+      settings: {}
+    optimizer: null
+    rounds: 3
+    checkpoint: true
+
+
+network :
+  defaults : plan/defaults/network.yaml

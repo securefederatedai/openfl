@@ -13,16 +13,16 @@ from click import pass_context
 from click import password_option
 from click import Path as ClickPath
 
-from openfl.component.ca.ca import CA_CONFIG_JSON
-from openfl.component.ca.ca import CA_PASSWORD_FILE
-from openfl.component.ca.ca import CA_PKI_DIR
-from openfl.component.ca.ca import CA_STEP_CONFIG_DIR
-from openfl.component.ca.ca import certify
-from openfl.component.ca.ca import get_ca_bin_paths
-from openfl.component.ca.ca import get_token
-from openfl.component.ca.ca import install
-from openfl.component.ca.ca import remove_ca
-from openfl.component.ca.ca import run_ca
+from openfl.utilities.ca.ca import CA_CONFIG_JSON
+from openfl.utilities.ca.ca import CA_PASSWORD_FILE
+from openfl.utilities.ca.ca import CA_PKI_DIR
+from openfl.utilities.ca.ca import CA_STEP_CONFIG_DIR
+from openfl.utilities.ca.ca import certify
+from openfl.utilities.ca.ca import get_ca_bin_paths
+from openfl.utilities.ca.ca import get_token
+from openfl.utilities.ca.ca import install
+from openfl.utilities.ca.ca import remove_ca
+from openfl.utilities.ca.ca import run_ca
 
 logger = logging.getLogger(__name__)
 
