@@ -36,4 +36,4 @@ Run the script
 
 .. code-block:: console
 
-    python test_hello_federation.py
+    $ python test_hello_federation.py
