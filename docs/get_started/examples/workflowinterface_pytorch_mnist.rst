@@ -28,10 +28,10 @@ First we start by installing the necessary dependencies for the workflow interfa
 
 .. code-block:: console
 
-    pip install git+https://github.com/intel/openfl.git
-    pip install -r requirements_workflow_interface.txt
-    pip install torch
-    pip install torchvision
+    $ pip install git+https://github.com/intel/openfl.git
+    $ pip install -r requirements_workflow_interface.txt
+    $ pip install torch
+    $ pip install torchvision
 
 We begin with the quintessential example of a small pytorch CNN model trained on the MNIST dataset. 
 Let's start define our dataloaders, model, optimizer, and some helper functions like we would for any other deep learning experiment

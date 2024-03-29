@@ -153,9 +153,9 @@ STEP 1: Create a Workspace
 
 1.	Start a Python 3.8 (>=3.6, <3.11) virtual environment and confirm |productName| is available.
 
-	.. code-block:: python
+	.. code-block:: console
 
-		fx
+		$ fx
 
 
 2. 	This example uses the :code:`keras_cnn_mnist` template.
@@ -164,8 +164,8 @@ STEP 1: Create a Workspace
 
     .. code-block:: console
 
-        export WORKSPACE_TEMPLATE=keras_cnn_mnist
-        export WORKSPACE_PATH=${HOME}/my_federation
+        $ export WORKSPACE_TEMPLATE=keras_cnn_mnist
+        $ export WORKSPACE_PATH=${HOME}/my_federation
 
 3.	Decide a workspace template, which are end-to-end federated learning training demonstrations. The following is a sample of available templates:
 
@@ -179,14 +179,14 @@ STEP 1: Create a Workspace
 
     .. code-block:: console
 
-       fx workspace create --prefix ${WORKSPACE_PATH}
+       $ fx workspace create --prefix ${WORKSPACE_PATH}
 
 
 4.  Create a workspace directory for the new federation project.
 
     .. code-block:: console
 
-       fx workspace create --prefix ${WORKSPACE_PATH} --template ${WORKSPACE_TEMPLATE}
+       $ fx workspace create --prefix ${WORKSPACE_PATH} --template ${WORKSPACE_TEMPLATE}
 
 
     .. note::
@@ -197,13 +197,13 @@ STEP 1: Create a Workspace
 
     .. code-block:: console
 
-        cd ${WORKSPACE_PATH}
+        $ cd ${WORKSPACE_PATH}
 
 6.  Install the workspace requirements:
 
     .. code-block:: console
 
-        pip install -r requirements.txt
+        $ pip install -r requirements.txt
 
 
 7.	Create an initial set of random model weights.
@@ -217,7 +217,7 @@ STEP 1: Create a Workspace
 
     .. code-block:: console
 
-		fx plan initialize
+		$ fx plan initialize
 
 
     This command initializes the FL plan and auto populates the `fully qualified domain name (FQDN) <https://en.wikipedia.org/wiki/Fully_qualified_domain_name>`_ of the aggregator node. This FQDN is embedded within the FL plan so the collaborator nodes know the address of the externally accessible aggregator server to connect to.
@@ -228,19 +228,19 @@ STEP 1: Create a Workspace
 
 		.. code-block:: console
 
-			fx plan initialize -a aggregator-hostname.internal-domain.com
+			$ fx plan initialize -a aggregator-hostname.internal-domain.com
 
 	- OPTION 2: override the apparent FQDN of the system by setting an FQDN environment variable.
 
 		.. code-block:: console
 
-			export FQDN=x.x.x.x
+			$ export FQDN=x.x.x.x
 
 		and initializing the FL plan
 
 		.. code-block:: console
 
-			fx plan initialize
+			$ fx plan initialize
 
 
 .. note::
@@ -281,7 +281,7 @@ Setting Up the Certificate Authority
 
     .. code-block:: console
 
-       cd WORKSPACE_PATH
+       $ cd WORKSPACE_PATH
 
 2. Set up the aggregator node as the `certificate authority <https://en.wikipedia.org/wiki/Certificate_authority>`_ for the federation.
 
@@ -289,13 +289,13 @@ Setting Up the Certificate Authority
 
     .. code-block:: console
 
-       fx workspace certify
+       $ fx workspace certify
 
 3. Run the aggregator certificate creation command, replacing :code:`AFQDN` with the actual `fully qualified domain name (FQDN) <https://en.wikipedia.org/wiki/Fully_qualified_domain_name>`_ for the aggregator node.
 
     .. code-block:: console
 
-       fx aggregator generate-cert-request --fqdn AFQDN
+       $ fx aggregator generate-cert-request --fqdn AFQDN
 
     .. note::
 
@@ -303,7 +303,7 @@ Setting Up the Certificate Authority
 
            .. code-block:: console
 
-              hostname --all-fqdns | awk '{print $1}'
+              $ hostname --all-fqdns | awk '{print $1}'
 
    .. note::
 
@@ -311,19 +311,19 @@ Setting Up the Certificate Authority
 
         .. code-block:: console
 
-            fx aggregator generate-cert-request export FQDN=x.x.x.x
+            $ fx aggregator generate-cert-request export FQDN=x.x.x.x
 
       If you omit the :code:`--fdqn` parameter, then :code:`fx` will automatically use the FQDN of the current node assuming the node has been correctly set with a static address.
 
         .. code-block:: console
 
-            fx aggregator generate-cert-request
+            $ fx aggregator generate-cert-request
 
 4. Run the aggregator certificate signing command, replacing :code:`AFQDN` with the actual `fully qualified domain name (FQDN) <https://en.wikipedia.org/wiki/Fully_qualified_domain_name>`_ for the aggregator node.
 
     .. code-block:: console
 
-       fx aggregator certify --fqdn AFQDN
+       $ fx aggregator certify --fqdn AFQDN
 
 
    .. note::
@@ -332,7 +332,7 @@ Setting Up the Certificate Authority
 
         .. code-block:: console
 
-           fx aggregator certify export FQDN=x.x.x.x
+           $ fx aggregator certify export FQDN=x.x.x.x
 
 5. This node now has a signed security certificate as the aggregator for this new federation. You should have the following files.
 
@@ -357,7 +357,7 @@ Exporting the Workspace
 
     .. code-block:: console
 
-       fx workspace export
+       $ fx workspace export
 
    The :code:`export` command will archive the current workspace (with a :code:`zip` file extension) and create a **requirements.txt** of the current Python\*\ packages in the virtual environment.
 
@@ -376,7 +376,7 @@ Importing the Workspace
 
     .. code-block:: console
 
-       fx workspace import --archive WORKSPACE.zip
+       $ fx workspace import --archive WORKSPACE.zip
 
  where **WORKSPACE.zip** is the name of the workspace archive. This will unzip the workspace to the current directory and install the required Python packages within the current virtual environment.
 
@@ -386,8 +386,8 @@ Importing the Workspace
 
     .. code-block:: console
 
-       fx collaborator create -n {COL_LABEL} -d {DATA_PATH:optional}
-       fx collaborator generate-cert-request -n {COL_LABEL}
+       $ fx collaborator create -n {COL_LABEL} -d {DATA_PATH:optional}
+       $ fx collaborator generate-cert-request -n {COL_LABEL}
 
 
  The creation script will also ask you to specify the path to the data. For this example, enter the integer that represents which MNIST shard to use on this collaborator node. For the first collaborator node enter **1**. For the second collaborator node enter **2**.
@@ -409,7 +409,7 @@ Importing the Workspace
 
     .. code-block:: console
 
-       fx collaborator certify --request-pkg /PATH/TO/col_{COL_LABEL}_to_agg_cert_request.zip
+       $ fx collaborator certify --request-pkg /PATH/TO/col_{COL_LABEL}_to_agg_cert_request.zip
 
    where :code:`/PATH/TO/col_{COL_LABEL}_to_agg_cert_request.zip` is the path to the Collaborator CSR Package containing the :code:`.csr` file from the collaborator node. The certificate authority will sign this certificate for use in the federation.
 
@@ -425,7 +425,7 @@ Importing the Workspace
 
     .. code-block:: console
 
-       fx collaborator certify --import /PATH/TO/agg_to_col_{COL_LABEL}_signed_cert.zip
+       $ fx collaborator certify --import /PATH/TO/agg_to_col_{COL_LABEL}_signed_cert.zip
 
 
 
@@ -441,7 +441,7 @@ STEP 3: Start the Federation
 
     .. code-block:: console
 
-       fx aggregator start
+       $ fx aggregator start
 
  Now, the Aggregator is running and waiting for Collaborators to connect.
 
@@ -455,7 +455,7 @@ STEP 3: Start the Federation
 
     .. code-block:: console
 
-       fx collaborator start -n {COLLABORATOR_LABEL}
+       $ fx collaborator start -n {COLLABORATOR_LABEL}
 
     where :code:`COLLABORATOR_LABEL` is the label for this Collaborator.
 
@@ -487,7 +487,7 @@ Among other training artifacts, the aggregator creates the last and best aggrega
 
 .. code-block:: console
 
-    fx model save -i model_protobuf_path.pth -o save_model_path
+    $ fx model save -i model_protobuf_path.pth -o save_model_path
 
 In order for this command to succeed, the **TaskRunner** used in the experiment must implement a :code:`save_native()` method.
 
@@ -526,7 +526,7 @@ Option 1: Deploy a Federation in a Docker Container
 
     .. code-block:: console
 
-       docker run -it --network host openfl
+       $ docker run -it --network host openfl
 
 
 You can now experiment with |productName| in the container. For example, you can test the project pipeline with the `"Hello Federation" bash script <https://github.com/intel/openfl/blob/develop/tests/github/test_hello_federation.sh>`_.
@@ -545,7 +545,7 @@ Option 2: Deploy Your Workspace in a Docker Container
 
     .. code-block:: console
 
-       fx workspace dockerize
+       $ fx workspace dockerize
 
 
     By default, the image is saved as **WORKSPACE_NAME_image.tar** in the workspace directory.
