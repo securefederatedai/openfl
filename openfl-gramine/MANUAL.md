@@ -1,5 +1,5 @@
 # OpenFL + Gramine
-This manual will help you run OpenFL with Aggregator-based workflow inside SGX enclave with Gramine.
+This manual will help you run OpenFL with Task Runner API inside SGX enclave with Gramine.
 
 ## Prerequisites
 Building machine:
@@ -11,6 +11,7 @@ Machines that will run an Aggregator and Collaborator containers should have the
 - Intel SGX driver or Linux 5.11+ driver
 - Intel SGX SDK/PSW
 </br>
+
 This is a short list, see more in [Gramine docs](https://gramine.readthedocs.io/en/latest/devel/building.html).
 
 ## Workflow
@@ -91,7 +92,7 @@ docker load < WORKSPACE_NAME.tar.gz
 ```
 
 7. **Prepare certificates**
-Certificates exchange is a big separate topic. To run an experiment following OpenFL Aggregator-based workflow, a user must follow the established procedure, please refer to [the docs](https://openfl.readthedocs.io/en/latest/running_the_federation.html#bare-metal-approach).
+Certificates exchange is a big separate topic. To run an experiment following OpenFL Task Runner API, a user must follow the established procedure, please refer to [the docs](https://openfl.readthedocs.io/en/latest/about/features_index/taskrunner.html#bare-metal-approach).
 Following the above-mentioned procedure, running machines will acquire certificates. Moreover, as the result of this procedure, the aggregator machine will also obtain a `cols.yaml` file (required to start an experiment) with registered collaborators' names, and the collaborator machines will obtain `data.yaml` files.
 
 We recommend replicating the OpenFL workspace folder structure on all the machines and following the usual certifying procedure. Finally, on the aggregator node you should have the following folder structure:

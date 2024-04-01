@@ -1,5 +1,5 @@
 # **Welcome to the OpenFL Tutorials!**
-## The **Director Workflow** tutorials can be found in the "interactive_api" folder. All other tutorials are for the **Aggregator Workflow**.
+## The **Interactive API** tutorials can be found in the "interactive_api" folder. All other tutorials are for the **Task Runner API**.
 
 <br/>
 
