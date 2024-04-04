@@ -64,9 +64,39 @@ Perform this procedure on every node in the federation.
 
 5. Run the :code:`fx` command in the virtual environment to confirm |productName| is installed.
 
-   .. figure:: ../images/fx_help.png
-      :scale: 70 %
+	.. code-block:: console
 
+
+		OpenFL - Open Federated Learning                                                
+	
+		BASH COMPLETE ACTIVATION
+		
+		Run in terminal:
+		   _FX_COMPLETE=bash_source fx > ~/.fx-autocomplete.sh
+		   source ~/.fx-autocomplete.sh
+		If ~/.fx-autocomplete.sh has already exist:
+		   source ~/.fx-autocomplete.sh
+		
+		CORRECT USAGE
+		
+		fx [options] [command] [subcommand] [args]
+		
+		GLOBAL OPTIONS
+		
+		-l, --log-level TEXT  Logging verbosity level.
+		--no-warnings         Disable third-party warnings.
+		--help                Show this message and exit.
+
+		AVAILABLE COMMANDSAVAILABLE COMMANDS
+		
+		plan              Manage Federated Learning Plans.
+		────────────────────────────────────────────────────────────────────────────────
+		  * freeze       Finalize the Data Science plan.
+		  * initialize   Initialize Data Science plan.
+		  * print        Print the current plan.
+		  * remove       Remove this plan.
+		  * save         Save the current plan to this plan and...
+		  * switch       Switch the current plan to this plan.
 .. centered:: Output of the fx Command
 
 
