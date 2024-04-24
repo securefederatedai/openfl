@@ -101,7 +101,7 @@ class PyTorchCNN(PyTorchTaskRunner):
         x = self.fc2(x)
         return x
 
-    def validate(self, col_name, round_num, input_tensor_dict,
+    def validate_task(self, col_name, round_num, input_tensor_dict,
                  use_tqdm=False, **kwargs):
         """Validate.
 

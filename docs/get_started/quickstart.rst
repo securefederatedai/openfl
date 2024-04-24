@@ -24,11 +24,11 @@ To begin we recommend installing OpenFL inside a python virtual environment. Thi
     
     pip install virtualenv
     virtualenv ~/openfl-quickstart
-    source ~/openfl-quickstart
+    source ~/openfl-quickstart/bin/activate
     pip install openfl
 
 
-Now you're ready to run your first federation! Copying these commands to your terminal will run a simple federation with two collaborators all on your local machine. These commands can be broken down into five steps, which you can read more about `here <../about/features_index/taskrunner.html#step-1-create-a-workspace>`_
+Now you're ready to run your first federation! Copying these commands to your terminal will run a simple federation with an aggregator and two collaborators all on your local machine. These commands can be broken down into five steps, which you can read more about `here <../about/features_index/taskrunner.html#step-1-create-a-workspace>`_
 
 1. Setup Federation Workspace & Certificate Authority (CA) for Secure Communication
 2. Setup Aggregator & Initialize Federation Plan + Model
@@ -170,7 +170,7 @@ You should see this output at the end of the experiment:
 Working with your own model
 ***************************
 
-Now that you've run your first federation, let's see how to use replace the model used in the federation. After copying in the text above, you should be in the :code:`my_workspace` directory. Every workspace has a :code:`src` directory that contains the Task Runner, an OpenFL interface that defines the deep learning model, as well as the training and validation functions that will run on that model. In this case, the Task Runner is defined in :code:`src/taskrunner.py`. After opening it you'll see the following:
+Now that you've run your first federation, let's see how to replace the model used in the federation. After copying in the text above, you should be in the :code:`my_workspace` directory. Every workspace has a :code:`src` directory that contains the Task Runner, an OpenFL interface that defines the deep learning model, as well as the training and validation functions that will run on that model. In this case, the Task Runner is defined in :code:`src/taskrunner.py`. After opening it you'll see the following:
 
 .. code-block:: python
 
