@@ -31,7 +31,7 @@ Demonstration of adding the straggler handling interface
 
 The example template, **torch_cnn_mnist_straggler_check**, uses the ``PercentageBasedStragglerHandling``. To gain a better understanding of how experiments perform, you can modify the **percent_collaborators_needed** or **minimum_reporting** parameter in the template **plan.yaml** or even choose **CutoffTimeBasedStragglerHandling** function instead:
 
-    .. code-block:: console
+    .. code-block:: yaml
     
         straggler_handling_policy :
             template : openfl.component.straggler_handling_functions.CutoffTimeBasedStragglerHandling

@@ -14,7 +14,7 @@ import openfl.native as fx
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.dirname(SCRIPT_DIR))
 from src.InHorovodLLMTrainer import LLMTrainer  # noqa: E402
-from src.ptglue_inmemory import GlueMrpcDataLoader  # noqa: E402
+from src.ptemotion_inmemory import EmotionDataLoader  # noqa: E402
 
 
 def get_args():
@@ -58,7 +58,7 @@ def main():
         logger.info("getting arguments")
         args = get_args()
         logger.info("loading data")
-        data_loader = GlueMrpcDataLoader(
+        data_loader = EmotionDataLoader(
             data_path=args.data_path, batch_size=args.batch_size
         )
         logger.info("get taskrunner")
