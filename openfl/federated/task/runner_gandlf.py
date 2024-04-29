@@ -48,10 +48,7 @@ class GaNDLFTaskRunner(TaskRunner):
         if isinstance(gandlf_config, str) and os.path.exists(gandlf_config):
             gandlf_config = yaml.safe_load(open(gandlf_config, "r"))
 
-        try:
-            gandlf_config = ConfigManager(gandlf_config)
-        except Exception:
-            self.logger.info("WARNING: GANDLF.config_manager.ConfigManager did not work.")
+        gandlf_config = ConfigManager(gandlf_config)
 
         (
             model,

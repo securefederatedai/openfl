@@ -26,4 +26,4 @@ Experimental features are *not* ready for production. These features are under a
    :maxdepth: 4
    :hidden:
 
-   workflow_interface 
+   ../about/features_index/workflowinterface
