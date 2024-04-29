@@ -7,7 +7,6 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
-import tqdm
 from typing import Iterator
 from typing import Tuple
 
@@ -18,12 +17,12 @@ from openfl.utilities import Metric
 class PyTorchCNN(PyTorchTaskRunner):
     """
     Simple CNN for classification.
-    
+
     PyTorchTaskRunner inherits from nn.module, so you can define your model
     in the same way that you would for PyTorch
     """
 
-    def __init__(self, device='cpu', **kwargs):
+    def __init__(self, device="cpu", **kwargs):
         """Initialize.
 
         Args:
@@ -40,12 +39,11 @@ class PyTorchCNN(PyTorchTaskRunner):
         self.fc2 = nn.Linear(500, 10)
         self.to(device)
 
-        # `self.optimizer` must be set for optimizer weights to be federated 
+        # `self.optimizer` must be set for optimizer weights to be federated
         self.optimizer = optim.Adam(self.parameters(), lr=1e-4)
 
         # Set the loss function
         self.loss_fn = F.cross_entropy
-
 
     def forward(self, x):
         """
@@ -63,8 +61,9 @@ class PyTorchCNN(PyTorchTaskRunner):
         x = self.fc2(x)
         return x
 
-
-    def train_(self, train_dataloader: Iterator[Tuple[np.ndarray, np.ndarray]]) -> Metric:
+    def train_(
+        self, train_dataloader: Iterator[Tuple[np.ndarray, np.ndarray]]
+    ) -> Metric:
         """
         Train single epoch.
 
@@ -88,15 +87,17 @@ class PyTorchCNN(PyTorchTaskRunner):
         loss = np.mean(losses)
         return Metric(name=self.loss_fn.__name__, value=np.array(loss))
 
-
-    def validate_(self, validation_dataloader: Iterator[Tuple[np.ndarray, np.ndarray]]) -> Metric:
+    def validate_(
+        self, validation_dataloader: Iterator[Tuple[np.ndarray, np.ndarray]]
+    ) -> Metric:
         """
         Perform validation on PyTorch Model
 
         Override this function for your own custom validation function
 
         Args:
-            validation_dataloader: Validation dataset batch generator. Yields (samples, targets) tuples
+            validation_dataloader: Validation dataset batch generator.
+                                   Yields (samples, targets) tuples
         Returns:
             Metric: An object containing name and np.ndarray value
         """
@@ -107,12 +108,13 @@ class PyTorchCNN(PyTorchTaskRunner):
             for data, target in validation_dataloader:
                 samples = target.shape[0]
                 total_samples += samples
-                data, target = data.to(self.device), target.to(self.device, dtype=torch.int64)
+                data, target = data.to(self.device), target.to(
+                    self.device, dtype=torch.int64
+                )
                 output = self(data)
                 # get the index of the max log-probability
                 pred = output.argmax(dim=1)
                 val_score += pred.eq(target).sum().cpu().numpy()
-        
-        accuracy = val_score / total_samples
-        return Metric(name='accuracy', value=np.array(accuracy))
 
+        accuracy = val_score / total_samples
+        return Metric(name="accuracy", value=np.array(accuracy))

@@ -27,7 +27,8 @@ class PyTorchMNISTInMemory(PyTorchDataLoader):
         super().__init__(batch_size, **kwargs)
 
         num_classes, X_train, y_train, X_valid, y_valid = load_mnist_shard(
-            shard_num=int(data_path), **kwargs)
+            shard_num=int(data_path), **kwargs
+        )
 
         self.X_train = X_train
         self.y_train = y_train
@@ -40,8 +41,9 @@ class PyTorchMNISTInMemory(PyTorchDataLoader):
         self.num_classes = num_classes
 
 
-def load_mnist_shard(shard_num, collaborator_count,
-                 categorical=False, channels_last=True, **kwargs):
+def load_mnist_shard(
+    shard_num, collaborator_count, categorical=False, channels_last=True, **kwargs
+):
     """
     Load the MNIST dataset.
 
@@ -66,12 +68,13 @@ def load_mnist_shard(shard_num, collaborator_count,
     num_classes = 10
 
     (X_train, y_train), (X_valid, y_valid) = _load_raw_datashards(
-        shard_num, collaborator_count, transform=transforms.ToTensor())
+        shard_num, collaborator_count, transform=transforms.ToTensor()
+    )
 
-    logger.info(f'MNIST > X_train Shape : {X_train.shape}')
-    logger.info(f'MNIST > y_train Shape : {y_train.shape}')
-    logger.info(f'MNIST > Train Samples : {X_train.shape[0]}')
-    logger.info(f'MNIST > Valid Samples : {X_valid.shape[0]}')
+    logger.info(f"MNIST > X_train Shape : {X_train.shape}")
+    logger.info(f"MNIST > y_train Shape : {y_train.shape}")
+    logger.info(f"MNIST > Train Samples : {X_train.shape[0]}")
+    logger.info(f"MNIST > Valid Samples : {X_valid.shape[0]}")
 
     if categorical:
         # convert class vectors to binary class matrices
@@ -110,7 +113,7 @@ def _load_raw_datashards(shard_num, collaborator_count, transform=None):
         2 tuples: (image, label) of the training, validation dataset
     """
     train_data, val_data = (
-        datasets.MNIST('data', train=train, download=True, transform=transform)
+        datasets.MNIST("data", train=train, download=True, transform=transform)
         for train in (True, False)
     )
     X_train_tot, y_train_tot = train_data.train_data, train_data.train_labels
@@ -125,6 +128,3 @@ def _load_raw_datashards(shard_num, collaborator_count, transform=None):
     y_valid = y_valid_tot[shard_num::collaborator_count]
 
     return (X_train, y_train), (X_valid, y_valid)
-
-
-
