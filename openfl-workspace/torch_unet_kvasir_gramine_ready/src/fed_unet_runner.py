@@ -89,7 +89,7 @@ class PyTorchFederatedUnet(PyTorchTaskRunner):
         x = torch.sigmoid(x)
         return x
 
-    def validate(self, col_name, round_num, input_tensor_dict, use_tqdm=True, **kwargs):
+    def validate_task(self, col_name, round_num, input_tensor_dict, use_tqdm=True, **kwargs):
         """Run validation of the model on the local data.
 
         Args:
