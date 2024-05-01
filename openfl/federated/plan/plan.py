@@ -489,6 +489,9 @@ class Plan:
         if self.runner_ is None:
             self.runner_ = Plan.build(**defaults)
 
+        # Define task dependencies after taskrunner has been initialized
+        self.runner_.initialize_tensorkeys_for_functions()
+
         return self.runner_
 
     # Python interactive api
