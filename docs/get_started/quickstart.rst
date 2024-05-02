@@ -1,4 +1,4 @@
-.. # Copyright (C) 2020-2023 Intel Corporation
+.. # Copyright (C) 2020-2024 Intel Corporation
 .. # SPDX-License-Identifier: Apache-2.0
 
 .. _quick_start:
@@ -18,14 +18,16 @@ In this quick start guide, we will demonstrate how to run a simple federated lea
 Creating a federation in 5 steps
 ********************************
 
-To begin we recommend installing OpenFL inside a python virtual environment. This can be done with the following:
+To begin we recommend installing the latest OpenFL inside a python virtual environment. This can be done with the following:
 
 .. code-block:: console:
-    
+
     pip install virtualenv
     virtualenv ~/openfl-quickstart
     source ~/openfl-quickstart/bin/activate
-    pip install openfl
+    git clone https://github.com/securefederatedai/openfl.git
+    cd openfl
+    pip install .
 
 
 Now you're ready to run your first federation! Copying these commands to your terminal will run a simple federation with an aggregator and two collaborators all on your local machine. These commands can be broken down into five steps, which you can read more about `here <../about/features_index/taskrunner.html#step-1-create-a-workspace>`_
