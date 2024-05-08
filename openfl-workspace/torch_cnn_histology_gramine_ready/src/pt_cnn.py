@@ -35,17 +35,14 @@ class PyTorchCNN(PyTorchTaskRunner):
 
         self.num_classes = self.data_loader.num_classes
         self.init_network(device=self.device, **kwargs)
-        self._init_optimizer(lr=kwargs.get('lr'))
+        self._init_optimizer(lr=kwargs.get("lr"))
         self.initialize_tensorkeys_for_functions()
 
     def _init_optimizer(self, lr):
         """Initialize the optimizer."""
         self.optimizer = optim.Adam(self.parameters(), lr=float(lr or 1e-3))
 
-    def init_network(self,
-                     device,
-                     print_model=True,
-                     **kwargs):
+    def init_network(self, device, print_model=True, **kwargs):
         """Create the network (model).
 
         Args:
@@ -54,9 +51,8 @@ class PyTorchCNN(PyTorchTaskRunner):
             **kwargs: Additional arguments to pass to the function
 
         """
-        channel = self.data_loader.get_feature_shape()[
-            0]  # (channel, dim1, dim2)
-        conv_kwargs = {'kernel_size': 3, 'stride': 1, 'padding': 1}
+        channel = self.data_loader.get_feature_shape()[0]  # (channel, dim1, dim2)
+        conv_kwargs = {"kernel_size": 3, "stride": 1, "padding": 1}
         self.conv1 = nn.Conv2d(channel, 16, **conv_kwargs)
         self.conv2 = nn.Conv2d(16, 32, **conv_kwargs)
         self.conv3 = nn.Conv2d(32, 64, **conv_kwargs)
@@ -101,8 +97,9 @@ class PyTorchCNN(PyTorchTaskRunner):
         x = self.fc2(x)
         return x
 
-    def validate(self, col_name, round_num, input_tensor_dict,
-                 use_tqdm=False, **kwargs):
+    def validate_task(
+        self, col_name, round_num, input_tensor_dict, use_tqdm=False, **kwargs
+    ):
         """Validate.
 
         Run validation of the model on the local data.
@@ -126,31 +123,34 @@ class PyTorchCNN(PyTorchTaskRunner):
 
         loader = self.data_loader.get_valid_loader()
         if use_tqdm:
-            loader = tqdm.tqdm(loader, desc='validate')
+            loader = tqdm.tqdm(loader, desc="validate")
 
         with torch.no_grad():
             for data, target in loader:
                 samples = target.shape[0]
                 total_samples += samples
-                data, target = (torch.tensor(data).to(self.device),
-                                torch.tensor(target).to(self.device))
+                data, target = (
+                    torch.tensor(data).to(self.device),
+                    torch.tensor(target).to(self.device),
+                )
                 output = self(data)
                 # get the index of the max log-probability
                 pred = output.argmax(dim=1)
                 val_score += pred.eq(target).sum().cpu().numpy()
 
         origin = col_name
-        suffix = 'validate'
-        if kwargs['apply'] == 'local':
-            suffix += '_local'
+        suffix = "validate"
+        if kwargs["apply"] == "local":
+            suffix += "_local"
         else:
-            suffix += '_agg'
-        tags = ('metric', suffix)
+            suffix += "_agg"
+        tags = ("metric", suffix)
         # TODO figure out a better way to pass in metric for
         #  this pytorch validate function
         output_tensor_dict = {
-            TensorKey('acc', origin, round_num, True, tags):
-                np.array(val_score / total_samples)
+            TensorKey("acc", origin, round_num, True, tags): np.array(
+                val_score / total_samples
+            )
         }
 
         # empty list represents metrics that should only be stored locally
@@ -162,4 +162,4 @@ class PyTorchCNN(PyTorchTaskRunner):
         Resets the optimizer state variables.
 
         """
-        self._init_optimizer(lr=self.optimizer.defaults.get('lr'))
+        self._init_optimizer(lr=self.optimizer.defaults.get("lr"))

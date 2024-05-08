@@ -49,7 +49,7 @@ The |productName| PKI pipeline involves creating a local certificate authority (
 
       .. code-block:: console
 
-         fx pki install -p </path/to/ca/dir> --ca-url <host:port>
+         $ fx pki install -p </path/to/ca/dir> --ca-url <host:port>
 
       | where
       | :code:`-p` defines the path to the directory that contains CA files, and
@@ -62,7 +62,7 @@ The |productName| PKI pipeline involves creating a local certificate authority (
 
       .. code-block:: console
 
-         fx pki run -p </path/to/ca/dir>
+         $ fx pki run -p </path/to/ca/dir>
 
       | where
       | :code:`-p` defines the path to the directory that contains CA files.
@@ -71,7 +71,7 @@ The |productName| PKI pipeline involves creating a local certificate authority (
 
       .. code-block:: console
 
-         fx pki get-token -n <subject> --ca-path </path/to/ca/dir> --ca-url <host:port>
+         $ fx pki get-token -n <subject> --ca-path </path/to/ca/dir> --ca-url <host:port>
 
       | where
       | :code:`-n` defines the subject name, FQDN for director, collaborator name for envoy, or API name for the API-layer node.
@@ -84,8 +84,8 @@ The |productName| PKI pipeline involves creating a local certificate authority (
 
       .. code-block:: console
 
-         cd <path/to/subject/folder>
-         fx pki certify -n <subject> -t <generated token for subject>
+         $ cd <path/to/subject/folder>
+         $ fx pki certify -n <subject> -t <generated token for subject>
 
       | where
       | :code:`-n` defines the subject name, FQDN for director, collaborator name for envoy, or API name for the API-layer node.

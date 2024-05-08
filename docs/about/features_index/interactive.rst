@@ -86,7 +86,7 @@ Start the Director on a node with at least two open ports. See :ref:`openfl_ll_c
 
     .. code-block:: console
 
-        fx director create-workspace -p path/to/director_workspace_dir
+        $ fx director create-workspace -p path/to/director_workspace_dir
 
  This workspace will contain received experiments and supplementary files (Director config file and certificates).
 
@@ -100,13 +100,13 @@ Start the Director on a node with at least two open ports. See :ref:`openfl_ll_c
 
     .. code-block:: console
 
-       fx director start --disable-tls -c director_config.yaml
+       $ fx director start --disable-tls -c director_config.yaml
 
  If you have a federation with PKI certificates, run this command.
 
     .. code-block:: console
 
-       fx director start -c director_config.yaml \
+       $ fx director start -c director_config.yaml \
             -rc cert/root_ca.crt \
             -pk cert/priv.key \
             -oc cert/open.crt
@@ -157,7 +157,7 @@ STEP 2: Start the Envoy
 
     .. code-block:: console
 
-        fx envoy create-workspace -p path/to/envoy_workspace_dir
+        $ fx envoy create-workspace -p path/to/envoy_workspace_dir
 
 2. Modify the Envoy config file and local shard descriptor template.
 
@@ -183,7 +183,7 @@ STEP 2: Start the Envoy
 
         ENVOY_NAME=envoy_example_name
 
-        fx envoy start \
+        $ fx envoy start \
             -n "$ENVOY_NAME" \
             --disable-tls \
             --envoy-config-path envoy_config.yaml \
@@ -194,9 +194,9 @@ STEP 2: Start the Envoy
 
     .. code-block:: console
 
-        ENVOY_NAME=envoy_example_name
+        $ ENVOY_NAME=envoy_example_name
 
-        fx envoy start \
+        $ fx envoy start \
             -n "$ENVOY_NAME" \
             --envoy-config-path envoy_config.yaml \
             -dh director_fqdn \

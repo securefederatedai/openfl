@@ -16,7 +16,7 @@ Running a Federation
 Task Runner API
     Define an experiment and distribute it manually. All participants can verify model code and FL plan prior to execution. 
     The federation is terminated when the experiment is finished. Formerly known as the aggregator-based workflow.
-    `For more info <features_index/taskrunner.html>`_
+    For more info see :doc:`features_index/taskrunner`
 
     .. toctree::
         :hidden:
@@ -26,7 +26,7 @@ Task Runner API
 Interactive API
     Setup long-lived components to run many experiments in series. Recommended for FL research when many changes to model, dataloader, or hyperparameters are expected.
     Formerly known as the director-based workflow.
-    `For more info <features_index/interactive.html>`_
+    For more info see :doc:`features_index/interactive`
 
     .. toctree::
         :hidden:
@@ -36,7 +36,7 @@ Interactive API
 Workflow API (Experimental)
     Formulate the experiment as a series of tasks, or a flow. Every flow begins with the start task and concludes with end.
     Heavily influenced by the interface and design of Netflix's Metaflow, the popular framework for data scientists. 
-    `For more info <features_index/workflowinterface.html>`_
+    For more info see :doc:`features_index/workflowinterface`
 
     .. toctree::
         :hidden:
@@ -91,7 +91,7 @@ FedCurv
 Federated Evaluation
 ---------------------
 
-Evaluate the accuracy and performance of your model on data distributed across decentralized nodes without comprimising data privacy and security. `For more info <features_index/fed_eval.html>`_
+Evaluate the accuracy and performance of your model on data distributed across decentralized nodes without comprimising data privacy and security. For more info see :doc:`features_index/fed_eval`
 
 .. toctree::
     :hidden:
@@ -104,7 +104,7 @@ Evaluate the accuracy and performance of your model on data distributed across d
 Privacy Meter
 ---------------------
 
-Quantitatively audit data privacy in statistical and machine learning algorithms. `For more info <features_index/privacy_meter.html>`_
+Quantitatively audit data privacy in statistical and machine learning algorithms. For more info see :doc:`features_index/privacy_meter`
     
 .. toctree::
     :hidden:

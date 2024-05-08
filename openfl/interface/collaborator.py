@@ -69,6 +69,11 @@ def start_(plan, collaborator_name, data_config, secure):
 @option('-s', '--silent', help='Do not prompt', is_flag=True)
 def create_(collaborator_name, data_path, silent):
     """Creates a user for an experiment."""
+    create(collaborator_name, data_path, silent)
+
+
+def create(collaborator_name, data_path, silent):
+    """Creates a user for an experiment."""
     if data_path and is_directory_traversal(data_path):
         echo('Data path is out of the openfl workspace scope.')
         sys.exit(1)

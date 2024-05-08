@@ -27,13 +27,13 @@ Perform this procedure on every node in the federation.
 
    .. code-block:: console
 
-      python3 -m venv venv
+      $ python3 -m venv venv
 
 3. Activate the virtual environment.
 
    .. code-block:: console
 
-      source venv/bin/activate
+      $ source venv/bin/activate
 
 4. Install the |productName| package.
 
@@ -41,7 +41,7 @@ Perform this procedure on every node in the federation.
     
         .. code-block:: console
         
-            python -m pip install openfl
+            $ python -m pip install openfl
    
     B. Installation from source:
 
@@ -49,24 +49,54 @@ Perform this procedure on every node in the federation.
         
             .. code-block:: console
             
-                git clone https://github.com/intel/openfl.git 
+                $ git clone https://github.com/intel/openfl.git 
 
 
         #. Install build tools, before installing |productName|: 
 
             .. code-block:: console
             
-                python -m pip install -U pip setuptools wheel
-                cd openfl/
-                python -m pip install .
+                $ python -m pip install -U pip setuptools wheel
+                $ cd openfl/
+                $ python -m pip install .
 
 
 
 5. Run the :code:`fx` command in the virtual environment to confirm |productName| is installed.
 
-   .. figure:: ../images/fx_help.png
-      :scale: 70 %
+	.. code-block:: console
 
+
+		OpenFL - Open Federated Learning                                                
+	
+		BASH COMPLETE ACTIVATION
+		
+		Run in terminal:
+		   _FX_COMPLETE=bash_source fx > ~/.fx-autocomplete.sh
+		   source ~/.fx-autocomplete.sh
+		If ~/.fx-autocomplete.sh has already exist:
+		   source ~/.fx-autocomplete.sh
+		
+		CORRECT USAGE
+		
+		fx [options] [command] [subcommand] [args]
+		
+		GLOBAL OPTIONS
+		
+		-l, --log-level TEXT  Logging verbosity level.
+		--no-warnings         Disable third-party warnings.
+		--help                Show this message and exit.
+
+		AVAILABLE COMMANDSAVAILABLE COMMANDS
+		
+		plan              Manage Federated Learning Plans.
+		────────────────────────────────────────────────────────────────────────────────
+		  * freeze       Finalize the Data Science plan.
+		  * initialize   Initialize Data Science plan.
+		  * print        Print the current plan.
+		  * remove       Remove this plan.
+		  * save         Save the current plan to this plan and...
+		  * switch       Switch the current plan to this plan.
 .. centered:: Output of the fx Command
 
 
@@ -101,12 +131,12 @@ Follow this procedure to download or build a Docker\*\  image of |productName|, 
 
 	.. code-block:: console
 
-	   docker pull intel/openfl
+	   $ docker pull intel/openfl
    
 	If you prefer to build an image from a specific commit or branch, perform the following commands:
 
 	.. code-block:: console
 
-	   git clone https://github.com/intel/openfl.git
-	   cd openfl
-	   docker build -f openfl-docker/Dockerfile.base .
+	   $ git clone https://github.com/intel/openfl.git
+	   $ cd openfl
+	   $ docker build -f openfl-docker/Dockerfile.base .

@@ -20,4 +20,11 @@ Experimental features are *not* ready for production. These features are under a
         - Filter out information that should stay local
         - Use Metaflow tools to analyze and debug experiments  
 
+
     - :doc:`../about/features_index/workflowinterface`
+
+.. toctree::
+   :maxdepth: 4
+   :hidden:
+
+   ../about/features_index/workflowinterface
