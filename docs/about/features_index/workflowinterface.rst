@@ -7,8 +7,9 @@
 Workflow API
 ******************
 
-.. note::
-    The OpenFL Workflow API is experimental, subject to change, and is currently limited to single node execution. To setup and launch a real federation, see :ref:`running_a_federation`
+**Important Note**
+
+The OpenFL Workflow API is experimental, subject to change, and is currently limited to single node execution. To setup and launch a real federation, see :ref:`running_a_federation`
 
 What is it?
 ===========
