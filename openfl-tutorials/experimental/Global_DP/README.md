@@ -7,14 +7,14 @@ Global DP implementation uses the [Opacus library](https://opacus.ai/) to perfor
 
 Prerequisites:
 
-`pip install -r ../requirements_workflow_interface.txt`
+`pip install -r ../requirements_workflow_api.txt`
 `pip install -r requirements_global_dp.txt`
 
-1. `Workflow_Interface_Mnist_Implementation_1.py` uses lower level RDPAccountant and DPDataLoader Opacus objects to perform the privacy accounting and collaborator selection respectively. Local model aggregation and noising is implemented independent of Opacus, and final accounting is calculated by the RDPAccountant, using information about how many rounds of training was performed. To run with this version:
+1. `Workflow_API_Mnist_Implementation_1.py` uses lower level RDPAccountant and DPDataLoader Opacus objects to perform the privacy accounting and collaborator selection respectively. Local model aggregation and noising is implemented independent of Opacus, and final accounting is calculated by the RDPAccountant, using information about how many rounds of training was performed. To run with this version:
 
-`python Workflow_Interface_Mnist_Implementation_1.py --config_path test_config.yml`
+`python Workflow_API_Mnist_Implementation_1.py --config_path test_config.yml`
 
-2. `Workflow_Interface_Mnist_Implementation_2.py` uses the higher level PrivacyEngine Opacus object to wrap (using the 'make_private' method) a global data loader (serving up collaborator names), and a global optimizer (performing the local model aggregation and noising), with RDP accounting being performed internally by PrivacyEngine utilizing the fact that it tracks the usage of these wrapped objects over the course of training. To run with this version:
+2. `Workflow_API_Mnist_Implementation_2.py` uses the higher level PrivacyEngine Opacus object to wrap (using the 'make_private' method) a global data loader (serving up collaborator names), and a global optimizer (performing the local model aggregation and noising), with RDP accounting being performed internally by PrivacyEngine utilizing the fact that it tracks the usage of these wrapped objects over the course of training. To run with this version:
 
-`python Workflow_Interface_Mnist_Implementation_2.py --config_path test_config.yml`
+`python Workflow_API_Mnist_Implementation_2.py --config_path test_config.yml`
 
