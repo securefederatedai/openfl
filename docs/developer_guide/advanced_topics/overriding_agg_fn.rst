@@ -7,7 +7,7 @@
 Override Aggregation Function
 *****************************
 
-With the aggregator-based workflow, you can use custom aggregation functions for each task via Python\*\  API or command line interface.
+With the Task Runner API, you can use custom aggregation functions for each task via Python\*\  API or command line interface.
 
 
 Python API

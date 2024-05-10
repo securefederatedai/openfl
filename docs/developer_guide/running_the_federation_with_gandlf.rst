@@ -10,20 +10,20 @@ Run the Federation with a model defined using GaNDLF
 This guide will show you how to take an existing model using the `Generally Nuanced Deep Learning Framework (GaNDLF) <https://github.com/mlcommons/GaNDLF>`_ experiment to a federated environment. 
 
 
-`Aggregator-Based Workflow`_
+`Task Runner API`_
     Define an experiment and distribute it manually. All participants can verify model code and `FL plan <https://openfl.readthedocs.io/en/latest/running_the_federation.html#federated-learning-plan-fl-plan-settings>`_ prior to executing the code/model. The federation is terminated when the experiment is finished, and appropriate statistics are generated.
 
 
 .. _running_the_federation_aggregator_based_gandlf:
 
-Aggregator-Based Workflow
+Task Runner API
 =========================
 
 An overview of this workflow is shown below.
 
 .. figure:: ../images/openfl_flow.png
 
-.. centered:: Overview of the Aggregator-Based Workflow
+.. centered:: Overview of the Task Runner API
 
 
 This workflow uses short-lived components in a federation, which is terminated when the experiment is finished. The components are as follows:
@@ -91,7 +91,7 @@ You can use the `"Hello Federation" bash script <https://github.com/intel/openfl
 .. literalinclude:: ../../tests/github/test_hello_federation.py
   :language: bash
 
-However, continue with the following procedure for details in creating a federation with an aggregator-based workflow.
+However, continue with the following procedure for details in creating a federation with the Task Runner API.
 
     `STEP 1: Install GaNDLF prerequisites and Create a Workspace`_
 

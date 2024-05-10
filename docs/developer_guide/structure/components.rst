@@ -49,8 +49,8 @@ The Collaborator is a short-lived entity that manages training the model on loca
     - exchanging model parameters with the Aggregator.
 
 The Collaborator is created by the :ref:`Envoy <openfl_ll_components_envoy>` when a new experiment is submitted
-in the :ref:`Director-based workflow <running_interactive>`. The Collaborator should be started from CLI if a user follows the
-:ref:`Aggregator-based workflow <running_the_task_runner>`
+in the :ref:`Interactive API <running_interactive>`. The Collaborator should be started from CLI if a user follows the
+:ref:`Task Runner API <running_the_task_runner>`
 
 Every Collaborator is a unique service. The data loader is loaded with a local *shard descriptor* to perform tasks
 included in an FL experiment. At the end of the training task, weight tensors are extracted and sent to the central node
@@ -67,7 +67,7 @@ they would like see supported in |productName|.
 Long-Lived Components
 ======================
 
-These components were introduced to support the :ref:`Director-based workflow <running_interactive>`.
+These components were introduced to support the :ref:`Interactive API <running_interactive>`.
 	
     - The *Director* is the central node of the federation. This component starts an *Aggregator* for each experiment, broadcasts experiment archive to connected collaborator nodes, and provides updates on the status.
     - The *Envoy* runs on collaborator nodes and is always connected to the *Director*. When the *Director* starts an experiment, the *Envoy* starts the *Collaborator* to train the global model.

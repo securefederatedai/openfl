@@ -56,9 +56,10 @@ See :ref:`interactive_tensorflow_mnist`
 
     examples/interactive_tensorflow_mnist
 
----------------------------------
-Workflow Interface (Experimental)
----------------------------------
+----------------------------
+Workflow API (Experimental)
+----------------------------
+
 Formulate the experiment as a series of tasks, or a flow. 
 
 See :ref:`workflowinterface_pytorch_mnist`

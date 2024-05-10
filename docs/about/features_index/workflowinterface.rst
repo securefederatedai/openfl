@@ -4,12 +4,12 @@
 .. _workflow_interface:
 
 ******************
-Workflow Interface
+Workflow API
 ******************
 
 **Important Note**
 
-The OpenFL workflow interface is experimental, subject to change, and is currently limited to single node execution. To setup and launch a real federation, see :ref:`running_a_federation`
+The OpenFL Workflow API is experimental, subject to change, and is currently limited to single node execution. To setup and launch a real federation, see :ref:`running_a_federation`
 
 What is it?
 ===========
@@ -30,7 +30,7 @@ There are several modifications we make in our reimagined version of this interf
 How to use it?
 ==============
 
-Let's start with the basics. A flow is intended to define the entirety of federated learning experiment. Every flow begins with the `start` task and concludes with the `end` task. At each step in the flow, attributes can be defined, modified, or deleted. Attributes get passed forward to the next step in the flow, which is defined by the name of the task passed to the `next` function. In the line before each task, there is a **placement decorator**. The placement decorator defines where that task will be run. The OpenFL Workflow Interface adopts the conventions set by Metaflow, that every workflow begins with start and concludes with the end task. In the following example, the aggregator begins with an optionally passed in model and optimizer. The aggregator begins the flow with the start task, where the list of collaborators is extracted from the runtime (:code:`self.collaborators = self.runtime.collaborators`) and is then used as the list of participants to run the task listed in self.next, aggregated_model_validation. The model, optimizer, and anything that is not explicitly excluded from the next function will be passed from the start function on the aggregator to the aggregated_model_validation task on the collaborator. Where the tasks run is determined by the placement decorator that precedes each task definition (:code:`@aggregator` or :code:`@collaborator`). Once each of the collaborators (defined in the runtime) complete the aggregated_model_validation task, they pass their current state onto the train task, from train to local_model_validation, and then finally to join at the aggregator. It is in join that an average is taken of the model weights, and the next round can begin. 
+Let's start with the basics. A flow is intended to define the entirety of federated learning experiment. Every flow begins with the `start` task and concludes with the `end` task. At each step in the flow, attributes can be defined, modified, or deleted. Attributes get passed forward to the next step in the flow, which is defined by the name of the task passed to the `next` function. In the line before each task, there is a **placement decorator**. The placement decorator defines where that task will be run. The OpenFL Workflow API adopts the conventions set by Metaflow, that every workflow begins with start and concludes with the end task. In the following example, the aggregator begins with an optionally passed in model and optimizer. The aggregator begins the flow with the start task, where the list of collaborators is extracted from the runtime (:code:`self.collaborators = self.runtime.collaborators`) and is then used as the list of participants to run the task listed in self.next, aggregated_model_validation. The model, optimizer, and anything that is not explicitly excluded from the next function will be passed from the start function on the aggregator to the aggregated_model_validation task on the collaborator. Where the tasks run is determined by the placement decorator that precedes each task definition (:code:`@aggregator` or :code:`@collaborator`). Once each of the collaborators (defined in the runtime) complete the aggregated_model_validation task, they pass their current state onto the train task, from train to local_model_validation, and then finally to join at the aggregator. It is in join that an average is taken of the model weights, and the next round can begin. 
 
 .. code-block:: python
 
@@ -134,10 +134,10 @@ Goals
     5. The placement of tasks and how they connect should be straightforward
     6. Don't reinvent unless absolutely necessary
 
-Workflow Interface API
+Workflow API
 ======================
 
-The workflow interface formulates the experiment as a series of tasks, or a flow. Every flow begins with the `start` task and concludes with `end`.
+The Workflow API formulates the experiment as a series of tasks, or a flow. Every flow begins with the `start` task and concludes with `end`.
 
 Runtimes
 ========
