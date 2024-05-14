@@ -1,5 +1,5 @@
 aggregated_model_validation:
-  function : validate
+  function : validate_task
   kwargs   :
     batch_size : 32
     apply      : global
@@ -7,7 +7,7 @@ aggregated_model_validation:
       - accuracy
 
 locally_tuned_model_validation:
-  function : validate
+  function : validate_task
   kwargs   :
     batch_size : 32
     apply      : local
@@ -15,7 +15,7 @@ locally_tuned_model_validation:
       - accuracy
 
 train:
-  function : train
+  function : train_task
   kwargs   :
     batch_size : 32
     epochs     : 1
