@@ -201,9 +201,7 @@ def ray_group_assign(collaborators, num_actors=1):
         # add collaborator to actor group
         initializations.append(
             collaborator_actor.append.remote(
-                collaborator.get_name(),
-                private_attributes_callable=collaborator.private_attributes_callable,
-                **collaborator.kwargs,
+                collaborator
             )
         )
 
@@ -236,9 +234,7 @@ class RayGroup:
 
     def append(
         self,
-        name: str = "",
-        private_attributes_callable: Callable = None,
-        **kwargs,
+        collaborator: Collaborator,
     ):
         """
         Appends a new collaborator to the group.
@@ -251,11 +247,20 @@ class RayGroup:
         """
         from openfl.experimental.interface import Collaborator
 
-        self.collaborators[name] = Collaborator(
-            name=name,
-            private_attributes_callable=private_attributes_callable,
-            **kwargs,
-        )
+        if collaborator.private_attributes_callable is not None:
+            self.collaborators[collaborator.name] = Collaborator(
+                name=collaborator.name,
+                private_attributes_callable=collaborator.private_attributes_callable,
+                **collaborator.kwargs,
+            )
+        elif collaborator.private_attributes is not None:
+            self.collaborators[collaborator.name] = Collaborator(
+                name=collaborator.name,
+                **collaborator.kwargs,
+            )
+            self.collaborators[collaborator.name].initialize_private_attributes(
+                collaborator.private_attributes
+            )
 
     def execute_from_col(self, name, internal_f_name, *args, **kwargs):
         """
@@ -384,11 +389,21 @@ class LocalRuntime(Runtime):
         aggregator_actor = ray.remote(aggregator_class).options(
             num_cpus=agg_cpus, num_gpus=agg_gpus
         )
-        aggregator_actor_ref = aggregator_actor.remote(
-            name=aggregator.get_name(),
-            private_attributes_callable=aggregator.private_attributes_callable,
-            **aggregator.kwargs,
-        )
+
+        if aggregator.private_attributes_callable is not None:
+            aggregator_actor_ref = aggregator_actor.remote(
+                name=aggregator.get_name(),
+                private_attributes_callable=aggregator.private_attributes_callable,
+                **aggregator.kwargs,
+            )
+        elif aggregator.private_attributes is not None:
+            aggregator_actor_ref = aggregator_actor.remote(
+                name=aggregator.get_name(),
+                **aggregator.kwargs,
+            )
+            aggregator_actor_ref.initialize_private_attributes.remote(
+                aggregator.private_attributes
+            )
 
         return aggregator_actor_ref
 
