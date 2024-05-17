@@ -1,6 +1,6 @@
 build:
-	@docker build -t openfl -f Dockerfile.base ..
+	@docker build --pull -t openfl -f Dockerfile.base ..
 run:
-	@docker run -it --network host openfl
+	@docker run --rm -it --network host openfl
 save:
-	@docker save openfl > openfl.tar
+	@docker save openfl | gzip > openfl.tar.gz
