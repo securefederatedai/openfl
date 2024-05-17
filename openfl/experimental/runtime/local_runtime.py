@@ -11,6 +11,7 @@ import os
 import gc
 from openfl.experimental.runtime import Runtime
 from typing import TYPE_CHECKING, Optional
+from logging import getLogger
 import math
 
 if TYPE_CHECKING:
@@ -348,6 +349,7 @@ class LocalRuntime(Runtime):
 
             self.num_actors = kwargs.get("num_actors", 1)
         self.backend = backend
+        self.logger = getLogger(__name__)
         if aggregator is not None:
             self.aggregator = self.__get_aggregator_object(aggregator)
 
@@ -356,6 +358,14 @@ class LocalRuntime(Runtime):
 
     def __get_aggregator_object(self, aggregator: Type[Aggregator]) -> Any:
         """Get aggregator object based on localruntime backend"""
+
+        if aggregator.private_attributes and aggregator.private_attributes_callable:
+            self.logger.warning(
+                'Warning: Aggregator private attributes '
+                + 'will be initialized via callable and '
+                + 'attributes via aggregator.private_attributes '
+                + 'will be ignored'
+            )
 
         if self.backend == "single_process":
             return aggregator
@@ -409,6 +419,15 @@ class LocalRuntime(Runtime):
 
     def __get_collaborator_object(self, collaborators: List) -> Any:
         """Get collaborator object based on localruntime backend"""
+
+        for collab in collaborators:
+            if collab.private_attributes and collab.private_attributes_callable:
+                self.logger.warning(
+                    f'Warning: Collaborator {collab.name} private attributes '
+                    + 'will be initialized via callable and '
+                    + 'attributes via collaborator.private_attributes '
+                    + 'will be ignored'
+                )
 
         if self.backend == "single_process":
             return collaborators

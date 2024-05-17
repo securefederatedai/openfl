@@ -95,7 +95,7 @@ class Collaborator(Participant):
     def initialize_private_attributes(self, private_attrs: Dict[Any, Any] = None) -> None:
         """
         initialize private attributes of Collaborator object by invoking
-        the callable or private_attributes directly specified by the user
+        the callable or by passing private_attrs argument
         """
         if private_attrs:
             self.private_attributes = private_attrs
@@ -193,7 +193,7 @@ class Aggregator(Participant):
     def initialize_private_attributes(self, private_attrs: Dict[Any, Any] = None) -> None:
         """
         initialize private attributes of Aggregator object by invoking
-        the callable or private_attributes directly specified by the user
+        the callable or by passing private_attrs argument
         """
         if private_attrs:
             self.private_attributes = private_attrs
