@@ -79,6 +79,7 @@ RUN apt-get update && \
         openssh-server=\* \
         curl=\* \
         ca-certificates=\* && \
+    rm -rf /etc/ssh/ssh_host_*_key && \
     if [ "$INSTALL_SOURCES" = "yes" ]; then \
         dpkg --get-selections | grep -v deinstall | awk '{print $1}' > all_packages.txt && \
         sed -Ei 's/# deb-src /deb-src /' /etc/apt/sources.list && \
