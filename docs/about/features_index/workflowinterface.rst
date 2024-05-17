@@ -142,12 +142,50 @@ The workflow interface formulates the experiment as a series of tasks, or a flow
 Runtimes
 ========
 
-A :code:`Runtime` defines where the flow will be executed, who the participants are in the experiment, and the private information that each participant has access to. In this experimental release, single node execution is supported using the :code:`LocalRuntime`. Let's see how a :code:`LocalRuntime` is created:
+A :code:`Runtime` defines where the flow will be executed, who the participants are in the experiment, and the private information that each participant has access to. In this experimental release, single node execution is supported using the :code:`LocalRuntime`. Let's see how a :code:`LocalRuntime` is created.
+
+Let's break this down, starting with the :code:`Aggregator` and :code:`Collaborator` components. These components represent the *Participants* in a Federated Learning experiment. Each participant has its own set of *private attributes* that represent the information / data specific to its role or requirements. As the name suggests these *private attributes* are accessible only to the particular participant, and are appropriately inserted into or filtered out of current Flow state when transferring from between Participants. For e.g. Collaborator private attributes are inserted into :code:`flow` when transitioning from Aggregator to Collaborator and are filtered out when transitioning from Collaborator to Aggregator.
+
+In the above :code:`FederatedFlow`, each collaborator accesses train and test datasets via *private attributes* :code:`train_loader` and :code:`test_loader`. There exist two methods through which one may set private attributes, as illustrated in the following examples:
+
+**1. Set private attributes directly**
 
 .. code-block:: python
+
+    # Setup participants
+    aggregator = Aggregator()
+    aggregator.private_attributes = {}
+
+    # Setup collaborators with private attributes
+    collaborator_names = ['Portland', 'Seattle', 'Chandler','Bangalore']
+    collaborators = [Collaborator(name=name) for name in collaborator_names]
+    for idx, collaborator in enumerate(collaborators):
+        local_train = deepcopy(mnist_train)
+        local_test = deepcopy(mnist_test)
+        local_train.data = mnist_train.data[idx::len(collaborators)]
+        local_train.targets = mnist_train.targets[idx::len(collaborators)]
+        local_test.data = mnist_test.data[idx::len(collaborators)]
+        local_test.targets = mnist_test.targets[idx::len(collaborators)]
+        collaborator.private_attributes = {
+                'train_loader': torch.utils.data.DataLoader(local_train,batch_size=batch_size_train, shuffle=True),
+                'test_loader': torch.utils.data.DataLoader(local_test,batch_size=batch_size_train, shuffle=True)
+        }
+
+    local_runtime = LocalRuntime(aggregator=aggregator, collaborators=collaborators, backend='single_process')
+
+In this example *private attributes* need to be set in form of a dictionary(user defined), where the key is the name of the attribute and the value is the object.
+:code:`collaborator.private_attributes` sets the collaborator private attributes :code:`train_loader` and :code:`test_loader` that are accessed by collaborator steps (:code:`aggregated_model_validation`, :code:`train` and :code:`local_model_validation`). Some important points to remember while creating private attributes dictionary are: 
     
+    - In above example multiple collaborators have the same *private attributes* dictionary. Depending on the Federated Learning requirements, user can specify *private attributes* dictionary for each Participant.
+    - If *private attributes* dictionary is not specified then the Participant shall not have any *private attributes*.
+    - *Private attributes* needs to be set after instantiating the participant.
+
+**2. Set private attributes using a callable**
+
+.. code-block:: python
+
     # Aggregator
-    aggregator_ = Aggregator()
+    aggregator = Aggregator()
 
     collaborator_names = ["Portland", "Seattle", "Chandler", "Bangalore"]
 
@@ -179,15 +217,12 @@ A :code:`Runtime` defines where the flow will be executed, who the participants 
             )
         )
 
-    local_runtime = LocalRuntime(aggregator=aggregator_, collaborators=collaborators)
+    local_runtime = LocalRuntime(aggregator=aggregator, collaborators=collaborators)
 
-Let's break this down, starting with the :code:`Aggregator` and :code:`Collaborator` components. These components represent the *Participants* in a Federated Learning experiment. Each participant has its own set of *private attributes* that represent the information / data specific to its role or requirements. As the name suggests these *private attributes* are accessible only to the particular participant, and are appropriately inserted into or filtered out of current Flow state when transferring from between Participants. For e.g. Collaborator private attributes are inserted into :code:`flow` when transitioning from Aggregator to Collaborator and are filtered out when transitioning from Collaborator to Aggregator.
+In this example *private attributes* need to be set using a (user defined) callback function while instantiating the participant. Participant *private attributes* are returned by the callback function in form of a dictionary, where the key is the name of the attribute and the value is the object.
+The callback function :code:`callable_to_initialize_collaborator_private_attributes()` returns the collaborator private attributes :code:`train_loader` and :code:`test_loader` that are accessed by collaborator steps (:code:`aggregated_model_validation`, :code:`train` and :code:`local_model_validation`). Some important points to remember while creating callback function and private attributes are: 
 
-In the above :code:`FederatedFlow`, each collaborator accesses train and test datasets via *private attributes* :code:`train_loader` and :code:`test_loader`. These *private attributes* need to be set using a (user defined) callback function while instantiating the participant. Participant *private attributes* are returned by the callback function in form of a dictionary, where the key is the name of the attribute and the value is the object.
-
-In this example callback function :code:`callable_to_initialize_collaborator_private_attributes()` returns the collaborator private attributes :code:`train_loader` and :code:`test_loader` that are accessed by collaborator steps (:code:`aggregated_model_validation`, :code:`train` and :code:`local_model_validation`). Some important points to remember while creating callback function and private attributes are: 
-
-   - Callback Function needs to  be defined by the user and should return the *private attributes* required by the participant in form of a key/value pair 
+   - Callback Function needs to be defined by the user and should return the *private attributes* required by the participant in form of a key/value pair 
    - In above example multiple collaborators have the same callback function. Depending on the Federated Learning requirements, user can specify unique callback functions for each Participant
    - If no Callback Function is specified then the Participant shall not have any *private attributes*
    - Callback function can be provided with any parameters required as arguments. In this example, parameters essential for the callback function are supplied with corresponding values bearing *same names* during the instantiation of the Collaborator
