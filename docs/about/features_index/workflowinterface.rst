@@ -169,22 +169,49 @@ A :code:`Runtime` defines where the flow will be executed, who the participants 
 
 Let's break this down, starting with the :code:`Aggregator` and :code:`Collaborator` components. These components represent the *Participants* in a Federated Learning experiment. Each participant has its own set of *private attributes* that represent the information / data specific to its role or requirements. As the name suggests these *private attributes* are accessible only to the particular participant, and are appropriately inserted into or filtered out of current Flow state when transferring from between Participants. For e.g. Collaborator private attributes are inserted into :code:`flow` when transitioning from Aggregator to Collaborator and are filtered out when transitioning from Collaborator to Aggregator.
 
-In the above :code:`FederatedFlow`, each collaborator accesses train and test datasets via *private attributes* :code:`train_loader` and :code:`test_loader`. These *private attributes* need to be set using a (user defined) callback function while instantiating the participant. Participant *private attributes* are returned by the callback function in form of a dictionary, where the key is the name of the attribute and the value is the object. In this example callback function :code:`callable_to_initialize_collaborator_private_attributes()` returns the collaborator private attributes :code:`train_loader` and :code:`test_loader` that are accessed by collaborator steps (:code:`aggregated_model_validation`, :code:`train` and :code:`local_model_validation`). 
+In the above :code:`FederatedFlow`, each collaborator accesses train and test datasets via *private attributes* :code:`train_loader` and :code:`test_loader`. These *private attributes* need to be set in form of a dictionary(user defined), where the key is the name of the attribute and the value is the object. In this example :code:`collaborator.private_attributes` sets the collaborator *private attributes* :code:`train_loader` and :code:`test_loader` that are accessed by collaborator steps (:code:`aggregated_model_validation`, :code:`train` and :code:`local_model_validation`). 
     
-There is another way of initializing private attributes in which *private attributes* need to be set in form of a dictionary(user defined), where the key is the name of the attribute and the value is the object.
+There is another way of initializing private attributes in which *private attributes* need to be set using a (user defined) callback function while instantiating the participant.
 
 .. code-block:: python
 
-    collaborator_names = ['Portland', 'Seattle', 'Chandler','Bangalore']
-    for collaborator_name in collaborator_names:
-        collab = Collaborator(name=collaborator_name)
-        collab.private_attributes =  {
-                'train_loader': torch.utils.data.DataLoader(local_train,batch_size=batch_size_train, shuffle=True),
-                'test_loader': torch.utils.data.DataLoader(local_test,batch_size=batch_size_train, shuffle=True)
-        }
-        collaborators.append(collab)
+    # Aggregator
+    aggregator_ = Aggregator()
 
-In this example :code:`collaborator.private_attributes` sets the collaborator private attributes :code:`train_loader` and :code:`test_loader`.
+    collaborator_names = ["Portland", "Seattle", "Chandler", "Bangalore"]
+
+    def callable_to_initialize_collaborator_private_attributes(index, n_collaborators, batch_size, train_dataset, test_dataset):
+        train = deepcopy(train_dataset)
+        test = deepcopy(test_dataset)
+        train.data = train_dataset.data[index::n_collaborators]
+        train.targets = train_dataset.targets[index::n_collaborators]
+        test.data = test_dataset.data[index::n_collaborators]
+        test.targets = test_dataset.targets[index::n_collaborators]
+
+        return {
+            "train_loader": torch.utils.data.DataLoader(train, batch_size=batch_size, shuffle=True),
+            "test_loader": torch.utils.data.DataLoader(test, batch_size=batch_size, shuffle=True),
+        }
+
+    # Setup collaborators private attributes via callable function
+    collaborators = []
+    for idx, collaborator_name in enumerate(collaborator_names):
+        collaborators.append(
+            Collaborator(
+                name=collaborator_name,
+                private_attributes_callable=callable_to_initialize_collaborator_private_attributes,
+                index=idx, 
+                n_collaborators=len(collaborator_names),
+                train_dataset=mnist_train, 
+                test_dataset=mnist_test, 
+                batch_size=64
+            )
+        )
+
+    local_runtime = LocalRuntime(aggregator=aggregator_, collaborators=collaborators)
+
+
+Participant *private attributes* are returned by the callback function in form of a dictionary, where the key is the name of the attribute and the value is the object. In this example callback function :code:`callable_to_initialize_collaborator_private_attributes()` returns :code:`train_loader` and :code:`test_loader` in the form of a dictionary.
 
 **Note:**If both callable and private attributes are provided, the initialization will prioritize the private attributes through the :code:`callable` function.
 

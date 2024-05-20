@@ -39,7 +39,7 @@ class TestFlowPrivateAttributes(FLSpec):
         )
         self.collaborators = self.runtime.collaborators
 
-        validate_collab_private_attr(self, "test_loader", "start")
+        validate_collab_private_attr(self, "test_loader_via_callable", "start")
 
         self.exclude_agg_to_agg = 10
         self.include_agg_to_agg = 100
@@ -51,7 +51,7 @@ class TestFlowPrivateAttributes(FLSpec):
         Testing whether Agg private attributes are accessible in next agg step.
         Collab private attributes should not be accessible here
         """
-        validate_collab_private_attr(self, "test_loader", "aggregator_step")
+        validate_collab_private_attr(self, "test_loader_via_callable", "aggregator_step")
 
         self.include_agg_to_collab = 42
         self.exclude_agg_to_collab = 40
@@ -68,7 +68,7 @@ class TestFlowPrivateAttributes(FLSpec):
         Aggregator private attributes should not be accessible here
         """
         validate_agg_private_attrs(
-            self, "train_loader", "test_loader", "collaborator_step_a"
+            self, "train_loader_via_callable", "test_loader_via_callable", "collaborator_step_a"
         )
 
         self.exclude_collab_to_collab = 2
@@ -83,7 +83,7 @@ class TestFlowPrivateAttributes(FLSpec):
         """
 
         validate_agg_private_attrs(
-            self, "train_loader", "test_loader", "collaborator_step_b"
+            self, "train_loader_via_callable", "test_loader_via_callable", "collaborator_step_b"
         )
         self.exclude_collab_to_agg = 10
         self.include_collab_to_agg = 12
@@ -95,7 +95,7 @@ class TestFlowPrivateAttributes(FLSpec):
         Testing whether attributes are excluded from collab to agg
         """
         # Aggregator should only be able to access its own attributes
-        if hasattr(self, "test_loader") is False:
+        if hasattr(self, "test_loader_via_callable") is False:
             TestFlowPrivateAttributes.error_list.append(
                 "aggregator_join_aggregator_attributes_missing"
             )
@@ -106,8 +106,8 @@ class TestFlowPrivateAttributes(FLSpec):
 
         for idx, collab in enumerate(inputs):
             if (
-                hasattr(collab, "train_loader") is True
-                or hasattr(collab, "test_loader") is True
+                hasattr(collab, "train_loader_via_callable") is True
+                or hasattr(collab, "test_loader_via_callable") is True
             ):
                 # Error - we are able to access collaborator attributes
                 TestFlowPrivateAttributes.error_list.append(
@@ -197,7 +197,7 @@ def validate_agg_private_attrs(self, private_attr_1, private_attr_2, step_name):
 if __name__ == "__main__":
     # Setup Aggregator with private attributes via callable function
     def callable_to_initialize_aggregator_private_attributes():
-        return {"test_loader": np.random.rand(10, 28, 28)}  # Random data
+        return {"test_loader_via_callable": np.random.rand(10, 28, 28)}  # Random data
 
     aggregator = Aggregator(
         name="agg",
@@ -222,8 +222,8 @@ if __name__ == "__main__":
 
     def callable_to_initialize_collaborator_private_attributes(index):
         return {
-            "train_loader": np.random.rand(idx * 50, 28, 28),
-            "test_loader": np.random.rand(idx * 10, 28, 28),
+            "train_loader_via_callable": np.random.rand(idx * 50, 28, 28),
+            "test_loader_via_callable": np.random.rand(idx * 10, 28, 28),
         }
 
     collaborators = []
