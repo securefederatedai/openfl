@@ -78,7 +78,7 @@ class PyTorchCNN(PyTorchTaskRunner):
         x = F.dropout(self.fc1(x), p=0.5)
         x = self.fc2(x)
         return x
-    
+
     def train_(
         self, train_dataloader: Iterator[Tuple[np.ndarray, np.ndarray]]
     ) -> Metric:
@@ -105,7 +105,7 @@ class PyTorchCNN(PyTorchTaskRunner):
             losses.append(loss.detach().cpu().numpy())
         loss = np.mean(losses)
         return Metric(name=self.loss_fn.__name__, value=np.array(loss))
-    
+
     def validate_(
         self, validation_dataloader: Iterator[Tuple[np.ndarray, np.ndarray]]
     ) -> Metric:
