@@ -12,6 +12,7 @@ from typing import Iterator, Tuple
 from openfl.federated import PyTorchTaskRunner
 from openfl.utilities import Metric
 
+
 class PyTorchCNN(PyTorchTaskRunner):
     """
     Simple CNN for classification.
