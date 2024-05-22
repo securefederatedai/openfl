@@ -42,7 +42,8 @@ jobs:
         pip uninstall onnx -y
         cat ./GANDLF/version.py
         echo "Download data and Split CSVs into training and validation"
-        python -c "from testing.test_full import test_generic_download_data, test_generic_constructTrainingCSV; test_generic_download_data(); test_generic_constructTrainingCSV()"
+        # python -c "from testing.test_full import test_generic_download_data, test_generic_constructTrainingCSV; test_generic_download_data(); test_generic_constructTrainingCSV()"
+        pytest --cov=. --cov-report=xml -k "prepare_data_for_ci"
         head -n 1 testing/data/train_2d_rad_segmentation.csv > /home/runner/work/openfl/openfl/valid.csv
         tail -n +9 testing/data/train_2d_rad_segmentation.csv >> /home/runner/work/openfl/openfl/valid.csv
         head -n 8 testing/data/train_2d_rad_segmentation.csv > /home/runner/work/openfl/openfl/train.csv
