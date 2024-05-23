@@ -9,6 +9,7 @@ def collaborator_private_attrs(index):
         "test_loader_via_callable": np.random.rand(index * 10, 28, 28),
     }
 
+
 collaborator_private_attributes = {
     "train_loader": np.random.rand(1 * 50, 28, 28),
     "test_loader": np.random.rand(1 * 10, 28, 28),
