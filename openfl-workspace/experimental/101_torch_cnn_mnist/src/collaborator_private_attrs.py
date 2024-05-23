@@ -31,25 +31,37 @@ mnist_test = torchvision.datasets.MNIST(
     ),
 )
 
-train_dataset = mnist_train
-test_dataset = mnist_test
 
+n_collaborators = 2
+batch_size = 32
 
-def collaborator_private_attrs(
-    index, n_collaborators, batch_size, train_dataset, test_dataset
-):
-    train = deepcopy(train_dataset)
-    test = deepcopy(test_dataset)
-    train.data = train_dataset.data[index::n_collaborators]
-    train.targets = train_dataset.targets[index::n_collaborators]
-    test.data = test_dataset.data[index::n_collaborators]
-    test.targets = test_dataset.targets[index::n_collaborators]
+train = deepcopy(mnist_train)
+test = deepcopy(mnist_test)
 
-    return {
-        "train_loader": torch.utils.data.DataLoader(
-            train, batch_size=batch_size, shuffle=True
-        ),
-        "test_loader": torch.utils.data.DataLoader(
-            test, batch_size=batch_size, shuffle=True
-        ),
-    }
+train.data = train.data[0::n_collaborators]
+train.targets = train.targets[0::n_collaborators]
+test.data = test.data[0::n_collaborators]
+test.targets = test.targets[0::n_collaborators]
+
+col1_private_attributes = {
+    "train_loader": torch.utils.data.DataLoader(
+        train, batch_size=batch_size, shuffle=True
+    ),
+    "test_loader": torch.utils.data.DataLoader(
+        test, batch_size=batch_size, shuffle=True
+    ),
+}
+
+train.data = train.data[1::n_collaborators]
+train.targets = train.targets[1::n_collaborators]
+test.data = test.data[1::n_collaborators]
+test.targets = test.targets[1::n_collaborators]
+
+col2_private_attributes = {
+    "train_loader": torch.utils.data.DataLoader(
+        train, batch_size=batch_size, shuffle=True
+    ),
+    "test_loader": torch.utils.data.DataLoader(
+        test, batch_size=batch_size, shuffle=True
+    ),
+}

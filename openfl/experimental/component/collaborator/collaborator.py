@@ -35,6 +35,7 @@ class Collaborator:
                  client: Any,
                  private_attributes_callable: Any = None,
                  private_attributes_kwargs: Dict = {},
+                 private_attributes: Dict = {},
                  **kwargs) -> None:
 
         self.name = collaborator_name
@@ -47,12 +48,12 @@ class Collaborator:
 
         self.__private_attrs_callable = private_attributes_callable
 
-        self.__private_attrs = {}
+        self.__private_attrs = private_attributes
         if self.__private_attrs_callable is not None:
             self.logger.info("Initializing collaborator.")
             self.__initialize_private_attributes(private_attributes_kwargs)
 
-    def __initialize_private_attributes(self, kwrags: Dict) -> None:
+    def __initialize_private_attributes(self, kwargs: Dict) -> None:
         """
         Call private_attrs_callable function set
             attributes to self.__private_attrs
@@ -64,7 +65,7 @@ class Collaborator:
             None
         """
         self.__private_attrs = self.__private_attrs_callable(
-            **kwrags
+            **kwargs
         )
 
     def __set_attributes_to_clone(self, clone: Any) -> None:

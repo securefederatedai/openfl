@@ -266,9 +266,12 @@ class Plan:
         defaults[SETTINGS]["federation_uuid"] = self.federation_uuid
         defaults[SETTINGS]["authorized_cols"] = self.authorized_cols
 
-        private_attrs_callable, private_attrs_kwargs = self.get_private_attr("aggregator")
+        private_attrs_callable, private_attrs_kwargs, private_attributes = (
+            self.get_private_attr("aggregator")
+        )
         defaults[SETTINGS]["private_attributes_callable"] = private_attrs_callable
         defaults[SETTINGS]["private_attributes_kwargs"] = private_attrs_kwargs
+        defaults[SETTINGS]["private_attributes"] = private_attributes
 
         defaults[SETTINGS]["flow"] = self.get_flow()
         checkpoint = self.config.get("federated_flow", False)
@@ -312,10 +315,12 @@ class Plan:
         defaults[SETTINGS]["aggregator_uuid"] = self.aggregator_uuid
         defaults[SETTINGS]["federation_uuid"] = self.federation_uuid
 
-        private_attrs_callable, private_attrs_kwargs = self.get_private_attr(collaborator_name)
-
+        private_attrs_callable, private_attrs_kwargs, private_attributes = (
+            self.get_private_attr(collaborator_name)
+        )
         defaults[SETTINGS]["private_attributes_callable"] = private_attrs_callable
         defaults[SETTINGS]["private_attributes_kwargs"] = private_attrs_kwargs
+        defaults[SETTINGS]["private_attributes"] = private_attributes
 
         if client is not None:
             defaults[SETTINGS]["client"] = client
@@ -438,6 +443,7 @@ class Plan:
     def get_private_attr(self, private_attr_name=None):
         private_attrs_callable = None
         private_attrs_kwargs = {}
+        private_attributes = {}
 
         import os
         from openfl.experimental.federated.plan import Plan
@@ -448,21 +454,45 @@ class Plan:
         if os.path.exists(data_yaml) and os.path.isfile(data_yaml):
             d = Plan.load(Path(data_yaml).absolute())
 
+            callable_func = d.get(private_attr_name, {}).get(
+                "callable_func"
+            )
+            private_attributes = d.get(private_attr_name, {}).get(
+                "private_attributes"
+            )
+
+            if callable_func and private_attributes:
+                logger = getLogger(__name__)
+                logger.warning(
+                    f'Warning: {private_attr_name} private attributes '
+                    'will be initialized via callable and '
+                    'attributes directly specified '
+                    'will be ignored'
+                )
+
             if d.get(private_attr_name, None):
-                private_attrs_callable = {
-                    "template": d.get(private_attr_name)["callable_func"]["template"]
-                }
+                if callable_func is not None:
+                    private_attrs_callable = {
+                        "template": d.get(private_attr_name)["callable_func"]["template"]
+                    }
 
-                private_attrs_kwargs = self.import_kwargs_modules(
-                    d.get(private_attr_name)["callable_func"]
-                )["settings"]
+                    private_attrs_kwargs = self.import_kwargs_modules(
+                        d.get(private_attr_name)["callable_func"]
+                    )["settings"]
 
-                if isinstance(private_attrs_callable, dict):
-                    private_attrs_callable = Plan.import_(**private_attrs_callable)
+                    if isinstance(private_attrs_callable, dict):
+                        private_attrs_callable = Plan.import_(**private_attrs_callable)
+
+                elif private_attributes:
+                    private_attributes = Plan.import_(
+                        d.get(private_attr_name)["private_attributes"]
+                    )
+
                 elif not callable(private_attrs_callable):
                     raise TypeError(
                         f"private_attrs_callable should be callable object "
                         f"or be import from code part, get {private_attrs_callable}"
                     )
-                return private_attrs_callable, private_attrs_kwargs
-        return None, None
+
+                return private_attrs_callable, private_attrs_kwargs, private_attributes
+        return None, None, {}
