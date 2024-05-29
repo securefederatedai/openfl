@@ -121,7 +121,7 @@ def create_(prefix, custom_template, template, notebook, template_output_dir):
             notebook_path=notebook, output_workspace=template_output_dir,
         )
 
-        create(prefix, template_output_dir)
+        create(prefix, Path(template_output_dir).resolve())
 
         logger.warning(
             'The user should review the generated workspace for completeness '
