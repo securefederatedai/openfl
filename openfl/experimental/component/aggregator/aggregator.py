@@ -2,18 +2,17 @@
 # SPDX-License-Identifier: Apache-2.0
 
 """Experimental Aggregator module."""
-import time
-import queue
-import pickle
 import inspect
-from threading import Event
+import pickle
+import queue
+import time
 from logging import getLogger
-from typing import Any, Callable
-from typing import Dict, List, Tuple
+from threading import Event
+from typing import Any, Callable, Dict, List, Tuple
 
-from openfl.experimental.utilities import aggregator_to_collaborator
 from openfl.experimental.runtime import FederatedRuntime
-from openfl.experimental.utilities import checkpoint
+from openfl.experimental.utilities import (aggregator_to_collaborator,
+                                           checkpoint)
 from openfl.experimental.utilities.metaflow_utils import MetaflowInterface
 
 
@@ -222,9 +221,7 @@ class Aggregator:
             None
         """
         if self.checkpoint:
-            from openfl.experimental.interface import (
-                FLSpec,
-            )
+            from openfl.experimental.interface import FLSpec
 
             # Check if arguments are pickled, if yes then unpickle
             if not isinstance(ctx, FLSpec):

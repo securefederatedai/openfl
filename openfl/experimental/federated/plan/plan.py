@@ -9,13 +9,11 @@ from logging import getLogger
 from os.path import splitext
 from pathlib import Path
 
-from yaml import dump
-from yaml import safe_load
-from yaml import SafeDumper
+from yaml import SafeDumper, dump, safe_load
 
 from openfl.experimental.interface.cli.cli_helper import WORKSPACE
-from openfl.experimental.transport import AggregatorGRPCClient
-from openfl.experimental.transport import AggregatorGRPCServer
+from openfl.experimental.transport import (AggregatorGRPCClient,
+                                           AggregatorGRPCServer)
 from openfl.utilities.utils import getfqdn_env
 
 SETTINGS = "settings"
@@ -440,8 +438,9 @@ class Plan:
         private_attrs_kwargs = {}
 
         import os
-        from openfl.experimental.federated.plan import Plan
         from pathlib import Path
+
+        from openfl.experimental.federated.plan import Plan
 
         data_yaml = "plan/data.yaml"
 

@@ -3,15 +3,12 @@
 """Module with auxiliary CLI helper functions."""
 
 from itertools import islice
-from os import environ
-from os import stat
+from os import environ, stat
 from pathlib import Path
 from sys import argv
 
-from click import echo
-from click import style
-from yaml import FullLoader
-from yaml import load
+from click import echo, style
+from yaml import FullLoader, load
 
 FX = argv[0]
 
@@ -189,8 +186,8 @@ def check_varenv(env: str = '', args: dict = None):
 
 def get_fx_path(curr_path=''):
     """Return the absolute path to fx binary."""
-    import re
     import os
+    import re
 
     match = re.search('lib', curr_path)
     idx = match.end()

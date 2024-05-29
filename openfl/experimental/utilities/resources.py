@@ -3,7 +3,7 @@
 """openfl.experimental.utilities.resources module."""
 
 from logging import getLogger
-from subprocess import run, PIPE
+from subprocess import PIPE, run
 
 logger = getLogger(__name__)
 

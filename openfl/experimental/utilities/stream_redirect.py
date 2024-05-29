@@ -3,8 +3,8 @@
 
 """openfl.experimental.utilities.stream_redirect module."""
 
-import sys
 import io
+import sys
 from copy import deepcopy
 
 

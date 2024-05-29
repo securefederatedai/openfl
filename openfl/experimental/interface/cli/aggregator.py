@@ -6,12 +6,8 @@ import sys
 import threading
 from logging import getLogger
 
-from click import echo
-from click import group
-from click import option
-from click import pass_context
 from click import Path as ClickPath
-from click import style
+from click import echo, group, option, pass_context, style
 
 from openfl.utilities import click_types
 from openfl.utilities.path_check import is_directory_traversal
@@ -92,10 +88,8 @@ def _generate_cert_request(fqdn):
 
 def generate_cert_request(fqdn):
     """Create aggregator certificate key pair."""
+    from openfl.cryptography.io import get_csr_hash, write_crt, write_key
     from openfl.cryptography.participant import generate_csr
-    from openfl.cryptography.io import write_crt
-    from openfl.cryptography.io import write_key
-    from openfl.cryptography.io import get_csr_hash
     from openfl.experimental.interface.cli.cli_helper import CERT_DIR
 
     if fqdn is None:
@@ -141,10 +135,7 @@ def certify(fqdn, silent):
     from click import confirm
 
     from openfl.cryptography.ca import sign_certificate
-    from openfl.cryptography.io import read_crt
-    from openfl.cryptography.io import read_csr
-    from openfl.cryptography.io import read_key
-    from openfl.cryptography.io import write_crt
+    from openfl.cryptography.io import read_crt, read_csr, read_key, write_crt
     from openfl.experimental.interface.cli.cli_helper import CERT_DIR
 
     if fqdn is None:

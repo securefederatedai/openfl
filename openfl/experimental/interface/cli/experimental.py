@@ -5,8 +5,7 @@
 import os
 from pathlib import Path
 
-from click import group
-from click import pass_context
+from click import group, pass_context
 
 
 @group()

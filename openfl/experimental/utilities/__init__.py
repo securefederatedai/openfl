@@ -3,31 +3,16 @@
 
 """openfl.experimental.utilities package."""
 
+from .exceptions import (ResourcesAllocationError, ResourcesNotAvailableError,
+                         SerializationError)
 from .metaflow_utils import MetaflowInterface
-from .transitions import (
-    should_transfer,
-    aggregator_to_collaborator,
-    collaborator_to_aggregator,
-)
-from .exceptions import (
-    SerializationError,
-    ResourcesNotAvailableError,
-    ResourcesAllocationError,
-)
-from .stream_redirect import (
-    RedirectStdStreamBuffer,
-    RedirectStdStream,
-    RedirectStdStreamContext,
-)
 from .resources import get_number_of_gpus
-from .runtime_utils import (
-    parse_attrs,
-    generate_artifacts,
-    filter_attributes,
-    checkpoint,
-    check_resource_allocation,
-)
-
+from .runtime_utils import (check_resource_allocation, checkpoint,
+                            filter_attributes, generate_artifacts, parse_attrs)
+from .stream_redirect import (RedirectStdStream, RedirectStdStreamBuffer,
+                              RedirectStdStreamContext)
+from .transitions import (aggregator_to_collaborator,
+                          collaborator_to_aggregator, should_transfer)
 
 __all__ = [
     "MetaflowInterface",

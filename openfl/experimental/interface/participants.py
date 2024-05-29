@@ -3,8 +3,7 @@
 
 """openfl.experimental.interface.participants module."""
 
-from typing import Dict, Any
-from typing import Callable, Optional
+from typing import Any, Callable, Dict, Optional
 
 
 class Participant:

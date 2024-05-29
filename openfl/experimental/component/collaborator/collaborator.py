@@ -2,12 +2,10 @@
 # SPDX-License-Identifier: Apache-2.0
 
 """Experimental Collaborator module."""
-import time
 import pickle
-
-from typing import Any, Callable
-from typing import Dict, Tuple
+import time
 from logging import getLogger
+from typing import Any, Callable, Dict, Tuple
 
 
 class Collaborator:

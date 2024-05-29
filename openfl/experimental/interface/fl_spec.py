@@ -7,18 +7,16 @@ from __future__ import annotations
 
 import inspect
 from copy import deepcopy
-from typing import Type, List, Callable
-from openfl.experimental.utilities import (
-    MetaflowInterface,
-    SerializationError,
-    generate_artifacts,
-    aggregator_to_collaborator,
-    collaborator_to_aggregator,
-    should_transfer,
-    filter_attributes,
-    checkpoint
-)
+from typing import Callable, List, Type
+
 from openfl.experimental.runtime import Runtime
+from openfl.experimental.utilities import (MetaflowInterface,
+                                           SerializationError,
+                                           aggregator_to_collaborator,
+                                           checkpoint,
+                                           collaborator_to_aggregator,
+                                           filter_attributes,
+                                           generate_artifacts, should_transfer)
 
 
 class FLSpec:

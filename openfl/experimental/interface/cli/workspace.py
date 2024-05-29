@@ -2,20 +2,15 @@
 # SPDX-License-Identifier: Apache-2.0
 """Workspace module."""
 
-import sys
 import os
+import sys
+from logging import getLogger
 from pathlib import Path
 from typing import Tuple
-from logging import getLogger
 
 from click import Choice
-from click import confirm
-from click import echo
-from click import style
-from click import group
-from click import option
-from click import pass_context
 from click import Path as ClickPath
+from click import confirm, echo, group, option, pass_context, style
 
 from openfl.utilities.path_check import is_directory_traversal
 from openfl.utilities.workspace import dump_requirements_file
@@ -51,8 +46,8 @@ def create_temp(prefix, template):
     """Create workspace templates."""
     from shutil import ignore_patterns
 
-    from openfl.experimental.interface.cli.cli_helper import copytree
-    from openfl.experimental.interface.cli.cli_helper import WORKSPACE
+    from openfl.experimental.interface.cli.cli_helper import (WORKSPACE,
+                                                              copytree)
 
     echo('Creating Workspace Templates')
     # Use the specified template if it's a Path, otherwise use WORKSPACE/template
@@ -141,10 +136,8 @@ def create(prefix, template):
     from subprocess import check_call
     from sys import executable
 
-    from openfl.experimental.interface.cli.cli_helper import (
-        OPENFL_USERDIR,
-        print_tree
-    )
+    from openfl.experimental.interface.cli.cli_helper import (OPENFL_USERDIR,
+                                                              print_tree)
 
     if not OPENFL_USERDIR.exists():
         OPENFL_USERDIR.mkdir()
@@ -182,17 +175,13 @@ def create(prefix, template):
              'e.g. -o "--find-links source.site"')
 def export_(pip_install_options: Tuple[str]):
     """Export federated learning workspace."""
-    from os import getcwd
-    from os import makedirs
-    from os.path import basename
-    from os.path import join
-    from shutil import copy2
-    from shutil import copytree
-    from shutil import ignore_patterns
-    from shutil import make_archive
+    from os import getcwd, makedirs
+    from os.path import basename, join
+    from shutil import copy2, copytree, ignore_patterns, make_archive
     from tempfile import mkdtemp
 
     from plan import freeze_plan
+
     from openfl.experimental.interface.cli.cli_helper import WORKSPACE
     from openfl.utilities.utils import rmtree
 
@@ -252,8 +241,7 @@ def export_(pip_install_options: Tuple[str]):
 def import_(archive):
     """Import federated learning workspace."""
     from os import chdir
-    from os.path import basename
-    from os.path import isfile
+    from os.path import basename, isfile
     from shutil import unpack_archive
     from subprocess import check_call
     from sys import executable
@@ -289,10 +277,8 @@ def certify_():
 def certify():
     """Create certificate authority for federation."""
     from cryptography.hazmat.primitives import serialization
-
-    from openfl.cryptography.ca import generate_root_cert
-    from openfl.cryptography.ca import generate_signing_csr
-    from openfl.cryptography.ca import sign_certificate
+    from openfl.cryptography.ca import (generate_root_cert,
+                                        generate_signing_csr, sign_certificate)
     from openfl.experimental.interface.cli.cli_helper import CERT_DIR
 
     echo('Setting Up Certificate Authority...\n')

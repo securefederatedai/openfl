@@ -4,58 +4,49 @@
 """openfl.experimental.utilities.metaflow_utils module."""
 
 from __future__ import annotations
-from datetime import datetime
-from metaflow.metaflow_environment import MetaflowEnvironment
-from metaflow.plugins import LocalMetadataProvider
-from metaflow.datastore import FlowDataStore, DATASTORES
-from metaflow.graph import DAGNode, FlowGraph, StepVisitor
-from metaflow.graph import deindent_docstring
-from metaflow.datastore.task_datastore import TaskDataStore
-from metaflow.datastore.exceptions import (
-    DataException,
-    UnpicklableArtifactException,
-)
-from metaflow.datastore.task_datastore import only_if_not_done, require_mode
-import cloudpickle as pickle
-import ray
+
 import ast
-from pathlib import Path
-from metaflow.runtime import TruncatedBuffer, mflog_msg, MAX_LOG_SIZE
-from metaflow.mflog import RUNTIME_LOG_SOURCE
-from metaflow.task import MetaDatum
 import fcntl
 import hashlib
-from dill.source import getsource  # nosec
+from datetime import datetime
+from pathlib import Path
 # getsource only used to determine structure of FlowGraph
 from typing import TYPE_CHECKING
+
+import cloudpickle as pickle
+import ray
+from dill.source import getsource  # nosec
+from metaflow.datastore import DATASTORES, FlowDataStore
+from metaflow.datastore.exceptions import (DataException,
+                                           UnpicklableArtifactException)
+from metaflow.datastore.task_datastore import (TaskDataStore, only_if_not_done,
+                                               require_mode)
+from metaflow.graph import DAGNode, FlowGraph, StepVisitor, deindent_docstring
+from metaflow.metaflow_environment import MetaflowEnvironment
+from metaflow.mflog import RUNTIME_LOG_SOURCE
+from metaflow.plugins import LocalMetadataProvider
+from metaflow.runtime import MAX_LOG_SIZE, TruncatedBuffer, mflog_msg
+from metaflow.task import MetaDatum
+
 if TYPE_CHECKING:
     from openfl.experimental.interface import FLSpec
-from io import StringIO
-from typing import Generator, Any, Type
 
-from metaflow.plugins.cards.card_modules.basic import (
-    DefaultCard,
-    TaskInfoComponent,
-)
-from metaflow.plugins.cards.card_modules.basic import (
-    DagComponent,
-    SectionComponent,
-    PageComponent,
-)
-from metaflow.plugins.cards.card_modules.basic import (
-    RENDER_TEMPLATE_PATH,
-    JS_PATH,
-    CSS_PATH,
-)
-from metaflow.plugins.cards.card_modules.basic import (
-    read_file,
-    transform_flow_graph,
-)
-from metaflow import __version__ as mf_version
-
-import json
 import base64
+import json
 import uuid
+from io import StringIO
+from typing import Any, Generator, Type
+
+from metaflow import __version__ as mf_version
+from metaflow.plugins.cards.card_modules.basic import (CSS_PATH, JS_PATH,
+                                                       RENDER_TEMPLATE_PATH,
+                                                       DagComponent,
+                                                       DefaultCard,
+                                                       PageComponent,
+                                                       SectionComponent,
+                                                       TaskInfoComponent,
+                                                       read_file,
+                                                       transform_flow_graph)
 
 
 class SystemMutex:

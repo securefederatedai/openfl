@@ -5,13 +5,11 @@
 
 import time
 from logging import getLogger
-from typing import Optional
-from typing import Tuple
+from typing import Optional, Tuple
 
 import grpc
 
-from openfl.experimental.protocols import aggregator_pb2
-from openfl.experimental.protocols import aggregator_pb2_grpc
+from openfl.experimental.protocols import aggregator_pb2, aggregator_pb2_grpc
 from openfl.utilities import check_equal
 
 from .grpc_channel_options import channel_options

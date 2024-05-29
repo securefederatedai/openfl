@@ -2,19 +2,14 @@
 # SPDX-License-Identifier: Apache-2.0
 """Collaborator module."""
 
-import sys
 import os
+import sys
 from logging import getLogger
 
-from click import echo
-from click import group
-from click import option
-from click import pass_context
 from click import Path as ClickPath
-from click import style
+from click import echo, group, option, pass_context, style
 
 from openfl.utilities.path_check import is_directory_traversal
-
 
 logger = getLogger(__name__)
 
@@ -113,10 +108,8 @@ def generate_cert_request(collaborator_name, silent, skip_package):
 
     Then create a package with the CSR to send for signing.
     """
+    from openfl.cryptography.io import get_csr_hash, write_crt, write_key
     from openfl.cryptography.participant import generate_csr
-    from openfl.cryptography.io import write_crt
-    from openfl.cryptography.io import write_key
-    from openfl.cryptography.io import get_csr_hash
     from openfl.experimental.interface.cli.cli_helper import CERT_DIR
 
     common_name = f"{collaborator_name}".lower()
@@ -147,14 +140,11 @@ def generate_cert_request(collaborator_name, silent, skip_package):
     write_key(client_private_key, CERT_DIR / "client" / f"{file_name}.key")
 
     if not skip_package:
-        from shutil import copytree
-        from shutil import ignore_patterns
-        from shutil import make_archive
-        from tempfile import mkdtemp
-        from os.path import basename
-        from os.path import join
-        from os import remove
         from glob import glob
+        from os import remove
+        from os.path import basename, join
+        from shutil import copytree, ignore_patterns, make_archive
+        from tempfile import mkdtemp
 
         from openfl.utilities.utils import rmtree
 
@@ -200,10 +190,9 @@ def register_collaborator(file_name):
 
     """
     from os.path import isfile
-    from yaml import dump
-    from yaml import FullLoader
-    from yaml import load
     from pathlib import Path
+
+    from yaml import FullLoader, dump, load
 
     col_name = find_certificate_name(file_name)
 
@@ -272,22 +261,17 @@ def certify_(collaborator_name, silent, request_pkg, import_):
 
 def certify(collaborator_name, silent, request_pkg=None, import_=False):
     """Sign/certify collaborator certificate key pair."""
-    from click import confirm
-    from pathlib import Path
-    from shutil import copy
-    from shutil import make_archive
-    from shutil import unpack_archive
     from glob import glob
-    from os.path import basename
-    from os.path import join
-    from os.path import splitext
     from os import remove
+    from os.path import basename, join, splitext
+    from pathlib import Path
+    from shutil import copy, make_archive, unpack_archive
     from tempfile import mkdtemp
+
+    from click import confirm
+
     from openfl.cryptography.ca import sign_certificate
-    from openfl.cryptography.io import read_crt
-    from openfl.cryptography.io import read_csr
-    from openfl.cryptography.io import read_key
-    from openfl.cryptography.io import write_crt
+    from openfl.cryptography.io import read_crt, read_csr, read_key, write_crt
     from openfl.experimental.interface.cli.cli_helper import CERT_DIR
     from openfl.utilities.utils import rmtree
 

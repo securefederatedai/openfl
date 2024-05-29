@@ -3,11 +3,13 @@
 
 """ openfl.experimental.runtime module Runtime class."""
 from __future__ import annotations
+
 from typing import TYPE_CHECKING
+
 if TYPE_CHECKING:
     from openfl.experimental.interface import Aggregator, Collaborator, FLSpec
-from typing import List
-from typing import Callable
+
+from typing import Callable, List
 
 
 class Runtime:

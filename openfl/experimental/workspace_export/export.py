@@ -2,19 +2,19 @@
 # SPDX-License-Identifier: Apache-2.0
 """Workspace Builder module."""
 
-import re
-import yaml
 import ast
-import astor
-import inspect
 import importlib
-import nbformat
-
-from shutil import copytree
+import inspect
+import re
 from logging import getLogger
 from pathlib import Path
+from shutil import copytree
 
+import astor
+import nbformat
+import yaml
 from nbdev.export import nb_export
+
 from openfl.experimental.interface.cli.cli_helper import print_tree
 
 
@@ -200,8 +200,8 @@ class WorkspaceExport:
         """
         Imports generated python script with help of importlib
         """
-        import sys
         import importlib
+        import sys
 
         sys.path.append(str(self.script_path.parent))
         self.exported_script_module = importlib.import_module(self.script_name)

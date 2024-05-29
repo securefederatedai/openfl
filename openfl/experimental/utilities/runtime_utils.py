@@ -3,10 +3,12 @@
 
 """openfl.experimental.utilities package."""
 
-import itertools
 import inspect
-import numpy as np
+import itertools
 from types import MethodType
+
+import numpy as np
+
 from openfl.experimental.utilities import ResourcesAllocationError
 
 
