@@ -337,7 +337,7 @@ class WorkspaceExport:
         federated_flow_class = getattr(self.exported_script_module, self.flow_class_name)
         # Find federated_flow._runtime and federated_flow._runtime.collaborators
         for t in self.available_modules_in_exported_script:
-            tempstring  = t
+            tempstring = t
             t = getattr(self.exported_script_module, t)
             if isinstance(t, federated_flow_class):
                 flow_name = tempstring
@@ -379,7 +379,7 @@ class WorkspaceExport:
                     value = f"src.{self.script_name}.{arg}"
                     data["aggregator"]["callable_func"]["settings"][key] = value
         elif aggregator_private_attributes:
-            runtime_created  = True
+            runtime_created = True
             with open(self.script_path, 'a') as f:
                 f.write(f"\n{runtime_name} = {flow_name}._runtime\n")
                 f.write(
