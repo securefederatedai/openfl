@@ -11,8 +11,7 @@ from pathlib import Path
 from yaml import SafeDumper, dump, safe_load
 
 from openfl.experimental.interface.cli.cli_helper import WORKSPACE
-from openfl.experimental.transport import (AggregatorGRPCClient,
-                                           AggregatorGRPCServer)
+from openfl.experimental.transport import AggregatorGRPCClient, AggregatorGRPCServer
 from openfl.utilities.utils import getfqdn_env
 
 SETTINGS = "settings"

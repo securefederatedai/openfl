@@ -47,8 +47,7 @@ def create_temp(prefix, template):
     """Create workspace templates."""
     from shutil import ignore_patterns
 
-    from openfl.experimental.interface.cli.cli_helper import (WORKSPACE,
-                                                              copytree)
+    from openfl.experimental.interface.cli.cli_helper import WORKSPACE, copytree
 
     echo('Creating Workspace Templates')
     # Use the specified template if it's a Path, otherwise use WORKSPACE/template
@@ -141,8 +140,7 @@ def create(prefix, template):
     from subprocess import check_call
     from sys import executable
 
-    from openfl.experimental.interface.cli.cli_helper import (OPENFL_USERDIR,
-                                                              print_tree)
+    from openfl.experimental.interface.cli.cli_helper import OPENFL_USERDIR, print_tree
 
     if not OPENFL_USERDIR.exists():
         OPENFL_USERDIR.mkdir()
@@ -301,8 +299,12 @@ def certify_():
 def certify():
     """Create certificate authority for federation."""
     from cryptography.hazmat.primitives import serialization
-    from openfl.cryptography.ca import (generate_root_cert,
-                                        generate_signing_csr, sign_certificate)
+
+    from openfl.cryptography.ca import (
+        generate_root_cert,
+        generate_signing_csr,
+        sign_certificate,
+    )
     from openfl.experimental.interface.cli.cli_helper import CERT_DIR
 
     echo('Setting Up Certificate Authority...\n')

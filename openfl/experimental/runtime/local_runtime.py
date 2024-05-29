@@ -20,12 +20,15 @@ if TYPE_CHECKING:
 
 from typing import Any, Callable, Dict, List, Type
 
-from openfl.experimental.utilities import (ResourcesNotAvailableError,
-                                           aggregator_to_collaborator,
-                                           check_resource_allocation,
-                                           checkpoint, filter_attributes,
-                                           generate_artifacts,
-                                           get_number_of_gpus)
+from openfl.experimental.utilities import (
+    ResourcesNotAvailableError,
+    aggregator_to_collaborator,
+    check_resource_allocation,
+    checkpoint,
+    filter_attributes,
+    generate_artifacts,
+    get_number_of_gpus,
+)
 
 
 class RayExecutor:

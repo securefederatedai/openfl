@@ -9,6 +9,7 @@ import fcntl
 import hashlib
 from datetime import datetime
 from pathlib import Path
+
 # getsource only used to determine structure of FlowGraph
 from typing import TYPE_CHECKING
 
@@ -16,10 +17,12 @@ import cloudpickle as pickle
 import ray
 from dill.source import getsource  # nosec
 from metaflow.datastore import DATASTORES, FlowDataStore
-from metaflow.datastore.exceptions import (DataException,
-                                           UnpicklableArtifactException)
-from metaflow.datastore.task_datastore import (TaskDataStore, only_if_not_done,
-                                               require_mode)
+from metaflow.datastore.exceptions import DataException, UnpicklableArtifactException
+from metaflow.datastore.task_datastore import (
+    TaskDataStore,
+    only_if_not_done,
+    require_mode,
+)
 from metaflow.graph import DAGNode, FlowGraph, StepVisitor, deindent_docstring
 from metaflow.metaflow_environment import MetaflowEnvironment
 from metaflow.mflog import RUNTIME_LOG_SOURCE
@@ -38,9 +41,17 @@ from typing import Any, Generator, Type
 
 from metaflow import __version__ as mf_version
 from metaflow.plugins.cards.card_modules.basic import (
-    CSS_PATH, JS_PATH, RENDER_TEMPLATE_PATH, DagComponent, DefaultCard,
-    PageComponent, SectionComponent, TaskInfoComponent, read_file,
-    transform_flow_graph)
+    CSS_PATH,
+    JS_PATH,
+    RENDER_TEMPLATE_PATH,
+    DagComponent,
+    DefaultCard,
+    PageComponent,
+    SectionComponent,
+    TaskInfoComponent,
+    read_file,
+    transform_flow_graph,
+)
 
 
 class SystemMutex:

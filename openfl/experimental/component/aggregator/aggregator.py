@@ -10,8 +10,7 @@ from threading import Event
 from typing import Any, Callable, Dict, List, Tuple
 
 from openfl.experimental.runtime import FederatedRuntime
-from openfl.experimental.utilities import (aggregator_to_collaborator,
-                                           checkpoint)
+from openfl.experimental.utilities import aggregator_to_collaborator, checkpoint
 from openfl.experimental.utilities.metaflow_utils import MetaflowInterface
 
 
