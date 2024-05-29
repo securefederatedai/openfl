@@ -1,6 +1,5 @@
 # Copyright (C) 2020-2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-
 """ openfl.experimental.runtime module Runtime class."""
 from __future__ import annotations
 
@@ -13,6 +12,7 @@ from typing import Callable, List
 
 
 class Runtime:
+
     def __init__(self):
         """
         Base interface for runtimes that can run FLSpec flows
@@ -42,14 +42,12 @@ class Runtime:
         """Set Runtime collaborators"""
         raise NotImplementedError
 
-    def execute_task(
-        self,
-        flspec_obj: FLSpec,
-        f: Callable,
-        parent_func: Callable,
-        instance_snapshot: List[FLSpec] = [],
-        **kwargs
-    ):
+    def execute_task(self,
+                     flspec_obj: FLSpec,
+                     f: Callable,
+                     parent_func: Callable,
+                     instance_snapshot: List[FLSpec] = [],
+                     **kwargs):
         """
         Performs the execution of a task as defined by the
         implementation and underlying backend (single_process, ray, etc)

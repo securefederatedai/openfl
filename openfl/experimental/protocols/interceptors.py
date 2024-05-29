@@ -1,6 +1,5 @@
 # Copyright (C) 2020-2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-
 """gRPC interceptors module."""
 import collections
 
@@ -48,12 +47,10 @@ def _create_generic_interceptor(intercept_call):
 
 
 class _ClientCallDetails(
-    collections.namedtuple(
-        '_ClientCallDetails',
-        ('method', 'timeout', 'metadata', 'credentials')
-    ),
-    grpc.ClientCallDetails
-):
+        collections.namedtuple(
+            '_ClientCallDetails',
+            ('method', 'timeout', 'metadata', 'credentials')),
+        grpc.ClientCallDetails):
     pass
 
 

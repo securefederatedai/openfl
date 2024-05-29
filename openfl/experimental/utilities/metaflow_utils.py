@@ -1,6 +1,5 @@
 # Copyright (C) 2020-2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-
 """openfl.experimental.utilities.metaflow_utils module."""
 
 from __future__ import annotations
@@ -38,24 +37,21 @@ from io import StringIO
 from typing import Any, Generator, Type
 
 from metaflow import __version__ as mf_version
-from metaflow.plugins.cards.card_modules.basic import (CSS_PATH, JS_PATH,
-                                                       RENDER_TEMPLATE_PATH,
-                                                       DagComponent,
-                                                       DefaultCard,
-                                                       PageComponent,
-                                                       SectionComponent,
-                                                       TaskInfoComponent,
-                                                       read_file,
-                                                       transform_flow_graph)
+from metaflow.plugins.cards.card_modules.basic import (
+    CSS_PATH, JS_PATH, RENDER_TEMPLATE_PATH, DagComponent, DefaultCard,
+    PageComponent, SectionComponent, TaskInfoComponent, read_file,
+    transform_flow_graph)
 
 
 class SystemMutex:
+
     def __init__(self, name):
         self.name = name
 
     def __enter__(self):
-        lock_id = hashlib.new('md5', self.name.encode("utf8"),
-                              usedforsecurity=False).hexdigest()  # nosec
+        lock_id = hashlib.new(
+            'md5', self.name.encode("utf8"),
+            usedforsecurity=False).hexdigest()  # nosec
         # MD5sum used for concurrency purposes, not security
         self.fp = open(f"/tmp/.lock-{lock_id}.lck", "wb")
         fcntl.flock(self.fp.fileno(), fcntl.LOCK_EX)
@@ -66,6 +62,7 @@ class SystemMutex:
 
 
 class Flow:
+
     def __init__(self, name):
         """Mock flow for metaflow internals"""
         self.name = name
@@ -73,6 +70,7 @@ class Flow:
 
 @ray.remote
 class Counter(object):
+
     def __init__(self):
         self.value = 0
 
@@ -85,14 +83,14 @@ class Counter(object):
 
 
 class DAGnode(DAGNode):
+
     def __init__(self, func_ast, decos, doc):
         self.name = func_ast.name
         self.func_lineno = func_ast.lineno
         self.decorators = decos
         self.doc = deindent_docstring(doc)
         self.parallel_step = any(
-            getattr(deco, "IS_PARALLEL", False) for deco in decos
-        )
+            getattr(deco, "IS_PARALLEL", False) for deco in decos)
 
         # these attributes are populated by _parse
         self.tail_next_lineno = 0
@@ -177,6 +175,7 @@ class DAGnode(DAGNode):
 
 
 class StepVisitor(StepVisitor):
+
     def __init__(self, nodes, flow):
         super().__init__(nodes, flow)
 
@@ -187,6 +186,7 @@ class StepVisitor(StepVisitor):
 
 
 class FlowGraph(FlowGraph):
+
     def __init__(self, flow):
         self.name = flow.__name__
         self.nodes = self._create_nodes(flow)
@@ -198,8 +198,7 @@ class FlowGraph(FlowGraph):
         module = __import__(flow.__module__)
         tree = ast.parse(getsource(module)).body
         root = [
-            n
-            for n in tree
+            n for n in tree
             if isinstance(n, ast.ClassDef) and n.name == self.name
         ][0]
         nodes = {}
@@ -208,6 +207,7 @@ class FlowGraph(FlowGraph):
 
 
 class TaskDataStore(TaskDataStore):
+
     def __init__(
         self,
         flow_datastore,
@@ -261,17 +261,14 @@ class TaskDataStore(TaskDataStore):
         def pickle_iter():
             for name, obj in artifacts_iter:
                 do_v4 = (
-                    force_v4 and force_v4
-                    if isinstance(force_v4, bool)
-                    else force_v4.get(name, False)
-                )
+                    force_v4 and force_v4 if isinstance(force_v4, bool) else
+                    force_v4.get(name, False))
                 if do_v4:
                     encode_type = "gzip+pickle-v4"
                     if encode_type not in self._encodings:
                         raise DataException(
                             f"Artifact {name} requires a serialization encoding that "
-                            + "requires Python 3.4 or newer."
-                        )
+                            + "requires Python 3.4 or newer.")
                     try:
                         blob = pickle.dumps(obj, protocol=4)
                     except TypeError:
@@ -284,10 +281,9 @@ class TaskDataStore(TaskDataStore):
                         encode_type = "gzip+pickle-v4"
                         if encode_type not in self._encodings:
                             raise DataException(
-                                f"Artifact {name} is very large (over 2GB). "
-                                + "You need to use Python 3.4 or newer if you want to "
-                                + "serialize large objects."
-                            )
+                                f"Artifact {name} is very large (over 2GB). " +
+                                "You need to use Python 3.4 or newer if you want to "
+                                + "serialize large objects.")
                         try:
                             blob = pickle.dumps(obj, protocol=4)
                         except TypeError:
@@ -305,13 +301,13 @@ class TaskDataStore(TaskDataStore):
 
         # Use the content-addressed store to store all artifacts
         save_result = self._ca_store.save_blobs(
-            pickle_iter(), len_hint=len_hint
-        )
+            pickle_iter(), len_hint=len_hint)
         for name, result in zip(artifact_names, save_result):
             self._objects[name] = result.key
 
 
 class FlowDataStore(FlowDataStore):
+
     def __init__(
         self,
         flow_name,
@@ -356,6 +352,7 @@ class FlowDataStore(FlowDataStore):
 
 
 class MetaflowInterface:
+
     def __init__(self, flow: Type[FLSpec], backend: str = "ray"):
         """
         Wrapper class for the metaflow tooling modified to work with the
@@ -427,14 +424,9 @@ class MetaflowInterface:
                 self.counter += 1
                 return self.counter
 
-    def save_artifacts(
-        self,
-        data_pairs: Generator[str, Any],
-        task_name: str,
-        task_id: int,
-        buffer_out: Type[StringIO],
-        buffer_err: Type[StringIO]
-    ) -> None:
+    def save_artifacts(self, data_pairs: Generator[str, Any], task_name: str,
+                       task_id: int, buffer_out: Type[StringIO],
+                       buffer_err: Type[StringIO]) -> None:
         """
         Use metaflow task datastore to save flow attributes, stdout, and stderr
         for a specific task (identified by the task_name + task_id)
@@ -450,8 +442,7 @@ class MetaflowInterface:
 
         """
         task_datastore = self.flow_datastore.get_task_datastore(
-            self.run_id, task_name, str(task_id), attempt=0, mode="w"
-        )
+            self.run_id, task_name, str(task_id), attempt=0, mode="w")
         task_datastore.init_task()
         task_datastore.save_artifacts(data_pairs)
 
@@ -497,17 +488,14 @@ class MetaflowInterface:
     def load_artifacts(self, artifact_names, task_name, task_id):
         """Use metaflow task datastore to load flow attributes"""
         task_datastore = self.flow_datastore.get_task_datastore(
-            self.run_id, task_name, str(task_id), attempt=0, mode="r"
-        )
+            self.run_id, task_name, str(task_id), attempt=0, mode="r")
         return task_datastore.load_artifacts(artifact_names)
 
-    def emit_log(
-            self,
-            msgbuffer_out: Type[StringIO],
-            msgbuffer_err: Type[StringIO],
-            task_datastore: Type[TaskDataStore],
-            system_msg: bool = False
-    ) -> None:
+    def emit_log(self,
+                 msgbuffer_out: Type[StringIO],
+                 msgbuffer_err: Type[StringIO],
+                 task_datastore: Type[TaskDataStore],
+                 system_msg: bool = False) -> None:
         """
         This function writes the stdout and stderr to Metaflow TaskDatastore
         Args:
@@ -521,14 +509,12 @@ class MetaflowInterface:
         for std_output in msgbuffer_out.readlines():
             timestamp = datetime.utcnow()
             stdout_buffer.write(
-                mflog_msg(std_output, now=timestamp), system_msg=system_msg
-            )
+                mflog_msg(std_output, now=timestamp), system_msg=system_msg)
 
         for std_error in msgbuffer_err.readlines():
             timestamp = datetime.utcnow()
             stderr_buffer.write(
-                mflog_msg(std_error, now=timestamp), system_msg=system_msg
-            )
+                mflog_msg(std_error, now=timestamp), system_msg=system_msg)
 
         task_datastore.save_logs(
             RUNTIME_LOG_SOURCE,
@@ -567,13 +553,18 @@ class DefaultCard(DefaultCard):
         ).render()
         pt = self._get_mustache()
         data_dict = {
-            "task_data": base64.b64encode(
-                json.dumps(final_component_dict).encode("utf-8")
-            ).decode("utf-8"),
-            "javascript": JS_DATA,
-            "title": task,
-            "css": CSS_DATA,
-            "card_data_id": uuid.uuid4(),
+            "task_data":
+                base64.b64encode(
+                    json.dumps(final_component_dict).encode("utf-8")
+                ).decode("utf-8"),
+            "javascript":
+                JS_DATA,
+            "title":
+                task,
+            "css":
+                CSS_DATA,
+            "card_data_id":
+                uuid.uuid4(),
         }
         return pt.render(RENDER_TEMPLATE, data_dict)
 
@@ -619,8 +610,8 @@ class TaskInfoComponent(TaskInfoComponent):
         }
 
         dag_component = SectionComponent(
-            title="DAG", contents=[DagComponent(data=self._graph).render()]
-        ).render()
+            title="DAG",
+            contents=[DagComponent(data=self._graph).render()]).render()
 
         page_contents = []
         page_contents.append(dag_component)

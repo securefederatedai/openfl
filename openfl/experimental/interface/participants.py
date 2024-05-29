@@ -1,12 +1,12 @@
 # Copyright (C) 2020-2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-
 """openfl.experimental.interface.participants module."""
 
 from typing import Any, Callable, Dict, Optional
 
 
 class Participant:
+
     def __init__(self, name: str = ""):
         self.private_attributes = {}
         self._name = name.lower()
@@ -43,14 +43,12 @@ class Collaborator(Participant):
     Defines a collaborator participant
     """
 
-    def __init__(
-        self,
-        name: str = "",
-        private_attributes_callable: Callable = None,
-        num_cpus: int = 0,
-        num_gpus: int = 0.0,
-        **kwargs
-    ):
+    def __init__(self,
+                 name: str = "",
+                 private_attributes_callable: Callable = None,
+                 num_cpus: int = 0,
+                 num_gpus: int = 0.0,
+                 **kwargs):
         """
         Create collaborator object with custom resources and a callable
         function to assign private attributes
@@ -82,8 +80,7 @@ class Collaborator(Participant):
         else:
             if not callable(private_attributes_callable):
                 raise Exception(
-                    "private_attributes_callable  parameter must be a callable"
-                )
+                    "private_attributes_callable  parameter must be a callable")
             else:
                 self.private_attributes_callable = private_attributes_callable
 
@@ -97,7 +94,8 @@ class Collaborator(Participant):
         the callable specified by user
         """
         if self.private_attributes_callable is not None:
-            self.private_attributes = self.private_attributes_callable(**self.kwargs)
+            self.private_attributes = self.private_attributes_callable(
+                **self.kwargs)
 
     def __set_collaborator_attrs_to_clone(self, clone: Any) -> None:
         """
@@ -118,7 +116,8 @@ class Collaborator(Participant):
         # parameters from clone, then delete attributes from clone.
         for attr_name in self.private_attributes:
             if hasattr(clone, attr_name):
-                self.private_attributes.update({attr_name: getattr(clone, attr_name)})
+                self.private_attributes.update(
+                    {attr_name: getattr(clone, attr_name)})
                 delattr(clone, attr_name)
 
     def execute_func(self, ctx: Any, f_name: str, callback: Callable) -> Any:
@@ -139,14 +138,12 @@ class Aggregator(Participant):
     Defines an aggregator participant
     """
 
-    def __init__(
-        self,
-        name: str = "",
-        private_attributes_callable: Callable = None,
-        num_cpus: int = 0,
-        num_gpus: int = 0.0,
-        **kwargs
-    ):
+    def __init__(self,
+                 name: str = "",
+                 private_attributes_callable: Callable = None,
+                 num_cpus: int = 0,
+                 num_gpus: int = 0.0,
+                 **kwargs):
         """
         Create aggregator object with custom resources and a callable
         function to assign private attributes
@@ -178,8 +175,7 @@ class Aggregator(Participant):
         else:
             if not callable(private_attributes_callable):
                 raise Exception(
-                    "private_attributes_callable parameter must be a callable"
-                )
+                    "private_attributes_callable parameter must be a callable")
             else:
                 self.private_attributes_callable = private_attributes_callable
 
@@ -193,7 +189,8 @@ class Aggregator(Participant):
         the callable specified by user
         """
         if self.private_attributes_callable is not None:
-            self.private_attributes = self.private_attributes_callable(**self.kwargs)
+            self.private_attributes = self.private_attributes_callable(
+                **self.kwargs)
 
     def __set_agg_attrs_to_clone(self, clone: Any) -> None:
         """
@@ -214,10 +211,14 @@ class Aggregator(Participant):
         # parameters from clone, then delete attributes from clone.
         for attr_name in self.private_attributes:
             if hasattr(clone, attr_name):
-                self.private_attributes.update({attr_name: getattr(clone, attr_name)})
+                self.private_attributes.update(
+                    {attr_name: getattr(clone, attr_name)})
                 delattr(clone, attr_name)
 
-    def execute_func(self, ctx: Any, f_name: str, callback: Callable,
+    def execute_func(self,
+                     ctx: Any,
+                     f_name: str,
+                     callback: Callable,
                      clones: Optional[Any] = None) -> Any:
         """
         Execute remote function f

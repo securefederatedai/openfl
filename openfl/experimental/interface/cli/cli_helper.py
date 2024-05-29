@@ -42,7 +42,8 @@ def tree(path):
             echo(f'{space}d {path.name}')
 
 
-def print_tree(dir_path: Path, level: int = -1,
+def print_tree(dir_path: Path,
+               level: int = -1,
                limit_to_directories: bool = False,
                length_limit: int = 1000):
     """Given a directory Path object print a visual tree structure."""
@@ -71,8 +72,8 @@ def print_tree(dir_path: Path, level: int = -1,
                 yield prefix + pointer + path.name
                 directories += 1
                 extension = branch if pointer == tee else space
-                yield from inner(path, prefix=prefix + extension,
-                                 level=level - 1)
+                yield from inner(
+                    path, prefix=prefix + extension, level=level - 1)
             elif not limit_to_directories:
                 yield prefix + pointer + path.name
                 files += 1
@@ -86,8 +87,12 @@ def print_tree(dir_path: Path, level: int = -1,
     echo(f'\n{directories} directories' + (f', {files} files' if files else ''))
 
 
-def copytree(src, dst, symlinks=False, ignore=None,
-             ignore_dangling_symlinks=False, dirs_exist_ok=False):
+def copytree(src,
+             dst,
+             symlinks=False,
+             ignore=None,
+             ignore_dangling_symlinks=False,
+             dirs_exist_ok=False):
     """From Python 3.8 'shutil' which include 'dirs_exist_ok' option."""
     import os
     import shutil
@@ -124,20 +129,28 @@ def copytree(src, dst, symlinks=False, ignore=None,
                     linkto = os.readlink(srcname)
                     if symlinks:
                         os.symlink(linkto, dstname)
-                        shutil.copystat(srcobj, dstname,
-                                        follow_symlinks=not symlinks)
+                        shutil.copystat(
+                            srcobj, dstname, follow_symlinks=not symlinks)
                     else:
-                        if (not os.path.exists(linkto)
-                                and ignore_dangling_symlinks):
+                        if (not os.path.exists(linkto) and
+                                ignore_dangling_symlinks):
                             continue
                         if srcentry.is_dir():
-                            copytree(srcobj, dstname, symlinks, ignore,
-                                     dirs_exist_ok=dirs_exist_ok)
+                            copytree(
+                                srcobj,
+                                dstname,
+                                symlinks,
+                                ignore,
+                                dirs_exist_ok=dirs_exist_ok)
                         else:
                             copy_function(srcobj, dstname)
                 elif srcentry.is_dir():
-                    copytree(srcobj, dstname, symlinks, ignore,
-                             dirs_exist_ok=dirs_exist_ok)
+                    copytree(
+                        srcobj,
+                        dstname,
+                        symlinks,
+                        ignore,
+                        dirs_exist_ok=dirs_exist_ok)
                 else:
                     copy_function(srcobj, dstname)
             except OSError as why:

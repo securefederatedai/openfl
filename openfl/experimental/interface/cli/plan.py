@@ -22,17 +22,31 @@ def plan(context):
 
 @plan.command()
 @pass_context
-@option('-p', '--plan_config', required=False,
-        help='Federated learning plan [plan/plan.yaml]',
-        default='plan/plan.yaml', type=ClickPath(exists=True))
-@option('-c', '--cols_config', required=False,
-        help='Authorized collaborator list [plan/cols.yaml]',
-        default='plan/cols.yaml', type=ClickPath(exists=True))
-@option('-d', '--data_config', required=False,
-        help='The data set/shard configuration file [plan/data.yaml]',
-        default='plan/data.yaml')
-@option('-a', '--aggregator_address', required=False,
-        help='The FQDN of the federation agregator')
+@option(
+    '-p',
+    '--plan_config',
+    required=False,
+    help='Federated learning plan [plan/plan.yaml]',
+    default='plan/plan.yaml',
+    type=ClickPath(exists=True))
+@option(
+    '-c',
+    '--cols_config',
+    required=False,
+    help='Authorized collaborator list [plan/cols.yaml]',
+    default='plan/cols.yaml',
+    type=ClickPath(exists=True))
+@option(
+    '-d',
+    '--data_config',
+    required=False,
+    help='The data set/shard configuration file [plan/data.yaml]',
+    default='plan/data.yaml')
+@option(
+    '-a',
+    '--aggregator_address',
+    required=False,
+    help='The FQDN of the federation agregator')
 def initialize(context, plan_config, cols_config, data_config,
                aggregator_address):
     """
@@ -55,15 +69,17 @@ def initialize(context, plan_config, cols_config, data_config,
     cols_config = Path(cols_config).absolute()
     data_config = Path(data_config).absolute()
 
-    plan = Plan.parse(plan_config_path=plan_config,
-                      cols_config_path=cols_config,
-                      data_config_path=data_config)
+    plan = Plan.parse(
+        plan_config_path=plan_config,
+        cols_config_path=cols_config,
+        data_config_path=data_config)
 
     plan_origin = Plan.parse(plan_config, resolve=False).config
 
-    if (plan_origin['network']['settings']['agg_addr'] == 'auto'
-            or aggregator_address):
-        plan_origin['network']['settings']['agg_addr'] = aggregator_address or getfqdn_env()
+    if (plan_origin['network']['settings']['agg_addr'] == 'auto' or
+            aggregator_address):
+        plan_origin['network']['settings'][
+            'agg_addr'] = aggregator_address or getfqdn_env()
 
         logger.warn(f'Patching Aggregator Addr in Plan'
                     f" 🠆 {plan_origin['network']['settings']['agg_addr']}")

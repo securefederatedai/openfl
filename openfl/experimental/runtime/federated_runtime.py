@@ -1,6 +1,5 @@
 # Copyright (C) 2020-2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-
 """ openfl.experimental.runtime package LocalRuntime class."""
 
 from __future__ import annotations
@@ -17,6 +16,7 @@ from typing import List, Type
 
 
 class FederatedRuntime(Runtime):
+
     def __init__(
         self,
         aggregator: str = None,

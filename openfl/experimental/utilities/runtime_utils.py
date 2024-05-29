@@ -1,6 +1,5 @@
 # Copyright (C) 2020-2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-
 """openfl.experimental.utilities package."""
 
 import inspect
@@ -18,13 +17,9 @@ def parse_attrs(ctx, exclude=[], reserved_words=["next", "runtime", "input"]):
     cls_attrs = []
     valid_artifacts = []
     for i in inspect.getmembers(ctx):
-        if (
-            not hasattr(i[1], "task")
-            and not i[0].startswith("_")
-            and i[0] not in reserved_words
-            and i[0] not in exclude
-            and i not in inspect.getmembers(type(ctx))
-        ):
+        if (not hasattr(i[1], "task") and not i[0].startswith("_") and
+                i[0] not in reserved_words and i[0] not in exclude and
+                i not in inspect.getmembers(type(ctx))):
             if not isinstance(i[1], MethodType):
                 cls_attrs.append(i[0])
                 valid_artifacts.append((i[0], i[1]))
@@ -58,8 +53,7 @@ def filter_attributes(ctx, f, **kwargs):
         for in_attr in kwargs["include"]:
             if in_attr not in cls_attrs:
                 raise RuntimeError(
-                    f"argument '{in_attr}' not found in flow task {f.__name__}"
-                )
+                    f"argument '{in_attr}' not found in flow task {f.__name__}")
         for attr in cls_attrs:
             if attr not in kwargs["include"]:
                 delattr(ctx, attr)
@@ -68,8 +62,7 @@ def filter_attributes(ctx, f, **kwargs):
         for in_attr in kwargs["exclude"]:
             if in_attr not in cls_attrs:
                 raise RuntimeError(
-                    f"argument '{in_attr}' not found in flow task {f.__name__}"
-                )
+                    f"argument '{in_attr}' not found in flow task {f.__name__}")
         for attr in cls_attrs:
             if attr in kwargs["exclude"] and hasattr(ctx, attr):
                 delattr(ctx, attr)
@@ -88,8 +81,7 @@ def checkpoint(ctx, parent_func, chkpnt_reserved_words=["next", "runtime"]):
         # all objects will be serialized using Metaflow interface
         print(f"Saving data artifacts for {parent_func.__name__}")
         artifacts_iter, _ = generate_artifacts(
-            ctx=ctx, reserved_words=chkpnt_reserved_words
-        )
+            ctx=ctx, reserved_words=chkpnt_reserved_words)
         task_id = ctx._metaflow_interface.create_task(parent_func.__name__)
         ctx._metaflow_interface.save_artifacts(
             artifacts_iter(),
@@ -116,21 +108,20 @@ def old_check_resource_allocation(num_gpus, each_participant_gpu_usage):
     # funtion raise an error.
     for gpu in np.ones(num_gpus, dtype=int):
         for i, (participant_name, participant_gpu_usage) in enumerate(
-            each_participant_gpu_usage.items()
-        ):
+                each_participant_gpu_usage.items()):
             if gpu == 0:
                 break
             if gpu < participant_gpu_usage:
                 remaining_gpu_memory.update({participant_name: gpu})
                 each_participant_gpu_usage = dict(
-                    itertools.islice(each_participant_gpu_usage.items(), i)
-                )
+                    itertools.islice(each_participant_gpu_usage.items(), i))
             else:
                 gpu -= participant_gpu_usage
     if len(remaining_gpu_memory) > 0:
         raise ResourcesAllocationError(
             f"Failed to allocate Participant {list(remaining_gpu_memory.keys())} "
-            + "to specified GPU. Please try allocating lesser GPU resources to participants"
+            +
+            "to specified GPU. Please try allocating lesser GPU resources to participants"
         )
 
 
@@ -141,9 +132,8 @@ def check_resource_allocation(num_gpus, each_participant_gpu_usage):
     for gpu in np.ones(num_gpus, dtype=int):
         # buffer to cycle though since need_assigned will change sizes as we assign participants
         current_dict = need_assigned.copy()
-        for i, (participant_name, participant_gpu_usage) in enumerate(
-            current_dict.items()
-        ):
+        for i, (participant_name,
+                participant_gpu_usage) in enumerate(current_dict.items()):
             if gpu == 0:
                 break
             if gpu < participant_gpu_usage:
@@ -158,6 +148,6 @@ def check_resource_allocation(num_gpus, each_participant_gpu_usage):
     # assigned
     if len(need_assigned) > 0:
         raise ResourcesAllocationError(
-            f"Failed to allocate Participant {list(need_assigned.keys())} "
-            + "to specified GPU. Please try allocating lesser GPU resources to participants"
+            f"Failed to allocate Participant {list(need_assigned.keys())} " +
+            "to specified GPU. Please try allocating lesser GPU resources to participants"
         )

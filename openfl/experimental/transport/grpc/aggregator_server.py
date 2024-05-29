@@ -1,6 +1,5 @@
 # Copyright (C) 2020-2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-
 """AggregatorGRPCServer module."""
 
 import logging
@@ -72,8 +71,8 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
 
         """
         if self.tls:
-            common_name = context.auth_context()[
-                'x509_common_name'][0].decode('utf-8')
+            common_name = context.auth_context()['x509_common_name'][0].decode(
+                'utf-8')
             collaborator_common_name = request.header.sender
             if not self.aggregator.valid_collaborator_cn_and_id(
                     common_name, collaborator_common_name):
@@ -96,8 +95,8 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
             sender=self.aggregator.uuid,
             receiver=collaborator_name,
             federation_uuid=self.aggregator.federation_uuid,
-            single_col_cert_common_name=self.aggregator.single_col_cert_common_name
-        )
+            single_col_cert_common_name=self.aggregator
+            .single_col_cert_common_name)
 
     def check_request(self, request):
         """
@@ -108,21 +107,19 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
                 Request sent from a collaborator that requires validation
         """
         # TODO improve this check. the sender name could be spoofed
-        check_is_in(request.header.sender, self.aggregator.authorized_cols, self.logger)
+        check_is_in(request.header.sender, self.aggregator.authorized_cols,
+                    self.logger)
 
         # check that the message is for me
         check_equal(request.header.receiver, self.aggregator.uuid, self.logger)
 
         # check that the message is for my federation
-        check_equal(
-            request.header.federation_uuid, self.aggregator.federation_uuid, self.logger)
+        check_equal(request.header.federation_uuid,
+                    self.aggregator.federation_uuid, self.logger)
 
         # check that we agree on the single cert common name
-        check_equal(
-            request.header.single_col_cert_common_name,
-            self.aggregator.single_col_cert_common_name,
-            self.logger
-        )
+        check_equal(request.header.single_col_cert_common_name,
+                    self.aggregator.single_col_cert_common_name, self.logger)
 
     def SendTaskResults(self, request, context):  # NOQA:N802
         """
@@ -140,13 +137,12 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
         next_step = request.next_step,
         execution_environment = request.execution_environment
 
-        _ = self.aggregator.send_task_results(
-            collaborator_name, round_number[0], next_step, execution_environment
-        )
+        _ = self.aggregator.send_task_results(collaborator_name,
+                                              round_number[0], next_step,
+                                              execution_environment)
 
         return aggregator_pb2.TaskResultsResponse(
-            header=self.get_header(collaborator_name)
-        )
+            header=self.get_header(collaborator_name))
 
     def GetTasks(self, request, context):  # NOQA:N802
         """
@@ -160,8 +156,7 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
         self.check_request(request)
         collaborator_name = request.header.sender
 
-        rn, f, ee, st, q = self.aggregator.get_tasks(
-            request.header.sender)
+        rn, f, ee, st, q = self.aggregator.get_tasks(request.header.sender)
 
         return aggregator_pb2.GetTasksResponse(
             header=self.get_header(collaborator_name),
@@ -169,8 +164,7 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
             function_name=f,
             execution_environment=ee,
             sleep_time=st,
-            quit=q
-        )
+            quit=q)
 
     def CallCheckpoint(self, request, context):  # NOQA:N802
         """
@@ -188,18 +182,17 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
         function = request.function
         stream_buffer = request.stream_buffer
 
-        self.aggregator.call_checkpoint(
-            execution_environment, function, stream_buffer
-        )
+        self.aggregator.call_checkpoint(execution_environment, function,
+                                        stream_buffer)
 
         return aggregator_pb2.CheckpointResponse(
-            header=self.get_header(collaborator_name)
-        )
+            header=self.get_header(collaborator_name))
 
     def get_server(self):
         """Return gRPC server."""
-        self.server = server(ThreadPoolExecutor(max_workers=cpu_count()),
-                             options=channel_options)
+        self.server = server(
+            ThreadPoolExecutor(max_workers=cpu_count()),
+            options=channel_options)
 
         aggregator_pb2_grpc.add_AggregatorServicer_to_server(self, self.server)
 
@@ -225,8 +218,7 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
             self.server_credentials = ssl_server_credentials(
                 ((private_key_b, certificate_b),),
                 root_certificates=root_certificate_b,
-                require_client_auth=not self.disable_client_auth
-            )
+                require_client_auth=not self.disable_client_auth)
 
             self.server.add_secure_port(self.uri, self.server_credentials)
 

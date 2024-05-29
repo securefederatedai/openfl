@@ -9,6 +9,7 @@ from openfl.experimental.utilities.metaflow_utils import DefaultCard, FlowGraph
 
 
 class InspectFlow:
+
     def __init__(
         self,
         flow_obj,
