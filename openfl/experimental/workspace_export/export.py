@@ -50,6 +50,11 @@ class WorkspaceExport:
 
         self.logger.info("Converting jupter notebook to python script...")
         export_filename = self.__get_exp_name()
+        if export_filename is None:
+            raise NameError(
+                "Please include `#| default_exp <experiment_name>` in "
+                "the first cell of the notebook."
+            )
         self.script_path = Path(self.__convert_to_python(
             self.notebook_path, self.created_workspace_path.joinpath("src"),
             f"{export_filename}.py")).resolve()
@@ -100,10 +105,12 @@ class WorkspaceExport:
         with open(self.script_path, "r") as f:
             data = f.read()
 
-        if data.find("backend='ray'") != -1:
-            data = data.replace("backend='ray'", "backend='single_process'")
-        elif data.find('backend="ray"') != -1:
-            data = data.replace('backend="ray"', 'backend="single_process"')
+        if "backend='ray'" in data or 'backend="ray"' in data:
+            data = data.replace(
+                "backend='ray'", "backend='single_process'"
+            ).replace(
+                'backend="ray"', 'backend="single_process"'
+            )
 
         with open(self.script_path, "w") as f:
             f.write(data)
@@ -124,7 +131,7 @@ class WorkspaceExport:
 
         # If class not found
         if "cls" not in locals():
-            raise Exception(f"{class_name} not found.")
+            raise NameError(f"{class_name} not found.")
 
         if inspect.isclass(cls):
             # Check if the class has an __init__ method
@@ -342,10 +349,10 @@ class WorkspaceExport:
             if isinstance(t, federated_flow_class):
                 flow_name = tempstring
                 if not hasattr(t, "_runtime"):
-                    raise Exception("Unable to locate LocalRuntime instantiation")
+                    raise AttributeError("Unable to locate LocalRuntime instantiation")
                 runtime = t._runtime
                 if not hasattr(runtime, "collaborators"):
-                    raise Exception("LocalRuntime instance does not have collaborators")
+                    raise AttributeError("LocalRuntime instance does not have collaborators")
                 break
 
         data_yaml = self.created_workspace_path.joinpath("plan", "data.yaml").resolve()
@@ -425,15 +432,16 @@ class WorkspaceExport:
                 with open(self.script_path, 'a') as f:
                     if not runtime_created:
                         f.write(f"\n{runtime_name} = {flow_name}._runtime\n")
+                        runtime_created = True
                     if not runtime_collab_created:
                         f.write(
-                            f"\nCollaborators = {runtime_name}._LocalRuntime__collaborators\n"
+                            f"\nruntime_collaborators = "
+                            f"{runtime_name}._LocalRuntime__collaborators\n"
                         )
-                        runtime_created = True
                         runtime_collab_created = True
                     f.write(
                         f"\n{collab_name}_private_attributes = "
-                        f"Collaborators['{collab_name}'].private_attributes\n"
+                        f"runtime_collaborators['{collab_name}'].private_attributes\n"
                     )
                 data[collab_name] = {
                     "private_attributes": f"src."
