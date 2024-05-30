@@ -18,7 +18,8 @@ def experimental(context):
 @experimental.command(name="deactivate")
 def deactivate():
     """Deactivate experimental environment."""
-    settings = Path("~").expanduser().joinpath(".openfl",
-                                               "experimental").resolve()
+    settings = (
+        Path("~").expanduser().joinpath(".openfl", "experimental").resolve()
+    )
 
     os.remove(settings)

@@ -11,7 +11,10 @@ from pathlib import Path
 from yaml import SafeDumper, dump, safe_load
 
 from openfl.experimental.interface.cli.cli_helper import WORKSPACE
-from openfl.experimental.transport import AggregatorGRPCClient, AggregatorGRPCServer
+from openfl.experimental.transport import (
+    AggregatorGRPCClient,
+    AggregatorGRPCServer,
+)
 from openfl.utilities.utils import getfqdn_env
 
 SETTINGS = "settings"
@@ -47,7 +50,8 @@ class Plan:
             plan = Plan()
             plan.config = config
             frozen_yaml_path = Path(
-                f"{yaml_path.parent}/{yaml_path.stem}_{plan.hash[:8]}.yaml")
+                f"{yaml_path.parent}/{yaml_path.stem}_{plan.hash[:8]}.yaml"
+            )
             if frozen_yaml_path.exists():
                 Plan.logger.info(f"{yaml_path.name} is already frozen")
                 return
@@ -110,7 +114,8 @@ class Plan:
                     if SETTINGS in defaults:
                         # override defaults with section settings
                         defaults[SETTINGS].update(
-                            plan.config[section][SETTINGS])
+                            plan.config[section][SETTINGS]
+                        )
                         plan.config[section][SETTINGS] = defaults[SETTINGS]
 
                     defaults.update(plan.config[section])
@@ -118,7 +123,8 @@ class Plan:
                     plan.config[section] = defaults
 
             plan.authorized_cols = Plan.load(cols_config_path).get(
-                "collaborators", [])
+                "collaborators", []
+            )
 
             if resolve:
                 plan.resolve()
@@ -176,9 +182,11 @@ class Plan:
             extra={"markup": True},
         )
         Plan.logger.debug(
-            f"Settings [red]🡆[/] {settings}", extra={"markup": True})
+            f"Settings [red]🡆[/] {settings}", extra={"markup": True}
+        )
         Plan.logger.debug(
-            f"Override [red]🡆[/] {override}", extra={"markup": True})
+            f"Override [red]🡆[/] {override}", extra={"markup": True}
+        )
 
         settings.update(**override)
         module = import_module(module_path)
@@ -234,7 +242,8 @@ class Plan:
         self.hash_ = sha384(dump(self.config).encode("utf-8"))
         Plan.logger.info(
             f"FL-Plan hash is [blue]{self.hash_.hexdigest()}[/]",
-            extra={"markup": True})
+            extra={"markup": True},
+        )
 
         return self.hash_.hexdigest()
 
@@ -244,30 +253,34 @@ class Plan:
         self.aggregator_uuid = f"aggregator_{self.federation_uuid}"
 
         self.rounds_to_train = self.config["aggregator"][SETTINGS][
-            "rounds_to_train"]
+            "rounds_to_train"
+        ]
 
         if self.config["network"][SETTINGS]["agg_addr"] == AUTO:
             self.config["network"][SETTINGS]["agg_addr"] = getfqdn_env()
 
         if self.config["network"][SETTINGS]["agg_port"] == AUTO:
             self.config["network"][SETTINGS]["agg_port"] = (
-                int(self.hash[:8], 16) % (60999 - 49152) + 49152)
+                int(self.hash[:8], 16) % (60999 - 49152) + 49152
+            )
 
     def get_aggregator(self):
         """Get federation aggregator."""
-        defaults = self.config.get("aggregator", {
-            TEMPLATE: "openfl.experimental.Aggregator",
-            SETTINGS: {}
-        })
+        defaults = self.config.get(
+            "aggregator",
+            {TEMPLATE: "openfl.experimental.Aggregator", SETTINGS: {}},
+        )
 
         defaults[SETTINGS]["aggregator_uuid"] = self.aggregator_uuid
         defaults[SETTINGS]["federation_uuid"] = self.federation_uuid
         defaults[SETTINGS]["authorized_cols"] = self.authorized_cols
 
         private_attrs_callable, private_attrs_kwargs = self.get_private_attr(
-            "aggregator")
+            "aggregator"
+        )
         defaults[SETTINGS][
-            "private_attributes_callable"] = private_attrs_callable
+            "private_attributes_callable"
+        ] = private_attrs_callable
         defaults[SETTINGS]["private_attributes_kwargs"] = private_attrs_kwargs
 
         defaults[SETTINGS]["flow"] = self.get_flow()
@@ -283,7 +296,8 @@ class Plan:
             elif not callable(log_metric_callback):
                 raise TypeError(
                     f"log_metric_callback should be callable object "
-                    f"or be import from code part, get {log_metric_callback}")
+                    f"or be import from code part, get {log_metric_callback}"
+                )
         defaults[SETTINGS]["log_metric_callback"] = log_metric_callback
 
         if self.aggregator_ is None:
@@ -300,20 +314,22 @@ class Plan:
         client=None,
     ):
         """Get collaborator."""
-        defaults = self.config.get("collaborator", {
-            TEMPLATE: "openfl.experimental.Collaborator",
-            SETTINGS: {}
-        })
+        defaults = self.config.get(
+            "collaborator",
+            {TEMPLATE: "openfl.experimental.Collaborator", SETTINGS: {}},
+        )
 
         defaults[SETTINGS]["collaborator_name"] = collaborator_name
         defaults[SETTINGS]["aggregator_uuid"] = self.aggregator_uuid
         defaults[SETTINGS]["federation_uuid"] = self.federation_uuid
 
         private_attrs_callable, private_attrs_kwargs = self.get_private_attr(
-            collaborator_name)
+            collaborator_name
+        )
 
         defaults[SETTINGS][
-            "private_attributes_callable"] = private_attrs_callable
+            "private_attributes_callable"
+        ] = private_attrs_callable
         defaults[SETTINGS]["private_attributes_kwargs"] = private_attrs_kwargs
 
         if client is not None:
@@ -365,11 +381,13 @@ class Plan:
 
         return self.client_
 
-    def get_server(self,
-                   root_certificate=None,
-                   private_key=None,
-                   certificate=None,
-                   **kwargs):
+    def get_server(
+        self,
+        root_certificate=None,
+        private_key=None,
+        certificate=None,
+        **kwargs,
+    ):
         """Get gRPC server of the aggregator instance."""
         common_name = self.config["network"][SETTINGS]["agg_addr"].lower()
 
@@ -398,10 +416,7 @@ class Plan:
         """instantiates federated flow object"""
         defaults = self.config.get(
             "federated_flow",
-            {
-                TEMPLATE: self.config["federated_flow"]["template"],
-                SETTINGS: {}
-            },
+            {TEMPLATE: self.config["federated_flow"]["template"], SETTINGS: {}},
         )
         defaults = self.import_kwargs_modules(defaults)
 
@@ -422,8 +437,8 @@ class Plan:
                             if import_module(module_path):
                                 module = import_module(module_path)
                                 value_defaults_data = {
-                                    'template': value,
-                                    'settings': settings.get('settings', {}),
+                                    "template": value,
+                                    "settings": settings.get("settings", {}),
                                 }
                                 attr = getattr(module, class_name)
 
@@ -454,16 +469,19 @@ class Plan:
 
             if d.get(private_attr_name, None):
                 private_attrs_callable = {
-                    "template":
-                        d.get(private_attr_name)["callable_func"]["template"]
+                    "template": d.get(private_attr_name)["callable_func"][
+                        "template"
+                    ]
                 }
 
                 private_attrs_kwargs = self.import_kwargs_modules(
-                    d.get(private_attr_name)["callable_func"])["settings"]
+                    d.get(private_attr_name)["callable_func"]
+                )["settings"]
 
                 if isinstance(private_attrs_callable, dict):
                     private_attrs_callable = Plan.import_(
-                        **private_attrs_callable)
+                        **private_attrs_callable
+                    )
                 elif not callable(private_attrs_callable):
                     raise TypeError(
                         f"private_attrs_callable should be callable object "

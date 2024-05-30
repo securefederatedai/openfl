@@ -43,12 +43,14 @@ class Collaborator(Participant):
     Defines a collaborator participant
     """
 
-    def __init__(self,
-                 name: str = "",
-                 private_attributes_callable: Callable = None,
-                 num_cpus: int = 0,
-                 num_gpus: int = 0.0,
-                 **kwargs):
+    def __init__(
+        self,
+        name: str = "",
+        private_attributes_callable: Callable = None,
+        num_cpus: int = 0,
+        num_gpus: int = 0.0,
+        **kwargs
+    ):
         """
         Create collaborator object with custom resources and a callable
         function to assign private attributes
@@ -80,7 +82,8 @@ class Collaborator(Participant):
         else:
             if not callable(private_attributes_callable):
                 raise Exception(
-                    "private_attributes_callable  parameter must be a callable")
+                    "private_attributes_callable  parameter must be a callable"
+                )
             else:
                 self.private_attributes_callable = private_attributes_callable
 
@@ -95,7 +98,8 @@ class Collaborator(Participant):
         """
         if self.private_attributes_callable is not None:
             self.private_attributes = self.private_attributes_callable(
-                **self.kwargs)
+                **self.kwargs
+            )
 
     def __set_collaborator_attrs_to_clone(self, clone: Any) -> None:
         """
@@ -117,7 +121,8 @@ class Collaborator(Participant):
         for attr_name in self.private_attributes:
             if hasattr(clone, attr_name):
                 self.private_attributes.update(
-                    {attr_name: getattr(clone, attr_name)})
+                    {attr_name: getattr(clone, attr_name)}
+                )
                 delattr(clone, attr_name)
 
     def execute_func(self, ctx: Any, f_name: str, callback: Callable) -> Any:
@@ -138,12 +143,14 @@ class Aggregator(Participant):
     Defines an aggregator participant
     """
 
-    def __init__(self,
-                 name: str = "",
-                 private_attributes_callable: Callable = None,
-                 num_cpus: int = 0,
-                 num_gpus: int = 0.0,
-                 **kwargs):
+    def __init__(
+        self,
+        name: str = "",
+        private_attributes_callable: Callable = None,
+        num_cpus: int = 0,
+        num_gpus: int = 0.0,
+        **kwargs
+    ):
         """
         Create aggregator object with custom resources and a callable
         function to assign private attributes
@@ -175,7 +182,8 @@ class Aggregator(Participant):
         else:
             if not callable(private_attributes_callable):
                 raise Exception(
-                    "private_attributes_callable parameter must be a callable")
+                    "private_attributes_callable parameter must be a callable"
+                )
             else:
                 self.private_attributes_callable = private_attributes_callable
 
@@ -190,7 +198,8 @@ class Aggregator(Participant):
         """
         if self.private_attributes_callable is not None:
             self.private_attributes = self.private_attributes_callable(
-                **self.kwargs)
+                **self.kwargs
+            )
 
     def __set_agg_attrs_to_clone(self, clone: Any) -> None:
         """
@@ -212,14 +221,17 @@ class Aggregator(Participant):
         for attr_name in self.private_attributes:
             if hasattr(clone, attr_name):
                 self.private_attributes.update(
-                    {attr_name: getattr(clone, attr_name)})
+                    {attr_name: getattr(clone, attr_name)}
+                )
                 delattr(clone, attr_name)
 
-    def execute_func(self,
-                     ctx: Any,
-                     f_name: str,
-                     callback: Callable,
-                     clones: Optional[Any] = None) -> Any:
+    def execute_func(
+        self,
+        ctx: Any,
+        f_name: str,
+        callback: Callable,
+        clones: Optional[Any] = None,
+    ) -> Any:
         """
         Execute remote function f
         """

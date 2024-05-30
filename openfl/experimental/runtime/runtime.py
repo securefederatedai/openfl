@@ -42,12 +42,14 @@ class Runtime:
         """Set Runtime collaborators"""
         raise NotImplementedError
 
-    def execute_task(self,
-                     flspec_obj: FLSpec,
-                     f: Callable,
-                     parent_func: Callable,
-                     instance_snapshot: List[FLSpec] = [],
-                     **kwargs):
+    def execute_task(
+        self,
+        flspec_obj: FLSpec,
+        f: Callable,
+        parent_func: Callable,
+        instance_snapshot: List[FLSpec] = [],
+        **kwargs,
+    ):
         """
         Performs the execution of a task as defined by the
         implementation and underlying backend (single_process, ray, etc)

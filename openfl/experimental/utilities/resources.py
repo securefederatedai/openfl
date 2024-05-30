@@ -26,5 +26,6 @@ def get_number_of_gpus() -> int:
     except FileNotFoundError:
         logger.warning(
             f'No GPUs found! If this is a mistake please try running "{command}" '
-            + 'manually.')
+            + "manually."
+        )
         return 0

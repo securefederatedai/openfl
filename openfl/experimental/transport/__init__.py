@@ -4,6 +4,6 @@
 from .grpc import AggregatorGRPCClient, AggregatorGRPCServer
 
 __all__ = [
-    'AggregatorGRPCServer',
-    'AggregatorGRPCClient',
+    "AggregatorGRPCServer",
+    "AggregatorGRPCClient",
 ]

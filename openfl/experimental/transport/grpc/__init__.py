@@ -11,7 +11,7 @@ class ShardNotFoundError(Exception):
 
 
 __all__ = [
-    'AggregatorGRPCServer',
-    'AggregatorGRPCClient',
-    'ShardNotFoundError',
+    "AggregatorGRPCServer",
+    "AggregatorGRPCClient",
+    "ShardNotFoundError",
 ]
