@@ -38,10 +38,10 @@ batch_size = 32
 train = deepcopy(mnist_train)
 test = deepcopy(mnist_test)
 
-train.data = train.data[0::n_collaborators]
-train.targets = train.targets[0::n_collaborators]
-test.data = test.data[0::n_collaborators]
-test.targets = test.targets[0::n_collaborators]
+train.data = mnist_train.data[0::n_collaborators]
+train.targets = mnist_train.targets[0::n_collaborators]
+test.data = mnist_test.data[0::n_collaborators]
+test.targets = mnist_test.targets[0::n_collaborators]
 
 col1_private_attributes = {
     "train_loader": torch.utils.data.DataLoader(
@@ -52,10 +52,10 @@ col1_private_attributes = {
     ),
 }
 
-train.data = train.data[1::n_collaborators]
-train.targets = train.targets[1::n_collaborators]
-test.data = test.data[1::n_collaborators]
-test.targets = test.targets[1::n_collaborators]
+train.data = mnist_train.data[1::n_collaborators]
+train.targets = mnist_train.targets[1::n_collaborators]
+test.data = mnist_test.data[1::n_collaborators]
+test.targets = mnist_test.targets[1::n_collaborators]
 
 col2_private_attributes = {
     "train_loader": torch.utils.data.DataLoader(
