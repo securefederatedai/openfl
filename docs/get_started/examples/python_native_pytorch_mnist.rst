@@ -1,13 +1,13 @@
 .. # Copyright (C) 2020-2023 Intel Corporation
 .. # SPDX-License-Identifier: Apache-2.0
 
-.. _taskrunner_pytorch_mnist:
+.. _python_native_pytorch_mnist:
 
 ==========================================
-Task Runner API: Federated PyTorch MNIST
+Python Native API: Federated PyTorch MNIST
 ==========================================
 
-In this tutorial, we will set up a federation and train a basic PyTorch model on the MNIST dataset using the task runner API.
+In this tutorial, we will set up a federation and train a basic PyTorch model on the MNIST dataset using the Python Native API.
 See `full notebook <https://github.com/securefederatedai/openfl/blob/f1657abe88632d542504d6d71ca961de9333913f/openfl-tutorials/Federated_Pytorch_MNIST_Tutorial.ipynb>`_.
 
 .. note::
@@ -21,7 +21,7 @@ Install additional dependencies if not already installed
 
 .. code-block:: console
 
-    pip install torch torchvision
+    $ pip install torch torchvision
 
 .. code-block:: python
 
