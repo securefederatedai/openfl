@@ -1,101 +1,78 @@
 # Contributing to OpenFL
 
-We welcome contributions from the community. We believe that anyone can bring something valuable to OpenFL and help us to improve the project. This document explains how to contribute to OpenFL. 
+We welcome contributions from the community. There are several ways to contribute:
+* Improvements in [documentation](https://openfl.readthedocs.io/en/latest/install.html).
+* Contributing to OpenFL's code-base: via bug-fixes or feature additions.
+* Answering questions on our [discussions page](https://github.com/securefederatedai/openfl/discussions).
+* Participating in our [roadmap](https://github.com/securefederatedai/openfl/blob/develop/ROADMAP.md) discussions.
 
-We accept various contributions from documentation improvement and bug fixing to major features proposals and [roadmap](https://github.com/intel/openfl/blob/develop/ROADMAP.md) suggestions.
+We have a slack [channel](https://join.slack.com/t/openfl/shared_invite/zt-ovzbohvn-T5fApk05~YS_iZhjJ5yaTw) and we host regular [community meetings](https://github.com/intel/openfl#support).
 
-Documentation improvement: review our [documentation](https://openfl.readthedocs.io/en/latest/install.html) and let us know if something is not clear or not relevant. 
-Propose your own formulations or even write new section explaining something that you know how works, but do not see in the documentation. 
-Propose it through GitHub [issues](https://github.com/intel/openfl/issues/new/choose) or [Discussions](https://github.com/intel/openfl/discussions).
 
-To propose bugs, new features, or other code improvements:
+## How to contribute code
+### Step 1. Open an issue
 
-1.	Check open and closed [issues](https://github.com/intel/openfl/issues) and make sure there is no similar proposal.
-2.	Open a [new issue](https://github.com/intel/openfl/issues/new/choose), select a relevant category (Bug report / Feature request / Report a security vulnerability) and describe your idea using the template. 
-3.	If you want to fix a bug or create this feature by yourself, prepare a contribution.
-	-	Format your code following the [flake8 style](https://flake8.pycqa.org/en/latest/).
-	-	Make sure that your code is original and corresponds to [OpenFL license](#license).
-	-	Sing your work - [see below](#sign-your-work). 
-	-	Create a [pull request](#formatting-of-pull-requests) and wait for feedback.
-	-	Verify that all tests in our [CI/CD pipeline](#Continuous-Integration-and-Continuous-Development) passed.
-4.	Hurrah! You are a new contributor to OpenFL! You will see your name in released notes of the subsequent releases!😊
+Before you start making any changes, it is always good to open an [issue](https://github.com/securefederatedai/openfl/issues/new/choose) first (assuming one does not already exist), outlining your proposed changes. We can give you feedback, and potentially validate the proposed changes.
 
-Join our [Slack](https://join.slack.com/t/openfl/shared_invite/zt-ovzbohvn-T5fApk05~YS_iZhjJ5yaTw) and [Community meetings](https://github.com/intel/openfl#support) and participate in the discussions. 
+For minor changes (akin to a documentation or bug fix), proceed to opening a Pull Request (PR) directly.
 
-Are you an expert in Federated Learning and want to contribute to our roadmap? You can nominate yourself as a member of our Technical Steering Committee and be part of the OpenFL decision making group. Please reach us through our [Slack](https://join.slack.com/t/openfl/shared_invite/zt-ovzbohvn-T5fApk05~YS_iZhjJ5yaTw).
+### Step 2. Make code changes
 
-### Code format and style
+To modify code, you need to fork the repository. Set up a development environment as covered in the section "Setup environment" below.
 
-We use [flake8](https://flake8.pycqa.org/en/latest/) for PEP8 style guide enforcement. This is run as a part of our CI/CD pipeline and it’s required prior a merge. 
+### Step 3. Create a Pull Request (PR)
 
-### Formatting of Pull Requests
+Once the change is ready, open a PR from your branch in your fork, to the `develop` branch in [securefederatedai/openfl](https://github.com/securefederatedai/openfl). OpenFL follows standard recommendations of PR formatting. Find more details [here](https://github.blog/2015-01-21-how-to-write-the-perfect-pull-request/).
 
-OpenFL follows standard recommendations of PR formatting. Please find more details [here](https://github.blog/2015-01-21-how-to-write-the-perfect-pull-request/).
+### Step 4. Sign your work
 
-### Continuous Integration and Continuous Development
-
-OpenFL uses GitHub actions to perform all functional and unit tests. Before your contribution can be merged make sure that all your tests are passing. 
-For more information of what fails you can click on the “details” link near the pipeline that failed.
-
-![CI/CD](docs/images/CI_details.png)
- 
-### Writing the tests
-
-The OpenFL team recommend including tests for all new features contributions. Test can be found in the “Tests” directory. 
-The [Tests/OpenFL folder](https://github.com/intel/openfl/tree/develop/tests/openfl) contains unit tests and the [Tests/GitHub folder](https://github.com/intel/openfl/tree/develop/tests/github) contains end-to-end and functional tests.
-
-### License
-
-OpenFL is licensed under the terms in [Apache 2.0 license](https://github.com/intel/openfl/blob/develop/LICENSE). By contributing to the project, you agree to the license and copyright terms therein and release your contribution under these terms.
-
-### Sign your work
-
-Please use the sign-off line at the end of the patch. Your signature certifies that you wrote the patch or otherwise have the right to pass it on as an open-source patch. The rules are pretty simple: if you can certify
-the below (from [developercertificate.org](http://developercertificate.org/)):
-
-```
-Developer Certificate of Origin
-Version 1.1
-
-Copyright (C) 2004, 2006 The Linux Foundation and its contributors.
-660 York Street, Suite 102,
-San Francisco, CA 94110 USA
-
-Everyone is permitted to copy and distribute verbatim copies of this
-license document, but changing it is not allowed.
-
-Developer's Certificate of Origin 1.1
-
-By making a contribution to this project, I certify that:
-
-(a) The contribution was created in whole or in part by me and I
-    have the right to submit it under the open source license
-    indicated in the file; or
-
-(b) The contribution is based upon previous work that, to the best
-    of my knowledge, is covered under an appropriate open source
-    license and I have the right under that license to submit that
-    work with modifications, whether created in whole or in part
-    by me, under the same open source license (unless I am
-    permitted to submit under a different license), as indicated
-    in the file; or
-
-(c) The contribution was provided directly to me by some other
-    person who certified (a), (b) or (c) and I have not modified
-    it.
-
-(d) I understand and agree that this project and the contribution
-    are public and that a record of the contribution (including all
-    personal information I submit with it, including my sign-off) is
-    maintained indefinitely and may be redistributed consistent with
-    this project or the open source license(s) involved.
-```
-
-Then you just add a line to every git commit message:
+Signoff your patch commits using your real name. We discourage anonymous contributions.
 
     Signed-off-by: Joe Smith <joe.smith@email.com>
 
-Use your real name (sorry, no pseudonyms or anonymous contributions.)
-
 If you set your `user.name` and `user.email` git configs, you can sign your
-commit automatically with `git commit -s`.
+commits using `git commit --signoff`.
+
+Your signature [certifies](http://developercertificate.org/) that you wrote the patch, or, you otherwise have the right to pass it on as an open-source patch.
+
+OpenFL is licensed under the [Apache 2.0 license](https://github.com/intel/openfl/blob/develop/LICENSE). By contributing to the project, you agree to the license and copyright terms therein and release your contribution under these terms.
+
+### Step 5. Code review and merge
+
+Verify that your contribution passes all tests in our CI/CD pipeline. In case of a failure, like shown below, look into the error messages and try to fix them.
+
+![CI/CD](docs/images/CI_details.png)
+
+Meanwhile, a reviewer will review the pull request and provide comments. Post few iterations of
+reviews and changes (depending on the complexity of the changes), PR will be approved for merge.
+
+## Setup environment
+
+We recommend setting up a local dev environment. Clone your forked repo to your local machine and install the dependencies.
+
+```shell
+git clone https://github.com/YOUR_GITHUB_USERNAME/openfl.git
+cd openfl
+pip install -U pip setuptools wheel
+pip install .
+```
+
+## Code style
+
+OpenFL uses [black](https://black.readthedocs.io/en/stable/) and [isort](https://pycqa.github.io/isort/) to format the code.
+
+Run the following command at the **root** directory of the repo to format your code.
+
+```
+sh shell/format.sh
+```
+You may need to resolve errors that could not be resolved by autoformatting. To only show lint errors, run `sh shell/lint.sh` at the **root** directory of the repo.
+
+### Docstrings
+Since docstrings cannot be checked or standardized, if you do write/edit any docstring, make sure to check them manually. OpenFL docstrings should follow the conventions below:
+
+A **class** or a **function** docstring may contain:
+* A one-line description of the class/function.
+* Paragraph(s) of detailed information.
+* Optional `Examples` section.
+* `Args` section for arguments under `__init__()`.
