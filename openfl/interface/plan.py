@@ -57,8 +57,6 @@ def initialize(context, plan_config, cols_config, data_config,
     from openfl.utilities.utils import getfqdn_env
     from openfl.utilities.mocks import MockDataLoader
 
-    #logger.info(f'Feature_shape = {feature_shape}')
-
     for p in [plan_config, cols_config, data_config]:
         if is_directory_traversal(p):
             echo(f'{p} is out of the openfl workspace scope.')
@@ -86,7 +84,6 @@ def initialize(context, plan_config, cols_config, data_config,
         # If feature shape is not provided, data is assumed to be present
         collaborator_cname = list(plan.cols_data_paths)[0]
         data_loader = plan.get_data_loader(collaborator_cname)
-        echo(f'Real data loader feature shape: {data_loader.get_feature_shape()}')
     task_runner = plan.get_task_runner(data_loader)
     tensor_pipe = plan.get_tensor_pipe()
 
