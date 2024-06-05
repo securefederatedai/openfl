@@ -196,8 +196,11 @@ class WorkspaceExport:
                             if value.startswith("[") and "," not in value:
                                 value = value.lstrip("[").rstrip("]")
                             try:
+                                # Evaluate the value to convert it from a string
+                                # representation into its corresponding python object.
                                 value = ast.literal_eval(value)
-                            except Exception:
+                            except ValueError:
+                                # ValueError is ignored because we want the value as a string
                                 pass
                             instantiation_args["kwargs"][kwarg.arg] = value
 
@@ -436,12 +439,12 @@ class WorkspaceExport:
                     if not runtime_collab_created:
                         f.write(
                             f"\nruntime_collaborators = "
-                            f"{runtime_name}._LocalRuntime__collaborators\n"
+                            f"{runtime_name}._LocalRuntime__collaborators"
                         )
                         runtime_collab_created = True
                     f.write(
                         f"\n{collab_name}_private_attributes = "
-                        f"runtime_collaborators['{collab_name}'].private_attributes\n"
+                        f"runtime_collaborators['{collab_name}'].private_attributes"
                     )
                 data[collab_name] = {
                     "private_attributes": f"src."
