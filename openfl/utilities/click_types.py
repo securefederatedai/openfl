@@ -3,6 +3,7 @@
 """Click types module."""
 
 import click
+import ast
 
 from openfl.utilities import utils
 
@@ -29,6 +30,17 @@ class IpAddressParamType(click.ParamType):
         if not utils.is_api_adress(value):
             self.fail(f'{value} is not a valid ip adress name', param, ctx)
         return value
+
+class ListOption(click.Option):
+
+    def type_cast_value(self, ctx, value):
+        try:
+            if value is None:
+                return None
+            else:
+                return ast.literal_eval(value)
+        except:
+            raise click.BadParameter(value)
 
 
 FQDN = FqdnParamType()

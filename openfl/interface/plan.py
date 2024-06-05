@@ -12,6 +12,7 @@ from click import pass_context
 from click import Path as ClickPath
 
 from openfl.utilities.path_check import is_directory_traversal
+from openfl.utilities.click_types import ListOption
 
 logger = getLogger(__name__)
 
@@ -36,8 +37,8 @@ def plan(context):
         default='plan/data.yaml', type=ClickPath(exists=True))
 @option('-a', '--aggregator_address', required=False,
         help='The FQDN of the federation agregator')
-@option('-f', '--feature_shape', required=False,
-        help='The input shape to the model')
+@option('-f', '--feature_shape', cls=ListOption, required=False,
+        help='The input shape to the model (i.e. [1,28,28])')
 @option('-g', '--gandlf_config', required=False,
         help='GaNDLF Configuration File Path')
 def initialize(context, plan_config, cols_config, data_config,
@@ -54,6 +55,9 @@ def initialize(context, plan_config, cols_config, data_config,
     from openfl.protocols import utils
     from openfl.utilities.split import split_tensor_dict_for_holdouts
     from openfl.utilities.utils import getfqdn_env
+    from openfl.utilities.mocks import MockDataLoader
+
+    #logger.info(f'Feature_shape = {feature_shape}')
 
     for p in [plan_config, cols_config, data_config]:
         if is_directory_traversal(p):
@@ -73,18 +77,16 @@ def initialize(context, plan_config, cols_config, data_config,
 
     init_state_path = plan.config['aggregator']['settings']['init_state_path']
 
-    # TODO:  Is this part really needed?  Why would we need to collaborator
-    #  name to know the input shape to the model?
-
-    # if  feature_shape is None:
-    #     if  cols_config is None:
-    #         exit('You must specify either a feature
-    #         shape or authorized collaborator
-    #         list in order for the script to determine the input layer shape')
-
-    collaborator_cname = list(plan.cols_data_paths)[0]
-
-    data_loader = plan.get_data_loader(collaborator_cname)
+    # This is needed to bypass data being locally available
+    if feature_shape is not None:
+        logger.info('Attempting to generate initial model weights with' \
+               f' custom feature shape {feature_shape}') 
+        data_loader = MockDataLoader(feature_shape)
+    else:
+        # If feature shape is not provided, data is assumed to be present
+        collaborator_cname = list(plan.cols_data_paths)[0]
+        data_loader = plan.get_data_loader(collaborator_cname)
+        echo(f'Real data loader feature shape: {data_loader.get_feature_shape()}')
     task_runner = plan.get_task_runner(data_loader)
     tensor_pipe = plan.get_tensor_pipe()
 
