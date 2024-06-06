@@ -16,8 +16,7 @@ with catch_warnings():
 from .runner import TaskRunner  # NOQA
 
 if importlib.util.find_spec('tensorflow'):
-    from .runner_tf import TensorFlowTaskRunner  # NOQA
-    from .runner_tf import TensorFlowTaskRunner_v1  # NOQA
+    from .runner_tf import TensorFlowTaskRunner, TensorFlowTaskRunner_v1  # NOQA
     from .runner_keras import KerasTaskRunner  # NOQA
     from .fl_model import FederatedModel  # NOQA
 if importlib.util.find_spec('torch'):
