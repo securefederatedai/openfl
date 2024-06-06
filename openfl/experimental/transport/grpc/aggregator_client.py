@@ -9,9 +9,10 @@ from typing import Optional, Tuple
 import grpc
 
 from openfl.experimental.protocols import aggregator_pb2, aggregator_pb2_grpc
+from openfl.experimental.transport.grpc.grpc_channel_options import (
+    channel_options,
+)
 from openfl.utilities import check_equal
-
-from .grpc_channel_options import channel_options
 
 
 class ConstantBackoff:

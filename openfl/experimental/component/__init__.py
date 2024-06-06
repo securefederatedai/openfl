@@ -2,7 +2,6 @@
 # SPDX-License-Identifier: Apache-2.0
 """openfl.experimental.component package."""
 
-from .aggregator import Aggregator
-from .collaborator import Collaborator
-
-__all__ = ["Aggregator", "Collaborator"]
+# FIXME: Too much recursion
+from openfl.experimental.component.aggregator import Aggregator
+from openfl.experimental.component.collaborator import Collaborator
