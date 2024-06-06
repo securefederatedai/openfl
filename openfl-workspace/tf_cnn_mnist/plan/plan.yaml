@@ -8,7 +8,7 @@ aggregator :
     init_state_path : save/tf_cnn_mnist_init.pbuf
     best_state_path : save/tf_cnn_mnist_best.pbuf
     last_state_path : save/tf_cnn_mnist_last.pbuf
-    rounds_to_train : 2
+    rounds_to_train : 10
 
 collaborator :
   defaults : plan/defaults/collaborator.yaml

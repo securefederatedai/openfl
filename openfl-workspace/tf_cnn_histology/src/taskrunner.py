@@ -3,12 +3,14 @@
 
 """You may copy this file as the starting point of your own model."""
 
+import numpy as np
 import tensorflow as tf
 
-from openfl.federated import KerasTaskRunner
+from openfl.utilities import Metric
+from openfl.federated import TensorFlowTaskRunner
 
 
-class TensorFlowCNN(KerasTaskRunner):
+class TensorFlowCNN(TensorFlowTaskRunner):
     """Initialize.
 
     Args:
@@ -17,7 +19,8 @@ class TensorFlowCNN(KerasTaskRunner):
     """
 
     def __init__(self, **kwargs):
-        """Initialize.
+        """
+        Initialize.
 
         Args:
             **kwargs: Additional parameters to pass to the function
@@ -25,32 +28,38 @@ class TensorFlowCNN(KerasTaskRunner):
         """
         super().__init__(**kwargs)
 
-        self.model = self.create_model(
+        self.model = self.build_model(
             self.feature_shape,
             self.data_loader.num_classes,
             **kwargs
         )
         self.initialize_tensorkeys_for_functions()
 
-    def create_model(self,
-                     input_shape,
-                     num_classes,
-                     training_smoothing=32.0,
-                     validation_smoothing=1.0,
-                     **kwargs):
-        """Create the TensorFlow CNN Histology model.
+        self.model.summary(print_fn=self.logger.info)
+
+        self.logger.info(f'Train Set Size : {self.get_train_data_size()}')
+        self.logger.info(f'Valid Set Size : {self.get_valid_data_size()}')
+
+    def build_model(self,
+                    input_shape,
+                    num_classes,
+                    **kwargs):
+        """
+        Define the model architecture.
 
         Args:
-            training_smoothing (float): (Default=32.0)
-            validation_smoothing (float): (Default=1.0)
+            input_shape (numpy.ndarray): The shape of the data
+            num_classes (int): The number of classes of the dataset
             **kwargs: Additional parameters to pass to the function
+
+        Returns:
+            keras.src.engine.functional.Functional
 
         """
         print(tf.config.threading.get_intra_op_parallelism_threads())
         print(tf.config.threading.get_inter_op_parallelism_threads())
-        # ## Define Model
-        #
-        # Convolutional neural network model
+
+        ## Define Model using Functional API
 
         inputs = tf.keras.layers.Input(shape=input_shape)
         conv = tf.keras.layers.Conv2D(
@@ -96,13 +105,39 @@ class TensorFlowCNN(KerasTaskRunner):
             metrics=[tf.keras.metrics.SparseCategoricalAccuracy()],
         )
 
-        self.tvars = model.layers
-        print(f'layer names: {[var.name for var in self.tvars]}')
-
-        self.opt_vars = self.optimizer.variables()
-        print(f'optimizer vars: {self.opt_vars}')
-
-        # Two opt_vars for one tvar: gradient and square sum for RMSprop.
-        self.fl_vars = self.tvars + self.opt_vars
-
         return model
+
+
+    def train_(self, batch_generator, metrics: list = None, **kwargs):
+        """Train single epoch.
+
+        Override this function for custom training.
+
+        Args:
+            batch_generator: Generator of training batches.
+                Each batch is a tuple of N train images and N train labels
+                where N is the batch size of the DataLoader of the current TaskRunner instance.
+
+            epochs: Number of epochs to train.
+            metrics: Names of metrics to save.
+        """
+        if metrics is None:
+            metrics = []
+
+        model_metrics_names = self.model.metrics_names
+
+        for param in metrics:
+            if param not in model_metrics_names:
+                raise ValueError(
+                    f'TensorFlowTaskRunner does not support specifying new metrics. '
+                    f'Param_metrics = {metrics}, model_metrics_names = {model_metrics_names}'
+                )
+
+        history = self.model.fit(batch_generator,
+                                 verbose=1,
+                                 **kwargs)
+        results = []
+        for metric in metrics:
+            value = np.mean([history.history[metric]])
+            results.append(Metric(name=metric, value=np.array(value)))
+        return results

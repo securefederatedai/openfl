@@ -34,11 +34,6 @@ class TensorFlowCNN(TensorFlowTaskRunner):
     def build_model(self,
                     input_shape,
                     num_classes,
-                    conv_kernel_size=(4, 4),
-                    conv_strides=(2, 2),
-                    conv1_channels_out=16,
-                    conv2_channels_out=32,
-                    final_dense_inputsize=100,
                     **kwargs):
         """
         Define the model architecture.
@@ -48,15 +43,15 @@ class TensorFlowCNN(TensorFlowTaskRunner):
             num_classes (int): The number of classes of the dataset
 
         Returns:
-            tensorflow.python.keras.engine.sequential.Sequential: The model defined in Keras
+            tensorflow.python.keras.engine.sequential.Sequential
 
         """
         
         model = tf.keras.models.Sequential([
-            tf.keras.layers.Conv2D(conv1_channels_out, kernel_size=conv_kernel_size, strides=conv_strides, activation='relu', input_shape=input_shape),
-            tf.keras.layers.Conv2D(conv2_channels_out, kernel_size=conv_kernel_size, strides=conv_strides, activation='relu'),
+            tf.keras.layers.Conv2D(16, kernel_size=(4, 4), strides=(2, 2), activation='relu', input_shape=input_shape),
+            tf.keras.layers.Conv2D(32, kernel_size=(4, 4), strides=(2, 2), activation='relu'),
             tf.keras.layers.Flatten(),
-            tf.keras.layers.Dense(final_dense_inputsize, activation='relu'),
+            tf.keras.layers.Dense(100, activation='relu'),
             tf.keras.layers.Dense(num_classes, activation='softmax')
         ])
 

@@ -5,10 +5,10 @@ aggregator :
   defaults : plan/defaults/aggregator.yaml
   template : openfl.component.Aggregator
   settings :
-    init_state_path  : save/tf_cnn_histology_init.pbuf
-    last_state_path  : save/tf_cnn_histology_latest.pbuf
-    best_state_path  : save/tf_cnn_histology_best.pbuf
-    db_store_rounds: 2
+    init_state_path : save/tf_cnn_histology_init.pbuf
+    last_state_path : save/tf_cnn_histology_latest.pbuf
+    best_state_path : save/tf_cnn_histology_best.pbuf
+    db_store_rounds : 2
     rounds_to_train : 10
 
 collaborator :
@@ -21,7 +21,7 @@ collaborator :
 
 data_loader :
   defaults : plan/defaults/data_loader.yaml
-  template : src.tfhistology_inmemory.TensorFlowHistologyInMemory
+  template : src.dataloader.TensorFlowHistologyInMemory
   settings :
     batch_size: 64
     percent_train: 0.8
@@ -30,7 +30,7 @@ data_loader :
 
 task_runner :
   defaults : plan/defaults/task_runner.yaml
-  template : src.tf_cnn.TensorFlowCNN
+  template : src.taskrunner.TensorFlowCNN
 
 network :
   defaults : plan/defaults/network.yaml
@@ -41,14 +41,14 @@ assigner :
 tasks:
   defaults: plan/defaults/tasks_tensorflow.yaml
   aggregated_model_validation:
-    function: validate
+    function: validate_task
     kwargs:
       apply: global
       batch_size: 32
       metrics:
       - sparse_categorical_accuracy
   locally_tuned_model_validation:
-    function: validate
+    function: validate_task
     kwargs:
       apply: local
       batch_size: 32
@@ -56,7 +56,7 @@ tasks:
       - sparse_categorical_accuracy
   settings: {}
   train:
-    function: train
+    function: train_task
     kwargs:
       batch_size: 32
       epochs: 1
