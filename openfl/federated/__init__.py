@@ -3,14 +3,15 @@
 
 """openfl.federated package."""
 
-import pkgutil
+import importlib.util
 from .plan import Plan  # NOQA
 from .task import TaskRunner  # NOQA
 from .data import DataLoader  # NOQA
 
-if pkgutil.find_loader('tensorflow'):
+if importlib.util.find_spec('tensorflow'):
     from .task import TensorFlowTaskRunner, TensorFlowTaskRunner_v1, KerasTaskRunner, FederatedModel  # NOQA
     from .data import TensorFlowDataLoader, KerasDataLoader, FederatedDataSet  # NOQA
-if pkgutil.find_loader('torch'):
+if importlib.util.find_spec('torch'):
     from .task import PyTorchTaskRunner, FederatedModel  # NOQA
     from .data import PyTorchDataLoader, FederatedDataSet  # NOQA
+
