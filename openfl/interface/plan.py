@@ -12,7 +12,8 @@ from click import pass_context
 from click import Path as ClickPath
 
 from openfl.utilities.path_check import is_directory_traversal
-from openfl.utilities.click_types import ListOption
+from openfl.utilities.click_types import InputSpec
+from openfl.utilities.mocks import MockDataLoader
 
 logger = getLogger(__name__)
 
@@ -37,12 +38,15 @@ def plan(context):
         default='plan/data.yaml', type=ClickPath(exists=True))
 @option('-a', '--aggregator_address', required=False,
         help='The FQDN of the federation agregator')
-@option('-f', '--feature_shape', cls=ListOption, required=False,
-        help='The input shape to the model (i.e. [1,28,28])')
+@option('-f', '--input_shape', cls=InputSpec, required=False,
+        help="The input shape to the model. May be provided as a list:\n\n"
+             "--input_shape [1,28,28]\n\n"
+             "or as a dictionary for multihead models (must be passed in quotes):\n\n"
+             "--input_shape \"{'input_0': [1, 240, 240, 4],'output_1': [1, 240, 240, 1]}\"\n\n ")
 @option('-g', '--gandlf_config', required=False,
         help='GaNDLF Configuration File Path')
 def initialize(context, plan_config, cols_config, data_config,
-               aggregator_address, feature_shape, gandlf_config):
+               aggregator_address, input_shape, gandlf_config):
     """
     Initialize Data Science plan.
 
@@ -55,12 +59,13 @@ def initialize(context, plan_config, cols_config, data_config,
     from openfl.protocols import utils
     from openfl.utilities.split import split_tensor_dict_for_holdouts
     from openfl.utilities.utils import getfqdn_env
-    from openfl.utilities.mocks import MockDataLoader
 
     for p in [plan_config, cols_config, data_config]:
         if is_directory_traversal(p):
             echo(f'{p} is out of the openfl workspace scope.')
             sys.exit(1)
+
+    logger.info("input shape = {input_shape}")
 
     plan_config = Path(plan_config).absolute()
     cols_config = Path(cols_config).absolute()
@@ -76,10 +81,10 @@ def initialize(context, plan_config, cols_config, data_config,
     init_state_path = plan.config['aggregator']['settings']['init_state_path']
 
     # This is needed to bypass data being locally available
-    if feature_shape is not None:
-        logger.info('Attempting to generate initial model weights with' \
-               f' custom feature shape {feature_shape}') 
-        data_loader = MockDataLoader(feature_shape)
+    if input_shape is not None:
+        logger.info('Attempting to generate initial model weights with'
+                    f' custom input shape {input_shape}')
+        data_loader = MockDataLoader(input_shape)
     else:
         # If feature shape is not provided, data is assumed to be present
         collaborator_cname = list(plan.cols_data_paths)[0]

@@ -1,6 +1,6 @@
-# Copyright (C) 2020-2023 Intel Corporation
+# Copyright (C) 2020-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-"""Click types module."""
+"""Custom input types definition for Click"""
 
 import click
 import ast
@@ -31,15 +31,16 @@ class IpAddressParamType(click.ParamType):
             self.fail(f'{value} is not a valid ip adress name', param, ctx)
         return value
 
-class ListOption(click.Option):
 
+class InputSpec(click.Option):
+    """List or dictionary that corresponds to the input shape for a model"""
     def type_cast_value(self, ctx, value):
         try:
             if value is None:
                 return None
             else:
                 return ast.literal_eval(value)
-        except:
+        except Exception:
             raise click.BadParameter(value)
 
 
