@@ -56,7 +56,7 @@ task_runner:
   template: src.tf_3dunet_model.TensorFlow3dUNet
 tasks:
   aggregated_model_validation:
-    function: validate
+    function: validate_task
     kwargs:
       apply: global
       batch_size: 4
@@ -65,7 +65,7 @@ tasks:
       - soft_dice_coef
   defaults: plan/defaults/tasks_tensorflow.yaml
   locally_tuned_model_validation:
-    function: validate
+    function: validate_task
     kwargs:
       apply: local
       batch_size: 4
@@ -74,7 +74,7 @@ tasks:
       - soft_dice_coef
   settings: {}
   train:
-    function: train
+    function: train_task
     kwargs:
       batch_size: 4
       epochs: 1

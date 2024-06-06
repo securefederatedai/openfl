@@ -5,12 +5,12 @@
 
 import tensorflow.compat.v1 as tf
 
-from openfl.federated import TensorFlowTaskRunner
+from openfl.federated import TensorFlowTaskRunner_v1
 
 tf.disable_v2_behavior()
 
 
-class TensorFlow2DUNet(TensorFlowTaskRunner):
+class TensorFlow2DUNet(TensorFlowTaskRunner_v1):
     """Initialize.
 
     Args:

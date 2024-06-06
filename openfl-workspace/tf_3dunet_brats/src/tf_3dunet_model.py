@@ -5,14 +5,14 @@
 
 import tensorflow as tf
 
-from openfl.federated import KerasTaskRunner
+from openfl.federated import TensorFlowTaskRunner
 from .define_model import build_model
 from .define_model import dice_coef
 from .define_model import dice_loss
 from .define_model import soft_dice_coef
 
 
-class TensorFlow3dUNet(KerasTaskRunner):
+class TensorFlow3dUNet(TensorFlowTaskRunner):
     """Initialize.
 
     Args:
