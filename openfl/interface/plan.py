@@ -65,8 +65,6 @@ def initialize(context, plan_config, cols_config, data_config,
             echo(f'{p} is out of the openfl workspace scope.')
             sys.exit(1)
 
-    logger.info("input shape = {input_shape}")
-
     plan_config = Path(plan_config).absolute()
     cols_config = Path(cols_config).absolute()
     data_config = Path(data_config).absolute()
