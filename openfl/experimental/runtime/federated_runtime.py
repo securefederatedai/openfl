@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from openfl.experimental.runtime import Runtime
+from openfl.experimental.runtime.runtime import Runtime
 
 if TYPE_CHECKING:
     from openfl.experimental.interface import Aggregator

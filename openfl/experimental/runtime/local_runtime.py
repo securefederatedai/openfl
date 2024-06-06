@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING, Optional
 
 import ray
 
-from openfl.experimental.runtime import Runtime
+from openfl.experimental.runtime.runtime import Runtime
 
 if TYPE_CHECKING:
     from openfl.experimental.interface import Aggregator, Collaborator, FLSpec
