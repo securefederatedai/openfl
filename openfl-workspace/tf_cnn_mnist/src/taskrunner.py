@@ -7,10 +7,10 @@ import numpy as np
 import tensorflow as tf
 
 from openfl.utilities import Metric
-from openfl.federated import KerasTaskRunner
+from openfl.federated import TensorFlowTaskRunner
 
 
-class TensorFlowCNN(KerasTaskRunner):
+class TensorFlowCNN(TensorFlowTaskRunner):
     """A basic convolutional neural network model."""
 
     def __init__(self, **kwargs):
@@ -51,30 +51,18 @@ class TensorFlowCNN(KerasTaskRunner):
             tensorflow.python.keras.engine.sequential.Sequential: The model defined in Keras
 
         """
+        
         model = tf.keras.models.Sequential([
-            tf.keras.layers.Conv2D(conv1_channels_out,
-                                   kernel_size=conv_kernel_size,
-                                   strides=conv_strides,
-                                   activation='relu',
-                                   input_shape=input_shape),
-           tf.keras.layers.Conv2D(conv2_channels_out,
-                                  kernel_size=conv_kernel_size,
-                                  strides=conv_strides,
-                                  activation='relu'),
+            tf.keras.layers.Conv2D(conv1_channels_out, kernel_size=conv_kernel_size, strides=conv_strides, activation='relu', input_shape=input_shape),
+            tf.keras.layers.Conv2D(conv2_channels_out, kernel_size=conv_kernel_size, strides=conv_strides, activation='relu'),
             tf.keras.layers.Flatten(),
             tf.keras.layers.Dense(final_dense_inputsize, activation='relu'),
             tf.keras.layers.Dense(num_classes, activation='softmax')
         ])
 
         model.compile(loss=tf.keras.losses.categorical_crossentropy,
-                      optimizer=tf.keras.optimizers.legacy.Adam(),
+                      optimizer=tf.keras.optimizers.Adam(),
                       metrics=['accuracy'])
-
-        # initialize the optimizer variables
-        opt_vars = model.optimizer.variables()
-
-        for v in opt_vars:
-            v.initializer.run(session=self.sess)
 
         return model
     
@@ -100,7 +88,7 @@ class TensorFlowCNN(KerasTaskRunner):
         for param in metrics:
             if param not in model_metrics_names:
                 raise ValueError(
-                    f'KerasTaskRunner does not support specifying new metrics. '
+                    f'TensorFlowTaskRunner does not support specifying new metrics. '
                     f'Param_metrics = {metrics}, model_metrics_names = {model_metrics_names}'
                 )
 

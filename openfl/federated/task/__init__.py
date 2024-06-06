@@ -3,23 +3,23 @@
 
 """Task package."""
 
-import pkgutil
+import importlib.util
 from warnings import catch_warnings
 from warnings import simplefilter
 
 with catch_warnings():
     simplefilter(action='ignore', category=FutureWarning)
-    if pkgutil.find_loader('tensorflow'):
+    if importlib.util.find_spec('tensorflow') is not None:
         # ignore deprecation warnings in command-line interface
         import tensorflow  # NOQA
 
 from .runner import TaskRunner  # NOQA
 
-
-if pkgutil.find_loader('tensorflow'):
+if importlib.util.find_spec('tensorflow') is not None:
     from .runner_tf import TensorFlowTaskRunner  # NOQA
+    from .runner_tf import TensorFlowTaskRunner_v1  # NOQA
     from .runner_keras import KerasTaskRunner  # NOQA
     from .fl_model import FederatedModel  # NOQA
-if pkgutil.find_loader('torch'):
+if importlib.util.find_spec('torch') is not None:
     from .runner_pt import PyTorchTaskRunner  # NOQA
     from .fl_model import FederatedModel  # NOQA
