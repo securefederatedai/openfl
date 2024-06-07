@@ -257,12 +257,7 @@ class TensorFlowTaskRunner(TaskRunner):
             The weight name list
         """
         if with_opt_vars:
-            # When acquiring optimizer weights, check optimizer version.
-            # Current optimizer does not use 'weights' attributes
-            if 'legacy' in obj.__class__.__module__:
-                weight_names = [weight.name for weight in obj.weights]
-            else:
-                weight_names = [weight.name for weight in obj.variables]
+            weight_names = [weight.name for weight in obj.variables]
 
         weight_names = [weight.name for weight in obj.weights]
         return weight_names
@@ -287,14 +282,8 @@ class TensorFlowTaskRunner(TaskRunner):
 
         weights_dict = {}
         if with_opt_vars:
-            # When acquiring optimizer weights, check optimizer version.
-            # Current optimizer does not use 'weights' or '.get_weights()' attributes
-            if 'legacy' in obj.__class__.__module__:
-                weight_names = [weight.name for weight in obj.weights]
-                weight_values = obj.get_weights()
-            else:
-                weight_names = [weight.name for weight in obj.variables]
-                weight_values = [weight.numpy() for weight in obj.variables]
+            weight_names = [weight.name for weight in obj.variables]
+            weight_values = [weight.numpy() for weight in obj.variables]
         else:
             weight_names = [weight.name for weight in obj.weights]
             weight_values = obj.get_weights()
@@ -319,12 +308,7 @@ class TensorFlowTaskRunner(TaskRunner):
         """
 
         if with_opt_vars:
-            # When acquiring optimizer weights, check optimizer version.
-            # Current optimizer does not use 'weights' attributes
-            if 'legacy' in obj.__class__.__module__:
-                weight_names = [weight.name for weight in obj.weights]
-            else:
-                weight_names = [weight.name for weight in obj.variables]
+            weight_names = [weight.name for weight in obj.variables]
         else:
             weight_names = [weight.name for weight in obj.weights]
 
@@ -383,15 +367,10 @@ class TensorFlowTaskRunner(TaskRunner):
             model_weights_dict = {
                 name: tensor_dict[name] for name in model_weight_names
             }
-            if 'legacy' in self.model.optimizer.__class__.__module__:
-                opt_weight_names = [
-                    weight.name for weight in self.model.optimizer.weights
-                ]
-            else:
-                opt_weight_names = [
-                    weight.name for weight in self.model.optimizer.variables
-                ]
 
+            opt_weight_names = [
+                weight.name for weight in self.model.optimizer.variables
+            ]
             opt_weights_dict = {
                 name: tensor_dict[name] for name in opt_weight_names
             }
