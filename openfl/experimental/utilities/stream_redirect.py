@@ -61,7 +61,7 @@ class RedirectStdStream(object):
 
     def write(self, message):
         """Writes the message to the standard destination and buffer.
-        
+
         Args:
             message (str): The message to write.
         """
