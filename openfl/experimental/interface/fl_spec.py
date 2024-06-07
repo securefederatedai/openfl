@@ -1,24 +1,24 @@
 # Copyright (C) 2020-2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-
 """openfl.experimental.interface.flspec module."""
 
 from __future__ import annotations
 
 import inspect
 from copy import deepcopy
-from typing import Type, List, Callable
+from typing import Callable, List, Type
+
+from openfl.experimental.runtime import Runtime
 from openfl.experimental.utilities import (
     MetaflowInterface,
     SerializationError,
-    generate_artifacts,
     aggregator_to_collaborator,
+    checkpoint,
     collaborator_to_aggregator,
-    should_transfer,
     filter_attributes,
-    checkpoint
+    generate_artifacts,
+    should_transfer,
 )
-from openfl.experimental.runtime import Runtime
 
 
 class FLSpec:
@@ -119,7 +119,9 @@ class FLSpec:
             return_objs.append(backup)
         return return_objs
 
-    def _is_at_transition_point(self, f: Callable, parent_func: Callable) -> bool:
+    def _is_at_transition_point(
+        self, f: Callable, parent_func: Callable
+    ) -> bool:
         """
         Has the collaborator finished its current sequence?
 
@@ -130,12 +132,16 @@ class FLSpec:
         if parent_func.__name__ in self._foreach_methods:
             self._foreach_methods.append(f.__name__)
             if should_transfer(f, parent_func):
-                print(f"Should transfer from {parent_func.__name__} to {f.__name__}")
+                print(
+                    f"Should transfer from {parent_func.__name__} to {f.__name__}"
+                )
                 self.execute_next = f.__name__
                 return True
         return False
 
-    def _display_transition_logs(self, f: Callable, parent_func: Callable) -> None:
+    def _display_transition_logs(
+        self, f: Callable, parent_func: Callable
+    ) -> None:
         """
         Prints aggregator to collaborators or
         collaborators to aggregator state transition logs
@@ -159,9 +165,9 @@ class FLSpec:
         for col in selected_collaborators:
             clone = FLSpec._clones[col]
             clone.input = col
-            if ("exclude" in kwargs and hasattr(clone, kwargs["exclude"][0])) or (
-                "include" in kwargs and hasattr(clone, kwargs["include"][0])
-            ):
+            if (
+                "exclude" in kwargs and hasattr(clone, kwargs["exclude"][0])
+            ) or ("include" in kwargs and hasattr(clone, kwargs["include"][0])):
                 filter_attributes(clone, f, **kwargs)
             artifacts_iter, _ = generate_artifacts(ctx=self)
             for name, attr in artifacts_iter():
@@ -184,7 +190,7 @@ class FLSpec:
         """
         FLSpec._reset_clones()
         FLSpec._create_clones(self, self.runtime.collaborators)
-        selected_collaborators = self.__getattribute__(kwargs['foreach'])
+        selected_collaborators = self.__getattribute__(kwargs["foreach"])
 
         for col in selected_collaborators:
             clone = FLSpec._clones[col]
@@ -226,9 +232,15 @@ class FLSpec:
 
             if "foreach" in kwargs:
                 self.filter_exclude_include(f, **kwargs)
-            # if "foreach" in kwargs:
-                self.execute_task_args = (self, f, parent_func, FLSpec._clones,
-                                          agg_to_collab_ss, kwargs)
+                # if "foreach" in kwargs:
+                self.execute_task_args = (
+                    self,
+                    f,
+                    parent_func,
+                    FLSpec._clones,
+                    agg_to_collab_ss,
+                    kwargs,
+                )
             else:
                 self.execute_task_args = (self, f, parent_func, kwargs)
 
