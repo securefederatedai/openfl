@@ -1,20 +1,18 @@
 # Copyright (C) 2020-2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-
 """AggregatorGRPCClient module."""
 
 import time
 from logging import getLogger
-from typing import Optional
-from typing import Tuple
+from typing import Optional, Tuple
 
 import grpc
 
-from openfl.experimental.protocols import aggregator_pb2
-from openfl.experimental.protocols import aggregator_pb2_grpc
+from openfl.experimental.protocols import aggregator_pb2, aggregator_pb2_grpc
+from openfl.experimental.transport.grpc.grpc_channel_options import (
+    channel_options,
+)
 from openfl.utilities import check_equal
-
-from .grpc_channel_options import channel_options
 
 
 class ConstantBackoff:
@@ -28,7 +26,7 @@ class ConstantBackoff:
 
     def sleep(self):
         """Sleep for specified interval."""
-        self.logger.info(f'Attempting to connect to aggregator at {self.uri}')
+        self.logger.info(f"Attempting to connect to aggregator at {self.uri}")
         time.sleep(self.reconnect_interval)
 
 
@@ -38,15 +36,17 @@ class RetryOnRpcErrorClientInterceptor(
     """Retry gRPC connection on failure."""
 
     def __init__(
-            self,
-            sleeping_policy,
-            status_for_retry: Optional[Tuple[grpc.StatusCode]] = None,
+        self,
+        sleeping_policy,
+        status_for_retry: Optional[Tuple[grpc.StatusCode]] = None,
     ):
         """Initialize function for gRPC retry."""
         self.sleeping_policy = sleeping_policy
         self.status_for_retry = status_for_retry
 
-    def _intercept_call(self, continuation, client_call_details, request_or_iterator):
+    def _intercept_call(
+        self, continuation, client_call_details, request_or_iterator
+    ):
         """Intercept the call to the gRPC server."""
         while True:
             response = continuation(client_call_details, request_or_iterator)
@@ -54,10 +54,12 @@ class RetryOnRpcErrorClientInterceptor(
             if isinstance(response, grpc.RpcError):
 
                 # If status code is not in retryable status codes
-                self.sleeping_policy.logger.info(f'Response code: {response.code()}')
+                self.sleeping_policy.logger.info(
+                    f"Response code: {response.code()}"
+                )
                 if (
-                        self.status_for_retry
-                        and response.code() not in self.status_for_retry
+                    self.status_for_retry
+                    and response.code() not in self.status_for_retry
                 ):
                     return response
 
@@ -70,13 +72,16 @@ class RetryOnRpcErrorClientInterceptor(
         return self._intercept_call(continuation, client_call_details, request)
 
     def intercept_stream_unary(
-            self, continuation, client_call_details, request_iterator
+        self, continuation, client_call_details, request_iterator
     ):
         """Wrap intercept call for stream->unary RPC."""
-        return self._intercept_call(continuation, client_call_details, request_iterator)
+        return self._intercept_call(
+            continuation, client_call_details, request_iterator
+        )
 
 
 def _atomic_connection(func):
+
     def wrapper(self, *args, **kwargs):
         self.reconnect()
         response = func(self, *args, **kwargs)
@@ -87,6 +92,7 @@ def _atomic_connection(func):
 
 
 def _resend_data_on_reconnection(func):
+
     def wrapper(self, *args, **kwargs):
         while True:
             try:
@@ -94,7 +100,7 @@ def _resend_data_on_reconnection(func):
             except grpc.RpcError as e:
                 if e.code() == grpc.StatusCode.UNKNOWN:
                     self.logger.info(
-                        f'Attempting to resend data request to aggregator at {self.uri}'
+                        f"Attempting to resend data request to aggregator at {self.uri}"
                     )
                 elif e.code() == grpc.StatusCode.UNAUTHENTICATED:
                     raise
@@ -108,20 +114,22 @@ def _resend_data_on_reconnection(func):
 class AggregatorGRPCClient:
     """Client to the aggregator over gRPC-TLS."""
 
-    def __init__(self,
-                 agg_addr,
-                 agg_port,
-                 tls,
-                 disable_client_auth,
-                 root_certificate,
-                 certificate,
-                 private_key,
-                 aggregator_uuid=None,
-                 federation_uuid=None,
-                 single_col_cert_common_name=None,
-                 **kwargs):
+    def __init__(
+        self,
+        agg_addr,
+        agg_port,
+        tls,
+        disable_client_auth,
+        root_certificate,
+        certificate,
+        private_key,
+        aggregator_uuid=None,
+        federation_uuid=None,
+        single_col_cert_common_name=None,
+        **kwargs,
+    ):
         """Initialize."""
-        self.uri = f'{agg_addr}:{agg_port}'
+        self.uri = f"{agg_addr}:{agg_port}"
         self.tls = tls
         self.disable_client_auth = disable_client_auth
         self.root_certificate = root_certificate
@@ -132,7 +140,8 @@ class AggregatorGRPCClient:
 
         if not self.tls:
             self.logger.warn(
-                'gRPC is running on insecure channel with TLS disabled.')
+                "gRPC is running on insecure channel with TLS disabled."
+            )
             self.channel = self.create_insecure_channel(self.uri)
         else:
             self.channel = self.create_tls_channel(
@@ -140,7 +149,7 @@ class AggregatorGRPCClient:
                 self.root_certificate,
                 self.disable_client_auth,
                 self.certificate,
-                self.private_key
+                self.private_key,
             )
 
         self.header = None
@@ -153,8 +162,11 @@ class AggregatorGRPCClient:
             RetryOnRpcErrorClientInterceptor(
                 sleeping_policy=ConstantBackoff(
                     logger=self.logger,
-                    reconnect_interval=int(kwargs.get('client_reconnect_interval', 1)),
-                    uri=self.uri),
+                    reconnect_interval=int(
+                        kwargs.get("client_reconnect_interval", 1)
+                    ),
+                    uri=self.uri,
+                ),
                 status_for_retry=(grpc.StatusCode.UNAVAILABLE,),
             ),
         )
@@ -177,8 +189,14 @@ class AggregatorGRPCClient:
         """
         return grpc.insecure_channel(uri, options=channel_options)
 
-    def create_tls_channel(self, uri, root_certificate, disable_client_auth,
-                           certificate, private_key):
+    def create_tls_channel(
+        self,
+        uri,
+        root_certificate,
+        disable_client_auth,
+        certificate,
+        private_key,
+    ):
         """
         Set an secure gRPC channel (i.e. TLS).
 
@@ -193,17 +211,17 @@ class AggregatorGRPCClient:
         Returns:
             An insecure gRPC channel object
         """
-        with open(root_certificate, 'rb') as f:
+        with open(root_certificate, "rb") as f:
             root_certificate_b = f.read()
 
         if disable_client_auth:
-            self.logger.warn('Client-side authentication is disabled.')
+            self.logger.warn("Client-side authentication is disabled.")
             private_key_b = None
             certificate_b = None
         else:
-            with open(private_key, 'rb') as f:
+            with open(private_key, "rb") as f:
                 private_key_b = f.read()
-            with open(certificate, 'rb') as f:
+            with open(certificate, "rb") as f:
                 certificate_b = f.read()
 
         credentials = grpc.ssl_channel_credentials(
@@ -212,15 +230,14 @@ class AggregatorGRPCClient:
             certificate_chain=certificate_b,
         )
 
-        return grpc.secure_channel(
-            uri, credentials, options=channel_options)
+        return grpc.secure_channel(uri, credentials, options=channel_options)
 
     def _set_header(self, collaborator_name):
         self.header = aggregator_pb2.MessageHeader(
             sender=collaborator_name,
             receiver=self.aggregator_uuid,
             federation_uuid=self.federation_uuid,
-            single_col_cert_common_name=self.single_col_cert_common_name or ''
+            single_col_cert_common_name=self.single_col_cert_common_name or "",
         )
 
     def validate_response(self, reply, collaborator_name):
@@ -231,21 +248,19 @@ class AggregatorGRPCClient:
 
         # check that federation id matches
         check_equal(
-            reply.header.federation_uuid,
-            self.federation_uuid,
-            self.logger
+            reply.header.federation_uuid, self.federation_uuid, self.logger
         )
 
         # check that there is aggrement on the single_col_cert_common_name
         check_equal(
             reply.header.single_col_cert_common_name,
-            self.single_col_cert_common_name or '',
-            self.logger
+            self.single_col_cert_common_name or "",
+            self.logger,
         )
 
     def disconnect(self):
         """Close the gRPC channel."""
-        self.logger.debug(f'Disconnecting from gRPC server at {self.uri}')
+        self.logger.debug(f"Disconnecting from gRPC server at {self.uri}")
         self.channel.close()
 
     def reconnect(self):
@@ -261,10 +276,10 @@ class AggregatorGRPCClient:
                 self.root_certificate,
                 self.disable_client_auth,
                 self.certificate,
-                self.private_key
+                self.private_key,
             )
 
-        self.logger.debug(f'Connecting to gRPC at {self.uri}')
+        self.logger.debug(f"Connecting to gRPC at {self.uri}")
 
         self.stub = aggregator_pb2_grpc.AggregatorStub(
             grpc.intercept_channel(self.channel, *self.interceptors)
@@ -272,8 +287,9 @@ class AggregatorGRPCClient:
 
     @_atomic_connection
     @_resend_data_on_reconnection
-    def send_task_results(self, collaborator_name, round_number, next_step,
-                          clone_bytes):
+    def send_task_results(
+        self, collaborator_name, round_number, next_step, clone_bytes
+    ):
         """Send next function name to aggregator."""
         self._set_header(collaborator_name)
         request = aggregator_pb2.TaskResultsRequest(
@@ -281,7 +297,7 @@ class AggregatorGRPCClient:
             collab_name=collaborator_name,
             round_number=round_number,
             next_step=next_step,
-            execution_environment=clone_bytes
+            execution_environment=clone_bytes,
         )
 
         response = self.stub.SendTaskResults(request)
@@ -299,12 +315,19 @@ class AggregatorGRPCClient:
         response = self.stub.GetTasks(request)
         self.validate_response(response, collaborator_name)
 
-        return (response.round_number, response.function_name,
-                response.execution_environment, response.sleep_time, response.quit)
+        return (
+            response.round_number,
+            response.function_name,
+            response.execution_environment,
+            response.sleep_time,
+            response.quit,
+        )
 
     @_atomic_connection
     @_resend_data_on_reconnection
-    def call_checkpoint(self, collaborator_name, clone_bytes, function, stream_buffer):
+    def call_checkpoint(
+        self, collaborator_name, clone_bytes, function, stream_buffer
+    ):
         """Perform checkpoint for collaborator task."""
         self._set_header(collaborator_name)
 
