@@ -46,13 +46,22 @@ class TensorFlowCNN(TensorFlowTaskRunner):
             tensorflow.python.keras.engine.sequential.Sequential
 
         """
-        
+
         model = tf.keras.models.Sequential([
-            tf.keras.layers.Conv2D(16, kernel_size=(4, 4), strides=(2, 2), activation='relu', input_shape=input_shape),
-            tf.keras.layers.Conv2D(32, kernel_size=(4, 4), strides=(2, 2), activation='relu'),
+            tf.keras.layers.Conv2D(16, 
+                                   kernel_size=(4, 4), 
+                                   strides=(2, 2), 
+                                   activation='relu', 
+                                   input_shape=input_shape),
+            tf.keras.layers.Conv2D(32, 
+                                   kernel_size=(4, 4), 
+                                   strides=(2, 2), 
+                                   activation='relu'),
             tf.keras.layers.Flatten(),
-            tf.keras.layers.Dense(100, activation='relu'),
-            tf.keras.layers.Dense(num_classes, activation='softmax')
+            tf.keras.layers.Dense(100, 
+                                  activation='relu'),
+            tf.keras.layers.Dense(num_classes, 
+                                  activation='softmax')
         ])
 
         model.compile(loss=tf.keras.losses.categorical_crossentropy,
@@ -60,8 +69,7 @@ class TensorFlowCNN(TensorFlowTaskRunner):
                       metrics=['accuracy'])
 
         return model
-    
-    
+
     def train_(self, batch_generator, metrics: list = None, **kwargs):
         """Train single epoch.
 

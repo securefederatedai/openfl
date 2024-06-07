@@ -9,6 +9,9 @@ from openfl.utilities import change_tags, Metric, TensorKey
 from openfl.utilities.split import split_tensor_dict_for_holdouts
 from .runner import TaskRunner
 
+import tensorflow.compat.v1
+from tqdm import tqdm
+
 
 class TensorFlowTaskRunner(TaskRunner):
     """The base model for Keras models in the federation."""
@@ -70,8 +73,8 @@ class TensorFlowTaskRunner(TaskRunner):
         for epoch in range(epochs):
             self.logger.info(f'Run {epoch} epoch of {round_num} round')
             results = self.train_(self.data_loader.get_train_loader(batch_size),
-                                           metrics=metrics,
-                                           **kwargs)
+                                  metrics=metrics,
+                                  **kwargs)
 
         # output metric tensors (scalar)
         origin = col_name
@@ -260,7 +263,7 @@ class TensorFlowTaskRunner(TaskRunner):
                 weight_names = [weight.name for weight in obj.weights]
             else:
                 weight_names = [weight.name for weight in obj.variables]
-                
+
         weight_names = [weight.name for weight in obj.weights]
         return weight_names
 
@@ -296,7 +299,6 @@ class TensorFlowTaskRunner(TaskRunner):
             weight_names = [weight.name for weight in obj.weights]
             weight_values = obj.get_weights()
 
-
         for name, value in zip(weight_names, weight_values):
             weights_dict[name + suffix] = value
         return weights_dict
@@ -315,7 +317,7 @@ class TensorFlowTaskRunner(TaskRunner):
         Returns:
             None
         """
-                
+
         if with_opt_vars:
             # When acquiring optimizer weights, check optimizer version.
             # Current optimizer does not use 'weights' attributes
@@ -344,15 +346,15 @@ class TensorFlowTaskRunner(TaskRunner):
         Returns:
             dict: The tensor dictionary.
         """
-        
+
         model_weights = self._get_weights_dict(self.model, suffix)
 
         if with_opt_vars:
-            
+
             opt_weights = self._get_weights_dict(self.model.optimizer, suffix, with_opt_vars)
 
             model_weights.update(opt_weights)
-            
+
             if len(opt_weights) == 0:
                 self.logger.debug(
                     "WARNING: We didn't find variables for the optimizer.")
@@ -384,11 +386,11 @@ class TensorFlowTaskRunner(TaskRunner):
             if 'legacy' in self.model.optimizer.__class__.__module__:
                 opt_weight_names = [
                     weight.name for weight in self.model.optimizer.weights
-                    ]
+                ]
             else:
                 opt_weight_names = [
                     weight.name for weight in self.model.optimizer.variables
-                    ]
+                ]
 
             opt_weights_dict = {
                 name: tensor_dict[name] for name in opt_weight_names
@@ -565,11 +567,7 @@ class TensorFlowTaskRunner(TaskRunner):
         ]
 
 
-import tensorflow.compat.v1
-from tqdm import tqdm
-
-
-class TensorFlowTaskRunner_v1(TaskRunner):
+class TensorFlowTaskRunnerV1(TaskRunner):
     """
     Base class for TensorFlow models in the Federated Learning solution.
 

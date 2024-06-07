@@ -82,8 +82,8 @@ class KerasTaskRunner(TaskRunner):
         for epoch in range(epochs):
             self.logger.info(f'Run {epoch} epoch of {round_num} round')
             results = self.train_(self.data_loader.get_train_loader(batch_size),
-                                           metrics=metrics,
-                                           **kwargs)
+                                  metrics=metrics,
+                                  **kwargs)
 
         # output metric tensors (scalar)
         origin = col_name

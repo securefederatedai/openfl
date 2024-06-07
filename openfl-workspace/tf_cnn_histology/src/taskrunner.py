@@ -59,7 +59,7 @@ class TensorFlowCNN(TensorFlowTaskRunner):
         print(tf.config.threading.get_intra_op_parallelism_threads())
         print(tf.config.threading.get_inter_op_parallelism_threads())
 
-        ## Define Model using Functional API
+        # Define Model using Functional API
 
         inputs = tf.keras.layers.Input(shape=input_shape)
         conv = tf.keras.layers.Conv2D(
@@ -106,7 +106,6 @@ class TensorFlowCNN(TensorFlowTaskRunner):
         )
 
         return model
-
 
     def train_(self, batch_generator, metrics: list = None, **kwargs):
         """Train single epoch.
