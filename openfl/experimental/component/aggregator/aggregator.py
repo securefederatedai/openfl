@@ -1,19 +1,16 @@
 # Copyright (C) 2020-2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-
 """Experimental Aggregator module."""
-import time
-import queue
-import pickle
 import inspect
-from threading import Event
+import pickle
+import queue
+import time
 from logging import getLogger
-from typing import Any, Callable
-from typing import Dict, List, Tuple
+from threading import Event
+from typing import Any, Callable, Dict, List, Tuple
 
-from openfl.experimental.utilities import aggregator_to_collaborator
 from openfl.experimental.runtime import FederatedRuntime
-from openfl.experimental.utilities import checkpoint
+from openfl.experimental.utilities import aggregator_to_collaborator, checkpoint
 from openfl.experimental.utilities.metaflow_utils import MetaflowInterface
 
 
@@ -80,8 +77,9 @@ class Aggregator:
         # Event to inform aggregator that collaborators have sent the results
         self.collaborator_task_results = Event()
         # A queue for each task
-        self.__collaborator_tasks_queue = {collab: queue.Queue() for collab
-                                           in self.authorized_cols}
+        self.__collaborator_tasks_queue = {
+            collab: queue.Queue() for collab in self.authorized_cols
+        }
 
         self.flow = flow
         self.checkpoint = checkpoint
@@ -110,9 +108,7 @@ class Aggregator:
         Call private_attrs_callable function set
             attributes to self.__private_attrs.
         """
-        self.__private_attrs = self.__private_attrs_callable(
-            **kwargs
-        )
+        self.__private_attrs = self.__private_attrs_callable(**kwargs)
 
     def __set_attributes_to_clone(self, clone: Any) -> None:
         """
@@ -122,7 +118,9 @@ class Aggregator:
             for name, attr in self.__private_attrs.items():
                 setattr(clone, name, attr)
 
-    def __delete_agg_attrs_from_clone(self, clone: Any, replace_str: str = None) -> None:
+    def __delete_agg_attrs_from_clone(
+        self, clone: Any, replace_str: str = None
+    ) -> None:
         """
         Remove aggregator private attributes from FLSpec clone before
         transition from Aggregator step to collaborator steps.
@@ -132,7 +130,9 @@ class Aggregator:
         if len(self.__private_attrs) > 0:
             for attr_name in self.__private_attrs:
                 if hasattr(clone, attr_name):
-                    self.__private_attrs.update({attr_name: getattr(clone, attr_name)})
+                    self.__private_attrs.update(
+                        {attr_name: getattr(clone, attr_name)}
+                    )
                     if replace_str:
                         setattr(clone, attr_name, replace_str)
                     else:
@@ -185,27 +185,37 @@ class Aggregator:
                 len_connected_collabs = len(self.connected_collaborators)
                 if len_connected_collabs < len_sel_collabs:
                     # Waiting for collaborators to connect.
-                    self.logger.info("Waiting for "
-                                     + f"{len_connected_collabs}/{len_sel_collabs}"
-                                     + " collaborators to connect...")
+                    self.logger.info(
+                        "Waiting for "
+                        + f"{len_connected_collabs}/{len_sel_collabs}"
+                        + " collaborators to connect..."
+                    )
                 elif self.tasks_sent_to_collaborators != len_sel_collabs:
-                    self.logger.info("Waiting for "
-                                     + f"{self.tasks_sent_to_collaborators}/{len_sel_collabs}"
-                                     + " to make requests for tasks...")
+                    self.logger.info(
+                        "Waiting for "
+                        + f"{self.tasks_sent_to_collaborators}/{len_sel_collabs}"
+                        + " to make requests for tasks..."
+                    )
                 else:
                     # Waiting for selected collaborators to send the results.
-                    self.logger.info("Waiting for "
-                                     + f"{self.collaborators_counter}/{len_sel_collabs}"
-                                     + " collaborators to send results...")
+                    self.logger.info(
+                        "Waiting for "
+                        + f"{self.collaborators_counter}/{len_sel_collabs}"
+                        + " collaborators to send results..."
+                    )
                 time.sleep(Aggregator._get_sleep_time())
 
             self.collaborator_task_results.clear()
             f_name = self.next_step
             if hasattr(self, "instance_snapshot"):
-                self.flow.restore_instance_snapshot(self.flow, list(self.instance_snapshot))
+                self.flow.restore_instance_snapshot(
+                    self.flow, list(self.instance_snapshot)
+                )
                 delattr(self, "instance_snapshot")
 
-    def call_checkpoint(self, ctx: Any, f: Callable, stream_buffer: bytes = None) -> None:
+    def call_checkpoint(
+        self, ctx: Any, f: Callable, stream_buffer: bytes = None
+    ) -> None:
         """
         Perform checkpoint task.
 
@@ -221,9 +231,7 @@ class Aggregator:
             None
         """
         if self.checkpoint:
-            from openfl.experimental.interface import (
-                FLSpec,
-            )
+            from openfl.experimental.interface import FLSpec
 
             # Check if arguments are pickled, if yes then unpickle
             if not isinstance(ctx, FLSpec):
@@ -234,7 +242,9 @@ class Aggregator:
                 f = pickle.loads(f)
             if isinstance(stream_buffer, bytes):
                 # Set stream buffer as function parameter
-                setattr(f.__func__, "_stream_buffer", pickle.loads(stream_buffer))
+                setattr(
+                    f.__func__, "_stream_buffer", pickle.loads(stream_buffer)
+                )
 
             checkpoint(ctx, f)
 
@@ -265,22 +275,38 @@ class Aggregator:
             # If it is time to then inform the collaborator
             if self.time_to_quit:
                 self.logger.info(
-                    f"Sending signal to collaborator {collaborator_name} to shutdown...")
+                    f"Sending signal to collaborator {collaborator_name} to shutdown..."
+                )
                 # FIXME: 0, and "" instead of None is just for protobuf compatibility.
                 #  Cleaner solution?
-                return 0, "", None, Aggregator._get_sleep_time(), self.time_to_quit
+                return (
+                    0,
+                    "",
+                    None,
+                    Aggregator._get_sleep_time(),
+                    self.time_to_quit,
+                )
 
             # If not time to quit then sleep for 10 seconds
             time.sleep(Aggregator._get_sleep_time())
 
         # Get collaborator step, and clone for requesting collaborator
         next_step, clone = self.__collaborator_tasks_queue[
-            collaborator_name].get()
+            collaborator_name
+        ].get()
 
         self.tasks_sent_to_collaborators += 1
-        self.logger.info("Sending tasks to collaborator"
-                         + f" {collaborator_name} for round {self.current_round}...")
-        return self.current_round, next_step, pickle.dumps(clone), 0, self.time_to_quit
+        self.logger.info(
+            "Sending tasks to collaborator"
+            + f" {collaborator_name} for round {self.current_round}..."
+        )
+        return (
+            self.current_round,
+            next_step,
+            pickle.dumps(clone),
+            0,
+            self.time_to_quit,
+        )
 
     def do_task(self, f_name: str) -> Any:
         """
@@ -305,7 +331,9 @@ class Aggregator:
             if f.__name__ == "end":
                 f()
                 # Take the checkpoint of "end" step
-                self.__delete_agg_attrs_from_clone(self.flow, "Private attributes: Not Available.")
+                self.__delete_agg_attrs_from_clone(
+                    self.flow, "Private attributes: Not Available."
+                )
                 self.call_checkpoint(self.flow, f)
                 self.__set_attributes_to_clone(self.flow)
                 # Check if all rounds of external loop is executed
@@ -341,7 +369,9 @@ class Aggregator:
             # clones are arguments
             f(*selected_clones)
 
-            self.__delete_agg_attrs_from_clone(self.flow, "Private attributes: Not Available.")
+            self.__delete_agg_attrs_from_clone(
+                self.flow, "Private attributes: Not Available."
+            )
             # Take the checkpoint of executed step
             self.call_checkpoint(self.flow, f)
             self.__set_attributes_to_clone(self.flow)
@@ -360,7 +390,9 @@ class Aggregator:
                     temp = self.flow.execute_task_args[3:]
                     self.clones_dict, self.instance_snapshot, self.kwargs = temp
 
-                    self.selected_collaborators = getattr(self.flow, self.kwargs["foreach"])
+                    self.selected_collaborators = getattr(
+                        self.flow, self.kwargs["foreach"]
+                    )
                 else:
                     self.kwargs = self.flow.execute_task_args[3]
 
@@ -372,8 +404,13 @@ class Aggregator:
 
         return f_name if f_name != "end" else None
 
-    def send_task_results(self, collab_name: str, round_number: int, next_step: str,
-                          clone_bytes: bytes) -> None:
+    def send_task_results(
+        self,
+        collab_name: str,
+        round_number: int,
+        next_step: str,
+        clone_bytes: bytes,
+    ) -> None:
         """
         After collaborator execution, collaborator will call this function via gRPc
             to send next function.
@@ -411,11 +448,14 @@ class Aggregator:
             # Set the event to inform aggregator to resume the flow execution
             self.collaborator_task_results.set()
             # Empty tasks_sent_to_collaborators list for next time.
-            if self.tasks_sent_to_collaborators == len(self.selected_collaborators):
+            if self.tasks_sent_to_collaborators == len(
+                self.selected_collaborators
+            ):
                 self.tasks_sent_to_collaborators = 0
 
-    def valid_collaborator_cn_and_id(self, cert_common_name: str,
-                                     collaborator_common_name: str) -> bool:
+    def valid_collaborator_cn_and_id(
+        self, cert_common_name: str, collaborator_common_name: str
+    ) -> bool:
         """
         Determine if the collaborator certificate and ID are valid for this federation.
 
@@ -432,13 +472,17 @@ class Aggregator:
         # FIXME: "" instead of None is just for protobuf compatibility.
         #  Cleaner solution?
         if self.single_col_cert_common_name == "":
-            return (cert_common_name == collaborator_common_name
-                    and collaborator_common_name in self.authorized_cols)
+            return (
+                cert_common_name == collaborator_common_name
+                and collaborator_common_name in self.authorized_cols
+            )
         # otherwise, common_name must be in whitelist and
         # collaborator_common_name must be in authorized_cols
         else:
-            return (cert_common_name == self.single_col_cert_common_name
-                    and collaborator_common_name in self.authorized_cols)
+            return (
+                cert_common_name == self.single_col_cert_common_name
+                and collaborator_common_name in self.authorized_cols
+            )
 
     def all_quit_jobs_sent(self) -> bool:
         """Assert all quit jobs are sent to collaborators."""
