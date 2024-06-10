@@ -28,15 +28,18 @@ class Collaborator:
     Note:
         \* - Plan setting.
     """
-    def __init__(self,
-                 collaborator_name: str,
-                 aggregator_uuid: str,
-                 federation_uuid: str,
-                 client: Any,
-                 private_attributes_callable: Any = None,
-                 private_attributes_kwargs: Dict = {},
-                 private_attributes: Dict = {},
-                 **kwargs) -> None:
+
+    def __init__(
+        self,
+        collaborator_name: str,
+        aggregator_uuid: str,
+        federation_uuid: str,
+        client: Any,
+        private_attributes_callable: Any = None,
+        private_attributes_kwargs: Dict = {},
+        private_attributes: Dict = {},
+        **kwargs,
+    ) -> None:
 
         self.name = collaborator_name
         self.aggregator_uuid = aggregator_uuid
@@ -64,9 +67,7 @@ class Collaborator:
         Returns:
             None
         """
-        self.__private_attrs = self.__private_attrs_callable(
-            **kwargs
-        )
+        self.__private_attrs = self.__private_attrs_callable(**kwargs)
 
     def __set_attributes_to_clone(self, clone: Any) -> None:
         """

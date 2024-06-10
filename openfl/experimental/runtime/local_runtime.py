@@ -4,30 +4,33 @@
 """ openfl.experimental.runtime package LocalRuntime class."""
 
 from __future__ import annotations
-from copy import deepcopy
-import importlib
-import ray
-import os
+
 import gc
-from openfl.experimental.runtime import Runtime
-from typing import TYPE_CHECKING, Optional
-from logging import getLogger
+import importlib
 import math
+import os
+from copy import deepcopy
+from logging import getLogger
+from typing import TYPE_CHECKING, Optional
+
+import ray
+
+from openfl.experimental.runtime import Runtime
 
 if TYPE_CHECKING:
     from openfl.experimental.interface import Aggregator, Collaborator, FLSpec
 
+from typing import Any, Callable, Dict, List, Type
+
 from openfl.experimental.utilities import (
     ResourcesNotAvailableError,
     aggregator_to_collaborator,
-    generate_artifacts,
-    filter_attributes,
-    checkpoint,
-    get_number_of_gpus,
     check_resource_allocation,
+    checkpoint,
+    filter_attributes,
+    generate_artifacts,
+    get_number_of_gpus,
 )
-from typing import List, Any
-from typing import Dict, Type, Callable
 
 
 class RayExecutor:
@@ -654,9 +657,7 @@ class LocalRuntime(Runtime):
             flspec_obj: updated FLSpec (flow) object
         """
 
-        from openfl.experimental.interface import (
-            FLSpec,
-        )
+        from openfl.experimental.interface import FLSpec
 
         flspec_obj._foreach_methods.append(f.__name__)
         selected_collaborators = getattr(flspec_obj, kwargs["foreach"])
@@ -716,9 +717,7 @@ class LocalRuntime(Runtime):
             selected_collaborators : all collaborators
         """
 
-        from openfl.experimental.interface import (
-            FLSpec,
-        )
+        from openfl.experimental.interface import FLSpec
 
         for col in selected_collaborators:
             clone = FLSpec._clones[col]

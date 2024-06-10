@@ -267,7 +267,9 @@ class Plan:
         defaults[SETTINGS]["authorized_cols"] = self.authorized_cols
 
         private_attrs_callable, private_attrs_kwargs, private_attributes = (
-            self.get_private_attr("aggregator")
+            self.get_private_attr(
+                "aggregator"
+            )
         )
         defaults[SETTINGS]["private_attributes_callable"] = private_attrs_callable
         defaults[SETTINGS]["private_attributes_kwargs"] = private_attrs_kwargs
@@ -316,7 +318,9 @@ class Plan:
         defaults[SETTINGS]["federation_uuid"] = self.federation_uuid
 
         private_attrs_callable, private_attrs_kwargs, private_attributes = (
-            self.get_private_attr(collaborator_name)
+            self.get_private_attr(
+                collaborator_name
+            )
         )
         defaults[SETTINGS]["private_attributes_callable"] = private_attrs_callable
         defaults[SETTINGS]["private_attributes_kwargs"] = private_attrs_kwargs
@@ -473,7 +477,9 @@ class Plan:
             if d.get(private_attr_name, None):
                 if callable_func is not None:
                     private_attrs_callable = {
-                        "template": d.get(private_attr_name)["callable_func"]["template"]
+                        "template": d.get(private_attr_name)["callable_func"][
+                            "template"
+                        ]
                     }
 
                     private_attrs_kwargs = self.import_kwargs_modules(
@@ -481,7 +487,9 @@ class Plan:
                     )["settings"]
 
                     if isinstance(private_attrs_callable, dict):
-                        private_attrs_callable = Plan.import_(**private_attrs_callable)
+                        private_attrs_callable = Plan.import_(
+                            **private_attrs_callable
+                        )
 
                 elif private_attributes:
                     private_attributes = Plan.import_(

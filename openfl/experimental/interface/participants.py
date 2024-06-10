@@ -98,7 +98,9 @@ class Collaborator(Participant):
         the callable or by passing private_attrs argument
         """
         if self.private_attributes_callable is not None:
-            self.private_attributes = self.private_attributes_callable(**self.kwargs)
+            self.private_attributes = self.private_attributes_callable(
+                **self.kwargs
+            )
         elif private_attrs:
             self.private_attributes = private_attrs
 
@@ -196,7 +198,9 @@ class Aggregator(Participant):
         the callable or by passing private_attrs argument
         """
         if self.private_attributes_callable is not None:
-            self.private_attributes = self.private_attributes_callable(**self.kwargs)
+            self.private_attributes = self.private_attributes_callable(
+                **self.kwargs
+            )
         elif private_attrs:
             self.private_attributes = private_attrs
 

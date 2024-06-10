@@ -55,9 +55,13 @@ class WorkspaceExport:
                 "Please include `#| default_exp <experiment_name>` in "
                 "the first cell of the notebook."
             )
-        self.script_path = Path(self.__convert_to_python(
-            self.notebook_path, self.created_workspace_path.joinpath("src"),
-            f"{export_filename}.py")).resolve()
+        self.script_path = Path(
+            self.__convert_to_python(
+                self.notebook_path,
+                self.created_workspace_path.joinpath("src"),
+                f"{export_filename}.py",
+            )
+        ).resolve()
         print_tree(self.created_workspace_path, level=2)
 
         # Generated python script name without .py extension
@@ -352,10 +356,14 @@ class WorkspaceExport:
             if isinstance(t, federated_flow_class):
                 flow_name = tempstring
                 if not hasattr(t, "_runtime"):
-                    raise AttributeError("Unable to locate LocalRuntime instantiation")
+                    raise AttributeError(
+                        "Unable to locate LocalRuntime instantiation"
+                    )
                 runtime = t._runtime
                 if not hasattr(runtime, "collaborators"):
-                    raise AttributeError("LocalRuntime instance does not have collaborators")
+                    raise AttributeError(
+                        "LocalRuntime instance does not have collaborators"
+                    )
                 break
 
         data_yaml = self.created_workspace_path.joinpath("plan", "data.yaml").resolve()
@@ -403,8 +411,9 @@ class WorkspaceExport:
         # Get runtime collaborators
         collaborators = runtime._LocalRuntime__collaborators
         # Find arguments expected by Collaborator
-        arguments_passed_to_initialize = self.__extract_class_initializing_args("Collaborator")[
-            "kwargs"]
+        arguments_passed_to_initialize = self.__extract_class_initializing_args(
+            "Collaborator"
+        )["kwargs"]
         runtime_collab_created = False
         for collab in collaborators.values():
             collab_name = collab.get_name()
@@ -414,10 +423,7 @@ class WorkspaceExport:
             if callable_func:
                 if collab_name not in data:
                     data[collab_name] = {
-                        "callable_func": {
-                            "settings": {},
-                            "template": None
-                        }
+                        "callable_func": {"settings": {}, "template": None}
                     }
                 # Find collaborator private_attributes callable details
                 kw_args = runtime.get_collaborator_kwargs(collab_name)
