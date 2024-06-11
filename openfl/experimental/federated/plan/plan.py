@@ -469,23 +469,22 @@ class Plan:
         if os.path.exists(data_yaml) and os.path.isfile(data_yaml):
             d = Plan.load(Path(data_yaml).absolute())
 
-            callable_func = d.get(private_attr_name, {}).get(
-                "callable_func"
-            )
-            private_attributes = d.get(private_attr_name, {}).get(
-                "private_attributes"
-            )
-
-            if callable_func and private_attributes:
-                logger = getLogger(__name__)
-                logger.warning(
-                    f'Warning: {private_attr_name} private attributes '
-                    'will be initialized via callable and '
-                    'attributes directly specified '
-                    'will be ignored'
-                )
-
             if d.get(private_attr_name, None):
+                callable_func = d.get(private_attr_name, {}).get(
+                    "callable_func"
+                )
+                private_attributes = d.get(private_attr_name, {}).get(
+                    "private_attributes"
+                )
+                if callable_func and private_attributes:
+                    logger = getLogger(__name__)
+                    logger.warning(
+                        f'Warning: {private_attr_name} private attributes '
+                        'will be initialized via callable and '
+                        'attributes directly specified '
+                        'will be ignored'
+                    )
+
                 if callable_func is not None:
                     private_attrs_callable = {
                         "template": d.get(private_attr_name)["callable_func"][
