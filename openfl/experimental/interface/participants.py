@@ -9,7 +9,7 @@ class Participant:
 
     def __init__(self, name: str = ""):
         self.private_attributes = {}
-        self._name = name.lower()
+        self._name = name
 
     @property
     def name(self):
@@ -17,7 +17,7 @@ class Participant:
 
     @name.setter
     def name(self, name: str):
-        self._name = name.lower()
+        self._name = name
 
     def private_attributes(self, attrs: Dict[str, Any]) -> None:
         """
