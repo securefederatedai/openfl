@@ -171,7 +171,8 @@ Let's break this down, starting with the :code:`Aggregator` and :code:`Collabora
 
 In the above :code:`FederatedFlow`, each collaborator accesses train and test datasets via *private attributes* :code:`train_loader` and :code:`test_loader`. These *private attributes* need to be set in form of a dictionary(user defined), where the key is the name of the attribute and the value is the object. In this example :code:`collaborator.private_attributes` sets the collaborator *private attributes* :code:`train_loader` and :code:`test_loader` that are accessed by collaborator steps (:code:`aggregated_model_validation`, :code:`train` and :code:`local_model_validation`). 
     
-There is another way of initializing private attributes in which *private attributes* need to be set using a (user defined) callback function while instantiating the participant.
+While setting *private attributes* directly through a dictionary is the preferred method, this requires an object to be initialized before the flow begins execution. 
+In rare cases this can be a problem because certain python objects cannot be serialized. To compensate for these cases, users can delay the *private attributes* object initialization via the use of a callback: 
 
 .. code-block:: python
 
