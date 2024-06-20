@@ -4,6 +4,9 @@
 """Cutoff time based Straggler Handling function."""
 import numpy as np
 import time
+import threading
+from typing import Callable
+from logging import Logger
 
 from openfl.component.straggler_handling_functions import StragglerHandlingFunction
 
@@ -31,3 +34,20 @@ class CutoffTimeBasedStragglerHandling(StragglerHandlingFunction):
         cutoff = self.straggler_time_expired() and self.minimum_collaborators_reported(
             num_collaborators_done)
         return cutoff
+
+    # TODO: Rename function to something more appropriate
+    def start_timer(self, callback: Callable, logger: Logger):
+        # TODO: Add docstirng
+        self.round_start_time = time.time()
+        if self.straggler_cutoff_time == np.inf:
+            logger.warning("straggler_cutoff_time is set to np.inf, timer will not start.")
+            return
+
+        if hasattr(self, "timer"):
+            self.timer.cancel()
+            delattr(self, "timer")
+        self.timer = threading.Timer(
+            self.straggler_cutoff_time, callback,
+        )
+        self.timer.daemon = True
+        self.timer.start()

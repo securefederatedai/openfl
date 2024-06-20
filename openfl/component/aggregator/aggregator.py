@@ -332,9 +332,60 @@ class Aggregator:
         sleep_time = 0
 
         if hasattr(self.straggler_handling_policy, 'round_start_time'):
-            self.straggler_handling_policy.round_start_time = time.time()
+            self.straggler_handling_policy.start_timer(
+                self.__timer_expired, self.logger
+            )
 
         return tasks, self.round_number, sleep_time, time_to_quit
+
+    # TODO: Rename function to something more appropriate
+    def __timer_expired(self):
+        # TODO: Add docstring
+        self.logger.info("Wait time elapsed.")
+
+        straggler_collaborators_name = []
+        unfinished_task_name = None
+
+        all_tasks = self.assigner.get_all_tasks_for_round(self.round_number)
+        for task_name in all_tasks:
+            # All collaborators which were supposed to perform task
+            all_collaborators = self.assigner.get_collaborators_for_task(
+                task_name, self.round_number
+            )
+            # Check how many collaborators completed the task
+            collaborators_done = []
+            for c in all_collaborators:
+                if self._collaborator_task_completed(
+                    c, task_name, self.round_number):
+                    collaborators_done.append(c)
+                else:
+                    # Found straggler collaborator and unfinished task
+                    straggler_collaborators_name.append(c)
+                    unfinished_task_name = task_name
+            if len(straggler_collaborators_name) != 0 and unfinished_task_name != None:
+                break
+
+        if len(straggler_collaborators_name) == 0 and unfinished_task_name == None:
+            return
+
+        # Check if minimum collaborators reported results
+        straggler_check = self.straggler_handling_policy.straggler_cutoff_check(
+            len(collaborators_done), all_collaborators
+        )
+        if straggler_check:
+            self.logger.info(
+                f"Collaborator {straggler_collaborators_name} did not send "
+                f"{unfinished_task_name} task results for round {self.round_number} in time."
+            )
+            self.logger.info("Minimum required collaborators already reported task results.")
+            self.logger.info("Starting next round...")
+            self._end_of_round_check()
+            return
+        self.logger.warning(
+            "Minimum required collaborators did not report results, "
+            "disregarding straggler handling policy, waiting for minimum "
+            "required collaborators to send results..."
+        )
 
     def get_aggregated_tensor(self, collaborator_name, tensor_name,
                               round_number, report, tags, require_lossless):
@@ -506,7 +557,7 @@ class Aggregator:
         if self._time_to_quit() or self._is_task_done(task_name):
             self.logger.warning(
                 f'STRAGGLER: Collaborator {collaborator_name} is reporting results '
-                'after task {task_name} has finished.'
+                f'after task {task_name} has finished.'
             )
             return
 
