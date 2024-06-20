@@ -332,15 +332,19 @@ class Aggregator:
         sleep_time = 0
 
         if hasattr(self.straggler_handling_policy, 'round_start_time'):
-            self.straggler_handling_policy.start_timer(
-                self.__timer_expired, self.logger
+            self.straggler_handling_policy.start_straggler_cutoff_timer(
+                self._straggler_cutoff_time_elapsed, self.logger
             )
 
         return tasks, self.round_number, sleep_time, time_to_quit
 
-    # TODO: Rename function to something more appropriate
-    def __timer_expired(self):
-        # TODO: Add docstring
+    def _straggler_cutoff_time_elapsed(self) -> None:
+        """
+        Implement straggler handling policy.
+
+        Returns:
+            None
+        """
         self.logger.info("Wait time elapsed.")
 
         straggler_collaborators_name = []

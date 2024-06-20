@@ -35,14 +35,22 @@ class CutoffTimeBasedStragglerHandling(StragglerHandlingFunction):
             num_collaborators_done)
         return cutoff
 
-    # TODO: Rename function to something more appropriate
-    def start_timer(self, callback: Callable, logger: Logger):
-        # TODO: Add docstirng
+    def start_straggler_cutoff_timer(self, callback: Callable, logger: Logger) -> None:
+        """
+        Start timer.
+
+        Args:
+            callback: Callable
+                Callback function for when straggler_cutoff_time elapses
+            logger: Logger
+
+        Returns:
+            None
+        """
         self.round_start_time = time.time()
         if self.straggler_cutoff_time == np.inf:
             logger.warning("straggler_cutoff_time is set to np.inf, timer will not start.")
             return
-
         if hasattr(self, "timer"):
             self.timer.cancel()
             delattr(self, "timer")
