@@ -75,7 +75,6 @@ def start_(plan, collaborator_name, secure, data_config="plan/data.yaml"):
         import yaml
         from yaml.loader import SafeLoader
 
-        collaborator_name = collaborator_name.lower()
         with open(data_config, "r") as f:
             data = yaml.load(f, Loader=SafeLoader)
             if data.get(collaborator_name, None) is None:
@@ -118,7 +117,7 @@ def generate_cert_request(collaborator_name, silent, skip_package):
     from openfl.cryptography.participant import generate_csr
     from openfl.experimental.interface.cli.cli_helper import CERT_DIR
 
-    common_name = f"{collaborator_name}".lower()
+    common_name = f"{collaborator_name}"
     subject_alternative_name = f"DNS:{common_name}"
     file_name = f"col_{common_name}"
 
@@ -282,7 +281,7 @@ def certify(collaborator_name, silent, request_pkg=None, import_=False):
     from openfl.experimental.interface.cli.cli_helper import CERT_DIR
     from openfl.utilities.utils import rmtree
 
-    common_name = f"{collaborator_name}".lower()
+    common_name = f"{collaborator_name}"
 
     if not import_:
         if request_pkg:
