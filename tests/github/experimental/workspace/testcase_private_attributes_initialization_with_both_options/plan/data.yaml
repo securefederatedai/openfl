@@ -1,0 +1,26 @@
+## Copyright (C) 2020-2023 Intel Corporation
+# Licensed subject to the terms of the separately executed evaluation license agreement between Intel Corporation and you.
+
+# all keys under 'collaborators' corresponds to a specific colaborator name the corresponding dictionary has data_name, data_path pairs.
+# Note that in the mnist case we do not store the data locally, and the data_path is used to pass an integer that helps the data object
+# construct the shard of the mnist dataset to be use for this collaborator.
+
+col1:
+  callable_func:
+    settings:
+      index: 1
+    template: src.collaborator_private_attrs.collaborator_private_attrs
+  private_attributes: src.collaborator_private_attrs.collaborator_private_attributes
+
+col2:
+  callable_func:
+    settings:
+      index: 2
+    template: src.collaborator_private_attrs.collaborator_private_attrs
+  private_attributes: src.collaborator_private_attrs.collaborator_private_attributes
+
+aggregator:
+  callable_func:
+    settings: {}
+    template: src.aggregator_private_attrs.aggregator_private_attrs
+  private_attributes: src.aggregator_private_attrs.aggregator_private_attributes
