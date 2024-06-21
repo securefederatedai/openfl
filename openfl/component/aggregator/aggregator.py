@@ -345,7 +345,10 @@ class Aggregator:
         Returns:
             None
         """
-        self.logger.info("Wait time elapsed.")
+        self.logger.info(
+            f"straggler_cutoff_time of {self.straggler_handling_policy.straggler_cutoff_time}s "
+            f"elapsed. Applying {self.straggler_handling_policy.__class__.__name__} straggler policy."
+        )
 
         straggler_collaborators_name = []
         unfinished_task_name = None
@@ -378,18 +381,42 @@ class Aggregator:
         )
         if straggler_check:
             self.logger.info(
-                f"Collaborator {straggler_collaborators_name} did not send "
+                f"Collaborator(s) {straggler_collaborators_name} did not send "
                 f"{unfinished_task_name} task results for round {self.round_number} in time."
             )
-            self.logger.info("Minimum required collaborators already reported task results.")
+            if len(collaborators_done) > self.straggler_handling_policy.minimum_reporting:
+                self.logger.info(
+                    f"{len(collaborators_done)} collaborator(s) reported results in time, "
+                    "which is more than minimum required of "
+                    f"{self.straggler_handling_policy.minimum_reporting} collaborator(s)."
+                )
+            else:
+                self.logger.info(
+                    f"Minimum required of {self.straggler_handling_policy.minimum_reporting} "
+                    "collaborator(s) already reported task results in time."
+                )
             self.logger.info("Starting next round...")
             self._end_of_round_check()
             return
-        self.logger.warning(
-            "Minimum required collaborators did not report results, "
-            "disregarding straggler handling policy, waiting for minimum "
-            "required collaborators to send results..."
-        )
+
+        if len(collaborators_done) == 0:
+            self.logger.info(
+                "No collaborators reported results in time, disregarding straggler "
+                "handling policy and "
+                f"waiting for minimum of {self.straggler_handling_policy.minimum_reporting} "
+                "collaborator(s) to report results."
+            )
+        else:
+            self.logger.info(
+                f"Only {len(collaborators_done)} collaborator(s) reported results in time, "
+                "which less than minimum required of "
+                f"{self.straggler_handling_policy.minimum_reporting} collaborator(s)."
+            )
+            self.logger.info(
+                "Disregarding straggler handling policy and waiting for minimum of "
+                f"{self.straggler_handling_policy.minimum_reporting} collaborator(s) "
+                "to report results."
+            )
 
     def get_aggregated_tensor(self, collaborator_name, tensor_name,
                               round_number, report, tags, require_lossless):
@@ -847,7 +874,7 @@ class Aggregator:
         # leave out stragglers for the round
         collaborators_for_task = []
         for c in all_collaborators_for_task:
-            if self._collaborator_task_completed(c, task_name, self.round_number):
+            if c not in self.stragglers:
                 collaborators_for_task.append(c)
 
         # The collaborator data sizes for that task
