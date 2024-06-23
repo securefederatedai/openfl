@@ -156,7 +156,7 @@ setup(
         'grpcio>=1.56.2',
         'ipykernel',
         'jupyterlab',
-        'numpy',
+        'numpy<2',
         'pandas',
         'protobuf>=3.20.3',
         'pyzmq<=26.0.3',
