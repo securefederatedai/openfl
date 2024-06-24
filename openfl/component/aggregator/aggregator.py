@@ -837,13 +837,22 @@ class Aggregator:
                 agg_tensor_key, collaborator_weight_dict, aggregation_function=agg_function)
             if report:
                 # Print the aggregated metric
+                # metric_dict = {
+                #     'metric_origin': 'Aggregator',
+                #     'task_name': task_name,
+                #     'metric_name': tensor_key.tensor_name,
+                #     'metric_value': agg_results.item(),
+                #     'round': round_number}
                 metric_dict = {
-                    'metric_origin': 'Aggregator',
-                    'task_name': task_name,
-                    'metric_name': tensor_key.tensor_name,
-                    'metric_value': agg_results.item(),
-                    'round': round_number}
-
+                    # metric_origin -> {...}
+                    tensor_key.tags[-1]: {
+                        'round': round_number,
+                        task_name: {
+                            # metric_name -> metric_value
+                            tensor_key.tensor_name: agg_results.item()
+                        }
+                    }
+                }
                 if agg_function:
                     self.logger.metric(f'Round {round_number}, aggregator: {task_name} '
                                        f'{agg_function} {agg_tensor_name}:\t{agg_results:f}')
