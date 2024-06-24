@@ -12,6 +12,8 @@ from click import pass_context
 from click import Path as ClickPath
 
 from openfl.utilities.path_check import is_directory_traversal
+from openfl.utilities.click_types import InputSpec
+from openfl.utilities.mocks import MockDataLoader
 
 logger = getLogger(__name__)
 
@@ -40,15 +42,19 @@ def plan(context):
         default='plan/data.yaml', type=ClickPath(exists=True))
 @option('-a', '--aggregator_address', required=False,
         help='The FQDN of the federation agregator')
-@option('-f', '--feature_shape', required=False,
-        help='The input shape to the model')
+@option('-f', '--input_shape', cls=InputSpec, required=False,
+        help="The input shape to the model. May be provided as a list:\n\n"
+             "--input_shape [1,28,28]\n\n"
+             "or as a dictionary for multihead models (must be passed in quotes):\n\n"
+             "--input_shape \"{'input_0': [1, 240, 240, 4],'output_1': [1, 240, 240, 1]}\"\n\n ")
 @option('-g', '--gandlf_config', required=False,
         help='GaNDLF Configuration File Path')
 def initialize(context, plan_config, cols_config, data_config,
                aggregator_address, feature_shape, gandlf_config):
     """Initialize Data Science plan.
 
-    Create a protocol buffer file of the initial model weights for the federation.
+    Create a protocol buffer file of the initial model weights for the
+    federation.
 
     Args:
         context (click.core.Context): Click context.
@@ -84,18 +90,15 @@ def initialize(context, plan_config, cols_config, data_config,
 
     init_state_path = plan.config['aggregator']['settings']['init_state_path']
 
-    # TODO:  Is this part really needed?  Why would we need to collaborator
-    #  name to know the input shape to the model?
-
-    # if  feature_shape is None:
-    #     if  cols_config is None:
-    #         exit('You must specify either a feature
-    #         shape or authorized collaborator
-    #         list in order for the script to determine the input layer shape')
-
-    collaborator_cname = list(plan.cols_data_paths)[0]
-
-    data_loader = plan.get_data_loader(collaborator_cname)
+    # This is needed to bypass data being locally available
+    if input_shape is not None:
+        logger.info('Attempting to generate initial model weights with'
+                    f' custom input shape {input_shape}')
+        data_loader = MockDataLoader(input_shape)
+    else:
+        # If feature shape is not provided, data is assumed to be present
+        collaborator_cname = list(plan.cols_data_paths)[0]
+        data_loader = plan.get_data_loader(collaborator_cname)
     task_runner = plan.get_task_runner(data_loader)
     tensor_pipe = plan.get_tensor_pipe()
 
@@ -186,7 +189,7 @@ def freeze(plan_config):
 
 def switch_plan(name):
     """Switch the FL plan to this one.
-    
+
     Args:
         name (str): Name of the Federated learning plan.
 
@@ -231,7 +234,7 @@ def switch_plan(name):
         default='default', type=str)
 def switch_(name):
     """Switch the current plan to this plan.
-    
+
     Args:
         name (str): Name of the Federated learning plan.
     """
@@ -244,7 +247,7 @@ def switch_(name):
         default='default', type=str)
 def save_(name):
     """Save the current plan to this plan and switch.
-    
+
     Args:
         name (str): Name of the Federated learning plan.
     """
@@ -267,7 +270,7 @@ def save_(name):
         default='default', type=str)
 def remove_(name):
     """Remove this plan.
-    
+
     Args:
         name (str): Name of the Federated learning plan.
     """
