@@ -547,12 +547,22 @@ class Aggregator:
             )
             if 'metric' in tensor_key.tags:
                 metric_value = nparray.item()
+                # metric_dict = {
+                #     'metric_origin': tensor_key.tags[-1],
+                #     'task_name': task_name,
+                #     'metric_name': tensor_key.tensor_name,
+                #     'metric_value': metric_value,
+                #     'round': round_number}
                 metric_dict = {
-                    'metric_origin': tensor_key.tags[-1],
-                    'task_name': task_name,
-                    'metric_name': tensor_key.tensor_name,
-                    'metric_value': metric_value,
-                    'round': round_number}
+                    # metric_origin -> {...}
+                    tensor_key.tags[-1]: {
+                        'round': round_number,
+                        task_name: {
+                            # metric_name -> metric_value
+                            tensor_key.tensor_name: metric_value
+                        }
+                    }
+                }
                 if self.write_logs:
                     self.log_metric(tensor_key.tags[-1], task_name,
                                     tensor_key.tensor_name, nparray, round_number)
