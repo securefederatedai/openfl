@@ -554,9 +554,9 @@ class Aggregator:
                 #     'metric_value': metric_value,
                 #     'round': round_number}
                 metric_dict = {
+                    'round': round_number,
                     # metric_origin -> {...}
                     tensor_key.tags[-1]: {
-                        'round': round_number,
                         task_name: {
                             # metric_name -> metric_value
                             tensor_key.tensor_name: metric_value
@@ -844,12 +844,14 @@ class Aggregator:
                 #     'metric_value': agg_results.item(),
                 #     'round': round_number}
                 metric_dict = {
-                    # metric_origin -> {...}
-                    tensor_key.tags[-1]: {
-                        'round': round_number,
-                        task_name: {
-                            # metric_name -> metric_value
-                            tensor_key.tensor_name: agg_results.item()
+                    'round': round_number,
+                    'aggregator': {
+                            # metric_origin -> {...}
+                            tensor_key.tags[-1]: {
+                            task_name: {
+                                # metric_name -> metric_value
+                                tensor_key.tensor_name: agg_results.item()
+                            }
                         }
                     }
                 }
