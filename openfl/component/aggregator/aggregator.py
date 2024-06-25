@@ -350,8 +350,7 @@ class Aggregator:
             f"elapsed. Applying {self.straggler_handling_policy.__class__.__name__} straggler policy."
         )
 
-        straggler_collaborators_name = []
-        unfinished_task_name = None
+        straggler_collaborators_and_unfinished_tasks = {}
 
         all_tasks = self.assigner.get_all_tasks_for_round(self.round_number)
         for task_name in all_tasks:
@@ -367,12 +366,10 @@ class Aggregator:
                     collaborators_done.append(c)
                 else:
                     # Found straggler collaborator and unfinished task
-                    straggler_collaborators_name.append(c)
-                    unfinished_task_name = task_name
-            if len(straggler_collaborators_name) != 0 and unfinished_task_name != None:
-                break
+                    straggler_collaborators_and_unfinished_tasks[c] = task_name
 
-        if len(straggler_collaborators_name) == 0 and unfinished_task_name == None:
+        # Nothing to do if there are no straggler collaborator(s) and no unfinished task(s)
+        if len(straggler_collaborators_and_unfinished_tasks) == 0:
             return
 
         # Check if minimum collaborators reported results
@@ -381,8 +378,9 @@ class Aggregator:
         )
         if straggler_check:
             self.logger.info(
-                f"Collaborator(s) {straggler_collaborators_name} did not send "
-                f"{unfinished_task_name} task results for round {self.round_number} in time."
+                f"Collaborator(s) {list(straggler_collaborators_and_unfinished_tasks.keys())} "
+                f"did not send {list(straggler_collaborators_and_unfinished_tasks.values())} "
+                f"task results for round {self.round_number} in time."
             )
             if len(collaborators_done) > self.straggler_handling_policy.minimum_reporting:
                 self.logger.info(
