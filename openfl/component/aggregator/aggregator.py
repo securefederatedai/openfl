@@ -552,9 +552,8 @@ class Aggregator:
             if 'metric' in tensor_key.tags:
                 # This tree structure enables efficient conversion between
                 # list-of-dicts to dict-of-lists and vice versa.
-                metrics.update({
-                    task_name: {tensor_key.tensor_name: value.item()}
-                })
+                metrics[task_name] = {tensor_key.tensor_name: value.item()}
+
             task_results.append(tensor_key)
         
         # Append metadata to metrics before sending.
@@ -823,9 +822,7 @@ class Aggregator:
             if report:
                 # This tree structure enables efficient conversion between
                 # list-of-dicts to dict-of-lists and vice versa.
-                metrics.update({
-                    task_name: {tensor_key.tensor_name: agg_results.item()}
-                })
+                metrics[task_name] = {tensor_key.tensor_name: agg_results.item()}
 
                 # TODO Add all of the logic for saving the model based
                 #  on best accuracy, lowest loss, etc.
