@@ -1,0 +1,54 @@
+# Copyright (C) 2020-2021 Intel Corporation
+# Licensed subject to the terms of the separately executed evaluation license agreement between Intel Corporation and you.
+
+aggregator :
+  defaults : plan/defaults/aggregator.yaml
+  template : openfl.experimental.component.Aggregator
+  settings :
+    rounds_to_train     : 1
+    log_metric_callback :
+      template : src.utils.write_metric
+
+
+collaborator :
+  defaults : plan/defaults/collaborator.yaml
+  template : openfl.experimental.component.Collaborator
+  settings : {}
+
+
+federated_flow:
+  template: src.flow.MNISTFlow
+  settings:
+    model:
+      template: src.flow.Net
+      settings:
+        convolutional_block:
+          template: src.flow.convolutional_block
+          settings:
+            block_sequential:
+              template: src.flow.sequential_block
+              settings:
+                conv2d1:
+                  template: src.flow.conv2d1
+                  settings:
+                    in_channels: 1
+                    out_channels: 10
+                    kernel_size: 5
+                maxPool2d1:
+                  template: src.flow.maxpool2d1
+                  settings:
+                    kernel_size: 2
+                relu: src.flow.relu
+            conv2d2: src.flow.conv2d2
+            dropout2d: src.flow.dropout2d
+            maxPool2d2: src.flow.maxpool2d2
+            relu: src.flow.relu
+        in_features: 50
+        out_features: 10
+    optimizer: null
+    rounds: 4
+    checkpoint: true
+
+
+network :
+  defaults : plan/defaults/network.yaml

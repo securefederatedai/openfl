@@ -3,21 +3,73 @@
 
 # If your machine is behind a proxy, make sure you set it up in ~/.docker/config.json
 
-FROM ubuntu:22.04
+ARG IMAGE_NAME=ubuntu
+ARG IMAGE_TAG=22.04
+
+# Base image to be used everywhere
+FROM ${IMAGE_NAME}:${IMAGE_TAG} as base
+RUN apt-get clean && \
+    apt-get update && \
+    apt-get upgrade -y && \
+    apt-get clean autoclean && \
+    apt-get autoremove -y && \
+    rm -rf /var/lib/apt/lists/*
+
+# Python image
+FROM base as python-dev
+
+ARG PYTHON=python3.10
+ARG PIP=pip3.10
+
+RUN apt-get update && \
+    apt-get install --no-install-recommends --fix-missing -y \
+      curl \
+      gpg-agent \
+      software-properties-common && \
+    add-apt-repository -y ppa:deadsnakes/ppa && \
+    apt-get update && \
+    DEBIAN_FRONTEND=noninteractive \
+    apt-get install --no-install-recommends --fix-missing -y \
+      ${PYTHON} \
+      ${PYTHON}-distutils && \
+    curl -s https://bootstrap.pypa.io/get-pip.py | ${PYTHON} && \
+    apt-get purge -y \
+      curl \
+      gpg-agent \
+      software-properties-common && \
+    apt-get autoclean && \
+    apt-get autoremove -y && \
+    rm -rf /var/lib/apt/lists/*
+
+RUN ln -sf /usr/bin/${PYTHON} /usr/bin/python && \
+    ln -sf /usr/bin/${PYTHON} /usr/bin/python3 && \
+    ln -sf /usr/local/bin/${PIP} /usr/local/bin/pip && \
+    ln -sf /usr/local/bin/${PIP} /usr/local/bin/pip3
+
+FROM base as python-base
+
+ARG PYTHON=python3.10
+
+COPY --from=python-dev /usr/lib/x86_64-linux-gnu /usr/lib/x86_64-linux-gnu
+COPY --from=python-dev /usr/lib/${PYTHON} /usr/lib/${PYTHON}
+COPY --from=python-dev /usr/local/lib/${PYTHON} /usr/local/lib/${PYTHON}
+COPY --from=python-dev /usr/bin /usr/bin
+COPY --from=python-dev /usr/local/bin /usr/local/bin
+
+FROM python-base as openfl
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 ARG INSTALL_SOURCES="yes"
 
 WORKDIR /zlib
 #zlib install to 1.2.13
-RUN apt-get update && apt-get install -y --no-install-recommends --fix-missing wget build-essential
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends --fix-missing wget build-essential
 RUN wget --no-check-certificate https://github.com/madler/zlib/archive/refs/tags/v1.2.13.tar.gz && tar -xvf ./v1.2.13.tar.gz && cd zlib-1.2.13 && ./configure --prefix=/usr && make && make install
 RUN rm -rf zlib-1.2.13 && rm -rf v1.2.13.tar.gz
 RUN apt-get remove --purge -y wget build-essential && \
     apt-get autoclean -y && \
     apt-get auto-remove -y
-
-WORKDIR /thirdparty
 
 RUN dpkg --get-selections | grep -v deinstall | awk '{print $1}' > base_packages.txt  && \
     rm -rf /var/lib/apt/lists/*
@@ -25,10 +77,9 @@ RUN dpkg --get-selections | grep -v deinstall | awk '{print $1}' > base_packages
 RUN apt-get update && \
     apt-get install -y --no-install-recommends --fix-missing \
         openssh-server=\* \
-        python3.10=\* \
-        python3-distutils=\* \
         curl=\* \
         ca-certificates=\* && \
+    rm -rf /etc/ssh/ssh_host_*_key && \
     if [ "$INSTALL_SOURCES" = "yes" ]; then \
         dpkg --get-selections | grep -v deinstall | awk '{print $1}' > all_packages.txt && \
         sed -Ei 's/# deb-src /deb-src /' /etc/apt/sources.list && \
@@ -52,10 +103,10 @@ RUN apt-get update && \
 WORKDIR /openfl
 COPY . .
 
-# Install pip
-RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.10 1
-RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py && python get-pip.py && rm -rf get-pip.py
-RUN pip install --no-cache-dir . 
+# Install OpenFL
+RUN pip install --no-cache-dir install --upgrade pip setuptools
+RUN pip install --no-cache-dir .
+
 WORKDIR /thirdparty
 RUN if [ "$INSTALL_SOURCES" = "yes" ]; then \
     pip install --no-cache-dir pip-licenses; \

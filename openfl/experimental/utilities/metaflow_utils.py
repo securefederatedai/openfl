@@ -1,70 +1,71 @@
 # Copyright (C) 2020-2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-
 """openfl.experimental.utilities.metaflow_utils module."""
 
 from __future__ import annotations
+
+import ast
+import fcntl
+import hashlib
 from datetime import datetime
-from metaflow.metaflow_environment import MetaflowEnvironment
-from metaflow.plugins import LocalMetadataProvider
-from metaflow.datastore import FlowDataStore, DATASTORES
-from metaflow.graph import DAGNode, FlowGraph, StepVisitor
-from metaflow.graph import deindent_docstring
-from metaflow.datastore.task_datastore import TaskDataStore
+from pathlib import Path
+
+# getsource only used to determine structure of FlowGraph
+from typing import TYPE_CHECKING
+
+import cloudpickle as pickle
+import ray
+from dill.source import getsource  # nosec
+from metaflow.datastore import DATASTORES, FlowDataStore
 from metaflow.datastore.exceptions import (
     DataException,
     UnpicklableArtifactException,
 )
-from metaflow.datastore.task_datastore import only_if_not_done, require_mode
-import cloudpickle as pickle
-import ray
-import ast
-from pathlib import Path
-from metaflow.runtime import TruncatedBuffer, mflog_msg, MAX_LOG_SIZE
+from metaflow.datastore.task_datastore import (
+    TaskDataStore,
+    only_if_not_done,
+    require_mode,
+)
+from metaflow.graph import DAGNode, FlowGraph, StepVisitor, deindent_docstring
+from metaflow.metaflow_environment import MetaflowEnvironment
 from metaflow.mflog import RUNTIME_LOG_SOURCE
+from metaflow.plugins import LocalMetadataProvider
+from metaflow.runtime import MAX_LOG_SIZE, TruncatedBuffer, mflog_msg
 from metaflow.task import MetaDatum
-import fcntl
-import hashlib
-from dill.source import getsource  # nosec
-# getsource only used to determine structure of FlowGraph
-from typing import TYPE_CHECKING
+
 if TYPE_CHECKING:
     from openfl.experimental.interface import FLSpec
-from io import StringIO
-from typing import Generator, Any, Type
 
+import base64
+import json
+import uuid
+from io import StringIO
+from typing import Any, Generator, Type
+
+from metaflow import __version__ as mf_version
 from metaflow.plugins.cards.card_modules.basic import (
-    DefaultCard,
-    TaskInfoComponent,
-)
-from metaflow.plugins.cards.card_modules.basic import (
-    DagComponent,
-    SectionComponent,
-    PageComponent,
-)
-from metaflow.plugins.cards.card_modules.basic import (
-    RENDER_TEMPLATE_PATH,
-    JS_PATH,
     CSS_PATH,
-)
-from metaflow.plugins.cards.card_modules.basic import (
+    JS_PATH,
+    RENDER_TEMPLATE_PATH,
+    DagComponent,
+    DefaultCard,
+    PageComponent,
+    SectionComponent,
+    TaskInfoComponent,
     read_file,
     transform_flow_graph,
 )
-from metaflow import __version__ as mf_version
-
-import json
-import base64
-import uuid
 
 
 class SystemMutex:
+
     def __init__(self, name):
         self.name = name
 
     def __enter__(self):
-        lock_id = hashlib.new('md5', self.name.encode("utf8"),
-                              usedforsecurity=False).hexdigest()  # nosec
+        lock_id = hashlib.new(
+            "md5", self.name.encode("utf8"), usedforsecurity=False
+        ).hexdigest()  # nosec
         # MD5sum used for concurrency purposes, not security
         self.fp = open(f"/tmp/.lock-{lock_id}.lck", "wb")
         fcntl.flock(self.fp.fileno(), fcntl.LOCK_EX)
@@ -75,6 +76,7 @@ class SystemMutex:
 
 
 class Flow:
+
     def __init__(self, name):
         """Mock flow for metaflow internals"""
         self.name = name
@@ -82,6 +84,7 @@ class Flow:
 
 @ray.remote
 class Counter(object):
+
     def __init__(self):
         self.value = 0
 
@@ -94,6 +97,7 @@ class Counter(object):
 
 
 class DAGnode(DAGNode):
+
     def __init__(self, func_ast, decos, doc):
         self.name = func_ast.name
         self.func_lineno = func_ast.lineno
@@ -186,6 +190,7 @@ class DAGnode(DAGNode):
 
 
 class StepVisitor(StepVisitor):
+
     def __init__(self, nodes, flow):
         super().__init__(nodes, flow)
 
@@ -196,6 +201,7 @@ class StepVisitor(StepVisitor):
 
 
 class FlowGraph(FlowGraph):
+
     def __init__(self, flow):
         self.name = flow.__name__
         self.nodes = self._create_nodes(flow)
@@ -217,6 +223,7 @@ class FlowGraph(FlowGraph):
 
 
 class TaskDataStore(TaskDataStore):
+
     def __init__(
         self,
         flow_datastore,
@@ -321,6 +328,7 @@ class TaskDataStore(TaskDataStore):
 
 
 class FlowDataStore(FlowDataStore):
+
     def __init__(
         self,
         flow_name,
@@ -365,6 +373,7 @@ class FlowDataStore(FlowDataStore):
 
 
 class MetaflowInterface:
+
     def __init__(self, flow: Type[FLSpec], backend: str = "ray"):
         """
         Wrapper class for the metaflow tooling modified to work with the
@@ -379,8 +388,6 @@ class MetaflowInterface:
         """
         self.backend = backend
         self.flow_name = flow.__name__
-        self._graph = FlowGraph(flow)
-        self._steps = [getattr(flow, node.name) for node in self._graph]
         if backend == "ray":
             self.counter = Counter.remote()
         else:
@@ -423,19 +430,20 @@ class MetaflowInterface:
         Returns:
             task_id [int]
         """
-        # May need a lock here
-        if self.backend == "ray":
-            with SystemMutex("critical_section"):
+        with SystemMutex("critical_section"):
+            if self.backend == "ray":
                 task_id = ray.get(self.counter.get_counter.remote())
                 self.local_metadata._task_id_seq = task_id
                 self.local_metadata.new_task_id(self.run_id, task_name)
                 return ray.get(self.counter.increment.remote())
-        else:
-            task_id = self.counter
-            self.local_metadata._task_id_seq = task_id
-            self.local_metadata.new_task_id(self.run_id, task_name)
-            self.counter += 1
-            return self.counter
+            else:
+                # Keeping single_process in critical_section
+                # because gRPC calls may cause problems.
+                task_id = self.counter
+                self.local_metadata._task_id_seq = task_id
+                self.local_metadata.new_task_id(self.run_id, task_name)
+                self.counter += 1
+                return self.counter
 
     def save_artifacts(
         self,
@@ -443,7 +451,7 @@ class MetaflowInterface:
         task_name: str,
         task_id: int,
         buffer_out: Type[StringIO],
-        buffer_err: Type[StringIO]
+        buffer_err: Type[StringIO],
     ) -> None:
         """
         Use metaflow task datastore to save flow attributes, stdout, and stderr
@@ -512,11 +520,11 @@ class MetaflowInterface:
         return task_datastore.load_artifacts(artifact_names)
 
     def emit_log(
-            self,
-            msgbuffer_out: Type[StringIO],
-            msgbuffer_err: Type[StringIO],
-            task_datastore: Type[TaskDataStore],
-            system_msg: bool = False
+        self,
+        msgbuffer_out: Type[StringIO],
+        msgbuffer_err: Type[StringIO],
+        task_datastore: Type[TaskDataStore],
+        system_msg: bool = False,
     ) -> None:
         """
         This function writes the stdout and stderr to Metaflow TaskDatastore

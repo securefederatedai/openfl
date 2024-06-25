@@ -39,9 +39,7 @@ class TestFlowIncludeExclude(FLSpec):
 
         self.exclude_agg_to_agg = 10
         self.include_agg_to_agg = 100
-        self.next(
-            self.test_include_exclude_agg_to_agg, exclude=["exclude_agg_to_agg"]
-        )
+        self.next(self.test_include_exclude_agg_to_agg, exclude=["exclude_agg_to_agg"])
 
     @aggregator
     def test_include_exclude_agg_to_agg(self):
@@ -202,24 +200,30 @@ class TestFlowIncludeExclude(FLSpec):
 if __name__ == "__main__":
     # Setup participants
     aggregator = Aggregator()
-    aggregator.private_attributes = {}
 
-    # Setup collaborators with private attributes
+    # Setup collaborators
     collaborator_names = ["Portland", "Chandler", "Bangalore", "Delhi"]
-    collaborators = [Collaborator(name=name) for name in collaborator_names]
+    collaborators = []
+    for collaborator_name in collaborator_names:
+        collaborators.append(
+            Collaborator(
+                name=collaborator_name,
+            )
+        )
 
     local_runtime = LocalRuntime(
-        aggregator=aggregator, collaborators=collaborators
+        aggregator=aggregator,
+        collaborators=collaborators,
     )
 
     if len(sys.argv) > 1:
-        if sys.argv[1] == 'ray':
+        if sys.argv[1] == "ray":
             local_runtime = LocalRuntime(
-                aggregator=aggregator, collaborators=collaborators, backend='ray'
+                aggregator=aggregator, collaborators=collaborators, backend="ray"
             )
 
     print(f"Local runtime collaborators = {local_runtime.collaborators}")
-    flflow = TestFlowIncludeExclude(checkpoint=False)
+    flflow = TestFlowIncludeExclude(checkpoint=True)
     flflow.runtime = local_runtime
     for i in range(5):
         print(f"Starting round {i}...")

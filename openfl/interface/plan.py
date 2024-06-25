@@ -12,6 +12,8 @@ from click import pass_context
 from click import Path as ClickPath
 
 from openfl.utilities.path_check import is_directory_traversal
+from openfl.utilities.click_types import InputSpec
+from openfl.utilities.mocks import MockDataLoader
 
 logger = getLogger(__name__)
 
@@ -36,12 +38,15 @@ def plan(context):
         default='plan/data.yaml', type=ClickPath(exists=True))
 @option('-a', '--aggregator_address', required=False,
         help='The FQDN of the federation agregator')
-@option('-f', '--feature_shape', required=False,
-        help='The input shape to the model')
+@option('-f', '--input_shape', cls=InputSpec, required=False,
+        help="The input shape to the model. May be provided as a list:\n\n"
+             "--input_shape [1,28,28]\n\n"
+             "or as a dictionary for multihead models (must be passed in quotes):\n\n"
+             "--input_shape \"{'input_0': [1, 240, 240, 4],'output_1': [1, 240, 240, 1]}\"\n\n ")
 @option('-g', '--gandlf_config', required=False,
         help='GaNDLF Configuration File Path')
 def initialize(context, plan_config, cols_config, data_config,
-               aggregator_address, feature_shape, gandlf_config):
+               aggregator_address, input_shape, gandlf_config):
     """
     Initialize Data Science plan.
 
@@ -63,6 +68,8 @@ def initialize(context, plan_config, cols_config, data_config,
     plan_config = Path(plan_config).absolute()
     cols_config = Path(cols_config).absolute()
     data_config = Path(data_config).absolute()
+    if gandlf_config is not None:
+        gandlf_config = Path(gandlf_config).absolute()
 
     plan = Plan.parse(plan_config_path=plan_config,
                       cols_config_path=cols_config,
@@ -71,19 +78,15 @@ def initialize(context, plan_config, cols_config, data_config,
 
     init_state_path = plan.config['aggregator']['settings']['init_state_path']
 
-    # TODO:  Is this part really needed?  Why would we need to collaborator
-    #  name to know the input shape to the model?
-
-    # if  feature_shape is None:
-    #     if  cols_config is None:
-    #         exit('You must specify either a feature
-    #         shape or authorized collaborator
-    #         list in order for the script to determine the input layer shape')
-    print(plan.cols_data_paths)
-
-    collaborator_cname = list(plan.cols_data_paths)[0]
-
-    data_loader = plan.get_data_loader(collaborator_cname)
+    # This is needed to bypass data being locally available
+    if input_shape is not None:
+        logger.info('Attempting to generate initial model weights with'
+                    f' custom input shape {input_shape}')
+        data_loader = MockDataLoader(input_shape)
+    else:
+        # If feature shape is not provided, data is assumed to be present
+        collaborator_cname = list(plan.cols_data_paths)[0]
+        data_loader = plan.get_data_loader(collaborator_cname)
     task_runner = plan.get_task_runner(data_loader)
     tensor_pipe = plan.get_tensor_pipe()
 
@@ -105,23 +108,26 @@ def initialize(context, plan_config, cols_config, data_config,
 
     utils.dump_proto(model_proto=model_snap, fpath=init_state_path)
 
-    plan_origin = Plan.parse(plan_config, resolve=False).config
+    plan_origin = Plan.parse(plan_config_path=plan_config,
+                             gandlf_config_path=gandlf_config,
+                             resolve=False)
 
-    if (plan_origin['network']['settings']['agg_addr'] == 'auto'
+    if (plan_origin.config['network']['settings']['agg_addr'] == 'auto'
             or aggregator_address):
-        plan_origin['network']['settings']['agg_addr'] = aggregator_address or getfqdn_env()
+        plan_origin.config['network']['settings']['agg_addr'] = aggregator_address or getfqdn_env()
 
         logger.warn(f'Patching Aggregator Addr in Plan'
-                    f" 🠆 {plan_origin['network']['settings']['agg_addr']}")
+                    f" 🠆 {plan_origin.config['network']['settings']['agg_addr']}")
 
-        Plan.dump(plan_config, plan_origin)
+        Plan.dump(plan_config, plan_origin.config)
 
-    plan.config = plan_origin
+    if gandlf_config is not None:
+        Plan.dump(plan_config, plan_origin.config)
 
     # Record that plan with this hash has been initialized
     if 'plans' not in context.obj:
         context.obj['plans'] = []
-    context.obj['plans'].append(f'{plan_config.stem}_{plan.hash[:8]}')
+    context.obj['plans'].append(f'{plan_config.stem}_{plan_origin.hash[:8]}')
     logger.info(f"{context.obj['plans']}")
 
 
