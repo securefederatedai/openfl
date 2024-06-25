@@ -43,6 +43,7 @@ class Aggregator:
         checkpoint: bool = False,
         private_attributes_callable: Callable = None,
         private_attributes_kwargs: Dict = {},
+        private_attributes: Dict = {},
         single_col_cert_common_name: str = None,
         log_metric_callback: Callable = None,
         **kwargs,
@@ -93,7 +94,7 @@ class Aggregator:
         self.flow.runtime.collaborators = self.authorized_cols
 
         self.__private_attrs_callable = private_attributes_callable
-        self.__private_attrs = {}
+        self.__private_attrs = private_attributes
         self.connected_collaborators = []
         self.tasks_sent_to_collaborators = 0
         self.collaborator_results_received = []
