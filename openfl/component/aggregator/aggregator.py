@@ -552,12 +552,15 @@ class Aggregator:
             if 'metric' in tensor_key.tags:
                 # This tree structure enables efficient conversion between
                 # list-of-dicts to dict-of-lists and vice versa.
-                metrics[task_name] = {tensor_key.tensor_name: value.item()}
+                metrics[task_name] = {
+                    'round': round_number,
+                    tensor_key.tensor_name: value.item()
+                }
 
             task_results.append(tensor_key)
         
-        # Append metadata to metrics before sending.
-        metrics = {collaborator_name: {'round': round_number, **metrics}}
+        # Append participant name.
+        metrics = {collaborator_name: metrics}
         self.logger.metric("%s", str(metrics))
         self.metric_queue.put(metrics)
 
@@ -822,7 +825,10 @@ class Aggregator:
             if report:
                 # This tree structure enables efficient conversion between
                 # list-of-dicts to dict-of-lists and vice versa.
-                metrics[task_name] = {tensor_key.tensor_name: agg_results.item()}
+                metrics[task_name] = {
+                    'round': round_number,
+                    tensor_key.tensor_name: agg_results.item()
+                }
 
                 # TODO Add all of the logic for saving the model based
                 #  on best accuracy, lowest loss, etc.
@@ -837,8 +843,8 @@ class Aggregator:
             if 'trained' in tags:
                 self._prepare_trained(tensor_name, origin, round_number, report, agg_results)
         
-        # Append participant/round metadata.
-        metrics = {'aggregator': {'round': round_number, **metrics}}
+        # Append participant name.
+        metrics = {'aggregator': metrics}
         self.metric_queue.put(metrics)
         self.logger.metric("%s", metrics)
 
