@@ -543,29 +543,28 @@ class Aggregator:
         # Setting these incrementally is leading to missing values
         task_results = []
 
-        metrics = {}
         for named_tensor in named_tensors:
             # quite a bit happens in here, including decompression, delta
             # handling, etc...
             tensor_key, value = self._process_named_tensor(
                 named_tensor, collaborator_name)
+
             if 'metric' in tensor_key.tags:
-                # This tree structure enables efficient conversion between
-                # list-of-dicts to dict-of-lists and vice versa.
-                metrics[task_name] = {
+                # Caution: This schema must be followed. It is also used in 
+                # gRPC message streams for director/envoy.
+                metrics = {
                     'round': round_number,
-                    tensor_key.tensor_name: value.item()
+                    'metric_origin': collaborator_name,
+                    'task_name': task_name,
+                    'metric_name': tensor_key.tensor_name,
+                    'metric_value': float(value),
                 }
+                self.metric_queue.put(metrics)
+                self.logger.metric("%s", str(metrics))
 
             task_results.append(tensor_key)
         
-        # Append participant name.
-        metrics = {collaborator_name: metrics}
-        self.logger.metric("%s", str(metrics))
-        self.metric_queue.put(metrics)
-
         self.collaborator_tasks_results[task_key] = task_results
-
         self._end_of_task_check(task_name)
 
     def _process_named_tensor(self, named_tensor, collaborator_name):
@@ -809,7 +808,6 @@ class Aggregator:
         task_agg_function = self.assigner.get_aggregation_type_for_task(task_name)
         task_key = TaskResultKey(task_name, collaborators_for_task[0], self.round_number)
         
-        metrics = {}
         for tensor_key in self.collaborator_tasks_results[task_key]:
             tensor_name, origin, round_number, report, tags = tensor_key
             assert (collaborators_for_task[0] in tags), (
@@ -823,18 +821,22 @@ class Aggregator:
                 agg_tensor_key, collaborator_weight_dict, aggregation_function=agg_function)
 
             if report:
-                # This tree structure enables efficient conversion between
-                # list-of-dicts to dict-of-lists and vice versa.
-                metrics[task_name] = {
+                # Caution: This schema must be followed. It is also used in 
+                # gRPC message streams for director/envoy.
+                metrics = {
+                    'metric_origin': 'aggregator',
+                    'task_name': task_name,
+                    'metric_name': tensor_key.tensor_name,
+                    'metric_value': float(agg_results),
                     'round': round_number,
-                    tensor_key.tensor_name: agg_results.item()
                 }
+                
+                self.metric_queue.put(metrics)
+                self.logger.metric("%s", metrics)
 
-                # TODO Add all of the logic for saving the model based
-                #  on best accuracy, lowest loss, etc.
+                # FIXME: Configurable logic for min/max criteria in saving best.
                 if 'validate_agg' in tags:
-                    # Compare the accuracy of the model, and
-                    # potentially save it
+                    # Compare the accuracy of the model, potentially save it
                     if self.best_model_score is None or self.best_model_score < agg_results:
                         self.logger.metric(f'Round {round_number}: saved the best '
                                            f'model with score {agg_results:f}')
@@ -842,11 +844,6 @@ class Aggregator:
                         self._save_model(round_number, self.best_state_path)
             if 'trained' in tags:
                 self._prepare_trained(tensor_name, origin, round_number, report, agg_results)
-        
-        # Append participant name.
-        metrics = {'aggregator': metrics}
-        self.metric_queue.put(metrics)
-        self.logger.metric("%s", metrics)
 
     def _end_of_round_check(self):
         """
