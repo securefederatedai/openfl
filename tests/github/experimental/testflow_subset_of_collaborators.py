@@ -141,7 +141,6 @@ if __name__ == "__main__":
         subset_collaborators = testflow_subset_collaborators.subset_collabrators
         collaborators_ran = testflow_subset_collaborators.collaborators_ran
         # We now convert names to lowercase
-        collaborators_ran = list(map(str.lower, collaborators_ran))
         random_ints = testflow_subset_collaborators.random_ints
         random_ints.remove(len(subset_collaborators))
 
