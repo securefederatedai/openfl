@@ -262,7 +262,7 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
         # Grabbing keys from model's state_dict helps to confirm we have
         # everything
         for k in self.state_dict():
-            new_state[k] = torch.from_numpy(tensor_dict.pop(k)).to(device)
+            new_state[k] = torch.tensor(tensor_dict.pop(k)).to(device)
 
         # set model state
         self.load_state_dict(new_state)
@@ -607,7 +607,7 @@ def expand_derived_opt_state_dict(derived_opt_state_dict, device):
             for subkey, tag in state_subkeys_and_tags:
                 flat_key = f"__opt_state_{this_id}_{tag}_{subkey}"
                 if tag == "istensor":
-                    new_v = torch.from_numpy(derived_opt_state_dict.pop(flat_key))
+                    new_v = torch.tensor(derived_opt_state_dict.pop(flat_key))
                 else:
                     # Here (for currrently supported optimizers) the subkey
                     # should be 'step' and the length of array should be one.
