@@ -1,10 +1,8 @@
 # Copyright (C) 2020-2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-
 """openfl.experimental.interface.participants module."""
 
-from typing import Dict, Any
-from typing import Callable, Optional
+from typing import Any, Callable, Dict, Optional
 
 
 class Participant:
@@ -14,7 +12,7 @@ class Participant:
         private_attributes (dict): The private attributes of the participant.
         _name (str): The name of the participant.
     """
-
+  
     def __init__(self, name: str = ""):
         """Initializes the Participant object with an optional name.
 
@@ -22,7 +20,7 @@ class Participant:
             name (str, optional): The name of the participant. Defaults to "".
         """
         self.private_attributes = {}
-        self._name = name.lower()
+        self._name = name
 
     @property
     def name(self):
@@ -126,7 +124,11 @@ class Collaborator(Participant):
         the callable specified by user.
         """
         if self.private_attributes_callable is not None:
-            self.private_attributes = self.private_attributes_callable(**self.kwargs)
+            self.private_attributes = self.private_attributes_callable(
+                **self.kwargs
+            )
+        elif private_attrs:
+            self.private_attributes = private_attrs
 
     def __set_collaborator_attrs_to_clone(self, clone: Any) -> None:
         """Set collaborator private attributes to FLSpec clone before transitioning
@@ -151,7 +153,9 @@ class Collaborator(Participant):
         # parameters from clone, then delete attributes from clone.
         for attr_name in self.private_attributes:
             if hasattr(clone, attr_name):
-                self.private_attributes.update({attr_name: getattr(clone, attr_name)})
+                self.private_attributes.update(
+                    {attr_name: getattr(clone, attr_name)}
+                )
                 delattr(clone, attr_name)
 
     def execute_func(self, ctx: Any, f_name: str, callback: Callable) -> Any:
@@ -230,7 +234,11 @@ class Aggregator(Participant):
         the callable specified by user.
         """
         if self.private_attributes_callable is not None:
-            self.private_attributes = self.private_attributes_callable(**self.kwargs)
+            self.private_attributes = self.private_attributes_callable(
+                **self.kwargs
+            )
+        elif private_attrs:
+            self.private_attributes = private_attrs
 
     def __set_agg_attrs_to_clone(self, clone: Any) -> None:
         """Set aggregator private attributes to FLSpec clone before transition
@@ -255,8 +263,11 @@ class Aggregator(Participant):
         # parameters from clone, then delete attributes from clone.
         for attr_name in self.private_attributes:
             if hasattr(clone, attr_name):
-                self.private_attributes.update({attr_name: getattr(clone, attr_name)})
+                self.private_attributes.update(
+                    {attr_name: getattr(clone, attr_name)}
+                )
                 delattr(clone, attr_name)
+
 
     def execute_func(self, ctx: Any, f_name: str, callback: Callable,
                      clones: Optional[Any] = None) -> Any:

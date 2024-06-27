@@ -306,7 +306,7 @@ def entry():
         cli.add_command(command_group.__getattribute__(module))
 
     try:
-        cli()
+        cli(max_content_width=120)
     except Exception as e:
         error_handler(e)
 

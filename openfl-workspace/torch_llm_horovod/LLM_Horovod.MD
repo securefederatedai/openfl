@@ -30,7 +30,7 @@ To use your own data and models, follow these steps:
 
 1. Copy the `openfl/openfl-workspace/torch_llm_horovod` directory to `openfl/openfl-workspace/name_of_your_template`.
 2. In the `src/InHorovodrun` file, make the following changes:
-   - Replace `GlueMrpcDataLoader` with your own dataloader.
+   - Replace `EmotionDataLoader` with your own dataloader.
    - Replace `LLMTrainer` with your own training/validation scripts.
 
 ## Running the Experiment

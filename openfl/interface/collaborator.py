@@ -86,6 +86,7 @@ def create_(collaborator_name, data_path, silent):
         data_path (str): The data path to be associated with the collaborator.
         silent (bool): Do not prompt.
     """
+
     if data_path and is_directory_traversal(data_path):
         echo('Data path is out of the openfl workspace scope.')
         sys.exit(1)

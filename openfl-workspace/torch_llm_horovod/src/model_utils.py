@@ -22,7 +22,7 @@ ALL_LAYERNORM_LAYERS = [nn.LayerNorm]
 
 def _init_model(base_model_name="roberta-base", device=None):
     model = AutoModelForSequenceClassification.from_pretrained(
-        base_model_name, return_dict=True
+        base_model_name, return_dict=True, num_labels=6,
     )
     peft_config = LoraConfig(
         task_type=TaskType.SEQ_CLS,

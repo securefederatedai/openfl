@@ -1,16 +1,18 @@
 # Copyright (C) 2020-2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-
 """ openfl.experimental.runtime module Runtime class."""
 from __future__ import annotations
+
 from typing import TYPE_CHECKING
+
 if TYPE_CHECKING:
     from openfl.experimental.interface import Aggregator, Collaborator, FLSpec
-from typing import List
-from typing import Callable
+
+from typing import Callable, List
 
 
 class Runtime:
+
     def __init__(self):
         """Initializes the Runtime object. This serves as a base interface for runtimes that can run FLSpec flows."""
         pass
@@ -63,7 +65,7 @@ class Runtime:
         f: Callable,
         parent_func: Callable,
         instance_snapshot: List[FLSpec] = [],
-        **kwargs
+        **kwargs,
     ):
         """Performs the execution of a task as defined by the implementation 
         and underlying backend (single_process, ray, etc).

@@ -2,8 +2,9 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import functools
-from openfl.experimental.utilities import RedirectStdStreamContext
 from typing import Callable
+
+from openfl.experimental.utilities import RedirectStdStreamContext
 
 
 def aggregator(f: Callable = None) -> Callable:

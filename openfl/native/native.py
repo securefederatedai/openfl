@@ -221,7 +221,7 @@ def init(workspace_template: str = 'default', log_level: str = 'INFO',
         collaborator.create(
             col_name, str(data_path), silent=True)
         collaborator.generate_cert_request(
-            col_name, str(data_path), silent=True, skip_package=True)
+            col_name, silent=True, skip_package=True)
         collaborator.certify(col_name, silent=True)
         data_path += 1
 

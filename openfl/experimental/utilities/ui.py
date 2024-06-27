@@ -1,10 +1,11 @@
 # Copyright (C) 2020-2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-from openfl.experimental.utilities.metaflow_utils import DefaultCard, FlowGraph
-from pathlib import Path
 import os
 import webbrowser
+from pathlib import Path
+
+from openfl.experimental.utilities.metaflow_utils import DefaultCard, FlowGraph
 
 
 class InspectFlow:
@@ -17,6 +18,7 @@ class InspectFlow:
         flow_name (str): The name of the flow.
         graph_dict (dict): The graph of the flow.
     """
+
     def __init__(
         self,
         flow_obj,

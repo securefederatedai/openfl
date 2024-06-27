@@ -3,7 +3,7 @@
 """openfl.experimental.utilities.resources module."""
 
 from logging import getLogger
-from subprocess import run, PIPE
+from subprocess import PIPE, run
 
 logger = getLogger(__name__)
 
@@ -24,6 +24,8 @@ def get_number_of_gpus() -> int:
         stdout = op.stdout.decode().strip()
         return len(stdout.split("\n"))
     except FileNotFoundError:
-        logger.warning(f'No GPUs found! If this is a mistake please try running "{command}" '
-                       + 'manually.')
+        logger.warning(
+            f'No GPUs found! If this is a mistake please try running "{command}" '
+            + "manually."
+        )
         return 0

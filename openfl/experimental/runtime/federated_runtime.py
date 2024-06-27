@@ -1,18 +1,18 @@
 # Copyright (C) 2020-2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-
 """ openfl.experimental.runtime package LocalRuntime class."""
 
 from __future__ import annotations
-from openfl.experimental.runtime import Runtime
+
 from typing import TYPE_CHECKING
+
+from openfl.experimental.runtime.runtime import Runtime
 
 if TYPE_CHECKING:
     from openfl.experimental.interface import Aggregator
     from openfl.experimental.interface import Collaborator
 
-from typing import List
-from typing import Type
+from typing import List, Type
 
 
 class FederatedRuntime(Runtime):

@@ -1,65 +1,65 @@
 # Copyright (C) 2020-2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-
 """openfl.experimental.utilities.metaflow_utils module."""
 
 from __future__ import annotations
+
+import ast
+import fcntl
+import hashlib
 from datetime import datetime
-from metaflow.metaflow_environment import MetaflowEnvironment
-from metaflow.plugins import LocalMetadataProvider
-from metaflow.datastore import FlowDataStore, DATASTORES
-from metaflow.graph import DAGNode, FlowGraph, StepVisitor
-from metaflow.graph import deindent_docstring
-from metaflow.datastore.task_datastore import TaskDataStore
+from pathlib import Path
+
+# getsource only used to determine structure of FlowGraph
+from typing import TYPE_CHECKING
+
+import cloudpickle as pickle
+import ray
+from dill.source import getsource  # nosec
+from metaflow.datastore import DATASTORES, FlowDataStore
 from metaflow.datastore.exceptions import (
     DataException,
     UnpicklableArtifactException,
 )
-from metaflow.datastore.task_datastore import only_if_not_done, require_mode
-import cloudpickle as pickle
-import ray
-import ast
-from pathlib import Path
-from metaflow.runtime import TruncatedBuffer, mflog_msg, MAX_LOG_SIZE
+from metaflow.datastore.task_datastore import (
+    TaskDataStore,
+    only_if_not_done,
+    require_mode,
+)
+from metaflow.graph import DAGNode, FlowGraph, StepVisitor, deindent_docstring
+from metaflow.metaflow_environment import MetaflowEnvironment
 from metaflow.mflog import RUNTIME_LOG_SOURCE
+from metaflow.plugins import LocalMetadataProvider
+from metaflow.runtime import MAX_LOG_SIZE, TruncatedBuffer, mflog_msg
 from metaflow.task import MetaDatum
-import fcntl
-import hashlib
-from dill.source import getsource  # nosec
-# getsource only used to determine structure of FlowGraph
-from typing import TYPE_CHECKING
+
 if TYPE_CHECKING:
     from openfl.experimental.interface import FLSpec
-from io import StringIO
-from typing import Generator, Any, Type
 
+import base64
+import json
+import uuid
+from io import StringIO
+from typing import Any, Generator, Type
+
+from metaflow import __version__ as mf_version
 from metaflow.plugins.cards.card_modules.basic import (
-    DefaultCard,
-    TaskInfoComponent,
-)
-from metaflow.plugins.cards.card_modules.basic import (
-    DagComponent,
-    SectionComponent,
-    PageComponent,
-)
-from metaflow.plugins.cards.card_modules.basic import (
-    RENDER_TEMPLATE_PATH,
-    JS_PATH,
     CSS_PATH,
-)
-from metaflow.plugins.cards.card_modules.basic import (
+    JS_PATH,
+    RENDER_TEMPLATE_PATH,
+    DagComponent,
+    DefaultCard,
+    PageComponent,
+    SectionComponent,
+    TaskInfoComponent,
     read_file,
     transform_flow_graph,
 )
-from metaflow import __version__ as mf_version
-
-import json
-import base64
-import uuid
 
 
 class SystemMutex:
     """Provides a system-wide mutex that locks a file until the lock is released."""
+
     def __init__(self, name):
         """Initializes the SystemMutex with the provided name.
 
@@ -69,8 +69,9 @@ class SystemMutex:
         self.name = name
 
     def __enter__(self):
-        lock_id = hashlib.new('md5', self.name.encode("utf8"),
-                              usedforsecurity=False).hexdigest()  # nosec
+        lock_id = hashlib.new(
+            "md5", self.name.encode("utf8"), usedforsecurity=False
+        ).hexdigest()  # nosec
         # MD5sum used for concurrency purposes, not security
         self.fp = open(f"/tmp/.lock-{lock_id}.lck", "wb")
         fcntl.flock(self.fp.fileno(), fcntl.LOCK_EX)
@@ -544,7 +545,7 @@ class MetaflowInterface:
         task_name: str,
         task_id: int,
         buffer_out: Type[StringIO],
-        buffer_err: Type[StringIO]
+        buffer_err: Type[StringIO],
     ) -> None:
         """Use metaflow task datastore to save flow attributes, stdout, and stderr
         for a specific task (identified by the task_name + task_id).
@@ -620,11 +621,11 @@ class MetaflowInterface:
         return task_datastore.load_artifacts(artifact_names)
 
     def emit_log(
-            self,
-            msgbuffer_out: Type[StringIO],
-            msgbuffer_err: Type[StringIO],
-            task_datastore: Type[TaskDataStore],
-            system_msg: bool = False
+        self,
+        msgbuffer_out: Type[StringIO],
+        msgbuffer_err: Type[StringIO],
+        task_datastore: Type[TaskDataStore],
+        system_msg: bool = False,
     ) -> None:
         """Writes stdout and stderr to Metaflow's TaskDatastore.
 

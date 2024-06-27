@@ -1,8 +1,10 @@
 # Copyright (C) 2020-2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
+
 class SerializationError(Exception):
     """Raised when there is an error in serialization process."""
+
 
     def __init__(self, *args: object) -> None:
         """Initializes the SerializationError with the provided arguments.
@@ -16,6 +18,7 @@ class SerializationError(Exception):
 
 class ResourcesNotAvailableError(Exception):
     """Exception raised when the required resources are not available."""
+
     def __init__(self, *args: object) -> None:
         """Initializes the ResourcesNotAvailableError with the provided arguments.
 
@@ -28,6 +31,7 @@ class ResourcesNotAvailableError(Exception):
 
 class ResourcesAllocationError(Exception):
     """Exception raised when there is an error in the resources allocation process."""
+
     def __init__(self, *args: object) -> None:
         """Initializes the ResourcesAllocationError with the provided arguments.
 

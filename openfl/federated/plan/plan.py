@@ -213,13 +213,9 @@ class Plan:
         class_name = splitext(template)[1].strip('.')
         module_path = splitext(template)[0]
 
-        Plan.logger.info(f'Building [red]🡆[/] Object [red]{class_name}[/] '
-                         f'from [red]{module_path}[/] Module.',
-                         extra={'markup': True})
-        Plan.logger.debug(f'Settings [red]🡆[/] {settings}',
-                          extra={'markup': True})
-        Plan.logger.debug(f'Override [red]🡆[/] {override}',
-                          extra={'markup': True})
+        Plan.logger.info(f'Building `{template}` Module.')
+        Plan.logger.debug(f'Settings {settings}')
+        Plan.logger.debug(f'Override {override}')
 
         settings.update(**override)
 
@@ -488,6 +484,9 @@ class Plan:
 
         if self.runner_ is None:
             self.runner_ = Plan.build(**defaults)
+
+        # Define task dependencies after taskrunner has been initialized
+        self.runner_.initialize_tensorkeys_for_functions()
 
         return self.runner_
 
