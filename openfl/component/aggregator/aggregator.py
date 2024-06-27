@@ -550,7 +550,7 @@ class Aggregator:
                 named_tensor, collaborator_name)
 
             if 'metric' in tensor_key.tags:
-                # Caution: This schema must be followed. It is also used in 
+                # Caution: This schema must be followed. It is also used in
                 # gRPC message streams for director/envoy.
                 metrics = {
                     'round': round_number,
@@ -563,7 +563,7 @@ class Aggregator:
                 self.logger.metric("%s", str(metrics))
 
             task_results.append(tensor_key)
-        
+
         self.collaborator_tasks_results[task_key] = task_results
         self._end_of_task_check(task_name)
 
@@ -807,7 +807,7 @@ class Aggregator:
         # tensor for that round
         task_agg_function = self.assigner.get_aggregation_type_for_task(task_name)
         task_key = TaskResultKey(task_name, collaborators_for_task[0], self.round_number)
-        
+
         for tensor_key in self.collaborator_tasks_results[task_key]:
             tensor_name, origin, round_number, report, tags = tensor_key
             assert (collaborators_for_task[0] in tags), (
@@ -821,7 +821,7 @@ class Aggregator:
                 agg_tensor_key, collaborator_weight_dict, aggregation_function=agg_function)
 
             if report:
-                # Caution: This schema must be followed. It is also used in 
+                # Caution: This schema must be followed. It is also used in
                 # gRPC message streams for director/envoy.
                 metrics = {
                     'metric_origin': 'aggregator',
@@ -830,7 +830,7 @@ class Aggregator:
                     'metric_value': float(agg_results),
                     'round': round_number,
                 }
-                
+
                 self.metric_queue.put(metrics)
                 self.logger.metric("%s", metrics)
 
