@@ -533,44 +533,38 @@ class Aggregator:
                 f' for task {task_key}'
             )
 
+        # By giving task_key it's own weight, we can support different
+        # training/validation weights
+        # As well as eventually supporting weights that change by round
+        # (if more data is added)
+        self.collaborator_task_weight[task_key] = data_size
+
         # initialize the list of tensors that go with this task
         # Setting these incrementally is leading to missing values
         task_results = []
 
-        # go through the tensors and add them to the tensor dictionary and the
-        # task dictionary
         for named_tensor in named_tensors:
             # quite a bit happens in here, including decompression, delta
             # handling, etc...
-            tensor_key, nparray = self._process_named_tensor(
-                named_tensor, collaborator_name
-            )
+            tensor_key, value = self._process_named_tensor(
+                named_tensor, collaborator_name)
+
             if 'metric' in tensor_key.tags:
-                metric_value = nparray.item()
-                metric_dict = {
-                    'metric_origin': tensor_key.tags[-1],
+                # Caution: This schema must be followed. It is also used in
+                # gRPC message streams for director/envoy.
+                metrics = {
+                    'round': round_number,
+                    'metric_origin': collaborator_name,
                     'task_name': task_name,
                     'metric_name': tensor_key.tensor_name,
-                    'metric_value': metric_value,
-                    'round': round_number}
-                if self.write_logs:
-                    self.log_metric(tensor_key.tags[-1], task_name,
-                                    tensor_key.tensor_name, nparray, round_number)
-                self.logger.metric(f'Round {round_number}, '
-                                   f'collaborator {tensor_key.tags[-1]} '
-                                   f'{task_name} result '
-                                   f'{tensor_key.tensor_name}:\t{metric_value:f}')
-                self.metric_queue.put(metric_dict)
+                    'metric_value': float(value),
+                }
+                self.metric_queue.put(metrics)
+                self.logger.metric("%s", str(metrics))
 
             task_results.append(tensor_key)
-            # By giving task_key it's own weight, we can support different
-            # training/validation weights
-            # As well as eventually supporting weights that change by round
-            # (if more data is added)
-            self.collaborator_task_weight[task_key] = data_size
 
         self.collaborator_tasks_results[task_key] = task_results
-
         self._end_of_task_check(task_name)
 
     def _process_named_tensor(self, named_tensor, collaborator_name):
@@ -813,6 +807,7 @@ class Aggregator:
         # tensor for that round
         task_agg_function = self.assigner.get_aggregation_type_for_task(task_name)
         task_key = TaskResultKey(task_name, collaborators_for_task[0], self.round_number)
+
         for tensor_key in self.collaborator_tasks_results[task_key]:
             tensor_name, origin, round_number, report, tags = tensor_key
             assert (collaborators_for_task[0] in tags), (
@@ -821,35 +816,27 @@ class Aggregator:
             # Strip the collaborator label, and lookup aggregated tensor
             new_tags = change_tags(tags, remove_field=collaborators_for_task[0])
             agg_tensor_key = TensorKey(tensor_name, origin, round_number, report, new_tags)
-            agg_tensor_name, agg_origin, agg_round_number, agg_report, agg_tags = agg_tensor_key
             agg_function = WeightedAverage() if 'metric' in tags else task_agg_function
             agg_results = self.tensor_db.get_aggregated_tensor(
                 agg_tensor_key, collaborator_weight_dict, aggregation_function=agg_function)
+
             if report:
-                # Print the aggregated metric
-                metric_dict = {
-                    'metric_origin': 'Aggregator',
+                # Caution: This schema must be followed. It is also used in
+                # gRPC message streams for director/envoy.
+                metrics = {
+                    'metric_origin': 'aggregator',
                     'task_name': task_name,
                     'metric_name': tensor_key.tensor_name,
-                    'metric_value': agg_results.item(),
-                    'round': round_number}
+                    'metric_value': float(agg_results),
+                    'round': round_number,
+                }
 
-                if agg_function:
-                    self.logger.metric(f'Round {round_number}, aggregator: {task_name} '
-                                       f'{agg_function} {agg_tensor_name}:\t{agg_results:f}')
-                else:
-                    self.logger.metric(f'Round {round_number}, aggregator: {task_name} '
-                                       f'{agg_tensor_name}:\t{agg_results:f}')
-                if self.write_logs:
-                    self.log_metric('Aggregator', task_name,
-                                    tensor_key.tensor_name,
-                                    agg_results, round_number)
-                self.metric_queue.put(metric_dict)
-                # TODO Add all of the logic for saving the model based
-                #  on best accuracy, lowest loss, etc.
+                self.metric_queue.put(metrics)
+                self.logger.metric("%s", metrics)
+
+                # FIXME: Configurable logic for min/max criteria in saving best.
                 if 'validate_agg' in tags:
-                    # Compare the accuracy of the model, and
-                    # potentially save it
+                    # Compare the accuracy of the model, potentially save it
                     if self.best_model_score is None or self.best_model_score < agg_results:
                         self.logger.metric(f'Round {round_number}: saved the best '
                                            f'model with score {agg_results:f}')
