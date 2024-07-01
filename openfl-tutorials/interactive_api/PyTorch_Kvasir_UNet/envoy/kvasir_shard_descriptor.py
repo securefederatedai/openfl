@@ -4,6 +4,7 @@
 
 import os
 from pathlib import Path
+import subprocess
 
 import numpy as np
 from PIL import Image
@@ -94,17 +95,16 @@ class KvasirShardDescriptor(ShardDescriptor):
         """Download data."""
         zip_file_path = data_folder / 'kvasir.zip'
         os.makedirs(data_folder, exist_ok=True)
-        os.system(
-            'wget -nc'
-            " 'https://datasets.simula.no/downloads/"
-            "hyper-kvasir/hyper-kvasir-segmented-images.zip'"
-            f' -O {zip_file_path.relative_to(Path.cwd())}'
-        )
+        wget_command = ['wget', '-nc', 'https://datasets.simula.no/downloads/'
+                        'hyper-kvasir/hyper-kvasir-segmented-images.zip',
+                        '-O', str(zip_file_path.relative_to(Path.cwd()))]
+        subprocess.run(wget_command, check=True)
         zip_sha384 = ('66cd659d0e8afd8c83408174'
                       '1ade2b75dada8d4648b816f2533c8748b1658efa3d49e205415d4116faade2c5810e241e')
         validate_file_hash(zip_file_path, zip_sha384)
-        os.system(f'unzip -n {zip_file_path.relative_to(Path.cwd())}'
-                  f' -d {data_folder.relative_to(Path.cwd())}')
+        unzip_command = ['unzip', '-n', str(zip_file_path.relative_to(Path.cwd())), '-d',
+                         str(data_folder.relative_to(Path.cwd()))]
+        subprocess.run(unzip_command, check=True)
 
     @property
     def sample_shape(self):

@@ -7,6 +7,7 @@ from glob import glob
 from pathlib import Path
 
 import numpy as np
+import subprocess
 from imageio import imread
 from PIL import Image
 
@@ -87,13 +88,19 @@ class MVTecShardDescriptor(ShardDescriptor):
         zip_file_path = self.dataset_path / 'mvtec_anomaly_detection.tar.xz'
         if not Path(zip_file_path).exists():
             os.makedirs(self.dataset_path, exist_ok=True)
-            print('Downloading MVTec Dataset...this might take a while')
-            os.system('wget -nc'
-                      " 'https://www.mydrive.ch/shares/38536/3830184030e49fe74747669442f0f282/download/420938113-1629952094/mvtec_anomaly_detection.tar.xz'"  # noqa
-                      f' -O {zip_file_path.relative_to(Path.cwd())}')
+            print('Downloading MVTec Dataset...this might take a while')            
+            wget_command = [
+                'wget', '-nc',
+                'https://www.mydrive.ch/shares/38536/3830184030e49fe74747669442f0f282/download/420938113-1629952094/mvtec_anomaly_detection.tar.xz', # noqa
+                '-O', str(zip_file_path.relative_to(Path.cwd()))
+            ]
+            subprocess.run(wget_command, check=True)
             print('Downloaded MVTec dataset, untar-ring now')
-            os.system(f'tar -xvf {zip_file_path.relative_to(Path.cwd())}'
-                      f' -C {self.dataset_path.relative_to(Path.cwd())}')
+            tar_command = [
+                'tar', '-xvf', str(zip_file_path.relative_to(Path.cwd())),
+                '-C', str(self.dataset_path.relative_to(Path.cwd()))
+            ]
+            subprocess.run(tar_command, check=True)
             # change to write permissions
             self.change_permissions(self.dataset_path, 0o764)
 

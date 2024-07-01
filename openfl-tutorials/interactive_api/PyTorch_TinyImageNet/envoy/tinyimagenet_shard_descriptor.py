@@ -8,6 +8,7 @@ import logging
 import os
 import shutil
 from pathlib import Path
+import subprocess
 from typing import Tuple
 
 from PIL import Image
@@ -90,8 +91,12 @@ class TinyImageNetShardDescriptor(ShardDescriptor):
         """Download prepared shard dataset."""
         zip_file_path = self.common_data_folder / 'tiny-imagenet-200.zip'
         os.makedirs(self.common_data_folder, exist_ok=True)
-        os.system(f'wget --no-clobber http://cs231n.stanford.edu/tiny-imagenet-200.zip'
-                  f' -O {zip_file_path}')
+        wget_command = [
+            'wget', '--no-clobber', 
+            'http://cs231n.stanford.edu/tiny-imagenet-200.zip',
+            '-O', str(zip_file_path)
+        ]
+        subprocess.run(wget_command, check=True)
         shutil.unpack_archive(str(zip_file_path), str(self.common_data_folder))
 
     def get_dataset(self, dataset_type):
