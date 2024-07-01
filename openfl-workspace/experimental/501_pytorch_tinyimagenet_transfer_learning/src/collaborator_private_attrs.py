@@ -5,6 +5,7 @@ import os
 import glob
 import shutil
 import torch
+import subprocess
 import torchvision.transforms as T
 
 from pathlib import Path
@@ -16,8 +17,14 @@ from torch.utils.data import Dataset, random_split
 common_data_folder = os.path.join(os.getcwd(), 'data')
 zip_file_path = os.path.join(common_data_folder, 'tiny-imagenet-200.zip')
 os.makedirs(common_data_folder, exist_ok=True)
-os.system(f'wget --no-clobber http://cs231n.stanford.edu/tiny-imagenet-200.zip'
-          f' -O {zip_file_path}')
+wget_command = [
+    'wget', '--no-clobber',
+    'http://cs231n.stanford.edu/tiny-imagenet-200.zip',
+    '-O', str(zip_file_path)
+]
+
+# Run the command
+subprocess.run(wget_command, check=True)
 print('Unpacking tiny-imagenet-200.zip')
 shutil.unpack_archive(str(zip_file_path), str(common_data_folder))
 
