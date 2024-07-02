@@ -21,14 +21,22 @@ class PercentageBasedStragglerHandling(StragglerHandlingFunction):
         self, callback: Callable, logger: Logger, collaborator_name: str
     ) -> None:
         """
-        Only required in time-based straggler handling policies.
+        Not required in PercentageBasedStragglerHandling.
         """
         pass
 
     def straggler_cutoff_check(self, num_collaborators_done, all_collaborators):
+        """
+        If percent_collaborators_needed have and minimum_reporting collaborators have
+        reported results, then it is time to end round early.
+        """
         cutoff = (num_collaborators_done >= self.percent_collaborators_needed * len(
             all_collaborators)) and self.__minimum_collaborators_reported(num_collaborators_done)
         return cutoff
 
     def __minimum_collaborators_reported(self, num_collaborators_done):
+        """
+        If minimum required collaborators have reported results, then return True
+        otherwise False.
+        """
         return num_collaborators_done >= self.minimum_reporting

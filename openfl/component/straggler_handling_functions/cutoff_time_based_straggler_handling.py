@@ -27,19 +27,23 @@ class CutoffTimeBasedStragglerHandling(StragglerHandlingFunction):
         self, callback: Callable, logger: Logger, collaborator_name: str
     ) -> None:
         """
-        Start policy.
+        Start time-based straggler handling policy for collaborator for
+        a particular round.
 
         Args:
             callback: Callable
                 Callback function for when straggler_cutoff_time elapses
+            collaborator_name: str
+                Name of the collaborator
             logger: Logger
 
         Returns:
             None
         """
         self.round_start_time = time.time()
+        self.logger = logger
         if self.straggler_cutoff_time == np.inf:
-            logger.warning("straggler_cutoff_time is set to np.inf, timer will not start.")
+            self.logger.warning("straggler_cutoff_time is set to np.inf, timer will not start.")
             return
         if hasattr(self, "timer"):
             self.timer.cancel()
@@ -51,13 +55,36 @@ class CutoffTimeBasedStragglerHandling(StragglerHandlingFunction):
         self.timer.start()
 
     def straggler_cutoff_check(self, num_collaborators_done, all_collaborators=None):
+        """
+        If minimum_reporting collaborators have reported results within
+        straggler_cutoff_time, then return True otherwise False.
+        """
         cutoff = self.__straggler_time_expired() and self.__minimum_collaborators_reported(
             num_collaborators_done)
+
+        if num_collaborators_done > self.minimum_reporting:
+            self.logger.info(
+                f"{num_collaborators_done} collaborator(s) reported results in time, "
+                "which is more than minimum required of "
+                f"{self.minimum_reporting} collaborator(s)."
+            )
+        else:
+            self.logger.info(
+                f"Minimum required of {self.minimum_reporting} "
+                "collaborator(s) already reported task results in time."
+            )
         return cutoff
 
     def __straggler_time_expired(self):
+        """
+        Determines if straggler_cutoff_time is elapsed
+        """
         return self.round_start_time is not None and (
             (time.time() - self.round_start_time) > self.straggler_cutoff_time)
 
     def __minimum_collaborators_reported(self, num_collaborators_done):
+        """
+        If minimum required collaborators have reported results, then return True
+        otherwise False.
+        """
         return num_collaborators_done >= self.minimum_reporting

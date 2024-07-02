@@ -17,11 +17,14 @@ class StragglerHandlingFunction(ABC):
         self, callback: Callable, logger: Logger, collaborator_name: str
     ) -> None:
         """
-        Start policy.
+        Start straggler handling policy for collaborator for a particular round.
+        NOTE: Refer CutoffTimeBasedStragglerHandling for reference.
 
         Args:
             callback: Callable
                 Callback function for when straggler_cutoff_time elapses
+            collaborator_name: str
+                Name of the collaborator
             logger: Logger
 
         Returns:

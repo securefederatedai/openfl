@@ -127,9 +127,7 @@ class Aggregator:
         self.collaborator_task_weight = {}  # {TaskResultKey: data_size}
 
         # to track each collaborator progress
-        self.collaborators_done = {
-            "done": []
-        }
+        self.collaborators_done = []
 
     def _load_initial_tensors(self):
         """
@@ -336,10 +334,17 @@ class Aggregator:
         )
         sleep_time = 0
 
-        self.straggler_handling_policy.start_policy(
-            self._straggler_cutoff_time_elapsed, self.logger,
-            collaborator_name
-        )
+        # For CutoffTimeBasedStragglerHandling start straggler handling policy
+        # for the collaborator
+        if hasattr(self.straggler_handling_policy, "round_start_time"):
+            self.straggler_handling_policy.start_policy(
+                self._straggler_cutoff_time_elapsed, self.logger,
+                collaborator_name
+            )
+        else:
+            self.straggler_handling_policy.start_policy(
+                None, self.logger, collaborator_name
+            )
 
         return tasks, self.round_number, sleep_time, time_to_quit
 
@@ -358,24 +363,13 @@ class Aggregator:
 
         # Check if minimum collaborators reported results
         straggler_check = self.straggler_handling_policy.straggler_cutoff_check(
-            len(self.collaborators_done["done"])
+            len(self.collaborators_done)
         )
         if straggler_check:
             self.logger.info(
                 "Collaborator(s) did not send task results for one or more tasks"
                 f" for round number {self.round_number} in time."
             )
-            if len(self.collaborators_done["done"]) > self.straggler_handling_policy.minimum_reporting:
-                self.logger.info(
-                    f"{len(self.collaborators_done['done'])} collaborator(s) reported results in time, "
-                    "which is more than minimum required of "
-                    f"{self.straggler_handling_policy.minimum_reporting} collaborator(s)."
-                )
-            else:
-                self.logger.info(
-                    f"Minimum required of {self.straggler_handling_policy.minimum_reporting} "
-                    "collaborator(s) already reported task results in time."
-                )
             self._end_of_round_check()
             return
 
@@ -620,16 +614,19 @@ class Aggregator:
 
         self.collaborator_tasks_results[task_key] = task_results
 
-        # Count tasks completed by each collaborator
-        if collaborator_name not in self.collaborators_done.keys():
-            self.collaborators_done[collaborator_name] = 1
-        else:
-            self.collaborators_done[collaborator_name] += 1
+        # Check if all tasks are completed by collaborator
+        all_tasks_count = self.assigner.get_all_tasks_for_round(self.round_number)
+        all_tasks_completed = True
+        for task in all_tasks_count:
+            t = TaskResultKey(task_name=task, owner=collaborator_name, round_number=self.round_number)
+            all_tasks_completed = t in self.collaborator_tasks_results.keys()
+            if not all_tasks_completed:
+                break
 
-        # Check if collaborator has finished all tasks given for current round
-        all_tasks_count = len(self.assigner.get_all_tasks_for_round(self.round_number))
-        if self.collaborators_done[collaborator_name] >= all_tasks_count:
-            self.collaborators_done["done"].append(collaborator_name)
+        # If all collaborators have completed tasks for current round
+        # mark collaborator as done.
+        if all_tasks_completed:
+            self.collaborators_done.append(collaborator_name)
 
         self._end_of_task_check(task_name)
 
@@ -946,9 +943,7 @@ class Aggregator:
         # resetting stragglers for task for a new round
         self.stragglers = []
         # resetting collaborators_done for next round
-        self.collaborators_done = {
-            "done": []
-        }
+        self.collaborators_done = []
 
         # Save the latest model
         self.logger.info(f'Saving round {self.round_number} model...')
