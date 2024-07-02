@@ -620,11 +620,13 @@ class Aggregator:
 
         self.collaborator_tasks_results[task_key] = task_results
 
+        # Count tasks completed by each collaborator
         if collaborator_name not in self.collaborators_done.keys():
             self.collaborators_done[collaborator_name] = 1
         else:
             self.collaborators_done[collaborator_name] += 1
 
+        # Check if collaborator has finished all tasks given for current round
         all_tasks_count = len(self.assigner.get_all_tasks_for_round(self.round_number))
         if self.collaborators_done[collaborator_name] >= all_tasks_count:
             self.collaborators_done["done"].append(collaborator_name)
@@ -943,6 +945,7 @@ class Aggregator:
         self.round_number += 1
         # resetting stragglers for task for a new round
         self.stragglers = []
+        # resetting collaborators_done for next round
         self.collaborators_done = {
             "done": []
         }
