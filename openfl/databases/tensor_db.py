@@ -8,8 +8,13 @@ from typing import Dict, Iterator, Optional
 
 import numpy as np
 import pandas as pd
-from openfl.databases.utilities import (ROUND_PLACEHOLDER, _retrieve, _search,
-                                        _store)
+
+from openfl.databases.utilities import (
+    ROUND_PLACEHOLDER,
+    _retrieve,
+    _search,
+    _store,
+)
 from openfl.interface.aggregation_functions import AggregationFunction
 from openfl.utilities import LocalTensor, TensorKey, change_tags
 
