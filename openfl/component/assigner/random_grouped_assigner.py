@@ -54,10 +54,9 @@ class RandomGroupedAssigner(Assigner):
         Returns:
             None
         """
-        assert (
-            np.abs(1.0 -
-                   np.sum([group['percentage'] for group in self.task_groups]))
-            < 0.01), ('Task group percentages must sum to 100%')
+        assert (np.abs(1.0 - np.sum([group['percentage']
+                                     for group in self.task_groups])) < 0.01), (
+            'Task group percentages must sum to 100%')
 
         # Start by finding all of the tasks in all specified groups
         self.all_tasks_in_groups = list(
@@ -83,9 +82,8 @@ class RandomGroupedAssigner(Assigner):
             for group in self.task_groups:
                 num_col_in_group = int(group['percentage'] * col_list_size)
                 rand_col_group_list = [
-                    self.authorized_cols[i]
-                    for i in randomized_col_idx[col_idx:col_idx +
-                                                num_col_in_group]
+                    self.authorized_cols[i] for i in
+                    randomized_col_idx[col_idx:col_idx + num_col_in_group]
                 ]
                 self.task_group_collaborators[
                     group['name']] = rand_col_group_list
