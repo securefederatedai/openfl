@@ -43,6 +43,8 @@ class CutoffTimeBasedStragglerHandling(StragglerHandlingFunction):
         Returns:
             None
         """
+        if self.straggler_cutoff_time == np.inf:
+            return
         self.round_start_time = time.time()
         if hasattr(self, "timer"):
             self.timer.cancel()
