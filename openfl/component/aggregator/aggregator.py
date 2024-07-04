@@ -6,13 +6,14 @@ import queue
 import time
 from logging import getLogger
 
-from openfl.component.straggler_handling_functions import \
-    CutoffTimeBasedStragglerHandling
+from openfl.component.straggler_handling_functions import (
+    CutoffTimeBasedStragglerHandling,
+)
 from openfl.databases import TensorDB
 from openfl.interface.aggregation_functions import WeightedAverage
 from openfl.pipelines import NoCompressionPipeline, TensorCodec
 from openfl.protocols import base_pb2, utils
-from openfl.utilities import TaskResultKey, TensorKey, change_tags
+from openfl.utilities import change_tags, TaskResultKey, TensorKey
 from openfl.utilities.logs import write_metric
 
 
@@ -113,8 +114,9 @@ class Aggregator:
             # Cleaner solution?
             self.single_col_cert_common_name = ''
 
-        self.straggler_handling_policy = (straggler_handling_policy or
-                                          CutoffTimeBasedStragglerHandling())
+        self.straggler_handling_policy = (
+            straggler_handling_policy or CutoffTimeBasedStragglerHandling()
+        )
         self._end_of_round_check_done = [False] * rounds_to_train
         self.stragglers = []
 
@@ -251,14 +253,16 @@ class Aggregator:
 
     def valid_collaborator_cn_and_id(self, cert_common_name,
                                      collaborator_common_name):
-        """Determine if the collaborator certificate and ID are valid for this federation.
+        """Determine if the collaborator certificate and ID are valid for this
+        federation.
 
         Args:
             cert_common_name (str): Common name for security certificate.
             collaborator_common_name (str): Common name for collaborator.
 
         Returns:
-            bool: True means the collaborator common name matches the name in the security certificate.
+            bool: True means the collaborator common name matches the name in
+                the security certificate.
         """
         # if self.test_mode_whitelist is None, then the common_name must
         # match collaborator_common_name and be in authorized_cols
@@ -308,7 +312,8 @@ class Aggregator:
             collaborator_name (str): Requested collaborator name.
 
         Returns:
-            tasks (list[str]): List of tasks to be performed by the requesting collaborator for the current round.
+            tasks (list[str]): List of tasks to be performed by the requesting
+                collaborator for the current round.
             round_number (int): Actual round number.
             sleep_time (int): Sleep time.
             time_to_quit (bool): Whether it's time to quit.
@@ -900,7 +905,7 @@ class Aggregator:
 
     def _is_task_done(self, task_name):
         """Check that task is done.
-        
+
         Args:
             task_name (str): Task name.
 
