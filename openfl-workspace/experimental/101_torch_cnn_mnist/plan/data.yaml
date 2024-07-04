@@ -7,21 +7,7 @@
 
 # collaborator_name ,data_directory_path
 col1:
-  callable_func:
-    settings:
-      batch_size: 32
-      index: 0
-      n_collaborators: 2
-      train_dataset: src.collaborator_private_attrs.train_dataset
-      test_dataset: src.collaborator_private_attrs.test_dataset
-    template: src.collaborator_private_attrs.collaborator_private_attrs
+  private_attributes: src.collaborator_private_attrs.col1_private_attributes
 
 col2:
-  callable_func:
-    settings:
-      batch_size: 32
-      index: 1
-      n_collaborators: 2
-      train_dataset: src.collaborator_private_attrs.train_dataset
-      test_dataset: src.collaborator_private_attrs.test_dataset
-    template: src.collaborator_private_attrs.collaborator_private_attrs
+  private_attributes: src.collaborator_private_attrs.col2_private_attributes

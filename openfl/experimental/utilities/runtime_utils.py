@@ -1,12 +1,13 @@
 # Copyright (C) 2020-2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-
 """openfl.experimental.utilities package."""
 
-import itertools
 import inspect
-import numpy as np
+import itertools
 from types import MethodType
+
+import numpy as np
+
 from openfl.experimental.utilities import ResourcesAllocationError
 
 

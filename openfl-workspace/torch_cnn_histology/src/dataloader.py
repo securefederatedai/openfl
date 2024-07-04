@@ -10,6 +10,7 @@ from pathlib import Path
 from urllib.request import urlretrieve
 from zipfile import ZipFile
 
+from openfl.federated import PyTorchDataLoader
 import numpy as np
 import torch
 from torch.utils.data import random_split
@@ -20,6 +21,31 @@ from tqdm import tqdm
 from openfl.utilities import validate_file_hash
 
 logger = getLogger(__name__)
+
+
+class PyTorchHistologyInMemory(PyTorchDataLoader):
+    """PyTorch data loader for Histology dataset."""
+
+    def __init__(self, data_path, batch_size, **kwargs):
+        """Instantiate the data object.
+
+        Args:
+            data_path: The file path to the data
+            batch_size: The batch size of the data loader
+            **kwargs: Additional arguments, passed to super init
+             and load_mnist_shard
+        """
+        super().__init__(batch_size, random_seed=0, **kwargs)
+
+        _, num_classes, X_train, y_train, X_valid, y_valid = load_histology_shard(
+            shard_num=int(data_path), **kwargs)
+
+        self.X_train = X_train
+        self.y_train = y_train
+        self.X_valid = X_valid
+        self.y_valid = y_valid
+
+        self.num_classes = num_classes
 
 
 class HistologyDataset(ImageFolder):
