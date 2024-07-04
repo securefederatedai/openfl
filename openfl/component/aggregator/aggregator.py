@@ -614,7 +614,9 @@ class Aggregator:
         all_tasks = self.assigner.get_all_tasks_for_round(self.round_number)
         all_tasks_completed = True
         for task in all_tasks:
-            t = TaskResultKey(task_name=task, owner=collaborator_name, round_number=self.round_number)
+            t = TaskResultKey(
+                task_name=task, owner=collaborator_name, round_number=self.round_number
+            )
             all_tasks_completed = t in self.collaborator_tasks_results.keys()
             if not all_tasks_completed:
                 break

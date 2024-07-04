@@ -6,7 +6,6 @@
 from abc import ABC
 from abc import abstractmethod
 from typing import Callable
-from logging import Logger
 
 
 class StragglerHandlingFunction(ABC):
