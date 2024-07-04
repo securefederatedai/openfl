@@ -13,7 +13,7 @@ from openfl.databases import TensorDB
 from openfl.interface.aggregation_functions import WeightedAverage
 from openfl.pipelines import NoCompressionPipeline, TensorCodec
 from openfl.protocols import base_pb2, utils
-from openfl.utilities import change_tags, TaskResultKey, TensorKey
+from openfl.utilities import TaskResultKey, TensorKey, change_tags
 from openfl.utilities.logs import write_metric
 
 
