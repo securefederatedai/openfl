@@ -164,7 +164,7 @@ class TensorDB:
             collaborator_weight_dict (dict): A dictionary where the keys are
                 collaborator names and the values are their respective weights.
             aggregation_function (AggregationFunction): Call the underlying
-                numpy aggregation function to use to compute the weighted 
+                numpy aggregation function to use to compute the weighted
                 average. Default is just the weighted average.
 
         Returns:
@@ -234,8 +234,9 @@ class TensorDB:
         return np.array(agg_nparray)
 
     def _iterate(self, order_by: str = 'round', ascending: bool = False) -> Iterator[pd.Series]:
-        """Returns an iterator over the rows of the TensorDB, sorted by a specified column.
-    
+        """Returns an iterator over the rows of the TensorDB, sorted by a
+        specified column.
+
         Args:
             order_by (str, optional): The column to sort by. Defaults to
                 'round'.
