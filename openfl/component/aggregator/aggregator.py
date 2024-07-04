@@ -65,9 +65,6 @@ class Aggregator:
             # Cleaner solution?
             self.single_col_cert_common_name = ''
 
-        self.straggler_handling_policy = (
-            straggler_handling_policy or CutoffTimeBasedStragglerHandling()
-        )
         self._end_of_round_check_done = [False] * rounds_to_train
         self.stragglers = []
 
@@ -89,6 +86,12 @@ class Aggregator:
         self.logger = getLogger(__name__)
         self.write_logs = write_logs
         self.log_metric_callback = log_metric_callback
+
+        self.straggler_handling_policy = (
+            straggler_handling_policy or CutoffTimeBasedStragglerHandling(
+                logger=self.logger
+            )
+        )
 
         if self.write_logs:
             self.log_metric = write_metric
