@@ -14,7 +14,7 @@ class StragglerHandlingFunction(ABC):
 
     @abstractmethod
     def start_policy(
-        self, callback: Callable, logger: Logger, collaborator_name: str
+        self, callback: Callable, collaborator_name: str
     ) -> None:
         """
         Start straggler handling policy for collaborator for a particular round.
@@ -25,7 +25,6 @@ class StragglerHandlingFunction(ABC):
                 Callback function for when straggler_cutoff_time elapses
             collaborator_name: str
                 Name of the collaborator
-            logger: Logger
 
         Returns:
             None

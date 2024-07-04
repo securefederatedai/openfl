@@ -17,14 +17,18 @@ class CutoffTimeBasedStragglerHandling(StragglerHandlingFunction):
         round_start_time=None,
         straggler_cutoff_time=np.inf,
         minimum_reporting=1,
+        logger=Logger,
         **kwargs
     ):
         self.round_start_time = round_start_time
         self.straggler_cutoff_time = straggler_cutoff_time
         self.minimum_reporting = minimum_reporting
+        self.logger = logger
+        if self.straggler_cutoff_time == np.inf:
+            self.logger.warning("straggler_cutoff_time is set to np.inf, timer will not start.")
 
     def start_policy(
-        self, callback: Callable, logger: Logger, collaborator_name: str
+        self, callback: Callable, collaborator_name: str
     ) -> None:
         """
         Start time-based straggler handling policy for collaborator for
@@ -35,16 +39,11 @@ class CutoffTimeBasedStragglerHandling(StragglerHandlingFunction):
                 Callback function for when straggler_cutoff_time elapses
             collaborator_name: str
                 Name of the collaborator
-            logger: Logger
 
         Returns:
             None
         """
         self.round_start_time = time.time()
-        self.logger = logger
-        if self.straggler_cutoff_time == np.inf:
-            self.logger.warning("straggler_cutoff_time is set to np.inf, timer will not start.")
-            return
         if hasattr(self, "timer"):
             self.timer.cancel()
             delattr(self, "timer")
@@ -61,18 +60,6 @@ class CutoffTimeBasedStragglerHandling(StragglerHandlingFunction):
         """
         cutoff = self.__straggler_time_expired() and self.__minimum_collaborators_reported(
             num_collaborators_done)
-
-        if num_collaborators_done > self.minimum_reporting:
-            self.logger.info(
-                f"{num_collaborators_done} collaborator(s) reported results in time, "
-                "which is more than minimum required of "
-                f"{self.minimum_reporting} collaborator(s)."
-            )
-        else:
-            self.logger.info(
-                f"Minimum required of {self.minimum_reporting} "
-                "collaborator(s) already reported task results in time."
-            )
         return cutoff
 
     def __straggler_time_expired(self):

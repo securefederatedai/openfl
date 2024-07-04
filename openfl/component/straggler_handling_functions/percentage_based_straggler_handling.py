@@ -12,13 +12,15 @@ class PercentageBasedStragglerHandling(StragglerHandlingFunction):
         self,
         percent_collaborators_needed=1.0,
         minimum_reporting=1,
+        logger=Logger,
         **kwargs
     ):
         self.percent_collaborators_needed = percent_collaborators_needed
         self.minimum_reporting = minimum_reporting
+        self.logger = logger
 
     def start_policy(
-        self, callback: Callable, logger: Logger, collaborator_name: str
+        self, callback: Callable, collaborator_name: str
     ) -> None:
         """
         Not required in PercentageBasedStragglerHandling.

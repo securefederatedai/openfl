@@ -126,7 +126,8 @@ class Aggregator:
 
         self.collaborator_task_weight = {}  # {TaskResultKey: data_size}
 
-        # to track each collaborator progress
+        # maintain a list of collaborators that have completed task and
+        # reported results in a given round
         self.collaborators_done = []
 
     def _load_initial_tensors(self):
@@ -350,15 +351,16 @@ class Aggregator:
 
     def _straggler_cutoff_time_elapsed(self) -> None:
         """
-        After the cutoff time has elapsed, evaluate cutoff time based
-        straggler handling policy.
+        This method is called by the straggler handling policy when cutoff timer is elapsed.
+        It applies straggler handling policy and ends the round early.
 
         Returns:
             None
         """
-        self.logger.info(
-            f"straggler_cutoff_time of {self.straggler_handling_policy.straggler_cutoff_time}s "
-            f"elapsed. Applying {self.straggler_handling_policy.__class__.__name__} straggler policy."
+        self.logger.warning(
+            f"Round number: {self.round_number} cutoff timer elapsed after "
+            f"{self.straggler_handling_policy.straggler_cutoff_time}s. "
+            f"Applying {self.straggler_handling_policy.__class__.__name__} policy."
         )
 
         # Check if minimum collaborators reported results
@@ -367,8 +369,8 @@ class Aggregator:
         )
         if straggler_check:
             self.logger.info(
-                "Collaborator(s) did not send task results for one or more tasks"
-                f" for round number {self.round_number} in time."
+                f"{len(self.collaborators_done)} collaborators reported results within cutoff "
+                f"time. Applying cutoff policy and proceeding with end of round."
             )
             self._end_of_round_check()
             return
@@ -615,9 +617,9 @@ class Aggregator:
         self.collaborator_tasks_results[task_key] = task_results
 
         # Check if all tasks are completed by collaborator
-        all_tasks_count = self.assigner.get_all_tasks_for_round(self.round_number)
+        all_tasks = self.assigner.get_all_tasks_for_round(self.round_number)
         all_tasks_completed = True
-        for task in all_tasks_count:
+        for task in all_tasks:
             t = TaskResultKey(task_name=task, owner=collaborator_name, round_number=self.round_number)
             all_tasks_completed = t in self.collaborator_tasks_results.keys()
             if not all_tasks_completed:
