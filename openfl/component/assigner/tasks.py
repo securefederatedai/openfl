@@ -2,8 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 """Task module."""
 
-from dataclasses import dataclass
-from dataclasses import field
+from dataclasses import dataclass, field
 
 
 @dataclass
