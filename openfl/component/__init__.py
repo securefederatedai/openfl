@@ -5,9 +5,11 @@
 from .aggregator import Aggregator
 from .assigner import Assigner, RandomGroupedAssigner, StaticGroupedAssigner
 from .collaborator import Collaborator
-from .straggler_handling_functions import (CutoffTimeBasedStragglerHandling,
-                                           PercentageBasedStragglerHandling,
-                                           StragglerHandlingFunction)
+from .straggler_handling_functions import (
+    CutoffTimeBasedStragglerHandling,
+    PercentageBasedStragglerHandling,
+    StragglerHandlingFunction,
+)
 
 __all__ = [
     'Assigner', 'RandomGroupedAssigner', 'StaticGroupedAssigner', 'Aggregator',
