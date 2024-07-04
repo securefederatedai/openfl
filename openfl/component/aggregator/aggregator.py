@@ -339,12 +339,11 @@ class Aggregator:
         # for the collaborator
         if hasattr(self.straggler_handling_policy, "round_start_time"):
             self.straggler_handling_policy.start_policy(
-                self._straggler_cutoff_time_elapsed, self.logger,
-                collaborator_name
+                self._straggler_cutoff_time_elapsed, collaborator_name
             )
         else:
             self.straggler_handling_policy.start_policy(
-                None, self.logger, collaborator_name
+                None, collaborator_name
             )
 
         return tasks, self.round_number, sleep_time, time_to_quit
