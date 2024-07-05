@@ -37,8 +37,7 @@ def create_dirs(prefix):
     (prefix / "data").mkdir(parents=True, exist_ok=True)  # training data
     (prefix / "logs").mkdir(parents=True, exist_ok=True)  # training logs
     (prefix / "save").mkdir(
-        parents=True, exist_ok=True
-    )  # model weight saves / initialization
+        parents=True, exist_ok=True)  # model weight saves / initialization
     (prefix / "src").mkdir(parents=True, exist_ok=True)  # model code
 
     copyfile(WORKSPACE / "workspace" / ".workspace", prefix / ".workspace")
@@ -68,16 +67,16 @@ def get_templates():
     from openfl.experimental.interface.cli.cli_helper import WORKSPACE
 
     return [
-        d.name
-        for d in WORKSPACE.glob("*")
+        d.name for d in WORKSPACE.glob("*")
         if d.is_dir() and d.name not in ["__pycache__", "workspace"]
     ]
 
 
 @workspace.command(name="create")
-@option(
-    "--prefix", required=True, help="Workspace name or path", type=ClickPath()
-)
+@option("--prefix",
+        required=True,
+        help="Workspace name or path",
+        type=ClickPath())
 @option(
     "--custom_template",
     required=False,
@@ -105,31 +104,22 @@ def create_(prefix, custom_template, template, notebook, template_output_dir):
 
     if custom_template and template and notebook:
         raise ValueError(
-            "Please provide either `template`, `custom_template` or "
-            + "`notebook`. Not all are necessary"
-        )
-    elif (
-        (custom_template and template)
-        or (template and notebook)
-        or (custom_template and notebook)
-    ):
-        raise ValueError(
-            "Please provide only one of the following options: "
-            + "`template`, `custom_template`, or `notebook`."
-        )
+            "Please provide either `template`, `custom_template` or " +
+            "`notebook`. Not all are necessary")
+    elif ((custom_template and template) or (template and notebook)
+          or (custom_template and notebook)):
+        raise ValueError("Please provide only one of the following options: " +
+                         "`template`, `custom_template`, or `notebook`.")
 
     if not (custom_template or template or notebook):
-        raise ValueError(
-            "Please provide one of the following options: "
-            + "`template`, `custom_template`, or `notebook`."
-        )
+        raise ValueError("Please provide one of the following options: " +
+                         "`template`, `custom_template`, or `notebook`.")
 
     if notebook:
         if not template_output_dir:
             raise ValueError(
                 "Please provide output_workspace which is Destination directory to "
-                + "save your Jupyter Notebook workspace."
-            )
+                + "save your Jupyter Notebook workspace.")
 
         from openfl.experimental.workspace_export import WorkspaceExport
 
@@ -142,12 +132,10 @@ def create_(prefix, custom_template, template, notebook, template_output_dir):
 
         logger.warning(
             "The user should review the generated workspace for completeness "
-            + "before proceeding"
-        )
+            + "before proceeding")
     else:
-        template = (
-            Path(custom_template).resolve() if custom_template else template
-        )
+        template = (Path(custom_template).resolve()
+                    if custom_template else template)
         create(prefix, template)
 
 
@@ -178,8 +166,7 @@ def create(prefix, template):
                 "Participant private attributes shall be set to None as plan/data.yaml"
                 + " was not found in the workspace.",
                 fg="yellow",
-            )
-        )
+            ))
 
     if isfile(f"{str(prefix)}/{requirements_filename}"):
         check_call(
@@ -193,14 +180,15 @@ def create(prefix, template):
             ],
             shell=False,
         )
-        echo(f"Successfully installed packages from {prefix}/requirements.txt.")
+        echo(
+            f"Successfully installed packages from {prefix}/requirements.txt.")
     else:
         echo("No additional requirements for workspace defined. Skipping...")
     prefix_hash = _get_dir_hash(str(prefix.absolute()))
     with open(
-        OPENFL_USERDIR / f"requirements.{prefix_hash}.txt",
-        "w",
-        encoding="utf-8",
+            OPENFL_USERDIR / f"requirements.{prefix_hash}.txt",
+            "w",
+            encoding="utf-8",
     ) as f:
         check_call([executable, "-m", "pip", "freeze"], shell=False, stdout=f)
 
@@ -234,11 +222,11 @@ def export_(pip_install_options: Tuple[str]):
     echo(
         style(
             "This command will archive the contents of 'plan' and 'src' directory, user"
-            + " should review that these does not contain any information which is private and"
+            +
+            " should review that these does not contain any information which is private and"
             + " not to be shared.",
             fg="yellow",
-        )
-    )
+        ))
 
     plan_file = Path("plan/plan.yaml").absolute()
     try:
@@ -247,9 +235,8 @@ def export_(pip_install_options: Tuple[str]):
         echo(f'Plan file "{plan_file}" not found. No freeze performed.')
 
     # Dump requirements.txt
-    dump_requirements_file(
-        prefixes=pip_install_options, keep_original_prefixes=True
-    )
+    dump_requirements_file(prefixes=pip_install_options,
+                           keep_original_prefixes=True)
 
     archive_type = "zip"
     archive_name = basename(getcwd())
@@ -258,9 +245,8 @@ def export_(pip_install_options: Tuple[str]):
     # Aggregator workspace
     tmp_dir = join(mkdtemp(), "openfl", archive_name)
 
-    ignore = ignore_patterns(
-        "__pycache__", "*.crt", "*.key", "*.csr", "*.srl", "*.pem", "*.pbuf"
-    )
+    ignore = ignore_patterns("__pycache__", "*.crt", "*.key", "*.csr", "*.srl",
+                             "*.pem", "*.pbuf")
 
     # We only export the minimum required files to set up a collaborator
     makedirs(f"{tmp_dir}/save", exist_ok=True)
@@ -277,10 +263,8 @@ def export_(pip_install_options: Tuple[str]):
         if confirm("Create a default '.workspace' file?"):
             copy2(WORKSPACE / "workspace" / ".workspace", tmp_dir)
         else:
-            echo(
-                "To proceed, you must have a '.workspace' "
-                "file in the current directory."
-            )
+            echo("To proceed, you must have a '.workspace' "
+                 "file in the current directory.")
             raise
 
     # Create Zip archive of directory
@@ -351,29 +335,28 @@ def certify():
     echo("1.  Create Root CA")
     echo("1.1 Create Directories")
 
-    (CERT_DIR / "ca/root-ca/private").mkdir(
-        parents=True, exist_ok=True, mode=0o700
-    )
+    (CERT_DIR / "ca/root-ca/private").mkdir(parents=True,
+                                            exist_ok=True,
+                                            mode=0o700)
     (CERT_DIR / "ca/root-ca/db").mkdir(parents=True, exist_ok=True)
 
     echo("1.2 Create Database")
 
-    with open(
-        CERT_DIR / "ca/root-ca/db/root-ca.db", "w", encoding="utf-8"
-    ) as f:
+    with open(CERT_DIR / "ca/root-ca/db/root-ca.db", "w",
+              encoding="utf-8") as f:
         pass  # write empty file
-    with open(
-        CERT_DIR / "ca/root-ca/db/root-ca.db.attr", "w", encoding="utf-8"
-    ) as f:
+    with open(CERT_DIR / "ca/root-ca/db/root-ca.db.attr",
+              "w",
+              encoding="utf-8") as f:
         pass  # write empty file
 
-    with open(
-        CERT_DIR / "ca/root-ca/db/root-ca.crt.srl", "w", encoding="utf-8"
-    ) as f:
+    with open(CERT_DIR / "ca/root-ca/db/root-ca.crt.srl",
+              "w",
+              encoding="utf-8") as f:
         f.write("01")  # write file with '01'
-    with open(
-        CERT_DIR / "ca/root-ca/db/root-ca.crl.srl", "w", encoding="utf-8"
-    ) as f:
+    with open(CERT_DIR / "ca/root-ca/db/root-ca.crl.srl",
+              "w",
+              encoding="utf-8") as f:
         f.write("01")  # write file with '01'
 
     echo("1.3 Create CA Request and Certificate")
@@ -385,11 +368,7 @@ def certify():
 
     # Write root CA certificate to disk
     with open(CERT_DIR / root_crt_path, "wb") as f:
-        f.write(
-            root_cert.public_bytes(
-                encoding=serialization.Encoding.PEM,
-            )
-        )
+        f.write(root_cert.public_bytes(encoding=serialization.Encoding.PEM, ))
 
     with open(CERT_DIR / root_key_path, "wb") as f:
         f.write(
@@ -397,35 +376,34 @@ def certify():
                 encoding=serialization.Encoding.PEM,
                 format=serialization.PrivateFormat.TraditionalOpenSSL,
                 encryption_algorithm=serialization.NoEncryption(),
-            )
-        )
+            ))
 
     echo("2.  Create Signing Certificate")
     echo("2.1 Create Directories")
 
-    (CERT_DIR / "ca/signing-ca/private").mkdir(
-        parents=True, exist_ok=True, mode=0o700
-    )
+    (CERT_DIR / "ca/signing-ca/private").mkdir(parents=True,
+                                               exist_ok=True,
+                                               mode=0o700)
     (CERT_DIR / "ca/signing-ca/db").mkdir(parents=True, exist_ok=True)
 
     echo("2.2 Create Database")
 
-    with open(
-        CERT_DIR / "ca/signing-ca/db/signing-ca.db", "w", encoding="utf-8"
-    ) as f:
+    with open(CERT_DIR / "ca/signing-ca/db/signing-ca.db",
+              "w",
+              encoding="utf-8") as f:
         pass  # write empty file
-    with open(
-        CERT_DIR / "ca/signing-ca/db/signing-ca.db.attr", "w", encoding="utf-8"
-    ) as f:
+    with open(CERT_DIR / "ca/signing-ca/db/signing-ca.db.attr",
+              "w",
+              encoding="utf-8") as f:
         pass  # write empty file
 
-    with open(
-        CERT_DIR / "ca/signing-ca/db/signing-ca.crt.srl", "w", encoding="utf-8"
-    ) as f:
+    with open(CERT_DIR / "ca/signing-ca/db/signing-ca.crt.srl",
+              "w",
+              encoding="utf-8") as f:
         f.write("01")  # write file with '01'
-    with open(
-        CERT_DIR / "ca/signing-ca/db/signing-ca.crl.srl", "w", encoding="utf-8"
-    ) as f:
+    with open(CERT_DIR / "ca/signing-ca/db/signing-ca.crl.srl",
+              "w",
+              encoding="utf-8") as f:
         f.write("01")  # write file with '01'
 
     echo("2.3 Create Signing Certificate CSR")
@@ -438,11 +416,8 @@ def certify():
 
     # Write Signing CA CSR to disk
     with open(CERT_DIR / signing_csr_path, "wb") as f:
-        f.write(
-            signing_csr.public_bytes(
-                encoding=serialization.Encoding.PEM,
-            )
-        )
+        f.write(signing_csr.public_bytes(
+            encoding=serialization.Encoding.PEM, ))
 
     with open(CERT_DIR / signing_key_path, "wb") as f:
         f.write(
@@ -450,21 +425,18 @@ def certify():
                 encoding=serialization.Encoding.PEM,
                 format=serialization.PrivateFormat.TraditionalOpenSSL,
                 encryption_algorithm=serialization.NoEncryption(),
-            )
-        )
+            ))
 
     echo("2.4 Sign Signing Certificate CSR")
 
-    signing_cert = sign_certificate(
-        signing_csr, root_private_key, root_cert.subject, ca=True
-    )
+    signing_cert = sign_certificate(signing_csr,
+                                    root_private_key,
+                                    root_cert.subject,
+                                    ca=True)
 
     with open(CERT_DIR / signing_crt_path, "wb") as f:
         f.write(
-            signing_cert.public_bytes(
-                encoding=serialization.Encoding.PEM,
-            )
-        )
+            signing_cert.public_bytes(encoding=serialization.Encoding.PEM, ))
 
     echo("3   Create Certificate Chain")
 
@@ -506,13 +478,14 @@ def _get_dir_hash(path):
 def apply_template_plan(prefix, template):
     """Copy plan file from template folder.
 
-    This function unfolds default values from template plan configuration
-    and writes the configuration to the current workspace.
+    This function unfolds default values from template plan configuration and
+    writes the configuration to the current workspace.
     """
     from openfl.experimental.federated.plan import Plan
     from openfl.experimental.interface.cli.cli_helper import WORKSPACE
 
-    # Use the specified template if it's a Path, otherwise use WORKSPACE/template
+    # Use the specified template if it's a Path, otherwise use
+    # WORKSPACE/template
     source = template if isinstance(template, Path) else WORKSPACE / template
 
     template_plan = Plan.parse(source / "plan" / "plan.yaml")

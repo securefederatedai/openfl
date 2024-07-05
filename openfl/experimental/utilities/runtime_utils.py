@@ -12,7 +12,8 @@ from openfl.experimental.utilities import ResourcesAllocationError
 
 
 def parse_attrs(ctx, exclude=[], reserved_words=["next", "runtime", "input"]):
-    """Parses the context to get its attributes and artifacts, excluding those specified.
+    """Parses the context to get its attributes and artifacts, excluding those
+    specified.
 
     Args:
         ctx (any): The context to parse.
@@ -26,13 +27,9 @@ def parse_attrs(ctx, exclude=[], reserved_words=["next", "runtime", "input"]):
     cls_attrs = []
     valid_artifacts = []
     for i in inspect.getmembers(ctx):
-        if (
-            not hasattr(i[1], "task")
-            and not i[0].startswith("_")
-            and i[0] not in reserved_words
-            and i[0] not in exclude
-            and i not in inspect.getmembers(type(ctx))
-        ):
+        if (not hasattr(i[1], "task") and not i[0].startswith("_")
+                and i[0] not in reserved_words and i[0] not in exclude
+                and i not in inspect.getmembers(type(ctx))):
             if not isinstance(i[1], MethodType):
                 cls_attrs.append(i[0])
                 valid_artifacts.append((i[0], i[1]))
@@ -40,16 +37,20 @@ def parse_attrs(ctx, exclude=[], reserved_words=["next", "runtime", "input"]):
 
 
 def generate_artifacts(ctx, reserved_words=["next", "runtime", "input"]):
-    """Generates artifacts from the given context, excluding specified reserved words.
+    """Generates artifacts from the given context, excluding specified reserved
+    words.
 
     Args:
         ctx (any): The context to generate artifacts from.
-        reserved_words (list, optional): A list of reserved words to exclude. Defaults to ["next", "runtime", "input"].
+        reserved_words (list, optional): A list of reserved words to exclude.
+            Defaults to ["next", "runtime", "input"].
 
     Returns:
-        tuple: A tuple containing a generator of artifacts and a list of attribute names.
+        tuple: A tuple containing a generator of artifacts and a list of
+            attribute names.
     """
-    cls_attrs, valid_artifacts = parse_attrs(ctx, reserved_words=reserved_words)
+    cls_attrs, valid_artifacts = parse_attrs(ctx,
+                                             reserved_words=reserved_words)
 
     def artifacts_iter():
         # Helper function from metaflow source
@@ -61,22 +62,25 @@ def generate_artifacts(ctx, reserved_words=["next", "runtime", "input"]):
 
 
 def filter_attributes(ctx, f, **kwargs):
-    """
-    Filters out attributes from the next task in the flow based on inclusion or exclusion.
+    """Filters out attributes from the next task in the flow based on inclusion
+    or exclusion.
 
     Args:
         ctx (any): The context to filter attributes from.
         f (function): The next task function in the flow.
-        **kwargs: Optional arguments that specify the 'include' or 'exclude' lists.
+        **kwargs: Optional arguments that specify the 'include' or 'exclude'
+            lists.
 
     Raises:
-        RuntimeError: If both 'include' and 'exclude' are present, or if an attribute in 'include' or 'exclude' is not 
-            found in the context's attributes.
+        RuntimeError: If both 'include' and 'exclude' are present, or if an
+            attribute in 'include' or 'exclude' is not found in the context's
+            attributes.
     """
 
     _, cls_attrs = generate_artifacts(ctx=ctx)
     if "include" in kwargs and "exclude" in kwargs:
-        raise RuntimeError("'include' and 'exclude' should not both be present")
+        raise RuntimeError(
+            "'include' and 'exclude' should not both be present")
     elif "include" in kwargs:
         assert isinstance(kwargs["include"], list)
         for in_attr in kwargs["include"]:
@@ -100,25 +104,25 @@ def filter_attributes(ctx, f, **kwargs):
 
 
 def checkpoint(ctx, parent_func, chkpnt_reserved_words=["next", "runtime"]):
-    """
-    Optionally saves the current state for the task just executed.
+    """Optionally saves the current state for the task just executed.
 
     Args:
         ctx (any): The context to checkpoint.
         parent_func (function): The function that was just executed.
-        chkpnt_reserved_words (list, optional): A list of reserved words to exclude from checkpointing. Defaults to ["next", "runtime"].
+        chkpnt_reserved_words (list, optional): A list of reserved words to
+            exclude from checkpointing. Defaults to ["next", "runtime"].
     """
 
     # Extract the stdout & stderr from the buffer
-    # NOTE: Any prints in this method before this line will be recorded as step output/error
+    # NOTE: Any prints in this method before this line will be recorded as
+    # step output/error
     step_stdout, step_stderr = parent_func._stream_buffer.get_stdstream()
 
     if ctx._checkpoint:
         # all objects will be serialized using Metaflow interface
         print(f"Saving data artifacts for {parent_func.__name__}")
         artifacts_iter, _ = generate_artifacts(
-            ctx=ctx, reserved_words=chkpnt_reserved_words
-        )
+            ctx=ctx, reserved_words=chkpnt_reserved_words)
         task_id = ctx._metaflow_interface.create_task(parent_func.__name__)
         ctx._metaflow_interface.save_artifacts(
             artifacts_iter(),
@@ -132,34 +136,32 @@ def checkpoint(ctx, parent_func, chkpnt_reserved_words=["next", "runtime"]):
 
 def old_check_resource_allocation(num_gpus, each_participant_gpu_usage):
     remaining_gpu_memory = {}
-    # TODO for each GPU the funtion tries see if all participant usages fit into a GPU, it it
-    # doesn't it removes that
-    # participant from the participant list, and adds it to the remaining_gpu_memory dict. So any
-    # sum of GPU requirements above 1
-    # triggers this.
-    # But at this point the funtion will raise an error because remaining_gpu_memory is never
-    # cleared.
-    # The participant list should remove the participant if it fits in the gpu and save the
-    # partipant if it doesn't and continue
-    # to the next GPU to see if it fits in that one, only if we run out of GPUs should this
-    # funtion raise an error.
+    # TODO for each GPU the funtion tries see if all participant usages fit
+    # into a GPU, it it doesn't it removes that participant from the
+    # participant list, and adds it to the remaining_gpu_memory dict. So any
+    # sum of GPU requirements above 1 triggers this.
+    # But at this point the funtion will raise an error because
+    # remaining_gpu_memory is never cleared.
+    # The participant list should remove the participant if it fits in the gpu
+    # and save the partipant if it doesn't and continue to the next GPU to see
+    # if it fits in that one, only if we run out of GPUs should this funtion
+    # raise an error.
     for gpu in np.ones(num_gpus, dtype=int):
         for i, (participant_name, participant_gpu_usage) in enumerate(
-            each_participant_gpu_usage.items()
-        ):
+                each_participant_gpu_usage.items()):
             if gpu == 0:
                 break
             if gpu < participant_gpu_usage:
                 remaining_gpu_memory.update({participant_name: gpu})
                 each_participant_gpu_usage = dict(
-                    itertools.islice(each_participant_gpu_usage.items(), i)
-                )
+                    itertools.islice(each_participant_gpu_usage.items(), i))
             else:
                 gpu -= participant_gpu_usage
     if len(remaining_gpu_memory) > 0:
         raise ResourcesAllocationError(
             f"Failed to allocate Participant {list(remaining_gpu_memory.keys())} "
-            + "to specified GPU. Please try allocating lesser GPU resources to participants"
+            +
+            "to specified GPU. Please try allocating lesser GPU resources to participants"
         )
 
 
@@ -168,11 +170,11 @@ def check_resource_allocation(num_gpus, each_participant_gpu_usage):
     need_assigned = each_participant_gpu_usage.copy()
     # cycle through all available GPU availability
     for gpu in np.ones(num_gpus, dtype=int):
-        # buffer to cycle though since need_assigned will change sizes as we assign participants
+        # buffer to cycle though since need_assigned will change sizes as we
+        # assign participants
         current_dict = need_assigned.copy()
-        for i, (participant_name, participant_gpu_usage) in enumerate(
-            current_dict.items()
-        ):
+        for i, (participant_name,
+                participant_gpu_usage) in enumerate(current_dict.items()):
             if gpu == 0:
                 break
             if gpu < participant_gpu_usage:
@@ -183,10 +185,10 @@ def check_resource_allocation(num_gpus, each_participant_gpu_usage):
                 need_assigned.pop(participant_name)
                 gpu -= participant_gpu_usage
 
-    # raise error if after going though all gpus there are still participants that needed to be
-    # assigned
+    # raise error if after going though all gpus there are still participants
+    # that needed to be assigned
     if len(need_assigned) > 0:
         raise ResourcesAllocationError(
-            f"Failed to allocate Participant {list(need_assigned.keys())} "
-            + "to specified GPU. Please try allocating lesser GPU resources to participants"
+            f"Failed to allocate Participant {list(need_assigned.keys())} " +
+            "to specified GPU. Please try allocating lesser GPU resources to participants"
         )

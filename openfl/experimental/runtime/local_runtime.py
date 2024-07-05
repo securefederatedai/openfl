@@ -1,6 +1,10 @@
 # Copyright (C) 2020-2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+<<<<<<< HEAD
 """ openfl.experimental.runtime package LocalRuntime class."""
+=======
+"""openfl.experimental.runtime package LocalRuntime class."""
+>>>>>>> 665cf85 (Update experimental functions docstring for fix lint warnings)
 
 from __future__ import annotations
 
@@ -33,9 +37,16 @@ from openfl.experimental.utilities import (
 
 
 class RayExecutor:
+<<<<<<< HEAD
 
     def __init__(self):
         """Create RayExecutor object"""
+=======
+    """Class for executing tasks using the Ray framework."""
+
+    def __init__(self):
+        """Initializes the RayExecutor object."""
+>>>>>>> 665cf85 (Update experimental functions docstring for fix lint warnings)
         self.__remote_contexts = []
 
     def ray_call_put(
@@ -46,6 +57,7 @@ class RayExecutor:
         callback: Callable,
         clones: Optional[Any] = None,
     ) -> None:
+<<<<<<< HEAD
         """
         Execute f_name from inside participant (Aggregator or Collaborator) class with the context
         of clone (ctx)
@@ -63,6 +75,33 @@ class RayExecutor:
         """
         Get remote clones and delete ray references of clone (ctx) and,
         reclaim memory
+=======
+        """Execute f_name from inside participant (Aggregator or Collaborator)
+        class with the context of clone (ctx).
+
+        Args:
+            participant (Any): The participant (Aggregator or Collaborator) to
+                execute the function in.
+            ctx (Any): The context to execute the function in.
+            f_name (str): The name of the function to execute.
+            callback (Callable): The callback to execute after the function.
+            clones (Optional[Any], optional): The clones to use in the
+                function. Defaults to None.
+        """
+        if clones is not None:
+            self.__remote_contexts.append(
+                participant.execute_func.remote(ctx, f_name, callback, clones))
+        else:
+            self.__remote_contexts.append(
+                participant.execute_func.remote(ctx, f_name, callback))
+
+    def ray_call_get(self) -> List[Any]:
+        """Get remote clones and delete ray references of clone (ctx) and,
+        reclaim memory.
+
+        Returns:
+            List[Any]: The list of remote clones.
+>>>>>>> 665cf85 (Update experimental functions docstring for fix lint warnings)
         """
         clones = ray.get(self.__remote_contexts)
         del self.__remote_contexts
@@ -72,6 +111,7 @@ class RayExecutor:
 
 
 def ray_group_assign(collaborators, num_actors=1):
+<<<<<<< HEAD
     """
     Assigns collaborators to resource groups which share a CUDA context.
 
@@ -79,12 +119,21 @@ def ray_group_assign(collaborators, num_actors=1):
         collaborators (list): The list of collaborators.
         num_actors (int, optional): Number of actors to distribute collaborators to.
         Defaults to 3.
+=======
+    """Assigns collaborators to resource groups which share a CUDA context.
+
+    Args:
+        collaborators (list): The list of collaborators.
+        num_actors (int, optional): Number of actors to distribute
+            collaborators to. Defaults to 1.
+>>>>>>> 665cf85 (Update experimental functions docstring for fix lint warnings)
 
     Returns:
         list: A list of GroupMember instances.
     """
 
     class GroupMember:
+<<<<<<< HEAD
         """
         A utility class that manages the collaborator and its group.
 
@@ -95,6 +144,17 @@ def ray_group_assign(collaborators, num_actors=1):
         def __init__(self, collaborator_actor, collaborator):
             """
             Initializes a new instance of the GroupMember class.
+=======
+        """A utility class that manages the collaborator and its group.
+
+        This class maintains compatibility with runtime execution by assigning
+        attributes for each function in the Collaborator interface in
+        conjunction with RemoteHelper.
+        """
+
+        def __init__(self, collaborator_actor, collaborator):
+            """Initializes a new instance of the GroupMember class.
+>>>>>>> 665cf85 (Update experimental functions docstring for fix lint warnings)
 
             Args:
                 collaborator_actor: The collaborator actor.
@@ -103,8 +163,12 @@ def ray_group_assign(collaborators, num_actors=1):
             from openfl.experimental.interface import Collaborator
 
             all_methods = [
+<<<<<<< HEAD
                 method
                 for method in dir(Collaborator)
+=======
+                method for method in dir(Collaborator)
+>>>>>>> 665cf85 (Update experimental functions docstring for fix lint warnings)
                 if callable(getattr(Collaborator, method))
             ]
             external_methods = [
@@ -116,6 +180,7 @@ def ray_group_assign(collaborators, num_actors=1):
                 setattr(
                     self,
                     method,
+<<<<<<< HEAD
                     RemoteHelper(
                         self.collaborator_actor, self.collaborator, method
                     ),
@@ -137,6 +202,28 @@ def ray_group_assign(collaborators, num_actors=1):
         def __init__(self, collaborator_actor, collaborator, f_name) -> None:
             """
             Initializes a new instance of the RemoteHelper class.
+=======
+                    RemoteHelper(self.collaborator_actor, self.collaborator,
+                                 method),
+                )
+
+    class RemoteHelper:
+        """A utility class to maintain compatibility with RayExecutor.
+
+        This class returns a lambda function that uses
+        collaborator_actor.execute_from_col to run a given function from the
+        given collaborator.
+        """
+
+        # once ray_grouped replaces the current ray runtime this class can be
+        # replaced with a funtion that returns the lambda funtion, using a
+        # funtion is necesary because this is used in setting multiple
+        # funtions in a loop and lambda takes the reference to self.f_name and
+        # not the value so we need to change scope to avoid self.f_name from
+        # changing as the loop  progresses
+        def __init__(self, collaborator_actor, collaborator, f_name) -> None:
+            """Initializes a new instance of the RemoteHelper class.
+>>>>>>> 665cf85 (Update experimental functions docstring for fix lint warnings)
 
             Args:
                 collaborator_actor: The collaborator actor.
@@ -147,12 +234,20 @@ def ray_group_assign(collaborators, num_actors=1):
             self.collaborator_actor = collaborator_actor
             self.collaborator = collaborator
             self.f = lambda *args, **kwargs: self.collaborator_actor.execute_from_col.remote(
+<<<<<<< HEAD
                 self.collaborator, self.f_name, *args, **kwargs
             )
 
         def remote(self, *args, **kwargs):
             """
             Executes the function with the given arguments and keyword arguments.
+=======
+                self.collaborator, self.f_name, *args, **kwargs)
+
+        def remote(self, *args, **kwargs):
+            """Executes the function with the given arguments and keyword
+            arguments.
+>>>>>>> 665cf85 (Update experimental functions docstring for fix lint warnings)
 
             Args:
                 *args: The arguments to pass to the function.
@@ -166,8 +261,13 @@ def ray_group_assign(collaborators, num_actors=1):
     collaborator_ray_refs = []
     collaborators_per_group = math.ceil(len(collaborators) / num_actors)
     times_called = 0
+<<<<<<< HEAD
     # logic to sort collaborators by gpus, if collaborators have the same number of gpu then they
     # are sorted by cpu
+=======
+    # logic to sort collaborators by gpus, if collaborators have the same
+    # number of gpu then they are sorted by cpu
+>>>>>>> 665cf85 (Update experimental functions docstring for fix lint warnings)
     cpu_magnitude = len(str(abs(max([i.num_cpus for i in collaborators]))))
     min_gpu = min([i.num_gpus for i in collaborators])
     min_gpu = max(min_gpu, 0.0001)
@@ -180,6 +280,7 @@ def ray_group_assign(collaborators, num_actors=1):
     for collaborator in collaborators_sorted_by_gpucpu:
         # initialize actor group
         if times_called % collaborators_per_group == 0:
+<<<<<<< HEAD
             max_num_cpus = max(
                 [
                     i.num_cpus
@@ -210,13 +311,37 @@ def ray_group_assign(collaborators, num_actors=1):
                 collaborator
             )
         )
+=======
+            max_num_cpus = max([
+                i.num_cpus for i in
+                collaborators_sorted_by_gpucpu[times_called:times_called
+                                               + collaborators_per_group]
+            ])
+            max_num_gpus = max([
+                i.num_gpus for i in
+                collaborators_sorted_by_gpucpu[times_called:times_called
+                                               + collaborators_per_group]
+            ])
+            print(f"creating actor with {max_num_cpus}, {max_num_gpus}")
+            collaborator_actor = (
+                ray.remote(RayGroup).options(
+                    num_cpus=max_num_cpus,
+                    num_gpus=max_num_gpus)  # max_concurrency=max_concurrency)
+                .remote())
+        # add collaborator to actor group
+        initializations.append(collaborator_actor.append.remote(collaborator))
+>>>>>>> 665cf85 (Update experimental functions docstring for fix lint warnings)
 
         times_called += 1
 
         # append GroupMember to output list
         collaborator_ray_refs.append(
+<<<<<<< HEAD
             GroupMember(collaborator_actor, collaborator.get_name())
         )
+=======
+            GroupMember(collaborator_actor, collaborator.get_name()))
+>>>>>>> 665cf85 (Update experimental functions docstring for fix lint warnings)
     # Wait for all collaborators to be created on actors
     ray.get(initializations)
 
@@ -224,6 +349,7 @@ def ray_group_assign(collaborators, num_actors=1):
 
 
 class RayGroup:
+<<<<<<< HEAD
     """
     A Ray actor that manages a group of collaborators.
 
@@ -236,12 +362,24 @@ class RayGroup:
         """
         Initializes a new instance of the RayGroup class.
         """
+=======
+    """A Ray actor that manages a group of collaborators.
+
+    This class allows for the execution of functions from a specified
+    collaborator using the execute_from_col method. The collaborators are
+    stored in a dictionary where the key is the collaborator's name.
+    """
+
+    def __init__(self):
+        """Initializes a new instance of the RayGroup class."""
+>>>>>>> 665cf85 (Update experimental functions docstring for fix lint warnings)
         self.collaborators = {}
 
     def append(
         self,
         collaborator: Collaborator,
     ):
+<<<<<<< HEAD
         """
         Appends a new collaborator to the group.
 
@@ -249,6 +387,14 @@ class RayGroup:
             name (str): The name of the collaborator.
             private_attributes_callable (Callable): A callable that sets the private attributes of
             the collaborator.
+=======
+        """Appends a new collaborator to the group.
+
+        Args:
+            name (str): The name of the collaborator.
+            private_attributes_callable (Callable): A callable that sets the
+                private attributes of the collaborator.
+>>>>>>> 665cf85 (Update experimental functions docstring for fix lint warnings)
             **kwargs: Additional keyword arguments.
         """
         from openfl.experimental.interface import Collaborator
@@ -256,7 +402,12 @@ class RayGroup:
         if collaborator.private_attributes_callable is not None:
             self.collaborators[collaborator.name] = Collaborator(
                 name=collaborator.name,
+<<<<<<< HEAD
                 private_attributes_callable=collaborator.private_attributes_callable,
+=======
+                private_attributes_callable=collaborator.
+                private_attributes_callable,
+>>>>>>> 665cf85 (Update experimental functions docstring for fix lint warnings)
                 **collaborator.kwargs,
             )
         elif collaborator.private_attributes is not None:
@@ -264,6 +415,7 @@ class RayGroup:
                 name=collaborator.name,
                 **collaborator.kwargs,
             )
+<<<<<<< HEAD
             self.collaborators[collaborator.name].initialize_private_attributes(
                 collaborator.private_attributes
             )
@@ -271,6 +423,14 @@ class RayGroup:
     def execute_from_col(self, name, internal_f_name, *args, **kwargs):
         """
         Executes a function from a specified collaborator.
+=======
+            self.collaborators[
+                collaborator.name].initialize_private_attributes(
+                    collaborator.private_attributes)
+
+    def execute_from_col(self, name, internal_f_name, *args, **kwargs):
+        """Executes a function from a specified collaborator.
+>>>>>>> 665cf85 (Update experimental functions docstring for fix lint warnings)
 
         Args:
             name (str): The name of the collaborator.
@@ -285,8 +445,12 @@ class RayGroup:
         return f(*args, **kwargs)
 
     def get_collaborator(self, name):
+<<<<<<< HEAD
         """
         Retrieves a collaborator from the group by name.
+=======
+        """Retrieves a collaborator from the group by name.
+>>>>>>> 665cf85 (Update experimental functions docstring for fix lint warnings)
 
         Args:
             name (str): The name of the collaborator.
@@ -302,10 +466,18 @@ class LocalRuntime(Runtime):
 
     Attributes:
         aggregator (Type[Aggregator]): The aggregator participant.
+<<<<<<< HEAD
         __collaborators (dict): The collaborators, stored as a dictionary of names to participants.
         backend (str): The backend that will execute the tasks.
     """
         
+=======
+        __collaborators (dict): The collaborators, stored as a dictionary of
+            names to participants.
+        backend (str): The backend that will execute the tasks.
+    """
+
+>>>>>>> 665cf85 (Update experimental functions docstring for fix lint warnings)
     def __init__(
         self,
         aggregator: Dict = None,
@@ -313,6 +485,7 @@ class LocalRuntime(Runtime):
         backend: str = "single_process",
         **kwargs,
     ) -> None:
+<<<<<<< HEAD
         """Initializes the LocalRuntime object to run the flow on a single node, with an optional aggregator, 
         an optional list of collaborators, an optional backend, and additional keyword arguments.
 
@@ -349,13 +522,60 @@ class LocalRuntime(Runtime):
         
         Raises:
             ValueError: If the provided backend value is not 'ray' or 'single_process'.
+=======
+        """Initializes the LocalRuntime object to run the flow on a single
+        node, with an optional aggregator, an optional list of collaborators,
+        an optional backend, and additional keyword arguments.
+
+        Args:
+            aggregator (Type[Aggregator], optional): The aggregator instance
+                that holds private attributes.
+            collaborators (List[Type[Collaborator]], optional): A list of
+                collaborators; each with their own private attributes.
+            backend (str, optional): The backend that will execute the tasks.
+            Defaults to "single_process".
+                Available options are:
+                - 'single_process': (default) Executes every task within the
+                  same process.
+                - 'ray': Executes tasks using the Ray library. We use ray
+                  actors called RayGroups to runs tasks in their own isolated
+                  process. Each participant is distributed into a ray group.
+                  The RayGroups run concurrently while participants in the
+                  group run serially.
+                  The default is 1 RayGroup and can be changed by using the
+                  num_actors=1 kwarg. By using more RayGroups more concurency
+                  is allowed with the trade off being that each RayGroup has
+                  extra memory overhead in the form of extra CUDA CONTEXTS.
+
+                  Also the ray runtime supports GPU isolation using Ray's
+                  'num_gpus' argument, which can be passed in through the
+                  collaborator placement decorator.
+
+        Raises:
+            ValueError: If the provided backend value is not 'ray' or
+                'single_process'.
+
+        Example:
+            @collaborator(num_gpus=1)
+            def some_collaborator_task(self):
+                # Task implementation
+            ...
+
+            By selecting num_gpus=1, the task is guaranteed exclusive GPU
+            access. If the system has one GPU, collaborator tasks will run
+            sequentially.
+>>>>>>> 665cf85 (Update experimental functions docstring for fix lint warnings)
         """
         super().__init__()
         if backend not in ["ray", "single_process"]:
             raise ValueError(
                 f"Invalid 'backend' value '{backend}', accepted values are "
+<<<<<<< HEAD
                 + "'ray', or 'single_process'"
             )
+=======
+                + "'ray', or 'single_process'")
+>>>>>>> 665cf85 (Update experimental functions docstring for fix lint warnings)
         if backend == "ray":
             if not ray.is_initialized():
                 dh = kwargs.get("dashboard_host", "127.0.0.1")
@@ -372,15 +592,39 @@ class LocalRuntime(Runtime):
             self.collaborators = self.__get_collaborator_object(collaborators)
 
     def __get_aggregator_object(self, aggregator: Type[Aggregator]) -> Any:
+<<<<<<< HEAD
         """Get aggregator object based on localruntime backend"""
+=======
+        """Get aggregator object based on localruntime backend.
+
+        If the backend is 'single_process', it returns the aggregator directly.
+        If the backend is 'ray', it creates a Ray actor for the aggregator
+        with the specified resources.
+
+        Args:
+            aggregator (Type[Aggregator]): The aggregator class to instantiate.
+
+        Returns:
+            Any: The aggregator object or a reference to the Ray actor
+                representing the aggregator.
+
+        Raises:
+            ResourcesNotAvailableError: If the requested resources exceed the
+                available resources.
+        """
+>>>>>>> 665cf85 (Update experimental functions docstring for fix lint warnings)
 
         if aggregator.private_attributes and aggregator.private_attributes_callable:
             self.logger.warning(
                 'Warning: Aggregator private attributes '
                 + 'will be initialized via callable and '
                 + 'attributes via aggregator.private_attributes '
+<<<<<<< HEAD
                 + 'will be ignored'
             )
+=======
+                + 'will be ignored')
+>>>>>>> 665cf85 (Update experimental functions docstring for fix lint warnings)
 
         if self.backend == "single_process":
             return aggregator
@@ -400,6 +644,7 @@ class LocalRuntime(Runtime):
         if total_available_gpus < agg_gpus:
             raise ResourcesNotAvailableError(
                 f"cannot assign more than available GPUs \
+<<<<<<< HEAD
                     ({agg_gpus} < {total_available_gpus})."
             )
         if total_available_cpus < agg_cpus:
@@ -416,11 +661,30 @@ class LocalRuntime(Runtime):
         aggregator_actor = ray.remote(aggregator_class).options(
             num_cpus=agg_cpus, num_gpus=agg_gpus
         )
+=======
+                    ({agg_gpus} < {total_available_gpus}).")
+        if total_available_cpus < agg_cpus:
+            raise ResourcesNotAvailableError(
+                f"cannot assign more than available CPUs \
+                    ({agg_cpus} < {total_available_cpus}).")
+
+        interface_module = importlib.import_module(
+            "openfl.experimental.interface")
+        aggregator_class = getattr(interface_module, "Aggregator")
+
+        aggregator_actor = ray.remote(aggregator_class).options(
+            num_cpus=agg_cpus, num_gpus=agg_gpus)
+>>>>>>> 665cf85 (Update experimental functions docstring for fix lint warnings)
 
         if aggregator.private_attributes_callable is not None:
             aggregator_actor_ref = aggregator_actor.remote(
                 name=aggregator.get_name(),
+<<<<<<< HEAD
                 private_attributes_callable=aggregator.private_attributes_callable,
+=======
+                private_attributes_callable=aggregator.
+                private_attributes_callable,
+>>>>>>> 665cf85 (Update experimental functions docstring for fix lint warnings)
                 **aggregator.kwargs,
             )
         elif aggregator.private_attributes is not None:
@@ -429,14 +693,40 @@ class LocalRuntime(Runtime):
                 **aggregator.kwargs,
             )
             aggregator_actor_ref.initialize_private_attributes.remote(
+<<<<<<< HEAD
                 aggregator.private_attributes
             )
+=======
+                aggregator.private_attributes)
+>>>>>>> 665cf85 (Update experimental functions docstring for fix lint warnings)
 
         return aggregator_actor_ref
 
     def __get_collaborator_object(self, collaborators: List) -> Any:
+<<<<<<< HEAD
         """Get collaborator object based on localruntime backend"""
 
+=======
+        """Get collaborator object based on localruntime backend.
+
+        If the backend is 'single_process', it returns the list of
+        collaborators directly.
+        If the backend is 'ray', it assigns collaborators to Ray actors using
+        the ray_group_assign function.
+
+        Args:
+            collaborators (List[Type[Collaborator]]): The list of collaborator
+                classes to instantiate.
+
+        Returns:
+            Any: The list of collaborator objects or a list of references to
+                the Ray actors representing the collaborators.
+
+        Raises:
+            ResourcesNotAvailableError: If the requested resources exceed the
+                available resources.
+        """
+>>>>>>> 665cf85 (Update experimental functions docstring for fix lint warnings)
         for collab in collaborators:
             if collab.private_attributes and collab.private_attributes_callable:
                 self.logger.warning(
@@ -451,6 +741,7 @@ class LocalRuntime(Runtime):
 
         total_available_cpus = os.cpu_count()
         total_required_cpus = sum(
+<<<<<<< HEAD
             [collaborator.num_cpus for collaborator in collaborators]
         )
         if total_available_cpus < total_required_cpus:
@@ -463,6 +754,17 @@ class LocalRuntime(Runtime):
             collaborator_ray_refs = ray_group_assign(
                 collaborators, num_actors=self.num_actors
             )
+=======
+            [collaborator.num_cpus for collaborator in collaborators])
+        if total_available_cpus < total_required_cpus:
+            raise ResourcesNotAvailableError(
+                f"cannot assign more than available CPUs \
+                    ({total_required_cpus} < {total_available_cpus}).")
+
+        if self.backend == "ray":
+            collaborator_ray_refs = ray_group_assign(
+                collaborators, num_actors=self.num_actors)
+>>>>>>> 665cf85 (Update experimental functions docstring for fix lint warnings)
             return collaborator_ray_refs
 
     @property
@@ -477,7 +779,11 @@ class LocalRuntime(Runtime):
     @aggregator.setter
     def aggregator(self, aggregator: Type[Aggregator]):
         """Set LocalRuntime _aggregator.
+<<<<<<< HEAD
         
+=======
+
+>>>>>>> 665cf85 (Update experimental functions docstring for fix lint warnings)
         Args:
             aggregator (Type[Aggregator]): The aggregator to be set.
         """
@@ -485,7 +791,12 @@ class LocalRuntime(Runtime):
 
     @property
     def collaborators(self) -> List[str]:
+<<<<<<< HEAD
         """Return names of collaborators. Don't give direct access to private attributes.
+=======
+        """Return names of collaborators. Don't give direct access to private
+        attributes.
+>>>>>>> 665cf85 (Update experimental functions docstring for fix lint warnings)
 
         Returns:
             List[str]: The names of the collaborators.
@@ -495,9 +806,16 @@ class LocalRuntime(Runtime):
     @collaborators.setter
     def collaborators(self, collaborators: List[Type[Collaborator]]):
         """Set LocalRuntime collaborators.
+<<<<<<< HEAD
         
         Args:
             collaborators (List[Type[Collaborator]]): The collaborators to be set.
+=======
+
+        Args:
+            collaborators (List[Type[Collaborator]]): The collaborators to be
+                set.
+>>>>>>> 665cf85 (Update experimental functions docstring for fix lint warnings)
         """
         if self.backend == "single_process":
 
@@ -515,11 +833,19 @@ class LocalRuntime(Runtime):
         }
 
     def get_collaborator_kwargs(self, collaborator_name: str):
+<<<<<<< HEAD
         """
         Returns kwargs of collaborator
 
         Args:
             collaborator_name: Collaborator name for which kwargs is to be returned
+=======
+        """Returns kwargs of collaborator.
+
+        Args:
+            collaborator_name: Collaborator name for which kwargs is to be
+                returned
+>>>>>>> 665cf85 (Update experimental functions docstring for fix lint warnings)
 
         Returns:
             kwargs: Collaborator private_attributes_callable function name, and
@@ -531,20 +857,32 @@ class LocalRuntime(Runtime):
             if collab.private_attributes_callable is not None:
                 kwargs.update(collab.kwargs)
                 kwargs["private_attributes_callable"] = (
+<<<<<<< HEAD
                     collab.private_attributes_callable.__name__
                 )
+=======
+                    collab.private_attributes_callable.__name__)
+>>>>>>> 665cf85 (Update experimental functions docstring for fix lint warnings)
 
         return kwargs
 
     def initialize_aggregator(self):
+<<<<<<< HEAD
         """initialize aggregator private attributes"""
+=======
+        """Initialize aggregator private attributes."""
+>>>>>>> 665cf85 (Update experimental functions docstring for fix lint warnings)
         if self.backend == "single_process":
             self._aggregator.initialize_private_attributes()
         else:
             ray.get(self._aggregator.initialize_private_attributes.remote())
 
     def initialize_collaborators(self):
+<<<<<<< HEAD
         """initialize collaborator private attributes"""
+=======
+        """Initialize collaborator private attributes."""
+>>>>>>> 665cf85 (Update experimental functions docstring for fix lint warnings)
         if self.backend == "single_process":
 
             def init_private_attrs(collab):
@@ -558,6 +896,7 @@ class LocalRuntime(Runtime):
         for collaborator in self.__collaborators.values():
             init_private_attrs(collaborator)
 
+<<<<<<< HEAD
     def restore_instance_snapshot(
         self, ctx: Type[FLSpec], instance_snapshot: List[Type[FLSpec]]
     ):
@@ -566,6 +905,17 @@ class LocalRuntime(Runtime):
         Args:
             ctx (Type[FLSpec]): The context to restore the snapshot to.
             instance_snapshot (List[Type[FLSpec]]): The snapshot of the instance to be restored.
+=======
+    def restore_instance_snapshot(self, ctx: Type[FLSpec],
+                                  instance_snapshot: List[Type[FLSpec]]):
+        """Restores attributes from backup (in instance snapshot) to context
+        (ctx).
+
+        Args:
+            ctx (Type[FLSpec]): The context to restore the snapshot to.
+            instance_snapshot (List[Type[FLSpec]]): The snapshot of the
+                instance to be restored.
+>>>>>>> 665cf85 (Update experimental functions docstring for fix lint warnings)
         """
         for backup in instance_snapshot:
             artifacts_iter, _ = generate_artifacts(ctx=backup)
@@ -573,11 +923,24 @@ class LocalRuntime(Runtime):
                 if not hasattr(ctx, name):
                     setattr(ctx, name, attr)
 
+<<<<<<< HEAD
     def execute_agg_steps(
         self, ctx: Any, f_name: str, clones: Optional[Any] = None
     ):
         """
         Execute aggregator steps until at transition point
+=======
+    def execute_agg_steps(self,
+                          ctx: Any,
+                          f_name: str,
+                          clones: Optional[Any] = None):
+        """Execute aggregator steps until at transition point.
+
+        Args:
+            ctx (Any): The context in which the function is executed.
+            f_name (str): The name of the function to be executed.
+            clones (Optional[Any], optional): Clones if any. Defaults to None.
+>>>>>>> 665cf85 (Update experimental functions docstring for fix lint warnings)
         """
         if clones is not None:
             f = getattr(ctx, f_name)
@@ -589,17 +952,30 @@ class LocalRuntime(Runtime):
                 f()
 
                 f, parent_func = ctx.execute_task_args[:2]
+<<<<<<< HEAD
                 if (
                     aggregator_to_collaborator(f, parent_func)
                     or f.__name__ == "end"
                 ):
+=======
+                if (aggregator_to_collaborator(f, parent_func)
+                        or f.__name__ == "end"):
+>>>>>>> 665cf85 (Update experimental functions docstring for fix lint warnings)
                     not_at_transition_point = False
 
                 f_name = f.__name__
 
     def execute_collab_steps(self, ctx: Any, f_name: str):
+<<<<<<< HEAD
         """
         Execute collaborator steps until at transition point
+=======
+        """Execute collaborator steps until at transition point.
+
+        Args:
+            ctx (Any): The context in which the function is executed.
+            f_name (str): The name of the function to be executed.
+>>>>>>> 665cf85 (Update experimental functions docstring for fix lint warnings)
         """
         not_at_transition_point = True
         while not_at_transition_point:
@@ -613,6 +989,7 @@ class LocalRuntime(Runtime):
             f_name = f.__name__
 
     def execute_task(self, flspec_obj: Type[FLSpec], f: Callable, **kwargs):
+<<<<<<< HEAD
         """
         Defines which function to be executed based on name and kwargs
         Updates the arguments and executes until end is not reached
@@ -694,6 +1071,136 @@ class LocalRuntime(Runtime):
                 collaborator.execute_func(
                     clone, f.__name__, self.execute_collab_steps
                 )
+=======
+        """Defines which function to be executed based on name and kwargs.
+
+        Updates the arguments and executes until end is not reached.
+
+        Args:
+            flspec_obj: Reference to the FLSpec (flow) object. Contains
+                information about task sequence, flow attributes.
+            f: The next task to be executed within the flow.
+
+        Returns:
+            artifacts_iter: Iterator with updated sequence of values
+        """
+        parent_func = None
+        instance_snapshot = None
+        self.join_step = False
+
+        while f.__name__ != "end":
+            if "foreach" in kwargs:
+                flspec_obj = self.execute_collab_task(flspec_obj, f,
+                                                      parent_func,
+                                                      instance_snapshot,
+                                                      **kwargs)
+            else:
+                flspec_obj = self.execute_agg_task(flspec_obj, f)
+            f, parent_func, instance_snapshot, kwargs = (
+                flspec_obj.execute_task_args)
+        else:
+            flspec_obj = self.execute_agg_task(flspec_obj, f)
+            f = flspec_obj.execute_task_args[0]
+
+            checkpoint(flspec_obj, f)
+            artifacts_iter, _ = generate_artifacts(ctx=flspec_obj)
+            return artifacts_iter()
+
+    def execute_agg_task(self, flspec_obj, f):
+        """Performs execution of aggregator task.
+
+        Args:
+            flspec_obj: Reference to the FLSpec (flow) object.
+            f: The task to be executed within the flow.
+
+        Returns:
+            flspec_obj: updated FLSpec (flow) object.
+        """
+        from openfl.experimental.interface import FLSpec
+
+        aggregator = self._aggregator
+        clones = None
+
+        if self.join_step:
+            clones = [
+                FLSpec._clones[col] for col in self.selected_collaborators
+            ]
+            self.join_step = False
+
+        if self.backend == "ray":
+            ray_executor = RayExecutor()
+            ray_executor.ray_call_put(
+                aggregator,
+                flspec_obj,
+                f.__name__,
+                self.execute_agg_steps,
+                clones,
+            )
+            flspec_obj = ray_executor.ray_call_get()[0]
+            del ray_executor
+        else:
+            aggregator.execute_func(flspec_obj, f.__name__,
+                                    self.execute_agg_steps, clones)
+
+        gc.collect()
+        return flspec_obj
+
+    def execute_collab_task(self, flspec_obj, f, parent_func,
+                            instance_snapshot, **kwargs):
+        """Performs execution of collaborator task.
+
+        Performs
+            1. Filter include/exclude
+            2. Set runtime, collab private attributes , metaflow_interface
+            3. Execution of all collaborator for each task
+            4. Remove collaborator private attributes
+            5. Execute the next function after transition
+
+        Args:
+            flspec_obj: Reference to the FLSpec (flow) object.
+            f: The task to be executed within the flow.
+            parent_func: The prior task executed in the flow.
+            instance_snapshot: A prior FLSpec state that needs to be restored.
+
+        Returns:
+            flspec_obj: updated FLSpec (flow) object
+        """
+
+        from openfl.experimental.interface import FLSpec
+
+        flspec_obj._foreach_methods.append(f.__name__)
+        selected_collaborators = getattr(flspec_obj, kwargs["foreach"])
+        self.selected_collaborators = selected_collaborators
+
+        # filter exclude/include attributes for clone
+        self.filter_exclude_include(flspec_obj, f, selected_collaborators,
+                                    **kwargs)
+
+        if self.backend == "ray":
+            ray_executor = RayExecutor()
+        # set runtime,collab private attributes and metaflowinterface
+        for col in selected_collaborators:
+            clone = FLSpec._clones[col]
+            # Set new LocalRuntime for clone as it is required
+            # new runtime object will not contain private attributes of
+            # aggregator or other collaborators
+            clone.runtime = LocalRuntime(backend="single_process")
+
+            # write the clone to the object store
+            # ensure clone is getting latest _metaflow_interface
+            clone._metaflow_interface = flspec_obj._metaflow_interface
+
+        for collab_name in selected_collaborators:
+            clone = FLSpec._clones[collab_name]
+            collaborator = self.__collaborators[collab_name]
+
+            if self.backend == "ray":
+                ray_executor.ray_call_put(collaborator, clone, f.__name__,
+                                          self.execute_collab_steps)
+            else:
+                collaborator.execute_func(clone, f.__name__,
+                                          self.execute_collab_steps)
+>>>>>>> 665cf85 (Update experimental functions docstring for fix lint warnings)
 
         if self.backend == "ray":
             clones = ray_executor.ray_call_get()
@@ -712,6 +1219,7 @@ class LocalRuntime(Runtime):
         self.join_step = True
         return flspec_obj
 
+<<<<<<< HEAD
     def filter_exclude_include(
         self, flspec_obj, f, selected_collaborators, **kwargs
     ):
@@ -721,6 +1229,16 @@ class LocalRuntime(Runtime):
             flspec_obj  :  Reference to the FLSpec (flow) object
             f           :  The task to be executed within the flow
             selected_collaborators : all collaborators
+=======
+    def filter_exclude_include(self, flspec_obj, f, selected_collaborators,
+                               **kwargs):
+        """This function filters exclude/include attributes.
+
+        Args:
+            flspec_obj: Reference to the FLSpec (flow) object.
+            f: The task to be executed within the flow.
+            selected_collaborators: all collaborators.
+>>>>>>> 665cf85 (Update experimental functions docstring for fix lint warnings)
         """
 
         from openfl.experimental.interface import FLSpec
@@ -728,9 +1246,15 @@ class LocalRuntime(Runtime):
         for col in selected_collaborators:
             clone = FLSpec._clones[col]
             clone.input = col
+<<<<<<< HEAD
             if (
                 "exclude" in kwargs and hasattr(clone, kwargs["exclude"][0])
             ) or ("include" in kwargs and hasattr(clone, kwargs["include"][0])):
+=======
+            if ("exclude" in kwargs and hasattr(clone, kwargs["exclude"][0])
+                ) or ("include" in kwargs
+                      and hasattr(clone, kwargs["include"][0])):
+>>>>>>> 665cf85 (Update experimental functions docstring for fix lint warnings)
                 filter_attributes(clone, f, **kwargs)
             artifacts_iter, _ = generate_artifacts(ctx=flspec_obj)
             for name, attr in artifacts_iter():

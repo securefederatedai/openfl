@@ -50,8 +50,7 @@ class Plan:
             plan = Plan()
             plan.config = config
             frozen_yaml_path = Path(
-                f"{yaml_path.parent}/{yaml_path.stem}_{plan.hash[:8]}.yaml"
-            )
+                f"{yaml_path.parent}/{yaml_path.stem}_{plan.hash[:8]}.yaml")
             if frozen_yaml_path.exists():
                 Plan.logger.info(f"{yaml_path.name} is already frozen")
                 return
@@ -68,8 +67,7 @@ class Plan:
         data_config_path: Path = None,
         resolve=True,
     ):
-        """
-        Parse the Federated Learning plan.
+        """Parse the Federated Learning plan.
 
         Args:
             plan_config_path (string): The filepath to the federated learning
@@ -84,7 +82,8 @@ class Plan:
         """
         try:
             plan = Plan()
-            plan.config = Plan.load(plan_config_path)  # load plan configuration
+            plan.config = Plan.load(
+                plan_config_path)  # load plan configuration
             plan.name = plan_config_path.name
             plan.files = [plan_config_path]  # collect all the plan files
 
@@ -114,8 +113,7 @@ class Plan:
                     if SETTINGS in defaults:
                         # override defaults with section settings
                         defaults[SETTINGS].update(
-                            plan.config[section][SETTINGS]
-                        )
+                            plan.config[section][SETTINGS])
                         plan.config[section][SETTINGS] = defaults[SETTINGS]
 
                     defaults.update(plan.config[section])
@@ -123,8 +121,7 @@ class Plan:
                     plan.config[section] = defaults
 
             plan.authorized_cols = Plan.load(cols_config_path).get(
-                "collaborators", []
-            )
+                "collaborators", [])
 
             if resolve:
                 plan.resolve()
@@ -148,8 +145,7 @@ class Plan:
 
     @staticmethod
     def accept_args(cls):
-        """
-        Determines whether a class's constructor (__init__ method) accepts
+        """Determines whether a class's constructor (__init__ method) accepts
         variable positional arguments (*args).
 
         Returns:
@@ -163,8 +159,8 @@ class Plan:
 
     @staticmethod
     def build(template, settings, **override):
-        """
-        Create an instance of a openfl Component or Federated DataLoader/TaskRunner.
+        """Create an instance of a openfl Component or Federated
+        DataLoader/TaskRunner.
 
         Args:
             template: Fully qualified class template path
@@ -193,8 +189,8 @@ class Plan:
 
     @staticmethod
     def import_(template):
-        """
-        Import an instance of a openfl Component or Federated DataLoader/TaskRunner.
+        """Import an instance of a openfl Component or Federated
+        DataLoader/TaskRunner.
 
         Args:
             template: Fully qualified object path
@@ -245,22 +241,23 @@ class Plan:
         self.aggregator_uuid = f"aggregator_{self.federation_uuid}"
 
         self.rounds_to_train = self.config["aggregator"][SETTINGS][
-            "rounds_to_train"
-        ]
+            "rounds_to_train"]
 
         if self.config["network"][SETTINGS]["agg_addr"] == AUTO:
             self.config["network"][SETTINGS]["agg_addr"] = getfqdn_env()
 
         if self.config["network"][SETTINGS]["agg_port"] == AUTO:
             self.config["network"][SETTINGS]["agg_port"] = (
-                int(self.hash[:8], 16) % (60999 - 49152) + 49152
-            )
+                int(self.hash[:8], 16) % (60999 - 49152) + 49152)
 
     def get_aggregator(self):
         """Get federation aggregator."""
         defaults = self.config.get(
             "aggregator",
-            {TEMPLATE: "openfl.experimental.Aggregator", SETTINGS: {}},
+            {
+                TEMPLATE: "openfl.experimental.Aggregator",
+                SETTINGS: {}
+            },
         )
 
         defaults[SETTINGS]["aggregator_uuid"] = self.aggregator_uuid
@@ -268,11 +265,9 @@ class Plan:
         defaults[SETTINGS]["authorized_cols"] = self.authorized_cols
 
         private_attrs_callable, private_attrs_kwargs, private_attributes = (
-            self.get_private_attr(
-                "aggregator"
-            )
-        )
-        defaults[SETTINGS]["private_attributes_callable"] = private_attrs_callable
+            self.get_private_attr("aggregator"))
+        defaults[SETTINGS][
+            "private_attributes_callable"] = private_attrs_callable
         defaults[SETTINGS]["private_attributes_kwargs"] = private_attrs_kwargs
         defaults[SETTINGS]["private_attributes"] = private_attributes
 
@@ -289,8 +284,7 @@ class Plan:
             elif not callable(log_metric_callback):
                 raise TypeError(
                     f"log_metric_callback should be callable object "
-                    f"or be import from code part, get {log_metric_callback}"
-                )
+                    f"or be import from code part, get {log_metric_callback}")
         defaults[SETTINGS]["log_metric_callback"] = log_metric_callback
 
         if self.aggregator_ is None:
@@ -309,7 +303,10 @@ class Plan:
         """Get collaborator."""
         defaults = self.config.get(
             "collaborator",
-            {TEMPLATE: "openfl.experimental.Collaborator", SETTINGS: {}},
+            {
+                TEMPLATE: "openfl.experimental.Collaborator",
+                SETTINGS: {}
+            },
         )
 
         defaults[SETTINGS]["collaborator_name"] = collaborator_name
@@ -317,11 +314,9 @@ class Plan:
         defaults[SETTINGS]["federation_uuid"] = self.federation_uuid
 
         private_attrs_callable, private_attrs_kwargs, private_attributes = (
-            self.get_private_attr(
-                collaborator_name
-            )
-        )
-        defaults[SETTINGS]["private_attributes_callable"] = private_attrs_callable
+            self.get_private_attr(collaborator_name))
+        defaults[SETTINGS][
+            "private_attributes_callable"] = private_attrs_callable
         defaults[SETTINGS]["private_attributes_kwargs"] = private_attrs_kwargs
         defaults[SETTINGS]["private_attributes"] = private_attributes
 
@@ -406,10 +401,13 @@ class Plan:
         return self.server_
 
     def get_flow(self):
-        """instantiates federated flow object"""
+        """Instantiates federated flow object."""
         defaults = self.config.get(
             "federated_flow",
-            {TEMPLATE: self.config["federated_flow"]["template"], SETTINGS: {}},
+            {
+                TEMPLATE: self.config["federated_flow"]["template"],
+                SETTINGS: {}
+            },
         )
         defaults = self.import_kwargs_modules(defaults)
 
@@ -438,7 +436,8 @@ class Plan:
                                 if not inspect.isclass(attr):
                                     settings[key] = attr
                                 else:
-                                    settings = Plan.build(**value_defaults_data)
+                                    settings = Plan.build(
+                                        **value_defaults_data)
                         except ImportError:
                             raise ImportError(f"Cannot import {value}.")
             return settings
@@ -462,40 +461,33 @@ class Plan:
             d = Plan.load(Path(data_yaml).absolute())
 
             if d.get(private_attr_name, None):
-                callable_func = d.get(private_attr_name, {}).get(
-                    "callable_func"
-                )
-                private_attributes = d.get(private_attr_name, {}).get(
-                    "private_attributes"
-                )
+                callable_func = d.get(private_attr_name,
+                                      {}).get("callable_func")
+                private_attributes = d.get(private_attr_name,
+                                           {}).get("private_attributes")
                 if callable_func and private_attributes:
                     logger = getLogger(__name__)
                     logger.warning(
                         f'Warning: {private_attr_name} private attributes '
                         'will be initialized via callable and '
                         'attributes directly specified '
-                        'will be ignored'
-                    )
+                        'will be ignored')
 
                 if callable_func is not None:
                     private_attrs_callable = {
-                        "template": d.get(private_attr_name)["callable_func"][
-                            "template"
-                        ]
+                        "template":
+                        d.get(private_attr_name)["callable_func"]["template"]
                     }
 
                     private_attrs_kwargs = self.import_kwargs_modules(
-                        d.get(private_attr_name)["callable_func"]
-                    )["settings"]
+                        d.get(private_attr_name)["callable_func"])["settings"]
 
                     if isinstance(private_attrs_callable, dict):
                         private_attrs_callable = Plan.import_(
-                            **private_attrs_callable
-                        )
+                            **private_attrs_callable)
                 elif private_attributes:
                     private_attributes = Plan.import_(
-                        d.get(private_attr_name)["private_attributes"]
-                    )
+                        d.get(private_attr_name)["private_attributes"])
                 elif not callable(private_attrs_callable):
                     raise TypeError(
                         f"private_attrs_callable should be callable object "

@@ -1,6 +1,6 @@
 # Copyright (C) 2020-2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-""" openfl.experimental.runtime module Runtime class."""
+"""openfl.experimental.runtime module Runtime class."""
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -14,7 +14,10 @@ from typing import Callable, List
 class Runtime:
 
     def __init__(self):
-        """Initializes the Runtime object. This serves as a base interface for runtimes that can run FLSpec flows."""
+        """Initializes the Runtime object.
+
+        This serves as a base interface for runtimes that can run FLSpec flows.
+        """
         pass
 
     @property
@@ -22,7 +25,8 @@ class Runtime:
         """Returns the name of the aggregator.
 
         Raises:
-            NotImplementedError: If the method is not implemented in a subclass.
+            NotImplementedError: If the method is not implemented in a
+                subclass.
         """
         raise NotImplementedError
 
@@ -34,16 +38,19 @@ class Runtime:
             aggregator (Aggregator): The aggregator to be set.
 
         Raises:
-            NotImplementedError: If the method is not implemented in a subclass.
+            NotImplementedError: If the method is not implemented in a
+                subclass.
         """
         raise NotImplementedError
 
     @property
     def collaborators(self):
-        """Return the names of the collaborators. Don't give direct access to private attributes
+        """Return the names of the collaborators. Don't give direct access to
+        private attributes.
 
         Raises:
-            NotImplementedError: If the method is not implemented in a subclass.
+            NotImplementedError: If the method is not implemented in a
+                subclass.
         """
         raise NotImplementedError
 
@@ -55,7 +62,8 @@ class Runtime:
             collaborators (List[Collaborator]): The collaborators to be set.
 
         Raises:
-            NotImplementedError: If the method is not implemented in a subclass.
+            NotImplementedError: If the method is not implemented in a
+                subclass.
         """
         raise NotImplementedError
 
@@ -67,19 +75,22 @@ class Runtime:
         instance_snapshot: List[FLSpec] = [],
         **kwargs,
     ):
-        """Performs the execution of a task as defined by the implementation 
+        """Performs the execution of a task as defined by the implementation
         and underlying backend (single_process, ray, etc).
 
         Args:
-            flspec_obj (FLSpec): Reference to the FLSpec (flow) object. Contains information
-                about task sequence, flow attributes, that are needed to execute a future task.
+            flspec_obj (FLSpec): Reference to the FLSpec (flow) object.
+                Contains information about task sequence, flow attributes,
+                that are needed to execute a future task.
             f (Callable): The next task to be executed within the flow.
             parent_func (Callable): The prior task executed in the flow.
-            instance_snapshot (List[FLSpec], optional): A prior FLSpec state that needs to be 
-            restored from (i.e. restoring aggregator state after collaborator execution).
+            instance_snapshot (List[FLSpec], optional): A prior FLSpec state
+                that needs to be restored from (i.e. restoring aggregator
+                state after collaborator execution).
             **kwargs: Additional keyword arguments.
 
         Raises:
-            NotImplementedError: If the method is not implemented in a subclass.
+            NotImplementedError: If the method is not implemented in a
+                subclass.
         """
         raise NotImplementedError

@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 
 class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
-    """gRPC server class for the Aggregator."""
+    """GRPC server class for the Aggregator."""
 
     def __init__(
         self,
@@ -33,8 +33,7 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
         private_key=None,
         **kwargs,
     ):
-        """
-        Class initializer.
+        """Class initializer.
 
         Args:
             aggregator: The aggregator
@@ -61,8 +60,7 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
         self.logger = logging.getLogger(__name__)
 
     def validate_collaborator(self, request, context):
-        """
-        Validate the collaborator.
+        """Validate the collaborator.
 
         Args:
             request: The gRPC message request
@@ -70,17 +68,14 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
 
         Raises:
             ValueError: If the collaborator or collaborator certificate is not
-             valid then raises error.
-
+                valid then raises error.
         """
         if self.tls:
             common_name = context.auth_context()["x509_common_name"][0].decode(
-                "utf-8"
-            )
+                "utf-8")
             collaborator_common_name = request.header.sender
             if not self.aggregator.valid_collaborator_cn_and_id(
-                common_name, collaborator_common_name
-            ):
+                    common_name, collaborator_common_name):
                 # Random delay in authentication failures
                 sleep(5 * random())
                 context.abort(
@@ -90,8 +85,7 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
                 )
 
     def get_header(self, collaborator_name):
-        """
-        Compose and return MessageHeader.
+        """Compose and return MessageHeader.
 
         Args:
             collaborator_name : str
@@ -101,21 +95,20 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
             sender=self.aggregator.uuid,
             receiver=collaborator_name,
             federation_uuid=self.aggregator.federation_uuid,
-            single_col_cert_common_name=self.aggregator.single_col_cert_common_name,
+            single_col_cert_common_name=self.aggregator.
+            single_col_cert_common_name,
         )
 
     def check_request(self, request):
-        """
-        Validate request header matches expected values.
+        """Validate request header matches expected values.
 
         Args:
             request : protobuf
                 Request sent from a collaborator that requires validation
         """
         # TODO improve this check. the sender name could be spoofed
-        check_is_in(
-            request.header.sender, self.aggregator.authorized_cols, self.logger
-        )
+        check_is_in(request.header.sender, self.aggregator.authorized_cols,
+                    self.logger)
 
         # check that the message is for me
         check_equal(request.header.receiver, self.aggregator.uuid, self.logger)
@@ -135,32 +128,28 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
         )
 
     def SendTaskResults(self, request, context):  # NOQA:N802
-        """
-        <FIND OUT WHAT COMMENT TO PUT HERE>.
+        """<FIND OUT WHAT COMMENT TO PUT HERE>.
 
         Args:
             request: The gRPC message request
             context: The gRPC context
-
         """
         self.validate_collaborator(request, context)
         self.check_request(request)
         collaborator_name = request.header.sender
-        round_number = (request.round_number,)
-        next_step = (request.next_step,)
+        round_number = (request.round_number, )
+        next_step = (request.next_step, )
         execution_environment = request.execution_environment
 
-        _ = self.aggregator.send_task_results(
-            collaborator_name, round_number[0], next_step, execution_environment
-        )
+        _ = self.aggregator.send_task_results(collaborator_name,
+                                              round_number[0], next_step,
+                                              execution_environment)
 
         return aggregator_pb2.TaskResultsResponse(
-            header=self.get_header(collaborator_name)
-        )
+            header=self.get_header(collaborator_name))
 
     def GetTasks(self, request, context):  # NOQA:N802
-        """
-        Request a job from aggregator.
+        """Request a job from aggregator.
 
         Args:
             request: The gRPC message request
@@ -182,9 +171,7 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
         )
 
     def CallCheckpoint(self, request, context):  # NOQA:N802
-        """
-        Request aggregator to perform a checkpoint
-        for a given function.
+        """Request aggregator to perform a checkpoint for a given function.
 
         Args:
             request: The gRPC message request
@@ -197,27 +184,23 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
         function = request.function
         stream_buffer = request.stream_buffer
 
-        self.aggregator.call_checkpoint(
-            execution_environment, function, stream_buffer
-        )
+        self.aggregator.call_checkpoint(execution_environment, function,
+                                        stream_buffer)
 
         return aggregator_pb2.CheckpointResponse(
-            header=self.get_header(collaborator_name)
-        )
+            header=self.get_header(collaborator_name))
 
     def get_server(self):
         """Return gRPC server."""
-        self.server = server(
-            ThreadPoolExecutor(max_workers=cpu_count()), options=channel_options
-        )
+        self.server = server(ThreadPoolExecutor(max_workers=cpu_count()),
+                             options=channel_options)
 
         aggregator_pb2_grpc.add_AggregatorServicer_to_server(self, self.server)
 
         if not self.tls:
 
             self.logger.warn(
-                "gRPC is running on insecure channel with TLS disabled."
-            )
+                "gRPC is running on insecure channel with TLS disabled.")
             port = self.server.add_insecure_port(self.uri)
             self.logger.info(f"Insecure port: {port}")
 
@@ -234,7 +217,7 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
                 self.logger.warn("Client-side authentication is disabled.")
 
             self.server_credentials = ssl_server_credentials(
-                ((private_key_b, certificate_b),),
+                ((private_key_b, certificate_b), ),
                 root_certificates=root_certificate_b,
                 require_client_auth=not self.disable_client_auth,
             )

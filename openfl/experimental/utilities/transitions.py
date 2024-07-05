@@ -19,7 +19,7 @@ def should_transfer(func, parent_func):
         return False
 
 
-def aggregator_to_collaborator(func, parent_func):    
+def aggregator_to_collaborator(func, parent_func):
     """Checks if a transition from aggregator to collaborator is possible.
 
     Args:
