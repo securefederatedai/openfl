@@ -97,8 +97,7 @@ class TensorDB:
             current_round = np.sort(
                 self.tensor_db['round'].astype(int).unique())[-2]
         self.tensor_db = self.tensor_db[
-            (self.tensor_db['round'].astype(int) > current_round -
-             remove_older_than)
+            (self.tensor_db['round'].astype(int) > current_round - remove_older_than)
             | self.tensor_db['report']].reset_index(drop=True)
 
     def cache_tensor(self, tensor_key_dict: Dict[TensorKey,
