@@ -74,9 +74,9 @@ def print_tree(
                 yield prefix + pointer + path.name
                 directories += 1
                 extension = branch if pointer == tee else space
-                yield from inner(
-                    path, prefix=prefix + extension, level=level - 1
-                )
+                yield from inner(path,
+                                 prefix=prefix + extension,
+                                 level=level - 1)
             elif not limit_to_directories:
                 yield prefix + pointer + path.name
                 files += 1
@@ -87,7 +87,8 @@ def print_tree(
         echo(line)
     if next(iterator, None):
         echo(f"... length_limit, {length_limit}, reached, counted:")
-    echo(f"\n{directories} directories" + (f", {files} files" if files else ""))
+    echo(f"\n{directories} directories" +
+         (f", {files} files" if files else ""))
 
 
 def copytree(
@@ -116,9 +117,8 @@ def copytree(
 
         os.makedirs(dst, exist_ok=dirs_exist_ok)
         errors = []
-        use_srcentry = (
-            copy_function is shutil.copy2 or copy_function is shutil.copy
-        )
+        use_srcentry = (copy_function is shutil.copy2
+                        or copy_function is shutil.copy)
 
         for srcentry in entries:
             if srcentry.name in ignored_names:
@@ -136,14 +136,12 @@ def copytree(
                     linkto = os.readlink(srcname)
                     if symlinks:
                         os.symlink(linkto, dstname)
-                        shutil.copystat(
-                            srcobj, dstname, follow_symlinks=not symlinks
-                        )
+                        shutil.copystat(srcobj,
+                                        dstname,
+                                        follow_symlinks=not symlinks)
                     else:
-                        if (
-                            not os.path.exists(linkto)
-                            and ignore_dangling_symlinks
-                        ):
+                        if (not os.path.exists(linkto)
+                                and ignore_dangling_symlinks):
                             continue
                         if srcentry.is_dir():
                             copytree(
@@ -199,7 +197,8 @@ def get_workspace_parameter(name):
 
 
 def check_varenv(env: str = "", args: dict = None):
-    """Update "args" (dictionary) with <env: env_value> if env has a defined value in the host."""
+    """Update "args" (dictionary) with <env: env_value> if env has a defined
+    value in the host."""
     if args is None:
         args = {}
     env_val = environ.get(env)
