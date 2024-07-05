@@ -67,10 +67,8 @@ def start_(plan, collaborator_name, secure, data_config="plan/data.yaml"):
     )
 
     if not os.path.exists(data_config):
-        logger.warning(
-            "Collaborator private attributes are set to None as"
-            f" {data_config} not found in workspace."
-        )
+        logger.warning("Collaborator private attributes are set to None as"
+                       f" {data_config} not found in workspace.")
     else:
         import yaml
         from yaml.loader import SafeLoader
@@ -80,8 +78,7 @@ def start_(plan, collaborator_name, secure, data_config="plan/data.yaml"):
             if data.get(collaborator_name, None) is None:
                 logger.warning(
                     f"Collaborator private attributes are set to None as no attributes"
-                    f" for {collaborator_name} found in {data_config}."
-                )
+                    f" for {collaborator_name} found in {data_config}.")
 
     logger.info("🧿 Starting the Collaborator Service.")
 
@@ -108,8 +105,7 @@ def generate_cert_request_(collaborator_name, silent, skip_package):
 
 
 def generate_cert_request(collaborator_name, silent, skip_package):
-    """
-    Create collaborator certificate key pair.
+    """Create collaborator certificate key pair.
 
     Then create a package with the CSR to send for signing.
     """
@@ -124,17 +120,14 @@ def generate_cert_request(collaborator_name, silent, skip_package):
     echo(
         f"Creating COLLABORATOR certificate key pair with following settings: "
         f'CN={style(common_name, fg="red")},'
-        f' SAN={style(subject_alternative_name, fg="red")}'
-    )
+        f' SAN={style(subject_alternative_name, fg="red")}')
 
     client_private_key, client_csr = generate_csr(common_name, server=False)
 
     (CERT_DIR / "client").mkdir(parents=True, exist_ok=True)
 
-    echo(
-        "  Moving COLLABORATOR certificate to: "
-        + style(f"{CERT_DIR}/{file_name}", fg="green")
-    )
+    echo("  Moving COLLABORATOR certificate to: " +
+         style(f"{CERT_DIR}/{file_name}", fg="green"))
 
     # Print csr hash before writing csr to disk
     csr_hash = get_csr_hash(client_csr)
@@ -172,14 +165,10 @@ def generate_cert_request(collaborator_name, silent, skip_package):
         make_archive(archive_name, archive_type, tmp_dir)
         rmtree(tmp_dir)
 
-        echo(
-            f"Archive {archive_file_name} with certificate signing"
-            f" request created"
-        )
-        echo(
-            "This file should be sent to the certificate authority"
-            " (typically hosted by the aggregator) for signing"
-        )
+        echo(f"Archive {archive_file_name} with certificate signing"
+             f" request created")
+        echo("This file should be sent to the certificate authority"
+             " (typically hosted by the aggregator) for signing")
 
 
 def find_certificate_name(file_name):
@@ -193,7 +182,6 @@ def register_collaborator(file_name):
 
     Args:
         file_name (str): The name of the collaborator in this federation
-
     """
     from os.path import isfile
     from pathlib import Path
@@ -217,24 +205,16 @@ def register_collaborator(file_name):
         doc["collaborators"] = []  # Create empty list
 
     if col_name in doc["collaborators"]:
-        echo(
-            "\nCollaborator "
-            + style(f"{col_name}", fg="green")
-            + " is already in the "
-            + style(f"{cols_file}", fg="green")
-        )
+        echo("\nCollaborator " + style(f"{col_name}", fg="green") +
+             " is already in the " + style(f"{cols_file}", fg="green"))
 
     else:
         doc["collaborators"].append(col_name)
         with open(cols_file, "w", encoding="utf-8") as f:
             dump(doc, f)
 
-        echo(
-            "\nRegistering "
-            + style(f"{col_name}", fg="green")
-            + " in "
-            + style(f"{cols_file}", fg="green")
-        )
+        echo("\nRegistering " + style(f"{col_name}", fg="green") + " in " +
+             style(f"{cols_file}", fg="green"))
 
 
 @collaborator.command(name="certify")
@@ -290,13 +270,11 @@ def certify(collaborator_name, silent, request_pkg=None, import_=False):
             csr = glob(f"{CERT_DIR}/client/*.csr")[0]
         else:
             if collaborator_name is None:
-                echo(
-                    "collaborator_name can only be omitted if signing\n"
-                    "a zipped request package.\n"
-                    "\n"
-                    "Example: fx collaborator certify --request-pkg "
-                    "col_one_to_agg_cert_request.zip"
-                )
+                echo("collaborator_name can only be omitted if signing\n"
+                     "a zipped request package.\n"
+                     "\n"
+                     "Example: fx collaborator certify --request-pkg "
+                     "col_one_to_agg_cert_request.zip")
                 return
             csr = glob(f"{CERT_DIR}/client/col_{common_name}.csr")[0]
             copy(csr, CERT_DIR)
@@ -311,48 +289,39 @@ def certify(collaborator_name, silent, request_pkg=None, import_=False):
                 style(
                     "Collaborator certificate signing request not found.",
                     fg="red",
-                )
-                + " Please run `fx collaborator generate-cert-request`"
-                " to generate the certificate request."
-            )
+                ) + " Please run `fx collaborator generate-cert-request`"
+                " to generate the certificate request.")
 
         csr, csr_hash = read_csr(f"{cert_name}.csr")
 
         # Load private signing key
         if not Path(CERT_DIR / signing_key_path).exists():
             echo(
-                style("Signing key not found.", fg="red")
-                + " Please run `fx workspace certify`"
-                " to initialize the local certificate authority."
-            )
+                style("Signing key not found.", fg="red") +
+                " Please run `fx workspace certify`"
+                " to initialize the local certificate authority.")
 
         signing_key = read_key(CERT_DIR / signing_key_path)
 
         # Load signing cert
         if not Path(CERT_DIR / signing_crt_path).exists():
             echo(
-                style("Signing certificate not found.", fg="red")
-                + " Please run `fx workspace certify`"
-                " to initialize the local certificate authority."
-            )
+                style("Signing certificate not found.", fg="red") +
+                " Please run `fx workspace certify`"
+                " to initialize the local certificate authority.")
 
         signing_crt = read_crt(CERT_DIR / signing_crt_path)
 
-        echo(
-            "The CSR Hash for file "
-            + style(f"{file_name}.csr", fg="green")
-            + " = "
-            + style(f"{csr_hash}", fg="red")
-        )
+        echo("The CSR Hash for file " + style(f"{file_name}.csr", fg="green") +
+             " = " + style(f"{csr_hash}", fg="red"))
 
         if silent:
             echo(" Signing COLLABORATOR certificate")
             echo(
                 " Warning: manual check of certificate hashes is bypassed in silent mode."
             )
-            signed_col_cert = sign_certificate(
-                csr, signing_key, signing_crt.subject
-            )
+            signed_col_cert = sign_certificate(csr, signing_key,
+                                               signing_crt.subject)
             write_crt(signed_col_cert, f"{cert_name}.crt")
             register_collaborator(CERT_DIR / "client" / f"{file_name}.crt")
 
@@ -360,18 +329,16 @@ def certify(collaborator_name, silent, request_pkg=None, import_=False):
             echo("Make sure the two hashes above are the same.")
             if confirm("Do you want to sign this certificate?"):
                 echo(" Signing COLLABORATOR certificate")
-                signed_col_cert = sign_certificate(
-                    csr, signing_key, signing_crt.subject
-                )
+                signed_col_cert = sign_certificate(csr, signing_key,
+                                                   signing_crt.subject)
                 write_crt(signed_col_cert, f"{cert_name}.crt")
                 register_collaborator(CERT_DIR / "client" / f"{file_name}.crt")
 
             else:
                 echo(
-                    style("Not signing certificate.", fg="red")
-                    + " Please check with this collaborator to get the"
-                    " correct certificate for this federation."
-                )
+                    style("Not signing certificate.", fg="red") +
+                    " Please check with this collaborator to get the"
+                    " correct certificate for this federation.")
                 return
 
         if len(common_name) == 0:

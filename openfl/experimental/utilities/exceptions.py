@@ -5,7 +5,6 @@
 class SerializationError(Exception):
     """Raised when there is an error in serialization process."""
 
-
     def __init__(self, *args: object) -> None:
         """Initializes the SerializationError with the provided arguments.
 
@@ -20,7 +19,8 @@ class ResourcesNotAvailableError(Exception):
     """Exception raised when the required resources are not available."""
 
     def __init__(self, *args: object) -> None:
-        """Initializes the ResourcesNotAvailableError with the provided arguments.
+        """Initializes the ResourcesNotAvailableError with the provided
+        arguments.
 
         Args:
             *args (object): Variable length argument list.
@@ -30,10 +30,12 @@ class ResourcesNotAvailableError(Exception):
 
 
 class ResourcesAllocationError(Exception):
-    """Exception raised when there is an error in the resources allocation process."""
+    """Exception raised when there is an error in the resources allocation
+    process."""
 
     def __init__(self, *args: object) -> None:
-        """Initializes the ResourcesAllocationError with the provided arguments.
+        """Initializes the ResourcesAllocationError with the provided
+        arguments.
 
         Args:
             *args (object): Variable length argument list.

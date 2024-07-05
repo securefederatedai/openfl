@@ -12,8 +12,10 @@ class InspectFlow:
     """Class for inspecting a flow.
 
     Attributes:
-        ds_root (str): The root directory for the data store. Defaults to "~/.metaflow".
-        show_html (bool): Whether to show the UI in a web browser. Defaults to False.
+        ds_root (str): The root directory for the data store. Defaults to
+            "~/.metaflow".
+        show_html (bool): Whether to show the UI in a web browser. Defaults to
+            False.
         run_id (str): The run ID of the flow.
         flow_name (str): The name of the flow.
         graph_dict (dict): The graph of the flow.
@@ -26,14 +28,17 @@ class InspectFlow:
         show_html=False,
         ds_root=f"{Path.home()}/.metaflow",
     ):
-        """Initializes the InspectFlow with a flow object, run ID, an optional flag to show the UI in a web browser, 
-        and an optional root directory for the data store.
+        """Initializes the InspectFlow with a flow object, run ID, an optional
+        flag to show the UI in a web browser, and an optional root directory
+        for the data store.
 
         Args:
             flow_obj (Flow): The flow object to inspect.
             run_id (str): The run ID of the flow.
-            show_html (bool, optional): Whether to show the UI in a web browser. Defaults to False.
-            ds_root (str, optional): The root directory for the data store. Defaults to "~/.metaflow".
+            show_html (bool, optional): Whether to show the UI in a web
+                browser. Defaults to False.
+            ds_root (str, optional): The root directory for the data store.
+                Defaults to "~/.metaflow".
         """
         self.ds_root = ds_root
         self.show_html = show_html
@@ -63,8 +68,9 @@ class InspectFlow:
         webbrowser.open(url)
 
     def show_ui(self):
-        """Shows the UI of the flow in a web browser if show_html is True, and saves the UI as an HTML file."""
-        
+        """Shows the UI of the flow in a web browser if show_html is True, and
+        saves the UI as an HTML file."""
+
         default_card = DefaultCard(graph=self.graph_dict)
 
         pathspec = self.get_pathspec()

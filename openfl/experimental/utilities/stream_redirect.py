@@ -16,7 +16,8 @@ class RedirectStdStreamBuffer:
     """
 
     def __init__(self):
-        """Initializes the RedirectStdStreamBuffer with empty stdout and stderr buffers."""
+        """Initializes the RedirectStdStreamBuffer with empty stdout and stderr
+        buffers."""
         self._stdoutbuff = io.StringIO()
         self._stderrbuff = io.StringIO()
 
@@ -24,7 +25,8 @@ class RedirectStdStreamBuffer:
         """Returns the contents of stdout and stderr buffers.
 
         Returns:
-            tuple: A tuple containing the contents of stdout and stderr buffers.
+            tuple: A tuple containing the contents of stdout and stderr
+                buffers.
         """
         self._stdoutbuff.seek(0)
         self._stderrbuff.seek(0)
@@ -39,8 +41,8 @@ class RedirectStdStreamBuffer:
 
 
 class RedirectStdStream(object):
-    """Class used to intercept stdout and stderr, so that
-    stdout and stderr is written to buffer as well as terminal.
+    """Class used to intercept stdout and stderr, so that stdout and stderr is
+    written to buffer as well as terminal.
 
     Attributes:
         __stdDestination (io.TextIOWrapper): Destination for standard outputs.
@@ -59,7 +61,7 @@ class RedirectStdStream(object):
 
     def write(self, message):
         """Writes the message to the standard destination and buffer.
-        
+
         Args:
             message (str): The message to write.
         """
@@ -79,7 +81,8 @@ class RedirectStdStreamContext:
     """
 
     def __init__(self):
-        """Initializes the RedirectStdStreamContext with a RedirectStdStreamBuffer."""
+        """Initializes the RedirectStdStreamContext with a
+        RedirectStdStreamBuffer."""
         self.stdstreambuffer = RedirectStdStreamBuffer()
 
     def __enter__(self):
@@ -90,12 +93,10 @@ class RedirectStdStreamContext:
         """
         self.__old_stdout = sys.stdout
         self.__old_stderr = sys.stderr
-        sys.stdout = RedirectStdStream(
-            self.stdstreambuffer._stdoutbuff, sys.stdout
-        )
-        sys.stderr = RedirectStdStream(
-            self.stdstreambuffer._stderrbuff, sys.stderr
-        )
+        sys.stdout = RedirectStdStream(self.stdstreambuffer._stdoutbuff,
+                                       sys.stdout)
+        sys.stderr = RedirectStdStream(self.stdstreambuffer._stderrbuff,
+                                       sys.stderr)
 
         return self.stdstreambuffer
 
