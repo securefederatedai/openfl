@@ -51,14 +51,12 @@ def plan(context):
     required=False,
     help="The FQDN of the federation agregator",
 )
-def initialize(
-    context, plan_config, cols_config, data_config, aggregator_address
-):
-    """
-    Initialize Data Science plan.
+def initialize(context, plan_config, cols_config, data_config,
+               aggregator_address):
+    """Initialize Data Science plan.
 
-    Create a protocol buffer file of the initial model weights for
-     the federation.
+    Create a protocol buffer file of the initial model weights for  the
+    federation.
     """
     from pathlib import Path
 
@@ -82,18 +80,13 @@ def initialize(
 
     plan_origin = Plan.parse(plan_config, resolve=False).config
 
-    if (
-        plan_origin["network"]["settings"]["agg_addr"] == "auto"
-        or aggregator_address
-    ):
-        plan_origin["network"]["settings"]["agg_addr"] = (
-            aggregator_address or getfqdn_env()
-        )
+    if (plan_origin["network"]["settings"]["agg_addr"] == "auto"
+            or aggregator_address):
+        plan_origin["network"]["settings"]["agg_addr"] = (aggregator_address
+                                                          or getfqdn_env())
 
-        logger.warn(
-            f"Patching Aggregator Addr in Plan"
-            f" 🠆 {plan_origin['network']['settings']['agg_addr']}"
-        )
+        logger.warn(f"Patching Aggregator Addr in Plan"
+                    f" 🠆 {plan_origin['network']['settings']['agg_addr']}")
 
         Plan.dump(plan_config, plan_origin)
 
