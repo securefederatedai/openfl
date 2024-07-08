@@ -15,7 +15,8 @@ from openfl.utilities.split import split_tensor_dict_for_holdouts
 
 
 class FederatedFastEstimator:
-    """A wrapper for fastestimator.estimator that allows running in federated mode.
+    """A wrapper for fastestimator.estimator that allows running in federated
+    mode.
 
     Attributes:
         estimator: The FastEstimator to be used.
@@ -28,7 +29,8 @@ class FederatedFastEstimator:
 
         Args:
             estimator: The FastEstimator to be used.
-            override_config (dict, optional): A dictionary to override the default configuration. Defaults to None.
+            override_config (dict, optional): A dictionary to override the
+                default configuration. Defaults to None.
             **kwargs: Additional keyword arguments.
         """
         self.estimator = estimator
@@ -64,8 +66,8 @@ class FederatedFastEstimator:
 
         self.rounds = plan.config['aggregator']['settings']['rounds_to_train']
         data_loader = FastEstimatorDataLoader(self.estimator.pipeline)
-        runner = FastEstimatorTaskRunner(
-            self.estimator, data_loader=data_loader)
+        runner = FastEstimatorTaskRunner(self.estimator,
+                                         data_loader=data_loader)
         # Overwrite plan values
         tensor_pipe = plan.get_tensor_pipe()
         # Initialize model weights
@@ -88,7 +90,8 @@ class FederatedFastEstimator:
         aggregator = plan.get_aggregator()
 
         model_states = {
-            collaborator: None for collaborator in plan.authorized_cols
+            collaborator: None
+            for collaborator in plan.authorized_cols
         }
         runners = {}
         save_dir = {}
@@ -96,12 +99,14 @@ class FederatedFastEstimator:
         for col in plan.authorized_cols:
             data = self.estimator.pipeline.data
             train_data, eval_data, test_data = split_data(
-                data['train'], data['eval'], data['test'],
-                data_path, len(plan.authorized_cols))
+                data['train'], data['eval'], data['test'], data_path,
+                len(plan.authorized_cols))
             pipeline_kwargs = {}
             for k, v in self.estimator.pipeline.__dict__.items():
-                if k in ['batch_size', 'ops', 'num_process',
-                         'drop_last', 'pad_value', 'collate_fn']:
+                if k in [
+                        'batch_size', 'ops', 'num_process', 'drop_last',
+                        'pad_value', 'collate_fn'
+                ]:
                     pipeline_kwargs[k] = v
             pipeline_kwargs.update({
                 'train_data': train_data,
@@ -113,8 +118,8 @@ class FederatedFastEstimator:
             data_loader = FastEstimatorDataLoader(pipeline)
             self.estimator.system.pipeline = pipeline
 
-            runners[col] = FastEstimatorTaskRunner(
-                estimator=self.estimator, data_loader=data_loader)
+            runners[col] = FastEstimatorTaskRunner(estimator=self.estimator,
+                                                   data_loader=data_loader)
             runners[col].set_optimizer_treatment('CONTINUE_LOCAL')
 
             for trace in runners[col].estimator.system.traces:
@@ -126,9 +131,12 @@ class FederatedFastEstimator:
             data_path += 1
 
         # Create the collaborators
-        collaborators = {collaborator: fx.create_collaborator(
-            plan, collaborator, runners[collaborator], aggregator)
-            for collaborator in plan.authorized_cols}
+        collaborators = {
+            collaborator:
+            fx.create_collaborator(plan, collaborator, runners[collaborator],
+                                   aggregator)
+            for collaborator in plan.authorized_cols
+        }
 
         model = None
         for round_num in range(self.rounds):
@@ -174,9 +182,10 @@ def split_data(train, eva, test, rank, collaborator_count):
         test : The testing data.
         rank (int): The rank of the current collaborator.
         collaborator_count (int): The total number of collaborators.
-        
+
     Returns:
-        tuple: The training, evaluation, and testing data for the current collaborator.
+        tuple: The training, evaluation, and testing data for the current
+            collaborator.
     """
     if collaborator_count == 1:
         return train, eva, test
