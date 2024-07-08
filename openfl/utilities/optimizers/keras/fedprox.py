@@ -1,6 +1,5 @@
 # Copyright (C) 2020-2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-
 """FedProx Keras optimizer module."""
 import tensorflow as tf
 import tensorflow.keras as keras
@@ -11,7 +10,10 @@ from tensorflow.python.ops import standard_ops
 class FedProxOptimizer(keras.optimizers.Optimizer):
     """FedProx optimizer.
 
-    Implements the FedProx algorithm as a Keras optimizer. FedProx is a federated learning optimization algorithm designed to handle non-IID data. It introduces a proximal term to the federated averaging algorithm to reduce the impact of devices with outlying updates.
+    Implements the FedProx algorithm as a Keras optimizer. FedProx is a
+    federated learning optimization algorithm designed to handle non-IID data.
+    It introduces a proximal term to the federated averaging algorithm to
+    reduce the impact of devices with outlying updates.
 
     Paper: https://arxiv.org/pdf/1812.06127.pdf
 
@@ -20,13 +22,20 @@ class FedProxOptimizer(keras.optimizers.Optimizer):
         mu (float): The proximal term coefficient.
     """
 
-    def __init__(self, learning_rate=0.01, mu=0.01, name='FedProxOptimizer', **kwargs):
+    def __init__(self,
+                 learning_rate=0.01,
+                 mu=0.01,
+                 name='FedProxOptimizer',
+                 **kwargs):
         """Initialize the FedProxOptimizer.
 
         Args:
-            learning_rate (float, optional): The learning rate for the optimizer. Defaults to 0.01.
-            mu (float, optional): The proximal term coefficient. Defaults to 0.01.
-            name (str, optional): The name of the optimizer. Defaults to 'FedProxOptimizer'.
+            learning_rate (float, optional): The learning rate for the
+                optimizer. Defaults to 0.01.
+            mu (float, optional): The proximal term coefficient. Defaults}
+                to 0.01.
+            name (str, optional): The name of the optimizer. Defaults to
+                'FedProxOptimizer'.
             **kwargs: Additional keyword arguments.
         """
         super().__init__(name=name, **kwargs)
@@ -43,7 +52,8 @@ class FedProxOptimizer(keras.optimizers.Optimizer):
         Args:
             var_list (list): List of variables to be optimized.
         """
-        self._lr_t = tf.convert_to_tensor(self._get_hyper('learning_rate'), name='lr')
+        self._lr_t = tf.convert_to_tensor(self._get_hyper('learning_rate'),
+                                          name='lr')
         self._mu_t = tf.convert_to_tensor(self._get_hyper('mu'), name='mu')
 
     def _create_slots(self, var_list):
@@ -71,7 +81,9 @@ class FedProxOptimizer(keras.optimizers.Optimizer):
 
         var_update = var.assign_sub(lr_t * (grad + mu_t * (var - vstar)))
 
-        return tf.group(*[var_update, ])
+        return tf.group(*[
+            var_update,
+        ])
 
     def _apply_sparse_shared(self, grad, var, indices, scatter_add):
         """Apply sparse gradients to variables.
@@ -88,13 +100,16 @@ class FedProxOptimizer(keras.optimizers.Optimizer):
         lr_t = tf.cast(self._lr_t, var.dtype.base_dtype)
         mu_t = tf.cast(self._mu_t, var.dtype.base_dtype)
         vstar = self.get_slot(var, 'vstar')
-        v_diff = vstar.assign(mu_t * (var - vstar), use_locking=self._use_locking)
+        v_diff = vstar.assign(mu_t * (var - vstar),
+                              use_locking=self._use_locking)
 
         with tf.control_dependencies([v_diff]):
             scaled_grad = scatter_add(vstar, indices, grad)
         var_update = var.assign_sub(lr_t * scaled_grad)
 
-        return tf.group(*[var_update, ])
+        return tf.group(*[
+            var_update,
+        ])
 
     def _resource_apply_sparse(self, grad, var):
         """Apply sparse gradients to variables.
@@ -123,7 +138,7 @@ class FedProxOptimizer(keras.optimizers.Optimizer):
         """
         base_config = super(FedProxOptimizer, self).get_config()
         return {
-            **base_config,
-            'lr': self._serialize_hyperparameter('learning_rate'),
+            **base_config, 'lr':
+            self._serialize_hyperparameter('learning_rate'),
             'mu': self._serialize_hyperparameter('mu')
         }

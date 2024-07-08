@@ -1,6 +1,6 @@
 # Copyright (C) 2020-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-"""Custom input types definition for Click"""
+"""Custom input types definition for Click."""
 
 import click
 import ast
@@ -11,7 +11,8 @@ from openfl.utilities import utils
 class FqdnParamType(click.ParamType):
     """Domain Type for click arguments.
 
-    This class is used to validate that a command line argument is a fully qualified domain name.
+    This class is used to validate that a command line argument is a fully
+    qualified domain name.
 
     Attributes:
         name (str): The name of the parameter type.
@@ -24,14 +25,16 @@ class FqdnParamType(click.ParamType):
 
         Args:
             value (str): The value to validate.
-            param (click.core.Option): The option that this value was supplied to.
+            param (click.core.Option): The option that this value was supplied
+                to.
             ctx (click.core.Context): The context for the parameter.
 
         Returns:
             str: The value, if it is valid.
 
         Raises:
-            value (click.exceptions.BadParameter): If the value is not a valid domain name.
+            value (click.exceptions.BadParameter): If the value is not a valid
+                domain name.
         """
         if not utils.is_fqdn(value):
             self.fail(f'{value} is not a valid domain name', param, ctx)
@@ -41,7 +44,8 @@ class FqdnParamType(click.ParamType):
 class IpAddressParamType(click.ParamType):
     """IpAddress Type for click arguments.
 
-    This class is used to validate that a command line argument is an IP address.
+    This class is used to validate that a command line argument is an IP
+    address.
 
     Attributes:
         name (str): The name of the parameter type.
@@ -54,14 +58,16 @@ class IpAddressParamType(click.ParamType):
 
         Args:
             value (str): The value to validate.
-            param (click.core.Option): The option that this value was supplied to.
+            param (click.core.Option): The option that this value was supplied
+                to.
             ctx (click.core.Context): The context for the parameter.
 
         Returns:
             str: The value, if it is valid.
 
         Raises:
-            click.exceptions.BadParameter: If the value is not a valid IP address.
+            click.exceptions.BadParameter: If the value is not a valid IP
+                address.
         """
         if not utils.is_api_adress(value):
             self.fail(f'{value} is not a valid ip adress name', param, ctx)
@@ -69,7 +75,8 @@ class IpAddressParamType(click.ParamType):
 
 
 class InputSpec(click.Option):
-    """List or dictionary that corresponds to the input shape for a model"""
+    """List or dictionary that corresponds to the input shape for a model."""
+
     def type_cast_value(self, ctx, value):
         try:
             if value is None:
