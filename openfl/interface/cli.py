@@ -43,15 +43,16 @@ def setup_logging(level='info', log_file=None):
     if log_file:
         fh = logging.FileHandler(log_file)
         formatter = logging.Formatter(
-            '%(asctime)s %(levelname)s %(message)s %(filename)s:%(lineno)d'
-        )
+            '%(asctime)s %(levelname)s %(message)s %(filename)s:%(lineno)d')
         fh.setFormatter(formatter)
         handlers.append(fh)
 
     console = Console(width=160)
     handlers.append(RichHandler(console=console))
-    basicConfig(level=level, format='%(message)s',
-                datefmt='[%X]', handlers=handlers)
+    basicConfig(level=level,
+                format='%(message)s',
+                datefmt='[%X]',
+                handlers=handlers)
 
 
 def disable_warnings():
@@ -72,7 +73,8 @@ class CLI(Group):
 
         Args:
             name (str, optional): Name of the CLI group. Defaults to None.
-            commands (dict, optional): Commands for the CLI group. Defaults to None.
+            commands (dict, optional): Commands for the CLI group. Defaults
+                to None.
             **kwargs: Arbitrary keyword arguments.
         """
         super(CLI, self).__init__(name, commands, **kwargs)
@@ -98,23 +100,23 @@ class CLI(Group):
         """
         show_header()
         uses = [
-            f'{ctx.command_path}',
-            '[options]',
+            f'{ctx.command_path}', '[options]',
             style('[command]', fg='blue'),
-            style('[subcommand]', fg='cyan'),
-            '[args]'
+            style('[subcommand]', fg='cyan'), '[args]'
         ]
 
-        formatter.write(style('BASH COMPLETE ACTIVATION\n\n', bold=True, fg='bright_black'))
+        formatter.write(
+            style('BASH COMPLETE ACTIVATION\n\n', bold=True,
+                  fg='bright_black'))
         formatter.write(
             'Run in terminal:\n'
             '   _FX_COMPLETE=bash_source fx > ~/.fx-autocomplete.sh\n'
             '   source ~/.fx-autocomplete.sh\n'
             'If ~/.fx-autocomplete.sh has already exist:\n'
-            '   source ~/.fx-autocomplete.sh\n\n'
-        )
+            '   source ~/.fx-autocomplete.sh\n\n')
 
-        formatter.write(style('CORRECT USAGE\n\n', bold=True, fg='bright_black'))
+        formatter.write(
+            style('CORRECT USAGE\n\n', bold=True, fg='bright_black'))
         formatter.write(' '.join(uses) + '\n')
 
         opts = []
@@ -123,8 +125,8 @@ class CLI(Group):
             if rv is not None:
                 opts.append(rv)
 
-        formatter.write(style(
-            '\nGLOBAL OPTIONS\n\n', bold=True, fg='bright_black'))
+        formatter.write(
+            style('\nGLOBAL OPTIONS\n\n', bold=True, fg='bright_black'))
         formatter.write_dl(opts)
 
         cmds = []
@@ -136,8 +138,8 @@ class CLI(Group):
                 sub = cmd.get_command(ctx, sub)
                 cmds.append((sub.name, sub, 1))
 
-        formatter.write(style(
-            '\nAVAILABLE COMMANDS\n', bold=True, fg='bright_black'))
+        formatter.write(
+            style('\nAVAILABLE COMMANDS\n', bold=True, fg='bright_black'))
 
         for name, cmd, level in cmds:
             help_str = cmd.get_short_help_str()
@@ -219,15 +221,18 @@ def error_handler(error):
     """
     if 'cannot import' in str(error):
         if 'TensorFlow' in str(error):
-            echo(style('EXCEPTION', fg='red', bold=True) + ' : ' + style(
-                'Tensorflow must be installed prior to running this command',
-                fg='red'))
+            echo(
+                style('EXCEPTION', fg='red', bold=True) + ' : ' + style(
+                    'Tensorflow must be installed prior to running this command',
+                    fg='red'))
         if 'PyTorch' in str(error):
-            echo(style('EXCEPTION', fg='red', bold=True) + ' : ' + style(
-                'Torch must be installed prior to running this command',
-                fg='red'))
-    echo(style('EXCEPTION', fg='red', bold=True)
-         + ' : ' + style(f'{error}', fg='red'))
+            echo(
+                style('EXCEPTION', fg='red', bold=True) + ' : ' +
+                style('Torch must be installed prior to running this command',
+                      fg='red'))
+    echo(
+        style('EXCEPTION', fg='red', bold=True) + ' : ' +
+        style(f'{error}', fg='red'))
     raise error
 
 
@@ -241,17 +246,22 @@ def review_plan_callback(file_name, file_path):
     Returns:
         bool: True if the file is accepted, False otherwise.
     """
-    echo(style(
-        f'Please review the contents of {file_name} before proceeding...',
-        fg='green',
-        bold=True))
-    # Wait for users to read the question before flashing the contents of the file.
+    echo(
+        style(
+            f'Please review the contents of {file_name} before proceeding...',
+            fg='green',
+            bold=True))
+    # Wait for users to read the question before flashing the contents of the
+    # file.
     time.sleep(3)
 
     with open_file(file_path, 'r') as f:
         echo(f.read())
 
-    if confirm(style(f'Do you want to accept the {file_name}?', fg='green', bold=True)):
+    if confirm(
+            style(f'Do you want to accept the {file_name}?',
+                  fg='green',
+                  bold=True)):
         echo(style(f'{file_name} accepted!', fg='green', bold=True))
         return True
     else:
@@ -287,7 +297,8 @@ def entry():
     root = Path(__file__).parent.resolve()
 
     if experimental.exists():
-        root = root.parent.joinpath("experimental", "interface", "cli").resolve()
+        root = root.parent.joinpath("experimental", "interface",
+                                    "cli").resolve()
 
     work = Path.cwd().resolve()
     path.append(str(root))

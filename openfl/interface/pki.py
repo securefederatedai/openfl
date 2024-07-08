@@ -41,8 +41,7 @@ def pki(context):
 
 
 @pki.command(name='run')
-@option('-p', '--ca-path', required=True,
-        help='The ca path', type=ClickPath())
+@option('-p', '--ca-path', required=True, help='The ca path', type=ClickPath())
 def run_(ca_path):
     """Run CA server.
 
@@ -67,15 +66,16 @@ def run(ca_path):
     if (not os.path.exists(step_config_dir) or not os.path.exists(pki_dir)
             or not os.path.exists(password_file) or not os.path.exists(ca_json)
             or not os.path.exists(step_ca_path)):
-        logger.error('CA is not installed or corrupted, please install it first')
+        logger.error(
+            'CA is not installed or corrupted, please install it first')
         sys.exit(1)
     run_ca(step_ca_path, password_file, ca_json)
 
 
 @pki.command(name='install')
-@option('-p', '--ca-path', required=True,
-        help='The ca path', type=ClickPath())
-@password_option(prompt='The password will encrypt some ca files \nEnter the password')
+@option('-p', '--ca-path', required=True, help='The ca path', type=ClickPath())
+@password_option(
+    prompt='The password will encrypt some ca files \nEnter the password')
 @option('--ca-url', required=False, default=CA_URL)
 def install_(ca_path, password, ca_url):
     """Create a ca workspace.
@@ -90,8 +90,7 @@ def install_(ca_path, password, ca_url):
 
 
 @pki.command(name='uninstall')
-@option('-p', '--ca-path', required=True,
-        help='The CA path', type=ClickPath())
+@option('-p', '--ca-path', required=True, help='The CA path', type=ClickPath())
 def uninstall(ca_path):
     """Remove step-CA.
 
@@ -105,13 +104,17 @@ def uninstall(ca_path):
 @pki.command(name='get-token')
 @option('-n', '--name', required=True)
 @option('--ca-url', required=False, default=CA_URL)
-@option('-p', '--ca-path', default='.',
-        help='The CA path', type=ClickPath(exists=True))
+@option('-p',
+        '--ca-path',
+        default='.',
+        help='The CA path',
+        type=ClickPath(exists=True))
 def get_token_(name, ca_url, ca_path):
     """Create authentication token.
 
     Args:
-        name (str): Common name for following certificate (aggregator fqdn or collaborator name).
+        name (str): Common name for following certificate (aggregator fqdn or
+            collaborator name).
         ca_url (str): Full URL of CA server.
         ca_path (str): The path to CA binaries.
     """
@@ -124,15 +127,24 @@ def get_token_(name, ca_url, ca_path):
 @pki.command(name='certify')
 @option('-n', '--name', required=True)
 @option('-t', '--token', 'token_with_cert', required=True)
-@option('-c', '--certs-path', required=False, default=Path('.') / 'cert',
-        help='The path where certificates will be stored', type=ClickPath())
-@option('-p', '--ca-path', default='.', help='The path to CA client',
-        type=ClickPath(exists=True), required=False)
+@option('-c',
+        '--certs-path',
+        required=False,
+        default=Path('.') / 'cert',
+        help='The path where certificates will be stored',
+        type=ClickPath())
+@option('-p',
+        '--ca-path',
+        default='.',
+        help='The path to CA client',
+        type=ClickPath(exists=True),
+        required=False)
 def certify_(name, token_with_cert, certs_path, ca_path):
     """Create an envoy workspace.
 
     Args:
-        name (str): Common name for following certificate (aggregator fqdn or collaborator name).
+        name (str): Common name for following certificate (aggregator fqdn or
+            collaborator name).
         token_with_cert (str): Authentication token.
         certs_path (str): The path where certificates will be stored.
         ca_path (str): The path to CA client.

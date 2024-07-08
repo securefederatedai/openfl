@@ -13,40 +13,39 @@ from openfl.interface.aggregation_functions import AggregationFunction
 
 
 class PrivilegedAggregationFunction(AggregationFunction):
-    """Privileged Aggregation Function interface provides write access to TensorDB Dataframe.
+    """Privileged Aggregation Function interface provides write access to
+    TensorDB Dataframe."""
 
-    """
-
-    def __init__(
-        self
-    ) -> None:
-        """Initialize with TensorDB write access"""
+    def __init__(self) -> None:
+        """Initialize with TensorDB write access."""
         super().__init__()
         self._privileged = True
 
     @abstractmethod
-    def call(self,
-             local_tensors: List[LocalTensor],
-             tensor_db: pd.DataFrame,
-             tensor_name: str,
-             fl_round: int,
-             tags: Tuple[str]) -> np.ndarray:
+    def call(self, local_tensors: List[LocalTensor], tensor_db: pd.DataFrame,
+             tensor_name: str, fl_round: int, tags: Tuple[str]) -> np.ndarray:
         """Aggregate tensors.
 
         Args:
-            local_tensors (list[openfl.utilities.LocalTensor]): List of local tensors to aggregate.
+            local_tensors (list[openfl.utilities.LocalTensor]): List of local
+                tensors to aggregate.
             tensor_db: Raw TensorDB dataframe (for write access). Columns:
                 - 'tensor_name': name of the tensor.
-                    Examples for `torch.nn.Module`s: 'conv1.weight', 'fc2.bias'.
-                - 'round': 0-based number of round corresponding to this tensor.
+                    Examples for `torch.nn.Module`s: 'conv1.weight','fc2.bias'.
+                - 'round': 0-based number of round corresponding to this
+                    tensor.
                 - 'tags': tuple of tensor tags. Tags that can appear:
                     - 'model' indicates that the tensor is a model parameter.
-                    - 'trained' indicates that tensor is a part of a training result.
-                        These tensors are passed to the aggregator node after local learning.
-                    - 'aggregated' indicates that tensor is a result of aggregation.
-                        These tensors are sent to collaborators for the next round.
-                    - 'delta' indicates that value is a difference between rounds
-                        for a specific tensor.
+                    - 'trained' indicates that tensor is a part of a training
+                        result.
+                        These tensors are passed to the aggregator node after
+                        local learning.
+                    - 'aggregated' indicates that tensor is a result of
+                        aggregation.
+                        These tensors are sent to collaborators for the next
+                        round.
+                    - 'delta' indicates that value is a difference between
+                        rounds for a specific tensor.
                     also one of the tags is a collaborator name
                     if it corresponds to a result of a local task.
 

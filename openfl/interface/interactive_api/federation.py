@@ -25,8 +25,15 @@ class Federation:
         sample_shape (tuple): The shape of the samples in the dataset.
         target_shape (tuple): The shape of the targets in the dataset.
     """
-    def __init__(self, client_id=None, director_node_fqdn=None, director_port=None, tls=True,
-                 cert_chain=None, api_cert=None, api_private_key=None) -> None:
+
+    def __init__(self,
+                 client_id=None,
+                 director_node_fqdn=None,
+                 director_port=None,
+                 tls=True,
+                 cert_chain=None,
+                 api_cert=None,
+                 api_private_key=None) -> None:
         """
         Initialize federation.
 
@@ -58,19 +65,18 @@ class Federation:
         self.api_private_key = api_private_key
 
         # Create Director client
-        self.dir_client = DirectorClient(
-            client_id=client_id,
-            director_host=director_node_fqdn,
-            director_port=director_port,
-            tls=tls,
-            root_certificate=cert_chain,
-            private_key=api_private_key,
-            certificate=api_cert
-        )
+        self.dir_client = DirectorClient(client_id=client_id,
+                                         director_host=director_node_fqdn,
+                                         director_port=director_port,
+                                         tls=tls,
+                                         root_certificate=cert_chain,
+                                         private_key=api_private_key,
+                                         certificate=api_cert)
 
         # Request sample and target shapes from Director.
         # This is an internal method for finding out dataset properties in a Federation.
-        self.sample_shape, self.target_shape = self.dir_client.get_dataset_info()
+        self.sample_shape, self.target_shape = self.dir_client.get_dataset_info(
+        )
 
     def get_dummy_shard_descriptor(self, size):
         """Return a dummy shard descriptor.
