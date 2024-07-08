@@ -1,6 +1,5 @@
 # Copyright (C) 2020-2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-
 """KerasDataLoader module."""
 
 import numpy as np
@@ -48,25 +47,32 @@ class KerasDataLoader(DataLoader):
         """Returns the data loader for the training data.
 
         Args:
-            batch_size (int, optional): The batch size for the data loader (default is None).
-            num_batches (int, optional): The number of batches for the data loader (default is None).
+            batch_size (int, optional): The batch size for the data loader
+                (default is None).
+            num_batches (int, optional): The number of batches for the data
+                loader (default is None).
 
         Returns:
             DataLoader: The DataLoader object for the training data.
         """
-        return self._get_batch_generator(X=self.X_train, y=self.y_train, batch_size=batch_size,
+        return self._get_batch_generator(X=self.X_train,
+                                         y=self.y_train,
+                                         batch_size=batch_size,
                                          num_batches=num_batches)
 
     def get_valid_loader(self, batch_size=None):
         """Returns the data loader for the validation data.
 
         Args:
-            batch_size (int, optional): The batch size for the data loader (default is None).
+            batch_size (int, optional): The batch size for the data loader
+                (default is None).
 
         Returns:
             DataLoader: The DataLoader object for the validation data.
         """
-        return self._get_batch_generator(X=self.X_valid, y=self.y_valid, batch_size=batch_size)
+        return self._get_batch_generator(X=self.X_valid,
+                                         y=self.y_valid,
+                                         batch_size=batch_size)
 
     def get_train_data_size(self):
         """Returns the total number of training samples.
@@ -110,7 +116,8 @@ class KerasDataLoader(DataLoader):
             X (np.array): The input data.
             y (np.array): The label data.
             batch_size (int): The batch size for the data loader.
-            num_batches (int, optional): The number of batches (default is None).
+            num_batches (int, optional): The number of batches (default is
+                None).
 
         Returns:
             generator: The dataset generator.

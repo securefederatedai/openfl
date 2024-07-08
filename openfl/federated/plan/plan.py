@@ -1,6 +1,5 @@
 # Copyright (C) 2020-2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-
 """Plan module."""
 from hashlib import sha384
 from importlib import import_module
@@ -29,7 +28,8 @@ AUTO = 'auto'
 class Plan:
     """A class used to represent a Federated Learning plan.
 
-    This class provides methods to manage and manipulate federated learning plans.
+    This class provides methods to manage and manipulate federated learning
+    plans.
 
     Attributes:
         logger (Logger): Logger instance for the class.
@@ -58,7 +58,8 @@ class Plan:
 
         Args:
             yaml_path (Path): Path to the YAML file.
-            default (dict, optional): Default plan configuration. Defaults to {}.
+            default (dict, optional): Default plan configuration. 
+                Defaults to {}.
 
         Returns:
             dict: Plan configuration loaded from the YAML file.
@@ -76,7 +77,8 @@ class Plan:
         Args:
             yaml_path (Path): Path to the YAML file.
             config (dict): Plan configuration to be dumped.
-            freeze (bool, optional): Flag to freeze the plan. Defaults to False.
+            freeze (bool, optional): Flag to freeze the plan. Defaults to
+                False.
         """
 
         class NoAliasDumper(SafeDumper):
@@ -99,17 +101,24 @@ class Plan:
             yaml_path.write_text(dump(config))
 
     @staticmethod
-    def parse(plan_config_path: Path, cols_config_path: Path = None,
-              data_config_path: Path = None, gandlf_config_path=None,
+    def parse(plan_config_path: Path,
+              cols_config_path: Path = None,
+              data_config_path: Path = None,
+              gandlf_config_path=None,
               resolve=True):
         """Parse the Federated Learning plan.
 
         Args:
-            plan_config_path (Path): The filepath to the Federated Learning plan.
-            cols_config_path (Path, optional): The filepath to the Federation collaborator list. Defaults to None.
-            data_config_path (Path, optional): The filepath to the Federation collaborator data configuration. Defaults to None.
-            gandlf_config_path (Path, optional): The filepath to a yaml file that overrides the configuration. Defaults to None.
-            resolve (bool, optional): Flag to resolve the plan settings. Defaults to True.
+            plan_config_path (Path): The filepath to the Federated Learning
+                plan.
+            cols_config_path (Path, optional): The filepath to the Federation
+                collaborator list. Defaults to None.
+            data_config_path (Path, optional): The filepath to the Federation
+                collaborator data configuration. Defaults to None.
+            gandlf_config_path (Path, optional): The filepath to a yaml file
+                that overrides the configuration. Defaults to None.
+            resolve (bool, optional): Flag to resolve the plan settings.
+                Defaults to True.
 
         Returns:
             Plan: A Federated Learning plan object.
@@ -117,7 +126,8 @@ class Plan:
         try:
 
             plan = Plan()
-            plan.config = Plan.load(plan_config_path)  # load plan configuration
+            plan.config = Plan.load(
+                plan_config_path)  # load plan configuration
             plan.name = plan_config_path.name
             plan.files = [plan_config_path]  # collect all the plan files
 
@@ -162,12 +172,13 @@ class Plan:
 
                 gandlf_config = Plan.load(Path(gandlf_config_path))
                 # check for some defaults
-                gandlf_config['output_dir'] = gandlf_config.get('output_dir', '.')
-                plan.config['task_runner']['settings']['gandlf_config'] = gandlf_config
+                gandlf_config['output_dir'] = gandlf_config.get(
+                    'output_dir', '.')
+                plan.config['task_runner']['settings'][
+                    'gandlf_config'] = gandlf_config
 
             plan.authorized_cols = Plan.load(cols_config_path).get(
-                'collaborators', []
-            )
+                'collaborators', [])
 
             # TODO: Does this need to be a YAML file? Probably want to use key
             #  value as the plan hash
@@ -193,14 +204,16 @@ class Plan:
             return plan
 
         except Exception:
-            Plan.logger.exception(f'Parsing Federated Learning Plan : '
-                                  f'[red]FAILURE[/] : [blue]{plan_config_path}[/].',
-                                  extra={'markup': True})
+            Plan.logger.exception(
+                f'Parsing Federated Learning Plan : '
+                f'[red]FAILURE[/] : [blue]{plan_config_path}[/].',
+                extra={'markup': True})
             raise
 
     @staticmethod
     def build(template, settings, **override):
-        """Create an instance of a openfl Component or Federated DataLoader/TaskRunner.
+        """Create an instance of a openfl Component or Federated
+        DataLoader/TaskRunner.
 
         Args:
             template (str): Fully qualified class template path.
@@ -226,7 +239,8 @@ class Plan:
 
     @staticmethod
     def import_(template):
-        """Import an instance of a openfl Component or Federated DataLoader/TaskRunner.
+        """Import an instance of a openfl Component or Federated
+        DataLoader/TaskRunner.
 
         Args:
             template (str): Fully qualified object path.
@@ -236,9 +250,10 @@ class Plan:
         """
         class_name = splitext(template)[1].strip('.')
         module_path = splitext(template)[0]
-        Plan.logger.info(f'Importing [red]🡆[/] Object [red]{class_name}[/] '
-                         f'from [red]{module_path}[/] Module.',
-                         extra={'markup': True})
+        Plan.logger.info(
+            f'Importing [red]🡆[/] Object [red]{class_name}[/] '
+            f'from [red]{module_path}[/] Module.',
+            extra={'markup': True})
         module = import_module(module_path)
         instance = getattr(module, class_name)
 
@@ -290,20 +305,19 @@ class Plan:
 
         if self.config['network'][SETTINGS]['agg_port'] == AUTO:
             self.config['network'][SETTINGS]['agg_port'] = int(
-                self.hash[:8], 16
-            ) % (60999 - 49152) + 49152
+                self.hash[:8], 16) % (60999 - 49152) + 49152
 
     def get_assigner(self):
         """Get the plan task assigner."""
         aggregation_functions_by_task = None
         assigner_function = None
         try:
-            aggregation_functions_by_task = self.restore_object('aggregation_function_obj.pkl')
+            aggregation_functions_by_task = self.restore_object(
+                'aggregation_function_obj.pkl')
             assigner_function = self.restore_object('task_assigner_obj.pkl')
         except Exception as exc:
             self.logger.error(
-                f'Failed to load aggregation and assigner functions: {exc}'
-            )
+                f'Failed to load aggregation and assigner functions: {exc}')
             self.logger.info('Using Task Runner API workflow')
         if assigner_function:
             self.assigner_ = Assigner(
@@ -314,13 +328,10 @@ class Plan:
             )
         else:
             # Backward compatibility
-            defaults = self.config.get(
-                'assigner',
-                {
-                    TEMPLATE: 'openfl.component.Assigner',
-                    SETTINGS: {}
-                }
-            )
+            defaults = self.config.get('assigner', {
+                TEMPLATE: 'openfl.component.Assigner',
+                SETTINGS: {}
+            })
 
             defaults[SETTINGS]['authorized_cols'] = self.authorized_cols
             defaults[SETTINGS]['rounds_to_train'] = self.rounds_to_train
@@ -354,55 +365,58 @@ class Plan:
 
     def get_aggregator(self, tensor_dict=None):
         """Get federation aggregator.
-        
-        This method retrieves the federation aggregator. If the aggregator does not exist, 
-        it is built using the configuration settings and the provided tensor dictionary.
+
+        This method retrieves the federation aggregator. If the aggregator
+        does not exist, it is built using the configuration settings and the
+        provided tensor dictionary.
 
         Args:
-            tensor_dict (dict, optional): The initial tensor dictionary to use when building the aggregator. Defaults to None.
+            tensor_dict (dict, optional): The initial tensor dictionary to use
+                when building the aggregator. Defaults to None.
 
         Returns:
             self.aggregator_ (Aggregator): The federation aggregator.
 
         Raises:
-            TypeError: If the log_metric_callback is not a callable object or cannot be imported from code.
+            TypeError: If the log_metric_callback is not a callable object or
+                cannot be imported from code.
         """
-        defaults = self.config.get('aggregator',
-                                   {
-                                       TEMPLATE: 'openfl.component.Aggregator',
-                                       SETTINGS: {}
-                                   })
+        defaults = self.config.get('aggregator', {
+            TEMPLATE: 'openfl.component.Aggregator',
+            SETTINGS: {}
+        })
 
         defaults[SETTINGS]['aggregator_uuid'] = self.aggregator_uuid
         defaults[SETTINGS]['federation_uuid'] = self.federation_uuid
         defaults[SETTINGS]['authorized_cols'] = self.authorized_cols
         defaults[SETTINGS]['assigner'] = self.get_assigner()
         defaults[SETTINGS]['compression_pipeline'] = self.get_tensor_pipe()
-        defaults[SETTINGS]['straggler_handling_policy'] = self.get_straggler_handling_policy()
+        defaults[SETTINGS][
+            'straggler_handling_policy'] = self.get_straggler_handling_policy(
+            )
         log_metric_callback = defaults[SETTINGS].get('log_metric_callback')
 
         if log_metric_callback:
             if isinstance(log_metric_callback, dict):
                 log_metric_callback = Plan.import_(**log_metric_callback)
             elif not callable(log_metric_callback):
-                raise TypeError(f'log_metric_callback should be callable object '
-                                f'or be import from code part, get {log_metric_callback}')
+                raise TypeError(
+                    f'log_metric_callback should be callable object '
+                    f'or be import from code part, get {log_metric_callback}')
 
         defaults[SETTINGS]['log_metric_callback'] = log_metric_callback
         if self.aggregator_ is None:
-            self.aggregator_ = Plan.build(**defaults, initial_tensor_dict=tensor_dict)
+            self.aggregator_ = Plan.build(**defaults,
+                                          initial_tensor_dict=tensor_dict)
 
         return self.aggregator_
 
     def get_tensor_pipe(self):
         """Get data tensor pipeline."""
-        defaults = self.config.get(
-            'compression_pipeline',
-            {
-                TEMPLATE: 'openfl.pipelines.NoCompressionPipeline',
-                SETTINGS: {}
-            }
-        )
+        defaults = self.config.get('compression_pipeline', {
+            TEMPLATE: 'openfl.pipelines.NoCompressionPipeline',
+            SETTINGS: {}
+        })
 
         if self.pipe_ is None:
             self.pipe_ = Plan.build(**defaults)
@@ -412,13 +426,10 @@ class Plan:
     def get_straggler_handling_policy(self):
         """Get straggler handling policy."""
         template = 'openfl.component.straggler_handling_functions.CutoffTimeBasedStragglerHandling'
-        defaults = self.config.get(
-            'straggler_handling_policy',
-            {
-                TEMPLATE: template,
-                SETTINGS: {}
-            }
-        )
+        defaults = self.config.get('straggler_handling_policy', {
+            TEMPLATE: template,
+            SETTINGS: {}
+        })
 
         if self.straggler_policy_ is None:
             self.straggler_policy_ = Plan.build(**defaults)
@@ -435,15 +446,13 @@ class Plan:
         Returns:
             DataLoader: Data loader for the specified collaborator.
         """
-        defaults = self.config.get('data_loader',
-                                   {
-                                       TEMPLATE: 'openfl.federation.DataLoader',
-                                       SETTINGS: {}
-                                   })
+        defaults = self.config.get('data_loader', {
+            TEMPLATE: 'openfl.federation.DataLoader',
+            SETTINGS: {}
+        })
 
         defaults[SETTINGS]['data_path'] = self.cols_data_paths[
-            collaborator_name
-        ]
+            collaborator_name]
 
         if self.loader_ is None:
             self.loader_ = Plan.build(**defaults)
@@ -474,11 +483,10 @@ class Plan:
         Returns:
             TaskRunner: Task runner for the tasks.
         """
-        defaults = self.config.get('task_runner',
-                                   {
-                                       TEMPLATE: 'openfl.federation.TaskRunner',
-                                       SETTINGS: {}
-                                   })
+        defaults = self.config.get('task_runner', {
+            TEMPLATE: 'openfl.federation.TaskRunner',
+            SETTINGS: {}
+        })
 
         defaults[SETTINGS]['data_loader'] = data_loader
 
@@ -491,22 +499,25 @@ class Plan:
         return self.runner_
 
     # Python interactive api
-    def get_core_task_runner(self, data_loader=None,
+    def get_core_task_runner(self,
+                             data_loader=None,
                              model_provider=None,
                              task_keeper=None):
         """Get core task runner.
 
         Args:
-            data_loader (DataLoader, optional): Data loader for the tasks. Defaults to None.
-            model_provider (ModelProvider, optional): Provider for the model. Defaults to None.
-            task_keeper (TaskKeeper, optional): Keeper for the tasks. Defaults to None.
+            data_loader (DataLoader, optional): Data loader for the tasks.
+                Defaults to None.
+            model_provider (ModelProvider, optional): Provider for the model.
+                Defaults to None.
+            task_keeper (TaskKeeper, optional): Keeper for the tasks. Defaults
+                to None.
 
         Returns:
             CoreTaskRunner: Core task runner for the tasks.
         """
         defaults = self.config.get(
-            'task_runner',
-            {
+            'task_runner', {
                 TEMPLATE: 'openfl.federated.task.task_runner.CoreTaskRunner',
                 SETTINGS: {}
             })
@@ -521,7 +532,8 @@ class Plan:
         self.runner_.set_task_provider(task_keeper)
 
         framework_adapter = Plan.build(
-            self.config['task_runner']['required_plugin_components']['framework_adapters'], {})
+            self.config['task_runner']['required_plugin_components']
+            ['framework_adapters'], {})
 
         # This step initializes tensorkeys
         # Which have no sens if task provider is not set up
@@ -529,32 +541,42 @@ class Plan:
 
         return self.runner_
 
-    def get_collaborator(self, collaborator_name, root_certificate=None, private_key=None,
-                         certificate=None, task_runner=None, client=None, shard_descriptor=None):
+    def get_collaborator(self,
+                         collaborator_name,
+                         root_certificate=None,
+                         private_key=None,
+                         certificate=None,
+                         task_runner=None,
+                         client=None,
+                         shard_descriptor=None):
         """Get collaborator.
 
-        This method retrieves a collaborator. If the collaborator does not exist, 
-        it is built using the configuration settings and the provided parameters.
+        This method retrieves a collaborator. If the collaborator does not
+        exist, it is built using the configuration settings and the provided
+        parameters.
 
         Args:
             collaborator_name (str): Name of the collaborator.
-            root_certificate (str, optional): Root certificate for the collaborator. Defaults to None.
-            private_key (str, optional): Private key for the collaborator. Defaults to None.
-            certificate (str, optional): Certificate for the collaborator. Defaults to None.
-            task_runner (TaskRunner, optional): Task runner for the collaborator. Defaults to None.
-            client (Client, optional): Client for the collaborator. Defaults to None.
-            shard_descriptor (ShardDescriptor, optional): Descriptor of the data shard. Defaults to None.
+            root_certificate (str, optional): Root certificate for the
+                collaborator. Defaults to None.
+            private_key (str, optional): Private key for the collaborator.
+                Defaults to None.
+            certificate (str, optional): Certificate for the collaborator.
+                Defaults to None.
+            task_runner (TaskRunner, optional): Task runner for the
+                collaborator. Defaults to None.
+            client (Client, optional): Client for the collaborator. Defaults
+                to None.
+            shard_descriptor (ShardDescriptor, optional): Descriptor of the
+                data shard. Defaults to None.
 
         Returns:
             self.collaborator_ (Collaborator): The collaborator instance.
         """
-        defaults = self.config.get(
-            'collaborator',
-            {
-                TEMPLATE: 'openfl.component.Collaborator',
-                SETTINGS: {}
-            }
-        )
+        defaults = self.config.get('collaborator', {
+            TEMPLATE: 'openfl.component.Collaborator',
+            SETTINGS: {}
+        })
 
         defaults[SETTINGS]['collaborator_name'] = collaborator_name
         defaults[SETTINGS]['aggregator_uuid'] = self.aggregator_uuid
@@ -563,15 +585,21 @@ class Plan:
         if task_runner is not None:
             defaults[SETTINGS]['task_runner'] = task_runner
         else:
-            # Here we support new interactive api as well as old task_runner subclassing interface
-            # If Task Runner class is placed incide openfl `task-runner` subpackage it is
-            # a part of the New API and it is a part of OpenFL kernel.
-            # If Task Runner is placed elsewhere, somewhere in user workspace, than it is
-            # a part of the old interface and we follow legacy initialization procedure.
-            if 'openfl.federated.task.task_runner' in self.config['task_runner']['template']:
+            # Here we support new interactive api as well as old task_runner
+            # subclassing interface.
+            # If Task Runner class is placed incide openfl `task-runner`
+            # subpackage it is a part of the New API and it is a part of
+            # OpenFL kernel.
+            # If Task Runner is placed elsewhere, somewhere in user workspace,
+            # than it is a part of the old interface and we follow legacy
+            # initialization procedure.
+            if 'openfl.federated.task.task_runner' in self.config[
+                    'task_runner']['template']:
                 # Interactive API
-                model_provider, task_keeper, data_loader = self.deserialize_interface_objects()
-                data_loader = self.initialize_data_loader(data_loader, shard_descriptor)
+                model_provider, task_keeper, data_loader = self.deserialize_interface_objects(
+                )
+                data_loader = self.initialize_data_loader(
+                    data_loader, shard_descriptor)
                 defaults[SETTINGS]['task_runner'] = self.get_core_task_runner(
                     data_loader=data_loader,
                     model_provider=model_provider,
@@ -579,7 +607,8 @@ class Plan:
             else:
                 # TaskRunner subclassing API
                 data_loader = self.get_data_loader(collaborator_name)
-                defaults[SETTINGS]['task_runner'] = self.get_task_runner(data_loader)
+                defaults[SETTINGS]['task_runner'] = self.get_task_runner(
+                    data_loader)
 
         defaults[SETTINGS]['compression_pipeline'] = self.get_tensor_pipe()
         defaults[SETTINGS]['task_config'] = self.config.get('tasks', {})
@@ -587,30 +616,33 @@ class Plan:
             defaults[SETTINGS]['client'] = client
         else:
             defaults[SETTINGS]['client'] = self.get_client(
-                collaborator_name,
-                self.aggregator_uuid,
-                self.federation_uuid,
-                root_certificate,
-                private_key,
-                certificate
-            )
+                collaborator_name, self.aggregator_uuid, self.federation_uuid,
+                root_certificate, private_key, certificate)
 
         if self.collaborator_ is None:
             self.collaborator_ = Plan.build(**defaults)
 
         return self.collaborator_
 
-    def get_client(self, collaborator_name, aggregator_uuid, federation_uuid,
-                   root_certificate=None, private_key=None, certificate=None):
+    def get_client(self,
+                   collaborator_name,
+                   aggregator_uuid,
+                   federation_uuid,
+                   root_certificate=None,
+                   private_key=None,
+                   certificate=None):
         """Get gRPC client for the specified collaborator.
 
         Args:
             collaborator_name (str): Name of the collaborator.
             aggregator_uuid (str): UUID of the aggregator.
             federation_uuid (str): UUID of the federation.
-            root_certificate (str, optional): Root certificate for the collaborator. Defaults to None.
-            private_key (str, optional): Private key for the collaborator. Defaults to None.
-            certificate (str, optional): Certificate for the collaborator. Defaults to None.
+            root_certificate (str, optional): Root certificate for the
+                collaborator. Defaults to None.
+            private_key (str, optional): Private key for the collaborator.
+                Defaults to None.
+            certificate (str, optional): Certificate for the collaborator.
+                Defaults to None.
 
         Returns:
             AggregatorGRPCClient: gRPC client for the specified collaborator.
@@ -637,13 +669,20 @@ class Plan:
 
         return self.client_
 
-    def get_server(self, root_certificate=None, private_key=None, certificate=None, **kwargs):
+    def get_server(self,
+                   root_certificate=None,
+                   private_key=None,
+                   certificate=None,
+                   **kwargs):
         """Get gRPC server of the aggregator instance.
 
         Args:
-            root_certificate (str, optional): Root certificate for the server. Defaults to None.
-            private_key (str, optional): Private key for the server. Defaults to None.
-            certificate (str, optional): Certificate for the server. Defaults to None.
+            root_certificate (str, optional): Root certificate for the server.
+                Defaults to None.
+            private_key (str, optional): Private key for the server. Defaults
+                to None.
+            certificate (str, optional): Certificate for the server. Defaults
+                to None.
             **kwargs: Additional keyword arguments.
 
         Returns:
@@ -672,8 +711,8 @@ class Plan:
 
         return self.server_
 
-    def interactive_api_get_server(self, *, tensor_dict, root_certificate, certificate,
-                                   private_key, tls):
+    def interactive_api_get_server(self, *, tensor_dict, root_certificate,
+                                   certificate, private_key, tls):
         """Get gRPC server of the aggregator instance for interactive API.
 
         Args:
@@ -709,16 +748,17 @@ class Plan:
         """
         api_layer = self.config['api_layer']
         filenames = [
-            'model_interface_file',
-            'tasks_interface_file',
+            'model_interface_file', 'tasks_interface_file',
             'dataloader_interface_file'
         ]
-        return (self.restore_object(api_layer['settings'][filename]) for filename in filenames)
+        return (self.restore_object(api_layer['settings'][filename])
+                for filename in filenames)
 
     def get_serializer_plugin(self, **kwargs):
         """Get serializer plugin.
 
-        This plugin is used for serialization of interfaces in new interactive API.
+        This plugin is used for serialization of interfaces in new interactive
+        API.
 
         Args:
             **kwargs: Additional keyword arguments.
@@ -729,7 +769,8 @@ class Plan:
         if self.serializer_ is None:
             if 'api_layer' not in self.config:  # legacy API
                 return None
-            required_plugin_components = self.config['api_layer']['required_plugin_components']
+            required_plugin_components = self.config['api_layer'][
+                'required_plugin_components']
             serializer_plugin = required_plugin_components['serializer_plugin']
             self.serializer_ = Plan.build(serializer_plugin, kwargs)
         return self.serializer_

@@ -1,12 +1,13 @@
 # Copyright (C) 2020-2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-
 """DataLoader module."""
+
 
 class DataLoader:
     """A base class used to represent a Federated Learning Data Loader.
 
-    This class should be inherited by any data loader class specific to a machine learning framework.
+    This class should be inherited by any data loader class specific to a
+    machine learning framework.
 
     Attributes:
         None
@@ -24,7 +25,8 @@ class DataLoader:
         """Returns the shape of an example feature array.
 
         Raises:
-            NotImplementedError: This method must be implemented by a child class.
+            NotImplementedError: This method must be implemented by a child
+                class.
         """
         raise NotImplementedError
 
@@ -35,7 +37,8 @@ class DataLoader:
             kwargs: Additional arguments to pass to the function.
 
         Raises:
-            NotImplementedError: This method must be implemented by a child class.
+            NotImplementedError: This method must be implemented by a child
+                class.
         """
         raise NotImplementedError
 
@@ -43,7 +46,8 @@ class DataLoader:
         """Returns the data loader for the validation data.
 
         Raises:
-            NotImplementedError: This method must be implemented by a child class.
+            NotImplementedError: This method must be implemented by a child
+                class.
         """
         raise NotImplementedError
 
@@ -51,7 +55,8 @@ class DataLoader:
         """Returns the data loader for inferencing data.
 
         Raises:
-            NotImplementedError: This method must be implemented by a child class.
+            NotImplementedError: This method must be implemented by a child
+                class.
         """
         return NotImplementedError
 
@@ -59,7 +64,8 @@ class DataLoader:
         """Returns the total number of training samples.
 
         Raises:
-            NotImplementedError: This method must be implemented by a child class.
+            NotImplementedError: This method must be implemented by a child
+                class.
         """
         raise NotImplementedError
 
@@ -67,6 +73,7 @@ class DataLoader:
         """Returns the total number of validation samples.
 
         Raises:
-            NotImplementedError: This method must be implemented by a child class.
+            NotImplementedError: This method must be implemented by a child
+                class.
         """
         raise NotImplementedError
