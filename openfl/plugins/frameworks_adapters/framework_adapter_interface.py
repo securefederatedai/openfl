@@ -21,13 +21,16 @@ class FrameworkAdapterPluginInterface:
 
         Args:
             model (object): The model object.
-            optimizer (object, optional): The optimizer object. Defaults to None.
+            optimizer (object, optional): The optimizer object. Defaults to
+                None.
 
         Returns:
-            dict: A dictionary with weight name as key and numpy ndarray as value.
+            dict: A dictionary with weight name as key and numpy ndarray as
+                value.
 
         Raises:
-            NotImplementedError: This is a placeholder method that needs to be implemented in subclasses.
+            NotImplementedError: This is a placeholder method that needs to be
+                implemented in subclasses.
         """
         raise NotImplementedError
 
@@ -40,14 +43,17 @@ class FrameworkAdapterPluginInterface:
 
         Args:
             model (object): The model object.
-            tensor_dict (dict): Dictionary with weight name as key and numpy ndarray as value.
-            optimizer (object, optional): The optimizer object. Defaults to None.
+            tensor_dict (dict): Dictionary with weight name as key and numpy
+                ndarray as value.
+            optimizer (object, optional): The optimizer object. Defaults to
+                None.
             device (str, optional): The device to be used. Defaults to 'cpu'.
 
         Returns:
             None
 
         Raises:
-            NotImplementedError: This is a placeholder method that needs to be implemented in subclasses.
+            NotImplementedError: This is a placeholder method that needs to be
+                implemented in subclasses.
         """
         raise NotImplementedError

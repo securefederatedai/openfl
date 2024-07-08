@@ -15,7 +15,8 @@ class FrameworkAdapterPlugin(FrameworkAdapterPluginInterface):
 
     @staticmethod
     def get_tensor_dict(model, optimizer=None):
-        """Extract tensor dict from a model.params and model.opt_state (optimizer).
+        """Extract tensor dict from a model.params and model.opt_state
+        (optimizer).
 
         Args:
             model (object): The model object.
@@ -30,7 +31,8 @@ class FrameworkAdapterPlugin(FrameworkAdapterPluginInterface):
         params_dict = _get_weights_dict(model_params, 'param')
 
         # If optimizer is initialized
-        # Optax Optimizer agnostic state processing (TraceState, AdamScaleState, any...)
+        # Optax Optimizer agnostic state processing (TraceState,
+        # AdamScaleState, any...)
         if not isinstance(model.opt_state[0], optax.EmptyState):
             opt_state = jax.tree_util.tree_map(np.array, model.opt_state)[0]
             opt_vars = filter(_get_opt_vars, dir(opt_state))
@@ -44,17 +46,20 @@ class FrameworkAdapterPlugin(FrameworkAdapterPluginInterface):
 
     @staticmethod
     def set_tensor_dict(model, tensor_dict, optimizer=None, device='cpu'):
-        """Set the `model.params and model.opt_state` with a flattened tensor dictionary.
-        Choice of JAX platform (device) cpu/gpu/gpu is initialized at start.
+        """Set the `model.params and model.opt_state` with a flattened tensor
+        dictionary. Choice of JAX platform (device) cpu/gpu/gpu is initialized
+        at start.
 
         Args:
             model (object): The model object.
-            tensor_dict (dict): Flattened dictionary with weight name as key and numpy ndarray as value.
-            optimizer (object, optional): The optimizer object. Defaults to None.
+            tensor_dict (dict): Flattened dictionary with weight name as key
+                and numpy ndarray as value.
+            optimizer (object, optional): The optimizer object. Defaults to
+                None.
             device (str, optional): The device to be used. Defaults to 'cpu'.
 
         Returns:
-            None    
+            None
         """
 
         tensor_dict = jax.tree_util.tree_map(jnp.array, tensor_dict)
@@ -83,10 +88,12 @@ def _set_weights_dict(obj, weights_dict, prefix=''):
     The obj can be a model or an optimizer.
 
     Args:
-        obj (Model or Optimizer): The target object that we want to set the weights.
+        obj (Model or Optimizer): The target object that we want to set the
+            weights.
         weights_dict (dict): The weight dictionary.
-        prefix (str, optional): The prefix for the weight dictionary keys. Defaults to ''.
-        
+        prefix (str, optional): The prefix for the weight dictionary keys.
+            Defaults to ''.
+
     Returns:
         None
     """
@@ -104,7 +111,7 @@ def _set_weights_dict(obj, weights_dict, prefix=''):
 
 def _update_weights(state_dict, tensor_dict, prefix, suffix=None):
     """Helper function to update the weights of the state dictionary.
-    
+
     Re-assignment of the state variable(s) is restricted.
     Instead update the nested layers weights iteratively.
 
@@ -112,7 +119,8 @@ def _update_weights(state_dict, tensor_dict, prefix, suffix=None):
         state_dict (dict): The state dictionary.
         tensor_dict (dict): The tensor dictionary.
         prefix (str): The prefix for the weight dictionary keys.
-        suffix (str, optional): The suffix for the weight dictionary keys. Defaults to None.
+        suffix (str, optional): The suffix for the weight dictionary keys.
+            Defaults to None.
 
     Returns:
         None
@@ -129,7 +137,8 @@ def _get_weights_dict(obj, prefix):
     """Get the dictionary of weights.
 
     Args:
-        obj (Model or Optimizer): The target object that we want to get the weights.
+        obj (Model or Optimizer): The target object that we want to get the
+            weights.
         prefix (str): The prefix for the weight dictionary keys.
 
     Returns:
