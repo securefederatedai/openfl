@@ -1,6 +1,5 @@
 # Copyright (C) 2020-2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-
 """Geometric median module."""
 
 import numpy as np
@@ -24,7 +23,8 @@ def _geometric_median_objective(median, tensors, weights):
 
 
 def geometric_median(tensors, weights, maxiter=4, eps=1e-5, ftol=1e-6):
-    """Compute geometric median of tensors with weights using Weiszfeld's Algorithm.
+    """Compute geometric median of tensors with weights using Weiszfeld's
+    Algorithm.
 
     Args:
         tensors (list): List of tensors.
@@ -44,7 +44,9 @@ def geometric_median(tensors, weights, maxiter=4, eps=1e-5, ftol=1e-6):
 
     for _ in range(maxiter):
         prev_obj_val = obj_val
-        weights = np.asarray([w / max(eps, _l2dist(median, x)) for w, x in zip(weights, tensors)])
+        weights = np.asarray([
+            w / max(eps, _l2dist(median, x)) for w, x in zip(weights, tensors)
+        ])
         weights = weights / weights.sum()
         median = weighted_average(tensors, weights)
         num_oracle_calls += 1
@@ -78,19 +80,23 @@ class GeometricMedian(AggregationFunction):
         """Aggregate tensors.
 
         Args:
-            local_tensors (list[openfl.utilities.LocalTensor]): List of local tensors to aggregate.
+            local_tensors (list[openfl.utilities.LocalTensor]): List of local
+                tensors to aggregate.
             db_iterator: iterator over history of all tensors. Columns:
                 - 'tensor_name': name of the tensor.
                     Examples for `torch.nn.Module`s: 'conv1.weight', 'fc2.bias'.
-                - 'round': 0-based number of round corresponding to this tensor.
+                - 'round': 0-based number of round corresponding to this
+                    tensor.
                 - 'tags': tuple of tensor tags. Tags that can appear:
                     - 'model' indicates that the tensor is a model parameter.
-                    - 'trained' indicates that tensor is a part of a training result.
-                        These tensors are passed to the aggregator node after local learning.
-                    - 'aggregated' indicates that tensor is a result of aggregation.
-                        These tensors are sent to collaborators for the next round.
-                    - 'delta' indicates that value is a difference between rounds
-                        for a specific tensor.
+                    - 'trained' indicates that tensor is a part of a training
+                        result. These tensors are passed to the aggregator
+                        node after local learning.
+                    - 'aggregated' indicates that tensor is a result of
+                        aggregation. These tensors are sent to collaborators
+                        for the next round.
+                    - 'delta' indicates that value is a difference between
+                        rounds for a specific tensor.
                     also one of the tags is a collaborator name
                     if it corresponds to a result of a local task.
 
