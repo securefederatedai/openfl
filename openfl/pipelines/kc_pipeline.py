@@ -1,8 +1,6 @@
 # Copyright (C) 2020-2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-
 """KCPipeline module."""
-
 
 import copy as co
 import gzip as gz
@@ -18,7 +16,7 @@ class KmeansTransformer(Transformer):
     """K-means transformer class for quantizing input data.
 
     This class is a transformer that uses the K-means method for quantization.
-    
+
     Attributes:
         n_cluster (int): The number of clusters for the K-means.
         lossy (bool): Indicates if the transformer is lossy.
@@ -28,7 +26,8 @@ class KmeansTransformer(Transformer):
         """Initialize KmeansTransformer.
 
         Args:
-            n_cluster (int, optional): The number of clusters for the K-means. Defaults to 6.
+            n_cluster (int, optional): The number of clusters for the K-means.
+                Defaults to 6.
         """
         self.lossy = True
         self.n_cluster = n_cluster
@@ -46,11 +45,12 @@ class KmeansTransformer(Transformer):
         """
         metadata = {'int_list': list(data.shape)}
         # clustering
-        k_means = cluster.KMeans(n_clusters=self.n_cluster, n_init=self.n_cluster)
+        k_means = cluster.KMeans(n_clusters=self.n_cluster,
+                                 n_init=self.n_cluster)
         data = data.reshape((-1, 1))
         if data.shape[0] >= self.n_cluster:
-            k_means = cluster.KMeans(
-                n_clusters=self.n_cluster, n_init=self.n_cluster)
+            k_means = cluster.KMeans(n_clusters=self.n_cluster,
+                                     n_init=self.n_cluster)
             k_means.fit(data)
             quantized_values = k_means.cluster_centers_.squeeze()
             indices = k_means.labels_
@@ -64,11 +64,13 @@ class KmeansTransformer(Transformer):
         return int_array, metadata
 
     def backward(self, data, metadata, **kwargs):
-        """Recover data array back to the original numerical type and the shape.
+        """Recover data array back to the original numerical type and the
+        shape.
 
         Args:
             data: The flattened numpy array.
-            metadata: The dictionary containing information for recovering to original data array.
+            metadata: The dictionary containing information for recovering to
+                original data array.
 
         Returns:
             data: The numpy array with original numerical type and shape.
@@ -86,13 +88,15 @@ class KmeansTransformer(Transformer):
 
     @staticmethod
     def _float_to_int(np_array):
-        """Create look-up table for conversion between floating and integer types.
+        """Create look-up table for conversion between floating and integer
+        types.
 
         Args:
             np_array: A Numpy array.
 
         Returns:
-            int_array: The input Numpy float array converted to an integer array.
+            int_array: The input Numpy float array converted to an integer
+                array.
             int_to_float_map: The dictionary mapping integers to floats.
         """
         flatten_array = np_array.reshape(-1)
@@ -113,7 +117,7 @@ class KmeansTransformer(Transformer):
 
 class GZIPTransformer(Transformer):
     """GZIP transformer class for losslessly compressing data.
-    
+
     Attributes:
         lossy (bool): Indicates if the transformer is lossy.
     """
@@ -155,7 +159,7 @@ class GZIPTransformer(Transformer):
 
 class KCPipeline(TransformationPipeline):
     """A pipeline class to compress data lossly using k-means and GZIP methods.
-    
+
     Attributes:
         p (float): The amount of sparsity for compression.
         n_cluster (int): The number of K-mean clusters.
@@ -165,8 +169,10 @@ class KCPipeline(TransformationPipeline):
         """Initialize a pipeline of transformers.
 
         Args:
-            p_sparsity (float, optional): The amount of sparsity for compression. Defaults to 0.01.
-            n_clusters (int, optional): The number of K-mean clusters. Defaults to 6.
+            p_sparsity (float, optional): The amount of sparsity for
+                compression. Defaults to 0.01.
+            n_clusters (int, optional): The number of K-mean clusters.
+                Defaults to 6.
             **kwargs: Additional keyword arguments.
         """
         # instantiate each transformer
