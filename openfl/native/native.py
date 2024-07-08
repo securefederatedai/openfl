@@ -1,8 +1,9 @@
 # Copyright (C) 2020-2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-"""openfl Native functions module.
+"""Openfl Native functions module.
 
-This file defines openfl entrypoints to be used directly through python (not CLI)
+This file defines openfl entrypoints to be used directly through python (not
+CLI)
 """
 
 import logging
@@ -30,7 +31,8 @@ def setup_plan(log_level='CRITICAL'):
     """Dump the plan with all defaults and overrides set.
 
     Args:
-        log_level (str, optional): The log level Whether to save the plan to disk. 
+        log_level (str, optional): The log level Whether to save the plan to
+            disk.
         Defaults to 'CRITICAL'.
 
     Returns:
@@ -53,10 +55,11 @@ def setup_plan(log_level='CRITICAL'):
 
 def flatten(config, return_complete=False):
     """Flatten nested config.
-    
+
     Args:
         config (dict): The configuration dictionary to flatten.
-        return_complete (bool, optional): Whether to return the complete flattened config. Defaults to False.
+        return_complete (bool, optional): Whether to return the complete
+            flattened config. Defaults to False.
 
     Returns:
         flattened_config (dict): The flattened configuration dictionary.
@@ -65,7 +68,8 @@ def flatten(config, return_complete=False):
     if not return_complete:
         keys_to_remove = [
             k for k, v in flattened_config.items()
-            if ('defaults' in k or v is None)]
+            if ('defaults' in k or v is None)
+        ]
     else:
         keys_to_remove = [k for k, v in flattened_config.items() if v is None]
     for k in keys_to_remove:
@@ -81,8 +85,10 @@ def update_plan(override_config, plan=None, resolve=True):
 
     Args:
         override_config (dict): A dictionary of values to override in the plan.
-        plan (Plan, optional): The plan to update. If None, a new plan is set up. Defaults to None.
-        resolve (bool, optional): Whether to resolve the plan. Defaults to True.
+        plan (Plan, optional): The plan to update. If None, a new plan is set
+            up. Defaults to None.
+        resolve (bool, optional): Whether to resolve the plan. Defaults to
+            True.
 
     Returns:
         plan (object): The updated plan.
@@ -110,7 +116,9 @@ def update_plan(override_config, plan=None, resolve=True):
             logger.info(f'Updating {key} to {val}... ')
         else:
             # TODO: We probably need to validate the new key somehow
-            logger.info(f'Did not find {key} in config. Make sure it should exist. Creating...')
+            logger.info(
+                f'Did not find {key} in config. Make sure it should exist. Creating...'
+            )
         if type(val) is list:
             for idx, v in enumerate(val):
                 flat_plan_config[f'{key}.{idx}'] = v
@@ -128,7 +136,8 @@ def unflatten(config, separator='.'):
 
     Args:
         config (dict): The flattened configuration dictionary to unfold.
-        separator (str, optional): The separator used in the flattened config. Defaults to '.'.
+        separator (str, optional): The separator used in the flattened config.
+            Defaults to '.'.
 
     Returns:
         config (dict): The unfolded configuration dictionary.
@@ -139,7 +148,7 @@ def unflatten(config, separator='.'):
 
 def setup_logging(level='INFO', log_file=None):
     """Initializes logging settings.
-    
+
     Args:
         level (str, optional): The log level. Defaults to 'INFO'.
         log_file (str, optional): The name of the file to log to.
@@ -163,19 +172,23 @@ def setup_logging(level='INFO', log_file=None):
     if log_file:
         fh = logging.FileHandler(log_file)
         formatter = logging.Formatter(
-            '%(asctime)s %(levelname)s %(message)s %(filename)s:%(lineno)d'
-        )
+            '%(asctime)s %(levelname)s %(message)s %(filename)s:%(lineno)d')
         fh.setFormatter(formatter)
         handlers.append(fh)
 
     console = Console(width=160)
     handlers.append(RichHandler(console=console))
-    basicConfig(level=level, format='%(message)s',
-                datefmt='[%X]', handlers=handlers)
+    basicConfig(level=level,
+                format='%(message)s',
+                datefmt='[%X]',
+                handlers=handlers)
 
 
-def init(workspace_template: str = 'default', log_level: str = 'INFO',
-         log_file: str = None, agg_fqdn: str = None, col_names=None):
+def init(workspace_template: str = 'default',
+         log_level: str = 'INFO',
+         log_file: str = None,
+         agg_fqdn: str = None,
+         col_names=None):
     """Initializes the openfl package.
 
     It performs the following tasks:
@@ -192,20 +205,21 @@ def init(workspace_template: str = 'default', log_level: str = 'INFO',
         5. Setup logging
 
     Args:
-        workspace_template (str): The template that should be used as the basis for 
-            the experiment.  Defaults to 'default'.
-            Other options include are any of the template names [keras_cnn_mnist, 
-            tf_2dunet, tf_cnn_histology, mtorch_cnn_histology, torch_cnn_mnist].
-        log_level (str): Log level for logging. METRIC level is available. Defaults 
-            to 'INFO'.
-        log_file (str): Name of the file in which the log will be duplicated. If None, 
-            logs are not saved to a file. Defaults to None.
-        agg_fqdn (str): The local node's fully qualified domain name (if it can't be
-            resolved automatically). Defaults to None.
-        col_names (list[str]): The names of the collaborators that will be created. 
-            These collaborators will be set up to participate in the experiment, 
-            but are not required to. Defaults to None.
-          
+        workspace_template (str): The template that should be used as the
+            basis for the experiment.  Defaults to 'default'.
+            Other options include are any of the template names
+            [keras_cnn_mnist, tf_2dunet, tf_cnn_histology, 
+            mtorch_cnn_histology, torch_cnn_mnist].
+        log_level (str): Log level for logging. METRIC level is available.
+            Defaults to 'INFO'.
+        log_file (str): Name of the file in which the log will be duplicated.
+            If None, logs are not saved to a file. Defaults to None.
+        agg_fqdn (str): The local node's fully qualified domain name (if it
+            can't be resolved automatically). Defaults to None.
+        col_names (list[str]): The names of the collaborators that will be
+            created. These collaborators will be set up to participate in the 
+            experiment, but are not required to. Defaults to None.
+
     Returns:
         None
     """
@@ -218,10 +232,10 @@ def init(workspace_template: str = 'default', log_level: str = 'INFO',
     aggregator.certify(agg_fqdn, silent=True)
     data_path = 1
     for col_name in col_names:
-        collaborator.create(
-            col_name, str(data_path), silent=True)
-        collaborator.generate_cert_request(
-            col_name, silent=True, skip_package=True)
+        collaborator.create(col_name, str(data_path), silent=True)
+        collaborator.generate_cert_request(col_name,
+                                           silent=True,
+                                           skip_package=True)
         collaborator.certify(col_name, silent=True)
         data_path += 1
 
@@ -253,18 +267,22 @@ def run_experiment(collaborator_dict: dict, override_config: dict = None):
     """Core function that executes the FL Plan.
 
     Args:
-        collaborator_dict (dict): A dictionary mapping collaborator names to their federated models.
+        collaborator_dict (dict): A dictionary mapping collaborator names to
+            their federated models.
             Example: {collaborator_name(str): FederatedModel}
-            This dictionary defines which collaborators will participate in the experiment, 
-            as well as a reference to that collaborator's federated model.
-        override_config (dict, optional): A dictionary of values to override in the plan. Defaults to None.
+            This dictionary defines which collaborators will participate in
+            the experiment, as well as a reference to that collaborator's
+            federated model.
+        override_config (dict, optional): A dictionary of values to override
+            in the plan. Defaults to None.
             Example: dict {flplan.key : flplan.value}
             Override any of the plan parameters at runtime using this
             dictionary. To get a list of the available options, execute
             `fx.get_plan()`
 
     Returns:
-        model: Final Federated model. The model resulting from the federated learning experiment
+        model: Final Federated model. The model resulting from the federated
+            learning experiment
     """
     from sys import path
 
@@ -293,9 +311,7 @@ def run_experiment(collaborator_dict: dict, override_config: dict = None):
     init_state_path = plan.config['aggregator']['settings']['init_state_path']
     rounds_to_train = plan.config['aggregator']['settings']['rounds_to_train']
     tensor_dict, holdout_params = split_tensor_dict_for_holdouts(
-        logger,
-        model.get_tensor_dict(False)
-    )
+        logger, model.get_tensor_dict(False))
 
     model_snap = utils.construct_model_proto(tensor_dict=tensor_dict,
                                              round_number=0,
@@ -311,9 +327,10 @@ def run_experiment(collaborator_dict: dict, override_config: dict = None):
 
     # get the collaborators
     collaborators = {
-        collaborator: get_collaborator(
-            plan, collaborator, collaborator_dict[collaborator], aggregator
-        ) for collaborator in plan.authorized_cols
+        collaborator:
+        get_collaborator(plan, collaborator, collaborator_dict[collaborator],
+                         aggregator)
+        for collaborator in plan.authorized_cols
     }
 
     for _ in range(rounds_to_train):
@@ -322,18 +339,22 @@ def run_experiment(collaborator_dict: dict, override_config: dict = None):
             collaborator.run_simulation()
 
     # Set the weights for the final model
-    model.rebuild_model(
-        rounds_to_train - 1, aggregator.last_tensor_dict, validation=True)
+    model.rebuild_model(rounds_to_train - 1,
+                        aggregator.last_tensor_dict,
+                        validation=True)
     return model
 
 
 def get_plan(fl_plan=None, indent=4, sort_keys=True):
     """Returns a string representation of the current Plan.
-    
+
     Args:
-        fl_plan (Plan): The plan to get a string representation of. If None, a new plan is set up. Defaults to None.
-        indent (int): The number of spaces to use for indentation in the string representation. Defaults to 4.
-        sort_keys (bool): Whether to sort the keys in the string representation. Defaults to True.
+        fl_plan (Plan): The plan to get a string representation of. If None, a
+            new plan is set up. Defaults to None.
+        indent (int): The number of spaces to use for indentation in the
+            string representation. Defaults to 4.
+        sort_keys (bool): Whether to sort the keys in the string
+            representation. Defaults to True.
 
     Returns:
         str: A string representation of the plan.
