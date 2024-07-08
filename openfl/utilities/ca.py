@@ -7,14 +7,17 @@ import os
 def get_credentials(folder_path):
     """Get credentials from folder by template.
 
-    This function retrieves the root certificate, key, and certificate from the specified folder. 
-    The files are identified by their extensions: '.key' for the key, '.crt' for the certificate, and 'root_ca' for the root certificate.
+    This function retrieves the root certificate, key, and certificate from
+    the specified folder.
+    The files are identified by their extensions: '.key' for the key, '.crt'
+    for the certificate, and 'root_ca' for the root certificate.
 
     Args:
         folder_path (str): The path to the folder containing the credentials.
 
     Returns:
-        Tuple[Optional[str], Optional[str], Optional[str]]: The paths to the root certificate, key, and certificate. 
+        Tuple[Optional[str], Optional[str], Optional[str]]: The paths to the
+            root certificate, key, and certificate.
             If a file is not found, its corresponding value is None.
     """
     root_ca, key, cert = None, None, None

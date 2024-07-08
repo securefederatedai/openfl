@@ -1,6 +1,5 @@
 # Copyright (C) 2020-2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-
 """CA module."""
 
 import base64
@@ -46,7 +45,8 @@ def get_token(name, ca_url, ca_path='.'):
     pki_dir = ca_path / CA_PKI_DIR
     step_path, _ = get_ca_bin_paths(ca_path)
     if not step_path:
-        raise Exception('Step-CA is not installed!\nRun `fx pki install` first')
+        raise Exception(
+            'Step-CA is not installed!\nRun `fx pki install` first')
 
     priv_json = step_config_dir / 'secrets' / 'priv.json'
     pass_file = pki_dir / CA_PASSWORD_FILE
@@ -55,7 +55,9 @@ def get_token(name, ca_url, ca_path='.'):
         token = subprocess.check_output(
             f'{step_path} ca token {name} '
             f'--key {priv_json} --root {root_crt} '
-            f'--password-file {pass_file} 'f'--ca-url {ca_url}', shell=True)
+            f'--password-file {pass_file} '
+            f'--ca-url {ca_url}',
+            shell=True)
     except subprocess.CalledProcessError as exc:
         logger.error(f'Error code {exc.returncode}: {exc.output}')
         sys.exit(1)
@@ -121,12 +123,15 @@ def certify(name, cert_path: Path, token_with_cert, ca_path: Path):
         download_step_bin(prefix=ca_path)
         step_path, _ = get_ca_bin_paths(ca_path)
     if not step_path:
-        raise Exception('Step-CA is not installed!\nRun `fx pki install` first')
+        raise Exception(
+            'Step-CA is not installed!\nRun `fx pki install` first')
 
     with open(f'{cert_path}/root_ca.crt', mode='wb') as file:
         file.write(root_certificate)
-    check_call(f'{step_path} ca certificate {name} {cert_path}/{name}.crt '
-               f'{cert_path}/{name}.key --kty EC --curve P-384 -f --token {token}', shell=True)
+    check_call(
+        f'{step_path} ca certificate {name} {cert_path}/{name}.crt '
+        f'{cert_path}/{name}.key --kty EC --curve P-384 -f --token {token}',
+        shell=True)
 
 
 def remove_ca(ca_path):
@@ -155,12 +160,13 @@ def install(ca_path, ca_url, password):
     os.environ['STEPPATH'] = str(step_config_dir)
     step_path, step_ca_path = get_ca_bin_paths(ca_path)
 
-    if not (step_path and step_ca_path and step_path.exists() and step_ca_path.exists()):
+    if not (step_path and step_ca_path and step_path.exists()
+            and step_ca_path.exists()):
         download_step_bin(prefix=ca_path, confirmation=True)
         download_step_ca_bin(prefix=ca_path, confirmation=False)
     step_config_dir = ca_path / CA_STEP_CONFIG_DIR
-    if (not step_config_dir.exists()
-            or confirm('CA exists, do you want to recreate it?', default=True)):
+    if (not step_config_dir.exists() or confirm(
+            'CA exists, do you want to recreate it?', default=True)):
         _create_ca(ca_path, ca_url, password)
     _configure(step_config_dir)
 
@@ -175,7 +181,8 @@ def run_ca(step_ca, pass_file, ca_json):
     """
     if _check_kill_process('step-ca', confirmation=True):
         logger.info('Up CA server')
-        check_call(f'{step_ca} --password-file {pass_file} {ca_json}', shell=True)
+        check_call(f'{step_ca} --password-file {pass_file} {ca_json}',
+                   shell=True)
 
 
 def _check_kill_process(pstring, confirmation=False):
@@ -183,14 +190,16 @@ def _check_kill_process(pstring, confirmation=False):
 
     Args:
         pstring (str): Name of the process.
-        confirmation (bool, optional): If True, ask for confirmation before killing the process. Defaults to False.
+        confirmation (bool, optional): If True, ask for confirmation before
+            killing the process. Defaults to False.
 
     Returns:
         bool: True if the process was killed, False otherwise.
     """
     pids = []
     proc = subprocess.Popen(f'ps ax | grep {pstring} | grep -v grep',
-                            shell=True, stdout=subprocess.PIPE)
+                            shell=True,
+                            stdout=subprocess.PIPE)
     text = proc.communicate()[0].decode('utf-8')
 
     for line in text.splitlines():
@@ -198,7 +207,8 @@ def _check_kill_process(pstring, confirmation=False):
         pids.append(fields[0])
 
     if len(pids):
-        if confirmation and not confirm('CA server is already running. Stop him?', default=True):
+        if confirmation and not confirm(
+                'CA server is already running. Stop him?', default=True):
             return False
         for pid in pids:
             os.kill(int(pid), signal.SIGKILL)
@@ -225,7 +235,8 @@ def _create_ca(ca_path: Path, ca_url: str, password: str):
         f.write(password)
     os.chmod(f'{pki_dir}/pass_file', 0o600)
     step_path, step_ca_path = get_ca_bin_paths(ca_path)
-    if not (step_path and step_ca_path and step_path.exists() and step_ca_path.exists()):
+    if not (step_path and step_ca_path and step_path.exists()
+            and step_ca_path.exists()):
         logger.error('Could not find step-ca binaries in the path specified')
         sys.exit(1)
 
@@ -237,19 +248,16 @@ def _create_ca(ca_path: Path, ca_url: str, password: str):
         f'{step_path} ca init --name name --dns {name} '
         f'--address {ca_url}  --provisioner prov '
         f'--password-file {pki_dir}/pass_file',
-        shell=True
-    )
+        shell=True)
 
     check_call(f'{step_path} ca provisioner remove prov --all', shell=True)
     check_call(
         f'{step_path} crypto jwk create {step_config_dir}/certs/pub.json '
         f'{step_config_dir}/secrets/priv.json --password-file={pki_dir}/pass_file',
-        shell=True
-    )
+        shell=True)
     check_call(
         f'{step_path} ca provisioner add provisioner {step_config_dir}/certs/pub.json',
-        shell=True
-    )
+        shell=True)
 
 
 def _configure(step_config_dir):
