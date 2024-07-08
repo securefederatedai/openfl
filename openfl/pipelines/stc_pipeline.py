@@ -1,6 +1,5 @@
 # Copyright (C) 2020-2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-
 """STCPipelinemodule."""
 
 import gzip as gz
@@ -18,7 +17,7 @@ class SparsityTransformer(Transformer):
         p (float): The sparsity ratio.
         lossy (bool): A flag indicating if the transformation is lossy.
     """
-    
+
     def __init__(self, p=0.01):
         """Initialize.
 
@@ -29,13 +28,15 @@ class SparsityTransformer(Transformer):
         self.p = p
 
     def forward(self, data, **kwargs):
-        """Sparsify data and pass over only non-sparsified elements by reducing the array size.
+        """Sparsify data and pass over only non-sparsified elements by reducing
+        the array size.
 
         Args:
             data: an numpy array from the model tensor_dict.
 
         Returns:
-            sparse_data: a flattened, sparse representation of the input tensor.
+            sparse_data: a flattened, sparse representation of the input
+                tensor.
             metadata: dictionary to store a list of meta information.
         """
         metadata = {'int_list': list(data.shape)}
@@ -102,7 +103,8 @@ class TernaryTransformer(Transformer):
         self.lossy = True
 
     def forward(self, data, **kwargs):
-        """Ternerize data into positive mean value, negative mean value and zero value.
+        """Ternerize data into positive mean value, negative mean value and
+        zero value.
 
         Args:
             data: an flattened numpy array
@@ -128,7 +130,7 @@ class TernaryTransformer(Transformer):
                 to original data array.
 
         Returns:
-            metadata: dictionary to contain information for recovering back 
+            metadata: dictionary to contain information for recovering back
                 to original data array.
             data: an numpy array with original numerical type.
         """
@@ -143,13 +145,15 @@ class TernaryTransformer(Transformer):
 
     @staticmethod
     def _float_to_int(np_array):
-        """Create look-up table for conversion between floating and integer types.
+        """Create look-up table for conversion between floating and integer
+        types.
 
         Args:
-            np_array: A numpy array. 
+            np_array: A numpy array.
 
         Returns:
-            int_array: The input numpy float array converted to an integer array.
+            int_array: The input numpy float array converted to an integer
+                array.
             int_to_float_map: The dictionary mapping integers to floats.
         """
         flatten_array = np_array.reshape(-1)
@@ -187,7 +191,7 @@ class GZIPTransformer(Transformer):
 
         Returns:
             compressed_bytes: The compressed data.
-            metadata: dictionary to contain information for recovering back 
+            metadata: dictionary to contain information for recovering back
                 to original data array
         """
         bytes_ = data.astype(np.float32).tobytes()
@@ -200,11 +204,12 @@ class GZIPTransformer(Transformer):
 
         Args:
             data: an numpy array with non-zero values.
-            metadata: dictionary to contain information for recovering back 
+            metadata: dictionary to contain information for recovering back
                 to original data array.
 
         Returns:
-            data: A numpy array with the original numerical type after decompression.
+            data: A numpy array with the original numerical type after
+                decompression.
         """
         decompressed_bytes_ = gz.decompress(data)
         data = np.frombuffer(decompressed_bytes_, dtype=np.float32)
@@ -212,7 +217,8 @@ class GZIPTransformer(Transformer):
 
 
 class STCPipeline(TransformationPipeline):
-    """A pipeline class to compress data lossly using sparsity and ternarization methods.
+    """A pipeline class to compress data lossly using sparsity and
+    ternarization methods.
 
     Attributes:
         p (float): The sparsity factor.
@@ -223,7 +229,8 @@ class STCPipeline(TransformationPipeline):
 
         Args:
             p_sparsity (float, optional): The sparsity factor. Defaults to 0.1.
-            n_clusters (int, optional): The number of K-mean clusters. Defaults to 6.
+            n_clusters (int, optional): The number of K-mean clusters.
+                Defaults to 6.
             **kwargs: Additional keyword arguments for the pipeline.
 
         Returns:
@@ -231,5 +238,9 @@ class STCPipeline(TransformationPipeline):
         """
         # instantiate each transformer
         self.p = p_sparsity
-        transformers = [SparsityTransformer(self.p), TernaryTransformer(), GZIPTransformer()]
+        transformers = [
+            SparsityTransformer(self.p),
+            TernaryTransformer(),
+            GZIPTransformer()
+        ]
         super(STCPipeline, self).__init__(transformers=transformers, **kwargs)
