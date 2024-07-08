@@ -1,6 +1,5 @@
 # Copyright (C) 2020-2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-
 """Task package."""
 
 import pkgutil
@@ -14,7 +13,6 @@ with catch_warnings():
         import tensorflow  # NOQA
 
 from .runner import TaskRunner  # NOQA
-
 
 if pkgutil.find_loader('tensorflow'):
     from .runner_tf import TensorFlowTaskRunner  # NOQA

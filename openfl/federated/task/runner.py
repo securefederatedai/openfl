@@ -1,8 +1,6 @@
 # Copyright (C) 2020-2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-
-"""
-Mixin class for FL models. No default implementation.
+"""Mixin class for FL models. No default implementation.
 
 Each framework will likely have its own baseclass implementation (e.g.
 TensorflowTaskRunner) that uses this mixin.
@@ -16,22 +14,26 @@ from logging import getLogger
 
 class TaskRunner:
     """Federated Learning Task Runner Class.
-    
+
     Attributes:
         data_loader: The data_loader object.
-        tensor_dict_split_fn_kwargs (dict): Key word arguments for determining which parameters 
-            to hold out from aggregation.
+        tensor_dict_split_fn_kwargs (dict): Key word arguments for determining
+            which parameters to hold out from aggregation.
         logger (logging.Logger): Logger object for logging events.
         opt_treatment (str): Treatment of current instance optimizer.
     """
 
-    def __init__(self, data_loader, tensor_dict_split_fn_kwargs: dict = None, **kwargs):
+    def __init__(self,
+                 data_loader,
+                 tensor_dict_split_fn_kwargs: dict = None,
+                 **kwargs):
         """Intializes the TaskRunner object.
 
         Args:
             data_loader: The data_loader object
-            tensor_dict_split_fn_kwargs (dict, optional): Key word arguments for determining which parameters
-                to hold out from aggregation. Default is None.
+            tensor_dict_split_fn_kwargs (dict, optional): Key word arguments
+                for determining which parameters to hold out from aggregation.
+                Default is None.
             **kwargs: Additional parameters to pass to the function.
         """
         self.data_loader = data_loader
@@ -42,7 +44,8 @@ class TaskRunner:
         # If set to none, an empty dict will be passed, currently resulting in
         # the defaults:
         # be held out
-        # holdout_tensor_names=[]     # params with these names will be held out  # NOQA:E800
+        # holdout_tensor_names=[]                   # NOQA:E800
+        # params with these names will be held out  # NOQA:E800
         # TODO: params are restored from protobufs as float32 numpy arrays, so
         # non-floats arrays and non-arrays are not currently supported for
         # passing to and from protobuf (and as a result for aggregation) - for
@@ -55,7 +58,7 @@ class TaskRunner:
 
     def set_logger(self):
         """Set up the log object.
-        
+
         Returns:
             None
         """
@@ -63,7 +66,7 @@ class TaskRunner:
 
     def set_optimizer_treatment(self, opt_treatment):
         """Change the treatment of current instance optimizer.
-                
+
         Args:
             opt_treatment (str): The optimizer treatment.
 
@@ -91,7 +94,8 @@ class TaskRunner:
         Returns:
             None
         """
-        if data_loader.get_feature_shape() != self.data_loader.get_feature_shape():
+        if data_loader.get_feature_shape(
+        ) != self.data_loader.get_feature_shape():
             raise ValueError(
                 'The data_loader feature shape is not compatible with model.')
 
@@ -125,8 +129,10 @@ class TaskRunner:
         shuffled and draws continue.
 
         Args:
-            num_batches (int, optional): Number of batches to train. Default is None.
-            use_tqdm (bool, optional): If True, use tqdm to print a progress bar. Default is False.
+            num_batches (int, optional): Number of batches to train. Default
+                is None.
+            use_tqdm (bool, optional): If True, use tqdm to print a progress
+                bar. Default is False.
 
         Returns:
             dict: {<metric>: <value>}.
@@ -142,15 +148,16 @@ class TaskRunner:
         raise NotImplementedError
 
     def get_required_tensorkeys_for_function(self, func_name, **kwargs):
-        """When running a task, a map of named tensorkeys
-        must be provided to the function as dependencies.
+        """When running a task, a map of named tensorkeys must be provided to
+        the function as dependencies.
 
         Args:
             func_name (str): The function name.
             **kwargs: Additional parameters to pass to the function.
 
         Returns:
-            list: List of required TensorKey. (TensorKey(tensor_name, origin, round_number))
+            list: List of required TensorKey. (TensorKey(tensor_name, origin,
+                round_number))
         """
         raise NotImplementedError
 
@@ -158,7 +165,8 @@ class TaskRunner:
         """Get the weights.
 
         Args:
-            with_opt_vars (bool): Specify if we also want to get the variables of the optimizer.
+            with_opt_vars (bool): Specify if we also want to get the variables
+                of the optimizer.
 
         Returns:
             dict: The weight dictionary {<tensor_name>: <value>}.
@@ -181,7 +189,7 @@ class TaskRunner:
 
     def reset_opt_vars(self):
         """Reinitialize the optimizer variables.
-        
+
         Returns:
             None
         """
@@ -204,9 +212,10 @@ class TaskRunner:
 
         Args:
             filepath (str): Path to frame-work specific file to load.
-                For frameworks that use multiple files, this string must be used to
-                derive the other filepaths.
-            **kwargs: Additional parameters to pass to the function. For future-proofing.
+                For frameworks that use multiple files, this string must be
+                    used to derive the other filepaths.
+            **kwargs: Additional parameters to pass to the function. For
+                future-proofing.
 
         Returns:
             None
@@ -214,14 +223,17 @@ class TaskRunner:
         raise NotImplementedError
 
     def save_native(self, filepath, **kwargs):
-        """Save model state in ML-framework "native" format, e.g. PyTorch pickled models.
+        """Save model state in ML-framework "native" format, e.g. PyTorch
+        pickled models.
 
         May save one file or multiple files, depending on the framework.
 
         Args:
-            filepath (str): If framework stores a single file, this should be a single file path.
-                Frameworks that store multiple files may need to derive the other paths from this path.
-            **kwargs: Additional parameters to pass to the function. For future-proofing.
+            filepath (str): If framework stores a single file, this should be
+                a single file path. Frameworks that store multiple files may 
+                need to derive the other paths from this path.
+            **kwargs: Additional parameters to pass to the function. For
+                future-proofing.
 
         Returns:
             None
