@@ -18,13 +18,15 @@ class Serializer:
 
         Args:
             object_ (object): The object to be serialized.
-            filename (str): The name of the file where the serialized object will be saved.
+            filename (str): The name of the file where the serialized object
+                will be saved.
 
         Returns:
             None
 
         Raises:
-            NotImplementedError: This is a placeholder method that needs to be implemented in subclasses.
+            NotImplementedError: This is a placeholder method that needs to be
+                implemented in subclasses.
         """
         raise NotImplementedError
 
@@ -35,12 +37,14 @@ class Serializer:
         This is a static method that is not implemented.
 
         Args:
-            filename (str): The name of the file where the serialized object is saved.
+            filename (str): The name of the file where the serialized object
+                is saved.
 
         Returns:
             object: The deserialized object.
 
         Raises:
-            NotImplementedError: This is a placeholder method that needs to be implemented in subclasses.
+            NotImplementedError: This is a placeholder method that needs to be
+                implemented in subclasses.
         """
         raise NotImplementedError

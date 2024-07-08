@@ -32,9 +32,7 @@ class FrameworkAdapterPlugin(FrameworkAdapterPluginInterface):
             if training_config is not None:
                 restored_model.compile(
                     **saving_utils.compile_args_from_training_config(
-                        training_config
-                    )
-                )
+                        training_config))
             restored_model.set_weights(weights)
             return restored_model
 
@@ -54,10 +52,13 @@ class FrameworkAdapterPlugin(FrameworkAdapterPluginInterface):
 
         # Run the function
         if version.parse(tf.__version__) <= version.parse('2.7.1'):
-            logger.warn('Applying hotfix for model serialization.'
-                        'Please consider updating to tensorflow>=2.8 to silence this warning.')
+            logger.warn(
+                'Applying hotfix for model serialization.'
+                'Please consider updating to tensorflow>=2.8 to silence this warning.'
+            )
             make_keras_picklable()
         if version.parse(tf.__version__) >= version.parse('2.13'):
+
             def build(self, var_list):
                 pass
 
@@ -70,11 +71,14 @@ class FrameworkAdapterPlugin(FrameworkAdapterPluginInterface):
 
         Args:
             model (object): The model object.
-            optimizer (object, optional): The optimizer object. Defaults to None.
-            suffix (str, optional): The suffix for the weight dictionary keys. Defaults to ''.
+            optimizer (object, optional): The optimizer object. Defaults to
+                None.
+            suffix (str, optional): The suffix for the weight dictionary keys.
+                Defaults to ''.
 
         Returns:
-            model_weights (dict): A dictionary with weight name as key and numpy ndarray as value.
+            model_weights (dict): A dictionary with weight name as key and
+                numpy ndarray as value.
         """
         model_weights = _get_weights_dict(model, suffix)
 
@@ -95,7 +99,8 @@ class FrameworkAdapterPlugin(FrameworkAdapterPluginInterface):
         Args:
             model (object): The model object.
             tensor_dict (dict): The tensor dictionary.
-            optimizer (object, optional): The optimizer object. Defaults to None.
+            optimizer (object, optional): The optimizer object. Defaults to
+                None.
             device (str, optional): The device to be used. Defaults to 'cpu'.
 
         Returns:
@@ -103,16 +108,16 @@ class FrameworkAdapterPlugin(FrameworkAdapterPluginInterface):
         """
         model_weight_names = [weight.name for weight in model.weights]
         model_weights_dict = {
-            name: tensor_dict[name] for name in model_weight_names
+            name: tensor_dict[name]
+            for name in model_weight_names
         }
         _set_weights_dict(model, model_weights_dict)
 
         if optimizer is not None:
-            opt_weight_names = [
-                weight.name for weight in optimizer.weights
-            ]
+            opt_weight_names = [weight.name for weight in optimizer.weights]
             opt_weights_dict = {
-                name: tensor_dict[name] for name in opt_weight_names
+                name: tensor_dict[name]
+                for name in opt_weight_names
             }
             _set_weights_dict(optimizer, opt_weights_dict)
 
@@ -121,8 +126,10 @@ def _get_weights_dict(obj, suffix=''):
     """Get the dictionary of weights.
 
     Args:
-        obj (Model or Optimizer): The target object that we want to get the weights.
-        suffix (str, optional): The suffix for the weight dictionary keys. Defaults to ''.
+        obj (Model or Optimizer): The target object that we want to get the
+            weights.
+        suffix (str, optional): The suffix for the weight dictionary keys.
+            Defaults to ''.
 
     Returns:
         weights_dict (dict): The weight dictionary.
@@ -139,7 +146,8 @@ def _set_weights_dict(obj, weights_dict):
     """Set the object weights with a dictionary.
 
     Args:
-        obj (Model or Optimizer): The target object that we want to set the weights.
+        obj (Model or Optimizer): The target object that we want to set the
+            weights.
         weights_dict (dict): The weight dictionary.
 
     Returns:
