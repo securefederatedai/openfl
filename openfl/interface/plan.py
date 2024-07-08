@@ -31,29 +31,48 @@ def plan(context):
 
 @plan.command()
 @pass_context
-@option('-p', '--plan_config', required=False,
+@option('-p',
+        '--plan_config',
+        required=False,
         help='Federated learning plan [plan/plan.yaml]',
-        default='plan/plan.yaml', type=ClickPath(exists=True))
-@option('-c', '--cols_config', required=False,
+        default='plan/plan.yaml',
+        type=ClickPath(exists=True))
+@option('-c',
+        '--cols_config',
+        required=False,
         help='Authorized collaborator list [plan/cols.yaml]',
-        default='plan/cols.yaml', type=ClickPath(exists=True))
-@option('-d', '--data_config', required=False,
+        default='plan/cols.yaml',
+        type=ClickPath(exists=True))
+@option('-d',
+        '--data_config',
+        required=False,
         help='The data set/shard configuration file [plan/data.yaml]',
-        default='plan/data.yaml', type=ClickPath(exists=True))
-@option('-a', '--aggregator_address', required=False,
+        default='plan/data.yaml',
+        type=ClickPath(exists=True))
+@option('-a',
+        '--aggregator_address',
+        required=False,
         help='The FQDN of the federation agregator')
-@option('-f', '--input_shape', cls=InputSpec, required=False,
-        help="The input shape to the model. May be provided as a list:\n\n"
-             "--input_shape [1,28,28]\n\n"
-             "or as a dictionary for multihead models (must be passed in quotes):\n\n"
-             "--input_shape \"{'input_0': [1, 240, 240, 4],'output_1': [1, 240, 240, 1]}\"\n\n ")
-@option('-g', '--gandlf_config', required=False,
+@option(
+    '-f',
+    '--input_shape',
+    cls=InputSpec,
+    required=False,
+    help="The input shape to the model. May be provided as a list:\n\n"
+    "--input_shape [1,28,28]\n\n"
+    "or as a dictionary for multihead models (must be passed in quotes):\n\n"
+    "--input_shape \"{'input_0': [1, 240, 240, 4],'output_1': [1, 240, 240, 1]}\"\n\n "
+)
+@option('-g',
+        '--gandlf_config',
+        required=False,
         help='GaNDLF Configuration File Path')
 def initialize(context, plan_config, cols_config, data_config,
                aggregator_address, feature_shape, gandlf_config):
     """Initialize Data Science plan.
 
-    Create a protocol buffer file of the initial model weights for the federation.
+    Create a protocol buffer file of the initial model weights for the
+    federation.
 
     Args:
         context (click.core.Context): Click context.
@@ -102,10 +121,8 @@ def initialize(context, plan_config, cols_config, data_config,
     tensor_pipe = plan.get_tensor_pipe()
 
     tensor_dict, holdout_params = split_tensor_dict_for_holdouts(
-        logger,
-        task_runner.get_tensor_dict(False),
-        **task_runner.tensor_dict_split_fn_kwargs
-    )
+        logger, task_runner.get_tensor_dict(False),
+        **task_runner.tensor_dict_split_fn_kwargs)
 
     logger.warn(f'Following parameters omitted from global initial model, '
                 f'local initialization will determine'
@@ -125,10 +142,12 @@ def initialize(context, plan_config, cols_config, data_config,
 
     if (plan_origin.config['network']['settings']['agg_addr'] == 'auto'
             or aggregator_address):
-        plan_origin.config['network']['settings']['agg_addr'] = aggregator_address or getfqdn_env()
+        plan_origin.config['network']['settings'][
+            'agg_addr'] = aggregator_address or getfqdn_env()
 
-        logger.warn(f'Patching Aggregator Addr in Plan'
-                    f" 🠆 {plan_origin.config['network']['settings']['agg_addr']}")
+        logger.warn(
+            f'Patching Aggregator Addr in Plan'
+            f" 🠆 {plan_origin.config['network']['settings']['agg_addr']}")
 
         Plan.dump(plan_config, plan_origin.config)
 
@@ -167,9 +186,12 @@ def freeze_plan(plan_config):
 
 
 @plan.command(name='freeze')
-@option('-p', '--plan_config', required=False,
+@option('-p',
+        '--plan_config',
+        required=False,
         help='Federated learning plan [plan/plan.yaml]',
-        default='plan/plan.yaml', type=ClickPath(exists=True))
+        default='plan/plan.yaml',
+        type=ClickPath(exists=True))
 def freeze(plan_config):
     """Finalize the Data Science plan.
 
@@ -178,7 +200,6 @@ def freeze(plan_config):
 
     Args:
         plan_config (str): Federated learning plan.
-
     """
     if is_directory_traversal(plan_config):
         echo('Plan config path is out of the openfl workspace scope.')
@@ -188,10 +209,9 @@ def freeze(plan_config):
 
 def switch_plan(name):
     """Switch the FL plan to this one.
-    
+
     Args:
         name (str): Name of the Federated learning plan.
-
     """
     from shutil import copyfile
     from os.path import isfile
@@ -228,12 +248,15 @@ def switch_plan(name):
 
 
 @plan.command(name='switch')
-@option('-n', '--name', required=False,
+@option('-n',
+        '--name',
+        required=False,
         help='Name of the Federated learning plan',
-        default='default', type=str)
+        default='default',
+        type=str)
 def switch_(name):
     """Switch the current plan to this plan.
-    
+
     Args:
         name (str): Name of the Federated learning plan.
     """
@@ -241,12 +264,15 @@ def switch_(name):
 
 
 @plan.command(name='save')
-@option('-n', '--name', required=False,
+@option('-n',
+        '--name',
+        required=False,
         help='Name of the Federated learning plan',
-        default='default', type=str)
+        default='default',
+        type=str)
 def save_(name):
     """Save the current plan to this plan and switch.
-    
+
     Args:
         name (str): Name of the Federated learning plan.
     """
@@ -264,12 +290,15 @@ def save_(name):
 
 
 @plan.command(name='remove')
-@option('-n', '--name', required=False,
+@option('-n',
+        '--name',
+        required=False,
         help='Name of the Federated learning plan',
-        default='default', type=str)
+        default='default',
+        type=str)
 def remove_(name):
     """Remove this plan.
-    
+
     Args:
         name (str): Name of the Federated learning plan.
     """

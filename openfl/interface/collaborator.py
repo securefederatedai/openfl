@@ -30,17 +30,28 @@ def collaborator(context):
 
 
 @collaborator.command(name='start')
-@option('-p', '--plan', required=False,
+@option('-p',
+        '--plan',
+        required=False,
         help='Federated learning plan [plan/plan.yaml]',
         default='plan/plan.yaml',
         type=ClickPath(exists=True))
-@option('-d', '--data_config', required=False,
+@option('-d',
+        '--data_config',
+        required=False,
         help='The data set/shard configuration file [plan/data.yaml]',
-        default='plan/data.yaml', type=ClickPath(exists=True))
-@option('-n', '--collaborator_name', required=True,
+        default='plan/data.yaml',
+        type=ClickPath(exists=True))
+@option('-n',
+        '--collaborator_name',
+        required=True,
         help='The certified common name of the collaborator')
-@option('-s', '--secure', required=False,
-        help='Enable Intel SGX Enclave', is_flag=True, default=False)
+@option('-s',
+        '--secure',
+        required=False,
+        help='Enable Intel SGX Enclave',
+        is_flag=True,
+        default=False)
 def start_(plan, collaborator_name, data_config, secure):
     """Start a collaborator service.
 
@@ -55,10 +66,14 @@ def start_(plan, collaborator_name, data_config, secure):
     from openfl.federated import Plan
 
     if plan and is_directory_traversal(plan):
-        echo('Federated learning plan path is out of the openfl workspace scope.')
+        echo(
+            'Federated learning plan path is out of the openfl workspace scope.'
+        )
         sys.exit(1)
     if data_config and is_directory_traversal(data_config):
-        echo('The data set/shard configuration file path is out of the openfl workspace scope.')
+        echo(
+            'The data set/shard configuration file path is out of the openfl workspace scope.'
+        )
         sys.exit(1)
 
     plan = Plan.parse(plan_config_path=Path(plan).absolute(),
@@ -73,9 +88,12 @@ def start_(plan, collaborator_name, data_config, secure):
 
 
 @collaborator.command(name='create')
-@option('-n', '--collaborator_name', required=True,
+@option('-n',
+        '--collaborator_name',
+        required=True,
         help='The certified common name of the collaborator')
-@option('-d', '--data_path',
+@option('-d',
+        '--data_path',
         help='The data path to be associated with the collaborator')
 @option('-s', '--silent', help='Do not prompt', is_flag=True)
 def create_(collaborator_name, data_path, silent):
@@ -101,9 +119,11 @@ def register_data_path(collaborator_name, data_path=None, silent=False):
     """Register dataset path in the plan/data.yaml file.
 
     Args:
-        collaborator_name (str): The collaborator whose data path to be defined.
+        collaborator_name (str): The collaborator whose data path to be
+            defined.
         data_path (str, optional): Data path. Defaults to None.
-        silent (bool, optional): Silent operation (don't prompt). Defaults to False.
+        silent (bool, optional): Silent operation (don't prompt). Defaults to
+            False.
     """
     from click import prompt
     from os.path import isfile
@@ -116,9 +136,9 @@ def register_data_path(collaborator_name, data_path=None, silent=False):
     default_data_path = f'data/{collaborator_name}'
     if not silent and data_path is None:
         dir_path = prompt('\nWhere is the data (or what is the rank)'
-                          ' for collaborator '
-                          + style(f'{collaborator_name}', fg='green')
-                          + ' ? ', default=default_data_path)
+                          ' for collaborator ' +
+                          style(f'{collaborator_name}', fg='green') + ' ? ',
+                          default=default_data_path)
     elif data_path is not None:
         dir_path = data_path
     else:
@@ -146,20 +166,23 @@ def register_data_path(collaborator_name, data_path=None, silent=False):
 
 
 @collaborator.command(name='generate-cert-request')
-@option('-n', '--collaborator_name', required=True,
+@option('-n',
+        '--collaborator_name',
+        required=True,
         help='The certified common name of the collaborator')
 @option('-s', '--silent', help='Do not prompt', is_flag=True)
-@option('-x', '--skip-package',
+@option('-x',
+        '--skip-package',
         help='Do not package the certificate signing request for export',
         is_flag=True)
-def generate_cert_request_(collaborator_name,
-                           silent, skip_package):
+def generate_cert_request_(collaborator_name, silent, skip_package):
     """Generate certificate request for the collaborator.
 
     Args:
         collaborator_name (str): The certified common name of the collaborator.
         silent (bool): Do not prompt.
-        skip_package (bool): Do not package the certificate signing request for export.
+        skip_package (bool): Do not package the certificate signing request
+            for export.
     """
     generate_cert_request(collaborator_name, silent, skip_package)
 
@@ -168,11 +191,12 @@ def generate_cert_request(collaborator_name, silent, skip_package):
     """Create collaborator certificate key pair.
 
     Then create a package with the CSR to send for signing.
-    
+
     Args:
         collaborator_name (str): The certified common name of the collaborator.
         silent (bool): Do not prompt.
-        skip_package (bool): Do not package the certificate signing request for export.
+        skip_package (bool): Do not package the certificate signing request
+            for export.
     """
     from openfl.cryptography.participant import generate_csr
     from openfl.cryptography.io import write_crt
@@ -184,9 +208,10 @@ def generate_cert_request(collaborator_name, silent, skip_package):
     subject_alternative_name = f'DNS:{common_name}'
     file_name = f'col_{common_name}'
 
-    echo(f'Creating COLLABORATOR certificate key pair with following settings: '
-         f'CN={style(common_name, fg="red")},'
-         f' SAN={style(subject_alternative_name, fg="red")}')
+    echo(
+        f'Creating COLLABORATOR certificate key pair with following settings: '
+        f'CN={style(common_name, fg="red")},'
+        f' SAN={style(subject_alternative_name, fg="red")}')
 
     client_private_key, client_csr = generate_csr(common_name, server=False)
 
@@ -258,7 +283,6 @@ def register_collaborator(file_name):
 
     Args:
         file_name (str): The name of the collaborator in this federation.
-
     """
     from os.path import isfile
     from yaml import dump
@@ -284,10 +308,8 @@ def register_collaborator(file_name):
 
     if col_name in doc['collaborators']:
 
-        echo('\nCollaborator '
-             + style(f'{col_name}', fg='green')
-             + ' is already in the '
-             + style(f'{cols_file}', fg='green'))
+        echo('\nCollaborator ' + style(f'{col_name}', fg='green') +
+             ' is already in the ' + style(f'{cols_file}', fg='green'))
 
     else:
 
@@ -295,31 +317,37 @@ def register_collaborator(file_name):
         with open(cols_file, 'w', encoding='utf-8') as f:
             dump(doc, f)
 
-        echo('\nRegistering '
-             + style(f'{col_name}', fg='green')
-             + ' in '
-             + style(f'{cols_file}', fg='green'))
+        echo('\nRegistering ' + style(f'{col_name}', fg='green') + ' in ' +
+             style(f'{cols_file}', fg='green'))
 
 
 @collaborator.command(name='certify')
-@option('-n', '--collaborator_name',
+@option('-n',
+        '--collaborator_name',
         help='The certified common name of the collaborator. This is only'
-             ' needed for single node expiriments')
+        ' needed for single node expiriments')
 @option('-s', '--silent', help='Do not prompt', is_flag=True)
-@option('-r', '--request-pkg', type=ClickPath(exists=True),
+@option('-r',
+        '--request-pkg',
+        type=ClickPath(exists=True),
         help='The archive containing the certificate signing'
-             ' request (*.zip) for a collaborator')
-@option('-i', '--import', 'import_', type=ClickPath(exists=True),
+        ' request (*.zip) for a collaborator')
+@option('-i',
+        '--import',
+        'import_',
+        type=ClickPath(exists=True),
         help='Import the archive containing the collaborator\'s'
-             ' certificate (signed by the CA)')
+        ' certificate (signed by the CA)')
 def certify_(collaborator_name, silent, request_pkg, import_):
     """Certify the collaborator.
 
     Args:
         collaborator_name (str): The certified common name of the collaborator.
         silent (bool): Do not prompt.
-        request_pkg (str): The archive containing the certificate signing request (*.zip) for a collaborator.
-        import_ (str): Import the archive containing the collaborator's certificate (signed by the CA).
+        request_pkg (str): The archive containing the certificate signing
+            request (*.zip) for a collaborator.
+        import_ (str): Import the archive containing the collaborator's
+            certificate (signed by the CA).
     """
     certify(collaborator_name, silent, request_pkg, import_)
 
@@ -330,8 +358,10 @@ def certify(collaborator_name, silent, request_pkg=None, import_=False):
     Args:
         collaborator_name (str): The certified common name of the collaborator.
         silent (bool): Do not prompt.
-        request_pkg (str, optional): The archive containing the certificate signing request (*.zip) for a collaborator. Defaults to None.
-        import_ (bool, optional): Import the archive containing the collaborator's certificate (signed by the CA). Defaults to False.
+        request_pkg (str, optional): The archive containing the certificate
+            signing request (*.zip) for a collaborator. Defaults to None.
+        import_ (bool, optional): Import the archive containing the
+            collaborator's certificate (signed by the CA). Defaults to False.
     """
     from click import confirm
     from pathlib import Path
@@ -417,14 +447,16 @@ def certify(collaborator_name, silent, request_pkg=None, import_=False):
             if confirm('Do you want to sign this certificate?'):
 
                 echo(' Signing COLLABORATOR certificate')
-                signed_col_cert = sign_certificate(csr, signing_key, signing_crt.subject)
+                signed_col_cert = sign_certificate(csr, signing_key,
+                                                   signing_crt.subject)
                 write_crt(signed_col_cert, f'{cert_name}.crt')
                 register_collaborator(CERT_DIR / 'client' / f'{file_name}.crt')
 
             else:
-                echo(style('Not signing certificate.', fg='red')
-                     + ' Please check with this collaborator to get the'
-                       ' correct certificate for this federation.')
+                echo(
+                    style('Not signing certificate.', fg='red') +
+                    ' Please check with this collaborator to get the'
+                    ' correct certificate for this federation.')
                 return
 
         if len(common_name) == 0:

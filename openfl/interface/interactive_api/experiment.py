@@ -1,6 +1,5 @@
 # Copyright (C) 2020-2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-
 """Python low-level API module."""
 import os
 import time
@@ -62,11 +61,11 @@ class FLExperiment:
     """
 
     def __init__(
-            self,
-            federation,
-            experiment_name: str = None,
-            serializer_plugin: str = 'openfl.plugins.interface_serializer.'
-                                     'cloudpickle_serializer.CloudpickleSerializer'
+        self,
+        federation,
+        experiment_name: str = None,
+        serializer_plugin: str = 'openfl.plugins.interface_serializer.'
+        'cloudpickle_serializer.CloudpickleSerializer'
     ) -> None:
         """Initialize an experiment inside a federation.
 
@@ -79,7 +78,8 @@ class FLExperiment:
             serializer_plugin (str, optional): The serializer plugin. Defaults to 'openfl.plugins.interface_serializer.cloudpickle_serializer.CloudpickleSerializer'.
         """
         self.federation = federation
-        self.experiment_name = experiment_name or 'test-' + time.strftime('%Y%m%d-%H%M%S')
+        self.experiment_name = experiment_name or 'test-' + time.strftime(
+            '%Y%m%d-%H%M%S')
         self.summary_writer = None
         self.serializer_plugin = serializer_plugin
 
@@ -109,11 +109,9 @@ class FLExperiment:
         """Assure experiment is sent to director and accepted."""
         if not self.experiment_submitted:
             self.logger.error(
-                'The experiment was not submitted to a Director service.'
-            )
-            self.logger.error(
-                'Report the experiment first: '
-                'use the Experiment.start() method.')
+                'The experiment was not submitted to a Director service.')
+            self.logger.error('Report the experiment first: '
+                              'use the Experiment.start() method.')
             return False
         return True
 
@@ -122,8 +120,7 @@ class FLExperiment:
         if not self._assert_experiment_submitted():
             return
         exp_status = self.federation.dir_client.get_experiment_status(
-            experiment_name=self.experiment_name
-        )
+            experiment_name=self.experiment_name)
         return exp_status.experiment_status
 
     def get_best_model(self):
@@ -133,7 +130,8 @@ class FLExperiment:
         tensor_dict = self.federation.dir_client.get_best_model(
             experiment_name=self.experiment_name)
 
-        return self._rebuild_model(tensor_dict, upcoming_model_status=ModelStatus.BEST)
+        return self._rebuild_model(tensor_dict,
+                                   upcoming_model_status=ModelStatus.BEST)
 
     def get_last_model(self):
         """Retrieve the aggregated model after the last round."""
@@ -142,9 +140,12 @@ class FLExperiment:
         tensor_dict = self.federation.dir_client.get_last_model(
             experiment_name=self.experiment_name)
 
-        return self._rebuild_model(tensor_dict, upcoming_model_status=ModelStatus.LAST)
+        return self._rebuild_model(tensor_dict,
+                                   upcoming_model_status=ModelStatus.LAST)
 
-    def _rebuild_model(self, tensor_dict, upcoming_model_status=ModelStatus.BEST):
+    def _rebuild_model(self,
+                       tensor_dict,
+                       upcoming_model_status=ModelStatus.BEST):
         """Use tensor dict to update model weights.
 
         This method updates the model weights using the provided tensor dictionary. If the tensor
@@ -172,7 +173,9 @@ class FLExperiment:
             self.logger.warning(warning_msg)
 
         else:
-            self.task_runner_stub.rebuild_model(tensor_dict, validation=True, device='cpu')
+            self.task_runner_stub.rebuild_model(tensor_dict,
+                                                validation=True,
+                                                device='cpu')
             self.current_model_status = upcoming_model_status
 
         return deepcopy(self.task_runner_stub.model)
@@ -181,7 +184,8 @@ class FLExperiment:
         """Stream metrics."""
         if not self._assert_experiment_submitted():
             return
-        for metric_message_dict in self.federation.dir_client.stream_metrics(self.experiment_name):
+        for metric_message_dict in self.federation.dir_client.stream_metrics(
+                self.experiment_name):
             self.logger.metric(
                 f'Round {metric_message_dict["round"]}, '
                 f'collaborator {metric_message_dict["metric_origin"]} '
@@ -195,7 +199,8 @@ class FLExperiment:
     def write_tensorboard_metric(self, metric: dict) -> None:
         """Write metric callback."""
         if not self.summary_writer:
-            self.summary_writer = SummaryWriter(f'./logs/{self.experiment_name}', flush_secs=5)
+            self.summary_writer = SummaryWriter(
+                f'./logs/{self.experiment_name}', flush_secs=5)
 
         self.summary_writer.add_scalar(
             f'{metric["metric_origin"]}/{metric["task_name"]}/{metric["metric_name"]}',
@@ -207,8 +212,7 @@ class FLExperiment:
             return
         log_message = 'Removing experiment data '
         if self.federation.dir_client.remove_experiment_data(
-                name=self.experiment_name
-        ):
+                name=self.experiment_name):
             log_message += 'succeed.'
             self.experiment_submitted = False
         else:
@@ -216,7 +220,10 @@ class FLExperiment:
 
         self.logger.info(log_message)
 
-    def prepare_workspace_distribution(self, model_provider, task_keeper, data_loader,
+    def prepare_workspace_distribution(self,
+                                       model_provider,
+                                       task_keeper,
+                                       data_loader,
                                        task_assigner,
                                        pip_install_options: Tuple[str] = ()):
         """Prepare an archive from a user workspace.
@@ -236,9 +243,12 @@ class FLExperiment:
             None
         """
         # Save serialized python objects to disc
-        self._serialize_interface_objects(model_provider, task_keeper, data_loader, task_assigner)
+        self._serialize_interface_objects(model_provider, task_keeper,
+                                          data_loader, task_assigner)
         # Save the prepared plan
-        Plan.dump(Path(f'./plan/{self.plan.name}'), self.plan.config, freeze=False)
+        Plan.dump(Path(f'./plan/{self.plan.name}'),
+                  self.plan.config,
+                  freeze=False)
 
         # PACK the WORKSPACE!
         # Prepare requirements file to restore python env
@@ -248,14 +258,20 @@ class FLExperiment:
         # Compress te workspace to restore it on collaborator
         self.arch_path = self._pack_the_workspace()
 
-    def start(self, *, model_provider, task_keeper, data_loader,
-              rounds_to_train: int,
-              task_assigner=None,
-              override_config: dict = None,
-              delta_updates: bool = False,
-              opt_treatment: str = 'RESET',
-              device_assignment_policy: str = 'CPU_ONLY',
-              pip_install_options: Tuple[str] = ()) -> None:
+    def start(
+        self,
+        *,
+        model_provider,
+        task_keeper,
+        data_loader,
+        rounds_to_train: int,
+        task_assigner=None,
+        override_config: dict = None,
+        delta_updates: bool = False,
+        opt_treatment: str = 'RESET',
+        device_assignment_policy: str = 'CPU_ONLY',
+        pip_install_options: Tuple[str] = ()
+    ) -> None:
         """Prepare workspace distribution and send to Director.
 
         A successful call of this function will result in sending the experiment workspace
@@ -281,22 +297,23 @@ class FLExperiment:
                 example: ('-f some.website', '--no-index')
         """
         if not task_assigner:
-            task_assigner = self.define_task_assigner(task_keeper, rounds_to_train)
+            task_assigner = self.define_task_assigner(task_keeper,
+                                                      rounds_to_train)
 
-        self._prepare_plan(model_provider, data_loader,
+        self._prepare_plan(model_provider,
+                           data_loader,
                            rounds_to_train,
-                           delta_updates=delta_updates, opt_treatment=opt_treatment,
+                           delta_updates=delta_updates,
+                           opt_treatment=opt_treatment,
                            device_assignment_policy=device_assignment_policy,
                            override_config=override_config,
                            model_interface_file='model_obj.pkl',
                            tasks_interface_file='tasks_obj.pkl',
                            dataloader_interface_file='loader_obj.pkl')
 
-        self.prepare_workspace_distribution(
-            model_provider, task_keeper, data_loader,
-            task_assigner,
-            pip_install_options
-        )
+        self.prepare_workspace_distribution(model_provider, task_keeper,
+                                            data_loader, task_assigner,
+                                            pip_install_options)
 
         self.logger.info('Starting experiment!')
         self.plan.resolve()
@@ -306,8 +323,7 @@ class FLExperiment:
                 name=self.experiment_name,
                 col_names=self.plan.authorized_cols,
                 arch_path=self.arch_path,
-                initial_tensor_dict=initial_tensor_dict
-            )
+                initial_tensor_dict=initial_tensor_dict)
         finally:
             self.remove_workspace_archive()
 
@@ -315,7 +331,8 @@ class FLExperiment:
             self.logger.info('Experiment was submitted to the director!')
             self.experiment_submitted = True
         else:
-            self.logger.info('Experiment could not be submitted to the director.')
+            self.logger.info(
+                'Experiment could not be submitted to the director.')
 
     def define_task_assigner(self, task_keeper, rounds_to_train):
         """Define task assigner by registered tasks.
@@ -354,6 +371,7 @@ class FLExperiment:
             raise Exception('Variable rounds_to_train must be equal 1, '
                             'because only validation tasks were given')
         if is_train_task_exist and self.is_validate_task_exist:
+
             def assigner(collaborators, round_number, **kwargs):
                 tasks_by_collaborator = {}
                 for collaborator in collaborators:
@@ -363,8 +381,10 @@ class FLExperiment:
                         tasks['aggregated_model_validate'],
                     ]
                 return tasks_by_collaborator
+
             return assigner
         elif not is_train_task_exist and self.is_validate_task_exist:
+
             def assigner(collaborators, round_number, **kwargs):
                 tasks_by_collaborator = {}
                 for collaborator in collaborators:
@@ -372,6 +392,7 @@ class FLExperiment:
                         tasks['aggregated_model_validate'],
                     ]
                 return tasks_by_collaborator
+
             return assigner
         elif is_train_task_exist and not self.is_validate_task_exist:
             raise Exception('You should define validate task!')
@@ -390,7 +411,8 @@ class FLExperiment:
             model_provider: The provider of the model used in the experiment.
 
         """
-        self.task_runner_stub = self.plan.get_core_task_runner(model_provider=model_provider)
+        self.task_runner_stub = self.plan.get_core_task_runner(
+            model_provider=model_provider)
         self.current_model_status = ModelStatus.RESTORED
         self.experiment_submitted = True
 
@@ -412,13 +434,14 @@ class FLExperiment:
         tmp_dir = 'temp_' + archive_name
         makedirs(tmp_dir, exist_ok=True)
 
-        ignore = ignore_patterns(
-            '__pycache__', 'data', 'cert', tmp_dir, '*.crt', '*.key',
-            '*.csr', '*.srl', '*.pem', '*.pbuf', '*zip')
+        ignore = ignore_patterns('__pycache__', 'data', 'cert', tmp_dir,
+                                 '*.crt', '*.key', '*.csr', '*.srl', '*.pem',
+                                 '*.pbuf', '*zip')
 
         copytree('./', tmp_dir + '/workspace', ignore=ignore)
 
-        arch_path = make_archive(archive_name, archive_type, tmp_dir + '/workspace')
+        arch_path = make_archive(archive_name, archive_type,
+                                 tmp_dir + '/workspace')
 
         rmtree(tmp_dir)
 
@@ -443,24 +466,28 @@ class FLExperiment:
         Returns:
             dict: The tensor dictionary.
         """
-        self.task_runner_stub = self.plan.get_core_task_runner(model_provider=model_provider)
+        self.task_runner_stub = self.plan.get_core_task_runner(
+            model_provider=model_provider)
         self.current_model_status = ModelStatus.INITIAL
         tensor_dict, _ = split_tensor_dict_for_holdouts(
-            self.logger,
-            self.task_runner_stub.get_tensor_dict(False),
-            **self.task_runner_stub.tensor_dict_split_fn_kwargs
-        )
+            self.logger, self.task_runner_stub.get_tensor_dict(False),
+            **self.task_runner_stub.tensor_dict_split_fn_kwargs)
         return tensor_dict
 
-    def _prepare_plan(self, model_provider, data_loader,
-                      rounds_to_train,
-                      delta_updates, opt_treatment,
-                      device_assignment_policy,
-                      override_config=None,
-                      model_interface_file='model_obj.pkl', tasks_interface_file='tasks_obj.pkl',
-                      dataloader_interface_file='loader_obj.pkl',
-                      aggregation_function_interface_file='aggregation_function_obj.pkl',
-                      task_assigner_file='task_assigner_obj.pkl'):
+    def _prepare_plan(
+            self,
+            model_provider,
+            data_loader,
+            rounds_to_train,
+            delta_updates,
+            opt_treatment,
+            device_assignment_policy,
+            override_config=None,
+            model_interface_file='model_obj.pkl',
+            tasks_interface_file='tasks_obj.pkl',
+            dataloader_interface_file='loader_obj.pkl',
+            aggregation_function_interface_file='aggregation_function_obj.pkl',
+            task_assigner_file='task_assigner_obj.pkl'):
         """Fills the plan.yaml file using user-provided settings.
 
         It sets up the network, aggregator, collaborator, data loader, task runner, 
@@ -494,16 +521,20 @@ class FLExperiment:
         # Network part of the plan
         # We keep in mind that an aggregator FQND will be the same as the directors FQDN
         # We just choose a port randomly from plan hash
-        director_fqdn = self.federation.director_node_fqdn.split(':')[0]  # We drop the port
+        director_fqdn = self.federation.director_node_fqdn.split(':')[
+            0]  # We drop the port
         self.plan.config['network']['settings']['agg_addr'] = director_fqdn
         self.plan.config['network']['settings']['tls'] = self.federation.tls
 
         # Aggregator part of the plan
-        self.plan.config['aggregator']['settings']['rounds_to_train'] = rounds_to_train
+        self.plan.config['aggregator']['settings'][
+            'rounds_to_train'] = rounds_to_train
 
         # Collaborator part
-        self.plan.config['collaborator']['settings']['delta_updates'] = delta_updates
-        self.plan.config['collaborator']['settings']['opt_treatment'] = opt_treatment
+        self.plan.config['collaborator']['settings'][
+            'delta_updates'] = delta_updates
+        self.plan.config['collaborator']['settings'][
+            'opt_treatment'] = opt_treatment
         self.plan.config['collaborator']['settings'][
             'device_assignment_policy'] = device_assignment_policy
 
@@ -527,21 +558,19 @@ class FLExperiment:
                 'model_interface_file': model_interface_file,
                 'tasks_interface_file': tasks_interface_file,
                 'dataloader_interface_file': dataloader_interface_file,
-                'aggregation_function_interface_file': aggregation_function_interface_file,
+                'aggregation_function_interface_file':
+                aggregation_function_interface_file,
                 'task_assigner_file': task_assigner_file
             }
         }
 
         if override_config:
-            self.plan = update_plan(override_config, plan=self.plan, resolve=False)
+            self.plan = update_plan(override_config,
+                                    plan=self.plan,
+                                    resolve=False)
 
-    def _serialize_interface_objects(
-            self,
-            model_provider,
-            task_keeper,
-            data_loader,
-            task_assigner
-    ):
+    def _serialize_interface_objects(self, model_provider, task_keeper,
+                                     data_loader, task_assigner):
         """Save python objects to be restored on collaborators.
 
         This method serializes the provided python objects and saves them for later use. The objects
@@ -554,7 +583,8 @@ class FLExperiment:
             task_assigner: The task assigner to be serialized.
         """
         serializer = self.plan.build(
-            self.plan.config['api_layer']['required_plugin_components']['serializer_plugin'], {})
+            self.plan.config['api_layer']['required_plugin_components']
+            ['serializer_plugin'], {})
         framework_adapter = Plan.build(model_provider.framework_plugin, {})
         # Model provider serialization may need preprocessing steps
         framework_adapter.serialization_setup()
@@ -563,12 +593,14 @@ class FLExperiment:
             'model_interface_file': model_provider,
             'tasks_interface_file': task_keeper,
             'dataloader_interface_file': data_loader,
-            'aggregation_function_interface_file': task_keeper.aggregation_functions,
+            'aggregation_function_interface_file':
+            task_keeper.aggregation_functions,
             'task_assigner_file': task_assigner
         }
 
         for filename, object_ in obj_dict.items():
-            serializer.serialize(object_, self.plan.config['api_layer']['settings'][filename])
+            serializer.serialize(
+                object_, self.plan.config['api_layer']['settings'][filename])
 
 
 class TaskKeeper:
@@ -606,7 +638,12 @@ class TaskKeeper:
         # Mapping 'task_alias' -> Task
         self._tasks: Dict[str, Task] = {}
 
-    def register_fl_task(self, model, data_loader, device, optimizer=None, round_num=None):
+    def register_fl_task(self,
+                         model,
+                         data_loader,
+                         device,
+                         optimizer=None,
+                         round_num=None):
         """Register FL tasks.
 
         The task contract should be set up by providing variable names:
@@ -637,7 +674,7 @@ class TaskKeeper:
             optimizer (optional): The optimizer to be used in the task. Defaults to None.
             round_num (optional): The round number for the task. Defaults to None.
         """
-        
+
         def decorator_with_args(training_method):
             """A high-level wrapper that allows arguments for the decorator.
 
@@ -651,6 +688,7 @@ class TaskKeeper:
             Returns:
                 function: The wrapped training method.
             """
+
             # We could pass hooks to the decorator
             # @functools.wraps(training_method)
 
@@ -661,8 +699,13 @@ class TaskKeeper:
             # Saving the task and the contract for later serialization
             function_name = training_method.__name__
             self.task_registry[function_name] = wrapper_decorator
-            contract = {'model': model, 'data_loader': data_loader,
-                        'device': device, 'optimizer': optimizer, 'round_num': round_num}
+            contract = {
+                'model': model,
+                'data_loader': data_loader,
+                'device': device,
+                'optimizer': optimizer,
+                'round_num': round_num
+            }
             self.task_contract[function_name] = contract
             # define tasks
             if optimizer:
@@ -697,6 +740,7 @@ class TaskKeeper:
         Args:
             **task_kwargs: Keyword arguments for the task settings.
         """
+
         # The highest level wrapper for allowing arguments for the decorator
         def decorator_with_args(training_method):
             # Saving the task's settings to be written in plan
@@ -706,7 +750,8 @@ class TaskKeeper:
 
         return decorator_with_args
 
-    def set_aggregation_function(self, aggregation_function: AggregationFunction):
+    def set_aggregation_function(self,
+                                 aggregation_function: AggregationFunction):
         """Set aggregation function for the task.
 
         To be serialized and sent to aggregator node.
@@ -726,12 +771,15 @@ class TaskKeeper:
         Args:
             aggregation_function: The aggregation function to be used for the task.
         """
+
         def decorator_with_args(training_method):
             if not isinstance(aggregation_function, AggregationFunction):
                 raise Exception('aggregation_function must implement '
                                 'AggregationFunction interface.')
-            self.aggregation_functions[training_method.__name__] = aggregation_function
+            self.aggregation_functions[
+                training_method.__name__] = aggregation_function
             return training_method
+
         return decorator_with_args
 
     def get_registered_tasks(self) -> Dict[str, Task]:

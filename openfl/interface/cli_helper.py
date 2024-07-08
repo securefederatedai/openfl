@@ -53,7 +53,8 @@ def tree(path):
             echo(f'{space}d {path.name}')
 
 
-def print_tree(dir_path: Path, level: int = -1,
+def print_tree(dir_path: Path,
+               level: int = -1,
                limit_to_directories: bool = False,
                length_limit: int = 1000):
     """Given a directory Path object print a visual tree structure.
@@ -61,7 +62,8 @@ def print_tree(dir_path: Path, level: int = -1,
     Args:
         dir_path (Path): The directory path.
         level (int, optional): The level of the directory. Defaults to -1.
-        limit_to_directories (bool, optional): Limit to directories. Defaults to False.
+        limit_to_directories (bool, optional): Limit to directories. Defaults
+            to False.
         length_limit (int, optional): The length limit. Defaults to 1000.
     """
     space = '    '
@@ -89,7 +91,8 @@ def print_tree(dir_path: Path, level: int = -1,
                 yield prefix + pointer + path.name
                 directories += 1
                 extension = branch if pointer == tee else space
-                yield from inner(path, prefix=prefix + extension,
+                yield from inner(path,
+                                 prefix=prefix + extension,
                                  level=level - 1)
             elif not limit_to_directories:
                 yield prefix + pointer + path.name
@@ -101,20 +104,30 @@ def print_tree(dir_path: Path, level: int = -1,
         echo(line)
     if next(iterator, None):
         echo(f'... length_limit, {length_limit}, reached, counted:')
-    echo(f'\n{directories} directories' + (f', {files} files' if files else ''))
+    echo(f'\n{directories} directories' +
+         (f', {files} files' if files else ''))
 
 
-def copytree(src, dst, symlinks=False, ignore=None,
-             ignore_dangling_symlinks=False, dirs_exist_ok=False):
+def copytree(src,
+             dst,
+             symlinks=False,
+             ignore=None,
+             ignore_dangling_symlinks=False,
+             dirs_exist_ok=False):
     """From Python 3.8 'shutil' which include 'dirs_exist_ok' option.
 
     Args:
         src (str): The source directory.
         dst (str): The destination directory.
         symlinks (bool, optional): Whether to copy symlinks. Defaults to False.
-        ignore (callable, optional): A function that takes a directory name and filenames as input parameters and returns a list of names to ignore. Defaults to None.
-        ignore_dangling_symlinks (bool, optional): Whether to ignore dangling symlinks. Defaults to False.
-        dirs_exist_ok (bool, optional): Whether to raise an exception in case dst or any missing parent directory already exists. Defaults to False.
+        ignore (callable, optional): A function that takes a directory name
+            and filenames as input parameters and returns a list of names to
+            ignore. Defaults to None.
+        ignore_dangling_symlinks (bool, optional): Whether to ignore dangling
+            symlinks. Defaults to False.
+        dirs_exist_ok (bool, optional): Whether to raise an exception in case
+            dst or any missing parent directory already exists. Defaults to
+            False.
     """
     import os
     import shutil
@@ -151,19 +164,26 @@ def copytree(src, dst, symlinks=False, ignore=None,
                     linkto = os.readlink(srcname)
                     if symlinks:
                         os.symlink(linkto, dstname)
-                        shutil.copystat(srcobj, dstname,
+                        shutil.copystat(srcobj,
+                                        dstname,
                                         follow_symlinks=not symlinks)
                     else:
                         if (not os.path.exists(linkto)
                                 and ignore_dangling_symlinks):
                             continue
                         if srcentry.is_dir():
-                            copytree(srcobj, dstname, symlinks, ignore,
+                            copytree(srcobj,
+                                     dstname,
+                                     symlinks,
+                                     ignore,
                                      dirs_exist_ok=dirs_exist_ok)
                         else:
                             copy_function(srcobj, dstname)
                 elif srcentry.is_dir():
-                    copytree(srcobj, dstname, symlinks, ignore,
+                    copytree(srcobj,
+                             dstname,
+                             symlinks,
+                             ignore,
                              dirs_exist_ok=dirs_exist_ok)
                 else:
                     copy_function(srcobj, dstname)
@@ -208,7 +228,8 @@ def get_workspace_parameter(name):
 
 
 def check_varenv(env: str = '', args: dict = None):
-    """Update "args" (dictionary) with <env: env_value> if env has a defined value in the host.
+    """Update "args" (dictionary) with <env: env_value> if env has a defined
+    value in the host.
 
     Args:
         env (str, optional): The environment variable. Defaults to ''.
@@ -265,7 +286,7 @@ def remove_line_from_file(pkg, filename):
 
 def replace_line_in_file(line, line_num_to_replace, filename):
     """Replace line at `line_num_to_replace` with `line`.
-    
+
     Args:
         line (str): The new line.
         line_num_to_replace (int): The line number to be replaced.
