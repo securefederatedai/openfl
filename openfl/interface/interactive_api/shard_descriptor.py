@@ -65,12 +65,8 @@ class ShardDescriptor:
 class DummyShardDataset(ShardDataset):
     """Dummy shard dataset class."""
 
-    def __init__(
-            self, *,
-            size: int,
-            sample_shape: List[int],
-            target_shape: List[int]
-    ):
+    def __init__(self, *, size: int, sample_shape: List[int],
+                 target_shape: List[int]):
         """Initialize DummyShardDataset.
 
         Args:
@@ -79,8 +75,10 @@ class DummyShardDataset(ShardDataset):
             target_shape (List[int]): The shape of the targets.
         """
         self.size = size
-        self.samples = np.random.randint(0, 255, (self.size, *sample_shape), np.uint8)
-        self.targets = np.random.randint(0, 255, (self.size, *target_shape), np.uint8)
+        self.samples = np.random.randint(0, 255, (self.size, *sample_shape),
+                                         np.uint8)
+        self.targets = np.random.randint(0, 255, (self.size, *target_shape),
+                                         np.uint8)
 
     def __len__(self) -> int:
         """Return the len of the dataset.
@@ -105,12 +103,8 @@ class DummyShardDataset(ShardDataset):
 class DummyShardDescriptor(ShardDescriptor):
     """Dummy shard descriptor class."""
 
-    def __init__(
-            self,
-            sample_shape: Iterable[str],
-            target_shape: Iterable[str],
-            size: int
-    ) -> None:
+    def __init__(self, sample_shape: Iterable[str],
+                 target_shape: Iterable[str], size: int) -> None:
         """Initialize DummyShardDescriptor.
 
         Args:
@@ -131,11 +125,9 @@ class DummyShardDescriptor(ShardDescriptor):
         Returns:
             ShardDataset: The shard dataset.
         """
-        return DummyShardDataset(
-            size=self.size,
-            sample_shape=self._sample_shape,
-            target_shape=self._target_shape
-        )
+        return DummyShardDataset(size=self.size,
+                                 sample_shape=self._sample_shape,
+                                 target_shape=self._target_shape)
 
     @property
     def sample_shape(self) -> List[int]:

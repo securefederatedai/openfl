@@ -1,6 +1,5 @@
 # Copyright (C) 2020-2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-
 """Adagrad adaptive aggregation module."""
 
 from typing import Dict
@@ -12,7 +11,6 @@ from openfl.utilities.optimizers.numpy import NumPyAdagrad
 from .core import AdaptiveAggregation
 from .core import AggregationFunction
 from .weighted_average import WeightedAverage
-
 
 DEFAULT_AGG_FUNC = WeightedAverage()
 
@@ -34,12 +32,15 @@ class AdagradAdaptiveAggregation(AdaptiveAggregation):
 
         Args:
             agg_func (AggregationFunction): Aggregate function for aggregating
-                parameters that are not inside the optimizer (default: WeightedAverage()).
-            params (Optional[Dict[str, np.ndarray]]): Parameters to be stored for optimization.
+                parameters that are not inside the optimizer (default:
+                WeightedAverage()).
+            params (Optional[Dict[str, np.ndarray]]): Parameters to be stored
+                for optimization.
             model_interface: Model interface instance to provide parameters.
             learning_rate (float): Tuning parameter that determines
                 the step size at each iteration.
-            initial_accumulator_value (float): Initial value for squared gradients.
+            initial_accumulator_value (float): Initial value for squared 
+                gradients.
             epsilon (float): Value for computational stability.
         """
         opt = NumPyAdagrad(params=params,
