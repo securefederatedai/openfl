@@ -1,7 +1,6 @@
 # Copyright (C) 2020-2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-"""
-pynvml CUDA Device monitor plugin module.
+"""Pynvml CUDA Device monitor plugin module.
 
 Required package: pynvml
 """
@@ -22,7 +21,7 @@ class PynvmlCUDADeviceMonitor(CUDADeviceMonitor):
 
     def get_driver_version(self) -> str:
         """Get Nvidia driver version.
-        
+
         Returns:
             str: The Nvidia driver version.
         """
@@ -30,7 +29,7 @@ class PynvmlCUDADeviceMonitor(CUDADeviceMonitor):
 
     def get_device_memory_total(self, index: int) -> int:
         """Get total memory available on the device.
-        
+
         Args:
             index (int): The index of the device.
 
@@ -43,7 +42,7 @@ class PynvmlCUDADeviceMonitor(CUDADeviceMonitor):
 
     def get_device_memory_utilized(self, index: int) -> int:
         """Get utilized memory on the device.
-        
+
         Args:
             index (int): The index of the device.
 
@@ -57,7 +56,8 @@ class PynvmlCUDADeviceMonitor(CUDADeviceMonitor):
     def get_device_utilization(self, index: int) -> str:
         """Get device utilization.
 
-        It is just a general method that returns a string that may be shown to the frontend user.
+        It is just a general method that returns a string that may be shown to
+        the frontend user.
 
         Args:
             index (int): The index of the device.
@@ -71,7 +71,7 @@ class PynvmlCUDADeviceMonitor(CUDADeviceMonitor):
 
     def get_device_name(self, index: int) -> str:
         """Get device utilization method.
-        
+
         Args:
             index (int): The index of the device.
 
