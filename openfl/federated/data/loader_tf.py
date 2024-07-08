@@ -1,6 +1,5 @@
 # Copyright (C) 2020-2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-
 """TensorflowDataLoader module."""
 
 import numpy as np
@@ -9,7 +8,8 @@ from .loader import DataLoader
 
 
 class TensorFlowDataLoader(DataLoader):
-    """A class used to represent a Federation Data Loader for TensorFlow models.
+    """A class used to represent a Federation Data Loader for TensorFlow
+    models.
 
     Attributes:
         batch_size (int): Size of batches used for all data loaders.
@@ -18,9 +18,10 @@ class TensorFlowDataLoader(DataLoader):
         X_valid (np.array): Validation features.
         y_valid (np.array): Validation labels.
     """
-    
+
     def __init__(self, batch_size, **kwargs):
-        """Initializes the TensorFlowDataLoader object with the batch size and any additional arguments.
+        """Initializes the TensorFlowDataLoader object with the batch size and
+        any additional arguments.
 
         Args:
             batch_size (int): The size of batches used for all data loaders.
@@ -48,23 +49,29 @@ class TensorFlowDataLoader(DataLoader):
         """Returns the data loader for the training data.
 
         Args:
-            batch_size (int, optional): The batch size for the data loader (default is None).
+            batch_size (int, optional): The batch size for the data loader
+                (default is None).
 
         Returns:
             DataLoader: The DataLoader object for the training data.
         """
-        return self._get_batch_generator(X=self.X_train, y=self.y_train, batch_size=batch_size)
+        return self._get_batch_generator(X=self.X_train,
+                                         y=self.y_train,
+                                         batch_size=batch_size)
 
     def get_valid_loader(self, batch_size=None):
         """Returns the data loader for the validation data.
 
         Args:
-            batch_size (int, optional): The batch size for the data loader (default is None).
+            batch_size (int, optional): The batch size for the data loader
+                (default is None).
 
         Returns:
             DataLoader: The DataLoader object for the validation data.
         """
-        return self._get_batch_generator(X=self.X_valid, y=self.y_valid, batch_size=batch_size)
+        return self._get_batch_generator(X=self.X_valid,
+                                         y=self.y_valid,
+                                         batch_size=batch_size)
 
     def get_train_data_size(self):
         """Returns the total number of training samples.
