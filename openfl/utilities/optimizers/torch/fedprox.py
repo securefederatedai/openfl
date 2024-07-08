@@ -1,6 +1,5 @@
 # Copyright (C) 2020-2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-
 """PyTorch FedProx optimizer module."""
 
 import math
@@ -13,10 +12,11 @@ from torch.optim.optimizer import required
 class FedProxOptimizer(Optimizer):
     """FedProx optimizer.
 
-    Implements the FedProx optimization algorithm using PyTorch. 
-    FedProx is a federated learning optimization algorithm designed to handle non-IID data. 
-    It introduces a proximal term to the federated averaging algorithm to reduce the impact 
-    of devices with outlying updates.
+    Implements the FedProx optimization algorithm using PyTorch.
+    FedProx is a federated learning optimization algorithm designed to handle
+    non-IID data.
+    It introduces a proximal term to the federated averaging algorithm to
+    reduce the impact of devices with outlying updates.
 
     Paper: https://arxiv.org/pdf/1812.06127.pdf
 
@@ -73,7 +73,8 @@ class FedProxOptimizer(Optimizer):
         }
 
         if nesterov and (momentum <= 0 or dampening != 0):
-            raise ValueError('Nesterov momentum requires a momentum and zero dampening')
+            raise ValueError(
+                'Nesterov momentum requires a momentum and zero dampening')
 
         super(FedProxOptimizer, self).__init__(params, defaults)
 
@@ -92,7 +93,8 @@ class FedProxOptimizer(Optimizer):
         """Perform a single optimization step.
 
         Args:
-            closure (callable, optional): A closure that reevaluates the model and returns the loss.
+            closure (callable, optional): A closure that reevaluates the model
+                and returns the loss.
 
         Returns:
             Loss value if closure is provided. None otherwise.
@@ -117,7 +119,8 @@ class FedProxOptimizer(Optimizer):
                 if momentum != 0:
                     param_state = self.state[p]
                     if 'momentum_buffer' not in param_state:
-                        buf = param_state['momentum_buffer'] = torch.clone(d_p).detach()
+                        buf = param_state['momentum_buffer'] = torch.clone(
+                            d_p).detach()
                     else:
                         buf = param_state['momentum_buffer']
                         buf.mul_(momentum).add_(d_p, alpha=1 - dampening)
@@ -150,24 +153,33 @@ class FedProxAdam(Optimizer):
         params: Parameters to be stored for optimization.
         mu: Proximal term coefficient.
         lr: Learning rate.
-        betas: Coefficients used for computing running averages of gradient and its square.
+        betas: Coefficients used for computing running averages of gradient
+            and its square.
         eps: Value for computational stability.
         weight_decay: Weight decay (L2 penalty).
         amsgrad: Whether to use the AMSGrad variant of this algorithm.
     """
 
-    def __init__(self, params, mu=0, lr=1e-3, betas=(0.9, 0.999), eps=1e-8,
-                 weight_decay=0, amsgrad=False):
+    def __init__(self,
+                 params,
+                 mu=0,
+                 lr=1e-3,
+                 betas=(0.9, 0.999),
+                 eps=1e-8,
+                 weight_decay=0,
+                 amsgrad=False):
         """Initialize the FedProxAdam optimizer.
 
         Args:
             params: Parameters to be stored for optimization.
             mu: Proximal term coefficient. Defaults to 0.
             lr: Learning rate. Defaults to 1e-3.
-            betas: Coefficients used for computing running averages of gradient and its square. Defaults to (0.9, 0.999).
+            betas: Coefficients used for computing running averages of
+                gradient and its square. Defaults to (0.9, 0.999).
             eps: Value for computational stability. Defaults to 1e-8.
             weight_decay: Weight decay (L2 penalty). Defaults to 0.
-            amsgrad: Whether to use the AMSGrad variant of this algorithm. Defaults to False.
+            amsgrad: Whether to use the AMSGrad variant of this algorithm.
+                Defaults to False.
 
         Raises:
             ValueError: If learning rate is less than 0.
@@ -188,8 +200,14 @@ class FedProxAdam(Optimizer):
             raise ValueError(f'Invalid weight_decay value: {weight_decay}')
         if mu < 0.0:
             raise ValueError(f'Invalid mu value: {mu}')
-        defaults = {'lr': lr, 'betas': betas, 'eps': eps,
-                    'weight_decay': weight_decay, 'amsgrad': amsgrad, 'mu': mu}
+        defaults = {
+            'lr': lr,
+            'betas': betas,
+            'eps': eps,
+            'weight_decay': weight_decay,
+            'amsgrad': amsgrad,
+            'mu': mu
+        }
         super(FedProxAdam, self).__init__(params, defaults)
 
     def __setstate__(self, state):
@@ -216,7 +234,8 @@ class FedProxAdam(Optimizer):
         """Perform a single optimization step.
 
         Args:
-            closure (callable, optional): A closure that reevaluates the model and returns the loss.
+            closure (callable, optional): A closure that reevaluates the model
+                and returns the loss.
 
         Returns:
             Loss value if closure is provided. None otherwise.
@@ -248,7 +267,8 @@ class FedProxAdam(Optimizer):
                     if len(state) == 0:
                         state['step'] = 0
                         # Exponential moving average of gradient values
-                        state['exp_avg'] = torch.zeros_like(p, memory_format=torch.preserve_format)
+                        state['exp_avg'] = torch.zeros_like(
+                            p, memory_format=torch.preserve_format)
                         # Exponential moving average of squared gradient values
                         state['exp_avg_sq'] = torch.zeros_like(
                             p, memory_format=torch.preserve_format)
@@ -269,37 +289,15 @@ class FedProxAdam(Optimizer):
                     state_steps.append(state['step'])
 
             beta1, beta2 = group['betas']
-            self.adam(params_with_grad,
-                      grads,
-                      exp_avgs,
-                      exp_avg_sqs,
-                      max_exp_avg_sqs,
-                      state_steps,
-                      group['amsgrad'],
-                      beta1,
-                      beta2,
-                      group['lr'],
-                      group['weight_decay'],
-                      group['eps'],
-                      group['mu'],
-                      group['w_old']
-                      )
+            self.adam(params_with_grad, grads, exp_avgs, exp_avg_sqs,
+                      max_exp_avg_sqs, state_steps, group['amsgrad'], beta1,
+                      beta2, group['lr'], group['weight_decay'], group['eps'],
+                      group['mu'], group['w_old'])
         return loss
 
-    def adam(self, params,
-             grads,
-             exp_avgs,
-             exp_avg_sqs,
-             max_exp_avg_sqs,
-             state_steps,
-             amsgrad,
-             beta1: float,
-             beta2: float,
-             lr: float,
-             weight_decay: float,
-             eps: float,
-             mu: float,
-             w_old):
+    def adam(self, params, grads, exp_avgs, exp_avg_sqs, max_exp_avg_sqs,
+             state_steps, amsgrad, beta1: float, beta2: float, lr: float,
+             weight_decay: float, eps: float, mu: float, w_old):
         """Update optimizer parameters.
 
         Args:
@@ -310,8 +308,10 @@ class FedProxAdam(Optimizer):
             max_exp_avg_sqs: Maintains max of all exp. moving avg. of sq. grad. values.
             state_steps: Steps for each param group update.
             amsgrad: Whether to use the AMSGrad variant of this algorithm.
-            beta1 (float): Coefficient used for computing running averages of gradient.
-            beta2 (float): Coefficient used for computing running averages of squared gradient.
+            beta1 (float): Coefficient used for computing running averages of
+                gradient.
+            beta2 (float): Coefficient used for computing running averages of
+                squared gradient.
             lr (float): Learning rate.
             weight_decay (float): Weight decay (L2 penalty).
             eps (float): Value for computational stability.
@@ -326,8 +326,8 @@ class FedProxAdam(Optimizer):
             exp_avg_sq = exp_avg_sqs[i]
             step = state_steps[i]
 
-            bias_correction1 = 1 - beta1 ** step
-            bias_correction2 = 1 - beta2 ** step
+            bias_correction1 = 1 - beta1**step
+            bias_correction2 = 1 - beta2**step
 
             if weight_decay != 0:
                 grad = grad.add(param, alpha=weight_decay)
@@ -337,7 +337,9 @@ class FedProxAdam(Optimizer):
             exp_avg_sq.mul_(beta2).addcmul_(grad, grad, value=1 - beta2)
             if amsgrad:
                 # Maintains the maximum of all 2nd moment running avg. till now
-                torch.maximum(max_exp_avg_sqs[i], exp_avg_sq, out=max_exp_avg_sqs[i])
+                torch.maximum(max_exp_avg_sqs[i],
+                              exp_avg_sq,
+                              out=max_exp_avg_sqs[i])
                 # Use the max. for normalizing running avg. of gradient
                 denom = (max_exp_avg_sqs[i].sqrt() / math.sqrt(bias_correction2)).add_(eps)
             else:

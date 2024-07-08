@@ -16,10 +16,7 @@ ARCHITECTURE_ALIASES = {
     'aarch64': 'arm64'
 }
 
-FILE_EXTENSIONS = {
-    'windows': 'zip',
-    'linux': 'tar.gz'
-}
+FILE_EXTENSIONS = {'windows': 'zip', 'linux': 'tar.gz'}
 
 
 def get_system_and_architecture():
@@ -42,7 +39,8 @@ def download_step_bin(prefix='.', confirmation=True):
 
     Args:
         prefix (str, optional): Folder path to download. Defaults to '.'.
-        confirmation (bool, optional): Request user confirmation or not. Defaults to True.
+        confirmation (bool, optional): Request user confirmation or not.
+            Defaults to True.
     """
     system, arch = get_system_and_architecture()
     ext = FILE_EXTENSIONS[system]
@@ -56,7 +54,8 @@ def download_step_ca_bin(prefix='.', confirmation=True):
 
     Args:
         prefix (str, optional): Folder path to download. Defaults to '.'.
-        confirmation (bool, optional): Request user confirmation or not. Defaults to True.
+        confirmation (bool, optional): Request user confirmation or not.
+            Defaults to True.
     """
     system, arch = get_system_and_architecture()
     ext = FILE_EXTENSIONS[system]

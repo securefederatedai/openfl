@@ -13,7 +13,8 @@ def register_buffer(module: torch.nn.Module, name: str, value: torch.Tensor):
 
     Args:
         module (torch.nn.Module): The module to add the buffer to.
-        name (str): The name of the buffer. Supports complex module names like 'model.conv1.bias'.
+        name (str): The name of the buffer. Supports complex module names like
+            'model.conv1.bias'.
         value (torch.Tensor): The value of the buffer.
     """
     module_path, _, name = name.rpartition('.')
@@ -40,7 +41,8 @@ def get_buffer(module, target):
     mod: torch.nn.Module = module.get_submodule(module_path)
 
     if not hasattr(mod, buffer_name):
-        raise AttributeError(f'{mod._get_name()} has no attribute `{buffer_name}`')
+        raise AttributeError(
+            f'{mod._get_name()} has no attribute `{buffer_name}`')
 
     buffer: torch.Tensor = getattr(mod, buffer_name)
 
@@ -57,7 +59,8 @@ class FedCurv:
     Requires torch>=1.9.0.
 
     Args:
-        model (torch.nn.Module): The base model. Parameters of it are used in loss penalty calculation.
+        model (torch.nn.Module): The base model. Parameters of it are used in
+            loss penalty calculation.
         importance (float): The lambda coefficient of the FedCurv algorithm.
     """
 
@@ -65,8 +68,10 @@ class FedCurv:
         """Initialize the FedCurv object.
 
         Args:
-            model (torch.nn.Module): The base model. Parameters of it are used in loss penalty calculation.
-            importance (float): The lambda coefficient of the FedCurv algorithm.
+            model (torch.nn.Module): The base model. Parameters of it are used
+                in loss penalty calculation.
+            importance (float): The lambda coefficient of the FedCurv
+                algorithm.
         """
         self.importance = importance
         self._params = {}
@@ -76,7 +81,8 @@ class FedCurv:
         """Register the Fisher parameters of the model.
 
         Args:
-            model (torch.nn.Module): The model to register the Fisher parameters for.
+            model (torch.nn.Module): The model to register the Fisher
+                parameters for.
         """
         params = list(model.named_parameters())
         for n, p in params:
@@ -100,13 +106,17 @@ class FedCurv:
         Args:
             model (torch.nn.Module): The model to update the parameters for.
         """
-        self._params = deepcopy({n: p for n, p in model.named_parameters() if p.requires_grad})
+        self._params = deepcopy({
+            n: p
+            for n, p in model.named_parameters() if p.requires_grad
+        })
 
     def _diag_fisher(self, model, data_loader, device):
         """Calculate the diagonal of the Fisher information matrix.
 
         Args:
-            model (torch.nn.Module): The model to calculate the Fisher information matrix for.
+            model (torch.nn.Module): The model to calculate the Fisher
+                information matrix for.
             data_loader (Iterable): The data loader for the training data.
             device (str): The device to perform the calculations on.
 
@@ -130,7 +140,8 @@ class FedCurv:
 
             for n, p in model.named_parameters():
                 if p.requires_grad:
-                    precision_matrices[n].data = p.grad.data ** 2 / len(data_loader)
+                    precision_matrices[n].data = p.grad.data**2 / len(
+                        data_loader)
 
         return precision_matrices
 
@@ -138,7 +149,7 @@ class FedCurv:
         """Calculate the penalty term for the loss function.
 
         Args:
-            model (torch.nn.Module): The model to calculate the penalty for. 
+            model (torch.nn.Module): The model to calculate the penalty for.
                 Stores global u_t and v_t values as buffers.
 
         Returns:
@@ -149,18 +160,19 @@ class FedCurv:
             return penalty
         for name, param in model.named_parameters():
             if param.requires_grad:
-                u_global, v_global, w_global = (
-                    get_buffer(model, target).detach()
-                    for target in (f'{name}_u', f'{name}_v', f'{name}_w')
-                )
-                u_local, v_local, w_local = (
-                    getattr(self, name).detach()
-                    for name in (f'{name}_u', f'{name}_v', f'{name}_w')
-                )
+                u_global, v_global, w_global = (get_buffer(model,
+                                                           target).detach()
+                                                for target in (f'{name}_u',
+                                                               f'{name}_v',
+                                                               f'{name}_w'))
+                u_local, v_local, w_local = (getattr(self, name).detach()
+                                             for name in (f'{name}_u',
+                                                          f'{name}_v',
+                                                          f'{name}_w'))
                 u = u_global - u_local
                 v = v_global - v_local
                 w = w_global - w_local
-                _penalty = param ** 2 * u - 2 * param * v + w
+                _penalty = param**2 * u - 2 * param * v + w
                 penalty += _penalty.sum()
         penalty = self.importance * penalty
         return penalty.float()
@@ -175,7 +187,7 @@ class FedCurv:
 
     def on_train_end(self, model: torch.nn.Module, data_loader, device):
         """Perform post-training steps.
-        
+
         Args:
             model (torch.nn.Module): The trained model.
             data_loader (Iterable): The data loader for the training data.
@@ -186,7 +198,7 @@ class FedCurv:
             u = m.data.to(device)
             v = m.data * model.get_parameter(n)
             v = v.to(device)
-            w = m.data * model.get_parameter(n) ** 2
+            w = m.data * model.get_parameter(n)**2
             w = w.to(device)
             register_buffer(model, f'{n}_u', u.clone().detach())
             register_buffer(model, f'{n}_v', v.clone().detach())
