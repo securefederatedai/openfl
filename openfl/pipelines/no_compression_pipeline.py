@@ -1,6 +1,5 @@
 # Copyright (C) 2020-2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-
 """NoCompressionPipeline module."""
 
 from .pipeline import Float32NumpyArrayToBytes
@@ -12,5 +11,6 @@ class NoCompressionPipeline(TransformationPipeline):
 
     def __init__(self, **kwargs):
         """Initialize."""
-        super(NoCompressionPipeline, self).__init__(
-            transformers=[Float32NumpyArrayToBytes()], **kwargs)
+        super(NoCompressionPipeline,
+              self).__init__(transformers=[Float32NumpyArrayToBytes()],
+                             **kwargs)
