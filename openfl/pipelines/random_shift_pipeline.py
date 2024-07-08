@@ -1,6 +1,5 @@
 # Copyright (C) 2020-2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-
 """RandomShiftPipeline module."""
 
 import numpy as np
@@ -32,8 +31,8 @@ class RandomShiftTransformer(Transformer):
             metadata: The metadata for the transformation.
         """
         shape = data.shape
-        random_shift = np.random.uniform(
-            low=-20, high=20, size=shape).astype(np.float32)
+        random_shift = np.random.uniform(low=-20, high=20,
+                                         size=shape).astype(np.float32)
         transformed_data = data + random_shift
 
         # construct metadata
@@ -60,13 +59,12 @@ class RandomShiftTransformer(Transformer):
         # this is an awkward use of the metadata into to float dict, usually
         # it will trully be treated as a dict. Here (and in 'forward' above)
         # we use it essentially as an array.
-        shift = np.reshape(
-            np.array([
-                metadata['int_to_float'][idx]
-                for idx in range(len(metadata['int_to_float']))]),
-            newshape=shape,
-            order='C'
-        )
+        shift = np.reshape(np.array([
+            metadata['int_to_float'][idx]
+            for idx in range(len(metadata['int_to_float']))
+        ]),
+                           newshape=shape,
+                           order='C')
         return data - shift
 
 

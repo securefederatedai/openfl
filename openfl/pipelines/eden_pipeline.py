@@ -3,10 +3,11 @@
 
 # Copyright 2022 VMware, Inc.
 # SPDX-License-Identifier: Apache-2.0
-
 """
-@author: Shay Vargaftik (VMware Research), shayv@vmware.com; vargaftik@gmail.com
-@author: Yaniv Ben-Itzhak (VMware Research), ybenitzhak@vmware.com; yaniv.benizhak@gmail.com
+@author: Shay Vargaftik (VMware Research),
+shayv@vmware.com; vargaftik@gmail.com
+@author: Yaniv Ben-Itzhak (VMware Research),
+ybenitzhak@vmware.com; yaniv.benizhak@gmail.com
 
 
 EdenPipeline module.
@@ -14,11 +15,15 @@ EdenPipeline module.
 
 EDEN is an unbiased lossy compression method that uses a random rotation
     followed by deterministic quantization and scaling.
-EDEN provides strong theoretical guarantees, as described in the following ICML 2022 paper:
+EDEN provides strong theoretical guarantees, as described in the following
+    ICML 2022 paper:
 
-"EDEN: Communication-Efficient and Robust Distributed Mean Estimation for Federated Learning"
-Shay Vargaftik, Ran Ben Basat, Amit Portnoy, Gal Mendelson, Yaniv Ben Itzhak, Michael Mitzenmacher,
-Proceedings of the 39th International Conference on Machine Learning, PMLR 162:21984-22014, 2022.
+"EDEN: Communication-Efficient and Robust Distributed Mean Estimation for
+    Federated Learning"
+Shay Vargaftik, Ran Ben Basat, Amit Portnoy, Gal Mendelson, Yaniv Ben Itzhak,
+Michael Mitzenmacher,
+Proceedings of the 39th International Conference on Machine Learning,
+PMLR 162:21984-22014, 2022.
 
 https://proceedings.mlr.press/v162/vargaftik22a.html
 
@@ -32,8 +37,8 @@ compression_pipeline :
   settings :
     n_bits : <number of bits per coordinate>
     device: <cpu|cuda:0|cuda:1|...>
-    dim_threshold: 1000 #EDEN compresses layers that their dimension is above the dim_threshold,
-                   use 1000 as default
+    dim_threshold: 1000 #EDEN compresses layers that their dimension is above 
+        the dim_threshold, use 1000 as default
 """
 
 import torch
@@ -52,34 +57,44 @@ class Eden:
 
     Attributes:
         device (str): The device to be used for quantization ('cpu' or 'cuda').
-        centroids (dict): A dictionary mapping the number of bits to the corresponding centroids.
-        boundaries (dict): A dictionary mapping the number of bits to the corresponding boundaries.
+        centroids (dict): A dictionary mapping the number of bits to the
+            corresponding centroids.
+        boundaries (dict): A dictionary mapping the number of bits to the
+            corresponding boundaries.
         nbits (int): The number of bits per coordinate for quantization.
         num_hadamard (int): The number of Hadamard transforms to employ.
-        max_padding_overhead (float): The maximum overhead that is allowed for padding the vector.
+        max_padding_overhead (float): The maximum overhead that is allowed for
+            padding the vector.
     """
 
     def __init__(self, nbits=8, device='cpu'):
         """Initialize Eden.
 
         Args:
-            nbits (int, optional): The number of bits per coordinate for quantization. Defaults to 8.
-            device (str, optional): The device to be used for quantization ('cpu' or 'cuda'). Defaults to 'cpu'.
+            nbits (int, optional): The number of bits per coordinate for
+                quantization. Defaults to 8.
+            device (str, optional): The device to be used for quantization
+                ('cpu' or 'cuda'). Defaults to 'cpu'.
         """
-        def gen_normal_centroids_and_boundaries(device):
-            """Generates the centroids and boundaries for the quantization process.
 
-            This function generates the centroids and boundaries used in the quantization process 
-            based on the specified device. The centroids are generated for different numbers of bits, 
-            and the boundaries are calculated based on these centroids.
+        def gen_normal_centroids_and_boundaries(device):
+            """Generates the centroids and boundaries for the quantization
+            process.
+
+            This function generates the centroids and boundaries used in the
+            quantization process based on the specified device. The centroids
+            are generated for different numbers of bits, and the boundaries
+            are calculated based on these centroids.
 
             Args:
-                device (str): The device to be used for quantization ('cpu' or 'cuda').
+                device (str): The device to be used for quantization
+                    ('cpu' or 'cuda').
 
             Returns:
-                tuple: A tuple containing two dictionaries. The first dictionary maps the number of 
-                bits to the corresponding centroids, and the second dictionary maps the number of 
-                bits to the corresponding boundaries.
+                tuple: A tuple containing two dictionaries. The first
+                    dictionary maps the number of bits to the corresponding
+                    centroids, and the second dictionary maps the number of
+                    bits to the corresponding boundaries.
             """
 
             # half-normal lloyd-max centroids
@@ -369,15 +384,16 @@ class Eden:
             dim_list: The list of dimensions for the compression.
             total_dim: The total dimension of the vector.
         """
+
         def low_po2(n):
             if not n:
                 return 0
-            return 2 ** int(np.log2(n))
+            return 2**int(np.log2(n))
 
         def high_po2(n):
             if not n:
                 return 0
-            return 2 ** (int(np.ceil(np.log2(n))))
+            return 2**(int(np.ceil(np.log2(n))))
 
         vec = torch.Tensor(vec.flatten()).to(self.device)
 
@@ -459,18 +475,19 @@ class Eden:
         vec = vec[:total_dim]
 
         return vec.cpu().numpy()
- 
+
     def to_bits(self, int_bool_vec):
         """Convert a vector of integers to bits.
 
         Packing the quantization values to bytes.
-        
+
         Args:
             int_bool_vec: The vector of integers to be converted.
 
         Returns:
             The bit vector.
         """
+
         def to_bits_h(ibv):
 
             n = ibv.numel()
@@ -493,15 +510,16 @@ class Eden:
 
     def from_bits(self, bit_vec):
         """Convert a bit vector to integers.
-        
+
         Unpacking bytes to quantization values.
-        
+
         Args:
             bit_vec: The bit vector to be converted.
 
         Returns:
             The vector of integers.
         """
+
         def from_bits_h(bv):
 
             n = bv.numel()
@@ -529,21 +547,25 @@ class EdenTransformer(Transformer):
 
     Attributes:
         n_bits (int): The number of bits per coordinate for quantization.
-        dim_threshold (int): The threshold for the dimension of the data. Data with dimensions 
-            less than this threshold are not compressed.
+        dim_threshold (int): The threshold for the dimension of the data. Data
+            with dimensions less than this threshold are not compressed.
         device (str): The device to be used for quantization ('cpu' or 'cuda').
         eden (Eden): The Eden object for quantization.
-        no_comp (Float32NumpyArrayToBytes): The transformer for data that are not compressed.
+        no_comp (Float32NumpyArrayToBytes): The transformer for data that are
+            not compressed.
     """
 
     def __init__(self, n_bits=8, dim_threshold=100, device='cpu'):
         """Initialize EdenTransformer.
 
         Args:
-            n_bits (int, optional): The number of bits per coordinate for quantization. Defaults to 8.
-            dim_threshold (int, optional): The threshold for the dimension of the data. Data with dimensions 
-                less than this threshold are not compressed. Defaults to 100.
-            device (str, optional): The device to be used for quantization ('cpu' or 'cuda'). Defaults to 'cpu'.
+            n_bits (int, optional): The number of bits per coordinate for
+                quantization. Defaults to 8.
+            dim_threshold (int, optional): The threshold for the dimension of
+                the data. Data with dimensions less than this threshold are
+                not compressed. Defaults to 100.
+            device (str, optional): The device to be used for quantization
+                ('cpu' or 'cuda'). Defaults to 'cpu'.
         """
         self.lossy = True
         self.eden = Eden(nbits=n_bits, device=device)
@@ -564,12 +586,14 @@ class EdenTransformer(Transformer):
             The quantized data and the metadata for the quantization.
         """
         # TODO: can be simplified if have access to a unique feature of the participant (e.g., ID)
-        seed = (hash(sum(data.flatten()) * 13 + 7) + np.random.randint(1, 2**16)) % (2**16)
+        seed = (hash(sum(data.flatten()) * 13 + 7) +
+                np.random.randint(1, 2**16)) % (2**16)
         seed = int(float(seed))
         metadata = {'int_list': list(data.shape)}
 
         if data.size > self.dim_threshold:
-            int_array, scale_list, dim_list, total_dim = self.eden.compress(data, seed)
+            int_array, scale_list, dim_list, total_dim = self.eden.compress(
+                data, seed)
 
             # TODO: workaround: using the int to float dictionary to pass eden's metadata
             metadata['int_to_float'] = {0: float(seed), 1: float(total_dim)}
@@ -590,23 +614,23 @@ class EdenTransformer(Transformer):
         return return_values
 
     def backward(self, data, metadata, **kwargs):
-        """Recover data array back to the original numerical type and the shape.
+        """Recover data array back to the original numerical type and the
+        shape.
 
         Args:
             data: an flattened numpy array.
-            metadata: dictionary to contain information for recovering to original data array.
+            metadata: dictionary to contain information for recovering to
+                original data array.
 
         Returns:
             data: Numpy array with original numerical type and shape.
         """
 
-        if np.prod(metadata['int_list']) >= self.dim_threshold:  # compressed data
+        if np.prod(
+                metadata['int_list']) >= self.dim_threshold:  # compressed data
             data = np.frombuffer(data, dtype=np.uint8)
             data = co.deepcopy(data)
-            data = self.eden.decompress(
-                data,
-                metadata['int_to_float']
-            )
+            data = self.eden.decompress(data, metadata['int_to_float'])
             data_shape = list(metadata['int_list'])
             data = data.reshape(data_shape)
         else:
@@ -619,12 +643,13 @@ class EdenTransformer(Transformer):
 class EdenPipeline(TransformationPipeline):
     """A pipeline class for compressing data using the Eden method.
 
-    This class is a pipeline of transformers that use the Eden method for quantization.
+    This class is a pipeline of transformers that use the Eden method for
+    quantization.
 
     Attributes:
         n_bits (int): The number of bits per coordinate for quantization.
-        dim_threshold (int): The threshold for the dimension of the data. Data with dimensions 
-            less than this threshold are not compressed.
+        dim_threshold (int): The threshold for the dimension of the data. Data
+            with dimensions less than this threshold are not compressed.
         device (str): The device to be used for quantization ('cpu' or 'cuda').
     """
 
@@ -632,9 +657,12 @@ class EdenPipeline(TransformationPipeline):
         """Initialize a pipeline of transformers.
 
         Args:
-            n_bits (int): Number of bits per coordinate (1-8 bits are supported).
-            dim_threshold (int): Layers with less than dim_threshold params are not compressed.
-            device: Device for executing the compression and decompressionc(e.g., 'cpu', 'cuda:0', 'cuda:1').
+            n_bits (int): Number of bits per coordinate (1-8 bits are
+                supported).
+            dim_threshold (int): Layers with less than dim_threshold params
+                are not compressed.
+            device: Device for executing the compression and decompressionc
+                (e.g., 'cpu', 'cuda:0', 'cuda:1').
 
         Return:
             Transformer class object.

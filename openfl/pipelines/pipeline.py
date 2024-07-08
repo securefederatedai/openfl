@@ -1,6 +1,5 @@
 # Copyright (C) 2020-2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-
 """Pipeline module."""
 
 import numpy as np
@@ -9,9 +8,10 @@ import numpy as np
 class Transformer:
     """Base class for data transformation.
 
-    This class defines the basic structure of a data transformer. 
-    It should be subclassed when implementing new types of data transformations.
+    This class defines the basic structure of a data transformer. It should be
+    subclassed when implementing new types of data transformations.
     """
+
     def forward(self, data, **kwargs):
         """Forward pass data transformation.
 
@@ -47,7 +47,8 @@ class Transformer:
 
 
 class Float32NumpyArrayToBytes(Transformer):
-    """Transformer class for converting float32 Numpy arrays to bytes arrays."""
+    """Transformer class for converting float32 Numpy arrays to bytes
+    arrays."""
 
     def __init__(self):
         """Initialize Float32NumpyArrayToBytes."""
@@ -93,12 +94,13 @@ class Float32NumpyArrayToBytes(Transformer):
 class TransformationPipeline:
     """Data Transformer Pipeline Class.
 
-    This class is a pipeline of transformers that transform data in a sequential manner.
+    This class is a pipeline of transformers that transform data in a
+    sequential manner.
 
     A sequential pipeline to transform (e.x. compress) data (e.x. layer of
     model_weights) as well as return metadata (if needed) for the
     reconstruction process carried out by the backward method.
-    
+
     Attributes:
         transformers (list): The list of transformers in the pipeline.
     """
@@ -155,14 +157,16 @@ class TransformationPipeline:
             The original data before the transformation.
         """
         for transformer in self.transformers[::-1]:
-            data = transformer.backward(
-                data=data, metadata=transformer_metadata.pop(), **kwargs)
+            data = transformer.backward(data=data,
+                                        metadata=transformer_metadata.pop(),
+                                        **kwargs)
         return data
 
     def is_lossy(self):
         """If any of the transformers are lossy, then the pipeline is lossy.
-        
+
         Returns:
-            True if any of the transformers in the pipeline are lossy, False otherwise.
+            True if any of the transformers in the pipeline are lossy, False
+                otherwise.
         """
         return any(transformer.lossy for transformer in self.transformers)
