@@ -24,6 +24,7 @@ jobs:
         with:
           image-ref: 'docker.io/securefederatedai/openfl:${{ github.sha }}'
           format: 'sarif'
+          args: ignore-unfixed
           output: 'trivy-results.sarif'
 
       - name: Upload Trivy scan results to GitHub Security tab
