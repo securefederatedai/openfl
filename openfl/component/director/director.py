@@ -1,4 +1,3 @@
-
 """Director module."""
 
 import asyncio

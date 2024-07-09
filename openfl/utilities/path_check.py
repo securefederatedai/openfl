@@ -1,4 +1,3 @@
-
 """openfl path checks."""
 
 import os

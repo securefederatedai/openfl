@@ -1,4 +1,3 @@
-
 """Task package."""
 
 import importlib

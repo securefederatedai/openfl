@@ -1,4 +1,3 @@
-
 """PyTorch FedProx optimizer module."""
 
 import math

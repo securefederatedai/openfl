@@ -1,4 +1,3 @@
-
 """PyTorchDataLoader module."""
 
 from math import ceil

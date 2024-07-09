@@ -1,4 +1,3 @@
-
 """openfl.utilities.data_splitters.data_splitter module."""
 from abc import ABC
 from abc import abstractmethod

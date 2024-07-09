@@ -1,4 +1,3 @@
-
 """Collaborator module."""
 
 from enum import Enum

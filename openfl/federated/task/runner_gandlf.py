@@ -1,4 +1,3 @@
-
 """GaNDLFTaskRunner module."""
 
 from copy import deepcopy

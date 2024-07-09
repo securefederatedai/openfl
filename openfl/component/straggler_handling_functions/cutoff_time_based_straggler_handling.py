@@ -1,4 +1,3 @@
-
 """Cutoff time based Straggler Handling function."""
 import numpy as np
 import time

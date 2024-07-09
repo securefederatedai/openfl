@@ -1,4 +1,3 @@
-
 """Straggler handling module."""
 
 from abc import ABC

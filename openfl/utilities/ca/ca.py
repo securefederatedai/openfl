@@ -1,4 +1,3 @@
-
 """CA module."""
 
 import base64

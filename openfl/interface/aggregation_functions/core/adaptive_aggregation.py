@@ -1,4 +1,3 @@
-
 """Adaptive aggregation module."""
 
 from typing import List

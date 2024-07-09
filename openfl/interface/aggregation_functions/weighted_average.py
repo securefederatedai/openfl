@@ -1,4 +1,3 @@
-
 """Federated averaging module."""
 
 import numpy as np

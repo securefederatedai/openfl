@@ -1,4 +1,3 @@
-
 """AggregatorGRPCServer module."""
 
 import logging

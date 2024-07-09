@@ -1,4 +1,3 @@
-
 """Director clients module."""
 
 import logging

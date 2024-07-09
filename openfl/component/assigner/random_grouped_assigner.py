@@ -1,4 +1,3 @@
-
 """Random grouped assigner module."""
 
 

@@ -1,4 +1,3 @@
-
 """PyTorchTaskRunner module."""
 
 from copy import deepcopy

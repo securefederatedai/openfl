@@ -1,4 +1,3 @@
-
 """FederatedModel module."""
 
 import inspect

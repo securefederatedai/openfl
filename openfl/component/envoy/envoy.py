@@ -1,4 +1,3 @@
-
 """Envoy module."""
 
 import logging

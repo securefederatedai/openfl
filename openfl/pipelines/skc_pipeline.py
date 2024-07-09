@@ -1,4 +1,3 @@
-
 """SKCPipeline module."""
 
 import copy as co

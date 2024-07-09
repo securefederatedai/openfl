@@ -1,4 +1,3 @@
-
 """STCPipelinemodule."""
 
 import gzip as gz

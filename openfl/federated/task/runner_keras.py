@@ -1,4 +1,3 @@
-
 """
 Base classes for developing a ke.Model() Federated Learning model.
 

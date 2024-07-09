@@ -1,4 +1,3 @@
-
 """Data package."""
 
 import importlib

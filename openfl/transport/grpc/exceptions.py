@@ -1,4 +1,3 @@
-
 """Exceptions that occur during service interaction."""
 
 

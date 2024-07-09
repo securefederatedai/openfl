@@ -1,4 +1,3 @@
-
 """RandomShiftPipeline module."""
 
 import numpy as np

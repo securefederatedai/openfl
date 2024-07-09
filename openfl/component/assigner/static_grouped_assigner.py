@@ -1,4 +1,3 @@
-
 """Static grouped assigner module."""
 
 from openfl.component.assigner.assigner import Assigner

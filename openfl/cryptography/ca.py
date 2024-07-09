@@ -1,4 +1,3 @@
-
 """Cryptography CA utilities."""
 
 import datetime

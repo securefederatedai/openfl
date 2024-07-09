@@ -1,4 +1,3 @@
-
 """Aggregator module."""
 import time
 import queue

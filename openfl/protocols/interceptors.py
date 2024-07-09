@@ -1,4 +1,3 @@
-
 """gRPC interceptors module."""
 import collections
 

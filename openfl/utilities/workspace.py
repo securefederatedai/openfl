@@ -1,4 +1,3 @@
-
 """Workspace utils module."""
 
 import logging

@@ -1,4 +1,3 @@
-
 """Adagrad adaptive aggregation module."""
 
 from typing import Dict

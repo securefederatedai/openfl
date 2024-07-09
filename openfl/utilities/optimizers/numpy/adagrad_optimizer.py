@@ -1,4 +1,3 @@
-
 """Adagrad optimizer module."""
 
 from typing import Dict

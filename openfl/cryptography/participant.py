@@ -1,4 +1,3 @@
-
 """Cryptography participant utilities."""
 from typing import Tuple
 

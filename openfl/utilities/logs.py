@@ -1,4 +1,3 @@
-
 """Logs utilities."""
 
 import logging

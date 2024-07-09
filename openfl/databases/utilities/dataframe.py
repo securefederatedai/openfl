@@ -1,4 +1,3 @@
-
 """Convenience Utilities for DataFrame."""
 
 import numpy as np

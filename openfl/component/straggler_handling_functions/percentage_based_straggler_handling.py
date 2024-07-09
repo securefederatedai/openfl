@@ -1,4 +1,3 @@
-
 """Percentage based Straggler Handling function."""
 from openfl.component.straggler_handling_functions import StragglerHandlingFunction
 

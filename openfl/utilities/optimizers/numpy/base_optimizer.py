@@ -1,4 +1,3 @@
-
 """Base abstract optimizer class module."""
 import abc
 from importlib import import_module

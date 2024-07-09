@@ -1,4 +1,3 @@
-
 max_metadata_size = 32 * 2**20
 max_message_length = 2**30
 

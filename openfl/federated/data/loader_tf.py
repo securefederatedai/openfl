@@ -1,4 +1,3 @@
-
 """TensorflowDataLoader module."""
 
 import numpy as np

@@ -1,4 +1,3 @@
-
 """Cryptography IO utilities."""
 
 import os

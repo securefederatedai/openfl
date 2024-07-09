@@ -1,4 +1,3 @@
-
 """KCPipeline module."""
 
 

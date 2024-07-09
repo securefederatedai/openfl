@@ -1,4 +1,3 @@
-
 """openfl.federated package."""
 
 import importlib

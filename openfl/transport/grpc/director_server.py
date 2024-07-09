@@ -1,4 +1,3 @@
-
 """Director server."""
 
 import asyncio

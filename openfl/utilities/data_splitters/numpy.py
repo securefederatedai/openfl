@@ -1,4 +1,3 @@
-
 """UnbalancedFederatedDataset module."""
 
 from abc import abstractmethod

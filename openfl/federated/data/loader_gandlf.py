@@ -1,4 +1,3 @@
-
 """PyTorchDataLoader module."""
 from openfl.federated.data.loader import DataLoader
 

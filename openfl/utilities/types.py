@@ -1,4 +1,3 @@
-
 """openfl common object types."""
 
 from abc import ABCMeta

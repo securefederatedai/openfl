@@ -1,4 +1,3 @@
-
 """Adam optimizer module."""
 
 from typing import Dict

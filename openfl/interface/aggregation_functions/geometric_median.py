@@ -1,4 +1,3 @@
-
 """Geometric median module."""
 
 import numpy as np

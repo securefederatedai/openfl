@@ -1,4 +1,3 @@
-
 """Pipeline module."""
 
 import numpy as np

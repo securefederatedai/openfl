@@ -1,5 +1,3 @@
-
-
 class SerializationError(Exception):
 
     def __init__(self, *args: object) -> None:

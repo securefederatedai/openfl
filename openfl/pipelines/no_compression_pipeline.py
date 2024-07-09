@@ -1,4 +1,3 @@
-
 """NoCompressionPipeline module."""
 
 from openfl.pipelines.pipeline import Float32NumpyArrayToBytes

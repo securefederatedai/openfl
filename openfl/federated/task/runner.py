@@ -1,4 +1,3 @@
-
 """
 Mixin class for FL models. No default implementation.
 
