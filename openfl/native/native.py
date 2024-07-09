@@ -39,10 +39,10 @@ from openfl.utilities.split import split_tensor_dict_for_holdouts
 
 logger = getLogger(__name__)
 
-WORKSPACE_PREFIX = os.path.join(os.path.expanduser('~'), '.local', 'workspace')
+WORKSPACE_PREFIX = os.path.join(os.path.expanduser("~"), ".local", "workspace")
 
 
-def setup_plan(log_level='CRITICAL'):
+def setup_plan(log_level="CRITICAL"):
     """
     Dump the plan with all defaults + overrides set.
 
@@ -53,16 +53,18 @@ def setup_plan(log_level='CRITICAL'):
     Returns:
         plan : Plan object
     """
-    plan_config = 'plan/plan.yaml'
-    cols_config = 'plan/cols.yaml'
-    data_config = 'plan/data.yaml'
+    plan_config = "plan/plan.yaml"
+    cols_config = "plan/cols.yaml"
+    data_config = "plan/data.yaml"
 
     current_level = logging.root.level
     getLogger().setLevel(log_level)
-    plan = Plan.parse(plan_config_path=Path(plan_config),
-                      cols_config_path=Path(cols_config),
-                      data_config_path=Path(data_config),
-                      resolve=False)
+    plan = Plan.parse(
+        plan_config_path=Path(plan_config),
+        cols_config_path=Path(cols_config),
+        data_config_path=Path(data_config),
+        resolve=False,
+    )
     getLogger().setLevel(current_level)
 
     return plan
@@ -70,11 +72,13 @@ def setup_plan(log_level='CRITICAL'):
 
 def flatten(config, return_complete=False):
     """Flatten nested config."""
-    flattened_config = flatten_json.flatten(config, '.')
+    flattened_config = flatten_json.flatten(config, ".")
     if not return_complete:
         keys_to_remove = [
-            k for k, v in flattened_config.items()
-            if ('defaults' in k or v is None)]
+            k
+            for k, v in flattened_config.items()
+            if ("defaults" in k or v is None)
+        ]
     else:
         keys_to_remove = [k for k, v in flattened_config.items() if v is None]
     for k in keys_to_remove:
@@ -101,7 +105,7 @@ def update_plan(override_config, plan=None, resolve=True):
 
     org_list_keys_with_count = {}
     for k in flat_plan_config:
-        k_split = k.rsplit('.', 1)
+        k_split = k.rsplit(".", 1)
         if k_split[1].isnumeric():
             if k_split[0] in org_list_keys_with_count:
                 org_list_keys_with_count[k_split[0]] += 1
@@ -112,40 +116,44 @@ def update_plan(override_config, plan=None, resolve=True):
         if key in org_list_keys_with_count:
             # remove old list corresponding to this key entirely
             for idx in range(org_list_keys_with_count[key]):
-                del flat_plan_config[f'{key}.{idx}']
+                del flat_plan_config[f"{key}.{idx}"]
             logger.info("Updating %s to %s... ", key, val)
         elif key in flat_plan_config:
             logger.info("Updating %s to %s... ", key, val)
         else:
             # TODO: We probably need to validate the new key somehow
-            logger.info("Did not find %s in config. Make sure it should exist. Creating...", key)
+            logger.info(
+                "Did not find %s in config. Make sure it should exist. Creating...",
+                key,
+            )
         if type(val) is list:
             for idx, v in enumerate(val):
-                flat_plan_config[f'{key}.{idx}'] = v
+                flat_plan_config[f"{key}.{idx}"] = v
         else:
             flat_plan_config[key] = val
 
-    plan.config = unflatten(flat_plan_config, '.')
+    plan.config = unflatten(flat_plan_config, ".")
     if resolve:
         plan.resolve()
     return plan
 
 
-def unflatten(config, separator='.'):
+def unflatten(config, separator="."):
     """Unfold `config` settings that have `separator` in their names."""
     config = flatten_json.unflatten_list(config, separator)
     return config
 
 
-def setup_logging(level='INFO', log_file=None):
+def setup_logging(level="INFO", log_file=None):
     """Initialize logging settings."""
     # Setup logging
 
-    if importlib.util.find_spec('tensorflow') is not None:
+    if importlib.util.find_spec("tensorflow") is not None:
         import tensorflow as tf  # pylint: disable=import-outside-toplevel
+
         tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
     metric = 25
-    add_log_level('METRIC', metric)
+    add_log_level("METRIC", metric)
 
     if isinstance(level, str):
         level = level.upper()
@@ -154,19 +162,25 @@ def setup_logging(level='INFO', log_file=None):
     if log_file:
         fh = logging.FileHandler(log_file)
         formatter = logging.Formatter(
-            '%(asctime)s %(levelname)s %(message)s %(filename)s:%(lineno)d'
+            "%(asctime)s %(levelname)s %(message)s %(filename)s:%(lineno)d"
         )
         fh.setFormatter(formatter)
         handlers.append(fh)
 
     console = Console(width=160)
     handlers.append(RichHandler(console=console))
-    basicConfig(level=level, format='%(message)s',
-                datefmt='[%X]', handlers=handlers)
+    basicConfig(
+        level=level, format="%(message)s", datefmt="[%X]", handlers=handlers
+    )
 
 
-def init(workspace_template: str = 'default', log_level: str = 'INFO',
-         log_file: str = None, agg_fqdn: str = None, col_names=None):
+def init(
+    workspace_template: str = "default",
+    log_level: str = "INFO",
+    log_file: str = None,
+    agg_fqdn: str = None,
+    col_names=None,
+):
     """
     Initialize the openfl package.
 
@@ -205,7 +219,7 @@ def init(workspace_template: str = 'default', log_level: str = 'INFO',
         None
     """
     if col_names is None:
-        col_names = ['one', 'two']
+        col_names = ["one", "two"]
     workspace.create(WORKSPACE_PREFIX, workspace_template)
     os.chdir(WORKSPACE_PREFIX)
     workspace.certify()
@@ -213,10 +227,10 @@ def init(workspace_template: str = 'default', log_level: str = 'INFO',
     aggregator.certify(agg_fqdn, silent=True)
     data_path = 1
     for col_name in col_names:
-        collaborator.create(
-            col_name, str(data_path), silent=True)
+        collaborator.create(col_name, str(data_path), silent=True)
         collaborator.generate_cert_request(
-            col_name, silent=True, skip_package=True)
+            col_name, silent=True, skip_package=True
+        )
         collaborator.certify(col_name, silent=True)
         data_path += 1
 
@@ -277,22 +291,21 @@ def run_experiment(collaborator_dict: dict, override_config: dict = None):
     model = plan.runner_
 
     # Initialize model weights
-    init_state_path = plan.config['aggregator']['settings']['init_state_path']
-    rounds_to_train = plan.config['aggregator']['settings']['rounds_to_train']
+    init_state_path = plan.config["aggregator"]["settings"]["init_state_path"]
+    rounds_to_train = plan.config["aggregator"]["settings"]["rounds_to_train"]
     tensor_dict, holdout_params = split_tensor_dict_for_holdouts(
-        logger,
-        model.get_tensor_dict(False)
+        logger, model.get_tensor_dict(False)
     )
 
-    model_snap = utils.construct_model_proto(tensor_dict=tensor_dict,
-                                             round_number=0,
-                                             tensor_pipe=tensor_pipe)
+    model_snap = utils.construct_model_proto(
+        tensor_dict=tensor_dict, round_number=0, tensor_pipe=tensor_pipe
+    )
 
     logger.info("Creating Initial Weights File    🠆 %s", init_state_path)
 
     utils.dump_proto(model_proto=model_snap, fpath=init_state_path)
 
-    logger.info('Starting Experiment...')
+    logger.info("Starting Experiment...")
 
     aggregator = plan.get_aggregator()
 
@@ -300,7 +313,8 @@ def run_experiment(collaborator_dict: dict, override_config: dict = None):
     collaborators = {
         collaborator: get_collaborator(
             plan, collaborator, collaborator_dict[collaborator], aggregator
-        ) for collaborator in plan.authorized_cols
+        )
+        for collaborator in plan.authorized_cols
     }
 
     for _ in range(rounds_to_train):
@@ -310,7 +324,8 @@ def run_experiment(collaborator_dict: dict, override_config: dict = None):
 
     # Set the weights for the final model
     model.rebuild_model(
-        rounds_to_train - 1, aggregator.last_tensor_dict, validation=True)
+        rounds_to_train - 1, aggregator.last_tensor_dict, validation=True
+    )
     return model
 
 

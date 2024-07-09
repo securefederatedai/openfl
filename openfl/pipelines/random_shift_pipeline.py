@@ -46,14 +46,15 @@ class RandomShiftTransformer(Transformer):
 
         """
         shape = data.shape
-        random_shift = np.random.uniform(
-            low=-20, high=20, size=shape).astype(np.float32)
+        random_shift = np.random.uniform(low=-20, high=20, size=shape).astype(
+            np.float32
+        )
         transformed_data = data + random_shift
 
         # construct metadata
-        metadata = {'int_to_float': {}, 'int_list': list(shape)}
-        for idx, val in enumerate(random_shift.flatten(order='C')):
-            metadata['int_to_float'][idx] = val
+        metadata = {"int_to_float": {}, "int_list": list(shape)}
+        for idx, val in enumerate(random_shift.flatten(order="C")):
+            metadata["int_to_float"][idx] = val
 
         return transformed_data, metadata
 
@@ -70,16 +71,19 @@ class RandomShiftTransformer(Transformer):
         Returns:
             transformed_data:
         """
-        shape = tuple(metadata['int_list'])
+        shape = tuple(metadata["int_list"])
         # this is an awkward use of the metadata into to float dict, usually
         # it will trully be treated as a dict. Here (and in 'forward' above)
         # we use it essentially as an array.
         shift = np.reshape(
-            np.array([
-                metadata['int_to_float'][idx]
-                for idx in range(len(metadata['int_to_float']))]),
+            np.array(
+                [
+                    metadata["int_to_float"][idx]
+                    for idx in range(len(metadata["int_to_float"]))
+                ]
+            ),
             newshape=shape,
-            order='C'
+            order="C",
         )
         return data - shift
 

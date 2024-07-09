@@ -78,7 +78,6 @@ def aggregator(context):
 def start_(plan, authorized_cols, secure):
     """Start the aggregator service."""
 
-
     if is_directory_traversal(plan):
         echo(
             "Federated learning plan path is out of the openfl workspace scope."
@@ -185,8 +184,6 @@ def _certify(fqdn, silent):
 
 def certify(fqdn, silent):
     """Sign/certify the aggregator certificate key pair."""
-
-
 
     if fqdn is None:
         fqdn = getfqdn_env()

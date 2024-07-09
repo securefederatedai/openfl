@@ -75,7 +75,6 @@ def initialize(
      the federation.
     """
 
-
     for p in [plan_config, cols_config, data_config]:
         if is_directory_traversal(p):
             echo(f"{p} is out of the openfl workspace scope.")
@@ -119,7 +118,6 @@ def initialize(
 
 def freeze_plan(plan_config):
     """Dump the plan to YAML file."""
-
 
     plan = Plan()
     plan.config = Plan.parse(Path(plan_config), resolve=False).config

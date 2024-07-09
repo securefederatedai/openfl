@@ -103,7 +103,9 @@ class Collaborator(Participant):
         """Get collaborator name"""
         return self._name
 
-    def initialize_private_attributes(self, private_attrs: Dict[Any, Any] = None) -> None:
+    def initialize_private_attributes(
+        self, private_attrs: Dict[Any, Any] = None
+    ) -> None:
         """
         initialize private attributes of Collaborator object by invoking
         the callable or by passing private_attrs argument
@@ -205,7 +207,9 @@ class Aggregator(Participant):
         """Get aggregator name"""
         return self.name
 
-    def initialize_private_attributes(self, private_attrs: Dict[Any, Any] = None) -> None:
+    def initialize_private_attributes(
+        self, private_attrs: Dict[Any, Any] = None
+    ) -> None:
         """
         initialize private attributes of Aggregator object by invoking
         the callable or by passing private_attrs argument

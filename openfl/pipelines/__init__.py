@@ -9,5 +9,5 @@ from openfl.pipelines.skc_pipeline import SKCPipeline
 from openfl.pipelines.stc_pipeline import STCPipeline
 from openfl.pipelines.tensor_codec import TensorCodec
 
-if importlib.util.find_spec('torch') is not None:
+if importlib.util.find_spec("torch") is not None:
     from openfl.pipelines.eden_pipeline import EdenPipeline  # NOQA

@@ -77,31 +77,35 @@ class Collaborator:
         \* - Plan setting.
     """
 
-    def __init__(self,
-                 collaborator_name,
-                 aggregator_uuid,
-                 federation_uuid,
-                 client,
-                 task_runner,
-                 task_config,
-                 opt_treatment='RESET',
-                 device_assignment_policy='CPU_ONLY',
-                 delta_updates=False,
-                 compression_pipeline=None,
-                 db_store_rounds=1,
-                 **kwargs):
+    def __init__(
+        self,
+        collaborator_name,
+        aggregator_uuid,
+        federation_uuid,
+        client,
+        task_runner,
+        task_config,
+        opt_treatment="RESET",
+        device_assignment_policy="CPU_ONLY",
+        delta_updates=False,
+        compression_pipeline=None,
+        db_store_rounds=1,
+        **kwargs,
+    ):
         """Initialize."""
         self.single_col_cert_common_name = None
 
         if self.single_col_cert_common_name is None:
-            self.single_col_cert_common_name = ''  # for protobuf compatibility
+            self.single_col_cert_common_name = ""  # for protobuf compatibility
         # we would really want this as an object
 
         self.collaborator_name = collaborator_name
         self.aggregator_uuid = aggregator_uuid
         self.federation_uuid = federation_uuid
 
-        self.compression_pipeline = compression_pipeline or NoCompressionPipeline()
+        self.compression_pipeline = (
+            compression_pipeline or NoCompressionPipeline()
+        )
         self.tensor_codec = TensorCodec(self.compression_pipeline)
         self.tensor_db = TensorDB()
         self.db_store_rounds = db_store_rounds
@@ -120,15 +124,21 @@ class Collaborator:
             self.opt_treatment = OptTreatment[opt_treatment]
         else:
             self.logger.error("Unknown opt_treatment: %s.", opt_treatment.name)
-            raise NotImplementedError(f'Unknown opt_treatment: {opt_treatment}.')
+            raise NotImplementedError(
+                f"Unknown opt_treatment: {opt_treatment}."
+            )
 
         if hasattr(DevicePolicy, device_assignment_policy):
-            self.device_assignment_policy = DevicePolicy[device_assignment_policy]
+            self.device_assignment_policy = DevicePolicy[
+                device_assignment_policy
+            ]
         else:
-            self.logger.error('Unknown device_assignment_policy: '
-                              f'{device_assignment_policy.name}.')
+            self.logger.error(
+                "Unknown device_assignment_policy: "
+                f"{device_assignment_policy.name}."
+            )
             raise NotImplementedError(
-                f'Unknown device_assignment_policy: {device_assignment_policy}.'
+                f"Unknown device_assignment_policy: {device_assignment_policy}."
             )
 
         self.task_runner.set_optimizer_treatment(self.opt_treatment.name)
@@ -157,7 +167,7 @@ class Collaborator:
                 # Cleaning tensor db
                 self.tensor_db.clean_up(self.db_store_rounds)
 
-        self.logger.info('End of Federation reached. Exiting...')
+        self.logger.info("End of Federation reached. Exiting...")
 
     def run_simulation(self):
         """
@@ -170,7 +180,7 @@ class Collaborator:
         while True:
             tasks, round_number, sleep_time, time_to_quit = self.get_tasks()
             if time_to_quit:
-                self.logger.info('End of Federation reached. Exiting...')
+                self.logger.info("End of Federation reached. Exiting...")
                 break
             elif sleep_time > 0:
                 sleep(sleep_time)  # some sleep function
@@ -178,51 +188,61 @@ class Collaborator:
                 self.logger.info("Received the following tasks: %s", tasks)
                 for task in tasks:
                     self.do_task(task, round_number)
-                self.logger.info(f'All tasks completed on {self.collaborator_name} '
-                                 f'for round {round_number}...')
+                self.logger.info(
+                    f"All tasks completed on {self.collaborator_name} "
+                    f"for round {round_number}..."
+                )
                 break
 
     def get_tasks(self):
         """Get tasks from the aggregator."""
         # logging wait time to analyze training process
-        self.logger.info('Waiting for tasks...')
+        self.logger.info("Waiting for tasks...")
         tasks, round_number, sleep_time, time_to_quit = self.client.get_tasks(
-            self.collaborator_name)
+            self.collaborator_name
+        )
 
         return tasks, round_number, sleep_time, time_to_quit
 
     def do_task(self, task, round_number):
         """Do the specified task."""
         # map this task to an actual function name and kwargs
-        if hasattr(self.task_runner, 'TASK_REGISTRY'):
+        if hasattr(self.task_runner, "TASK_REGISTRY"):
             func_name = task.function_name
             task_name = task.name
             kwargs = {}
-            if task.task_type == 'validate':
+            if task.task_type == "validate":
                 if task.apply_local:
-                    kwargs['apply'] = 'local'
+                    kwargs["apply"] = "local"
                 else:
-                    kwargs['apply'] = 'global'
+                    kwargs["apply"] = "global"
         else:
             if isinstance(task, str):
                 task_name = task
             else:
                 task_name = task.name
-            func_name = self.task_config[task_name]['function']
-            kwargs = self.task_config[task_name]['kwargs']
+            func_name = self.task_config[task_name]["function"]
+            kwargs = self.task_config[task_name]["kwargs"]
 
         # this would return a list of what tensors we require as TensorKeys
-        required_tensorkeys_relative = self.task_runner.get_required_tensorkeys_for_function(
-            func_name,
-            **kwargs
+        required_tensorkeys_relative = (
+            self.task_runner.get_required_tensorkeys_for_function(
+                func_name, **kwargs
+            )
         )
 
         # models actually return "relative" tensorkeys of (name, LOCAL|GLOBAL,
         # round_offset)
         # so we need to update these keys to their "absolute values"
         required_tensorkeys = []
-        for tname, origin, rnd_num, report, tags in required_tensorkeys_relative:
-            if origin == 'GLOBAL':
+        for (
+            tname,
+            origin,
+            rnd_num,
+            report,
+            tags,
+        ) in required_tensorkeys_relative:
+            if origin == "GLOBAL":
                 origin = self.aggregator_uuid
             else:
                 origin = self.collaborator_name
@@ -240,33 +260,36 @@ class Collaborator:
         )
 
         # now we have whatever the model needs to do the task
-        if hasattr(self.task_runner, 'TASK_REGISTRY'):
+        if hasattr(self.task_runner, "TASK_REGISTRY"):
             # New interactive python API
             # New `Core` TaskRunner contains registry of tasks
             func = self.task_runner.TASK_REGISTRY[func_name]
-            self.logger.debug('Using Interactive Python API')
+            self.logger.debug("Using Interactive Python API")
 
             # So far 'kwargs' contained parameters read from the plan
             # those are parameters that the eperiment owner registered for
             # the task.
             # There is another set of parameters that created on the
             # collaborator side, for instance, local processing unit identifier:s
-            if (self.device_assignment_policy is DevicePolicy.CUDA_PREFERRED
-                    and len(self.cuda_devices) > 0):
-                kwargs['device'] = f'cuda:{self.cuda_devices[0]}'
+            if (
+                self.device_assignment_policy is DevicePolicy.CUDA_PREFERRED
+                and len(self.cuda_devices) > 0
+            ):
+                kwargs["device"] = f"cuda:{self.cuda_devices[0]}"
             else:
-                kwargs['device'] = 'cpu'
+                kwargs["device"] = "cpu"
         else:
             # TaskRunner subclassing API
             # Tasks are defined as methods of TaskRunner
             func = getattr(self.task_runner, func_name)
-            self.logger.debug('Using TaskRunner subclassing API')
+            self.logger.debug("Using TaskRunner subclassing API")
 
         global_output_tensor_dict, local_output_tensor_dict = func(
             col_name=self.collaborator_name,
             round_num=round_number,
             input_tensor_dict=input_tensor_dict,
-            **kwargs)
+            **kwargs,
+        )
 
         # Save global and local output_tensor_dicts to TensorDB
         self.tensor_db.cache_tensor(global_output_tensor_dict)
@@ -274,11 +297,15 @@ class Collaborator:
 
         # send the results for this tasks; delta and compression will occur in
         # this function
-        self.send_task_results(global_output_tensor_dict, round_number, task_name)
+        self.send_task_results(
+            global_output_tensor_dict, round_number, task_name
+        )
 
     def get_numpy_dict_for_tensorkeys(self, tensor_keys):
         """Get tensor dictionary for specified tensorkey set."""
-        return {k.tensor_name: self.get_data_for_tensorkey(k) for k in tensor_keys}
+        return {
+            k.tensor_name: self.get_data_for_tensorkey(k) for k in tensor_keys
+        }
 
     def get_data_for_tensorkey(self, tensor_key):
         """
@@ -291,29 +318,38 @@ class Collaborator:
         """
         # try to get from the store
         tensor_name, origin, round_number, report, tags = tensor_key
-        self.logger.debug("Attempting to retrieve tensor %s from local store", tensor_key)
+        self.logger.debug(
+            "Attempting to retrieve tensor %s from local store", tensor_key
+        )
         nparray = self.tensor_db.get_tensor_from_cache(tensor_key)
 
         # if None and origin is our client, request it from the client
         if nparray is None:
             if origin == self.collaborator_name:
                 self.logger.info(
-                    f'Attempting to find locally stored {tensor_name} tensor from prior round...'
+                    f"Attempting to find locally stored {tensor_name} tensor from prior round..."
                 )
                 prior_round = round_number - 1
                 while prior_round >= 0:
                     nparray = self.tensor_db.get_tensor_from_cache(
-                        TensorKey(tensor_name, origin, prior_round, report, tags))
+                        TensorKey(
+                            tensor_name, origin, prior_round, report, tags
+                        )
+                    )
                     if nparray is not None:
-                        self.logger.debug(f'Found tensor {tensor_name} in local TensorDB '
-                                          f'for round {prior_round}')
+                        self.logger.debug(
+                            f"Found tensor {tensor_name} in local TensorDB "
+                            f"for round {prior_round}"
+                        )
                         return nparray
                     prior_round -= 1
                 self.logger.info(
-                    f'Cannot find any prior version of tensor {tensor_name} locally...'
+                    f"Cannot find any prior version of tensor {tensor_name} locally..."
                 )
-            self.logger.debug('Unable to get tensor from local store...'
-                              'attempting to retrieve from client')
+            self.logger.debug(
+                "Unable to get tensor from local store..."
+                "attempting to retrieve from client"
+            )
             # Determine whether there are additional compression related
             # dependencies.
             # Typically, dependencies are only relevant to model layers
@@ -330,8 +366,10 @@ class Collaborator:
                     tensor_dependencies[0]
                 )
                 if prior_model_layer is not None:
-                    uncompressed_delta = self.get_aggregated_tensor_from_aggregator(
-                        tensor_dependencies[1]
+                    uncompressed_delta = (
+                        self.get_aggregated_tensor_from_aggregator(
+                            tensor_dependencies[1]
+                        )
                     )
                     new_model_tk, nparray = self.tensor_codec.apply_delta(
                         tensor_dependencies[1],
@@ -341,26 +379,27 @@ class Collaborator:
                     )
                     self.tensor_db.cache_tensor({new_model_tk: nparray})
                 else:
-                    self.logger.info('Count not find previous model layer.'
-                                     'Fetching latest layer from aggregator')
+                    self.logger.info(
+                        "Count not find previous model layer."
+                        "Fetching latest layer from aggregator"
+                    )
                     # The original model tensor should be fetched from client
                     nparray = self.get_aggregated_tensor_from_aggregator(
-                        tensor_key,
-                        require_lossless=True
+                        tensor_key, require_lossless=True
                     )
-            elif 'model' in tags:
+            elif "model" in tags:
                 # Pulling the model for the first time
                 nparray = self.get_aggregated_tensor_from_aggregator(
-                    tensor_key,
-                    require_lossless=True
+                    tensor_key, require_lossless=True
                 )
         else:
             self.logger.debug("Found tensor %s in local TensorDB", tensor_key)
 
         return nparray
 
-    def get_aggregated_tensor_from_aggregator(self, tensor_key,
-                                              require_lossless=False):
+    def get_aggregated_tensor_from_aggregator(
+        self, tensor_key, require_lossless=False
+    ):
         """
         Return the decompressed tensor associated with the requested tensor key.
 
@@ -388,7 +427,13 @@ class Collaborator:
 
         self.logger.debug("Requesting aggregated tensor %s", tensor_key)
         tensor = self.client.get_aggregated_tensor(
-            self.collaborator_name, tensor_name, round_number, report, tags, require_lossless)
+            self.collaborator_name,
+            tensor_name,
+            round_number,
+            report,
+            tags,
+            require_lossless,
+        )
 
         # this translates to a numpy array and includes decompression, as
         # necessary
@@ -410,10 +455,10 @@ class Collaborator:
 
         data_size = -1
 
-        if 'train' in task_name:
+        if "train" in task_name:
             data_size = self.task_runner.get_train_data_size()
 
-        if 'valid' in task_name:
+        if "valid" in task_name:
             data_size = self.task_runner.get_valid_data_size()
 
         self.logger.debug("%s data size = %s", task_name, data_size)
@@ -423,12 +468,18 @@ class Collaborator:
 
             if report:
                 self.logger.metric(
-                    f'Round {round_number}, collaborator {self.collaborator_name} '
-                    f'is sending metric for task {task_name}:'
-                    f' {tensor_name}\t{tensor_dict[tensor]:f}')
+                    f"Round {round_number}, collaborator {self.collaborator_name} "
+                    f"is sending metric for task {task_name}:"
+                    f" {tensor_name}\t{tensor_dict[tensor]:f}"
+                )
 
         self.client.send_local_task_results(
-            self.collaborator_name, round_number, task_name, data_size, named_tensors)
+            self.collaborator_name,
+            round_number,
+            task_name,
+            data_size,
+            named_tensors,
+        )
 
     def nparray_to_named_tensor(self, tensor_key, nparray):
         """
@@ -438,52 +489,42 @@ class Collaborator:
         """
         # if we have an aggregated tensor, we can make a delta
         tensor_name, origin, round_number, report, tags = tensor_key
-        if 'trained' in tags and self.delta_updates:
+        if "trained" in tags and self.delta_updates:
             # Should get the pretrained model to create the delta. If training
             # has happened,
             # Model should already be stored in the TensorDB
             model_nparray = self.tensor_db.get_tensor_from_cache(
-                TensorKey(
-                    tensor_name,
-                    origin,
-                    round_number,
-                    report,
-                    ('model',)
-                )
+                TensorKey(tensor_name, origin, round_number, report, ("model",))
             )
 
             # The original model will not be present for the optimizer on the
             # first round.
             if model_nparray is not None:
-                delta_tensor_key, delta_nparray = self.tensor_codec.generate_delta(
-                    tensor_key,
-                    nparray,
-                    model_nparray
+                delta_tensor_key, delta_nparray = (
+                    self.tensor_codec.generate_delta(
+                        tensor_key, nparray, model_nparray
+                    )
                 )
-                delta_comp_tensor_key, delta_comp_nparray, metadata = self.tensor_codec.compress(
-                    delta_tensor_key,
-                    delta_nparray
+                delta_comp_tensor_key, delta_comp_nparray, metadata = (
+                    self.tensor_codec.compress(delta_tensor_key, delta_nparray)
                 )
 
                 named_tensor = utils.construct_named_tensor(
                     delta_comp_tensor_key,
                     delta_comp_nparray,
                     metadata,
-                    lossless=False
+                    lossless=False,
                 )
                 return named_tensor
 
         # Assume every other tensor requires lossless compression
-        compressed_tensor_key, compressed_nparray, metadata = self.tensor_codec.compress(
-            tensor_key,
-            nparray,
-            require_lossless=True
+        compressed_tensor_key, compressed_nparray, metadata = (
+            self.tensor_codec.compress(
+                tensor_key, nparray, require_lossless=True
+            )
         )
         named_tensor = utils.construct_named_tensor(
-            compressed_tensor_key,
-            compressed_nparray,
-            metadata,
-            lossless=True
+            compressed_tensor_key, compressed_nparray, metadata, lossless=True
         )
 
         return named_tensor
@@ -493,10 +534,14 @@ class Collaborator:
         # do the stuff we do now for decompression and frombuffer and stuff
         # This should probably be moved back to protoutils
         raw_bytes = named_tensor.data_bytes
-        metadata = [{'int_to_float': proto.int_to_float,
-                     'int_list': proto.int_list,
-                     'bool_list': proto.bool_list
-                     } for proto in named_tensor.transformer_metadata]
+        metadata = [
+            {
+                "int_to_float": proto.int_to_float,
+                "int_list": proto.int_list,
+                "bool_list": proto.bool_list,
+            }
+            for proto in named_tensor.transformer_metadata
+        ]
         # The tensor has already been transfered to collaborator, so
         # the newly constructed tensor should have the collaborator origin
         tensor_key = TensorKey(
@@ -504,26 +549,28 @@ class Collaborator:
             self.collaborator_name,
             named_tensor.round_number,
             named_tensor.report,
-            tuple(named_tensor.tags)
+            tuple(named_tensor.tags),
         )
         tensor_name, origin, round_number, report, tags = tensor_key
-        if 'compressed' in tags:
-            decompressed_tensor_key, decompressed_nparray = self.tensor_codec.decompress(
-                tensor_key,
-                data=raw_bytes,
-                transformer_metadata=metadata,
-                require_lossless=True
+        if "compressed" in tags:
+            decompressed_tensor_key, decompressed_nparray = (
+                self.tensor_codec.decompress(
+                    tensor_key,
+                    data=raw_bytes,
+                    transformer_metadata=metadata,
+                    require_lossless=True,
+                )
             )
-        elif 'lossy_compressed' in tags:
-            decompressed_tensor_key, decompressed_nparray = self.tensor_codec.decompress(
-                tensor_key,
-                data=raw_bytes,
-                transformer_metadata=metadata
+        elif "lossy_compressed" in tags:
+            decompressed_tensor_key, decompressed_nparray = (
+                self.tensor_codec.decompress(
+                    tensor_key, data=raw_bytes, transformer_metadata=metadata
+                )
             )
         else:
             # There could be a case where the compression pipeline is bypassed
             # entirely
-            self.logger.warning('Bypassing tensor codec...')
+            self.logger.warning("Bypassing tensor codec...")
             decompressed_tensor_key = tensor_key
             decompressed_nparray = raw_bytes
 

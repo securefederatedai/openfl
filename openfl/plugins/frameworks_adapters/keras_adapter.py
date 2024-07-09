@@ -58,7 +58,7 @@ class FrameworkAdapterPlugin(FrameworkAdapterPluginInterface):
 
             def __reduce__(self):  # NOQA:N807
                 model_metadata = saving_utils.model_metadata(self)
-                training_config = model_metadata.get('training_config', None)
+                training_config = model_metadata.get("training_config", None)
                 model = serialize(self)
                 weights = self.get_weights()
                 return (unpack, (model, training_config, weights))
@@ -67,11 +67,14 @@ class FrameworkAdapterPlugin(FrameworkAdapterPluginInterface):
             cls.__reduce__ = __reduce__
 
         # Run the function
-        if version.parse(tf.__version__) <= version.parse('2.7.1'):
-            logger.warn('Applying hotfix for model serialization.'
-                        'Please consider updating to tensorflow>=2.8 to silence this warning.')
+        if version.parse(tf.__version__) <= version.parse("2.7.1"):
+            logger.warn(
+                "Applying hotfix for model serialization."
+                "Please consider updating to tensorflow>=2.8 to silence this warning."
+            )
             make_keras_picklable()
-        if version.parse(tf.__version__) >= version.parse('2.13'):
+        if version.parse(tf.__version__) >= version.parse("2.13"):
+
             def build(self, var_list):
                 pass
 
@@ -79,7 +82,7 @@ class FrameworkAdapterPlugin(FrameworkAdapterPluginInterface):
             cls.build = build
 
     @staticmethod
-    def get_tensor_dict(model, optimizer=None, suffix=''):
+    def get_tensor_dict(model, optimizer=None, suffix=""):
         """
         Extract tensor dict from a model and an optimizer.
 
@@ -99,7 +102,7 @@ class FrameworkAdapterPlugin(FrameworkAdapterPluginInterface):
         return model_weights
 
     @staticmethod
-    def set_tensor_dict(model, tensor_dict, optimizer=None, device='cpu'):
+    def set_tensor_dict(model, tensor_dict, optimizer=None, device="cpu"):
         """
         Set the model weights with a tensor dictionary.
 
@@ -114,16 +117,14 @@ class FrameworkAdapterPlugin(FrameworkAdapterPluginInterface):
         _set_weights_dict(model, model_weights_dict)
 
         if optimizer is not None:
-            opt_weight_names = [
-                weight.name for weight in optimizer.weights
-            ]
+            opt_weight_names = [weight.name for weight in optimizer.weights]
             opt_weights_dict = {
                 name: tensor_dict[name] for name in opt_weight_names
             }
             _set_weights_dict(optimizer, opt_weights_dict)
 
 
-def _get_weights_dict(obj, suffix=''):
+def _get_weights_dict(obj, suffix=""):
     """
     Get the dictionary of weights.
 

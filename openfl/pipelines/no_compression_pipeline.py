@@ -25,5 +25,4 @@ class NoCompressionPipeline(TransformationPipeline):
 
     def __init__(self, **kwargs):
         """Initialize."""
-        super().__init__(
-            transformers=[Float32NumpyArrayToBytes()], **kwargs)
+        super().__init__(transformers=[Float32NumpyArrayToBytes()], **kwargs)

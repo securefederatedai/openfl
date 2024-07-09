@@ -37,59 +37,94 @@ logger = logging.getLogger(__name__)
 @pass_context
 def director(context):
     """Manage Federated Learning Director."""
-    context.obj['group'] = 'director'
+    context.obj["group"] = "director"
 
 
-@director.command(name='start')
-@option('-c', '--director-config-path', default='director.yaml',
-        help='The director config file path', type=ClickPath(exists=True))
-@option('--tls/--disable-tls', default=True,
-        is_flag=True, help='Use TLS or not (By default TLS is enabled)')
-@option('-rc', '--root-cert-path', 'root_certificate', required=False,
-        type=ClickPath(exists=True), default=None,
-        help='Path to a root CA cert')
-@option('-pk', '--private-key-path', 'private_key', required=False,
-        type=ClickPath(exists=True), default=None,
-        help='Path to a private key')
-@option('-oc', '--public-cert-path', 'certificate', required=False,
-        type=ClickPath(exists=True), default=None,
-        help='Path to a signed certificate')
-def start(director_config_path, tls, root_certificate, private_key, certificate):
+@director.command(name="start")
+@option(
+    "-c",
+    "--director-config-path",
+    default="director.yaml",
+    help="The director config file path",
+    type=ClickPath(exists=True),
+)
+@option(
+    "--tls/--disable-tls",
+    default=True,
+    is_flag=True,
+    help="Use TLS or not (By default TLS is enabled)",
+)
+@option(
+    "-rc",
+    "--root-cert-path",
+    "root_certificate",
+    required=False,
+    type=ClickPath(exists=True),
+    default=None,
+    help="Path to a root CA cert",
+)
+@option(
+    "-pk",
+    "--private-key-path",
+    "private_key",
+    required=False,
+    type=ClickPath(exists=True),
+    default=None,
+    help="Path to a private key",
+)
+@option(
+    "-oc",
+    "--public-cert-path",
+    "certificate",
+    required=False,
+    type=ClickPath(exists=True),
+    default=None,
+    help="Path to a signed certificate",
+)
+def start(
+    director_config_path, tls, root_certificate, private_key, certificate
+):
     """Start the director service."""
 
-
     director_config_path = Path(director_config_path).absolute()
-    logger.info('🧿 Starting the Director Service.')
+    logger.info("🧿 Starting the Director Service.")
     if is_directory_traversal(director_config_path):
-        click.echo('The director config file path is out of the openfl workspace scope.')
+        click.echo(
+            "The director config file path is out of the openfl workspace scope."
+        )
         sys.exit(1)
     config = merge_configs(
         settings_files=director_config_path,
         overwrite_dict={
-            'root_certificate': root_certificate,
-            'private_key': private_key,
-            'certificate': certificate,
+            "root_certificate": root_certificate,
+            "private_key": private_key,
+            "certificate": certificate,
         },
         validators=[
-            Validator('settings.listen_host', default='localhost'),
-            Validator('settings.listen_port', default=50051, gte=1024, lte=65535),
-            Validator('settings.sample_shape', default=[]),
-            Validator('settings.target_shape', default=[]),
-            Validator('settings.install_requirements', default=False),
-            Validator('settings.envoy_health_check_period',
-                      default=60,  # in seconds
-                      gte=1, lte=24 * 60 * 60),
-            Validator('settings.review_experiment', default=False),
+            Validator("settings.listen_host", default="localhost"),
+            Validator(
+                "settings.listen_port", default=50051, gte=1024, lte=65535
+            ),
+            Validator("settings.sample_shape", default=[]),
+            Validator("settings.target_shape", default=[]),
+            Validator("settings.install_requirements", default=False),
+            Validator(
+                "settings.envoy_health_check_period",
+                default=60,  # in seconds
+                gte=1,
+                lte=24 * 60 * 60,
+            ),
+            Validator("settings.review_experiment", default=False),
         ],
         value_transform=[
-            ('settings.sample_shape', lambda x: list(map(str, x))),
-            ('settings.target_shape', lambda x: list(map(str, x))),
+            ("settings.sample_shape", lambda x: list(map(str, x))),
+            ("settings.target_shape", lambda x: list(map(str, x))),
         ],
     )
 
     logger.info(
-        f'Sample shape: {config.settings.sample_shape}, '
-        f'target shape: {config.settings.target_shape}'
+        f"Sample shape: {config.settings.sample_shape}, "
+        f"target shape: {config.settings.target_shape}"
     )
 
     if config.root_certificate:
@@ -119,24 +154,33 @@ def start(director_config_path, tls, root_certificate, private_key, certificate)
         listen_port=config.settings.listen_port,
         review_plan_callback=overwritten_review_plan_callback,
         envoy_health_check_period=config.settings.envoy_health_check_period,
-        install_requirements=config.settings.install_requirements
+        install_requirements=config.settings.install_requirements,
     )
     director_server.start()
 
 
-@director.command(name='create-workspace')
-@option('-p', '--director-path', required=True,
-        help='The director path', type=ClickPath())
+@director.command(name="create-workspace")
+@option(
+    "-p",
+    "--director-path",
+    required=True,
+    help="The director path",
+    type=ClickPath(),
+)
 def create(director_path):
     """Create a director workspace."""
     if is_directory_traversal(director_path):
-        click.echo('The director path is out of the openfl workspace scope.')
+        click.echo("The director path is out of the openfl workspace scope.")
         sys.exit(1)
     director_path = Path(director_path).absolute()
     if director_path.exists():
-        if not click.confirm('Director workspace already exists. Recreate?', default=True):
+        if not click.confirm(
+            "Director workspace already exists. Recreate?", default=True
+        ):
             sys.exit(1)
         shutil.rmtree(director_path)
-    (director_path / 'cert').mkdir(parents=True, exist_ok=True)
-    (director_path / 'logs').mkdir(parents=True, exist_ok=True)
-    shutil.copyfile(WORKSPACE / 'default/director.yaml', director_path / 'director.yaml')
+    (director_path / "cert").mkdir(parents=True, exist_ok=True)
+    (director_path / "logs").mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(
+        WORKSPACE / "default/director.yaml", director_path / "director.yaml"
+    )

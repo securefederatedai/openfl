@@ -29,28 +29,32 @@ from cryptography.x509.name import Name
 from cryptography.x509.oid import ExtensionOID, NameOID
 
 
-def generate_root_cert(days_to_expiration: int = 365) -> Tuple[RSAPrivateKey, Certificate]:
+def generate_root_cert(
+    days_to_expiration: int = 365,
+) -> Tuple[RSAPrivateKey, Certificate]:
     """Generate_root_certificate."""
     now = datetime.datetime.utcnow()
     expiration_delta = days_to_expiration * datetime.timedelta(1, 0, 0)
 
     # Generate private key
     root_private_key = rsa.generate_private_key(
-        public_exponent=65537,
-        key_size=3072,
-        backend=default_backend()
+        public_exponent=65537, key_size=3072, backend=default_backend()
     )
 
     # Generate public key
     root_public_key = root_private_key.public_key()
     builder = x509.CertificateBuilder()
-    subject = x509.Name([
-        x509.NameAttribute(NameOID.DOMAIN_COMPONENT, 'org'),
-        x509.NameAttribute(NameOID.DOMAIN_COMPONENT, 'simple'),
-        x509.NameAttribute(NameOID.COMMON_NAME, 'Simple Root CA'),
-        x509.NameAttribute(NameOID.ORGANIZATION_NAME, 'Simple Inc'),
-        x509.NameAttribute(NameOID.ORGANIZATIONAL_UNIT_NAME, 'Simple Root CA'),
-    ])
+    subject = x509.Name(
+        [
+            x509.NameAttribute(NameOID.DOMAIN_COMPONENT, "org"),
+            x509.NameAttribute(NameOID.DOMAIN_COMPONENT, "simple"),
+            x509.NameAttribute(NameOID.COMMON_NAME, "Simple Root CA"),
+            x509.NameAttribute(NameOID.ORGANIZATION_NAME, "Simple Inc"),
+            x509.NameAttribute(
+                NameOID.ORGANIZATIONAL_UNIT_NAME, "Simple Root CA"
+            ),
+        ]
+    )
     issuer = subject
     builder = builder.subject_name(subject)
     builder = builder.issuer_name(issuer)
@@ -60,13 +64,15 @@ def generate_root_cert(days_to_expiration: int = 365) -> Tuple[RSAPrivateKey, Ce
     builder = builder.serial_number(int(uuid.uuid4()))
     builder = builder.public_key(root_public_key)
     builder = builder.add_extension(
-        x509.BasicConstraints(ca=True, path_length=None), critical=True,
+        x509.BasicConstraints(ca=True, path_length=None),
+        critical=True,
     )
 
     # Sign the CSR
     certificate = builder.sign(
-        private_key=root_private_key, algorithm=hashes.SHA384(),
-        backend=default_backend()
+        private_key=root_private_key,
+        algorithm=hashes.SHA384(),
+        backend=default_backend(),
     )
 
     return root_private_key, certificate
@@ -76,36 +82,44 @@ def generate_signing_csr() -> Tuple[RSAPrivateKey, CertificateSigningRequest]:
     """Generate signing CSR."""
     # Generate private key
     signing_private_key = rsa.generate_private_key(
-        public_exponent=65537,
-        key_size=3072,
-        backend=default_backend()
+        public_exponent=65537, key_size=3072, backend=default_backend()
     )
 
     builder = x509.CertificateSigningRequestBuilder()
-    subject = x509.Name([
-        x509.NameAttribute(NameOID.DOMAIN_COMPONENT, 'org'),
-        x509.NameAttribute(NameOID.DOMAIN_COMPONENT, 'simple'),
-        x509.NameAttribute(NameOID.COMMON_NAME, 'Simple Signing CA'),
-        x509.NameAttribute(NameOID.ORGANIZATION_NAME, 'Simple Inc'),
-        x509.NameAttribute(NameOID.ORGANIZATIONAL_UNIT_NAME, 'Simple Signing CA'),
-    ])
+    subject = x509.Name(
+        [
+            x509.NameAttribute(NameOID.DOMAIN_COMPONENT, "org"),
+            x509.NameAttribute(NameOID.DOMAIN_COMPONENT, "simple"),
+            x509.NameAttribute(NameOID.COMMON_NAME, "Simple Signing CA"),
+            x509.NameAttribute(NameOID.ORGANIZATION_NAME, "Simple Inc"),
+            x509.NameAttribute(
+                NameOID.ORGANIZATIONAL_UNIT_NAME, "Simple Signing CA"
+            ),
+        ]
+    )
     builder = builder.subject_name(subject)
     builder = builder.add_extension(
-        x509.BasicConstraints(ca=True, path_length=None), critical=True,
+        x509.BasicConstraints(ca=True, path_length=None),
+        critical=True,
     )
 
     # Sign the CSR
     csr = builder.sign(
-        private_key=signing_private_key, algorithm=hashes.SHA384(),
-        backend=default_backend()
+        private_key=signing_private_key,
+        algorithm=hashes.SHA384(),
+        backend=default_backend(),
     )
 
     return signing_private_key, csr
 
 
-def sign_certificate(csr: CertificateSigningRequest, issuer_private_key: RSAPrivateKey,
-                     issuer_name: Name, days_to_expiration: int = 365,
-                     ca: bool = False) -> Certificate:
+def sign_certificate(
+    csr: CertificateSigningRequest,
+    issuer_private_key: RSAPrivateKey,
+    issuer_name: Name,
+    days_to_expiration: int = 365,
+    ca: bool = False,
+) -> Certificate:
     """
     Sign the incoming CSR request.
 
@@ -128,18 +142,22 @@ def sign_certificate(csr: CertificateSigningRequest, issuer_private_key: RSAPriv
     builder = builder.serial_number(int(uuid.uuid4()))
     builder = builder.public_key(csr.public_key())
     builder = builder.add_extension(
-        x509.BasicConstraints(ca=ca, path_length=None), critical=True,
+        x509.BasicConstraints(ca=ca, path_length=None),
+        critical=True,
     )
     try:
         builder = builder.add_extension(
             csr.extensions.get_extension_for_oid(
                 ExtensionOID.SUBJECT_ALTERNATIVE_NAME
-            ).value, critical=False
+            ).value,
+            critical=False,
         )
     except ExtensionNotFound:
         pass  # Might not have alternative name
 
     signed_cert = builder.sign(
-        private_key=issuer_private_key, algorithm=hashes.SHA384(), backend=default_backend()
+        private_key=issuer_private_key,
+        algorithm=hashes.SHA384(),
+        backend=default_backend(),
     )
     return signed_cert

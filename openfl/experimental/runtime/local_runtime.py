@@ -21,18 +21,12 @@ import math
 import os
 from copy import deepcopy
 from logging import getLogger
-from typing import TYPE_CHECKING, Optional
+from typing import Any, Callable, Dict, List, Optional, Type
 
 import ray
 
-from openfl.experimental.interface import Collaborator, FLSpec
+from openfl.experimental.interface import Aggregator, Collaborator, FLSpec
 from openfl.experimental.runtime.runtime import Runtime
-
-if TYPE_CHECKING:
-    from openfl.experimental.interface import Aggregator, Collaborator, FLSpec
-
-from typing import Any, Callable, Dict, List, Type
-
 from openfl.experimental.utilities import (
     ResourcesNotAvailableError,
     aggregator_to_collaborator,
@@ -216,11 +210,7 @@ def ray_group_assign(collaborators, num_actors=1):
                 .remote()
             )
         # add collaborator to actor group
-        initializations.append(
-            collaborator_actor.append.remote(
-                collaborator
-            )
-        )
+        initializations.append(collaborator_actor.append.remote(collaborator))
 
         times_called += 1
 
@@ -375,12 +365,15 @@ class LocalRuntime(Runtime):
     def __get_aggregator_object(self, aggregator: Type[Aggregator]) -> Any:
         """Get aggregator object based on localruntime backend"""
 
-        if aggregator.private_attributes and aggregator.private_attributes_callable:
+        if (
+            aggregator.private_attributes
+            and aggregator.private_attributes_callable
+        ):
             self.logger.warning(
-                'Warning: Aggregator private attributes '
-                + 'will be initialized via callable and '
-                + 'attributes via aggregator.private_attributes '
-                + 'will be ignored'
+                "Warning: Aggregator private attributes "
+                + "will be initialized via callable and "
+                + "attributes via aggregator.private_attributes "
+                + "will be ignored"
             )
 
         if self.backend == "single_process":
@@ -441,10 +434,10 @@ class LocalRuntime(Runtime):
         for collab in collaborators:
             if collab.private_attributes and collab.private_attributes_callable:
                 self.logger.warning(
-                    f'Warning: Collaborator {collab.name} private attributes '
-                    + 'will be initialized via callable and '
-                    + 'attributes via collaborator.private_attributes '
-                    + 'will be ignored'
+                    f"Warning: Collaborator {collab.name} private attributes "
+                    + "will be initialized via callable and "
+                    + "attributes via collaborator.private_attributes "
+                    + "will be ignored"
                 )
 
         if self.backend == "single_process":
@@ -689,7 +682,6 @@ class LocalRuntime(Runtime):
             flspec_obj: updated FLSpec (flow) object
         """
 
-
         flspec_obj._foreach_methods.append(f.__name__)
         selected_collaborators = getattr(flspec_obj, kwargs["foreach"])
         self.selected_collaborators = selected_collaborators
@@ -753,7 +745,6 @@ class LocalRuntime(Runtime):
             f           :  The task to be executed within the flow
             selected_collaborators : all collaborators
         """
-
 
         for col in selected_collaborators:
             clone = FLSpec._clones[col]

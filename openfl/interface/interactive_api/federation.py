@@ -29,8 +29,16 @@ class Federation:
     their local data and network setting to enable communication in federation.
     """
 
-    def __init__(self, client_id=None, director_node_fqdn=None, director_port=None, tls=True,
-                 cert_chain=None, api_cert=None, api_private_key=None) -> None:
+    def __init__(
+        self,
+        client_id=None,
+        director_node_fqdn=None,
+        director_port=None,
+        tls=True,
+        cert_chain=None,
+        api_cert=None,
+        api_private_key=None,
+    ) -> None:
         """
         Initialize federation.
 
@@ -64,12 +72,14 @@ class Federation:
             tls=tls,
             root_certificate=cert_chain,
             private_key=api_private_key,
-            certificate=api_cert
+            certificate=api_cert,
         )
 
         # Request sample and target shapes from Director.
         # This is an internal method for finding out dataset properties in a Federation.
-        self.sample_shape, self.target_shape = self.dir_client.get_dataset_info()
+        self.sample_shape, self.target_shape = (
+            self.dir_client.get_dataset_info()
+        )
 
     def get_dummy_shard_descriptor(self, size):
         """Return a dummy shard descriptor."""

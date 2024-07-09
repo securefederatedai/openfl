@@ -12,11 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-max_metadata_size = 32 * 2 ** 20
-max_message_length = 2 ** 30
+max_metadata_size = 32 * 2**20
+max_message_length = 2**30
 
 channel_options = [
-    ('grpc.max_metadata_size', max_metadata_size),
-    ('grpc.max_send_message_length', max_message_length),
-    ('grpc.max_receive_message_length', max_message_length)
+    ("grpc.max_metadata_size", max_metadata_size),
+    ("grpc.max_send_message_length", max_message_length),
+    ("grpc.max_receive_message_length", max_message_length),
 ]

@@ -24,24 +24,22 @@ from openfl.utilities import LocalTensor
 
 
 class PrivilegedAggregationFunction(AggregationFunction):
-    """Privileged Aggregation Function interface provides write access to TensorDB Dataframe.
+    """Privileged Aggregation Function interface provides write access to TensorDB Dataframe."""
 
-    """
-
-    def __init__(
-        self
-    ) -> None:
+    def __init__(self) -> None:
         """Initialize with TensorDB write access"""
         super().__init__()
         self._privileged = True
 
     @abstractmethod
-    def call(self,
-             local_tensors: List[LocalTensor],
-             tensor_db: pd.DataFrame,
-             tensor_name: str,
-             fl_round: int,
-             tags: Tuple[str]) -> np.ndarray:
+    def call(
+        self,
+        local_tensors: List[LocalTensor],
+        tensor_db: pd.DataFrame,
+        tensor_name: str,
+        fl_round: int,
+        tags: Tuple[str],
+    ) -> np.ndarray:
         """Aggregate tensors.
 
         Args:

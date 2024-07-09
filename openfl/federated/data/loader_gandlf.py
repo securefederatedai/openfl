@@ -20,8 +20,8 @@ class GaNDLFDataLoaderWrapper(DataLoader):
     """Data Loader for the Generally Nuanced Deep Learning Framework (GaNDLF)."""
 
     def __init__(self, data_path, feature_shape):
-        self.train_csv = data_path + '/train.csv'
-        self.val_csv = data_path + '/valid.csv'
+        self.train_csv = data_path + "/train.csv"
+        self.val_csv = data_path + "/valid.csv"
         self.train_dataloader = None
         self.val_dataloader = None
         self.feature_shape = feature_shape

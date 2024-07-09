@@ -17,6 +17,7 @@
 
 class MockDataLoader:
     """Placeholder dataloader for when data is not available"""
+
     def __init__(self, feature_shape):
         self.feature_shape = feature_shape
 

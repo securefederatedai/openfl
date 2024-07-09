@@ -29,7 +29,7 @@ class KerasSerializer(Serializer):
     @staticmethod
     def serialize(object_, filename):
         """Serialize an object and save to disk."""
-        with open(filename, 'wb') as f:
+        with open(filename, "wb") as f:
             cloudpickle.dump(object_, f)
 
     @staticmethod
@@ -41,5 +41,5 @@ class KerasSerializer(Serializer):
             pass
 
         Optimizer.build = build
-        with open(filename, 'rb') as f:
+        with open(filename, "rb") as f:
             return cloudpickle.load(f)

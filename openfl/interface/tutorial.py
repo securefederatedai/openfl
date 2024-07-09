@@ -30,30 +30,47 @@ logger = getLogger(__name__)
 @pass_context
 def tutorial(context):
     """Manage Jupyter notebooks."""
-    context.obj['group'] = 'tutorial'
+    context.obj["group"] = "tutorial"
 
 
 @tutorial.command()
-@option('-ip', '--ip', required=False, type=click_types.IP_ADDRESS,
-        help='IP address the Jupyter Lab that should start')
-@option('-port', '--port', required=False, type=IntRange(1, 65535),
-        help='The port the Jupyter Lab server will listen on')
+@option(
+    "-ip",
+    "--ip",
+    required=False,
+    type=click_types.IP_ADDRESS,
+    help="IP address the Jupyter Lab that should start",
+)
+@option(
+    "-port",
+    "--port",
+    required=False,
+    type=IntRange(1, 65535),
+    help="The port the Jupyter Lab server will listen on",
+)
 def start(ip, port):
     """Start the Jupyter Lab from the tutorials directory."""
 
+    if "VIRTUAL_ENV" in environ:
+        venv = environ["VIRTUAL_ENV"].split(sep)[-1]
+        check_call(
+            [
+                executable,
+                "-m",
+                "ipykernel",
+                "install",
+                "--user",
+                "--name",
+                f"{venv}",
+            ],
+            shell=False,
+        )
 
-    if 'VIRTUAL_ENV' in environ:
-        venv = environ['VIRTUAL_ENV'].split(sep)[-1]
-        check_call([
-            executable, '-m', 'ipykernel', 'install',
-            '--user', '--name', f'{venv}'
-        ], shell=False)
-
-    jupyter_command = ['jupyter', 'lab', '--notebook-dir', f'{TUTORIALS}']
+    jupyter_command = ["jupyter", "lab", "--notebook-dir", f"{TUTORIALS}"]
 
     if ip is not None:
-        jupyter_command += ['--ip', f'{ip}']
+        jupyter_command += ["--ip", f"{ip}"]
     if port is not None:
-        jupyter_command += ['--port', f'{port}']
+        jupyter_command += ["--port", f"{port}"]
 
     check_call(jupyter_command)

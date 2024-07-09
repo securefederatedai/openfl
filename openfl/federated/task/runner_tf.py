@@ -85,17 +85,27 @@ class TensorFlowTaskRunner(TaskRunner):
         Returns:
             None
         """
-        if self.opt_treatment == 'RESET':
+        if self.opt_treatment == "RESET":
             self.reset_opt_vars()
             self.set_tensor_dict(input_tensor_dict, with_opt_vars=False)
-        elif (round_num > 0 and self.opt_treatment == 'CONTINUE_GLOBAL'
-              and not validation):
+        elif (
+            round_num > 0
+            and self.opt_treatment == "CONTINUE_GLOBAL"
+            and not validation
+        ):
             self.set_tensor_dict(input_tensor_dict, with_opt_vars=True)
         else:
             self.set_tensor_dict(input_tensor_dict, with_opt_vars=False)
 
-    def train_batches(self, col_name, round_num, input_tensor_dict,
-                      epochs=1, use_tqdm=False, **kwargs):
+    def train_batches(
+        self,
+        col_name,
+        round_num,
+        input_tensor_dict,
+        epochs=1,
+        use_tqdm=False,
+        **kwargs
+    ):
         """
         Perform the training.
 
@@ -111,8 +121,8 @@ class TensorFlowTaskRunner(TaskRunner):
         """
         batch_size = self.data_loader.batch_size
 
-        if kwargs['batch_size']:
-            batch_size = kwargs['batch_size']
+        if kwargs["batch_size"]:
+            batch_size = kwargs["batch_size"]
 
         # rebuild model with updated weights
         self.rebuild_model(round_num, input_tensor_dict)
@@ -125,52 +135,53 @@ class TensorFlowTaskRunner(TaskRunner):
             # get iterator for batch draws (shuffling happens here)
             gen = self.data_loader.get_train_loader(batch_size)
             if use_tqdm:
-                gen = tqdm.tqdm(gen, desc='training epoch')
+                gen = tqdm.tqdm(gen, desc="training epoch")
 
-            for (X, y) in gen:
+            for X, y in gen:
                 losses.append(self.train_batch(X, y))
 
         # Output metric tensors (scalar)
         origin = col_name
-        tags = ('trained',)
+        tags = ("trained",)
         output_metric_dict = {
             TensorKey(
-                self.loss_name, origin, round_num, True, ('metric',)
+                self.loss_name, origin, round_num, True, ("metric",)
             ): np.array(np.mean(losses))
         }
 
         # output model tensors (Doesn't include TensorKey)
         output_model_dict = self.get_tensor_dict(with_opt_vars=True)
         global_model_dict, local_model_dict = split_tensor_dict_for_holdouts(
-            self.logger, output_model_dict,
-            **self.tensor_dict_split_fn_kwargs
+            self.logger, output_model_dict, **self.tensor_dict_split_fn_kwargs
         )
 
         # Create global tensorkeys
         global_tensorkey_model_dict = {
-            TensorKey(tensor_name, origin, round_num, False, tags):
-                nparray for tensor_name, nparray in global_model_dict.items()
+            TensorKey(tensor_name, origin, round_num, False, tags): nparray
+            for tensor_name, nparray in global_model_dict.items()
         }
         # Create tensorkeys that should stay local
         local_tensorkey_model_dict = {
-            TensorKey(tensor_name, origin, round_num, False, tags):
-                nparray for tensor_name, nparray in local_model_dict.items()
+            TensorKey(tensor_name, origin, round_num, False, tags): nparray
+            for tensor_name, nparray in local_model_dict.items()
         }
         # The train/validate aggregated function of the next round will
         # look for the updated model parameters.
         # This ensures they will be resolved locally
         next_local_tensorkey_model_dict = {
             TensorKey(
-                tensor_name, origin, round_num + 1, False, ('model',)
-            ): nparray for tensor_name, nparray in local_model_dict.items()}
+                tensor_name, origin, round_num + 1, False, ("model",)
+            ): nparray
+            for tensor_name, nparray in local_model_dict.items()
+        }
 
         global_tensor_dict = {
             **output_metric_dict,
-            **global_tensorkey_model_dict
+            **global_tensorkey_model_dict,
         }
         local_tensor_dict = {
             **local_tensorkey_model_dict,
-            **next_local_tensorkey_model_dict
+            **next_local_tensorkey_model_dict,
         }
 
         # Update the required tensors if they need to be pulled from
@@ -183,7 +194,7 @@ class TensorFlowTaskRunner(TaskRunner):
         # these are only created after training occurs. A work around could
         # involve doing a single epoch of training on random data to get the
         # optimizer names, and then throwing away the model.
-        if self.opt_treatment == 'CONTINUE_GLOBAL':
+        if self.opt_treatment == "CONTINUE_GLOBAL":
             self.initialize_tensorkeys_for_functions(with_opt_vars=True)
 
         return global_tensor_dict, local_tensor_dict
@@ -202,12 +213,15 @@ class TensorFlowTaskRunner(TaskRunner):
         feed_dict = {self.X: X, self.y: y}
 
         # run the train step and return the loss
-        _, loss = self.sess.run([self.train_step, self.loss], feed_dict=feed_dict)
+        _, loss = self.sess.run(
+            [self.train_step, self.loss], feed_dict=feed_dict
+        )
 
         return loss
 
-    def validate(self, col_name, round_num,
-                 input_tensor_dict, use_tqdm=False, **kwargs):
+    def validate(
+        self, col_name, round_num, input_tensor_dict, use_tqdm=False, **kwargs
+    ):
         """
         Run validation.
 
@@ -216,8 +230,8 @@ class TensorFlowTaskRunner(TaskRunner):
         """
         batch_size = self.data_loader.batch_size
 
-        if kwargs['batch_size']:
-            batch_size = kwargs['batch_size']
+        if kwargs["batch_size"]:
+            batch_size = kwargs["batch_size"]
 
         self.rebuild_model(round_num, input_tensor_dict, validation=True)
 
@@ -227,7 +241,7 @@ class TensorFlowTaskRunner(TaskRunner):
 
         gen = self.data_loader.get_valid_loader(batch_size)
         if use_tqdm:
-            gen = tqdm.tqdm(gen, desc='validating')
+            gen = tqdm.tqdm(gen, desc="validating")
 
         for X, y in gen:
             weight = X.shape[0] / self.data_loader.get_valid_data_size()
@@ -235,16 +249,17 @@ class TensorFlowTaskRunner(TaskRunner):
             score += s * weight
 
         origin = col_name
-        suffix = 'validate'
-        if kwargs['apply'] == 'local':
-            suffix += '_local'
+        suffix = "validate"
+        if kwargs["apply"] == "local":
+            suffix += "_local"
         else:
-            suffix += '_agg'
-        tags = ('metric', suffix)
+            suffix += "_agg"
+        tags = ("metric", suffix)
         output_tensor_dict = {
             TensorKey(
                 self.validation_metric_name, origin, round_num, True, tags
-            ): np.array(score)}
+            ): np.array(score)
+        }
 
         # return empty dict for local metrics
         return output_tensor_dict, {}
@@ -263,7 +278,8 @@ class TensorFlowTaskRunner(TaskRunner):
         feed_dict = {self.X: X, self.y: y}
 
         return self.sess.run(
-            [self.output, self.validation_metric], feed_dict=feed_dict)
+            [self.output, self.validation_metric], feed_dict=feed_dict
+        )
 
     def get_tensor_dict(self, with_opt_vars=True):
         """Get the dictionary weights.
@@ -284,8 +300,10 @@ class TensorFlowTaskRunner(TaskRunner):
             variables = self.tvars
 
         # FIXME: do this in one call?
-        return {var.name: val for var, val in zip(
-            variables, self.sess.run(variables))}
+        return {
+            var.name: val
+            for var, val in zip(variables, self.sess.run(variables))
+        }
 
     def set_tensor_dict(self, tensor_dict, with_opt_vars):
         """Set the tensor dictionary.
@@ -303,8 +321,11 @@ class TensorFlowTaskRunner(TaskRunner):
         """
         if with_opt_vars:
             self.assign_ops, self.placeholders = tf_set_tensor_dict(
-                tensor_dict, self.sess, self.fl_vars,
-                self.assign_ops, self.placeholders
+                tensor_dict,
+                self.sess,
+                self.fl_vars,
+                self.assign_ops,
+                self.placeholders,
             )
         else:
             self.tvar_assign_ops, self.tvar_placeholders = tf_set_tensor_dict(
@@ -312,7 +333,7 @@ class TensorFlowTaskRunner(TaskRunner):
                 self.sess,
                 self.tvars,
                 self.tvar_assign_ops,
-                self.tvar_placeholders
+                self.tvar_placeholders,
             )
 
     def reset_opt_vars(self):
@@ -356,8 +377,8 @@ class TensorFlowTaskRunner(TaskRunner):
         Returns:
             list : [TensorKey]
         """
-        if func_name == 'validate':
-            local_model = 'apply=' + str(kwargs['apply'])
+        if func_name == "validate":
+            local_model = "apply=" + str(kwargs["apply"])
             return self.required_tensorkeys_for_function[func_name][local_model]
         else:
             return self.required_tensorkeys_for_function[func_name]
@@ -377,44 +398,44 @@ class TensorFlowTaskRunner(TaskRunner):
 
         output_model_dict = self.get_tensor_dict(with_opt_vars=with_opt_vars)
         global_model_dict, local_model_dict = split_tensor_dict_for_holdouts(
-            self.logger, output_model_dict,
-            **self.tensor_dict_split_fn_kwargs
+            self.logger, output_model_dict, **self.tensor_dict_split_fn_kwargs
         )
         if not with_opt_vars:
             global_model_dict_val = global_model_dict
             local_model_dict_val = local_model_dict
         else:
             output_model_dict = self.get_tensor_dict(with_opt_vars=False)
-            global_model_dict_val, local_model_dict_val = split_tensor_dict_for_holdouts(
-                self.logger,
-                output_model_dict,
-                **self.tensor_dict_split_fn_kwargs
+            global_model_dict_val, local_model_dict_val = (
+                split_tensor_dict_for_holdouts(
+                    self.logger,
+                    output_model_dict,
+                    **self.tensor_dict_split_fn_kwargs
+                )
             )
 
-        self.required_tensorkeys_for_function['train_batches'] = [
-            TensorKey(tensor_name, 'GLOBAL', 0, False, ('model',))
-            for tensor_name in global_model_dict]
-        self.required_tensorkeys_for_function['train_batches'] += [
-            TensorKey(tensor_name, 'LOCAL', 0, False, ('model',))
-            for tensor_name in local_model_dict]
+        self.required_tensorkeys_for_function["train_batches"] = [
+            TensorKey(tensor_name, "GLOBAL", 0, False, ("model",))
+            for tensor_name in global_model_dict
+        ]
+        self.required_tensorkeys_for_function["train_batches"] += [
+            TensorKey(tensor_name, "LOCAL", 0, False, ("model",))
+            for tensor_name in local_model_dict
+        ]
 
         # Validation may be performed on local or aggregated (global)
         # model, so there is an extra lookup dimension for kwargs
-        self.required_tensorkeys_for_function['validate'] = {}
+        self.required_tensorkeys_for_function["validate"] = {}
         # TODO This is not stateless. The optimizer will not be
-        self.required_tensorkeys_for_function['validate']['apply=local'] = [
-            TensorKey(tensor_name, 'LOCAL', 0, False, ('trained',))
-            for tensor_name in {
-                **global_model_dict_val,
-                **local_model_dict_val
-            }
+        self.required_tensorkeys_for_function["validate"]["apply=local"] = [
+            TensorKey(tensor_name, "LOCAL", 0, False, ("trained",))
+            for tensor_name in {**global_model_dict_val, **local_model_dict_val}
         ]
-        self.required_tensorkeys_for_function['validate']['apply=global'] = [
-            TensorKey(tensor_name, 'GLOBAL', 0, False, ('model',))
+        self.required_tensorkeys_for_function["validate"]["apply=global"] = [
+            TensorKey(tensor_name, "GLOBAL", 0, False, ("model",))
             for tensor_name in global_model_dict_val
         ]
-        self.required_tensorkeys_for_function['validate']['apply=global'] += [
-            TensorKey(tensor_name, 'LOCAL', 0, False, ('model',))
+        self.required_tensorkeys_for_function["validate"]["apply=global"] += [
+            TensorKey(tensor_name, "LOCAL", 0, False, ("model",))
             for tensor_name in local_model_dict_val
         ]
 
@@ -426,8 +447,9 @@ class TensorFlowTaskRunner(TaskRunner):
 # to avoid inflating the graph, caller should keep these and pass them back
 # What if we want to set a different group of vars in the middle?
 # It is good if it is the subset of the original variables.
-def tf_set_tensor_dict(tensor_dict, session, variables,
-                       assign_ops=None, placeholders=None):
+def tf_set_tensor_dict(
+    tensor_dict, session, variables, assign_ops=None, placeholders=None
+):
     """Tensorflow set tensor dictionary.
 
     Args:

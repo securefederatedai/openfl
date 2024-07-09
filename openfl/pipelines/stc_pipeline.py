@@ -44,7 +44,7 @@ class SparsityTransformer(Transformer):
             sparse_data: a flattened, sparse representation of the input tensor
             metadata: dictionary to store a list of meta information.
         """
-        metadata = {'int_list': list(data.shape)}
+        metadata = {"int_list": list(data.shape)}
         # sparsification
         data = data.astype(np.float32)
         flatten_data = data.flatten()
@@ -67,7 +67,7 @@ class SparsityTransformer(Transformer):
             recovered_data: an numpy array with original shape.
         """
         data = data.astype(np.float32)
-        data_shape = metadata['int_list']
+        data_shape = metadata["int_list"]
         recovered_data = data.reshape(data_shape)
         return recovered_data
 
@@ -118,7 +118,7 @@ class TernaryTransformer(Transformer):
         out_ = np.where(data > 0.0, mean_topk, 0.0)
         out = np.where(data < 0.0, -mean_topk, out_)
         int_array, int2float_map = self._float_to_int(out)
-        metadata = {'int_to_float': int2float_map}
+        metadata = {"int_to_float": int2float_map}
         return int_array, metadata
 
     def backward(self, data, metadata, **kwargs):
@@ -133,7 +133,7 @@ class TernaryTransformer(Transformer):
         """
         # TODO
         data = copy.deepcopy(data)
-        int2float_map = metadata['int_to_float']
+        int2float_map = metadata["int_to_float"]
         for key in int2float_map:
             indices = data == key
             data[indices] = int2float_map[key]
@@ -220,5 +220,9 @@ class STCPipeline(TransformationPipeline):
         """
         # instantiate each transformer
         self.p = p_sparsity
-        transformers = [SparsityTransformer(self.p), TernaryTransformer(), GZIPTransformer()]
+        transformers = [
+            SparsityTransformer(self.p),
+            TernaryTransformer(),
+            GZIPTransformer(),
+        ]
         super().__init__(transformers=transformers, **kwargs)

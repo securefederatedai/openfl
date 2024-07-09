@@ -36,7 +36,7 @@ class PynvmlCUDADeviceMonitor(CUDADeviceMonitor):
 
     def get_driver_version(self) -> str:
         """Get Nvidia driver version."""
-        return pynvml.nvmlSystemGetDriverVersion().decode('utf-8')
+        return pynvml.nvmlSystemGetDriverVersion().decode("utf-8")
 
     def get_device_memory_total(self, index: int) -> int:
         """Get total memory available on the device."""
@@ -58,7 +58,7 @@ class PynvmlCUDADeviceMonitor(CUDADeviceMonitor):
         """
         handle = pynvml.nvmlDeviceGetHandleByIndex(index)
         info_utilization = pynvml.nvmlDeviceGetUtilizationRates(handle)
-        return f'{info_utilization.gpu}%'
+        return f"{info_utilization.gpu}%"
 
     def get_device_name(self, index: int) -> str:
         """Get device utilization method."""
@@ -77,4 +77,4 @@ class PynvmlCUDADeviceMonitor(CUDADeviceMonitor):
         cuda_version = pynvml.nvmlSystemGetCudaDriverVersion()
         major_version = int(cuda_version / 1000)
         minor_version = int(cuda_version % 1000 / 10)
-        return f'{major_version}.{minor_version}'
+        return f"{major_version}.{minor_version}"

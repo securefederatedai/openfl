@@ -59,10 +59,12 @@ class AdamAdaptiveAggregation(AdaptiveAggregation):
                 and squared gradients.
             epsilon: Value for computational stability.
         """
-        opt = NumPyAdam(params=params,
-                        model_interface=model_interface,
-                        learning_rate=learning_rate,
-                        betas=betas,
-                        initial_accumulator_value=initial_accumulator_value,
-                        epsilon=epsilon)
+        opt = NumPyAdam(
+            params=params,
+            model_interface=model_interface,
+            learning_rate=learning_rate,
+            betas=betas,
+            initial_accumulator_value=initial_accumulator_value,
+            epsilon=epsilon,
+        )
         super().__init__(opt, agg_func)

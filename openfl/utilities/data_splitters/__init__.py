@@ -23,10 +23,10 @@ from openfl.utilities.data_splitters.numpy import (
 )
 
 __all__ = [
-    'DataSplitter',
-    'DirichletNumPyDataSplitter',
-    'EqualNumPyDataSplitter',
-    'LogNormalNumPyDataSplitter',
-    'NumPyDataSplitter',
-    'RandomNumPyDataSplitter',
+    "DataSplitter",
+    "DirichletNumPyDataSplitter",
+    "EqualNumPyDataSplitter",
+    "LogNormalNumPyDataSplitter",
+    "NumPyDataSplitter",
+    "RandomNumPyDataSplitter",
 ]

@@ -45,13 +45,16 @@ class KmeansTransformer(Transformer):
             data: an numpy array being quantized
             **kwargs: Variable arguments to pass
         """
-        metadata = {'int_list': list(data.shape)}
+        metadata = {"int_list": list(data.shape)}
         # clustering
-        k_means = cluster.KMeans(n_clusters=self.n_cluster, n_init=self.n_cluster)
+        k_means = cluster.KMeans(
+            n_clusters=self.n_cluster, n_init=self.n_cluster
+        )
         data = data.reshape((-1, 1))
         if data.shape[0] >= self.n_cluster:
             k_means = cluster.KMeans(
-                n_clusters=self.n_cluster, n_init=self.n_cluster)
+                n_clusters=self.n_cluster, n_init=self.n_cluster
+            )
             k_means.fit(data)
             quantized_values = k_means.cluster_centers_.squeeze()
             indices = k_means.labels_
@@ -60,7 +63,7 @@ class KmeansTransformer(Transformer):
             quant_array = data
 
         int_array, int2float_map = self._float_to_int(quant_array)
-        metadata['int_to_float'] = int2float_map
+        metadata["int_to_float"] = int2float_map
 
         return int_array, metadata
 
@@ -77,11 +80,11 @@ class KmeansTransformer(Transformer):
         # convert back to float
         # TODO
         data = co.deepcopy(data)
-        int2float_map = metadata['int_to_float']
+        int2float_map = metadata["int_to_float"]
         for key in int2float_map:
             indices = data == key
             data[indices] = int2float_map[key]
-        data_shape = list(metadata['int_list'])
+        data_shape = list(metadata["int_list"])
         data = data.reshape(data_shape)
         return data
 

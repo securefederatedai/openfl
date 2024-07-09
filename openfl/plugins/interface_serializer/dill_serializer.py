@@ -29,11 +29,11 @@ class DillSerializer(Serializer):
     @staticmethod
     def serialize(object_, filename):
         """Serialize an object and save to disk."""
-        with open(filename, 'wb') as f:
+        with open(filename, "wb") as f:
             dill.dump(object_, f, recurse=True)
 
     @staticmethod
     def restore_object(filename):
         """Load and deserialize an object."""
-        with open(filename, 'rb') as f:
+        with open(filename, "rb") as f:
             return dill.load(f)  # nosec

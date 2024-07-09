@@ -38,7 +38,7 @@ class FrameworkAdapterPluginInterface:
         raise NotImplementedError
 
     @staticmethod
-    def set_tensor_dict(model, tensor_dict, optimizer=None, device='cpu'):
+    def set_tensor_dict(model, tensor_dict, optimizer=None, device="cpu"):
         """
         Set tensor dict from a model and an optimizer.
 

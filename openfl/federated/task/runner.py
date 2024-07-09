@@ -28,7 +28,9 @@ from logging import getLogger
 class TaskRunner:
     """Federated Learning Task Runner Class."""
 
-    def __init__(self, data_loader, tensor_dict_split_fn_kwargs: dict = None, **kwargs):
+    def __init__(
+        self, data_loader, tensor_dict_split_fn_kwargs: dict = None, **kwargs
+    ):
         """
         Intialize.
 
@@ -83,9 +85,13 @@ class TaskRunner:
         Returns:
             None
         """
-        if data_loader.get_feature_shape() != self.data_loader.get_feature_shape():
+        if (
+            data_loader.get_feature_shape()
+            != self.data_loader.get_feature_shape()
+        ):
             raise ValueError(
-                'The data_loader feature shape is not compatible with model.')
+                "The data_loader feature shape is not compatible with model."
+            )
 
         self.data_loader = data_loader
 

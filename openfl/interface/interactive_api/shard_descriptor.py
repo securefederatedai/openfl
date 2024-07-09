@@ -51,22 +51,23 @@ class ShardDescriptor:
     @property
     def dataset_description(self) -> str:
         """Return the dataset description."""
-        return ''
+        return ""
 
 
 class DummyShardDataset(ShardDataset):
     """Dummy shard dataset class."""
 
     def __init__(
-            self, *,
-            size: int,
-            sample_shape: List[int],
-            target_shape: List[int]
+        self, *, size: int, sample_shape: List[int], target_shape: List[int]
     ):
         """Initialize DummyShardDataset."""
         self.size = size
-        self.samples = np.random.randint(0, 255, (self.size, *sample_shape), np.uint8)
-        self.targets = np.random.randint(0, 255, (self.size, *target_shape), np.uint8)
+        self.samples = np.random.randint(
+            0, 255, (self.size, *sample_shape), np.uint8
+        )
+        self.targets = np.random.randint(
+            0, 255, (self.size, *target_shape), np.uint8
+        )
 
     def __len__(self) -> int:
         """Return the len of the dataset."""
@@ -81,10 +82,10 @@ class DummyShardDescriptor(ShardDescriptor):
     """Dummy shard descriptor class."""
 
     def __init__(
-            self,
-            sample_shape: Iterable[str],
-            target_shape: Iterable[str],
-            size: int
+        self,
+        sample_shape: Iterable[str],
+        target_shape: Iterable[str],
+        size: int,
     ) -> None:
         """Initialize DummyShardDescriptor."""
         self._sample_shape = [int(dim) for dim in sample_shape]
@@ -96,7 +97,7 @@ class DummyShardDescriptor(ShardDescriptor):
         return DummyShardDataset(
             size=self.size,
             sample_shape=self._sample_shape,
-            target_shape=self._target_shape
+            target_shape=self._target_shape,
         )
 
     @property
@@ -112,4 +113,4 @@ class DummyShardDescriptor(ShardDescriptor):
     @property
     def dataset_description(self) -> str:
         """Return the dataset description."""
-        return 'Dummy shard descriptor'
+        return "Dummy shard descriptor"

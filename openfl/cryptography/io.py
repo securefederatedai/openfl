@@ -37,7 +37,7 @@ def read_key(path: Path) -> RSAPrivateKey:
     Returns:
         private_key
     """
-    with open(path, 'rb') as f:
+    with open(path, "rb") as f:
         pem_data = f.read()
 
     signing_key = load_pem_private_key(pem_data, password=None)
@@ -55,15 +55,18 @@ def write_key(key: RSAPrivateKey, path: Path) -> None:
         path : Path (pathlib)
 
     """
+
     def key_opener(path, flags):
         return os.open(path, flags, mode=0o600)
 
-    with open(path, 'wb', opener=key_opener) as f:
-        f.write(key.private_bytes(
-            encoding=serialization.Encoding.PEM,
-            format=serialization.PrivateFormat.TraditionalOpenSSL,
-            encryption_algorithm=serialization.NoEncryption()
-        ))
+    with open(path, "wb", opener=key_opener) as f:
+        f.write(
+            key.private_bytes(
+                encoding=serialization.Encoding.PEM,
+                format=serialization.PrivateFormat.TraditionalOpenSSL,
+                encryption_algorithm=serialization.NoEncryption(),
+            )
+        )
 
 
 def read_crt(path: Path) -> Certificate:
@@ -76,7 +79,7 @@ def read_crt(path: Path) -> Certificate:
     Returns:
         Cryptography TLS Certificate object
     """
-    with open(path, 'rb') as f:
+    with open(path, "rb") as f:
         pem_data = f.read()
 
     certificate = x509.load_pem_x509_certificate(pem_data)
@@ -96,10 +99,12 @@ def write_crt(certificate: Certificate, path: Path) -> None:
     Returns:
         Cryptography TLS Certificate object
     """
-    with open(path, 'wb') as f:
-        f.write(certificate.public_bytes(
-            encoding=serialization.Encoding.PEM,
-        ))
+    with open(path, "wb") as f:
+        f.write(
+            certificate.public_bytes(
+                encoding=serialization.Encoding.PEM,
+            )
+        )
 
 
 def read_csr(path: Path) -> Tuple[CertificateSigningRequest, str]:
@@ -112,7 +117,7 @@ def read_csr(path: Path) -> Tuple[CertificateSigningRequest, str]:
     Returns:
         Cryptography CSR object
     """
-    with open(path, 'rb') as f:
+    with open(path, "rb") as f:
         pem_data = f.read()
 
     csr = x509.load_pem_x509_csr(pem_data)

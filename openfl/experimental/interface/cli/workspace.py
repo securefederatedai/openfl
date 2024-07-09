@@ -49,7 +49,6 @@ from openfl.experimental.interface.cli.cli_helper import (
     CERT_DIR,
     OPENFL_USERDIR,
     WORKSPACE,
-    copytree,
     print_tree,
 )
 from openfl.experimental.workspace_export import WorkspaceExport
@@ -70,7 +69,6 @@ def workspace(context):
 def create_dirs(prefix):
     """Create workspace directories."""
 
-
     echo("Creating Workspace Directories")
 
     (prefix / "cert").mkdir(parents=True, exist_ok=True)  # certifications
@@ -86,7 +84,6 @@ def create_dirs(prefix):
 
 def create_temp(prefix, template):
     """Create workspace templates."""
-
 
     echo("Creating Workspace Templates")
     # Use the specified template if it's a Path, otherwise use WORKSPACE/template
@@ -168,7 +165,6 @@ def create_(prefix, custom_template, template, notebook, template_output_dir):
                 + "save your Jupyter Notebook workspace."
             )
 
-
         WorkspaceExport.export(
             notebook_path=notebook,
             output_workspace=template_output_dir,
@@ -189,7 +185,6 @@ def create_(prefix, custom_template, template, notebook, template_output_dir):
 
 def create(prefix, template):
     """Create federated learning workspace."""
-
 
     if not OPENFL_USERDIR.exists():
         OPENFL_USERDIR.mkdir()
@@ -250,8 +245,6 @@ def create(prefix, template):
 )
 def export_(pip_install_options: Tuple[str]):
     """Export federated learning workspace."""
-
-
 
     echo(
         style(
@@ -354,7 +347,6 @@ def certify_():
 
 def certify():
     """Create certificate authority for federation."""
-
 
     echo("Setting Up Certificate Authority...\n")
 

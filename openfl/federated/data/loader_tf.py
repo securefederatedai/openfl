@@ -60,7 +60,9 @@ class TensorFlowDataLoader(DataLoader):
         -------
         loader object
         """
-        return self._get_batch_generator(X=self.X_train, y=self.y_train, batch_size=batch_size)
+        return self._get_batch_generator(
+            X=self.X_train, y=self.y_train, batch_size=batch_size
+        )
 
     def get_valid_loader(self, batch_size=None):
         """
@@ -69,7 +71,9 @@ class TensorFlowDataLoader(DataLoader):
         Returns:
             loader object
         """
-        return self._get_batch_generator(X=self.X_valid, y=self.y_valid, batch_size=batch_size)
+        return self._get_batch_generator(
+            X=self.X_valid, y=self.y_valid, batch_size=batch_size
+        )
 
     def get_train_data_size(self):
         """

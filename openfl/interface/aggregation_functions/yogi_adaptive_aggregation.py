@@ -59,10 +59,12 @@ class YogiAdaptiveAggregation(AdaptiveAggregation):
                 and squared gradients.
             epsilon: Value for computational stability.
         """
-        opt = NumPyYogi(params=params,
-                        model_interface=model_interface,
-                        learning_rate=learning_rate,
-                        betas=betas,
-                        initial_accumulator_value=initial_accumulator_value,
-                        epsilo=epsilon)
+        opt = NumPyYogi(
+            params=params,
+            model_interface=model_interface,
+            learning_rate=learning_rate,
+            betas=betas,
+            initial_accumulator_value=initial_accumulator_value,
+            epsilo=epsilon,
+        )
         super().__init__(opt, agg_func)

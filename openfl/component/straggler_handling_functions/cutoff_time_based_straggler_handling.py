@@ -36,12 +36,17 @@ class CutoffTimeBasedStragglerHandling(StragglerHandlingFunction):
 
     def straggler_time_expired(self):
         return self.round_start_time is not None and (
-            (time.time() - self.round_start_time) > self.straggler_cutoff_time)
+            (time.time() - self.round_start_time) > self.straggler_cutoff_time
+        )
 
     def minimum_collaborators_reported(self, num_collaborators_done):
         return num_collaborators_done >= self.minimum_reporting
 
-    def straggler_cutoff_check(self, num_collaborators_done, all_collaborators=None):
-        cutoff = self.straggler_time_expired() and self.minimum_collaborators_reported(
-            num_collaborators_done)
+    def straggler_cutoff_check(
+        self, num_collaborators_done, all_collaborators=None
+    ):
+        cutoff = (
+            self.straggler_time_expired()
+            and self.minimum_collaborators_reported(num_collaborators_done)
+        )
         return cutoff

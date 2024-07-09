@@ -50,29 +50,28 @@ class StaticGroupedAssigner(Assigner):
 
     def define_task_assignments(self):
         """All of the logic to set up the map of tasks to collaborators is done here."""
-        cols_amount = sum([
-            len(group['collaborators']) for group in self.task_groups
-        ])
+        cols_amount = sum(
+            [len(group["collaborators"]) for group in self.task_groups]
+        )
         authorized_cols_amount = len(self.authorized_cols)
 
         unique_cols = {
-            col
-            for group in self.task_groups
-            for col in group['collaborators']
+            col for group in self.task_groups for col in group["collaborators"]
         }
         unique_authorized_cols = set(self.authorized_cols)
 
-        assert (cols_amount == authorized_cols_amount and unique_cols == unique_authorized_cols), (
-            f'Collaborators in each group must be distinct: '
-            f'{unique_cols}, {unique_authorized_cols}'
+        assert (
+            cols_amount == authorized_cols_amount
+            and unique_cols == unique_authorized_cols
+        ), (
+            f"Collaborators in each group must be distinct: "
+            f"{unique_cols}, {unique_authorized_cols}"
         )
 
         # Start by finding all of the tasks in all specified groups
-        self.all_tasks_in_groups = list({
-            task
-            for group in self.task_groups
-            for task in group['tasks']
-        })
+        self.all_tasks_in_groups = list(
+            {task for group in self.task_groups for task in group["tasks"]}
+        )
 
         # Initialize the map of collaborators for a given task on a given round
         for task in self.all_tasks_in_groups:
@@ -81,16 +80,16 @@ class StaticGroupedAssigner(Assigner):
             }
 
         for group in self.task_groups:
-            group_col_list = group['collaborators']
-            self.task_group_collaborators[group['name']] = group_col_list
+            group_col_list = group["collaborators"]
+            self.task_group_collaborators[group["name"]] = group_col_list
             for col in group_col_list:
                 # For now, we assume that collaborators have the same tasks for
                 # every round
                 self.collaborator_tasks[col] = {
-                    i: group['tasks'] for i in range(self.rounds)
+                    i: group["tasks"] for i in range(self.rounds)
                 }
             # Now populate reverse lookup of tasks->group
-            for task in group['tasks']:
+            for task in group["tasks"]:
                 for round_ in range(self.rounds):
                     # This should append the list of collaborators performing
                     # that task

@@ -80,7 +80,6 @@ def collaborator(context):
 def start_(plan, collaborator_name, secure, data_config="plan/data.yaml"):
     """Start a collaborator service."""
 
-
     if plan and is_directory_traversal(plan):
         echo(
             "Federated learning plan path is out of the openfl workspace scope."
@@ -172,7 +171,6 @@ def generate_cert_request(collaborator_name, silent, skip_package):
 
     if not skip_package:
 
-
         archive_type = "zip"
         archive_name = f"col_{common_name}_to_agg_cert_request"
         archive_file_name = archive_name + "." + archive_type
@@ -215,7 +213,6 @@ def register_collaborator(file_name):
         file_name (str): The name of the collaborator in this federation
 
     """
-
 
     col_name = find_certificate_name(file_name)
 
@@ -284,8 +281,6 @@ def certify_(collaborator_name, silent, request_pkg, import_):
 
 def certify(collaborator_name, silent, request_pkg=None, import_=False):
     """Sign/certify collaborator certificate key pair."""
-
-
 
     common_name = f"{collaborator_name}"
 

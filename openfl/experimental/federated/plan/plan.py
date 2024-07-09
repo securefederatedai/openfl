@@ -23,7 +23,6 @@ from pathlib import Path
 
 from yaml import SafeDumper, dump, safe_load
 
-from openfl.experimental.federated.plan import Plan
 from openfl.experimental.interface.cli.cli_helper import WORKSPACE
 from openfl.experimental.transport import (
     AggregatorGRPCClient,
@@ -282,11 +281,11 @@ class Plan:
         defaults[SETTINGS]["authorized_cols"] = self.authorized_cols
 
         private_attrs_callable, private_attrs_kwargs, private_attributes = (
-            self.get_private_attr(
-                "aggregator"
-            )
+            self.get_private_attr("aggregator")
         )
-        defaults[SETTINGS]["private_attributes_callable"] = private_attrs_callable
+        defaults[SETTINGS][
+            "private_attributes_callable"
+        ] = private_attrs_callable
         defaults[SETTINGS]["private_attributes_kwargs"] = private_attrs_kwargs
         defaults[SETTINGS]["private_attributes"] = private_attributes
 
@@ -331,11 +330,11 @@ class Plan:
         defaults[SETTINGS]["federation_uuid"] = self.federation_uuid
 
         private_attrs_callable, private_attrs_kwargs, private_attributes = (
-            self.get_private_attr(
-                collaborator_name
-            )
+            self.get_private_attr(collaborator_name)
         )
-        defaults[SETTINGS]["private_attributes_callable"] = private_attrs_callable
+        defaults[SETTINGS][
+            "private_attributes_callable"
+        ] = private_attrs_callable
         defaults[SETTINGS]["private_attributes_kwargs"] = private_attrs_kwargs
         defaults[SETTINGS]["private_attributes"] = private_attributes
 
@@ -465,8 +464,6 @@ class Plan:
         private_attrs_kwargs = {}
         private_attributes = {}
 
-
-
         data_yaml = "plan/data.yaml"
 
         if os.path.exists(data_yaml) and os.path.isfile(data_yaml):
@@ -482,10 +479,10 @@ class Plan:
                 if callable_func and private_attributes:
                     logger = getLogger(__name__)
                     logger.warning(
-                        f'Warning: {private_attr_name} private attributes '
-                        'will be initialized via callable and '
-                        'attributes directly specified '
-                        'will be ignored'
+                        f"Warning: {private_attr_name} private attributes "
+                        "will be initialized via callable and "
+                        "attributes directly specified "
+                        "will be ignored"
                     )
 
                 if callable_func is not None:
@@ -513,5 +510,9 @@ class Plan:
                         f"or be import from code part, get {private_attrs_callable}"
                     )
 
-                return private_attrs_callable, private_attrs_kwargs, private_attributes
+                return (
+                    private_attrs_callable,
+                    private_attrs_kwargs,
+                    private_attributes,
+                )
         return None, None, {}

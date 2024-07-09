@@ -26,18 +26,20 @@ class Task:
     function_name: str
     task_type: str
     apply_local: bool = False
-    parameters: dict = field(default_factory=dict)  # We can expend it in the future
+    parameters: dict = field(
+        default_factory=dict
+    )  # We can expend it in the future
 
 
 @dataclass
 class TrainTask(Task):
     """TrainTask class."""
 
-    task_type: str = 'train'
+    task_type: str = "train"
 
 
 @dataclass
 class ValidateTask(Task):
     """Validation Task class."""
 
-    task_type: str = 'validate'
+    task_type: str = "validate"

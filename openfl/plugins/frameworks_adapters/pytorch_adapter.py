@@ -47,7 +47,7 @@ class FrameworkAdapterPlugin(FrameworkAdapterPluginInterface):
         return state
 
     @staticmethod
-    def set_tensor_dict(model, tensor_dict, optimizer=None, device='cpu'):
+    def set_tensor_dict(model, tensor_dict, optimizer=None, device="cpu"):
         """
         Set tensor dict from a model and an optimizer.
 
@@ -65,7 +65,7 @@ class FrameworkAdapterPlugin(FrameworkAdapterPluginInterface):
 
         if optimizer is not None:
             # see if there is state to restore first
-            if tensor_dict.pop('__opt_state_needed') == 'true':
+            if tensor_dict.pop("__opt_state_needed") == "true":
                 _set_optimizer_state(optimizer, device, tensor_dict)
 
             # sanity check that we did not record any state that was not used
@@ -82,15 +82,16 @@ def _set_optimizer_state(optimizer, device, derived_opt_state_dict):
 
     """
     temp_state_dict = expand_derived_opt_state_dict(
-        derived_opt_state_dict, device)
+        derived_opt_state_dict, device
+    )
 
     # Setting other items from the param_groups
     # getting them from the local optimizer
     # (expand_derived_opt_state_dict sets only 'params')
     for i, group in enumerate(optimizer.param_groups):
         for k, v in group.items():
-            if k not in temp_state_dict['param_groups'][i]:
-                temp_state_dict['param_groups'][i][k] = v
+            if k not in temp_state_dict["param_groups"][i]:
+                temp_state_dict["param_groups"][i][k] = v
 
     optimizer.load_state_dict(temp_state_dict)
 
@@ -105,11 +106,11 @@ def _get_optimizer_state(optimizer):
 
     # Optimizer state might not have some parts representing frozen parameters
     # So we do not synchronize them
-    param_keys_with_state = set(opt_state_dict['state'].keys())
-    for group in opt_state_dict['param_groups']:
-        local_param_set = set(group['params'])
+    param_keys_with_state = set(opt_state_dict["state"].keys())
+    for group in opt_state_dict["param_groups"]:
+        local_param_set = set(group["params"])
         params_to_sync = local_param_set & param_keys_with_state
-        group['params'] = sorted(params_to_sync)
+        group["params"] = sorted(params_to_sync)
 
     derived_opt_state_dict = _derive_opt_state_dict(opt_state_dict)
 
@@ -131,17 +132,17 @@ def _derive_opt_state_dict(opt_state_dict):
     derived_opt_state_dict = {}
 
     # Determine if state is needed for this optimizer.
-    if len(opt_state_dict['state']) == 0:
-        derived_opt_state_dict['__opt_state_needed'] = 'false'
+    if len(opt_state_dict["state"]) == 0:
+        derived_opt_state_dict["__opt_state_needed"] = "false"
         return derived_opt_state_dict
 
-    derived_opt_state_dict['__opt_state_needed'] = 'true'
+    derived_opt_state_dict["__opt_state_needed"] = "true"
 
     # Using one example state key, we collect keys for the corresponding
     # dictionary value.
-    example_state_key = opt_state_dict['param_groups'][0]['params'][0]
+    example_state_key = opt_state_dict["param_groups"][0]["params"][0]
     example_state_subkeys = set(
-        opt_state_dict['state'][example_state_key].keys()
+        opt_state_dict["state"][example_state_key].keys()
     )
 
     # We assume that the state collected for all params in all param groups is
@@ -150,50 +151,54 @@ def _derive_opt_state_dict(opt_state_dict):
     # subkeys is a tensor depends only on the subkey.
     # Using assert statements to break the routine if these assumptions are
     # incorrect.
-    for state_key in opt_state_dict['state'].keys():
-        assert example_state_subkeys == set(opt_state_dict['state'][state_key].keys())
+    for state_key in opt_state_dict["state"].keys():
+        assert example_state_subkeys == set(
+            opt_state_dict["state"][state_key].keys()
+        )
         for state_subkey in example_state_subkeys:
-            assert (isinstance(
-                opt_state_dict['state'][example_state_key][state_subkey],
-                pt.Tensor)
-                == isinstance(
-                    opt_state_dict['state'][state_key][state_subkey],
-                    pt.Tensor))
+            assert isinstance(
+                opt_state_dict["state"][example_state_key][state_subkey],
+                pt.Tensor,
+            ) == isinstance(
+                opt_state_dict["state"][state_key][state_subkey], pt.Tensor
+            )
 
-    state_subkeys = list(opt_state_dict['state'][example_state_key].keys())
+    state_subkeys = list(opt_state_dict["state"][example_state_key].keys())
 
     # Tags will record whether the value associated to the subkey is a
     # tensor or not.
     state_subkey_tags = []
     for state_subkey in state_subkeys:
         if isinstance(
-                opt_state_dict['state'][example_state_key][state_subkey],
-                pt.Tensor
+            opt_state_dict["state"][example_state_key][state_subkey], pt.Tensor
         ):
-            state_subkey_tags.append('istensor')
+            state_subkey_tags.append("istensor")
         else:
-            state_subkey_tags.append('')
+            state_subkey_tags.append("")
     state_subkeys_and_tags = list(zip(state_subkeys, state_subkey_tags))
 
     # Forming the flattened dict, using a concatenation of group index,
     # subindex, tag, and subkey inserted into the flattened dict key -
     # needed for reconstruction.
     nb_params_per_group = []
-    for group_idx, group in enumerate(opt_state_dict['param_groups']):
-        for idx, param_id in enumerate(group['params']):
+    for group_idx, group in enumerate(opt_state_dict["param_groups"]):
+        for idx, param_id in enumerate(group["params"]):
             for subkey, tag in state_subkeys_and_tags:
-                if tag == 'istensor':
-                    new_v = opt_state_dict['state'][param_id][
-                        subkey].cpu().numpy()
+                if tag == "istensor":
+                    new_v = (
+                        opt_state_dict["state"][param_id][subkey].cpu().numpy()
+                    )
                 else:
                     new_v = np.array(
-                        [opt_state_dict['state'][param_id][subkey]]
+                        [opt_state_dict["state"][param_id][subkey]]
                     )
-                derived_opt_state_dict[f'__opt_state_{group_idx}_{idx}_{tag}_{subkey}'] = new_v
+                derived_opt_state_dict[
+                    f"__opt_state_{group_idx}_{idx}_{tag}_{subkey}"
+                ] = new_v
         nb_params_per_group.append(idx + 1)
     # group lengths are also helpful for reconstructing
     # original opt_state_dict structure
-    derived_opt_state_dict['__opt_group_lengths'] = np.array(
+    derived_opt_state_dict["__opt_group_lengths"] = np.array(
         nb_params_per_group
     )
 
@@ -217,40 +222,38 @@ def expand_derived_opt_state_dict(derived_opt_state_dict, device):
     """
     state_subkeys_and_tags = []
     for key in derived_opt_state_dict:
-        if key.startswith('__opt_state_0_0_'):
+        if key.startswith("__opt_state_0_0_"):
             stripped_key = key[16:]
-            if stripped_key.startswith('istensor_'):
-                this_tag = 'istensor'
+            if stripped_key.startswith("istensor_"):
+                this_tag = "istensor"
                 subkey = stripped_key[9:]
             else:
-                this_tag = ''
+                this_tag = ""
                 subkey = stripped_key[1:]
             state_subkeys_and_tags.append((subkey, this_tag))
 
-    opt_state_dict = {'param_groups': [], 'state': {}}
+    opt_state_dict = {"param_groups": [], "state": {}}
     nb_params_per_group = list(
-        derived_opt_state_dict.pop('__opt_group_lengths').astype(np.int32)
+        derived_opt_state_dict.pop("__opt_group_lengths").astype(np.int32)
     )
 
     # Construct the expanded dict.
     for group_idx, nb_params in enumerate(nb_params_per_group):
-        these_group_ids = [
-            f'{group_idx}_{idx}' for idx in range(nb_params)
-        ]
-        opt_state_dict['param_groups'].append({'params': these_group_ids})
+        these_group_ids = [f"{group_idx}_{idx}" for idx in range(nb_params)]
+        opt_state_dict["param_groups"].append({"params": these_group_ids})
         for this_id in these_group_ids:
-            opt_state_dict['state'][this_id] = {}
+            opt_state_dict["state"][this_id] = {}
             for subkey, tag in state_subkeys_and_tags:
-                flat_key = f'__opt_state_{this_id}_{tag}_{subkey}'
-                if tag == 'istensor':
+                flat_key = f"__opt_state_{this_id}_{tag}_{subkey}"
+                if tag == "istensor":
                     new_v = pt.from_numpy(derived_opt_state_dict.pop(flat_key))
                 else:
                     # Here (for currrently supported optimizers) the subkey
                     # should be 'step' and the length of array should be one.
-                    assert subkey == 'step'
+                    assert subkey == "step"
                     assert len(derived_opt_state_dict[flat_key]) == 1
                     new_v = int(derived_opt_state_dict.pop(flat_key))
-                opt_state_dict['state'][this_id][subkey] = new_v
+                opt_state_dict["state"][this_id][subkey] = new_v
 
     # sanity check that we did not miss any optimizer state
     assert len(derived_opt_state_dict) == 0, str(derived_opt_state_dict)
@@ -271,8 +274,10 @@ def to_cpu_numpy(state):
     for k, v in state.items():
         # When restoring, we currently assume all values are tensors.
         if not pt.is_tensor(v):
-            raise ValueError('We do not currently support non-tensors '
-                             'coming from model.state_dict()')
+            raise ValueError(
+                "We do not currently support non-tensors "
+                "coming from model.state_dict()"
+            )
         # get as a numpy array, making sure is on cpu
         state[k] = v.cpu().numpy()
     return state

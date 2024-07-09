@@ -37,7 +37,9 @@ def geometric_median(tensors, weights, maxiter=4, eps=1e-5, ftol=1e-6):
 
     for _ in range(maxiter):
         prev_obj_val = obj_val
-        weights = np.asarray([w / max(eps, _l2dist(median, x)) for w, x in zip(weights, tensors)])
+        weights = np.asarray(
+            [w / max(eps, _l2dist(median, x)) for w, x in zip(weights, tensors)]
+        )
         weights = weights / weights.sum()
         median = weighted_average(tensors, weights)
         num_oracle_calls += 1
@@ -50,7 +52,7 @@ def geometric_median(tensors, weights, maxiter=4, eps=1e-5, ftol=1e-6):
 def _l2dist(p1, p2):
     """L2 distance between p1, p2, each of which is a list of nd-arrays."""
     if p1.ndim != p2.ndim:
-        raise RuntimeError('Tensor shapes should be equal')
+        raise RuntimeError("Tensor shapes should be equal")
     if p1.ndim < 2:
         return _l2dist(*[np.expand_dims(x, axis=0) for x in [p1, p2]])
     return np.linalg.norm([np.linalg.norm(x1 - x2) for x1, x2 in zip(p1, p2)])

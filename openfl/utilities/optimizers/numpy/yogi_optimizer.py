@@ -51,19 +51,22 @@ class NumPyYogi(NumPyAdam):
                 and squared gradients.
             epsilon: Value for computational stability.
         """
-        super().__init__(params=params,
-                         model_interface=model_interface,
-                         learning_rate=learning_rate,
-                         betas=betas,
-                         initial_accumulator_value=initial_accumulator_value,
-                         epsilon=epsilon)
+        super().__init__(
+            params=params,
+            model_interface=model_interface,
+            learning_rate=learning_rate,
+            betas=betas,
+            initial_accumulator_value=initial_accumulator_value,
+            epsilon=epsilon,
+        )
 
     def _update_second_moment(self, grad_name: str, grad: np.ndarray) -> None:
         """Override second moment update rule for Yogi optimization updates."""
         sign = np.sign(grad**2 - self.grads_second_moment[grad_name])
-        self.grads_second_moment[grad_name] = (self.beta_2
-                                               * self.grads_second_moment[grad_name]
-                                               + (1.0 - self.beta_2) * sign * grad**2)
+        self.grads_second_moment[grad_name] = (
+            self.beta_2 * self.grads_second_moment[grad_name]
+            + (1.0 - self.beta_2) * sign * grad**2
+        )
 
     def step(self, gradients: Dict[str, np.ndarray]) -> None:
         """

@@ -33,11 +33,11 @@ class ExperimentWorkspace:
     """Experiment workspace context manager."""
 
     def __init__(
-            self,
-            experiment_name: str,
-            data_file_path: Path,
-            install_requirements: bool = False,
-            remove_archive: bool = True
+        self,
+        experiment_name: str,
+        data_file_path: Path,
+        install_requirements: bool = False,
+        remove_archive: bool = True,
     ) -> None:
         """Initialize workspace context manager."""
         self.experiment_name = experiment_name
@@ -49,15 +49,23 @@ class ExperimentWorkspace:
 
     def _install_requirements(self):
         """Install experiment requirements."""
-        requirements_filename = self.experiment_work_dir / 'requirements.txt'
+        requirements_filename = self.experiment_work_dir / "requirements.txt"
 
         if requirements_filename.is_file():
             attempts = 10
             for _ in range(attempts):
                 try:
-                    check_call([
-                        executable, '-m', 'pip', 'install', '-r', requirements_filename],
-                        shell=False)
+                    check_call(
+                        [
+                            executable,
+                            "-m",
+                            "pip",
+                            "install",
+                            "-r",
+                            requirements_filename,
+                        ],
+                        shell=False,
+                    )
                 except Exception as exc:
                     logger.error("Failed to install requirements: %s", exc)
                     # It's a workaround for cases when collaborators run
@@ -66,7 +74,7 @@ class ExperimentWorkspace:
                 else:
                     break
         else:
-            logger.error('No ' + requirements_filename + ' file found.')
+            logger.error("No " + requirements_filename + " file found.")
 
     def __enter__(self):
         """Create a collaborator workspace for the experiment."""
@@ -74,7 +82,9 @@ class ExperimentWorkspace:
             shutil.rmtree(self.experiment_work_dir, ignore_errors=True)
         os.makedirs(self.experiment_work_dir)
 
-        shutil.unpack_archive(self.data_file_path, self.experiment_work_dir, format='zip')
+        shutil.unpack_archive(
+            self.data_file_path, self.experiment_work_dir, format="zip"
+        )
 
         if self.install_requirements:
             self._install_requirements()
@@ -93,17 +103,19 @@ class ExperimentWorkspace:
 
         if self.remove_archive:
             logger.debug(
-                'Exiting from the workspace context manager'
-                f' for {self.experiment_name} experiment'
+                "Exiting from the workspace context manager"
+                f" for {self.experiment_name} experiment"
             )
-            logger.debug("Archive still exists: %s", self.data_file_path.exists())
+            logger.debug(
+                "Archive still exists: %s", self.data_file_path.exists()
+            )
             self.data_file_path.unlink(missing_ok=False)
 
 
 def dump_requirements_file(
-        path: Union[str, Path] = './requirements.txt',
-        keep_original_prefixes: bool = True,
-        prefixes: Optional[Union[Tuple[str], str]] = None,
+    path: Union[str, Path] = "./requirements.txt",
+    keep_original_prefixes: bool = True,
+    prefixes: Optional[Union[Tuple[str], str]] = None,
 ) -> None:
     """Prepare and save requirements.txt."""
     path = Path(path).absolute()
@@ -112,7 +124,9 @@ def dump_requirements_file(
     if prefixes is None:
         prefixes = set()
     elif type(prefixes) is str:
-        prefixes = set(prefixes,)
+        prefixes = set(
+            prefixes,
+        )
     else:
         prefixes = set(prefixes)
 
@@ -120,31 +134,32 @@ def dump_requirements_file(
     # We expect that all the prefixes in a requirement file
     # are placed at the top
     if keep_original_prefixes and path.is_file():
-        with open(path, encoding='utf-8') as f:
+        with open(path, encoding="utf-8") as f:
             for line in f:
-                if line == '\n':
+                if line == "\n":
                     continue
-                if line[0] == '-':
-                    prefixes |= {line.replace('\n', '')}
+                if line[0] == "-":
+                    prefixes |= {line.replace("\n", "")}
                 else:
                     break
 
     requirements_generator = freeze.freeze()
-    with open(path, 'w', encoding='utf-8') as f:
+    with open(path, "w", encoding="utf-8") as f:
         for prefix in prefixes:
-            f.write(prefix + '\n')
+            f.write(prefix + "\n")
 
         for package in requirements_generator:
             if _is_package_versioned(package):
-                f.write(package + '\n')
+                f.write(package + "\n")
 
 
 def _is_package_versioned(package: str) -> bool:
     """Check if the package has a version."""
-    return ('==' in package
-            and package not in ['pkg-resources==0.0.0', 'pkg_resources==0.0.0']
-            and '-e ' not in package
-            )
+    return (
+        "==" in package
+        and package not in ["pkg-resources==0.0.0", "pkg_resources==0.0.0"]
+        and "-e " not in package
+    )
 
 
 @contextmanager

@@ -53,24 +53,31 @@ class NumPyAdam(Optimizer):
         super().__init__()
 
         if model_interface is None and params is None:
-            raise ValueError('Should provide one of the params or model_interface')
+            raise ValueError(
+                "Should provide one of the params or model_interface"
+            )
 
         if learning_rate < 0:
             raise ValueError(
-                f'Invalid learning rate: {learning_rate}. Learning rate must be >= 0.')
+                f"Invalid learning rate: {learning_rate}. Learning rate must be >= 0."
+            )
         if not 0.0 <= betas[0] < 1:
             raise ValueError(
-                f'Invalid betas[0] value: {betas[0]}. betas[0] must be in [0, 1).')
+                f"Invalid betas[0] value: {betas[0]}. betas[0] must be in [0, 1)."
+            )
         if not 0.0 <= betas[1] < 1:
             raise ValueError(
-                f'Invalid betas[1] value: {betas[1]}. betas[1] must be in [0, 1).')
+                f"Invalid betas[1] value: {betas[1]}. betas[1] must be in [0, 1)."
+            )
         if initial_accumulator_value < 0:
             raise ValueError(
-                f'Invalid initial_accumulator_value value: {initial_accumulator_value}. \
-                Initial accumulator value must be >= 0.')
+                f"Invalid initial_accumulator_value value: {initial_accumulator_value}. \
+                Initial accumulator value must be >= 0."
+            )
         if epsilon <= 0:
             raise ValueError(
-                f'Invalid epsilon value: {epsilon}. Epsilon avalue must be > 0.')
+                f"Invalid epsilon value: {epsilon}. Epsilon avalue must be > 0."
+            )
 
         self.params = params
 
@@ -81,27 +88,33 @@ class NumPyAdam(Optimizer):
         self.beta_1, self.beta_2 = betas
         self.initial_accumulator_value = initial_accumulator_value
         self.epsilon = epsilon
-        self.current_step: Dict[str, int] = {param_name: 0 for param_name in self.params}
+        self.current_step: Dict[str, int] = {
+            param_name: 0 for param_name in self.params
+        }
 
         self.grads_first_moment, self.grads_second_moment = {}, {}
 
         for param_name in self.params:
-            self.grads_first_moment[param_name] = np.full_like(self.params[param_name],
-                                                               self.initial_accumulator_value)
-            self.grads_second_moment[param_name] = np.full_like(self.params[param_name],
-                                                                self.initial_accumulator_value)
+            self.grads_first_moment[param_name] = np.full_like(
+                self.params[param_name], self.initial_accumulator_value
+            )
+            self.grads_second_moment[param_name] = np.full_like(
+                self.params[param_name], self.initial_accumulator_value
+            )
 
     def _update_first_moment(self, grad_name: str, grad: np.ndarray) -> None:
         """Update gradients first moment."""
-        self.grads_first_moment[grad_name] = (self.beta_1
-                                              * self.grads_first_moment[grad_name]
-                                              + ((1.0 - self.beta_1) * grad))
+        self.grads_first_moment[grad_name] = (
+            self.beta_1 * self.grads_first_moment[grad_name]
+            + ((1.0 - self.beta_1) * grad)
+        )
 
     def _update_second_moment(self, grad_name: str, grad: np.ndarray) -> None:
         """Update gradients second moment."""
-        self.grads_second_moment[grad_name] = (self.beta_2
-                                               * self.grads_second_moment[grad_name]
-                                               + ((1.0 - self.beta_2) * grad**2))
+        self.grads_second_moment[grad_name] = (
+            self.beta_2 * self.grads_second_moment[grad_name]
+            + ((1.0 - self.beta_2) * grad**2)
+        )
 
     def step(self, gradients: Dict[str, np.ndarray]) -> None:
         """
@@ -114,7 +127,9 @@ class NumPyAdam(Optimizer):
         """
         for grad_name in gradients:
             if grad_name not in self.grads_first_moment:
-                raise KeyError(f"Key {grad_name} doesn't exist in optimized parameters")
+                raise KeyError(
+                    f"Key {grad_name} doesn't exist in optimized parameters"
+                )
 
             grad = gradients[grad_name]
 
@@ -125,11 +140,14 @@ class NumPyAdam(Optimizer):
             mean = self.grads_first_moment[grad_name]
             var = self.grads_second_moment[grad_name]
 
-            grads_first_moment_normalized = mean / (1. - self.beta_1 ** t)
-            grads_second_moment_normalized = var / (1. - self.beta_2 ** t)
+            grads_first_moment_normalized = mean / (1.0 - self.beta_1**t)
+            grads_second_moment_normalized = var / (1.0 - self.beta_2**t)
 
             # Make an update for a group of parameters
-            self.params[grad_name] -= (self.learning_rate * grads_first_moment_normalized
-                                       / (np.sqrt(grads_second_moment_normalized) + self.epsilon))
+            self.params[grad_name] -= (
+                self.learning_rate
+                * grads_first_moment_normalized
+                / (np.sqrt(grads_second_moment_normalized) + self.epsilon)
+            )
 
             self.current_step[grad_name] += 1

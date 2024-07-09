@@ -13,4 +13,4 @@
 # limitations under the License.
 
 """openfl version information."""
-__version__ = '1.5'
+__version__ = "1.5"

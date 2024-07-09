@@ -28,17 +28,19 @@ class AggregationFunction(metaclass=SingletonABCMeta):
     def __init__(self):
         """Initialize common AggregationFunction params
 
-           Default: Read only access to TensorDB
+        Default: Read only access to TensorDB
         """
         self._privileged = False
 
     @abstractmethod
-    def call(self,
-             local_tensors: List[LocalTensor],
-             db_iterator: Iterator[pd.Series],
-             tensor_name: str,
-             fl_round: int,
-             tags: Tuple[str]) -> np.ndarray:
+    def call(
+        self,
+        local_tensors: List[LocalTensor],
+        db_iterator: Iterator[pd.Series],
+        tensor_name: str,
+        fl_round: int,
+        tags: Tuple[str],
+    ) -> np.ndarray:
         """Aggregate tensors.
 
         Args:
@@ -67,10 +69,8 @@ class AggregationFunction(metaclass=SingletonABCMeta):
         """
         raise NotImplementedError
 
-    def __call__(self, local_tensors,
-                 db_iterator,
-                 tensor_name,
-                 fl_round,
-                 tags):
+    def __call__(self, local_tensors, db_iterator, tensor_name, fl_round, tags):
         """Use magic function for ease."""
-        return self.call(local_tensors, db_iterator, tensor_name, fl_round, tags)
+        return self.call(
+            local_tensors, db_iterator, tensor_name, fl_round, tags
+        )

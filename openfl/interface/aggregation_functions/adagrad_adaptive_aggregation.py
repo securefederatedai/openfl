@@ -55,9 +55,11 @@ class AdagradAdaptiveAggregation(AdaptiveAggregation):
             initial_accumulator_value: Initial value for squared gradients.
             epsilon: Value for computational stability.
         """
-        opt = NumPyAdagrad(params=params,
-                           model_interface=model_interface,
-                           learning_rate=learning_rate,
-                           initial_accumulator_value=initial_accumulator_value,
-                           epsilon=epsilon)
+        opt = NumPyAdagrad(
+            params=params,
+            model_interface=model_interface,
+            learning_rate=learning_rate,
+            initial_accumulator_value=initial_accumulator_value,
+            epsilon=epsilon,
+        )
         super().__init__(opt, agg_func)
