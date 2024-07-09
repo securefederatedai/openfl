@@ -9,7 +9,7 @@ class Participant:
 
     def __init__(self, name: str = ""):
         self.private_attributes = {}
-        self._name = name.lower()
+        self._name = name
 
     @property
     def name(self):
@@ -17,7 +17,7 @@ class Participant:
 
     @name.setter
     def name(self, name: str):
-        self._name = name.lower()
+        self._name = name
 
     def private_attributes(self, attrs: Dict[str, Any]) -> None:
         """
@@ -91,15 +91,17 @@ class Collaborator(Participant):
         """Get collaborator name"""
         return self._name
 
-    def initialize_private_attributes(self) -> None:
+    def initialize_private_attributes(self, private_attrs: Dict[Any, Any] = None) -> None:
         """
         initialize private attributes of Collaborator object by invoking
-        the callable specified by user
+        the callable or by passing private_attrs argument
         """
         if self.private_attributes_callable is not None:
             self.private_attributes = self.private_attributes_callable(
                 **self.kwargs
             )
+        elif private_attrs:
+            self.private_attributes = private_attrs
 
     def __set_collaborator_attrs_to_clone(self, clone: Any) -> None:
         """
@@ -191,15 +193,17 @@ class Aggregator(Participant):
         """Get aggregator name"""
         return self.name
 
-    def initialize_private_attributes(self) -> None:
+    def initialize_private_attributes(self, private_attrs: Dict[Any, Any] = None) -> None:
         """
         initialize private attributes of Aggregator object by invoking
-        the callable specified by user
+        the callable or by passing private_attrs argument
         """
         if self.private_attributes_callable is not None:
             self.private_attributes = self.private_attributes_callable(
                 **self.kwargs
             )
+        elif private_attrs:
+            self.private_attributes = private_attrs
 
     def __set_agg_attrs_to_clone(self, clone: Any) -> None:
         """
