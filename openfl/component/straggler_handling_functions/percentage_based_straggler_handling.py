@@ -1,5 +1,5 @@
 """Percentage based Straggler Handling function."""
-from openfl.component.straggler_handling_functions import (
+from openfl.component.straggler_handling_functions.straggler_handling_function import (
     StragglerHandlingFunction,
 )
 

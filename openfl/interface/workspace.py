@@ -24,7 +24,6 @@ from click import Choice
 from click import Path as ClickPath
 from click import confirm, echo, group, option, pass_context
 from cryptography.hazmat.primitives import serialization
-from plan import freeze_plan
 
 from openfl.cryptography.ca import (
     generate_root_cert,
@@ -40,6 +39,7 @@ from openfl.interface.cli_helper import (
     copytree,
     print_tree,
 )
+from openfl.interface.plan import freeze_plan
 from openfl.utilities.utils import rmtree
 
 

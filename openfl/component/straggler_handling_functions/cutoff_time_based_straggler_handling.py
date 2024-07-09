@@ -3,7 +3,7 @@ import time
 
 import numpy as np
 
-from openfl.component.straggler_handling_functions import (
+from openfl.component.straggler_handling_functions.straggler_handling_function import (
     StragglerHandlingFunction,
 )
 
