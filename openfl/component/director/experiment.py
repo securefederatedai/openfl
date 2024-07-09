@@ -88,10 +88,10 @@ class Experiment:
                 )
                 await self.run_aggregator_atask
             self.status = Status.FINISHED
-            logger.info("Experiment "%s" was finished successfully.", self.name)
+            logger.info("Experiment %s was finished successfully.", self.name)
         except Exception as e:
             self.status = Status.FAILED
-            logger.exception("Experiment "%s" failed with error: %s.", self.name, e)
+            logger.exception("Experiment %s failed with error: %s.", self.name, e)
 
     async def review_experiment(self, review_plan_callback: Callable) -> bool:
         """Get plan approve in console."""
