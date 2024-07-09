@@ -56,6 +56,11 @@ class WorkspaceExport:
 
         self.logger.info("Converting jupter notebook to python script...")
         export_filename = self.__get_exp_name()
+        if export_filename is None:
+            raise NameError(
+                "Please include `#| default_exp <experiment_name>` in "
+                "the first cell of the notebook."
+            )
         self.script_path = Path(
             self.__convert_to_python(
                 self.notebook_path,
@@ -114,10 +119,12 @@ class WorkspaceExport:
         with open(self.script_path, "r") as f:
             data = f.read()
 
-        if data.find("backend='ray'") != -1:
-            data = data.replace("backend='ray'", "backend='single_process'")
-        elif data.find('backend="ray"') != -1:
-            data = data.replace('backend="ray"', 'backend="single_process"')
+        if "backend='ray'" in data or 'backend="ray"' in data:
+            data = data.replace(
+                "backend='ray'", "backend='single_process'"
+            ).replace(
+                'backend="ray"', 'backend="single_process"'
+            )
 
         with open(self.script_path, "w") as f:
             f.write(data)
@@ -140,7 +147,7 @@ class WorkspaceExport:
 
         # If class not found
         if "cls" not in locals():
-            raise Exception(f"{class_name} not found.")
+            raise NameError(f"{class_name} not found.")
 
         if inspect.isclass(cls):
             # Check if the class has an __init__ method
@@ -216,8 +223,11 @@ class WorkspaceExport:
                             if value.startswith("[") and "," not in value:
                                 value = value.lstrip("[").rstrip("]")
                             try:
+                                # Evaluate the value to convert it from a string
+                                # representation into its corresponding python object.
                                 value = ast.literal_eval(value)
-                            except Exception:
+                            except ValueError:
+                                # ValueError is ignored because we want the value as a string
                                 pass
                             instantiation_args["kwargs"][kwarg.arg] = value
 
@@ -379,18 +389,19 @@ class WorkspaceExport:
         )
         # Find federated_flow._runtime and federated_flow._runtime.collaborators
         for t in self.available_modules_in_exported_script:
+            tempstring = t
             t = getattr(self.exported_script_module, t)
             if isinstance(t, federated_flow_class):
+                flow_name = tempstring
                 if not hasattr(t, "_runtime"):
-                    raise Exception(
+                    raise AttributeError(
                         "Unable to locate LocalRuntime instantiation"
                     )
                 runtime = t._runtime
                 if not hasattr(runtime, "collaborators"):
-                    raise Exception(
+                    raise AttributeError(
                         "LocalRuntime instance does not have collaborators"
                     )
-                collaborators_names = runtime.collaborators
                 break
 
         data_yaml = self.created_workspace_path.joinpath(
@@ -402,7 +413,11 @@ class WorkspaceExport:
 
         # Find aggregator details
         aggregator = runtime._aggregator
+        runtime_name = 'runtime_local'
+        runtime_created = False
         private_attrs_callable = aggregator.private_attributes_callable
+        aggregator_private_attributes = aggregator.private_attributes
+
         if private_attrs_callable is not None:
             data["aggregator"] = {
                 "callable_func": {
@@ -422,27 +437,65 @@ class WorkspaceExport:
                     arg = arguments_passed_to_initialize[key]
                     value = f"src.{self.script_name}.{arg}"
                     data["aggregator"]["callable_func"]["settings"][key] = value
+        elif aggregator_private_attributes:
+            runtime_created = True
+            with open(self.script_path, 'a') as f:
+                f.write(f"\n{runtime_name} = {flow_name}._runtime\n")
+                f.write(
+                    f"\naggregator_private_attributes = "
+                    f"{runtime_name}._aggregator.private_attributes\n"
+                )
+            data["aggregator"] = {
+                "private_attributes": f"src.{self.script_name}.aggregator_private_attributes"
+            }
 
+        # Get runtime collaborators
+        collaborators = runtime._LocalRuntime__collaborators
         # Find arguments expected by Collaborator
         arguments_passed_to_initialize = self.__extract_class_initializing_args(
             "Collaborator"
         )["kwargs"]
-        for collab_name in collaborators_names:
-            if collab_name not in data:
+        runtime_collab_created = False
+        for collab in collaborators.values():
+            collab_name = collab.get_name()
+            callable_func = collab.private_attributes_callable
+            private_attributes = collab.private_attributes
+
+            if callable_func:
+                if collab_name not in data:
+                    data[collab_name] = {
+                        "callable_func": {"settings": {}, "template": None}
+                    }
+                # Find collaborator private_attributes callable details
+                kw_args = runtime.get_collaborator_kwargs(collab_name)
+                for key, value in kw_args.items():
+                    if key == "private_attributes_callable":
+                        value = f"src.{self.script_name}.{value}"
+                        data[collab_name]["callable_func"]["template"] = value
+                    elif isinstance(value, (int, str, bool)):
+                        data[collab_name]["callable_func"]["settings"][key] = value
+                    else:
+                        arg = arguments_passed_to_initialize[key]
+                        value = f"src.{self.script_name}.{arg}"
+                        data[collab_name]["callable_func"]["settings"][key] = value
+            elif private_attributes:
+                with open(self.script_path, 'a') as f:
+                    if not runtime_created:
+                        f.write(f"\n{runtime_name} = {flow_name}._runtime\n")
+                        runtime_created = True
+                    if not runtime_collab_created:
+                        f.write(
+                            f"\nruntime_collaborators = "
+                            f"{runtime_name}._LocalRuntime__collaborators"
+                        )
+                        runtime_collab_created = True
+                    f.write(
+                        f"\n{collab_name}_private_attributes = "
+                        f"runtime_collaborators['{collab_name}'].private_attributes"
+                    )
                 data[collab_name] = {
-                    "callable_func": {"settings": {}, "template": None}
+                    "private_attributes": f"src."
+                    f"{self.script_name}.{collab_name}_private_attributes"
                 }
-            # Find collaborator details
-            kw_args = runtime.get_collaborator_kwargs(collab_name)
-            for key, value in kw_args.items():
-                if key == "private_attributes_callable":
-                    value = f"src.{self.script_name}.{value}"
-                    data[collab_name]["callable_func"]["template"] = value
-                elif isinstance(value, (int, str, bool)):
-                    data[collab_name]["callable_func"]["settings"][key] = value
-                else:
-                    arg = arguments_passed_to_initialize[key]
-                    value = f"src.{self.script_name}.{arg}"
-                    data[collab_name]["callable_func"]["settings"][key] = value
 
         self.__write_yaml(data_yaml, data)
