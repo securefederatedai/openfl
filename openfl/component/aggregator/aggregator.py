@@ -880,14 +880,7 @@ class Aggregator:
         # task sent
         # This handles getting the subset of collaborators that may be
         # part of the validation task
-        all_collaborators_for_task = self.assigner.get_collaborators_for_task(
-            task_name, self.round_number
-        )
-        # leave out stragglers for the round
-        collaborators_for_task = []
-        for c in all_collaborators_for_task:
-            if c in self.collaborators_done:
-                collaborators_for_task.append(c)
+        collaborators_for_task = self.collaborators_done
 
         # The collaborator data sizes for that task
         collaborator_weights_unnormalized = {
