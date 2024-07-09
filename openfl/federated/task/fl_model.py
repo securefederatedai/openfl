@@ -2,8 +2,6 @@
 import inspect
 
 from openfl.federated.task.runner import TaskRunner
-from openfl.federated.task.runner_keras import KerasTaskRunner
-from openfl.federated.task.runner_pt import PyTorchTaskRunner
 
 
 class FederatedModel(TaskRunner):
@@ -38,6 +36,7 @@ class FederatedModel(TaskRunner):
         # TODO pass params to model
         if inspect.isclass(build_model):
             self.model = build_model()
+            from openfl.federated.task.runner_pt import PyTorchTaskRunner
             if optimizer is not None:
                 self.optimizer = optimizer(self.model.parameters())
             self.runner = PyTorchTaskRunner(**kwargs)
@@ -46,6 +45,7 @@ class FederatedModel(TaskRunner):
         else:
             self.model = self.build_model(
                 self.feature_shape, self.data_loader.num_classes)
+            from openfl.federated.task.runner_keras import KerasTaskRunner
             self.runner = KerasTaskRunner(**kwargs)
             self.optimizer = self.model.optimizer
         self.lambda_opt = optimizer
