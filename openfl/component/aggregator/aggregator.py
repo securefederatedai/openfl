@@ -564,7 +564,6 @@ class Aggregator:
              None
         """
         if self._time_to_quit() or collaborator_name in self.stragglers:
-            # TODO: Update the following log
             self.logger.warning(
                 f'STRAGGLER: Collaborator {collaborator_name} is reporting results '
                 f'after task {task_name} has finished.'
@@ -606,11 +605,11 @@ class Aggregator:
                 len(self.collaborators_done), all_collaborators
             )
         ):
-            # TODO: Add a log here
+            self.logger.warning(
+                f'STRAGGLER: Collaborator {collaborator_name} is reporting results '
+                f'after task {task_name} has finished.'
+            )
             self.stragglers.append(collaborator_name)
-            self.logger.info("*"*30)
-            self.logger.info(f"self.stragglers: {self.stragglers}")
-            self.logger.info("*"*30)
             return
 
         # By giving task_key it's own weight, we can support different
@@ -1004,13 +1003,6 @@ class Aggregator:
 
         straggler_check = self.straggler_handling_policy.straggler_cutoff_check(
             len(collaborators_done), all_collaborators)
-
-        # if straggler_check:
-        #     for c in all_collaborators:
-        #         if c not in collaborators_done:
-        #             self.stragglers.append(c)
-        #     self.logger.info(f'\tEnding task {task_name} early due to straggler cutoff policy')
-        #     self.logger.warning(f'\tIdentified stragglers: {self.stragglers}')
 
         # all are done or straggler policy calls for early round end.
         return straggler_check or len(all_collaborators) == len(collaborators_done)
