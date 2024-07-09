@@ -28,7 +28,7 @@ def read_key(path: Path) -> RSAPrivateKey:
 
     signing_key = load_pem_private_key(pem_data, password=None)
     # TODO: replace assert with exception / sys.exit
-    assert (isinstance(signing_key, rsa.RSAPrivateKey))
+    assert isinstance(signing_key, rsa.RSAPrivateKey)
     return signing_key
 
 
@@ -67,7 +67,7 @@ def read_crt(path: Path) -> Certificate:
 
     certificate = x509.load_pem_x509_certificate(pem_data)
     # TODO: replace assert with exception / sys.exit
-    assert (isinstance(certificate, x509.Certificate))
+    assert isinstance(certificate, x509.Certificate)
     return certificate
 
 
@@ -103,7 +103,7 @@ def read_csr(path: Path) -> Tuple[CertificateSigningRequest, str]:
 
     csr = x509.load_pem_x509_csr(pem_data)
     # TODO: replace assert with exception / sys.exit
-    assert (isinstance(csr, x509.CertificateSigningRequest))
+    assert isinstance(csr, x509.CertificateSigningRequest)
     return csr, get_csr_hash(csr)
 
 

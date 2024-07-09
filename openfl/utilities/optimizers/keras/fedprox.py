@@ -52,8 +52,7 @@ class FedProxOptimizer(keras.optimizers.Optimizer):
 
     def _resource_apply_sparse(self, grad, var):
         return self._apply_sparse_shared(
-            grad.values, var, grad.indices,
-            lambda x, i, v: standard_ops.scatter_add(x, i, v))
+            grad.values, var, grad.indices, standard_ops.scatter_add)
 
     def get_config(self):
         """Return the config of the optimizer.

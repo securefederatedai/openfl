@@ -31,11 +31,11 @@ def generate_root_cert(days_to_expiration: int = 365) -> Tuple[RSAPrivateKey, Ce
     root_public_key = root_private_key.public_key()
     builder = x509.CertificateBuilder()
     subject = x509.Name([
-        x509.NameAttribute(NameOID.DOMAIN_COMPONENT, u'org'),
-        x509.NameAttribute(NameOID.DOMAIN_COMPONENT, u'simple'),
-        x509.NameAttribute(NameOID.COMMON_NAME, u'Simple Root CA'),
-        x509.NameAttribute(NameOID.ORGANIZATION_NAME, u'Simple Inc'),
-        x509.NameAttribute(NameOID.ORGANIZATIONAL_UNIT_NAME, u'Simple Root CA'),
+        x509.NameAttribute(NameOID.DOMAIN_COMPONENT, 'org'),
+        x509.NameAttribute(NameOID.DOMAIN_COMPONENT, 'simple'),
+        x509.NameAttribute(NameOID.COMMON_NAME, 'Simple Root CA'),
+        x509.NameAttribute(NameOID.ORGANIZATION_NAME, 'Simple Inc'),
+        x509.NameAttribute(NameOID.ORGANIZATIONAL_UNIT_NAME, 'Simple Root CA'),
     ])
     issuer = subject
     builder = builder.subject_name(subject)
@@ -69,11 +69,11 @@ def generate_signing_csr() -> Tuple[RSAPrivateKey, CertificateSigningRequest]:
 
     builder = x509.CertificateSigningRequestBuilder()
     subject = x509.Name([
-        x509.NameAttribute(NameOID.DOMAIN_COMPONENT, u'org'),
-        x509.NameAttribute(NameOID.DOMAIN_COMPONENT, u'simple'),
-        x509.NameAttribute(NameOID.COMMON_NAME, u'Simple Signing CA'),
-        x509.NameAttribute(NameOID.ORGANIZATION_NAME, u'Simple Inc'),
-        x509.NameAttribute(NameOID.ORGANIZATIONAL_UNIT_NAME, u'Simple Signing CA'),
+        x509.NameAttribute(NameOID.DOMAIN_COMPONENT, 'org'),
+        x509.NameAttribute(NameOID.DOMAIN_COMPONENT, 'simple'),
+        x509.NameAttribute(NameOID.COMMON_NAME, 'Simple Signing CA'),
+        x509.NameAttribute(NameOID.ORGANIZATION_NAME, 'Simple Inc'),
+        x509.NameAttribute(NameOID.ORGANIZATIONAL_UNIT_NAME, 'Simple Signing CA'),
     ])
     builder = builder.subject_name(subject)
     builder = builder.add_extension(

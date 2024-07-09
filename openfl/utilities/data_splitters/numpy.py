@@ -217,5 +217,5 @@ class DirichletNumPyDataSplitter(NumPyDataSplitter):
                 proportions = (np.cumsum(proportions) * len(idx_k)).astype(int)[:-1]
                 idx_splitted = np.split(idx_k, proportions)
                 idx_batch = [idx_j + idx.tolist() for idx_j, idx in zip(idx_batch, idx_splitted)]
-                min_size = min([len(idx_j) for idx_j in idx_batch])
+                min_size = min(len(idx_j) for idx_j in idx_batch)
         return idx_batch
