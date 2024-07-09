@@ -68,7 +68,7 @@ class CLI(Group):
 
     def __init__(self, name=None, commands=None, **kwargs):
         """Initialize."""
-        super(CLI, self).__init__(name, commands, **kwargs)
+        super().__init__(name, commands, **kwargs)
         self.commands = commands or {}
 
     def list_commands(self, ctx):

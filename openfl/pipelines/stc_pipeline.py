@@ -207,4 +207,4 @@ class STCPipeline(TransformationPipeline):
         # instantiate each transformer
         self.p = p_sparsity
         transformers = [SparsityTransformer(self.p), TernaryTransformer(), GZIPTransformer()]
-        super(STCPipeline, self).__init__(transformers=transformers, **kwargs)
+        super().__init__(transformers=transformers, **kwargs)

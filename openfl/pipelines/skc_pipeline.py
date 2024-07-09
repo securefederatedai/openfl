@@ -219,4 +219,4 @@ class SKCPipeline(TransformationPipeline):
             KmeansTransformer(self.n_cluster),
             GZIPTransformer()
         ]
-        super(SKCPipeline, self).__init__(transformers=transformers, **kwargs)
+        super().__init__(transformers=transformers, **kwargs)

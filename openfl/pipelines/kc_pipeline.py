@@ -152,4 +152,4 @@ class KCPipeline(TransformationPipeline):
         self.p = p_sparsity
         self.n_cluster = n_clusters
         transformers = [KmeansTransformer(self.n_cluster), GZIPTransformer()]
-        super(KCPipeline, self).__init__(transformers=transformers, **kwargs)
+        super().__init__(transformers=transformers, **kwargs)

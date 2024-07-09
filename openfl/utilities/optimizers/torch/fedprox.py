@@ -42,11 +42,11 @@ class FedProxOptimizer(Optimizer):
         if nesterov and (momentum <= 0 or dampening != 0):
             raise ValueError('Nesterov momentum requires a momentum and zero dampening')
 
-        super(FedProxOptimizer, self).__init__(params, defaults)
+        super().__init__(params, defaults)
 
     def __setstate__(self, state):
         """Set optimizer state."""
-        super(FedProxOptimizer, self).__setstate__(state)
+        super().__setstate__(state)
         for group in self.param_groups:
             group.setdefault('nesterov', False)
 
@@ -118,11 +118,11 @@ class FedProxAdam(Optimizer):
             raise ValueError(f'Invalid mu value: {mu}')
         defaults = {'lr': lr, 'betas': betas, 'eps': eps,
                     'weight_decay': weight_decay, 'amsgrad': amsgrad, 'mu': mu}
-        super(FedProxAdam, self).__init__(params, defaults)
+        super().__init__(params, defaults)
 
     def __setstate__(self, state):
         """Set optimizer state."""
-        super(FedProxAdam, self).__setstate__(state)
+        super().__setstate__(state)
         for group in self.param_groups:
             group.setdefault('amsgrad', False)
 

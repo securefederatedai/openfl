@@ -489,4 +489,4 @@ class EdenPipeline(TransformationPipeline):
 
         # instantiate each transformer
         transformers = [EdenTransformer(n_bits, dim_threshold, device)]
-        super(EdenPipeline, self).__init__(transformers=transformers, **kwargs)
+        super().__init__(transformers=transformers, **kwargs)

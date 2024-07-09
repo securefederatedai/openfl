@@ -72,7 +72,7 @@ class FederatedModel(TaskRunner):
                     'set_optimizer_treatment',
                     'train', 'train_batches', 'validate']:
             return self.runner.__getattribute__(attr)
-        return super(FederatedModel, self).__getattribute__(attr)
+        return super().__getattribute__(attr)
 
     def setup(self, num_collaborators, **kwargs):
         """

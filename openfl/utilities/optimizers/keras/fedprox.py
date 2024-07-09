@@ -66,7 +66,7 @@ class FedProxOptimizer(keras.optimizers.Optimizer):
         Returns:
             Python dictionary.
         """
-        base_config = super(FedProxOptimizer, self).get_config()
+        base_config = super().get_config()
         return {
             **base_config,
             'lr': self._serialize_hyperparameter('learning_rate'),
