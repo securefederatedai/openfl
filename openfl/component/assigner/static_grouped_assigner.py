@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 """Static grouped assigner module."""
 
-from .assigner import Assigner
+from openfl.component.assigner import Assigner
 
 
 class StaticGroupedAssigner(Assigner):
