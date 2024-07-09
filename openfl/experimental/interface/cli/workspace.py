@@ -104,16 +104,16 @@ def create_(prefix, custom_template, template, notebook, template_output_dir):
 
     if custom_template and template and notebook:
         raise ValueError(
-            "Please provide either `template`, `custom_template` or " +
-            "`notebook`. Not all are necessary")
+            "Please provide either `template`, `custom_template` or "
+            + "`notebook`. Not all are necessary")
     elif ((custom_template and template) or (template and notebook)
           or (custom_template and notebook)):
-        raise ValueError("Please provide only one of the following options: " +
-                         "`template`, `custom_template`, or `notebook`.")
+        raise ValueError("Please provide only one of the following options: "
+                         + "`template`, `custom_template`, or `notebook`.")
 
     if not (custom_template or template or notebook):
-        raise ValueError("Please provide one of the following options: " +
-                         "`template`, `custom_template`, or `notebook`.")
+        raise ValueError("Please provide one of the following options: "
+                         + "`template`, `custom_template`, or `notebook`.")
 
     if notebook:
         if not template_output_dir:
@@ -222,8 +222,7 @@ def export_(pip_install_options: Tuple[str]):
     echo(
         style(
             "This command will archive the contents of 'plan' and 'src' directory, user"
-            +
-            " should review that these does not contain any information which is private and"
+            + " should review that these does not contain any information which is private and"
             + " not to be shared.",
             fg="yellow",
         ))

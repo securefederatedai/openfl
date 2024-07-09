@@ -17,11 +17,14 @@ def parse_attrs(ctx, exclude=[], reserved_words=["next", "runtime", "input"]):
 
     Args:
         ctx (any): The context to parse.
-        exclude (list, optional): A list of attribute names to exclude. Defaults to an empty list.
-        reserved_words (list, optional): A list of reserved words to exclude. Defaults to ["next", "runtime", "input"].
+        exclude (list, optional): A list of attribute names to exclude.
+            Defaults to an empty list.
+        reserved_words (list, optional): A list of reserved words to exclude.
+            Defaults to ["next", "runtime", "input"].
 
     Returns:
-        tuple: A tuple containing a list of attribute names and a list of valid artifacts (pairs of attribute names and values).
+        tuple: A tuple containing a list of attribute names and a list of
+            valid artifacts (pairs of attribute names and values).
     """
     # TODO Persist attributes to local disk, database, object store, etc. here
     cls_attrs = []
@@ -160,8 +163,7 @@ def old_check_resource_allocation(num_gpus, each_participant_gpu_usage):
     if len(remaining_gpu_memory) > 0:
         raise ResourcesAllocationError(
             f"Failed to allocate Participant {list(remaining_gpu_memory.keys())} "
-            +
-            "to specified GPU. Please try allocating lesser GPU resources to participants"
+            + "to specified GPU. Please try allocating lesser GPU resources to participants"
         )
 
 
@@ -189,6 +191,6 @@ def check_resource_allocation(num_gpus, each_participant_gpu_usage):
     # that needed to be assigned
     if len(need_assigned) > 0:
         raise ResourcesAllocationError(
-            f"Failed to allocate Participant {list(need_assigned.keys())} " +
-            "to specified GPU. Please try allocating lesser GPU resources to participants"
+            f"Failed to allocate Participant {list(need_assigned.keys())} "
+            + "to specified GPU. Please try allocating lesser GPU resources to participants"
         )

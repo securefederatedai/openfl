@@ -231,8 +231,8 @@ def error_handler(error):
                 style('Torch must be installed prior to running this command',
                       fg='red'))
     echo(
-        style('EXCEPTION', fg='red', bold=True) + ' : ' +
-        style(f'{error}', fg='red'))
+        style('EXCEPTION', fg='red', bold=True) + ' : '
+        + style(f'{error}', fg='red'))
     raise error
 
 

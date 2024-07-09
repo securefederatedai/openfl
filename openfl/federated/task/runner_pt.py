@@ -392,24 +392,18 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
         # so there is an extra lookup dimension for kwargs
         self.required_tensorkeys_for_function["validate_task"] = {}
         # TODO This is not stateless. The optimizer will not be
-        self.required_tensorkeys_for_function["validate_task"][
-            "apply=local"] = [
-                TensorKey(tensor_name, "LOCAL", 0, False, ("trained", ))
-                for tensor_name in {
-                    **global_model_dict_val,
-                    **local_model_dict_val
-                }
-            ]
-        self.required_tensorkeys_for_function["validate_task"][
-            "apply=global"] = [
-                TensorKey(tensor_name, "GLOBAL", 0, False, ("model", ))
-                for tensor_name in global_model_dict_val
-            ]
-        self.required_tensorkeys_for_function["validate_task"][
-            "apply=global"] += [
-                TensorKey(tensor_name, "LOCAL", 0, False, ("model", ))
-                for tensor_name in local_model_dict_val
-            ]
+        self.required_tensorkeys_for_function["validate_task"]["apply=local"] = [
+            TensorKey(tensor_name, "LOCAL", 0, False, ("trained",))
+            for tensor_name in {**global_model_dict_val, **local_model_dict_val}
+        ]
+        self.required_tensorkeys_for_function["validate_task"]["apply=global"] = [
+            TensorKey(tensor_name, "GLOBAL", 0, False, ("model",))
+            for tensor_name in global_model_dict_val
+        ]
+        self.required_tensorkeys_for_function["validate_task"]["apply=global"] += [
+            TensorKey(tensor_name, "LOCAL", 0, False, ("model",))
+            for tensor_name in local_model_dict_val
+        ]
 
     def load_native(self,
                     filepath,

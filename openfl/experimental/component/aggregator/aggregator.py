@@ -177,20 +177,20 @@ class Aggregator:
                 if len_connected_collabs < len_sel_collabs:
                     # Waiting for collaborators to connect.
                     self.logger.info(
-                        "Waiting for " +
-                        f"{len_connected_collabs}/{len_sel_collabs}" +
-                        " collaborators to connect...")
+                        "Waiting for "
+                        + f"{len_connected_collabs}/{len_sel_collabs}"
+                        + " collaborators to connect...")
                 elif self.tasks_sent_to_collaborators != len_sel_collabs:
                     self.logger.info(
-                        "Waiting for " +
-                        f"{self.tasks_sent_to_collaborators}/{len_sel_collabs}"
+                        "Waiting for "
+                        + f"{self.tasks_sent_to_collaborators}/{len_sel_collabs}"
                         + " to make requests for tasks...")
                 else:
                     # Waiting for selected collaborators to send the results.
                     self.logger.info(
-                        "Waiting for " +
-                        f"{self.collaborators_counter}/{len_sel_collabs}" +
-                        " collaborators to send results...")
+                        "Waiting for "
+                        + f"{self.collaborators_counter}/{len_sel_collabs}"
+                        + " collaborators to send results...")
                 time.sleep(Aggregator._get_sleep_time())
 
             self.collaborator_task_results.clear()
@@ -283,8 +283,8 @@ class Aggregator:
 
         self.tasks_sent_to_collaborators += 1
         self.logger.info(
-            "Sending tasks to collaborator" +
-            f" {collaborator_name} for round {self.current_round}...")
+            "Sending tasks to collaborator"
+            + f" {collaborator_name} for round {self.current_round}...")
         return (
             self.current_round,
             next_step,
@@ -347,8 +347,8 @@ class Aggregator:
                         if name in self.selected_collaborators:
                             selected_clones[0].append(clone)
                 else:
-                    # Number of selected collaborators, and number of total collaborators
-                    # are same
+                    # Number of selected collaborators, and number of total
+                    # collaborators are same
                     selected_clones = (list(self.clones_dict.values()), )
             # Call the join function with selected collaborators
             # clones are arguments

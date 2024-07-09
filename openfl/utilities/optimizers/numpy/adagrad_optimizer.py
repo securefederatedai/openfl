@@ -100,8 +100,8 @@ class NumPyAdagrad(Optimizer):
             grad (np.ndarray): The gradient values.
         """
         self.params[grad_name] -= (
-            self.learning_rate * grad /
-            (np.sqrt(self.grads_squared[grad_name]) + self.epsilon))
+            self.learning_rate * grad
+            / (np.sqrt(self.grads_squared[grad_name]) + self.epsilon))
 
     def step(self, gradients: Dict[str, np.ndarray]) -> None:
         """Perform a single step for parameter update.
