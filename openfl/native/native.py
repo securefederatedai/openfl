@@ -1,22 +1,19 @@
-"""openfl Native functions module.
-import json
-from sys import path
-import tensorflow as tf
-from rich.logging import RichHandler
-from rich.console import Console
-from logging import basicConfig
-import importlib
+"""OpenFL Native functions module.
 
 This file defines openfl entrypoints to be used directly through python (not CLI)
 """
-
+import importlib
+import json
 import logging
 import os
 from copy import copy
-from logging import getLogger
+from logging import basicConfig, getLogger
 from pathlib import Path
+from sys import path
 
 import flatten_json
+from rich.console import Console
+from rich.logging import RichHandler
 
 import openfl.interface.aggregator as aggregator
 import openfl.interface.collaborator as collaborator
@@ -130,7 +127,8 @@ def setup_logging(level='INFO', log_file=None):
     """Initialize logging settings."""
     # Setup logging
 
-    if True if importlib.util.find_spec('tensorflow') else False:
+    if importlib.util.find_spec('tensorflow') is not None:
+        import tensorflow as tf
         tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
     metric = 25
     add_log_level('METRIC', metric)
