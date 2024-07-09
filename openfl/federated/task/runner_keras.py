@@ -443,16 +443,14 @@ class KerasTaskRunner(TaskRunner):
         # Validation may be performed on local or aggregated (global) model,
         # so there is an extra lookup dimension for kwargs
         self.required_tensorkeys_for_function['validate'] = {}
-        self.required_tensorkeys_for_function['validate'][
-            'local_model=True'] = [
-                TensorKey(tensor_name, 'LOCAL', 0, ('trained', ))
-                for tensor_name in tensor_names
-            ]
-        self.required_tensorkeys_for_function['validate'][
-            'local_model=False'] = [
-                TensorKey(tensor_name, 'GLOBAL', 0, ('model', ))
-                for tensor_name in tensor_names
-            ]
+        self.required_tensorkeys_for_function['validate']['local_model=True'] = [
+            TensorKey(tensor_name, 'LOCAL', 0, ('trained',))
+            for tensor_name in tensor_names
+        ]
+        self.required_tensorkeys_for_function['validate']['local_model=False'] = [
+            TensorKey(tensor_name, 'GLOBAL', 0, ('model',))
+            for tensor_name in tensor_names
+        ]
 
     def initialize_tensorkeys_for_functions(self, with_opt_vars=False):
         """Set the required tensors for all publicly accessible methods that

@@ -20,7 +20,7 @@ class DillSerializer(Serializer):
 
         Args:
             object_ (object): The object to be serialized.
-            filename (str): The name of the file where the serialized object 
+            filename (str): The name of the file where the serialized object
                 will be saved.
 
         Returns:

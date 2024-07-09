@@ -58,7 +58,7 @@ class Plan:
 
         Args:
             yaml_path (Path): Path to the YAML file.
-            default (dict, optional): Default plan configuration. 
+            default (dict, optional): Default plan configuration.
                 Defaults to {}.
 
         Returns:
@@ -392,8 +392,7 @@ class Plan:
         defaults[SETTINGS]['assigner'] = self.get_assigner()
         defaults[SETTINGS]['compression_pipeline'] = self.get_tensor_pipe()
         defaults[SETTINGS][
-            'straggler_handling_policy'] = self.get_straggler_handling_policy(
-            )
+            'straggler_handling_policy'] = self.get_straggler_handling_policy()
         log_metric_callback = defaults[SETTINGS].get('log_metric_callback')
 
         if log_metric_callback:

@@ -230,7 +230,7 @@ class TaskRunner:
 
         Args:
             filepath (str): If framework stores a single file, this should be
-                a single file path. Frameworks that store multiple files may 
+                a single file path. Frameworks that store multiple files may
                 need to derive the other paths from this path.
             **kwargs: Additional parameters to pass to the function. For
                 future-proofing.

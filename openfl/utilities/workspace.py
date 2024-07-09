@@ -66,10 +66,8 @@ class ExperimentWorkspace:
             for _ in range(attempts):
                 try:
                     check_call([
-                        executable, '-m', 'pip', 'install', '-r',
-                        requirements_filename
-                    ],
-                               shell=False)
+                        executable, '-m', 'pip', 'install', '-r', requirements_filename],
+                        shell=False)
                 except Exception as exc:
                     logger.error(f'Failed to install requirements: {exc}')
                     # It's a workaround for cases when collaborators run
@@ -124,12 +122,12 @@ def dump_requirements_file(
     path.
 
     Args:
-        path (Union[str, Path], optional): The path to save the 
+        path (Union[str, Path], optional): The path to save the
             requirements.txt file.
             Defaults to './requirements.txt'.
         keep_original_prefixes (bool, optional): Whether to keep the original
             prefixes in the requirements.txt file. Defaults to True.
-        prefixes (Optional[Union[Tuple[str], str]], optional): The prefixes to 
+        prefixes (Optional[Union[Tuple[str], str]], optional): The prefixes to
             add to the requirements.txt file. Defaults to None.
     """
     from pip._internal.operations import freeze

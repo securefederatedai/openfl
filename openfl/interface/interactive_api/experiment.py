@@ -28,7 +28,8 @@ from openfl.utilities.workspace import dump_requirements_file
 class ModelStatus:
     """Model statuses.
 
-    This class defines the various statuses a model can have during an experiment.
+    This class defines the various statuses a model can have during an
+    experiment.
 
     Attributes:
         INITIAL (str): Initial status of the model.
@@ -46,7 +47,8 @@ class ModelStatus:
 class FLExperiment:
     """Central class for FL experiment orchestration.
 
-    This class is responsible for orchestrating the federated learning experiment. It manages
+    This class is responsible for orchestrating the federated learning
+    experiment. It manages
     the experiment's lifecycle and interacts with the federation.
 
     Attributes:
@@ -70,12 +72,15 @@ class FLExperiment:
         """Initialize an experiment inside a federation.
 
         Experiment makes sense in a scope of some machine learning problem.
-        Information about the data on collaborators is contained on the federation level.
+        Information about the data on collaborators is contained on the
+        federation level.
 
         Args:
             federation: The federation that this experiment is part of.
-            experiment_name (str, optional): The name of the experiment. Defaults to None.
-            serializer_plugin (str, optional): The serializer plugin. Defaults to 'openfl.plugins.interface_serializer.cloudpickle_serializer.CloudpickleSerializer'.
+            experiment_name (str, optional): The name of the experiment.
+                Defaults to None.
+            serializer_plugin (str, optional): The serializer plugin. Defaults
+                to 'openfl.plugins.interface_serializer.cloudpickle_serializer.CloudpickleSerializer'.
         """
         self.federation = federation
         self.experiment_name = experiment_name or 'test-' + time.strftime(
@@ -148,13 +153,16 @@ class FLExperiment:
                        upcoming_model_status=ModelStatus.BEST):
         """Use tensor dict to update model weights.
 
-        This method updates the model weights using the provided tensor dictionary. If the tensor
-        dictionary is empty, it logs a warning and returns the current model. Otherwise, it rebuilds
-        the model with the new weights and updates the current model status.
+        This method updates the model weights using the provided tensor
+        dictionary. If the tensor dictionary is empty, it logs a warning and 
+        returns the current model. Otherwise, it rebuilds the model with the
+        new weights and updates the current model status.
 
         Args:
-            tensor_dict (dict): A dictionary containing tensor names as keys and tensor values as values.
-            upcoming_model_status (ModelStatus, optional): The upcoming status of the model. Defaults to ModelStatus.BEST.
+            tensor_dict (dict): A dictionary containing tensor names as keys
+                and tensor values as values.
+            upcoming_model_status (ModelStatus, optional): The upcoming status
+                of the model. Defaults to ModelStatus.BEST.
 
         Returns:
             The updated model.
@@ -228,16 +236,18 @@ class FLExperiment:
                                        pip_install_options: Tuple[str] = ()):
         """Prepare an archive from a user workspace.
 
-        This method serializes interface objects and saves them to disk, 
-        dumps the prepared plan, prepares a requirements file to restore 
-        the Python environment, and compresses the workspace to restore it on a collaborator.
+        This method serializes interface objects and saves them to disk,
+        dumps the prepared plan, prepares a requirements file to restore
+        the Python environment, and compresses the workspace to restore it on
+        a collaborator.
 
         Args:
             model_provider: The model provider object.
             task_keeper: The task keeper object.
             data_loader: The data loader object.
             task_assigner: The task assigner object.
-            pip_install_options (tuple, optional): A tuple of options for pip install. Defaults to an empty tuple.
+            pip_install_options (tuple, optional): A tuple of options for pip
+                install. Defaults to an empty tuple.
 
         Returns:
             None
@@ -274,26 +284,35 @@ class FLExperiment:
     ) -> None:
         """Prepare workspace distribution and send to Director.
 
-        A successful call of this function will result in sending the experiment workspace
-        to the Director service and experiment start.
+        A successful call of this function will result in sending the
+        experiment workspace to the Director service and experiment start.
 
         Args:
             model_provider: Model Interface instance.
             task_keeper: Task Interface instance.
             data_loader: Data Interface instance.
-            rounds_to_train (int): Required number of training rounds for the experiment.
+            rounds_to_train (int): Required number of training rounds for the
+                experiment.
             task_assigner (optional): Task assigner instance. Defaults to None.
-            override_config (dict, optional): Configuration to override the default settings. Defaults to None.
-            delta_updates (bool, optional): Flag to indicate if delta updates should be sent. Defaults to False.
-            opt_treatment (str, optional): Optimizer state treatment policy. Defaults to 'RESET'.
-                Valid options: 'RESET' - reinitialize optimizer for every round,
+            override_config (dict, optional): Configuration to override the
+                default settings. Defaults to None.
+            delta_updates (bool, optional): Flag to indicate if delta updates
+                should be sent. Defaults to False.
+            opt_treatment (str, optional): Optimizer state treatment policy.
+                Defaults to 'RESET'.
+                Valid options: 'RESET' - reinitialize optimizer for every
+                round,
                 'CONTINUE_LOCAL' - keep local optimizer state,
                 'CONTINUE_GLOBAL' - aggregate optimizer state.
-            device_assignment_policy (str, optional): Device assignment policy. Defaults to 'CPU_ONLY'.
-                Valid options: 'CPU_ONLY' - device parameter passed to tasks will always be 'cpu',
-                'CUDA_PREFERRED' - enable passing CUDA device identifiers to tasks by collaborators, 
-                works with cuda-device-monitor plugin equipped Envoys.
-            pip_install_options (Tuple[str], optional): Options for the remote `pip install` calls. Defaults to ().
+            device_assignment_policy (str, optional): Device assignment policy.
+                Defaults to 'CPU_ONLY'.
+                Valid options: 'CPU_ONLY' - device parameter passed to tasks
+                will always be 'cpu',
+                'CUDA_PREFERRED' - enable passing CUDA device identifiers to
+                tasks by collaborators, works with cuda-device-monitor plugin
+                equipped Envoys.
+            pip_install_options (Tuple[str], optional): Options for the remote
+                `pip install` calls. Defaults to ().
                 example: ('-f some.website', '--no-index')
         """
         if not task_assigner:
@@ -339,21 +358,23 @@ class FLExperiment:
 
         This method defines a task assigner based on the registered tasks. 
         It checks if there are 'train' and 'validate' tasks among the 
-        registered tasks and defines the task assigner accordingly. If there are 
-        both 'train' and 'validate' tasks, the task assigner assigns these tasks 
-        to each collaborator. If there are only 'validate' tasks, the task assigner 
-        assigns only these tasks to each collaborator. 
+        registered tasks and defines the task assigner accordingly. If there
+        are both 'train' and 'validate' tasks, the task assigner assigns these
+        tasks to each collaborator. If there are only 'validate' tasks, the
+        task assigner assigns only these tasks to each collaborator.
         If there are no 'train' or 'validate' tasks, an exception is raised.
 
         Args:
-            task_keeper: The task keeper object that holds the registered tasks.
+            task_keeper: The task keeper object that holds the registered
+                tasks.
             rounds_to_train (int): The number of rounds to train.
 
         Returns:
             assigner: A function that assigns tasks to each collaborator.
 
         Raises:
-            Exception: If there are no 'train' tasks and rounds_to_train is not 1.
+            Exception: If there are no 'train' tasks and rounds_to_train is
+                not 1.
             Exception: If there are no 'validate' tasks.
             Exception: If there are no 'train' or 'validate' tasks.
         """
@@ -367,7 +388,8 @@ class FLExperiment:
                 self.is_validate_task_exist = True
 
         if not is_train_task_exist and rounds_to_train != 1:
-            # Since we have only validation tasks, we do not have to train it multiple times
+            # Since we have only validation tasks, we do not have to train it
+            # multiple times
             raise Exception('Variable rounds_to_train must be equal 1, '
                             'because only validation tasks were given')
         if is_train_task_exist and self.is_validate_task_exist:
@@ -402,9 +424,9 @@ class FLExperiment:
     def restore_experiment_state(self, model_provider):
         """Restores the state of an accepted experiment object.
 
-        This method restores the state of an accepted experiment object by 
-        getting the core task runner from the plan and setting the current 
-        model status to RESTORED. It also sets the experiment_submitted 
+        This method restores the state of an accepted experiment object by
+        getting the core task runner from the plan and setting the current
+        model status to RESTORED. It also sets the experiment_submitted
         attribute to True.
 
         Args:
@@ -455,9 +477,9 @@ class FLExperiment:
     def _get_initial_tensor_dict(self, model_provider):
         """Extracts initial weights from the model.
 
-        This method extracts the initial weights from the model by getting the 
-        core task runner from the plan and setting the current model status to 
-        INITIAL. It then splits the tensor dictionary for holdouts and returns 
+        This method extracts the initial weights from the model by getting the
+        core task runner from the plan and setting the current model status to
+        INITIAL. It then splits the tensor dictionary for holdouts and returns
         the tensor dictionary.
 
         Args:
@@ -490,8 +512,8 @@ class FLExperiment:
             task_assigner_file='task_assigner_obj.pkl'):
         """Fills the plan.yaml file using user-provided settings.
 
-        It sets up the network, aggregator, collaborator, data loader, task runner, 
-        and API layer according to the user's specifications.
+        It sets up the network, aggregator, collaborator, data loader, task
+        runner, and API layer according to the user's specifications.
 
         Args:
             model_provider: The provider of the model used in the experiment.
@@ -499,27 +521,36 @@ class FLExperiment:
             rounds_to_train (int): The number of rounds to train.
             delta_updates (bool): Whether to use delta updates.
             opt_treatment (str): The optimization treatment to be used.
-            device_assignment_policy (str): The device assignment policy to be used.
-            override_config (dict, optional): The configuration to override the default settings.
-            model_interface_file (str, optional): The file for the model interface. Defaults to 'model_obj.pkl'.
-            tasks_interface_file (str, optional): The file for the tasks interface. Defaults to 'tasks_obj.pkl'.
-            dataloader_interface_file (str, optional): The file for the data loader interface. Defaults to 'loader_obj.pkl'.
-            aggregation_function_interface_file (str, optional): The file for the aggregation function interface. Defaults to 'aggregation_function_obj.pkl'.
-            task_assigner_file (str, optional): The file for the task assigner. Defaults to 'task_assigner_obj.pkl'.
+            device_assignment_policy (str): The device assignment policy to be
+                used.
+            override_config (dict, optional): The configuration to override
+                the default settings.
+            model_interface_file (str, optional): The file for the model
+                interface. Defaults to 'model_obj.pkl'.
+            tasks_interface_file (str, optional): The file for the tasks
+                interface. Defaults to 'tasks_obj.pkl'.
+            dataloader_interface_file (str, optional): The file for the data
+                loader interface. Defaults to 'loader_obj.pkl'.
+            aggregation_function_interface_file (str, optional): The file for
+                the aggregation function interface. Defaults to
+                'aggregation_function_obj.pkl'.
+            task_assigner_file (str, optional): The file for the task assigner.
+                Defaults to 'task_assigner_obj.pkl'.
         """
 
         # Seems like we still need to fill authorized_cols list
         # So aggregator know when to start sending tasks
-        # We also could change the aggregator logic so it will send tasks to aggregator
-        # as soon as it connects. This change should be a part of a bigger PR
-        # brining in fault tolerance changes
+        # We also could change the aggregator logic so it will send tasks to
+        # aggregator as soon as it connects. This change should be a part of a
+        # bigger PR brining in fault tolerance changes
 
         shard_registry = self.federation.get_shard_registry()
         self.plan.authorized_cols = [
             name for name, info in shard_registry.items() if info['is_online']
         ]
         # Network part of the plan
-        # We keep in mind that an aggregator FQND will be the same as the directors FQDN
+        # We keep in mind that an aggregator FQND will be the same as the
+        # directors FQDN
         # We just choose a port randomly from plan hash
         director_fqdn = self.federation.director_node_fqdn.split(':')[
             0]  # We drop the port
@@ -543,8 +574,8 @@ class FLExperiment:
             self.plan.config['data_loader']['settings'][setting] = value
 
         # TaskRunner framework plugin
-        # ['required_plugin_components'] should be already in the default plan with all the fields
-        # filled with the default values
+        # ['required_plugin_components'] should be already in the default plan
+        # with all the fields filled with the default values
         self.plan.config['task_runner']['required_plugin_components'] = {
             'framework_adapters': model_provider.framework_plugin
         }
@@ -573,8 +604,9 @@ class FLExperiment:
                                      data_loader, task_assigner):
         """Save python objects to be restored on collaborators.
 
-        This method serializes the provided python objects and saves them for later use. The objects
-        are serialized using the serializer plugin specified in the plan configuration.
+        This method serializes the provided python objects and saves them for
+        later use. The objects are serialized using the serializer plugin
+        specified in the plan configuration.
 
         Args:
             model_provider: The ModelInterface instance to be serialized.
@@ -605,23 +637,30 @@ class FLExperiment:
 
 class TaskKeeper:
     """Task keeper class.
-    
-    This class is responsible for managing tasks in a federated learning experiment. It keeps track of
-    registered tasks, their settings, and aggregation functions.
+
+    This class is responsible for managing tasks in a federated learning
+    experiment. It keeps track of registered tasks, their settings, and
+    aggregation functions.
 
     Task should accept the following entities that exist on collaborator nodes:
-    1. model - will be rebuilt with relevant weights for every task by `TaskRunner`
-    2. data_loader - data loader equipped with `repository adapter` that provides local data
-    3. device - a device to be used on collaborator machines
-    4. optimizer (optional)
+    1. model - will be rebuilt with relevant weights for every task by
+    `TaskRunner`.
+    2. data_loader - data loader equipped with `repository adapter` that
+    provides local data.
+    3. device - a device to be used on collaborator machines.
+    4. optimizer (optional).
 
     Task returns a dictionary {metric name: metric value for this task}
     
     Attributes:
-        task_registry (dict): A dictionary mapping task names to callable functions.
-        task_contract (dict): A dictionary mapping task names to their contract.
-        task_settings (dict): A dictionary mapping task names to their settings.
-        aggregation_functions (dict): A dictionary mapping task names to their aggregation functions.
+        task_registry (dict): A dictionary mapping task names to callable
+            functions.
+        task_contract (dict): A dictionary mapping task names to their
+            contract.
+        task_settings (dict): A dictionary mapping task names to their
+            settings.
+        aggregation_functions (dict): A dictionary mapping task names to their
+            aggregation functions.
         _tasks (dict): A dictionary mapping task aliases to Task objects.
     """
 
@@ -650,7 +689,8 @@ class TaskKeeper:
         [model, data_loader, device] - necessarily
         and optimizer - optionally
 
-        All tasks should accept contract entities to be run on collaborator node.
+        All tasks should accept contract entities to be run on collaborator
+        node.
         Moreover we ask users return dict{'metric':value} in every task
         `
         TI = TaskInterface()
@@ -662,7 +702,8 @@ class TaskKeeper:
         @TI.add_kwargs(**task_settings)
         @TI.register_fl_task(model='my_model', data_loader='train_loader',
                 device='device', optimizer='my_Adam_opt')
-        def foo_task(my_model, train_loader, my_Adam_opt, device, batch_size, some_arg=356)
+        def foo_task(my_model, train_loader, my_Adam_opt, device, batch_size,
+        some_arg=356)
             ...
             return {'metric_name': metric, 'metric_name_2': metric_2,}
         `
@@ -671,16 +712,18 @@ class TaskKeeper:
             model: The model to be used in the task.
             data_loader: The data loader to be used in the task.
             device: The device to be used in the task.
-            optimizer (optional): The optimizer to be used in the task. Defaults to None.
-            round_num (optional): The round number for the task. Defaults to None.
+            optimizer (optional): The optimizer to be used in the task.
+                Defaults to None.
+            round_num (optional): The round number for the task. Defaults
+                to None.
         """
 
         def decorator_with_args(training_method):
             """A high-level wrapper that allows arguments for the decorator.
 
-            This function is a decorator that wraps a training method. It saves the 
-            task and the contract for later serialization. It also defines tasks based 
-            on whether an optimizer is provided.
+            This function is a decorator that wraps a training method. It
+            saves the task and the contract for later serialization. It also
+            defines tasks based on whether an optimizer is provided.
 
             Args:
                 training_method: The training method to be wrapped.
@@ -760,16 +803,19 @@ class TaskKeeper:
         containing logic from workspace-related libraries
         that are not present on director yet.
 
-        You might need to override default FedAvg aggregation with built-in aggregation types:
+        You might need to override default FedAvg aggregation with built-in
+        aggregation types:
             - openfl.interface.aggregation_functions.GeometricMedian
             - openfl.interface.aggregation_functions.Median
         or define your own AggregationFunction subclass.
-        See more details on `Overriding the aggregation function`_ documentation page.
+        See more details on `Overriding the aggregation function`_
+        documentation page.
         .. _Overriding the aggregation function:
             https://openfl.readthedocs.io/en/latest/overriding_agg_fn.html
 
         Args:
-            aggregation_function: The aggregation function to be used for the task.
+            aggregation_function: The aggregation function to be used for
+                the task.
         """
 
         def decorator_with_args(training_method):
@@ -798,7 +844,8 @@ TaskInterface = TaskKeeper
 class ModelInterface:
     """Registers model graph and optimizer.
 
-    This class is responsible for managing the model and optimizer in a federated learning experiment.
+    This class is responsible for managing the model and optimizer in a
+    federated learning experiment.
 
     To be serialized and sent to collaborator nodes.
     This is the place to determine correct framework adapter
@@ -820,8 +867,10 @@ class ModelInterface:
 
         Args:
             model (Union[Path, str]) : The model to be used in the experiment.
-            optimizer (Union[tuple, optimizer]) : The optimizer to be used in the experiment.
-            framework_plugin: The framework plugin to be used in the experiment.
+            optimizer (Union[tuple, optimizer]) : The optimizer to be used in
+                the experiment.
+            framework_plugin: The framework plugin to be used in the
+                experiment.
         """
         self.model = model
         self.optimizer = optimizer
@@ -847,7 +896,8 @@ class ModelInterface:
 class DataInterface:
     """The class to define dataloaders.
 
-    This class is responsible for managing the data loaders in a federated learning experiment.
+    This class is responsible for managing the data loaders in a federated
+    learning experiment.
 
     In the future users will have to adapt `unified data interface hook`
     in their dataloaders.
@@ -886,11 +936,13 @@ class DataInterface:
         raise NotImplementedError
 
     def get_train_loader(self, **kwargs):
-        """Output of this method will be provided to tasks with optimizer in contract."""
+        """Output of this method will be provided to tasks with optimizer in
+        contract."""
         raise NotImplementedError
 
     def get_valid_loader(self, **kwargs):
-        """Output of this method will be provided to tasks without optimizer in contract."""
+        """Output of this method will be provided to tasks without optimizer
+        in contract."""
         raise NotImplementedError
 
     def get_train_data_size(self):

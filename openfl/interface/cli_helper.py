@@ -104,8 +104,8 @@ def print_tree(dir_path: Path,
         echo(line)
     if next(iterator, None):
         echo(f'... length_limit, {length_limit}, reached, counted:')
-    echo(f'\n{directories} directories' +
-         (f', {files} files' if files else ''))
+    echo(f'\n{directories} directories'
+         + (f', {files} files' if files else ''))
 
 
 def copytree(src,

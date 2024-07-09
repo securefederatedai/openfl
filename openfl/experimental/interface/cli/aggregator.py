@@ -133,8 +133,8 @@ def generate_cert_request(fqdn):
 
     (CERT_DIR / "server").mkdir(parents=True, exist_ok=True)
 
-    echo("  Writing AGGREGATOR certificate key pair to: " +
-         style(f"{CERT_DIR}/server", fg="green"))
+    echo("  Writing AGGREGATOR certificate key pair to: "
+         + style(f"{CERT_DIR}/server", fg="green"))
 
     # Print csr hash before writing csr to disk
     csr_hash = get_csr_hash(server_csr)
@@ -150,8 +150,7 @@ def generate_cert_request(fqdn):
     "-n",
     "--fqdn",
     type=click_types.FQDN,
-    help=
-    f"The fully qualified domain name of aggregator node [{getfqdn_env()}]",
+    help=f"The fully qualified domain name of aggregator node [{getfqdn_env()}]",
     default=getfqdn_env(),
 )
 @option("-s", "--silent", help="Do not prompt", is_flag=True)
@@ -183,19 +182,19 @@ def certify(fqdn, silent):
     if not csr_path_absolute_path.exists():
         echo(
             style("Aggregator certificate signing request not found.",
-                  fg="red") +
-            " Please run `fx aggregator generate-cert-request`"
+                  fg="red")
+            + " Please run `fx aggregator generate-cert-request`"
             " to generate the certificate request.")
 
     csr, csr_hash = read_csr(csr_path_absolute_path)
 
     # Load private signing key
-    private_sign_key_absolute_path = Path(CERT_DIR /
-                                          signing_key_path).absolute()
+    private_sign_key_absolute_path = Path(CERT_DIR
+                                          / signing_key_path).absolute()
     if not private_sign_key_absolute_path.exists():
         echo(
-            style("Signing key not found.", fg="red") +
-            " Please run `fx workspace certify`"
+            style("Signing key not found.", fg="red")
+            + " Please run `fx workspace certify`"
             " to initialize the local certificate authority.")
 
     signing_key = read_key(private_sign_key_absolute_path)
@@ -204,14 +203,14 @@ def certify(fqdn, silent):
     signing_crt_absolute_path = Path(CERT_DIR / signing_crt_path).absolute()
     if not signing_crt_absolute_path.exists():
         echo(
-            style("Signing certificate not found.", fg="red") +
-            " Please run `fx workspace certify`"
+            style("Signing certificate not found.", fg="red")
+            + " Please run `fx workspace certify`"
             " to initialize the local certificate authority.")
 
     signing_crt = read_crt(signing_crt_absolute_path)
 
-    echo("The CSR Hash for file " + style(f"{cert_name}.csr", fg="green") +
-         " = " + style(f"{csr_hash}", fg="red"))
+    echo("The CSR Hash for file " + style(f"{cert_name}.csr", fg="green")
+         + " = " + style(f"{csr_hash}", fg="red"))
 
     crt_path_absolute_path = Path(CERT_DIR / f"{cert_name}.crt").absolute()
 
@@ -235,6 +234,6 @@ def certify(fqdn, silent):
 
         else:
             echo(
-                style("Not signing certificate.", fg="red") +
-                " Please check with this AGGREGATOR to get the correct"
+                style("Not signing certificate.", fg="red")
+                + " Please check with this AGGREGATOR to get the correct"
                 " certificate for this federation.")

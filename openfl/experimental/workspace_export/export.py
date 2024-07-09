@@ -24,8 +24,10 @@ class WorkspaceExport:
 
     Args:
         notebook_path: Absolute path of jupyter notebook.
-        template_workspace_path: Path to template workspace provided with OpenFL.
-        output_dir: Output directory for new generated workspace (default="/tmp").
+        template_workspace_path: Path to template workspace provided with
+            OpenFL.
+        output_dir: Output directory for new generated workspace
+            (default="/tmp").
 
     Returns:
         None

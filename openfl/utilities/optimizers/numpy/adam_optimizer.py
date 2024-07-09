@@ -14,7 +14,7 @@ from .base_optimizer import Optimizer
 class NumPyAdam(Optimizer):
     """Adam optimizer implementation.
 
-    Implements the Adam optimization algorithm using NumPy. 
+    Implements the Adam optimization algorithm using NumPy.
     Adam is an algorithm for first-order gradient-based optimization of
     stochastic objective functions, based on adaptive estimates of lower-order
     moments.
@@ -103,10 +103,7 @@ class NumPyAdam(Optimizer):
         self.beta_1, self.beta_2 = betas
         self.initial_accumulator_value = initial_accumulator_value
         self.epsilon = epsilon
-        self.current_step: Dict[str, int] = {
-            param_name: 0
-            for param_name in self.params
-        }
+        self.current_step: Dict[str, int] = {param_name: 0 for param_name in self.params}
 
         self.grads_first_moment, self.grads_second_moment = {}, {}
 

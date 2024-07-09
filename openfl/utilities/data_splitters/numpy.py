@@ -288,8 +288,8 @@ class DirichletNumPyDataSplitter(NumPyDataSplitter):
                 ]
                 proportions = np.array(proportions)
                 proportions = proportions / proportions.sum()
-                proportions = (np.cumsum(proportions) *
-                               len(idx_k)).astype(int)[:-1]
+                proportions = (np.cumsum(proportions)
+                               * len(idx_k)).astype(int)[:-1]
                 idx_splitted = np.split(idx_k, proportions)
                 idx_batch = [
                     idx_j + idx.tolist()

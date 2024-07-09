@@ -126,8 +126,8 @@ def generate_cert_request(collaborator_name, silent, skip_package):
 
     (CERT_DIR / "client").mkdir(parents=True, exist_ok=True)
 
-    echo("  Moving COLLABORATOR certificate to: " +
-         style(f"{CERT_DIR}/{file_name}", fg="green"))
+    echo("  Moving COLLABORATOR certificate to: "
+         + style(f"{CERT_DIR}/{file_name}", fg="green"))
 
     # Print csr hash before writing csr to disk
     csr_hash = get_csr_hash(client_csr)
@@ -205,16 +205,16 @@ def register_collaborator(file_name):
         doc["collaborators"] = []  # Create empty list
 
     if col_name in doc["collaborators"]:
-        echo("\nCollaborator " + style(f"{col_name}", fg="green") +
-             " is already in the " + style(f"{cols_file}", fg="green"))
+        echo("\nCollaborator " + style(f"{col_name}", fg="green")
+             + " is already in the " + style(f"{cols_file}", fg="green"))
 
     else:
         doc["collaborators"].append(col_name)
         with open(cols_file, "w", encoding="utf-8") as f:
             dump(doc, f)
 
-        echo("\nRegistering " + style(f"{col_name}", fg="green") + " in " +
-             style(f"{cols_file}", fg="green"))
+        echo("\nRegistering " + style(f"{col_name}", fg="green") + " in "
+             + style(f"{cols_file}", fg="green"))
 
 
 @collaborator.command(name="certify")
@@ -297,8 +297,8 @@ def certify(collaborator_name, silent, request_pkg=None, import_=False):
         # Load private signing key
         if not Path(CERT_DIR / signing_key_path).exists():
             echo(
-                style("Signing key not found.", fg="red") +
-                " Please run `fx workspace certify`"
+                style("Signing key not found.", fg="red")
+                + " Please run `fx workspace certify`"
                 " to initialize the local certificate authority.")
 
         signing_key = read_key(CERT_DIR / signing_key_path)
@@ -306,14 +306,14 @@ def certify(collaborator_name, silent, request_pkg=None, import_=False):
         # Load signing cert
         if not Path(CERT_DIR / signing_crt_path).exists():
             echo(
-                style("Signing certificate not found.", fg="red") +
-                " Please run `fx workspace certify`"
+                style("Signing certificate not found.", fg="red")
+                + " Please run `fx workspace certify`"
                 " to initialize the local certificate authority.")
 
         signing_crt = read_crt(CERT_DIR / signing_crt_path)
 
-        echo("The CSR Hash for file " + style(f"{file_name}.csr", fg="green") +
-             " = " + style(f"{csr_hash}", fg="red"))
+        echo("The CSR Hash for file " + style(f"{file_name}.csr", fg="green")
+             + " = " + style(f"{csr_hash}", fg="red"))
 
         if silent:
             echo(" Signing COLLABORATOR certificate")
@@ -336,8 +336,8 @@ def certify(collaborator_name, silent, request_pkg=None, import_=False):
 
             else:
                 echo(
-                    style("Not signing certificate.", fg="red") +
-                    " Please check with this collaborator to get the"
+                    style("Not signing certificate.", fg="red")
+                    + " Please check with this collaborator to get the"
                     " correct certificate for this federation.")
                 return
 
