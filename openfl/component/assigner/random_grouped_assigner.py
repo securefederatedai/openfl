@@ -4,7 +4,7 @@
 
 import numpy as np
 
-from .assigner import Assigner
+from openfl.component.assigner import Assigner
 
 
 class RandomGroupedAssigner(Assigner):

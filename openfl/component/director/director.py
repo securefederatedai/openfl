@@ -11,7 +11,7 @@ from typing import Callable, Iterable, List, Union
 
 from openfl.transport.grpc.exceptions import ShardNotFoundError
 
-from .experiment import Experiment, ExperimentsRegistry, Status
+from openfl.component.director.experiment import Experiment, ExperimentsRegistry, Status
 
 logger = logging.getLogger(__name__)
 
