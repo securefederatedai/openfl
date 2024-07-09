@@ -1,22 +1,16 @@
+#!/usr/bin/env python
+# Copyright (C) 2020-2023 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+"""CLI module."""
 import logging
 import os
+import sys
+import time
 import warnings
 from importlib import import_module
 from logging import basicConfig
 from pathlib import Path
 from sys import argv, path
-
-from rich.console import Console
-from rich.logging import RichHandler
-
-#!/usr/bin/env python
-# Copyright (C) 2020-2023 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
-"""CLI module."""
-
-import os
-import sys
-import time
 
 from click import (
     Group,
@@ -30,6 +24,8 @@ from click import (
     pass_context,
     style,
 )
+from rich.console import Console
+from rich.logging import RichHandler
 
 from openfl.utilities import add_log_level
 

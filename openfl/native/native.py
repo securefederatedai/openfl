@@ -128,7 +128,7 @@ def setup_logging(level='INFO', log_file=None):
     # Setup logging
 
     if importlib.util.find_spec('tensorflow') is not None:
-        import tensorflow as tf
+        import tensorflow as tf  # pylint: disable=import-outside-toplevel
         tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
     metric = 25
     add_log_level('METRIC', metric)
