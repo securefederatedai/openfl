@@ -1,16 +1,12 @@
 # Copyright (C) 2020-2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-
 """Experiment module."""
 
 import asyncio
 import logging
 from contextlib import asynccontextmanager
 from pathlib import Path
-from typing import Callable
-from typing import Iterable
-from typing import List
-from typing import Union
+from typing import Callable, Iterable, List, Union
 
 from openfl.federated import Plan
 from openfl.transport import AggregatorGRPCServer
@@ -31,10 +27,11 @@ class Status:
 
 class Experiment:
     """Experiment class.
-    
+
     Attributes:
             name (str): The name of the experiment.
-            archive_path (Union[Path, str]): The path to the experiment archive.
+            archive_path (Union[Path, str]): The path to the experiment
+                archive.
             collaborators (List[str]): The list of collaborators.
             sender (str): The name of the sender.
             init_tensor_dict (dict): The initial tensor dictionary.
@@ -42,29 +39,34 @@ class Experiment:
             users (Iterable[str]): The list of users.
             status (str): The status of the experiment.
             aggregator (object): The aggregator object.
-            run_aggregator_atask (object): The run aggregator async task object.
+            run_aggregator_atask (object): The run aggregator async task
+                object.
     """
 
     def __init__(
-            self, *,
-            name: str,
-            archive_path: Union[Path, str],
-            collaborators: List[str],
-            sender: str,
-            init_tensor_dict: dict,
-            plan_path: Union[Path, str] = 'plan/plan.yaml',
-            users: Iterable[str] = None,
+        self,
+        *,
+        name: str,
+        archive_path: Union[Path, str],
+        collaborators: List[str],
+        sender: str,
+        init_tensor_dict: dict,
+        plan_path: Union[Path, str] = 'plan/plan.yaml',
+        users: Iterable[str] = None,
     ) -> None:
         """Initialize an experiment object.
-        
+
         Args:
             name (str): The name of the experiment.
-            archive_path (Union[Path, str]): The path to the experiment archive.
+            archive_path (Union[Path, str]): The path to the experiment
+                archive.
             collaborators (List[str]): The list of collaborators.
             sender (str): The name of the sender.
             init_tensor_dict (dict): The initial tensor dictionary.
-            plan_path (Union[Path, str], optional): The path to the plan. Defaults to 'plan/plan.yaml'.
-            users (Iterable[str], optional): The list of users. Defaults to None.
+            plan_path (Union[Path, str], optional): The path to the plan.
+                Defaults to 'plan/plan.yaml'.
+            users (Iterable[str], optional): The list of users. Defaults to
+                None.
         """
         self.name = name
         self.archive_path = Path(archive_path).absolute()
@@ -78,21 +80,27 @@ class Experiment:
         self.run_aggregator_atask = None
 
     async def start(
-            self, *,
-            tls: bool = True,
-            root_certificate: Union[Path, str] = None,
-            private_key: Union[Path, str] = None,
-            certificate: Union[Path, str] = None,
-            install_requirements: bool = False,
+        self,
+        *,
+        tls: bool = True,
+        root_certificate: Union[Path, str] = None,
+        private_key: Union[Path, str] = None,
+        certificate: Union[Path, str] = None,
+        install_requirements: bool = False,
     ):
         """Run experiment.
-        
+
         Args:
-            tls (bool, optional): A flag indicating if TLS should be used for connections. Defaults to True.
-            root_certificate (Union[Path, str], optional): The path to the root certificate for TLS. Defaults to None.
-            private_key (Union[Path, str], optional): The path to the private key for TLS. Defaults to None.
-            certificate (Union[Path, str], optional): The path to the certificate for TLS. Defaults to None.
-            install_requirements (bool, optional): A flag indicating if the requirements should be installed. Defaults to False.
+            tls (bool, optional): A flag indicating if TLS should be used for
+                connections. Defaults to True.
+            root_certificate (Union[Path, str], optional): The path to the
+                root certificate for TLS. Defaults to None.
+            private_key (Union[Path, str], optional): The path to the private
+                key for TLS. Defaults to None.
+            certificate (Union[Path, str], optional): The path to the
+                certificate for TLS. Defaults to None.
+            install_requirements (bool, optional): A flag indicating if the
+                requirements should be installed. Defaults to False.
         """
         self.status = Status.IN_PROGRESS
         try:
@@ -100,9 +108,9 @@ class Experiment:
                         f'collaborators {self.collaborators}')
 
             with ExperimentWorkspace(
-                experiment_name=self.name,
-                data_file_path=self.archive_path,
-                install_requirements=install_requirements,
+                    experiment_name=self.name,
+                    data_file_path=self.archive_path,
+                    install_requirements=install_requirements,
             ):
                 aggregator_grpc_server = self._create_aggregator_grpc_server(
                     tls=tls,
@@ -114,19 +122,18 @@ class Experiment:
 
                 self.run_aggregator_atask = asyncio.create_task(
                     self._run_aggregator_grpc_server(
-                        aggregator_grpc_server=aggregator_grpc_server,
-                    )
-                )
+                        aggregator_grpc_server=aggregator_grpc_server, ))
                 await self.run_aggregator_atask
             self.status = Status.FINISHED
             logger.info(f'Experiment "{self.name}" was finished successfully.')
         except Exception as e:
             self.status = Status.FAILED
-            logger.exception(f'Experiment "{self.name}" failed with error: {e}.')
+            logger.exception(
+                f'Experiment "{self.name}" failed with error: {e}.')
 
     async def review_experiment(self, review_plan_callback: Callable) -> bool:
         """Get plan approve in console.
-        
+
         Args:
             review_plan_callback (Callable): A callback function for reviewing the plan.
 
@@ -135,41 +142,41 @@ class Experiment:
         """
         logger.debug("Experiment Review starts")
         # Extract the workspace for review (without installing requirements)
-        with ExperimentWorkspace(
-            self.name,
-            self.archive_path,
-            is_install_requirements=False,
-            remove_archive=False
-        ):
+        with ExperimentWorkspace(self.name,
+                                 self.archive_path,
+                                 is_install_requirements=False,
+                                 remove_archive=False):
             loop = asyncio.get_event_loop()
             # Call for a review in a separate thread (server is not blocked)
             review_approve = await loop.run_in_executor(
-                None,
-                review_plan_callback,
-                self.name, self.plan_path
-            )
+                None, review_plan_callback, self.name, self.plan_path)
             if not review_approve:
                 self.status = Status.REJECTED
                 self.archive_path.unlink(missing_ok=True)
                 return False
 
-        logger.debug("Experiment Review succeed")
+        logger.debug("Experiment Review succeeded")
         return True
 
     def _create_aggregator_grpc_server(
-            self, *,
-            tls: bool = True,
-            root_certificate: Union[Path, str] = None,
-            private_key: Union[Path, str] = None,
-            certificate: Union[Path, str] = None,
+        self,
+        *,
+        tls: bool = True,
+        root_certificate: Union[Path, str] = None,
+        private_key: Union[Path, str] = None,
+        certificate: Union[Path, str] = None,
     ) -> AggregatorGRPCServer:
         """Create an aggregator gRPC server.
 
         Args:
-            tls (bool, optional): A flag indicating if TLS should be used for connections. Defaults to True.
-            root_certificate (Union[Path, str], optional): The path to the root certificate for TLS. Defaults to None.
-            private_key (Union[Path, str], optional): The path to the private key for TLS. Defaults to None.
-            certificate (Union[Path, str], optional): The path to the certificate for TLS. Defaults to None.
+            tls (bool, optional): A flag indicating if TLS should be used for
+                connections. Defaults to True.
+            root_certificate (Union[Path, str], optional): The path to the
+                root certificate for TLS. Defaults to None.
+            private_key (Union[Path, str], optional): The path to the private
+                key for TLS. Defaults to None.
+            certificate (Union[Path, str], optional): The path to the
+                certificate for TLS. Defaults to None.
 
         Returns:
             AggregatorGRPCServer: The created aggregator gRPC server.
@@ -177,7 +184,8 @@ class Experiment:
         plan = Plan.parse(plan_config_path=self.plan_path)
         plan.authorized_cols = list(self.collaborators)
 
-        logger.info(f'🧿 Created an Aggregator Server for {self.name} experiment.')
+        logger.info(
+            f'🧿 Created an Aggregator Server for {self.name} experiment.')
         aggregator_grpc_server = plan.interactive_api_get_server(
             tensor_dict=self.init_tensor_dict,
             root_certificate=root_certificate,
@@ -188,11 +196,13 @@ class Experiment:
         return aggregator_grpc_server
 
     @staticmethod
-    async def _run_aggregator_grpc_server(aggregator_grpc_server: AggregatorGRPCServer) -> None:
+    async def _run_aggregator_grpc_server(
+            aggregator_grpc_server: AggregatorGRPCServer) -> None:
         """Run aggregator.
-        
+
         Args:
-            aggregator_grpc_server (AggregatorGRPCServer): The aggregator gRPC server to run.
+            aggregator_grpc_server (AggregatorGRPCServer): The aggregator gRPC
+                server to run.
         """
         logger.info('🧿 Starting the Aggregator Service.')
         grpc_server = aggregator_grpc_server.get_server()
@@ -203,7 +213,8 @@ class Experiment:
             while not aggregator_grpc_server.aggregator.all_quit_jobs_sent():
                 # Awaiting quit job sent to collaborators
                 await asyncio.sleep(10)
-            logger.debug('Aggregator sent quit jobs calls to all collaborators')
+            logger.debug(
+                'Aggregator sent quit jobs calls to all collaborators')
         except KeyboardInterrupt:
             pass
         finally:
@@ -225,9 +236,10 @@ class ExperimentsRegistry:
     @property
     def active_experiment(self) -> Union[Experiment, None]:
         """Get active experiment.
-        
+
         Returns:
-            Union[Experiment, None]: The active experiment if exists, None otherwise.
+            Union[Experiment, None]: The active experiment if exists, None
+                otherwise.
         """
         if self.__active_experiment_name is None:
             return None
@@ -236,7 +248,7 @@ class ExperimentsRegistry:
     @property
     def pending_experiments(self) -> List[str]:
         """Get queue of not started experiments.
-        
+
         Returns:
             List[str]: The list of pending experiments.
         """
@@ -244,16 +256,16 @@ class ExperimentsRegistry:
 
     def add(self, experiment: Experiment) -> None:
         """Add experiment to queue of not started experiments.
-        
-         Args:
-            experiment (Experiment): The experiment to add.
+
+        Args:
+           experiment (Experiment): The experiment to add.
         """
         self.__dict[experiment.name] = experiment
         self.__pending_experiments.append(experiment.name)
 
     def remove(self, name: str) -> None:
         """Remove experiment from everywhere.
-        
+
         Args:
             name (str): The name of the experiment to remove.
         """
@@ -268,7 +280,7 @@ class ExperimentsRegistry:
 
     def __getitem__(self, key: str) -> Experiment:
         """Get experiment by name.
-        
+
         Args:
             key (str): The name of the experiment.
 
@@ -279,34 +291,32 @@ class ExperimentsRegistry:
 
     def get(self, key: str, default=None) -> Experiment:
         """Get experiment by name.
-        
+
         Args:
             key (str): The name of the experiment.
-            default (optional): The default value to return if the experiment does not exist.
+            default (optional): The default value to return if the experiment
+                does not exist.
 
         Returns:
-            Experiment: The experiment with the given name, or the default value if the experiment does not exist.
+            Experiment: The experiment with the given name, or the default
+                value if the experiment does not exist.
         """
         return self.__dict.get(key, default)
 
     def get_user_experiments(self, user: str) -> List[Experiment]:
         """Get list of experiments for specific user.
-        
+
         Args:
             user (str): The name of the user.
 
         Returns:
             List[Experiment]: The list of experiments for the specific user.
         """
-        return [
-            exp
-            for exp in self.__dict.values()
-            if user in exp.users
-        ]
+        return [exp for exp in self.__dict.values() if user in exp.users]
 
     def __contains__(self, key: str) -> bool:
         """Check if experiment exists.
-        
+
         Args:
             key (str): The name of the experiment.
 
@@ -324,8 +334,8 @@ class ExperimentsRegistry:
     async def get_next_experiment(self):
         """Context manager.
 
-        On enter get experiment from pending_experiments.
-        On exit put finished experiment to archive_experiments.
+        On enter get experiment from pending_experiments. On exit put finished
+        experiment to archive_experiments.
         """
         while True:
             if self.active_experiment is None and self.pending_experiments:
