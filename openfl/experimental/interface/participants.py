@@ -89,7 +89,7 @@ class Collaborator(Participant):
             name (str, optional): Name of the collaborator. Defaults to "".
             private_attributes_callable (Callable, optional): A function which
                 returns collaborator private attributes for each collaborator.
-                In case private_attributes are not required this can be 
+                In case private_attributes are not required this can be
                 omitted. Defaults to None.
             num_cpus (int, optional): Specifies how many cores to use for the
                 collaborator step execution. This will only be used if backend

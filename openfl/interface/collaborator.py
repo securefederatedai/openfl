@@ -136,8 +136,8 @@ def register_data_path(collaborator_name, data_path=None, silent=False):
     default_data_path = f'data/{collaborator_name}'
     if not silent and data_path is None:
         dir_path = prompt('\nWhere is the data (or what is the rank)'
-                          ' for collaborator ' +
-                          style(f'{collaborator_name}', fg='green') + ' ? ',
+                          ' for collaborator '
+                          + style(f'{collaborator_name}', fg='green') + ' ? ',
                           default=default_data_path)
     elif data_path is not None:
         dir_path = data_path
@@ -308,8 +308,8 @@ def register_collaborator(file_name):
 
     if col_name in doc['collaborators']:
 
-        echo('\nCollaborator ' + style(f'{col_name}', fg='green') +
-             ' is already in the ' + style(f'{cols_file}', fg='green'))
+        echo('\nCollaborator ' + style(f'{col_name}', fg='green')
+             + ' is already in the ' + style(f'{cols_file}', fg='green'))
 
     else:
 
@@ -317,8 +317,8 @@ def register_collaborator(file_name):
         with open(cols_file, 'w', encoding='utf-8') as f:
             dump(doc, f)
 
-        echo('\nRegistering ' + style(f'{col_name}', fg='green') + ' in ' +
-             style(f'{cols_file}', fg='green'))
+        echo('\nRegistering ' + style(f'{col_name}', fg='green') + ' in '
+             + style(f'{cols_file}', fg='green'))
 
 
 @collaborator.command(name='certify')
@@ -454,8 +454,8 @@ def certify(collaborator_name, silent, request_pkg=None, import_=False):
 
             else:
                 echo(
-                    style('Not signing certificate.', fg='red') +
-                    ' Please check with this collaborator to get the'
+                    style('Not signing certificate.', fg='red')
+                    + ' Please check with this collaborator to get the'
                     ' correct certificate for this federation.')
                 return
 

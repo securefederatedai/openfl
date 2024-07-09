@@ -217,7 +217,7 @@ def init(workspace_template: str = 'default',
         agg_fqdn (str): The local node's fully qualified domain name (if it
             can't be resolved automatically). Defaults to None.
         col_names (list[str]): The names of the collaborators that will be
-            created. These collaborators will be set up to participate in the 
+            created. These collaborators will be set up to participate in the
             experiment, but are not required to. Defaults to None.
 
     Returns:

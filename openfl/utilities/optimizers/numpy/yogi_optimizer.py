@@ -77,8 +77,8 @@ class NumPyYogi(NumPyAdam):
         """
         sign = np.sign(grad**2 - self.grads_second_moment[grad_name])
         self.grads_second_moment[grad_name] = (
-            self.beta_2 * self.grads_second_moment[grad_name] +
-            (1.0 - self.beta_2) * sign * grad**2)
+            self.beta_2 * self.grads_second_moment[grad_name]
+            + (1.0 - self.beta_2) * sign * grad**2)
 
     def step(self, gradients: Dict[str, np.ndarray]) -> None:
         """Perform a single step for parameter update.

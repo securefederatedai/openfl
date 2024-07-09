@@ -186,13 +186,13 @@ def ray_group_assign(collaborators, num_actors=1):
         if times_called % collaborators_per_group == 0:
             max_num_cpus = max([
                 i.num_cpus for i in
-                collaborators_sorted_by_gpucpu[times_called:times_called +
-                                               collaborators_per_group]
+                collaborators_sorted_by_gpucpu[times_called:times_called
+                                               + collaborators_per_group]
             ])
             max_num_gpus = max([
                 i.num_gpus for i in
-                collaborators_sorted_by_gpucpu[times_called:times_called +
-                                               collaborators_per_group]
+                collaborators_sorted_by_gpucpu[times_called:times_called
+                                               + collaborators_per_group]
             ])
             print(f"creating actor with {max_num_cpus}, {max_num_gpus}")
             collaborator_actor = (
@@ -345,8 +345,8 @@ class LocalRuntime(Runtime):
         super().__init__()
         if backend not in ["ray", "single_process"]:
             raise ValueError(
-                f"Invalid 'backend' value '{backend}', accepted values are " +
-                "'ray', or 'single_process'")
+                f"Invalid 'backend' value '{backend}', accepted values are "
+                + "'ray', or 'single_process'")
         if backend == "ray":
             if not ray.is_initialized():
                 dh = kwargs.get("dashboard_host", "127.0.0.1")
@@ -383,10 +383,10 @@ class LocalRuntime(Runtime):
 
         if aggregator.private_attributes and aggregator.private_attributes_callable:
             self.logger.warning(
-                'Warning: Aggregator private attributes ' +
-                'will be initialized via callable and ' +
-                'attributes via aggregator.private_attributes ' +
-                'will be ignored')
+                'Warning: Aggregator private attributes '
+                + 'will be initialized via callable and '
+                + 'attributes via aggregator.private_attributes '
+                + 'will be ignored')
 
         if self.backend == "single_process":
             return aggregator
@@ -582,7 +582,7 @@ class LocalRuntime(Runtime):
 
         Args:
             ctx (Type[FLSpec]): The context to restore the snapshot to.
-            instance_snapshot (List[Type[FLSpec]]): The snapshot of the 
+            instance_snapshot (List[Type[FLSpec]]): The snapshot of the
                 instance to be restored.
         """
         for backup in instance_snapshot:

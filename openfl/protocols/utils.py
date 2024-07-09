@@ -43,7 +43,7 @@ def bytes_and_metadata_to_model_proto(bytes_dict, model_id, model_version,
     """Convert bytes and metadata to model protobuf.
 
     Args:
-        bytes_dict: A dictionary where the keys are tensor names and the 
+        bytes_dict: A dictionary where the keys are tensor names and the
             values are the corresponding tensor data in bytes.
         model_id: The ID of the model.
         model_version: The version of the model.
@@ -54,9 +54,7 @@ def bytes_and_metadata_to_model_proto(bytes_dict, model_id, model_version,
     Returns:
         model_proto: The protobuf of the model.
     """
-    model_header = ModelHeader(id=model_id,
-                               version=model_version,
-                               is_delta=is_delta)  # NOQA:F821
+    model_header = ModelHeader(id=model_id, version=model_version, is_delta=is_delta)  # NOQA:F821
 
     tensor_protos = []
     for key, data_bytes in bytes_dict.items():
@@ -83,11 +81,9 @@ def bytes_and_metadata_to_model_proto(bytes_dict, model_id, model_version,
                     int_list=int_list,
                     bool_list=bool_list,
                 ))
-        tensor_protos.append(
-            TensorProto(
-                name=key,  # NOQA:F821
-                data_bytes=data_bytes,
-                transformer_metadata=metadata_protos))
+        tensor_protos.append(TensorProto(name=key,  # NOQA:F821
+                                         data_bytes=data_bytes,
+                                         transformer_metadata=metadata_protos))
     return base_pb2.ModelProto(header=model_header, tensors=tensor_protos)
 
 
