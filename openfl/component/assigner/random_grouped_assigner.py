@@ -6,7 +6,7 @@
 
 import numpy as np
 
-from .assigner import Assigner
+from openfl.component.assigner.assigner import Assigner
 
 
 class RandomGroupedAssigner(Assigner):

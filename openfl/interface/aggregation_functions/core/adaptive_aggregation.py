@@ -9,7 +9,7 @@ import numpy as np
 
 from openfl.utilities.optimizers.numpy.base_optimizer import Optimizer
 from openfl.utilities.types import LocalTensor
-from .interface import AggregationFunction
+from openfl.interface.aggregation_functions.core.interface import AggregationFunction
 
 
 class AdaptiveAggregation(AggregationFunction):

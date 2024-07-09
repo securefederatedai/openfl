@@ -3,7 +3,7 @@
 """Keras Framework Adapter plugin."""
 from logging import getLogger
 
-from .framework_adapter_interface import FrameworkAdapterPluginInterface
+from openfl.plugins.frameworks_adapters.framework_adapter_interface import FrameworkAdapterPluginInterface
 from packaging import version
 
 logger = getLogger(__name__)

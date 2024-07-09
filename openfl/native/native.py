@@ -128,7 +128,7 @@ def setup_logging(level='INFO', log_file=None):
     from rich.console import Console
     from rich.logging import RichHandler
     import pkgutil
-    if True if pkgutil.find_loader('tensorflow') else False:
+    if True if importlib.util.find_spec('tensorflow') else False:
         import tensorflow as tf
         tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
     metric = 25

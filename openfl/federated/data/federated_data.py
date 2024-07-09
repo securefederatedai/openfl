@@ -7,7 +7,7 @@ import numpy as np
 
 from openfl.utilities.data_splitters import EqualNumPyDataSplitter
 from openfl.utilities.data_splitters import NumPyDataSplitter
-from .loader_pt import PyTorchDataLoader
+from openfl.federated.data.loader_pt import PyTorchDataLoader
 
 
 class FederatedDataSet(PyTorchDataLoader):

@@ -4,7 +4,7 @@
 
 from openfl.transport.grpc.director_client import DirectorClient
 from openfl.utilities.utils import getfqdn_env
-from .shard_descriptor import DummyShardDescriptor
+from openfl.interface.interactive_api.shard_descriptor import DummyShardDescriptor
 
 
 class Federation:

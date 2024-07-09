@@ -5,7 +5,7 @@
 
 import numpy as np
 
-from .loader import DataLoader
+from openfl.federated.data.loader import DataLoader
 
 
 class TensorFlowDataLoader(DataLoader):

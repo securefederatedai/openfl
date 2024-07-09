@@ -20,7 +20,7 @@ from openfl.protocols.utils import deconstruct_model_proto
 from openfl.transport.grpc.exceptions import ShardNotFoundError
 from openfl.transport.grpc.director_server import CLIENT_ID_DEFAULT
 
-from .grpc_channel_options import channel_options
+from openfl.transport.grpc.grpc_channel_options import channel_options
 
 logger = logging.getLogger(__name__)
 

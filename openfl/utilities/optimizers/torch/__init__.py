@@ -2,8 +2,8 @@
 # SPDX-License-Identifier: Apache-2.0
 
 """PyTorch optimizers package."""
-import pkgutil
+import importlib
 
-if pkgutil.find_loader('torch'):
-    from .fedprox import FedProxOptimizer # NOQA
-    from .fedprox import FedProxAdam # NOQA
+if importlib.util.find_spec('torch'):
+    from openfl.utilities.optimizers.torch.fedprox import FedProxOptimizer # NOQA
+    from openfl.utilities.optimizers.torch.fedprox import FedProxAdam # NOQA

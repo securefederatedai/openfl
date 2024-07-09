@@ -8,7 +8,7 @@ from typing import Optional
 
 import numpy as np
 
-from .base_optimizer import Optimizer
+from openfl.utilities.optimizers.numpy.base_optimizer import Optimizer
 
 
 class NumPyAdagrad(Optimizer):

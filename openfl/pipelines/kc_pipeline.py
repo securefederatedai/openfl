@@ -10,8 +10,8 @@ import gzip as gz
 import numpy as np
 from sklearn import cluster
 
-from .pipeline import TransformationPipeline
-from .pipeline import Transformer
+from openfl.pipelines.pipeline import TransformationPipeline
+from openfl.pipelines.pipeline import Transformer
 
 
 class KmeansTransformer(Transformer):

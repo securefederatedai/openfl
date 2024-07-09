@@ -7,7 +7,7 @@ import numpy as np
 import optax
 
 from flax import traverse_util
-from .framework_adapter_interface import FrameworkAdapterPluginInterface
+from openfl.plugins.frameworks_adapters.framework_adapter_interface import FrameworkAdapterPluginInterface
 
 
 class FrameworkAdapterPlugin(FrameworkAdapterPluginInterface):

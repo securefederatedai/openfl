@@ -8,7 +8,7 @@ Required package: pynvml
 
 import pynvml
 
-from .cuda_device_monitor import CUDADeviceMonitor
+from openfl.plugins.processing_units_monitor.cuda_device_monitor import CUDADeviceMonitor
 
 pynvml.nvmlInit()
 

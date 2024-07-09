@@ -15,9 +15,9 @@ from typing import Union
 
 from openfl.transport.grpc.exceptions import ShardNotFoundError
 
-from .experiment import Experiment
-from .experiment import ExperimentsRegistry
-from .experiment import Status
+from openfl.component.director.experiment import Experiment
+from openfl.component.director.experiment import ExperimentsRegistry
+from openfl.component.director.experiment import Status
 
 logger = logging.getLogger(__name__)
 

@@ -9,9 +9,9 @@ from typing import Optional
 import numpy as np
 
 from openfl.utilities.optimizers.numpy import NumPyAdagrad
-from .core import AdaptiveAggregation
-from .core import AggregationFunction
-from .weighted_average import WeightedAverage
+from openfl.interface.aggregation_functions.core import AdaptiveAggregation
+from openfl.interface.aggregation_functions.core import AggregationFunction
+from openfl.interface.aggregation_functions.weighted_average import WeightedAverage
 
 
 DEFAULT_AGG_FUNC = WeightedAverage()

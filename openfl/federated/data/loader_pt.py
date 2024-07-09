@@ -7,7 +7,7 @@ from math import ceil
 
 import numpy as np
 
-from .loader import DataLoader
+from openfl.federated.data.loader import DataLoader
 
 
 class PyTorchDataLoader(DataLoader):

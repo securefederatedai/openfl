@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 """PyTorchDataLoader module."""
-from .loader import DataLoader
+from openfl.federated.data.loader import DataLoader
 
 
 class GaNDLFDataLoaderWrapper(DataLoader):

@@ -5,7 +5,7 @@
 
 import numpy as np
 
-from .core import AggregationFunction
+from openfl.interface.aggregation_functions.core import AggregationFunction
 
 
 class Median(AggregationFunction):

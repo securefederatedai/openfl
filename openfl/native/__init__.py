@@ -2,4 +2,4 @@
 # SPDX-License-Identifier: Apache-2.0
 """openfl.native package."""
 
-from .native import *  # NOQA
+from openfl.native.native import *  # NOQA

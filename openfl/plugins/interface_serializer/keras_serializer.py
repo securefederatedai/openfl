@@ -4,7 +4,7 @@
 
 import cloudpickle
 
-from .serializer_interface import Serializer
+from openfl.plugins.interface_serializer.serializer_interface import Serializer
 
 
 class KerasSerializer(Serializer):

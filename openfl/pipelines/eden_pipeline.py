@@ -40,9 +40,9 @@ import torch
 import copy as co
 import numpy as np
 
-from .pipeline import TransformationPipeline
-from .pipeline import Transformer
-from .pipeline import Float32NumpyArrayToBytes
+from openfl.pipelines.pipeline import TransformationPipeline
+from openfl.pipelines.pipeline import Transformer
+from openfl.pipelines.pipeline import Float32NumpyArrayToBytes
 
 
 class Eden:

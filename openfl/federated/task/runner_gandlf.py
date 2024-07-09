@@ -14,7 +14,7 @@ import yaml
 from openfl.utilities.split import split_tensor_dict_for_holdouts
 from openfl.utilities import TensorKey
 
-from .runner import TaskRunner
+from openfl.federated.task.runner import TaskRunner
 
 from GANDLF.compute.generic import create_pytorch_objects
 from GANDLF.compute.training_loop import train_network

@@ -19,7 +19,7 @@ from openfl.protocols import utils
 from openfl.utilities import check_equal
 from openfl.utilities import check_is_in
 
-from .grpc_channel_options import channel_options
+from openfl.transport.grpc.grpc_channel_options import channel_options
 
 logger = logging.getLogger(__name__)
 

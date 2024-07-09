@@ -9,7 +9,7 @@ from typing import Tuple
 
 import numpy as np
 
-from .base_optimizer import Optimizer
+from openfl.utilities.optimizers.numpy.base_optimizer import Optimizer
 
 
 class NumPyAdam(Optimizer):

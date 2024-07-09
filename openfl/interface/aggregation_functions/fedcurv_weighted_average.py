@@ -3,7 +3,7 @@
 """FedCurv Aggregation function module."""
 import numpy as np
 
-from .weighted_average import WeightedAverage
+from openfl.interface.aggregation_functions.weighted_average import WeightedAverage
 
 
 class FedCurvWeightedAverage(WeightedAverage):
