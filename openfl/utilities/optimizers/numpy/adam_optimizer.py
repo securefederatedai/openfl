@@ -1,8 +1,6 @@
 """Adam optimizer module."""
 
-from typing import Dict
-from typing import Optional
-from typing import Tuple
+from typing import Dict, Optional, Tuple
 
 import numpy as np
 

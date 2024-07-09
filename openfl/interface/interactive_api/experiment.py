@@ -4,22 +4,25 @@ import time
 from collections import defaultdict
 from copy import deepcopy
 from logging import getLogger
+from os import getcwd, makedirs
+from os.path import basename
 from pathlib import Path
-from typing import Dict
-from typing import Tuple
+from shutil import copytree, ignore_patterns, make_archive
+from typing import Dict, Tuple
 
 from tensorboardX import SummaryWriter
 
-from openfl.interface.aggregation_functions import AggregationFunction
-from openfl.interface.aggregation_functions import WeightedAverage
-from openfl.component.assigner.tasks import Task
-from openfl.component.assigner.tasks import TrainTask
-from openfl.component.assigner.tasks import ValidateTask
+from openfl.component.assigner.tasks import Task, TrainTask, ValidateTask
 from openfl.federated import Plan
+from openfl.interface.aggregation_functions import (
+    AggregationFunction,
+    WeightedAverage,
+)
 from openfl.interface.cli import setup_logging
 from openfl.interface.cli_helper import WORKSPACE
 from openfl.native import update_plan
 from openfl.utilities.split import split_tensor_dict_for_holdouts
+from openfl.utilities.utils import rmtree
 from openfl.utilities.workspace import dump_requirements_file
 
 
@@ -310,14 +313,7 @@ class FLExperiment:
     @staticmethod
     def _pack_the_workspace():
         """Packing the archive."""
-        from shutil import copytree
-        from shutil import ignore_patterns
-        from shutil import make_archive
-        from os import getcwd
-        from os import makedirs
-        from os.path import basename
 
-        from openfl.utilities.utils import rmtree
 
         archive_type = 'zip'
         archive_name = basename(getcwd())

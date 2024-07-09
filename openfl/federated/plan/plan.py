@@ -5,16 +5,15 @@ from logging import getLogger
 from os.path import splitext
 from pathlib import Path
 
-from yaml import dump
-from yaml import safe_load
-from yaml import SafeDumper
+from yaml import SafeDumper, dump, safe_load
 
-from openfl.interface.aggregation_functions import AggregationFunction
-from openfl.interface.aggregation_functions import WeightedAverage
 from openfl.component.assigner.custom_assigner import Assigner
+from openfl.interface.aggregation_functions import (
+    AggregationFunction,
+    WeightedAverage,
+)
 from openfl.interface.cli_helper import WORKSPACE
-from openfl.transport import AggregatorGRPCClient
-from openfl.transport import AggregatorGRPCServer
+from openfl.transport import AggregatorGRPCClient, AggregatorGRPCServer
 from openfl.utilities.utils import getfqdn_env
 
 SETTINGS = 'settings'

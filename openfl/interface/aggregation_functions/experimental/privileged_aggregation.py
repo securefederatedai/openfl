@@ -1,13 +1,12 @@
 """Aggregation function interface module."""
 from abc import abstractmethod
-from typing import List
-from typing import Tuple
+from typing import List, Tuple
 
 import numpy as np
 import pandas as pd
 
-from openfl.utilities import LocalTensor
 from openfl.interface.aggregation_functions import AggregationFunction
+from openfl.utilities import LocalTensor
 
 
 class PrivilegedAggregationFunction(AggregationFunction):

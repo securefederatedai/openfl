@@ -1,6 +1,6 @@
 import platform
-import urllib.request
 import shutil
+import urllib.request
 
 from click import confirm
 

@@ -2,18 +2,14 @@
 
 import time
 from logging import getLogger
-from typing import Optional
-from typing import Tuple
+from typing import Optional, Tuple
 
 import grpc
 
 from openfl.pipelines import NoCompressionPipeline
-from openfl.protocols import aggregator_pb2
-from openfl.protocols import aggregator_pb2_grpc
-from openfl.protocols import utils
-from openfl.utilities import check_equal
-
+from openfl.protocols import aggregator_pb2, aggregator_pb2_grpc, utils
 from openfl.transport.grpc.grpc_channel_options import channel_options
+from openfl.utilities import check_equal
 
 
 class ConstantBackoff:

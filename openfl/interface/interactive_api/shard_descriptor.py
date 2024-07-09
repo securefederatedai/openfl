@@ -1,7 +1,6 @@
 """Shard descriptor."""
 
-from typing import Iterable
-from typing import List
+from typing import Iterable, List
 
 import numpy as np
 

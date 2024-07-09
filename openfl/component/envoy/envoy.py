@@ -1,22 +1,21 @@
 """Envoy module."""
 
 import logging
+import sys
 import time
 import traceback
 import uuid
-import sys
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
-from typing import Callable
-from typing import Optional
-from typing import Type
-from typing import Union
+from typing import Callable, Optional, Type, Union
 
 from openfl.federated import Plan
 from openfl.interface.interactive_api.shard_descriptor import ShardDescriptor
-from openfl.plugins.processing_units_monitor.cuda_device_monitor import CUDADeviceMonitor
-from openfl.transport.grpc.exceptions import ShardNotFoundError
+from openfl.plugins.processing_units_monitor.cuda_device_monitor import (
+    CUDADeviceMonitor,
+)
 from openfl.transport.grpc.director_client import ShardDirectorClient
+from openfl.transport.grpc.exceptions import ShardNotFoundError
 from openfl.utilities.workspace import ExperimentWorkspace
 
 logger = logging.getLogger(__name__)

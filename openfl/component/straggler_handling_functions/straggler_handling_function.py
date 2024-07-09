@@ -1,7 +1,6 @@
 """Straggler handling module."""
 
-from abc import ABC
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 
 
 class StragglerHandlingFunction(ABC):

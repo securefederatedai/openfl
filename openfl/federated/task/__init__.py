@@ -1,8 +1,7 @@
 """Task package."""
 
 import importlib
-from warnings import catch_warnings
-from warnings import simplefilter
+from warnings import catch_warnings, simplefilter
 
 with catch_warnings():
     simplefilter(action='ignore', category=FutureWarning)
@@ -12,11 +11,10 @@ with catch_warnings():
 
 from openfl.federated.task.runner import TaskRunner  # NOQA
 
-
 if importlib.util.find_spec('tensorflow'):
-    from openfl.federated.task.runner_tf import TensorFlowTaskRunner  # NOQA
+    from openfl.federated.task.fl_model import FederatedModel  # NOQA
     from openfl.federated.task.runner_keras import KerasTaskRunner  # NOQA
-    from openfl.federated.task.fl_model import FederatedModel  # NOQA
+    from openfl.federated.task.runner_tf import TensorFlowTaskRunner  # NOQA
 if importlib.util.find_spec('torch'):
-    from openfl.federated.task.runner_pt import PyTorchTaskRunner  # NOQA
     from openfl.federated.task.fl_model import FederatedModel  # NOQA
+    from openfl.federated.task.runner_pt import PyTorchTaskRunner  # NOQA

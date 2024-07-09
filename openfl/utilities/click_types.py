@@ -1,7 +1,8 @@
 """Custom input types definition for Click"""
 
-import click
 import ast
+
+import click
 
 from openfl.utilities import utils
 

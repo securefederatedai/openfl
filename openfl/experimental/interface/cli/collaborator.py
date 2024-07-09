@@ -1,13 +1,34 @@
 """Collaborator module."""
-
 import os
 import sys
+from glob import glob
 from logging import getLogger
+from os import remove
+from os.path import basename, isfile, join, splitext
+from pathlib import Path
+from shutil import copy, copytree, ignore_patterns, make_archive, unpack_archive
+from tempfile import mkdtemp
 
+import yaml
 from click import Path as ClickPath
-from click import echo, group, option, pass_context, style
+from click import confirm, echo, group, option, pass_context, style
+from yaml import FullLoader, dump, load
+from yaml.loader import SafeLoader
 
+from openfl.cryptography.ca import sign_certificate
+from openfl.cryptography.io import (
+    get_csr_hash,
+    read_crt,
+    read_csr,
+    read_key,
+    write_crt,
+    write_key,
+)
+from openfl.cryptography.participant import generate_csr
+from openfl.experimental.federated import Plan
+from openfl.experimental.interface.cli.cli_helper import CERT_DIR
 from openfl.utilities.path_check import is_directory_traversal
+from openfl.utilities.utils import rmtree
 
 logger = getLogger(__name__)
 
@@ -44,9 +65,7 @@ def collaborator(context):
 )
 def start_(plan, collaborator_name, secure, data_config="plan/data.yaml"):
     """Start a collaborator service."""
-    from pathlib import Path
 
-    from openfl.experimental.federated import Plan
 
     if plan and is_directory_traversal(plan):
         echo(
@@ -70,8 +89,6 @@ def start_(plan, collaborator_name, secure, data_config="plan/data.yaml"):
             f" {data_config} not found in workspace."
         )
     else:
-        import yaml
-        from yaml.loader import SafeLoader
 
         with open(data_config, "r") as f:
             data = yaml.load(f, Loader=SafeLoader)
@@ -111,9 +128,6 @@ def generate_cert_request(collaborator_name, silent, skip_package):
 
     Then create a package with the CSR to send for signing.
     """
-    from openfl.cryptography.io import get_csr_hash, write_crt, write_key
-    from openfl.cryptography.participant import generate_csr
-    from openfl.experimental.interface.cli.cli_helper import CERT_DIR
 
     common_name = f"{collaborator_name}"
     subject_alternative_name = f"DNS:{common_name}"
@@ -143,13 +157,7 @@ def generate_cert_request(collaborator_name, silent, skip_package):
     write_key(client_private_key, CERT_DIR / "client" / f"{file_name}.key")
 
     if not skip_package:
-        from glob import glob
-        from os import remove
-        from os.path import basename, join
-        from shutil import copytree, ignore_patterns, make_archive
-        from tempfile import mkdtemp
 
-        from openfl.utilities.utils import rmtree
 
         archive_type = "zip"
         archive_name = f"col_{common_name}_to_agg_cert_request"
@@ -193,10 +201,7 @@ def register_collaborator(file_name):
         file_name (str): The name of the collaborator in this federation
 
     """
-    from os.path import isfile
-    from pathlib import Path
 
-    from yaml import FullLoader, dump, load
 
     col_name = find_certificate_name(file_name)
 
@@ -265,19 +270,8 @@ def certify_(collaborator_name, silent, request_pkg, import_):
 
 def certify(collaborator_name, silent, request_pkg=None, import_=False):
     """Sign/certify collaborator certificate key pair."""
-    from glob import glob
-    from os import remove
-    from os.path import basename, join, splitext
-    from pathlib import Path
-    from shutil import copy, make_archive, unpack_archive
-    from tempfile import mkdtemp
 
-    from click import confirm
 
-    from openfl.cryptography.ca import sign_certificate
-    from openfl.cryptography.io import read_crt, read_csr, read_key, write_crt
-    from openfl.experimental.interface.cli.cli_helper import CERT_DIR
-    from openfl.utilities.utils import rmtree
 
     common_name = f"{collaborator_name}"
 

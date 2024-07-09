@@ -2,9 +2,11 @@
 
 import numpy as np
 
-from openfl.pipelines.pipeline import Float32NumpyArrayToBytes
-from openfl.pipelines.pipeline import TransformationPipeline
-from openfl.pipelines.pipeline import Transformer
+from openfl.pipelines.pipeline import (
+    Float32NumpyArrayToBytes,
+    TransformationPipeline,
+    Transformer,
+)
 
 
 class RandomShiftTransformer(Transformer):

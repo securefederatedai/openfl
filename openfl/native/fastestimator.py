@@ -1,8 +1,11 @@
 """FederatedFastEstimator module."""
-
 import os
 from logging import getLogger
 from pathlib import Path
+from sys import path
+
+import fastestimator as fe
+from fastestimator.trace.io.best_model_saver import BestModelSaver
 
 import openfl.native as fx
 from openfl.federated import Plan
@@ -25,9 +28,7 @@ class FederatedFastEstimator:
 
     def fit(self):
         """Run the estimator."""
-        import fastestimator as fe
-        from fastestimator.trace.io.best_model_saver import BestModelSaver
-        from sys import path
+
 
         file = Path(__file__).resolve()
         # interface root, containing command modules

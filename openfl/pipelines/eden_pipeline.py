@@ -33,13 +33,16 @@ compression_pipeline :
                    use 1000 as default
 """
 
-import torch
 import copy as co
-import numpy as np
 
-from openfl.pipelines.pipeline import TransformationPipeline
-from openfl.pipelines.pipeline import Transformer
-from openfl.pipelines.pipeline import Float32NumpyArrayToBytes
+import numpy as np
+import torch
+
+from openfl.pipelines.pipeline import (
+    Float32NumpyArrayToBytes,
+    TransformationPipeline,
+    Transformer,
+)
 
 
 class Eden:

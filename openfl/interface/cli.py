@@ -1,32 +1,42 @@
+import logging
+import os
+import warnings
+from importlib import import_module
+from logging import basicConfig
+from pathlib import Path
+from sys import argv, path
+
+from rich.console import Console
+from rich.logging import RichHandler
+
 #!/usr/bin/env python
 # Copyright (C) 2020-2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 """CLI module."""
 
 import os
-
-from click import argument
-from click import command
-from click import confirm
-from click import echo
-from click import Group
-from click import group
-from click import open_file
-from click import option
-from click import pass_context
-from click import style
-import time
 import sys
+import time
+
+from click import (
+    Group,
+    argument,
+    command,
+    confirm,
+    echo,
+    group,
+    open_file,
+    option,
+    pass_context,
+    style,
+)
+
 from openfl.utilities import add_log_level
 
 
 def setup_logging(level='info', log_file=None):
     """Initialize logging settings."""
-    import logging
-    from logging import basicConfig
 
-    from rich.console import Console
-    from rich.logging import RichHandler
 
     metric = 25
     add_log_level('METRIC', metric)
@@ -51,8 +61,6 @@ def setup_logging(level='info', log_file=None):
 
 def disable_warnings():
     """Disables warnings."""
-    import os
-    import warnings
 
     os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
     warnings.simplefilter(action='ignore', category=FutureWarning)
@@ -135,8 +143,6 @@ class CLI(Group):
 @pass_context
 def cli(context, log_level, no_warnings):
     """Command-line Interface."""
-    import os
-    from sys import argv
 
     context.ensure_object(dict)
     context.obj['log_level'] = log_level
@@ -209,7 +215,6 @@ def review_plan_callback(file_name, file_path):
 
 def show_header():
     """Show header."""
-    from pathlib import Path
 
     banner = 'OpenFL - Open Federated Learning'
 
@@ -225,9 +230,6 @@ def show_header():
 
 def entry():
     """Entry point of the Command-Line Interface."""
-    from importlib import import_module
-    from pathlib import Path
-    from sys import path
 
     experimental = Path(os.path.expanduser("~")).resolve().joinpath(
         ".openfl", "experimental").resolve()

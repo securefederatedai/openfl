@@ -1,17 +1,32 @@
 """Collaborator module."""
-
-import sys
 import os
+import sys
+from glob import glob
 from logging import getLogger
+from os import remove
+from os.path import basename, isfile, join, splitext
+from pathlib import Path
+from shutil import copy, copytree, ignore_patterns, make_archive, unpack_archive
+from tempfile import mkdtemp
 
-from click import echo
-from click import group
-from click import option
-from click import pass_context
 from click import Path as ClickPath
-from click import style
+from click import confirm, echo, group, option, pass_context, prompt, style
+from yaml import FullLoader, dump, load
 
+from openfl.cryptography.ca import sign_certificate
+from openfl.cryptography.io import (
+    get_csr_hash,
+    read_crt,
+    read_csr,
+    read_key,
+    write_crt,
+    write_key,
+)
+from openfl.cryptography.participant import generate_csr
+from openfl.federated import Plan
+from openfl.interface.cli_helper import CERT_DIR
 from openfl.utilities.path_check import is_directory_traversal
+from openfl.utilities.utils import rmtree
 
 logger = getLogger(__name__)
 
@@ -37,9 +52,7 @@ def collaborator(context):
         help='Enable Intel SGX Enclave', is_flag=True, default=False)
 def start_(plan, collaborator_name, data_config, secure):
     """Start a collaborator service."""
-    from pathlib import Path
 
-    from openfl.federated import Plan
 
     if plan and is_directory_traversal(plan):
         echo('Federated learning plan path is out of the openfl workspace scope.')
@@ -90,8 +103,7 @@ def register_data_path(collaborator_name, data_path=None, silent=False):
         data_path (str)        : Data path (optional)
         silent (bool)          : Silent operation (don't prompt)
     """
-    from click import prompt
-    from os.path import isfile
+
 
     if data_path and is_directory_traversal(data_path):
         echo('Data path is out of the openfl workspace scope.')
@@ -149,11 +161,6 @@ def generate_cert_request(collaborator_name, silent, skip_package):
 
     Then create a package with the CSR to send for signing.
     """
-    from openfl.cryptography.participant import generate_csr
-    from openfl.cryptography.io import write_crt
-    from openfl.cryptography.io import write_key
-    from openfl.cryptography.io import get_csr_hash
-    from openfl.interface.cli_helper import CERT_DIR
 
     common_name = f'{collaborator_name}'.lower()
     subject_alternative_name = f'DNS:{common_name}'
@@ -179,16 +186,7 @@ def generate_cert_request(collaborator_name, silent, skip_package):
     write_key(client_private_key, CERT_DIR / 'client' / f'{file_name}.key')
 
     if not skip_package:
-        from shutil import copytree
-        from shutil import ignore_patterns
-        from shutil import make_archive
-        from tempfile import mkdtemp
-        from os.path import basename
-        from os.path import join
-        from os import remove
-        from glob import glob
 
-        from openfl.utilities.utils import rmtree
 
         archive_type = 'zip'
         archive_name = f'col_{common_name}_to_agg_cert_request'
@@ -228,11 +226,7 @@ def register_collaborator(file_name):
         file_name (str): The name of the collaborator in this federation
 
     """
-    from os.path import isfile
-    from yaml import dump
-    from yaml import FullLoader
-    from yaml import load
-    from pathlib import Path
+
 
     col_name = find_certificate_name(file_name)
 
@@ -287,24 +281,8 @@ def certify_(collaborator_name, silent, request_pkg, import_):
 
 def certify(collaborator_name, silent, request_pkg=None, import_=False):
     """Sign/certify collaborator certificate key pair."""
-    from click import confirm
-    from pathlib import Path
-    from shutil import copy
-    from shutil import make_archive
-    from shutil import unpack_archive
-    from glob import glob
-    from os.path import basename
-    from os.path import join
-    from os.path import splitext
-    from os import remove
-    from tempfile import mkdtemp
-    from openfl.cryptography.ca import sign_certificate
-    from openfl.cryptography.io import read_crt
-    from openfl.cryptography.io import read_csr
-    from openfl.cryptography.io import read_key
-    from openfl.cryptography.io import write_crt
-    from openfl.interface.cli_helper import CERT_DIR
-    from openfl.utilities.utils import rmtree
+
+
 
     common_name = f'{collaborator_name}'.lower()
 

@@ -4,9 +4,8 @@ from logging import getLogger
 
 import numpy as np
 
-from openfl.utilities import change_tags
+from openfl.utilities import TensorKey, change_tags
 from openfl.utilities.split import split_tensor_dict_for_holdouts
-from openfl.utilities import TensorKey
 
 
 class CoreTaskRunner:

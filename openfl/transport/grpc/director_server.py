@@ -4,25 +4,20 @@ import asyncio
 import logging
 import uuid
 from pathlib import Path
-from typing import Callable
-from typing import Optional
-from typing import Union
+from typing import Callable, Optional, Union
 
-from google.protobuf.json_format import MessageToDict
-from google.protobuf.json_format import ParseDict
 import grpc
-from grpc import aio
-from grpc import ssl_server_credentials
+from google.protobuf.json_format import MessageToDict, ParseDict
+from grpc import aio, ssl_server_credentials
 
 from openfl.pipelines import NoCompressionPipeline
-from openfl.protocols import base_pb2
-from openfl.protocols import director_pb2
-from openfl.protocols import director_pb2_grpc
-from openfl.protocols.utils import construct_model_proto
-from openfl.protocols.utils import deconstruct_model_proto
-from openfl.protocols.utils import get_headers
+from openfl.protocols import base_pb2, director_pb2, director_pb2_grpc
+from openfl.protocols.utils import (
+    construct_model_proto,
+    deconstruct_model_proto,
+    get_headers,
+)
 from openfl.transport.grpc.exceptions import ShardNotFoundError
-
 from openfl.transport.grpc.grpc_channel_options import channel_options
 
 logger = logging.getLogger(__name__)

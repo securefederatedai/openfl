@@ -7,6 +7,7 @@ from logging import getLogger
 from threading import Event
 from typing import Any, Callable, Dict, List, Tuple
 
+from openfl.experimental.interface import FLSpec
 from openfl.experimental.runtime import FederatedRuntime
 from openfl.experimental.utilities import aggregator_to_collaborator, checkpoint
 from openfl.experimental.utilities.metaflow_utils import MetaflowInterface
@@ -229,7 +230,6 @@ class Aggregator:
             None
         """
         if self.checkpoint:
-            from openfl.experimental.interface import FLSpec
 
             # Check if arguments are pickled, if yes then unpickle
             if not isinstance(ctx, FLSpec):

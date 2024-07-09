@@ -3,8 +3,7 @@
 import numpy as np
 
 from openfl.pipelines import NoCompressionPipeline
-from openfl.utilities import change_tags
-from openfl.utilities import TensorKey
+from openfl.utilities import TensorKey, change_tags
 
 
 class TensorCodec:

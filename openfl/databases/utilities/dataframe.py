@@ -1,8 +1,9 @@
 """Convenience Utilities for DataFrame."""
 
+from typing import Optional
+
 import numpy as np
 import pandas as pd
-from typing import Optional
 
 ROUND_PLACEHOLDER = 1000000
 

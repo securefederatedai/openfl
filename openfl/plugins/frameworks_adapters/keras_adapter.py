@@ -1,8 +1,11 @@
 """Keras Framework Adapter plugin."""
 from logging import getLogger
 
-from openfl.plugins.frameworks_adapters.framework_adapter_interface import FrameworkAdapterPluginInterface
 from packaging import version
+
+from openfl.plugins.frameworks_adapters.framework_adapter_interface import (
+    FrameworkAdapterPluginInterface,
+)
 
 logger = getLogger(__name__)
 
@@ -21,8 +24,7 @@ class FrameworkAdapterPlugin(FrameworkAdapterPluginInterface):
         import tensorflow as tf
         from tensorflow.keras.models import Model
         from tensorflow.keras.optimizers.legacy import Optimizer
-        from tensorflow.python.keras.layers import deserialize
-        from tensorflow.python.keras.layers import serialize
+        from tensorflow.python.keras.layers import deserialize, serialize
         from tensorflow.python.keras.saving import saving_utils
 
         def unpack(model, training_config, weights):

@@ -1,19 +1,20 @@
 """TensorDB Module."""
 
 from threading import Lock
-from typing import Dict
-from typing import Iterator
-from typing import Optional
 from types import MethodType
+from typing import Dict, Iterator, Optional
 
 import numpy as np
 import pandas as pd
 
+from openfl.databases.utilities import (
+    ROUND_PLACEHOLDER,
+    _retrieve,
+    _search,
+    _store,
+)
 from openfl.interface.aggregation_functions import AggregationFunction
-from openfl.utilities import change_tags
-from openfl.utilities import LocalTensor
-from openfl.utilities import TensorKey
-from openfl.databases.utilities import _search, _store, _retrieve, ROUND_PLACEHOLDER
+from openfl.utilities import LocalTensor, TensorKey, change_tags
 
 
 class TensorDB:

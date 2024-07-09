@@ -1,5 +1,6 @@
 """Plan module."""
 import inspect
+import os
 from hashlib import sha384
 from importlib import import_module
 from logging import getLogger
@@ -8,6 +9,7 @@ from pathlib import Path
 
 from yaml import SafeDumper, dump, safe_load
 
+from openfl.experimental.federated.plan import Plan
 from openfl.experimental.interface.cli.cli_helper import WORKSPACE
 from openfl.experimental.transport import (
     AggregatorGRPCClient,
@@ -449,10 +451,7 @@ class Plan:
         private_attrs_kwargs = {}
         private_attributes = {}
 
-        import os
-        from pathlib import Path
 
-        from openfl.experimental.federated.plan import Plan
 
         data_yaml = "plan/data.yaml"
 

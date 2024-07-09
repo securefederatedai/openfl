@@ -7,7 +7,7 @@ from typing import Dict
 from numpy import ndarray
 
 from openfl.plugins.frameworks_adapters.framework_adapter_interface import (
-    FrameworkAdapterPluginInterface
+    FrameworkAdapterPluginInterface,
 )
 
 

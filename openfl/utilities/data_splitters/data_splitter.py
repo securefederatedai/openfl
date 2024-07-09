@@ -1,9 +1,6 @@
 """openfl.utilities.data_splitters.data_splitter module."""
-from abc import ABC
-from abc import abstractmethod
-from typing import Iterable
-from typing import List
-from typing import TypeVar
+from abc import ABC, abstractmethod
+from typing import Iterable, List, TypeVar
 
 T = TypeVar('T')
 

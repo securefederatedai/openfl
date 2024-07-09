@@ -5,16 +5,14 @@ import logging
 import time
 from collections import defaultdict
 from pathlib import Path
-from typing import Callable
-from typing import Iterable
-from typing import List
-from typing import Union
+from typing import Callable, Iterable, List, Union
 
+from openfl.component.director.experiment import (
+    Experiment,
+    ExperimentsRegistry,
+    Status,
+)
 from openfl.transport.grpc.exceptions import ShardNotFoundError
-
-from openfl.component.director.experiment import Experiment
-from openfl.component.director.experiment import ExperimentsRegistry
-from openfl.component.director.experiment import Status
 
 logger = logging.getLogger(__name__)
 

@@ -2,21 +2,15 @@
 
 import logging
 from concurrent.futures import ThreadPoolExecutor
-from random import random
 from multiprocessing import cpu_count
+from random import random
 from time import sleep
 
-from grpc import server
-from grpc import ssl_server_credentials
-from grpc import StatusCode
+from grpc import StatusCode, server, ssl_server_credentials
 
-from openfl.protocols import aggregator_pb2
-from openfl.protocols import aggregator_pb2_grpc
-from openfl.protocols import utils
-from openfl.utilities import check_equal
-from openfl.utilities import check_is_in
-
+from openfl.protocols import aggregator_pb2, aggregator_pb2_grpc, utils
 from openfl.transport.grpc.grpc_channel_options import channel_options
+from openfl.utilities import check_equal, check_is_in
 
 logger = logging.getLogger(__name__)
 

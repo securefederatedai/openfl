@@ -1,15 +1,23 @@
 """Aggregator module."""
-
 import sys
 from logging import getLogger
+from pathlib import Path
 
-from click import echo
-from click import group
-from click import option
-from click import pass_context
 from click import Path as ClickPath
-from click import style
+from click import confirm, echo, group, option, pass_context, style
 
+from openfl.cryptography.ca import sign_certificate
+from openfl.cryptography.io import (
+    get_csr_hash,
+    read_crt,
+    read_csr,
+    read_key,
+    write_crt,
+    write_key,
+)
+from openfl.cryptography.participant import generate_csr
+from openfl.federated import Plan
+from openfl.interface.cli_helper import CERT_DIR
 from openfl.utilities import click_types
 from openfl.utilities.path_check import is_directory_traversal
 from openfl.utilities.utils import getfqdn_env
@@ -36,9 +44,7 @@ def aggregator(context):
         help='Enable Intel SGX Enclave', is_flag=True, default=False)
 def start_(plan, authorized_cols, secure):
     """Start the aggregator service."""
-    from pathlib import Path
 
-    from openfl.federated import Plan
 
     if is_directory_traversal(plan):
         echo('Federated learning plan path is out of the openfl workspace scope.')
@@ -66,11 +72,6 @@ def _generate_cert_request(fqdn):
 
 def generate_cert_request(fqdn):
     """Create aggregator certificate key pair."""
-    from openfl.cryptography.participant import generate_csr
-    from openfl.cryptography.io import write_crt
-    from openfl.cryptography.io import write_key
-    from openfl.cryptography.io import get_csr_hash
-    from openfl.interface.cli_helper import CERT_DIR
 
     if fqdn is None:
         fqdn = getfqdn_env()
@@ -122,16 +123,8 @@ def _certify(fqdn, silent):
 
 def certify(fqdn, silent):
     """Sign/certify the aggregator certificate key pair."""
-    from pathlib import Path
 
-    from click import confirm
 
-    from openfl.cryptography.ca import sign_certificate
-    from openfl.cryptography.io import read_crt
-    from openfl.cryptography.io import read_csr
-    from openfl.cryptography.io import read_key
-    from openfl.cryptography.io import write_crt
-    from openfl.interface.cli_helper import CERT_DIR
 
     if fqdn is None:
         fqdn = getfqdn_env()

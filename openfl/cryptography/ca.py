@@ -9,12 +9,10 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives.asymmetric.rsa import RSAPrivateKey
-from cryptography.x509.base import Certificate
-from cryptography.x509.base import CertificateSigningRequest
+from cryptography.x509.base import Certificate, CertificateSigningRequest
 from cryptography.x509.extensions import ExtensionNotFound
 from cryptography.x509.name import Name
-from cryptography.x509.oid import ExtensionOID
-from cryptography.x509.oid import NameOID
+from cryptography.x509.oid import ExtensionOID, NameOID
 
 
 def generate_root_cert(days_to_expiration: int = 365) -> Tuple[RSAPrivateKey, Certificate]:

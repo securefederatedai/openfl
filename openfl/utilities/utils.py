@@ -5,14 +5,12 @@ import ipaddress
 import logging
 import os
 import re
+import shutil
+import stat
 from collections.abc import Callable
 from functools import partial
 from socket import getfqdn
-from typing import List
-from typing import Optional
-from typing import Tuple
-import stat
-import shutil
+from typing import List, Optional, Tuple
 
 from dynaconf import Dynaconf
 from tqdm import tqdm

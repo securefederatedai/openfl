@@ -1,12 +1,11 @@
 """CA module."""
-
 import base64
 import json
 import os
-import sys
 import shutil
 import signal
 import subprocess  # nosec
+import sys
 import time
 from logging import getLogger
 from pathlib import Path
@@ -14,8 +13,10 @@ from subprocess import check_call  # nosec
 
 from click import confirm
 
-from openfl.utilities.ca.downloader import download_step_bin
-from openfl.utilities.ca.downloader import download_step_ca_bin
+from openfl.utilities.ca.downloader import (
+    download_step_bin,
+    download_step_ca_bin,
+)
 
 logger = getLogger(__name__)
 
@@ -173,7 +174,6 @@ def _check_kill_process(pstring, confirmation=False):
 
 def _create_ca(ca_path: Path, ca_url: str, password: str):
     """Create a ca workspace."""
-    import os
     pki_dir = ca_path / CA_PKI_DIR
     step_config_dir = ca_path / CA_STEP_CONFIG_DIR
 

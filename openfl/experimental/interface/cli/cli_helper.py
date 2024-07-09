@@ -1,5 +1,7 @@
 """Module with auxiliary CLI helper functions."""
-
+import os
+import re
+import shutil
 from itertools import islice
 from os import environ, stat
 from pathlib import Path
@@ -97,8 +99,6 @@ def copytree(
     dirs_exist_ok=False,
 ):
     """From Python 3.8 'shutil' which include 'dirs_exist_ok' option."""
-    import os
-    import shutil
 
     with os.scandir(src) as itr:
         entries = list(itr)
@@ -209,8 +209,6 @@ def check_varenv(env: str = "", args: dict = None):
 
 def get_fx_path(curr_path=""):
     """Return the absolute path to fx binary."""
-    import os
-    import re
 
     match = re.search("lib", curr_path)
     idx = match.end()

@@ -1,8 +1,7 @@
 """Data package."""
 
 import importlib
-from warnings import catch_warnings
-from warnings import simplefilter
+from warnings import catch_warnings, simplefilter
 
 with catch_warnings():
     simplefilter(action='ignore', category=FutureWarning)
@@ -13,10 +12,10 @@ with catch_warnings():
 from openfl.federated.data.loader import DataLoader  # NOQA
 
 if importlib.util.find_spec('tensorflow'):
-    from openfl.federated.data.loader_tf import TensorFlowDataLoader  # NOQA
-    from openfl.federated.data.loader_keras import KerasDataLoader  # NOQA
     from openfl.federated.data.federated_data import FederatedDataSet  # NOQA
+    from openfl.federated.data.loader_keras import KerasDataLoader  # NOQA
+    from openfl.federated.data.loader_tf import TensorFlowDataLoader  # NOQA
 
 if importlib.util.find_spec('torch'):
-    from openfl.federated.data.loader_pt import PyTorchDataLoader  # NOQA
     from openfl.federated.data.federated_data import FederatedDataSet  # NOQA
+    from openfl.federated.data.loader_pt import PyTorchDataLoader  # NOQA

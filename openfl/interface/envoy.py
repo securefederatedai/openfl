@@ -1,5 +1,4 @@
 """Envoy CLI."""
-
 import logging
 import shutil
 import sys
@@ -7,16 +6,14 @@ from importlib import import_module
 from pathlib import Path
 
 import click
-from click import group
-from click import option
-from click import pass_context
 from click import Path as ClickPath
+from click import group, option, pass_context
 from dynaconf import Validator
 
+from openfl.component.envoy.envoy import Envoy
 from openfl.interface.cli import review_plan_callback
 from openfl.interface.cli_helper import WORKSPACE
-from openfl.utilities import click_types
-from openfl.utilities import merge_configs
+from openfl.utilities import click_types, merge_configs
 from openfl.utilities.path_check import is_directory_traversal
 
 logger = logging.getLogger(__name__)
@@ -50,7 +47,6 @@ def start_(shard_name, director_host, director_port, tls, envoy_config_path,
            root_certificate, private_key, certificate):
     """Start the Envoy."""
 
-    from openfl.component.envoy.envoy import Envoy
 
     logger.info('🧿 Starting the Envoy.')
     if is_directory_traversal(envoy_config_path):

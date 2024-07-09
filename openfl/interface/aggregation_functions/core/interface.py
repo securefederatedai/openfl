@@ -1,14 +1,11 @@
 """Aggregation function interface module."""
 from abc import abstractmethod
-from typing import Iterator
-from typing import List
-from typing import Tuple
+from typing import Iterator, List, Tuple
 
 import numpy as np
 import pandas as pd
 
-from openfl.utilities import LocalTensor
-from openfl.utilities import SingletonABCMeta
+from openfl.utilities import LocalTensor, SingletonABCMeta
 
 
 class AggregationFunction(metaclass=SingletonABCMeta):

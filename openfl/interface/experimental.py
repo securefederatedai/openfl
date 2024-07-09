@@ -1,9 +1,12 @@
 """Experimental CLI."""
-
-from pathlib import Path
 from logging import getLogger
-from click import group
-from click import pass_context
+from pathlib import Path
+from subprocess import check_call
+from sys import executable
+
+from click import group, pass_context
+
+import openfl
 
 logger = getLogger(__name__)
 
@@ -23,9 +26,7 @@ def activate():
     settings.mkdir(parents=False, exist_ok=True)
     settings = settings.joinpath("experimental").resolve()
 
-    from subprocess import check_call
-    from sys import executable
-    import openfl
+
 
     rf = Path(openfl.__file__).parent.parent.resolve().joinpath(
         "openfl-tutorials", "experimental", "requirements_workflow_interface.txt").resolve()

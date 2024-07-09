@@ -5,22 +5,21 @@ import os
 import sys
 from pathlib import Path
 
-from click import group
-from click import option
-from click import pass_context
-from click import password_option
 from click import Path as ClickPath
+from click import group, option, pass_context, password_option
 
-from openfl.utilities.ca.ca import CA_CONFIG_JSON
-from openfl.utilities.ca.ca import CA_PASSWORD_FILE
-from openfl.utilities.ca.ca import CA_PKI_DIR
-from openfl.utilities.ca.ca import CA_STEP_CONFIG_DIR
-from openfl.utilities.ca.ca import certify
-from openfl.utilities.ca.ca import get_ca_bin_paths
-from openfl.utilities.ca.ca import get_token
-from openfl.utilities.ca.ca import install
-from openfl.utilities.ca.ca import remove_ca
-from openfl.utilities.ca.ca import run_ca
+from openfl.utilities.ca.ca import (
+    CA_CONFIG_JSON,
+    CA_PASSWORD_FILE,
+    CA_PKI_DIR,
+    CA_STEP_CONFIG_DIR,
+    certify,
+    get_ca_bin_paths,
+    get_token,
+    install,
+    remove_ca,
+    run_ca,
+)
 
 logger = logging.getLogger(__name__)
 

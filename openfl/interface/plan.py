@@ -1,17 +1,23 @@
 """Plan module."""
-
 import sys
 from logging import getLogger
+from os import makedirs
+from os.path import isfile
+from pathlib import Path
+from shutil import copyfile, rmtree
 
-from click import echo
-from click import group
-from click import option
-from click import pass_context
 from click import Path as ClickPath
+from click import echo, group, option, pass_context
+from yaml import FullLoader, dump, load
 
-from openfl.utilities.path_check import is_directory_traversal
+from openfl.federated import Plan
+from openfl.interface.cli_helper import get_workspace_parameter
+from openfl.protocols import utils
 from openfl.utilities.click_types import InputSpec
 from openfl.utilities.mocks import MockDataLoader
+from openfl.utilities.path_check import is_directory_traversal
+from openfl.utilities.split import split_tensor_dict_for_holdouts
+from openfl.utilities.utils import getfqdn_env
 
 logger = getLogger(__name__)
 
@@ -51,12 +57,7 @@ def initialize(context, plan_config, cols_config, data_config,
     Create a protocol buffer file of the initial model weights for
      the federation.
     """
-    from pathlib import Path
 
-    from openfl.federated import Plan
-    from openfl.protocols import utils
-    from openfl.utilities.split import split_tensor_dict_for_holdouts
-    from openfl.utilities.utils import getfqdn_env
 
     for p in [plan_config, cols_config, data_config]:
         if is_directory_traversal(p):
@@ -132,9 +133,7 @@ def initialize(context, plan_config, cols_config, data_config,
 # TODO: looks like Plan.method
 def freeze_plan(plan_config):
     """Dump the plan to YAML file."""
-    from pathlib import Path
 
-    from openfl.federated import Plan
 
     plan = Plan()
     plan.config = Plan.parse(Path(plan_config), resolve=False).config
@@ -168,12 +167,7 @@ def freeze(plan_config):
 
 def switch_plan(name):
     """Switch the FL plan to this one."""
-    from shutil import copyfile
-    from os.path import isfile
 
-    from yaml import dump
-    from yaml import FullLoader
-    from yaml import load
 
     plan_file = f'plan/plans/{name}/plan.yaml'
     if isfile(plan_file):
@@ -217,8 +211,6 @@ def switch_(name):
         default='default', type=str)
 def save_(name):
     """Save the current plan to this plan and switch."""
-    from os import makedirs
-    from shutil import copyfile
 
     echo(f'Saving plan to {name}')
     # TODO: How do we get the prefix path? What happens if this gets executed
@@ -236,7 +228,6 @@ def save_(name):
         default='default', type=str)
 def remove_(name):
     """Remove this plan."""
-    from shutil import rmtree
 
     if name != 'default':
         echo(f'Removing plan {name}')
@@ -254,7 +245,6 @@ def remove_(name):
 @plan.command(name='print')
 def print_():
     """Print the current plan."""
-    from openfl.interface.cli_helper import get_workspace_parameter
 
     current_plan_name = get_workspace_parameter('current_plan_name')
     echo(f'The current plan is: {current_plan_name}')

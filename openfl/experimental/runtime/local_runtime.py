@@ -1,5 +1,4 @@
 """ openfl.experimental.runtime package LocalRuntime class."""
-
 from __future__ import annotations
 
 import gc
@@ -12,6 +11,7 @@ from typing import TYPE_CHECKING, Optional
 
 import ray
 
+from openfl.experimental.interface import Collaborator, FLSpec
 from openfl.experimental.runtime.runtime import Runtime
 
 if TYPE_CHECKING:
@@ -98,7 +98,6 @@ def ray_group_assign(collaborators, num_actors=1):
                 collaborator_actor: The collaborator actor.
                 collaborator: The collaborator.
             """
-            from openfl.experimental.interface import Collaborator
 
             all_methods = [
                 method
@@ -249,7 +248,6 @@ class RayGroup:
             the collaborator.
             **kwargs: Additional keyword arguments.
         """
-        from openfl.experimental.interface import Collaborator
 
         if collaborator.private_attributes_callable is not None:
             self.collaborators[collaborator.name] = Collaborator(
@@ -627,7 +625,6 @@ class LocalRuntime(Runtime):
         Returns:
             flspec_obj: updated FLSpec (flow) object
         """
-        from openfl.experimental.interface import FLSpec
 
         aggregator = self._aggregator
         clones = None
@@ -678,7 +675,6 @@ class LocalRuntime(Runtime):
             flspec_obj: updated FLSpec (flow) object
         """
 
-        from openfl.experimental.interface import FLSpec
 
         flspec_obj._foreach_methods.append(f.__name__)
         selected_collaborators = getattr(flspec_obj, kwargs["foreach"])
@@ -744,7 +740,6 @@ class LocalRuntime(Runtime):
             selected_collaborators : all collaborators
         """
 
-        from openfl.experimental.interface import FLSpec
 
         for col in selected_collaborators:
             clone = FLSpec._clones[col]

@@ -1,9 +1,9 @@
 """Workspace Builder module."""
-
 import ast
 import importlib
 import inspect
 import re
+import sys
 from logging import getLogger
 from pathlib import Path
 from shutil import copytree
@@ -235,8 +235,6 @@ class WorkspaceExport:
         """
         Imports generated python script with help of importlib
         """
-        import importlib
-        import sys
 
         sys.path.append(str(self.script_path.parent))
         self.exported_script_module = importlib.import_module(self.script_name)

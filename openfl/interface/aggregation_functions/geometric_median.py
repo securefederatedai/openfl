@@ -3,7 +3,9 @@
 import numpy as np
 
 from openfl.interface.aggregation_functions.core import AggregationFunction
-from openfl.interface.aggregation_functions.weighted_average import weighted_average
+from openfl.interface.aggregation_functions.weighted_average import (
+    weighted_average,
+)
 
 
 def _geometric_median_objective(median, tensors, weights):

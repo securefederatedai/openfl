@@ -1,4 +1,11 @@
 """openfl Native functions module.
+import json
+from sys import path
+import tensorflow as tf
+from rich.logging import RichHandler
+from rich.console import Console
+from logging import basicConfig
+import importlib
 
 This file defines openfl entrypoints to be used directly through python (not CLI)
 """
@@ -122,12 +129,8 @@ def unflatten(config, separator='.'):
 def setup_logging(level='INFO', log_file=None):
     """Initialize logging settings."""
     # Setup logging
-    from logging import basicConfig
-    from rich.console import Console
-    from rich.logging import RichHandler
-    import importlib
+
     if True if importlib.util.find_spec('tensorflow') else False:
-        import tensorflow as tf
         tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
     metric = 25
     add_log_level('METRIC', metric)
@@ -239,7 +242,6 @@ def run_experiment(collaborator_dict: dict, override_config: dict = None):
         final_federated_model : FederatedModel
             The final model resulting from the federated learning experiment
     """
-    from sys import path
 
     if override_config is None:
         override_config = {}
@@ -302,7 +304,6 @@ def run_experiment(collaborator_dict: dict, override_config: dict = None):
 
 def get_plan(fl_plan=None, indent=4, sort_keys=True):
     """Get string representation of current Plan."""
-    import json
     if fl_plan is None:
         plan = setup_plan()
     else:

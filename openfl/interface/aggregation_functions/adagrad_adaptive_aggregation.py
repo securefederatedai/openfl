@@ -1,15 +1,17 @@
 """Adagrad adaptive aggregation module."""
 
-from typing import Dict
-from typing import Optional
+from typing import Dict, Optional
 
 import numpy as np
 
+from openfl.interface.aggregation_functions.core import (
+    AdaptiveAggregation,
+    AggregationFunction,
+)
+from openfl.interface.aggregation_functions.weighted_average import (
+    WeightedAverage,
+)
 from openfl.utilities.optimizers.numpy import NumPyAdagrad
-from openfl.interface.aggregation_functions.core import AdaptiveAggregation
-from openfl.interface.aggregation_functions.core import AggregationFunction
-from openfl.interface.aggregation_functions.weighted_average import WeightedAverage
-
 
 DEFAULT_AGG_FUNC = WeightedAverage()
 

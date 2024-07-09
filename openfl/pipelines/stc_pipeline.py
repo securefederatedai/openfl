@@ -1,11 +1,10 @@
 """STCPipelinemodule."""
-
+import copy
 import gzip as gz
 
 import numpy as np
 
-from openfl.pipelines.pipeline import TransformationPipeline
-from openfl.pipelines.pipeline import Transformer
+from openfl.pipelines.pipeline import TransformationPipeline, Transformer
 
 
 class SparsityTransformer(Transformer):
@@ -119,7 +118,6 @@ class TernaryTransformer(Transformer):
             data (return): an numpy array with original numerical type.
         """
         # TODO
-        import copy
         data = copy.deepcopy(data)
         int2float_map = metadata['int_to_float']
         for key in int2float_map:

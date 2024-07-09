@@ -2,21 +2,19 @@
 
 import logging
 from datetime import datetime
-from typing import List
-from typing import Type
+from typing import List, Type
 
 import grpc
 
 from openfl.interface.interactive_api.shard_descriptor import ShardDescriptor
 from openfl.pipelines import NoCompressionPipeline
-from openfl.protocols import director_pb2
-from openfl.protocols import director_pb2_grpc
-from openfl.protocols import interceptors
-from openfl.protocols.utils import construct_model_proto
-from openfl.protocols.utils import deconstruct_model_proto
-from openfl.transport.grpc.exceptions import ShardNotFoundError
+from openfl.protocols import director_pb2, director_pb2_grpc, interceptors
+from openfl.protocols.utils import (
+    construct_model_proto,
+    deconstruct_model_proto,
+)
 from openfl.transport.grpc.director_server import CLIENT_ID_DEFAULT
-
+from openfl.transport.grpc.exceptions import ShardNotFoundError
 from openfl.transport.grpc.grpc_channel_options import channel_options
 
 logger = logging.getLogger(__name__)

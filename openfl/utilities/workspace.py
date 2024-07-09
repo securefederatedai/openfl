@@ -1,5 +1,4 @@
 """Workspace utils module."""
-
 import logging
 import os
 import shutil
@@ -9,9 +8,9 @@ from contextlib import contextmanager
 from pathlib import Path
 from subprocess import check_call  # nosec
 from sys import executable
-from typing import Optional
-from typing import Tuple
-from typing import Union
+from typing import Optional, Tuple, Union
+
+from pip._internal.operations import freeze
 
 logger = logging.getLogger(__name__)
 
@@ -93,7 +92,6 @@ def dump_requirements_file(
         prefixes: Optional[Union[Tuple[str], str]] = None,
 ) -> None:
     """Prepare and save requirements.txt."""
-    from pip._internal.operations import freeze
     path = Path(path).absolute()
 
     # Prepare user provided prefixes for merge with original ones

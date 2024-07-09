@@ -1,12 +1,12 @@
 """Tutorial module."""
-
 from logging import getLogger
+from os import environ, sep
+from subprocess import check_call  # nosec
+from sys import executable
 
-from click import group
-from click import IntRange
-from click import option
-from click import pass_context
+from click import IntRange, group, option, pass_context
 
+from openfl.interface.cli_helper import TUTORIALS
 from openfl.utilities import click_types
 
 logger = getLogger(__name__)
@@ -26,12 +26,7 @@ def tutorial(context):
         help='The port the Jupyter Lab server will listen on')
 def start(ip, port):
     """Start the Jupyter Lab from the tutorials directory."""
-    from os import environ
-    from os import sep
-    from subprocess import check_call  # nosec
-    from sys import executable
 
-    from openfl.interface.cli_helper import TUTORIALS
 
     if 'VIRTUAL_ENV' in environ:
         venv = environ['VIRTUAL_ENV'].split(sep)[-1]

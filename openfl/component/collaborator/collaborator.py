@@ -6,8 +6,7 @@ from time import sleep
 from typing import Tuple
 
 from openfl.databases import TensorDB
-from openfl.pipelines import NoCompressionPipeline
-from openfl.pipelines import TensorCodec
+from openfl.pipelines import NoCompressionPipeline, TensorCodec
 from openfl.protocols import utils
 from openfl.utilities import TensorKey
 

@@ -1,13 +1,14 @@
 """Model CLI module."""
-
-from click import confirm
-from click import group
-from click import option
-from click import pass_context
-from click import style
-from click import Path as ClickPath
 from logging import getLogger
 from pathlib import Path
+
+from click import Path as ClickPath
+from click import confirm, group, option, pass_context, style
+
+from openfl.federated import Plan
+from openfl.pipelines import NoCompressionPipeline
+from openfl.protocols import utils
+from openfl.utilities.workspace import set_directory
 
 logger = getLogger(__name__)
 
@@ -69,10 +70,6 @@ def get_model(
     the diversity of the ways we store models in our template workspaces.
     """
 
-    from openfl.federated import Plan
-    from openfl.pipelines import NoCompressionPipeline
-    from openfl.protocols import utils
-    from openfl.utilities.workspace import set_directory
 
     # Here we change cwd to the experiment workspace folder
     # because plan.yaml usually contains relative paths to components.

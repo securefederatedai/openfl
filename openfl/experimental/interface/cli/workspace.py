@@ -1,16 +1,46 @@
 """Workspace module."""
-
 import os
 import sys
+from hashlib import sha256
 from logging import getLogger
+from os import chdir, getcwd, makedirs
+from os.path import basename, isfile, join
 from pathlib import Path
+from shutil import (
+    copy2,
+    copyfile,
+    copytree,
+    ignore_patterns,
+    make_archive,
+    unpack_archive,
+)
+from subprocess import check_call
+from sys import executable
+from tempfile import mkdtemp
 from typing import Tuple
 
 from click import Choice
 from click import Path as ClickPath
 from click import confirm, echo, group, option, pass_context, style
+from cryptography.hazmat.primitives import serialization
+from plan import freeze_plan
 
+from openfl.cryptography.ca import (
+    generate_root_cert,
+    generate_signing_csr,
+    sign_certificate,
+)
+from openfl.experimental.federated.plan import Plan
+from openfl.experimental.interface.cli.cli_helper import (
+    CERT_DIR,
+    OPENFL_USERDIR,
+    WORKSPACE,
+    copytree,
+    print_tree,
+)
+from openfl.experimental.workspace_export import WorkspaceExport
 from openfl.utilities.path_check import is_directory_traversal
+from openfl.utilities.utils import rmtree
 from openfl.utilities.workspace import dump_requirements_file
 
 logger = getLogger(__name__)
@@ -25,9 +55,7 @@ def workspace(context):
 
 def create_dirs(prefix):
     """Create workspace directories."""
-    from shutil import copyfile
 
-    from openfl.experimental.interface.cli.cli_helper import WORKSPACE
 
     echo("Creating Workspace Directories")
 
@@ -44,9 +72,7 @@ def create_dirs(prefix):
 
 def create_temp(prefix, template):
     """Create workspace templates."""
-    from shutil import ignore_patterns
 
-    from openfl.experimental.interface.cli.cli_helper import WORKSPACE, copytree
 
     echo("Creating Workspace Templates")
     # Use the specified template if it's a Path, otherwise use WORKSPACE/template
@@ -63,7 +89,6 @@ def create_temp(prefix, template):
 
 def get_templates():
     """Grab the default templates from the distribution."""
-    from openfl.experimental.interface.cli.cli_helper import WORKSPACE
 
     return [
         d.name
@@ -129,7 +154,6 @@ def create_(prefix, custom_template, template, notebook, template_output_dir):
                 + "save your Jupyter Notebook workspace."
             )
 
-        from openfl.experimental.workspace_export import WorkspaceExport
 
         WorkspaceExport.export(
             notebook_path=notebook,
@@ -151,14 +175,7 @@ def create_(prefix, custom_template, template, notebook, template_output_dir):
 
 def create(prefix, template):
     """Create federated learning workspace."""
-    from os.path import isfile
-    from subprocess import check_call
-    from sys import executable
 
-    from openfl.experimental.interface.cli.cli_helper import (
-        OPENFL_USERDIR,
-        print_tree,
-    )
 
     if not OPENFL_USERDIR.exists():
         OPENFL_USERDIR.mkdir()
@@ -219,15 +236,8 @@ def create(prefix, template):
 )
 def export_(pip_install_options: Tuple[str]):
     """Export federated learning workspace."""
-    from os import getcwd, makedirs
-    from os.path import basename, join
-    from shutil import copy2, copytree, ignore_patterns, make_archive
-    from tempfile import mkdtemp
 
-    from plan import freeze_plan
 
-    from openfl.experimental.interface.cli.cli_helper import WORKSPACE
-    from openfl.utilities.utils import rmtree
 
     echo(
         style(
@@ -297,11 +307,6 @@ def export_(pip_install_options: Tuple[str]):
 )
 def import_(archive):
     """Import federated learning workspace."""
-    from os import chdir
-    from os.path import basename, isfile
-    from shutil import unpack_archive
-    from subprocess import check_call
-    from sys import executable
 
     archive = Path(archive).absolute()
 
@@ -335,14 +340,7 @@ def certify_():
 
 def certify():
     """Create certificate authority for federation."""
-    from cryptography.hazmat.primitives import serialization
 
-    from openfl.cryptography.ca import (
-        generate_root_cert,
-        generate_signing_csr,
-        sign_certificate,
-    )
-    from openfl.experimental.interface.cli.cli_helper import CERT_DIR
 
     echo("Setting Up Certificate Authority...\n")
 
@@ -493,7 +491,6 @@ def _get_requirements_dict(txtfile):
 
 
 def _get_dir_hash(path):
-    from hashlib import sha256
 
     hash_ = sha256()
     hash_.update(path.encode("utf-8"))
@@ -507,8 +504,6 @@ def apply_template_plan(prefix, template):
     This function unfolds default values from template plan configuration
     and writes the configuration to the current workspace.
     """
-    from openfl.experimental.federated.plan import Plan
-    from openfl.experimental.interface.cli.cli_helper import WORKSPACE
 
     # Use the specified template if it's a Path, otherwise use WORKSPACE/template
     source = template if isinstance(template, Path) else WORKSPACE / template
