@@ -20,6 +20,8 @@ class CutoffTimeBasedStragglerHandling(StragglerHandlingFunction):
         logger: Logger=None,
         **kwargs
     ):
+        assert minimum_reporting != 0, ValueError("minimum_reporting cannot be 0")
+
         self.round_start_time = round_start_time
         self.straggler_cutoff_time = straggler_cutoff_time
         self.minimum_reporting = minimum_reporting

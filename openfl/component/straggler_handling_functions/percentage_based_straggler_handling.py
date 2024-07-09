@@ -15,6 +15,8 @@ class PercentageBasedStragglerHandling(StragglerHandlingFunction):
         logger:Logger=None,
         **kwargs
     ):
+        assert minimum_reporting != 0, ValueError("minimum_reporting cannot be 0")
+
         self.percent_collaborators_needed = percent_collaborators_needed
         self.minimum_reporting = minimum_reporting
         self.logger = logger
