@@ -110,7 +110,7 @@ class TensorFlowTaskRunner(TaskRunner):
         losses = []
 
         for epoch in range(epochs):
-            self.logger.info(f'Run {epoch} epoch of {round_num} round')
+            self.logger.info("Run %s epoch of %s round", epoch, round_num)
             # get iterator for batch draws (shuffling happens here)
             gen = self.data_loader.get_train_loader(batch_size)
             if use_tqdm:

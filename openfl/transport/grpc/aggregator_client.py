@@ -30,7 +30,7 @@ class ConstantBackoff:
 
     def sleep(self):
         """Sleep for specified interval."""
-        self.logger.info(f'Attempting to connect to aggregator at {self.uri}')
+        self.logger.info("Attempting to connect to aggregator at %s", self.uri)
         time.sleep(self.reconnect_interval)
 
 
@@ -56,7 +56,7 @@ class RetryOnRpcErrorClientInterceptor(
             if isinstance(response, grpc.RpcError):
 
                 # If status code is not in retryable status codes
-                self.sleeping_policy.logger.info(f'Response code: {response.code()}')
+                self.sleeping_policy.logger.info("Response code: %s", response.code())
                 if (
                         self.status_for_retry
                         and response.code() not in self.status_for_retry
@@ -247,7 +247,7 @@ class AggregatorGRPCClient:
 
     def disconnect(self):
         """Close the gRPC channel."""
-        self.logger.debug(f'Disconnecting from gRPC server at {self.uri}')
+        self.logger.debug("Disconnecting from gRPC server at %s", self.uri)
         self.channel.close()
 
     def reconnect(self):
@@ -266,7 +266,7 @@ class AggregatorGRPCClient:
                 self.private_key
             )
 
-        self.logger.debug(f'Connecting to gRPC at {self.uri}')
+        self.logger.debug("Connecting to gRPC at %s", self.uri)
 
         self.stub = aggregator_pb2_grpc.AggregatorStub(
             grpc.intercept_channel(self.channel, *self.interceptors)

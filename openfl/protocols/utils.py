@@ -230,7 +230,7 @@ def datastream_to_proto(proto, stream, logger=None):
     if len(npbytes) > 0:
         proto.ParseFromString(npbytes)
         if logger is not None:
-            logger.debug(f'datastream_to_proto parsed a {type(proto)}.')
+            logger.debug("datastream_to_proto parsed a %s.", type(proto))
         return proto
     else:
         raise RuntimeError(f'Received empty stream message of type {type(proto)}')
@@ -249,7 +249,7 @@ def proto_to_datastream(proto, logger, max_buffer_size=(2 * 1024 * 1024)):
     npbytes = proto.SerializeToString()
     data_size = len(npbytes)
     buffer_size = data_size if max_buffer_size > data_size else max_buffer_size
-    logger.debug(f'Setting stream chunks with size {buffer_size} for proto of type {type(proto)}')
+    logger.debug("Setting stream chunks with size %s for proto of type %s", buffer_size, type(proto))
 
     for i in range(0, data_size, buffer_size):
         chunk = npbytes[i: i + buffer_size]

@@ -97,12 +97,12 @@ def update_plan(override_config, plan=None, resolve=True):
             # remove old list corresponding to this key entirely
             for idx in range(org_list_keys_with_count[key]):
                 del flat_plan_config[f'{key}.{idx}']
-            logger.info(f'Updating {key} to {val}... ')
+            logger.info("Updating %s to %s... ", key, val)
         elif key in flat_plan_config:
-            logger.info(f'Updating {key} to {val}... ')
+            logger.info("Updating %s to %s... ", key, val)
         else:
             # TODO: We probably need to validate the new key somehow
-            logger.info(f'Did not find {key} in config. Make sure it should exist. Creating...')
+            logger.info("Did not find %s in config. Make sure it should exist. Creating...", key)
         if type(val) is list:
             for idx, v in enumerate(val):
                 flat_plan_config[f'{key}.{idx}'] = v
@@ -276,7 +276,7 @@ def run_experiment(collaborator_dict: dict, override_config: dict = None):
                                              round_number=0,
                                              tensor_pipe=tensor_pipe)
 
-    logger.info(f'Creating Initial Weights File    🠆 {init_state_path}')
+    logger.info("Creating Initial Weights File    🠆 %s", init_state_path)
 
     utils.dump_proto(model_proto=model_snap, fpath=init_state_path)
 

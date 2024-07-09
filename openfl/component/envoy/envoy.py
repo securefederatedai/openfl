@@ -83,7 +83,7 @@ class Envoy:
                 experiment_name = self.director_client.wait_experiment()
                 data_stream = self.director_client.get_experiment_data(experiment_name)
             except Exception as exc:
-                logger.exception(f'Failed to get experiment: {exc}')
+                logger.exception("Failed to get experiment: %s", exc)
                 time.sleep(DEFAULT_RETRY_TIMEOUT_IN_SECONDS)
                 continue
 
@@ -111,7 +111,7 @@ class Envoy:
                     self.is_experiment_running = True
                     self._run_collaborator()
             except Exception as exc:
-                logger.exception(f'Collaborator failed with error: {exc}:')
+                logger.exception("Collaborator failed with error: %s:", exc)
                 self.director_client.set_experiment_failed(
                     experiment_name,
                     error_code=1,
@@ -184,7 +184,7 @@ class Envoy:
         plan = Plan.parse(plan_config_path=Path(plan))
 
         # TODO: Need to restructure data loader config file loader
-        logger.debug(f'Data = {plan.cols_data_paths}')
+        logger.debug("Data = %s", plan.cols_data_paths)
         logger.info('🧿 Starting the Collaborator Service.')
 
         col = plan.get_collaborator(self.name, self.root_certificate, self.private_key,
@@ -199,7 +199,7 @@ class Envoy:
                 shard_descriptor=self.shard_descriptor,
                 cuda_devices=self.cuda_devices)
         except Exception as exc:
-            logger.exception(f'Failed to report shard info: {exc}')
+            logger.exception("Failed to report shard info: %s", exc)
             sys.exit(1)
         else:
             if is_accepted:

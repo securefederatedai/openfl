@@ -54,7 +54,7 @@ def save_(context, plan_config, cols_config, data_config, model_protobuf_path, o
     task_runner = get_model(plan_config, cols_config, data_config, model_protobuf_path)
 
     task_runner.save_native(output_filepath)
-    logger.info(f'Saved model in native format:  🠆 {output_filepath}')
+    logger.info("Saved model in native format:  🠆 %s", output_filepath)
 
 
 def get_model(
@@ -94,7 +94,7 @@ def get_model(
         task_runner = plan.get_task_runner(data_loader=data_loader)
 
     model_protobuf_path = Path(model_protobuf_path).resolve()
-    logger.info(f'Loading OpenFL model protobuf:  🠆 {model_protobuf_path}')
+    logger.info("Loading OpenFL model protobuf:  🠆 %s", model_protobuf_path)
 
     model_protobuf = utils.load_proto(model_protobuf_path)
 

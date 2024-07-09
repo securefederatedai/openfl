@@ -49,7 +49,7 @@ class ExperimentWorkspace:
                         executable, '-m', 'pip', 'install', '-r', requirements_filename],
                         shell=False)
                 except Exception as exc:
-                    logger.error(f'Failed to install requirements: {exc}')
+                    logger.error("Failed to install requirements: %s", exc)
                     # It's a workaround for cases when collaborators run
                     # in common virtual environment
                     time.sleep(5)
@@ -86,7 +86,7 @@ class ExperimentWorkspace:
                 'Exiting from the workspace context manager'
                 f' for {self.experiment_name} experiment'
             )
-            logger.debug(f'Archive still exists: {self.data_file_path.exists()}')
+            logger.debug("Archive still exists: %s", self.data_file_path.exists())
             self.data_file_path.unlink(missing_ok=False)
 
 

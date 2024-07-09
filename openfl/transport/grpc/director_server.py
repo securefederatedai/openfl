@@ -118,13 +118,13 @@ class DirectorGRPCServer(director_pb2_grpc.DirectorServicer):
                 require_client_auth=True
             )
             self.server.add_secure_port(self.listen_uri, server_credentials)
-        logger.info(f'Starting director server on {self.listen_uri}')
+        logger.info("Starting director server on %s", self.listen_uri)
         await self.server.start()
         await self.server.wait_for_termination()
 
     async def UpdateShardInfo(self, request, context):  # NOQA:N802
         """Receive acknowledge shard info."""
-        logger.info(f'Updating shard info: {request.shard_info}')
+        logger.info("Updating shard info: %s", request.shard_info)
         dict_shard_info = MessageToDict(
             request.shard_info,
             preserving_proto_field_name=True
@@ -159,7 +159,7 @@ class DirectorGRPCServer(director_pb2_grpc.DirectorServicer):
             experiment_archive_path=data_file_path
         )
 
-        logger.info(f'Experiment {request.name} registered')
+        logger.info("Experiment %s registered", request.name)
         return director_pb2.SetNewExperimentResponse(accepted=is_accepted)
 
     async def GetExperimentStatus(self, request, context):  # NOQA: N802
@@ -218,9 +218,9 @@ class DirectorGRPCServer(director_pb2_grpc.DirectorServicer):
 
     async def WaitExperiment(self, request, context):  # NOQA:N802
         """Request for wait an experiment."""
-        logger.debug(f'Request WaitExperiment received from envoy {request.collaborator_name}')
+        logger.debug("Request WaitExperiment received from envoy %s", request.collaborator_name)
         experiment_name = await self.director.wait_experiment(request.collaborator_name)
-        logger.debug(f'Experiment {experiment_name} is ready for {request.collaborator_name}')
+        logger.debug("Experiment %s is ready for %s", experiment_name, request.collaborator_name)
 
         return director_pb2.WaitExperimentResponse(experiment_name=experiment_name)
 
@@ -240,7 +240,7 @@ class DirectorGRPCServer(director_pb2_grpc.DirectorServicer):
 
     async def GetMetricStream(self, request, context):  # NOQA:N802
         """Request to stream metrics from the aggregator to frontend."""
-        logger.info(f'Getting metrics for {request.experiment_name}...')
+        logger.info("Getting metrics for %s...", request.experiment_name)
 
         caller = self.get_caller(context)
         async for metric_dict in self.director.stream_metrics(
@@ -280,7 +280,7 @@ class DirectorGRPCServer(director_pb2_grpc.DirectorServicer):
 
     async def UpdateEnvoyStatus(self, request, context):  # NOQA:N802
         """Accept health check from envoy."""
-        logger.debug(f'Updating envoy status: {request}')
+        logger.debug("Updating envoy status: %s", request)
         cuda_devices_info = [
             MessageToDict(message, preserving_proto_field_name=True)
             for message in request.cuda_devices

@@ -109,7 +109,7 @@ class Collaborator:
         if hasattr(OptTreatment, opt_treatment):
             self.opt_treatment = OptTreatment[opt_treatment]
         else:
-            self.logger.error(f'Unknown opt_treatment: {opt_treatment.name}.')
+            self.logger.error("Unknown opt_treatment: %s.", opt_treatment.name)
             raise NotImplementedError(f'Unknown opt_treatment: {opt_treatment}.')
 
         if hasattr(DevicePolicy, device_assignment_policy):
@@ -140,7 +140,7 @@ class Collaborator:
             elif sleep_time > 0:
                 sleep(sleep_time)  # some sleep function
             else:
-                self.logger.info(f'Received the following tasks: {tasks}')
+                self.logger.info("Received the following tasks: %s", tasks)
                 for task in tasks:
                     self.do_task(task, round_number)
 
@@ -165,7 +165,7 @@ class Collaborator:
             elif sleep_time > 0:
                 sleep(sleep_time)  # some sleep function
             else:
-                self.logger.info(f'Received the following tasks: {tasks}')
+                self.logger.info("Received the following tasks: %s", tasks)
                 for task in tasks:
                     self.do_task(task, round_number)
                 self.logger.info(f'All tasks completed on {self.collaborator_name} '
@@ -281,7 +281,7 @@ class Collaborator:
         """
         # try to get from the store
         tensor_name, origin, round_number, report, tags = tensor_key
-        self.logger.debug(f'Attempting to retrieve tensor {tensor_key} from local store')
+        self.logger.debug("Attempting to retrieve tensor %s from local store", tensor_key)
         nparray = self.tensor_db.get_tensor_from_cache(tensor_key)
 
         # if None and origin is our client, request it from the client
@@ -345,7 +345,7 @@ class Collaborator:
                     require_lossless=True
                 )
         else:
-            self.logger.debug(f'Found tensor {tensor_key} in local TensorDB')
+            self.logger.debug("Found tensor %s in local TensorDB", tensor_key)
 
         return nparray
 
@@ -376,7 +376,7 @@ class Collaborator:
         """
         tensor_name, origin, round_number, report, tags = tensor_key
 
-        self.logger.debug(f'Requesting aggregated tensor {tensor_key}')
+        self.logger.debug("Requesting aggregated tensor %s", tensor_key)
         tensor = self.client.get_aggregated_tensor(
             self.collaborator_name, tensor_name, round_number, report, tags, require_lossless)
 
@@ -406,7 +406,7 @@ class Collaborator:
         if 'valid' in task_name:
             data_size = self.task_runner.get_valid_data_size()
 
-        self.logger.debug(f'{task_name} data size = {data_size}')
+        self.logger.debug("%s data size = %s", task_name, data_size)
 
         for tensor in tensor_dict:
             tensor_name, origin, fl_round, report, tags = tensor

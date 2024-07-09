@@ -104,7 +104,7 @@ def initialize(context, plan_config, cols_config, data_config,
                                              round_number=0,
                                              tensor_pipe=tensor_pipe)
 
-    logger.info(f'Creating Initial Weights File    🠆 {init_state_path}')
+    logger.info("Creating Initial Weights File    🠆 %s", init_state_path)
 
     utils.dump_proto(model_proto=model_snap, fpath=init_state_path)
 

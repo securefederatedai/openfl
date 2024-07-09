@@ -173,7 +173,7 @@ class GaNDLFTaskRunner(TaskRunner):
         # set to "training" mode
         self.model.train()
         for epoch in range(epochs):
-            self.logger.info(f'Run {epoch} epoch of {round_num} round')
+            self.logger.info("Run %s epoch of %s round", epoch, round_num)
             # FIXME: do we want to capture these in an array
             # rather than simply taking the last value?
             epoch_train_loss, epoch_train_metric = train_network(self.model,

@@ -33,7 +33,7 @@ class ShardDirectorClient:
         """Initialize a shard director client object."""
         self.shard_name = shard_name
         director_addr = f'{director_host}:{director_port}'
-        logger.info(f'Director address: {director_addr}')
+        logger.info("Director address: %s", director_addr)
         if not tls:
             channel = grpc.insecure_channel(director_addr, options=channel_options)
         else:
@@ -60,7 +60,7 @@ class ShardDirectorClient:
     def report_shard_info(self, shard_descriptor: Type[ShardDescriptor],
                           cuda_devices: tuple) -> bool:
         """Report shard info to the director."""
-        logger.info(f'Sending {self.shard_name} shard info to director')
+        logger.info("Sending %s shard info to director", self.shard_name)
         # True considered as successful registration
         shard_info = director_pb2.ShardInfo(
             shard_description=shard_descriptor.dataset_description,
@@ -82,7 +82,7 @@ class ShardDirectorClient:
         """Wait an experiment data from the director."""
         logger.info('Waiting for an experiment to run...')
         response = self.stub.WaitExperiment(self._get_experiment_data())
-        logger.info(f'New experiment received: {response}')
+        logger.info("New experiment received: %s", response)
         experiment_name = response.experiment_name
         if not experiment_name:
             raise Exception('No experiment')
@@ -91,7 +91,7 @@ class ShardDirectorClient:
 
     def get_experiment_data(self, experiment_name):
         """Get an experiment data from the director."""
-        logger.info(f'Getting experiment data for {experiment_name}...')
+        logger.info("Getting experiment data for %s...", experiment_name)
         request = director_pb2.GetExperimentDataRequest(
             experiment_name=experiment_name,
             collaborator_name=self.shard_name
@@ -107,7 +107,7 @@ class ShardDirectorClient:
             error_description: str = ''
     ):
         """Set the experiment failed."""
-        logger.info(f'Experiment {experiment_name} failed')
+        logger.info("Experiment %s failed", experiment_name)
         request = director_pb2.SetExperimentFailedRequest(
             experiment_name=experiment_name,
             collaborator_name=self.shard_name,
@@ -140,11 +140,11 @@ class ShardDirectorClient:
                     for item in cuda_devices_info
                 ]
             except Exception as e:
-                logger.info(f'{e}')
+                logger.info("%s", e)
 
         status.cuda_devices.extend(cuda_messages)
 
-        logger.debug(f'Sending health check status: {status}')
+        logger.debug("Sending health check status: %s", status)
 
         try:
             response = self.stub.UpdateEnvoyStatus(status)
@@ -207,7 +207,7 @@ class DirectorClient:
     def set_new_experiment(self, name, col_names, arch_path,
                            initial_tensor_dict=None):
         """Send the new experiment to director to launch."""
-        logger.info(f'Submitting new experiment {name} to director')
+        logger.info("Submitting new experiment %s to director", name)
         if initial_tensor_dict:
             model_proto = construct_model_proto(initial_tensor_dict, 0, NoCompressionPipeline())
             experiment_info_gen = self._get_experiment_info(

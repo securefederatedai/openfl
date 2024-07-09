@@ -80,7 +80,7 @@ class KerasTaskRunner(TaskRunner):
         # rebuild model with updated weights
         self.rebuild_model(round_num, input_tensor_dict)
         for epoch in range(epochs):
-            self.logger.info(f'Run {epoch} epoch of {round_num} round')
+            self.logger.info("Run %s epoch of %s round", epoch, round_num)
             results = self.train_iteration(self.data_loader.get_train_loader(batch_size),
                                            metrics=metrics,
                                            **kwargs)
@@ -448,7 +448,7 @@ class KerasTaskRunner(TaskRunner):
         model_layer_names = self._get_weights_names(self.model)
         opt_names = self._get_weights_names(self.model.optimizer)
         tensor_names = model_layer_names + opt_names
-        self.logger.debug(f'Updating model tensor names: {tensor_names}')
+        self.logger.debug("Updating model tensor names: %s", tensor_names)
         self.required_tensorkeys_for_function['train'] = [
             TensorKey(tensor_name, 'GLOBAL', 0, ('model',))
             for tensor_name in tensor_names

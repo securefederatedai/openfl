@@ -55,7 +55,7 @@ def get_token(name, ca_url, ca_path='.'):
             f'--key {priv_json} --root {root_crt} '
             f'--password-file {pass_file} 'f'--ca-url {ca_url}', shell=True)
     except subprocess.CalledProcessError as exc:
-        logger.error(f'Error code {exc.returncode}: {exc.output}')
+        logger.error("Error code %s: %s", exc.returncode, exc.output)
         sys.exit(1)
 
     token = token.strip()

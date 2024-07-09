@@ -88,10 +88,10 @@ class Experiment:
                 )
                 await self.run_aggregator_atask
             self.status = Status.FINISHED
-            logger.info(f'Experiment "{self.name}" was finished successfully.')
+            logger.info("Experiment "%s" was finished successfully.", self.name)
         except Exception as e:
             self.status = Status.FAILED
-            logger.exception(f'Experiment "{self.name}" failed with error: {e}.')
+            logger.exception("Experiment "%s" failed with error: %s.", self.name, e)
 
     async def review_experiment(self, review_plan_callback: Callable) -> bool:
         """Get plan approve in console."""
@@ -128,7 +128,7 @@ class Experiment:
         plan = Plan.parse(plan_config_path=self.plan_path)
         plan.authorized_cols = list(self.collaborators)
 
-        logger.info(f'🧿 Created an Aggregator Server for {self.name} experiment.')
+        logger.info("🧿 Created an Aggregator Server for %s experiment.", self.name)
         aggregator_grpc_server = plan.interactive_api_get_server(
             tensor_dict=self.init_tensor_dict,
             root_certificate=root_certificate,

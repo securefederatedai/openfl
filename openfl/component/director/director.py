@@ -56,9 +56,9 @@ class Director:
         is_accepted = False
         if (self.sample_shape != shard_info['sample_shape']
                 or self.target_shape != shard_info['target_shape']):
-            logger.info(f'Director did not accept shard for {shard_info["node_info"]["name"]}')
+            logger.info("Director did not accept shard for %s", shard_info["node_info"]["name"])
             return is_accepted
-        logger.info(f'Director accepted shard for {shard_info["node_info"]["name"]}')
+        logger.info("Director accepted shard for %s", shard_info["node_info"]["name"])
         self._shard_registry[shard_info['node_info']['name']] = {
             'shard_info': shard_info,
             'is_online': True,
@@ -243,7 +243,7 @@ class Director:
 
     def get_envoys(self) -> list:
         """Get a status information about envoys."""
-        logger.debug(f'Shard registry: {self._shard_registry}')
+        logger.debug("Shard registry: %s", self._shard_registry)
         for envoy_info in self._shard_registry.values():
             envoy_info['is_online'] = (
                 time.time() < envoy_info.get('last_updated', 0)

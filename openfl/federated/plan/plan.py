@@ -55,11 +55,11 @@ class Plan:
             frozen_yaml_path = Path(
                 f'{yaml_path.parent}/{yaml_path.stem}_{plan.hash[:8]}.yaml')
             if frozen_yaml_path.exists():
-                Plan.logger.info(f'{yaml_path.name} is already frozen')
+                Plan.logger.info("%s is already frozen", yaml_path.name)
                 return
             frozen_yaml_path.write_text(dump(config))
             frozen_yaml_path.chmod(0o400)
-            Plan.logger.info(f'{yaml_path.name} frozen successfully')
+            Plan.logger.info("%s frozen successfully", yaml_path.name)
         else:
             yaml_path.write_text(dump(config))
 
@@ -183,9 +183,9 @@ class Plan:
         class_name = splitext(template)[1].strip('.')
         module_path = splitext(template)[0]
 
-        Plan.logger.info(f'Building `{template}` Module.')
-        Plan.logger.debug(f'Settings {settings}')
-        Plan.logger.debug(f'Override {override}')
+        Plan.logger.info("Building `%s` Module.", template)
+        Plan.logger.debug("Settings %s", settings)
+        Plan.logger.debug("Override %s", override)
 
         settings.update(**override)
 
