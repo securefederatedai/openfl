@@ -1,5 +1,3 @@
-# Copyright (C) 2020-2023 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 """Module with auxiliary CLI helper functions."""
 
 from itertools import islice

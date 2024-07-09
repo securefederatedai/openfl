@@ -1,5 +1,3 @@
-# Copyright (C) 2020-2023 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 """openfl Native functions module.
 
 This file defines openfl entrypoints to be used directly through python (not CLI)

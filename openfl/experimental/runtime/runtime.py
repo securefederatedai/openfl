@@ -1,5 +1,3 @@
-# Copyright (C) 2020-2023 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 """ openfl.experimental.runtime module Runtime class."""
 from __future__ import annotations
 

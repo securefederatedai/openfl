@@ -1,5 +1,3 @@
-# Copyright (C) 2020-2023 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 from openfl.interface.aggregation_functions.adagrad_adaptive_aggregation import AdagradAdaptiveAggregation
 from openfl.interface.aggregation_functions.adam_adaptive_aggregation import AdamAdaptiveAggregation
 from openfl.interface.aggregation_functions.core import AggregationFunction
