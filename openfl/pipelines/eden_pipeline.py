@@ -37,7 +37,7 @@ compression_pipeline :
   settings :
     n_bits : <number of bits per coordinate>
     device: <cpu|cuda:0|cuda:1|...>
-    dim_threshold: 1000 #EDEN compresses layers that their dimension is above 
+    dim_threshold: 1000 #EDEN compresses layers that their dimension is above
         the dim_threshold, use 1000 as default
 """
 
@@ -586,8 +586,8 @@ class EdenTransformer(Transformer):
             The quantized data and the metadata for the quantization.
         """
         # TODO: can be simplified if have access to a unique feature of the participant (e.g., ID)
-        seed = (hash(sum(data.flatten()) * 13 + 7) +
-                np.random.randint(1, 2**16)) % (2**16)
+        seed = (hash(sum(data.flatten()) * 13 + 7)
+                + np.random.randint(1, 2**16)) % (2**16)
         seed = int(float(seed))
         metadata = {'int_list': list(data.shape)}
 

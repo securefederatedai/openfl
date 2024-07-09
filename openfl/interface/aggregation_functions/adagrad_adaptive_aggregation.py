@@ -39,7 +39,7 @@ class AdagradAdaptiveAggregation(AdaptiveAggregation):
             model_interface: Model interface instance to provide parameters.
             learning_rate (float): Tuning parameter that determines
                 the step size at each iteration.
-            initial_accumulator_value (float): Initial value for squared 
+            initial_accumulator_value (float): Initial value for squared
                 gradients.
             epsilon (float): Value for computational stability.
         """

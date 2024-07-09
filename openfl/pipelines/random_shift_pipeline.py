@@ -59,12 +59,13 @@ class RandomShiftTransformer(Transformer):
         # this is an awkward use of the metadata into to float dict, usually
         # it will trully be treated as a dict. Here (and in 'forward' above)
         # we use it essentially as an array.
-        shift = np.reshape(np.array([
-            metadata['int_to_float'][idx]
-            for idx in range(len(metadata['int_to_float']))
-        ]),
-                           newshape=shape,
-                           order='C')
+        shift = np.reshape(
+            np.array([
+                metadata['int_to_float'][idx]
+                for idx in range(len(metadata['int_to_float']))]),
+            newshape=shape,
+            order='C'
+        )
         return data - shift
 
 
