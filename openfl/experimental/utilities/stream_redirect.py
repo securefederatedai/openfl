@@ -30,7 +30,7 @@ class RedirectStdStreamBuffer:
         return step_stdout, step_stderr
 
 
-class RedirectStdStream(object):
+class RedirectStdStream:
     """
     This class used to intercept stdout and stderr, so that
     stdout and stderr is written to buffer as well as terminal
