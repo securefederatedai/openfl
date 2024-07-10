@@ -7,4 +7,4 @@ isort --sp "${base_dir}/pyproject.toml" --check openfl
 
 black --config "${base_dir}/pyproject.toml" --check openfl
 
-flake8 --config "${base_dir}/setup.cfg" openfl
+flake8 --config "${base_dir}/setup.cfg" --show-source openfl
