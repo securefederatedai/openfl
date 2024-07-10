@@ -78,7 +78,7 @@ class NumPyAdam(Optimizer):
         self.beta_1, self.beta_2 = betas
         self.initial_accumulator_value = initial_accumulator_value
         self.epsilon = epsilon
-        self.current_step = dict.fromkeys(self.params, value=0)
+        self.current_step = dict.fromkeys(self.params, 0)
 
         self.grads_first_moment, self.grads_second_moment = {}, {}
 
