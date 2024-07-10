@@ -13,14 +13,11 @@
 # limitations under the License.
 
 """ openfl.experimental.runtime module Runtime class."""
-from __future__ import annotations
-
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from openfl.experimental.interface import Aggregator, Collaborator, FLSpec
 
 from typing import Callable, List
+
+from openfl.experimental.interface.fl_spec import FLSpec
+from openfl.experimental.interface.participants import Aggregator, Collaborator
 
 
 class Runtime:

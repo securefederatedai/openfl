@@ -20,7 +20,6 @@ import inspect
 from copy import deepcopy
 from typing import Callable, List, Type
 
-from openfl.experimental.runtime import Runtime
 from openfl.experimental.utilities import (
     MetaflowInterface,
     SerializationError,
@@ -102,17 +101,16 @@ class FLSpec:
             raise Exception("Runtime not implemented")
 
     @property
-    def runtime(self) -> Type[Runtime]:
+    def runtime(self):
         """Returns flow runtime"""
         return self._runtime
 
     @runtime.setter
-    def runtime(self, runtime: Type[Runtime]) -> None:
-        """Sets flow runtime"""
-        if isinstance(runtime, Runtime):
-            self._runtime = runtime
-        else:
+    def runtime(self, runtime) -> None:
+        """Sets flow runtime. `runtime` must be an `openfl.runtime.Runtime` instance."""
+        if str(runtime) not in ["LocalRuntime", "FederatedRuntime"]:
             raise TypeError(f"{runtime} is not a valid OpenFL Runtime")
+        self._runtime = runtime
 
     def _capture_instance_snapshot(self, kwargs):
         """
