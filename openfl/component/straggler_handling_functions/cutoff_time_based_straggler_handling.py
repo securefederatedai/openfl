@@ -6,7 +6,7 @@ import numpy as np
 import time
 import threading
 from typing import Callable
-from logging import Logger
+from logging import getLogger
 
 from openfl.component.straggler_handling_functions import StragglerHandlingFunction
 
@@ -17,17 +17,19 @@ class CutoffTimeBasedStragglerHandling(StragglerHandlingFunction):
         round_start_time=None,
         straggler_cutoff_time=np.inf,
         minimum_reporting=1,
-        logger: Logger=None,
         **kwargs
     ):
-        assert minimum_reporting != 0, ValueError("minimum_reporting cannot be 0")
+        if minimum_reporting == 0: raise ValueError("minimum_reporting cannot be 0")
 
         self.round_start_time = round_start_time
         self.straggler_cutoff_time = straggler_cutoff_time
         self.minimum_reporting = minimum_reporting
-        self.logger = logger
+        self.logger = getLogger(__name__)
         if self.straggler_cutoff_time == np.inf:
-            self.logger.warning("straggler_cutoff_time is set to np.inf, timer will not start.")
+            self.logger.warning(
+                "CutoffTimeBasedStragglerHandling is disabled as straggler_cutoff_time "
+                "is set to np.inf."
+            )
 
     def start_policy(
         self, callback: Callable, collaborator_name: str

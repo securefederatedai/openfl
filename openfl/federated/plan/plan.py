@@ -377,7 +377,6 @@ class Plan:
                 SETTINGS: {}
             }
         )
-        defaults[SETTINGS]["logger"] = self.logger
 
         if self.straggler_policy_ is None:
             self.straggler_policy_ = Plan.build(**defaults)

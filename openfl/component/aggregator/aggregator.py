@@ -339,8 +339,9 @@ class Aggregator:
         sleep_time = 0
 
         # For CutoffTimeBasedStragglerHandling start straggler handling policy
-        # for the collaborator
+        # and pass callback function
         if hasattr(self.straggler_handling_policy, "round_start_time"):
+        # if isinstance(self.straggler_handling_policy, CutoffTimeBasedStragglerHandling):
             self.straggler_handling_policy.start_policy(
                 self._straggler_cutoff_time_elapsed, collaborator_name
             )
@@ -365,24 +366,22 @@ class Aggregator:
             f"Applying {self.straggler_handling_policy.__class__.__name__} policy."
         )
 
-        # TODO: Cleaner approach to get all collaborator names?
-        all_collaborators = self.assigner.get_collaborators_for_task(
-            "train", 0
-        )
-        self.stragglers = [
-            collab_name for collab_name in all_collaborators
-            if collab_name not in self.collaborators_done
-        ]
-        self.logger.info(
-            f"{self.straggler_handling_policy.__class__.__name__} policy applied "
-            f"straggler: {self.stragglers}"
-        )
-
         # Check if minimum collaborators reported results
         straggler_check = self.straggler_handling_policy.straggler_cutoff_check(
             len(self.collaborators_done)
         )
+
         if straggler_check:
+            # If minimum required collaborators have reported results mark
+            # remaining collaborators as stragglers
+            self.stragglers = [
+                collab_name for collab_name in self.authorized_cols
+                if collab_name not in self.collaborators_done
+            ]
+            self.logger.info(
+                f"{self.straggler_handling_policy.__class__.__name__} policy applied "
+                f"straggler: {self.stragglers}"
+            )
             self.logger.info(
                 f"{len(self.collaborators_done)} collaborators reported results within cutoff "
                 f"time. Applying cutoff policy and proceeding with end of round."
@@ -593,25 +592,6 @@ class Aggregator:
                 f' for task {task_key}'
             )
 
-        all_collaborators = self.assigner.get_collaborators_for_task(
-            task_name, self.round_number
-        )
-
-        # If minimum required collaborators have reported results
-        # ignore results from all other collaborators and add them in stragglers list
-        if (
-            not hasattr(self.straggler_handling_policy, "round_start_time") and
-            self.straggler_handling_policy.straggler_cutoff_check(
-                len(self.collaborators_done), all_collaborators
-            )
-        ):
-            self.logger.warning(
-                f'STRAGGLER: Collaborator {collaborator_name} is reporting results '
-                f'after task {task_name} has finished.'
-            )
-            self.stragglers.append(collaborator_name)
-            return
-
         # By giving task_key it's own weight, we can support different
         # training/validation weights
         # As well as eventually supporting weights that change by round
@@ -656,13 +636,30 @@ class Aggregator:
                 all_tasks_completed and t in self.collaborator_tasks_results.keys()
             )
 
-        # If all collaborators have completed tasks for current round
-        # mark collaborator as done.
+        # If the collaborator has completed ALL tasks for current round,
+        # update collaborators_done
         if all_tasks_completed:
             self.collaborators_done.append(collaborator_name)
             self.logger.info(
                 f"Round: {self.round_number}, Collaborators that have completed all tasks: "
                 f"{self.collaborators_done}"
+            )
+
+        # NOTE: Only for %age based straggler handling policy
+        # If minimum required collaborators have reported results
+        # ignore results from all other collaborators and add them in stragglers list
+        if (
+            not hasattr(self.straggler_handling_policy, "round_start_time") and
+            self.straggler_handling_policy.straggler_cutoff_check(
+                len(self.collaborators_done), self.authorized_cols
+            )
+        ):
+            self.stragglers = [
+                collab_name for collab_name in self.authorized_cols
+                if collab_name not in self.collaborators_done
+            ]
+            self.logger.warning(
+                f"Identified straggler collaborators: {self.stragglers}."
             )
 
         self._end_of_task_check(task_name)
