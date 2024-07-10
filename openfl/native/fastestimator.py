@@ -93,9 +93,7 @@ class FederatedFastEstimator:
 
         aggregator = plan.get_aggregator()
 
-        model_states = {
-            collaborator: None for collaborator in plan.authorized_cols
-        }
+        model_states = dict.fromkeys(plan.authorized_cols, value=None)
         runners = {}
         save_dir = {}
         data_path = 1

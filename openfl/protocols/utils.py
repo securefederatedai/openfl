@@ -55,9 +55,7 @@ def bytes_and_metadata_to_model_proto(
     bytes_dict, model_id, model_version, is_delta, metadata_dict
 ):
     """Convert bytes and metadata to model protobuf."""
-    model_header = ModelHeader(
-        id=model_id, version=model_version, is_delta=is_delta
-    )  # noqa: F821
+    model_header = ModelHeader(id=model_id, version=model_version, is_delta=is_delta)  # noqa: F821
 
     tensor_protos = []
     for key, data_bytes in bytes_dict.items():
@@ -86,8 +84,8 @@ def bytes_and_metadata_to_model_proto(
                 )
             )
         tensor_protos.append(
-            TensorProto(
-                name=key,  # NOQA:F821
+            TensorProto(  # noqa: F821
+                name=key,
                 data_bytes=data_bytes,
                 transformer_metadata=metadata_protos,
             )

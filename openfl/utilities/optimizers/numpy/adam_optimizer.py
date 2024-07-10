@@ -88,9 +88,7 @@ class NumPyAdam(Optimizer):
         self.beta_1, self.beta_2 = betas
         self.initial_accumulator_value = initial_accumulator_value
         self.epsilon = epsilon
-        self.current_step: Dict[str, int] = {
-            param_name: 0 for param_name in self.params
-        }
+        self.current_step = dict.fromkeys(self.params, value=0)
 
         self.grads_first_moment, self.grads_second_moment = {}, {}
 
