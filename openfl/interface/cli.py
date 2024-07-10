@@ -50,9 +50,7 @@ def setup_logging(level="info", log_file=None):
 
     console = Console(width=160)
     handlers.append(RichHandler(console=console))
-    basicConfig(
-        level=level, format="%(message)s", datefmt="[%X]", handlers=handlers
-    )
+    basicConfig(level=level, format="%(message)s", datefmt="[%X]", handlers=handlers)
 
 
 def disable_warnings():
@@ -86,9 +84,7 @@ class CLI(Group):
             "[args]",
         ]
 
-        formatter.write(
-            style("BASH COMPLETE ACTIVATION\n\n", bold=True, fg="bright_black")
-        )
+        formatter.write(style("BASH COMPLETE ACTIVATION\n\n", bold=True, fg="bright_black"))
         formatter.write(
             "Run in terminal:\n"
             "   _FX_COMPLETE=bash_source fx > ~/.fx-autocomplete.sh\n"
@@ -97,9 +93,7 @@ class CLI(Group):
             "   source ~/.fx-autocomplete.sh\n\n"
         )
 
-        formatter.write(
-            style("CORRECT USAGE\n\n", bold=True, fg="bright_black")
-        )
+        formatter.write(style("CORRECT USAGE\n\n", bold=True, fg="bright_black"))
         formatter.write(" ".join(uses) + "\n")
 
         opts = []
@@ -108,9 +102,7 @@ class CLI(Group):
             if rv is not None:
                 opts.append(rv)
 
-        formatter.write(
-            style("\nGLOBAL OPTIONS\n\n", bold=True, fg="bright_black")
-        )
+        formatter.write(style("\nGLOBAL OPTIONS\n\n", bold=True, fg="bright_black"))
         formatter.write_dl(opts)
 
         cmds = []
@@ -122,9 +114,7 @@ class CLI(Group):
                 sub = cmd.get_command(ctx, sub)
                 cmds.append((sub.name, sub, 1))
 
-        formatter.write(
-            style("\nAVAILABLE COMMANDS\n", bold=True, fg="bright_black")
-        )
+        formatter.write(style("\nAVAILABLE COMMANDS\n", bold=True, fg="bright_black"))
 
         for name, cmd, level in cmds:
             help_str = cmd.get_short_help_str()
@@ -136,8 +126,7 @@ class CLI(Group):
                 formatter.write("─" * 80 + "\n")
             if level == 1:
                 formatter.write(
-                    f'  {style("*", fg="green")}'
-                    f' {style(name, fg="cyan"):<21} {help_str}' + "\n"
+                    f'  {style("*", fg="green")}' f' {style(name, fg="cyan"):<21} {help_str}' + "\n"
                 )
 
 
@@ -202,11 +191,7 @@ def error_handler(error):
                     fg="red",
                 )
             )
-    echo(
-        style("EXCEPTION", fg="red", bold=True)
-        + " : "
-        + style(f"{error}", fg="red")
-    )
+    echo(style("EXCEPTION", fg="red", bold=True) + " : " + style(f"{error}", fg="red"))
     raise error
 
 
@@ -225,9 +210,7 @@ def review_plan_callback(file_name, file_path):
     with open_file(file_path, "r") as f:
         echo(f.read())
 
-    if confirm(
-        style(f"Do you want to accept the {file_name}?", fg="green", bold=True)
-    ):
+    if confirm(style(f"Do you want to accept the {file_name}?", fg="green", bold=True)):
         echo(style(f"{file_name} accepted!", fg="green", bold=True))
         return True
     else:
@@ -241,10 +224,7 @@ def show_header():
     banner = "OpenFL - Open Federated Learning"
 
     experimental = (
-        Path(os.path.expanduser("~"))
-        .resolve()
-        .joinpath(".openfl", "experimental")
-        .resolve()
+        Path(os.path.expanduser("~")).resolve().joinpath(".openfl", "experimental").resolve()
     )
 
     if os.path.exists(experimental):
@@ -258,18 +238,13 @@ def entry():
     """Entry point of the Command-Line Interface."""
 
     experimental = (
-        Path(os.path.expanduser("~"))
-        .resolve()
-        .joinpath(".openfl", "experimental")
-        .resolve()
+        Path(os.path.expanduser("~")).resolve().joinpath(".openfl", "experimental").resolve()
     )
 
     root = Path(__file__).parent.resolve()
 
     if experimental.exists():
-        root = root.parent.joinpath(
-            "experimental", "interface", "cli"
-        ).resolve()
+        root = root.parent.joinpath("experimental", "interface", "cli").resolve()
 
     work = Path.cwd().resolve()
     path.append(str(root))

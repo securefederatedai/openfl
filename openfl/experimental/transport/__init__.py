@@ -13,7 +13,4 @@
 # limitations under the License.
 
 """openfl.experimental.transport package."""
-from openfl.experimental.transport.grpc import (
-    AggregatorGRPCClient,
-    AggregatorGRPCServer,
-)
+from openfl.experimental.transport.grpc import AggregatorGRPCClient, AggregatorGRPCServer

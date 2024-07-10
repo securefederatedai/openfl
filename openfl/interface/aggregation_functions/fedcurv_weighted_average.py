@@ -15,9 +15,7 @@
 """FedCurv Aggregation function module."""
 import numpy as np
 
-from openfl.interface.aggregation_functions.weighted_average import (
-    WeightedAverage,
-)
+from openfl.interface.aggregation_functions.weighted_average import WeightedAverage
 
 
 class FedCurvWeightedAverage(WeightedAverage):
@@ -32,11 +30,7 @@ class FedCurvWeightedAverage(WeightedAverage):
 
     def call(self, local_tensors, tensor_db, tensor_name, fl_round, tags):
         """Apply aggregation."""
-        if (
-            tensor_name.endswith("_u")
-            or tensor_name.endswith("_v")
-            or tensor_name.endswith("_w")
-        ):
+        if tensor_name.endswith("_u") or tensor_name.endswith("_v") or tensor_name.endswith("_w"):
             tensors = [local_tensor.tensor for local_tensor in local_tensors]
             agg_result = np.sum(tensors, axis=0)
             return agg_result

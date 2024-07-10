@@ -23,10 +23,7 @@ import grpc
 from openfl.interface.interactive_api.shard_descriptor import ShardDescriptor
 from openfl.pipelines import NoCompressionPipeline
 from openfl.protocols import director_pb2, director_pb2_grpc, interceptors
-from openfl.protocols.utils import (
-    construct_model_proto,
-    deconstruct_model_proto,
-)
+from openfl.protocols.utils import construct_model_proto, deconstruct_model_proto
 from openfl.transport.grpc.director_server import CLIENT_ID_DEFAULT
 from openfl.transport.grpc.exceptions import ShardNotFoundError
 from openfl.transport.grpc.grpc_channel_options import channel_options
@@ -53,9 +50,7 @@ class ShardDirectorClient:
         director_addr = f"{director_host}:{director_port}"
         logger.info("Director address: %s", director_addr)
         if not tls:
-            channel = grpc.insecure_channel(
-                director_addr, options=channel_options
-            )
+            channel = grpc.insecure_channel(director_addr, options=channel_options)
         else:
             if not (root_certificate and private_key and certificate):
                 raise Exception("No certificates provided")
@@ -67,18 +62,14 @@ class ShardDirectorClient:
                 with open(certificate, "rb") as f:
                     certificate_b = f.read()
             except FileNotFoundError as exc:
-                raise Exception(
-                    f"Provided certificate file is not exist: {exc.filename}"
-                )
+                raise Exception(f"Provided certificate file is not exist: {exc.filename}")
 
             credentials = grpc.ssl_channel_credentials(
                 root_certificates=root_certificate_b,
                 private_key=private_key_b,
                 certificate_chain=certificate_b,
             )
-            channel = grpc.secure_channel(
-                director_addr, credentials, options=channel_options
-            )
+            channel = grpc.secure_channel(director_addr, credentials, options=channel_options)
         self.stub = director_pb2_grpc.DirectorStub(channel)
 
     def report_shard_info(
@@ -95,8 +86,7 @@ class ShardDirectorClient:
 
         shard_info.node_info.name = self.shard_name
         shard_info.node_info.cuda_devices.extend(
-            director_pb2.CudaDeviceInfo(index=cuda_device)
-            for cuda_device in cuda_devices
+            director_pb2.CudaDeviceInfo(index=cuda_device) for cuda_device in cuda_devices
         )
 
         request = director_pb2.UpdateShardInfoRequest(shard_info=shard_info)
@@ -142,9 +132,7 @@ class ShardDirectorClient:
 
     def _get_experiment_data(self):
         """Generate the experiment data request."""
-        return director_pb2.WaitExperimentRequest(
-            collaborator_name=self.shard_name
-        )
+        return director_pb2.WaitExperimentRequest(collaborator_name=self.shard_name)
 
     def send_health_check(
         self,
@@ -162,10 +150,7 @@ class ShardDirectorClient:
         cuda_messages = []
         if cuda_devices_info is not None:
             try:
-                cuda_messages = [
-                    director_pb2.CudaDeviceInfo(**item)
-                    for item in cuda_devices_info
-                ]
+                cuda_messages = [director_pb2.CudaDeviceInfo(**item) for item in cuda_devices_info]
             except Exception as e:
                 logger.info("%s", e)
 
@@ -204,9 +189,7 @@ class DirectorClient:
         if not tls:
             if not client_id:
                 client_id = CLIENT_ID_DEFAULT
-            channel = grpc.insecure_channel(
-                director_addr, options=channel_options
-            )
+            channel = grpc.insecure_channel(director_addr, options=channel_options)
             headers = {
                 "client_id": client_id,
             }
@@ -223,9 +206,7 @@ class DirectorClient:
                 with open(certificate, "rb") as f:
                     certificate_b = f.read()
             except FileNotFoundError as exc:
-                raise Exception(
-                    f"Provided certificate file is not exist: {exc.filename}"
-                )
+                raise Exception(f"Provided certificate file is not exist: {exc.filename}")
 
             credentials = grpc.ssl_channel_credentials(
                 root_certificates=root_certificate_b,
@@ -233,20 +214,14 @@ class DirectorClient:
                 certificate_chain=certificate_b,
             )
 
-            channel = grpc.secure_channel(
-                director_addr, credentials, options=channel_options
-            )
+            channel = grpc.secure_channel(director_addr, credentials, options=channel_options)
         self.stub = director_pb2_grpc.DirectorStub(channel)
 
-    def set_new_experiment(
-        self, name, col_names, arch_path, initial_tensor_dict=None
-    ):
+    def set_new_experiment(self, name, col_names, arch_path, initial_tensor_dict=None):
         """Send the new experiment to director to launch."""
         logger.info("Submitting new experiment %s to director", name)
         if initial_tensor_dict:
-            model_proto = construct_model_proto(
-                initial_tensor_dict, 0, NoCompressionPipeline()
-            )
+            model_proto = construct_model_proto(initial_tensor_dict, 0, NoCompressionPipeline())
             experiment_info_gen = self._get_experiment_info(
                 arch_path=arch_path,
                 name=name,
@@ -277,9 +252,7 @@ class DirectorClient:
     def get_experiment_status(self, experiment_name):
         """Check if the experiment was accepted by the director"""
         logger.info("Getting experiment Status...")
-        request = director_pb2.GetExperimentStatusRequest(
-            experiment_name=experiment_name
-        )
+        request = director_pb2.GetExperimentStatusRequest(experiment_name=experiment_name)
         resp = self.stub.GetExperimentStatus(request)
         return resp
 
@@ -313,9 +286,7 @@ class DirectorClient:
 
     def stream_metrics(self, experiment_name):
         """Stream metrics RPC."""
-        request = director_pb2.GetMetricStreamRequest(
-            experiment_name=experiment_name
-        )
+        request = director_pb2.GetMetricStreamRequest(experiment_name=experiment_name)
         for metric_message in self.stub.GetMetricStream(request):
             yield {
                 "metric_origin": metric_message.metric_origin,
@@ -343,9 +314,9 @@ class DirectorClient:
                 "shard_info": envoy.shard_info,
                 "is_online": envoy.is_online or False,
                 "is_experiment_running": envoy.is_experiment_running or False,
-                "last_updated": datetime.fromtimestamp(
-                    envoy.last_updated.seconds
-                ).strftime("%Y-%m-%d %H:%M:%S"),
+                "last_updated": datetime.fromtimestamp(envoy.last_updated.seconds).strftime(
+                    "%Y-%m-%d %H:%M:%S"
+                ),
                 "current_time": now,
                 "valid_duration": envoy.valid_duration,
                 "experiment_name": "ExperimentName Mock",
@@ -354,9 +325,7 @@ class DirectorClient:
 
     def get_experiments_list(self):
         """Get experiments list."""
-        response = self.stub.GetExperimentsList(
-            director_pb2.GetExperimentsListRequest()
-        )
+        response = self.stub.GetExperimentsList(director_pb2.GetExperimentsListRequest())
         return response.experiments
 
     def get_experiment_description(self, name):

@@ -88,23 +88,13 @@ class TensorFlowTaskRunner(TaskRunner):
         if self.opt_treatment == "RESET":
             self.reset_opt_vars()
             self.set_tensor_dict(input_tensor_dict, with_opt_vars=False)
-        elif (
-            round_num > 0
-            and self.opt_treatment == "CONTINUE_GLOBAL"
-            and not validation
-        ):
+        elif round_num > 0 and self.opt_treatment == "CONTINUE_GLOBAL" and not validation:
             self.set_tensor_dict(input_tensor_dict, with_opt_vars=True)
         else:
             self.set_tensor_dict(input_tensor_dict, with_opt_vars=False)
 
     def train_batches(
-        self,
-        col_name,
-        round_num,
-        input_tensor_dict,
-        epochs=1,
-        use_tqdm=False,
-        **kwargs
+        self, col_name, round_num, input_tensor_dict, epochs=1, use_tqdm=False, **kwargs
     ):
         """
         Perform the training.
@@ -144,9 +134,9 @@ class TensorFlowTaskRunner(TaskRunner):
         origin = col_name
         tags = ("trained",)
         output_metric_dict = {
-            TensorKey(
-                self.loss_name, origin, round_num, True, ("metric",)
-            ): np.array(np.mean(losses))
+            TensorKey(self.loss_name, origin, round_num, True, ("metric",)): np.array(
+                np.mean(losses)
+            )
         }
 
         # output model tensors (Doesn't include TensorKey)
@@ -169,9 +159,7 @@ class TensorFlowTaskRunner(TaskRunner):
         # look for the updated model parameters.
         # This ensures they will be resolved locally
         next_local_tensorkey_model_dict = {
-            TensorKey(
-                tensor_name, origin, round_num + 1, False, ("model",)
-            ): nparray
+            TensorKey(tensor_name, origin, round_num + 1, False, ("model",)): nparray
             for tensor_name, nparray in local_model_dict.items()
         }
 
@@ -213,15 +201,11 @@ class TensorFlowTaskRunner(TaskRunner):
         feed_dict = {self.X: X, self.y: y}
 
         # run the train step and return the loss
-        _, loss = self.sess.run(
-            [self.train_step, self.loss], feed_dict=feed_dict
-        )
+        _, loss = self.sess.run([self.train_step, self.loss], feed_dict=feed_dict)
 
         return loss
 
-    def validate(
-        self, col_name, round_num, input_tensor_dict, use_tqdm=False, **kwargs
-    ):
+    def validate(self, col_name, round_num, input_tensor_dict, use_tqdm=False, **kwargs):
         """
         Run validation.
 
@@ -256,9 +240,7 @@ class TensorFlowTaskRunner(TaskRunner):
             suffix += "_agg"
         tags = ("metric", suffix)
         output_tensor_dict = {
-            TensorKey(
-                self.validation_metric_name, origin, round_num, True, tags
-            ): np.array(score)
+            TensorKey(self.validation_metric_name, origin, round_num, True, tags): np.array(score)
         }
 
         # return empty dict for local metrics
@@ -277,9 +259,7 @@ class TensorFlowTaskRunner(TaskRunner):
         """
         feed_dict = {self.X: X, self.y: y}
 
-        return self.sess.run(
-            [self.output, self.validation_metric], feed_dict=feed_dict
-        )
+        return self.sess.run([self.output, self.validation_metric], feed_dict=feed_dict)
 
     def get_tensor_dict(self, with_opt_vars=True):
         """Get the dictionary weights.
@@ -300,10 +280,7 @@ class TensorFlowTaskRunner(TaskRunner):
             variables = self.tvars
 
         # FIXME: do this in one call?
-        return {
-            var.name: val
-            for var, val in zip(variables, self.sess.run(variables))
-        }
+        return {var.name: val for var, val in zip(variables, self.sess.run(variables))}
 
     def set_tensor_dict(self, tensor_dict, with_opt_vars):
         """Set the tensor dictionary.
@@ -405,12 +382,8 @@ class TensorFlowTaskRunner(TaskRunner):
             local_model_dict_val = local_model_dict
         else:
             output_model_dict = self.get_tensor_dict(with_opt_vars=False)
-            global_model_dict_val, local_model_dict_val = (
-                split_tensor_dict_for_holdouts(
-                    self.logger,
-                    output_model_dict,
-                    **self.tensor_dict_split_fn_kwargs
-                )
+            global_model_dict_val, local_model_dict_val = split_tensor_dict_for_holdouts(
+                self.logger, output_model_dict, **self.tensor_dict_split_fn_kwargs
             )
 
         self.required_tensorkeys_for_function["train_batches"] = [
@@ -447,9 +420,7 @@ class TensorFlowTaskRunner(TaskRunner):
 # to avoid inflating the graph, caller should keep these and pass them back
 # What if we want to set a different group of vars in the middle?
 # It is good if it is the subset of the original variables.
-def tf_set_tensor_dict(
-    tensor_dict, session, variables, assign_ops=None, placeholders=None
-):
+def tf_set_tensor_dict(tensor_dict, session, variables, assign_ops=None, placeholders=None):
     """Tensorflow set tensor dictionary.
 
     Args:
@@ -464,13 +435,9 @@ def tf_set_tensor_dict(
 
     """
     if placeholders is None:
-        placeholders = {
-            v.name: tf.placeholder(v.dtype, shape=v.shape) for v in variables
-        }
+        placeholders = {v.name: tf.placeholder(v.dtype, shape=v.shape) for v in variables}
     if assign_ops is None:
-        assign_ops = {
-            v.name: tf.assign(v, placeholders[v.name]) for v in variables
-        }
+        assign_ops = {v.name: tf.assign(v, placeholders[v.name]) for v in variables}
 
     for k, v in tensor_dict.items():
         session.run(assign_ops[k], feed_dict={placeholders[k]: v})

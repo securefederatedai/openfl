@@ -68,18 +68,14 @@ def run(ca_path):
         or not os.path.exists(ca_json)
         or not os.path.exists(step_ca_path)
     ):
-        logger.error(
-            "CA is not installed or corrupted, please install it first"
-        )
+        logger.error("CA is not installed or corrupted, please install it first")
         sys.exit(1)
     run_ca(step_ca_path, password_file, ca_json)
 
 
 @pki.command(name="install")
 @option("-p", "--ca-path", required=True, help="The ca path", type=ClickPath())
-@password_option(
-    prompt="The password will encrypt some ca files \nEnter the password"
-)
+@password_option(prompt="The password will encrypt some ca files \nEnter the password")
 @option("--ca-url", required=False, default=CA_URL)
 def install_(ca_path, password, ca_url):
     """Create a ca workspace."""

@@ -77,12 +77,8 @@ class RedirectStdStreamContext:
         """
         self.__old_stdout = sys.stdout
         self.__old_stderr = sys.stderr
-        sys.stdout = RedirectStdStream(
-            self.stdstreambuffer._stdoutbuff, sys.stdout
-        )
-        sys.stderr = RedirectStdStream(
-            self.stdstreambuffer._stderrbuff, sys.stderr
-        )
+        sys.stdout = RedirectStdStream(self.stdstreambuffer._stdoutbuff, sys.stdout)
+        sys.stderr = RedirectStdStream(self.stdstreambuffer._stderrbuff, sys.stderr)
 
         return self.stdstreambuffer
 

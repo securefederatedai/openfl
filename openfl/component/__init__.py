@@ -14,12 +14,8 @@
 
 from openfl.component.aggregator.aggregator import Aggregator
 from openfl.component.assigner.assigner import Assigner
-from openfl.component.assigner.random_grouped_assigner import (
-    RandomGroupedAssigner,
-)
-from openfl.component.assigner.static_grouped_assigner import (
-    StaticGroupedAssigner,
-)
+from openfl.component.assigner.random_grouped_assigner import RandomGroupedAssigner
+from openfl.component.assigner.static_grouped_assigner import StaticGroupedAssigner
 from openfl.component.collaborator.collaborator import Collaborator
 from openfl.component.straggler_handling_functions.cutoff_time_based_straggler_handling import (
     CutoffTimeBasedStragglerHandling,

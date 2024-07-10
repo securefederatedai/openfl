@@ -45,8 +45,6 @@ class Optimizer(abc.ABC):
         framework_adapter_plugin: FrameworkAdapterPluginInterface = getattr(
             framework_adapter, class_name, None
         )
-        self.params: Dict[str, ndarray] = (
-            framework_adapter_plugin.get_tensor_dict(
-                model_interface.provide_model()
-            )
+        self.params: Dict[str, ndarray] = framework_adapter_plugin.get_tensor_dict(
+            model_interface.provide_model()
         )

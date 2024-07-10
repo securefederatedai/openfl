@@ -28,10 +28,7 @@ from tensorboardX import SummaryWriter
 
 from openfl.component.assigner.tasks import Task, TrainTask, ValidateTask
 from openfl.federated import Plan
-from openfl.interface.aggregation_functions import (
-    AggregationFunction,
-    WeightedAverage,
-)
+from openfl.interface.aggregation_functions import AggregationFunction, WeightedAverage
 from openfl.interface.cli import setup_logging
 from openfl.interface.cli_helper import WORKSPACE
 from openfl.native import update_plan
@@ -66,9 +63,7 @@ class FLExperiment:
         Information about the data on collaborators is contained on the federation level.
         """
         self.federation = federation
-        self.experiment_name = experiment_name or "test-" + time.strftime(
-            "%Y%m%d-%H%M%S"
-        )
+        self.experiment_name = experiment_name or "test-" + time.strftime("%Y%m%d-%H%M%S")
         self.summary_writer = None
         self.serializer_plugin = serializer_plugin
 
@@ -87,10 +82,7 @@ class FLExperiment:
         os.makedirs("./plan", exist_ok=True)
         os.makedirs("./save", exist_ok=True)
         # Load the default plan
-        base_plan_path = (
-            WORKSPACE
-            / "workspace/plan/plans/default/base_plan_interactive_api.yaml"
-        )
+        base_plan_path = WORKSPACE / "workspace/plan/plans/default/base_plan_interactive_api.yaml"
         plan = Plan.parse(base_plan_path, resolve=False)
         # Change plan name to default one
         plan.name = "plan.yaml"
@@ -100,13 +92,8 @@ class FLExperiment:
     def _assert_experiment_submitted(self):
         """Assure experiment is sent to director and accepted."""
         if not self.experiment_submitted:
-            self.logger.error(
-                "The experiment was not submitted to a Director service."
-            )
-            self.logger.error(
-                "Report the experiment first: "
-                "use the Experiment.start() method."
-            )
+            self.logger.error("The experiment was not submitted to a Director service.")
+            self.logger.error("Report the experiment first: " "use the Experiment.start() method.")
             return False
         return True
 
@@ -127,9 +114,7 @@ class FLExperiment:
             experiment_name=self.experiment_name
         )
 
-        return self._rebuild_model(
-            tensor_dict, upcoming_model_status=ModelStatus.BEST
-        )
+        return self._rebuild_model(tensor_dict, upcoming_model_status=ModelStatus.BEST)
 
     def get_last_model(self):
         """Retrieve the aggregated model after the last round."""
@@ -139,13 +124,9 @@ class FLExperiment:
             experiment_name=self.experiment_name
         )
 
-        return self._rebuild_model(
-            tensor_dict, upcoming_model_status=ModelStatus.LAST
-        )
+        return self._rebuild_model(tensor_dict, upcoming_model_status=ModelStatus.LAST)
 
-    def _rebuild_model(
-        self, tensor_dict, upcoming_model_status=ModelStatus.BEST
-    ):
+    def _rebuild_model(self, tensor_dict, upcoming_model_status=ModelStatus.BEST):
         """Use tensor dict to update model weights."""
         if len(tensor_dict) == 0:
             warning_msg = (
@@ -155,10 +136,7 @@ class FLExperiment:
                 "\t2. Experiment data removed from director"
             )
 
-            if (
-                upcoming_model_status == ModelStatus.BEST
-                and not self.is_validate_task_exist
-            ):
+            if upcoming_model_status == ModelStatus.BEST and not self.is_validate_task_exist:
                 warning_msg += "\n\t3. No validation tasks are provided"
 
             warning_msg += f"\nReturn {self.current_model_status} model"
@@ -166,9 +144,7 @@ class FLExperiment:
             self.logger.warning(warning_msg)
 
         else:
-            self.task_runner_stub.rebuild_model(
-                tensor_dict, validation=True, device="cpu"
-            )
+            self.task_runner_stub.rebuild_model(tensor_dict, validation=True, device="cpu")
             self.current_model_status = upcoming_model_status
 
         return deepcopy(self.task_runner_stub.model)
@@ -177,9 +153,7 @@ class FLExperiment:
         """Stream metrics."""
         if not self._assert_experiment_submitted():
             return
-        for metric_message_dict in self.federation.dir_client.stream_metrics(
-            self.experiment_name
-        ):
+        for metric_message_dict in self.federation.dir_client.stream_metrics(self.experiment_name):
             self.logger.metric(
                 f'Round {metric_message_dict["round"]}, '
                 f'collaborator {metric_message_dict["metric_origin"]} '
@@ -193,9 +167,7 @@ class FLExperiment:
     def write_tensorboard_metric(self, metric: dict) -> None:
         """Write metric callback."""
         if not self.summary_writer:
-            self.summary_writer = SummaryWriter(
-                f"./logs/{self.experiment_name}", flush_secs=5
-            )
+            self.summary_writer = SummaryWriter(f"./logs/{self.experiment_name}", flush_secs=5)
 
         self.summary_writer.add_scalar(
             f'{metric["metric_origin"]}/{metric["task_name"]}/{metric["metric_name"]}',
@@ -208,9 +180,7 @@ class FLExperiment:
         if not self._assert_experiment_submitted():
             return
         log_message = "Removing experiment data "
-        if self.federation.dir_client.remove_experiment_data(
-            name=self.experiment_name
-        ):
+        if self.federation.dir_client.remove_experiment_data(name=self.experiment_name):
             log_message += "succeed."
             self.experiment_submitted = False
         else:
@@ -228,19 +198,13 @@ class FLExperiment:
     ):
         """Prepare an archive from a user workspace."""
         # Save serialized python objects to disc
-        self._serialize_interface_objects(
-            model_provider, task_keeper, data_loader, task_assigner
-        )
+        self._serialize_interface_objects(model_provider, task_keeper, data_loader, task_assigner)
         # Save the prepared plan
-        Plan.dump(
-            Path(f"./plan/{self.plan.name}"), self.plan.config, freeze=False
-        )
+        Plan.dump(Path(f"./plan/{self.plan.name}"), self.plan.config, freeze=False)
 
         # PACK the WORKSPACE!
         # Prepare requirements file to restore python env
-        dump_requirements_file(
-            keep_original_prefixes=True, prefixes=pip_install_options
-        )
+        dump_requirements_file(keep_original_prefixes=True, prefixes=pip_install_options)
 
         # Compress te workspace to restore it on collaborator
         self.arch_path = self._pack_the_workspace()
@@ -285,9 +249,7 @@ class FLExperiment:
             example: ('-f some.website', '--no-index')
         """
         if not task_assigner:
-            task_assigner = self.define_task_assigner(
-                task_keeper, rounds_to_train
-            )
+            task_assigner = self.define_task_assigner(task_keeper, rounds_to_train)
 
         self._prepare_plan(
             model_provider,
@@ -327,9 +289,7 @@ class FLExperiment:
             self.logger.info("Experiment was submitted to the director!")
             self.experiment_submitted = True
         else:
-            self.logger.info(
-                "Experiment could not be submitted to the director."
-            )
+            self.logger.info("Experiment could not be submitted to the director.")
 
     def define_task_assigner(self, task_keeper, rounds_to_train):
         """Define task assigner by registered tasks."""
@@ -379,9 +339,7 @@ class FLExperiment:
 
     def restore_experiment_state(self, model_provider):
         """Restore accepted experiment object."""
-        self.task_runner_stub = self.plan.get_core_task_runner(
-            model_provider=model_provider
-        )
+        self.task_runner_stub = self.plan.get_core_task_runner(model_provider=model_provider)
         self.current_model_status = ModelStatus.RESTORED
         self.experiment_submitted = True
 
@@ -411,9 +369,7 @@ class FLExperiment:
 
         copytree("./", tmp_dir + "/workspace", ignore=ignore)
 
-        arch_path = make_archive(
-            archive_name, archive_type, tmp_dir + "/workspace"
-        )
+        arch_path = make_archive(archive_name, archive_type, tmp_dir + "/workspace")
 
         rmtree(tmp_dir)
 
@@ -426,9 +382,7 @@ class FLExperiment:
 
     def _get_initial_tensor_dict(self, model_provider):
         """Extract initial weights from the model."""
-        self.task_runner_stub = self.plan.get_core_task_runner(
-            model_provider=model_provider
-        )
+        self.task_runner_stub = self.plan.get_core_task_runner(model_provider=model_provider)
         self.current_model_status = ModelStatus.INITIAL
         tensor_dict, _ = split_tensor_dict_for_holdouts(
             self.logger,
@@ -467,24 +421,16 @@ class FLExperiment:
         # Network part of the plan
         # We keep in mind that an aggregator FQND will be the same as the directors FQDN
         # We just choose a port randomly from plan hash
-        director_fqdn = self.federation.director_node_fqdn.split(":")[
-            0
-        ]  # We drop the port
+        director_fqdn = self.federation.director_node_fqdn.split(":")[0]  # We drop the port
         self.plan.config["network"]["settings"]["agg_addr"] = director_fqdn
         self.plan.config["network"]["settings"]["tls"] = self.federation.tls
 
         # Aggregator part of the plan
-        self.plan.config["aggregator"]["settings"][
-            "rounds_to_train"
-        ] = rounds_to_train
+        self.plan.config["aggregator"]["settings"]["rounds_to_train"] = rounds_to_train
 
         # Collaborator part
-        self.plan.config["collaborator"]["settings"][
-            "delta_updates"
-        ] = delta_updates
-        self.plan.config["collaborator"]["settings"][
-            "opt_treatment"
-        ] = opt_treatment
+        self.plan.config["collaborator"]["settings"]["delta_updates"] = delta_updates
+        self.plan.config["collaborator"]["settings"]["opt_treatment"] = opt_treatment
         self.plan.config["collaborator"]["settings"][
             "device_assignment_policy"
         ] = device_assignment_policy
@@ -502,9 +448,7 @@ class FLExperiment:
 
         # API layer
         self.plan.config["api_layer"] = {
-            "required_plugin_components": {
-                "serializer_plugin": self.serializer_plugin
-            },
+            "required_plugin_components": {"serializer_plugin": self.serializer_plugin},
             "settings": {
                 "model_interface_file": model_interface_file,
                 "tasks_interface_file": tasks_interface_file,
@@ -515,18 +459,12 @@ class FLExperiment:
         }
 
         if override_config:
-            self.plan = update_plan(
-                override_config, plan=self.plan, resolve=False
-            )
+            self.plan = update_plan(override_config, plan=self.plan, resolve=False)
 
-    def _serialize_interface_objects(
-        self, model_provider, task_keeper, data_loader, task_assigner
-    ):
+    def _serialize_interface_objects(self, model_provider, task_keeper, data_loader, task_assigner):
         """Save python objects to be restored on collaborators."""
         serializer = self.plan.build(
-            self.plan.config["api_layer"]["required_plugin_components"][
-                "serializer_plugin"
-            ],
+            self.plan.config["api_layer"]["required_plugin_components"]["serializer_plugin"],
             {},
         )
         framework_adapter = Plan.build(model_provider.framework_plugin, {})
@@ -542,9 +480,7 @@ class FLExperiment:
         }
 
         for filename, object_ in obj_dict.items():
-            serializer.serialize(
-                object_, self.plan.config["api_layer"]["settings"][filename]
-            )
+            serializer.serialize(object_, self.plan.config["api_layer"]["settings"][filename])
 
 
 class TaskKeeper:
@@ -573,9 +509,7 @@ class TaskKeeper:
         # Mapping 'task_alias' -> Task
         self._tasks: Dict[str, Task] = {}
 
-    def register_fl_task(
-        self, model, data_loader, device, optimizer=None, round_num=None
-    ):
+    def register_fl_task(self, model, data_loader, device, optimizer=None, round_num=None):
         """
         Register FL tasks.
 
@@ -662,9 +596,7 @@ class TaskKeeper:
 
         return decorator_with_args
 
-    def set_aggregation_function(
-        self, aggregation_function: AggregationFunction
-    ):
+    def set_aggregation_function(self, aggregation_function: AggregationFunction):
         """Set aggregation function for the task.
 
         To be serialized and sent to aggregator node.
@@ -688,12 +620,9 @@ class TaskKeeper:
         def decorator_with_args(training_method):
             if not isinstance(aggregation_function, AggregationFunction):
                 raise Exception(
-                    "aggregation_function must implement "
-                    "AggregationFunction interface."
+                    "aggregation_function must implement " "AggregationFunction interface."
                 )
-            self.aggregation_functions[training_method.__name__] = (
-                aggregation_function
-            )
+            self.aggregation_functions[training_method.__name__] = aggregation_function
             return training_method
 
         return decorator_with_args

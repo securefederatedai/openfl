@@ -27,10 +27,7 @@ from subprocess import check_call  # nosec
 
 from click import confirm
 
-from openfl.utilities.ca.downloader import (
-    download_step_bin,
-    download_step_ca_bin,
-)
+from openfl.utilities.ca.downloader import download_step_bin, download_step_ca_bin
 
 logger = getLogger(__name__)
 
@@ -157,12 +154,7 @@ def install(ca_path, ca_url, password):
     os.environ["STEPPATH"] = str(step_config_dir)
     step_path, step_ca_path = get_ca_bin_paths(ca_path)
 
-    if not (
-        step_path
-        and step_ca_path
-        and step_path.exists()
-        and step_ca_path.exists()
-    ):
+    if not (step_path and step_ca_path and step_path.exists() and step_ca_path.exists()):
         download_step_bin(prefix=ca_path, confirmation=True)
         download_step_ca_bin(prefix=ca_path, confirmation=False)
     step_config_dir = ca_path / CA_STEP_CONFIG_DIR
@@ -177,9 +169,7 @@ def run_ca(step_ca, pass_file, ca_json):
     """Run CA server."""
     if _check_kill_process("step-ca", confirmation=True):
         logger.info("Up CA server")
-        check_call(
-            f"{step_ca} --password-file {pass_file} {ca_json}", shell=True
-        )
+        check_call(f"{step_ca} --password-file {pass_file} {ca_json}", shell=True)
 
 
 def _check_kill_process(pstring, confirmation=False):
@@ -197,9 +187,7 @@ def _check_kill_process(pstring, confirmation=False):
         pids.append(fields[0])
 
     if len(pids):
-        if confirmation and not confirm(
-            "CA server is already running. Stop him?", default=True
-        ):
+        if confirmation and not confirm("CA server is already running. Stop him?", default=True):
             return False
         for pid in pids:
             os.kill(int(pid), signal.SIGKILL)
@@ -219,12 +207,7 @@ def _create_ca(ca_path: Path, ca_url: str, password: str):
         f.write(password)
     os.chmod(f"{pki_dir}/pass_file", 0o600)
     step_path, step_ca_path = get_ca_bin_paths(ca_path)
-    if not (
-        step_path
-        and step_ca_path
-        and step_path.exists()
-        and step_ca_path.exists()
-    ):
+    if not (step_path and step_ca_path and step_path.exists() and step_ca_path.exists()):
         logger.error("Could not find step-ca binaries in the path specified")
         sys.exit(1)
 

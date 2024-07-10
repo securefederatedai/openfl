@@ -17,9 +17,7 @@
 import numpy as np
 
 from openfl.interface.aggregation_functions.core import AggregationFunction
-from openfl.interface.aggregation_functions.weighted_average import (
-    weighted_average,
-)
+from openfl.interface.aggregation_functions.weighted_average import weighted_average
 
 
 def _geometric_median_objective(median, tensors, weights):
@@ -37,9 +35,7 @@ def geometric_median(tensors, weights, maxiter=4, eps=1e-5, ftol=1e-6):
 
     for _ in range(maxiter):
         prev_obj_val = obj_val
-        weights = np.asarray(
-            [w / max(eps, _l2dist(median, x)) for w, x in zip(weights, tensors)]
-        )
+        weights = np.asarray([w / max(eps, _l2dist(median, x)) for w, x in zip(weights, tensors)])
         weights = weights / weights.sum()
         median = weighted_average(tensors, weights)
         num_oracle_calls += 1

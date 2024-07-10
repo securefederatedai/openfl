@@ -49,23 +49,17 @@ class NumPyAdagrad(Optimizer):
         super().__init__()
 
         if model_interface is None and params is None:
-            raise ValueError(
-                "Should provide one of the params or model_interface"
-            )
+            raise ValueError("Should provide one of the params or model_interface")
 
         if learning_rate < 0:
-            raise ValueError(
-                f"Invalid learning rate: {learning_rate}. Learning rate must be >= 0."
-            )
+            raise ValueError(f"Invalid learning rate: {learning_rate}. Learning rate must be >= 0.")
         if initial_accumulator_value < 0:
             raise ValueError(
                 f"Invalid initial_accumulator_value value: {initial_accumulator_value}."
                 "Initial accumulator value must be >= 0."
             )
         if epsilon <= 0:
-            raise ValueError(
-                f"Invalid epsilon value: {epsilon}. Epsilon avalue must be > 0."
-            )
+            raise ValueError(f"Invalid epsilon value: {epsilon}. Epsilon avalue must be > 0.")
 
         self.params = params
 
@@ -85,9 +79,7 @@ class NumPyAdagrad(Optimizer):
     def _update_param(self, grad_name: str, grad: np.ndarray) -> None:
         """Update papams by given gradients."""
         self.params[grad_name] -= (
-            self.learning_rate
-            * grad
-            / (np.sqrt(self.grads_squared[grad_name]) + self.epsilon)
+            self.learning_rate * grad / (np.sqrt(self.grads_squared[grad_name]) + self.epsilon)
         )
 
     def step(self, gradients: Dict[str, np.ndarray]) -> None:
@@ -101,12 +93,8 @@ class NumPyAdagrad(Optimizer):
         """
         for grad_name in gradients:
             if grad_name not in self.grads_squared:
-                raise KeyError(
-                    f"Key {grad_name} doesn't exist in optimized parameters"
-                )
+                raise KeyError(f"Key {grad_name} doesn't exist in optimized parameters")
 
             grad = gradients[grad_name]
-            self.grads_squared[grad_name] = (
-                self.grads_squared[grad_name] + grad**2
-            )
+            self.grads_squared[grad_name] = self.grads_squared[grad_name] + grad**2
             self._update_param(grad_name, grad)

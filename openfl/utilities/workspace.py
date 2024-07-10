@@ -82,9 +82,7 @@ class ExperimentWorkspace:
             shutil.rmtree(self.experiment_work_dir, ignore_errors=True)
         os.makedirs(self.experiment_work_dir)
 
-        shutil.unpack_archive(
-            self.data_file_path, self.experiment_work_dir, format="zip"
-        )
+        shutil.unpack_archive(self.data_file_path, self.experiment_work_dir, format="zip")
 
         if self.install_requirements:
             self._install_requirements()
@@ -106,9 +104,7 @@ class ExperimentWorkspace:
                 "Exiting from the workspace context manager"
                 f" for {self.experiment_name} experiment"
             )
-            logger.debug(
-                "Archive still exists: %s", self.data_file_path.exists()
-            )
+            logger.debug("Archive still exists: %s", self.data_file_path.exists())
             self.data_file_path.unlink(missing_ok=False)
 
 

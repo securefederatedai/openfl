@@ -27,12 +27,7 @@ class Assigner:
     """Custom assigner class."""
 
     def __init__(
-        self,
-        *,
-        assigner_function,
-        aggregation_functions_by_task,
-        authorized_cols,
-        rounds_to_train
+        self, *, assigner_function, aggregation_functions_by_task, authorized_cols, rounds_to_train
     ):
         """Initialize."""
         self.agg_functions_by_task = aggregation_functions_by_task
@@ -55,19 +50,13 @@ class Assigner:
                 number_of_callaborators=len(self.authorized_cols),
             )
             for collaborator_name, tasks in tasks_by_collaborator.items():
-                self.collaborator_tasks[round_number][collaborator_name].extend(
-                    tasks
-                )
+                self.collaborator_tasks[round_number][collaborator_name].extend(tasks)
                 for task in tasks:
                     self.all_tasks_for_round[round_number][task.name] = task
-                    self.collaborators_for_task[round_number][task.name].append(
-                        collaborator_name
-                    )
+                    self.collaborators_for_task[round_number][task.name].append(collaborator_name)
                     if self.agg_functions_by_task:
-                        self.agg_functions_by_task_name[task.name] = (
-                            self.agg_functions_by_task.get(
-                                task.function_name, WeightedAverage()
-                            )
+                        self.agg_functions_by_task_name[task.name] = self.agg_functions_by_task.get(
+                            task.function_name, WeightedAverage()
                         )
 
     def get_tasks_for_collaborator(self, collaborator_name, round_number):
@@ -85,14 +74,9 @@ class Assigner:
         Currently all tasks are performed on each round,
         But there may be a reason to change this.
         """
-        return [
-            task.name
-            for task in self.all_tasks_for_round[round_number].values()
-        ]
+        return [task.name for task in self.all_tasks_for_round[round_number].values()]
 
     def get_aggregation_type_for_task(self, task_name):
         """Extract aggregation type from self.tasks."""
-        agg_fn = self.agg_functions_by_task_name.get(
-            task_name, WeightedAverage()
-        )
+        agg_fn = self.agg_functions_by_task_name.get(task_name, WeightedAverage())
         return agg_fn

@@ -17,9 +17,7 @@ import queue
 import time
 from logging import getLogger
 
-from openfl.component.straggler_handling_functions import (
-    CutoffTimeBasedStragglerHandling,
-)
+from openfl.component.straggler_handling_functions import CutoffTimeBasedStragglerHandling
 from openfl.databases import TensorDB
 from openfl.interface.aggregation_functions import WeightedAverage
 from openfl.pipelines import NoCompressionPipeline, TensorCodec
@@ -107,9 +105,7 @@ class Aggregator:
         self.best_model_score = None
         self.metric_queue = queue.Queue()
 
-        self.compression_pipeline = (
-            compression_pipeline or NoCompressionPipeline()
-        )
+        self.compression_pipeline = compression_pipeline or NoCompressionPipeline()
         self.tensor_codec = TensorCodec(self.compression_pipeline)
 
         self.init_state_path = init_state_path
@@ -127,17 +123,13 @@ class Aggregator:
                 tensor_pipe=self.compression_pipeline,
             )
         else:
-            self.model: base_pb2.ModelProto = utils.load_proto(
-                self.init_state_path
-            )
+            self.model: base_pb2.ModelProto = utils.load_proto(self.init_state_path)
             self._load_initial_tensors()  # keys are TensorKeys
 
         self.collaborator_tensor_results = {}  # {TensorKey: nparray}}
 
         # these enable getting all tensors for a task
-        self.collaborator_tasks_results = (
-            {}
-        )  # {TaskResultKey: list of TensorKeys}
+        self.collaborator_tasks_results = {}  # {TaskResultKey: list of TensorKeys}
 
         self.collaborator_task_weight = {}  # {TaskResultKey: data_size}
 
@@ -226,9 +218,7 @@ class Aggregator:
         )
         utils.dump_proto(self.model, file_path)
 
-    def valid_collaborator_cn_and_id(
-        self, cert_common_name, collaborator_common_name
-    ):
+    def valid_collaborator_cn_and_id(self, cert_common_name, collaborator_common_name):
         """
         Determine if the collaborator certificate and ID are valid for this federation.
 
@@ -319,9 +309,7 @@ class Aggregator:
 
         time_to_quit = False
         # otherwise, get the tasks from our task assigner
-        tasks = self.assigner.get_tasks_for_collaborator(
-            collaborator_name, self.round_number
-        )
+        tasks = self.assigner.get_tasks_for_collaborator(collaborator_name, self.round_number)
 
         # if no tasks, tell the collaborator to sleep
         if len(tasks) == 0:
@@ -336,9 +324,7 @@ class Aggregator:
             tasks = [
                 t
                 for t in tasks
-                if not self._collaborator_task_completed(
-                    collaborator_name, t, self.round_number
-                )
+                if not self._collaborator_task_completed(collaborator_name, t, self.round_number)
             ]
             if collaborator_name in self.stragglers:
                 tasks = []
@@ -417,15 +403,11 @@ class Aggregator:
         if "lossy_compressed" in tags:
             tags = change_tags(tags, remove_field="lossy_compressed")
 
-        tensor_key = TensorKey(
-            tensor_name, self.uuid, round_number, report, tags
-        )
+        tensor_key = TensorKey(tensor_name, self.uuid, round_number, report, tags)
         tensor_name, origin, round_number, report, tags = tensor_key
 
         if "aggregated" in tags and "delta" in tags and round_number != 0:
-            agg_tensor_key = TensorKey(
-                tensor_name, origin, round_number, report, ("aggregated",)
-            )
+            agg_tensor_key = TensorKey(tensor_name, origin, round_number, report, ("aggregated",))
         else:
             agg_tensor_key = tensor_key
 
@@ -440,9 +422,7 @@ class Aggregator:
                 break
 
         if nparray is None:
-            raise ValueError(
-                f"Aggregator does not have an aggregated tensor for {tensor_key}"
-            )
+            raise ValueError(f"Aggregator does not have an aggregated tensor for {tensor_key}")
 
         # quite a bit happens in here, including compression, delta handling,
         # etc...
@@ -456,9 +436,7 @@ class Aggregator:
 
         return named_tensor
 
-    def _nparray_to_named_tensor(
-        self, tensor_key, nparray, send_model_deltas, compress_lossless
-    ):
+    def _nparray_to_named_tensor(self, tensor_key, nparray, send_model_deltas, compress_lossless):
         """
         Construct the NamedTensor Protobuf.
 
@@ -469,9 +447,7 @@ class Aggregator:
         if "aggregated" in tags and send_model_deltas:
             # Should get the pretrained model to create the delta. If training
             # has happened, Model should already be stored in the TensorDB
-            model_tk = TensorKey(
-                tensor_name, origin, round_number - 1, report, ("model",)
-            )
+            model_tk = TensorKey(tensor_name, origin, round_number - 1, report, ("model",))
 
             model_nparray = self.tensor_db.get_tensor_from_cache(model_tk)
 
@@ -482,10 +458,8 @@ class Aggregator:
             delta_tensor_key, delta_nparray = self.tensor_codec.generate_delta(
                 tensor_key, nparray, model_nparray
             )
-            delta_comp_tensor_key, delta_comp_nparray, metadata = (
-                self.tensor_codec.compress(
-                    delta_tensor_key, delta_nparray, lossless=compress_lossless
-                )
+            delta_comp_tensor_key, delta_comp_nparray, metadata = self.tensor_codec.compress(
+                delta_tensor_key, delta_nparray, lossless=compress_lossless
             )
             named_tensor = utils.construct_named_tensor(
                 delta_comp_tensor_key,
@@ -496,10 +470,8 @@ class Aggregator:
 
         else:
             # Assume every other tensor requires lossless compression
-            compressed_tensor_key, compressed_nparray, metadata = (
-                self.tensor_codec.compress(
-                    tensor_key, nparray, require_lossless=True
-                )
+            compressed_tensor_key, compressed_nparray, metadata = self.tensor_codec.compress(
+                tensor_key, nparray, require_lossless=True
             )
             named_tensor = utils.construct_named_tensor(
                 compressed_tensor_key,
@@ -576,9 +548,7 @@ class Aggregator:
         task_key = TaskResultKey(task_name, collaborator_name, round_number)
 
         # we mustn't have results already
-        if self._collaborator_task_completed(
-            collaborator_name, task_name, round_number
-        ):
+        if self._collaborator_task_completed(collaborator_name, task_name, round_number):
             raise ValueError(
                 f"Aggregator already has task results from collaborator {collaborator_name}"
                 f" for task {task_key}"
@@ -597,9 +567,7 @@ class Aggregator:
         for named_tensor in named_tensors:
             # quite a bit happens in here, including decompression, delta
             # handling, etc...
-            tensor_key, value = self._process_named_tensor(
-                named_tensor, collaborator_name
-            )
+            tensor_key, value = self._process_named_tensor(named_tensor, collaborator_name)
 
             if "metric" in tensor_key.tags:
                 # Caution: This schema must be followed. It is also used in
@@ -690,16 +658,10 @@ class Aggregator:
             )
 
         if "delta" in tags:
-            base_model_tensor_key = TensorKey(
-                tensor_name, origin, round_number, report, ("model",)
-            )
-            base_model_nparray = self.tensor_db.get_tensor_from_cache(
-                base_model_tensor_key
-            )
+            base_model_tensor_key = TensorKey(tensor_name, origin, round_number, report, ("model",))
+            base_model_nparray = self.tensor_db.get_tensor_from_cache(base_model_tensor_key)
             if base_model_nparray is None:
-                raise ValueError(
-                    f"Base model {base_model_tensor_key} not present in TensorDB"
-                )
+                raise ValueError(f"Base model {base_model_tensor_key} not present in TensorDB")
             final_tensor_key, final_nparray = self.tensor_codec.apply_delta(
                 decompressed_tensor_key,
                 decompressed_nparray,
@@ -709,9 +671,7 @@ class Aggregator:
             final_tensor_key = decompressed_tensor_key
             final_nparray = decompressed_nparray
 
-        assert (
-            final_nparray is not None
-        ), f"Could not create tensorkey {final_tensor_key}"
+        assert final_nparray is not None, f"Could not create tensorkey {final_tensor_key}"
         self.tensor_db.cache_tensor({final_tensor_key: final_nparray})
         self.logger.debug("Created TensorKey: %s", final_tensor_key)
 
@@ -733,9 +693,7 @@ class Aggregator:
             # now check for the end of the round
             self._end_of_round_check()
 
-    def _prepare_trained(
-        self, tensor_name, origin, round_number, report, agg_results
-    ):
+    def _prepare_trained(self, tensor_name, origin, round_number, report, agg_results):
         """
         Prepare aggregated tensorkey tags.
 
@@ -754,15 +712,11 @@ class Aggregator:
 
         # First insert the aggregated model layer with the
         # correct tensorkey
-        agg_tag_tk = TensorKey(
-            tensor_name, origin, round_number + 1, report, ("aggregated",)
-        )
+        agg_tag_tk = TensorKey(tensor_name, origin, round_number + 1, report, ("aggregated",))
         self.tensor_db.cache_tensor({agg_tag_tk: agg_results})
 
         # Create delta and save it in TensorDB
-        base_model_tk = TensorKey(
-            tensor_name, origin, round_number, report, ("model",)
-        )
+        base_model_tk = TensorKey(tensor_name, origin, round_number, report, ("model",))
         base_model_nparray = self.tensor_db.get_tensor_from_cache(base_model_tk)
         if base_model_nparray is not None:
             delta_tk, delta_nparray = self.tensor_codec.generate_delta(
@@ -776,8 +730,8 @@ class Aggregator:
             delta_tk, delta_nparray = agg_tag_tk, agg_results
 
         # Compress lossless/lossy
-        compressed_delta_tk, compressed_delta_nparray, metadata = (
-            self.tensor_codec.compress(delta_tk, delta_nparray)
+        compressed_delta_tk, compressed_delta_nparray, metadata = self.tensor_codec.compress(
+            delta_tk, delta_nparray
         )
 
         # TODO extend the TensorDB so that compressed data is
@@ -786,21 +740,15 @@ class Aggregator:
         # of recreating it for every request
 
         # Decompress lossless/lossy
-        decompressed_delta_tk, decompressed_delta_nparray = (
-            self.tensor_codec.decompress(
-                compressed_delta_tk, compressed_delta_nparray, metadata
-            )
+        decompressed_delta_tk, decompressed_delta_nparray = self.tensor_codec.decompress(
+            compressed_delta_tk, compressed_delta_nparray, metadata
         )
 
-        self.tensor_db.cache_tensor(
-            {decompressed_delta_tk: decompressed_delta_nparray}
-        )
+        self.tensor_db.cache_tensor({decompressed_delta_tk: decompressed_delta_nparray})
 
         # Apply delta (unless delta couldn't be created)
         if base_model_nparray is not None:
-            self.logger.debug(
-                "Applying delta for layer %s", decompressed_delta_tk[0]
-            )
+            self.logger.debug("Applying delta for layer %s", decompressed_delta_tk[0])
             new_model_tk, new_model_nparray = self.tensor_codec.apply_delta(
                 decompressed_delta_tk,
                 decompressed_delta_nparray,
@@ -851,22 +799,17 @@ class Aggregator:
         # leave out stragglers for the round
         collaborators_for_task = []
         for c in all_collaborators_for_task:
-            if self._collaborator_task_completed(
-                c, task_name, self.round_number
-            ):
+            if self._collaborator_task_completed(c, task_name, self.round_number):
                 collaborators_for_task.append(c)
 
         # The collaborator data sizes for that task
         collaborator_weights_unnormalized = {
-            c: self.collaborator_task_weight[
-                TaskResultKey(task_name, c, self.round_number)
-            ]
+            c: self.collaborator_task_weight[TaskResultKey(task_name, c, self.round_number)]
             for c in collaborators_for_task
         }
         weight_total = sum(collaborator_weights_unnormalized.values())
         collaborator_weight_dict = {
-            k: v / weight_total
-            for k, v in collaborator_weights_unnormalized.items()
+            k: v / weight_total for k, v in collaborator_weights_unnormalized.items()
         }
 
         # The validation task should have just a couple tensors (i.e.
@@ -875,12 +818,8 @@ class Aggregator:
         # collaborator in our subset, and apply the correct
         # transformations to the tensorkey to resolve the aggregated
         # tensor for that round
-        task_agg_function = self.assigner.get_aggregation_type_for_task(
-            task_name
-        )
-        task_key = TaskResultKey(
-            task_name, collaborators_for_task[0], self.round_number
-        )
+        task_agg_function = self.assigner.get_aggregation_type_for_task(task_name)
+        task_key = TaskResultKey(task_name, collaborators_for_task[0], self.round_number)
 
         for tensor_key in self.collaborator_tasks_results[task_key]:
             tensor_name, origin, round_number, report, tags = tensor_key
@@ -889,12 +828,8 @@ class Aggregator:
             ), f"Tensor {tensor_key} in task {task_name} has not been processed correctly"
             # Strip the collaborator label, and lookup aggregated tensor
             new_tags = change_tags(tags, remove_field=collaborators_for_task[0])
-            agg_tensor_key = TensorKey(
-                tensor_name, origin, round_number, report, new_tags
-            )
-            agg_function = (
-                WeightedAverage() if "metric" in tags else task_agg_function
-            )
+            agg_tensor_key = TensorKey(tensor_name, origin, round_number, report, new_tags)
+            agg_function = WeightedAverage() if "metric" in tags else task_agg_function
             agg_results = self.tensor_db.get_aggregated_tensor(
                 agg_tensor_key,
                 collaborator_weight_dict,
@@ -918,10 +853,7 @@ class Aggregator:
                 # FIXME: Configurable logic for min/max criteria in saving best.
                 if "validate_agg" in tags:
                     # Compare the accuracy of the model, potentially save it
-                    if (
-                        self.best_model_score is None
-                        or self.best_model_score < agg_results
-                    ):
+                    if self.best_model_score is None or self.best_model_score < agg_results:
                         self.logger.metric(
                             f"Round {round_number}: saved the best "
                             f"model with score {agg_results:f}"
@@ -929,9 +861,7 @@ class Aggregator:
                         self.best_model_score = agg_results
                         self._save_model(round_number, self.best_state_path)
             if "trained" in tags:
-                self._prepare_trained(
-                    tensor_name, origin, round_number, report, agg_results
-                )
+                self._prepare_trained(tensor_name, origin, round_number, report, agg_results)
 
     def _end_of_round_check(self):
         """
@@ -947,10 +877,7 @@ class Aggregator:
         Returns:
             None
         """
-        if (
-            not self._is_round_done()
-            or self._end_of_round_check_done[self.round_number]
-        ):
+        if not self._is_round_done() or self._end_of_round_check_done[self.round_number]:
             return
 
         # Compute all validation related metrics
@@ -979,15 +906,11 @@ class Aggregator:
 
     def _is_task_done(self, task_name):
         """Check that task is done."""
-        all_collaborators = self.assigner.get_collaborators_for_task(
-            task_name, self.round_number
-        )
+        all_collaborators = self.assigner.get_collaborators_for_task(task_name, self.round_number)
 
         collaborators_done = []
         for c in all_collaborators:
-            if self._collaborator_task_completed(
-                c, task_name, self.round_number
-            ):
+            if self._collaborator_task_completed(c, task_name, self.round_number):
                 collaborators_done.append(c)
 
         straggler_check = self.straggler_handling_policy.straggler_cutoff_check(
@@ -1005,19 +928,13 @@ class Aggregator:
             self.logger.warning("\tIdentified stragglers: %s", self.stragglers)
 
         # all are done or straggler policy calls for early round end.
-        return straggler_check or len(all_collaborators) == len(
-            collaborators_done
-        )
+        return straggler_check or len(all_collaborators) == len(collaborators_done)
 
     def _is_round_done(self):
         """Check that round is done."""
-        tasks_for_round = self.assigner.get_all_tasks_for_round(
-            self.round_number
-        )
+        tasks_for_round = self.assigner.get_all_tasks_for_round(self.round_number)
 
-        return all(
-            self._is_task_done(task_name) for task_name in tasks_for_round
-        )
+        return all(self._is_task_done(task_name) for task_name in tasks_for_round)
 
     def _log_big_warning(self):
         """Warn user about single collaborator cert mode."""
@@ -1038,9 +955,7 @@ class Aggregator:
 
         # This code does not actually send `quit` tasks to collaborators,
         # it just mimics it by filling arrays.
-        for collaborator_name in filter(
-            lambda c: c != failed_collaborator, self.authorized_cols
-        ):
+        for collaborator_name in filter(lambda c: c != failed_collaborator, self.authorized_cols):
             self.logger.info(
                 "Sending signal to collaborator %s to shutdown...",
                 collaborator_name,

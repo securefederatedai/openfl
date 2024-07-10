@@ -30,9 +30,7 @@ from openfl.utilities.split import split_tensor_dict_for_holdouts
 class PyTorchTaskRunner(nn.Module, TaskRunner):
     """PyTorch Model class for Federated Learning."""
 
-    def __init__(
-        self, device: str = None, loss_fn=None, optimizer=None, **kwargs
-    ):
+    def __init__(self, device: str = None, loss_fn=None, optimizer=None, **kwargs):
         """Initialize.
 
         Args:
@@ -44,9 +42,7 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
         if device:
             self.device = device
         else:
-            self.device = torch.device(
-                "cuda" if torch.cuda.is_available() else "cpu"
-            )
+            self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
         # This is a map of all the required tensors for each of the public
         # functions in PyTorchTaskRunner
@@ -59,9 +55,7 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
         # overwrite attribute to account for one optimizer param (in every
         # child model that does not overwrite get and set tensordict) that is
         # not a numpy array
-        self.tensor_dict_split_fn_kwargs.update(
-            {"holdout_tensor_names": ["__opt_state_needed"]}
-        )
+        self.tensor_dict_split_fn_kwargs.update({"holdout_tensor_names": ["__opt_state_needed"]})
 
     def rebuild_model(self, round_num, input_tensor_dict, validation=False):
         """
@@ -82,9 +76,7 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
         else:
             self.set_tensor_dict(input_tensor_dict, with_opt_vars=False)
 
-    def validate_task(
-        self, col_name, round_num, input_tensor_dict, use_tqdm=False, **kwargs
-    ):
+    def validate_task(self, col_name, round_num, input_tensor_dict, use_tqdm=False, **kwargs):
         """Validate Task.
 
         Run validation of the model on the local data.
@@ -120,9 +112,7 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
         tags = change_tags(tags, add_field=suffix)
         # TODO figure out a better way to pass in metric for this pytorch
         #  validate function
-        output_tensor_dict = {
-            TensorKey(metric.name, origin, round_num, True, tags): metric.value
-        }
+        output_tensor_dict = {TensorKey(metric.name, origin, round_num, True, tags): metric.value}
 
         # Empty list represents metrics that should only be stored locally
         return output_tensor_dict, {}
@@ -165,9 +155,7 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
         origin = col_name
         tags = ("trained",)
         output_metric_dict = {
-            TensorKey(
-                metric.name, origin, round_num, True, ("metric",)
-            ): metric.value
+            TensorKey(metric.name, origin, round_num, True, ("metric",)): metric.value
         }
 
         # output model tensors (Doesn't include TensorKey)
@@ -190,9 +178,7 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
         # for the updated model parameters.
         # This ensures they will be resolved locally
         next_local_tensorkey_model_dict = {
-            TensorKey(
-                tensor_name, origin, round_num + 1, False, ("model",)
-            ): nparray
+            TensorKey(tensor_name, origin, round_num + 1, False, ("model",)): nparray
             for tensor_name, nparray in local_model_dict.items()
         }
 
@@ -347,12 +333,10 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
             local_model_dict_val = local_model_dict
         else:
             output_model_dict = self.get_tensor_dict(with_opt_vars=False)
-            global_model_dict_val, local_model_dict_val = (
-                split_tensor_dict_for_holdouts(
-                    self.logger,
-                    output_model_dict,
-                    **self.tensor_dict_split_fn_kwargs,
-                )
+            global_model_dict_val, local_model_dict_val = split_tensor_dict_for_holdouts(
+                self.logger,
+                output_model_dict,
+                **self.tensor_dict_split_fn_kwargs,
             )
 
         self.required_tensorkeys_for_function["train_task"] = [
@@ -377,21 +361,15 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
         # so there is an extra lookup dimension for kwargs
         self.required_tensorkeys_for_function["validate_task"] = {}
         # TODO This is not stateless. The optimizer will not be
-        self.required_tensorkeys_for_function["validate_task"][
-            "apply=local"
-        ] = [
+        self.required_tensorkeys_for_function["validate_task"]["apply=local"] = [
             TensorKey(tensor_name, "LOCAL", 0, False, ("trained",))
             for tensor_name in {**global_model_dict_val, **local_model_dict_val}
         ]
-        self.required_tensorkeys_for_function["validate_task"][
-            "apply=global"
-        ] = [
+        self.required_tensorkeys_for_function["validate_task"]["apply=global"] = [
             TensorKey(tensor_name, "GLOBAL", 0, False, ("model",))
             for tensor_name in global_model_dict_val
         ]
-        self.required_tensorkeys_for_function["validate_task"][
-            "apply=global"
-        ] += [
+        self.required_tensorkeys_for_function["validate_task"]["apply=global"] += [
             TensorKey(tensor_name, "LOCAL", 0, False, ("model",))
             for tensor_name in local_model_dict_val
         ]
@@ -462,9 +440,7 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
         """
         pass
 
-    def train_(
-        self, train_dataloader: Iterator[Tuple[np.ndarray, np.ndarray]]
-    ) -> Metric:
+    def train_(self, train_dataloader: Iterator[Tuple[np.ndarray, np.ndarray]]) -> Metric:
         """Train single epoch.
 
         Override this function in order to use custom training.
@@ -477,9 +453,7 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
         """
         losses = []
         for data, target in train_dataloader:
-            data, target = torch.tensor(data).to(self.device), torch.tensor(
-                target
-            ).to(self.device)
+            data, target = torch.tensor(data).to(self.device), torch.tensor(target).to(self.device)
             self.optimizer.zero_grad()
             output = self(data)
             loss = self.loss_fn(output=output, target=target)
@@ -489,9 +463,7 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
         loss = np.mean(losses)
         return Metric(name=self.loss_fn.__name__, value=np.array(loss))
 
-    def validate_(
-        self, validation_dataloader: Iterator[Tuple[np.ndarray, np.ndarray]]
-    ) -> Metric:
+    def validate_(self, validation_dataloader: Iterator[Tuple[np.ndarray, np.ndarray]]) -> Metric:
         """
         Perform validation on PyTorch Model
 
@@ -510,9 +482,9 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
             for data, target in validation_dataloader:
                 samples = target.shape[0]
                 total_samples += samples
-                data, target = torch.tensor(data).to(self.device), torch.tensor(
-                    target
-                ).to(self.device, dtype=torch.int64)
+                data, target = torch.tensor(data).to(self.device), torch.tensor(target).to(
+                    self.device, dtype=torch.int64
+                )
                 output = self(data)
                 # get the index of the max log-probability
                 pred = output.argmax(dim=1)
@@ -546,9 +518,7 @@ def _derive_opt_state_dict(opt_state_dict):
     # Using one example state key, we collect keys for the corresponding
     # dictionary value.
     example_state_key = opt_state_dict["param_groups"][0]["params"][0]
-    example_state_subkeys = set(
-        opt_state_dict["state"][example_state_key].keys()
-    )
+    example_state_subkeys = set(opt_state_dict["state"][example_state_key].keys())
 
     # We assume that the state collected for all params in all param groups is
     # the same.
@@ -557,16 +527,12 @@ def _derive_opt_state_dict(opt_state_dict):
     # Using assert statements to break the routine if these assumptions are
     # incorrect.
     for state_key in opt_state_dict["state"].keys():
-        assert example_state_subkeys == set(
-            opt_state_dict["state"][state_key].keys()
-        )
+        assert example_state_subkeys == set(opt_state_dict["state"][state_key].keys())
         for state_subkey in example_state_subkeys:
             assert isinstance(
                 opt_state_dict["state"][example_state_key][state_subkey],
                 torch.Tensor,
-            ) == isinstance(
-                opt_state_dict["state"][state_key][state_subkey], torch.Tensor
-            )
+            ) == isinstance(opt_state_dict["state"][state_key][state_subkey], torch.Tensor)
 
     state_subkeys = list(opt_state_dict["state"][example_state_key].keys())
 
@@ -591,22 +557,14 @@ def _derive_opt_state_dict(opt_state_dict):
         for idx, param_id in enumerate(group["params"]):
             for subkey, tag in state_subkeys_and_tags:
                 if tag == "istensor":
-                    new_v = (
-                        opt_state_dict["state"][param_id][subkey].cpu().numpy()
-                    )
+                    new_v = opt_state_dict["state"][param_id][subkey].cpu().numpy()
                 else:
-                    new_v = np.array(
-                        [opt_state_dict["state"][param_id][subkey]]
-                    )
-                derived_opt_state_dict[
-                    f"__opt_state_{group_idx}_{idx}_{tag}_{subkey}"
-                ] = new_v
+                    new_v = np.array([opt_state_dict["state"][param_id][subkey]])
+                derived_opt_state_dict[f"__opt_state_{group_idx}_{idx}_{tag}_{subkey}"] = new_v
         nb_params_per_group.append(idx + 1)
     # group lengths are also helpful for reconstructing
     # original opt_state_dict structure
-    derived_opt_state_dict["__opt_group_lengths"] = np.array(
-        nb_params_per_group
-    )
+    derived_opt_state_dict["__opt_group_lengths"] = np.array(nb_params_per_group)
 
     return derived_opt_state_dict
 
@@ -639,9 +597,7 @@ def expand_derived_opt_state_dict(derived_opt_state_dict, device):
             state_subkeys_and_tags.append((subkey, this_tag))
 
     opt_state_dict = {"param_groups": [], "state": {}}
-    nb_params_per_group = list(
-        derived_opt_state_dict.pop("__opt_group_lengths").astype(np.int32)
-    )
+    nb_params_per_group = list(derived_opt_state_dict.pop("__opt_group_lengths").astype(np.int32))
 
     # Construct the expanded dict.
     for group_idx, nb_params in enumerate(nb_params_per_group):
@@ -697,9 +653,7 @@ def _set_optimizer_state(optimizer, device, derived_opt_state_dict):
         derived_opt_state_dict:
 
     """
-    temp_state_dict = expand_derived_opt_state_dict(
-        derived_opt_state_dict, device
-    )
+    temp_state_dict = expand_derived_opt_state_dict(derived_opt_state_dict, device)
 
     # FIXME: Figure out whether or not this breaks learning rate
     #  scheduling and the like.
@@ -727,8 +681,7 @@ def to_cpu_numpy(state):
         # When restoring, we currently assume all values are tensors.
         if not torch.is_tensor(v):
             raise ValueError(
-                "We do not currently support non-tensors "
-                "coming from model.state_dict()"
+                "We do not currently support non-tensors " "coming from model.state_dict()"
             )
         # get as a numpy array, making sure is on cpu
         state[k] = v.cpu().numpy()

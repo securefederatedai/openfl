@@ -25,9 +25,7 @@ class FedProxOptimizer(keras.optimizers.Optimizer):
     Paper: https://arxiv.org/pdf/1812.06127.pdf
     """
 
-    def __init__(
-        self, learning_rate=0.01, mu=0.01, name="FedProxOptimizer", **kwargs
-    ):
+    def __init__(self, learning_rate=0.01, mu=0.01, name="FedProxOptimizer", **kwargs):
         """Initialize."""
         super().__init__(name=name, **kwargs)
 
@@ -38,9 +36,7 @@ class FedProxOptimizer(keras.optimizers.Optimizer):
         self._mu_t = None
 
     def _prepare(self, var_list):
-        self._lr_t = tf.convert_to_tensor(
-            self._get_hyper("learning_rate"), name="lr"
-        )
+        self._lr_t = tf.convert_to_tensor(self._get_hyper("learning_rate"), name="lr")
         self._mu_t = tf.convert_to_tensor(self._get_hyper("mu"), name="mu")
 
     def _create_slots(self, var_list):
@@ -64,9 +60,7 @@ class FedProxOptimizer(keras.optimizers.Optimizer):
         lr_t = tf.cast(self._lr_t, var.dtype.base_dtype)
         mu_t = tf.cast(self._mu_t, var.dtype.base_dtype)
         vstar = self.get_slot(var, "vstar")
-        v_diff = vstar.assign(
-            mu_t * (var - vstar), use_locking=self._use_locking
-        )
+        v_diff = vstar.assign(mu_t * (var - vstar), use_locking=self._use_locking)
 
         with tf.control_dependencies([v_diff]):
             scaled_grad = scatter_add(vstar, indices, grad)
@@ -79,9 +73,7 @@ class FedProxOptimizer(keras.optimizers.Optimizer):
         )
 
     def _resource_apply_sparse(self, grad, var):
-        return self._apply_sparse_shared(
-            grad.values, var, grad.indices, standard_ops.scatter_add
-        )
+        return self._apply_sparse_shared(grad.values, var, grad.indices, standard_ops.scatter_add)
 
     def get_config(self):
         """Return the config of the optimizer.

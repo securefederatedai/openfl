@@ -81,17 +81,13 @@ def director(context):
     default=None,
     help="Path to a signed certificate",
 )
-def start(
-    director_config_path, tls, root_certificate, private_key, certificate
-):
+def start(director_config_path, tls, root_certificate, private_key, certificate):
     """Start the director service."""
 
     director_config_path = Path(director_config_path).absolute()
     logger.info("🧿 Starting the Director Service.")
     if is_directory_traversal(director_config_path):
-        click.echo(
-            "The director config file path is out of the openfl workspace scope."
-        )
+        click.echo("The director config file path is out of the openfl workspace scope.")
         sys.exit(1)
     config = merge_configs(
         settings_files=director_config_path,
@@ -102,9 +98,7 @@ def start(
         },
         validators=[
             Validator("settings.listen_host", default="localhost"),
-            Validator(
-                "settings.listen_port", default=50051, gte=1024, lte=65535
-            ),
+            Validator("settings.listen_port", default=50051, gte=1024, lte=65535),
             Validator("settings.sample_shape", default=[]),
             Validator("settings.target_shape", default=[]),
             Validator("settings.install_requirements", default=False),
@@ -174,13 +168,9 @@ def create(director_path):
         sys.exit(1)
     director_path = Path(director_path).absolute()
     if director_path.exists():
-        if not click.confirm(
-            "Director workspace already exists. Recreate?", default=True
-        ):
+        if not click.confirm("Director workspace already exists. Recreate?", default=True):
             sys.exit(1)
         shutil.rmtree(director_path)
     (director_path / "cert").mkdir(parents=True, exist_ok=True)
     (director_path / "logs").mkdir(parents=True, exist_ok=True)
-    shutil.copyfile(
-        WORKSPACE / "default/director.yaml", director_path / "director.yaml"
-    )
+    shutil.copyfile(WORKSPACE / "default/director.yaml", director_path / "director.yaml")

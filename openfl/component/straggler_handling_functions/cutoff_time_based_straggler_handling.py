@@ -24,11 +24,7 @@ from openfl.component.straggler_handling_functions.straggler_handling_function i
 
 class CutoffTimeBasedStragglerHandling(StragglerHandlingFunction):
     def __init__(
-        self,
-        round_start_time=None,
-        straggler_cutoff_time=np.inf,
-        minimum_reporting=1,
-        **kwargs
+        self, round_start_time=None, straggler_cutoff_time=np.inf, minimum_reporting=1, **kwargs
     ):
         self.round_start_time = round_start_time
         self.straggler_cutoff_time = straggler_cutoff_time
@@ -42,11 +38,8 @@ class CutoffTimeBasedStragglerHandling(StragglerHandlingFunction):
     def minimum_collaborators_reported(self, num_collaborators_done):
         return num_collaborators_done >= self.minimum_reporting
 
-    def straggler_cutoff_check(
-        self, num_collaborators_done, all_collaborators=None
-    ):
-        cutoff = (
-            self.straggler_time_expired()
-            and self.minimum_collaborators_reported(num_collaborators_done)
+    def straggler_cutoff_check(self, num_collaborators_done, all_collaborators=None):
+        cutoff = self.straggler_time_expired() and self.minimum_collaborators_reported(
+            num_collaborators_done
         )
         return cutoff

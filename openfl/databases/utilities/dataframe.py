@@ -120,9 +120,7 @@ def _store(
         idx = idx[0]
     else:
         idx = self.shape[0]
-    self.loc[idx] = np.array(
-        [tensor_name, origin, fl_round, metric, tags, nparray], dtype=object
-    )
+    self.loc[idx] = np.array([tensor_name, origin, fl_round, metric, tags, nparray], dtype=object)
 
 
 def _retrieve(

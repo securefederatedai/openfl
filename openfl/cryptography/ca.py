@@ -50,9 +50,7 @@ def generate_root_cert(
             x509.NameAttribute(NameOID.DOMAIN_COMPONENT, "simple"),
             x509.NameAttribute(NameOID.COMMON_NAME, "Simple Root CA"),
             x509.NameAttribute(NameOID.ORGANIZATION_NAME, "Simple Inc"),
-            x509.NameAttribute(
-                NameOID.ORGANIZATIONAL_UNIT_NAME, "Simple Root CA"
-            ),
+            x509.NameAttribute(NameOID.ORGANIZATIONAL_UNIT_NAME, "Simple Root CA"),
         ]
     )
     issuer = subject
@@ -92,9 +90,7 @@ def generate_signing_csr() -> Tuple[RSAPrivateKey, CertificateSigningRequest]:
             x509.NameAttribute(NameOID.DOMAIN_COMPONENT, "simple"),
             x509.NameAttribute(NameOID.COMMON_NAME, "Simple Signing CA"),
             x509.NameAttribute(NameOID.ORGANIZATION_NAME, "Simple Inc"),
-            x509.NameAttribute(
-                NameOID.ORGANIZATIONAL_UNIT_NAME, "Simple Signing CA"
-            ),
+            x509.NameAttribute(NameOID.ORGANIZATIONAL_UNIT_NAME, "Simple Signing CA"),
         ]
     )
     builder = builder.subject_name(subject)
@@ -147,9 +143,7 @@ def sign_certificate(
     )
     try:
         builder = builder.add_extension(
-            csr.extensions.get_extension_for_oid(
-                ExtensionOID.SUBJECT_ALTERNATIVE_NAME
-            ).value,
+            csr.extensions.get_extension_for_oid(ExtensionOID.SUBJECT_ALTERNATIVE_NAME).value,
             critical=False,
         )
     except ExtensionNotFound:

@@ -90,17 +90,13 @@ class Aggregator:
         # Event to inform aggregator that collaborators have sent the results
         self.collaborator_task_results = Event()
         # A queue for each task
-        self.__collaborator_tasks_queue = {
-            collab: queue.Queue() for collab in self.authorized_cols
-        }
+        self.__collaborator_tasks_queue = {collab: queue.Queue() for collab in self.authorized_cols}
 
         self.flow = flow
         self.checkpoint = checkpoint
         self.flow._foreach_methods = []
         self.logger.info("MetaflowInterface creation.")
-        self.flow._metaflow_interface = MetaflowInterface(
-            self.flow.__class__, "single_process"
-        )
+        self.flow._metaflow_interface = MetaflowInterface(self.flow.__class__, "single_process")
         self.flow._run_id = self.flow._metaflow_interface.create_run()
         self.flow.runtime = FederatedRuntime()
         self.flow.runtime.aggregator = "aggregator"
@@ -131,9 +127,7 @@ class Aggregator:
             for name, attr in self.__private_attrs.items():
                 setattr(clone, name, attr)
 
-    def __delete_agg_attrs_from_clone(
-        self, clone: Any, replace_str: str = None
-    ) -> None:
+    def __delete_agg_attrs_from_clone(self, clone: Any, replace_str: str = None) -> None:
         """
         Remove aggregator private attributes from FLSpec clone before
         transition from Aggregator step to collaborator steps.
@@ -143,9 +137,7 @@ class Aggregator:
         if len(self.__private_attrs) > 0:
             for attr_name in self.__private_attrs:
                 if hasattr(clone, attr_name):
-                    self.__private_attrs.update(
-                        {attr_name: getattr(clone, attr_name)}
-                    )
+                    self.__private_attrs.update({attr_name: getattr(clone, attr_name)})
                     if replace_str:
                         setattr(clone, attr_name, replace_str)
                     else:
@@ -221,14 +213,10 @@ class Aggregator:
             self.collaborator_task_results.clear()
             f_name = self.next_step
             if hasattr(self, "instance_snapshot"):
-                self.flow.restore_instance_snapshot(
-                    self.flow, list(self.instance_snapshot)
-                )
+                self.flow.restore_instance_snapshot(self.flow, list(self.instance_snapshot))
                 delattr(self, "instance_snapshot")
 
-    def call_checkpoint(
-        self, ctx: Any, f: Callable, stream_buffer: bytes = None
-    ) -> None:
+    def call_checkpoint(self, ctx: Any, f: Callable, stream_buffer: bytes = None) -> None:
         """
         Perform checkpoint task.
 
@@ -254,9 +242,7 @@ class Aggregator:
                 f = pickle.loads(f)
             if isinstance(stream_buffer, bytes):
                 # Set stream buffer as function parameter
-                setattr(
-                    f.__func__, "_stream_buffer", pickle.loads(stream_buffer)
-                )
+                setattr(f.__func__, "_stream_buffer", pickle.loads(stream_buffer))
 
             checkpoint(ctx, f)
 
@@ -303,9 +289,7 @@ class Aggregator:
             time.sleep(Aggregator._get_sleep_time())
 
         # Get collaborator step, and clone for requesting collaborator
-        next_step, clone = self.__collaborator_tasks_queue[
-            collaborator_name
-        ].get()
+        next_step, clone = self.__collaborator_tasks_queue[collaborator_name].get()
 
         self.tasks_sent_to_collaborators += 1
         self.logger.info(
@@ -343,9 +327,7 @@ class Aggregator:
             if f.__name__ == "end":
                 f()
                 # Take the checkpoint of "end" step
-                self.__delete_agg_attrs_from_clone(
-                    self.flow, "Private attributes: Not Available."
-                )
+                self.__delete_agg_attrs_from_clone(self.flow, "Private attributes: Not Available.")
                 self.call_checkpoint(self.flow, f)
                 self.__set_attributes_to_clone(self.flow)
                 # Check if all rounds of external loop is executed
@@ -381,9 +363,7 @@ class Aggregator:
             # clones are arguments
             f(*selected_clones)
 
-            self.__delete_agg_attrs_from_clone(
-                self.flow, "Private attributes: Not Available."
-            )
+            self.__delete_agg_attrs_from_clone(self.flow, "Private attributes: Not Available.")
             # Take the checkpoint of executed step
             self.call_checkpoint(self.flow, f)
             self.__set_attributes_to_clone(self.flow)
@@ -402,9 +382,7 @@ class Aggregator:
                     temp = self.flow.execute_task_args[3:]
                     self.clones_dict, self.instance_snapshot, self.kwargs = temp
 
-                    self.selected_collaborators = getattr(
-                        self.flow, self.kwargs["foreach"]
-                    )
+                    self.selected_collaborators = getattr(self.flow, self.kwargs["foreach"])
                 else:
                     self.kwargs = self.flow.execute_task_args[3]
 
@@ -444,8 +422,7 @@ class Aggregator:
             )
         else:
             self.logger.info(
-                f"Collaborator {collab_name} sent task results"
-                f" for round {round_number}."
+                f"Collaborator {collab_name} sent task results" f" for round {round_number}."
             )
         # Unpickle the clone (FLSpec object)
         clone = pickle.loads(clone_bytes)
@@ -460,9 +437,7 @@ class Aggregator:
             # Set the event to inform aggregator to resume the flow execution
             self.collaborator_task_results.set()
             # Empty tasks_sent_to_collaborators list for next time.
-            if self.tasks_sent_to_collaborators == len(
-                self.selected_collaborators
-            ):
+            if self.tasks_sent_to_collaborators == len(self.selected_collaborators):
                 self.tasks_sent_to_collaborators = 0
 
     def valid_collaborator_cn_and_id(

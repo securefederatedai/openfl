@@ -12,8 +12,4 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from openfl.transport.grpc import (
-    AggregatorGRPCClient,
-    AggregatorGRPCServer,
-    DirectorGRPCServer,
-)
+from openfl.transport.grpc import AggregatorGRPCClient, AggregatorGRPCServer, DirectorGRPCServer

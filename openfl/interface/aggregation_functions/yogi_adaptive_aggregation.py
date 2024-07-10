@@ -18,13 +18,8 @@ from typing import Dict, Optional, Tuple
 
 import numpy as np
 
-from openfl.interface.aggregation_functions.core import (
-    AdaptiveAggregation,
-    AggregationFunction,
-)
-from openfl.interface.aggregation_functions.weighted_average import (
-    WeightedAverage,
-)
+from openfl.interface.aggregation_functions.core import AdaptiveAggregation, AggregationFunction
+from openfl.interface.aggregation_functions.weighted_average import WeightedAverage
 from openfl.utilities.optimizers.numpy import NumPyYogi
 
 DEFAULT_AGG_FUNC = WeightedAverage()

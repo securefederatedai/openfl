@@ -22,10 +22,7 @@ from pathlib import Path
 from yaml import SafeDumper, dump, safe_load
 
 from openfl.component.assigner.custom_assigner import Assigner
-from openfl.interface.aggregation_functions import (
-    AggregationFunction,
-    WeightedAverage,
-)
+from openfl.interface.aggregation_functions import AggregationFunction, WeightedAverage
 from openfl.interface.cli_helper import WORKSPACE
 from openfl.transport import AggregatorGRPCClient, AggregatorGRPCServer
 from openfl.utilities.utils import getfqdn_env
@@ -62,9 +59,7 @@ class Plan:
         if freeze:
             plan = Plan()
             plan.config = config
-            frozen_yaml_path = Path(
-                f"{yaml_path.parent}/{yaml_path.stem}_{plan.hash[:8]}.yaml"
-            )
+            frozen_yaml_path = Path(f"{yaml_path.parent}/{yaml_path.stem}_{plan.hash[:8]}.yaml")
             if frozen_yaml_path.exists():
                 Plan.logger.info("%s is already frozen", yaml_path.name)
                 return
@@ -132,9 +127,7 @@ class Plan:
 
                     if SETTINGS in defaults:
                         # override defaults with section settings
-                        defaults[SETTINGS].update(
-                            plan.config[section][SETTINGS]
-                        )
+                        defaults[SETTINGS].update(plan.config[section][SETTINGS])
                         plan.config[section][SETTINGS] = defaults[SETTINGS]
 
                     defaults.update(plan.config[section])
@@ -150,16 +143,10 @@ class Plan:
 
                 gandlf_config = Plan.load(Path(gandlf_config_path))
                 # check for some defaults
-                gandlf_config["output_dir"] = gandlf_config.get(
-                    "output_dir", "."
-                )
-                plan.config["task_runner"]["settings"][
-                    "gandlf_config"
-                ] = gandlf_config
+                gandlf_config["output_dir"] = gandlf_config.get("output_dir", ".")
+                plan.config["task_runner"]["settings"]["gandlf_config"] = gandlf_config
 
-            plan.authorized_cols = Plan.load(cols_config_path).get(
-                "collaborators", []
-            )
+            plan.authorized_cols = Plan.load(cols_config_path).get("collaborators", [])
 
             # TODO: Does this need to be a YAML file? Probably want to use key
             #  value as the plan hash
@@ -282,9 +269,7 @@ class Plan:
         self.federation_uuid = f"{self.name}_{self.hash[:8]}"
         self.aggregator_uuid = f"aggregator_{self.federation_uuid}"
 
-        self.rounds_to_train = self.config["aggregator"][SETTINGS][
-            "rounds_to_train"
-        ]
+        self.rounds_to_train = self.config["aggregator"][SETTINGS]["rounds_to_train"]
 
         if self.config["network"][SETTINGS]["agg_addr"] == AUTO:
             self.config["network"][SETTINGS]["agg_addr"] = getfqdn_env()
@@ -299,14 +284,10 @@ class Plan:
         aggregation_functions_by_task = None
         assigner_function = None
         try:
-            aggregation_functions_by_task = self.restore_object(
-                "aggregation_function_obj.pkl"
-            )
+            aggregation_functions_by_task = self.restore_object("aggregation_function_obj.pkl")
             assigner_function = self.restore_object("task_assigner_obj.pkl")
         except Exception as exc:
-            self.logger.error(
-                f"Failed to load aggregation and assigner functions: {exc}"
-            )
+            self.logger.error(f"Failed to load aggregation and assigner functions: {exc}")
             self.logger.info("Using Task Runner API workflow")
         if assigner_function:
             self.assigner_ = Assigner(
@@ -365,9 +346,7 @@ class Plan:
         defaults[SETTINGS]["authorized_cols"] = self.authorized_cols
         defaults[SETTINGS]["assigner"] = self.get_assigner()
         defaults[SETTINGS]["compression_pipeline"] = self.get_tensor_pipe()
-        defaults[SETTINGS][
-            "straggler_handling_policy"
-        ] = self.get_straggler_handling_policy()
+        defaults[SETTINGS]["straggler_handling_policy"] = self.get_straggler_handling_policy()
         log_metric_callback = defaults[SETTINGS].get("log_metric_callback")
 
         if log_metric_callback:
@@ -381,9 +360,7 @@ class Plan:
 
         defaults[SETTINGS]["log_metric_callback"] = log_metric_callback
         if self.aggregator_ is None:
-            self.aggregator_ = Plan.build(
-                **defaults, initial_tensor_dict=tensor_dict
-            )
+            self.aggregator_ = Plan.build(**defaults, initial_tensor_dict=tensor_dict)
 
         return self.aggregator_
 
@@ -402,9 +379,7 @@ class Plan:
     def get_straggler_handling_policy(self):
         """Get straggler handling policy."""
         template = "openfl.component.straggler_handling_functions.CutoffTimeBasedStragglerHandling"
-        defaults = self.config.get(
-            "straggler_handling_policy", {TEMPLATE: template, SETTINGS: {}}
-        )
+        defaults = self.config.get("straggler_handling_policy", {TEMPLATE: template, SETTINGS: {}})
 
         if self.straggler_policy_ is None:
             self.straggler_policy_ = Plan.build(**defaults)
@@ -419,9 +394,7 @@ class Plan:
             {TEMPLATE: "openfl.federation.DataLoader", SETTINGS: {}},
         )
 
-        defaults[SETTINGS]["data_path"] = self.cols_data_paths[
-            collaborator_name
-        ]
+        defaults[SETTINGS]["data_path"] = self.cols_data_paths[collaborator_name]
 
         if self.loader_ is None:
             self.loader_ = Plan.build(**defaults)
@@ -453,9 +426,7 @@ class Plan:
         return self.runner_
 
     # Python interactive api
-    def get_core_task_runner(
-        self, data_loader=None, model_provider=None, task_keeper=None
-    ):
+    def get_core_task_runner(self, data_loader=None, model_provider=None, task_keeper=None):
         """Get task runner."""
         defaults = self.config.get(
             "task_runner",
@@ -475,9 +446,7 @@ class Plan:
         self.runner_.set_task_provider(task_keeper)
 
         framework_adapter = Plan.build(
-            self.config["task_runner"]["required_plugin_components"][
-                "framework_adapters"
-            ],
+            self.config["task_runner"]["required_plugin_components"]["framework_adapters"],
             {},
         )
 
@@ -515,17 +484,10 @@ class Plan:
             # a part of the New API and it is a part of OpenFL kernel.
             # If Task Runner is placed elsewhere, somewhere in user workspace, than it is
             # a part of the old interface and we follow legacy initialization procedure.
-            if (
-                "openfl.federated.task.task_runner"
-                in self.config["task_runner"]["template"]
-            ):
+            if "openfl.federated.task.task_runner" in self.config["task_runner"]["template"]:
                 # Interactive API
-                model_provider, task_keeper, data_loader = (
-                    self.deserialize_interface_objects()
-                )
-                data_loader = self.initialize_data_loader(
-                    data_loader, shard_descriptor
-                )
+                model_provider, task_keeper, data_loader = self.deserialize_interface_objects()
+                data_loader = self.initialize_data_loader(data_loader, shard_descriptor)
                 defaults[SETTINGS]["task_runner"] = self.get_core_task_runner(
                     data_loader=data_loader,
                     model_provider=model_provider,
@@ -534,9 +496,7 @@ class Plan:
             else:
                 # TaskRunner subclassing API
                 data_loader = self.get_data_loader(collaborator_name)
-                defaults[SETTINGS]["task_runner"] = self.get_task_runner(
-                    data_loader
-                )
+                defaults[SETTINGS]["task_runner"] = self.get_task_runner(data_loader)
 
         defaults[SETTINGS]["compression_pipeline"] = self.get_tensor_pipe()
         defaults[SETTINGS]["task_config"] = self.config.get("tasks", {})
@@ -647,10 +607,7 @@ class Plan:
             "tasks_interface_file",
             "dataloader_interface_file",
         ]
-        return (
-            self.restore_object(api_layer["settings"][filename])
-            for filename in filenames
-        )
+        return (self.restore_object(api_layer["settings"][filename]) for filename in filenames)
 
     def get_serializer_plugin(self, **kwargs):
         """Get serializer plugin.
@@ -660,9 +617,7 @@ class Plan:
         if self.serializer_ is None:
             if "api_layer" not in self.config:  # legacy API
                 return None
-            required_plugin_components = self.config["api_layer"][
-                "required_plugin_components"
-            ]
+            required_plugin_components = self.config["api_layer"]["required_plugin_components"]
             serializer_plugin = required_plugin_components["serializer_plugin"]
             self.serializer_ = Plan.build(serializer_plugin, kwargs)
         return self.serializer_

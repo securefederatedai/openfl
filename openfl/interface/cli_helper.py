@@ -88,9 +88,7 @@ def print_tree(
                 yield prefix + pointer + path.name
                 directories += 1
                 extension = branch if pointer == tee else space
-                yield from inner(
-                    path, prefix=prefix + extension, level=level - 1
-                )
+                yield from inner(path, prefix=prefix + extension, level=level - 1)
             elif not limit_to_directories:
                 yield prefix + pointer + path.name
                 files += 1
@@ -128,9 +126,7 @@ def copytree(
 
         os.makedirs(dst, exist_ok=dirs_exist_ok)
         errors = []
-        use_srcentry = (
-            copy_function is shutil.copy2 or copy_function is shutil.copy
-        )
+        use_srcentry = copy_function is shutil.copy2 or copy_function is shutil.copy
 
         for srcentry in entries:
             if srcentry.name in ignored_names:
@@ -148,14 +144,9 @@ def copytree(
                     linkto = os.readlink(srcname)
                     if symlinks:
                         os.symlink(linkto, dstname)
-                        shutil.copystat(
-                            srcobj, dstname, follow_symlinks=not symlinks
-                        )
+                        shutil.copystat(srcobj, dstname, follow_symlinks=not symlinks)
                     else:
-                        if (
-                            not os.path.exists(linkto)
-                            and ignore_dangling_symlinks
-                        ):
+                        if not os.path.exists(linkto) and ignore_dangling_symlinks:
                             continue
                         if srcentry.is_dir():
                             copytree(

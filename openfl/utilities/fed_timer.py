@@ -161,9 +161,7 @@ class SyncAsyncTaskDecoFactory:
             """
             Wrapper for synchronous execution of decorated function.
             """
-            logger.debug(
-                str_fmt.format("sync", func.__name__, self.is_coroutine)
-            )
+            logger.debug(str_fmt.format("sync", func.__name__, self.is_coroutine))
             with self.wrapper(func, *args, **kwargs):
                 return self.task.sync_execute()
 
@@ -172,9 +170,7 @@ class SyncAsyncTaskDecoFactory:
             """
             Wrapper for asynchronous execution of decorated function.
             """
-            logger.debug(
-                str_fmt.format("async", func.__name__, self.is_coroutine)
-            )
+            logger.debug(str_fmt.format("async", func.__name__, self.is_coroutine))
             with self.wrapper(func, *args, **kwargs):
                 return await self.task.async_execute()
 
@@ -198,18 +194,13 @@ class fedtiming(SyncAsyncTaskDecoFactory):  # noqa: N801
             Exception: Captures the exception raised by `async_wrapper`
             or `sync_wrapper` and terminates the execution.
         """
-        self.task = PrepareTask(
-            target_fn=func, timeout=self.timeout, args=args, kwargs=kwargs
-        )
+        self.task = PrepareTask(target_fn=func, timeout=self.timeout, args=args, kwargs=kwargs)
         try:
             start = time.perf_counter()
             yield
-            logger.info(
-                f"({self.task._fn_name}) Elapsed Time: {time.perf_counter() - start}"
-            )
+            logger.info(f"({self.task._fn_name}) Elapsed Time: {time.perf_counter() - start}")
         except Exception as e:
             logger.exception(
-                f"An exception of type {type(e).__name__} occurred. "
-                f"Arguments:\n{e.args[0]!r}"
+                f"An exception of type {type(e).__name__} occurred. " f"Arguments:\n{e.args[0]!r}"
             )
             os._exit(status=os.EX_TEMPFAIL)

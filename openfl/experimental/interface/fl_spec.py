@@ -60,9 +60,7 @@ class FLSpec:
         """Starts the execution of the flow"""
         # Submit flow to Runtime
         if str(self._runtime) == "LocalRuntime":
-            self._metaflow_interface = MetaflowInterface(
-                self.__class__, self.runtime.backend
-            )
+            self._metaflow_interface = MetaflowInterface(self.__class__, self.runtime.backend)
             self._run_id = self._metaflow_interface.create_run()
             # Initialize aggregator private attributes
             self.runtime.initialize_aggregator()
@@ -131,9 +129,7 @@ class FLSpec:
             return_objs.append(backup)
         return return_objs
 
-    def _is_at_transition_point(
-        self, f: Callable, parent_func: Callable
-    ) -> bool:
+    def _is_at_transition_point(self, f: Callable, parent_func: Callable) -> bool:
         """
         Has the collaborator finished its current sequence?
 
@@ -144,16 +140,12 @@ class FLSpec:
         if parent_func.__name__ in self._foreach_methods:
             self._foreach_methods.append(f.__name__)
             if should_transfer(f, parent_func):
-                print(
-                    f"Should transfer from {parent_func.__name__} to {f.__name__}"
-                )
+                print(f"Should transfer from {parent_func.__name__} to {f.__name__}")
                 self.execute_next = f.__name__
                 return True
         return False
 
-    def _display_transition_logs(
-        self, f: Callable, parent_func: Callable
-    ) -> None:
+    def _display_transition_logs(self, f: Callable, parent_func: Callable) -> None:
         """
         Prints aggregator to collaborators or
         collaborators to aggregator state transition logs
@@ -177,18 +169,16 @@ class FLSpec:
         for col in selected_collaborators:
             clone = FLSpec._clones[col]
             clone.input = col
-            if (
-                "exclude" in kwargs and hasattr(clone, kwargs["exclude"][0])
-            ) or ("include" in kwargs and hasattr(clone, kwargs["include"][0])):
+            if ("exclude" in kwargs and hasattr(clone, kwargs["exclude"][0])) or (
+                "include" in kwargs and hasattr(clone, kwargs["include"][0])
+            ):
                 filter_attributes(clone, f, **kwargs)
             artifacts_iter, _ = generate_artifacts(ctx=self)
             for name, attr in artifacts_iter():
                 setattr(clone, name, deepcopy(attr))
             clone._foreach_methods = self._foreach_methods
 
-    def restore_instance_snapshot(
-        self, ctx: FLSpec, instance_snapshot: List[FLSpec]
-    ):
+    def restore_instance_snapshot(self, ctx: FLSpec, instance_snapshot: List[FLSpec]):
         """Restores attributes from backup (in instance snapshot) to ctx"""
         for backup in instance_snapshot:
             artifacts_iter, _ = generate_artifacts(ctx=backup)

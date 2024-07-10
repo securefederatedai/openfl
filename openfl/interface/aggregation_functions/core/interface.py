@@ -71,6 +71,4 @@ class AggregationFunction(metaclass=SingletonABCMeta):
 
     def __call__(self, local_tensors, db_iterator, tensor_name, fl_round, tags):
         """Use magic function for ease."""
-        return self.call(
-            local_tensors, db_iterator, tensor_name, fl_round, tags
-        )
+        return self.call(local_tensors, db_iterator, tensor_name, fl_round, tags)

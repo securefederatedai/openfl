@@ -55,9 +55,7 @@ class RetryOnRpcErrorClientInterceptor(
         self.sleeping_policy = sleeping_policy
         self.status_for_retry = status_for_retry
 
-    def _intercept_call(
-        self, continuation, client_call_details, request_or_iterator
-    ):
+    def _intercept_call(self, continuation, client_call_details, request_or_iterator):
         """Intercept the call to the gRPC server."""
         while True:
             response = continuation(client_call_details, request_or_iterator)
@@ -65,13 +63,8 @@ class RetryOnRpcErrorClientInterceptor(
             if isinstance(response, grpc.RpcError):
 
                 # If status code is not in retryable status codes
-                self.sleeping_policy.logger.info(
-                    "Response code: %s", response.code()
-                )
-                if (
-                    self.status_for_retry
-                    and response.code() not in self.status_for_retry
-                ):
+                self.sleeping_policy.logger.info("Response code: %s", response.code())
+                if self.status_for_retry and response.code() not in self.status_for_retry:
                     return response
 
                 self.sleeping_policy.sleep()
@@ -82,13 +75,9 @@ class RetryOnRpcErrorClientInterceptor(
         """Wrap intercept call for unary->unary RPC."""
         return self._intercept_call(continuation, client_call_details, request)
 
-    def intercept_stream_unary(
-        self, continuation, client_call_details, request_iterator
-    ):
+    def intercept_stream_unary(self, continuation, client_call_details, request_iterator):
         """Wrap intercept call for stream->unary RPC."""
-        return self._intercept_call(
-            continuation, client_call_details, request_iterator
-        )
+        return self._intercept_call(continuation, client_call_details, request_iterator)
 
 
 def _atomic_connection(func):
@@ -148,9 +137,7 @@ class AggregatorGRPCClient:
         self.logger = getLogger(__name__)
 
         if not self.tls:
-            self.logger.warn(
-                "gRPC is running on insecure channel with TLS disabled."
-            )
+            self.logger.warn("gRPC is running on insecure channel with TLS disabled.")
             self.channel = self.create_insecure_channel(self.uri)
         else:
             self.channel = self.create_tls_channel(
@@ -171,9 +158,7 @@ class AggregatorGRPCClient:
             RetryOnRpcErrorClientInterceptor(
                 sleeping_policy=ConstantBackoff(
                     logger=self.logger,
-                    reconnect_interval=int(
-                        kwargs.get("client_reconnect_interval", 1)
-                    ),
+                    reconnect_interval=int(kwargs.get("client_reconnect_interval", 1)),
                     uri=self.uri,
                 ),
                 status_for_retry=(grpc.StatusCode.UNAVAILABLE,),
@@ -256,9 +241,7 @@ class AggregatorGRPCClient:
         check_equal(reply.header.sender, self.aggregator_uuid, self.logger)
 
         # check that federation id matches
-        check_equal(
-            reply.header.federation_uuid, self.federation_uuid, self.logger
-        )
+        check_equal(reply.header.federation_uuid, self.federation_uuid, self.logger)
 
         # check that there is aggrement on the single_col_cert_common_name
         check_equal(

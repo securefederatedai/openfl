@@ -84,9 +84,7 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
 
         """
         if self.tls:
-            common_name = context.auth_context()["x509_common_name"][0].decode(
-                "utf-8"
-            )
+            common_name = context.auth_context()["x509_common_name"][0].decode("utf-8")
             collaborator_common_name = request.header.sender
             if not self.aggregator.valid_collaborator_cn_and_id(
                 common_name, collaborator_common_name
@@ -123,9 +121,7 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
                 Request sent from a collaborator that requires validation
         """
         # TODO improve this check. the sender name could be spoofed
-        check_is_in(
-            request.header.sender, self.aggregator.authorized_cols, self.logger
-        )
+        check_is_in(request.header.sender, self.aggregator.authorized_cols, self.logger)
 
         # check that the message is for me
         check_equal(request.header.receiver, self.aggregator.uuid, self.logger)
@@ -156,8 +152,8 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
         self.validate_collaborator(request, context)
         self.check_request(request)
         collaborator_name = request.header.sender
-        tasks, round_number, sleep_time, time_to_quit = (
-            self.aggregator.get_tasks(request.header.sender)
+        tasks, round_number, sleep_time, time_to_quit = self.aggregator.get_tasks(
+            request.header.sender
         )
         if tasks:
             if isinstance(tasks[0], str):
@@ -258,17 +254,13 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
 
     def get_server(self):
         """Return gRPC server."""
-        self.server = server(
-            ThreadPoolExecutor(max_workers=cpu_count()), options=channel_options
-        )
+        self.server = server(ThreadPoolExecutor(max_workers=cpu_count()), options=channel_options)
 
         aggregator_pb2_grpc.add_AggregatorServicer_to_server(self, self.server)
 
         if not self.tls:
 
-            self.logger.warn(
-                "gRPC is running on insecure channel with TLS disabled."
-            )
+            self.logger.warn("gRPC is running on insecure channel with TLS disabled.")
             port = self.server.add_insecure_port(self.uri)
             self.logger.info("Insecure port: %s", port)
 

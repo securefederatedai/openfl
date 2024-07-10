@@ -20,14 +20,7 @@ from logging import getLogger
 from os import chdir, getcwd, makedirs
 from os.path import basename, isfile, join
 from pathlib import Path
-from shutil import (
-    copy2,
-    copyfile,
-    copytree,
-    ignore_patterns,
-    make_archive,
-    unpack_archive,
-)
+from shutil import copy2, copyfile, copytree, ignore_patterns, make_archive, unpack_archive
 from subprocess import check_call
 from sys import executable
 from tempfile import mkdtemp
@@ -39,11 +32,7 @@ from click import confirm, echo, group, option, pass_context, style
 from cryptography.hazmat.primitives import serialization
 from plan import freeze_plan
 
-from openfl.cryptography.ca import (
-    generate_root_cert,
-    generate_signing_csr,
-    sign_certificate,
-)
+from openfl.cryptography.ca import generate_root_cert, generate_signing_csr, sign_certificate
 from openfl.experimental.federated.plan import Plan
 from openfl.experimental.interface.cli.cli_helper import (
     CERT_DIR,
@@ -74,9 +63,7 @@ def create_dirs(prefix):
     (prefix / "cert").mkdir(parents=True, exist_ok=True)  # certifications
     (prefix / "data").mkdir(parents=True, exist_ok=True)  # training data
     (prefix / "logs").mkdir(parents=True, exist_ok=True)  # training logs
-    (prefix / "save").mkdir(
-        parents=True, exist_ok=True
-    )  # model weight saves / initialization
+    (prefix / "save").mkdir(parents=True, exist_ok=True)  # model weight saves / initialization
     (prefix / "src").mkdir(parents=True, exist_ok=True)  # model code
 
     copyfile(WORKSPACE / "workspace" / ".workspace", prefix / ".workspace")
@@ -109,9 +96,7 @@ def get_templates():
 
 
 @workspace.command(name="create")
-@option(
-    "--prefix", required=True, help="Workspace name or path", type=ClickPath()
-)
+@option("--prefix", required=True, help="Workspace name or path", type=ClickPath())
 @option(
     "--custom_template",
     required=False,
@@ -143,9 +128,7 @@ def create_(prefix, custom_template, template, notebook, template_output_dir):
             + "`notebook`. Not all are necessary"
         )
     elif (
-        (custom_template and template)
-        or (template and notebook)
-        or (custom_template and notebook)
+        (custom_template and template) or (template and notebook) or (custom_template and notebook)
     ):
         raise ValueError(
             "Please provide only one of the following options: "
@@ -173,13 +156,10 @@ def create_(prefix, custom_template, template, notebook, template_output_dir):
         create(prefix, Path(template_output_dir).resolve())
 
         logger.warning(
-            "The user should review the generated workspace for completeness "
-            + "before proceeding"
+            "The user should review the generated workspace for completeness " + "before proceeding"
         )
     else:
-        template = (
-            Path(custom_template).resolve() if custom_template else template
-        )
+        template = Path(custom_template).resolve() if custom_template else template
         create(prefix, template)
 
 
@@ -262,9 +242,7 @@ def export_(pip_install_options: Tuple[str]):
         echo(f'Plan file "{plan_file}" not found. No freeze performed.')
 
     # Dump requirements.txt
-    dump_requirements_file(
-        prefixes=pip_install_options, keep_original_prefixes=True
-    )
+    dump_requirements_file(prefixes=pip_install_options, keep_original_prefixes=True)
 
     archive_type = "zip"
     archive_name = basename(getcwd())
@@ -273,9 +251,7 @@ def export_(pip_install_options: Tuple[str]):
     # Aggregator workspace
     tmp_dir = join(mkdtemp(), "openfl", archive_name)
 
-    ignore = ignore_patterns(
-        "__pycache__", "*.crt", "*.key", "*.csr", "*.srl", "*.pem", "*.pbuf"
-    )
+    ignore = ignore_patterns("__pycache__", "*.crt", "*.key", "*.csr", "*.srl", "*.pem", "*.pbuf")
 
     # We only export the minimum required files to set up a collaborator
     makedirs(f"{tmp_dir}/save", exist_ok=True)
@@ -292,10 +268,7 @@ def export_(pip_install_options: Tuple[str]):
         if confirm("Create a default '.workspace' file?"):
             copy2(WORKSPACE / "workspace" / ".workspace", tmp_dir)
         else:
-            echo(
-                "To proceed, you must have a '.workspace' "
-                "file in the current directory."
-            )
+            echo("To proceed, you must have a '.workspace' " "file in the current directory.")
             raise
 
     # Create Zip archive of directory
@@ -353,29 +326,19 @@ def certify():
     echo("1.  Create Root CA")
     echo("1.1 Create Directories")
 
-    (CERT_DIR / "ca/root-ca/private").mkdir(
-        parents=True, exist_ok=True, mode=0o700
-    )
+    (CERT_DIR / "ca/root-ca/private").mkdir(parents=True, exist_ok=True, mode=0o700)
     (CERT_DIR / "ca/root-ca/db").mkdir(parents=True, exist_ok=True)
 
     echo("1.2 Create Database")
 
-    with open(
-        CERT_DIR / "ca/root-ca/db/root-ca.db", "w", encoding="utf-8"
-    ) as f:
+    with open(CERT_DIR / "ca/root-ca/db/root-ca.db", "w", encoding="utf-8") as f:
         pass  # write empty file
-    with open(
-        CERT_DIR / "ca/root-ca/db/root-ca.db.attr", "w", encoding="utf-8"
-    ) as f:
+    with open(CERT_DIR / "ca/root-ca/db/root-ca.db.attr", "w", encoding="utf-8") as f:
         pass  # write empty file
 
-    with open(
-        CERT_DIR / "ca/root-ca/db/root-ca.crt.srl", "w", encoding="utf-8"
-    ) as f:
+    with open(CERT_DIR / "ca/root-ca/db/root-ca.crt.srl", "w", encoding="utf-8") as f:
         f.write("01")  # write file with '01'
-    with open(
-        CERT_DIR / "ca/root-ca/db/root-ca.crl.srl", "w", encoding="utf-8"
-    ) as f:
+    with open(CERT_DIR / "ca/root-ca/db/root-ca.crl.srl", "w", encoding="utf-8") as f:
         f.write("01")  # write file with '01'
 
     echo("1.3 Create CA Request and Certificate")
@@ -405,29 +368,19 @@ def certify():
     echo("2.  Create Signing Certificate")
     echo("2.1 Create Directories")
 
-    (CERT_DIR / "ca/signing-ca/private").mkdir(
-        parents=True, exist_ok=True, mode=0o700
-    )
+    (CERT_DIR / "ca/signing-ca/private").mkdir(parents=True, exist_ok=True, mode=0o700)
     (CERT_DIR / "ca/signing-ca/db").mkdir(parents=True, exist_ok=True)
 
     echo("2.2 Create Database")
 
-    with open(
-        CERT_DIR / "ca/signing-ca/db/signing-ca.db", "w", encoding="utf-8"
-    ) as f:
+    with open(CERT_DIR / "ca/signing-ca/db/signing-ca.db", "w", encoding="utf-8") as f:
         pass  # write empty file
-    with open(
-        CERT_DIR / "ca/signing-ca/db/signing-ca.db.attr", "w", encoding="utf-8"
-    ) as f:
+    with open(CERT_DIR / "ca/signing-ca/db/signing-ca.db.attr", "w", encoding="utf-8") as f:
         pass  # write empty file
 
-    with open(
-        CERT_DIR / "ca/signing-ca/db/signing-ca.crt.srl", "w", encoding="utf-8"
-    ) as f:
+    with open(CERT_DIR / "ca/signing-ca/db/signing-ca.crt.srl", "w", encoding="utf-8") as f:
         f.write("01")  # write file with '01'
-    with open(
-        CERT_DIR / "ca/signing-ca/db/signing-ca.crl.srl", "w", encoding="utf-8"
-    ) as f:
+    with open(CERT_DIR / "ca/signing-ca/db/signing-ca.crl.srl", "w", encoding="utf-8") as f:
         f.write("01")  # write file with '01'
 
     echo("2.3 Create Signing Certificate CSR")
@@ -457,9 +410,7 @@ def certify():
 
     echo("2.4 Sign Signing Certificate CSR")
 
-    signing_cert = sign_certificate(
-        signing_csr, root_private_key, root_cert.subject, ca=True
-    )
+    signing_cert = sign_certificate(signing_csr, root_private_key, root_cert.subject, ca=True)
 
     with open(CERT_DIR / signing_crt_path, "wb") as f:
         f.write(

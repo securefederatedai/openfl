@@ -45,9 +45,7 @@ class FrameworkAdapterPlugin(FrameworkAdapterPluginInterface):
             restored_model = deserialize(model)
             if training_config is not None:
                 restored_model.compile(
-                    **saving_utils.compile_args_from_training_config(
-                        training_config
-                    )
+                    **saving_utils.compile_args_from_training_config(training_config)
                 )
             restored_model.set_weights(weights)
             return restored_model
@@ -111,16 +109,12 @@ class FrameworkAdapterPlugin(FrameworkAdapterPluginInterface):
             with_opt_vars (bool): True = include the optimizer's status.
         """
         model_weight_names = [weight.name for weight in model.weights]
-        model_weights_dict = {
-            name: tensor_dict[name] for name in model_weight_names
-        }
+        model_weights_dict = {name: tensor_dict[name] for name in model_weight_names}
         _set_weights_dict(model, model_weights_dict)
 
         if optimizer is not None:
             opt_weight_names = [weight.name for weight in optimizer.weights]
-            opt_weights_dict = {
-                name: tensor_dict[name] for name in opt_weight_names
-            }
+            opt_weights_dict = {name: tensor_dict[name] for name in opt_weight_names}
             _set_weights_dict(optimizer, opt_weights_dict)
 
 

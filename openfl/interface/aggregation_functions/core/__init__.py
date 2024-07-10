@@ -12,9 +12,5 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from openfl.interface.aggregation_functions.core.adaptive_aggregation import (
-    AdaptiveAggregation,
-)
-from openfl.interface.aggregation_functions.core.interface import (
-    AggregationFunction,
-)
+from openfl.interface.aggregation_functions.core.adaptive_aggregation import AdaptiveAggregation
+from openfl.interface.aggregation_functions.core.interface import AggregationFunction

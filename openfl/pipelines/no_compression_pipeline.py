@@ -14,10 +14,7 @@
 
 """NoCompressionPipeline module."""
 
-from openfl.pipelines.pipeline import (
-    Float32NumpyArrayToBytes,
-    TransformationPipeline,
-)
+from openfl.pipelines.pipeline import Float32NumpyArrayToBytes, TransformationPipeline
 
 
 class NoCompressionPipeline(TransformationPipeline):

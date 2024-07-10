@@ -12,9 +12,4 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from openfl.databases.utilities.dataframe import (
-    ROUND_PLACEHOLDER,
-    _retrieve,
-    _search,
-    _store,
-)
+from openfl.databases.utilities.dataframe import ROUND_PLACEHOLDER, _retrieve, _search, _store

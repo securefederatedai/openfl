@@ -38,11 +38,7 @@ import copy as co
 import numpy as np
 import torch
 
-from openfl.pipelines.pipeline import (
-    Float32NumpyArrayToBytes,
-    TransformationPipeline,
-    Transformer,
-)
+from openfl.pipelines.pipeline import Float32NumpyArrayToBytes, TransformationPipeline, Transformer
 
 
 class Eden:
@@ -322,22 +318,18 @@ class Eden:
 
             # normal centroids
             for i in centroids:
-                centroids[i] = torch.Tensor(
-                    [-j for j in centroids[i][::-1]] + centroids[i]
-                ).to(device)
+                centroids[i] = torch.Tensor([-j for j in centroids[i][::-1]] + centroids[i]).to(
+                    device
+                )
 
             # centroids to bin boundaries
             def gen_boundaries(centroids):
-                return [
-                    (a + b) / 2 for a, b in zip(centroids[:-1], centroids[1:])
-                ]
+                return [(a + b) / 2 for a, b in zip(centroids[:-1], centroids[1:])]
 
             # bin boundaries
             boundaries = {}
             for i in centroids:
-                boundaries[i] = torch.Tensor(gen_boundaries(centroids[i])).to(
-                    device
-                )
+                boundaries[i] = torch.Tensor(gen_boundaries(centroids[i])).to(device)
 
             return centroids, boundaries
 
@@ -345,9 +337,7 @@ class Eden:
         self.device = device
 
         # generate metadata for compression
-        self.centroids, self.boundaries = gen_normal_centroids_and_boundaries(
-            self.device
-        )
+        self.centroids, self.boundaries = gen_normal_centroids_and_boundaries(self.device)
 
         # bits per coordinate
         if nbits not in [1, 2, 3, 4, 5, 6, 7, 8]:
@@ -445,9 +435,7 @@ class Eden:
 
             normalized = vec * (vec.numel() ** 0.5) / vec_norm
             bins = torch.bucketize(normalized, self.boundaries[self.nbits])
-            scale = vec_norm**2 / torch.dot(
-                torch.take(self.centroids[self.nbits], bins), vec
-            )
+            scale = vec_norm**2 / torch.dot(torch.take(self.centroids[self.nbits], bins), vec)
 
             if not torch.isnan(scale):
                 return bins, scale
@@ -494,9 +482,7 @@ class Eden:
         dim = remaining = vec.numel()
         curr_index = 0
 
-        while (
-            high_po2(remaining) - remaining
-        ) / dim > self.max_padding_overhead:
+        while (high_po2(remaining) - remaining) / dim > self.max_padding_overhead:
             low = low_po2(remaining)
 
             slice_bins, slice_scale, slice_dim = self.compress_slice(
@@ -510,9 +496,7 @@ class Eden:
             curr_index += low
             remaining -= low
 
-        slice_bins, slice_scale, slice_dim = self.compress_slice(
-            vec[curr_index:], seed
-        )
+        slice_bins, slice_scale, slice_dim = self.compress_slice(vec[curr_index:], seed)
 
         res_bins.append(slice_bins)
         res_scale.append(slice_scale)
@@ -534,9 +518,7 @@ class Eden:
 
     def decompress(self, bins, metadata):
 
-        bins = (
-            self.from_bits(torch.Tensor(bins).to(self.device)).long().flatten()
-        )
+        bins = self.from_bits(torch.Tensor(bins).to(self.device)).long().flatten()
 
         seed = int(metadata[0])
         total_dim = int(metadata[1])
@@ -547,11 +529,7 @@ class Eden:
         for k in range(2, max(metadata.keys()) + 1, 2):
             scale = metadata[k]
             dim = int(metadata[k + 1])
-            vec.append(
-                self.decompress_slice(
-                    bins[curr_index : curr_index + dim], scale, dim, seed
-                )
-            )
+            vec.append(self.decompress_slice(bins[curr_index : curr_index + dim], scale, dim, seed))
             curr_index += dim
 
         vec = torch.cat(vec)
@@ -577,9 +555,7 @@ class Eden:
         bit_vec = torch.zeros(l_unit * self.nbits, dtype=torch.uint8)
 
         for i in range(self.nbits):
-            bit_vec[l_unit * i : l_unit * (i + 1)] = to_bits_h(
-                (int_bool_vec % 2 != 0).int()
-            )
+            bit_vec[l_unit * i : l_unit * (i + 1)] = to_bits_h((int_bool_vec % 2 != 0).int())
             int_bool_vec = torch.div(int_bool_vec, 2, rounding_mode="floor")
 
         return bit_vec
@@ -594,18 +570,12 @@ class Eden:
             iv = torch.zeros((8, n)).to(self.device)
             for i in range(8):
                 temp = bv.clone()
-                iv[i] = (
-                    torch.div(temp, 2**i, rounding_mode="floor") % 2 != 0
-                ).int()
+                iv[i] = (torch.div(temp, 2**i, rounding_mode="floor") % 2 != 0).int()
 
             return iv.T.reshape(-1)
 
-        bit_vec = bit_vec.view(self.nbits, bit_vec.numel() // self.nbits).to(
-            self.device
-        )
-        int_vecs = torch.zeros(bit_vec.numel() // self.nbits * 8).to(
-            self.device
-        )
+        bit_vec = bit_vec.view(self.nbits, bit_vec.numel() // self.nbits).to(self.device)
+        int_vecs = torch.zeros(bit_vec.numel() // self.nbits * 8).to(self.device)
 
         for i in range(self.nbits):
             int_vecs += 2**i * from_bits_h(bit_vec[i])
@@ -634,16 +604,12 @@ class EdenTransformer(Transformer):
         Quantize data.
         """
         # TODO: can be simplified if have access to a unique feature of the participant (e.g., ID)
-        seed = (
-            hash(sum(data.flatten()) * 13 + 7) + np.random.randint(1, 2**16)
-        ) % (2**16)
+        seed = (hash(sum(data.flatten()) * 13 + 7) + np.random.randint(1, 2**16)) % (2**16)
         seed = int(float(seed))
         metadata = {"int_list": list(data.shape)}
 
         if data.size > self.dim_threshold:
-            int_array, scale_list, dim_list, total_dim = self.eden.compress(
-                data, seed
-            )
+            int_array, scale_list, dim_list, total_dim = self.eden.compress(data, seed)
 
             # TODO: workaround: using the int to float dictionary to pass eden's metadata
             metadata["int_to_float"] = {0: float(seed), 1: float(total_dim)}
@@ -674,9 +640,7 @@ class EdenTransformer(Transformer):
             data: Numpy array with original numerical type and shape
         """
 
-        if (
-            np.prod(metadata["int_list"]) >= self.dim_threshold
-        ):  # compressed data
+        if np.prod(metadata["int_list"]) >= self.dim_threshold:  # compressed data
             data = np.frombuffer(data, dtype=np.uint8)
             data = co.deepcopy(data)
             data = self.eden.decompress(data, metadata["int_to_float"])

@@ -50,20 +50,13 @@ class StaticGroupedAssigner(Assigner):
 
     def define_task_assignments(self):
         """All of the logic to set up the map of tasks to collaborators is done here."""
-        cols_amount = sum(
-            [len(group["collaborators"]) for group in self.task_groups]
-        )
+        cols_amount = sum([len(group["collaborators"]) for group in self.task_groups])
         authorized_cols_amount = len(self.authorized_cols)
 
-        unique_cols = {
-            col for group in self.task_groups for col in group["collaborators"]
-        }
+        unique_cols = {col for group in self.task_groups for col in group["collaborators"]}
         unique_authorized_cols = set(self.authorized_cols)
 
-        assert (
-            cols_amount == authorized_cols_amount
-            and unique_cols == unique_authorized_cols
-        ), (
+        assert cols_amount == authorized_cols_amount and unique_cols == unique_authorized_cols, (
             f"Collaborators in each group must be distinct: "
             f"{unique_cols}, {unique_authorized_cols}"
         )
@@ -75,9 +68,7 @@ class StaticGroupedAssigner(Assigner):
 
         # Initialize the map of collaborators for a given task on a given round
         for task in self.all_tasks_in_groups:
-            self.collaborators_for_task[task] = {
-                i: [] for i in range(self.rounds)
-            }
+            self.collaborators_for_task[task] = {i: [] for i in range(self.rounds)}
 
         for group in self.task_groups:
             group_col_list = group["collaborators"]
@@ -85,9 +76,7 @@ class StaticGroupedAssigner(Assigner):
             for col in group_col_list:
                 # For now, we assume that collaborators have the same tasks for
                 # every round
-                self.collaborator_tasks[col] = {
-                    i: group["tasks"] for i in range(self.rounds)
-                }
+                self.collaborator_tasks[col] = {i: group["tasks"] for i in range(self.rounds)}
             # Now populate reverse lookup of tasks->group
             for task in group["tasks"]:
                 for round_ in range(self.rounds):

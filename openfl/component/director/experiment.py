@@ -75,10 +75,7 @@ class Experiment:
         """Run experiment."""
         self.status = Status.IN_PROGRESS
         try:
-            logger.info(
-                f"New experiment {self.name} for "
-                f"collaborators {self.collaborators}"
-            )
+            logger.info(f"New experiment {self.name} for " f"collaborators {self.collaborators}")
 
             with ExperimentWorkspace(
                 experiment_name=self.name,
@@ -103,9 +100,7 @@ class Experiment:
             logger.info("Experiment %s was finished successfully.", self.name)
         except Exception as e:
             self.status = Status.FAILED
-            logger.exception(
-                "Experiment %s failed with error: %s.", self.name, e
-            )
+            logger.exception("Experiment %s failed with error: %s.", self.name, e)
 
     async def review_experiment(self, review_plan_callback: Callable) -> bool:
         """Get plan approve in console."""
@@ -141,9 +136,7 @@ class Experiment:
         plan = Plan.parse(plan_config_path=self.plan_path)
         plan.authorized_cols = list(self.collaborators)
 
-        logger.info(
-            "🧿 Created an Aggregator Server for %s experiment.", self.name
-        )
+        logger.info("🧿 Created an Aggregator Server for %s experiment.", self.name)
         aggregator_grpc_server = plan.interactive_api_get_server(
             tensor_dict=self.init_tensor_dict,
             root_certificate=root_certificate,

@@ -50,9 +50,7 @@ class FederatedModel(TaskRunner):
         # TODO pass params to model
         if inspect.isclass(build_model):
             self.model = build_model()
-            from openfl.federated.task.runner_pt import (  # noqa: E501
-                PyTorchTaskRunner,
-            )
+            from openfl.federated.task.runner_pt import PyTorchTaskRunner  # noqa: E501
 
             if optimizer is not None:
                 self.optimizer = optimizer(self.model.parameters())
@@ -60,12 +58,8 @@ class FederatedModel(TaskRunner):
             if hasattr(self.model, "forward"):
                 self.runner.forward = self.model.forward
         else:
-            self.model = self.build_model(
-                self.feature_shape, self.data_loader.num_classes
-            )
-            from openfl.federated.task.runner_keras import (  # noqa: E501
-                KerasTaskRunner,
-            )
+            self.model = self.build_model(self.feature_shape, self.data_loader.num_classes)
+            from openfl.federated.task.runner_keras import KerasTaskRunner  # noqa: E501
 
             self.runner = KerasTaskRunner(**kwargs)
             self.optimizer = self.model.optimizer
@@ -75,18 +69,14 @@ class FederatedModel(TaskRunner):
                 self.runner, *args, **kwargs
             )
         if hasattr(self.model, "train_epoch"):
-            self.runner.train_epoch = (
-                lambda *args, **kwargs: build_model.train_epoch(
-                    self.runner, *args, **kwargs
-                )
+            self.runner.train_epoch = lambda *args, **kwargs: build_model.train_epoch(
+                self.runner, *args, **kwargs
             )
         self.runner.model = self.model
         self.runner.optimizer = self.optimizer
         self.loss_fn = loss_fn
         self.runner.loss_fn = self.loss_fn
-        self.tensor_dict_split_fn_kwargs = (
-            self.runner.tensor_dict_split_fn_kwargs
-        )
+        self.tensor_dict_split_fn_kwargs = self.runner.tensor_dict_split_fn_kwargs
         self.initialize_tensorkeys_for_functions()
 
     def __getattribute__(self, attr):

@@ -61,9 +61,7 @@ def is_fqdn(hostname: str) -> bool:
     #  Can begin and end with a number or letter only
     #  Can contain hyphens, a-z, A-Z, 0-9
     #  1 - 63 chars allowed
-    fqdn = re.compile(
-        r"^[a-z0-9]([a-z-0-9-]{0,61}[a-z0-9])?$", re.IGNORECASE
-    )  # noqa FS003
+    fqdn = re.compile(r"^[a-z0-9]([a-z-0-9-]{0,61}[a-z0-9])?$", re.IGNORECASE)  # noqa FS003
 
     # Check that all labels match that pattern.
     return all(fqdn.match(label) for label in labels)
@@ -187,11 +185,7 @@ def rmtree(path, ignore_errors=False):
     def remove_readonly(func, path, _):
         "Clear the readonly bit and reattempt the removal"
         if os.name == "nt":
-            os.chmod(
-                path, stat.S_IWRITE
-            )  # Windows can not remove read-only files.
+            os.chmod(path, stat.S_IWRITE)  # Windows can not remove read-only files.
         func(path)
 
-    return shutil.rmtree(
-        path, ignore_errors=ignore_errors, onerror=remove_readonly
-    )
+    return shutil.rmtree(path, ignore_errors=ignore_errors, onerror=remove_readonly)

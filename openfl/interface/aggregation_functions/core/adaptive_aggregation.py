@@ -18,9 +18,7 @@ from typing import List
 
 import numpy as np
 
-from openfl.interface.aggregation_functions.core.interface import (
-    AggregationFunction,
-)
+from openfl.interface.aggregation_functions.core.interface import AggregationFunction
 from openfl.utilities.optimizers.numpy.base_optimizer import Optimizer
 from openfl.utilities.types import LocalTensor
 
@@ -59,9 +57,7 @@ class AdaptiveAggregation(AggregationFunction):
             ]
         )
 
-    def call(
-        self, local_tensors, db_iterator, tensor_name, fl_round, tags
-    ) -> np.ndarray:
+    def call(self, local_tensors, db_iterator, tensor_name, fl_round, tags) -> np.ndarray:
         """Aggregate tensors.
 
         Args:
@@ -89,9 +85,7 @@ class AdaptiveAggregation(AggregationFunction):
             np.ndarray: aggregated tensor
         """
         if tensor_name not in self.optimizer.params:
-            return self.default_agg_func(
-                local_tensors, db_iterator, tensor_name, fl_round, tags
-            )
+            return self.default_agg_func(local_tensors, db_iterator, tensor_name, fl_round, tags)
 
         base_model_nparray = None
         search_tag = "aggregated" if fl_round != 0 else "model"
