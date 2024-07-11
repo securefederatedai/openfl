@@ -9,7 +9,7 @@ import tensorflow as tf
 from openfl.utilities import Metric
 from openfl.federated import TensorFlowTaskRunner
 
-class TensorFlow2DUNet(TensorFlowTaskRunner):
+class UNet2D(TensorFlowTaskRunner):
     """Initialize.
 
     Args:

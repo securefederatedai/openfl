@@ -12,7 +12,7 @@ from tensorflow.python.keras.utils.data_utils import get_file
 logger = getLogger(__name__)
 
 
-class TensorFlowMNISTInMemory(TensorFlowDataLoader):
+class MNISTDataloader(TensorFlowDataLoader):
     """TensorFlow Data Loader for MNIST Dataset."""
 
     def __init__(self, data_path, batch_size, **kwargs):

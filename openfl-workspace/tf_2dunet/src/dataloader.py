@@ -15,7 +15,7 @@ from openfl.federated import TensorFlowDataLoader
 logger = logging.getLogger(__name__)
 
 
-class TensorFlowBratsInMemory(TensorFlowDataLoader):
+class BratsDataloader(TensorFlowDataLoader):
     """TensorFlow Data Loader for the BraTS dataset."""
 
     def __init__(self, data_path, batch_size, percent_train=0.8, pre_split_shuffle=True, num_classes=1,

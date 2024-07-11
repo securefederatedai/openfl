@@ -12,7 +12,7 @@ import tensorflow_datasets as tfds
 logger = getLogger(__name__)
 
 
-class TensorFlowHistologyInMemory(TensorFlowDataLoader):
+class HistologyDataloader(TensorFlowDataLoader):
     """TensorFlow Data Loader for Colorectal Histology Dataset."""
 
     def __init__(self, data_path, batch_size, **kwargs):

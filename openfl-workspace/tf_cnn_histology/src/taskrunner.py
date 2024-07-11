@@ -10,7 +10,7 @@ from openfl.utilities import Metric
 from openfl.federated import TensorFlowTaskRunner
 
 
-class TensorFlowCNN(TensorFlowTaskRunner):
+class CNN(TensorFlowTaskRunner):
     """Initialize.
 
     Args:
