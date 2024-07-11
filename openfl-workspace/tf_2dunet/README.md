@@ -46,9 +46,4 @@ Output of `tree $DATA_PATH/$SUBFOLDER -L 1` in case when `n = 2`:
 If BraTS20 has the same structure, we can split it in the same way.
 Each slice contains subdirectories containing `*.nii.gz` files. According to `load_from_NIfTI` function [docstring](https://github.com/intel/openfl/blob/2e6680fedcd4d99363c94792c4a9cc272e4eebc0/openfl-workspace/tf_2dunet/src/brats_utils.py#L68), `NIfTI files for whole brains are assumed to be contained in subdirectories of the parent directory`. So we can use these slice folders as collaborator data paths.
 
-4) We are ready to train! Try executing the [Quick Start](https://openfl.readthedocs.io/en/latest/get_started/quickstart.html) steps. Make sure you have `openfl` installed in your Python virtual environment. Be sure to set the proper collaborator data paths in [plan/data.yaml](https://github.com/securefederatedai/openfl/blob/develop/openfl-workspace/tf_2dunet/plan/data.yaml) and during the `fx collaborator create` command. Alternatively, you can run a quick test with our 'Hello Federation' script:
-
-```bash
-python tests/github/test_hello_federation.py tf_2dunet fed_work12345alpha81671 one123dragons beta34unicorns localhost --col1-data-path ../$DATA_PATH/$SUBFOLDER/0 --col2-data-path ../$DATA_PATH/$SUBFOLDER/1 --rounds-to-train 5
-```
-The result of the execution of the command above is 5 completed training rounds. 
+4) We are ready to train! Try executing the [Quick Start](https://openfl.readthedocs.io/en/latest/get_started/quickstart.html) steps. Make sure you have `openfl` installed in your Python virtual environment. Be sure to set the proper collaborator data paths in [plan/data.yaml](https://github.com/securefederatedai/openfl/blob/develop/openfl-workspace/tf_2dunet/plan/data.yaml) and during the `fx collaborator create -n <collaborator name> -d <data path>` command. 
