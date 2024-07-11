@@ -29,11 +29,11 @@ from openfl.experimental.interface.cli.cli_helper import (
     WORKSPACE,
     print_tree,
 )
+from openfl.experimental.interface.cli.plan import freeze_plan
 from openfl.experimental.workspace_export import WorkspaceExport
 from openfl.utilities.path_check import is_directory_traversal
 from openfl.utilities.utils import rmtree
 from openfl.utilities.workspace import dump_requirements_file
-from plan import freeze_plan
 
 logger = getLogger(__name__)
 
