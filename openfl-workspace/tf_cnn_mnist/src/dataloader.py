@@ -38,20 +38,6 @@ class MNISTDataloader(TensorFlowDataLoader):
         self.num_classes = num_classes
 
 
-def one_hot(labels, classes):
-    """
-    One Hot encode a vector.
-
-    Args:
-        labels (list):  List of labels to onehot encode
-        classes (int): Total number of categorical classes
-
-    Returns:
-        np.array: Matrix of one-hot encoded labels
-    """
-    return np.eye(classes)[labels]
-
-
 def _load_raw_datashards(shard_num, collaborator_count):
     """
     Load the raw data by shard.
@@ -137,7 +123,7 @@ def load_mnist_shard(shard_num, collaborator_count, categorical=True,
 
     if categorical:
         # convert class vectors to binary class matrices
-        y_train = one_hot(y_train, num_classes)
-        y_valid = one_hot(y_valid, num_classes)
+        y_train = np.eye(num_classes)[y_train]
+        y_valid = np.eye(num_classes)[y_valid]
 
     return num_classes, X_train, y_train, X_valid, y_valid
