@@ -25,7 +25,7 @@ Different envoys can have different texts, so in this tutorial each envoy uses o
 ## III. Keras Model
 
 At this point OpenFL maintains Sequential API and Functional API. Keras Submodel is not supported.
-https://github.com/intel/openfl/issues/185
+https://github.com/securefederatedai/openfl/issues/185
 <br/>
 <br/>
 

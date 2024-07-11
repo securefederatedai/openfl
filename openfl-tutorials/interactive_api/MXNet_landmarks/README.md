@@ -39,7 +39,7 @@ on [link](https://www.kaggle.com/c/facial-keypoints-detection/data)
 
 ### 2. Adding support for a third-party framework
 
-You need to write your own adapter class which is based on `FrameworkAdapterPluginInterface` [class](https://github.com/intel/openfl/blob/develop/openfl/plugins/frameworks_adapters/framework_adapter_interface.py). This class should contain at least two methods:
+You need to write your own adapter class which is based on `FrameworkAdapterPluginInterface` [class](https://github.com/securefederatedai/openfl/blob/develop/openfl/plugins/frameworks_adapters/framework_adapter_interface.py). This class should contain at least two methods:
 
  - `get_tensor_dict(model, optimizer=None)` - extracts tensor dict from a model and optionally[^1] an optimizer. The resulting tensors must be converted to **dict{str: numpy.array}** for forwarding and aggregation.
 
@@ -53,7 +53,7 @@ You need to write your own adapter class which is based on `FrameworkAdapterPlug
                     framework_plugin=framework_adapter)
 ```
 
-[^1]: Whether or not to forward the optimizer parameters is set in the `start` method (FLExperiment [class](https://github.com/intel/openfl/blob/develop/openfl/interface/interactive_api/experiment.py) object, parameter `opt_treatment`).
+[^1]: Whether or not to forward the optimizer parameters is set in the `start` method (FLExperiment [class](https://github.com/securefederatedai/openfl/blob/develop/openfl/interface/interactive_api/experiment.py) object, parameter `opt_treatment`).
 
 ### Run experiment
 

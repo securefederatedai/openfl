@@ -99,7 +99,7 @@ Envoy
 
 The Envoy is a long-lived entity that runs on collaborator nodes connected to the Director. 
 
-Every Envoy is matched to one `shard descriptor <https://github.com/intel/openfl/blob/develop/openfl/interface/interactive_api/shard_descriptor.py>`_
+Every Envoy is matched to one `shard descriptor <https://github.com/securefederatedai/openfl/blob/develop/openfl/interface/interactive_api/shard_descriptor.py>`_
 in order to run. When the Director starts an experiment, the Envoy accepts the experiment workspace,
 prepares the environment, and starts a Collaborator.
 

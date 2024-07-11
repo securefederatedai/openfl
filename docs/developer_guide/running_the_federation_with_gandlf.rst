@@ -42,19 +42,19 @@ Configurable Settings
 ^^^^^^^^^^^^^^^^^^^^^
 
 - :class:`Aggregator <openfl.component.Aggregator>`
-    `openfl.component.Aggregator <https://github.com/intel/openfl/blob/develop/openfl/component/aggregator/aggregator.py>`_
+    `openfl.component.Aggregator <https://github.com/securefederatedai/openfl/blob/develop/openfl/component/aggregator/aggregator.py>`_
 
 - :class:`Collaborator <openfl.component.Collaborator>`
-    `openfl.component.Collaborator <https://github.com/intel/openfl/blob/develop/openfl/component/collaborator/collaborator.py>`_
+    `openfl.component.Collaborator <https://github.com/securefederatedai/openfl/blob/develop/openfl/component/collaborator/collaborator.py>`_
 
 - :class:`Data Loader <openfl.federated.data.loader.DataLoader>`
-    `openfl.federated.data.loader.DataLoader <https://github.com/intel/openfl/blob/develop/openfl/federated/data/loader.py>`_
+    `openfl.federated.data.loader.DataLoader <https://github.com/securefederatedai/openfl/blob/develop/openfl/federated/data/loader.py>`_
 
 - :class:`Task Runner <openfl.federated.task.runner.TaskRunner>`
-    `openfl.federated.task.runner.TaskRunner <https://github.com/intel/openfl/blob/develop/openfl/federated/task/runner.py>`_
+    `openfl.federated.task.runner.TaskRunner <https://github.com/securefederatedai/openfl/blob/develop/openfl/federated/task/runner.py>`_
 
 - :class:`Assigner <openfl.component.Assigner>`
-    `openfl.component.Assigner <https://github.com/intel/openfl/blob/develop/openfl/component/assigner/assigner.py>`_
+    `openfl.component.Assigner <https://github.com/securefederatedai/openfl/blob/develop/openfl/component/assigner/assigner.py>`_
 
 
 Tasks
@@ -67,7 +67,7 @@ Each task subsection contains the following:
 - ``kwargs``: kwargs passed to the ``function``.
 
 .. note::
-    See an `example <https://github.com/intel/openfl/blob/develop/openfl/federated/task/runner.py>`_ of the :class:`TaskRunner <openfl.federated.TaskRunner>` class for details.
+    See an `example <https://github.com/securefederatedai/openfl/blob/develop/openfl/federated/task/runner.py>`_ of the :class:`TaskRunner <openfl.federated.TaskRunner>` class for details.
 
 
 .. _running_the_federation_manual_gandlf:
@@ -86,7 +86,7 @@ Simulate a federation
     See :ref:`install_package` for details.
 
 
-You can use the `"Hello Federation" bash script <https://github.com/intel/openfl/blob/develop/tests/github/test_hello_federation.py>`_ to quickly create a federation (an aggregator node and two collaborator nodes) to test the project pipeline.
+You can use the `"Hello Federation" bash script <https://github.com/securefederatedai/openfl/blob/develop/tests/github/test_hello_federation.py>`_ to quickly create a federation (an aggregator node and two collaborator nodes) to test the project pipeline.
 
 .. literalinclude:: ../../tests/github/test_hello_federation.py
   :language: bash
