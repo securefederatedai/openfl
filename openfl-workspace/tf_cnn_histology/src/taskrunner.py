@@ -56,8 +56,6 @@ class CNN(TensorFlowTaskRunner):
             keras.src.engine.functional.Functional
 
         """
-        print(tf.config.threading.get_intra_op_parallelism_threads())
-        print(tf.config.threading.get_inter_op_parallelism_threads())
 
         # Define Model using Functional API
 
