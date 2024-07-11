@@ -14,18 +14,27 @@ To use a `tree` command, you have to install it first: `sudo apt-get install tre
     - `HGG`: glioblastoma scans
     - `LGG`: lower grade glioma scans
  
-Let's pick `HGG`: `export SUBFOLDER=HGG`. The learning rate has been already tuned for this task, so you don't have to change it. If you pick `LGG`, all the next steps will be the same.
+Let's pick `HGG`: `export SUBFOLDER=MICCAI_BraTS_2019_Data_Training/HGG`. The learning rate has been already tuned for this task, so you don't have to change it. If you pick `LGG`, all the next steps will be the same.
 
 3) In order for each collaborator to use separate slice of data, we split main folder into `n` subfolders:
 ```bash
+#!/bin/bash
 cd $DATA_PATH/$SUBFOLDER
-i=0; 
-for f in *; 
-do 
-    d=dir_$(printf $((i%n)));  # change n to number of data slices (number of collaborators in federation)
-    mkdir -p $d; 
-    mv "$f" $d; 
-    let i++; 
+
+n=2  # Set this to the number of directories you want to create
+
+# Get a list of all files and shuffle them
+files=($(ls | shuf))
+
+# Create the target directories if they don't exist
+for ((i=0; i<n; i++)); do
+  mkdir -p "$i"
+done
+
+# Split the files between the directories
+for i in "${!files[@]}"; do
+  target_dir=$((i % n))
+  mv "${files[$i]}" "$target_dir/"
 done
 ```
 Output of `tree $DATA_PATH/$SUBFOLDER -L 1` in case when `n = 2`:
@@ -37,8 +46,9 @@ Output of `tree $DATA_PATH/$SUBFOLDER -L 1` in case when `n = 2`:
 If BraTS20 has the same structure, we can split it in the same way.
 Each slice contains subdirectories containing `*.nii.gz` files. According to `load_from_NIfTI` function [docstring](https://github.com/intel/openfl/blob/2e6680fedcd4d99363c94792c4a9cc272e4eebc0/openfl-workspace/tf_2dunet/src/brats_utils.py#L68), `NIfTI files for whole brains are assumed to be contained in subdirectories of the parent directory`. So we can use these slice folders as collaborator data paths.
 
-4) We are ready to train! Try executing the [Hello Federation](https://openfl.readthedocs.io/en/latest/running_the_federation.baremetal.html#hello-federation-your-first-federated-learning-training) steps. Make sure you have `openfl` installed in your Python virtual environment. All you have to do is to specify collaborator data paths to slice folders. We have combined all 'Hello Federation' steps in a single bash script, so it is easier to test:
+4) We are ready to train! Try executing the [Quick Start](https://openfl.readthedocs.io/en/latest/get_started/quickstart.html) steps. Make sure you have `openfl` installed in your Python virtual environment. Be sure to set the proper collaborator data paths in [plan/data.yaml](https://github.com/securefederatedai/openfl/blob/develop/openfl-workspace/tf_2dunet/plan/data.yaml) and during the `fx collaborator create` command. Alternatively, you can run a quick test with our 'Hello Federation' script:
+
 ```bash
-bash tests/github/test_hello_federation.sh tf_2dunet fed_work12345alpha81671 one123dragons beta34unicorns localhost --col1-data-path $DATA_PATH/MICCAI_BraTS_2019_Data_Training/$SUBFOLDER/0 --col2-data-path $DATA_PATH/MICCAI_BraTS_2019_Data_Training/$SUBFOLDER/1 --rounds-to-train 5
+python tests/github/test_hello_federation.py tf_2dunet fed_work12345alpha81671 one123dragons beta34unicorns localhost --col1-data-path ../$DATA_PATH/$SUBFOLDER/0 --col2-data-path ../$DATA_PATH/$SUBFOLDER/1 --rounds-to-train 5
 ```
 The result of the execution of the command above is 5 completed training rounds. 

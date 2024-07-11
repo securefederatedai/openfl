@@ -83,18 +83,7 @@ class TensorFlowCNN(TensorFlowTaskRunner):
             epochs: Number of epochs to train.
             metrics: Names of metrics to save.
         """
-        if metrics is None:
-            metrics = []
-
-        model_metrics_names = self.model.metrics_names
-
-        for param in metrics:
-            if param not in model_metrics_names:
-                raise ValueError(
-                    f'TensorFlowTaskRunner does not support specifying new metrics. '
-                    f'Param_metrics = {metrics}, model_metrics_names = {model_metrics_names}'
-                )
-
+        
         history = self.model.fit(batch_generator,
                                  verbose=1,
                                  **kwargs)

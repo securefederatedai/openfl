@@ -9,7 +9,7 @@ from .task import TaskRunner  # NOQA
 from .data import DataLoader  # NOQA
 
 if importlib.util.find_spec('tensorflow'):
-    from .task import TensorFlowTaskRunner, TensorFlowTaskRunnerV1, KerasTaskRunner, FederatedModel  # NOQA
+    from .task import TensorFlowTaskRunner, KerasTaskRunner, FederatedModel  # NOQA
     from .data import TensorFlowDataLoader, KerasDataLoader, FederatedDataSet  # NOQA
 if importlib.util.find_spec('torch'):
     from .task import PyTorchTaskRunner, FederatedModel  # NOQA
