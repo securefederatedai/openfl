@@ -630,10 +630,12 @@ class Aggregator:
         # Check if all given tasks are completed by the collaborator
         all_tasks_completed = True
         for task in all_tasks:
+            if hasattr(task, "name"):
+                task = task.name
             all_tasks_completed = (
                 all_tasks_completed and
                 self._collaborator_task_completed(
-                    collaborator=collaborator_name, task_name=task.name,
+                    collaborator=collaborator_name, task_name=task,
                     round_num=self.round_number
                 )
             )
