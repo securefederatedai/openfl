@@ -88,9 +88,7 @@ class Aggregator:
         self.log_metric_callback = log_metric_callback
 
         self.straggler_handling_policy = (
-            straggler_handling_policy or CutoffTimeBasedStragglerHandling(
-                logger=self.logger
-            )
+            straggler_handling_policy or CutoffTimeBasedStragglerHandling()
         )
 
         if self.write_logs:
@@ -625,8 +623,11 @@ class Aggregator:
 
         self.collaborator_tasks_results[task_key] = task_results
 
-        # Check if all tasks are completed by collaborator
-        all_tasks = self.assigner.get_all_tasks_for_round(self.round_number)
+        # Get all tasks given to the collaborator for current round
+        all_tasks = self.assigner.get_tasks_for_collaborator(
+            collaborator_name, self.round_number
+        )
+        # Check if all given tasks are completed by the collaborator
         all_tasks_completed = True
         for task in all_tasks:
             t = TaskResultKey(
@@ -877,7 +878,14 @@ class Aggregator:
         # task sent
         # This handles getting the subset of collaborators that may be
         # part of the validation task
-        collaborators_for_task = self.collaborators_done
+        all_collaborators_for_task = self.assigner.get_collaborators_for_task(
+            task_name, self.round_number
+        )
+        # leave out stragglers for the round
+        collaborators_for_task = []
+        for c in all_collaborators_for_task:
+            if c in self.collaborators_done:
+                collaborators_for_task.append(c)
 
         # The collaborator data sizes for that task
         collaborator_weights_unnormalized = {
