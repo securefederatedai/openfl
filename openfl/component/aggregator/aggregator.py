@@ -633,7 +633,8 @@ class Aggregator:
             all_tasks_completed = (
                 all_tasks_completed and
                 self._collaborator_task_completed(
-                    collaborator=collaborator_name, task_name=task, round_num=self.round_number
+                    collaborator=collaborator_name, task_name=task.name,
+                    round_num=self.round_number
                 )
             )
 
