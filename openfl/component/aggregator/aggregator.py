@@ -630,11 +630,11 @@ class Aggregator:
         # Check if all given tasks are completed by the collaborator
         all_tasks_completed = True
         for task in all_tasks:
-            t = TaskResultKey(
-                task_name=task, owner=collaborator_name, round_number=self.round_number
-            )
             all_tasks_completed = (
-                all_tasks_completed and t in self.collaborator_tasks_results.keys()
+                all_tasks_completed and
+                self._collaborator_task_completed(
+                    collaborator=collaborator_name, task_name=task, round_num=self.round_number
+                )
             )
 
         # If the collaborator has completed ALL tasks for current round,
