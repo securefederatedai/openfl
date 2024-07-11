@@ -23,15 +23,15 @@ We are excited to announce the release of OpenFL 1.5.1 - our first since moving 
 ### 1.5 Highlights
 * **New Workflows Interface (Experimental)** - a new way of composing federated learning experiments inspired by [Metaflow](https://github.com/Netflix/metaflow). Enables the creation of custom aggregator and collaborators tasks. This initial release is intended for simulation on a single node (using the LocalRuntime); distributed execution (FederatedRuntime) to be enabled in a future release. 
 * **New use cases enabled by the workflow interface**:
-    * **[End-of-round validation with aggregator dataset](https://github.com/intel/openfl/blob/develop/openfl-tutorials/experimental/Workflow_Interface_102_Aggregator_Validation.ipynb)** 
-    * **[Privacy Meter](https://github.com/intel/openfl/tree/develop/openfl-tutorials/experimental/Privacy_Meter)** - Privacy meter, based on state-of-the-art membership inference attacks, provides a tool to quantitatively audit data privacy in statistical and machine learning algorithms. The objective of a membership inference attack is to determine whether a given data record was in the training dataset of the target model. Measures of success (accuracy, area under the ROC curve, true positive rate at a given false positive rate ...) for particular membership inference attacks against a target model are used to estimate privacy loss for that model (how much information a target model leaks about its training data). Since stronger attacks may be possible, these measures serve as lower bounds of the actual privacy loss. The Privacy Meter workflow example generates privacy loss reports for all party's local model updates as well as the global models throughout all rounds of the FL training. 
-    * **[Vertical Federated Learning Examples](https://github.com/intel/openfl/tree/develop/openfl-tutorials/experimental/Vertical_FL)** 
-    * **[Federated Model Watermarking](https://github.com/intel/openfl/blob/develop/openfl-tutorials/experimental/Workflow_Interface_301_MNIST_Watermarking.ipynb)** using the [WAFFLE](https://arxiv.org/pdf/2008.07298.pdf) method 
-    * **[Differential Privacy](https://github.com/intel/openfl/tree/develop/openfl-tutorials/experimental/Global_DP)** – Global differentially private federated learning using Opacus library to achieve a differentially private result w.r.t the inclusion or exclusion of any collaborator in the training process. At each round, a subset of collaborators are selected using a Poisson distribution over all collaborators, the selected collaborators perform local training with periodic clipping of their model delta (with respect to the current global model) to bound their contribution to the average of local model updates. Gaussian noise is then added to the average of these local models at the aggregator. This example is implemented in two different but statistically equivalent ways – the lower level API utilizes RDPAccountant and DPDataloader Opacus objects to perform privacy accounting and collaborator selection respectively, whereas the higher level API uses PrivacyEngine Opacus object for collaborator selection and internally utilizes RDPAccountant for privacy accounting. 
-* **[Habana Accelerator Support](https://github.com/intel/openfl/tree/develop/openfl-tutorials/interactive_api/HPU/PyTorch_TinyImageNet)** 
+    * **[End-of-round validation with aggregator dataset](https://github.com/securefederatedai/openfl/blob/develop/openfl-tutorials/experimental/Workflow_Interface_102_Aggregator_Validation.ipynb)** 
+    * **[Privacy Meter](https://github.com/securefederatedai/openfl/tree/develop/openfl-tutorials/experimental/Privacy_Meter)** - Privacy meter, based on state-of-the-art membership inference attacks, provides a tool to quantitatively audit data privacy in statistical and machine learning algorithms. The objective of a membership inference attack is to determine whether a given data record was in the training dataset of the target model. Measures of success (accuracy, area under the ROC curve, true positive rate at a given false positive rate ...) for particular membership inference attacks against a target model are used to estimate privacy loss for that model (how much information a target model leaks about its training data). Since stronger attacks may be possible, these measures serve as lower bounds of the actual privacy loss. The Privacy Meter workflow example generates privacy loss reports for all party's local model updates as well as the global models throughout all rounds of the FL training. 
+    * **[Vertical Federated Learning Examples](https://github.com/securefederatedai/openfl/tree/develop/openfl-tutorials/experimental/Vertical_FL)** 
+    * **[Federated Model Watermarking](https://github.com/securefederatedai/openfl/blob/develop/openfl-tutorials/experimental/Workflow_Interface_301_MNIST_Watermarking.ipynb)** using the [WAFFLE](https://arxiv.org/pdf/2008.07298.pdf) method 
+    * **[Differential Privacy](https://github.com/securefederatedai/openfl/tree/develop/openfl-tutorials/experimental/Global_DP)** – Global differentially private federated learning using Opacus library to achieve a differentially private result w.r.t the inclusion or exclusion of any collaborator in the training process. At each round, a subset of collaborators are selected using a Poisson distribution over all collaborators, the selected collaborators perform local training with periodic clipping of their model delta (with respect to the current global model) to bound their contribution to the average of local model updates. Gaussian noise is then added to the average of these local models at the aggregator. This example is implemented in two different but statistically equivalent ways – the lower level API utilizes RDPAccountant and DPDataloader Opacus objects to perform privacy accounting and collaborator selection respectively, whereas the higher level API uses PrivacyEngine Opacus object for collaborator selection and internally utilizes RDPAccountant for privacy accounting. 
+* **[Habana Accelerator Support](https://github.com/securefederatedai/openfl/tree/develop/openfl-tutorials/interactive_api/HPU/PyTorch_TinyImageNet)** 
 * **Official support for Python 3.9 and 3.10** 
-* **[EDEN Compression Pipeline](https://github.com/intel/openfl/blob/develop/openfl/pipelines/eden_pipeline.py)**: Communication-Efficient and Robust Distributed Mean Estimation for Federated Learning ([paper link](https://proceedings.mlr.press/v162/vargaftik22a.html)) 
-* **[FLAX Framework Support](https://github.com/intel/openfl/tree/develop/openfl-tutorials/interactive_api/Flax_CNN_CIFAR)**
+* **[EDEN Compression Pipeline](https://github.com/securefederatedai/openfl/blob/develop/openfl/pipelines/eden_pipeline.py)**: Communication-Efficient and Robust Distributed Mean Estimation for Federated Learning ([paper link](https://proceedings.mlr.press/v162/vargaftik22a.html)) 
+* **[FLAX Framework Support](https://github.com/securefederatedai/openfl/tree/develop/openfl-tutorials/interactive_api/Flax_CNN_CIFAR)**
 * **Improvements to the resiliency and security of the director / envoy infrastructure**: 
     * Optional notification to plan participants to agree to experiment sent to their infrastructure 
     * Improved resistance to loss of network connectivity and failure at various stages of execution
@@ -42,11 +42,11 @@ We are excited to announce the release of OpenFL 1.5.1 - our first since moving 
 
 The OpenFL v1.4 release contains the following:
 
-- [Straggler Handling](https://github.com/intel/openfl/pull/465)​
-- tf.data [Pipeline Example​](https://github.com/intel/openfl/pull/440)
-- [`PrivilegedAggregationFunction`](https://github.com/intel/openfl/pull/417) Interface​
-- FeTS Challenge [Task Runner](https://github.com/intel/openfl/pull/419)​
-- [JAX Framework Support](https://github.com/intel/openfl/pull/443)
+- [Straggler Handling](https://github.com/securefederatedai/openfl/pull/465)​
+- tf.data [Pipeline Example​](https://github.com/securefederatedai/openfl/pull/440)
+- [`PrivilegedAggregationFunction`](https://github.com/securefederatedai/openfl/pull/417) Interface​
+- FeTS Challenge [Task Runner](https://github.com/securefederatedai/openfl/pull/419)​
+- [JAX Framework Support](https://github.com/securefederatedai/openfl/pull/443)
 - Bug fixes and other improvements
 
 ## 1.3
@@ -54,15 +54,15 @@ The OpenFL v1.4 release contains the following:
 
 The OpenFL v1.3 release contains the following updates:
 
-* [Task Assigner functionality](https://github.com/intel/openfl/pull/343)
-* [OpenFL + Gramine to support workloads within SGX](https://github.com/intel/openfl/pull/339)
-* [FedCurv aggregation](https://github.com/intel/openfl/pull/167) algorithm
-* [HuggingFace/transformers audio classification example using SUPERB dataset](https://github.com/intel/openfl/pull/340)
-* [PyTorch Lightning GAN](https://github.com/intel/openfl/pull/287) example
-* NumPy Linear Regression example in [Google Colab](https://github.com/intel/openfl/pull/286)
-* [Adaptive Federated Optimization ](https://github.com/intel/openfl/issues/281) algorithms implementation: `FedYogi`, `FedAdagrad`, `FedAdam`
-* [MXNet landmarks regression example](https://github.com/intel/openfl/pull/349) as a custom plugin to OpenFL
-* Migration to [JupyterLab](https://github.com/intel/openfl/pull/307)
+* [Task Assigner functionality](https://github.com/securefederatedai/openfl/pull/343)
+* [OpenFL + Gramine to support workloads within SGX](https://github.com/securefederatedai/openfl/pull/339)
+* [FedCurv aggregation](https://github.com/securefederatedai/openfl/pull/167) algorithm
+* [HuggingFace/transformers audio classification example using SUPERB dataset](https://github.com/securefederatedai/openfl/pull/340)
+* [PyTorch Lightning GAN](https://github.com/securefederatedai/openfl/pull/287) example
+* NumPy Linear Regression example in [Google Colab](https://github.com/securefederatedai/openfl/pull/286)
+* [Adaptive Federated Optimization ](https://github.com/securefederatedai/openfl/issues/281) algorithms implementation: `FedYogi`, `FedAdagrad`, `FedAdam`
+* [MXNet landmarks regression example](https://github.com/securefederatedai/openfl/pull/349) as a custom plugin to OpenFL
+* Migration to [JupyterLab](https://github.com/securefederatedai/openfl/pull/307)
 * Bug fixes and other improvements
 
 ## 1.2
@@ -70,10 +70,10 @@ The OpenFL v1.3 release contains the following updates:
 
 The OpenFL v1.2 release contains the following updates:
 
-- Long-living entities: [Director/Envoy](https://github.com/intel/openfl/issues/120) for supporting multiple experiments within the same `Federation`
-- [Scalable PKI](https://github.com/intel/openfl/issues/38): semi-automatic mechanism for certificates distribution via step-ca
-- Examples with new Interactive API + Director/Envoy: [TensorFlow Next Word Prediction](https://github.com/intel/openfl/pull/183), [PyTorch Re-ID on Market](https://github.com/intel/openfl/pull/156), [PyTorch MobileNet v2 on TinyImageNet](https://github.com/intel/openfl/pull/170) 
-- [3D U-Net TensorFlow workspace for BraTS 2020 for CLI-based workflow](https://github.com/intel/openfl/pull/108)
+- Long-living entities: [Director/Envoy](https://github.com/securefederatedai/openfl/issues/120) for supporting multiple experiments within the same `Federation`
+- [Scalable PKI](https://github.com/securefederatedai/openfl/issues/38): semi-automatic mechanism for certificates distribution via step-ca
+- Examples with new Interactive API + Director/Envoy: [TensorFlow Next Word Prediction](https://github.com/securefederatedai/openfl/pull/183), [PyTorch Re-ID on Market](https://github.com/securefederatedai/openfl/pull/156), [PyTorch MobileNet v2 on TinyImageNet](https://github.com/securefederatedai/openfl/pull/170) 
+- [3D U-Net TensorFlow workspace for BraTS 2020 for CLI-based workflow](https://github.com/securefederatedai/openfl/pull/108)
 - `AggregationFunction` interface for custom aggregation functions in new Interactive API
 - Autocomplete of `fx` CLI
 - Bug fixes and documentation improvements
@@ -83,11 +83,11 @@ The OpenFL v1.2 release contains the following updates:
 
  The OpenFL v1.1 release contains the following updates:
 
-- New [Interactive Python API](https://github.com/intel/openfl/blob/develop/openfl-tutorials/interactive_api_tutorials_(experimental)/Pytorch_Kvasir_UNET_workspace/new_python_api_UNET.ipynb) (experimental)
+- New [Interactive Python API](https://github.com/securefederatedai/openfl/blob/develop/openfl-tutorials/interactive_api_tutorials_(experimental)/Pytorch_Kvasir_UNET_workspace/new_python_api_UNET.ipynb) (experimental)
 - Example FedProx algorithm implementation for PyTorch and Tensorflow
 - `AggregationFunctionInterface` for custom aggregation functions 
-- Adds a [Keras-based NLP Example](https://github.com/intel/openfl/tree/develop/openfl-workspace/keras_nlp)
-- Fixed lossy compression pipelines and added an [example](https://github.com/intel/openfl/tree/develop/openfl-workspace/keras_cnn_with_compression) for usage
+- Adds a [Keras-based NLP Example](https://github.com/securefederatedai/openfl/tree/develop/openfl-workspace/keras_nlp)
+- Fixed lossy compression pipelines and added an [example](https://github.com/securefederatedai/openfl/tree/develop/openfl-workspace/keras_cnn_with_compression) for usage
 - Bug fixes and documentation improvements
 
  ## 1.0.1

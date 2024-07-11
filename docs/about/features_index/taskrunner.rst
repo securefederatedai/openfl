@@ -42,7 +42,7 @@ Configurable Settings
 ^^^^^^^^^^^^^^^^^^^^^
 
 - :class:`Aggregator <openfl.component.Aggregator>`
-    `openfl.component.Aggregator <https://github.com/intel/openfl/blob/develop/openfl/component/aggregator/aggregator.py>`_
+    `openfl.component.Aggregator <https://github.com/securefederatedai/openfl/blob/develop/openfl/component/aggregator/aggregator.py>`_
     Defines the settings for the aggregator which is the model-owner in the experiment. While models can be trained from scratch, in many cases the federation performs fine-tuning of a previously trained model. For this reason, pre-trained weights for the model are stored in protobuf files on the aggregator node and passed to collaborator nodes during initialization. The settings for aggregator include:
 
  - :code:`init_state_path`: (str:path) Defines the weight protobuf file path where the experiment's initial weights will be loaded from. These weights will be generated with the `fx plan initialize` command.
@@ -53,7 +53,7 @@ Configurable Settings
 
 
 - :class:`Collaborator <openfl.component.Collaborator>`
-    `openfl.component.Collaborator <https://github.com/intel/openfl/blob/develop/openfl/component/collaborator/collaborator.py>`_
+    `openfl.component.Collaborator <https://github.com/securefederatedai/openfl/blob/develop/openfl/component/collaborator/collaborator.py>`_
     Defines the settings for the collaborator which is the data owner in the experiment. The settings for collaborator include:
 
  - :code:`delta_updates`: (boolean) Determines whether the difference in model weights between the current and previous round will be sent (True), or if whole checkpoints will be sent (False). Setting to delta_updates to True leads to higher sparsity in model weights sent across, which may improve compression ratios.
@@ -61,7 +61,7 @@ Configurable Settings
 
 
 - :class:`Data Loader <openfl.federated.data.loader.DataLoader>`
-    `openfl.federated.data.loader.DataLoader <https://github.com/intel/openfl/blob/develop/openfl/federated/data/loader.py>`_
+    `openfl.federated.data.loader.DataLoader <https://github.com/securefederatedai/openfl/blob/develop/openfl/federated/data/loader.py>`_
     Defines the data loader class that provides access to local dataset. It implements a train loader and a validation loader that takes in the train dataset and the validation dataset respectively. The settings for the dataloader include:
 
  - :code:`collaborator_count`: (int) The number of collaborators participating in the federation
@@ -70,12 +70,12 @@ Configurable Settings
 
 
 - :class:`Task Runner <openfl.federated.task.runner.TaskRunner>`
-    `openfl.federated.task.runner.TaskRunner <https://github.com/intel/openfl/blob/develop/openfl/federated/task/runner.py>`_
+    `openfl.federated.task.runner.TaskRunner <https://github.com/securefederatedai/openfl/blob/develop/openfl/federated/task/runner.py>`_
     Defines the model, training/validation functions, and how to extract and set the tensors from model weights and optimizer dictionary. Depending on different AI frameworks like PyTorch and Tensorflow, users can select pre-defined task runner methods.
 
 
 - :class:`Assigner <openfl.component.Assigner>`
-    `openfl.component.Assigner <https://github.com/intel/openfl/blob/develop/openfl/component/assigner/assigner.py>`_
+    `openfl.component.Assigner <https://github.com/securefederatedai/openfl/blob/develop/openfl/component/assigner/assigner.py>`_
     Defines the task that are sent to the collaborators from the aggregator. There are three default tasks that could be given to each Collaborator:
  
  - :code:`aggregated_model_validation`: (str) Perform validation on aggregated global model sent by the aggregator.
@@ -106,7 +106,7 @@ Each task subsection contains the following:
 - ``kwargs``: kwargs passed to the ``function``.
 
 .. note::
-    See an `example <https://github.com/intel/openfl/blob/develop/openfl/federated/task/runner.py>`_ of the :class:`TaskRunner <openfl.federated.TaskRunner>` class for details.
+    See an `example <https://github.com/securefederatedai/openfl/blob/develop/openfl/federated/task/runner.py>`_ of the :class:`TaskRunner <openfl.federated.TaskRunner>` class for details.
 
 
 .. _running_the_federation_manual:
@@ -525,7 +525,7 @@ Option 1: Deploy a Federation in a Docker Container
        $ docker run -it --network host openfl
 
 
-You can now experiment with |productName| in the container. For example, you can test the project pipeline with the `"Hello Federation" bash script <https://github.com/intel/openfl/blob/develop/tests/github/test_hello_federation.sh>`_.
+You can now experiment with |productName| in the container. For example, you can test the project pipeline with the `"Hello Federation" bash script <https://github.com/securefederatedai/openfl/blob/develop/tests/github/test_hello_federation.sh>`_.
 
 
 .. _running_the_federation_docker_workspace:

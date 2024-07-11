@@ -85,7 +85,7 @@ setup(
     description='Federated Learning for the Edge',
     long_description=long_description,
     long_description_content_type='text/markdown',
-    url='https://github.com/intel/openfl',
+    url='https://github.com/securefederatedai/openfl',
     packages=[
         'openfl',
         'openfl.component',
@@ -170,9 +170,9 @@ setup(
     setup_requires=['grpcio-tools>=1.56.2,<1.65.0'],
     python_requires='>=3.8, <3.12',
     project_urls={
-        'Bug Tracker': 'https://github.com/intel/openfl/issues',
+        'Bug Tracker': 'https://github.com/securefederatedai/openfl/issues',
         'Documentation': 'https://openfl.readthedocs.io/en/stable/',
-        'Source Code': 'https://github.com/intel/openfl',
+        'Source Code': 'https://github.com/securefederatedai/openfl',
     },
     classifiers=[
         'Environment :: Console',
