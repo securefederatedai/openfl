@@ -6,7 +6,7 @@ We welcome contributions from the community. There are several ways to contribut
 * Answering questions on our [discussions page](https://github.com/securefederatedai/openfl/discussions).
 * Participating in our [roadmap](https://github.com/securefederatedai/openfl/blob/develop/ROADMAP.md) discussions.
 
-We have a slack [channel](https://join.slack.com/t/openfl/shared_invite/zt-ovzbohvn-T5fApk05~YS_iZhjJ5yaTw) and we host regular [community meetings](https://github.com/intel/openfl#support).
+We have a slack [channel](https://join.slack.com/t/openfl/shared_invite/zt-ovzbohvn-T5fApk05~YS_iZhjJ5yaTw) and we host regular [community meetings](https://github.com/securefederatedai/openfl#support).
 
 
 ## How to contribute code
@@ -35,7 +35,7 @@ commits using `git commit --signoff`.
 
 Your signature [certifies](http://developercertificate.org/) that you wrote the patch, or, you otherwise have the right to pass it on as an open-source patch.
 
-OpenFL is licensed under the [Apache 2.0 license](https://github.com/intel/openfl/blob/develop/LICENSE). By contributing to the project, you agree to the license and copyright terms therein and release your contribution under these terms.
+OpenFL is licensed under the [Apache 2.0 license](https://github.com/securefederatedai/openfl/blob/develop/LICENSE). By contributing to the project, you agree to the license and copyright terms therein and release your contribution under these terms.
 
 ### Step 5. Code review and merge
 

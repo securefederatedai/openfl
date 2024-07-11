@@ -18,7 +18,7 @@ Python API
 2. In the ``override_config`` keyword argument of the :func:`openfl.native.run_experiment` native function, pass the implementation as a ``tasks.{task_name}.aggregation_type`` parameter.
 
 .. note::
-    See `Federated PyTorch MNIST Tutorial <https://github.com/intel/openfl/blob/develop/openfl-tutorials/Federated_Pytorch_MNIST_custom_aggregation_Tutorial.ipynb>`_ for an example of the custom aggregation function.
+    See `Federated PyTorch MNIST Tutorial <https://github.com/securefederatedai/openfl/blob/develop/openfl-tutorials/Federated_Pytorch_MNIST_custom_aggregation_Tutorial.ipynb>`_ for an example of the custom aggregation function.
     
 
 Command Line Interface
@@ -51,13 +51,13 @@ Adaptive Aggregation Functions
     Also, user must pass one of the arguments: ``params``
     - model parameters (a dictionary with named model parameters
     in the form of numpy arrays), or pass ``model_interface``
-    - an instance of the `ModelInterface <https://github.com/intel/openfl/blob/develop/openfl/interface/interactive_api/experiment.py>`_ class.
+    - an instance of the `ModelInterface <https://github.com/securefederatedai/openfl/blob/develop/openfl/interface/interactive_api/experiment.py>`_ class.
     If user pass both ``params`` and ``model_interface``,
     then the optimizer parameters are initialized via
     ``params``, ignoring ``model_interface`` argument.
 
     See the `AdagradAdaptiveAggregation
-    <https://github.com/intel/openfl/blob/develop/openfl/interface/aggregation_functions/adagrad_adaptive_aggregation.py>`_
+    <https://github.com/securefederatedai/openfl/blob/develop/openfl/interface/aggregation_functions/adagrad_adaptive_aggregation.py>`_
     definitions for details.
 
     `Adaptive federated optimization <https://arxiv.org/pdf/2003.00295.pdf>`_ original paper.
@@ -149,13 +149,13 @@ which will be used for global model aggreagation:
     ...
 
 .. note::
-    If you do not understand how to write your own numpy based optimizer, please see the `NumPyAdagrad <https://github.com/intel/openfl/blob/develop/openfl/utilities/optimizers/numpy/adagrad_optimizer.py>`_ and
-    `AdaptiveAggregation <https://github.com/intel/openfl/blob/develop/openfl/interface/aggregation_functions/core/adaptive_aggregation.py>`_ definitions for details.
+    If you do not understand how to write your own numpy based optimizer, please see the `NumPyAdagrad <https://github.com/securefederatedai/openfl/blob/develop/openfl/utilities/optimizers/numpy/adagrad_optimizer.py>`_ and
+    `AdaptiveAggregation <https://github.com/securefederatedai/openfl/blob/develop/openfl/interface/aggregation_functions/core/adaptive_aggregation.py>`_ definitions for details.
 
 Custom Aggregation Functions
 ----------------------------
 
-OpenFL provides interfaces to support your own custom aggregation functions. You can also create your own implementation of :class:`openfl.interface.aggregation_functions.core.AggregationFunction`. See `example <https://github.com/intel/openfl/blob/develop/openfl-tutorials/Federated_Pytorch_MNIST_custom_aggregation_Tutorial.ipynb>`_ for details.
+OpenFL provides interfaces to support your own custom aggregation functions. You can also create your own implementation of :class:`openfl.interface.aggregation_functions.core.AggregationFunction`. See `example <https://github.com/securefederatedai/openfl/blob/develop/openfl-tutorials/Federated_Pytorch_MNIST_custom_aggregation_Tutorial.ipynb>`_ for details.
 
 1. Define the behavior of the aggregation.
 
@@ -219,7 +219,7 @@ This function receives tensors for a single parameter from multiple collaborator
 
 
 .. note::
-    See the `definition <https://github.com/intel/openfl/blob/develop/openfl/interface/aggregation_functions/core/interface.py>`_ of :class:`openfl.interface.aggregation_functions.core.AggregationFunction.call` for details.
+    See the `definition <https://github.com/securefederatedai/openfl/blob/develop/openfl/interface/aggregation_functions/core/interface.py>`_ of :class:`openfl.interface.aggregation_functions.core.AggregationFunction.call` for details.
 
 
 Example of a Custom Aggregation Function
@@ -288,7 +288,7 @@ This is an example of a custom tensor clipping aggregation function that multipl
 
             return np.average(clipped_tensors, weights=weights, axis=0)
 
-A full implementation can be found at `Federated_Pytorch_MNIST_custom_aggregation_Tutorial.ipynb <https://github.com/intel/openfl/blob/develop/openfl-tutorials/Federated_Pytorch_MNIST_custom_aggregation_Tutorial.ipynb>`_
+A full implementation can be found at `Federated_Pytorch_MNIST_custom_aggregation_Tutorial.ipynb <https://github.com/securefederatedai/openfl/blob/develop/openfl-tutorials/Federated_Pytorch_MNIST_custom_aggregation_Tutorial.ipynb>`_
 
 Example of a Privileged Aggregation Function
 ============================================
@@ -378,4 +378,4 @@ Most of the time the AggregationFunction interface is sufficient to implement cu
                 
             return np.average(tensors, weights=weights, axis=0)
 
-A full implementation can be found at `Federated_Pytorch_MNIST_custom_aggregation_Tutorial.ipynb <https://github.com/intel/openfl/blob/develop/openfl-tutorials/Federated_Pytorch_MNIST_custom_aggregation_Tutorial.ipynb>`_
+A full implementation can be found at `Federated_Pytorch_MNIST_custom_aggregation_Tutorial.ipynb <https://github.com/securefederatedai/openfl/blob/develop/openfl-tutorials/Federated_Pytorch_MNIST_custom_aggregation_Tutorial.ipynb>`_

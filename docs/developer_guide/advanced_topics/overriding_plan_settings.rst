@@ -96,4 +96,4 @@ Since 'aggregator.settings.db_store_rounds' and 'compression_pipeline.template' 
     INFO     Did not find compression_pipeline.settings.n_clusters in config. Make sure it should exist. Creating...                        native.py:105
 
 
-A full implementation can be found at `Federated_Pytorch_MNIST_Tutorial.ipynb <https://github.com/intel/openfl/blob/develop/openfl-tutorials/Federated_Pytorch_MNIST_Tutorial.ipynb>`_ and at `Tensorflow_MNIST.ipynb <https://github.com/intel/openfl/blob/develop/openfl-tutorials/interactive_api/Tensorflow_MNIST/workspace/Tensorflow_MNIST.ipynb>`_.
+A full implementation can be found at `Federated_Pytorch_MNIST_Tutorial.ipynb <https://github.com/securefederatedai/openfl/blob/develop/openfl-tutorials/Federated_Pytorch_MNIST_Tutorial.ipynb>`_ and at `Tensorflow_MNIST.ipynb <https://github.com/securefederatedai/openfl/blob/develop/openfl-tutorials/interactive_api/Tensorflow_MNIST/workspace/Tensorflow_MNIST.ipynb>`_.
