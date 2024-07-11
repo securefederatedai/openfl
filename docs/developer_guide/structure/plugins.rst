@@ -9,7 +9,7 @@ Open Federated Learning (|productName|) is designed to be a flexible and extensi
 A plugin may be **required** or **optional**. 
 
 You can provide your implementations of |productName| plugins to achieve a desired behavior. Technically, a plugin is just a class that implements some interface. You may enable a plugin by putting its 
-import path and initialization parameters to the config file of a corresponding |productName| component or to the frontend Python API. See `openfl-tutorials <https://github.com/intel/openfl/tree/develop/openfl-tutorials>`_ for more details.
+import path and initialization parameters to the config file of a corresponding |productName| component or to the frontend Python API. See `openfl-tutorials <https://github.com/securefederatedai/openfl/tree/develop/openfl-tutorials>`_ for more details.
 
 .. _framework_adapter:
 

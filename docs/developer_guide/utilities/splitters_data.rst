@@ -23,7 +23,7 @@ Predefined |productName| data splitters functions are as follows:
 - ``openfl.interface.aggregation_functions.LogNormalNumPyDataSplitter``, which assumes the ``data`` argument as ``np.ndarray`` of integers (labels)
 - ``openfl.interface.aggregation_functions.DirichletNumPyDataSplitter``, which assumes the ``data`` argument as ``np.ndarray`` of integers (labels)
 
-Alternatively, you can create an `implementation <https://github.com/intel/openfl/blob/develop/openfl/utilities/data_splitters/numpy.py>`_ of :class:`openfl.plugins.data_splitters.NumPyDataSplitter` and pass it to the :code:`FederatedDataset` function as either ``train_splitter`` or ``valid_splitter`` keyword argument.
+Alternatively, you can create an `implementation <https://github.com/securefederatedai/openfl/blob/develop/openfl/utilities/data_splitters/numpy.py>`_ of :class:`openfl.plugins.data_splitters.NumPyDataSplitter` and pass it to the :code:`FederatedDataset` function as either ``train_splitter`` or ``valid_splitter`` keyword argument.
 
 
 OPTION 2: Use Dataset Splitters in your Shard Descriptor
@@ -50,5 +50,5 @@ This function receives ``data`` - NumPy array required to build the subsets of d
     X_valid_shard = X_valid[valid_idx]
 
 .. note::
-    By default, the data is shuffled and split equally. See an `example <https://github.com/intel/openfl/blob/develop/openfl/utilities/data_splitters/numpy.py>`_ of :class:`openfl.utilities.data_splitters.EqualNumPyDataSplitter` for details.
+    By default, the data is shuffled and split equally. See an `example <https://github.com/securefederatedai/openfl/blob/develop/openfl/utilities/data_splitters/numpy.py>`_ of :class:`openfl.utilities.data_splitters.EqualNumPyDataSplitter` for details.
     

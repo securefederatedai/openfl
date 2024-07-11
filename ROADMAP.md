@@ -15,7 +15,7 @@ All interfaces in OpenFL support the standard horizontal FL training workflow to
 4. The collaborator performs validation with their local validation dataset on their locally trained model, and sends their validation metrics to the aggregator (locally_tuned_model_validation task)
 5. The aggregator applies an aggregation function (weighted average, FedCurv, FedProx, etc.) to the model weights, and reports the aggregate metrics.
 
-The [Task Assigner](https://github.com/intel/openfl/blob/develop/openfl-workspace/workspace/plan/defaults/assigner.yaml#L7-L9) determines the list of collaborator tasks to be performed, 
+The [Task Assigner](https://github.com/securefederatedai/openfl/blob/develop/openfl-workspace/workspace/plan/defaults/assigner.yaml#L7-L9) determines the list of collaborator tasks to be performed, 
 and both in the task runner API as well as the interactive API these tasks can be modified (to varying degrees).
 For example, to perform federated evaluation of a model, only the `aggregated_model_validation` task would be listed for the assigner's block of the federated plan.
 Equivalently for the interactive API, this can be done by only registering a single validation task.
@@ -36,7 +36,7 @@ In the process of thinking about federated workflows, and the properties that ar
 7. Don't reinvent unless absolutely necessary
 
 ### 1.2 Security, Privacy, and Governance
-OpenFL is designed for security and privacy, and soon we will be releasing some exciting extensions that build on running [OpenFL experiments within SGX enclaves](https://github.com/intel/openfl/blob/develop/openfl-gramine/MANUAL.md).   
+OpenFL is designed for security and privacy, and soon we will be releasing some exciting extensions that build on running [OpenFL experiments within SGX enclaves](https://github.com/securefederatedai/openfl/blob/develop/openfl-gramine/MANUAL.md).   
 
 ### 1.3 Decoupling interface from infrastructure
 The task runner interface is coupled with the the single experiment aggregator / collaborator infrastructure, and the interactive API is tied to the director / envoy infrastructure. 
