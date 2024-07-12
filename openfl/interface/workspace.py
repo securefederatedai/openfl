@@ -147,8 +147,7 @@ def create(prefix, template):
         check_call([
             executable, '-m', 'pip', 'install', '-r',
             f'{prefix}/requirements.txt'
-        ],
-                   shell=False)
+        ], shell=False)
         echo(
             f'Successfully installed packages from {prefix}/requirements.txt.')
     else:
@@ -469,7 +468,7 @@ def dockerize_(context, base_image, save):
     It should be called after plan initialization from the workspace dir.
 
     User is expected to be in docker group.
-    If your machine is behind a proxy, make sure you set it up in 
+    If your machine is behind a proxy, make sure you set it up in
     ~/.docker/config.json.
 
     Args:
@@ -542,8 +541,7 @@ def dockerize_(context, base_image, save):
     required=False,
     type=lambda p: Path(p).absolute(),
     default='/',
-    help=
-    'A 3072-bit RSA private key (PEM format) is required for signing the manifest.\n'
+    help='A 3072-bit RSA private key (PEM format) is required for signing the manifest.\n'
     'If a key is passed the gramine-sgx manifest fill be prepared.\n'
     'In option is ignored this command will build an image that can only run '
     'with gramine-direct (not in enclave).',
@@ -590,7 +588,7 @@ def graminize_(context, signing_key: Path, enclave_size: str, tag: str,
     It should be called after `fx plan initialize` inside the workspace dir.
 
     User is expected to be in docker group.
-    If your machine is behind a proxy, make sure you set it up in 
+    If your machine is behind a proxy, make sure you set it up in
     ~/.docker/config.json.
 
     TODO:

@@ -119,8 +119,8 @@ def generate_cert_request(fqdn):
 
     (CERT_DIR / 'server').mkdir(parents=True, exist_ok=True)
 
-    echo('  Writing AGGREGATOR certificate key pair to: ' +
-         style(f'{CERT_DIR}/server', fg='green'))
+    echo('  Writing AGGREGATOR certificate key pair to: '
+         + style(f'{CERT_DIR}/server', fg='green'))
 
     # Print csr hash before writing csr to disk
     csr_hash = get_csr_hash(server_csr)

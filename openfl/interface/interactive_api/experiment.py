@@ -80,7 +80,8 @@ class FLExperiment:
             experiment_name (str, optional): The name of the experiment.
                 Defaults to None.
             serializer_plugin (str, optional): The serializer plugin. Defaults
-                to 'openfl.plugins.interface_serializer.cloudpickle_serializer.CloudpickleSerializer'.
+                to 'openfl.plugins.interface_serializer.
+                cloudpickle_serializer.CloudpickleSerializer'.
         """
         self.federation = federation
         self.experiment_name = experiment_name or 'test-' + time.strftime(
@@ -154,7 +155,7 @@ class FLExperiment:
         """Use tensor dict to update model weights.
 
         This method updates the model weights using the provided tensor
-        dictionary. If the tensor dictionary is empty, it logs a warning and 
+        dictionary. If the tensor dictionary is empty, it logs a warning and
         returns the current model. Otherwise, it rebuilds the model with the
         new weights and updates the current model status.
 
@@ -356,8 +357,8 @@ class FLExperiment:
     def define_task_assigner(self, task_keeper, rounds_to_train):
         """Define task assigner by registered tasks.
 
-        This method defines a task assigner based on the registered tasks. 
-        It checks if there are 'train' and 'validate' tasks among the 
+        This method defines a task assigner based on the registered tasks.
+        It checks if there are 'train' and 'validate' tasks among the
         registered tasks and defines the task assigner accordingly. If there
         are both 'train' and 'validate' tasks, the task assigner assigns these
         tasks to each collaborator. If there are only 'validate' tasks, the
@@ -651,7 +652,7 @@ class TaskKeeper:
     4. optimizer (optional).
 
     Task returns a dictionary {metric name: metric value for this task}
-    
+
     Attributes:
         task_registry (dict): A dictionary mapping task names to callable
             functions.
@@ -830,7 +831,7 @@ class TaskKeeper:
 
     def get_registered_tasks(self) -> Dict[str, Task]:
         """Return registered tasks.
-        
+
         Returns:
             A dictionary mapping task names to Task objects.
         """

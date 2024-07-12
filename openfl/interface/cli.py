@@ -228,8 +228,8 @@ def error_handler(error):
                     fg='red'))
         if 'PyTorch' in str(error):
             echo(
-                style('EXCEPTION', fg='red', bold=True) + ' : ' +
-                style('Torch must be installed prior to running this command',
+                style('EXCEPTION', fg='red', bold=True) + ' : '
+                + style('Torch must be installed prior to running this command',
                       fg='red'))
     echo(
         style('EXCEPTION', fg='red', bold=True) + ' : '

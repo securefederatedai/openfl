@@ -9,7 +9,7 @@ from .shard_descriptor import DummyShardDescriptor
 
 class Federation:
     """Federation class.
-    
+
     Manages information about collaborator settings, local data, and network settings.
 
     The Federation class is used to maintain information about collaborator-related settings,
