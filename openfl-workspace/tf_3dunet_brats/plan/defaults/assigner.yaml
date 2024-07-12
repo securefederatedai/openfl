@@ -1,0 +1,9 @@
+template : openfl.component.RandomGroupedAssigner
+settings :
+  task_groups  :
+    - name       : train_and_validate
+      percentage : 1.0
+      tasks      :
+        - aggregated_model_validation
+        - train
+        - locally_tuned_model_validation
