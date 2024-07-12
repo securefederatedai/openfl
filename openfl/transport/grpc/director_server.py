@@ -248,18 +248,10 @@ class DirectorGRPCServer(director_pb2_grpc.DirectorServicer):
         logger.debug('GetExperimentStatus request received')
         caller = self.get_caller(context)
         experiment_status = await self.director.get_experiment_status(
-<<<<<<< HEAD
-            experiment_name=request.experiment_name,
-            caller=caller
-        )
-        logger.debug('Sending GetExperimentStatus response')
-        return director_pb2.GetExperimentStatusResponse(experiment_status=experiment_status)
-=======
             experiment_name=request.experiment_name, caller=caller)
         logger.debug('Sending GetExperimentStatus response')
         return director_pb2.GetExperimentStatusResponse(
             experiment_status=experiment_status)
->>>>>>> b55501f (Update conflict files for merge)
 
     async def GetTrainedModel(self, request, context):  # NOQA:N802
         """RPC for retrieving trained models.
@@ -294,8 +286,6 @@ class DirectorGRPCServer(director_pb2_grpc.DirectorServicer):
 
         model_proto = construct_model_proto(trained_model_dict, 0,
                                             NoCompressionPipeline())
-
-        logger.debug('Sending trained model')
 
         logger.debug('Sending trained model')
 
@@ -336,11 +326,6 @@ class DirectorGRPCServer(director_pb2_grpc.DirectorServicer):
         Returns:
             director_pb2.WaitExperimentResponse: The response to the request.
         """
-<<<<<<< HEAD
-        logger.info(f'Request WaitExperiment has got from envoy {request.collaborator_name}!')
-        experiment_name = await self.director.wait_experiment(request.collaborator_name)
-        logger.debug(f'Experiment {experiment_name} is ready for {request.collaborator_name}')
-=======
         logger.debug(
             f'Request WaitExperiment received from envoy {request.collaborator_name}'
         )
@@ -349,7 +334,6 @@ class DirectorGRPCServer(director_pb2_grpc.DirectorServicer):
         logger.debug(
             f'Experiment {experiment_name} is ready for {request.collaborator_name}'
         )
->>>>>>> b55501f (Update conflict files for merge)
 
         return director_pb2.WaitExperimentResponse(
             experiment_name=experiment_name)
@@ -433,16 +417,10 @@ class DirectorGRPCServer(director_pb2_grpc.DirectorServicer):
         response = director_pb2.SetExperimentFailedResponse()
         if self.get_caller(context) != CLIENT_ID_DEFAULT:
             return response
-<<<<<<< HEAD
-        logger.error(f'Collaborator {request.collaborator_name} failed with error code:'
-                     f' {request.error_code}, error_description: {request.error_description}'
-                     f'Stopping experiment.')
-=======
         logger.error(
             f'Collaborator {request.collaborator_name} failed with error code:'
             f' {request.error_code}, error_description: {request.error_description}'
             f'Stopping experiment.')
->>>>>>> b55501f (Update conflict files for merge)
         self.director.set_experiment_failed(
             experiment_name=request.experiment_name,
             collaborator_name=request.collaborator_name)
