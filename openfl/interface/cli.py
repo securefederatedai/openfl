@@ -208,7 +208,8 @@ def help_(context, subcommand):
 
     Args:
         context (click.core.Context): Click context.
-        subcommand (str, optional): Subcommand to display help for. Defaults to None.
+        subcommand (str, optional): Subcommand to display help for. Defaults
+            to None.
     """
     pass
 

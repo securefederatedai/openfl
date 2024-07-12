@@ -71,7 +71,8 @@ def initialize(context, plan_config, cols_config, data_config,
                aggregator_address, feature_shape, gandlf_config):
     """Initialize Data Science plan.
 
-    Create a protocol buffer file of the initial model weights for the federation.
+    Create a protocol buffer file of the initial model weights for the
+    federation.
 
     Args:
         context (click.core.Context): Click context.
@@ -208,7 +209,7 @@ def freeze(plan_config):
 
 def switch_plan(name):
     """Switch the FL plan to this one.
-    
+
     Args:
         name (str): Name of the Federated learning plan.
     """
@@ -255,7 +256,7 @@ def switch_plan(name):
         type=str)
 def switch_(name):
     """Switch the current plan to this plan.
-    
+
     Args:
         name (str): Name of the Federated learning plan.
     """
@@ -271,7 +272,7 @@ def switch_(name):
         type=str)
 def save_(name):
     """Save the current plan to this plan and switch.
-    
+
     Args:
         name (str): Name of the Federated learning plan.
     """
@@ -297,7 +298,7 @@ def save_(name):
         type=str)
 def remove_(name):
     """Remove this plan.
-    
+
     Args:
         name (str): Name of the Federated learning plan.
     """
