@@ -1,5 +1,6 @@
 # Copyright (C) 2020-2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
 """Aggregation functions experimental package."""
 
 from .privileged_aggregation import PrivilegedAggregationFunction

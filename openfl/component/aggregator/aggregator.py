@@ -18,7 +18,7 @@ from openfl.utilities.logs import write_metric
 
 
 class Aggregator:
-    r"""An Aggregator is the central node in federated learning.
+    """An Aggregator is the central node in federated learning.
 
     Attributes:
         round_number (int): Current round number.
