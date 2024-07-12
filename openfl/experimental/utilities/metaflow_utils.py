@@ -720,7 +720,7 @@ class DefaultCard(DefaultCard):
             any: The rendered card.
         """
         # :param: task instead of metaflow.client.Task object task.pathspec
-        # (string) is provided
+        # (string) is provided # NOQA
         RENDER_TEMPLATE = read_file(RENDER_TEMPLATE_PATH)  # NOQA: N806
         JS_DATA = read_file(JS_PATH)  # NOQA: N806
         CSS_DATA = read_file(CSS_PATH)  # NOQA: N806

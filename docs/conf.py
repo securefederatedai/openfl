@@ -77,7 +77,7 @@ napoleon_custom_sections = [('Returns', 'params_style')]
 # This code extends Sphinx's GoogleDocstring class to support 'Keys',
 # 'Attributes', and 'Class Attributes' sections in docstrings. Allows for more
 # detailed and structured documentation of Python classes and their attributes.
-from sphinx.ext.napoleon.docstring import GoogleDocstring
+from sphinx.ext.napoleon.docstring import GoogleDocstring # NOQA
 
 # Define new sections and their corresponding parse methods
 new_sections = {
@@ -97,6 +97,7 @@ def patched_parse(self):
     for section in new_sections:
         self._sections[section] = getattr(self, f'_parse_{section}_section')
     self._unpatched_parse()
+
 
 # Apply the patch
 GoogleDocstring._unpatched_parse = GoogleDocstring._parse
