@@ -3,13 +3,15 @@
 
 """You may copy this file as the starting point of your own model."""
 
+import argparse
+from openfl.federated import TensorFlowTaskRunner
+import os
+from src.define_model import build_model, dice_coef, dice_loss, soft_dice_coef
+from src.dataloader import DatasetGenerator
 import tensorflow as tf
 
-from openfl.federated import TensorFlowTaskRunner
-from src.define_model import build_model, dice_coef, dice_loss, soft_dice_coef
 
-
-class TensorFlow3dUNet(TensorFlowTaskRunner):
+class UNet3D(TensorFlowTaskRunner):
     """Initialize.
 
     Args:
@@ -48,7 +50,6 @@ class TensorFlow3dUNet(TensorFlowTaskRunner):
                      n_cl_out=1,
                      use_upsampling=False,
                      dropout=0.2,
-                     print_summary=True,
                      seed=816,
                      depth=5,
                      dropout_at=(2, 3),
@@ -70,7 +71,6 @@ class TensorFlow3dUNet(TensorFlowTaskRunner):
                             n_cl_out=n_cl_out,
                             use_upsampling=use_upsampling,
                             dropout=dropout,
-                            print_summary=print_summary,
                             seed=seed,
                             depth=depth,
                             dropout_at=dropout_at,
@@ -98,12 +98,6 @@ class TensorFlow3dUNet(TensorFlowTaskRunner):
 
 
 if __name__ == '__main__':
-
-    from tf_brats_dataloader import DatasetGenerator
-    import os
-
-    import argparse
-
     parser = argparse.ArgumentParser(
         description='Train 3D U-Net model', add_help=True,
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
