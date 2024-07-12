@@ -54,9 +54,7 @@ def start(ip, port):
         venv = environ['VIRTUAL_ENV'].split(sep)[-1]
         check_call([
             executable, '-m', 'ipykernel', 'install', '--user', '--name',
-            f'{venv}'
-        ],
-                   shell=False)
+            f'{venv}'], shell=False)
 
     jupyter_command = ['jupyter', 'lab', '--notebook-dir', f'{TUTORIALS}']
 

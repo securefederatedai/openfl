@@ -167,7 +167,7 @@ class NumPyAdam(Optimizer):
 
             # Make an update for a group of parameters
             self.params[grad_name] -= (
-                self.learning_rate * grads_first_moment_normalized /
-                (np.sqrt(grads_second_moment_normalized) + self.epsilon))
+                self.learning_rate * grads_first_moment_normalized
+                / (np.sqrt(grads_second_moment_normalized) + self.epsilon))
 
             self.current_step[grad_name] += 1

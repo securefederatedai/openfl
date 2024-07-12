@@ -208,7 +208,7 @@ def init(workspace_template: str = 'default',
         workspace_template (str): The template that should be used as the
             basis for the experiment.  Defaults to 'default'.
             Other options include are any of the template names
-            [keras_cnn_mnist, tf_2dunet, tf_cnn_histology, 
+            [keras_cnn_mnist, tf_2dunet, tf_cnn_histology,
             mtorch_cnn_histology, torch_cnn_mnist].
         log_level (str): Log level for logging. METRIC level is available.
             Defaults to 'INFO'.
