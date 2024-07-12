@@ -14,12 +14,6 @@ class CNN(TensorFlowTaskRunner):
     """A basic convolutional neural network model."""
 
     def __init__(self, **kwargs):
-        """
-        Initialize.
-
-        Args:
-            **kwargs: Additional parameters to pass to the function
-        """
         super().__init__(**kwargs)
 
         self.model = self.build_model(self.feature_shape, self.data_loader.num_classes, **kwargs)
@@ -36,15 +30,16 @@ class CNN(TensorFlowTaskRunner):
                     num_classes,
                     **kwargs):
         """
-        Define the model architecture.
+        Build and compile a convolutional neural network model.
 
         Args:
-            input_shape (numpy.ndarray): The shape of the data
+            input_shape (List[int]): The shape of the data
             num_classes (int): The number of classes of the dataset
+            **kwargs (dict): Additional keyword arguments [optional]
 
         Returns:
-            tensorflow.python.keras.engine.sequential.Sequential
-
+            tf.keras.models.Sequential
+                A compiled Keras Sequential model ready for training.
         """
 
         model = tf.keras.models.Sequential([
@@ -71,17 +66,20 @@ class CNN(TensorFlowTaskRunner):
         return model
 
     def train_(self, batch_generator, metrics: list = None, **kwargs):
-        """Train single epoch.
+        """
+        Train single epoch.
 
         Override this function for custom training.
 
         Args:
-            batch_generator: Generator of training batches.
+            batch_generator (generator): Generator of training batches.
                 Each batch is a tuple of N train images and N train labels
                 where N is the batch size of the DataLoader of the current TaskRunner instance.
+            metrics (List[str]): A list of metric names to compute and save
+            **kwargs (dict): Additional keyword arguments
 
-            epochs: Number of epochs to train.
-            metrics: Names of metrics to save.
+        Returns:
+            list: Metric objects containing the computed metrics
         """
         
         history = self.model.fit(batch_generator,
@@ -91,4 +89,5 @@ class CNN(TensorFlowTaskRunner):
         for metric in metrics:
             value = np.mean([history.history[metric]])
             results.append(Metric(name=metric, value=np.array(value)))
+
         return results

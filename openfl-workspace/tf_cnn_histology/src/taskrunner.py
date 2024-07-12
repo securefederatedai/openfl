@@ -19,13 +19,6 @@ class CNN(TensorFlowTaskRunner):
     """
 
     def __init__(self, **kwargs):
-        """
-        Initialize.
-
-        Args:
-            **kwargs: Additional parameters to pass to the function
-
-        """
         super().__init__(**kwargs)
 
         self.model = self.build_model(
@@ -45,16 +38,16 @@ class CNN(TensorFlowTaskRunner):
                     num_classes,
                     **kwargs):
         """
-        Define the model architecture.
+        Build and compile a convolutional neural network model.
 
         Args:
-            input_shape (numpy.ndarray): The shape of the data
+            input_shape (List[int]): The shape of the data
             num_classes (int): The number of classes of the dataset
             **kwargs: Additional parameters to pass to the function
 
         Returns:
             keras.src.engine.functional.Functional
-
+                A compiled Keras model ready for training.
         """
 
         # Define Model using Functional API
@@ -106,29 +99,21 @@ class CNN(TensorFlowTaskRunner):
         return model
 
     def train_(self, batch_generator, metrics: list = None, **kwargs):
-        """Train single epoch.
+        """
+        Train single epoch.
 
         Override this function for custom training.
 
         Args:
-            batch_generator: Generator of training batches.
+            batch_generator (generator): Generator of training batches.
                 Each batch is a tuple of N train images and N train labels
                 where N is the batch size of the DataLoader of the current TaskRunner instance.
+            metrics (List[str]): A list of metric names to compute and save
+            **kwargs (dict): Additional keyword arguments
 
-            epochs: Number of epochs to train.
-            metrics: Names of metrics to save.
+        Returns:
+            list: Metric objects containing the computed metrics
         """
-        if metrics is None:
-            metrics = []
-
-        model_metrics_names = self.model.metrics_names
-
-        for param in metrics:
-            if param not in model_metrics_names:
-                raise ValueError(
-                    f'TensorFlowTaskRunner does not support specifying new metrics. '
-                    f'Param_metrics = {metrics}, model_metrics_names = {model_metrics_names}'
-                )
 
         history = self.model.fit(batch_generator,
                                  verbose=1,
