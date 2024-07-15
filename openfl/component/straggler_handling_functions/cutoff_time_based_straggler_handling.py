@@ -24,7 +24,9 @@ class CutoffTimeBasedStragglerHandling(StragglerHandlingFunction):
         self.round_start_time = round_start_time
         self.straggler_cutoff_time = straggler_cutoff_time
         self.minimum_reporting = minimum_reporting
+        self.is_timer_expired = False
         self.logger = getLogger(__name__)
+
         if self.straggler_cutoff_time == np.inf:
             self.logger.warning(
                 "CutoffTimeBasedStragglerHandling is disabled as straggler_cutoff_time "

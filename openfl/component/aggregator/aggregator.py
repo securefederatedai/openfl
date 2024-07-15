@@ -339,10 +339,10 @@ class Aggregator:
         # For CutoffTimeBasedStragglerHandling start straggler handling policy
         # and pass callback function
         if hasattr(self.straggler_handling_policy, "round_start_time"):
-        # if isinstance(self.straggler_handling_policy, CutoffTimeBasedStragglerHandling):
-            self.straggler_handling_policy.start_policy(
-                self._straggler_cutoff_time_elapsed, collaborator_name
-            )
+            if self.straggler_handling_policy.is_timer_expired:
+                self.straggler_handling_policy.start_policy(
+                    self._straggler_cutoff_time_elapsed, collaborator_name
+                )
         else:
             self.straggler_handling_policy.start_policy(
                 None, collaborator_name
@@ -358,6 +358,7 @@ class Aggregator:
         Returns:
             None
         """
+        self.straggler_handling_policy.is_timer_expired = True
         self.logger.warning(
             f"Round number: {self.round_number} cutoff timer elapsed after "
             f"{self.straggler_handling_policy.straggler_cutoff_time}s. "
@@ -633,8 +634,7 @@ class Aggregator:
             if hasattr(task, "name"):
                 task = task.name
             all_tasks_completed = (
-                all_tasks_completed and
-                self._collaborator_task_completed(
+                all_tasks_completed and self._collaborator_task_completed(
                     collaborator=collaborator_name, task_name=task,
                     round_num=self.round_number
                 )
@@ -988,6 +988,10 @@ class Aggregator:
 
         # Cleaning tensor db
         self.tensor_db.clean_up(self.db_store_rounds)
+        # NOTE: Only applicable to CutoffTimeBasedStragglerHandling policy.
+        # For the next round start timer again.
+        if hasattr(self.straggler_handling_policy, "is_timer_expired"):
+            self.straggler_handling_policy.is_timer_expired = False
 
     def _is_task_done(self, task_name):
         """Check that task is done."""
