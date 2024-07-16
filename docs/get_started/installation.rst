@@ -49,7 +49,7 @@ Perform this procedure on every node in the federation.
         
             .. code-block:: console
             
-                $ git clone https://github.com/intel/openfl.git 
+                $ git clone https://github.com/securefederatedai/openfl.git 
 
 
         #. Install build tools, before installing |productName|: 
@@ -137,6 +137,6 @@ Follow this procedure to download or build a Docker\*\  image of |productName|, 
 
 	.. code-block:: console
 
-	   $ git clone https://github.com/intel/openfl.git
+	   $ git clone https://github.com/securefederatedai/openfl.git
 	   $ cd openfl
 	   $ docker build -f openfl-docker/Dockerfile.base .

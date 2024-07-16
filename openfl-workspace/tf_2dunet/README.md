@@ -35,7 +35,7 @@ Output of `tree $DATA_PATH/$SUBFOLDER -L 1` in case when `n = 2`:
 └── 1
 ```
 If BraTS20 has the same structure, we can split it in the same way.
-Each slice contains subdirectories containing `*.nii.gz` files. According to `load_from_NIfTI` function [docstring](https://github.com/intel/openfl/blob/2e6680fedcd4d99363c94792c4a9cc272e4eebc0/openfl-workspace/tf_2dunet/src/brats_utils.py#L68), `NIfTI files for whole brains are assumed to be contained in subdirectories of the parent directory`. So we can use these slice folders as collaborator data paths.
+Each slice contains subdirectories containing `*.nii.gz` files. According to `load_from_NIfTI` function [docstring](https://github.com/securefederatedai/openfl/blob/2e6680fedcd4d99363c94792c4a9cc272e4eebc0/openfl-workspace/tf_2dunet/src/brats_utils.py#L68), `NIfTI files for whole brains are assumed to be contained in subdirectories of the parent directory`. So we can use these slice folders as collaborator data paths.
 
 4) We are ready to train! Try executing the [Hello Federation](https://openfl.readthedocs.io/en/latest/running_the_federation.baremetal.html#hello-federation-your-first-federated-learning-training) steps. Make sure you have `openfl` installed in your Python virtual environment. All you have to do is to specify collaborator data paths to slice folders. We have combined all 'Hello Federation' steps in a single bash script, so it is easier to test:
 ```bash
