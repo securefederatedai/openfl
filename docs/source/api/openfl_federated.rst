@@ -12,5 +12,7 @@ Federated modules reference:
    :template: custom-module-template.rst
    :recursive:
 
-   openfl.federated
+   openfl.federated.plan
+   openfl.federated.task
+   openfl.federated.data
    
