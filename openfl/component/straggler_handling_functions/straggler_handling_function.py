@@ -31,9 +31,23 @@ class StragglerHandlingFunction(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def straggler_cutoff_check(self, **kwargs):
+    def reset_policy_for_round(self) -> None:
+        """
+        Control whether to start the timer or not.
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def straggler_cutoff_check(self, **kwargs) -> bool:
         """
         Determines whether it is time to end the round early.
+
         Returns:
             bool
         """

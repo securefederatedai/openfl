@@ -20,6 +20,12 @@ class PercentageBasedStragglerHandling(StragglerHandlingFunction):
         self.minimum_reporting = minimum_reporting
         self.logger = getLogger(__name__)
 
+    def reset_policy_for_round(self) -> None:
+        """
+        Not required in PercentageBasedStragglerHandling.
+        """
+        pass
+
     def start_policy(
         self, callback: Callable, collaborator_name: str
     ) -> None:

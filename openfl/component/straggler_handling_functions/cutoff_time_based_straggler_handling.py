@@ -33,6 +33,12 @@ class CutoffTimeBasedStragglerHandling(StragglerHandlingFunction):
                 "is set to np.inf."
             )
 
+    def reset_policy_for_round(self) -> None:
+        """
+        Control whether to start the timer or not.
+        """
+        self.is_timer_expired = False
+
     def start_policy(
         self, callback: Callable, collaborator_name: str
     ) -> None:
@@ -49,7 +55,10 @@ class CutoffTimeBasedStragglerHandling(StragglerHandlingFunction):
         Returns:
             None
         """
-        if self.straggler_cutoff_time == np.inf:
+        # If straggler_cutoff_time is set to infinite or
+        # if the timer already expired for the current round do not start
+        # the timer again until next round.
+        if self.straggler_cutoff_time == np.inf or self.is_timer_expired:
             return
         self.round_start_time = time.time()
         if hasattr(self, "timer"):
