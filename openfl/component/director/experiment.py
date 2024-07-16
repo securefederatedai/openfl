@@ -6,7 +6,10 @@ import asyncio
 import logging
 from contextlib import asynccontextmanager
 from pathlib import Path
-from typing import Callable, Iterable, List, Union
+from typing import Callable
+from typing import Iterable
+from typing import List
+from typing import Union
 
 from openfl.federated import Plan
 from openfl.transport import AggregatorGRPCServer

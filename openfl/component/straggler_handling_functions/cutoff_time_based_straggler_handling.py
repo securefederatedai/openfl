@@ -5,9 +5,7 @@ import time
 
 import numpy as np
 
-from openfl.component.straggler_handling_functions.straggler_handling_function import (
-    StragglerHandlingFunction,
-)
+from openfl.component.straggler_handling_functions import StragglerHandlingFunction
 
 
 class CutoffTimeBasedStragglerHandling(StragglerHandlingFunction):
