@@ -64,4 +64,12 @@ Looking for the Open Flash Library project also referred to as OpenFL? Find it `
    :caption: CONTRIBUTING GUIDELINES
    :maxdepth: 2
 
-   contributing_guidelines/contributing   
+   contributing_guidelines/contributing
+
+
+.. Indices and tables
+.. ==================
+
+.. * :ref:`genindex`
+.. * :ref:`modindex`
+.. * :ref:`search`
