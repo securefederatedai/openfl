@@ -358,7 +358,7 @@ class Aggregator:
             None
         """
         # Stop timer from restarting until next round
-        self.straggler_handling_policy.is_timer_expired = True
+        # self.straggler_handling_policy.is_timer_expired = True
         self.logger.warning(
             f"Round number: {self.round_number} cutoff timer elapsed after "
             f"{self.straggler_handling_policy.straggler_cutoff_time}s. "
@@ -367,7 +367,7 @@ class Aggregator:
 
         # Check if minimum collaborators reported results
         straggler_check = self.straggler_handling_policy.straggler_cutoff_check(
-            len(self.collaborators_done)
+            len(self.collaborators_done), self.authorized_cols
         )
 
         if straggler_check:
@@ -381,18 +381,18 @@ class Aggregator:
                 f"{self.straggler_handling_policy.__class__.__name__} policy applied "
                 f"straggler: {self.stragglers}"
             )
-            self.logger.info(
-                f"{len(self.collaborators_done)} collaborators reported results within cutoff "
-                f"time. Applying cutoff policy and proceeding with end of round."
-            )
+            # self.logger.info(
+            #     f"{len(self.collaborators_done)} collaborators reported results within cutoff "
+            #     f"time. Applying cutoff policy and proceeding with end of round."
+            # )
             self._end_of_round_check()
-            return
+            # return
 
-        self.logger.info(
-            "Disregarding straggler handling policy and waiting for minimum of "
-            f"{self.straggler_handling_policy.minimum_reporting} collaborator(s) "
-            "to report results."
-        )
+        # self.logger.info(
+        #     "Disregarding straggler handling policy and waiting for minimum of "
+        #     f"{self.straggler_handling_policy.minimum_reporting} collaborator(s) "
+        #     "to report results."
+        # )
 
     def get_aggregated_tensor(self, collaborator_name, tensor_name,
                               round_number, report, tags, require_lossless):
@@ -652,21 +652,18 @@ class Aggregator:
         # NOTE: Only for %age based straggler handling policy
         # If minimum required collaborators have reported results
         # ignore results from all other collaborators and add them in stragglers list
-        if (
-            not hasattr(self.straggler_handling_policy, "round_start_time") and
-            self.straggler_handling_policy.straggler_cutoff_check(
-                len(self.collaborators_done), self.authorized_cols
-            )
+        if self.straggler_handling_policy.straggler_cutoff_check(
+            len(self.collaborators_done), self.authorized_cols
         ):
             self.stragglers = [
                 collab_name for collab_name in self.authorized_cols
                 if collab_name not in self.collaborators_done
             ]
-            self.logger.warning(
-                f"Identified straggler collaborators: {self.stragglers}."
+            if len(self.stragglers) != 0: self.logger.warning(
+                f"Identified straggler collaborators: {self.stragglers}"
             )
-
-        self._end_of_task_check(task_name)
+            self._end_of_round_check()
+        # self._end_of_task_check(task_name)
 
     def _process_named_tensor(self, named_tensor, collaborator_name):
         """
@@ -960,7 +957,8 @@ class Aggregator:
         Returns:
             None
         """
-        if not self._is_round_done() or self._end_of_round_check_done[self.round_number]:
+        # if not self._is_round_done() or self._end_of_round_check_done[self.round_number]:
+        if self._end_of_round_check_done[self.round_number]:
             return
 
         # Compute all validation related metrics

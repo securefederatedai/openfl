@@ -24,7 +24,7 @@ class CutoffTimeBasedStragglerHandling(StragglerHandlingFunction):
         self.round_start_time = round_start_time
         self.straggler_cutoff_time = straggler_cutoff_time
         self.minimum_reporting = minimum_reporting
-        self.is_timer_expired = False
+        self.__is_policy_applied = False
         self.logger = getLogger(__name__)
 
         if self.straggler_cutoff_time == np.inf:
@@ -37,7 +37,7 @@ class CutoffTimeBasedStragglerHandling(StragglerHandlingFunction):
         """
         Control whether to start the timer or not.
         """
-        self.is_timer_expired = False
+        self.__is_policy_applied = False
 
     def start_policy(
         self, callback: Callable, collaborator_name: str
@@ -58,7 +58,7 @@ class CutoffTimeBasedStragglerHandling(StragglerHandlingFunction):
         # If straggler_cutoff_time is set to infinite or
         # if the timer already expired for the current round do not start
         # the timer again until next round.
-        if self.straggler_cutoff_time == np.inf or self.is_timer_expired:
+        if self.straggler_cutoff_time == np.inf or self.__is_policy_applied:
             return
         self.round_start_time = time.time()
         if hasattr(self, "timer"):
@@ -70,14 +70,39 @@ class CutoffTimeBasedStragglerHandling(StragglerHandlingFunction):
         self.timer.daemon = True
         self.timer.start()
 
-    def straggler_cutoff_check(self, num_collaborators_done, all_collaborators=None):
+    def straggler_cutoff_check(
+        self, num_collaborators_done, all_collaborators=None,
+    ) -> bool:
         """
         If minimum_reporting collaborators have reported results within
         straggler_cutoff_time, then return True otherwise False.
         """
-        cutoff = self.__straggler_time_expired() and self.__minimum_collaborators_reported(
-            num_collaborators_done)
-        return cutoff
+        if not self.__straggler_time_expired():
+            return False
+        elif self.__straggler_time_expired() and not self.__is_policy_applied:
+            self.__is_policy_applied = True
+            if self.__minimum_collaborators_reported(num_collaborators_done):
+                self.logger.info(
+                    f"{len(self.collaborators_done)} collaborators reported results within cutoff "
+                    f"time. Applying cutoff policy and proceeding with end of round."
+                )
+                return True
+            else:
+                self.logger.info(
+                    "Disregarding straggler handling policy and waiting for ALL "
+                    f"{len(all_collaborators)} collaborator(s) to report results."
+                )
+                return False
+        elif self.__straggler_time_expired() and self.__is_policy_applied:
+            return len(all_collaborators) == num_collaborators_done
+        else:
+            self.logger.info("*"*20)
+            self.logger.info("Something has gone horribly wrong, and needs to be looked at immediately...")
+            self.logger.info("*"*20)
+            return None
+        # cutoff = self.__straggler_time_expired() and self.__minimum_collaborators_reported(
+        #     num_collaborators_done)
+        # return cutoff
 
     def __straggler_time_expired(self):
         """
