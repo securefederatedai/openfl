@@ -88,8 +88,8 @@ class CutoffTimeBasedStragglerHandling(StragglerHandlingFunction):
             # Check if minimum_reporting collaborators have reported results
             if self.__minimum_collaborators_reported(num_collaborators_done):
                 self.logger.info(
-                    f"{len(self.collaborators_done)} collaborators reported results within cutoff "
-                    f"time. Applying cutoff policy and proceeding with end of round."
+                    f"{len(num_collaborators_done)} collaborators reported results within "
+                    "cutoff time. Applying cutoff policy and proceeding with end of round."
                 )
                 return True
             self.logger.info(
