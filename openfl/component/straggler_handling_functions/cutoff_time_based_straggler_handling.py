@@ -101,8 +101,7 @@ class CutoffTimeBasedStragglerHandling(StragglerHandlingPolicy):
         # results.
         elif self.__straggler_time_expired() and self.__is_policy_applied_for_round:
             return total_collaborators == num_collaborators_done
-        else:
-            raise ValueError
+        raise ValueError
 
     def __straggler_time_expired(self):
         """
