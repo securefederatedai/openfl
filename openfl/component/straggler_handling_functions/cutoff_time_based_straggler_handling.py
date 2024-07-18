@@ -76,16 +76,10 @@ class CutoffTimeBasedStragglerHandling(StragglerHandlingPolicy):
         If minimum_reporting collaborators have reported results within
         straggler_cutoff_time, then return True otherwise False.
         """
-        # If straggler_cutoff_time is set to infinite, then only wait for
-        # minimum_reporting collaborators to report results.
+        # If straggler_cutoff_time is set to infinite, then wait for
+        # ALL collaborators to report results.
         if self.straggler_cutoff_time == np.inf:
-            if self.__minimum_collaborators_reported(num_collaborators_done):
-                self.logger.info(
-                    f"{num_collaborators_done} collaborators reported results within "
-                    "cutoff time. Applying cutoff policy and proceeding with end of round."
-                )
-                return True
-            return False
+            return num_collaborators_done == total_collaborators
         # Wait until time elapsed
         elif not self.__straggler_time_expired():
             return False
