@@ -8,10 +8,10 @@ import threading
 from typing import Callable
 from logging import getLogger
 
-from openfl.component.straggler_handling_functions import StragglerHandlingFunction
+from openfl.component.straggler_handling_functions import StragglerHandlingPolicy
 
 
-class CutoffTimeBasedStragglerHandling(StragglerHandlingFunction):
+class CutoffTimeBasedStragglerHandling(StragglerHandlingPolicy):
     def __init__(
         self,
         round_start_time=None,
@@ -27,11 +27,10 @@ class CutoffTimeBasedStragglerHandling(StragglerHandlingFunction):
         self.__is_policy_applied_for_round = False
         self.logger = getLogger(__name__)
 
-        if self.straggler_cutoff_time == np.inf:
-            self.logger.warning(
-                "CutoffTimeBasedStragglerHandling is disabled as straggler_cutoff_time "
-                "is set to np.inf."
-            )
+        if self.straggler_cutoff_time == np.inf: self.logger.warning(
+            "CutoffTimeBasedStragglerHandling is disabled as straggler_cutoff_time "
+            "is set to np.inf."
+        )
 
     def reset_policy_for_round(self) -> None:
         """
@@ -71,7 +70,7 @@ class CutoffTimeBasedStragglerHandling(StragglerHandlingFunction):
         self.timer.start()
 
     def straggler_cutoff_check(
-        self, num_collaborators_done, all_collaborators=None,
+        self, num_collaborators_done: int, total_collaborators: int,
     ) -> bool:
         """
         If minimum_reporting collaborators have reported results within
@@ -94,14 +93,14 @@ class CutoffTimeBasedStragglerHandling(StragglerHandlingFunction):
                 return True
             self.logger.info(
                 "Disregarding straggler handling policy and waiting for ALL "
-                f"{len(all_collaborators)} collaborator(s) to report results."
+                f"{total_collaborators} collaborator(s) to report results."
             )
             return False
         # If minimum_reporting collaborators have not reported results within cutoff
         # time, then disregard the policy and wait for ALL collaborators to report
         # results.
         elif self.__straggler_time_expired() and self.__is_policy_applied_for_round:
-            return len(all_collaborators) == num_collaborators_done
+            return total_collaborators == num_collaborators_done
         else:
             raise ValueError
 

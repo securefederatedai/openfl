@@ -8,7 +8,7 @@ from abc import abstractmethod
 from typing import Callable
 
 
-class StragglerHandlingFunction(ABC):
+class StragglerHandlingPolicy(ABC):
     """Federated Learning straggler handling interface."""
 
     @abstractmethod
@@ -44,7 +44,9 @@ class StragglerHandlingFunction(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def straggler_cutoff_check(self, **kwargs) -> bool:
+    def straggler_cutoff_check(
+        self, num_collaborators_done: int, total_collaborators: int, **kwargs
+    ) -> bool:
         """
         Determines whether it is time to end the round early.
 

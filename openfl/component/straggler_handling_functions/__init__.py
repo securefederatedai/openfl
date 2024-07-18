@@ -3,10 +3,10 @@
 
 """Straggler Handling functions package."""
 
-from .straggler_handling_function import StragglerHandlingFunction
+from .straggler_handling_function import StragglerHandlingPolicy
 from .cutoff_time_based_straggler_handling import CutoffTimeBasedStragglerHandling
 from .percentage_based_straggler_handling import PercentageBasedStragglerHandling
 
 __all__ = ['CutoffTimeBasedStragglerHandling',
            'PercentageBasedStragglerHandling',
-           'StragglerHandlingFunction']
+           'StragglerHandlingPolicy']

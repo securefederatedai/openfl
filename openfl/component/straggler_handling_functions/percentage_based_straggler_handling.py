@@ -4,10 +4,10 @@
 """Percentage based Straggler Handling function."""
 from logging import getLogger
 from typing import Callable
-from openfl.component.straggler_handling_functions import StragglerHandlingFunction
+from openfl.component.straggler_handling_functions import StragglerHandlingPolicy
 
 
-class PercentageBasedStragglerHandling(StragglerHandlingFunction):
+class PercentageBasedStragglerHandling(StragglerHandlingPolicy):
     def __init__(
         self,
         percent_collaborators_needed=1.0,
@@ -34,14 +34,17 @@ class PercentageBasedStragglerHandling(StragglerHandlingFunction):
         """
         pass
 
-    def straggler_cutoff_check(self, num_collaborators_done, all_collaborators):
+    def straggler_cutoff_check(
+        self, num_collaborators_done: int, total_collaborators: int,
+    ):
         """
         If percent_collaborators_needed and minimum_reporting collaborators have
         reported results, then it is time to end round early.
         """
-        cutoff = (num_collaborators_done >= self.percent_collaborators_needed * len(
-            all_collaborators)) and self.__minimum_collaborators_reported(num_collaborators_done)
-        return cutoff
+        return (
+            (num_collaborators_done >= self.percent_collaborators_needed * total_collaborators) and
+            self.__minimum_collaborators_reported(num_collaborators_done)
+        )
 
     def __minimum_collaborators_reported(self, num_collaborators_done):
         """

@@ -173,6 +173,7 @@ def test_collaborator_task_completed_true(agg):
     assert is_completed is True
 
 
+# TODO: To be removed after review
 def test_is_task_done_no_cols(agg):
     """Test that is_task_done returns True without corresponded collaborators."""
     task_name = 'test_task_name'
@@ -182,6 +183,7 @@ def test_is_task_done_no_cols(agg):
     assert is_task_done is True
 
 
+# TODO: To be removed after review
 def test_is_task_done_not_done(agg):
     """Test that is_task_done returns False in the corresponded case."""
     task_name = 'test_task_name'
@@ -193,6 +195,7 @@ def test_is_task_done_not_done(agg):
     assert is_task_done is False
 
 
+# TODO: To be removed after review
 def test_is_task_done_done(agg):
     """Test that is_task_done returns True in the corresponded case."""
     round_num = 0
@@ -209,6 +212,7 @@ def test_is_task_done_done(agg):
     assert is_task_done is True
 
 
+# TODO: To be removed after review
 def test_is_round_done_no_tasks(agg):
     """Test that is_round_done returns True in the corresponded case."""
     agg.assigner.get_all_tasks_for_round = mock.Mock(return_value=[])
@@ -217,6 +221,7 @@ def test_is_round_done_no_tasks(agg):
     assert is_round_done is True
 
 
+# TODO: To be removed after review
 def test_is_round_done_not_done(agg):
     """Test that is_round_done returns False in the corresponded case."""
     round_num = 0
@@ -233,6 +238,7 @@ def test_is_round_done_not_done(agg):
     assert is_round_done is False
 
 
+# TODO: To be removed after review
 def test_is_round_done_done(agg):
     """Test that is_round_done returns True in the corresponded case."""
     round_num = 0
