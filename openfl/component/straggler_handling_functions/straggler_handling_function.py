@@ -5,25 +5,21 @@
 
 from abc import ABC
 from abc import abstractmethod
-from typing import Callable
 
 
+# TODO: Rename this file to "straggler_handling_policy.py"
+# TODO: Ask Sachin: Should package name also be renamed?
 class StragglerHandlingPolicy(ABC):
     """Federated Learning straggler handling interface."""
 
     @abstractmethod
-    def start_policy(
-        self, callback: Callable, collaborator_name: str
-    ) -> None:
+    def start_policy(self, **kwargs) -> None:
         """
         Start straggler handling policy for collaborator for a particular round.
         NOTE: Refer CutoffTimeBasedStragglerHandling for reference.
 
         Args:
-            callback: Callable
-                Callback function for when straggler_cutoff_time elapses
-            collaborator_name: str
-                Name of the collaborator
+            **kwargs
 
         Returns:
             None
@@ -33,7 +29,7 @@ class StragglerHandlingPolicy(ABC):
     @abstractmethod
     def reset_policy_for_round(self) -> None:
         """
-        Control whether to start the timer or not.
+        Reset policy variable for the next round.
 
         Args:
             None
@@ -45,11 +41,17 @@ class StragglerHandlingPolicy(ABC):
 
     @abstractmethod
     def straggler_cutoff_check(
-        self, num_collaborators_done: int, total_collaborators: int, **kwargs
+        self, num_collaborators_done: int, num_all_collaborators: int, **kwargs
     ) -> bool:
         """
         Determines whether it is time to end the round early.
 
+        Args:
+            num_collaborators_done: int
+                Number of collaborators finished.
+            num_all_collaborators: int
+                Total number of collaborators.
+            
         Returns:
             bool
         """

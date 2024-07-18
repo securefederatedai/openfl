@@ -14,7 +14,8 @@ class PercentageBasedStragglerHandling(StragglerHandlingPolicy):
         minimum_reporting=1,
         **kwargs
     ):
-        if minimum_reporting == 0: raise ValueError("minimum_reporting cannot be 0")
+        if minimum_reporting == 0:
+            raise ValueError("minimum_reporting cannot be 0")
 
         self.percent_collaborators_needed = percent_collaborators_needed
         self.minimum_reporting = minimum_reporting
@@ -26,27 +27,25 @@ class PercentageBasedStragglerHandling(StragglerHandlingPolicy):
         """
         pass
 
-    def start_policy(
-        self, callback: Callable, collaborator_name: str
-    ) -> None:
+    def start_policy(self, **kwargs) -> None:
         """
         Not required in PercentageBasedStragglerHandling.
         """
         pass
 
     def straggler_cutoff_check(
-        self, num_collaborators_done: int, total_collaborators: int,
-    ):
+        self, num_collaborators_done: int, num_all_collaborators: int,
+    ) -> bool:
         """
         If percent_collaborators_needed and minimum_reporting collaborators have
         reported results, then it is time to end round early.
         """
         return (
-            (num_collaborators_done >= self.percent_collaborators_needed * total_collaborators) and
-            self.__minimum_collaborators_reported(num_collaborators_done)
+            (num_collaborators_done >= self.percent_collaborators_needed * num_all_collaborators)
+            and self.__minimum_collaborators_reported(num_collaborators_done)
         )
 
-    def __minimum_collaborators_reported(self, num_collaborators_done):
+    def __minimum_collaborators_reported(self, num_collaborators_done) -> bool:
         """
         If minimum required collaborators have reported results, then return True
         otherwise False.
