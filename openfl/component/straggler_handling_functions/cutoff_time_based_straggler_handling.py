@@ -121,8 +121,8 @@ class CutoffTimeBasedStragglerHandling(StragglerHandlingPolicy):
         Determines if straggler_cutoff_time is elapsed.
         """
         return (
-            self.round_start_time is not None and
-            ((time.time() - self.round_start_time) > self.straggler_cutoff_time)
+            self.round_start_time is not None
+            and ((time.time() - self.round_start_time) > self.straggler_cutoff_time)
         )
 
     def __minimum_collaborators_reported(self, num_collaborators_done) -> bool:

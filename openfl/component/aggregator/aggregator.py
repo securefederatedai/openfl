@@ -614,9 +614,10 @@ class Aggregator:
                 collab_name for collab_name in self.authorized_cols
                 if collab_name not in self.collaborators_done
             ]
-            if len(self.stragglers) != 0: self.logger.warning(
-                f"Identified straggler collaborators: {self.stragglers}"
-            )
+            if len(self.stragglers) != 0:
+                self.logger.warning(
+                    f"Identified straggler collaborators: {self.stragglers}"
+                )
             self._end_of_round_check()
 
     def _process_named_tensor(self, named_tensor, collaborator_name):

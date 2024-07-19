@@ -51,7 +51,7 @@ class StragglerHandlingPolicy(ABC):
                 Number of collaborators finished.
             num_all_collaborators: int
                 Total number of collaborators.
-            
+
         Returns:
             bool
         """
