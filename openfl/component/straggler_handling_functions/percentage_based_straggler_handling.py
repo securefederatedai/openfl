@@ -14,8 +14,8 @@ class PercentageBasedStragglerHandling(StragglerHandlingPolicy):
         minimum_reporting=1,
         **kwargs
     ):
-        if minimum_reporting == 0:
-            raise ValueError("minimum_reporting cannot be 0")
+        if minimum_reporting <= 0:
+            raise ValueError(f"minimum_reporting cannot be {minimum_reporting}")
 
         self.percent_collaborators_needed = percent_collaborators_needed
         self.minimum_reporting = minimum_reporting

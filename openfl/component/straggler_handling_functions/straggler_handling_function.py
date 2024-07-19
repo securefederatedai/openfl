@@ -8,7 +8,7 @@ from abc import abstractmethod
 
 
 # TODO: Rename this file to "straggler_handling_policy.py"
-# TODO: Ask Sachin: Should package name also be renamed?
+# TODO: Rename package to "straggler_handling_policies"
 class StragglerHandlingPolicy(ABC):
     """Federated Learning straggler handling interface."""
 

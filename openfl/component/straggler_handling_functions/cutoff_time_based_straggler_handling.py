@@ -19,8 +19,8 @@ class CutoffTimeBasedStragglerHandling(StragglerHandlingPolicy):
         minimum_reporting=1,
         **kwargs
     ):
-        if minimum_reporting == 0:
-            raise ValueError("minimum_reporting cannot be 0")
+        if minimum_reporting <= 0:
+            raise ValueError(f"minimum_reporting cannot be {minimum_reporting}")
 
         self.round_start_time = round_start_time
         self.straggler_cutoff_time = straggler_cutoff_time
@@ -83,12 +83,7 @@ class CutoffTimeBasedStragglerHandling(StragglerHandlingPolicy):
         Returns:
             bool
         """
-        # If straggler_cutoff_time is set to infinite, then wait for
-        # ALL collaborators to report results.
-        if self.straggler_cutoff_time == np.inf:
-            return num_collaborators_done == num_all_collaborators
-        # Wait until time elapsed
-        elif not self.__straggler_time_expired():
+        if not self.__straggler_time_expired():
             return False
         # Check if time has expired and policy is not applied
         elif self.__straggler_time_expired() and not self.__is_policy_applied_for_round:
@@ -107,10 +102,16 @@ class CutoffTimeBasedStragglerHandling(StragglerHandlingPolicy):
                 f"{num_all_collaborators} collaborator(s) to report results."
             )
             return False
+        # If straggler_cutoff_time is set to infinite,
+        # OR
         # If minimum_reporting collaborators have not reported results within cutoff
-        # time, then disregard the policy and wait for ALL collaborators to report
+        # time,
+        # then disregard the policy and wait for ALL collaborators to report
         # results.
-        elif self.__straggler_time_expired() and self.__is_policy_applied_for_round:
+        elif (
+            self.straggler_cutoff_time == np.inf
+            or (self.__straggler_time_expired() and self.__is_policy_applied_for_round)
+        ):
             return num_all_collaborators == num_collaborators_done
         # Something has gone, unhandled scenario, raising error.
         raise ValueError("Unhandled scenario")
