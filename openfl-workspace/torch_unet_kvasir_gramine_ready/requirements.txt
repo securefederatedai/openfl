@@ -1,4 +1,6 @@
--f https://download.pytorch.org/whl/cpu/torch_stable.html
-torch==1.13.1+cpu
-torchvision==0.14.1+cpu
-scikit-image==0.19.3
+scikit-image==0.24.0
+pillow==10.4.0
+
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch==2.3.1
+torchvision==0.18.1
