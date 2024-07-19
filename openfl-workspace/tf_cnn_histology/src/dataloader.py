@@ -3,6 +3,7 @@
 
 """You may copy this file as the starting point of your own model."""
 
+from openfl.federated import TensorFlowDataLoader
 from logging import getLogger
 
 import numpy as np
@@ -11,18 +12,31 @@ import tensorflow_datasets as tfds
 logger = getLogger(__name__)
 
 
-def one_hot(labels, classes):
-    """
-    One Hot encode a vector.
+class HistologyDataloader(TensorFlowDataLoader):
+    """TensorFlow Data Loader for Colorectal Histology Dataset."""
 
-    Args:
-        labels (list):  List of labels to onehot encode
-        classes (int): Total number of categorical classes
+    def __init__(self, data_path, batch_size, **kwargs):
+        """
+        Initialize.
 
-    Returns:
-        np.array: Matrix of one-hot encoded labels
-    """
-    return np.eye(classes)[labels]
+        Args:
+            data_path: File path for the dataset
+            batch_size (int): The batch size for the data loader
+            **kwargs: Additional arguments, passed to super init and load_mnist_shard
+        """
+        super().__init__(batch_size, **kwargs)
+
+        _, num_classes, X_train, y_train, X_valid, y_valid = load_histology_shard(
+            shard_num=data_path,
+            categorical=False, **kwargs
+        )
+
+        self.X_train = X_train
+        self.y_train = y_train
+        self.X_valid = X_valid
+        self.y_valid = y_valid
+
+        self.num_classes = num_classes
 
 
 def _load_raw_datashards(shard_num, collaborator_count):
@@ -120,7 +134,7 @@ def load_histology_shard(shard_num, collaborator_count, categorical=True,
 
     if categorical:
         # convert class vectors to binary class matrices
-        y_train = one_hot(y_train, num_classes)
-        y_valid = one_hot(y_valid, num_classes)
+        y_train = np.eye(num_classes)[y_train]
+        y_valid = np.eye(num_classes)[y_valid]
 
     return input_shape, num_classes, X_train, y_train, X_valid, y_valid
