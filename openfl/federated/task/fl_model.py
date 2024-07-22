@@ -74,7 +74,7 @@ class FederatedModel(TaskRunner):
                     'initialize_tensorkeys_for_functions',
                     'save_native', 'load_native', 'rebuild_model',
                     'set_optimizer_treatment',
-                    'train', 'train_batches', 'validate']:
+                    'train', 'train_batches', 'validate', 'validate_task', 'train_task']:
             return self.runner.__getattribute__(attr)
         return super(FederatedModel, self).__getattribute__(attr)
 
