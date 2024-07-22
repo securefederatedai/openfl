@@ -377,6 +377,7 @@ class FLExperiment:
         self.plan.authorized_cols = [
             name for name, info in shard_registry.items() if info['is_online']
         ]
+        self.plan.cn_mapping = {name:name for name in self.plan.authorized_cols}
         # Network part of the plan
         # We keep in mind that an aggregator FQND will be the same as the directors FQDN
         # We just choose a port randomly from plan hash
