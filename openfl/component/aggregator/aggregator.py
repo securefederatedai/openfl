@@ -336,16 +336,10 @@ class Aggregator:
         )
         sleep_time = 0
 
-        # For CutoffTimeBasedStragglerHandling start straggler handling policy
-        # and pass callback function
-        if hasattr(self.straggler_handling_policy, "round_start_time"):
-            self.straggler_handling_policy.start_policy(
-                self._straggler_cutoff_time_elapsed, collaborator_name
-            )
-        else:
-            self.straggler_handling_policy.start_policy(
-                None, collaborator_name
-            )
+        # Start straggler handling policy
+        self.straggler_handling_policy.start_policy(
+            callback=self._straggler_cutoff_time_elapsed
+        )
 
         return tasks, self.round_number, sleep_time, time_to_quit
 
@@ -357,8 +351,6 @@ class Aggregator:
         Returns:
             None
         """
-        # Stop timer from restarting until next round
-        self.straggler_handling_policy.is_timer_expired = True
         self.logger.warning(
             f"Round number: {self.round_number} cutoff timer elapsed after "
             f"{self.straggler_handling_policy.straggler_cutoff_time}s. "
@@ -366,11 +358,9 @@ class Aggregator:
         )
 
         # Check if minimum collaborators reported results
-        straggler_check = self.straggler_handling_policy.straggler_cutoff_check(
-            len(self.collaborators_done)
-        )
-
-        if straggler_check:
+        if self.straggler_handling_policy.straggler_cutoff_check(
+            len(self.collaborators_done), len(self.authorized_cols)
+        ):
             # If minimum required collaborators have reported results mark
             # remaining collaborators as stragglers
             self.stragglers = [
@@ -381,18 +371,7 @@ class Aggregator:
                 f"{self.straggler_handling_policy.__class__.__name__} policy applied "
                 f"straggler: {self.stragglers}"
             )
-            self.logger.info(
-                f"{len(self.collaborators_done)} collaborators reported results within cutoff "
-                f"time. Applying cutoff policy and proceeding with end of round."
-            )
             self._end_of_round_check()
-            return
-
-        self.logger.info(
-            "Disregarding straggler handling policy and waiting for minimum of "
-            f"{self.straggler_handling_policy.minimum_reporting} collaborator(s) "
-            "to report results."
-        )
 
     def get_aggregated_tensor(self, collaborator_name, tensor_name,
                               round_number, report, tags, require_lossless):
@@ -584,7 +563,7 @@ class Aggregator:
 
         # we mustn't have results already
         if self._collaborator_task_completed(
-                collaborator_name, task_name, round_number
+            collaborator_name, task_name, round_number
         ):
             raise ValueError(
                 f'Aggregator already has task results from collaborator {collaborator_name}'
@@ -624,49 +603,22 @@ class Aggregator:
 
         self.collaborator_tasks_results[task_key] = task_results
 
-        # Get all tasks given to the collaborator for current round
-        all_tasks = self.assigner.get_tasks_for_collaborator(
-            collaborator_name, self.round_number
-        )
-        # Check if all given tasks are completed by the collaborator
-        all_tasks_completed = True
-        for task in all_tasks:
-            if hasattr(task, "name"):
-                task = task.name
-            all_tasks_completed = (
-                all_tasks_completed and self._collaborator_task_completed(
-                    collaborator=collaborator_name, task_name=task,
-                    round_num=self.round_number
-                )
-            )
+        self._is_collaborator_done(collaborator_name)
 
-        # If the collaborator has completed ALL tasks for current round,
-        # update collaborators_done
-        if all_tasks_completed:
-            self.collaborators_done.append(collaborator_name)
-            self.logger.info(
-                f"Round: {self.round_number}, Collaborators that have completed all tasks: "
-                f"{self.collaborators_done}"
-            )
-
-        # NOTE: Only for %age based straggler handling policy
-        # If minimum required collaborators have reported results
-        # ignore results from all other collaborators and add them in stragglers list
-        if (
-            not hasattr(self.straggler_handling_policy, "round_start_time") and
-            self.straggler_handling_policy.straggler_cutoff_check(
-                len(self.collaborators_done), self.authorized_cols
-            )
+        # If minimum required collaborators have reported results,
+        # then identify stragglers and call for early round end.
+        if self.straggler_handling_policy.straggler_cutoff_check(
+            len(self.collaborators_done), len(self.authorized_cols)
         ):
             self.stragglers = [
                 collab_name for collab_name in self.authorized_cols
                 if collab_name not in self.collaborators_done
             ]
-            self.logger.warning(
-                f"Identified straggler collaborators: {self.stragglers}."
-            )
-
-        self._end_of_task_check(task_name)
+            if len(self.stragglers) != 0:
+                self.logger.warning(
+                    f"Identified straggler collaborators: {self.stragglers}"
+                )
+            self._end_of_round_check()
 
     def _process_named_tensor(self, named_tensor, collaborator_name):
         """
@@ -757,6 +709,7 @@ class Aggregator:
 
         return final_tensor_key, final_nparray
 
+    # TODO: To be removed after review
     def _end_of_task_check(self, task_name):
         """
         Check whether all collaborators who are supposed to perform the task complete.
@@ -884,7 +837,8 @@ class Aggregator:
         all_collaborators_for_task = self.assigner.get_collaborators_for_task(
             task_name, self.round_number
         )
-        # leave out stragglers for the round
+        # Leave out straggler for the round even if they've paritally
+        # completed given tasks
         collaborators_for_task = []
         for c in all_collaborators_for_task:
             if c in self.collaborators_done:
@@ -960,7 +914,7 @@ class Aggregator:
         Returns:
             None
         """
-        if not self._is_round_done() or self._end_of_round_check_done[self.round_number]:
+        if self._end_of_round_check_done[self.round_number]:
             return
 
         # Compute all validation related metrics
@@ -988,9 +942,10 @@ class Aggregator:
 
         # Cleaning tensor db
         self.tensor_db.clean_up(self.db_store_rounds)
-        # Round number is incremented, now timer can be started.
+        # Reset straggler handling policy for the next round.
         self.straggler_handling_policy.reset_policy_for_round()
 
+    # TODO: To be removed after review
     def _is_task_done(self, task_name):
         """Check that task is done."""
         all_collaborators = self.assigner.get_collaborators_for_task(
@@ -1005,11 +960,42 @@ class Aggregator:
                 collaborators_done.append(c)
 
         straggler_check = self.straggler_handling_policy.straggler_cutoff_check(
-            len(collaborators_done), all_collaborators)
+            len(collaborators_done), len(all_collaborators)
+        )
 
         # all are done or straggler policy calls for early round end.
         return straggler_check or len(all_collaborators) == len(collaborators_done)
 
+    def _is_collaborator_done(self, collaborator_name: str) -> None:
+        """
+        Check if all tasks given to the collaborator are completed then,
+        completed or not.
+        """
+        # Get all tasks given to the collaborator for current round
+        all_tasks = self.assigner.get_tasks_for_collaborator(
+            collaborator_name, self.round_number
+        )
+        # Check if all given tasks are completed by the collaborator
+        all_tasks_completed = True
+        for task in all_tasks:
+            if hasattr(task, "name"):
+                task = task.name
+            all_tasks_completed = (
+                all_tasks_completed and self._collaborator_task_completed(
+                    collaborator=collaborator_name, task_name=task,
+                    round_num=self.round_number
+                )
+            )
+        # If the collaborator has completed ALL tasks for current round,
+        # update collaborators_done
+        if all_tasks_completed:
+            self.collaborators_done.append(collaborator_name)
+            self.logger.info(
+                f"Round: {self.round_number}, Collaborators that have completed all tasks: "
+                f"{self.collaborators_done}"
+            )
+
+    # TODO: To be removed after review
     def _is_round_done(self):
         """Check that round is done."""
         tasks_for_round = self.assigner.get_all_tasks_for_round(self.round_number)
