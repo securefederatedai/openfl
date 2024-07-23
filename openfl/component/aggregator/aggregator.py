@@ -336,7 +336,8 @@ class Aggregator:
         )
         sleep_time = 0
 
-        # Start straggler handling policy
+        # Start straggler handling policy for timer based callback is required
+        # for %age based policy callback is not required
         self.straggler_handling_policy.start_policy(
             callback=self._straggler_cutoff_time_elapsed
         )
