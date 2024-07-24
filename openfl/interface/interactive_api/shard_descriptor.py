@@ -1,9 +1,10 @@
-# Copyright (C) 2020-2023 Intel Corporation
+# Copyright 2020-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+
 """Shard descriptor."""
 
-from typing import Iterable
-from typing import List
+from typing import Iterable, List
 
 import numpy as np
 
@@ -40,18 +41,13 @@ class ShardDescriptor:
     @property
     def dataset_description(self) -> str:
         """Return the dataset description."""
-        return ''
+        return ""
 
 
 class DummyShardDataset(ShardDataset):
     """Dummy shard dataset class."""
 
-    def __init__(
-            self, *,
-            size: int,
-            sample_shape: List[int],
-            target_shape: List[int]
-    ):
+    def __init__(self, *, size: int, sample_shape: List[int], target_shape: List[int]):
         """Initialize DummyShardDataset."""
         self.size = size
         self.samples = np.random.randint(0, 255, (self.size, *sample_shape), np.uint8)
@@ -70,10 +66,10 @@ class DummyShardDescriptor(ShardDescriptor):
     """Dummy shard descriptor class."""
 
     def __init__(
-            self,
-            sample_shape: Iterable[str],
-            target_shape: Iterable[str],
-            size: int
+        self,
+        sample_shape: Iterable[str],
+        target_shape: Iterable[str],
+        size: int,
     ) -> None:
         """Initialize DummyShardDescriptor."""
         self._sample_shape = [int(dim) for dim in sample_shape]
@@ -85,7 +81,7 @@ class DummyShardDescriptor(ShardDescriptor):
         return DummyShardDataset(
             size=self.size,
             sample_shape=self._sample_shape,
-            target_shape=self._target_shape
+            target_shape=self._target_shape,
         )
 
     @property
@@ -101,4 +97,4 @@ class DummyShardDescriptor(ShardDescriptor):
     @property
     def dataset_description(self) -> str:
         """Return the dataset description."""
-        return 'Dummy shard descriptor'
+        return "Dummy shard descriptor"

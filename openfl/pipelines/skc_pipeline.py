@@ -1,5 +1,6 @@
-# Copyright (C) 2020-2023 Intel Corporation
+# Copyright 2020-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
 
 """SKCPipeline module."""
 
@@ -9,8 +10,7 @@ import gzip as gz
 import numpy as np
 from sklearn import cluster
 
-from .pipeline import TransformationPipeline
-from .pipeline import Transformer
+from openfl.pipelines.pipeline import TransformationPipeline, Transformer
 
 
 class SparsityTransformer(Transformer):
@@ -36,7 +36,7 @@ class SparsityTransformer(Transformer):
             sparse_data: a flattened, sparse representation of the input tensor
             metadata: dictionary to store a list of meta information.
         """
-        metadata = {'int_list': list(data.shape)}
+        metadata = {"int_list": list(data.shape)}
         # sparsification
         data = data.astype(np.float32)
         flatten_data = data.flatten()
@@ -59,7 +59,7 @@ class SparsityTransformer(Transformer):
             recovered_data: an numpy array with original shape.
         """
         data = data.astype(np.float32)
-        data_shape = metadata['int_list']
+        data_shape = metadata["int_list"]
         recovered_data = data.reshape(data_shape)
         return recovered_data
 
@@ -109,8 +109,7 @@ class KmeansTransformer(Transformer):
         # clustering
         data = data.reshape((-1, 1))
         if data.shape[0] >= self.n_cluster:
-            k_means = cluster.KMeans(
-                n_clusters=self.n_cluster, n_init=self.n_cluster)
+            k_means = cluster.KMeans(n_clusters=self.n_cluster, n_init=self.n_cluster)
             k_means.fit(data)
             quantized_values = k_means.cluster_centers_.squeeze()
             indices = k_means.labels_
@@ -118,7 +117,7 @@ class KmeansTransformer(Transformer):
         else:
             quant_array = data
         int_array, int2float_map = self._float_to_int(quant_array)
-        metadata = {'int_to_float': int2float_map}
+        metadata = {"int_to_float": int2float_map}
         int_array = int_array.reshape(-1)
         return int_array, metadata
 
@@ -135,7 +134,7 @@ class KmeansTransformer(Transformer):
         """
         # convert back to float
         data = co.deepcopy(data)
-        int2float_map = metadata['int_to_float']
+        int2float_map = metadata["int_to_float"]
         for key in int2float_map:
             indices = data == key
             data[indices] = int2float_map[key]
@@ -221,6 +220,6 @@ class SKCPipeline(TransformationPipeline):
         transformers = [
             SparsityTransformer(self.p),
             KmeansTransformer(self.n_cluster),
-            GZIPTransformer()
+            GZIPTransformer(),
         ]
-        super(SKCPipeline, self).__init__(transformers=transformers, **kwargs)
+        super().__init__(transformers=transformers, **kwargs)

@@ -1,11 +1,11 @@
-# Copyright (C) 2020-2023 Intel Corporation
+# Copyright 2020-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""FederatedModel module."""
 
+"""FederatedModel module."""
 import inspect
 
-from .runner import TaskRunner
+from openfl.federated.task.runner import TaskRunner
 
 
 class FederatedModel(TaskRunner):
@@ -40,25 +40,28 @@ class FederatedModel(TaskRunner):
         # TODO pass params to model
         if inspect.isclass(build_model):
             self.model = build_model()
-            from .runner_pt import PyTorchTaskRunner
+            from openfl.federated.task.runner_pt import PyTorchTaskRunner  # noqa: E501
+
             if optimizer is not None:
                 self.optimizer = optimizer(self.model.parameters())
             self.runner = PyTorchTaskRunner(**kwargs)
-            if hasattr(self.model, 'forward'):
+            if hasattr(self.model, "forward"):
                 self.runner.forward = self.model.forward
         else:
-            self.model = self.build_model(
-                self.feature_shape, self.data_loader.num_classes)
-            from .runner_keras import KerasTaskRunner
+            self.model = self.build_model(self.feature_shape, self.data_loader.num_classes)
+            from openfl.federated.task.runner_keras import KerasTaskRunner  # noqa: E501
+
             self.runner = KerasTaskRunner(**kwargs)
             self.optimizer = self.model.optimizer
         self.lambda_opt = optimizer
-        if hasattr(self.model, 'validate'):
+        if hasattr(self.model, "validate"):
             self.runner.validate = lambda *args, **kwargs: build_model.validate(
-                self.runner, *args, **kwargs)
-        if hasattr(self.model, 'train_epoch'):
+                self.runner, *args, **kwargs
+            )
+        if hasattr(self.model, "train_epoch"):
             self.runner.train_epoch = lambda *args, **kwargs: build_model.train_epoch(
-                self.runner, *args, **kwargs)
+                self.runner, *args, **kwargs
+            )
         self.runner.model = self.model
         self.runner.optimizer = self.optimizer
         self.loss_fn = loss_fn
@@ -68,15 +71,23 @@ class FederatedModel(TaskRunner):
 
     def __getattribute__(self, attr):
         """Direct call into self.runner methods if necessary."""
-        if attr in ['reset_opt_vars', 'initialize_globals',
-                    'set_tensor_dict', 'get_tensor_dict',
-                    'get_required_tensorkeys_for_function',
-                    'initialize_tensorkeys_for_functions',
-                    'save_native', 'load_native', 'rebuild_model',
-                    'set_optimizer_treatment',
-                    'train', 'train_batches', 'validate']:
+        if attr in [
+            "reset_opt_vars",
+            "initialize_globals",
+            "set_tensor_dict",
+            "get_tensor_dict",
+            "get_required_tensorkeys_for_function",
+            "initialize_tensorkeys_for_functions",
+            "save_native",
+            "load_native",
+            "rebuild_model",
+            "set_optimizer_treatment",
+            "train",
+            "train_batches",
+            "validate",
+        ]:
             return self.runner.__getattribute__(attr)
-        return super(FederatedModel, self).__getattribute__(attr)
+        return super().__getattribute__(attr)
 
     def setup(self, num_collaborators, **kwargs):
         """
@@ -96,4 +107,5 @@ class FederatedModel(TaskRunner):
                 data_loader=data_slice,
                 **kwargs
             )
-            for data_slice in self.data_loader.split(num_collaborators)]
+            for data_slice in self.data_loader.split(num_collaborators)
+        ]

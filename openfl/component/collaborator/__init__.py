@@ -1,10 +1,5 @@
-# Copyright (C) 2020-2023 Intel Corporation
+# Copyright 2020-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Collaborator package."""
 
-from .collaborator import Collaborator
-
-__all__ = [
-    'Collaborator',
-]
+from openfl.component.collaborator.collaborator import Collaborator
