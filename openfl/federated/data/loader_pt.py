@@ -1,5 +1,6 @@
-# Copyright (C) 2020-2023 Intel Corporation
+# Copyright 2020-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
 
 """PyTorchDataLoader module."""
 
@@ -7,7 +8,7 @@ from math import ceil
 
 import numpy as np
 
-from .loader import DataLoader
+from openfl.federated.data.loader import DataLoader
 
 
 class PyTorchDataLoader(DataLoader):
@@ -52,7 +53,11 @@ class PyTorchDataLoader(DataLoader):
         loader object
         """
         return self._get_batch_generator(
-            X=self.X_train, y=self.y_train, batch_size=batch_size, num_batches=num_batches)
+            X=self.X_train,
+            y=self.y_train,
+            batch_size=batch_size,
+            num_batches=num_batches,
+        )
 
     def get_valid_loader(self, batch_size=None):
         """

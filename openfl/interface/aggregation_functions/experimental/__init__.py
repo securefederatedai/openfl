@@ -1,8 +1,7 @@
-# Copyright (C) 2020-2023 Intel Corporation
+# Copyright 2020-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Aggregation functions experimental package."""
 
-from .privileged_aggregation import PrivilegedAggregationFunction
-
-__all__ = ['PrivilegedAggregationFunction']
+from openfl.interface.aggregation_functions.experimental.privileged_aggregation import (
+    PrivilegedAggregationFunction,
+)

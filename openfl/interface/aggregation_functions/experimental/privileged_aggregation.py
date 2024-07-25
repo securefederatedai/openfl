@@ -1,36 +1,35 @@
-# Copyright (C) 2020-2023 Intel Corporation
+# Copyright 2020-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+
 """Aggregation function interface module."""
 from abc import abstractmethod
-from typing import List
-from typing import Tuple
+from typing import List, Tuple
 
 import numpy as np
 import pandas as pd
 
-from openfl.utilities import LocalTensor
 from openfl.interface.aggregation_functions import AggregationFunction
+from openfl.utilities import LocalTensor
 
 
 class PrivilegedAggregationFunction(AggregationFunction):
-    """Privileged Aggregation Function interface provides write access to TensorDB Dataframe.
+    """Privileged Aggregation Function interface provides write access to TensorDB Dataframe."""
 
-    """
-
-    def __init__(
-        self
-    ) -> None:
+    def __init__(self) -> None:
         """Initialize with TensorDB write access"""
         super().__init__()
         self._privileged = True
 
     @abstractmethod
-    def call(self,
-             local_tensors: List[LocalTensor],
-             tensor_db: pd.DataFrame,
-             tensor_name: str,
-             fl_round: int,
-             tags: Tuple[str]) -> np.ndarray:
+    def call(
+        self,
+        local_tensors: List[LocalTensor],
+        tensor_db: pd.DataFrame,
+        tensor_name: str,
+        fl_round: int,
+        tags: Tuple[str],
+    ) -> np.ndarray:
         """Aggregate tensors.
 
         Args:

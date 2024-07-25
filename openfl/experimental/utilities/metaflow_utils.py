@@ -1,5 +1,7 @@
-# Copyright (C) 2020-2023 Intel Corporation
+# Copyright 2020-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+
 """openfl.experimental.utilities.metaflow_utils module."""
 
 from __future__ import annotations
@@ -17,15 +19,8 @@ import cloudpickle as pickle
 import ray
 from dill.source import getsource  # nosec
 from metaflow.datastore import DATASTORES, FlowDataStore
-from metaflow.datastore.exceptions import (
-    DataException,
-    UnpicklableArtifactException,
-)
-from metaflow.datastore.task_datastore import (
-    TaskDataStore,
-    only_if_not_done,
-    require_mode,
-)
+from metaflow.datastore.exceptions import DataException, UnpicklableArtifactException
+from metaflow.datastore.task_datastore import TaskDataStore, only_if_not_done, require_mode
 from metaflow.graph import DAGNode, FlowGraph, StepVisitor, deindent_docstring
 from metaflow.metaflow_environment import MetaflowEnvironment
 from metaflow.mflog import RUNTIME_LOG_SOURCE
@@ -83,7 +78,7 @@ class Flow:
 
 
 @ray.remote
-class Counter(object):
+class Counter:
 
     def __init__(self):
         self.value = 0
@@ -103,9 +98,7 @@ class DAGnode(DAGNode):
         self.func_lineno = func_ast.lineno
         self.decorators = decos
         self.doc = deindent_docstring(doc)
-        self.parallel_step = any(
-            getattr(deco, "IS_PARALLEL", False) for deco in decos
-        )
+        self.parallel_step = any(getattr(deco, "IS_PARALLEL", False) for deco in decos)
 
         # these attributes are populated by _parse
         self.tail_next_lineno = 0
@@ -149,9 +142,7 @@ class DAGnode(DAGNode):
             self.tail_next_lineno = tail.lineno
             self.out_funcs = [e.attr for e in tail.value.args]
 
-            keywords = {
-                k.arg: getattr(k.value, "s", None) for k in tail.value.keywords
-            }
+            keywords = {k.arg: getattr(k.value, "s", None) for k in tail.value.keywords}
             # Second condition in the folliwing line added,
             # To add the support for up to 2 keyword arguments in Flowgraph
             if len(keywords) == 1 or len(keywords) == 2:
@@ -212,11 +203,7 @@ class FlowGraph(FlowGraph):
     def _create_nodes(self, flow):
         module = __import__(flow.__module__)
         tree = ast.parse(getsource(module)).body
-        root = [
-            n
-            for n in tree
-            if isinstance(n, ast.ClassDef) and n.name == self.name
-        ][0]
+        root = [n for n in tree if isinstance(n, ast.ClassDef) and n.name == self.name][0]
         nodes = {}
         StepVisitor(nodes, flow).visit(root)
         return nodes
@@ -320,9 +307,7 @@ class TaskDataStore(TaskDataStore):
                 yield blob
 
         # Use the content-addressed store to store all artifacts
-        save_result = self._ca_store.save_blobs(
-            pickle_iter(), len_hint=len_hint
-        )
+        save_result = self._ca_store.save_blobs(pickle_iter(), len_hint=len_hint)
         for name, result in zip(artifact_names, save_result):
             self._objects[name] = result.key
 
@@ -538,15 +523,11 @@ class MetaflowInterface:
 
         for std_output in msgbuffer_out.readlines():
             timestamp = datetime.utcnow()
-            stdout_buffer.write(
-                mflog_msg(std_output, now=timestamp), system_msg=system_msg
-            )
+            stdout_buffer.write(mflog_msg(std_output, now=timestamp), system_msg=system_msg)
 
         for std_error in msgbuffer_err.readlines():
             timestamp = datetime.utcnow()
-            stderr_buffer.write(
-                mflog_msg(std_error, now=timestamp), system_msg=system_msg
-            )
+            stderr_buffer.write(mflog_msg(std_error, now=timestamp), system_msg=system_msg)
 
         task_datastore.save_logs(
             RUNTIME_LOG_SOURCE,
@@ -585,9 +566,9 @@ class DefaultCard(DefaultCard):
         ).render()
         pt = self._get_mustache()
         data_dict = {
-            "task_data": base64.b64encode(
-                json.dumps(final_component_dict).encode("utf-8")
-            ).decode("utf-8"),
+            "task_data": base64.b64encode(json.dumps(final_component_dict).encode("utf-8")).decode(
+                "utf-8"
+            ),
             "javascript": JS_DATA,
             "title": task,
             "css": CSS_DATA,

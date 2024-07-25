@@ -1,5 +1,7 @@
-# Copyright (C) 2020-2023 Intel Corporation
+# Copyright 2020-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+
 """Utilities module."""
 
 import hashlib
@@ -7,20 +9,18 @@ import ipaddress
 import logging
 import os
 import re
+import shutil
+import stat
 from collections.abc import Callable
 from functools import partial
 from socket import getfqdn
-from typing import List
-from typing import Optional
-from typing import Tuple
-import stat
-import shutil
+from typing import List, Optional, Tuple
 
 from dynaconf import Dynaconf
 from tqdm import tqdm
 
 
-def getfqdn_env(name: str = '') -> str:
+def getfqdn_env(name: str = "") -> str:
     """
     Get the system FQDN, with priority given to environment variables.
 
@@ -30,7 +30,7 @@ def getfqdn_env(name: str = '') -> str:
     Returns:
         The FQDN of the system.
     """
-    fqdn = os.environ.get('FQDN', None)
+    fqdn = os.environ.get("FQDN", None)
     if fqdn is not None:
         return fqdn
     return getfqdn(name)
@@ -42,16 +42,16 @@ def is_fqdn(hostname: str) -> bool:
         return False
 
     # Remove trailing dot
-    hostname.rstrip('.')
+    hostname.rstrip(".")
 
     #  Split hostname into list of DNS labels
-    labels = hostname.split('.')
+    labels = hostname.split(".")
 
     #  Define pattern of DNS label
     #  Can begin and end with a number or letter only
     #  Can contain hyphens, a-z, A-Z, 0-9
     #  1 - 63 chars allowed
-    fqdn = re.compile(r'^[a-z0-9]([a-z-0-9-]{0,61}[a-z0-9])?$', re.IGNORECASE)  # noqa FS003
+    fqdn = re.compile(r"^[a-z0-9]([a-z-0-9-]{0,61}[a-z0-9])?$", re.IGNORECASE)  # noqa FS003
 
     # Check that all labels match that pattern.
     return all(fqdn.match(label) for label in labels)
@@ -104,7 +104,7 @@ def validate_file_hash(file_path, expected_hash, chunk_size=8192):
         chunk_size(int): Buffer size for file reading.
     """
     h = hashlib.sha384()
-    with open(file_path, 'rb') as file:
+    with open(file_path, "rb") as file:
         # Reading is buffered, so we can read smaller chunks.
         while True:
             chunk = file.read(chunk_size)
@@ -113,7 +113,7 @@ def validate_file_hash(file_path, expected_hash, chunk_size=8192):
             h.update(chunk)
 
     if h.hexdigest() != expected_hash:
-        raise SystemError('ZIP File hash doesn\'t match expected file hash.')
+        raise SystemError("ZIP File hash doesn't match expected file hash.")
 
 
 def tqdm_report_hook():
@@ -131,12 +131,12 @@ def tqdm_report_hook():
 
 
 def merge_configs(
-        overwrite_dict: Optional[dict] = None,
-        value_transform: Optional[List[Tuple[str, Callable]]] = None,
-        **kwargs,
+    overwrite_dict: Optional[dict] = None,
+    value_transform: Optional[List[Tuple[str, Callable]]] = None,
+    **kwargs,
 ) -> Dynaconf:
     """Create Dynaconf settings, merge its with `overwrite_dict` and validate result."""
-    settings = Dynaconf(**kwargs, YAML_LOADER='safe_load')
+    settings = Dynaconf(**kwargs, YAML_LOADER="safe_load")
     if overwrite_dict:
         for key, value in overwrite_dict.items():
             if value is not None or settings.get(key) is None:
@@ -165,7 +165,7 @@ def change_tags(tags, *, add_field=None, remove_field=None) -> Tuple[str, ...]:
         if remove_field in tags:
             tags.remove(remove_field)
         else:
-            raise Exception(f'{remove_field} not in tags {tuple(tags)}')
+            raise Exception(f"{remove_field} not in tags {tuple(tags)}")
 
     tags = tuple(sorted(tags))
     return tags
@@ -174,7 +174,8 @@ def change_tags(tags, *, add_field=None, remove_field=None) -> Tuple[str, ...]:
 def rmtree(path, ignore_errors=False):
     def remove_readonly(func, path, _):
         "Clear the readonly bit and reattempt the removal"
-        if os.name == 'nt':
+        if os.name == "nt":
             os.chmod(path, stat.S_IWRITE)  # Windows can not remove read-only files.
         func(path)
+
     return shutil.rmtree(path, ignore_errors=ignore_errors, onerror=remove_readonly)
