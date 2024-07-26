@@ -1,5 +1,7 @@
-# Copyright (C) 2020-2023 Intel Corporation
+# Copyright 2020-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+
 """openfl.experimental.utilities package."""
 
 import inspect
@@ -56,9 +58,7 @@ def filter_attributes(ctx, f, **kwargs):
         assert isinstance(kwargs["include"], list)
         for in_attr in kwargs["include"]:
             if in_attr not in cls_attrs:
-                raise RuntimeError(
-                    f"argument '{in_attr}' not found in flow task {f.__name__}"
-                )
+                raise RuntimeError(f"argument '{in_attr}' not found in flow task {f.__name__}")
         for attr in cls_attrs:
             if attr not in kwargs["include"]:
                 delattr(ctx, attr)
@@ -66,9 +66,7 @@ def filter_attributes(ctx, f, **kwargs):
         assert isinstance(kwargs["exclude"], list)
         for in_attr in kwargs["exclude"]:
             if in_attr not in cls_attrs:
-                raise RuntimeError(
-                    f"argument '{in_attr}' not found in flow task {f.__name__}"
-                )
+                raise RuntimeError(f"argument '{in_attr}' not found in flow task {f.__name__}")
         for attr in cls_attrs:
             if attr in kwargs["exclude"] and hasattr(ctx, attr):
                 delattr(ctx, attr)
@@ -86,9 +84,7 @@ def checkpoint(ctx, parent_func, chkpnt_reserved_words=["next", "runtime"]):
     if ctx._checkpoint:
         # all objects will be serialized using Metaflow interface
         print(f"Saving data artifacts for {parent_func.__name__}")
-        artifacts_iter, _ = generate_artifacts(
-            ctx=ctx, reserved_words=chkpnt_reserved_words
-        )
+        artifacts_iter, _ = generate_artifacts(ctx=ctx, reserved_words=chkpnt_reserved_words)
         task_id = ctx._metaflow_interface.create_task(parent_func.__name__)
         ctx._metaflow_interface.save_artifacts(
             artifacts_iter(),
@@ -140,9 +136,7 @@ def check_resource_allocation(num_gpus, each_participant_gpu_usage):
     for gpu in np.ones(num_gpus, dtype=int):
         # buffer to cycle though since need_assigned will change sizes as we assign participants
         current_dict = need_assigned.copy()
-        for i, (participant_name, participant_gpu_usage) in enumerate(
-            current_dict.items()
-        ):
+        for i, (participant_name, participant_gpu_usage) in enumerate(current_dict.items()):
             if gpu == 0:
                 break
             if gpu < participant_gpu_usage:

@@ -1,5 +1,7 @@
-# Copyright (C) 2020-2023 Intel Corporation
+# Copyright 2020-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+
 """Assigner module."""
 
 
@@ -30,8 +32,7 @@ class Assigner:
         \* - ``tasks`` argument is taken from ``tasks`` section of FL plan YAML file.
     """
 
-    def __init__(self, tasks, authorized_cols,
-                 rounds_to_train, **kwargs):
+    def __init__(self, tasks, authorized_cols, rounds_to_train, **kwargs):
         """Initialize."""
         self.tasks = tasks
         self.authorized_cols = authorized_cols
@@ -67,6 +68,6 @@ class Assigner:
 
     def get_aggregation_type_for_task(self, task_name):
         """Extract aggregation type from self.tasks."""
-        if 'aggregation_type' not in self.tasks[task_name]:
+        if "aggregation_type" not in self.tasks[task_name]:
             return None
-        return self.tasks[task_name]['aggregation_type']
+        return self.tasks[task_name]["aggregation_type"]

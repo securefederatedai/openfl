@@ -1,22 +1,22 @@
-# Copyright (C) 2020-2023 Intel Corporation
+# Copyright 2020-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
 
 """openfl.federated package."""
 
-import pkgutil
-from .plan import Plan  # NOQA
-from .task import TaskRunner  # NOQA
-from .data import DataLoader  # NOQA
+import importlib
 
-if pkgutil.find_loader('tensorflow'):
-    from .task import TensorFlowTaskRunner, KerasTaskRunner, FederatedModel  # NOQA
-    from .data import TensorFlowDataLoader, KerasDataLoader, FederatedDataSet  # NOQA
-if pkgutil.find_loader('torch'):
-    from .task import PyTorchTaskRunner, FederatedModel  # NOQA
-    from .data import PyTorchDataLoader, FederatedDataSet  # NOQA
+from openfl.federated.data import DataLoader  # NOQA
+from openfl.federated.plan import Plan  # NOQA
+from openfl.federated.task import TaskRunner  # NOQA
 
-__all__ = [
-    'Plan',
-    'TaskRunner',
-    'DataLoader',
-]
+if importlib.util.find_spec("tensorflow") is not None:
+    from openfl.federated.data import FederatedDataSet  # NOQA
+    from openfl.federated.data import KerasDataLoader, TensorFlowDataLoader
+    from openfl.federated.task import FederatedModel  # NOQA
+    from openfl.federated.task import KerasTaskRunner, TensorFlowTaskRunner
+if importlib.util.find_spec("torch") is not None:
+    from openfl.federated.data import FederatedDataSet  # NOQA
+    from openfl.federated.data import PyTorchDataLoader
+    from openfl.federated.task import FederatedModel  # NOQA
+    from openfl.federated.task import PyTorchTaskRunner
