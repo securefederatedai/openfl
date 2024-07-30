@@ -27,36 +27,74 @@ logger = logging.getLogger(__name__)
 @group()
 @pass_context
 def envoy(context):
-    """Manage Federated Learning Envoy."""
+    """Manage Federated Learning Envoy.
+
+    Args:
+        context (click.core.Context): Click context.
+    """
     context.obj['group'] = 'envoy'
 
 
 @envoy.command(name='start')
-@option('-n', '--shard-name', required=True,
-        help='Current shard name')
-@option('-dh', '--director-host', required=True,
-        help='The FQDN of the federation director', type=click_types.FQDN)
-@option('-dp', '--director-port', required=True,
-        help='The federation director port', type=click.IntRange(1, 65535))
-@option('--tls/--disable-tls', default=True,
-        is_flag=True, help='Use TLS or not (By default TLS is enabled)')
-@option('-ec', '--envoy-config-path', default='envoy_config.yaml',
-        help='The envoy config path', type=ClickPath(exists=True))
-@option('-rc', '--root-cert-path', 'root_certificate', default=None,
-        help='Path to a root CA cert', type=ClickPath(exists=True))
-@option('-pk', '--private-key-path', 'private_key', default=None,
-        help='Path to a private key', type=ClickPath(exists=True))
-@option('-oc', '--public-cert-path', 'certificate', default=None,
-        help='Path to a signed certificate', type=ClickPath(exists=True))
+@option('-n', '--shard-name', required=True, help='Current shard name')
+@option('-dh',
+        '--director-host',
+        required=True,
+        help='The FQDN of the federation director',
+        type=click_types.FQDN)
+@option('-dp',
+        '--director-port',
+        required=True,
+        help='The federation director port',
+        type=click.IntRange(1, 65535))
+@option('--tls/--disable-tls',
+        default=True,
+        is_flag=True,
+        help='Use TLS or not (By default TLS is enabled)')
+@option('-ec',
+        '--envoy-config-path',
+        default='envoy_config.yaml',
+        help='The envoy config path',
+        type=ClickPath(exists=True))
+@option('-rc',
+        '--root-cert-path',
+        'root_certificate',
+        default=None,
+        help='Path to a root CA cert',
+        type=ClickPath(exists=True))
+@option('-pk',
+        '--private-key-path',
+        'private_key',
+        default=None,
+        help='Path to a private key',
+        type=ClickPath(exists=True))
+@option('-oc',
+        '--public-cert-path',
+        'certificate',
+        default=None,
+        help='Path to a signed certificate',
+        type=ClickPath(exists=True))
 def start_(shard_name, director_host, director_port, tls, envoy_config_path,
            root_certificate, private_key, certificate):
-    """Start the Envoy."""
+    """Start the Envoy.
+
+    Args:
+        shard_name (str): Current shard name.
+        director_host (str): The FQDN of the federation director.
+        director_port (int): The federation director port.
+        tls (bool): Use TLS or not.
+        envoy_config_path (str): The envoy config path.
+        root_certificate (str): Path to a root CA cert.
+        private_key (str): Path to a private key.
+        certificate (str): Path to a signed certificate.
+    """
 
     from openfl.component.envoy.envoy import Envoy
 
     logger.info('🧿 Starting the Envoy.')
     if is_directory_traversal(envoy_config_path):
-        click.echo('The shard config path is out of the openfl workspace scope.')
+        click.echo(
+            'The shard config path is out of the openfl workspace scope.')
         sys.exit(1)
 
     config = merge_configs(
@@ -107,28 +145,34 @@ def start_(shard_name, director_host, director_port, tls, envoy_config_path,
     del envoy_params.review_experiment
 
     # Instantiate Shard Descriptor
-    shard_descriptor = shard_descriptor_from_config(config.get('shard_descriptor', {}))
-    envoy = Envoy(
-        shard_name=shard_name,
-        director_host=director_host,
-        director_port=director_port,
-        tls=tls,
-        shard_descriptor=shard_descriptor,
-        root_certificate=config.root_certificate,
-        private_key=config.private_key,
-        certificate=config.certificate,
-        review_plan_callback=overwritten_review_plan_callback,
-        **envoy_params
-    )
+    shard_descriptor = shard_descriptor_from_config(
+        config.get('shard_descriptor', {}))
+    envoy = Envoy(shard_name=shard_name,
+                  director_host=director_host,
+                  director_port=director_port,
+                  tls=tls,
+                  shard_descriptor=shard_descriptor,
+                  root_certificate=config.root_certificate,
+                  private_key=config.private_key,
+                  certificate=config.certificate,
+                  review_plan_callback=overwritten_review_plan_callback,
+                  **envoy_params)
 
     envoy.start()
 
 
 @envoy.command(name='create-workspace')
-@option('-p', '--envoy-path', required=True,
-        help='The Envoy path', type=ClickPath())
+@option('-p',
+        '--envoy-path',
+        required=True,
+        help='The Envoy path',
+        type=ClickPath())
 def create(envoy_path):
-    """Create an envoy workspace."""
+    """Create an envoy workspace.
+
+    Args:
+        envoy_path (str): The Envoy path.
+    """
     if is_directory_traversal(envoy_path):
         click.echo('The Envoy path is out of the openfl workspace scope.')
         sys.exit(1)
@@ -150,7 +194,14 @@ def create(envoy_path):
 
 
 def shard_descriptor_from_config(shard_config: dict):
-    """Build a shard descriptor from config."""
+    """Build a shard descriptor from config.
+
+    Args:
+        shard_config (dict): Shard configuration.
+
+    Returns:
+        instance: Shard descriptor instance.
+    """
     template = shard_config.get('template')
     if not template:
         raise Exception('You should define a shard '
