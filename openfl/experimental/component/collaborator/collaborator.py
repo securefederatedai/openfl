@@ -54,9 +54,8 @@ class Collaborator:
             self.__initialize_private_attributes(private_attributes_kwargs)
 
     def __initialize_private_attributes(self, kwargs: Dict) -> None:
-        """
-        Call private_attrs_callable function set
-            attributes to self.__private_attrs
+        """Call private_attrs_callable function set attributes to
+        self.__private_attrs.
 
         Args:
             kwargs (Dict): Private attributes callable function arguments
@@ -67,8 +66,7 @@ class Collaborator:
         self.__private_attrs = self.__private_attrs_callable(**kwargs)
 
     def __set_attributes_to_clone(self, clone: Any) -> None:
-        """
-        Set private_attrs to clone as attributes.
+        """Set private_attrs to clone as attributes.
 
         Args:
             clone (FLSpec): Clone to which private attributes are to be
@@ -81,12 +79,11 @@ class Collaborator:
             for name, attr in self.__private_attrs.items():
                 setattr(clone, name, attr)
 
-    def __delete_agg_attrs_from_clone(
-        self, clone: Any, replace_str: str = None
-    ) -> None:
-        """
-        Remove aggregator private attributes from FLSpec clone before
-        transition from Aggregator step to collaborator steps
+    def __delete_agg_attrs_from_clone(self,
+                                      clone: Any,
+                                      replace_str: str = None) -> None:
+        """Remove aggregator private attributes from FLSpec clone before
+        transition from Aggregator step to collaborator steps.
 
         Args:
             clone (FLSpec): Clone from which private attributes are to be
@@ -101,18 +98,15 @@ class Collaborator:
             for attr_name in self.__private_attrs:
                 if hasattr(clone, attr_name):
                     self.__private_attrs.update(
-                        {attr_name: getattr(clone, attr_name)}
-                    )
+                        {attr_name: getattr(clone, attr_name)})
                     if replace_str:
                         setattr(clone, attr_name, replace_str)
                     else:
                         delattr(clone, attr_name)
 
-    def call_checkpoint(
-        self, ctx: Any, f: Callable, stream_buffer: Any
-    ) -> None:
-        """
-        Call checkpoint gRPC.
+    def call_checkpoint(self, ctx: Any, f: Callable,
+                        stream_buffer: Any) -> None:
+        """Call checkpoint gRPC.
 
         Args:
             ctx (FLSpec): FLSPec object.
@@ -130,8 +124,7 @@ class Collaborator:
         )
 
     def run(self) -> None:
-        """
-        Run the collaborator.
+        """Run the collaborator.
 
         Args:
             None
@@ -153,28 +146,24 @@ class Collaborator:
         self.logger.info("End of Federation reached. Exiting...")
 
     def send_task_results(self, next_step: str, clone: Any) -> None:
-        """
-        After collaborator is executed, send next aggregator
-            step to Aggregator for continue execution.
+        """After collaborator is executed, send next aggregator step to
+        Aggregator for continue execution.
 
         Args:
             next_step (str): Send next function to aggregator
-            clone (FLSpec): Updated clone object (Private attributes atr not included)
+            clone (FLSpec): Updated clone object (Private attributes atr not
+                included)
 
         Returns:
             None
         """
-        self.logger.info(
-            f"Round {self.round_number},"
-            f" collaborator {self.name} is sending results..."
-        )
-        self.client.send_task_results(
-            self.name, self.round_number, next_step, pickle.dumps(clone)
-        )
+        self.logger.info(f"Round {self.round_number},"
+                         f" collaborator {self.name} is sending results...")
+        self.client.send_task_results(self.name, self.round_number, next_step,
+                                      pickle.dumps(clone))
 
     def get_tasks(self) -> Tuple:
-        """
-        Get tasks from the aggregator.
+        """Get tasks from the aggregator.
 
         Args:
             None
@@ -188,14 +177,12 @@ class Collaborator:
         self.logger.info("Waiting for tasks...")
         temp = self.client.get_tasks(self.name)
         self.round_number, next_step, clone_bytes, sleep_time, time_to_quit = (
-            temp
-        )
+            temp)
 
         return next_step, pickle.loads(clone_bytes), sleep_time, time_to_quit
 
     def do_task(self, f_name: str, ctx: Any) -> Tuple:
-        """
-        Run collaborator steps until transition.
+        """Run collaborator steps until transition.
 
         Args:
             f_name (str): Function name which is to be executed.
@@ -214,8 +201,7 @@ class Collaborator:
             f()
             # Checkpoint the function
             self.__delete_agg_attrs_from_clone(
-                ctx, "Private attributes: Not Available."
-            )
+                ctx, "Private attributes: Not Available.")
             self.call_checkpoint(ctx, f, f._stream_buffer)
             self.__set_attributes_to_clone(ctx)
 

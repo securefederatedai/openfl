@@ -21,7 +21,12 @@ from openfl.utilities import add_log_level
 
 
 def setup_logging(level='info', log_file=None):
-    """Initialize logging settings."""
+    """Initialize logging settings.
+
+    Args:
+        level (str, optional): Logging verbosity level. Defaults to 'info'.
+        log_file (str, optional): The log file. Defaults to None.
+    """
     import logging
     from logging import basicConfig
 
@@ -38,15 +43,16 @@ def setup_logging(level='info', log_file=None):
     if log_file:
         fh = logging.FileHandler(log_file)
         formatter = logging.Formatter(
-            '%(asctime)s %(levelname)s %(message)s %(filename)s:%(lineno)d'
-        )
+            '%(asctime)s %(levelname)s %(message)s %(filename)s:%(lineno)d')
         fh.setFormatter(formatter)
         handlers.append(fh)
 
     console = Console(width=160)
     handlers.append(RichHandler(console=console))
-    basicConfig(level=level, format='%(message)s',
-                datefmt='[%X]', handlers=handlers)
+    basicConfig(level=level,
+                format='%(message)s',
+                datefmt='[%X]',
+                handlers=handlers)
 
 
 def disable_warnings():
@@ -63,35 +69,54 @@ class CLI(Group):
     """CLI class."""
 
     def __init__(self, name=None, commands=None, **kwargs):
-        """Initialize."""
+        """Initialize CLI object.
+
+        Args:
+            name (str, optional): Name of the CLI group. Defaults to None.
+            commands (dict, optional): Commands for the CLI group. Defaults
+                to None.
+            **kwargs: Arbitrary keyword arguments.
+        """
         super(CLI, self).__init__(name, commands, **kwargs)
         self.commands = commands or {}
 
     def list_commands(self, ctx):
-        """Display all available commands."""
+        """Display all available commands.
+
+        Args:
+            ctx (click.core.Context): Click context.
+
+        Returns:
+            dict: Available commands.
+        """
         return self.commands
 
     def format_help(self, ctx, formatter):
-        """Dislpay user-friendly help."""
+        """Display user-friendly help.
+
+        Args:
+            ctx (click.core.Context): Click context.
+            formatter (click.formatting.HelpFormatter): Click help formatter.
+        """
         show_header()
         uses = [
-            f'{ctx.command_path}',
-            '[options]',
+            f'{ctx.command_path}', '[options]',
             style('[command]', fg='blue'),
-            style('[subcommand]', fg='cyan'),
-            '[args]'
+            style('[subcommand]', fg='cyan'), '[args]'
         ]
 
-        formatter.write(style('BASH COMPLETE ACTIVATION\n\n', bold=True, fg='bright_black'))
+        formatter.write(
+            style('BASH COMPLETE ACTIVATION\n\n', bold=True,
+                  fg='bright_black'))
         formatter.write(
             'Run in terminal:\n'
             '   _FX_COMPLETE=bash_source fx > ~/.fx-autocomplete.sh\n'
             '   source ~/.fx-autocomplete.sh\n'
             'If ~/.fx-autocomplete.sh has already exist:\n'
-            '   source ~/.fx-autocomplete.sh\n\n'
-        )
+            '   source ~/.fx-autocomplete.sh\n\n')
 
-        formatter.write(style('CORRECT USAGE\n\n', bold=True, fg='bright_black'))
+        formatter.write(
+            style('CORRECT USAGE\n\n', bold=True, fg='bright_black'))
         formatter.write(' '.join(uses) + '\n')
 
         opts = []
@@ -100,8 +125,8 @@ class CLI(Group):
             if rv is not None:
                 opts.append(rv)
 
-        formatter.write(style(
-            '\nGLOBAL OPTIONS\n\n', bold=True, fg='bright_black'))
+        formatter.write(
+            style('\nGLOBAL OPTIONS\n\n', bold=True, fg='bright_black'))
         formatter.write_dl(opts)
 
         cmds = []
@@ -113,8 +138,8 @@ class CLI(Group):
                 sub = cmd.get_command(ctx, sub)
                 cmds.append((sub.name, sub, 1))
 
-        formatter.write(style(
-            '\nAVAILABLE COMMANDS\n', bold=True, fg='bright_black'))
+        formatter.write(
+            style('\nAVAILABLE COMMANDS\n', bold=True, fg='bright_black'))
 
         for name, cmd, level in cmds:
             help_str = cmd.get_short_help_str()
@@ -134,7 +159,13 @@ class CLI(Group):
 @option('--no-warnings', is_flag=True, help='Disable third-party warnings.')
 @pass_context
 def cli(context, log_level, no_warnings):
-    """Command-line Interface."""
+    """Command-line Interface.
+
+    Args:
+        context (click.core.Context): Click context.
+        log_level (str): Logging verbosity level.
+        no_warnings (bool): Flag to disable third-party warnings.
+    """
     import os
     from sys import argv
 
@@ -156,7 +187,13 @@ def cli(context, log_level, no_warnings):
 @cli.result_callback()
 @pass_context
 def end(context, result, **kwargs):
-    """Print the result of the operation."""
+    """Print the result of the operation.
+
+    Args:
+        context (click.core.Context): Click context.
+        result: Result of the operation.
+        **kwargs: Arbitrary keyword arguments.
+    """
     if context.obj['fail']:
         echo('\n ❌ :(')
     else:
@@ -167,39 +204,65 @@ def end(context, result, **kwargs):
 @pass_context
 @argument('subcommand', required=False)
 def help_(context, subcommand):
-    """Display help."""
+    """Display help.
+
+    Args:
+        context (click.core.Context): Click context.
+        subcommand (str, optional): Subcommand to display help for. Defaults
+            to None.
+    """
     pass
 
 
 def error_handler(error):
-    """Handle the error."""
+    """Handle the error.
+
+    Args:
+        error (Exception): Error to handle.
+    """
     if 'cannot import' in str(error):
         if 'TensorFlow' in str(error):
-            echo(style('EXCEPTION', fg='red', bold=True) + ' : ' + style(
-                'Tensorflow must be installed prior to running this command',
-                fg='red'))
+            echo(
+                style('EXCEPTION', fg='red', bold=True) + ' : ' + style(
+                    'Tensorflow must be installed prior to running this command',
+                    fg='red'))
         if 'PyTorch' in str(error):
-            echo(style('EXCEPTION', fg='red', bold=True) + ' : ' + style(
-                'Torch must be installed prior to running this command',
-                fg='red'))
-    echo(style('EXCEPTION', fg='red', bold=True)
-         + ' : ' + style(f'{error}', fg='red'))
+            echo(
+                style('EXCEPTION', fg='red', bold=True) + ' : ' + style(
+                    'Torch must be installed prior to running this command',
+                    fg='red'))
+    echo(
+        style('EXCEPTION', fg='red', bold=True) + ' : '
+        + style(f'{error}', fg='red'))
     raise error
 
 
 def review_plan_callback(file_name, file_path):
-    """Review plan callback for Director and Envoy."""
-    echo(style(
-        f'Please review the contents of {file_name} before proceeding...',
-        fg='green',
-        bold=True))
-    # Wait for users to read the question before flashing the contents of the file.
+    """Review plan callback for Director and Envoy.
+
+    Args:
+        file_name (str): Name of the file to review.
+        file_path (str): Path of the file to review.
+
+    Returns:
+        bool: True if the file is accepted, False otherwise.
+    """
+    echo(
+        style(
+            f'Please review the contents of {file_name} before proceeding...',
+            fg='green',
+            bold=True))
+    # Wait for users to read the question before flashing the contents of the
+    # file.
     time.sleep(3)
 
     with open_file(file_path, 'r') as f:
         echo(f.read())
 
-    if confirm(style(f'Do you want to accept the {file_name}?', fg='green', bold=True)):
+    if confirm(
+            style(f'Do you want to accept the {file_name}?',
+                  fg='green',
+                  bold=True)):
         echo(style(f'{file_name} accepted!', fg='green', bold=True))
         return True
     else:
@@ -235,7 +298,8 @@ def entry():
     root = Path(__file__).parent.resolve()
 
     if experimental.exists():
-        root = root.parent.joinpath("experimental", "interface", "cli").resolve()
+        root = root.parent.joinpath("experimental", "interface",
+                                    "cli").resolve()
 
     work = Path.cwd().resolve()
     path.append(str(root))

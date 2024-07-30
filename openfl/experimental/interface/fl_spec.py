@@ -26,31 +26,48 @@ class FLSpec:
     _initial_state = None
 
     def __init__(self, checkpoint: bool = False):
+        """Initializes the FLSpec object.
+
+        Args:
+            checkpoint (bool, optional): Determines whether to checkpoint or
+                not. Defaults to False.
+        """
         self._foreach_methods = []
         self._checkpoint = checkpoint
 
     @classmethod
     def _create_clones(cls, instance: Type[FLSpec], names: List[str]) -> None:
-        """Creates clones for instance for each collaborator in names"""
+        """Creates clones for instance for each collaborator in names.
+
+        Args:
+            instance (Type[FLSpec]): The instance to be cloned.
+            names (List[str]): The list of names for the clones.
+        """
         cls._clones = {name: deepcopy(instance) for name in names}
 
     @classmethod
     def _reset_clones(cls):
-        """Reset clones"""
-        cls._clones = {}
+        """Resets the clones of the class."""
+
+        cls._clones = []
 
     @classmethod
     def save_initial_state(cls, instance: Type[FLSpec]) -> None:
-        """Save initial state of instance before executing the flow"""
+        """Saves the initial state of an instance before executing the flow.
+
+        Args:
+            instance (Type[FLSpec]): The instance whose initial state is to be
+                saved.
+        """
         cls._initial_state = deepcopy(instance)
 
     def run(self) -> None:
-        """Starts the execution of the flow"""
+        """Starts the execution of the flow."""
+
         # Submit flow to Runtime
         if str(self._runtime) == "LocalRuntime":
             self._metaflow_interface = MetaflowInterface(
-                self.__class__, self.runtime.backend
-            )
+                self.__class__, self.runtime.backend)
             self._run_id = self._metaflow_interface.create_run()
             # Initialize aggregator private attributes
             self.runtime.initialize_aggregator()
@@ -64,7 +81,8 @@ class FLSpec:
             try:
                 # Execute all Participant (Aggregator & Collaborator) tasks and
                 # retrieve the final attributes
-                # start step is the first task & invoked on aggregator through runtime.execute_task
+                # start step is the first task & invoked on aggregator through
+                # runtime.execute_task
                 final_attributes = self.runtime.execute_task(
                     self,
                     self.start,
@@ -79,8 +97,7 @@ class FLSpec:
                         "\n or for more information about the original error,"
                         "\nPlease see the official Ray documentation"
                         "\nhttps://docs.ray.io/en/releases-2.2.0/ray-core/\
-                        objects/serialization.html"
-                    )
+                        objects/serialization.html")
                     raise SerializationError(str(e) + msg)
                 else:
                     raise e
@@ -93,25 +110,38 @@ class FLSpec:
 
     @property
     def runtime(self) -> Type[Runtime]:
-        """Returns flow runtime"""
+        """Returns flow runtime.
+
+        Returns:
+            Type[Runtime]: The runtime of the flow.
+        """
         return self._runtime
 
     @runtime.setter
     def runtime(self, runtime: Type[Runtime]) -> None:
-        """Sets flow runtime"""
+        """Sets flow runtime.
+
+        Args:
+            runtime (Type[Runtime]): The runtime to be set.
+
+        Raises:
+            TypeError: If the provided runtime is not a valid OpenFL Runtime.
+        """
         if isinstance(runtime, Runtime):
             self._runtime = runtime
         else:
             raise TypeError(f"{runtime} is not a valid OpenFL Runtime")
 
     def _capture_instance_snapshot(self, kwargs):
-        """
-        Takes backup of self before exclude or include filtering
+        """Takes backup of self before exclude or include filtering.
 
         Args:
             kwargs: Key word arguments originally passed to the next function.
                     If include or exclude are in the kwargs, the state of the
-                    aggregator needs to be retained
+                    aggregator needs to be retained.
+
+        Returns:
+            return_objs (list): A list of return objects.
         """
         return_objs = []
         if "exclude" in kwargs or "include" in kwargs:
@@ -119,15 +149,17 @@ class FLSpec:
             return_objs.append(backup)
         return return_objs
 
-    def _is_at_transition_point(
-        self, f: Callable, parent_func: Callable
-    ) -> bool:
-        """
-        Has the collaborator finished its current sequence?
+    def _is_at_transition_point(self, f: Callable,
+                                parent_func: Callable) -> bool:
+        """Determines if the collaborator has finished its current sequence.
 
         Args:
-            f:           The next function to be executed
-            parent_func: The previous function executed
+            f (Callable): The next function to be executed.
+            parent_func (Callable): The previous function executed.
+
+        Returns:
+            bool: True if the collaborator has finished its current sequence,
+                False otherwise.
         """
         if parent_func.__name__ in self._foreach_methods:
             self._foreach_methods.append(f.__name__)
@@ -139,12 +171,14 @@ class FLSpec:
                 return True
         return False
 
-    def _display_transition_logs(
-        self, f: Callable, parent_func: Callable
-    ) -> None:
-        """
-        Prints aggregator to collaborators or
-        collaborators to aggregator state transition logs
+    def _display_transition_logs(self, f: Callable,
+                                 parent_func: Callable) -> None:
+        """Prints aggregator to collaborators or collaborators to aggregator
+        state transition logs.
+
+        Args:
+            f (Callable): The next function to be executed.
+            parent_func (Callable): The previous function executed.
         """
         if aggregator_to_collaborator(f, parent_func):
             print("Sending state from aggregator to collaborators")
@@ -153,31 +187,44 @@ class FLSpec:
             print("Sending state from collaborator to aggregator")
 
     def filter_exclude_include(self, f, **kwargs):
-        """
-        This function filters exclude/include attributes
+        """Filters exclude/include attributes for a given task within the flow.
 
         Args:
-            flspec_obj  :  Reference to the FLSpec (flow) object
-            f           :  The task to be executed within the flow
+            f (Callable): The task to be executed within the flow.
+            **kwargs (dict): Additional keyword arguments. These should
+                include:
+                - "foreach" (str): The attribute name that contains the list
+                of selected collaborators.
+                - "exclude" (list, optional): List of attribute names to
+                exclude. If an attribute name is present in this list and the
+                clone has this attribute, it will be filtered out.
+                - "include" (list, optional): List of attribute names to
+                include. If an attribute name is present in this list and the
+                clone has this attribute, it will be included.
         """
         selected_collaborators = getattr(self, kwargs["foreach"])
 
         for col in selected_collaborators:
             clone = FLSpec._clones[col]
             clone.input = col
-            if (
-                "exclude" in kwargs and hasattr(clone, kwargs["exclude"][0])
-            ) or ("include" in kwargs and hasattr(clone, kwargs["include"][0])):
+            if ("exclude" in kwargs and hasattr(clone, kwargs["exclude"][0])
+                ) or ("include" in kwargs
+                      and hasattr(clone, kwargs["include"][0])):
                 filter_attributes(clone, f, **kwargs)
             artifacts_iter, _ = generate_artifacts(ctx=self)
             for name, attr in artifacts_iter():
                 setattr(clone, name, deepcopy(attr))
             clone._foreach_methods = self._foreach_methods
 
-    def restore_instance_snapshot(
-        self, ctx: FLSpec, instance_snapshot: List[FLSpec]
-    ):
-        """Restores attributes from backup (in instance snapshot) to ctx"""
+    def restore_instance_snapshot(self, ctx: FLSpec,
+                                  instance_snapshot: List[FLSpec]):
+        """Restores attributes from backup (in instance snapshot) to ctx.
+
+        Args:
+            ctx (FLSpec): The context to restore the attributes to.
+            instance_snapshot (List[FLSpec]): The list of FLSpec instances
+                that serve as the backup.
+        """
         for backup in instance_snapshot:
             artifacts_iter, _ = generate_artifacts(ctx=backup)
             for name, attr in artifacts_iter():
@@ -185,9 +232,7 @@ class FLSpec:
                     setattr(ctx, name, attr)
 
     def get_clones(self, kwargs):
-        """
-        Create, and prepare clones
-        """
+        """Create, and prepare clones."""
         FLSpec._reset_clones()
         FLSpec._create_clones(self, self.runtime.collaborators)
         selected_collaborators = self.__getattribute__(kwargs["foreach"])
@@ -203,8 +248,11 @@ class FLSpec:
             clone._metaflow_interface = self._metaflow_interface
 
     def next(self, f, **kwargs):
-        """
-        Next task in the flow to execute
+        """Specifies the next task in the flow to execute.
+
+        Args:
+            f (Callable): The next task that will be executed in the flow.
+            **kwargs: Additional keyword arguments.
         """
         # Get the name and reference to the calling function
         parent = inspect.stack()[1][3]
