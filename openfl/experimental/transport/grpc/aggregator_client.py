@@ -158,8 +158,7 @@ class AggregatorGRPCClient:
                     kwargs.get("client_reconnect_interval", 1)),
                 uri=self.uri,
             ),
-            status_for_retry=(grpc.StatusCode.UNAVAILABLE, ),
-        ), )
+        )
         self.stub = aggregator_pb2_grpc.AggregatorStub(
             grpc.intercept_channel(self.channel, *self.interceptors))
 
