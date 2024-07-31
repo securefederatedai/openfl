@@ -30,8 +30,9 @@ class ConstantBackoff:
         time.sleep(self.reconnect_interval)
 
 
-class RetryOnRpcErrorClientInterceptor(grpc.UnaryUnaryClientInterceptor,
-                                       grpc.StreamUnaryClientInterceptor):
+class RetryOnRpcErrorClientInterceptor(
+    grpc.UnaryUnaryClientInterceptor, grpc.StreamUnaryClientInterceptor
+):
     """Retry gRPC connection on failure."""
 
     def __init__(
@@ -59,8 +60,7 @@ class RetryOnRpcErrorClientInterceptor(grpc.UnaryUnaryClientInterceptor,
             else:
                 return response
 
-    def intercept_unary_unary(self, continuation, client_call_details,
-                              request):
+    def intercept_unary_unary(self, continuation, client_call_details, request):
         """Wrap intercept call for unary->unary RPC."""
         return self._intercept_call(continuation, client_call_details, request)
 
@@ -156,7 +156,8 @@ class AggregatorGRPCClient:
             ),
         )
         self.stub = aggregator_pb2_grpc.AggregatorStub(
-            grpc.intercept_channel(self.channel, *self.interceptors))
+            grpc.intercept_channel(self.channel, *self.interceptors)
+        )
 
     def create_insecure_channel(self, uri):
         """Set an insecure gRPC channel (i.e. no TLS) if desired.
@@ -262,7 +263,8 @@ class AggregatorGRPCClient:
         self.logger.debug(f"Connecting to gRPC at {self.uri}")
 
         self.stub = aggregator_pb2_grpc.AggregatorStub(
-            grpc.intercept_channel(self.channel, *self.interceptors))
+            grpc.intercept_channel(self.channel, *self.interceptors)
+        )
 
     @_atomic_connection
     @_resend_data_on_reconnection

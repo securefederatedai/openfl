@@ -144,8 +144,7 @@ class DirectorGRPCServer(director_pb2_grpc.DirectorServicer):
 
     def start(self):
         """Launch the director GRPC server."""
-        loop = asyncio.get_event_loop(
-        )  # TODO: refactor after end of support for python3.6
+        loop = asyncio.get_event_loop()  # TODO: refactor after end of support for python3.6
         loop.create_task(self.director.start_experiment_execution_loop())
         loop.run_until_complete(self._run_server())
 
@@ -164,7 +163,7 @@ class DirectorGRPCServer(director_pb2_grpc.DirectorServicer):
             with open(self.root_certificate, "rb") as f:
                 root_certificate_b = f.read()
             server_credentials = ssl_server_credentials(
-                ((private_key_b, certificate_b), ),
+                ((private_key_b, certificate_b),),
                 root_certificates=root_certificate_b,
                 require_client_auth=True,
             )
@@ -208,16 +207,14 @@ class DirectorGRPCServer(director_pb2_grpc.DirectorServicer):
         data_file_path = self.root_dir / str(uuid.uuid4())
         with open(data_file_path, "wb") as data_file:
             async for request in stream:
-                if request.experiment_data.size == len(
-                        request.experiment_data.npbytes):
+                if request.experiment_data.size == len(request.experiment_data.npbytes):
                     data_file.write(request.experiment_data.npbytes)
                 else:
                     raise Exception("Could not register new experiment")
 
         tensor_dict = None
         if request.model_proto:
-            tensor_dict, _ = deconstruct_model_proto(request.model_proto,
-                                                     NoCompressionPipeline())
+            tensor_dict, _ = deconstruct_model_proto(request.model_proto, NoCompressionPipeline())
 
         caller = self.get_caller(context)
 
@@ -286,8 +283,7 @@ class DirectorGRPCServer(director_pb2_grpc.DirectorServicer):
         if trained_model_dict is None:
             return director_pb2.TrainedModelResponse()
 
-        model_proto = construct_model_proto(trained_model_dict, 0,
-                                            NoCompressionPipeline())
+        model_proto = construct_model_proto(trained_model_dict, 0, NoCompressionPipeline())
 
         logger.debug("Sending trained model")
 
@@ -339,8 +335,7 @@ class DirectorGRPCServer(director_pb2_grpc.DirectorServicer):
             request.collaborator_name,
         )
 
-        return director_pb2.WaitExperimentResponse(
-            experiment_name=experiment_name)
+        return director_pb2.WaitExperimentResponse(experiment_name=experiment_name)
 
     async def GetDatasetInfo(self, request, context):  # NOQA:N802
         """
@@ -528,8 +523,7 @@ class DirectorGRPCServer(director_pb2_grpc.DirectorServicer):
                 request.
         """
         caller = self.get_caller(context)
-        experiment = self.director.get_experiment_description(
-            caller, request.name)
+        experiment = self.director.get_experiment_description(caller, request.name)
         models_statuses = [
             base_pb2.DownloadStatus(name=ms["name"], status=ms["status"])
             for ms in experiment["download_statuses"]["models"]
@@ -568,4 +562,5 @@ class DirectorGRPCServer(director_pb2_grpc.DirectorServicer):
                 download_statuses=download_statuses,
                 collaborators=collaborators,
                 tasks=tasks,
-            ), )
+            ),
+        )

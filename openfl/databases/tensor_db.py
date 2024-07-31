@@ -40,10 +40,9 @@ class TensorDB:
             "tags": "object",
             "nparray": "object",
         }
-        self.tensor_db = pd.DataFrame({
-            col: pd.Series(dtype=dtype)
-            for col, dtype in types_dict.items()
-        })
+        self.tensor_db = pd.DataFrame(
+            {col: pd.Series(dtype=dtype) for col, dtype in types_dict.items()}
+        )
         self._bind_convenience_methods()
 
         self.mutex = Lock()
@@ -95,8 +94,7 @@ class TensorDB:
             | self.tensor_db["report"]
         ].reset_index(drop=True)
 
-    def cache_tensor(self, tensor_key_dict: Dict[TensorKey,
-                                                 np.ndarray]) -> None:
+    def cache_tensor(self, tensor_key_dict: Dict[TensorKey, np.ndarray]) -> None:
         """Insert a tensor into TensorDB (dataframe).
 
         Args:
@@ -128,8 +126,7 @@ class TensorDB:
 
             self.tensor_db = pd.concat([self.tensor_db, *entries_to_add], ignore_index=True)
 
-    def get_tensor_from_cache(self,
-                              tensor_key: TensorKey) -> Optional[np.ndarray]:
+    def get_tensor_from_cache(self, tensor_key: TensorKey) -> Optional[np.ndarray]:
         """Perform a lookup of the tensor_key in the TensorDB.
 
         Args:

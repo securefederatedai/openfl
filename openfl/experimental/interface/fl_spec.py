@@ -97,7 +97,8 @@ class FLSpec:
                         "\n or for more information about the original error,"
                         "\nPlease see the official Ray documentation"
                         "\nhttps://docs.ray.io/en/releases-2.2.0/ray-core/\
-                        objects/serialization.html")
+                        objects/serialization.html"
+                    )
                     raise SerializationError(str(e) + msg)
                 else:
                     raise e

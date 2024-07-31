@@ -32,9 +32,13 @@ def parse_attrs(ctx, exclude=[], reserved_words=["next", "runtime", "input"]):
     cls_attrs = []
     valid_artifacts = []
     for i in inspect.getmembers(ctx):
-        if (not hasattr(i[1], "task") and not i[0].startswith("_")
-                and i[0] not in reserved_words and i[0] not in exclude
-                and i not in inspect.getmembers(type(ctx))):
+        if (
+            not hasattr(i[1], "task")
+            and not i[0].startswith("_")
+            and i[0] not in reserved_words
+            and i[0] not in exclude
+            and i not in inspect.getmembers(type(ctx))
+        ):
             if not isinstance(i[1], MethodType):
                 cls_attrs.append(i[0])
                 valid_artifacts.append((i[0], i[1]))
@@ -54,8 +58,7 @@ def generate_artifacts(ctx, reserved_words=["next", "runtime", "input"]):
         tuple: A tuple containing a generator of artifacts and a list of
             attribute names.
     """
-    cls_attrs, valid_artifacts = parse_attrs(ctx,
-                                             reserved_words=reserved_words)
+    cls_attrs, valid_artifacts = parse_attrs(ctx, reserved_words=reserved_words)
 
     def artifacts_iter():
         # Helper function from metaflow source
@@ -84,8 +87,7 @@ def filter_attributes(ctx, f, **kwargs):
 
     _, cls_attrs = generate_artifacts(ctx=ctx)
     if "include" in kwargs and "exclude" in kwargs:
-        raise RuntimeError(
-            "'include' and 'exclude' should not both be present")
+        raise RuntimeError("'include' and 'exclude' should not both be present")
     elif "include" in kwargs:
         assert isinstance(kwargs["include"], list)
         for in_attr in kwargs["include"]:
@@ -148,13 +150,15 @@ def old_check_resource_allocation(num_gpus, each_participant_gpu_usage):
     # raise an error.
     for gpu in np.ones(num_gpus, dtype=int):
         for i, (participant_name, participant_gpu_usage) in enumerate(
-                each_participant_gpu_usage.items()):
+            each_participant_gpu_usage.items()
+        ):
             if gpu == 0:
                 break
             if gpu < participant_gpu_usage:
                 remaining_gpu_memory.update({participant_name: gpu})
                 each_participant_gpu_usage = dict(
-                    itertools.islice(each_participant_gpu_usage.items(), i))
+                    itertools.islice(each_participant_gpu_usage.items(), i)
+                )
             else:
                 gpu -= participant_gpu_usage
     if len(remaining_gpu_memory) > 0:

@@ -32,11 +32,7 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
             dictionary split function.
     """
 
-    def __init__(self,
-                 device: str = None,
-                 loss_fn=None,
-                 optimizer=None,
-                 **kwargs):
+    def __init__(self, device: str = None, loss_fn=None, optimizer=None, **kwargs):
         """Initializes the PyTorchTaskRunner object.
 
         Args:
@@ -50,8 +46,7 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
         if device:
             self.device = device
         else:
-            self.device = torch.device(
-                "cuda" if torch.cuda.is_available() else "cpu")
+            self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
         # This is a map of all the required tensors for each of the public
         # functions in PyTorchTaskRunner
@@ -81,8 +76,11 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
         if self.opt_treatment == "RESET":
             self.reset_opt_vars()
             self.set_tensor_dict(input_tensor_dict, with_opt_vars=False)
-        elif (self.training_round_completed
-              and self.opt_treatment == "CONTINUE_GLOBAL" and not validation):
+        elif (
+            self.training_round_completed
+            and self.opt_treatment == "CONTINUE_GLOBAL"
+            and not validation
+        ):
             self.set_tensor_dict(input_tensor_dict, with_opt_vars=True)
         else:
             self.set_tensor_dict(input_tensor_dict, with_opt_vars=False)
@@ -120,7 +118,7 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
             suffix += "_local"
         else:
             suffix += "_agg"
-        tags = ("metric", )
+        tags = ("metric",)
         tags = change_tags(tags, add_field=suffix)
         # TODO figure out a better way to pass in metric for this pytorch
         #  validate function
@@ -167,16 +165,16 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
             metric = self.train_(loader)
         # Output metric tensors (scalar)
         origin = col_name
-        tags = ("trained", )
+        tags = ("trained",)
         output_metric_dict = {
-            TensorKey(metric.name, origin, round_num, True, ("metric", )):
-            metric.value
+            TensorKey(metric.name, origin, round_num, True, ("metric",)): metric.value
         }
 
         # output model tensors (Doesn't include TensorKey)
         output_model_dict = self.get_tensor_dict(with_opt_vars=True)
         global_model_dict, local_model_dict = split_tensor_dict_for_holdouts(
-            self.logger, output_model_dict, **self.tensor_dict_split_fn_kwargs)
+            self.logger, output_model_dict, **self.tensor_dict_split_fn_kwargs
+        )
 
         # Create global tensorkeys
         global_tensorkey_model_dict = {
@@ -192,8 +190,7 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
         # for the updated model parameters.
         # This ensures they will be resolved locally
         next_local_tensorkey_model_dict = {
-            TensorKey(tensor_name, origin, round_num + 1, False, ("model", )):
-            nparray
+            TensorKey(tensor_name, origin, round_num + 1, False, ("model",)): nparray
             for tensor_name, nparray in local_model_dict.items()
         }
 
@@ -328,8 +325,7 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
         """
         if func_name == "validate_task":
             local_model = "apply=" + str(kwargs["apply"])
-            return self.required_tensorkeys_for_function[func_name][
-                local_model]
+            return self.required_tensorkeys_for_function[func_name][local_model]
         else:
             return self.required_tensorkeys_for_function[func_name]
 
@@ -352,7 +348,8 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
 
         output_model_dict = self.get_tensor_dict(with_opt_vars=with_opt_vars)
         global_model_dict, local_model_dict = split_tensor_dict_for_holdouts(
-            self.logger, output_model_dict, **self.tensor_dict_split_fn_kwargs)
+            self.logger, output_model_dict, **self.tensor_dict_split_fn_kwargs
+        )
         if not with_opt_vars:
             global_model_dict_val = global_model_dict
             local_model_dict_val = local_model_dict
@@ -365,20 +362,20 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
             )
 
         self.required_tensorkeys_for_function["train_task"] = [
-            TensorKey(tensor_name, "GLOBAL", 0, False, ("model", ))
+            TensorKey(tensor_name, "GLOBAL", 0, False, ("model",))
             for tensor_name in global_model_dict
         ]
         self.required_tensorkeys_for_function["train_task"] += [
-            TensorKey(tensor_name, "LOCAL", 0, False, ("model", ))
+            TensorKey(tensor_name, "LOCAL", 0, False, ("model",))
             for tensor_name in local_model_dict
         ]
 
         self.required_tensorkeys_for_function["train_task"] = [
-            TensorKey(tensor_name, "GLOBAL", 0, False, ("model", ))
+            TensorKey(tensor_name, "GLOBAL", 0, False, ("model",))
             for tensor_name in global_model_dict
         ]
         self.required_tensorkeys_for_function["train_task"] += [
-            TensorKey(tensor_name, "LOCAL", 0, False, ("model", ))
+            TensorKey(tensor_name, "LOCAL", 0, False, ("model",))
             for tensor_name in local_model_dict
         ]
 
@@ -399,11 +396,13 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
             for tensor_name in local_model_dict_val
         ]
 
-    def load_native(self,
-                    filepath,
-                    model_state_dict_key='model_state_dict',
-                    optimizer_state_dict_key='optimizer_state_dict',
-                    **kwargs):
+    def load_native(
+        self,
+        filepath,
+        model_state_dict_key="model_state_dict",
+        optimizer_state_dict_key="optimizer_state_dict",
+        **kwargs,
+    ):
         """Load model and optimizer states from a pickled file specified by
         filepath. model_/optimizer_state_dict args can be specified if needed.
         Uses pt.load().
@@ -423,11 +422,13 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
         self.load_state_dict(pickle_dict[model_state_dict_key])
         self.optimizer.load_state_dict(pickle_dict[optimizer_state_dict_key])
 
-    def save_native(self,
-                    filepath,
-                    model_state_dict_key='model_state_dict',
-                    optimizer_state_dict_key='optimizer_state_dict',
-                    **kwargs):
+    def save_native(
+        self,
+        filepath,
+        model_state_dict_key="model_state_dict",
+        optimizer_state_dict_key="optimizer_state_dict",
+        **kwargs,
+    ):
         """Save model and optimizer states in a picked file specified by the
         filepath. model_/optimizer_state_dicts are stored in the keys provided.
         Uses pt.save().
@@ -541,8 +542,7 @@ def _derive_opt_state_dict(opt_state_dict):
     # Using one example state key, we collect keys for the corresponding
     # dictionary value.
     example_state_key = opt_state_dict["param_groups"][0]["params"][0]
-    example_state_subkeys = set(
-        opt_state_dict["state"][example_state_key].keys())
+    example_state_subkeys = set(opt_state_dict["state"][example_state_key].keys())
 
     # We assume that the state collected for all params in all param groups is
     # the same.
@@ -551,8 +551,7 @@ def _derive_opt_state_dict(opt_state_dict):
     # Using assert statements to break the routine if these assumptions are
     # incorrect.
     for state_key in opt_state_dict["state"].keys():
-        assert example_state_subkeys == set(
-            opt_state_dict["state"][state_key].keys())
+        assert example_state_subkeys == set(opt_state_dict["state"][state_key].keys())
         for state_subkey in example_state_subkeys:
             assert isinstance(
                 opt_state_dict["state"][example_state_key][state_subkey],
@@ -582,16 +581,14 @@ def _derive_opt_state_dict(opt_state_dict):
         for idx, param_id in enumerate(group["params"]):
             for subkey, tag in state_subkeys_and_tags:
                 if tag == "istensor":
-                    new_v = opt_state_dict["state"][param_id][subkey].cpu(
-                    ).numpy()
+                    new_v = opt_state_dict["state"][param_id][subkey].cpu().numpy()
                 else:
                     new_v = np.array([opt_state_dict["state"][param_id][subkey]])
                 derived_opt_state_dict[f"__opt_state_{group_idx}_{idx}_{tag}_{subkey}"] = new_v
         nb_params_per_group.append(idx + 1)
     # group lengths are also helpful for reconstructing
     # original opt_state_dict structure
-    derived_opt_state_dict["__opt_group_lengths"] = np.array(
-        nb_params_per_group)
+    derived_opt_state_dict["__opt_group_lengths"] = np.array(nb_params_per_group)
 
     return derived_opt_state_dict
 
@@ -686,8 +683,7 @@ def _set_optimizer_state(optimizer, device, derived_opt_state_dict):
     Returns:
         None
     """
-    temp_state_dict = expand_derived_opt_state_dict(derived_opt_state_dict,
-                                                    device)
+    temp_state_dict = expand_derived_opt_state_dict(derived_opt_state_dict, device)
 
     # FIXME: Figure out whether or not this breaks learning rate
     #  scheduling and the like.

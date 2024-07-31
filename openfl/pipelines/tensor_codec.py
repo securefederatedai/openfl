@@ -177,10 +177,7 @@ class TensorCodec:
         return delta_tensor_key, nparray - base_model_nparray
 
     @staticmethod
-    def apply_delta(tensor_key,
-                    delta,
-                    base_model_nparray,
-                    creates_model=False):
+    def apply_delta(tensor_key, delta, base_model_nparray, creates_model=False):
         """Add delta to the nparray.
 
         Args:

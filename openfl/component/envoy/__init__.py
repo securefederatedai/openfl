@@ -7,5 +7,5 @@
 from .envoy import Envoy
 
 __all__ = [
-    'Envoy',
+    "Envoy",
 ]

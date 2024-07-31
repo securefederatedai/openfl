@@ -120,6 +120,7 @@ def get_csr_hash(certificate: CertificateSigningRequest) -> str:
     """
     hasher = sha384()
     encoded_bytes = certificate.public_bytes(
-        encoding=serialization.Encoding.PEM, )
+        encoding=serialization.Encoding.PEM,
+    )
     hasher.update(encoded_bytes)
     return hasher.hexdigest()

@@ -64,8 +64,7 @@ class ShardDirectorClient:
         director_addr = f"{director_host}:{director_port}"
         logger.info("Director address: %s", director_addr)
         if not tls:
-            channel = grpc.insecure_channel(director_addr,
-                                            options=channel_options)
+            channel = grpc.insecure_channel(director_addr, options=channel_options)
         else:
             if not (root_certificate and private_key and certificate):
                 raise Exception("No certificates provided")
@@ -185,8 +184,7 @@ class ShardDirectorClient:
             director_pb2.WaitExperimentRequest: The request for experiment
                 data.
         """
-        return director_pb2.WaitExperimentRequest(
-            collaborator_name=self.shard_name)
+        return director_pb2.WaitExperimentRequest(collaborator_name=self.shard_name)
 
     def send_health_check(
         self,
@@ -276,8 +274,7 @@ class DirectorClient:
         if not tls:
             if not client_id:
                 client_id = CLIENT_ID_DEFAULT
-            channel = grpc.insecure_channel(director_addr,
-                                            options=channel_options)
+            channel = grpc.insecure_channel(director_addr, options=channel_options)
             headers = {
                 "client_id": client_id,
             }
@@ -302,9 +299,7 @@ class DirectorClient:
                 certificate_chain=certificate_b,
             )
 
-            channel = grpc.secure_channel(director_addr,
-                                          credentials,
-                                          options=channel_options)
+            channel = grpc.secure_channel(director_addr, credentials, options=channel_options)
         self.stub = director_pb2_grpc.DirectorStub(channel)
 
     def set_new_experiment(self, name, col_names, arch_path, initial_tensor_dict=None):
@@ -324,8 +319,7 @@ class DirectorClient:
         """
         logger.info("Submitting new experiment %s to director", name)
         if initial_tensor_dict:
-            model_proto = construct_model_proto(initial_tensor_dict, 0,
-                                                NoCompressionPipeline())
+            model_proto = construct_model_proto(initial_tensor_dict, 0, NoCompressionPipeline())
             experiment_info_gen = self._get_experiment_info(
                 arch_path=arch_path,
                 name=name,
@@ -449,8 +443,7 @@ class DirectorClient:
         Yields:
             Dict[str, Any]: The metrics.
         """
-        request = director_pb2.GetMetricStreamRequest(
-            experiment_name=experiment_name)
+        request = director_pb2.GetMetricStreamRequest(experiment_name=experiment_name)
         for metric_message in self.stub.GetMetricStream(request):
             yield {
                 "metric_origin": metric_message.metric_origin,
@@ -524,5 +517,6 @@ class DirectorClient:
                 experiment.
         """
         response = self.stub.GetExperimentDescription(
-            director_pb2.GetExperimentDescriptionRequest(name=name))
+            director_pb2.GetExperimentDescriptionRequest(name=name)
+        )
         return response.experiment

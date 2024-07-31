@@ -81,10 +81,9 @@ class GaNDLFTaskRunner(TaskRunner):
             val_loader,
             scheduler,
             params,
-        ) = create_pytorch_objects(gandlf_config,
-                                   train_csv=train_csv,
-                                   val_csv=val_csv,
-                                   device=device)
+        ) = create_pytorch_objects(
+            gandlf_config, train_csv=train_csv, val_csv=val_csv, device=device
+        )
         self.model = model
         self.optimizer = optimizer
         self.scheduler = scheduler
@@ -314,8 +313,7 @@ class GaNDLFTaskRunner(TaskRunner):
             with_opt_vars (bool, optional): Include the optimizer tensors.
                 Defaults to False.
         """
-        set_pt_model_from_tensor_dict(self.model, tensor_dict, self.device,
-                                      with_opt_vars)
+        set_pt_model_from_tensor_dict(self.model, tensor_dict, self.device, with_opt_vars)
 
     def get_optimizer(self):
         """Get the optimizer of this instance.
@@ -486,7 +484,8 @@ def create_tensorkey_dicts(
         output_metric_dict[tk] = np.array(v)
 
     global_model_dict, local_model_dict = split_tensor_dict_for_holdouts(
-        logger, tensor_dict, **tensor_dict_split_fn_kwargs)
+        logger, tensor_dict, **tensor_dict_split_fn_kwargs
+    )
 
     # Create global tensorkeys
     global_tensorkey_model_dict = {
@@ -515,10 +514,7 @@ def create_tensorkey_dicts(
     return global_tensor_dict, local_tensor_dict
 
 
-def set_pt_model_from_tensor_dict(model,
-                                  tensor_dict,
-                                  device,
-                                  with_opt_vars=False):
+def set_pt_model_from_tensor_dict(model, tensor_dict, device, with_opt_vars=False):
     """Set the tensor dictionary for the PyTorch model.
 
     Args:

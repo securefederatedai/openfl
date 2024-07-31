@@ -17,8 +17,7 @@ class DataSplitter(ABC):
     """
 
     @abstractmethod
-    def split(self, data: Iterable[T],
-              num_collaborators: int) -> List[Iterable[T]]:
+    def split(self, data: Iterable[T], num_collaborators: int) -> List[Iterable[T]]:
         """Split the data into a specified number of parts.
 
         Args:

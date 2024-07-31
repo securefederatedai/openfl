@@ -273,9 +273,7 @@ class fedtiming(SyncAsyncTaskDecoFactory):  # noqa: N801
         try:
             start = time.perf_counter()
             yield
-            logger.info(
-                f"({self.task._fn_name}) Elapsed Time: {time.perf_counter() - start}"
-            )
+            logger.info(f"({self.task._fn_name}) Elapsed Time: {time.perf_counter() - start}")
         except Exception as e:
             logger.exception(
                 f"An exception of type {type(e).__name__} occurred. " f"Arguments:\n{e.args[0]!r}"

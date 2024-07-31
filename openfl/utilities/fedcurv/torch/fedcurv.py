@@ -107,10 +107,7 @@ class FedCurv:
         Args:
             model (torch.nn.Module): The model to update the parameters for.
         """
-        self._params = deepcopy({
-            n: p
-            for n, p in model.named_parameters() if p.requires_grad
-        })
+        self._params = deepcopy({n: p for n, p in model.named_parameters() if p.requires_grad})
 
     def _diag_fisher(self, model, data_loader, device):
         """Calculate the diagonal of the Fisher information matrix.
@@ -196,7 +193,7 @@ class FedCurv:
             u = m.data.to(device)
             v = m.data * model.get_parameter(n)
             v = v.to(device)
-            w = m.data * model.get_parameter(n)**2
+            w = m.data * model.get_parameter(n) ** 2
             w = w.to(device)
             register_buffer(model, f"{n}_u", u.clone().detach())
             register_buffer(model, f"{n}_v", v.clone().detach())

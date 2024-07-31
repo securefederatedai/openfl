@@ -10,6 +10,7 @@ from openfl.component.straggler_handling_functions.straggler_handling_function i
 
 class PercentageBasedStragglerHandling(StragglerHandlingFunction):
     """Percentage based Straggler Handling function."""
+
     def __init__(self, percent_collaborators_needed=1.0, minimum_reporting=1, **kwargs):
         """Initialize a PercentageBasedStragglerHandling object.
 

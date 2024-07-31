@@ -81,8 +81,7 @@ class Federation:
 
         # Request sample and target shapes from Director.
         # This is an internal method for finding out dataset properties in a Federation.
-        self.sample_shape, self.target_shape = self.dir_client.get_dataset_info(
-        )
+        self.sample_shape, self.target_shape = self.dir_client.get_dataset_info()
 
     def get_dummy_shard_descriptor(self, size):
         """Return a dummy shard descriptor.

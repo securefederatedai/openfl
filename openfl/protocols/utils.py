@@ -98,8 +98,7 @@ def bytes_and_metadata_to_model_proto(bytes_dict, model_id, model_version, is_de
     return base_pb2.ModelProto(header=model_header, tensors=tensor_protos)
 
 
-def construct_named_tensor(tensor_key, nparray, transformer_metadata,
-                           lossless):
+def construct_named_tensor(tensor_key, nparray, transformer_metadata, lossless):
     """Construct named tensor.
 
     Args:
@@ -148,8 +147,7 @@ def construct_named_tensor(tensor_key, nparray, transformer_metadata,
     )
 
 
-def construct_proto(tensor_dict, model_id, model_version, is_delta,
-                    compression_pipeline):
+def construct_proto(tensor_dict, model_id, model_version, is_delta, compression_pipeline):
     """Construct proto.
 
     Args:
@@ -228,8 +226,7 @@ def deconstruct_model_proto(model_proto, compression_pipeline):
         round_number: The round number for the model.
     """
     # extract the tensor_dict and metadata
-    bytes_dict, metadata_dict, round_number = model_proto_to_bytes_and_metadata(
-        model_proto)
+    bytes_dict, metadata_dict, round_number = model_proto_to_bytes_and_metadata(model_proto)
 
     # decompress the tensors
     # TODO: Handle tensors meant to be held-out from the compression pipeline

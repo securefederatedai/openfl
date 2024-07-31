@@ -65,9 +65,9 @@ class SystemMutex:
         self.name = name
 
     def __enter__(self):
-        lock_id = hashlib.new("md5",
-                              self.name.encode("utf8"),
-                              usedforsecurity=False).hexdigest()  # nosec
+        lock_id = hashlib.new(
+            "md5", self.name.encode("utf8"), usedforsecurity=False
+        ).hexdigest()  # nosec
         # MD5sum used for concurrency purposes, not security
         self.fp = open(f"/tmp/.lock-{lock_id}.lck", "wb")
         fcntl.flock(self.fp.fileno(), fcntl.LOCK_EX)
@@ -242,8 +242,7 @@ class StepVisitor(StepVisitor):
         """
         func = getattr(self.flow, node.name)
         if hasattr(func, "is_step"):
-            self.nodes[node.name] = DAGnode(node, func.decorators,
-                                            func.__doc__)
+            self.nodes[node.name] = DAGnode(node, func.decorators, func.__doc__)
 
 
 class FlowGraph(FlowGraph):
@@ -347,14 +346,18 @@ class TaskDataStore(TaskDataStore):
 
         def pickle_iter():
             for name, obj in artifacts_iter:
-                do_v4 = (force_v4 and force_v4 if isinstance(force_v4, bool)
-                         else force_v4.get(name, False))
+                do_v4 = (
+                    force_v4 and force_v4
+                    if isinstance(force_v4, bool)
+                    else force_v4.get(name, False)
+                )
                 if do_v4:
                     encode_type = "gzip+pickle-v4"
                     if encode_type not in self._encodings:
                         raise DataException(
                             f"Artifact {name} requires a serialization encoding that "
-                            + "requires Python 3.4 or newer.")
+                            + "requires Python 3.4 or newer."
+                        )
                     try:
                         blob = pickle.dumps(obj, protocol=4)
                     except TypeError:
@@ -563,11 +566,9 @@ class MetaflowInterface:
             buffer_out (StringIO): StringIO buffer containing stdout.
             buffer_err (StringIO): StringIO buffer containing stderr.
         """
-        task_datastore = self.flow_datastore.get_task_datastore(self.run_id,
-                                                                task_name,
-                                                                str(task_id),
-                                                                attempt=0,
-                                                                mode="w")
+        task_datastore = self.flow_datastore.get_task_datastore(
+            self.run_id, task_name, str(task_id), attempt=0, mode="w"
+        )
         task_datastore.init_task()
         task_datastore.save_artifacts(data_pairs)
 
@@ -621,11 +622,9 @@ class MetaflowInterface:
         Returns:
             dict: A dictionary of loaded artifacts.
         """
-        task_datastore = self.flow_datastore.get_task_datastore(self.run_id,
-                                                                task_name,
-                                                                str(task_id),
-                                                                attempt=0,
-                                                                mode="r")
+        task_datastore = self.flow_datastore.get_task_datastore(
+            self.run_id, task_name, str(task_id), attempt=0, mode="r"
+        )
         return task_datastore.load_artifacts(artifact_names)
 
     def emit_log(
@@ -672,6 +671,7 @@ class DefaultCard(DefaultCard):
             components are allowed. Defaults to True.
         type (str): The type of the card. Defaults to "default".
     """
+
     ALLOW_USER_COMPONENTS = True
 
     type = "default"
@@ -786,8 +786,8 @@ class TaskInfoComponent(TaskInfoComponent):
         }
 
         dag_component = SectionComponent(
-            title="DAG",
-            contents=[DagComponent(data=self._graph).render()]).render()
+            title="DAG", contents=[DagComponent(data=self._graph).render()]
+        ).render()
 
         page_contents = []
         page_contents.append(dag_component)

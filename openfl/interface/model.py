@@ -25,7 +25,7 @@ def model(context):
     Args:
         context (click.core.Context): Click context.
     """
-    context.obj['group'] = 'model'
+    context.obj["group"] = "model"
 
 
 @model.command(name="save")
@@ -103,8 +103,7 @@ def save_(
             context.obj["fail"] = True
             return
 
-    task_runner = get_model(plan_config, cols_config, data_config,
-                            model_protobuf_path)
+    task_runner = get_model(plan_config, cols_config, data_config, model_protobuf_path)
 
     task_runner.save_native(output_filepath)
     logger.info("Saved model in native format:  🠆 %s", output_filepath)
@@ -156,8 +155,7 @@ def get_model(
 
     model_protobuf = utils.load_proto(model_protobuf_path)
 
-    tensor_dict, _ = utils.deconstruct_model_proto(model_protobuf,
-                                                   NoCompressionPipeline())
+    tensor_dict, _ = utils.deconstruct_model_proto(model_protobuf, NoCompressionPipeline())
 
     # This may break for multiple models.
     # task_runner.set_tensor_dict will need to handle multiple models

@@ -137,7 +137,8 @@ class Aggregator:
             f"\n{the_dragon}\nYOU ARE RUNNING IN SINGLE COLLABORATOR CERT MODE! THIS IS"
             f" NOT PROPER PKI AND "
             f"SHOULD ONLY BE USED IN DEVELOPMENT SETTINGS!!!! YE HAVE BEEN"
-            f" WARNED!!!")
+            f" WARNED!!!"
+        )
 
     @staticmethod
     def _get_sleep_time() -> int:
@@ -177,18 +178,21 @@ class Aggregator:
                     self.logger.info(
                         "Waiting for "
                         + f"{len_connected_collabs}/{len_sel_collabs}"
-                        + " collaborators to connect...")
+                        + " collaborators to connect..."
+                    )
                 elif self.tasks_sent_to_collaborators != len_sel_collabs:
                     self.logger.info(
                         "Waiting for "
                         + f"{self.tasks_sent_to_collaborators}/{len_sel_collabs}"
-                        + " to make requests for tasks...")
+                        + " to make requests for tasks..."
+                    )
                 else:
                     # Waiting for selected collaborators to send the results.
                     self.logger.info(
                         "Waiting for "
                         + f"{self.collaborators_counter}/{len_sel_collabs}"
-                        + " collaborators to send results...")
+                        + " collaborators to send results..."
+                    )
                 time.sleep(Aggregator._get_sleep_time())
 
             self.collaborator_task_results.clear()
@@ -276,7 +280,8 @@ class Aggregator:
         self.tasks_sent_to_collaborators += 1
         self.logger.info(
             "Sending tasks to collaborator"
-            + f" {collaborator_name} for round {self.current_round}...")
+            + f" {collaborator_name} for round {self.current_round}..."
+        )
         return (
             self.current_round,
             next_step,
@@ -331,7 +336,7 @@ class Aggregator:
                 # selected collaborators are the same
                 if len(self.selected_collaborators) != len(self.clones_dict):
                     # Create list of selected collaborator clones
-                    selected_clones = ([], )
+                    selected_clones = ([],)
                     for name, clone in self.clones_dict.items():
                         # Check if collaboraotr is in the list of selected
                         # collaborators
@@ -340,7 +345,7 @@ class Aggregator:
                 else:
                     # Number of selected collaborators, and number of total
                     # collaborators are same
-                    selected_clones = (list(self.clones_dict.values()), )
+                    selected_clones = (list(self.clones_dict.values()),)
             # Call the join function with selected collaborators
             # clones are arguments
             f(*selected_clones)
@@ -400,7 +405,8 @@ class Aggregator:
         if round_number is not self.current_round:
             self.logger.warning(
                 f"Collaborator {collab_name} is reporting results"
-                f" for the wrong round: {round_number}. Ignoring...")
+                f" for the wrong round: {round_number}. Ignoring..."
+            )
         else:
             self.logger.info(
                 f"Collaborator {collab_name} sent task results" f" for round {round_number}."
@@ -421,8 +427,9 @@ class Aggregator:
             if self.tasks_sent_to_collaborators == len(self.selected_collaborators):
                 self.tasks_sent_to_collaborators = 0
 
-    def valid_collaborator_cn_and_id(self, cert_common_name: str,
-                                     collaborator_common_name: str) -> bool:
+    def valid_collaborator_cn_and_id(
+        self, cert_common_name: str, collaborator_common_name: str
+    ) -> bool:
         """Determine if the collaborator certificate and ID are valid for this
         federation.
 
@@ -439,13 +446,17 @@ class Aggregator:
         # FIXME: "" instead of None is just for protobuf compatibility.
         #  Cleaner solution?
         if self.single_col_cert_common_name == "":
-            return (cert_common_name == collaborator_common_name
-                    and collaborator_common_name in self.authorized_cols)
+            return (
+                cert_common_name == collaborator_common_name
+                and collaborator_common_name in self.authorized_cols
+            )
         # otherwise, common_name must be in whitelist and
         # collaborator_common_name must be in authorized_cols
         else:
-            return (cert_common_name == self.single_col_cert_common_name
-                    and collaborator_common_name in self.authorized_cols)
+            return (
+                cert_common_name == self.single_col_cert_common_name
+                and collaborator_common_name in self.authorized_cols
+            )
 
     def all_quit_jobs_sent(self) -> bool:
         """Assert all quit jobs are sent to collaborators."""

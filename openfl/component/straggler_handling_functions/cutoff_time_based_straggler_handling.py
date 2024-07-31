@@ -14,6 +14,7 @@ from openfl.component.straggler_handling_functions.straggler_handling_function i
 
 class CutoffTimeBasedStragglerHandling(StragglerHandlingFunction):
     """Cutoff time based Straggler Handling function."""
+
     def __init__(
         self, round_start_time=None, straggler_cutoff_time=np.inf, minimum_reporting=1, **kwargs
     ):

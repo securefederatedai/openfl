@@ -79,7 +79,8 @@ def get_templates():
     """Grab the default templates from the distribution."""
 
     return [
-        d.name for d in WORKSPACE.glob("*")
+        d.name
+        for d in WORKSPACE.glob("*")
         if d.is_dir() and d.name not in ["__pycache__", "workspace"]
     ]
 
@@ -125,14 +126,17 @@ def create_(prefix, custom_template, template, notebook, template_output_dir):
         )
 
     if not (custom_template or template or notebook):
-        raise ValueError("Please provide one of the following options: "
-                         + "`template`, `custom_template`, or `notebook`.")
+        raise ValueError(
+            "Please provide one of the following options: "
+            + "`template`, `custom_template`, or `notebook`."
+        )
 
     if notebook:
         if not template_output_dir:
             raise ValueError(
                 "Please provide output_workspace which is Destination directory to "
-                + "save your Jupyter Notebook workspace.")
+                + "save your Jupyter Notebook workspace."
+            )
 
         WorkspaceExport.export(
             notebook_path=notebook,
@@ -168,7 +172,8 @@ def create(prefix, template):
                 "Participant private attributes shall be set to None as plan/data.yaml"
                 + " was not found in the workspace.",
                 fg="yellow",
-            ))
+            )
+        )
 
     if isfile(f"{str(prefix)}/{requirements_filename}"):
         check_call(
@@ -182,15 +187,14 @@ def create(prefix, template):
             ],
             shell=False,
         )
-        echo(
-            f"Successfully installed packages from {prefix}/requirements.txt.")
+        echo(f"Successfully installed packages from {prefix}/requirements.txt.")
     else:
         echo("No additional requirements for workspace defined. Skipping...")
     prefix_hash = _get_dir_hash(str(prefix.absolute()))
     with open(
-            OPENFL_USERDIR / f"requirements.{prefix_hash}.txt",
-            "w",
-            encoding="utf-8",
+        OPENFL_USERDIR / f"requirements.{prefix_hash}.txt",
+        "w",
+        encoding="utf-8",
     ) as f:
         check_call([executable, "-m", "pip", "freeze"], shell=False, stdout=f)
 
@@ -218,7 +222,8 @@ def export_(pip_install_options: Tuple[str]):
             + " should review that these does not contain any information which is private and"
             + " not to be shared.",
             fg="yellow",
-        ))
+        )
+    )
 
     plan_file = Path("plan/plan.yaml").absolute()
     try:
@@ -335,7 +340,11 @@ def certify():
 
     # Write root CA certificate to disk
     with open(CERT_DIR / root_crt_path, "wb") as f:
-        f.write(root_cert.public_bytes(encoding=serialization.Encoding.PEM, ))
+        f.write(
+            root_cert.public_bytes(
+                encoding=serialization.Encoding.PEM,
+            )
+        )
 
     with open(CERT_DIR / root_key_path, "wb") as f:
         f.write(
@@ -343,7 +352,8 @@ def certify():
                 encoding=serialization.Encoding.PEM,
                 format=serialization.PrivateFormat.TraditionalOpenSSL,
                 encryption_algorithm=serialization.NoEncryption(),
-            ))
+            )
+        )
 
     echo("2.  Create Signing Certificate")
     echo("2.1 Create Directories")
@@ -373,8 +383,11 @@ def certify():
 
     # Write Signing CA CSR to disk
     with open(CERT_DIR / signing_csr_path, "wb") as f:
-        f.write(signing_csr.public_bytes(
-            encoding=serialization.Encoding.PEM, ))
+        f.write(
+            signing_csr.public_bytes(
+                encoding=serialization.Encoding.PEM,
+            )
+        )
 
     with open(CERT_DIR / signing_key_path, "wb") as f:
         f.write(
@@ -382,7 +395,8 @@ def certify():
                 encoding=serialization.Encoding.PEM,
                 format=serialization.PrivateFormat.TraditionalOpenSSL,
                 encryption_algorithm=serialization.NoEncryption(),
-            ))
+            )
+        )
 
     echo("2.4 Sign Signing Certificate CSR")
 
@@ -390,7 +404,10 @@ def certify():
 
     with open(CERT_DIR / signing_crt_path, "wb") as f:
         f.write(
-            signing_cert.public_bytes(encoding=serialization.Encoding.PEM, ))
+            signing_cert.public_bytes(
+                encoding=serialization.Encoding.PEM,
+            )
+        )
 
     echo("3   Create Certificate Chain")
 

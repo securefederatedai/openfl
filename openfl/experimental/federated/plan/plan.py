@@ -81,8 +81,7 @@ class Plan:
         """
         try:
             plan = Plan()
-            plan.config = Plan.load(
-                plan_config_path)  # load plan configuration
+            plan.config = Plan.load(plan_config_path)  # load plan configuration
             plan.name = plan_config_path.name
             plan.files = [plan_config_path]  # collect all the plan files
 
@@ -244,16 +243,14 @@ class Plan:
 
         if self.config["network"][SETTINGS]["agg_port"] == AUTO:
             self.config["network"][SETTINGS]["agg_port"] = (
-                int(self.hash[:8], 16) % (60999 - 49152) + 49152)
+                int(self.hash[:8], 16) % (60999 - 49152) + 49152
+            )
 
     def get_aggregator(self):
         """Get federation aggregator."""
         defaults = self.config.get(
             "aggregator",
-            {
-                TEMPLATE: "openfl.experimental.Aggregator",
-                SETTINGS: {}
-            },
+            {TEMPLATE: "openfl.experimental.Aggregator", SETTINGS: {}},
         )
 
         defaults[SETTINGS]["aggregator_uuid"] = self.aggregator_uuid
@@ -280,7 +277,8 @@ class Plan:
             elif not callable(log_metric_callback):
                 raise TypeError(
                     f"log_metric_callback should be callable object "
-                    f"or be import from code part, get {log_metric_callback}")
+                    f"or be import from code part, get {log_metric_callback}"
+                )
         defaults[SETTINGS]["log_metric_callback"] = log_metric_callback
 
         if self.aggregator_ is None:
@@ -299,10 +297,7 @@ class Plan:
         """Get collaborator."""
         defaults = self.config.get(
             "collaborator",
-            {
-                TEMPLATE: "openfl.experimental.Collaborator",
-                SETTINGS: {}
-            },
+            {TEMPLATE: "openfl.experimental.Collaborator", SETTINGS: {}},
         )
 
         defaults[SETTINGS]["collaborator_name"] = collaborator_name
@@ -400,10 +395,7 @@ class Plan:
         """Instantiates federated flow object."""
         defaults = self.config.get(
             "federated_flow",
-            {
-                TEMPLATE: self.config["federated_flow"]["template"],
-                SETTINGS: {}
-            },
+            {TEMPLATE: self.config["federated_flow"]["template"], SETTINGS: {}},
         )
         defaults = self.import_kwargs_modules(defaults)
 
@@ -432,8 +424,7 @@ class Plan:
                                 if not inspect.isclass(attr):
                                     settings[key] = attr
                                 else:
-                                    settings = Plan.build(
-                                        **value_defaults_data)
+                                    settings = Plan.build(**value_defaults_data)
                         except ImportError:
                             raise ImportError(f"Cannot import {value}.")
             return settings
@@ -469,13 +460,15 @@ class Plan:
                     }
 
                     private_attrs_kwargs = self.import_kwargs_modules(
-                        d.get(private_attr_name)["callable_func"])["settings"]
+                        d.get(private_attr_name)["callable_func"]
+                    )["settings"]
 
                     if isinstance(private_attrs_callable, dict):
                         private_attrs_callable = Plan.import_(**private_attrs_callable)
                 elif private_attributes:
                     private_attributes = Plan.import_(
-                        d.get(private_attr_name)["private_attributes"])
+                        d.get(private_attr_name)["private_attributes"]
+                    )
                 elif not callable(private_attrs_callable):
                     raise TypeError(
                         f"private_attrs_callable should be callable object "

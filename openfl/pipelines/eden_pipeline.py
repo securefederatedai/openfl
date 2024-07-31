@@ -63,7 +63,7 @@ class Eden:
             padding the vector.
     """
 
-    def __init__(self, nbits=8, device='cpu'):
+    def __init__(self, nbits=8, device="cpu"):
         """Initialize Eden.
 
         Args:
@@ -571,12 +571,12 @@ class Eden:
         def low_po2(n):
             if not n:
                 return 0
-            return 2**int(np.log2(n))
+            return 2 ** int(np.log2(n))
 
         def high_po2(n):
             if not n:
                 return 0
-            return 2**(int(np.ceil(np.log2(n))))
+            return 2 ** (int(np.ceil(np.log2(n))))
 
         vec = torch.Tensor(vec.flatten()).to(self.device)
 
@@ -739,7 +739,7 @@ class EdenTransformer(Transformer):
             not compressed.
     """
 
-    def __init__(self, n_bits=8, dim_threshold=100, device='cpu'):
+    def __init__(self, n_bits=8, dim_threshold=100, device="cpu"):
         """Initialize EdenTransformer.
 
         Args:
@@ -772,14 +772,12 @@ class EdenTransformer(Transformer):
             The quantized data and the metadata for the quantization.
         """
         # TODO: can be simplified if have access to a unique feature of the participant (e.g., ID)
-        seed = (hash(sum(data.flatten()) * 13 + 7)
-                + np.random.randint(1, 2**16)) % (2**16)
+        seed = (hash(sum(data.flatten()) * 13 + 7) + np.random.randint(1, 2**16)) % (2**16)
         seed = int(float(seed))
         metadata = {"int_list": list(data.shape)}
 
         if data.size > self.dim_threshold:
-            int_array, scale_list, dim_list, total_dim = self.eden.compress(
-                data, seed)
+            int_array, scale_list, dim_list, total_dim = self.eden.compress(data, seed)
 
             # TODO: workaround: using the int to float dictionary to pass eden's metadata
             metadata["int_to_float"] = {0: float(seed), 1: float(total_dim)}

@@ -201,8 +201,7 @@ def certify(fqdn, silent):
     csr, csr_hash = read_csr(csr_path_absolute_path)
 
     # Load private signing key
-    private_sign_key_absolute_path = Path(CERT_DIR
-                                          / signing_key_path).absolute()
+    private_sign_key_absolute_path = Path(CERT_DIR / signing_key_path).absolute()
     if not private_sign_key_absolute_path.exists():
         echo(
             style("Signing key not found.", fg="red") + " Please run `fx workspace certify`"

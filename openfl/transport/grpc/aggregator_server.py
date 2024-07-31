@@ -145,8 +145,7 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
             ValueError: If the request is not valid.
         """
         # TODO improve this check. the sender name could be spoofed
-        check_is_in(request.header.sender, self.aggregator.authorized_cols,
-                    self.logger)
+        check_is_in(request.header.sender, self.aggregator.authorized_cols, self.logger)
 
         # check that the message is for me
         check_equal(request.header.receiver, self.aggregator.uuid, self.logger)
@@ -290,7 +289,8 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
         )
         # turn data stream into local model update
         return aggregator_pb2.SendLocalTaskResultsResponse(
-            header=self.get_header(collaborator_name))
+            header=self.get_header(collaborator_name)
+        )
 
     def get_server(self):
         """
@@ -325,7 +325,7 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
                 self.logger.warn("Client-side authentication is disabled.")
 
             self.server_credentials = ssl_server_credentials(
-                ((private_key_b, certificate_b), ),
+                ((private_key_b, certificate_b),),
                 root_certificates=root_certificate_b,
                 require_client_auth=not self.disable_client_auth,
             )

@@ -126,8 +126,7 @@ class Plan:
         try:
 
             plan = Plan()
-            plan.config = Plan.load(
-                plan_config_path)  # load plan configuration
+            plan.config = Plan.load(plan_config_path)  # load plan configuration
             plan.name = plan_config_path.name
             plan.files = [plan_config_path]  # collect all the plan files
 
@@ -407,8 +406,7 @@ class Plan:
 
         defaults[SETTINGS]["log_metric_callback"] = log_metric_callback
         if self.aggregator_ is None:
-            self.aggregator_ = Plan.build(**defaults,
-                                          initial_tensor_dict=tensor_dict)
+            self.aggregator_ = Plan.build(**defaults, initial_tensor_dict=tensor_dict)
 
         return self.aggregator_
 

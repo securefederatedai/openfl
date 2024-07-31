@@ -89,6 +89,6 @@ class Assigner:
         Returns:
             str: Aggregation type for the task.
         """
-        if 'aggregation_type' not in self.tasks[task_name]:
+        if "aggregation_type" not in self.tasks[task_name]:
             return None
         return self.tasks[task_name]["aggregation_type"]

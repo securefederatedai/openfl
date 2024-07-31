@@ -74,7 +74,8 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
             common_name = context.auth_context()["x509_common_name"][0].decode("utf-8")
             collaborator_common_name = request.header.sender
             if not self.aggregator.valid_collaborator_cn_and_id(
-                    common_name, collaborator_common_name):
+                common_name, collaborator_common_name
+            ):
                 # Random delay in authentication failures
                 sleep(5 * random())
                 context.abort(
@@ -94,8 +95,7 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
             sender=self.aggregator.uuid,
             receiver=collaborator_name,
             federation_uuid=self.aggregator.federation_uuid,
-            single_col_cert_common_name=self.aggregator.
-            single_col_cert_common_name,
+            single_col_cert_common_name=self.aggregator.single_col_cert_common_name,
         )
 
     def check_request(self, request):
@@ -135,13 +135,13 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
         self.validate_collaborator(request, context)
         self.check_request(request)
         collaborator_name = request.header.sender
-        round_number = (request.round_number, )
-        next_step = (request.next_step, )
+        round_number = (request.round_number,)
+        next_step = (request.next_step,)
         execution_environment = request.execution_environment
 
-        _ = self.aggregator.send_task_results(collaborator_name,
-                                              round_number[0], next_step,
-                                              execution_environment)
+        _ = self.aggregator.send_task_results(
+            collaborator_name, round_number[0], next_step, execution_environment
+        )
 
         return aggregator_pb2.TaskResultsResponse(header=self.get_header(collaborator_name))
 
@@ -210,7 +210,7 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
                 self.logger.warn("Client-side authentication is disabled.")
 
             self.server_credentials = ssl_server_credentials(
-                ((private_key_b, certificate_b), ),
+                ((private_key_b, certificate_b),),
                 root_certificates=root_certificate_b,
                 require_client_auth=not self.disable_client_auth,
             )
