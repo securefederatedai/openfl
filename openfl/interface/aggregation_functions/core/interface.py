@@ -1,16 +1,15 @@
-# Copyright (C) 2020-2023 Intel Corporation
+# Copyright 2020-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+
 """Aggregation function interface module."""
 from abc import abstractmethod
-from typing import Iterator
-from typing import List
-from typing import Tuple
+from typing import Iterator, List, Tuple
 
 import numpy as np
 import pandas as pd
 
-from openfl.utilities import LocalTensor
-from openfl.utilities import SingletonABCMeta
+from openfl.utilities import LocalTensor, SingletonABCMeta
 
 
 class AggregationFunction(metaclass=SingletonABCMeta):
@@ -24,9 +23,14 @@ class AggregationFunction(metaclass=SingletonABCMeta):
         self._privileged = False
 
     @abstractmethod
-    def call(self, local_tensors: List[LocalTensor],
-             db_iterator: Iterator[pd.Series], tensor_name: str, fl_round: int,
-             tags: Tuple[str]) -> np.ndarray:
+    def call(
+        self,
+        local_tensors: List[LocalTensor],
+        db_iterator: Iterator[pd.Series],
+        tensor_name: str,
+        fl_round: int,
+        tags: Tuple[str],
+    ) -> np.ndarray:
         """Aggregate tensors.
 
         Args:
@@ -61,8 +65,7 @@ class AggregationFunction(metaclass=SingletonABCMeta):
         """
         raise NotImplementedError
 
-    def __call__(self, local_tensors, db_iterator, tensor_name, fl_round,
-                 tags):
+    def __call__(self, local_tensors, db_iterator, tensor_name, fl_round, tags):
         """Use magic function for ease."""
         return self.call(local_tensors, db_iterator, tensor_name, fl_round,
                          tags)

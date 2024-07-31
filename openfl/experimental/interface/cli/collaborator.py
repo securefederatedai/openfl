@@ -1,15 +1,31 @@
-# Copyright (C) 2020-2023 Intel Corporation
+# Copyright 2020-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-"""Collaborator module."""
 
+
+"""Collaborator module."""
 import os
 import sys
+from glob import glob
 from logging import getLogger
+from os import remove
+from os.path import basename, isfile, join, splitext
+from pathlib import Path
+from shutil import copy, copytree, ignore_patterns, make_archive, unpack_archive
+from tempfile import mkdtemp
 
+import yaml
 from click import Path as ClickPath
-from click import echo, group, option, pass_context, style
+from click import confirm, echo, group, option, pass_context, style
+from yaml import FullLoader, dump, load
+from yaml.loader import SafeLoader
 
+from openfl.cryptography.ca import sign_certificate
+from openfl.cryptography.io import get_csr_hash, read_crt, read_csr, read_key, write_crt, write_key
+from openfl.cryptography.participant import generate_csr
+from openfl.experimental.federated import Plan
+from openfl.experimental.interface.cli.cli_helper import CERT_DIR
 from openfl.utilities.path_check import is_directory_traversal
+from openfl.utilities.utils import rmtree
 
 logger = getLogger(__name__)
 
@@ -46,19 +62,12 @@ def collaborator(context):
 )
 def start_(plan, collaborator_name, secure, data_config="plan/data.yaml"):
     """Start a collaborator service."""
-    from pathlib import Path
-
-    from openfl.experimental.federated import Plan
 
     if plan and is_directory_traversal(plan):
-        echo(
-            "Federated learning plan path is out of the openfl workspace scope."
-        )
+        echo("Federated learning plan path is out of the openfl workspace scope.")
         sys.exit(1)
     if data_config and is_directory_traversal(data_config):
-        echo(
-            "The data set/shard configuration file path is out of the openfl workspace scope."
-        )
+        echo("The data set/shard configuration file path is out of the openfl workspace scope.")
         sys.exit(1)
 
     plan = Plan.parse(
@@ -70,8 +79,6 @@ def start_(plan, collaborator_name, secure, data_config="plan/data.yaml"):
         logger.warning("Collaborator private attributes are set to None as"
                        f" {data_config} not found in workspace.")
     else:
-        import yaml
-        from yaml.loader import SafeLoader
 
         with open(data_config, "r") as f:
             data = yaml.load(f, Loader=SafeLoader)
@@ -109,9 +116,6 @@ def generate_cert_request(collaborator_name, silent, skip_package):
 
     Then create a package with the CSR to send for signing.
     """
-    from openfl.cryptography.io import get_csr_hash, write_crt, write_key
-    from openfl.cryptography.participant import generate_csr
-    from openfl.experimental.interface.cli.cli_helper import CERT_DIR
 
     common_name = f"{collaborator_name}"
     subject_alternative_name = f"DNS:{common_name}"
@@ -126,8 +130,7 @@ def generate_cert_request(collaborator_name, silent, skip_package):
 
     (CERT_DIR / "client").mkdir(parents=True, exist_ok=True)
 
-    echo("  Moving COLLABORATOR certificate to: "
-         + style(f"{CERT_DIR}/{file_name}", fg="green"))
+    echo("  Moving COLLABORATOR certificate to: " + style(f"{CERT_DIR}/{file_name}", fg="green"))
 
     # Print csr hash before writing csr to disk
     csr_hash = get_csr_hash(client_csr)
@@ -138,13 +141,6 @@ def generate_cert_request(collaborator_name, silent, skip_package):
     write_key(client_private_key, CERT_DIR / "client" / f"{file_name}.key")
 
     if not skip_package:
-        from glob import glob
-        from os import remove
-        from os.path import basename, join
-        from shutil import copytree, ignore_patterns, make_archive
-        from tempfile import mkdtemp
-
-        from openfl.utilities.utils import rmtree
 
         archive_type = "zip"
         archive_name = f"col_{common_name}_to_agg_cert_request"
@@ -165,10 +161,11 @@ def generate_cert_request(collaborator_name, silent, skip_package):
         make_archive(archive_name, archive_type, tmp_dir)
         rmtree(tmp_dir)
 
-        echo(f"Archive {archive_file_name} with certificate signing"
-             f" request created")
-        echo("This file should be sent to the certificate authority"
-             " (typically hosted by the aggregator) for signing")
+        echo(f"Archive {archive_file_name} with certificate signing" f" request created")
+        echo(
+            "This file should be sent to the certificate authority"
+            " (typically hosted by the aggregator) for signing"
+        )
 
 
 def find_certificate_name(file_name):
@@ -183,10 +180,6 @@ def register_collaborator(file_name):
     Args:
         file_name (str): The name of the collaborator in this federation
     """
-    from os.path import isfile
-    from pathlib import Path
-
-    from yaml import FullLoader, dump, load
 
     col_name = find_certificate_name(file_name)
 
@@ -229,16 +222,14 @@ def register_collaborator(file_name):
     "-r",
     "--request-pkg",
     type=ClickPath(exists=True),
-    help="The archive containing the certificate signing"
-    " request (*.zip) for a collaborator",
+    help="The archive containing the certificate signing" " request (*.zip) for a collaborator",
 )
 @option(
     "-i",
     "--import",
     "import_",
     type=ClickPath(exists=True),
-    help="Import the archive containing the collaborator's"
-    " certificate (signed by the CA)",
+    help="Import the archive containing the collaborator's" " certificate (signed by the CA)",
 )
 def certify_(collaborator_name, silent, request_pkg, import_):
     """Certify the collaborator."""
@@ -247,19 +238,6 @@ def certify_(collaborator_name, silent, request_pkg, import_):
 
 def certify(collaborator_name, silent, request_pkg=None, import_=False):
     """Sign/certify collaborator certificate key pair."""
-    from glob import glob
-    from os import remove
-    from os.path import basename, join, splitext
-    from pathlib import Path
-    from shutil import copy, make_archive, unpack_archive
-    from tempfile import mkdtemp
-
-    from click import confirm
-
-    from openfl.cryptography.ca import sign_certificate
-    from openfl.cryptography.io import read_crt, read_csr, read_key, write_crt
-    from openfl.experimental.interface.cli.cli_helper import CERT_DIR
-    from openfl.utilities.utils import rmtree
 
     common_name = f"{collaborator_name}"
 
@@ -297,9 +275,9 @@ def certify(collaborator_name, silent, request_pkg=None, import_=False):
         # Load private signing key
         if not Path(CERT_DIR / signing_key_path).exists():
             echo(
-                style("Signing key not found.", fg="red")
-                + " Please run `fx workspace certify`"
-                " to initialize the local certificate authority.")
+                style("Signing key not found.", fg="red") + " Please run `fx workspace certify`"
+                " to initialize the local certificate authority."
+            )
 
         signing_key = read_key(CERT_DIR / signing_key_path)
 
@@ -317,11 +295,8 @@ def certify(collaborator_name, silent, request_pkg=None, import_=False):
 
         if silent:
             echo(" Signing COLLABORATOR certificate")
-            echo(
-                " Warning: manual check of certificate hashes is bypassed in silent mode."
-            )
-            signed_col_cert = sign_certificate(csr, signing_key,
-                                               signing_crt.subject)
+            echo(" Warning: manual check of certificate hashes is bypassed in silent mode.")
+            signed_col_cert = sign_certificate(csr, signing_key, signing_crt.subject)
             write_crt(signed_col_cert, f"{cert_name}.crt")
             register_collaborator(CERT_DIR / "client" / f"{file_name}.crt")
 
@@ -329,8 +304,7 @@ def certify(collaborator_name, silent, request_pkg=None, import_=False):
             echo("Make sure the two hashes above are the same.")
             if confirm("Do you want to sign this certificate?"):
                 echo(" Signing COLLABORATOR certificate")
-                signed_col_cert = sign_certificate(csr, signing_key,
-                                                   signing_crt.subject)
+                signed_col_cert = sign_certificate(csr, signing_key, signing_crt.subject)
                 write_crt(signed_col_cert, f"{cert_name}.crt")
                 register_collaborator(CERT_DIR / "client" / f"{file_name}.crt")
 

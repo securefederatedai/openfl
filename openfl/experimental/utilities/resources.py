@@ -1,5 +1,7 @@
-# Copyright (C) 2020-2023 Intel Corporation
+# Copyright 2020-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+
 """openfl.experimental.utilities.resources module."""
 
 from logging import getLogger
@@ -30,6 +32,6 @@ def get_number_of_gpus() -> int:
         return len(stdout.split("\n"))
     except FileNotFoundError:
         logger.warning(
-            f'No GPUs found! If this is a mistake please try running "{command}" '
-            + "manually.")
+            f'No GPUs found! If this is a mistake please try running "{command}" ' + "manually."
+        )
         return 0

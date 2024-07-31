@@ -1,10 +1,12 @@
-# Copyright (C) 2020-2023 Intel Corporation
+# Copyright 2020-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+
 """KerasDataLoader module."""
 
 import numpy as np
 
-from .loader import DataLoader
+from openfl.federated.data.loader import DataLoader
 
 
 class KerasDataLoader(DataLoader):
@@ -55,10 +57,12 @@ class KerasDataLoader(DataLoader):
         Returns:
             DataLoader: The DataLoader object for the training data.
         """
-        return self._get_batch_generator(X=self.X_train,
-                                         y=self.y_train,
-                                         batch_size=batch_size,
-                                         num_batches=num_batches)
+        return self._get_batch_generator(
+            X=self.X_train,
+            y=self.y_train,
+            batch_size=batch_size,
+            num_batches=num_batches,
+        )
 
     def get_valid_loader(self, batch_size=None):
         """Returns the data loader for the validation data.

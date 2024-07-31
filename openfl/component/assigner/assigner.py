@@ -1,5 +1,7 @@
-# Copyright (C) 2020-2023 Intel Corporation
+# Copyright 2020-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+
 """Assigner module."""
 
 
@@ -89,4 +91,4 @@ class Assigner:
         """
         if 'aggregation_type' not in self.tasks[task_name]:
             return None
-        return self.tasks[task_name]['aggregation_type']
+        return self.tasks[task_name]["aggregation_type"]

@@ -1,10 +1,5 @@
-# Copyright (C) 2020-2023 Intel Corporation
+# Copyright 2020-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Databases package."""
 
-from .tensor_db import TensorDB
-
-__all__ = [
-    'TensorDB',
-]
+from openfl.databases.tensor_db import TensorDB

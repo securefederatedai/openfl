@@ -1,5 +1,7 @@
-# Copyright (C) 2020-2023 Intel Corporation
+# Copyright 2020-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+
 """openfl.experimental.utilities.stream_redirect module."""
 
 import io
@@ -40,8 +42,9 @@ class RedirectStdStreamBuffer:
         return step_stdout, step_stderr
 
 
-class RedirectStdStream(object):
-    """Class used to intercept stdout and stderr, so that stdout and stderr is
+class RedirectStdStream:
+    """
+    Class used to intercept stdout and stderr, so that stdout and stderr is
     written to buffer as well as terminal.
 
     Attributes:
@@ -93,10 +96,8 @@ class RedirectStdStreamContext:
         """
         self.__old_stdout = sys.stdout
         self.__old_stderr = sys.stderr
-        sys.stdout = RedirectStdStream(self.stdstreambuffer._stdoutbuff,
-                                       sys.stdout)
-        sys.stderr = RedirectStdStream(self.stdstreambuffer._stderrbuff,
-                                       sys.stderr)
+        sys.stdout = RedirectStdStream(self.stdstreambuffer._stdoutbuff, sys.stdout)
+        sys.stderr = RedirectStdStream(self.stdstreambuffer._stderrbuff, sys.stderr)
 
         return self.stdstreambuffer
 

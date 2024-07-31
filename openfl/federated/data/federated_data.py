@@ -1,12 +1,13 @@
-# Copyright (C) 2020-2023 Intel Corporation
+# Copyright 2020-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+
 """FederatedDataset module."""
 
 import numpy as np
 
-from openfl.utilities.data_splitters import EqualNumPyDataSplitter
-from openfl.utilities.data_splitters import NumPyDataSplitter
-from .loader_pt import PyTorchDataLoader
+from openfl.federated.data.loader_pt import PyTorchDataLoader
+from openfl.utilities.data_splitters import EqualNumPyDataSplitter, NumPyDataSplitter
 
 
 class FederatedDataSet(PyTorchDataLoader):
@@ -23,16 +24,19 @@ class FederatedDataSet(PyTorchDataLoader):
     train_splitter: NumPyDataSplitter
     valid_splitter: NumPyDataSplitter
 
-    def __init__(self,
-                 X_train,
-                 y_train,
-                 X_valid,
-                 y_valid,
-                 batch_size=1,
-                 num_classes=None,
-                 train_splitter=None,
-                 valid_splitter=None):
-        """Initializes the FederatedDataSet object.
+    def __init__(
+        self,
+        X_train,
+        y_train,
+        X_valid,
+        y_valid,
+        batch_size=1,
+        num_classes=None,
+        train_splitter=None,
+        valid_splitter=None,
+    ):
+        """
+        Initializes the FederatedDataSet object.
 
         Args:
             X_train (np.array): The training features.
@@ -57,8 +61,7 @@ class FederatedDataSet(PyTorchDataLoader):
 
         if num_classes is None:
             num_classes = np.unique(self.y_train).shape[0]
-            print(
-                f'Inferred {num_classes} classes from the provided labels...')
+            print(f"Inferred {num_classes} classes from the provided labels...")
         self.num_classes = num_classes
         self.train_splitter = self._get_splitter_or_default(train_splitter)
         self.valid_splitter = self._get_splitter_or_default(valid_splitter)
@@ -80,8 +83,7 @@ class FederatedDataSet(PyTorchDataLoader):
         if isinstance(value, NumPyDataSplitter):
             return value
         else:
-            raise NotImplementedError(
-                f'Data splitter {value} is not supported')
+            raise NotImplementedError(f"Data splitter {value} is not supported")
 
     def split(self, num_collaborators):
         """Splits the dataset into equal parts for each collaborator and
@@ -99,13 +101,15 @@ class FederatedDataSet(PyTorchDataLoader):
         valid_idx = self.valid_splitter.split(self.y_valid, num_collaborators)
 
         return [
-            FederatedDataSet(self.X_train[train_idx[i]],
-                             self.y_train[train_idx[i]],
-                             self.X_valid[valid_idx[i]],
-                             self.y_valid[valid_idx[i]],
-                             batch_size=self.batch_size,
-                             num_classes=self.num_classes,
-                             train_splitter=self.train_splitter,
-                             valid_splitter=self.valid_splitter)
+            FederatedDataSet(
+                self.X_train[train_idx[i]],
+                self.y_train[train_idx[i]],
+                self.X_valid[valid_idx[i]],
+                self.y_valid[valid_idx[i]],
+                batch_size=self.batch_size,
+                num_classes=self.num_classes,
+                train_splitter=self.train_splitter,
+                valid_splitter=self.valid_splitter,
+            )
             for i in range(num_collaborators)
         ]

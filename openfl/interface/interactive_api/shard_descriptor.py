@@ -1,9 +1,10 @@
-# Copyright (C) 2020-2023 Intel Corporation
+# Copyright 2020-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+
 """Shard descriptor."""
 
-from typing import Iterable
-from typing import List
+from typing import Iterable, List
 
 import numpy as np
 
@@ -65,9 +66,9 @@ class ShardDescriptor:
 class DummyShardDataset(ShardDataset):
     """Dummy shard dataset class."""
 
-    def __init__(self, *, size: int, sample_shape: List[int],
-                 target_shape: List[int]):
-        """Initialize DummyShardDataset.
+    def __init__(self, *, size: int, sample_shape: List[int], target_shape: List[int]):
+        """
+        Initialize DummyShardDataset.
 
         Args:
             size (int): The size of the dataset.
@@ -103,9 +104,14 @@ class DummyShardDataset(ShardDataset):
 class DummyShardDescriptor(ShardDescriptor):
     """Dummy shard descriptor class."""
 
-    def __init__(self, sample_shape: Iterable[str],
-                 target_shape: Iterable[str], size: int) -> None:
-        """Initialize DummyShardDescriptor.
+    def __init__(
+        self,
+        sample_shape: Iterable[str],
+        target_shape: Iterable[str],
+        size: int,
+    ) -> None:
+        """
+        Initialize DummyShardDescriptor.
 
         Args:
             sample_shape (Iterable[str]): The shape of the samples.
@@ -117,7 +123,8 @@ class DummyShardDescriptor(ShardDescriptor):
         self.size = size
 
     def get_dataset(self, dataset_type: str) -> ShardDataset:
-        """Return a shard dataset by type.
+        """
+        Return a shard dataset by type.
 
         Args:
             dataset_type (str): The type of the dataset.
@@ -125,9 +132,11 @@ class DummyShardDescriptor(ShardDescriptor):
         Returns:
             ShardDataset: The shard dataset.
         """
-        return DummyShardDataset(size=self.size,
-                                 sample_shape=self._sample_shape,
-                                 target_shape=self._target_shape)
+        return DummyShardDataset(
+            size=self.size,
+            sample_shape=self._sample_shape,
+            target_shape=self._target_shape,
+        )
 
     @property
     def sample_shape(self) -> List[int]:

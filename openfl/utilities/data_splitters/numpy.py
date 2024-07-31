@@ -1,5 +1,7 @@
-# Copyright (C) 2020-2023 Intel Corporation
+# Copyright 2020-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+
 """UnbalancedFederatedDataset module."""
 
 from abc import abstractmethod
@@ -148,13 +150,15 @@ class LogNormalNumPyDataSplitter(NumPyDataSplitter):
         Non-deterministic behavior selects only random subpart of class items.
     """
 
-    def __init__(self,
-                 mu,
-                 sigma,
-                 num_classes,
-                 classes_per_col,
-                 min_samples_per_class,
-                 seed=0):
+    def __init__(
+        self,
+        mu,
+        sigma,
+        num_classes,
+        classes_per_col,
+        min_samples_per_class,
+        seed=0,
+    ):
         """Initialize the generator.
 
         Args:
@@ -194,21 +198,24 @@ class LogNormalNumPyDataSplitter(NumPyDataSplitter):
                 slice_start = col // self.num_classes * samples_per_col
                 slice_start += self.min_samples_per_class * c
                 slice_end = slice_start + self.min_samples_per_class
-                print(
-                    f'Assigning {slice_start}:{slice_end} of class {label} to {col} col...'
-                )
+                print(f"Assigning {slice_start}:{slice_end} of class {label} to {col} col...")
                 idx[col] += list(label_idx[slice_start:slice_end])
         if any(len(i) != samples_per_col for i in idx):
             raise SystemError(
-                f'''All collaborators should have {samples_per_col} elements
-but distribution is {[len(i) for i in idx]}''')
+                f"""All collaborators should have {samples_per_col} elements
+but distribution is {[len(i) for i in idx]}"""
+            )
 
-        props_shape = (self.num_classes, num_collaborators // self.num_classes,
-                       self.classes_per_col)
+        props_shape = (
+            self.num_classes,
+            num_collaborators // self.num_classes,
+            self.classes_per_col,
+        )
         props = np.random.lognormal(self.mu, self.sigma, props_shape)
-        num_samples_per_class = [[[
-            get_label_count(data, label) - self.min_samples_per_class
-        ]] for label in range(self.num_classes)]
+        num_samples_per_class = [
+            [[get_label_count(data, label) - self.min_samples_per_class]]
+            for label in range(self.num_classes)
+        ]
         num_samples_per_class = np.array(num_samples_per_class)
         props = num_samples_per_class * props / np.sum(props, (1, 2),
                                                        keepdims=True)
@@ -217,9 +224,7 @@ but distribution is {[len(i) for i in idx]}''')
                 label = (col + j) % self.num_classes
                 num_samples = int(props[label, col // self.num_classes, j])
 
-                print(
-                    f'Trying to append {num_samples} samples of {label} class to {col} col...'
-                )
+                print(f"Trying to append {num_samples} samples of {label} class to {col} col...")
                 slice_start = np.count_nonzero(data[np.hstack(idx)] == label)
                 slice_end = slice_start + num_samples
                 label_count = get_label_count(data, label)
@@ -229,9 +234,11 @@ but distribution is {[len(i) for i in idx]}''')
                     idx_to_append = label_subset[slice_start:slice_end]
                     idx[col] = np.append(idx[col], idx_to_append)
                 else:
-                    print(f'Index {slice_end} is out of bounds '
-                          f'of array of length {label_count}. Skipping...')
-        print(f'Split result: {[len(i) for i in idx]}.')
+                    print(
+                        f"Index {slice_end} is out of bounds "
+                        f"of array of length {label_count}. Skipping..."
+                    )
+        print(f"Split result: {[len(i) for i in idx]}.")
         return idx
 
 
@@ -280,8 +287,7 @@ class DirichletNumPyDataSplitter(NumPyDataSplitter):
             for k in range(classes):
                 idx_k = np.where(data == k)[0]
                 np.random.shuffle(idx_k)
-                proportions = np.random.dirichlet(
-                    np.repeat(self.alpha, num_collaborators))
+                proportions = np.random.dirichlet(np.repeat(self.alpha, num_collaborators))
                 proportions = [
                     p * (len(idx_j) < n / num_collaborators)
                     for p, idx_j in zip(proportions, idx_batch)
@@ -291,9 +297,6 @@ class DirichletNumPyDataSplitter(NumPyDataSplitter):
                 proportions = (np.cumsum(proportions)
                                * len(idx_k)).astype(int)[:-1]
                 idx_splitted = np.split(idx_k, proportions)
-                idx_batch = [
-                    idx_j + idx.tolist()
-                    for idx_j, idx in zip(idx_batch, idx_splitted)
-                ]
-                min_size = min([len(idx_j) for idx_j in idx_batch])
+                idx_batch = [idx_j + idx.tolist() for idx_j, idx in zip(idx_batch, idx_splitted)]
+                min_size = min(len(idx_j) for idx_j in idx_batch)
         return idx_batch

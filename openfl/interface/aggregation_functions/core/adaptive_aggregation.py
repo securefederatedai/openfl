@@ -1,14 +1,16 @@
-# Copyright (C) 2020-2023 Intel Corporation
+# Copyright 2020-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+
 """Adaptive aggregation module."""
 
 from typing import List
 
 import numpy as np
 
+from openfl.interface.aggregation_functions.core.interface import AggregationFunction
 from openfl.utilities.optimizers.numpy.base_optimizer import Optimizer
 from openfl.utilities.types import LocalTensor
-from .interface import AggregationFunction
 
 
 class AdaptiveAggregation(AggregationFunction):
@@ -34,8 +36,9 @@ class AdaptiveAggregation(AggregationFunction):
         self.default_agg_func = agg_func
 
     @staticmethod
-    def _make_gradient(base_model_nparray: np.ndarray,
-                       local_tensors: List[LocalTensor]) -> np.ndarray:
+    def _make_gradient(
+        base_model_nparray: np.ndarray, local_tensors: List[LocalTensor]
+    ) -> np.ndarray:
         """Make gradient.
 
         Args:
@@ -45,13 +48,14 @@ class AdaptiveAggregation(AggregationFunction):
         Returns:
             np.ndarray: The gradient tensor.
         """
-        return sum([
-            local_tensor.weight * (base_model_nparray - local_tensor.tensor)
-            for local_tensor in local_tensors
-        ])
+        return sum(
+            [
+                local_tensor.weight * (base_model_nparray - local_tensor.tensor)
+                for local_tensor in local_tensors
+            ]
+        )
 
-    def call(self, local_tensors, db_iterator, tensor_name, fl_round,
-             tags) -> np.ndarray:
+    def call(self, local_tensors, db_iterator, tensor_name, fl_round, tags) -> np.ndarray:
         """Aggregate tensors.
 
         Args:
@@ -85,21 +89,22 @@ class AdaptiveAggregation(AggregationFunction):
             np.ndarray: aggregated tensor
         """
         if tensor_name not in self.optimizer.params:
-            return self.default_agg_func(local_tensors, db_iterator,
-                                         tensor_name, fl_round, tags)
+            return self.default_agg_func(local_tensors, db_iterator, tensor_name, fl_round, tags)
 
         base_model_nparray = None
-        search_tag = 'aggregated' if fl_round != 0 else 'model'
+        search_tag = "aggregated" if fl_round != 0 else "model"
         for record in db_iterator:
-            if (record['round'] == fl_round
-                    and record['tensor_name'] == tensor_name
-                    and search_tag in record['tags']
-                    and 'delta' not in record['tags']):
-                base_model_nparray = record['nparray']
+            if (
+                record["round"] == fl_round
+                and record["tensor_name"] == tensor_name
+                and search_tag in record["tags"]
+                and "delta" not in record["tags"]
+            ):
+                base_model_nparray = record["nparray"]
 
         if base_model_nparray is None:
             raise KeyError(
-                f'There is no current global model in TensorDB for tensor name: {tensor_name}'
+                f"There is no current global model in TensorDB for tensor name: {tensor_name}"
             )
 
         gradient = self._make_gradient(base_model_nparray, local_tensors)

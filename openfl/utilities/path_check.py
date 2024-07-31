@@ -1,6 +1,8 @@
-# Copyright (C) 2020-2023 Intel Corporation
+# Copyright 2020-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-"""Openfl path checks."""
+
+
+"""openfl path checks."""
 
 import os
 from pathlib import Path

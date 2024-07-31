@@ -44,14 +44,14 @@ assigner :
 tasks :
   defaults : plan/defaults/tasks_torch.yaml
   aggregated_model_validation:
-    function  : validate
+    function  : validate_task
     kwargs    :
       apply   : global
       metrics :
       - dice_coef
   
   locally_tuned_model_validation:
-    function  : validate
+    function  : validate_task
     kwargs    :
       apply   : local
       metrics :

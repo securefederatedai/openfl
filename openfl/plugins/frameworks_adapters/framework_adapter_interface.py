@@ -1,5 +1,7 @@
-# Copyright (C) 2020-2023 Intel Corporation
+# Copyright 2020-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+
 """Framework Adapter plugin interface."""
 
 
@@ -35,8 +37,9 @@ class FrameworkAdapterPluginInterface:
         raise NotImplementedError
 
     @staticmethod
-    def set_tensor_dict(model, tensor_dict, optimizer=None, device='cpu'):
-        """Set tensor dict from a model and an optimizer.
+    def set_tensor_dict(model, tensor_dict, optimizer=None, device="cpu"):
+        """
+        Set tensor dict from a model and an optimizer.
 
         Given a dict {weight name: numpy ndarray} sets weights to
         the model and optimizer objects inplace.

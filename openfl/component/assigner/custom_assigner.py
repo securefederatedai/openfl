@@ -1,5 +1,7 @@
-# Copyright (C) 2020-2023 Intel Corporation
+# Copyright 2020-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+
 """Custom Assigner module."""
 
 import logging
@@ -30,8 +32,9 @@ class Assigner:
             collaborators.
     """
 
-    def __init__(self, *, assigner_function, aggregation_functions_by_task,
-                 authorized_cols, rounds_to_train):
+    def __init__(
+        self, *, assigner_function, aggregation_functions_by_task, authorized_cols, rounds_to_train
+    ):
         """Initialize the Custom assigner object.
 
         Args:
@@ -72,7 +75,7 @@ class Assigner:
             tasks_by_collaborator = self.assigner_function(
                 self.authorized_cols,
                 round_number,
-                number_of_callaborators=len(self.authorized_cols)
+                number_of_callaborators=len(self.authorized_cols),
             )
             for collaborator_name, tasks in tasks_by_collaborator.items():
                 self.collaborator_tasks[round_number][collaborator_name].extend(tasks)
@@ -80,9 +83,9 @@ class Assigner:
                     self.all_tasks_for_round[round_number][task.name] = task
                     self.collaborators_for_task[round_number][task.name].append(collaborator_name)
                     if self.agg_functions_by_task:
-                        self.agg_functions_by_task_name[
-                            task.name
-                        ] = self.agg_functions_by_task.get(task.function_name, WeightedAverage())
+                        self.agg_functions_by_task_name[task.name] = self.agg_functions_by_task.get(
+                            task.function_name, WeightedAverage()
+                        )
 
     def get_tasks_for_collaborator(self, collaborator_name, round_number):
         """Get tasks for a specific collaborator in a specific round.

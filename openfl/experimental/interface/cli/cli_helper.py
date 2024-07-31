@@ -1,7 +1,11 @@
-# Copyright (C) 2020-2023 Intel Corporation
+# Copyright 2020-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-"""Module with auxiliary CLI helper functions."""
 
+
+"""Module with auxiliary CLI helper functions."""
+import os
+import re
+import shutil
 from itertools import islice
 from os import environ, stat
 from pathlib import Path
@@ -74,9 +78,7 @@ def print_tree(
                 yield prefix + pointer + path.name
                 directories += 1
                 extension = branch if pointer == tee else space
-                yield from inner(path,
-                                 prefix=prefix + extension,
-                                 level=level - 1)
+                yield from inner(path, prefix=prefix + extension, level=level - 1)
             elif not limit_to_directories:
                 yield prefix + pointer + path.name
                 files += 1
@@ -100,8 +102,6 @@ def copytree(
     dirs_exist_ok=False,
 ):
     """From Python 3.8 'shutil' which include 'dirs_exist_ok' option."""
-    import os
-    import shutil
 
     with os.scandir(src) as itr:
         entries = list(itr)
@@ -117,8 +117,7 @@ def copytree(
 
         os.makedirs(dst, exist_ok=dirs_exist_ok)
         errors = []
-        use_srcentry = (copy_function is shutil.copy2
-                        or copy_function is shutil.copy)
+        use_srcentry = copy_function is shutil.copy2 or copy_function is shutil.copy
 
         for srcentry in entries:
             if srcentry.name in ignored_names:
@@ -136,12 +135,9 @@ def copytree(
                     linkto = os.readlink(srcname)
                     if symlinks:
                         os.symlink(linkto, dstname)
-                        shutil.copystat(srcobj,
-                                        dstname,
-                                        follow_symlinks=not symlinks)
+                        shutil.copystat(srcobj, dstname, follow_symlinks=not symlinks)
                     else:
-                        if (not os.path.exists(linkto)
-                                and ignore_dangling_symlinks):
+                        if not os.path.exists(linkto) and ignore_dangling_symlinks:
                             continue
                         if srcentry.is_dir():
                             copytree(
@@ -210,8 +206,6 @@ def check_varenv(env: str = "", args: dict = None):
 
 def get_fx_path(curr_path=""):
     """Return the absolute path to fx binary."""
-    import os
-    import re
 
     match = re.search("lib", curr_path)
     idx = match.end()
