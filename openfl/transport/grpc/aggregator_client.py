@@ -49,8 +49,9 @@ class ConstantBackoff:
         time.sleep(self.reconnect_interval)
 
 
-class RetryOnRpcErrorClientInterceptor(grpc.UnaryUnaryClientInterceptor,
-                                       grpc.StreamUnaryClientInterceptor):
+class RetryOnRpcErrorClientInterceptor(
+    grpc.UnaryUnaryClientInterceptor, grpc.StreamUnaryClientInterceptor
+):
     """Retry gRPC connection on failure.
 
     This class implements a gRPC client interceptor that retries failed RPC
@@ -79,8 +80,7 @@ class RetryOnRpcErrorClientInterceptor(grpc.UnaryUnaryClientInterceptor,
         self.sleeping_policy = sleeping_policy
         self.status_for_retry = status_for_retry
 
-    def _intercept_call(self, continuation, client_call_details,
-                        request_or_iterator):
+    def _intercept_call(self, continuation, client_call_details, request_or_iterator):
         """Intercept the call to the gRPC server.
 
         Args:
@@ -108,8 +108,7 @@ class RetryOnRpcErrorClientInterceptor(grpc.UnaryUnaryClientInterceptor,
             else:
                 return response
 
-    def intercept_unary_unary(self, continuation, client_call_details,
-                              request):
+    def intercept_unary_unary(self, continuation, client_call_details, request):
         """Wrap intercept call for unary->unary RPC.
 
         Args:
@@ -261,7 +260,8 @@ class AggregatorGRPCClient:
             status_for_retry=(grpc.StatusCode.UNAVAILABLE, ),
         ), )
         self.stub = aggregator_pb2_grpc.AggregatorStub(
-            grpc.intercept_channel(self.channel, *self.interceptors))
+            grpc.intercept_channel(self.channel, *self.interceptors)
+        )
 
     def create_insecure_channel(self, uri):
         """Set an insecure gRPC channel (i.e. no TLS) if desired.
@@ -368,7 +368,8 @@ class AggregatorGRPCClient:
         self.logger.debug(f'Connecting to gRPC at {self.uri}')
 
         self.stub = aggregator_pb2_grpc.AggregatorStub(
-            grpc.intercept_channel(self.channel, *self.interceptors))
+            grpc.intercept_channel(self.channel, *self.interceptors)
+        )
 
     @_atomic_connection
     @_resend_data_on_reconnection

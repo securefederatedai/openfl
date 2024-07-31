@@ -22,10 +22,7 @@ def get_number_of_gpus() -> int:
     # Execute the nvidia-smi command.
     command = "nvidia-smi --list-gpus"
     try:
-        op = run(command.strip().split(),
-                 shell=False,
-                 stdout=PIPE,
-                 stderr=PIPE)
+        op = run(command.strip().split(), shell=False, stdout=PIPE, stderr=PIPE)
         stdout = op.stdout.decode().strip()
         return len(stdout.split("\n"))
     except FileNotFoundError:

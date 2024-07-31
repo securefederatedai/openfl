@@ -59,7 +59,7 @@ class ShardDescriptor:
         Returns:
             str: The dataset description.
         """
-        return ''
+        return ""
 
 
 class DummyShardDataset(ShardDataset):
@@ -75,10 +75,8 @@ class DummyShardDataset(ShardDataset):
             target_shape (List[int]): The shape of the targets.
         """
         self.size = size
-        self.samples = np.random.randint(0, 255, (self.size, *sample_shape),
-                                         np.uint8)
-        self.targets = np.random.randint(0, 255, (self.size, *target_shape),
-                                         np.uint8)
+        self.samples = np.random.randint(0, 255, (self.size, *sample_shape), np.uint8)
+        self.targets = np.random.randint(0, 255, (self.size, *target_shape), np.uint8)
 
     def __len__(self) -> int:
         """Return the len of the dataset.
@@ -154,4 +152,4 @@ class DummyShardDescriptor(ShardDescriptor):
         Returns:
             str: The dataset description.
         """
-        return 'Dummy shard descriptor'
+        return "Dummy shard descriptor"

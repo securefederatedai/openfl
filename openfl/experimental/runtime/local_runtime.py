@@ -61,7 +61,8 @@ class RayExecutor:
         """
         if clones is not None:
             self.__remote_contexts.append(
-                participant.execute_func.remote(ctx, f_name, callback, clones))
+                participant.execute_func.remote(ctx, f_name, callback, clones)
+            )
         else:
             self.__remote_contexts.append(
                 participant.execute_func.remote(ctx, f_name, callback))
@@ -152,7 +153,8 @@ def ray_group_assign(collaborators, num_actors=1):
             self.collaborator_actor = collaborator_actor
             self.collaborator = collaborator
             self.f = lambda *args, **kwargs: self.collaborator_actor.execute_from_col.remote(
-                self.collaborator, self.f_name, *args, **kwargs)
+                self.collaborator, self.f_name, *args, **kwargs
+            )
 
         def remote(self, *args, **kwargs):
             """Executes the function with the given arguments and keyword
@@ -184,22 +186,30 @@ def ray_group_assign(collaborators, num_actors=1):
     for collaborator in collaborators_sorted_by_gpucpu:
         # initialize actor group
         if times_called % collaborators_per_group == 0:
-            max_num_cpus = max([
-                i.num_cpus for i in
-                collaborators_sorted_by_gpucpu[times_called:times_called
-                                               + collaborators_per_group]
-            ])
-            max_num_gpus = max([
-                i.num_gpus for i in
-                collaborators_sorted_by_gpucpu[times_called:times_called
-                                               + collaborators_per_group]
-            ])
+            max_num_cpus = max(
+                [
+                    i.num_cpus
+                    for i in collaborators_sorted_by_gpucpu[
+                        times_called : times_called + collaborators_per_group
+                    ]
+                ]
+            )
+            max_num_gpus = max(
+                [
+                    i.num_gpus
+                    for i in collaborators_sorted_by_gpucpu[
+                        times_called : times_called + collaborators_per_group
+                    ]
+                ]
+            )
             print(f"creating actor with {max_num_cpus}, {max_num_gpus}")
             collaborator_actor = (
-                ray.remote(RayGroup).options(
-                    num_cpus=max_num_cpus,
-                    num_gpus=max_num_gpus)  # max_concurrency=max_concurrency)
-                .remote())
+                ray.remote(RayGroup)
+                .options(
+                    num_cpus=max_num_cpus, num_gpus=max_num_gpus
+                )  # max_concurrency=max_concurrency)
+                .remote()
+            )
         # add collaborator to actor group
         initializations.append(collaborator_actor.append.remote(collaborator))
 
@@ -243,8 +253,7 @@ class RayGroup:
         if collaborator.private_attributes_callable is not None:
             self.collaborators[collaborator.name] = Collaborator(
                 name=collaborator.name,
-                private_attributes_callable=collaborator.
-                private_attributes_callable,
+                private_attributes_callable=collaborator.private_attributes_callable,
                 **collaborator.kwargs,
             )
         elif collaborator.private_attributes is not None:
@@ -252,9 +261,9 @@ class RayGroup:
                 name=collaborator.name,
                 **collaborator.kwargs,
             )
-            self.collaborators[
-                collaborator.name].initialize_private_attributes(
-                    collaborator.private_attributes)
+            self.collaborators[collaborator.name].initialize_private_attributes(
+                collaborator.private_attributes
+            )
 
     def execute_from_col(self, name, internal_f_name, *args, **kwargs):
         """Executes a function from a specified collaborator.
@@ -346,7 +355,8 @@ class LocalRuntime(Runtime):
         if backend not in ["ray", "single_process"]:
             raise ValueError(
                 f"Invalid 'backend' value '{backend}', accepted values are "
-                + "'ray', or 'single_process'")
+                + "'ray', or 'single_process'"
+            )
         if backend == "ray":
             if not ray.is_initialized():
                 dh = kwargs.get("dashboard_host", "127.0.0.1")
@@ -406,24 +416,26 @@ class LocalRuntime(Runtime):
         if total_available_gpus < agg_gpus:
             raise ResourcesNotAvailableError(
                 f"cannot assign more than available GPUs \
-                    ({agg_gpus} < {total_available_gpus}).")
+                    ({agg_gpus} < {total_available_gpus})."
+            )
         if total_available_cpus < agg_cpus:
             raise ResourcesNotAvailableError(
                 f"cannot assign more than available CPUs \
-                    ({agg_cpus} < {total_available_cpus}).")
+                    ({agg_cpus} < {total_available_cpus})."
+            )
 
         interface_module = importlib.import_module(
             "openfl.experimental.interface")
         aggregator_class = getattr(interface_module, "Aggregator")
 
         aggregator_actor = ray.remote(aggregator_class).options(
-            num_cpus=agg_cpus, num_gpus=agg_gpus)
+            num_cpus=agg_cpus, num_gpus=agg_gpus
+        )
 
         if aggregator.private_attributes_callable is not None:
             aggregator_actor_ref = aggregator_actor.remote(
                 name=aggregator.get_name(),
-                private_attributes_callable=aggregator.
-                private_attributes_callable,
+                private_attributes_callable=aggregator.private_attributes_callable,
                 **aggregator.kwargs,
             )
         elif aggregator.private_attributes is not None:
@@ -474,7 +486,8 @@ class LocalRuntime(Runtime):
         if total_available_cpus < total_required_cpus:
             raise ResourcesNotAvailableError(
                 f"cannot assign more than available CPUs \
-                    ({total_required_cpus} < {total_available_cpus}).")
+                    ({total_required_cpus} < {total_available_cpus})."
+            )
 
         if self.backend == "ray":
             collaborator_ray_refs = ray_group_assign(
@@ -655,10 +668,9 @@ class LocalRuntime(Runtime):
 
         while f.__name__ != "end":
             if "foreach" in kwargs:
-                flspec_obj = self.execute_collab_task(flspec_obj, f,
-                                                      parent_func,
-                                                      instance_snapshot,
-                                                      **kwargs)
+                flspec_obj = self.execute_collab_task(
+                    flspec_obj, f, parent_func, instance_snapshot, **kwargs
+                )
             else:
                 flspec_obj = self.execute_agg_task(flspec_obj, f)
             f, parent_func, instance_snapshot, kwargs = (
@@ -760,8 +772,9 @@ class LocalRuntime(Runtime):
             collaborator = self.__collaborators[collab_name]
 
             if self.backend == "ray":
-                ray_executor.ray_call_put(collaborator, clone, f.__name__,
-                                          self.execute_collab_steps)
+                ray_executor.ray_call_put(
+                    collaborator, clone, f.__name__, self.execute_collab_steps
+                )
             else:
                 collaborator.execute_func(clone, f.__name__,
                                           self.execute_collab_steps)

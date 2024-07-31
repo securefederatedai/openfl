@@ -70,9 +70,7 @@ class KerasDataLoader(DataLoader):
         Returns:
             DataLoader: The DataLoader object for the validation data.
         """
-        return self._get_batch_generator(X=self.X_valid,
-                                         y=self.y_valid,
-                                         batch_size=batch_size)
+        return self._get_batch_generator(X=self.X_valid, y=self.y_valid, batch_size=batch_size)
 
     def get_train_data_size(self):
         """Returns the total number of training samples.

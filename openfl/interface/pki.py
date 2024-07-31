@@ -37,11 +37,11 @@ def pki(context):
     Args:
         context (click.core.Context): Click context.
     """
-    context.obj['group'] = 'pki'
+    context.obj["group"] = "pki"
 
 
-@pki.command(name='run')
-@option('-p', '--ca-path', required=True, help='The ca path', type=ClickPath())
+@pki.command(name="run")
+@option("-p", "--ca-path", required=True, help="The ca path", type=ClickPath())
 def run_(ca_path):
     """Run CA server.
 

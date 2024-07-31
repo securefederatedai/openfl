@@ -26,7 +26,7 @@ def plan(context):
     Args:
         context (click.core.Context): Click context.
     """
-    context.obj['group'] = 'plan'
+    context.obj["group"] = "plan"
 
 
 @plan.command()

@@ -41,9 +41,12 @@ class WorkspaceExport:
         self.output_workspace_path.parent.mkdir(parents=True, exist_ok=True)
 
         self.template_workspace_path = (
-            Path(f"{__file__}").parent.parent.parent.parent.joinpath(
-                "openfl-workspace", "experimental",
-                "template_workspace").resolve(strict=True))
+            Path(f"{__file__}")
+            .parent.parent.parent.parent.joinpath(
+                "openfl-workspace", "experimental", "template_workspace"
+            )
+            .resolve(strict=True)
+        )
 
         # Copy template workspace to output directory
         self.created_workspace_path = Path(
@@ -56,13 +59,15 @@ class WorkspaceExport:
         if export_filename is None:
             raise NameError(
                 "Please include `#| default_exp <experiment_name>` in "
-                "the first cell of the notebook.")
+                "the first cell of the notebook."
+            )
         self.script_path = Path(
             self.__convert_to_python(
                 self.notebook_path,
                 self.created_workspace_path.joinpath("src"),
                 f"{export_filename}.py",
-            )).resolve()
+            )
+        ).resolve()
         print_tree(self.created_workspace_path, level=2)
 
         # Generated python script name without .py extension
@@ -144,7 +149,8 @@ class WorkspaceExport:
                 # Extract the parameter names (excluding 'self', 'args', and
                 # 'kwargs')
                 arg_names = [
-                    param for param in init_signature.parameters
+                    param
+                    for param in init_signature.parameters
                     if param not in ("self", "args", "kwargs")
                 ]
                 return arg_names
@@ -273,7 +279,8 @@ class WorkspaceExport:
                         requirements.append(f"{line.split(' ')[-1].strip()}\n")
 
         requirements_filepath = str(
-            self.created_workspace_path.joinpath("requirements.txt").resolve())
+            self.created_workspace_path.joinpath("requirements.txt").resolve()
+        )
 
         # Write libraries found in requirements.txt
         with open(requirements_filepath, "a") as f:
@@ -381,8 +388,7 @@ class WorkspaceExport:
             data["aggregator"] = {
                 "callable_func": {
                     "settings": {},
-                    "template":
-                    f"src.{self.script_name}.{private_attrs_callable.__name__}",
+                    "template": f"src.{self.script_name}.{private_attrs_callable.__name__}",
                 }
             }
             # Find arguments expected by Aggregator
@@ -391,22 +397,21 @@ class WorkspaceExport:
             agg_kwargs = aggregator.kwargs
             for key, value in agg_kwargs.items():
                 if isinstance(value, (int, str, bool)):
-                    data["aggregator"]["callable_func"]["settings"][
-                        key] = value
+                    data["aggregator"]["callable_func"]["settings"][key] = value
                 else:
                     arg = arguments_passed_to_initialize[key]
                     value = f"src.{self.script_name}.{arg}"
-                    data["aggregator"]["callable_func"]["settings"][
-                        key] = value
+                    data["aggregator"]["callable_func"]["settings"][key] = value
         elif aggregator_private_attributes:
             runtime_created = True
             with open(self.script_path, 'a') as f:
                 f.write(f"\n{runtime_name} = {flow_name}._runtime\n")
-                f.write(f"\naggregator_private_attributes = "
-                        f"{runtime_name}._aggregator.private_attributes\n")
+                f.write(
+                    f"\naggregator_private_attributes = "
+                    f"{runtime_name}._aggregator.private_attributes\n"
+                )
             data["aggregator"] = {
-                "private_attributes":
-                f"src.{self.script_name}.aggregator_private_attributes"
+                "private_attributes": f"src.{self.script_name}.aggregator_private_attributes"
             }
 
         # Get runtime collaborators
@@ -435,29 +440,28 @@ class WorkspaceExport:
                         value = f"src.{self.script_name}.{value}"
                         data[collab_name]["callable_func"]["template"] = value
                     elif isinstance(value, (int, str, bool)):
-                        data[collab_name]["callable_func"]["settings"][
-                            key] = value
+                        data[collab_name]["callable_func"]["settings"][key] = value
                     else:
                         arg = arguments_passed_to_initialize[key]
                         value = f"src.{self.script_name}.{arg}"
-                        data[collab_name]["callable_func"]["settings"][
-                            key] = value
+                        data[collab_name]["callable_func"]["settings"][key] = value
             elif private_attributes:
                 with open(self.script_path, 'a') as f:
                     if not runtime_created:
                         f.write(f"\n{runtime_name} = {flow_name}._runtime\n")
                         runtime_created = True
                     if not runtime_collab_created:
-                        f.write(f"\nruntime_collaborators = "
-                                f"{runtime_name}._LocalRuntime__collaborators")
+                        f.write(
+                            f"\nruntime_collaborators = "
+                            f"{runtime_name}._LocalRuntime__collaborators"
+                        )
                         runtime_collab_created = True
                     f.write(
                         f"\n{collab_name}_private_attributes = "
                         f"runtime_collaborators['{collab_name}'].private_attributes"
                     )
                 data[collab_name] = {
-                    "private_attributes":
-                    f"src."
+                    "private_attributes": f"src."
                     f"{self.script_name}.{collab_name}_private_attributes"
                 }
 

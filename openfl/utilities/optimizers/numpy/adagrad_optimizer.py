@@ -100,8 +100,8 @@ class NumPyAdagrad(Optimizer):
             grad (np.ndarray): The gradient values.
         """
         self.params[grad_name] -= (
-            self.learning_rate * grad
-            / (np.sqrt(self.grads_squared[grad_name]) + self.epsilon))
+            self.learning_rate * grad / (np.sqrt(self.grads_squared[grad_name]) + self.epsilon)
+        )
 
     def step(self, gradients: Dict[str, np.ndarray]) -> None:
         """Perform a single step for parameter update.
@@ -118,10 +118,8 @@ class NumPyAdagrad(Optimizer):
         """
         for grad_name in gradients:
             if grad_name not in self.grads_squared:
-                raise KeyError(
-                    f"Key {grad_name} doesn't exist in optimized parameters")
+                raise KeyError(f"Key {grad_name} doesn't exist in optimized parameters")
 
             grad = gradients[grad_name]
-            self.grads_squared[
-                grad_name] = self.grads_squared[grad_name] + grad**2
+            self.grads_squared[grad_name] = self.grads_squared[grad_name] + grad**2
             self._update_param(grad_name, grad)

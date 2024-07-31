@@ -131,7 +131,7 @@ def update_plan(override_config, plan=None, resolve=True):
     return plan
 
 
-def unflatten(config, separator='.'):
+def unflatten(config, separator="."):
     """Unfolds `config` settings that have `separator` in their names.
 
     Args:
@@ -146,7 +146,7 @@ def unflatten(config, separator='.'):
     return config
 
 
-def setup_logging(level='INFO', log_file=None):
+def setup_logging(level="INFO", log_file=None):
     """Initializes logging settings.
 
     Args:

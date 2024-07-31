@@ -74,7 +74,8 @@ def start_(plan, authorized_cols, secure):
     if not os.path.exists("plan/data.yaml"):
         logger.warning(
             "Aggregator private attributes are set to None as plan/data.yaml not found"
-            + " in workspace.")
+            + " in workspace."
+        )
     else:
         import yaml
         from yaml.loader import SafeLoader
@@ -84,7 +85,8 @@ def start_(plan, authorized_cols, secure):
             if data.get("aggregator", None) is None:
                 logger.warning(
                     "Aggregator private attributes are set to None as no aggregator"
-                    + " attributes found in plan/data.yaml.")
+                    + " attributes found in plan/data.yaml."
+                )
 
     logger.info("🧿 Starting the Aggregator Service.")
 
@@ -125,9 +127,11 @@ def generate_cert_request(fqdn):
     subject_alternative_name = f"DNS:{common_name}"
     file_name = f"agg_{common_name}"
 
-    echo(f"Creating AGGREGATOR certificate key pair with following settings: "
-         f'CN={style(common_name, fg="red")},'
-         f' SAN={style(subject_alternative_name, fg="red")}')
+    echo(
+        f"Creating AGGREGATOR certificate key pair with following settings: "
+        f'CN={style(common_name, fg="red")},'
+        f' SAN={style(subject_alternative_name, fg="red")}'
+    )
 
     server_private_key, server_csr = generate_csr(common_name, server=True)
 
@@ -181,10 +185,10 @@ def certify(fqdn, silent):
     csr_path_absolute_path = Path(CERT_DIR / f"{cert_name}.csr").absolute()
     if not csr_path_absolute_path.exists():
         echo(
-            style("Aggregator certificate signing request not found.",
-                  fg="red")
+            style("Aggregator certificate signing request not found.", fg="red")
             + " Please run `fx aggregator generate-cert-request`"
-            " to generate the certificate request.")
+            " to generate the certificate request."
+        )
 
     csr, csr_hash = read_csr(csr_path_absolute_path)
 
@@ -209,8 +213,12 @@ def certify(fqdn, silent):
 
     signing_crt = read_crt(signing_crt_absolute_path)
 
-    echo("The CSR Hash for file " + style(f"{cert_name}.csr", fg="green")
-         + " = " + style(f"{csr_hash}", fg="red"))
+    echo(
+        "The CSR Hash for file "
+        + style(f"{cert_name}.csr", fg="green")
+        + " = "
+        + style(f"{csr_hash}", fg="red")
+    )
 
     crt_path_absolute_path = Path(CERT_DIR / f"{cert_name}.crt").absolute()
 
@@ -236,4 +244,5 @@ def certify(fqdn, silent):
             echo(
                 style("Not signing certificate.", fg="red")
                 + " Please check with this AGGREGATOR to get the correct"
-                " certificate for this federation.")
+                " certificate for this federation."
+            )

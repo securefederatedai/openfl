@@ -74,12 +74,14 @@ class Collaborator(Participant):
             function.
     """
 
-    def __init__(self,
-                 name: str = "",
-                 private_attributes_callable: Callable = None,
-                 num_cpus: int = 0,
-                 num_gpus: int = 0.0,
-                 **kwargs):
+    def __init__(
+        self,
+        name: str = "",
+        private_attributes_callable: Callable = None,
+        num_cpus: int = 0,
+        num_gpus: int = 0.0,
+        **kwargs
+    ):
         """Initializes the Collaborator object.
 
         Create collaborator object with custom resources and a callable
@@ -125,7 +127,7 @@ class Collaborator(Participant):
         """
         return self._name
 
-    def initialize_private_attributes(self) -> None:
+    def initialize_private_attributes(self, private_attrs: Dict[Any, Any] = None) -> None:
         """Initialize private attributes of Collaborator object by invoking the
         callable specified by user."""
         if self.private_attributes_callable is not None:
@@ -185,12 +187,14 @@ class Aggregator(Participant):
     """Class for an aggregator participant, derived from the Participant
     class."""
 
-    def __init__(self,
-                 name: str = "",
-                 private_attributes_callable: Callable = None,
-                 num_cpus: int = 0,
-                 num_gpus: int = 0.0,
-                 **kwargs):
+    def __init__(
+        self,
+        name: str = "",
+        private_attributes_callable: Callable = None,
+        num_cpus: int = 0,
+        num_gpus: int = 0.0,
+        **kwargs
+    ):
         """Initializes the Aggregator object.
 
         Create aggregator object with custom resources and a callable
@@ -234,7 +238,7 @@ class Aggregator(Participant):
         """
         return self.name
 
-    def initialize_private_attributes(self) -> None:
+    def initialize_private_attributes(self, private_attrs: Dict[Any, Any] = None) -> None:
         """Initialize private attributes of Aggregator object by invoking the
         callable specified by user."""
         if self.private_attributes_callable is not None:
@@ -270,11 +274,9 @@ class Aggregator(Participant):
                     {attr_name: getattr(clone, attr_name)})
                 delattr(clone, attr_name)
 
-    def execute_func(self,
-                     ctx: Any,
-                     f_name: str,
-                     callback: Callable,
-                     clones: Optional[Any] = None) -> Any:
+    def execute_func(
+        self, ctx: Any, f_name: str, callback: Callable, clones: Optional[Any] = None
+    ) -> Any:
         """Executes remote function f.
 
         Args:

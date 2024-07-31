@@ -126,7 +126,8 @@ class FLExperiment:
         if not self._assert_experiment_submitted():
             return
         exp_status = self.federation.dir_client.get_experiment_status(
-            experiment_name=self.experiment_name)
+            experiment_name=self.experiment_name
+        )
         return exp_status.experiment_status
 
     def get_best_model(self):
@@ -136,8 +137,7 @@ class FLExperiment:
         tensor_dict = self.federation.dir_client.get_best_model(
             experiment_name=self.experiment_name)
 
-        return self._rebuild_model(tensor_dict,
-                                   upcoming_model_status=ModelStatus.BEST)
+        return self._rebuild_model(tensor_dict, upcoming_model_status=ModelStatus.BEST)
 
     def get_last_model(self):
         """Retrieve the aggregated model after the last round."""
@@ -146,12 +146,9 @@ class FLExperiment:
         tensor_dict = self.federation.dir_client.get_last_model(
             experiment_name=self.experiment_name)
 
-        return self._rebuild_model(tensor_dict,
-                                   upcoming_model_status=ModelStatus.LAST)
+        return self._rebuild_model(tensor_dict, upcoming_model_status=ModelStatus.LAST)
 
-    def _rebuild_model(self,
-                       tensor_dict,
-                       upcoming_model_status=ModelStatus.BEST):
+    def _rebuild_model(self, tensor_dict, upcoming_model_status=ModelStatus.BEST):
         """Use tensor dict to update model weights.
 
         This method updates the model weights using the provided tensor
@@ -193,8 +190,7 @@ class FLExperiment:
         """Stream metrics."""
         if not self._assert_experiment_submitted():
             return
-        for metric_message_dict in self.federation.dir_client.stream_metrics(
-                self.experiment_name):
+        for metric_message_dict in self.federation.dir_client.stream_metrics(self.experiment_name):
             self.logger.metric(
                 f'Round {metric_message_dict["round"]}, '
                 f'collaborator {metric_message_dict["metric_origin"]} '
@@ -254,8 +250,7 @@ class FLExperiment:
             None
         """
         # Save serialized python objects to disc
-        self._serialize_interface_objects(model_provider, task_keeper,
-                                          data_loader, task_assigner)
+        self._serialize_interface_objects(model_provider, task_keeper, data_loader, task_assigner)
         # Save the prepared plan
         Plan.dump(Path(f'./plan/{self.plan.name}'),
                   self.plan.config,
@@ -317,8 +312,7 @@ class FLExperiment:
                 example: ('-f some.website', '--no-index')
         """
         if not task_assigner:
-            task_assigner = self.define_task_assigner(task_keeper,
-                                                      rounds_to_train)
+            task_assigner = self.define_task_assigner(task_keeper, rounds_to_train)
 
         self._prepare_plan(model_provider,
                            data_loader,
@@ -434,8 +428,7 @@ class FLExperiment:
             model_provider: The provider of the model used in the experiment.
 
         """
-        self.task_runner_stub = self.plan.get_core_task_runner(
-            model_provider=model_provider)
+        self.task_runner_stub = self.plan.get_core_task_runner(model_provider=model_provider)
         self.current_model_status = ModelStatus.RESTORED
         self.experiment_submitted = True
 
@@ -489,8 +482,7 @@ class FLExperiment:
         Returns:
             dict: The tensor dictionary.
         """
-        self.task_runner_stub = self.plan.get_core_task_runner(
-            model_provider=model_provider)
+        self.task_runner_stub = self.plan.get_core_task_runner(model_provider=model_provider)
         self.current_model_status = ModelStatus.INITIAL
         tensor_dict, _ = split_tensor_dict_for_holdouts(
             self.logger, self.task_runner_stub.get_tensor_dict(False),
@@ -597,9 +589,7 @@ class FLExperiment:
         }
 
         if override_config:
-            self.plan = update_plan(override_config,
-                                    plan=self.plan,
-                                    resolve=False)
+            self.plan = update_plan(override_config, plan=self.plan, resolve=False)
 
     def _serialize_interface_objects(self, model_provider, task_keeper,
                                      data_loader, task_assigner):
@@ -678,12 +668,7 @@ class TaskKeeper:
         # Mapping 'task_alias' -> Task
         self._tasks: Dict[str, Task] = {}
 
-    def register_fl_task(self,
-                         model,
-                         data_loader,
-                         device,
-                         optimizer=None,
-                         round_num=None):
+    def register_fl_task(self, model, data_loader, device, optimizer=None, round_num=None):
         """Register FL tasks.
 
         The task contract should be set up by providing variable names:
@@ -794,8 +779,7 @@ class TaskKeeper:
 
         return decorator_with_args
 
-    def set_aggregation_function(self,
-                                 aggregation_function: AggregationFunction):
+    def set_aggregation_function(self, aggregation_function: AggregationFunction):
         """Set aggregation function for the task.
 
         To be serialized and sent to aggregator node.

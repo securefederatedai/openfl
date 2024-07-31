@@ -105,8 +105,7 @@ def _store(self,
         idx = idx[0]
     else:
         idx = self.shape[0]
-    self.loc[idx] = np.array(
-        [tensor_name, origin, fl_round, metric, tags, nparray], dtype=object)
+    self.loc[idx] = np.array([tensor_name, origin, fl_round, metric, tags, nparray], dtype=object)
 
 
 def _retrieve(self, tensor_name: str = '_', origin: str = '_',

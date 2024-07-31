@@ -59,7 +59,7 @@ class TensorFlowTaskRunner(TaskRunner):
         self.tvar_placeholders = None
 
         # construct the shape needed for the input features
-        self.input_shape = (None, ) + self.data_loader.get_feature_shape()
+        self.input_shape = (None,) + self.data_loader.get_feature_shape()
 
         # Required tensorkeys for all public functions in TensorFlowTaskRunner
         self.required_tensorkeys_for_function = {}
@@ -220,8 +220,7 @@ class TensorFlowTaskRunner(TaskRunner):
         feed_dict = {self.X: X, self.y: y}
 
         # run the train step and return the loss
-        _, loss = self.sess.run([self.train_step, self.loss],
-                                feed_dict=feed_dict)
+        _, loss = self.sess.run([self.train_step, self.loss], feed_dict=feed_dict)
 
         return loss
 

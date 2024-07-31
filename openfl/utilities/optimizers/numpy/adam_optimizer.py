@@ -150,8 +150,7 @@ class NumPyAdam(Optimizer):
         """
         for grad_name in gradients:
             if grad_name not in self.grads_first_moment:
-                raise KeyError(
-                    f"Key {grad_name} doesn't exist in optimized parameters")
+                raise KeyError(f"Key {grad_name} doesn't exist in optimized parameters")
 
             grad = gradients[grad_name]
 

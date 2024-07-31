@@ -67,8 +67,10 @@ def start_(plan, collaborator_name, secure, data_config="plan/data.yaml"):
     )
 
     if not os.path.exists(data_config):
-        logger.warning("Collaborator private attributes are set to None as"
-                       f" {data_config} not found in workspace.")
+        logger.warning(
+            "Collaborator private attributes are set to None as"
+            f" {data_config} not found in workspace."
+        )
     else:
         import yaml
         from yaml.loader import SafeLoader
@@ -78,7 +80,8 @@ def start_(plan, collaborator_name, secure, data_config="plan/data.yaml"):
             if data.get(collaborator_name, None) is None:
                 logger.warning(
                     f"Collaborator private attributes are set to None as no attributes"
-                    f" for {collaborator_name} found in {data_config}.")
+                    f" for {collaborator_name} found in {data_config}."
+                )
 
     logger.info("🧿 Starting the Collaborator Service.")
 
@@ -120,7 +123,8 @@ def generate_cert_request(collaborator_name, silent, skip_package):
     echo(
         f"Creating COLLABORATOR certificate key pair with following settings: "
         f'CN={style(common_name, fg="red")},'
-        f' SAN={style(subject_alternative_name, fg="red")}')
+        f' SAN={style(subject_alternative_name, fg="red")}'
+    )
 
     client_private_key, client_csr = generate_csr(common_name, server=False)
 
@@ -205,16 +209,24 @@ def register_collaborator(file_name):
         doc["collaborators"] = []  # Create empty list
 
     if col_name in doc["collaborators"]:
-        echo("\nCollaborator " + style(f"{col_name}", fg="green")
-             + " is already in the " + style(f"{cols_file}", fg="green"))
+        echo(
+            "\nCollaborator "
+            + style(f"{col_name}", fg="green")
+            + " is already in the "
+            + style(f"{cols_file}", fg="green")
+        )
 
     else:
         doc["collaborators"].append(col_name)
         with open(cols_file, "w", encoding="utf-8") as f:
             dump(doc, f)
 
-        echo("\nRegistering " + style(f"{col_name}", fg="green") + " in "
-             + style(f"{cols_file}", fg="green"))
+        echo(
+            "\nRegistering "
+            + style(f"{col_name}", fg="green")
+            + " in "
+            + style(f"{cols_file}", fg="green")
+        )
 
 
 @collaborator.command(name="certify")
@@ -270,11 +282,13 @@ def certify(collaborator_name, silent, request_pkg=None, import_=False):
             csr = glob(f"{CERT_DIR}/client/*.csr")[0]
         else:
             if collaborator_name is None:
-                echo("collaborator_name can only be omitted if signing\n"
-                     "a zipped request package.\n"
-                     "\n"
-                     "Example: fx collaborator certify --request-pkg "
-                     "col_one_to_agg_cert_request.zip")
+                echo(
+                    "collaborator_name can only be omitted if signing\n"
+                    "a zipped request package.\n"
+                    "\n"
+                    "Example: fx collaborator certify --request-pkg "
+                    "col_one_to_agg_cert_request.zip"
+                )
                 return
             csr = glob(f"{CERT_DIR}/client/col_{common_name}.csr")[0]
             copy(csr, CERT_DIR)
@@ -289,8 +303,10 @@ def certify(collaborator_name, silent, request_pkg=None, import_=False):
                 style(
                     "Collaborator certificate signing request not found.",
                     fg="red",
-                ) + " Please run `fx collaborator generate-cert-request`"
-                " to generate the certificate request.")
+                )
+                + " Please run `fx collaborator generate-cert-request`"
+                " to generate the certificate request."
+            )
 
         csr, csr_hash = read_csr(f"{cert_name}.csr")
 
@@ -308,12 +324,17 @@ def certify(collaborator_name, silent, request_pkg=None, import_=False):
             echo(
                 style("Signing certificate not found.", fg="red")
                 + " Please run `fx workspace certify`"
-                " to initialize the local certificate authority.")
+                " to initialize the local certificate authority."
+            )
 
         signing_crt = read_crt(CERT_DIR / signing_crt_path)
 
-        echo("The CSR Hash for file " + style(f"{file_name}.csr", fg="green")
-             + " = " + style(f"{csr_hash}", fg="red"))
+        echo(
+            "The CSR Hash for file "
+            + style(f"{file_name}.csr", fg="green")
+            + " = "
+            + style(f"{csr_hash}", fg="red")
+        )
 
         if silent:
             echo(" Signing COLLABORATOR certificate")
@@ -338,7 +359,8 @@ def certify(collaborator_name, silent, request_pkg=None, import_=False):
                 echo(
                     style("Not signing certificate.", fg="red")
                     + " Please check with this collaborator to get the"
-                    " correct certificate for this federation.")
+                    " correct certificate for this federation."
+                )
                 return
 
         if len(common_name) == 0:

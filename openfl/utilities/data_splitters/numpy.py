@@ -45,8 +45,7 @@ class NumPyDataSplitter(DataSplitter):
     """
 
     @abstractmethod
-    def split(self, data: np.ndarray,
-              num_collaborators: int) -> List[List[int]]:
+    def split(self, data: np.ndarray, num_collaborators: int) -> List[List[int]]:
         """Split the data."""
         raise NotImplementedError
 
@@ -111,8 +110,7 @@ class RandomNumPyDataSplitter(NumPyDataSplitter):
         idx = range(len(data))
         if self.shuffle:
             idx = np.random.permutation(idx)
-        random_idx = np.sort(
-            np.random.choice(len(data), num_collaborators - 1, replace=False))
+        random_idx = np.sort(np.random.choice(len(data), num_collaborators - 1, replace=False))
 
         return np.split(idx, random_idx)
 
@@ -210,8 +208,7 @@ but distribution is {[len(i) for i in idx]}''')
             get_label_count(data, label) - self.min_samples_per_class
         ]] for label in range(self.num_classes)]
         num_samples_per_class = np.array(num_samples_per_class)
-        props = num_samples_per_class * props / np.sum(props, (1, 2),
-                                                       keepdims=True)
+        props = num_samples_per_class * props / np.sum(props, (1, 2), keepdims=True)
         for col in trange(num_collaborators):
             for j in range(self.classes_per_col):
                 label = (col + j) % self.num_classes
@@ -224,8 +221,7 @@ but distribution is {[len(i) for i in idx]}''')
                 slice_end = slice_start + num_samples
                 label_count = get_label_count(data, label)
                 if slice_end < label_count:
-                    label_subset = np.nonzero(data == (col + j) %
-                                              self.num_classes)[0]
+                    label_subset = np.nonzero(data == (col + j) % self.num_classes)[0]
                     idx_to_append = label_subset[slice_start:slice_end]
                     idx[col] = np.append(idx[col], idx_to_append)
                 else:
@@ -288,8 +284,7 @@ class DirichletNumPyDataSplitter(NumPyDataSplitter):
                 ]
                 proportions = np.array(proportions)
                 proportions = proportions / proportions.sum()
-                proportions = (np.cumsum(proportions)
-                               * len(idx_k)).astype(int)[:-1]
+                proportions = (np.cumsum(proportions) * len(idx_k)).astype(int)[:-1]
                 idx_splitted = np.split(idx_k, proportions)
                 idx_batch = [
                     idx_j + idx.tolist()

@@ -127,8 +127,7 @@ class Envoy:
             try:
                 # Workspace import should not be done by gRPC client!
                 experiment_name = self.director_client.wait_experiment()
-                data_stream = self.director_client.get_experiment_data(
-                    experiment_name)
+                data_stream = self.director_client.get_experiment_data(experiment_name)
             except Exception as exc:
                 logger.exception(f'Failed to get experiment: {exc}')
                 time.sleep(DEFAULT_RETRY_TIMEOUT_IN_SECONDS)
@@ -216,8 +215,7 @@ class Envoy:
         try:
             if self.cuda_device_monitor is not None:
                 cuda_devices_info = []
-                cuda_driver_version = self.cuda_device_monitor.get_driver_version(
-                )
+                cuda_driver_version = self.cuda_device_monitor.get_driver_version()
                 cuda_version = self.cuda_device_monitor.get_cuda_version()
                 for device_id in self.cuda_devices:
                     memory_total = self.cuda_device_monitor.get_device_memory_total(
@@ -275,8 +273,7 @@ class Envoy:
             if is_accepted:
                 logger.info('Shard was accepted by director')
                 # Shard accepted for participation in the federation
-                self._health_check_future = self.executor.submit(
-                    self.send_health_check)
+                self._health_check_future = self.executor.submit(self.send_health_check)
                 self.run()
             else:
                 # Shut down

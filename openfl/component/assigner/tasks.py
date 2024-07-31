@@ -18,12 +18,12 @@ class Task:
         parameters (dict, optional): Parameters for the task. Defaults to an
             empty dictionary.
     """
+
     name: str
     function_name: str
     task_type: str
     apply_local: bool = False
-    parameters: dict = field(
-        default_factory=dict)  # We can expend it in the future
+    parameters: dict = field(default_factory=dict)  # We can expend it in the future
 
 
 @dataclass
@@ -41,7 +41,8 @@ class TrainTask(Task):
     Attributes:
         task_type (str): Type of the task. Set to 'train'.
     """
-    task_type: str = 'train'
+
+    task_type: str = "train"
 
 
 @dataclass
@@ -59,4 +60,5 @@ class ValidateTask(Task):
     Attributes:
         task_type (str): Type of the task. Set to 'validate'.
     """
-    task_type: str = 'validate'
+
+    task_type: str = "validate"

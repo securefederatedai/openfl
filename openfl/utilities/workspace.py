@@ -104,8 +104,10 @@ class ExperimentWorkspace:
             sys.path.remove(str(self.experiment_work_dir))
 
         if self.remove_archive:
-            logger.debug('Exiting from the workspace context manager'
-                         f' for {self.experiment_name} experiment')
+            logger.debug(
+                "Exiting from the workspace context manager"
+                f" for {self.experiment_name} experiment"
+            )
             logger.debug(
                 f'Archive still exists: {self.data_file_path.exists()}')
             self.data_file_path.unlink(missing_ok=False)

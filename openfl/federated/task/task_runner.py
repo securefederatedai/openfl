@@ -129,8 +129,7 @@ class CoreTaskRunner:
 
         def task_binder(task_name, callable_task):
 
-            def collaborator_adapted_task(col_name, round_num,
-                                          input_tensor_dict, **kwargs):
+            def collaborator_adapted_task(col_name, round_num, input_tensor_dict, **kwargs):
                 task_contract = self.task_provider.task_contract[task_name]
                 # Validation flag can be [False, '_local', '_agg']
                 validation_flag = True if task_contract[
@@ -139,9 +138,7 @@ class CoreTaskRunner:
 
                 device = kwargs.get('device', 'cpu')
 
-                self.rebuild_model(input_tensor_dict,
-                                   validation=validation_flag,
-                                   device=device)
+                self.rebuild_model(input_tensor_dict, validation=validation_flag, device=device)
                 task_kwargs = {}
                 if validation_flag:
                     loader = self.data_loader.get_valid_loader()
@@ -266,8 +263,7 @@ class CoreTaskRunner:
             aggregate_optimizer_parameters = True
         else:
             aggregate_optimizer_parameters = False
-        self.initialize_tensorkeys_for_functions(
-            with_opt_vars=aggregate_optimizer_parameters)
+        self.initialize_tensorkeys_for_functions(with_opt_vars=aggregate_optimizer_parameters)
 
     def set_logger(self):
         """Set up the log object.
@@ -313,9 +309,7 @@ class CoreTaskRunner:
                                  with_opt_vars=True,
                                  device=device)
         else:
-            self.set_tensor_dict(input_tensor_dict,
-                                 with_opt_vars=False,
-                                 device=device)
+            self.set_tensor_dict(input_tensor_dict, with_opt_vars=False, device=device)
 
     def get_required_tensorkeys_for_function(self, func_name, **kwargs):
         """Get the required tensors for specified function that could be called

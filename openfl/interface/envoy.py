@@ -202,7 +202,7 @@ def shard_descriptor_from_config(shard_config: dict):
     Returns:
         instance: Shard descriptor instance.
     """
-    template = shard_config.get('template')
+    template = shard_config.get("template")
     if not template:
         raise Exception('You should define a shard '
                         'descriptor template in the envoy config')

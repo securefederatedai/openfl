@@ -289,8 +289,7 @@ class Director:
                 yield aggregator.metric_queue.get()
                 continue
 
-            if aggregator.all_quit_jobs_sent(
-            ) and aggregator.metric_queue.empty():
+            if aggregator.all_quit_jobs_sent() and aggregator.metric_queue.empty():
                 return
 
             yield None
@@ -302,12 +301,13 @@ class Director:
             experiment_name (str): String id for experiment.
             caller (str): String id for experiment owner.
         """
-        if (experiment_name in self.experiments_registry and caller
-                in self.experiments_registry[experiment_name].users):
+        if (
+            experiment_name in self.experiments_registry
+            and caller in self.experiments_registry[experiment_name].users
+        ):
             self.experiments_registry.remove(experiment_name)
 
-    def set_experiment_failed(self, *, experiment_name: str,
-                              collaborator_name: str):
+    def set_experiment_failed(self, *, experiment_name: str, collaborator_name: str):
         """Envoys Set experiment failed RPC.
 
         Args:
@@ -458,13 +458,11 @@ class Director:
         """Run task to monitor and run experiments."""
         loop = asyncio.get_event_loop()
         while True:
-            async with self.experiments_registry.get_next_experiment(
-            ) as experiment:
+            async with self.experiments_registry.get_next_experiment() as experiment:
 
                 # Review experiment block starts.
                 if self.review_plan_callback:
-                    if not await experiment.review_experiment(
-                            self.review_plan_callback):
+                    if not await experiment.review_experiment(self.review_plan_callback):
                         logger.info(
                             f'"{experiment.name}" Plan was rejected by the Director manager.'
                         )

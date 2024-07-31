@@ -160,8 +160,7 @@ def install(ca_path, ca_url, password):
     os.environ['STEPPATH'] = str(step_config_dir)
     step_path, step_ca_path = get_ca_bin_paths(ca_path)
 
-    if not (step_path and step_ca_path and step_path.exists()
-            and step_ca_path.exists()):
+    if not (step_path and step_ca_path and step_path.exists() and step_ca_path.exists()):
         download_step_bin(prefix=ca_path, confirmation=True)
         download_step_ca_bin(prefix=ca_path, confirmation=False)
     step_config_dir = ca_path / CA_STEP_CONFIG_DIR
@@ -224,7 +223,6 @@ def _create_ca(ca_path: Path, ca_url: str, password: str):
         ca_url (str): URL for the CA server.
         password (str): Password for encrypting root private keys.
     """
-    import os
     pki_dir = ca_path / CA_PKI_DIR
     step_config_dir = ca_path / CA_STEP_CONFIG_DIR
 

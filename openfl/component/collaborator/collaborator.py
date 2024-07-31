@@ -250,7 +250,8 @@ class Collaborator:
             # rnd_num is the relative round. So if rnd_num is -1, get the
             # tensor from the previous round
             required_tensorkeys.append(
-                TensorKey(tname, origin, rnd_num + round_number, report, tags))
+                TensorKey(tname, origin, rnd_num + round_number, report, tags)
+            )
 
         # print('Required tensorkeys = {}'.format(
         # [tk[0] for tk in required_tensorkeys]))
@@ -293,8 +294,7 @@ class Collaborator:
 
         # send the results for this tasks; delta and compression will occur in
         # this function
-        self.send_task_results(global_output_tensor_dict, round_number,
-                               task_name)
+        self.send_task_results(global_output_tensor_dict, round_number, task_name)
 
     def get_numpy_dict_for_tensorkeys(self, tensor_keys):
         """Get tensor dictionary for specified tensorkey set.
@@ -303,10 +303,7 @@ class Collaborator:
             tensor_keys (namedtuple): Tensorkeys that will be resolved locally
                 or remotely. May be the product of other tensors.
         """
-        return {
-            k.tensor_name: self.get_data_for_tensorkey(k)
-            for k in tensor_keys
-        }
+        return {k.tensor_name: self.get_data_for_tensorkey(k) for k in tensor_keys}
 
     def get_data_for_tensorkey(self, tensor_key):
         """Resolve the tensor corresponding to the requested tensorkey.
@@ -351,7 +348,8 @@ class Collaborator:
             # dependencies.
             # Typically, dependencies are only relevant to model layers
             tensor_dependencies = self.tensor_codec.find_dependencies(
-                tensor_key, self.delta_updates)
+                tensor_key, self.delta_updates
+            )
             if len(tensor_dependencies) > 0:
                 # Resolve dependencies
                 # tensor_dependencies[0] corresponds to the prior version
@@ -362,7 +360,8 @@ class Collaborator:
                     tensor_dependencies[0])
                 if prior_model_layer is not None:
                     uncompressed_delta = self.get_aggregated_tensor_from_aggregator(
-                        tensor_dependencies[1])
+                        tensor_dependencies[1]
+                    )
                     new_model_tk, nparray = self.tensor_codec.apply_delta(
                         tensor_dependencies[1],
                         uncompressed_delta,

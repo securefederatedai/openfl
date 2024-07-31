@@ -274,7 +274,7 @@ def find_certificate_name(file_name):
     Returns:
         col_name (str): The collaborator name.
     """
-    col_name = str(file_name).split(os.sep)[-1].split('.')[0][4:]
+    col_name = str(file_name).split(os.sep)[-1].split(".")[0][4:]
     return col_name
 
 

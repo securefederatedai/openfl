@@ -124,10 +124,7 @@ class Assigner:
         Returns:
             list: List of all tasks for the specified round.
         """
-        return [
-            task.name
-            for task in self.all_tasks_for_round[round_number].values()
-        ]
+        return [task.name for task in self.all_tasks_for_round[round_number].values()]
 
     def get_aggregation_type_for_task(self, task_name):
         """Get the aggregation type for a specific task (from self.tasks).
@@ -138,6 +135,5 @@ class Assigner:
         Returns:
             function: Aggregation function for the task.
         """
-        agg_fn = self.agg_functions_by_task_name.get(task_name,
-                                                     WeightedAverage())
+        agg_fn = self.agg_functions_by_task_name.get(task_name, WeightedAverage())
         return agg_fn

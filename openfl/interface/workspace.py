@@ -25,7 +25,7 @@ def workspace(context):
     Args:
         context: The context in which the command is being invoked.
     """
-    context.obj['group'] = 'workspace'
+    context.obj["group"] = "workspace"
 
 
 def is_directory_traversal(directory: Union[str, Path]) -> bool:
@@ -392,10 +392,7 @@ def certify():
 
     echo('2.4 Sign Signing Certificate CSR')
 
-    signing_cert = sign_certificate(signing_csr,
-                                    root_private_key,
-                                    root_cert.subject,
-                                    ca=True)
+    signing_cert = sign_certificate(signing_csr, root_private_key, root_cert.subject, ca=True)
 
     with open(CERT_DIR / signing_crt_path, 'wb') as f:
         f.write(
@@ -422,7 +419,7 @@ def _get_requirements_dict(txtfile):
     Returns:
         snapshot_dict (dict): A dictionary containing the requirements.
     """
-    with open(txtfile, 'r', encoding='utf-8') as snapshot:
+    with open(txtfile, "r", encoding="utf-8") as snapshot:
         snapshot_dict = {}
         for line in snapshot:
             try:
@@ -615,8 +612,7 @@ def graminize_(context, signing_key: Path, enclave_size: str, tag: str,
                                    stdout=subprocess.PIPE)
         for line in process.stdout:
             echo(line)
-        _ = process.communicate(
-        )  # pipe is already empty, used to get `returncode`
+        _ = process.communicate()  # pipe is already empty, used to get `returncode`
         if process.returncode != 0:
             raise Exception('\n ❌ Execution failed\n')
 

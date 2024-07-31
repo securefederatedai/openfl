@@ -93,8 +93,7 @@ class RandomGroupedAssigner(Assigner):
                 for task in group['tasks']:
                     # This should append the list of collaborators performing
                     # that task
-                    self.collaborators_for_task[task][
-                        round_num] += rand_col_group_list
+                    self.collaborators_for_task[task][round_num] += rand_col_group_list
                 col_idx += num_col_in_group
             assert (col_idx == col_list_size
                     ), 'Task groups were not divided properly'

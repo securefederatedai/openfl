@@ -111,9 +111,9 @@ class Experiment:
                         f'collaborators {self.collaborators}')
 
             with ExperimentWorkspace(
-                    experiment_name=self.name,
-                    data_file_path=self.archive_path,
-                    install_requirements=install_requirements,
+                experiment_name=self.name,
+                data_file_path=self.archive_path,
+                install_requirements=install_requirements,
             ):
                 aggregator_grpc_server = self._create_aggregator_grpc_server(
                     tls=tls,
@@ -125,7 +125,9 @@ class Experiment:
 
                 self.run_aggregator_atask = asyncio.create_task(
                     self._run_aggregator_grpc_server(
-                        aggregator_grpc_server=aggregator_grpc_server, ))
+                        aggregator_grpc_server=aggregator_grpc_server,
+                    )
+                )
                 await self.run_aggregator_atask
             self.status = Status.FINISHED
             logger.info(f'Experiment "{self.name}" was finished successfully.')
