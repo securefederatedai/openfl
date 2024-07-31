@@ -17,7 +17,8 @@ class CutoffTimeBasedStragglerHandling(StragglerHandlingFunction):
     def __init__(
         self, round_start_time=None, straggler_cutoff_time=np.inf, minimum_reporting=1, **kwargs
     ):
-         """Initialize a CutoffTimeBasedStragglerHandling object.
+        """
+         Initialize a CutoffTimeBasedStragglerHandling object.
 
         Args:
             round_start_time (optional): The start time of the round. Defaults
