@@ -154,8 +154,7 @@ class AggregatorGRPCClient:
                 ),
                 status_for_retry=(grpc.StatusCode.UNAVAILABLE,),
             ),
-            status_for_retry=(grpc.StatusCode.UNAVAILABLE, ),
-        ), )
+        )
         self.stub = aggregator_pb2_grpc.AggregatorStub(
             grpc.intercept_channel(self.channel, *self.interceptors))
 

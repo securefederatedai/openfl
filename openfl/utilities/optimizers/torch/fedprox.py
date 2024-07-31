@@ -1,10 +1,7 @@
 # Copyright 2020-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-<<<<<<< HEAD
-=======
 
 
->>>>>>> 660ad32505690f0fb304666a4abdb0d9fcffa359
 """PyTorch FedProx optimizer module."""
 
 import math
