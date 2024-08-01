@@ -5,14 +5,14 @@
 """Percentage based Straggler Handling function."""
 from logging import getLogger
 from openfl.component.straggler_handling_functions.straggler_handling_function import (
-    StragglerHandlingFunction,
+    StragglerHandlingPolicy,
 )
 
 
-class PercentageBasedStragglerHandling(StragglerHandlingFunction):
+class PercentageBasedStragglerHandling(StragglerHandlingPolicy):
     def __init__(self, percent_collaborators_needed=1.0, minimum_reporting=1, **kwargs):
         if minimum_reporting <= 0:
-            raise ValueError(f"minimum_reporting cannot be {minimum_reporting}")
+            raise ValueError("minimum_reporting must be >0")
 
         self.percent_collaborators_needed = percent_collaborators_needed
         self.minimum_reporting = minimum_reporting

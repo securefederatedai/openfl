@@ -11,7 +11,7 @@ from logging import getLogger
 import numpy as np
 
 from openfl.component.straggler_handling_functions.straggler_handling_function import (
-    StragglerHandlingFunction,
+    StragglerHandlingPolicy,
 )
 
 
@@ -20,7 +20,7 @@ class CutoffTimeBasedStragglerHandling(StragglerHandlingPolicy):
         self, round_start_time=None, straggler_cutoff_time=np.inf, minimum_reporting=1, **kwargs
     ):
         if minimum_reporting <= 0:
-            raise ValueError(f"minimum_reporting cannot be {minimum_reporting}")
+            raise ValueError("minimum_reporting must be >0")
 
         self.round_start_time = round_start_time
         self.straggler_cutoff_time = straggler_cutoff_time
@@ -114,7 +114,12 @@ class CutoffTimeBasedStragglerHandling(StragglerHandlingPolicy):
         ):
             return num_all_collaborators == num_collaborators_done
         # Something has gone, unhandled scenario, raising error.
-        raise ValueError("Unhandled scenario")
+        raise ValueError(
+            "Unhandled scenario"
+            f"{self.__straggler_time_expired()=}"
+            f"{self.__is_policy_applied_for_round=}"
+            f"{self.straggler_cutoff_time=}"
+        )
 
     def __straggler_time_expired(self) -> bool:
         """
