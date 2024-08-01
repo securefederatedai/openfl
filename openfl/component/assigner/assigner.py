@@ -4,7 +4,8 @@
 
 
 class Assigner:
-    r"""The task assigner maintains a list of tasks.
+    r"""
+    The task assigner maintains a list of tasks.
 
     Also it decides the policy for which collaborator should run those tasks.
     There may be many types of policies implemented, but a natural place to start
