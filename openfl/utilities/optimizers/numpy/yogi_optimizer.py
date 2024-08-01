@@ -1,15 +1,14 @@
-# Copyright (C) 2020-2023 Intel Corporation
+# Copyright 2020-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
 
 """Adam optimizer module."""
 
-from typing import Dict
-from typing import Optional
-from typing import Tuple
+from typing import Dict, Optional, Tuple
 
 import numpy as np
 
-from .adam_optimizer import NumPyAdam
+from openfl.utilities.optimizers.numpy.adam_optimizer import NumPyAdam
 
 
 class NumPyYogi(NumPyAdam):
@@ -42,19 +41,21 @@ class NumPyYogi(NumPyAdam):
                 and squared gradients.
             epsilon: Value for computational stability.
         """
-        super().__init__(params=params,
-                         model_interface=model_interface,
-                         learning_rate=learning_rate,
-                         betas=betas,
-                         initial_accumulator_value=initial_accumulator_value,
-                         epsilon=epsilon)
+        super().__init__(
+            params=params,
+            model_interface=model_interface,
+            learning_rate=learning_rate,
+            betas=betas,
+            initial_accumulator_value=initial_accumulator_value,
+            epsilon=epsilon,
+        )
 
     def _update_second_moment(self, grad_name: str, grad: np.ndarray) -> None:
         """Override second moment update rule for Yogi optimization updates."""
         sign = np.sign(grad**2 - self.grads_second_moment[grad_name])
-        self.grads_second_moment[grad_name] = (self.beta_2
-                                               * self.grads_second_moment[grad_name]
-                                               + (1.0 - self.beta_2) * sign * grad**2)
+        self.grads_second_moment[grad_name] = (
+            self.beta_2 * self.grads_second_moment[grad_name] + (1.0 - self.beta_2) * sign * grad**2
+        )
 
     def step(self, gradients: Dict[str, np.ndarray]) -> None:
         """

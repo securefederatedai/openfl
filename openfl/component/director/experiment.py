@@ -1,5 +1,6 @@
-# Copyright (C) 2020-2023 Intel Corporation
+# Copyright 2020-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
 
 """Experiment module."""
 
@@ -7,10 +8,7 @@ import asyncio
 import logging
 from contextlib import asynccontextmanager
 from pathlib import Path
-from typing import Callable
-from typing import Iterable
-from typing import List
-from typing import Union
+from typing import Callable, Iterable, List, Union
 
 from openfl.federated import Plan
 from openfl.transport import AggregatorGRPCServer
@@ -22,25 +20,26 @@ logger = logging.getLogger(__name__)
 class Status:
     """Experiment's statuses."""
 
-    PENDING = 'pending'
-    FINISHED = 'finished'
-    IN_PROGRESS = 'in_progress'
-    FAILED = 'failed'
-    REJECTED = 'rejected'
+    PENDING = "pending"
+    FINISHED = "finished"
+    IN_PROGRESS = "in_progress"
+    FAILED = "failed"
+    REJECTED = "rejected"
 
 
 class Experiment:
     """Experiment class."""
 
     def __init__(
-            self, *,
-            name: str,
-            archive_path: Union[Path, str],
-            collaborators: List[str],
-            sender: str,
-            init_tensor_dict: dict,
-            plan_path: Union[Path, str] = 'plan/plan.yaml',
-            users: Iterable[str] = None,
+        self,
+        *,
+        name: str,
+        archive_path: Union[Path, str],
+        collaborators: List[str],
+        sender: str,
+        init_tensor_dict: dict,
+        plan_path: Union[Path, str] = "plan/plan.yaml",
+        users: Iterable[str] = None,
     ) -> None:
         """Initialize an experiment object."""
         self.name = name
@@ -55,18 +54,18 @@ class Experiment:
         self.run_aggregator_atask = None
 
     async def start(
-            self, *,
-            tls: bool = True,
-            root_certificate: Union[Path, str] = None,
-            private_key: Union[Path, str] = None,
-            certificate: Union[Path, str] = None,
-            install_requirements: bool = False,
+        self,
+        *,
+        tls: bool = True,
+        root_certificate: Union[Path, str] = None,
+        private_key: Union[Path, str] = None,
+        certificate: Union[Path, str] = None,
+        install_requirements: bool = False,
     ):
         """Run experiment."""
         self.status = Status.IN_PROGRESS
         try:
-            logger.info(f'New experiment {self.name} for '
-                        f'collaborators {self.collaborators}')
+            logger.info(f"New experiment {self.name} for " f"collaborators {self.collaborators}")
 
             with ExperimentWorkspace(
                 experiment_name=self.name,
@@ -88,10 +87,10 @@ class Experiment:
                 )
                 await self.run_aggregator_atask
             self.status = Status.FINISHED
-            logger.info(f'Experiment "{self.name}" was finished successfully.')
+            logger.info("Experiment %s was finished successfully.", self.name)
         except Exception as e:
             self.status = Status.FAILED
-            logger.exception(f'Experiment "{self.name}" failed with error: {e}.')
+            logger.exception("Experiment %s failed with error: %s.", self.name, e)
 
     async def review_experiment(self, review_plan_callback: Callable) -> bool:
         """Get plan approve in console."""
@@ -101,14 +100,12 @@ class Experiment:
             self.name,
             self.archive_path,
             is_install_requirements=False,
-            remove_archive=False
+            remove_archive=False,
         ):
             loop = asyncio.get_event_loop()
             # Call for a review in a separate thread (server is not blocked)
             review_approve = await loop.run_in_executor(
-                None,
-                review_plan_callback,
-                self.name, self.plan_path
+                None, review_plan_callback, self.name, self.plan_path
             )
             if not review_approve:
                 self.status = Status.REJECTED
@@ -119,16 +116,17 @@ class Experiment:
         return True
 
     def _create_aggregator_grpc_server(
-            self, *,
-            tls: bool = True,
-            root_certificate: Union[Path, str] = None,
-            private_key: Union[Path, str] = None,
-            certificate: Union[Path, str] = None,
+        self,
+        *,
+        tls: bool = True,
+        root_certificate: Union[Path, str] = None,
+        private_key: Union[Path, str] = None,
+        certificate: Union[Path, str] = None,
     ) -> AggregatorGRPCServer:
         plan = Plan.parse(plan_config_path=self.plan_path)
         plan.authorized_cols = list(self.collaborators)
 
-        logger.info(f'🧿 Created an Aggregator Server for {self.name} experiment.')
+        logger.info("🧿 Created an Aggregator Server for %s experiment.", self.name)
         aggregator_grpc_server = plan.interactive_api_get_server(
             tensor_dict=self.init_tensor_dict,
             root_certificate=root_certificate,
@@ -139,18 +137,20 @@ class Experiment:
         return aggregator_grpc_server
 
     @staticmethod
-    async def _run_aggregator_grpc_server(aggregator_grpc_server: AggregatorGRPCServer) -> None:
+    async def _run_aggregator_grpc_server(
+        aggregator_grpc_server: AggregatorGRPCServer,
+    ) -> None:
         """Run aggregator."""
-        logger.info('🧿 Starting the Aggregator Service.')
+        logger.info("🧿 Starting the Aggregator Service.")
         grpc_server = aggregator_grpc_server.get_server()
         grpc_server.start()
-        logger.info('Starting Aggregator gRPC Server')
+        logger.info("Starting Aggregator gRPC Server")
 
         try:
             while not aggregator_grpc_server.aggregator.all_quit_jobs_sent():
                 # Awaiting quit job sent to collaborators
                 await asyncio.sleep(10)
-            logger.debug('Aggregator sent quit jobs calls to all collaborators')
+            logger.debug("Aggregator sent quit jobs calls to all collaborators")
         except KeyboardInterrupt:
             pass
         finally:
@@ -207,11 +207,7 @@ class ExperimentsRegistry:
 
     def get_user_experiments(self, user: str) -> List[Experiment]:
         """Get list of experiments for specific user."""
-        return [
-            exp
-            for exp in self.__dict.values()
-            if user in exp.users
-        ]
+        return [exp for exp in self.__dict.values() if user in exp.users]
 
     def __contains__(self, key: str) -> bool:
         """Check if experiment exists."""

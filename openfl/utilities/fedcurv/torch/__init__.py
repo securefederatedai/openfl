@@ -1,4 +1,5 @@
-# Copyright (C) 2020-2023 Intel Corporation
+# Copyright 2020-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-"""openfl.utilities.fedcurv.torch package."""
-from .fedcurv import FedCurv  # NOQA
+
+
+from openfl.utilities.fedcurv.torch.fedcurv import FedCurv  # NOQA

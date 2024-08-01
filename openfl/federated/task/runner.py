@@ -1,5 +1,6 @@
-# Copyright (C) 2020-2023 Intel Corporation
+# Copyright 2020-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
 
 """
 Mixin class for FL models. No default implementation.
@@ -73,8 +74,7 @@ class TaskRunner:
             None
         """
         if data_loader.get_feature_shape() != self.data_loader.get_feature_shape():
-            raise ValueError(
-                'The data_loader feature shape is not compatible with model.')
+            raise ValueError("The data_loader feature shape is not compatible with model.")
 
         self.data_loader = data_loader
 

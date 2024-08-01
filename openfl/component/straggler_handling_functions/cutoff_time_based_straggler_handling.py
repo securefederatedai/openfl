@@ -1,23 +1,23 @@
-# Copyright (C) 2020-2023 Intel Corporation
+# Copyright 2020-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
+
 """Cutoff time based Straggler Handling function."""
-import numpy as np
 import time
 import threading
 from typing import Callable
 from logging import getLogger
 
-from openfl.component.straggler_handling_functions import StragglerHandlingPolicy
+import numpy as np
+
+from openfl.component.straggler_handling_functions.straggler_handling_function import (
+    StragglerHandlingFunction,
+)
 
 
 class CutoffTimeBasedStragglerHandling(StragglerHandlingPolicy):
     def __init__(
-        self,
-        round_start_time=None,
-        straggler_cutoff_time=np.inf,
-        minimum_reporting=1,
-        **kwargs
+        self, round_start_time=None, straggler_cutoff_time=np.inf, minimum_reporting=1, **kwargs
     ):
         if minimum_reporting <= 0:
             raise ValueError(f"minimum_reporting cannot be {minimum_reporting}")

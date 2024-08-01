@@ -1,10 +1,11 @@
-# Copyright (C) 2020-2023 Intel Corporation
+# Copyright 2020-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+
 """Task module."""
 
 
-from dataclasses import dataclass
-from dataclasses import field
+from dataclasses import dataclass, field
 
 
 @dataclass
@@ -22,11 +23,11 @@ class Task:
 class TrainTask(Task):
     """TrainTask class."""
 
-    task_type: str = 'train'
+    task_type: str = "train"
 
 
 @dataclass
 class ValidateTask(Task):
     """Validation Task class."""
 
-    task_type: str = 'validate'
+    task_type: str = "validate"

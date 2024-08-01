@@ -1,18 +1,16 @@
-# Copyright (C) 2020-2023 Intel Corporation
+# Copyright 2020-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
 
 """Percentage based Straggler Handling function."""
 from logging import getLogger
-from openfl.component.straggler_handling_functions import StragglerHandlingPolicy
+from openfl.component.straggler_handling_functions.straggler_handling_function import (
+    StragglerHandlingFunction,
+)
 
 
-class PercentageBasedStragglerHandling(StragglerHandlingPolicy):
-    def __init__(
-        self,
-        percent_collaborators_needed=1.0,
-        minimum_reporting=1,
-        **kwargs
-    ):
+class PercentageBasedStragglerHandling(StragglerHandlingFunction):
+    def __init__(self, percent_collaborators_needed=1.0, minimum_reporting=1, **kwargs):
         if minimum_reporting <= 0:
             raise ValueError(f"minimum_reporting cannot be {minimum_reporting}")
 
