@@ -107,6 +107,8 @@ class FederatedModel(TaskRunner):
             "train",
             "train_batches",
             "validate",
+            "validate_task",
+            "train_task"
         ]:
             return self.runner.__getattribute__(attr)
         return super().__getattribute__(attr)
