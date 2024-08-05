@@ -1,18 +1,16 @@
-# Copyright (C) 2020-2023 Intel Corporation
+# Copyright 2020-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
 
 """Adagrad adaptive aggregation module."""
 
-from typing import Dict
-from typing import Optional
+from typing import Dict, Optional
 
 import numpy as np
 
+from openfl.interface.aggregation_functions.core import AdaptiveAggregation, AggregationFunction
+from openfl.interface.aggregation_functions.weighted_average import WeightedAverage
 from openfl.utilities.optimizers.numpy import NumPyAdagrad
-from .core import AdaptiveAggregation
-from .core import AggregationFunction
-from .weighted_average import WeightedAverage
-
 
 DEFAULT_AGG_FUNC = WeightedAverage()
 
@@ -42,9 +40,11 @@ class AdagradAdaptiveAggregation(AdaptiveAggregation):
             initial_accumulator_value: Initial value for squared gradients.
             epsilon: Value for computational stability.
         """
-        opt = NumPyAdagrad(params=params,
-                           model_interface=model_interface,
-                           learning_rate=learning_rate,
-                           initial_accumulator_value=initial_accumulator_value,
-                           epsilon=epsilon)
+        opt = NumPyAdagrad(
+            params=params,
+            model_interface=model_interface,
+            learning_rate=learning_rate,
+            initial_accumulator_value=initial_accumulator_value,
+            epsilon=epsilon,
+        )
         super().__init__(opt, agg_func)

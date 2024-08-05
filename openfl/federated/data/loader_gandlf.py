@@ -1,16 +1,17 @@
-# Copyright (C) 2020-2023 Intel Corporation
+# Copyright 2020-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
+
 """PyTorchDataLoader module."""
-from .loader import DataLoader
+from openfl.federated.data.loader import DataLoader
 
 
 class GaNDLFDataLoaderWrapper(DataLoader):
     """Data Loader for the Generally Nuanced Deep Learning Framework (GaNDLF)."""
 
     def __init__(self, data_path, feature_shape):
-        self.train_csv = data_path + '/train.csv'
-        self.val_csv = data_path + '/valid.csv'
+        self.train_csv = data_path + "/train.csv"
+        self.val_csv = data_path + "/valid.csv"
         self.train_dataloader = None
         self.val_dataloader = None
         self.feature_shape = feature_shape

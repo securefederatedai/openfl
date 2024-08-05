@@ -1,8 +1,8 @@
-# Copyright (C) 2020-2023 Intel Corporation
+# Copyright 2020-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Keras optimizers package."""
-import pkgutil
 
-if pkgutil.find_loader('tensorflow'):
-    from .fedprox import FedProxOptimizer # NOQA
+import importlib
+
+if importlib.util.find_spec("tensorflow") is not None:
+    from openfl.utilities.optimizers.keras.fedprox import FedProxOptimizer  # NOQA

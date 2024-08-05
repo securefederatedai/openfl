@@ -1,12 +1,13 @@
-# Copyright (C) 2020-2023 Intel Corporation
+# Copyright 2020-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
 
 """Geometric median module."""
 
 import numpy as np
 
-from .core import AggregationFunction
-from .weighted_average import weighted_average
+from openfl.interface.aggregation_functions.core import AggregationFunction
+from openfl.interface.aggregation_functions.weighted_average import weighted_average
 
 
 def _geometric_median_objective(median, tensors, weights):
@@ -37,7 +38,7 @@ def geometric_median(tensors, weights, maxiter=4, eps=1e-5, ftol=1e-6):
 def _l2dist(p1, p2):
     """L2 distance between p1, p2, each of which is a list of nd-arrays."""
     if p1.ndim != p2.ndim:
-        raise RuntimeError('Tensor shapes should be equal')
+        raise RuntimeError("Tensor shapes should be equal")
     if p1.ndim < 2:
         return _l2dist(*[np.expand_dims(x, axis=0) for x in [p1, p2]])
     return np.linalg.norm([np.linalg.norm(x1 - x2) for x1, x2 in zip(p1, p2)])

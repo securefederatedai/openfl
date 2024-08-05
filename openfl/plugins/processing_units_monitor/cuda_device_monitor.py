@@ -1,8 +1,10 @@
-# Copyright (C) 2020-2023 Intel Corporation
+# Copyright 2020-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+
 """CUDA Device monitor plugin module."""
 
-from .device_monitor import DeviceMonitor
+from openfl.plugins.processing_units_monitor.device_monitor import DeviceMonitor
 
 
 class CUDADeviceMonitor(DeviceMonitor):
