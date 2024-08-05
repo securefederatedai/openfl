@@ -1,5 +1,7 @@
-# Copyright (C) 2020-2023 Intel Corporation
+# Copyright 2020-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+
 """Cryptography participant utilities."""
 from typing import Tuple
 
@@ -13,8 +15,7 @@ from cryptography.x509.oid import NameOID
 
 
 def generate_csr(
-        common_name: str,
-        server: bool = False
+    common_name: str, server: bool = False
 ) -> Tuple[RSAPrivateKey, CertificateSigningRequest]:
     """Issue a Certificate Signing Request (CSR) for a server or a client.
 
@@ -28,14 +29,16 @@ def generate_csr(
             the CSR.
     """
     # Generate private key
-    private_key = rsa.generate_private_key(public_exponent=65537,
-                                           key_size=3072,
-                                           backend=default_backend())
+    private_key = rsa.generate_private_key(
+        public_exponent=65537, key_size=3072, backend=default_backend()
+    )
 
     builder = x509.CertificateSigningRequestBuilder()
-    subject = x509.Name([
-        x509.NameAttribute(NameOID.COMMON_NAME, common_name),
-    ])
+    subject = x509.Name(
+        [
+            x509.NameAttribute(NameOID.COMMON_NAME, common_name),
+        ]
+    )
     builder = builder.subject_name(subject)
     builder = builder.add_extension(
         x509.BasicConstraints(ca=False, path_length=None),
@@ -44,34 +47,39 @@ def generate_csr(
     if server:
         builder = builder.add_extension(
             x509.ExtendedKeyUsage([x509.ExtendedKeyUsageOID.SERVER_AUTH]),
-            critical=True
+            critical=True,
         )
 
     else:
         builder = builder.add_extension(
             x509.ExtendedKeyUsage([x509.ExtendedKeyUsageOID.CLIENT_AUTH]),
-            critical=True
+            critical=True,
         )
 
-    builder = builder.add_extension(x509.KeyUsage(digital_signature=True,
-                                                  key_encipherment=True,
-                                                  data_encipherment=False,
-                                                  key_agreement=False,
-                                                  content_commitment=False,
-                                                  key_cert_sign=False,
-                                                  crl_sign=False,
-                                                  encipher_only=False,
-                                                  decipher_only=False),
-                                    critical=True)
+    builder = builder.add_extension(
+        x509.KeyUsage(
+            digital_signature=True,
+            key_encipherment=True,
+            data_encipherment=False,
+            key_agreement=False,
+            content_commitment=False,
+            key_cert_sign=False,
+            crl_sign=False,
+            encipher_only=False,
+            decipher_only=False,
+        ),
+        critical=True,
+    )
 
     builder = builder.add_extension(
-        x509.SubjectAlternativeName([x509.DNSName(common_name)]),
-        critical=False
+        x509.SubjectAlternativeName([x509.DNSName(common_name)]), critical=False
     )
 
     # Sign the CSR
-    csr = builder.sign(private_key=private_key,
-                       algorithm=hashes.SHA384(),
-                       backend=default_backend())
+    csr = builder.sign(
+        private_key=private_key,
+        algorithm=hashes.SHA384(),
+        backend=default_backend(),
+    )
 
     return private_key, csr

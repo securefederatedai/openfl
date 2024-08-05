@@ -1,25 +1,26 @@
-# Copyright (C) 2020-2023 Intel Corporation
+# Copyright 2020-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-"""Module with auxiliary CLI helper functions."""
 
+
+"""Module with auxiliary CLI helper functions."""
+import os
+import re
+import shutil
 from itertools import islice
-from os import environ
-from os import stat
+from os import environ, stat
 from pathlib import Path
 from sys import argv
 
-from click import echo
-from click import style
-from yaml import FullLoader
-from yaml import load
+from click import echo, style
+from yaml import FullLoader, load
 
 FX = argv[0]
 
 SITEPACKS = Path(__file__).parent.parent.parent
-WORKSPACE = SITEPACKS / 'openfl-workspace'
-TUTORIALS = SITEPACKS / 'openfl-tutorials'
-OPENFL_USERDIR = Path.home() / '.openfl'
-CERT_DIR = Path('cert').absolute()
+WORKSPACE = SITEPACKS / "openfl-workspace"
+TUTORIALS = SITEPACKS / "openfl-tutorials"
+OPENFL_USERDIR = Path.home() / ".openfl"
+CERT_DIR = Path("cert").absolute()
 
 
 def pretty(o):
@@ -31,32 +32,35 @@ def pretty(o):
     m = max(map(len, o.keys()))
 
     for k, v in o.items():
-        echo(style(f'{k:<{m}} : ', fg='blue') + style(f'{v}', fg='cyan'))
+        echo(style(f"{k:<{m}} : ", fg="blue") + style(f"{v}", fg="cyan"))
 
 
 def tree(path):
-    """Print current directory file tree.
+    """
+    Print current directory file tree.
 
     Args:
         path (str): The path of the directory.
     """
-    echo(f'+ {path}')
+    echo(f"+ {path}")
 
-    for path in sorted(path.rglob('*')):
+    for path in sorted(path.rglob("*")):
 
         depth = len(path.relative_to(path).parts)
-        space = '    ' * depth
+        space = "    " * depth
 
         if path.is_file():
-            echo(f'{space}f {path.name}')
+            echo(f"{space}f {path.name}")
         else:
-            echo(f'{space}d {path.name}')
+            echo(f"{space}d {path.name}")
 
 
-def print_tree(dir_path: Path,
-               level: int = -1,
-               limit_to_directories: bool = False,
-               length_limit: int = 1000):
+def print_tree(
+    dir_path: Path,
+    level: int = -1,
+    limit_to_directories: bool = False,
+    length_limit: int = 1000,
+):
     """Given a directory Path object print a visual tree structure.
 
     Args:
@@ -66,18 +70,18 @@ def print_tree(dir_path: Path,
             to False.
         length_limit (int, optional): The length limit. Defaults to 1000.
     """
-    space = '    '
-    branch = '│   '
-    tee = '├── '
-    last = '└── '
+    space = "    "
+    branch = "│   "
+    tee = "├── "
+    last = "└── "
 
-    echo('\nNew workspace directory structure:')
+    echo("\nNew workspace directory structure:")
 
     dir_path = Path(dir_path)  # accept string coerceable to Path
     files = 0
     directories = 0
 
-    def inner(dir_path: Path, prefix: str = '', level=-1):
+    def inner(dir_path: Path, prefix: str = "", level=-1):
         nonlocal files, directories
         if not level:
             return  # 0, stop iterating
@@ -91,9 +95,7 @@ def print_tree(dir_path: Path,
                 yield prefix + pointer + path.name
                 directories += 1
                 extension = branch if pointer == tee else space
-                yield from inner(path,
-                                 prefix=prefix + extension,
-                                 level=level - 1)
+                yield from inner(path, prefix=prefix + extension, level=level - 1)
             elif not limit_to_directories:
                 yield prefix + pointer + path.name
                 files += 1
@@ -103,17 +105,18 @@ def print_tree(dir_path: Path,
     for line in islice(iterator, length_limit):
         echo(line)
     if next(iterator, None):
-        echo(f'... length_limit, {length_limit}, reached, counted:')
-    echo(f'\n{directories} directories'
-         + (f', {files} files' if files else ''))
+        echo(f"... length_limit, {length_limit}, reached, counted:")
+    echo(f"\n{directories} directories" + (f", {files} files" if files else ""))
 
 
-def copytree(src,
-             dst,
-             symlinks=False,
-             ignore=None,
-             ignore_dangling_symlinks=False,
-             dirs_exist_ok=False):
+def copytree(
+    src,
+    dst,
+    symlinks=False,
+    ignore=None,
+    ignore_dangling_symlinks=False,
+    dirs_exist_ok=False,
+):
     """From Python 3.8 'shutil' which include 'dirs_exist_ok' option.
 
     Args:
@@ -129,8 +132,6 @@ def copytree(src,
             dst or any missing parent directory already exists. Defaults to
             False.
     """
-    import os
-    import shutil
 
     with os.scandir(src) as itr:
         entries = list(itr)
@@ -156,7 +157,7 @@ def copytree(src,
             srcobj = srcentry if use_srcentry else srcname
             try:
                 is_symlink = srcentry.is_symlink()
-                if is_symlink and os.name == 'nt':
+                if is_symlink and os.name == "nt":
                     lstat = srcentry.stat(follow_symlinks=False)
                     if lstat.st_reparse_tag == stat.IO_REPARSE_TAG_MOUNT_POINT:
                         is_symlink = False
@@ -164,27 +165,28 @@ def copytree(src,
                     linkto = os.readlink(srcname)
                     if symlinks:
                         os.symlink(linkto, dstname)
-                        shutil.copystat(srcobj,
-                                        dstname,
-                                        follow_symlinks=not symlinks)
+                        shutil.copystat(srcobj, dstname, follow_symlinks=not symlinks)
                     else:
-                        if (not os.path.exists(linkto)
-                                and ignore_dangling_symlinks):
+                        if not os.path.exists(linkto) and ignore_dangling_symlinks:
                             continue
                         if srcentry.is_dir():
-                            copytree(srcobj,
-                                     dstname,
-                                     symlinks,
-                                     ignore,
-                                     dirs_exist_ok=dirs_exist_ok)
+                            copytree(
+                                srcobj,
+                                dstname,
+                                symlinks,
+                                ignore,
+                                dirs_exist_ok=dirs_exist_ok,
+                            )
                         else:
                             copy_function(srcobj, dstname)
                 elif srcentry.is_dir():
-                    copytree(srcobj,
-                             dstname,
-                             symlinks,
-                             ignore,
-                             dirs_exist_ok=dirs_exist_ok)
+                    copytree(
+                        srcobj,
+                        dstname,
+                        symlinks,
+                        ignore,
+                        dirs_exist_ok=dirs_exist_ok,
+                    )
                 else:
                     copy_function(srcobj, dstname)
             except OSError as why:
@@ -194,7 +196,7 @@ def copytree(src,
         try:
             shutil.copystat(src, dst)
         except OSError as why:
-            if getattr(why, 'winerror', None) is None:
+            if getattr(why, "winerror", None) is None:
                 errors.append((src, dst, str(why)))
         if errors:
             raise Exception(errors)
@@ -213,21 +215,21 @@ def get_workspace_parameter(name):
         str: The value of the parameter.
     """
     # Update the .workspace file to show the current workspace plan
-    workspace_file = '.workspace'
+    workspace_file = ".workspace"
 
-    with open(workspace_file, 'r', encoding='utf-8') as f:
+    with open(workspace_file, "r", encoding="utf-8") as f:
         doc = load(f, Loader=FullLoader)
 
     if not doc:  # YAML is not correctly formatted
         doc = {}  # Create empty dictionary
 
     if name not in doc.keys() or not doc[name]:  # List doesn't exist
-        return ''
+        return ""
     else:
         return doc[name]
 
 
-def check_varenv(env: str = '', args: dict = None):
+def check_varenv(env: str = "", args: dict = None):
     """Update "args" (dictionary) with <env: env_value> if env has a defined
     value in the host.
 
@@ -247,7 +249,7 @@ def check_varenv(env: str = '', args: dict = None):
     return args
 
 
-def get_fx_path(curr_path=''):
+def get_fx_path(curr_path=""):
     """Return the absolute path to fx binary.
 
     Args:
@@ -256,14 +258,12 @@ def get_fx_path(curr_path=''):
     Returns:
         str: The absolute path to fx binary.
     """
-    import re
-    import os
 
-    match = re.search('lib', curr_path)
+    match = re.search("lib", curr_path)
     idx = match.end()
     path_prefix = curr_path[0:idx]
-    bin_path = re.sub('lib', 'bin', path_prefix)
-    fx_path = os.path.join(bin_path, 'fx')
+    bin_path = re.sub("lib", "bin", path_prefix)
+    fx_path = os.path.join(bin_path, "fx")
 
     return fx_path
 
@@ -275,7 +275,7 @@ def remove_line_from_file(pkg, filename):
         pkg (str): The package to be removed.
         filename (str): The name of the file.
     """
-    with open(filename, 'r+', encoding='utf-8') as f:
+    with open(filename, "r+", encoding="utf-8") as f:
         d = f.readlines()
         f.seek(0)
         for i in d:
@@ -292,7 +292,7 @@ def replace_line_in_file(line, line_num_to_replace, filename):
         line_num_to_replace (int): The line number to be replaced.
         filename (str): The name of the file.
     """
-    with open(filename, 'r+', encoding='utf-8') as f:
+    with open(filename, "r+", encoding="utf-8") as f:
         d = f.readlines()
         f.seek(0)
         for idx, i in enumerate(d):

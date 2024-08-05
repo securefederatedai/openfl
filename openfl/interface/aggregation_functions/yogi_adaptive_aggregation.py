@@ -1,17 +1,16 @@
-# Copyright (C) 2020-2023 Intel Corporation
+# Copyright 2020-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+
 """Yogi adaptive aggregation module."""
 
-from typing import Dict
-from typing import Optional
-from typing import Tuple
+from typing import Dict, Optional, Tuple
 
 import numpy as np
 
+from openfl.interface.aggregation_functions.core import AdaptiveAggregation, AggregationFunction
+from openfl.interface.aggregation_functions.weighted_average import WeightedAverage
 from openfl.utilities.optimizers.numpy import NumPyYogi
-from .core import AdaptiveAggregation
-from .core import AggregationFunction
-from .weighted_average import WeightedAverage
 
 DEFAULT_AGG_FUNC = WeightedAverage()
 
@@ -47,10 +46,12 @@ class YogiAdaptiveAggregation(AdaptiveAggregation):
                 and squared gradients.
             epsilon (float): Value for computational stability.
         """
-        opt = NumPyYogi(params=params,
-                        model_interface=model_interface,
-                        learning_rate=learning_rate,
-                        betas=betas,
-                        initial_accumulator_value=initial_accumulator_value,
-                        epsilo=epsilon)
+        opt = NumPyYogi(
+            params=params,
+            model_interface=model_interface,
+            learning_rate=learning_rate,
+            betas=betas,
+            initial_accumulator_value=initial_accumulator_value,
+            epsilo=epsilon,
+        )
         super().__init__(opt, agg_func)

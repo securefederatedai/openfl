@@ -1,5 +1,7 @@
-# Copyright (C) 2020-2023 Intel Corporation
+# Copyright 2020-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+
 """Pipeline module."""
 
 import numpy as np
@@ -70,8 +72,8 @@ class Float32NumpyArrayToBytes(Transformer):
             data = data.astype(np.float32)
         array_shape = data.shape
         # Better call it array_shape?
-        metadata = {'int_list': list(array_shape)}
-        data_bytes = data.tobytes(order='C')
+        metadata = {"int_list": list(array_shape)}
+        data_bytes = data.tobytes(order="C")
         return data_bytes, metadata
 
     def backward(self, data, metadata, **kwargs):
@@ -84,11 +86,11 @@ class Float32NumpyArrayToBytes(Transformer):
         Returns:
             The data converted back to a float32 Numpy array.
         """
-        array_shape = tuple(metadata['int_list'])
+        array_shape = tuple(metadata["int_list"])
         flat_array = np.frombuffer(data, dtype=np.float32)
         # For integer parameters we probably should unpack arrays
         # with shape (1,)
-        return np.reshape(flat_array, newshape=array_shape, order='C')
+        return np.reshape(flat_array, newshape=array_shape, order="C")
 
 
 class TransformationPipeline:
@@ -157,9 +159,7 @@ class TransformationPipeline:
             The original data before the transformation.
         """
         for transformer in self.transformers[::-1]:
-            data = transformer.backward(data=data,
-                                        metadata=transformer_metadata.pop(),
-                                        **kwargs)
+            data = transformer.backward(data=data, metadata=transformer_metadata.pop(), **kwargs)
         return data
 
     def is_lossy(self):

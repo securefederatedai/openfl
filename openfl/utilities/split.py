@@ -1,6 +1,8 @@
-# Copyright (C) 2020-2023 Intel Corporation
+# Copyright 2020-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-"""Split tensors module."""
+
+
+"""split tensors module."""
 
 import numpy as np
 
@@ -52,11 +54,14 @@ def split_tensor_dict_by_types(tensor_dict, keep_types):
     return keep_dict, holdout_dict
 
 
-def split_tensor_dict_for_holdouts(logger,
-                                   tensor_dict,
-                                   keep_types=(np.floating, np.integer),
-                                   holdout_tensor_names=()):
-    """Split a tensor according to tensor types.
+def split_tensor_dict_for_holdouts(
+    logger,
+    tensor_dict,
+    keep_types=(np.floating, np.integer),
+    holdout_tensor_names=(),
+):
+    """
+    Split a tensor according to tensor types.
 
     This function splits a tensor dictionary into two dictionaries: one
     containing the tensors to send and the other containing the holdout
@@ -87,13 +92,14 @@ def split_tensor_dict_for_holdouts(logger,
                 holdout_tensors[tensor_name] = tensors_to_send.pop(tensor_name)
             except KeyError:
                 logger.warn(
-                    f'tried to remove tensor: {tensor_name} not present '
-                    f'in the tensor dict')
+                    f"tried to remove tensor: {tensor_name} not present " f"in the tensor dict"
+                )
                 continue
 
     # filter holdout_types from tensors_to_send and add to holdout_tensors
     tensors_to_send, not_supported_tensors_dict = split_tensor_dict_by_types(
-        tensors_to_send, keep_types)
+        tensors_to_send, keep_types
+    )
     holdout_tensors = {**holdout_tensors, **not_supported_tensors_dict}
 
     return tensors_to_send, holdout_tensors

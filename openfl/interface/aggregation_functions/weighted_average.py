@@ -1,10 +1,12 @@
-# Copyright (C) 2020-2023 Intel Corporation
+# Copyright 2020-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+
 """Federated averaging module."""
 
 import numpy as np
 
-from .core import AggregationFunction
+from openfl.interface.aggregation_functions.core import AggregationFunction
 
 
 def weighted_average(tensors, weights):

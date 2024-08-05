@@ -1,13 +1,13 @@
-# Copyright (C) 2020-2023 Intel Corporation
+# Copyright 2020-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-"""STCPipelinemodule."""
 
+"""STCPipelinemodule."""
+import copy
 import gzip as gz
 
 import numpy as np
 
-from .pipeline import TransformationPipeline
-from .pipeline import Transformer
+from openfl.pipelines.pipeline import TransformationPipeline, Transformer
 
 
 class SparsityTransformer(Transformer):
@@ -39,7 +39,7 @@ class SparsityTransformer(Transformer):
                 tensor.
             metadata: dictionary to store a list of meta information.
         """
-        metadata = {'int_list': list(data.shape)}
+        metadata = {"int_list": list(data.shape)}
         # sparsification
         data = data.astype(np.float32)
         flatten_data = data.flatten()
@@ -62,7 +62,7 @@ class SparsityTransformer(Transformer):
             recovered_data: an numpy array with original shape.
         """
         data = data.astype(np.float32)
-        data_shape = metadata['int_list']
+        data_shape = metadata["int_list"]
         recovered_data = data.reshape(data_shape)
         return recovered_data
 
@@ -118,7 +118,7 @@ class TernaryTransformer(Transformer):
         out_ = np.where(data > 0.0, mean_topk, 0.0)
         out = np.where(data < 0.0, -mean_topk, out_)
         int_array, int2float_map = self._float_to_int(out)
-        metadata = {'int_to_float': int2float_map}
+        metadata = {"int_to_float": int2float_map}
         return int_array, metadata
 
     def backward(self, data, metadata, **kwargs):
@@ -135,9 +135,8 @@ class TernaryTransformer(Transformer):
             data: an numpy array with original numerical type.
         """
         # TODO
-        import copy
         data = copy.deepcopy(data)
-        int2float_map = metadata['int_to_float']
+        int2float_map = metadata["int_to_float"]
         for key in int2float_map:
             indices = data == key
             data[indices] = int2float_map[key]
@@ -241,6 +240,6 @@ class STCPipeline(TransformationPipeline):
         transformers = [
             SparsityTransformer(self.p),
             TernaryTransformer(),
-            GZIPTransformer()
+            GZIPTransformer(),
         ]
-        super(STCPipeline, self).__init__(transformers=transformers, **kwargs)
+        super().__init__(transformers=transformers, **kwargs)

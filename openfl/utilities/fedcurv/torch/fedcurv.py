@@ -1,5 +1,7 @@
-# Copyright (C) 2020-2023 Intel Corporation
+# Copyright 2020-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+
 """Implementation of FedCurv algorithm."""
 
 from copy import deepcopy
@@ -17,7 +19,7 @@ def register_buffer(module: torch.nn.Module, name: str, value: torch.Tensor):
             'model.conv1.bias'.
         value (torch.Tensor): The value of the buffer.
     """
-    module_path, _, name = name.rpartition('.')
+    module_path, _, name = name.rpartition(".")
     mod = module.get_submodule(module_path)
     mod.register_buffer(name, value)
 
@@ -36,18 +38,17 @@ def get_buffer(module, target):
     Returns:
         torch.Tensor: The buffer.
     """
-    module_path, _, buffer_name = target.rpartition('.')
+    module_path, _, buffer_name = target.rpartition(".")
 
     mod: torch.nn.Module = module.get_submodule(module_path)
 
     if not hasattr(mod, buffer_name):
-        raise AttributeError(
-            f'{mod._get_name()} has no attribute `{buffer_name}`')
+        raise AttributeError(f"{mod._get_name()} has no attribute `{buffer_name}`")
 
     buffer: torch.Tensor = getattr(mod, buffer_name)
 
     if buffer_name not in mod._buffers:
-        raise AttributeError('`' + buffer_name + '` is not a buffer')
+        raise AttributeError("`" + buffer_name + "` is not a buffer")
 
     return buffer
 
@@ -91,14 +92,14 @@ class FedCurv:
             w = torch.zeros_like(p, requires_grad=False)
 
             # Add buffers to model for aggregation
-            register_buffer(model, f'{n}_u', u)
-            register_buffer(model, f'{n}_v', v)
-            register_buffer(model, f'{n}_w', w)
+            register_buffer(model, f"{n}_u", u)
+            register_buffer(model, f"{n}_v", v)
+            register_buffer(model, f"{n}_w", w)
 
             # Store buffers locally for subtraction in loss function
-            setattr(self, f'{n}_u', u)
-            setattr(self, f'{n}_v', v)
-            setattr(self, f'{n}_w', w)
+            setattr(self, f"{n}_u", u)
+            setattr(self, f"{n}_v", v)
+            setattr(self, f"{n}_w", w)
 
     def _update_params(self, model):
         """Update the parameters of the model.
@@ -137,8 +138,7 @@ class FedCurv:
 
             for n, p in model.named_parameters():
                 if p.requires_grad:
-                    precision_matrices[n].data = p.grad.data**2 / len(
-                        data_loader)
+                    precision_matrices[n].data = p.grad.data**2 / len(data_loader)
 
         return precision_matrices
 
@@ -157,15 +157,13 @@ class FedCurv:
             return penalty
         for name, param in model.named_parameters():
             if param.requires_grad:
-                u_global, v_global, w_global = (get_buffer(model,
-                                                           target).detach()
-                                                for target in (f'{name}_u',
-                                                               f'{name}_v',
-                                                               f'{name}_w'))
-                u_local, v_local, w_local = (getattr(self, name).detach()
-                                             for name in (f'{name}_u',
-                                                          f'{name}_v',
-                                                          f'{name}_w'))
+                u_global, v_global, w_global = (
+                    get_buffer(model, target).detach()
+                    for target in (f"{name}_u", f"{name}_v", f"{name}_w")
+                )
+                u_local, v_local, w_local = (
+                    getattr(self, name).detach() for name in (f"{name}_u", f"{name}_v", f"{name}_w")
+                )
                 u = u_global - u_local
                 v = v_global - v_local
                 w = w_global - w_local
@@ -197,9 +195,9 @@ class FedCurv:
             v = v.to(device)
             w = m.data * model.get_parameter(n) ** 2
             w = w.to(device)
-            register_buffer(model, f'{n}_u', u.clone().detach())
-            register_buffer(model, f'{n}_v', v.clone().detach())
-            register_buffer(model, f'{n}_w', w.clone().detach())
-            setattr(self, f'{n}_u', u.clone().detach())
-            setattr(self, f'{n}_v', v.clone().detach())
-            setattr(self, f'{n}_w', w.clone().detach())
+            register_buffer(model, f"{n}_u", u.clone().detach())
+            register_buffer(model, f"{n}_v", v.clone().detach())
+            register_buffer(model, f"{n}_w", w.clone().detach())
+            setattr(self, f"{n}_u", u.clone().detach())
+            setattr(self, f"{n}_v", v.clone().detach())
+            setattr(self, f"{n}_w", w.clone().detach())

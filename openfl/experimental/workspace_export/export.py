@@ -1,11 +1,13 @@
-# Copyright (C) 2020-2023 Intel Corporation
+# Copyright 2020-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-"""Workspace Builder module."""
 
+
+"""Workspace Builder module."""
 import ast
 import importlib
 import inspect
 import re
+import sys
 from logging import getLogger
 from pathlib import Path
 from shutil import copytree
@@ -50,9 +52,9 @@ class WorkspaceExport:
 
         # Copy template workspace to output directory
         self.created_workspace_path = Path(
-            copytree(self.template_workspace_path, self.output_workspace_path))
-        self.logger.info(
-            f"Copied template workspace to {self.created_workspace_path}")
+            copytree(self.template_workspace_path, self.output_workspace_path)
+        )
+        self.logger.info(f"Copied template workspace to {self.created_workspace_path}")
 
         self.logger.info("Converting jupter notebook to python script...")
         export_filename = self.__get_exp_name()
@@ -89,13 +91,11 @@ class WorkspaceExport:
                 code = cell.source
                 match = re.search(r"#\s*\|\s*default_exp\s+(\w+)", code)
                 if match:
-                    self.logger.info(
-                        f"Retrieved {match.group(1)} from default_exp")
+                    self.logger.info(f"Retrieved {match.group(1)} from default_exp")
                     return match.group(1)
         return None
 
-    def __convert_to_python(self, notebook_path: Path, output_path: Path,
-                            export_filename):
+    def __convert_to_python(self, notebook_path: Path, output_path: Path, export_filename):
         nb_export(notebook_path, output_path)
 
         return Path(output_path).joinpath(export_filename).resolve()
@@ -116,10 +116,9 @@ class WorkspaceExport:
             data = f.read()
 
         if "backend='ray'" in data or 'backend="ray"' in data:
-            data = data.replace("backend='ray'",
-                                "backend='single_process'").replace(
-                                    'backend="ray"',
-                                    'backend="single_process"')
+            data = data.replace("backend='ray'", "backend='single_process'").replace(
+                'backend="ray"', 'backend="single_process"'
+            )
 
         with open(self.script_path, "w") as f:
             f.write(data)
@@ -167,8 +166,7 @@ class WorkspaceExport:
         # Going though all attributes in imported python script
         for attr in self.available_modules_in_exported_script:
             t = getattr(self.exported_script_module, attr)
-            if (inspect.isclass(t) and t != parent_class
-                    and issubclass(t, parent_class)):
+            if inspect.isclass(t) and t != parent_class and issubclass(t, parent_class):
                 return inspect.getsource(t), attr
 
         return None, None
@@ -182,8 +180,7 @@ class WorkspaceExport:
             tree = ast.parse(s.read())
 
             for node in ast.walk(tree):
-                if isinstance(node, ast.Call) and isinstance(
-                        node.func, ast.Name):
+                if isinstance(node, ast.Call) and isinstance(node.func, ast.Name):
                     if node.func.id == class_name:
                         # We found an instantiation of the class
                         for arg in node.args:
@@ -192,11 +189,9 @@ class WorkspaceExport:
                                 # Use the variable name as the argument value
                                 instantiation_args["args"][arg.id] = arg.id
                             elif isinstance(arg, ast.Constant):
-                                instantiation_args["args"][arg.s] = (
-                                    astor.to_source(arg))
+                                instantiation_args["args"][arg.s] = astor.to_source(arg)
                             else:
-                                instantiation_args["args"][arg.arg] = (
-                                    astor.to_source(arg).strip())
+                                instantiation_args["args"][arg.arg] = astor.to_source(arg).strip()
 
                         for kwarg in node.keywords:
                             # Iterate through keyword arguments
@@ -223,14 +218,13 @@ class WorkspaceExport:
         return instantiation_args
 
     def __import_exported_script(self):
-        """Imports generated python script with help of importlib."""
-        import importlib
-        import sys
+        """
+        Imports generated python script with help of importlib
+        """
 
         sys.path.append(str(self.script_path.parent))
         self.exported_script_module = importlib.import_module(self.script_name)
-        self.available_modules_in_exported_script = dir(
-            self.exported_script_module)
+        self.available_modules_in_exported_script = dir(self.exported_script_module)
 
     def __read_yaml(self, path):
         with open(path, "r") as y:
@@ -272,10 +266,9 @@ class WorkspaceExport:
                 line = line.strip()
                 if "pip install" in line:
                     line_nos.append(i)
-                    # Avoid commented lines, libraries from *.txt file, or
-                    # openfl.git installation
-                    if (not line.startswith("#") and "-r" not in line
-                            and "openfl.git" not in line):
+                    # Avoid commented lines, libraries from *.txt file, or openfl.git
+                    # installation
+                    if not line.startswith("#") and "-r" not in line and "openfl.git" not in line:
                         requirements.append(f"{line.split(' ')[-1].strip()}\n")
 
         requirements_filepath = str(
@@ -294,27 +287,25 @@ class WorkspaceExport:
                     f.write(line)
 
     def generate_plan_yaml(self):
-        """Generates plan.yaml."""
-        flspec = getattr(
-            importlib.import_module("openfl.experimental.interface"), "FLSpec")
+        """
+        Generates plan.yaml
+        """
+        flspec = getattr(importlib.import_module("openfl.experimental.interface"), "FLSpec")
         # Get flow classname
-        _, self.flow_class_name = (
-            self.__get_class_name_and_sourcecode_from_parent_class(flspec))
+        _, self.flow_class_name = self.__get_class_name_and_sourcecode_from_parent_class(flspec)
         # Get expected arguments of flow class
-        self.flow_class_expected_arguments = self.__get_class_arguments(
-            self.flow_class_name)
+        self.flow_class_expected_arguments = self.__get_class_arguments(self.flow_class_name)
         # Get provided arguments to flow class
-        self.arguments_passed_to_initialize = (
-            self.__extract_class_initializing_args(self.flow_class_name))
+        self.arguments_passed_to_initialize = self.__extract_class_initializing_args(
+            self.flow_class_name
+        )
 
-        plan = self.created_workspace_path.joinpath("plan",
-                                                    "plan.yaml").resolve()
+        plan = self.created_workspace_path.joinpath("plan", "plan.yaml").resolve()
         data = self.__read_yaml(plan)
         if data is None:
             data["federated_flow"] = {"settings": {}, "template": ""}
 
-        data["federated_flow"][
-            "template"] = f"src.{self.script_name}.{self.flow_class_name}"
+        data["federated_flow"]["template"] = f"src.{self.script_name}.{self.flow_class_name}"
 
         def update_dictionary(args: dict, data: dict, dtype: str = "args"):
             for idx, (k, v) in enumerate(args.items()):
@@ -349,37 +340,31 @@ class WorkspaceExport:
                 importlib.import_module("openfl.experimental.interface"),
                 "FLSpec",
             )
-            _, self.flow_class_name = (
-                self.__get_class_name_and_sourcecode_from_parent_class(flspec))
+            _, self.flow_class_name = self.__get_class_name_and_sourcecode_from_parent_class(flspec)
 
         # Import flow class
-        federated_flow_class = getattr(self.exported_script_module,
-                                       self.flow_class_name)
-        # Find federated_flow._runtime and
-        # federated_flow._runtime.collaborators
+        federated_flow_class = getattr(self.exported_script_module, self.flow_class_name)
+        # Find federated_flow._runtime and federated_flow._runtime.collaborators
         for t in self.available_modules_in_exported_script:
             tempstring = t
             t = getattr(self.exported_script_module, t)
             if isinstance(t, federated_flow_class):
                 flow_name = tempstring
                 if not hasattr(t, "_runtime"):
-                    raise AttributeError(
-                        "Unable to locate LocalRuntime instantiation")
+                    raise AttributeError("Unable to locate LocalRuntime instantiation")
                 runtime = t._runtime
                 if not hasattr(runtime, "collaborators"):
-                    raise AttributeError(
-                        "LocalRuntime instance does not have collaborators")
+                    raise AttributeError("LocalRuntime instance does not have collaborators")
                 break
 
-        data_yaml = self.created_workspace_path.joinpath(
-            "plan", "data.yaml").resolve()
+        data_yaml = self.created_workspace_path.joinpath("plan", "data.yaml").resolve()
         data = self.__read_yaml(data_yaml)
         if data is None:
             data = {}
 
         # Find aggregator details
         aggregator = runtime._aggregator
-        runtime_name = 'runtime_local'
+        runtime_name = "runtime_local"
         runtime_created = False
         private_attrs_callable = aggregator.private_attributes_callable
         aggregator_private_attributes = aggregator.private_attributes
@@ -392,8 +377,9 @@ class WorkspaceExport:
                 }
             }
             # Find arguments expected by Aggregator
-            arguments_passed_to_initialize = (
-                self.__extract_class_initializing_args("Aggregator")["kwargs"])
+            arguments_passed_to_initialize = self.__extract_class_initializing_args("Aggregator")[
+                "kwargs"
+            ]
             agg_kwargs = aggregator.kwargs
             for key, value in agg_kwargs.items():
                 if isinstance(value, (int, str, bool)):
@@ -404,7 +390,7 @@ class WorkspaceExport:
                     data["aggregator"]["callable_func"]["settings"][key] = value
         elif aggregator_private_attributes:
             runtime_created = True
-            with open(self.script_path, 'a') as f:
+            with open(self.script_path, "a") as f:
                 f.write(f"\n{runtime_name} = {flow_name}._runtime\n")
                 f.write(
                     f"\naggregator_private_attributes = "
@@ -417,8 +403,9 @@ class WorkspaceExport:
         # Get runtime collaborators
         collaborators = runtime._LocalRuntime__collaborators
         # Find arguments expected by Collaborator
-        arguments_passed_to_initialize = self.__extract_class_initializing_args(
-            "Collaborator")["kwargs"]
+        arguments_passed_to_initialize = self.__extract_class_initializing_args("Collaborator")[
+            "kwargs"
+        ]
         runtime_collab_created = False
         for collab in collaborators.values():
             collab_name = collab.get_name()
@@ -427,12 +414,7 @@ class WorkspaceExport:
 
             if callable_func:
                 if collab_name not in data:
-                    data[collab_name] = {
-                        "callable_func": {
-                            "settings": {},
-                            "template": None
-                        }
-                    }
+                    data[collab_name] = {"callable_func": {"settings": {}, "template": None}}
                 # Find collaborator private_attributes callable details
                 kw_args = runtime.get_collaborator_kwargs(collab_name)
                 for key, value in kw_args.items():
@@ -446,7 +428,7 @@ class WorkspaceExport:
                         value = f"src.{self.script_name}.{arg}"
                         data[collab_name]["callable_func"]["settings"][key] = value
             elif private_attributes:
-                with open(self.script_path, 'a') as f:
+                with open(self.script_path, "a") as f:
                     if not runtime_created:
                         f.write(f"\n{runtime_name} = {flow_name}._runtime\n")
                         runtime_created = True

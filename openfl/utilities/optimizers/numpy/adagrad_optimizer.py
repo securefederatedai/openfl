@@ -1,13 +1,14 @@
-# Copyright (C) 2020-2023 Intel Corporation
+# Copyright 2020-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+
 """Adagrad optimizer module."""
 
-from typing import Dict
-from typing import Optional
+from typing import Dict, Optional
 
 import numpy as np
 
-from .base_optimizer import Optimizer
+from openfl.utilities.optimizers.numpy.base_optimizer import Optimizer
 
 
 class NumPyAdagrad(Optimizer):
@@ -62,21 +63,17 @@ class NumPyAdagrad(Optimizer):
         super().__init__()
 
         if model_interface is None and params is None:
-            raise ValueError(
-                'Should provide one of the params or model_interface')
+            raise ValueError("Should provide one of the params or model_interface")
 
         if learning_rate < 0:
-            raise ValueError(
-                f'Invalid learning rate: {learning_rate}. Learning rate must be >= 0.'
-            )
+            raise ValueError(f"Invalid learning rate: {learning_rate}. Learning rate must be >= 0.")
         if initial_accumulator_value < 0:
             raise ValueError(
-                f'Invalid initial_accumulator_value value: {initial_accumulator_value}.'
-                'Initial accumulator value must be >= 0.')
-        if epsilon <= 0:
-            raise ValueError(
-                f'Invalid epsilon value: {epsilon}. Epsilon avalue must be > 0.'
+                f"Invalid initial_accumulator_value value: {initial_accumulator_value}."
+                "Initial accumulator value must be >= 0."
             )
+        if epsilon <= 0:
+            raise ValueError(f"Invalid epsilon value: {epsilon}. Epsilon avalue must be > 0.")
 
         self.params = params
 
@@ -90,10 +87,12 @@ class NumPyAdagrad(Optimizer):
         self.grads_squared = {}
         for param_name in self.params:
             self.grads_squared[param_name] = np.full_like(
-                self.params[param_name], self.initial_accumulator_value)
+                self.params[param_name], self.initial_accumulator_value
+            )
 
     def _update_param(self, grad_name: str, grad: np.ndarray) -> None:
-        """Update parameters by given gradients.
+        """
+        Update papams by given gradients.
 
         Args:
             grad_name (str): The name of the gradient.

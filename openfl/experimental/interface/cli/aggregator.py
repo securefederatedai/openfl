@@ -1,14 +1,24 @@
-# Copyright (C) 2020-2023 Intel Corporation
+# Copyright 2020-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-"""Aggregator module."""
 
+
+"""Aggregator module."""
+import os
 import sys
 import threading
 from logging import getLogger
+from pathlib import Path
 
+import yaml
 from click import Path as ClickPath
-from click import echo, group, option, pass_context, style
+from click import confirm, echo, group, option, pass_context, style
+from yaml.loader import SafeLoader
 
+from openfl.cryptography.ca import sign_certificate
+from openfl.cryptography.io import get_csr_hash, read_crt, read_csr, read_key, write_crt, write_key
+from openfl.cryptography.participant import generate_csr
+from openfl.experimental.federated.plan import Plan
+from openfl.experimental.interface.cli.cli_helper import CERT_DIR
 from openfl.utilities import click_types
 from openfl.utilities.path_check import is_directory_traversal
 from openfl.utilities.utils import getfqdn_env
@@ -50,20 +60,12 @@ def aggregator(context):
 )
 def start_(plan, authorized_cols, secure):
     """Start the aggregator service."""
-    import os
-    from pathlib import Path
-
-    from openfl.experimental.federated.plan import Plan
 
     if is_directory_traversal(plan):
-        echo(
-            "Federated learning plan path is out of the openfl workspace scope."
-        )
+        echo("Federated learning plan path is out of the openfl workspace scope.")
         sys.exit(1)
     if is_directory_traversal(authorized_cols):
-        echo(
-            "Authorized collaborator list file path is out of the openfl workspace scope."
-        )
+        echo("Authorized collaborator list file path is out of the openfl workspace scope.")
         sys.exit(1)
 
     plan = Plan.parse(
@@ -77,8 +79,6 @@ def start_(plan, authorized_cols, secure):
             + " in workspace."
         )
     else:
-        import yaml
-        from yaml.loader import SafeLoader
 
         with open("plan/data.yaml", "r") as f:
             data = yaml.load(f, Loader=SafeLoader)
@@ -106,8 +106,7 @@ def start_(plan, authorized_cols, secure):
     "--fqdn",
     required=False,
     type=click_types.FQDN,
-    help=f"The fully qualified domain name of"
-    f" aggregator node [{getfqdn_env()}]",
+    help=f"The fully qualified domain name of" f" aggregator node [{getfqdn_env()}]",
     default=getfqdn_env(),
 )
 def _generate_cert_request(fqdn):
@@ -116,9 +115,6 @@ def _generate_cert_request(fqdn):
 
 def generate_cert_request(fqdn):
     """Create aggregator certificate key pair."""
-    from openfl.cryptography.io import get_csr_hash, write_crt, write_key
-    from openfl.cryptography.participant import generate_csr
-    from openfl.experimental.interface.cli.cli_helper import CERT_DIR
 
     if fqdn is None:
         fqdn = getfqdn_env()
@@ -137,8 +133,7 @@ def generate_cert_request(fqdn):
 
     (CERT_DIR / "server").mkdir(parents=True, exist_ok=True)
 
-    echo("  Writing AGGREGATOR certificate key pair to: "
-         + style(f"{CERT_DIR}/server", fg="green"))
+    echo("  Writing AGGREGATOR certificate key pair to: " + style(f"{CERT_DIR}/server", fg="green"))
 
     # Print csr hash before writing csr to disk
     csr_hash = get_csr_hash(server_csr)
@@ -164,13 +159,6 @@ def _certify(fqdn, silent):
 
 def certify(fqdn, silent):
     """Sign/certify the aggregator certificate key pair."""
-    from pathlib import Path
-
-    from click import confirm
-
-    from openfl.cryptography.ca import sign_certificate
-    from openfl.cryptography.io import read_crt, read_csr, read_key, write_crt
-    from openfl.experimental.interface.cli.cli_helper import CERT_DIR
 
     if fqdn is None:
         fqdn = getfqdn_env()
@@ -193,13 +181,12 @@ def certify(fqdn, silent):
     csr, csr_hash = read_csr(csr_path_absolute_path)
 
     # Load private signing key
-    private_sign_key_absolute_path = Path(CERT_DIR
-                                          / signing_key_path).absolute()
+    private_sign_key_absolute_path = Path(CERT_DIR / signing_key_path).absolute()
     if not private_sign_key_absolute_path.exists():
         echo(
-            style("Signing key not found.", fg="red")
-            + " Please run `fx workspace certify`"
-            " to initialize the local certificate authority.")
+            style("Signing key not found.", fg="red") + " Please run `fx workspace certify`"
+            " to initialize the local certificate authority."
+        )
 
     signing_key = read_key(private_sign_key_absolute_path)
 
@@ -207,9 +194,9 @@ def certify(fqdn, silent):
     signing_crt_absolute_path = Path(CERT_DIR / signing_crt_path).absolute()
     if not signing_crt_absolute_path.exists():
         echo(
-            style("Signing certificate not found.", fg="red")
-            + " Please run `fx workspace certify`"
-            " to initialize the local certificate authority.")
+            style("Signing certificate not found.", fg="red") + " Please run `fx workspace certify`"
+            " to initialize the local certificate authority."
+        )
 
     signing_crt = read_crt(signing_crt_absolute_path)
 
@@ -223,12 +210,9 @@ def certify(fqdn, silent):
     crt_path_absolute_path = Path(CERT_DIR / f"{cert_name}.crt").absolute()
 
     if silent:
-        echo(
-            " Warning: manual check of certificate hashes is bypassed in silent mode."
-        )
+        echo(" Warning: manual check of certificate hashes is bypassed in silent mode.")
         echo(" Signing AGGREGATOR certificate")
-        signed_agg_cert = sign_certificate(csr, signing_key,
-                                           signing_crt.subject)
+        signed_agg_cert = sign_certificate(csr, signing_key, signing_crt.subject)
         write_crt(signed_agg_cert, crt_path_absolute_path)
 
     else:
@@ -236,8 +220,7 @@ def certify(fqdn, silent):
         if confirm("Do you want to sign this certificate?"):
 
             echo(" Signing AGGREGATOR certificate")
-            signed_agg_cert = sign_certificate(csr, signing_key,
-                                               signing_crt.subject)
+            signed_agg_cert = sign_certificate(csr, signing_key, signing_crt.subject)
             write_crt(signed_agg_cert, crt_path_absolute_path)
 
         else:

@@ -1,31 +1,29 @@
-# Copyright (C) 2020-2023 Intel Corporation
+# Copyright 2020-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+
 """Director clients module."""
 
 import logging
 from datetime import datetime
-from typing import List
-from typing import Type
+from typing import List, Type
 
 import grpc
 
 from openfl.interface.interactive_api.shard_descriptor import ShardDescriptor
 from openfl.pipelines import NoCompressionPipeline
-from openfl.protocols import director_pb2
-from openfl.protocols import director_pb2_grpc
-from openfl.protocols import interceptors
-from openfl.protocols.utils import construct_model_proto
-from openfl.protocols.utils import deconstruct_model_proto
-from openfl.transport.grpc.exceptions import ShardNotFoundError
+from openfl.protocols import director_pb2, director_pb2_grpc, interceptors
+from openfl.protocols.utils import construct_model_proto, deconstruct_model_proto
 from openfl.transport.grpc.director_server import CLIENT_ID_DEFAULT
-
-from .grpc_channel_options import channel_options
+from openfl.transport.grpc.exceptions import ShardNotFoundError
+from openfl.transport.grpc.grpc_channel_options import channel_options
 
 logger = logging.getLogger(__name__)
 
 
 class ShardDirectorClient:
-    """The internal director client class.
+    """
+    The internal director client class.
 
     This class communicates with the director to manage the shard's
     participation in the federation.
@@ -36,16 +34,19 @@ class ShardDirectorClient:
             with the director.
     """
 
-    def __init__(self,
-                 *,
-                 director_host,
-                 director_port,
-                 shard_name,
-                 tls=True,
-                 root_certificate=None,
-                 private_key=None,
-                 certificate=None) -> None:
-        """Initialize a shard director client object.
+    def __init__(
+        self,
+        *,
+        director_host,
+        director_port,
+        shard_name,
+        tls=True,
+        root_certificate=None,
+        private_key=None,
+        certificate=None,
+    ) -> None:
+        """
+        Initialize a shard director client object.
 
         Args:
             director_host (str): The host of the director.
@@ -60,36 +61,36 @@ class ShardDirectorClient:
                 connection.
         """
         self.shard_name = shard_name
-        director_addr = f'{director_host}:{director_port}'
-        logger.info(f'Director address: {director_addr}')
+        director_addr = f"{director_host}:{director_port}"
+        logger.info("Director address: %s", director_addr)
         if not tls:
             channel = grpc.insecure_channel(director_addr, options=channel_options)
         else:
             if not (root_certificate and private_key and certificate):
-                raise Exception('No certificates provided')
+                raise Exception("No certificates provided")
             try:
-                with open(root_certificate, 'rb') as f:
+                with open(root_certificate, "rb") as f:
                     root_certificate_b = f.read()
-                with open(private_key, 'rb') as f:
+                with open(private_key, "rb") as f:
                     private_key_b = f.read()
-                with open(certificate, 'rb') as f:
+                with open(certificate, "rb") as f:
                     certificate_b = f.read()
             except FileNotFoundError as exc:
-                raise Exception(
-                    f'Provided certificate file is not exist: {exc.filename}')
+                raise Exception(f"Provided certificate file is not exist: {exc.filename}")
 
             credentials = grpc.ssl_channel_credentials(
                 root_certificates=root_certificate_b,
                 private_key=private_key_b,
-                certificate_chain=certificate_b)
-            channel = grpc.secure_channel(director_addr,
-                                          credentials,
-                                          options=channel_options)
+                certificate_chain=certificate_b,
+            )
+            channel = grpc.secure_channel(director_addr, credentials, options=channel_options)
         self.stub = director_pb2_grpc.DirectorStub(channel)
 
-    def report_shard_info(self, shard_descriptor: Type[ShardDescriptor],
-                          cuda_devices: tuple) -> bool:
-        """Report shard info to the director.
+    def report_shard_info(
+        self, shard_descriptor: Type[ShardDescriptor], cuda_devices: tuple
+    ) -> bool:
+        """
+        Report shard info to the director.
 
         Args:
             shard_descriptor (Type[ShardDescriptor]): The descriptor of the
@@ -100,39 +101,42 @@ class ShardDirectorClient:
             acknowledgement (bool): Whether the report was accepted by the
                 director.
         """
-        logger.info(f'Sending {self.shard_name} shard info to director')
+        logger.info("Sending %s shard info to director", self.shard_name)
         # True considered as successful registration
         shard_info = director_pb2.ShardInfo(
             shard_description=shard_descriptor.dataset_description,
             sample_shape=shard_descriptor.sample_shape,
-            target_shape=shard_descriptor.target_shape)
+            target_shape=shard_descriptor.target_shape,
+        )
 
         shard_info.node_info.name = self.shard_name
         shard_info.node_info.cuda_devices.extend(
-            director_pb2.CudaDeviceInfo(index=cuda_device)
-            for cuda_device in cuda_devices)
+            director_pb2.CudaDeviceInfo(index=cuda_device) for cuda_device in cuda_devices
+        )
 
         request = director_pb2.UpdateShardInfoRequest(shard_info=shard_info)
         acknowledgement = self.stub.UpdateShardInfo(request)
         return acknowledgement.accepted
 
     def wait_experiment(self):
-        """Wait an experiment data from the director.
+        """
+        Wait an experiment data from the director.
 
         Returns:
             experiment_name (str): The name of the experiment.
         """
-        logger.info('Waiting for an experiment to run...')
+        logger.info("Waiting for an experiment to run...")
         response = self.stub.WaitExperiment(self._get_experiment_data())
-        logger.info(f'New experiment received: {response}')
+        logger.info("New experiment received: %s", response)
         experiment_name = response.experiment_name
         if not experiment_name:
-            raise Exception('No experiment')
+            raise Exception("No experiment")
 
         return experiment_name
 
     def get_experiment_data(self, experiment_name):
-        """Get an experiment data from the director.
+        """
+        Get an experiment data from the director.
 
         Args:
             experiment_name (str): The name of the experiment.
@@ -141,18 +145,22 @@ class ShardDirectorClient:
             data_stream (grpc._channel._MultiThreadedRendezvous): The data
                 stream of the experiment data.
         """
-        logger.info(f'Getting experiment data for {experiment_name}...')
+        logger.info("Getting experiment data for %s...", experiment_name)
         request = director_pb2.GetExperimentDataRequest(
-            experiment_name=experiment_name, collaborator_name=self.shard_name)
+            experiment_name=experiment_name, collaborator_name=self.shard_name
+        )
         data_stream = self.stub.GetExperimentData(request)
 
         return data_stream
 
-    def set_experiment_failed(self,
-                              experiment_name: str,
-                              error_code: int = 1,
-                              error_description: str = ''):
-        """Set the experiment failed.
+    def set_experiment_failed(
+        self,
+        experiment_name: str,
+        error_code: int = 1,
+        error_description: str = "",
+    ):
+        """
+        Set the experiment failed.
 
         Args:
             experiment_name (str): The name of the experiment.
@@ -160,12 +168,13 @@ class ShardDirectorClient:
             error_description (str, optional): The description of the error.
                 Defaults to ''.
         """
-        logger.info(f'Experiment {experiment_name} failed')
+        logger.info("Experiment %s failed", experiment_name)
         request = director_pb2.SetExperimentFailedRequest(
             experiment_name=experiment_name,
             collaborator_name=self.shard_name,
             error_code=error_code,
-            error_description=error_description)
+            error_description=error_description,
+        )
         self.stub.SetExperimentFailed(request)
 
     def _get_experiment_data(self):
@@ -204,16 +213,13 @@ class ShardDirectorClient:
         cuda_messages = []
         if cuda_devices_info is not None:
             try:
-                cuda_messages = [
-                    director_pb2.CudaDeviceInfo(**item)
-                    for item in cuda_devices_info
-                ]
+                cuda_messages = [director_pb2.CudaDeviceInfo(**item) for item in cuda_devices_info]
             except Exception as e:
-                logger.info(f'{e}')
+                logger.info("%s", e)
 
         status.cuda_devices.extend(cuda_messages)
 
-        logger.debug(f'Sending health check status: {status}')
+        logger.debug("Sending health check status: %s", status)
 
         try:
             response = self.stub.UpdateEnvoyStatus(status)
@@ -249,7 +255,8 @@ class DirectorClient:
         private_key: str,
         certificate: str,
     ) -> None:
-        """Initialize director client object.
+        """
+        Initialize director client object.
 
         Args:
             client_id (str): The ID of the client.
@@ -263,44 +270,41 @@ class DirectorClient:
             certificate (str): The path to the certificate for the TLS
                 connection.
         """
-        director_addr = f'{director_host}:{director_port}'
+        director_addr = f"{director_host}:{director_port}"
         if not tls:
             if not client_id:
                 client_id = CLIENT_ID_DEFAULT
             channel = grpc.insecure_channel(director_addr, options=channel_options)
             headers = {
-                'client_id': client_id,
+                "client_id": client_id,
             }
             header_interceptor = interceptors.headers_adder(headers)
             channel = grpc.intercept_channel(channel, header_interceptor)
         else:
             if not (root_certificate and private_key and certificate):
-                raise Exception('No certificates provided')
+                raise Exception("No certificates provided")
             try:
-                with open(root_certificate, 'rb') as f:
+                with open(root_certificate, "rb") as f:
                     root_certificate_b = f.read()
-                with open(private_key, 'rb') as f:
+                with open(private_key, "rb") as f:
                     private_key_b = f.read()
-                with open(certificate, 'rb') as f:
+                with open(certificate, "rb") as f:
                     certificate_b = f.read()
             except FileNotFoundError as exc:
-                raise Exception(
-                    f'Provided certificate file is not exist: {exc.filename}')
+                raise Exception(f"Provided certificate file is not exist: {exc.filename}")
 
             credentials = grpc.ssl_channel_credentials(
                 root_certificates=root_certificate_b,
                 private_key=private_key_b,
-                certificate_chain=certificate_b)
+                certificate_chain=certificate_b,
+            )
 
             channel = grpc.secure_channel(director_addr, credentials, options=channel_options)
         self.stub = director_pb2_grpc.DirectorStub(channel)
 
-    def set_new_experiment(self,
-                           name,
-                           col_names,
-                           arch_path,
-                           initial_tensor_dict=None):
-        """Send the new experiment to director to launch.
+    def set_new_experiment(self, name, col_names, arch_path, initial_tensor_dict=None):
+        """
+        Send the new experiment to director to launch.
 
         Args:
             name (str): The name of the experiment.
@@ -313,7 +317,7 @@ class DirectorClient:
             resp (director_pb2.SetNewExperimentResponse): The response from
                 the director.
         """
-        logger.info(f'Submitting new experiment {name} to director')
+        logger.info("Submitting new experiment %s to director", name)
         if initial_tensor_dict:
             model_proto = construct_model_proto(initial_tensor_dict, 0, NoCompressionPipeline())
             experiment_info_gen = self._get_experiment_info(
@@ -326,7 +330,8 @@ class DirectorClient:
             return resp
 
     def _get_experiment_info(self, arch_path, name, col_names, model_proto):
-        """Generate the experiment data request.
+        """
+        Generate the experiment data request.
 
         This method generates a stream of experiment data to be sent to the
         director.
@@ -340,24 +345,26 @@ class DirectorClient:
         Yields:
             director_pb2.ExperimentInfo: The experiment data.
         """
-        with open(arch_path, 'rb') as arch:
+        with open(arch_path, "rb") as arch:
             max_buffer_size = 2 * 1024 * 1024
             chunk = arch.read(max_buffer_size)
-            while chunk != b'':
+            while chunk != b"":
                 if not chunk:
                     raise StopIteration
                 # TODO: add hash or/and size to check
                 experiment_info = director_pb2.ExperimentInfo(
                     name=name,
                     collaborator_names=col_names,
-                    model_proto=model_proto)
+                    model_proto=model_proto,
+                )
                 experiment_info.experiment_data.size = len(chunk)
                 experiment_info.experiment_data.npbytes = chunk
                 yield experiment_info
                 chunk = arch.read(max_buffer_size)
 
     def get_experiment_status(self, experiment_name):
-        """Check if the experiment was accepted by the director.
+        """
+        Check if the experiment was accepted by the director.
 
         Args:
             experiment_name (str): The name of the experiment.
@@ -366,9 +373,8 @@ class DirectorClient:
             resp (director_pb2.GetExperimentStatusResponse): The response from
                 the director.
         """
-        logger.info('Getting experiment Status...')
-        request = director_pb2.GetExperimentStatusRequest(
-            experiment_name=experiment_name)
+        logger.info("Getting experiment Status...")
+        request = director_pb2.GetExperimentStatusRequest(experiment_name=experiment_name)
         resp = self.stub.GetExperimentStatus(request)
         return resp
 
@@ -440,11 +446,11 @@ class DirectorClient:
         request = director_pb2.GetMetricStreamRequest(experiment_name=experiment_name)
         for metric_message in self.stub.GetMetricStream(request):
             yield {
-                'metric_origin': metric_message.metric_origin,
-                'task_name': metric_message.task_name,
-                'metric_name': metric_message.metric_name,
-                'metric_value': metric_message.metric_value,
-                'round': metric_message.round,
+                "metric_origin": metric_message.metric_origin,
+                "task_name": metric_message.task_name,
+                "metric_name": metric_message.metric_name,
+                "metric_value": metric_message.metric_value,
+                "round": metric_message.round,
             }
 
     def remove_experiment_data(self, name):
@@ -474,36 +480,30 @@ class DirectorClient:
         envoys = self.stub.GetEnvoys(director_pb2.GetEnvoysRequest())
         if raw_result:
             return envoys
-        now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         result = {}
         for envoy in envoys.envoy_infos:
             result[envoy.shard_info.node_info.name] = {
-                'shard_info':
-                envoy.shard_info,
-                'is_online':
-                envoy.is_online or False,
-                'is_experiment_running':
-                envoy.is_experiment_running or False,
-                'last_updated':
-                datetime.fromtimestamp(
-                    envoy.last_updated.seconds).strftime('%Y-%m-%d %H:%M:%S'),
-                'current_time':
-                now,
-                'valid_duration':
-                envoy.valid_duration,
-                'experiment_name':
-                'ExperimentName Mock',
+                "shard_info": envoy.shard_info,
+                "is_online": envoy.is_online or False,
+                "is_experiment_running": envoy.is_experiment_running or False,
+                "last_updated": datetime.fromtimestamp(envoy.last_updated.seconds).strftime(
+                    "%Y-%m-%d %H:%M:%S"
+                ),
+                "current_time": now,
+                "valid_duration": envoy.valid_duration,
+                "experiment_name": "ExperimentName Mock",
             }
         return result
 
     def get_experiments_list(self):
-        """Get experiments list.
+        """
+        Get experiments list.
 
         Returns:
             List[str]: The list of experiments.
         """
-        response = self.stub.GetExperimentsList(
-            director_pb2.GetExperimentsListRequest())
+        response = self.stub.GetExperimentsList(director_pb2.GetExperimentsListRequest())
         return response.experiments
 
     def get_experiment_description(self, name):

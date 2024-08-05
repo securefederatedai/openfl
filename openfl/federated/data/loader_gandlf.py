@@ -1,8 +1,9 @@
-# Copyright (C) 2020-2023 Intel Corporation
+# Copyright 2020-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-"""PyTorchDataLoader module."""
 
-from .loader import DataLoader
+
+"""PyTorchDataLoader module."""
+from openfl.federated.data.loader import DataLoader
 
 
 class GaNDLFDataLoaderWrapper(DataLoader):
@@ -24,8 +25,8 @@ class GaNDLFDataLoaderWrapper(DataLoader):
             data_path (str): The path to the directory containing the data.
             feature_shape (tuple): The shape of an example feature array.
         """
-        self.train_csv = data_path + '/train.csv'
-        self.val_csv = data_path + '/valid.csv'
+        self.train_csv = data_path + "/train.csv"
+        self.val_csv = data_path + "/valid.csv"
         self.train_dataloader = None
         self.val_dataloader = None
         self.feature_shape = feature_shape
