@@ -14,7 +14,7 @@ from concurrent.futures import ProcessPoolExecutor
 from tests.github.utils import start_aggregator_container
 from tests.github.utils import start_collaborator_container
 from tests.github.utils import create_signed_cert_for_collaborator
-
+from openfl.utilities.utils import getfqdn_env
 
 if __name__ == '__main__':
     # 1. Create the workspace
@@ -36,7 +36,7 @@ if __name__ == '__main__':
 
     # If an aggregator container will run on another machine
     # a relevant FQDN should be provided
-    fqdn = socket.getfqdn()
+    fqdn = getfqdn_env()
     # Build base image
     check_call([
         'docker', 'build', '-t', base_image_tag, '-f', 'openfl-docker/Dockerfile.base', '.'
