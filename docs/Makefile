@@ -5,8 +5,8 @@
 # Minimal makefile for Sphinx documentation
 #
 
-# You can set these variables from the command line, and also
-# from the environment for the first two.
+# You can set these variables from the command line, and
+# also from the environment for the first two.
 SPHINXOPTS    ?= -D autodoc_default_options.imported-members=True
 SPHINXBUILD   ?= sphinx-build
 SOURCEDIR     = .
