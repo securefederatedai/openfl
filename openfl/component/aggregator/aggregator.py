@@ -52,7 +52,7 @@ class Aggregator:
             results.
         collaborator_tasks_results (dict): Dict of collaborator tasks
             results.
-        collaborator_task_weight (dict): Dict of collaborator task weight.
+        collaborator_task_weight (dict): Dict of col task weight.
 
     .. note::
          - plan setting.
