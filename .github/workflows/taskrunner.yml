@@ -10,6 +10,9 @@ on:
 permissions:
   contents: read
 
+env:
+  FQDN: "localhost"
+
 jobs:
   build:
     strategy:
