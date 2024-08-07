@@ -55,7 +55,7 @@ class Aggregator:
         collaborator_task_weight (dict): Dict of col task weight.
 
     .. note::
-         - plan setting.
+         - plan setting
     """
 
     def __init__(
