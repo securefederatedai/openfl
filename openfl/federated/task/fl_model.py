@@ -71,6 +71,7 @@ class FederatedModel(TaskRunner):
 
     def __getattribute__(self, attr):
         """Direct call into self.runner methods if necessary."""
+
         if attr in [
             "reset_opt_vars",
             "initialize_globals",
@@ -85,6 +86,8 @@ class FederatedModel(TaskRunner):
             "train",
             "train_batches",
             "validate",
+            "validate_task",
+            "train_task",
         ]:
             return self.runner.__getattribute__(attr)
         return super().__getattribute__(attr)

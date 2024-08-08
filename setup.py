@@ -159,7 +159,7 @@ setup(
         'numpy',
         'pandas',
         'protobuf>=3.20.3',
-        'pyzmq<=26.0.3',
+        'pyzmq<=26.1.0',
         'requests',
         'rich',
         'scikit-learn',

@@ -11,7 +11,7 @@ from concurrent.futures import ProcessPoolExecutor
 
 from openfl.utilities.utils import rmtree
 from tests.github.utils import create_collaborator, create_certified_workspace, certify_aggregator
-
+from openfl.utilities.utils import getfqdn_env
 
 if __name__ == '__main__':
     # Test the pipeline
@@ -34,7 +34,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
     fed_workspace = args.fed_workspace
     archive_name = f'{fed_workspace}.zip'
-    fqdn = socket.getfqdn()
+    fqdn = getfqdn_env()
     template = args.template
     rounds_to_train = args.rounds_to_train
     col1, col2 = args.col1, args.col2

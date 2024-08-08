@@ -1,7 +1,8 @@
 numpy==1.23.3
-torch==1.13.1
-torchvision==0.14.1
-opacus==1.2.0
+torch==2.2.0
+torchvision==0.17.0
+torchaudio==2.2.0
+opacus==1.5.1
 matplotlib==3.6.0
 pillow==10.3.0
 pyyaml==6.0
