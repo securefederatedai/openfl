@@ -164,6 +164,7 @@ def ray_group_assign(collaborators, num_actors=1):
         key=lambda x: x.num_gpus / min_gpu * 10**cpu_magnitude + x.num_cpus,
     )
     initializations = []
+    collaborator_actor = None 
 
     for collaborator in collaborators_sorted_by_gpucpu:
         # initialize actor group
@@ -192,6 +193,10 @@ def ray_group_assign(collaborators, num_actors=1):
                 )  # max_concurrency=max_concurrency)
                 .remote()
             )
+        
+        if collaborator_actor is None:
+            raise ValueError("collaborator_actor has not been initialized.")
+        
         # add collaborator to actor group
         initializations.append(collaborator_actor.append.remote(collaborator))
 
