@@ -10,6 +10,10 @@ on:
 permissions:
   contents: read
 
+env:
+  # A workaround for long FQDN names provided by GitHub actions.
+  FQDN: "localhost"
+
 jobs:
   build:
     strategy:
