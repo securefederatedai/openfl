@@ -1,9 +1,10 @@
 # Copyright 2022 VMware, Inc.
 # SPDX-License-Identifier: Apache-2.0
-
 """
-@author: Shay Vargaftik (VMware Research), shayv@vmware.com; vargaftik@gmail.com
-@author: Yaniv Ben-Itzhak (VMware Research), ybenitzhak@vmware.com; yaniv.benizhak@gmail.com
+@author: Shay Vargaftik (VMware Research),
+shayv@vmware.com; vargaftik@gmail.com
+@author: Yaniv Ben-Itzhak (VMware Research),
+ybenitzhak@vmware.com; yaniv.benizhak@gmail.com
 
 
 EdenPipeline module.
@@ -11,11 +12,15 @@ EdenPipeline module.
 
 EDEN is an unbiased lossy compression method that uses a random rotation
     followed by deterministic quantization and scaling.
-EDEN provides strong theoretical guarantees, as described in the following ICML 2022 paper:
+EDEN provides strong theoretical guarantees, as described in the following
+    ICML 2022 paper:
 
-"EDEN: Communication-Efficient and Robust Distributed Mean Estimation for Federated Learning"
-Shay Vargaftik, Ran Ben Basat, Amit Portnoy, Gal Mendelson, Yaniv Ben Itzhak, Michael Mitzenmacher,
-Proceedings of the 39th International Conference on Machine Learning, PMLR 162:21984-22014, 2022.
+"EDEN: Communication-Efficient and Robust Distributed Mean Estimation for
+    Federated Learning"
+Shay Vargaftik, Ran Ben Basat, Amit Portnoy, Gal Mendelson, Yaniv Ben Itzhak,
+Michael Mitzenmacher,
+Proceedings of the 39th International Conference on Machine Learning,
+PMLR 162:21984-22014, 2022.
 
 https://proceedings.mlr.press/v162/vargaftik22a.html
 
@@ -29,8 +34,8 @@ compression_pipeline :
   settings :
     n_bits : <number of bits per coordinate>
     device: <cpu|cuda:0|cuda:1|...>
-    dim_threshold: 1000 #EDEN compresses layers that their dimension is above the dim_threshold,
-                   use 1000 as default
+    dim_threshold: 1000 #EDEN compresses layers that their dimension is above
+        the dim_threshold, use 1000 as default
 """
 
 import copy as co
@@ -42,10 +47,51 @@ from openfl.pipelines.pipeline import Float32NumpyArrayToBytes, TransformationPi
 
 
 class Eden:
+    """Eden class for quantization.
+
+    This class is responsible for quantizing tensors using the Eden method.
+
+    Attributes:
+        device (str): The device to be used for quantization ('cpu' or 'cuda').
+        centroids (dict): A dictionary mapping the number of bits to the
+            corresponding centroids.
+        boundaries (dict): A dictionary mapping the number of bits to the
+            corresponding boundaries.
+        nbits (int): The number of bits per coordinate for quantization.
+        num_hadamard (int): The number of Hadamard transforms to employ.
+        max_padding_overhead (float): The maximum overhead that is allowed for
+            padding the vector.
+    """
 
     def __init__(self, nbits=8, device="cpu"):
+        """Initialize Eden.
+
+        Args:
+            nbits (int, optional): The number of bits per coordinate for
+                quantization. Defaults to 8.
+            device (str, optional): The device to be used for quantization
+                ('cpu' or 'cuda'). Defaults to 'cpu'.
+        """
 
         def gen_normal_centroids_and_boundaries(device):
+            """Generates the centroids and boundaries for the quantization
+            process.
+
+            This function generates the centroids and boundaries used in the
+            quantization process based on the specified device. The centroids
+            are generated for different numbers of bits, and the boundaries
+            are calculated based on these centroids.
+
+            Args:
+                device (str): The device to be used for quantization
+                    ('cpu' or 'cuda').
+
+            Returns:
+                tuple: A tuple containing two dictionaries. The first
+                    dictionary maps the number of bits to the corresponding
+                    centroids, and the second dictionary maps the number of
+                    bits to the corresponding boundaries.
+            """
 
             # half-normal lloyd-max centroids
             centroids = {}
@@ -355,7 +401,15 @@ class Eden:
         # but 1 can be used for non-adversarial inputs and thus run faster
 
     def rand_diag(self, size, seed):
+        """Generate a random diagonal matrix.
 
+        Args:
+            size (int): The size of the matrix.
+            seed (int): The seed for the random number generator.
+
+        Returns:
+            A random diagonal matrix.
+        """
         bools_in_float32 = 8
 
         shift = 32 // bools_in_float32
@@ -395,7 +449,14 @@ class Eden:
         return res[:size]
 
     def hadamard(self, vec):
+        """Apply the Hadamard transform to a vector.
 
+        Args:
+            vec: The vector to be transformed.
+
+        Returns:
+            The transformed vector.
+        """
         d = vec.numel()
         if d & (d - 1) != 0:
             raise Exception("input numel must be a power of 2")
@@ -411,24 +472,46 @@ class Eden:
 
         return vec.view(-1)
 
-    # randomized Hadamard transform
     def rht(self, vec, seed):
+        """Apply the randomized Hadamard transform to a vector.
 
+        Args:
+            vec: The vector to be transformed.
+            seed (int): The seed for the random number generator.
+
+        Returns:
+            The transformed vector.
+        """
         vec = vec * self.rand_diag(size=vec.numel(), seed=seed)
         vec = self.hadamard(vec)
 
         return vec
 
-    # inverse randomized Hadamard transform
     def irht(self, vec, seed):
+        """Apply the inverse randomized Hadamard transform to a vector.
 
+        Args:
+            vec: The vector to be transformed.
+            seed (int): The seed for the random number generator.
+
+        Returns:
+            The transformed vector.
+        """
         vec = self.hadamard(vec)
         vec = vec * self.rand_diag(size=vec.numel(), seed=seed)
 
         return vec
 
     def quantize(self, vec):
+        """Quantize a vector.
 
+        Args:
+            vec: The vector to be quantized.
+
+        Returns:
+            bins: The quantized values of the vector.
+            scale: The scale factor for the quantization.
+        """
         vec_norm = torch.norm(vec, 2)
 
         if vec_norm > 0:
@@ -443,7 +526,17 @@ class Eden:
         return torch.zeros(vec.numel(), device=self.device), torch.tensor([0])
 
     def compress_slice(self, vec, seed):
+        """Compress a slice of a vector.
 
+        Args:
+            vec: The slice of the vector to be compressed.
+            seed (int): The seed for the random number generator.
+
+        Returns:
+            bins: The compressed values of the slice.
+            scale: The scale factor for the compression.
+            dim: The dimension of the slice.
+        """
         dim = vec.numel()
 
         if not dim & (dim - 1) == 0 or dim < 8:
@@ -462,6 +555,18 @@ class Eden:
         return bins, float(scale.cpu().numpy()), vec.numel()
 
     def compress(self, vec, seed):
+        """Compress a vector.
+
+        Args:
+            vec: The vector to be compressed.
+            seed (int): The seed for the random number generator.
+
+        Returns:
+            int_array: The compressed values of the vector.
+            scale_list: The list of scale factors for the compression.
+            dim_list: The list of dimensions for the compression.
+            total_dim: The total dimension of the vector.
+        """
 
         def low_po2(n):
             if not n:
@@ -508,7 +613,17 @@ class Eden:
         return all_bins.cpu().numpy(), res_scale, res_dim, vec.numel()
 
     def decompress_slice(self, bins, scale, dim, seed):
+        """Decompress a slice of a vector.
 
+        Args:
+            bins: The compressed values of the slice.
+            scale: The scale factor for the decompression.
+            dim: The dimension of the slice.
+            seed (int): The seed for the random number generator.
+
+        Returns:
+            The decompressed slice of the vector.
+        """
         vec = torch.take(self.centroids[self.nbits], bins)
 
         for i in range(self.num_hadamard):
@@ -517,7 +632,15 @@ class Eden:
         return (scale * vec)[:dim]
 
     def decompress(self, bins, metadata):
+        """Decompress a vector.
 
+        Args:
+            bins: The compressed values of the vector.
+            metadata: The metadata for the decompression.
+
+        Returns:
+            The decompressed vector.
+        """
         bins = self.from_bits(torch.Tensor(bins).to(self.device)).long().flatten()
 
         seed = int(metadata[0])
@@ -537,8 +660,17 @@ class Eden:
 
         return vec.cpu().numpy()
 
-    # packing the quantization values to bytes
     def to_bits(self, int_bool_vec):
+        """Convert a vector of integers to bits.
+
+        Packing the quantization values to bytes.
+
+        Args:
+            int_bool_vec: The vector of integers to be converted.
+
+        Returns:
+            The bit vector.
+        """
 
         def to_bits_h(ibv):
 
@@ -560,8 +692,17 @@ class Eden:
 
         return bit_vec
 
-    # unpacking bytes to quantization values
     def from_bits(self, bit_vec):
+        """Convert a bit vector to integers.
+
+        Unpacking bytes to quantization values.
+
+        Args:
+            bit_vec: The bit vector to be converted.
+
+        Returns:
+            The vector of integers.
+        """
 
         def from_bits_h(bv):
 
@@ -584,10 +725,32 @@ class Eden:
 
 
 class EdenTransformer(Transformer):
-    """Eden transformer class to quantize input data."""
+    """Eden transformer class for quantizing input data.
+
+    This class is a transformer that uses the Eden method for quantization.
+
+    Attributes:
+        n_bits (int): The number of bits per coordinate for quantization.
+        dim_threshold (int): The threshold for the dimension of the data. Data
+            with dimensions less than this threshold are not compressed.
+        device (str): The device to be used for quantization ('cpu' or 'cuda').
+        eden (Eden): The Eden object for quantization.
+        no_comp (Float32NumpyArrayToBytes): The transformer for data that are
+            not compressed.
+    """
 
     def __init__(self, n_bits=8, dim_threshold=100, device="cpu"):
-        """Class initializer."""
+        """Initialize EdenTransformer.
+
+        Args:
+            n_bits (int, optional): The number of bits per coordinate for
+                quantization. Defaults to 8.
+            dim_threshold (int, optional): The threshold for the dimension of
+                the data. Data with dimensions less than this threshold are
+                not compressed. Defaults to 100.
+            device (str, optional): The device to be used for quantization
+                ('cpu' or 'cuda'). Defaults to 'cpu'.
+        """
         self.lossy = True
         self.eden = Eden(nbits=n_bits, device=device)
 
@@ -600,8 +763,13 @@ class EdenTransformer(Transformer):
         self.no_comp = Float32NumpyArrayToBytes()
 
     def forward(self, data, **kwargs):
-        """
-        Quantize data.
+        """Quantize data.
+
+        Args:
+            data: The data to be quantized.
+
+        Returns:
+            The quantized data and the metadata for the quantization.
         """
         # TODO: can be simplified if have access to a unique feature of the participant (e.g., ID)
         seed = (hash(sum(data.flatten()) * 13 + 7) + np.random.randint(1, 2**16)) % (2**16)
@@ -630,14 +798,16 @@ class EdenTransformer(Transformer):
         return return_values
 
     def backward(self, data, metadata, **kwargs):
-        """Recover data array back to the original numerical type and the shape.
+        """Recover data array back to the original numerical type and the
+        shape.
 
         Args:
-            data: an flattened numpy array
-            metadata: dictionary to contain information for recovering to original data array
+            data: an flattened numpy array.
+            metadata: dictionary to contain information for recovering to
+                original data array.
 
         Returns:
-            data: Numpy array with original numerical type and shape
+            data: Numpy array with original numerical type and shape.
         """
 
         if np.prod(metadata["int_list"]) >= self.dim_threshold:  # compressed data
@@ -654,19 +824,31 @@ class EdenTransformer(Transformer):
 
 
 class EdenPipeline(TransformationPipeline):
-    """A pipeline class to compress data lossy using EDEN."""
+    """A pipeline class for compressing data using the Eden method.
+
+    This class is a pipeline of transformers that use the Eden method for
+    quantization.
+
+    Attributes:
+        n_bits (int): The number of bits per coordinate for quantization.
+        dim_threshold (int): The threshold for the dimension of the data. Data
+            with dimensions less than this threshold are not compressed.
+        device (str): The device to be used for quantization ('cpu' or 'cuda').
+    """
 
     def __init__(self, n_bits=8, dim_threshold=100, device="cpu", **kwargs):
         """Initialize a pipeline of transformers.
 
         Args:
-            n_bits (int): Number of bits per coordinate (1-8 bits are supported)
-            dim_threshold (int): Layers with less than dim_threshold params are not compressed
-            device: Device for executing the compression and decompression
-                    (e.g., 'cpu', 'cuda:0', 'cuda:1')
+            n_bits (int): Number of bits per coordinate (1-8 bits are
+                supported).
+            dim_threshold (int): Layers with less than dim_threshold params
+                are not compressed.
+            device: Device for executing the compression and decompressionc
+                (e.g., 'cpu', 'cuda:0', 'cuda:1').
 
         Return:
-            Transformer class object
+            Transformer class object.
         """
 
         # instantiate each transformer

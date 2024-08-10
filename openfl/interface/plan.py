@@ -29,7 +29,11 @@ logger = getLogger(__name__)
 @group()
 @pass_context
 def plan(context):
-    """Manage Federated Learning Plans."""
+    """Manage Federated Learning Plans.
+
+    Args:
+        context (click.core.Context): Click context.
+    """
     context.obj["group"] = "plan"
 
 
@@ -90,11 +94,19 @@ def initialize(
     input_shape,
     gandlf_config,
 ):
-    """
-    Initialize Data Science plan.
+    """Initialize Data Science plan.
 
-    Create a protocol buffer file of the initial model weights for
-     the federation.
+    Create a protocol buffer file of the initial model weights for the
+    federation.
+
+    Args:
+        context (click.core.Context): Click context.
+        plan_config (str): Federated learning plan.
+        cols_config (str): Authorized collaborator list.
+        data_config (str): The data set/shard configuration file.
+        aggregator_address (str): The FQDN of the federation aggregator.
+        feature_shape (str): The input shape to the model.
+        gandlf_config (str): GaNDLF Configuration File Path.
     """
 
     for p in [plan_config, cols_config, data_config]:
@@ -178,7 +190,11 @@ def initialize(
 
 # TODO: looks like Plan.method
 def freeze_plan(plan_config):
-    """Dump the plan to YAML file."""
+    """Dump the plan to YAML file.
+
+    Args:
+        plan_config (str): Federated learning plan.
+    """
 
     plan = Plan()
     plan.config = Plan.parse(Path(plan_config), resolve=False).config
@@ -202,11 +218,13 @@ def freeze_plan(plan_config):
     type=ClickPath(exists=True),
 )
 def freeze(plan_config):
-    """
-    Finalize the Data Science plan.
+    """Finalize the Data Science plan.
 
     Create a new plan file that embeds its hash in the file name
-    (plan.yaml -> plan_{hash}.yaml) and changes the permissions to read only
+    (plan.yaml -> plan_{hash}.yaml) and changes the permissions to read only.
+
+    Args:
+        plan_config (str): Federated learning plan.
     """
     if is_directory_traversal(plan_config):
         echo("Plan config path is out of the openfl workspace scope.")
@@ -215,7 +233,11 @@ def freeze(plan_config):
 
 
 def switch_plan(name):
-    """Switch the FL plan to this one."""
+    """Switch the FL plan to this one.
+
+    Args:
+        name (str): Name of the Federated learning plan.
+    """
 
     plan_file = f"plan/plans/{name}/plan.yaml"
     if isfile(plan_file):
@@ -254,7 +276,11 @@ def switch_plan(name):
     type=str,
 )
 def switch_(name):
-    """Switch the current plan to this plan."""
+    """Switch the current plan to this plan.
+
+    Args:
+        name (str): Name of the Federated learning plan.
+    """
     switch_plan(name)
 
 
@@ -268,7 +294,11 @@ def switch_(name):
     type=str,
 )
 def save_(name):
-    """Save the current plan to this plan and switch."""
+    """Save the current plan to this plan and switch.
+
+    Args:
+        name (str): Name of the Federated learning plan.
+    """
 
     echo(f"Saving plan to {name}")
     # TODO: How do we get the prefix path? What happens if this gets executed
@@ -290,7 +320,11 @@ def save_(name):
     type=str,
 )
 def remove_(name):
-    """Remove this plan."""
+    """Remove this plan.
+
+    Args:
+        name (str): Name of the Federated learning plan.
+    """
 
     if name != "default":
         echo(f"Removing plan {name}")

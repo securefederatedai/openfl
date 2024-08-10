@@ -11,13 +11,15 @@ logger = getLogger(__name__)
 
 
 def get_number_of_gpus() -> int:
-    """
-    Returns number of NVIDIA GPUs attached to the machine.
+    """Returns number of NVIDIA GPUs attached to the machine.
 
-    Args:
-        None
+    This function executes the `nvidia-smi --list-gpus` command to get the
+    list of GPUs.
+    If the command fails (e.g., NVIDIA drivers are not installed), it logs a
+    warning and returns 0.
+
     Returns:
-        int: Number of NVIDIA GPUs
+        int: The number of NVIDIA GPUs attached to the machine.
     """
     # Execute the nvidia-smi command.
     command = "nvidia-smi --list-gpus"

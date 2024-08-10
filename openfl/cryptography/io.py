@@ -18,14 +18,13 @@ from cryptography.x509.base import Certificate, CertificateSigningRequest
 
 
 def read_key(path: Path) -> RSAPrivateKey:
-    """
-    Read private key.
+    """Reads a private key from a file.
 
     Args:
-        path : Path (pathlib)
+        path (Path): The path to the file containing the private key.
 
     Returns:
-        private_key
+        RSAPrivateKey: The private key.
     """
     with open(path, "rb") as f:
         pem_data = f.read()
@@ -37,13 +36,11 @@ def read_key(path: Path) -> RSAPrivateKey:
 
 
 def write_key(key: RSAPrivateKey, path: Path) -> None:
-    """
-    Write private key.
+    """Writes a private key to a file.
 
     Args:
-        key  : RSA private key object
-        path : Path (pathlib)
-
+        key (RSAPrivateKey): The private key to write.
+        path (Path): The path to the file to write the private key to.
     """
 
     def key_opener(path, flags):
@@ -60,14 +57,13 @@ def write_key(key: RSAPrivateKey, path: Path) -> None:
 
 
 def read_crt(path: Path) -> Certificate:
-    """
-    Read signed TLS certificate.
+    """Reads a signed TLS certificate from a file.
 
     Args:
-        path : Path (pathlib)
+        path (Path): The path to the file containing the certificate.
 
     Returns:
-        Cryptography TLS Certificate object
+        Certificate: The TLS certificate.
     """
     with open(path, "rb") as f:
         pem_data = f.read()
@@ -79,15 +75,12 @@ def read_crt(path: Path) -> Certificate:
 
 
 def write_crt(certificate: Certificate, path: Path) -> None:
-    """
-    Write cryptography certificate / csr.
+    """Writes a cryptography certificate / CSR to a file.
 
     Args:
-        certificate : cryptography csr / certificate object
-        path : Path (pathlib)
-
-    Returns:
-        Cryptography TLS Certificate object
+        certificate (Certificate): cryptography csr / certificate object to
+            write.
+        path (Path): The path to the file to write the certificate to.
     """
     with open(path, "wb") as f:
         f.write(
@@ -98,14 +91,13 @@ def write_crt(certificate: Certificate, path: Path) -> None:
 
 
 def read_csr(path: Path) -> Tuple[CertificateSigningRequest, str]:
-    """
-    Read certificate signing request.
+    """Reads a Certificate Signing Request (CSR) from a file.
 
     Args:
-        path : Path (pathlib)
+        path (Path): The path to the file containing the CSR.
 
     Returns:
-        Cryptography CSR object
+        Tuple[CertificateSigningRequest, str]: The CSR and its hash.
     """
     with open(path, "rb") as f:
         pem_data = f.read()
@@ -117,14 +109,14 @@ def read_csr(path: Path) -> Tuple[CertificateSigningRequest, str]:
 
 
 def get_csr_hash(certificate: CertificateSigningRequest) -> str:
-    """
-    Get hash of cryptography certificate.
+    """Computes the SHA-384 hash of a certificate.
 
     Args:
-        certificate : Cryptography CSR object
+        certificate (CertificateSigningRequest): The certificate to compute
+            the hash of.
 
     Returns:
-        Hash of cryptography certificate / csr
+        str: The SHA-384 hash of the certificate.
     """
     hasher = sha384()
     encoded_bytes = certificate.public_bytes(

@@ -23,14 +23,16 @@ class Aggregator:
     Args:
         aggregator_uuid (str): Aggregation ID.
         federation_uuid (str): Federation ID.
-        authorized_cols (list of str): The list of IDs of enrolled collaborators.
-
+        authorized_cols (list of str): The list of IDs of enrolled
+            collaborators.
         flow (Any): Flow class.
         rounds_to_train (int): External loop rounds.
         checkpoint (bool): Whether to save checkpoint or noe (default=False).
-        private_attrs_callable (Callable): Function for Aggregator private attriubtes
+        private_attrs_callable (Callable): Function for Aggregator private
+            attriubtes
         (default=None).
-        private_attrs_kwargs (Dict): Arguments to call private_attrs_callable (default={}).
+        private_attrs_kwargs (Dict): Arguments to call private_attrs_callable
+            (default={}).
 
     Returns:
         None
@@ -103,16 +105,12 @@ class Aggregator:
             self.__initialize_private_attributes(private_attributes_kwargs)
 
     def __initialize_private_attributes(self, kwargs: Dict) -> None:
-        """
-        Call private_attrs_callable function set
-            attributes to self.__private_attrs.
-        """
+        """Call private_attrs_callable function set attributes to
+        self.__private_attrs."""
         self.__private_attrs = self.__private_attrs_callable(**kwargs)
 
     def __set_attributes_to_clone(self, clone: Any) -> None:
-        """
-        Set private_attrs to clone as attributes.
-        """
+        """Set private_attrs to clone as attributes."""
         if len(self.__private_attrs) > 0:
             for name, attr in self.__private_attrs.items():
                 setattr(clone, name, attr)
@@ -144,8 +142,7 @@ class Aggregator:
 
     @staticmethod
     def _get_sleep_time() -> int:
-        """
-        Sleep 10 seconds.
+        """Sleep 10 seconds.
 
         Returns:
             sleep_time: int
@@ -153,9 +150,7 @@ class Aggregator:
         return 10
 
     def run_flow(self) -> None:
-        """
-        Start the execution and run flow until transition.
-        """
+        """Start the execution and run flow until transition."""
         # Start function will be the first step if any flow
         f_name = "start"
 
@@ -211,12 +206,14 @@ class Aggregator:
         Perform checkpoint task.
 
         Args:
-            ctx (FLSpec / bytes): Collaborator FLSpec object for which checkpoint is to be
-            performed.
-            f (Callable / bytes): Collaborator Step (Function) which is to be checkpointed.
-            stream_buffer (bytes): Captured object for output and error (default=None).
-            reserved_attributes (List[str]): List of attribute names which is to be excluded
-                from checkpoint (default=[]).
+            ctx (FLSpec / bytes): Collaborator FLSpec object for which
+                checkpoint is to be performed.
+            f (Callable / bytes): Collaborator Step (Function) which is to be
+                checkpointed.
+            stream_buffer (bytes): Captured object for output and error
+                (default=None).
+            reserved_attributes (List[str]): List of attribute names which is
+                to be excluded from checkpoint (default=[]).
 
         Returns:
             None
@@ -237,8 +234,7 @@ class Aggregator:
             checkpoint(ctx, f)
 
     def get_tasks(self, collaborator_name: str) -> Tuple:
-        """
-        RPC called by a collaborator to determine which tasks to perform.
+        """RPC called by a collaborator to determine which tasks to perform.
         Tasks will only be sent to selected collaborators.
 
         Args:
@@ -248,8 +244,8 @@ class Aggregator:
             next_step (str): Next function to be executed by collaborator
             clone_bytes (bytes): Function execution context for collaborator
         """
-        # If requesting collaborator is not registered as connected collaborator,
-        # then register it
+        # If requesting collaborator is not registered as connected
+        # collaborator, then register it
         if collaborator_name not in self.connected_collaborators:
             self.logger.info(f"Collaborator {collaborator_name} is connected.")
             self.connected_collaborators.append(collaborator_name)
@@ -295,8 +291,7 @@ class Aggregator:
         )
 
     def do_task(self, f_name: str) -> Any:
-        """
-        Execute aggregator steps until transition.
+        """Execute aggregator steps until transition.
 
         Args:
             f_name (str): Aggregator step
@@ -308,7 +303,8 @@ class Aggregator:
         self.__set_attributes_to_clone(self.flow)
 
         not_at_transition_point = True
-        # Run a loop to execute flow steps until not_at_transition_point is False
+        # Run a loop to execute flow steps until not_at_transition_point
+        # is False
         while not_at_transition_point:
             f = getattr(self.flow, f_name)
             # Get the list of parameters of function f
@@ -336,18 +332,19 @@ class Aggregator:
             selected_clones = ()
             # If function requires arguments then it is join step of the flow
             if len(args) > 0:
-                # Check if total number of collaborators and number of selected collaborators
-                # are the same
+                # Check if total number of collaborators and number of
+                # selected collaborators are the same
                 if len(self.selected_collaborators) != len(self.clones_dict):
                     # Create list of selected collaborator clones
                     selected_clones = ([],)
                     for name, clone in self.clones_dict.items():
-                        # Check if collaboraotr is in the list of selected collaborators
+                        # Check if collaboraotr is in the list of selected
+                        # collaborators
                         if name in self.selected_collaborators:
                             selected_clones[0].append(clone)
                 else:
-                    # Number of selected collaborators, and number of total collaborators
-                    # are same
+                    # Number of selected collaborators, and number of total
+                    # collaborators are same
                     selected_clones = (list(self.clones_dict.values()),)
             # Call the join function with selected collaborators
             # clones are arguments
@@ -391,13 +388,13 @@ class Aggregator:
         next_step: str,
         clone_bytes: bytes,
     ) -> None:
-        """
-        After collaborator execution, collaborator will call this function via gRPc
-            to send next function.
+        """After collaborator execution, collaborator will call this function
+        via gRPc to send next function.
 
         Args:
             collab_name (str): Collaborator name which is sending results
-            round_number (int): Round number for which collaborator is sending results
+            round_number (int): Round number for which collaborator is sending
+                results
             next_step (str): Next aggregator step in the flow
             clone_bytes (bytes): Collaborator FLSpec object
 
@@ -433,8 +430,8 @@ class Aggregator:
     def valid_collaborator_cn_and_id(
         self, cert_common_name: str, collaborator_common_name: str
     ) -> bool:
-        """
-        Determine if the collaborator certificate and ID are valid for this federation.
+        """Determine if the collaborator certificate and ID are valid for this
+        federation.
 
         Args:
             cert_common_name: Common name for security certificate

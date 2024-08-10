@@ -18,7 +18,32 @@ logger = logging.getLogger(__name__)
 
 
 class Director:
-    """Director class."""
+    """Director class. The Director is the central node of the federation
+    (Director-Based Workflow).
+
+    Attributes:
+        tls (bool): A flag indicating if TLS should be used for connections.
+        root_certificate (Union[Path, str]): The path to the root certificate
+            for TLS.
+        private_key (Union[Path, str]): The path to the private key for TLS.
+        certificate (Union[Path, str]): The path to the certificate for TLS.
+        sample_shape (list): The shape of the sample data.
+        target_shape (list): The shape of the target data.
+        review_plan_callback (Union[None, Callable]): A callback function for
+            reviewing the plan.
+        envoy_health_check_period (int): The period for health check of envoys
+            in seconds.
+        install_requirements (bool): A flag indicating if the requirements
+            should be installed.
+        _shard_registry (dict): A dictionary to store the shard registry.
+        experiments_registry (ExperimentsRegistry): An object of
+            ExperimentsRegistry to store the experiments.
+        col_exp_queues (defaultdict): A defaultdict to store the experiment
+            queues for collaborators.
+        col_exp (dict): A dictionary to store the experiments for
+            collaborators.
+        logger (Logger): A logger for logging activities.
+    """
 
     def __init__(
         self,
@@ -33,7 +58,28 @@ class Director:
         envoy_health_check_period: int = 60,
         install_requirements: bool = False,
     ) -> None:
-        """Initialize a director object."""
+        """Initialize the Director object.
+
+        Args:
+            tls (bool, optional): A flag indicating if TLS should be used for
+                connections. Defaults to True.
+            root_certificate (Union[Path, str], optional): The path to the
+                root certificate for TLS. Defaults to None.
+            private_key (Union[Path, str], optional): The path to the private
+                key for TLS. Defaults to None.
+            certificate (Union[Path, str], optional): The path to the
+                certificate for TLS. Defaults to None.
+            sample_shape (list, optional): The shape of the sample data.
+                Defaults to None.
+            target_shape (list, optional): The shape of the target data.
+                Defaults to None.
+            review_plan_callback (Union[None, Callable], optional): A callback
+                function for reviewing the plan. Defaults to None.
+            envoy_health_check_period (int, optional): The period for health
+                check of envoys in seconds. Defaults to 60.
+            install_requirements (bool, optional): A flag indicating if the
+                requirements should be installed. Defaults to False.
+        """
         self.sample_shape, self.target_shape = sample_shape, target_shape
         self._shard_registry = {}
         self.tls = tls
@@ -48,7 +94,16 @@ class Director:
         self.install_requirements = install_requirements
 
     def acknowledge_shard(self, shard_info: dict) -> bool:
-        """Save shard info to shard registry if accepted."""
+        """Save shard info to shard registry if it's acceptable.
+
+        Args:
+            shard_info (dict): The shard info dictionary should be able to
+                store registries.
+
+        Returns:
+            is_accepted (bool): Bool value to accept o deny the addition of
+                the shard info.
+        """
         is_accepted = False
         if (
             self.sample_shape != shard_info["sample_shape"]
@@ -79,7 +134,18 @@ class Director:
         collaborator_names: Iterable[str],
         experiment_archive_path: Path,
     ) -> bool:
-        """Set new experiment."""
+        """Set new experiment.
+
+        Args:
+            experiment_name (str): String id for experiment.
+            sender_name (str): The name of the sender.
+            tensor_dict (dict): Dictionary of tensors.
+            collaborator_names (Iterable[str]): Names of collaborators.
+            experiment_archive_path (Path): Path of the experiment.
+
+        Returns:
+            bool : Boolean returned if the experiment register was successful.
+        """
         experiment = Experiment(
             name=experiment_name,
             archive_path=experiment_archive_path,
@@ -92,7 +158,20 @@ class Director:
         return True
 
     async def get_experiment_status(self, experiment_name: str, caller: str):
-        """Get experiment status."""
+        """Get experiment status.
+
+        Args:
+            experiment_name (str): String id for experiment.
+            caller (str): String id for experiment owner.
+
+        Returns:
+            str: The status of the experiment can be one of the following:
+                - PENDING = 'pending'
+                - FINISHED = 'finished'
+                - IN_PROGRESS = 'in_progress'
+                - FAILED = 'failed'
+                - REJECTED = 'rejected'
+        """
         if (
             experiment_name not in self.experiments_registry
             or caller not in self.experiments_registry[experiment_name].users
@@ -102,7 +181,20 @@ class Director:
         return self.experiments_registry[experiment_name].status
 
     def get_trained_model(self, experiment_name: str, caller: str, model_type: str):
-        """Get trained model."""
+        """Get trained model.
+
+        Args:
+            experiment_name (str): String id for experiment.
+            caller (str): String id for experiment owner.
+            model_type (str): The type of the model.
+
+        Returns:
+            None: One of the following: [No experiment data in the stash] or
+                [Aggregator have no aggregated model to return] or [Unknown
+                model type required].
+            dict: Dictionary of tensors from the aggregator when the model
+                type is 'best' or 'last'.
+        """
         if (
             experiment_name not in self.experiments_registry
             or caller not in self.experiments_registry[experiment_name].users
@@ -125,11 +217,25 @@ class Director:
             return None
 
     def get_experiment_data(self, experiment_name: str) -> Path:
-        """Get experiment data."""
+        """Get experiment data.
+
+        Args:
+            experiment_name (str): String id for experiment.
+
+        Returns:
+            str: Path of archive.
+        """
         return self.experiments_registry[experiment_name].archive_path
 
     async def wait_experiment(self, envoy_name: str) -> str:
-        """Wait an experiment."""
+        """Wait an experiment.
+
+        Args:
+            envoy_name (str): The name of the envoy.
+
+        Returns:
+            str: The name of the experiment on the queue.
+        """
         experiment_name = self.col_exp.get(envoy_name)
         if experiment_name and experiment_name in self.experiments_registry:
             # Experiment already set, but the envoy hasn't received experiment
@@ -154,23 +260,22 @@ class Director:
         return [shard_status["shard_info"] for shard_status in self._shard_registry.values()]
 
     async def stream_metrics(self, experiment_name: str, caller: str):
-        """
-        Stream metrics from the aggregator.
+        """Stream metrics from the aggregator.
 
         This method takes next metric dictionary from the aggregator's queue
         and returns it to the caller.
 
-        Inputs:
-            experiment_name - string id for experiment
-            caller - string id for experiment owner
+        Args:
+            experiment_name (str): String id for experiment.
+            caller (str): String id for experiment owner.
 
         Returns:
-            metric_dict - {'metric_origin','task_name','metric_name','metric_value','round'}
-                if the queue is not empty
-            None - f queue is empty but the experiment is still running
+            metric_dict: {'metric_origin','task_name','metric_name','metric_value','round'}
+                if the queue is not empty.
+            None: queue is empty but the experiment is still running.
 
         Raises:
-            StopIteration - if the experiment is finished and there is no more metrics to report
+            StopIteration: if the experiment is finished and there is no more metrics to report.
         """
         if (
             experiment_name not in self.experiments_registry
@@ -196,7 +301,12 @@ class Director:
             yield None
 
     def remove_experiment_data(self, experiment_name: str, caller: str):
-        """Remove experiment data from stash."""
+        """Remove experiment data from stash.
+
+        Args:
+            experiment_name (str): String id for experiment.
+            caller (str): String id for experiment owner.
+        """
         if (
             experiment_name in self.experiments_registry
             and caller in self.experiments_registry[experiment_name].users
@@ -204,14 +314,20 @@ class Director:
             self.experiments_registry.remove(experiment_name)
 
     def set_experiment_failed(self, *, experiment_name: str, collaborator_name: str):
+        """Envoys Set experiment failed RPC.
+
+        Args:
+            experiment_name (str): String id for experiment.
+            collaborator_name (str): String id for collaborator.
+
+        Return:
+            None
         """
-        Envoys Set experiment failed RPC.
+        """This method shoud call `experiment.abort()` and all the code should
+        be pushed down to that method.
 
-        This method shoud call `experiment.abort()` and all the code
-        should be pushed down to that method.
-
-        It would be also good to be able to interrupt aggregator async task with
-        the following code:
+        It would be also good to be able to interrupt aggregator async task
+        with the following code:
         ```
         run_aggregator_atask = self.experiments_registry[experiment_name].run_aggregator_atask
         if asyncio.isfuture(run_aggregator_atask) and not run_aggregator_atask.done():
@@ -233,7 +349,21 @@ class Director:
         is_experiment_running: bool,
         cuda_devices_status: list = None,
     ) -> int:
-        """Accept health check from envoy."""
+        """Accept health check from envoy.
+
+        Args:
+            envoy_name (str): String id for envoy.
+            is_experiment_running (bool): Boolean value for the status of the
+                experiment.
+            cuda_devices_status (list, optional): List of cuda devices and
+                status. Defaults to None.
+
+        Raises:
+            ShardNotFoundError: When Unknown shard {envoy_name}.
+
+        Returns:
+            int: Value of the envoy_health_check_period.
+        """
         shard_info = self._shard_registry.get(envoy_name)
         if not shard_info:
             raise ShardNotFoundError(f"Unknown shard {envoy_name}")
@@ -250,7 +380,11 @@ class Director:
         return self.envoy_health_check_period
 
     def get_envoys(self) -> list:
-        """Get a status information about envoys."""
+        """Get a status information about envoys.
+
+        Returns:
+            list: List with the status information about envoys.
+        """
         logger.debug("Shard registry: %s", self._shard_registry)
         for envoy_info in self._shard_registry.values():
             envoy_info["is_online"] = time.time() < envoy_info.get(
@@ -262,7 +396,13 @@ class Director:
         return self._shard_registry.values()
 
     def get_experiments_list(self, caller: str) -> list:
-        """Get experiments list for specific user."""
+        """Get experiments list for specific user.
+
+        Args:
+            caller (str): String id for experiment owner.
+        Returns:
+            list: List with the info of the experiment for specific user.
+        """
         experiments = self.experiments_registry.get_user_experiments(caller)
         result = []
         for exp in experiments:
@@ -284,7 +424,15 @@ class Director:
         return result
 
     def get_experiment_description(self, caller: str, name: str) -> dict:
-        """Get a experiment information by name for specific user."""
+        """Get a experiment information by name for specific user.
+
+        Args:
+            caller (str): String id for experiment owner.
+            name (str): String id for experiment name.
+
+        Returns:
+            dict: Dictionary with the info from the experiment.
+        """
         exp = self.experiments_registry.get(name)
         if not exp or caller not in exp.users:
             return {}

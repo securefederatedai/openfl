@@ -14,19 +14,41 @@ from openfl.utilities.split import split_tensor_dict_for_holdouts
 
 
 class TensorFlowTaskRunner(TaskRunner):
-    """
-    Base class for TensorFlow models in the Federated Learning solution.
+    """Base class for TensorFlow models in the Federated Learning solution.
 
-        child classes should have __init__ function signature (self, data, kwargs),
-        and should overwrite at least the following while defining the model
+    Attributes:
+        assign_ops (tf.Operation): TensorFlow operations for assignment.
+        placeholders (tf.Tensor): TensorFlow placeholders for tensors.
+        tvar_assign_ops (tf.Operation): TensorFlow operations for assignment
+            of trainable variables.
+        tvar_placeholders (tf.Tensor): TensorFlow placeholders for trainable
+            variables.
+        input_shape (tuple): Shape of the input features.
+        required_tensorkeys_for_function (dict): Required tensorkeys for all
+            public functions in TensorFlowTaskRunner.
+        sess (tf.Session): TensorFlow session.
+        X (tf.Tensor): Input features to the model.
+        y (tf.Tensor): Input labels to the model.
+        train_step (tf.Operation): Optimizer train step operation.
+        loss (tf.Tensor): Model loss function.
+        output (tf.Tensor): Model output tensor.
+        validation_metric (tf.Tensor): Function used to validate the model
+            outputs against labels.
+        tvars (list): TensorFlow trainable variables.
+        opt_vars (list): Optimizer variables.
+        fl_vars (list): Trainable variables and optimizer variables.
+
+    .. note::
+        Child classes should have __init__ function signature (self, data,
+            kwargs),
+        and should overwrite at least the following while defining the model.
     """
 
     def __init__(self, **kwargs):
-        """
-        Initialize.
+        """Initializes the TensorFlowTaskRunner object.
 
         Args:
-            **kwargs: Additional parameters to pass to the function
+            **kwargs: Additional parameters to pass to the function.
         """
         tf.disable_v2_behavior()
 
@@ -40,9 +62,6 @@ class TensorFlowTaskRunner(TaskRunner):
 
         # construct the shape needed for the input features
         self.input_shape = (None,) + self.data_loader.get_feature_shape()
-
-        # Required tensorkeys for all public functions in TensorFlowTaskRunner
-        self.required_tensorkeys_for_function = {}
 
         # Required tensorkeys for all public functions in TensorFlowTaskRunner
         self.required_tensorkeys_for_function = {}
@@ -69,8 +88,13 @@ class TensorFlowTaskRunner(TaskRunner):
         self.fl_vars = None
 
     def rebuild_model(self, round_num, input_tensor_dict, validation=False):
-        """
-        Parse tensor names and update weights of model. Handles the optimizer treatment.
+        """Parse tensor names and update weights of model. Handles the
+        optimizer treatment.
+
+        Args:
+            round_num (int): The round number.
+            input_tensor_dict (dict): The input tensor dictionary.
+            validation (bool): If True, perform validation. Default is False.
 
         Returns:
             None
@@ -89,15 +113,20 @@ class TensorFlowTaskRunner(TaskRunner):
         """
         Perform the training.
 
-        Is expected to perform draws randomly, without replacement until data is exausted. Then
-        data is replaced and shuffled and draws continue.
+        Is expected to perform draws randomly, without replacement until data
+            is exausted. Then data is replaced and shuffled and draws continue.
 
         Args:
-            use_tqdm (bool): True = use tqdm to print a progress
-             bar (Default=False)
-            epochs (int): Number of epochs to train
+            col_name (str): The column name.
+            round_num (int): The round number.
+            input_tensor_dict (dict): The input tensor dictionary.
+            epochs (int): Number of epochs to train. Default is 1.
+            use_tqdm (bool): If True, use tqdm to print a progress bar.
+                Default is False.
+            **kwargs: Additional parameters to pass to the function.
+
         Returns:
-            float: loss metric
+            float: loss metric.
         """
         batch_size = self.data_loader.batch_size
 
@@ -178,15 +207,14 @@ class TensorFlowTaskRunner(TaskRunner):
         return global_tensor_dict, local_tensor_dict
 
     def train_batch(self, X, y):
-        """
-        Train the model on a single batch.
+        """Train the model on a single batch.
 
         Args:
-            X: Input to the model
-            y: Ground truth label to the model
+            X (tf.Tensor): Input to the model.
+            y (tf.Tensor): Ground truth label to the model.
 
         Returns:
-            float: loss metric
+            loss (float): loss metric.
         """
         feed_dict = {self.X: X, self.y: y}
 
@@ -199,8 +227,16 @@ class TensorFlowTaskRunner(TaskRunner):
         """
         Run validation.
 
+        Args:
+            col_name (str): The column name.
+            round_num (int): The round number.
+            input_tensor_dict (dict): The input tensor dictionary.
+            use_tqdm (bool): If True, use tqdm to print a progress bar.
+                Default is False.
+            **kwargs: Additional parameters to pass to the function.
+
         Returns:
-            dict: {<metric>: <value>}
+            output_tensor_dict (dict): {<metric>: <value>}.
         """
         batch_size = self.data_loader.batch_size
 
@@ -240,12 +276,11 @@ class TensorFlowTaskRunner(TaskRunner):
         """Validate the model on a single local batch.
 
         Args:
-            X: Input to the model
-            y: Ground truth label to the model
+            X (tf.Tensor): Input to the model.
+            y (tf.Tensor): Ground truth label to the model.
 
         Returns:
-            float: loss metric
-
+            float: loss metric.
         """
         feed_dict = {self.X: X, self.y: y}
 
@@ -254,15 +289,14 @@ class TensorFlowTaskRunner(TaskRunner):
     def get_tensor_dict(self, with_opt_vars=True):
         """Get the dictionary weights.
 
-        Get the weights from the tensor
+        Get the weights from the tensor.
 
         Args:
             with_opt_vars (bool): Specify if we also want to get the variables
-             of the optimizer
+                of the optimizer. Default is True.
 
         Returns:
-            dict: The weight dictionary {<tensor_name>: <value>}
-
+            dict: The weight dictionary {<tensor_name>: <value>}.
         """
         if with_opt_vars is True:
             variables = self.fl_vars
@@ -275,13 +309,13 @@ class TensorFlowTaskRunner(TaskRunner):
     def set_tensor_dict(self, tensor_dict, with_opt_vars):
         """Set the tensor dictionary.
 
-        Set the model weights with a tensor
-         dictionary: {<tensor_name>: <value>}.
+        Set the model weights with a tensor dictionary:
+        {<tensor_name>: <value>}.
 
         Args:
-            tensor_dict (dict): The model weights dictionary
+            tensor_dict (dict): The model weights dictionary.
             with_opt_vars (bool): Specify if we also want to set the variables
-             of the optimizer
+                of the optimizer.
 
         Returns:
             None
@@ -304,7 +338,11 @@ class TensorFlowTaskRunner(TaskRunner):
             )
 
     def reset_opt_vars(self):
-        """Reinitialize the optimizer variables."""
+        """Reinitialize the optimizer variables.
+
+        Returns:
+            None
+        """
         for v in self.opt_vars:
             v.initializer.run(session=self.sess)
 
@@ -323,10 +361,10 @@ class TensorFlowTaskRunner(TaskRunner):
 
         Args:
             with_opt_vars (bool): Specify if we also want to get the variables
-             of the optimizer.
+                of the optimizer. Default is True.
 
         Returns:
-            list : The weight names list
+            list: The weight names list.
         """
         if with_opt_vars is True:
             variables = self.fl_vars
@@ -336,13 +374,18 @@ class TensorFlowTaskRunner(TaskRunner):
         return [var.name for var in variables]
 
     def get_required_tensorkeys_for_function(self, func_name, **kwargs):
-        """
-        Get the required tensors for specified function that could be called as part of a task.
+        """Get the required tensors for specified function that could be called
+        as part of a task.
 
         By default, this is just all of the layers and optimizer of the model.
 
+        Args:
+            func_name (str): The function name.
+            **kwargs: Additional parameters to pass to the function.
+
         Returns:
-            list : [TensorKey]
+            required_tensorkeys_for_function (list): List of required
+                TensorKey. [TensorKey].
         """
         if func_name == "validate":
             local_model = "apply=" + str(kwargs["apply"])
@@ -351,13 +394,18 @@ class TensorFlowTaskRunner(TaskRunner):
             return self.required_tensorkeys_for_function[func_name]
 
     def initialize_tensorkeys_for_functions(self, with_opt_vars=False):
-        """
-        Set the required tensors for all publicly accessible methods \
-            that could be called as part of a task.
+        """Set the required tensors for all publicly accessible methods that
+        could be called as part of a task.
 
         By default, this is just all of the layers and optimizer of the model.
         Custom tensors should be added to this function
 
+        Args:
+            with_opt_vars (bool): Specify if we also want to set the variables
+                of the optimizer. Default is False.
+
+        Returns:
+            None
         """
         # TODO there should be a way to programmatically iterate through
         #  all of the methods in the class and declare the tensors.
@@ -414,15 +462,17 @@ def tf_set_tensor_dict(tensor_dict, session, variables, assign_ops=None, placeho
     """Tensorflow set tensor dictionary.
 
     Args:
-        tensor_dict: Dictionary of tensors
-        session: TensorFlow session
-        variables: TensorFlow variables
-        assign_ops: TensorFlow operations (Default=None)
-        placeholders: TensorFlow placeholders (Default=None)
+        tensor_dict (dict): Dictionary of tensors.
+        session (tf.Session): TensorFlow session.
+        variables (list): List of TensorFlow variables.
+        assign_ops (tf.Operation, optional): TensorFlow operations for
+            assignment. Default is None.
+        placeholders (tf.Tensor, optional): TensorFlow placeholders for
+            tensors. Default is None.
 
     Returns:
-        assign_ops, placeholders
-
+        assign_ops (tf.Operation): TensorFlow operations for assignment.
+        placeholders (tf.Tensor): TensorFlow placeholders for tensors.
     """
     if placeholders is None:
         placeholders = {v.name: tf.placeholder(v.dtype, shape=v.shape) for v in variables}

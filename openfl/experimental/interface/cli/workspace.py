@@ -448,11 +448,12 @@ def _get_dir_hash(path):
 def apply_template_plan(prefix, template):
     """Copy plan file from template folder.
 
-    This function unfolds default values from template plan configuration
-    and writes the configuration to the current workspace.
+    This function unfolds default values from template plan configuration and
+    writes the configuration to the current workspace.
     """
 
-    # Use the specified template if it's a Path, otherwise use WORKSPACE/template
+    # Use the specified template if it's a Path, otherwise use
+    # WORKSPACE/template
     source = template if isinstance(template, Path) else WORKSPACE / template
 
     template_plan = Plan.parse(source / "plan" / "plan.yaml")

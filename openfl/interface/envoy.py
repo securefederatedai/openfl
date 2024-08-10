@@ -26,7 +26,11 @@ logger = logging.getLogger(__name__)
 @group()
 @pass_context
 def envoy(context):
-    """Manage Federated Learning Envoy."""
+    """Manage Federated Learning Envoy.
+
+    Args:
+        context (click.core.Context): Click context.
+    """
     context.obj["group"] = "envoy"
 
 
@@ -93,7 +97,18 @@ def start_(
     private_key,
     certificate,
 ):
-    """Start the Envoy."""
+    """Start the Envoy.
+
+    Args:
+        shard_name (str): Current shard name.
+        director_host (str): The FQDN of the federation director.
+        director_port (int): The federation director port.
+        tls (bool): Use TLS or not.
+        envoy_config_path (str): The envoy config path.
+        root_certificate (str): Path to a root CA cert.
+        private_key (str): Path to a private key.
+        certificate (str): Path to a signed certificate.
+    """
 
     logger.info("🧿 Starting the Envoy.")
     if is_directory_traversal(envoy_config_path):
@@ -167,7 +182,11 @@ def start_(
 @envoy.command(name="create-workspace")
 @option("-p", "--envoy-path", required=True, help="The Envoy path", type=ClickPath())
 def create(envoy_path):
-    """Create an envoy workspace."""
+    """Create an envoy workspace.
+
+    Args:
+        envoy_path (str): The Envoy path.
+    """
     if is_directory_traversal(envoy_path):
         click.echo("The Envoy path is out of the openfl workspace scope.")
         sys.exit(1)
@@ -191,7 +210,14 @@ def create(envoy_path):
 
 
 def shard_descriptor_from_config(shard_config: dict):
-    """Build a shard descriptor from config."""
+    """Build a shard descriptor from config.
+
+    Args:
+        shard_config (dict): Shard configuration.
+
+    Returns:
+        instance: Shard descriptor instance.
+    """
     template = shard_config.get("template")
     if not template:
         raise Exception("You should define a shard " "descriptor template in the envoy config")

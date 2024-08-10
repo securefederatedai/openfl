@@ -59,8 +59,8 @@ def initialize(context, plan_config, cols_config, data_config, aggregator_addres
     """
     Initialize Data Science plan.
 
-    Create a protocol buffer file of the initial model weights for
-     the federation.
+    Create a protocol buffer file of the initial model weights for  the
+    federation.
     """
 
     for p in [plan_config, cols_config, data_config]:

@@ -66,8 +66,7 @@ class Plan:
         data_config_path: Path = None,
         resolve=True,
     ):
-        """
-        Parse the Federated Learning plan.
+        """Parse the Federated Learning plan.
 
         Args:
             plan_config_path (string): The filepath to the federated learning
@@ -142,8 +141,7 @@ class Plan:
 
     @staticmethod
     def accept_args(cls):
-        """
-        Determines whether a class's constructor (__init__ method) accepts
+        """Determines whether a class's constructor (__init__ method) accepts
         variable positional arguments (*args).
 
         Returns:
@@ -157,8 +155,8 @@ class Plan:
 
     @staticmethod
     def build(template, settings, **override):
-        """
-        Create an instance of a openfl Component or Federated DataLoader/TaskRunner.
+        """Create an instance of a openfl Component or Federated
+        DataLoader/TaskRunner.
 
         Args:
             template: Fully qualified class template path
@@ -187,8 +185,8 @@ class Plan:
 
     @staticmethod
     def import_(template):
-        """
-        Import an instance of a openfl Component or Federated DataLoader/TaskRunner.
+        """Import an instance of a openfl Component or Federated
+        DataLoader/TaskRunner.
 
         Args:
             template: Fully qualified object path
@@ -394,7 +392,7 @@ class Plan:
         return self.server_
 
     def get_flow(self):
-        """instantiates federated flow object"""
+        """Instantiates federated flow object."""
         defaults = self.config.get(
             "federated_flow",
             {TEMPLATE: self.config["federated_flow"]["template"], SETTINGS: {}},
