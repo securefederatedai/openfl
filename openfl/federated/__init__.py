@@ -22,7 +22,7 @@ if importlib.util.find_spec("torch") is not None:
     from openfl.federated.task import PyTorchTaskRunner
 
 __all__ = [
-    'Plan',
-    'TaskRunner',
-    'DataLoader',
+    "Plan",
+    "TaskRunner",
+    "DataLoader",
 ]
