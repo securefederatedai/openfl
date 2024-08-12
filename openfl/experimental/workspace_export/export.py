@@ -303,6 +303,7 @@ class WorkspaceExport:
         plan = self.created_workspace_path.joinpath("plan", "plan.yaml").resolve()
         data = self.__read_yaml(plan)
         if data is None:
+            data = {}
             data["federated_flow"] = {"settings": {}, "template": ""}
 
         data["federated_flow"]["template"] = f"src.{self.script_name}.{self.flow_class_name}"
