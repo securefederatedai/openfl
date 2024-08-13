@@ -87,11 +87,11 @@ jobs:
           --network host \
           --mount type=bind,source=./cert_agg.tar,target=/certs.tar \
           -e CONTAINER_TYPE=aggregator \
-          example_workspace bash /openfl/openfl-docker/start_actor_in_container.sh
+          example_workspace bash /openfl/openfl-docker/start_actor_in_container.sh &
         
-        # docker run --rm \
-        #   --network host \
-        #   --mount type=bind,source=./cert_col_charlie.tar,target=/certs.tar \
-        #   -e CONTAINER_TYPE=collaborator \
-        #   -e COL=charlie \
-        #   example_workspace bash /openfl/openfl-docker/start_actor_in_container.sh
+        docker run --rm \
+          --network host \
+          --mount type=bind,source=./cert_col_charlie.tar,target=/certs.tar \
+          -e CONTAINER_TYPE=collaborator \
+          -e COL=charlie \
+          example_workspace bash /openfl/openfl-docker/start_actor_in_container.sh
