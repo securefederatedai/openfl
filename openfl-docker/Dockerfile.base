@@ -5,7 +5,7 @@
 # ------------------------------------
 FROM ubuntu:22.04 as base
 
-USER root
+# Configure network proxy, if required, in ~/.docker/config.json
 ENV DEBIAN_FRONTEND=noninteractive
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
@@ -20,14 +20,19 @@ RUN --mount=type=cache,id=apt-dev,target=/var/cache/apt \
     --no-install-recommends && \
     rm -rf /var/lib/apt/lists/*
 
+# Create an unprivileged user.
+RUN groupadd -g 1001 default && \
+    useradd -m -u 1001 -g default openfl
+USER openfl
+
 # Install OpenFL.
-WORKDIR /openfl
+WORKDIR /home/openfl
 COPY . .
+ENV PATH=/home/openfl/.local/bin:$PATH
 RUN pip install --no-cache-dir -U pip setuptools wheel && \
     pip install --no-cache-dir -e .
 
 # Download thirdparty licenses.
-RUN chmod +x /openfl/openfl-docker/licenses.sh &&\
-    INSTALL_SOURCES=yes /openfl/openfl-docker/licenses.sh
+RUN INSTALL_SOURCES=yes /home/openfl/openfl-docker/licenses.sh
 
 CMD ["/bin/bash"]
