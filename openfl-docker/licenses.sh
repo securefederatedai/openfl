@@ -3,19 +3,6 @@
 # Save the list of installed packages to base_packages.txt
 dpkg --get-selections | grep -v deinstall | awk '{print $1}' > base_packages.txt
 
-# Clean up APT lists
-rm -rf /var/lib/apt/lists/*
-
-# Update the package list and install specified packages
-apt-get update
-apt-get install -y --no-install-recommends --fix-missing \
-    openssh-server=* \
-    curl=* \
-    ca-certificates=*
-
-# Remove existing SSH host keys
-rm -rf /etc/ssh/ssh_host_*_key
-
 # If INSTALL_SOURCES is set to "yes", perform additional operations
 if [ "$INSTALL_SOURCES" = "yes" ]; then
     # Save the list of all installed packages to all_packages.txt
@@ -46,9 +33,8 @@ if [ "$INSTALL_SOURCES" = "yes" ]; then
     rm -rf /var/lib/apt/lists/*
 fi
 
-# Change to the /thirdparty directory
-mkdir -p /thirdparty
-cd /thirdparty
+mkdir -p thirdparty
+cd thirdparty
 
 # If INSTALL_SOURCES is set to "yes", perform additional operations
 if [ "$INSTALL_SOURCES" = "yes" ]; then
