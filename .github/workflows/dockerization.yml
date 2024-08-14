@@ -26,7 +26,7 @@ jobs:
 
     - name: Build base image
       run: |
-        docker build --progress=plain -t openfl -f openfl-docker/Dockerfile.base .
+        docker build -t openfl -f openfl-docker/Dockerfile.base .
 
     - name: Create workspace image
       run: |
@@ -87,7 +87,7 @@ jobs:
           --network host \
           --mount type=bind,source=./cert_agg.tar,target=/certs.tar \
           -e CONTAINER_TYPE=aggregator \
-          example_workspace /openfl/openfl-docker/start_actor_in_container.sh &
+          example_workspace /home/openfl/openfl-docker/start_actor_in_container.sh &
         
         # TODO: Run with two collaborators instead.
         docker run --rm \
@@ -95,4 +95,4 @@ jobs:
           --mount type=bind,source=./cert_col_charlie.tar,target=/certs.tar \
           -e CONTAINER_TYPE=collaborator \
           -e COL=charlie \
-          example_workspace /openfl/openfl-docker/start_actor_in_container.sh
+          example_workspace /home/openfl/openfl-docker/start_actor_in_container.sh
