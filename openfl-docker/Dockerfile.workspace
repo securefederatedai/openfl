@@ -14,8 +14,7 @@ COPY ${WORKSPACE_NAME}.zip .
 
 WORKDIR /home/openfl
 RUN fx workspace import --archive ${WORKSPACE_NAME}.zip && \
-    mv ${WORKSPACE_NAME} workspace  && \
-    cd workspace && \
-    pip install -r requirements.txt
+    pip install -r ${WORKSPACE_NAME}/requirements.txt
 
+WORKDIR /home/openfl/${WORKSPACE_NAME}
 CMD ["/bin/bash"]
