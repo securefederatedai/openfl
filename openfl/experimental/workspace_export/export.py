@@ -21,13 +21,15 @@ from openfl.experimental.interface.cli.cli_helper import print_tree
 
 
 class WorkspaceExport:
-    """
-    Convert a LocalRuntime Jupyter Notebook to Aggregator based FederatedRuntime Workflow.
+    """Convert a LocalRuntime Jupyter Notebook to Aggregator based
+    FederatedRuntime Workflow.
 
     Args:
         notebook_path: Absolute path of jupyter notebook.
-        template_workspace_path: Path to template workspace provided with OpenFL.
-        output_dir: Output directory for new generated workspace (default="/tmp").
+        template_workspace_path: Path to template workspace provided with
+            OpenFL.
+        output_dir: Output directory for new generated workspace
+            (default="/tmp").
 
     Returns:
         None
@@ -72,9 +74,11 @@ class WorkspaceExport:
 
         # Generated python script name without .py extension
         self.script_name = self.script_path.name.split(".")[0].strip()
-        # Comment flow.run() so when script is imported flow does not start executing
+        # Comment flow.run() so when script is imported flow does not start
+        # executing
         self.__comment_flow_execution()
-        # This is required as Ray created actors too many actors when backend="ray"
+        # This is required as Ray created actors too many actors when
+        # backend="ray" # NOQA
         self.__change_runtime()
 
     def __get_exp_name(self):
@@ -97,9 +101,7 @@ class WorkspaceExport:
         return Path(output_path).joinpath(export_filename).resolve()
 
     def __comment_flow_execution(self):
-        """
-        In the python script search for ".run()" and comment it
-        """
+        """In the python script search for ".run()" and comment it."""
         with open(self.script_path, "r") as f:
             data = f.readlines()
         for idx, line in enumerate(data):
@@ -109,9 +111,7 @@ class WorkspaceExport:
             f.writelines(data)
 
     def __change_runtime(self):
-        """
-        Change the LocalRuntime backend from ray to single_process
-        """
+        """Change the LocalRuntime backend from ray to single_process."""
         with open(self.script_path, "r") as f:
             data = f.read()
 
@@ -124,9 +124,7 @@ class WorkspaceExport:
             f.write(data)
 
     def __get_class_arguments(self, class_name):
-        """
-        Given the class name returns expected class arguments
-        """
+        """Given the class name returns expected class arguments."""
         # Import python script if not already
         if not hasattr(self, "exported_script_module"):
             self.__import_exported_script()
@@ -147,7 +145,8 @@ class WorkspaceExport:
             # Check if the class has an __init__ method
             if "__init__" in cls.__dict__:
                 init_signature = inspect.signature(cls.__init__)
-                # Extract the parameter names (excluding 'self', 'args', and 'kwargs')
+                # Extract the parameter names (excluding 'self', 'args', and
+                # 'kwargs')
                 arg_names = [
                     param
                     for param in init_signature.parameters
@@ -158,9 +157,8 @@ class WorkspaceExport:
         self.logger.error(f"{cls} is not a class")
 
     def __get_class_name_and_sourcecode_from_parent_class(self, parent_class):
-        """
-        Provided the parent_class name returns derived class source code and name.
-        """
+        """Provided the parent_class name returns derived class source code and
+        name."""
         # Import python script if not already
         if not hasattr(self, "exported_script_module"):
             self.__import_exported_script()
@@ -174,9 +172,8 @@ class WorkspaceExport:
         return None, None
 
     def __extract_class_initializing_args(self, class_name):
-        """
-        Provided name of the class returns expected arguments and it's values in form of dictionary
-        """
+        """Provided name of the class returns expected arguments and it's
+        values in form of dictionary."""
         instantiation_args = {"args": {}, "kwargs": {}}
 
         with open(self.script_path, "r") as s:
@@ -200,18 +197,21 @@ class WorkspaceExport:
                             # Iterate through keyword arguments
                             value = astor.to_source(kwarg.value).strip()
 
-                            # If paranthese or brackets around the value is found
-                            # and it's not tuple or list remove paranthese or brackets
+                            # If paranthese or brackets around the value is
+                            # found and it's not tuple or list remove
+                            # paranthese or brackets
                             if value.startswith("(") and "," not in value:
                                 value = value.lstrip("(").rstrip(")")
                             if value.startswith("[") and "," not in value:
                                 value = value.lstrip("[").rstrip("]")
                             try:
-                                # Evaluate the value to convert it from a string
-                                # representation into its corresponding python object.
+                                # Evaluate the value to convert it from a
+                                # string representation into its corresponding
+                                # python object.
                                 value = ast.literal_eval(value)
                             except ValueError:
-                                # ValueError is ignored because we want the value as a string
+                                # ValueError is ignored because we want the
+                                # value as a string
                                 pass
                             instantiation_args["kwargs"][kwarg.arg] = value
 
@@ -236,14 +236,13 @@ class WorkspaceExport:
 
     @classmethod
     def export(cls, notebook_path: str, output_workspace: str) -> None:
-        """
-        Exports workspace to `output_dir`.
+        """Exports workspace to `output_dir`.
 
         Args:
             notebook_path: Jupyter notebook path.
             output_dir: Path for generated workspace directory.
-            template_workspace_path: Path to template workspace provided with OpenFL
-            (default="/tmp").
+            template_workspace_path: Path to template workspace provided with
+                OpenFL (default="/tmp").
 
         Returns:
             None
@@ -256,10 +255,8 @@ class WorkspaceExport:
     # Have to do generate_requirements before anything else
     # because these !pip commands needs to be removed from python script
     def generate_requirements(self):
-        """
-        Finds pip libraries mentioned in exported python script and append in
-        workspace/requirements.txt
-        """
+        """Finds pip libraries mentioned in exported python script and append
+        in workspace/requirements.txt."""
         data = None
         with open(self.script_path, "r") as f:
             requirements = []
@@ -306,6 +303,7 @@ class WorkspaceExport:
         plan = self.created_workspace_path.joinpath("plan", "plan.yaml").resolve()
         data = self.__read_yaml(plan)
         if data is None:
+            data = {}
             data["federated_flow"] = {"settings": {}, "template": ""}
 
         data["federated_flow"]["template"] = f"src.{self.script_name}.{self.flow_class_name}"
@@ -332,9 +330,7 @@ class WorkspaceExport:
         self.__write_yaml(plan, data)
 
     def generate_data_yaml(self):
-        """
-        Generates data.yaml
-        """
+        """Generates data.yaml."""
         # Import python script if not already
         if not hasattr(self, "exported_script_module"):
             self.__import_exported_script()

@@ -31,7 +31,12 @@ logger = getLogger(__name__)
 @group()
 @pass_context
 def collaborator(context):
-    """Manage Federated Learning Collaborators."""
+    """
+    Manage Federated Learning Collaborators.
+
+    Args:
+        context (click.core.Context): Click context.
+    """
     context.obj["group"] = "service"
 
 
@@ -67,7 +72,14 @@ def collaborator(context):
     default=False,
 )
 def start_(plan, collaborator_name, data_config, secure):
-    """Start a collaborator service."""
+    """Start a collaborator service.
+
+    Args:
+        plan (str): Federated learning plan.
+        collaborator_name (str): The certified common name of the collaborator.
+        data_config (str): The data set/shard configuration file.
+        secure (bool): Enable Intel SGX Enclave.
+    """
 
     if plan and is_directory_traversal(plan):
         echo("Federated learning plan path is out of the openfl workspace scope.")
@@ -103,12 +115,14 @@ def start_(plan, collaborator_name, data_config, secure):
 )
 @option("-s", "--silent", help="Do not prompt", is_flag=True)
 def create_(collaborator_name, data_path, silent):
-    """Creates a user for an experiment."""
-    create(collaborator_name, data_path, silent)
+    """Creates a user for an experiment.
 
+    Args:
+        collaborator_name (str): The certified common name of the collaborator.
+        data_path (str): The data path to be associated with the collaborator.
+        silent (bool): Do not prompt.
+    """
 
-def create(collaborator_name, data_path, silent):
-    """Creates a user for an experiment."""
     if data_path and is_directory_traversal(data_path):
         echo("Data path is out of the openfl workspace scope.")
         sys.exit(1)
@@ -123,9 +137,11 @@ def register_data_path(collaborator_name, data_path=None, silent=False):
     """Register dataset path in the plan/data.yaml file.
 
     Args:
-        collaborator_name (str): The collaborator whose data path to be defined
-        data_path (str)        : Data path (optional)
-        silent (bool)          : Silent operation (don't prompt)
+        collaborator_name (str): The collaborator whose data path to be
+            defined.
+        data_path (str, optional): Data path. Defaults to None.
+        silent (bool, optional): Silent operation (don't prompt). Defaults to
+            False.
     """
 
     if data_path and is_directory_traversal(data_path):
@@ -186,10 +202,15 @@ def generate_cert_request_(collaborator_name, silent, skip_package):
 
 
 def generate_cert_request(collaborator_name, silent, skip_package):
-    """
-    Create collaborator certificate key pair.
+    """Create collaborator certificate key pair.
 
     Then create a package with the CSR to send for signing.
+
+    Args:
+        collaborator_name (str): The certified common name of the collaborator.
+        silent (bool): Do not prompt.
+        skip_package (bool): Do not package the certificate signing request
+            for export.
     """
 
     common_name = f"{collaborator_name}".lower()
@@ -245,7 +266,14 @@ def generate_cert_request(collaborator_name, silent, skip_package):
 
 
 def find_certificate_name(file_name):
-    """Parse the collaborator name."""
+    """Parse the collaborator name.
+
+    Args:
+        file_name (str): The name of the collaborator in this federation.
+
+    Returns:
+        col_name (str): The collaborator name.
+    """
     col_name = str(file_name).split(os.sep)[-1].split(".")[0][4:]
     return col_name
 
@@ -254,8 +282,7 @@ def register_collaborator(file_name):
     """Register the collaborator name in the cols.yaml list.
 
     Args:
-        file_name (str): The name of the collaborator in this federation
-
+        file_name (str): The name of the collaborator in this federation.
     """
 
     col_name = find_certificate_name(file_name)
@@ -319,12 +346,30 @@ def register_collaborator(file_name):
     help="Import the archive containing the collaborator's" " certificate (signed by the CA)",
 )
 def certify_(collaborator_name, silent, request_pkg, import_):
-    """Certify the collaborator."""
+    """Certify the collaborator.
+
+    Args:
+        collaborator_name (str): The certified common name of the collaborator.
+        silent (bool): Do not prompt.
+        request_pkg (str): The archive containing the certificate signing
+            request (*.zip) for a collaborator.
+        import_ (str): Import the archive containing the collaborator's
+            certificate (signed by the CA).
+    """
     certify(collaborator_name, silent, request_pkg, import_)
 
 
 def certify(collaborator_name, silent, request_pkg=None, import_=False):
-    """Sign/certify collaborator certificate key pair."""
+    """Sign/certify collaborator certificate key pair.
+
+    Args:
+        collaborator_name (str): The certified common name of the collaborator.
+        silent (bool): Do not prompt.
+        request_pkg (str, optional): The archive containing the certificate
+            signing request (*.zip) for a collaborator. Defaults to None.
+        import_ (bool, optional): Import the archive containing the
+            collaborator's certificate (signed by the CA). Defaults to False.
+    """
 
     common_name = f"{collaborator_name}".lower()
 

@@ -10,10 +10,10 @@ from openfl.pipelines.pipeline import Float32NumpyArrayToBytes, TransformationPi
 
 
 class RandomShiftTransformer(Transformer):
-    """Random Shift Transformer."""
+    """Random Shift Transformer class."""
 
     def __init__(self):
-        """Initialize."""
+        """Initialize RandomShiftTransformer."""
         self.lossy = False
 
         return
@@ -24,12 +24,11 @@ class RandomShiftTransformer(Transformer):
         Implement the data transformation.
 
         Args:
-            data: an array value from a model tensor_dict
+            data: The data to be transformed.
 
         Returns:
-            transformed_data:
-            metadata:
-
+            transformed_data: The data after the random shift.
+            metadata: The metadata for the transformation.
         """
         shape = data.shape
         random_shift = np.random.uniform(low=-20, high=20, size=shape).astype(np.float32)
@@ -49,11 +48,11 @@ class RandomShiftTransformer(Transformer):
         direction to the forward method.
 
         Args:
-            data:
-            metadata:
+            data: The transformed data.
+            metadata: The metadata for the transformation.
 
         Returns:
-            transformed_data:
+            The original data before the random shift.
         """
         shape = tuple(metadata["int_list"])
         # this is an awkward use of the metadata into to float dict, usually

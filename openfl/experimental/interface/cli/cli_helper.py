@@ -192,7 +192,8 @@ def get_workspace_parameter(name):
 
 
 def check_varenv(env: str = "", args: dict = None):
-    """Update "args" (dictionary) with <env: env_value> if env has a defined value in the host."""
+    """Update "args" (dictionary) with <env: env_value> if env has a defined
+    value in the host."""
     if args is None:
         args = {}
     env_val = environ.get(env)

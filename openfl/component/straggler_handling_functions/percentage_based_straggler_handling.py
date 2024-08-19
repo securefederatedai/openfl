@@ -10,7 +10,18 @@ from openfl.component.straggler_handling_functions.straggler_handling_function i
 
 
 class PercentageBasedStragglerHandling(StragglerHandlingPolicy):
+  """Percentage based Straggler Handling function."""
+
     def __init__(self, percent_collaborators_needed=1.0, minimum_reporting=1, **kwargs):
+      """Initialize a PercentageBasedStragglerHandling object.
+
+        Args:
+            percent_collaborators_needed (float, optional): The percentage of
+                collaborators needed. Defaults to 1.0.
+            minimum_reporting (int, optional): The minimum number of
+                collaborators that should report. Defaults to 1.
+            **kwargs: Variable length argument list.
+        """
         if minimum_reporting <= 0:
             raise ValueError("minimum_reporting must be >0")
 
@@ -36,6 +47,15 @@ class PercentageBasedStragglerHandling(StragglerHandlingPolicy):
         """
         If percent_collaborators_needed and minimum_reporting collaborators have
         reported results, then it is time to end round early.
+        
+        Args:
+            num_collaborators_done (int): The number of collaborators that
+                have reported.
+            all_collaborators (list): All the collaborators.
+
+        Returns:
+            bool: True if the straggler cutoff conditions are met, False
+                otherwise.
         """
         return (
             (num_collaborators_done >= self.percent_collaborators_needed * num_all_collaborators)
@@ -43,8 +63,14 @@ class PercentageBasedStragglerHandling(StragglerHandlingPolicy):
         )
 
     def __minimum_collaborators_reported(self, num_collaborators_done) -> bool:
-        """
-        If minimum required collaborators have reported results, then return True
-        otherwise False.
+        """Check if the minimum number of collaborators have reported.
+
+        Args:
+            num_collaborators_done (int): The number of collaborators that
+                have reported.
+
+        Returns:
+            bool: True if the minimum number of collaborators have reported,
+                False otherwise.
         """
         return num_collaborators_done >= self.minimum_reporting

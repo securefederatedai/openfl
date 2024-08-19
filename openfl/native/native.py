@@ -4,7 +4,8 @@
 
 """OpenFL Native functions module.
 
-This file defines openfl entrypoints to be used directly through python (not CLI)
+This file defines openfl entrypoints to be used directly through python (not
+CLI)
 """
 import importlib
 import json
@@ -37,11 +38,12 @@ def setup_plan(log_level="CRITICAL"):
     Dump the plan with all defaults + overrides set.
 
     Args:
-        save : bool (default=True)
-            Whether to save the plan to disk
+        log_level (str, optional): The log level Whether to save the plan to
+            disk.
+        Defaults to 'CRITICAL'.
 
     Returns:
-        plan : Plan object
+        plan: Plan object.
     """
     plan_config = "plan/plan.yaml"
     cols_config = "plan/cols.yaml"
@@ -61,7 +63,17 @@ def setup_plan(log_level="CRITICAL"):
 
 
 def flatten(config, return_complete=False):
-    """Flatten nested config."""
+    """
+    Flatten nested config.
+
+    Args:
+        config (dict): The configuration dictionary to flatten.
+        return_complete (bool, optional): Whether to return the complete
+            flattened config. Defaults to False.
+
+    Returns:
+        flattened_config (dict): The flattened configuration dictionary.
+    """
     flattened_config = flatten_json.flatten(config, ".")
     if not return_complete:
         keys_to_remove = [k for k, v in flattened_config.items() if ("defaults" in k or v is None)]
@@ -74,16 +86,19 @@ def flatten(config, return_complete=False):
 
 
 def update_plan(override_config, plan=None, resolve=True):
-    """
-    Update the plan with the provided override and save it to disk.
+    """Updates the plan with the provided override and saves it to disk.
 
     For a list of available override options, call `fx.get_plan()`
 
     Args:
-        override_config : dict {"COMPONENT.settings.variable" : value or list of values}
+        override_config (dict): A dictionary of values to override in the plan.
+        plan (Plan, optional): The plan to update. If None, a new plan is set
+            up. Defaults to None.
+        resolve (bool, optional): Whether to resolve the plan. Defaults to
+            True.
 
     Returns:
-        None
+        plan (object): The updated plan.
     """
     if plan is None:
         plan = setup_plan()
@@ -125,13 +140,28 @@ def update_plan(override_config, plan=None, resolve=True):
 
 
 def unflatten(config, separator="."):
-    """Unfold `config` settings that have `separator` in their names."""
+    """Unfolds `config` settings that have `separator` in their names.
+
+    Args:
+        config (dict): The flattened configuration dictionary to unfold.
+        separator (str, optional): The separator used in the flattened config.
+            Defaults to '.'.
+
+    Returns:
+        config (dict): The unfolded configuration dictionary.
+    """
     config = flatten_json.unflatten_list(config, separator)
     return config
 
 
 def setup_logging(level="INFO", log_file=None):
-    """Initialize logging settings."""
+    """Initializes logging settings.
+
+    Args:
+        level (str, optional): The log level. Defaults to 'INFO'.
+        log_file (str, optional): The name of the file to log to.
+        If None, logs are not saved to a file. Defaults to None.
+    """
     # Setup logging
 
     if importlib.util.find_spec("tensorflow") is not None:
@@ -170,34 +200,32 @@ def init(
 
     It performs the following tasks:
 
-         1. Creates a workspace in ~/.local/workspace (Equivalent to `fx
-         workspace create --prefix ~/.local/workspace --template
-         $workspace_template)
-         2. Setup certificate authority (equivalent to `fx workspace certify`)
-         3. Setup aggregator PKI (equivalent to `fx aggregator
-         generate-cert-request` followed by `fx aggregator certify`)
-         4. Setup list of collaborators (col_names) and their PKI. (Equivalent
-         to running `fx collaborator generate-cert-request` followed by `fx
-         collaborator certify` for each of the collaborators in col_names)
-         5. Setup logging
+        1. Creates a workspace in ~/.local/workspace (Equivalent to `fx
+        workspace create --prefix ~/.local/workspace --template
+        $workspace_template)
+        2. Setup certificate authority (equivalent to `fx workspace certify`)
+        3. Setup aggregator PKI (equivalent to `fx aggregator
+        generate-cert-request` followed by `fx aggregator certify`)
+        4. Setup list of collaborators (col_names) and their PKI. (Equivalent
+        to running `fx collaborator generate-cert-request` followed by `fx
+        collaborator certify` for each of the collaborators in col_names)
+        5. Setup logging
 
     Args:
-        workspace_template : str (default='default')
-            The template that should be used as the basis for the experiment.
-            Other options include are any of the template names [
-            keras_cnn_mnist, tf_2dunet, tf_cnn_histology, mtorch_cnn_histology,
-            torch_cnn_mnist]
-        log_level : str
-            Log level for logging. METRIC level is available
-        log_file : str
-            Name of the file in which the log will be duplicated
-        agg_fqdn : str
-           The local node's fully qualified domain name (if it can't be
-           resolved automatically)
-        col_names: list[str]
-           The names of the collaborators that will be created. These
-           collaborators will be set up to participate in the experiment, but
-           are not required to
+        workspace_template (str): The template that should be used as the
+            basis for the experiment.  Defaults to 'default'.
+            Other options include are any of the template names
+            [keras_cnn_mnist, tf_2dunet, tf_cnn_histology,
+            mtorch_cnn_histology, torch_cnn_mnist].
+        log_level (str): Log level for logging. METRIC level is available.
+            Defaults to 'INFO'.
+        log_file (str): Name of the file in which the log will be duplicated.
+            If None, logs are not saved to a file. Defaults to None.
+        agg_fqdn (str): The local node's fully qualified domain name (if it
+            can't be resolved automatically). Defaults to None.
+        col_names (list[str]): The names of the collaborators that will be
+            created. These collaborators will be set up to participate in the
+            experiment, but are not required to. Defaults to None.
 
     Returns:
         None
@@ -220,12 +248,20 @@ def init(
 
 
 def get_collaborator(plan, name, model, aggregator):
-    """
-    Create the collaborator.
+    """Create the collaborator.
 
     Using the same plan object to create multiple collaborators leads to
     identical collaborator objects. This function can be removed once
     collaborator generation is fixed in openfl/federated/plan/plan.py
+
+    Args:
+        plan (Plan): The plan to use to create the collaborator.
+        name (str): The name of the collaborator.
+        model (Model): The model to use for the collaborator.
+        aggregator (Aggregator): The aggregator to use for the collaborator.
+
+    Returns:
+        Collaborator: The created collaborator.
     """
     plan = copy(plan)
 
@@ -233,22 +269,25 @@ def get_collaborator(plan, name, model, aggregator):
 
 
 def run_experiment(collaborator_dict: dict, override_config: dict = None):
-    """
-    Core function that executes the FL Plan.
+    """Core function that executes the FL Plan.
 
     Args:
-        collaborator_dict : dict {collaborator_name(str): FederatedModel}
-            This dictionary defines which collaborators will participate in the
-            experiment, as well as a reference to that collaborator's
+        collaborator_dict (dict): A dictionary mapping collaborator names to
+            their federated models.
+            Example: {collaborator_name(str): FederatedModel}
+            This dictionary defines which collaborators will participate in
+            the experiment, as well as a reference to that collaborator's
             federated model.
-        override_config : dict {flplan.key : flplan.value}
+        override_config (dict, optional): A dictionary of values to override
+            in the plan. Defaults to None.
+            Example: dict {flplan.key : flplan.value}
             Override any of the plan parameters at runtime using this
             dictionary. To get a list of the available options, execute
             `fx.get_plan()`
 
     Returns:
-        final_federated_model : FederatedModel
-            The final model resulting from the federated learning experiment
+        model: Final Federated model. The model resulting from the federated
+            learning experiment
     """
 
     if override_config is None:
@@ -310,7 +349,19 @@ def run_experiment(collaborator_dict: dict, override_config: dict = None):
 
 
 def get_plan(fl_plan=None, indent=4, sort_keys=True):
-    """Get string representation of current Plan."""
+    """Returns a string representation of the current Plan.
+
+    Args:
+        fl_plan (Plan): The plan to get a string representation of. If None, a
+            new plan is set up. Defaults to None.
+        indent (int): The number of spaces to use for indentation in the
+            string representation. Defaults to 4.
+        sort_keys (bool): Whether to sort the keys in the string
+            representation. Defaults to True.
+
+    Returns:
+        str: A string representation of the plan.
+    """
     if fl_plan is None:
         plan = setup_plan()
     else:

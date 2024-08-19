@@ -1,122 +1,38 @@
-# Copyright (C) 2020-2023 Intel Corporation
+# Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+# ------------------------------------
+# OpenFL Base Image
+# ------------------------------------
+FROM ubuntu:22.04 as base
 
-# If your machine is behind a proxy, make sure you set it up in ~/.docker/config.json
-
-ARG IMAGE_NAME=ubuntu
-ARG IMAGE_TAG=22.04
-
-# Base image to be used everywhere
-FROM ${IMAGE_NAME}:${IMAGE_TAG} as base
-RUN apt-get clean && \
-    apt-get update && \
-    apt-get upgrade -y && \
-    apt-get clean autoclean && \
-    apt-get autoremove -y && \
-    rm -rf /var/lib/apt/lists/*
-
-# Python image
-FROM base as python-dev
-
-ARG PYTHON=python3.10
-ARG PIP=pip3.10
-
-RUN apt-get update && \
-    apt-get install --no-install-recommends --fix-missing -y \
-      curl \
-      gpg-agent \
-      software-properties-common && \
-    add-apt-repository -y ppa:deadsnakes/ppa && \
-    apt-get update && \
-    DEBIAN_FRONTEND=noninteractive \
-    apt-get install --no-install-recommends --fix-missing -y \
-      ${PYTHON} \
-      ${PYTHON}-distutils && \
-    curl -s https://bootstrap.pypa.io/get-pip.py | ${PYTHON} && \
-    apt-get purge -y \
-      curl \
-      gpg-agent \
-      software-properties-common && \
-    apt-get autoclean && \
-    apt-get autoremove -y && \
-    rm -rf /var/lib/apt/lists/*
-
-RUN ln -sf /usr/bin/${PYTHON} /usr/bin/python && \
-    ln -sf /usr/bin/${PYTHON} /usr/bin/python3 && \
-    ln -sf /usr/local/bin/${PIP} /usr/local/bin/pip && \
-    ln -sf /usr/local/bin/${PIP} /usr/local/bin/pip3
-
-FROM base as python-base
-
-ARG PYTHON=python3.10
-
-COPY --from=python-dev /usr/lib/x86_64-linux-gnu /usr/lib/x86_64-linux-gnu
-COPY --from=python-dev /usr/lib/${PYTHON} /usr/lib/${PYTHON}
-COPY --from=python-dev /usr/local/lib/${PYTHON} /usr/local/lib/${PYTHON}
-COPY --from=python-dev /usr/bin /usr/bin
-COPY --from=python-dev /usr/local/bin /usr/local/bin
-
-FROM python-base as openfl
-
+# Configure network proxy, if required, in ~/.docker/config.json
+ENV DEBIAN_FRONTEND=noninteractive
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
-ARG INSTALL_SOURCES="yes"
 
-WORKDIR /zlib
-#zlib install to 1.2.13
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends --fix-missing wget build-essential
-RUN wget --no-check-certificate https://github.com/madler/zlib/archive/refs/tags/v1.2.13.tar.gz && tar -xvf ./v1.2.13.tar.gz && cd zlib-1.2.13 && ./configure --prefix=/usr && make && make install
-RUN rm -rf zlib-1.2.13 && rm -rf v1.2.13.tar.gz
-RUN apt-get remove --purge -y wget build-essential && \
-    apt-get autoclean -y && \
-    apt-get auto-remove -y
-
-RUN dpkg --get-selections | grep -v deinstall | awk '{print $1}' > base_packages.txt  && \
+# Install dependencies.
+RUN --mount=type=cache,id=apt-dev,target=/var/cache/apt \
+    apt-get update && \
+    apt-get install -y \
+    python3-pip \
+    python3.10-dev \
+    ca-certificates \
+    build-essential \
+    --no-install-recommends && \
     rm -rf /var/lib/apt/lists/*
 
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends --fix-missing \
-        openssh-server=\* \
-        curl=\* \
-        ca-certificates=\* && \
-    rm -rf /etc/ssh/ssh_host_*_key && \
-    if [ "$INSTALL_SOURCES" = "yes" ]; then \
-        dpkg --get-selections | grep -v deinstall | awk '{print $1}' > all_packages.txt && \
-        sed -Ei 's/# deb-src /deb-src /' /etc/apt/sources.list && \
-        apt-get update && \
-        grep -v -f base_packages.txt all_packages.txt | while read -r line; do \
-            package=$line; \
-            unparsed_name=("${package//:/ }"); \
-            name=$(echo $unparsed_name | awk '{ print $1 }'); \
-            echo "${name}" >> all_dependencies.txt; \
-            echo "${name}" >> licenses.txt;\
-            cat /usr/share/doc/"${name}"/copyright >> licenses.txt; \
-            grep -lE 'GPL|MPL|EPL' /usr/share/doc/"${name}"/copyright; \
-            exit_status=$?; \
-            if [ $exit_status -eq 0 ]; then \
-                apt-get source -q --download-only "$package";  \
-            fi \
-        done && rm -rf ./*packages.txt && \
-        echo "Download source for $(find . | wc -l) third-party packages: $(du -sh)"; fi && \
-    rm -rf /var/lib/apt/lists/*
+# Create an unprivileged user.
+RUN groupadd -g 1001 default && \
+    useradd -m -u 1001 -g default openfl
+USER openfl
 
-WORKDIR /openfl
+# Install OpenFL.
+WORKDIR /home/openfl
 COPY . .
+ENV PATH=/home/openfl/.local/bin:$PATH
+RUN pip install --no-cache-dir -U pip setuptools wheel && \
+    pip install --no-cache-dir -e .
 
-# Install OpenFL
-RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
-    pip install --no-cache-dir .
+# Download thirdparty licenses.
+RUN INSTALL_SOURCES=yes /home/openfl/openfl-docker/licenses.sh
 
-WORKDIR /thirdparty
-RUN if [ "$INSTALL_SOURCES" = "yes" ]; then \
-    pip install --no-cache-dir pip-licenses; \
-    pip-licenses -l >> licenses.txt; \
-    pip-licenses | awk '{for(i=1;i<=NF;i++) if(i!=2) printf $i" "; print ""}' | tee -a all_dependencies.txt; \
-    pip-licenses | grep -E 'GPL|MPL|EPL' | awk '{OFS="=="} {print $1,$2}' | xargs pip download --no-binary :all:; \
-fi
-WORKDIR /openfl
-
-HEALTHCHECK  --interval=30m --timeout=3s \
-  CMD echo "Container works" || exit 1
-
-CMD [ "/bin/bash" ]
+CMD ["/bin/bash"]

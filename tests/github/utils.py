@@ -117,26 +117,3 @@ def create_signed_cert_for_collaborator(col, data_path):
         os.remove(f)
     # Remove request archive
     os.remove(f'col_{col}_to_agg_cert_request.zip')
-
-
-def start_aggregator_container(workspace_image_name, aggregator_required_files):
-    check_call(
-        'docker run --rm '
-        '--network host '
-        f'-v {Path.cwd().resolve()}/{aggregator_required_files}:/certs.tar '
-        '-e \"CONTAINER_TYPE=aggregator\" '
-        f'{workspace_image_name} '
-        'bash /openfl/openfl-docker/start_actor_in_container.sh',
-        shell=True)
-
-
-def start_collaborator_container(workspace_image_name, col_name):
-    check_call(
-        'docker run --rm '
-        '--network host '
-        f'-v {Path.cwd()}/cert_col_{col_name}.tar:/certs.tar '
-        '-e \"CONTAINER_TYPE=collaborator\" '
-        f'-e \"COL={col_name}\" '
-        f'{workspace_image_name} '
-        'bash /openfl/openfl-docker/start_actor_in_container.sh',
-        shell=True)

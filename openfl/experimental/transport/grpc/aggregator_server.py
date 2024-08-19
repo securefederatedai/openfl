@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 
 class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
-    """gRPC server class for the Aggregator."""
+    """GRPC server class for the Aggregator."""
 
     def __init__(
         self,
@@ -33,8 +33,7 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
         private_key=None,
         **kwargs,
     ):
-        """
-        Class initializer.
+        """Class initializer.
 
         Args:
             aggregator: The aggregator
@@ -61,8 +60,7 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
         self.logger = logging.getLogger(__name__)
 
     def validate_collaborator(self, request, context):
-        """
-        Validate the collaborator.
+        """Validate the collaborator.
 
         Args:
             request: The gRPC message request
@@ -70,8 +68,7 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
 
         Raises:
             ValueError: If the collaborator or collaborator certificate is not
-             valid then raises error.
-
+                valid then raises error.
         """
         if self.tls:
             common_name = context.auth_context()["x509_common_name"][0].decode("utf-8")
@@ -88,8 +85,7 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
                 )
 
     def get_header(self, collaborator_name):
-        """
-        Compose and return MessageHeader.
+        """Compose and return MessageHeader.
 
         Args:
             collaborator_name : str
@@ -103,8 +99,7 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
         )
 
     def check_request(self, request):
-        """
-        Validate request header matches expected values.
+        """Validate request header matches expected values.
 
         Args:
             request : protobuf
@@ -131,13 +126,11 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
         )
 
     def SendTaskResults(self, request, context):  # NOQA:N802
-        """
-        <FIND OUT WHAT COMMENT TO PUT HERE>.
+        """<FIND OUT WHAT COMMENT TO PUT HERE>.
 
         Args:
             request: The gRPC message request
             context: The gRPC context
-
         """
         self.validate_collaborator(request, context)
         self.check_request(request)
@@ -153,8 +146,7 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
         return aggregator_pb2.TaskResultsResponse(header=self.get_header(collaborator_name))
 
     def GetTasks(self, request, context):  # NOQA:N802
-        """
-        Request a job from aggregator.
+        """Request a job from aggregator.
 
         Args:
             request: The gRPC message request
@@ -176,9 +168,7 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
         )
 
     def CallCheckpoint(self, request, context):  # NOQA:N802
-        """
-        Request aggregator to perform a checkpoint
-        for a given function.
+        """Request aggregator to perform a checkpoint for a given function.
 
         Args:
             request: The gRPC message request

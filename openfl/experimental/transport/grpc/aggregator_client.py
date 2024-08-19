@@ -160,8 +160,7 @@ class AggregatorGRPCClient:
         )
 
     def create_insecure_channel(self, uri):
-        """
-        Set an insecure gRPC channel (i.e. no TLS) if desired.
+        """Set an insecure gRPC channel (i.e. no TLS) if desired.
 
         Warns user that this is not recommended.
 
@@ -170,7 +169,6 @@ class AggregatorGRPCClient:
 
         Returns:
             An insecure gRPC channel object
-
         """
         return grpc.insecure_channel(uri, options=channel_options)
 
@@ -182,8 +180,7 @@ class AggregatorGRPCClient:
         certificate,
         private_key,
     ):
-        """
-        Set an secure gRPC channel (i.e. TLS).
+        """Set an secure gRPC channel (i.e. TLS).
 
         Args:
             uri: The uniform resource identifier fo the insecure channel
@@ -248,7 +245,8 @@ class AggregatorGRPCClient:
 
     def reconnect(self):
         """Create a new channel with the gRPC server."""
-        # channel.close() is idempotent. Call again here in case it wasn't issued previously
+        # channel.close() is idempotent. Call again here in case it wasn't
+        # issued previously
         self.disconnect()
 
         if not self.tls:

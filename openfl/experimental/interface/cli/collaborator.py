@@ -115,8 +115,7 @@ def generate_cert_request_(collaborator_name, silent, skip_package):
 
 
 def generate_cert_request(collaborator_name, silent, skip_package):
-    """
-    Create collaborator certificate key pair.
+    """Create collaborator certificate key pair.
 
     Then create a package with the CSR to send for signing.
     """
@@ -184,7 +183,6 @@ def register_collaborator(file_name):
 
     Args:
         file_name (str): The name of the collaborator in this federation
-
     """
 
     col_name = find_certificate_name(file_name)

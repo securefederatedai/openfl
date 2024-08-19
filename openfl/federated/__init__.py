@@ -20,3 +20,9 @@ if importlib.util.find_spec("torch") is not None:
     from openfl.federated.data import PyTorchDataLoader
     from openfl.federated.task import FederatedModel  # NOQA
     from openfl.federated.task import PyTorchTaskRunner
+
+__all__ = [
+    "Plan",
+    "TaskRunner",
+    "DataLoader",
+]

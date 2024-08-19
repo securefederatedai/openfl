@@ -19,7 +19,11 @@ logger = getLogger(__name__)
 @group()
 @pass_context
 def tutorial(context):
-    """Manage Jupyter notebooks."""
+    """Manage Jupyter notebooks.
+
+    Args:
+        context (click.core.Context): Click context.
+    """
     context.obj["group"] = "tutorial"
 
 
@@ -39,7 +43,12 @@ def tutorial(context):
     help="The port the Jupyter Lab server will listen on",
 )
 def start(ip, port):
-    """Start the Jupyter Lab from the tutorials directory."""
+    """Start the Jupyter Lab from the tutorials directory.
+
+    Args:
+        ip (str): IP address the Jupyter Lab that should start.
+        port (int): The port the Jupyter Lab server will listen on.
+    """
 
     if "VIRTUAL_ENV" in environ:
         venv = environ["VIRTUAL_ENV"].split(sep)[-1]
