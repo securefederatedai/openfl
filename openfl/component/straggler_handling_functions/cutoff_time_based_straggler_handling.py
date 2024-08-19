@@ -3,10 +3,10 @@
 
 
 """Cutoff time based Straggler Handling function."""
-import time
 import threading
-from typing import Callable
+import time
 from logging import getLogger
+from typing import Callable
 
 import numpy as np
 
@@ -74,13 +74,16 @@ class CutoffTimeBasedStragglerHandling(StragglerHandlingPolicy):
             self.timer.cancel()
             delattr(self, "timer")
         self.timer = threading.Timer(
-            self.straggler_cutoff_time, callback,
+            self.straggler_cutoff_time,
+            callback,
         )
         self.timer.daemon = True
         self.timer.start()
 
     def straggler_cutoff_check(
-        self, num_collaborators_done: int, num_all_collaborators: int,
+        self,
+        num_collaborators_done: int,
+        num_all_collaborators: int,
     ) -> bool:
         """
         If minimum_reporting collaborators have reported results within
@@ -120,9 +123,8 @@ class CutoffTimeBasedStragglerHandling(StragglerHandlingPolicy):
         # time,
         # then disregard the policy and wait for ALL collaborators to report
         # results.
-        elif (
-            self.straggler_cutoff_time == np.inf
-            or (self.__straggler_time_expired() and self.__is_policy_applied_for_round)
+        elif self.straggler_cutoff_time == np.inf or (
+            self.__straggler_time_expired() and self.__is_policy_applied_for_round
         ):
             return num_all_collaborators == num_collaborators_done
         # Something has gone, unhandled scenario, raising error.
@@ -139,9 +141,8 @@ class CutoffTimeBasedStragglerHandling(StragglerHandlingPolicy):
         Returns:
             bool: True if the straggler time has expired, False otherwise.
         """
-        return (
-            self.round_start_time is not None
-            and ((time.time() - self.round_start_time) > self.straggler_cutoff_time)
+        return self.round_start_time is not None and (
+            (time.time() - self.round_start_time) > self.straggler_cutoff_time
         )
 
     def __minimum_collaborators_reported(self, num_collaborators_done) -> bool:

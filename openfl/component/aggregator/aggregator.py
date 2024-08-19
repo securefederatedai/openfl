@@ -398,9 +398,7 @@ class Aggregator:
 
         # Start straggler handling policy for timer based callback is required
         # for %age based policy callback is not required
-        self.straggler_handling_policy.start_policy(
-            callback=self._straggler_cutoff_time_elapsed
-        )
+        self.straggler_handling_policy.start_policy(callback=self._straggler_cutoff_time_elapsed)
 
         return tasks, self.round_number, sleep_time, time_to_quit
 
@@ -425,7 +423,8 @@ class Aggregator:
             # If minimum required collaborators have reported results mark
             # remaining collaborators as stragglers
             self.stragglers = [
-                collab_name for collab_name in self.authorized_cols
+                collab_name
+                for collab_name in self.authorized_cols
                 if collab_name not in self.collaborators_done
             ]
             self.logger.info(
@@ -613,8 +612,8 @@ class Aggregator:
         """
         if self._time_to_quit() or collaborator_name in self.stragglers:
             self.logger.warning(
-                f'STRAGGLER: Collaborator {collaborator_name} is reporting results '
-                f'after task {task_name} has finished.'
+                f"STRAGGLER: Collaborator {collaborator_name} is reporting results "
+                f"after task {task_name} has finished."
             )
             return
 
@@ -679,13 +678,12 @@ class Aggregator:
             len(self.collaborators_done), len(self.authorized_cols)
         ):
             self.stragglers = [
-                collab_name for collab_name in self.authorized_cols
+                collab_name
+                for collab_name in self.authorized_cols
                 if collab_name not in self.collaborators_done
             ]
             if len(self.stragglers) != 0:
-                self.logger.warning(
-                    f"Identified straggler collaborators: {self.stragglers}"
-                )
+                self.logger.warning(f"Identified straggler collaborators: {self.stragglers}")
             self._end_of_round_check()
 
     def _process_named_tensor(self, named_tensor, collaborator_name):
@@ -1036,19 +1034,14 @@ class Aggregator:
         completed or not.
         """
         # Get all tasks given to the collaborator for current round
-        all_tasks = self.assigner.get_tasks_for_collaborator(
-            collaborator_name, self.round_number
-        )
+        all_tasks = self.assigner.get_tasks_for_collaborator(collaborator_name, self.round_number)
         # Check if all given tasks are completed by the collaborator
         all_tasks_completed = True
         for task in all_tasks:
             if hasattr(task, "name"):
                 task = task.name
-            all_tasks_completed = (
-                all_tasks_completed and self._collaborator_task_completed(
-                    collaborator=collaborator_name, task_name=task,
-                    round_num=self.round_number
-                )
+            all_tasks_completed = all_tasks_completed and self._collaborator_task_completed(
+                collaborator=collaborator_name, task_name=task, round_num=self.round_number
             )
         # If the collaborator has completed ALL tasks for current round,
         # update collaborators_done
