@@ -776,22 +776,6 @@ class Aggregator:
 
         return final_tensor_key, final_nparray
 
-    # TODO: To be removed after review
-    def _end_of_task_check(self, task_name):
-        """Check whether all collaborators who are supposed to perform the
-        task complete.
-
-        Args:
-            task_name (str): Task name.
-                The task name to check.
-
-        Returns:
-            bool: Whether the task is done.
-        """
-        if self._is_task_done(task_name):
-            # now check for the end of the round
-            self._end_of_round_check()
-
     def _prepare_trained(self, tensor_name, origin, round_number, report, agg_results):
         """Prepare aggregated tensorkey tags.
 
@@ -1004,30 +988,6 @@ class Aggregator:
         # Reset straggler handling policy for the next round.
         self.straggler_handling_policy.reset_policy_for_round()
 
-    # TODO: To be removed after review
-    def _is_task_done(self, task_name):
-        """Check that task is done.
-
-        Args:
-            task_name (str): Task name.
-
-        Returns:
-            bool: Whether the task is done.
-        """
-        all_collaborators = self.assigner.get_collaborators_for_task(task_name, self.round_number)
-
-        collaborators_done = []
-        for c in all_collaborators:
-            if self._collaborator_task_completed(c, task_name, self.round_number):
-                collaborators_done.append(c)
-
-        straggler_check = self.straggler_handling_policy.straggler_cutoff_check(
-            len(collaborators_done), len(all_collaborators)
-        )
-
-        # all are done or straggler policy calls for early round end.
-        return straggler_check or len(all_collaborators) == len(collaborators_done)
-
     def _is_collaborator_done(self, collaborator_name: str) -> None:
         """
         Check if all tasks given to the collaborator are completed then,
@@ -1051,17 +1011,6 @@ class Aggregator:
                 f"Round: {self.round_number}, Collaborators that have completed all tasks: "
                 f"{self.collaborators_done}"
             )
-
-    # TODO: To be removed after review
-    def _is_round_done(self):
-        """Check that round is done.
-
-        Returns:
-            bool: Whether the round is done.
-        """
-        tasks_for_round = self.assigner.get_all_tasks_for_round(self.round_number)
-
-        return all(self._is_task_done(task_name) for task_name in tasks_for_round)
 
     def _log_big_warning(self):
         """Warn user about single collaborator cert mode."""

@@ -37,7 +37,6 @@ class CutoffTimeBasedStragglerHandling(StragglerHandlingPolicy):
         self.round_start_time = round_start_time
         self.straggler_cutoff_time = straggler_cutoff_time
         self.minimum_reporting = minimum_reporting
-        self.__is_policy_applied_for_round = False
         self.logger = getLogger(__name__)
 
         if self.straggler_cutoff_time == np.inf:
@@ -48,9 +47,11 @@ class CutoffTimeBasedStragglerHandling(StragglerHandlingPolicy):
 
     def reset_policy_for_round(self) -> None:
         """
-        Reset policy variable for the next round.
+        Reset timer for the next round.
         """
-        self.__is_policy_applied_for_round = False
+        if hasattr(self, "timer"):
+            self.timer.cancel()
+            delattr(self, "timer")
 
     def start_policy(self, callback: Callable) -> None:
         """
@@ -64,15 +65,12 @@ class CutoffTimeBasedStragglerHandling(StragglerHandlingPolicy):
         Returns:
             None
         """
-        # If straggler_cutoff_time is set to infinite or
-        # if the timer already expired for the current round do not start
-        # the timer again until next round.
-        if self.straggler_cutoff_time == np.inf or self.__is_policy_applied_for_round:
+        # If straggler_cutoff_time is set to infinity
+        # or if the timer is already running,
+        # do not start the policy.
+        if self.straggler_cutoff_time == np.inf or hasattr(self, "timer"):
             return
         self.round_start_time = time.time()
-        if hasattr(self, "timer"):
-            self.timer.cancel()
-            delattr(self, "timer")
         self.timer = threading.Timer(
             self.straggler_cutoff_time,
             callback,
@@ -98,13 +96,14 @@ class CutoffTimeBasedStragglerHandling(StragglerHandlingPolicy):
         Returns:
             bool
         """
+
+        # if straggler time has not expired then
+        # wait for ALL collaborators to report results.
         if not self.__straggler_time_expired():
-            return False
-        # Check if time has expired and policy is not applied
-        elif self.__straggler_time_expired() and not self.__is_policy_applied_for_round:
-            # Stop timer from restarting for current round and
-            # if set to True wait for ALL collaborators instead of minimum_reporting
-            self.__is_policy_applied_for_round = True
+            return num_all_collaborators == num_collaborators_done
+
+        # Check if time has expired
+        elif self.__straggler_time_expired():
             # Check if minimum_reporting collaborators have reported results
             if self.__minimum_collaborators_reported(num_collaborators_done):
                 self.logger.info(
@@ -113,25 +112,15 @@ class CutoffTimeBasedStragglerHandling(StragglerHandlingPolicy):
                 )
                 return True
             self.logger.info(
-                "Disregarding straggler handling policy and waiting for ALL "
-                f"{num_all_collaborators} collaborator(s) to report results."
+                "Disregarded straggler handling policy and waiting for minimum "
+                f"{self.minimum_reporting} collaborator(s) to report results."
             )
             return False
-        # If straggler_cutoff_time is set to infinite,
-        # OR
-        # If minimum_reporting collaborators have not reported results within cutoff
-        # time,
-        # then disregard the policy and wait for ALL collaborators to report
-        # results.
-        elif self.straggler_cutoff_time == np.inf or (
-            self.__straggler_time_expired() and self.__is_policy_applied_for_round
-        ):
-            return num_all_collaborators == num_collaborators_done
-        # Something has gone, unhandled scenario, raising error.
+
+        # Something has gone wrong, unhandled scenario, raising error.
         raise ValueError(
             "Unhandled scenario"
             f"{self.__straggler_time_expired()=}"
-            f"{self.__is_policy_applied_for_round=}"
             f"{self.straggler_cutoff_time=}"
         )
 
