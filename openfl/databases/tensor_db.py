@@ -216,7 +216,6 @@ class TensorDB:
         if hasattr(aggregation_function, "_privileged"):
             if aggregation_function._privileged:
                 with self.mutex:
-                    self._bind_convenience_methods()
                     agg_nparray = aggregation_function(
                         local_tensors,
                         self.tensor_db,
