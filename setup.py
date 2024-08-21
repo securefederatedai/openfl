@@ -100,7 +100,6 @@ setup(
         'openfl.component.straggler_handling_functions',
         'openfl.cryptography',
         'openfl.databases',
-        'openfl.databases.utilities',
         'openfl.experimental',
         'openfl.experimental.workspace_export',
         'openfl.experimental.federated',

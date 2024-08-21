@@ -5,15 +5,15 @@
 """TensorDB Module."""
 
 from threading import Lock
-from types import MethodType
 from typing import Dict, Iterator, Optional
 
 import numpy as np
 import pandas as pd
 
-from openfl.databases.utilities import ROUND_PLACEHOLDER, _retrieve, _search, _store
 from openfl.interface.aggregation_functions import AggregationFunction
 from openfl.utilities import LocalTensor, TensorKey, change_tags
+
+ROUND_PLACEHOLDER = 1000000
 
 
 class TensorDB:
@@ -43,19 +43,7 @@ class TensorDB:
         self.tensor_db = pd.DataFrame(
             {col: pd.Series(dtype=dtype) for col, dtype in types_dict.items()}
         )
-        self._bind_convenience_methods()
-
         self.mutex = Lock()
-
-    def _bind_convenience_methods(self):
-        """Bind convenience methods for the TensorDB dataframe to make storage,
-        retrieval, and search easier."""
-        if not hasattr(self.tensor_db, "store"):
-            self.tensor_db.store = MethodType(_store, self.tensor_db)
-        if not hasattr(self.tensor_db, "retrieve"):
-            self.tensor_db.retrieve = MethodType(_retrieve, self.tensor_db)
-        if not hasattr(self.tensor_db, "search"):
-            self.tensor_db.search = MethodType(_search, self.tensor_db)
 
     def __repr__(self) -> str:
         """Returns the string representation of the TensorDB object.
