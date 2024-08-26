@@ -5,9 +5,6 @@
 
 from openfl.federated import PyTorchDataLoader
 from .mnist_utils import load_mnist_shard
-from logging import getLogger
-
-logger = getLogger(__name__)
 
 
 class PyTorchMNISTInMemory(PyTorchDataLoader):
@@ -31,13 +28,13 @@ class PyTorchMNISTInMemory(PyTorchDataLoader):
         # of collaborator list.
 
         try:
-            num_classes, X_train, y_train, X_valid, y_valid = load_mnist_shard(
-                shard_num=int(data_path), **kwargs
-            )
-        except ValueError:
-            logger.error("Please pass the shard number (integer) for the collaborator using data path flag.")
-            return
+            int(data_path)
+        except:
+            raise ValueError("Pass shard number using data path flag as an int.")
 
+        num_classes, X_train, y_train, X_valid, y_valid = load_mnist_shard(
+            shard_num=int(data_path), **kwargs
+        )
         self.X_train = X_train
         self.y_train = y_train
         self.train_loader = self.get_train_loader()

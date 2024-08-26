@@ -19,9 +19,6 @@ from tqdm import tqdm
 
 from openfl.federated import PyTorchDataLoader
 from openfl.utilities import validate_file_hash
-from logging import getLogger
-
-logger = getLogger(__name__)
 
 
 def read_data(image_path, mask_path):
@@ -125,14 +122,14 @@ class PyTorchKvasirDataLoader(PyTorchDataLoader):
         """
         super().__init__(batch_size, **kwargs)
 
-        load_kvasir_dataset()
         try:
-            self.valid_dataset = KvasirDataset(True, shard_num=int(data_path), **kwargs)
-            self.train_dataset = KvasirDataset(False, shard_num=int(data_path), **kwargs)
-        except ValueError:
-            logger.error("Please pass the shard number (integer) for the collaborator using data path flag.")
-            return
-
+            int(data_path)
+        except:
+            raise ValueError("Pass shard number using data path flag as an int.")
+        
+        load_kvasir_dataset()
+        self.valid_dataset = KvasirDataset(True, shard_num=int(data_path), **kwargs)
+        self.train_dataset = KvasirDataset(False, shard_num=int(data_path), **kwargs)
         self.train_loader = self.get_train_loader()
         self.val_loader = self.get_valid_loader()
         self.batch_size = batch_size
