@@ -6,6 +6,8 @@
 import zipfile
 from os import listdir
 from pathlib import Path
+from re import findall
+
 
 import numpy as np
 import PIL
@@ -122,8 +124,8 @@ class PyTorchKvasirDataLoader(PyTorchDataLoader):
         super().__init__(batch_size, **kwargs)
 
         load_kvasir_dataset()
-        self.valid_dataset = KvasirDataset(True, shard_num=int(data_path), **kwargs)
-        self.train_dataset = KvasirDataset(False, shard_num=int(data_path), **kwargs)
+        self.valid_dataset = KvasirDataset(True, shard_num=findall(r'\d+', data_path)[0], **kwargs)
+        self.train_dataset = KvasirDataset(False, shard_num=findall(r'\d+', data_path)[0], **kwargs)
         self.train_loader = self.get_train_loader()
         self.val_loader = self.get_valid_loader()
         self.batch_size = batch_size
