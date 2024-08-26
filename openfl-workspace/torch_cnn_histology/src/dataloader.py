@@ -9,7 +9,6 @@ from os import makedirs
 from pathlib import Path
 from urllib.request import urlretrieve
 from zipfile import ZipFile
-from re import findall
 
 from openfl.federated import PyTorchDataLoader
 import numpy as np
@@ -38,8 +37,13 @@ class PyTorchHistologyInMemory(PyTorchDataLoader):
         """
         super().__init__(batch_size, random_seed=0, **kwargs)
 
-        _, num_classes, X_train, y_train, X_valid, y_valid = load_histology_shard(
-            shard_num=findall(r'\d+', data_path)[0], **kwargs)
+        try:
+            _, num_classes, X_train, y_train, X_valid, y_valid = load_histology_shard(
+                shard_num=int(data_path), **kwargs
+            )
+        except ValueError:
+            logger.error("Please pass the shard number (integer) for the collaborator using data path flag.")
+            return
 
         self.X_train = X_train
         self.y_train = y_train

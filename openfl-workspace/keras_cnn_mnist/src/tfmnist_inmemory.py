@@ -3,10 +3,11 @@
 
 """You may copy this file as the starting point of your own model."""
 
-from re import findall
-
 from openfl.federated import TensorFlowDataLoader
 from .mnist_utils import load_mnist_shard
+from logging import getLogger
+
+logger = getLogger(__name__)
 
 
 class TensorFlowMNISTInMemory(TensorFlowDataLoader):
@@ -29,9 +30,13 @@ class TensorFlowMNISTInMemory(TensorFlowDataLoader):
         # Then we have a way to automatically shard based on rank and size of
         # collaborator list.
 
-        _, num_classes, X_train, y_train, X_valid, y_valid = load_mnist_shard(
-            shard_num=findall(r'\d+', data_path)[0], **kwargs
-        )
+        try:
+            _, num_classes, X_train, y_train, X_valid, y_valid = load_mnist_shard(
+                shard_num=int(data_path), **kwargs
+            )
+        except ValueError:
+            logger.error("Please pass the shard number (integer) for the collaborator using data path flag.")
+            return
 
         self.X_train = X_train
         self.y_train = y_train
