@@ -6,7 +6,6 @@
 import zipfile
 from os import listdir
 from pathlib import Path
-from re import findall
 
 
 import numpy as np
@@ -20,6 +19,9 @@ from tqdm import tqdm
 
 from openfl.federated import PyTorchDataLoader
 from openfl.utilities import validate_file_hash
+from logging import getLogger
+
+logger = getLogger(__name__)
 
 
 def read_data(image_path, mask_path):
@@ -124,8 +126,13 @@ class PyTorchKvasirDataLoader(PyTorchDataLoader):
         super().__init__(batch_size, **kwargs)
 
         load_kvasir_dataset()
-        self.valid_dataset = KvasirDataset(True, shard_num=findall(r'\d+', data_path)[0], **kwargs)
-        self.train_dataset = KvasirDataset(False, shard_num=findall(r'\d+', data_path)[0], **kwargs)
+        try:
+            self.valid_dataset = KvasirDataset(True, shard_num=int(data_path), **kwargs)
+            self.train_dataset = KvasirDataset(False, shard_num=int(data_path), **kwargs)
+        except ValueError:
+            logger.error("Please pass the shard number (integer) for the collaborator using data path flag.")
+            return
+
         self.train_loader = self.get_train_loader()
         self.val_loader = self.get_valid_loader()
         self.batch_size = batch_size
