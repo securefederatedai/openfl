@@ -158,7 +158,7 @@ setup(
         'jupyterlab',
         'numpy',
         'pandas',
-        'protobuf>=4.22,<5.0.0dev',
+        'protobuf>=4.22,<6.0.0',
         'pyzmq<=26.1.1',
         'requests',
         'rich',
