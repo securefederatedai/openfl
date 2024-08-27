@@ -417,21 +417,7 @@ class Aggregator:
         )
 
         # Check if minimum collaborators reported results
-        if self.straggler_handling_policy.straggler_cutoff_check(
-            len(self.collaborators_done), len(self.authorized_cols)
-        ):
-            # If minimum required collaborators have reported results mark
-            # remaining collaborators as stragglers
-            self.stragglers = [
-                collab_name
-                for collab_name in self.authorized_cols
-                if collab_name not in self.collaborators_done
-            ]
-            self.logger.info(
-                f"{self.straggler_handling_policy.__class__.__name__} policy applied "
-                f"straggler: {self.stragglers}"
-            )
-            self._end_of_round_check()
+        self._end_of_round_with_stragglers_check()
 
     def get_aggregated_tensor(
         self,
@@ -672,8 +658,16 @@ class Aggregator:
 
         self._is_collaborator_done(collaborator_name)
 
-        # If minimum required collaborators have reported results,
-        # then identify stragglers and call for early round end.
+        self._end_of_round_with_stragglers_check()
+
+    def _end_of_round_with_stragglers_check(self):
+        """
+        Checks if the minimum required collaborators have reported their results,
+        identifies any stragglers, and initiates an early round end if necessary.
+
+        Returns:
+            None
+        """
         if self.straggler_handling_policy.straggler_cutoff_check(
             len(self.collaborators_done), len(self.authorized_cols)
         ):
@@ -683,7 +677,7 @@ class Aggregator:
                 if collab_name not in self.collaborators_done
             ]
             if len(self.stragglers) != 0:
-                self.logger.warning(f"Identified straggler collaborators: {self.stragglers}")
+                self.logger.warning(f"Identified stragglers: {self.stragglers}")
             self._end_of_round_check()
 
     def _process_named_tensor(self, named_tensor, collaborator_name):
@@ -879,9 +873,9 @@ class Aggregator:
         # Leave out straggler for the round even if they've paritally
         # completed given tasks
         collaborators_for_task = []
-        for c in all_collaborators_for_task:
-            if c in self.collaborators_done:
-                collaborators_for_task.append(c)
+        collaborators_for_task = [
+            c for c in all_collaborators_for_task if c in self.collaborators_done
+        ]
 
         # The collaborator data sizes for that task
         collaborator_weights_unnormalized = {

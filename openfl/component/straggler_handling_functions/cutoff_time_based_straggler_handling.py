@@ -94,7 +94,7 @@ class CutoffTimeBasedStragglerHandling(StragglerHandlingPolicy):
                 Total number of collaborators.
 
         Returns:
-            bool
+            bool: True if the straggler cutoff conditions are met, False otherwise.
         """
 
         # if straggler time has not expired then
@@ -111,11 +111,12 @@ class CutoffTimeBasedStragglerHandling(StragglerHandlingPolicy):
                     "cutoff time. Applying cutoff policy and proceeding with end of round."
                 )
                 return True
-            self.logger.info(
-                "Disregarded straggler handling policy and waiting for minimum "
-                f"{self.minimum_reporting} collaborator(s) to report results."
-            )
-            return False
+            else:
+                self.logger.info(
+                    "Disregarded straggler handling policy and waiting for minimum "
+                    f"{self.minimum_reporting} collaborator(s) to report results."
+                )
+                return False
 
         # Something has gone wrong, unhandled scenario, raising error.
         raise ValueError(
