@@ -1,12 +1,7 @@
 name: Documentation_Preview
 on:
-  pull_request_target:
-    types:
-      - opened
-    # Execute this action only on PRs that touch
-    # documentation files.
-    # paths:
-    #   - "docs/**"
+  pull_request:
+    branches: [ develop ]
 
 permissions:
   pull-requests: write
