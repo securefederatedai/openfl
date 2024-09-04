@@ -3,6 +3,12 @@
 We use sphinx to generate the documentation for this project.
 The documentation project has been initialized properly and we basically just need to update the actual content.
 
+Install the openfl package
+
+```sh
+pip install .
+```
+
 Install requirements for building documentation:
 
 ```sh
