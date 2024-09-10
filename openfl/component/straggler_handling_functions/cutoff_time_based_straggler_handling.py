@@ -16,6 +16,8 @@ from openfl.component.straggler_handling_functions.straggler_handling_function i
 
 
 class CutoffTimeBasedStragglerHandling(StragglerHandlingPolicy):
+    """Cutoff time based Straggler Handling function."""
+
     def __init__(
         self, round_start_time=None, straggler_cutoff_time=np.inf, minimum_reporting=1, **kwargs
     ):
@@ -102,28 +104,20 @@ class CutoffTimeBasedStragglerHandling(StragglerHandlingPolicy):
         if not self.__straggler_time_expired():
             return num_all_collaborators == num_collaborators_done
 
-        # Check if time has expired
-        elif self.__straggler_time_expired():
-            # Check if minimum_reporting collaborators have reported results
-            if self.__minimum_collaborators_reported(num_collaborators_done):
-                self.logger.info(
-                    f"{num_collaborators_done} collaborators reported results within "
-                    "cutoff time. Applying cutoff policy and proceeding with end of round."
-                )
-                return True
-            else:
-                self.logger.info(
-                    "Disregarded straggler handling policy and waiting for minimum "
-                    f"{self.minimum_reporting} collaborator(s) to report results."
-                )
-                return False
-
-        # Something has gone wrong, unhandled scenario, raising error.
-        raise ValueError(
-            "Unhandled scenario"
-            f"{self.__straggler_time_expired()=}"
-            f"{self.straggler_cutoff_time=}"
-        )
+        # Time has expired
+        # Check if minimum_reporting collaborators have reported results
+        elif self.__minimum_collaborators_reported(num_collaborators_done):
+            self.logger.info(
+                f"{num_collaborators_done} collaborators reported results within "
+                "cutoff time. Applying cutoff policy and proceeding with end of round."
+            )
+            return True
+        else:
+            self.logger.info(
+                "Disregarded straggler handling policy and waiting for minimum "
+                f"{self.minimum_reporting} collaborator(s) to report results."
+            )
+            return False
 
     def __straggler_time_expired(self) -> bool:
         """Check if the straggler time has expired.

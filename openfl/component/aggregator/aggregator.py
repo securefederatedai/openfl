@@ -6,6 +6,7 @@
 import queue
 import time
 from logging import getLogger
+from threading import Lock
 
 from openfl.component.straggler_handling_functions import CutoffTimeBasedStragglerHandling
 from openfl.databases import TensorDB
@@ -53,9 +54,10 @@ class Aggregator:
         collaborator_tasks_results (dict): Dict of collaborator tasks
             results.
         collaborator_task_weight (dict): Dict of col task weight.
+        mutex: A threading Lock object used to ensure thread-safe operations.
 
     .. note::
-         - plan setting
+        - plan setting
     """
 
     def __init__(
@@ -67,7 +69,7 @@ class Aggregator:
         best_state_path,
         last_state_path,
         assigner,
-        straggler_handling_policy=None,
+        straggler_handling_policy=CutoffTimeBasedStragglerHandling,
         rounds_to_train=256,
         single_col_cert_common_name=None,
         compression_pipeline=None,
@@ -137,9 +139,7 @@ class Aggregator:
         self.write_logs = write_logs
         self.log_metric_callback = log_metric_callback
 
-        self.straggler_handling_policy = (
-            straggler_handling_policy or CutoffTimeBasedStragglerHandling()
-        )
+        self.straggler_handling_policy = straggler_handling_policy
 
         if self.write_logs:
             self.log_metric = write_metric
@@ -181,6 +181,9 @@ class Aggregator:
         # maintain a list of collaborators that have completed task and
         # reported results in a given round
         self.collaborators_done = []
+
+        # Initialize a mutex lock for thread safety
+        self.mutex = Lock()
 
     def _load_initial_tensors(self):
         """Load all of the tensors required to begin federated learning.
@@ -416,8 +419,9 @@ class Aggregator:
             f"Applying {self.straggler_handling_policy.__class__.__name__} policy."
         )
 
-        # Check if minimum collaborators reported results
-        self._end_of_round_with_stragglers_check()
+        with self.mutex:
+            # Check if minimum collaborators reported results
+            self._end_of_round_with_stragglers_check()
 
     def get_aggregated_tensor(
         self,
@@ -619,10 +623,11 @@ class Aggregator:
 
         # we mustn't have results already
         if self._collaborator_task_completed(collaborator_name, task_name, round_number):
-            raise ValueError(
+            self.logger.warning(
                 f"Aggregator already has task results from collaborator {collaborator_name}"
                 f" for task {task_key}"
             )
+            return
 
         # By giving task_key it's own weight, we can support different
         # training/validation weights
@@ -656,9 +661,10 @@ class Aggregator:
 
         self.collaborator_tasks_results[task_key] = task_results
 
-        self._is_collaborator_done(collaborator_name)
+        with self.mutex:
+            self._is_collaborator_done(collaborator_name, round_number)
 
-        self._end_of_round_with_stragglers_check()
+            self._end_of_round_with_stragglers_check()
 
     def _end_of_round_with_stragglers_check(self):
         """
@@ -982,11 +988,25 @@ class Aggregator:
         # Reset straggler handling policy for the next round.
         self.straggler_handling_policy.reset_policy_for_round()
 
-    def _is_collaborator_done(self, collaborator_name: str) -> None:
+    def _is_collaborator_done(self, collaborator_name: str, round_number: int) -> None:
         """
         Check if all tasks given to the collaborator are completed then,
         completed or not.
+
+        Args:
+            collaborator_name (str): Collaborator name.
+            round_number (int): Round number.
+
+        Returns:
+            None
         """
+        if self.round_number != round_number:
+            self.logger.warning(
+                f"Collaborator {collaborator_name} is reporting results"
+                f" for the wrong round: {round_number}. Ignoring..."
+            )
+            return
+
         # Get all tasks given to the collaborator for current round
         all_tasks = self.assigner.get_tasks_for_collaborator(collaborator_name, self.round_number)
         # Check if all given tasks are completed by the collaborator
