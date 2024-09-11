@@ -160,7 +160,7 @@ setup(
         'pandas',
         'protobuf>=4.22,<5.0.0dev',
         'pyzmq<=26.1.1',
-        'requests',
+        'requests>=2.32.2',
         'rich',
         'scikit-learn',
         'tensorboard',
