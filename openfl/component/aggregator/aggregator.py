@@ -54,7 +54,7 @@ class Aggregator:
         collaborator_tasks_results (dict): Dict of collaborator tasks
             results.
         collaborator_task_weight (dict): Dict of col task weight.
-        mutex: A threading Lock object used to ensure thread-safe operations.
+        lock: A threading Lock object used to ensure thread-safe operations.
 
     .. note::
         - plan setting
@@ -182,8 +182,8 @@ class Aggregator:
         # reported results in a given round
         self.collaborators_done = []
 
-        # Initialize a mutex lock for thread safety
-        self.mutex = Lock()
+        # Initialize a lock for thread safety
+        self.lock = Lock()
 
     def _load_initial_tensors(self):
         """Load all of the tensors required to begin federated learning.
@@ -419,7 +419,7 @@ class Aggregator:
             f"Applying {self.straggler_handling_policy.__class__.__name__} policy."
         )
 
-        with self.mutex:
+        with self.lock:
             # Check if minimum collaborators reported results
             self._end_of_round_with_stragglers_check()
 
@@ -661,7 +661,7 @@ class Aggregator:
 
         self.collaborator_tasks_results[task_key] = task_results
 
-        with self.mutex:
+        with self.lock:
             self._is_collaborator_done(collaborator_name, round_number)
 
             self._end_of_round_with_stragglers_check()
