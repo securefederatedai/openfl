@@ -16,7 +16,6 @@ RUN --mount=type=cache,id=apt-dev,target=/var/cache/apt \
     python3-pip \
     python3.10-dev \
     ca-certificates \
-    build-essential \
     --no-install-recommends && \
     rm -rf /var/lib/apt/lists/*
 RUN apt-get purge -y linux-libc-dev

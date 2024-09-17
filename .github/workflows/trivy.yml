@@ -1,8 +1,7 @@
 name: Trivy
 on:
-  push:
-    branches: [ develop ]
   pull_request:
+    branches: [ develop ]
 jobs:
   build:
     permissions:
@@ -23,10 +22,3 @@ jobs:
         uses: aquasecurity/trivy-action@master
         with:
           image-ref: 'docker.io/securefederatedai/openfl:${{ github.sha }}'
-          format: 'sarif'
-          output: 'trivy-results.sarif'
-
-      - name: Upload Trivy scan results to GitHub Security tab
-        uses: github/codeql-action/upload-sarif@v2
-        with:
-          sarif_file: 'trivy-results.sarif'
