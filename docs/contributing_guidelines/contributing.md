@@ -5,7 +5,7 @@ We welcome contributions from the community. We believe that anyone can bring so
 
 We accept various contributions from documentation improvement and bug fixing to major features proposals and [roadmap](https://github.com/intel/openfl/blob/develop/ROADMAP.md) suggestions.
 
-Documentation improvement: review our [documentation](https://openfl.readthedocs.io/en/latest/install.html) and let us know if something is not clear or not relevant. 
+Documentation improvement: review our [documentation](https://openfl.readthedocs.io/en/latest) and let us know if something is not clear or not relevant. 
 Propose your own formulations or even write new section explaining something that you know how works, but do not see in the documentation. 
 Propose it through GitHub [issues](https://github.com/intel/openfl/issues/new/choose) or [Discussions](https://github.com/intel/openfl/discussions).
 
