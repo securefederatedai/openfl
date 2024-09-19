@@ -35,7 +35,6 @@ class Optimizer(abc.ABC):
             gradients (dict): Partial derivatives with respect to optimized
                 parameters.
         """
-        pass
 
     def _set_params_from_model(self, model_interface):
         """
