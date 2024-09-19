@@ -1,7 +1,7 @@
 # Contributing to OpenFL
 
 We welcome contributions from the community. There are several ways to contribute:
-* Improvements in [documentation](https://openfl.readthedocs.io/en/latest/install.html).
+* Improvements in [documentation](https://openfl.readthedocs.io/en/latest/).
 * Contributing to OpenFL's code-base: via bug-fixes or feature additions.
 * Answering questions on our [discussions page](https://github.com/securefederatedai/openfl/discussions).
 * Participating in our [roadmap](https://github.com/securefederatedai/openfl/blob/develop/ROADMAP.md) discussions.
