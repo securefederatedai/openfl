@@ -213,7 +213,6 @@ def help_(context, subcommand):
         subcommand (str, optional): Subcommand to display help for. Defaults
             to None.
     """
-    pass
 
 
 def error_handler(error):

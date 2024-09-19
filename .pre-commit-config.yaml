@@ -20,3 +20,11 @@ repos:
         files: \.json$
       - id: trailing-whitespace
         files: \.py$
+  - repo: https://github.com/PyCQA/autoflake
+    rev: v2.2.0
+    hooks:
+      - id: autoflake
+        args:
+          - --in-place
+          - --remove-unused-variables
+          - --recursive

@@ -19,7 +19,6 @@ class FrameworkAdapterPlugin(FrameworkAdapterPluginInterface):
 
     def __init__(self) -> None:
         """Initialize framework adapter."""
-        pass
 
     @staticmethod
     def serialization_setup():
