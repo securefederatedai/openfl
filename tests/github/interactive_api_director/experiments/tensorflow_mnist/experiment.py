@@ -17,7 +17,7 @@ def run():
     # please use the same identificator that was used in signed certificate
     client_id = 'frontend'
 
-    # 1) Run with API layer - Director mTLS 
+    # 1) Run with API layer - Director mTLS
     # If the user wants to enable mTLS their must provide CA root chain, and signed key pair to the federation interface
     # cert_chain = 'cert/root_ca.crt'
     # API_certificate = 'cert/frontend.crt'
@@ -54,7 +54,7 @@ def run():
     TI = TaskInterface()
     # Task interface currently supports only standalone functions.
     @TI.register_fl_task(model='model', data_loader='train_dataset',
-                        device='device', optimizer='optimizer')     
+                        device='device', optimizer='optimizer')
     def train(model, train_dataset, optimizer, device, loss_fn=loss_fn, warmup=False):
 
         # Iterate over the batches of the dataset.
@@ -88,7 +88,7 @@ def run():
         return {'train_acc': train_acc}
 
 
-    @TI.register_fl_task(model='model', data_loader='val_dataset', device='device')     
+    @TI.register_fl_task(model='model', data_loader='val_dataset', device='device')
     def validate(model, val_dataset, device):
         # Run a validation loop at the end of each epoch.
         for x_batch_val, y_batch_val in val_dataset:
@@ -98,7 +98,7 @@ def run():
         val_acc = val_acc_metric.result()
         val_acc_metric.reset_states()
         print("Validation acc: %.4f" % (float(val_acc),))
-                
+
         return {'validation_accuracy': val_acc,}
     # Save the initial model state
     train(model,fed_dataset.get_train_loader(), optimizer, 'cpu', warmup=True)
@@ -119,7 +119,7 @@ def run():
     # If I use autoreload I got a pickling error
 
     # The following command zips the workspace and python requirements to be transfered to collaborator nodes
-    fl_experiment.start(model_provider=MI, 
+    fl_experiment.start(model_provider=MI,
                         task_keeper=TI,
                         data_loader=fed_dataset,
                         rounds_to_train=2,

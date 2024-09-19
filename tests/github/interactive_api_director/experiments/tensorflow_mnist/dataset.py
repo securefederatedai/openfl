@@ -13,7 +13,7 @@ class FedDataset(DataInterface):
     @property
     def shard_descriptor(self):
         return self._shard_descriptor
-        
+
     @shard_descriptor.setter
     def shard_descriptor(self, shard_descriptor):
         """

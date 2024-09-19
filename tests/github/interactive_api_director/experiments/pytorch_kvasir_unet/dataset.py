@@ -107,4 +107,3 @@ class FedDataset(DataInterface):
         Information for aggregation
         """
         return len(self.valid_set)
-

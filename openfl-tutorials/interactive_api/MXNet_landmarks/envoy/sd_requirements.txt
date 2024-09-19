@@ -1,2 +1,2 @@
-pynvml
 kaggle
+pynvml
