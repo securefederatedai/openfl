@@ -2,7 +2,6 @@
 # SPDX-License-Identifier: Apache-2.0
 from pathlib import Path
 import time
-import logging
 import sys
 import shutil
 import subprocess

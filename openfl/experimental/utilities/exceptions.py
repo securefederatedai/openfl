@@ -12,7 +12,6 @@ class SerializationError(Exception):
             *args (object): Variable length argument list.
         """
         super().__init__(*args)
-        pass
 
 
 class ResourcesNotAvailableError(Exception):
@@ -26,7 +25,6 @@ class ResourcesNotAvailableError(Exception):
             *args (object): Variable length argument list.
         """
         super().__init__(*args)
-        pass
 
 
 class ResourcesAllocationError(Exception):
@@ -41,4 +39,3 @@ class ResourcesAllocationError(Exception):
             *args (object): Variable length argument list.
         """
         super().__init__(*args)
-        pass

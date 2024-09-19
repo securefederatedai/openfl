@@ -17,7 +17,6 @@ class Runtime:
 
         This serves as a base interface for runtimes that can run FLSpec flows.
         """
-        pass
 
     @property
     def aggregator(self):

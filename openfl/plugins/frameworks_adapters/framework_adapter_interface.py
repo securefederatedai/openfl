@@ -10,12 +10,10 @@ class FrameworkAdapterPluginInterface:
 
     def __init__(self) -> None:
         """Initialize framework adapter."""
-        pass
 
     @staticmethod
     def serialization_setup():
         """Prepare model for serialization (optional)."""
-        pass
 
     @staticmethod
     def get_tensor_dict(model, optimizer=None) -> dict:

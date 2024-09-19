@@ -25,7 +25,7 @@ def run():
         tls=False
     )
 
-    shard_registry = federation.get_shard_registry()
+    federation.get_shard_registry()
 
     dummy_shard_desc = federation.get_dummy_shard_descriptor(size=10)
     dummy_shard_dataset = dummy_shard_desc.get_dataset('')
