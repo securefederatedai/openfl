@@ -42,12 +42,20 @@ def tutorial(context):
     type=IntRange(1, 65535),
     help="The port the Jupyter Lab server will listen on",
 )
-def start(ip, port):
+@option(
+    "-no-browser",
+    "--no-browser",
+    required=False,
+    type=bool,
+    help="The Jupyter Lab server will without opening a browser",
+)
+def start(ip, port, no_browser):
     """Start the Jupyter Lab from the tutorials directory.
 
     Args:
         ip (str): IP address the Jupyter Lab that should start.
         port (int): The port the Jupyter Lab server will listen on.
+        no_browser (bool): The Jupyter Lab server will start without opening a browser.
     """
 
     if "VIRTUAL_ENV" in environ:
@@ -71,5 +79,6 @@ def start(ip, port):
         jupyter_command += ["--ip", f"{ip}"]
     if port is not None:
         jupyter_command += ["--port", f"{port}"]
-
+    if no_browser:
+        jupyter_command += ["--no-browser"]
     check_call(jupyter_command)
