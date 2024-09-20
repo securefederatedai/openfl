@@ -216,6 +216,7 @@ def help_(context, subcommand):
     # noqa: disable=all
     pass  # noqa: disable=pass
 
+
 def error_handler(error):
     """
     Handle the error.
