@@ -213,8 +213,7 @@ def help_(context, subcommand):
         subcommand (str, optional): Subcommand to display help for. Defaults
             to None.
     """
-    # noqa: disable=all
-    pass  # noqa: disable=pass
+    pass
 
 
 def error_handler(error):

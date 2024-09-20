@@ -28,3 +28,4 @@ repos:
           - --in-place
           - --remove-unused-variables
           - --recursive
+          - --ignore-pass-statements
