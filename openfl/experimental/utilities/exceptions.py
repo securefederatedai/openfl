@@ -12,7 +12,7 @@ class SerializationError(Exception):
             *args (object): Variable length argument list.
         """
         super().__init__(*args)
-
+        pass # noqa: disable=all
 
 class ResourcesNotAvailableError(Exception):
     """Exception raised when the required resources are not available."""
@@ -25,6 +25,7 @@ class ResourcesNotAvailableError(Exception):
             *args (object): Variable length argument list.
         """
         super().__init__(*args)
+        pass # noqa: disable=all
 
 
 class ResourcesAllocationError(Exception):
@@ -39,3 +40,4 @@ class ResourcesAllocationError(Exception):
             *args (object): Variable length argument list.
         """
         super().__init__(*args)
+        pass # noqa: disable=all

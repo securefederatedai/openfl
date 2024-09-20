@@ -19,6 +19,7 @@ class FrameworkAdapterPlugin(FrameworkAdapterPluginInterface):
 
     def __init__(self) -> None:
         """Initialize framework adapter."""
+        pass # noqa: disable=all
 
     @staticmethod
     def serialization_setup():
