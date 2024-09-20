@@ -17,7 +17,8 @@ class Runtime:
 
         This serves as a base interface for runtimes that can run FLSpec flows.
         """
-        pass # noqa: disable=all
+        # noqa: disable=all
+        pass  # noqa: disable=pass
 
     @property
     def aggregator(self):

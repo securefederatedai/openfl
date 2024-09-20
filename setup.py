@@ -25,7 +25,8 @@ class BuildPackageProtos(Command):
 
         This method must be implemented by all command classes.
         """
-        pass # noqa: disable=all
+        # noqa: disable=all
+        pass  # noqa: disable=pass
 
     def finalize_options(self):
         """Set final values for all the options that this command supports.
@@ -39,7 +40,8 @@ class BuildPackageProtos(Command):
 
         This method must be implemented by all command classes.
         """
-        pass # noqa: disable=all
+        # noqa: disable=all
+        pass  # noqa: disable=pass
 
     def run(self):
         """Build gRPC modules."""
