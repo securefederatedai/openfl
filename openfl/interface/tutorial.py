@@ -55,7 +55,7 @@ def start(ip, port, no_browser):
     Args:
         ip (str): IP address the Jupyter Lab that should start.
         port (int): The port the Jupyter Lab server will listen on.
-        no_browser (bool): The Jupyter Lab server will start without opening a browser.
+        no_browser (bool): If True, the server will not open the default web browser.
     """
 
     if "VIRTUAL_ENV" in environ:
