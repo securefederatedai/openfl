@@ -460,7 +460,6 @@ class Director:
         loop = asyncio.get_event_loop()
         while True:
             async with self.experiments_registry.get_next_experiment() as experiment:
-
                 # Review experiment block starts.
                 if self.review_plan_callback:
                     if not await experiment.review_experiment(self.review_plan_callback):

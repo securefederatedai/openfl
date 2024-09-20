@@ -515,7 +515,6 @@ class Eden:
         vec_norm = torch.norm(vec, 2)
 
         if vec_norm > 0:
-
             normalized = vec * (vec.numel() ** 0.5) / vec_norm
             bins = torch.bucketize(normalized, self.boundaries[self.nbits])
             scale = vec_norm**2 / torch.dot(torch.take(self.centroids[self.nbits], bins), vec)
@@ -540,7 +539,6 @@ class Eden:
         dim = vec.numel()
 
         if not dim & (dim - 1) == 0 or dim < 8:
-
             padded_dim = max(int(2 ** (np.ceil(np.log2(dim)))), 8)
             padded_vec = torch.zeros(padded_dim, device=self.device)
             padded_vec[:dim] = vec
@@ -673,7 +671,6 @@ class Eden:
         """
 
         def to_bits_h(ibv):
-
             n = ibv.numel()
             ibv = ibv.view(n // 8, 8).int()
 
@@ -705,7 +702,6 @@ class Eden:
         """
 
         def from_bits_h(bv):
-
             n = bv.numel()
 
             iv = torch.zeros((8, n)).to(self.device)
@@ -791,7 +787,6 @@ class EdenTransformer(Transformer):
             return_values = int_array.astype(np.uint8).tobytes(), metadata
 
         else:
-
             no_comp_data, metadata = self.no_comp.forward(data)
             return_values = no_comp_data, metadata
 

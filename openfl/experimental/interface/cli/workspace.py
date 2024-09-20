@@ -438,7 +438,6 @@ def _get_requirements_dict(txtfile):
 
 
 def _get_dir_hash(path):
-
     hash_ = sha256()
     hash_.update(path.encode("utf-8"))
     hash_ = hash_.hexdigest()

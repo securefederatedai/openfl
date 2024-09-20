@@ -11,7 +11,6 @@ from openfl.experimental.interface.participants import Aggregator, Collaborator
 
 
 class Runtime:
-
     def __init__(self):
         """Initializes the Runtime object.
 

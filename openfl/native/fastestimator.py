@@ -151,7 +151,6 @@ class FederatedFastEstimator:
         model = None
         for round_num in range(self.rounds):
             for col in plan.authorized_cols:
-
                 collaborator = collaborators[col]
 
                 if round_num != 0:

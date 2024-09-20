@@ -192,13 +192,11 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
         aggregator_pb2_grpc.add_AggregatorServicer_to_server(self, self.server)
 
         if not self.tls:
-
             self.logger.warn("gRPC is running on insecure channel with TLS disabled.")
             port = self.server.add_insecure_port(self.uri)
             self.logger.info(f"Insecure port: {port}")
 
         else:
-
             with open(self.private_key, "rb") as f:
                 private_key_b = f.read()
             with open(self.certificate, "rb") as f:

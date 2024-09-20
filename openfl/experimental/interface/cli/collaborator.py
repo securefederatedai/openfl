@@ -81,7 +81,6 @@ def start_(plan, collaborator_name, secure, data_config="plan/data.yaml"):
             f" {data_config} not found in workspace."
         )
     else:
-
         with open(data_config, "r") as f:
             data = yaml.load(f, Loader=SafeLoader)
             if data.get(collaborator_name, None) is None:
@@ -145,7 +144,6 @@ def generate_cert_request(collaborator_name, silent, skip_package):
     write_key(client_private_key, CERT_DIR / "client" / f"{file_name}.key")
 
     if not skip_package:
-
         archive_type = "zip"
         archive_name = f"col_{common_name}_to_agg_cert_request"
         archive_file_name = archive_name + "." + archive_type
