@@ -232,7 +232,6 @@ def generate_cert_request(collaborator_name, silent, skip_package):
     write_key(client_private_key, CERT_DIR / "client" / f"{file_name}.key")
 
     if not skip_package:
-
         archive_type = "zip"
         archive_name = f"col_{common_name}_to_agg_cert_request"
         archive_file_name = archive_name + "." + archive_type
@@ -296,7 +295,6 @@ def register_collaborator(file_name):
         doc["collaborators"] = []  # Create empty list
 
     if col_name in doc["collaborators"]:
-
         echo(
             "\nCollaborator "
             + style(f"{col_name}", fg="green")
@@ -305,7 +303,6 @@ def register_collaborator(file_name):
         )
 
     else:
-
         doc["collaborators"].append(col_name)
         with open(cols_file, "w", encoding="utf-8") as f:
             dump(doc, f)
@@ -429,7 +426,6 @@ def certify(collaborator_name, silent, request_pkg=None, import_=False):
         )
 
         if silent:
-
             echo(" Signing COLLABORATOR certificate")
             echo(" Warning: manual check of certificate hashes is bypassed in silent mode.")
             signed_col_cert = sign_certificate(csr, signing_key, signing_crt.subject)
@@ -437,10 +433,8 @@ def certify(collaborator_name, silent, request_pkg=None, import_=False):
             register_collaborator(CERT_DIR / "client" / f"{file_name}.crt")
 
         else:
-
             echo("Make sure the two hashes above are the same.")
             if confirm("Do you want to sign this certificate?"):
-
                 echo(" Signing COLLABORATOR certificate")
                 signed_col_cert = sign_certificate(csr, signing_key, signing_crt.subject)
                 write_crt(signed_col_cert, f"{cert_name}.crt")

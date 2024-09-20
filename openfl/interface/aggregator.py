@@ -221,17 +221,14 @@ def certify(fqdn, silent):
     crt_path_absolute_path = Path(CERT_DIR / f"{cert_name}.crt").absolute()
 
     if silent:
-
         echo(" Warning: manual check of certificate hashes is bypassed in silent mode.")
         echo(" Signing AGGREGATOR certificate")
         signed_agg_cert = sign_certificate(csr, signing_key, signing_crt.subject)
         write_crt(signed_agg_cert, crt_path_absolute_path)
 
     else:
-
         echo("Make sure the two hashes above are the same.")
         if confirm("Do you want to sign this certificate?"):
-
             echo(" Signing AGGREGATOR certificate")
             signed_agg_cert = sign_certificate(csr, signing_key, signing_crt.subject)
             write_crt(signed_agg_cert, crt_path_absolute_path)
