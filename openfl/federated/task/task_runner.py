@@ -127,7 +127,6 @@ class CoreTaskRunner:
         """
 
         def task_binder(task_name, callable_task):
-
             def collaborator_adapted_task(col_name, round_num, input_tensor_dict, **kwargs):
                 task_contract = self.task_provider.task_contract[task_name]
                 # Validation flag can be [False, '_local', '_agg']
