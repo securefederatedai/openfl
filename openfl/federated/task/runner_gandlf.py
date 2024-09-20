@@ -450,8 +450,7 @@ class GaNDLFTaskRunner(TaskRunner):
 
     def reset_opt_vars(self):
         """Reset optimizer variables."""
-        # noqa: disable=all
-        pass  # noqa: disable=pass
+        pass
 
 
 def create_tensorkey_dicts(

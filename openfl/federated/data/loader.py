@@ -21,8 +21,7 @@ class DataLoader:
         Args:
             kwargs: Additional arguments to pass to the function.
         """
-        # noqa: disable=all
-        pass  # noqa: disable=pass
+        pass
 
     def get_feature_shape(self):
         """Returns the shape of an example feature array.
