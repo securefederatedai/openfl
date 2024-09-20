@@ -1,0 +1,48 @@
+general:
+  name: qm9
+  guidance_target: both
+  sample_every_val: 1
+  samples_to_generate: 10000
+  samples_to_save: 0
+  chains_to_save: 0
+  number_chain_steps: 50
+
+model:
+  type: discrete
+  transition: marginal
+  model: graph_tf
+  diffusion_steps: 500
+  diffusion_noise_schedule: cosine
+  n_layers: 5
+  extra_features: null
+  hidden_mlp_dims:
+    X: 256
+    E: 128
+    y: 128
+  hidden_dims:
+    dx: 256
+    de: 64
+    dy: 64
+    n_head: 8
+    dim_ffX: 256
+    dim_ffE: 128
+    dim_ffy: 128
+  lambda_train:
+  - 5
+  - 0
+  input_dims: {'X': 4, 'E': 5, 'y': 1}
+  output_dims: {'X': 4, 'E': 5, 'y': 0}
+  torch_compile: False
+guidance:
+  use_guidance: True
+  lambda_guidance: 100.0
+train:
+  batch_size: 512
+  lr: 0.0002
+  num_workers: 0
+  weight_decay: 1.0e-12
+dataset:
+  name: qm9
+  datadir: data/qm9/qm9_pyg/
+  remove_h: true
+  pin_memory: false
