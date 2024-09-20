@@ -98,6 +98,7 @@ if watermark_path.exists() and watermark_path.is_dir():
     print(
         f"Watermark dataset already exists at: {watermark_path}. Proceeding to next step ... "
     )
+    pass # noqa: disable=all
 else:
     print("Generating Watermark dataset... ")
     generate_watermark()
