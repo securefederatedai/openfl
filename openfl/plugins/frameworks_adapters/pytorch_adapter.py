@@ -18,6 +18,7 @@ class FrameworkAdapterPlugin(FrameworkAdapterPluginInterface):
 
     def __init__(self) -> None:
         """Initialize framework adapter."""
+        pass # noqa: disable=all
 
     @staticmethod
     def get_tensor_dict(model, optimizer=None):

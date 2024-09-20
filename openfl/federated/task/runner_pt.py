@@ -458,6 +458,7 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
         Returns:
             None
         """
+        pass # noqa: disable=all
 
     def train_(self, train_dataloader: Iterator[Tuple[np.ndarray, np.ndarray]]) -> Metric:
         """Train single epoch.

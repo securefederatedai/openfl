@@ -10,6 +10,7 @@ class Serializer:
 
     def __init__(self) -> None:
         """Initialize serializer."""
+        pass # noqa: disable=all
 
     @staticmethod
     def serialize(object_, filename):
