@@ -47,7 +47,7 @@ def tutorial(context):
     "--no-browser",
     required=False,
     type=bool,
-    help="The Jupyter Lab server will without opening a browser",
+    help="If True, the server will not use the default web browser",
 )
 def start(ip, port, no_browser):
     """Start the Jupyter Lab from the tutorials directory.
