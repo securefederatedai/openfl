@@ -15,6 +15,7 @@ class SerializationError(Exception):
         # noqa: disable=all
         pass  # noqa: disable=pass
 
+
 class ResourcesNotAvailableError(Exception):
     """Exception raised when the required resources are not available."""
 
