@@ -59,7 +59,7 @@ pip install .
 
 ## Code style
 
-OpenFL uses [black](https://black.readthedocs.io/en/stable/), [isort](https://pycqa.github.io/isort/) and [precommit](https://github.com/pre-commit/pre-commit-hooks) to format the code.
+OpenFL uses [black](https://black.readthedocs.io/en/stable/), [isort](https://pycqa.github.io/isort/) and [precommit](https://pre-commit.com/) to format the code.
 
 Run the following command at the **root** directory of the repo to format your code.
 
