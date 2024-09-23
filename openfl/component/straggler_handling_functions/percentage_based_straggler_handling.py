@@ -3,12 +3,14 @@
 
 
 """Percentage based Straggler Handling function."""
+from logging import getLogger
+
 from openfl.component.straggler_handling_functions.straggler_handling_function import (
-    StragglerHandlingFunction,
+    StragglerHandlingPolicy,
 )
 
 
-class PercentageBasedStragglerHandling(StragglerHandlingFunction):
+class PercentageBasedStragglerHandling(StragglerHandlingPolicy):
     """Percentage based Straggler Handling function."""
 
     def __init__(self, percent_collaborators_needed=1.0, minimum_reporting=1, **kwargs):
@@ -21,10 +23,48 @@ class PercentageBasedStragglerHandling(StragglerHandlingFunction):
                 collaborators that should report. Defaults to 1.
             **kwargs: Variable length argument list.
         """
+        if minimum_reporting <= 0:
+            raise ValueError("minimum_reporting must be >0")
+
         self.percent_collaborators_needed = percent_collaborators_needed
         self.minimum_reporting = minimum_reporting
+        self.logger = getLogger(__name__)
 
-    def minimum_collaborators_reported(self, num_collaborators_done):
+    def reset_policy_for_round(self) -> None:
+        """
+        Not required in PercentageBasedStragglerHandling.
+        """
+        pass
+
+    def start_policy(self, **kwargs) -> None:
+        """
+        Not required in PercentageBasedStragglerHandling.
+        """
+        pass
+
+    def straggler_cutoff_check(
+        self,
+        num_collaborators_done: int,
+        num_all_collaborators: int,
+    ) -> bool:
+        """
+        If percent_collaborators_needed and minimum_reporting collaborators have
+        reported results, then it is time to end round early.
+
+        Args:
+            num_collaborators_done (int): The number of collaborators that
+                have reported.
+            all_collaborators (list): All the collaborators.
+
+        Returns:
+            bool: True if the straggler cutoff conditions are met, False
+                otherwise.
+        """
+        return (
+            num_collaborators_done >= self.percent_collaborators_needed * num_all_collaborators
+        ) and self.__minimum_collaborators_reported(num_collaborators_done)
+
+    def __minimum_collaborators_reported(self, num_collaborators_done) -> bool:
         """Check if the minimum number of collaborators have reported.
 
         Args:
@@ -36,20 +76,3 @@ class PercentageBasedStragglerHandling(StragglerHandlingFunction):
                 False otherwise.
         """
         return num_collaborators_done >= self.minimum_reporting
-
-    def straggler_cutoff_check(self, num_collaborators_done, all_collaborators):
-        """Check if the straggler cutoff conditions are met.
-
-        Args:
-            num_collaborators_done (int): The number of collaborators that
-                have reported.
-            all_collaborators (list): All the collaborators.
-
-        Returns:
-            bool: True if the straggler cutoff conditions are met, False
-                otherwise.
-        """
-        cutoff = (
-            num_collaborators_done >= self.percent_collaborators_needed * len(all_collaborators)
-        ) and self.minimum_collaborators_reported(num_collaborators_done)
-        return cutoff

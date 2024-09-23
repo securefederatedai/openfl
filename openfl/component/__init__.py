@@ -14,5 +14,5 @@ from openfl.component.straggler_handling_functions.percentage_based_straggler_ha
     PercentageBasedStragglerHandling,
 )
 from openfl.component.straggler_handling_functions.straggler_handling_function import (
-    StragglerHandlingFunction,
+    StragglerHandlingPolicy,
 )
