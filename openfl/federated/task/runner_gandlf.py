@@ -74,6 +74,7 @@ class GaNDLFTaskRunner(TaskRunner):
 
         gandlf_config = ConfigManager(gandlf_config)
 
+        print(f'gandlf_config: {gandlf_config}')
         (
             model,
             optimizer,
