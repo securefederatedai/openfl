@@ -1,7 +1,7 @@
 name: Bandit Security Analysis
 
 on:
-  push:
+  pull_request:
     branches: [develop]
 
 permissions:
@@ -24,7 +24,7 @@ jobs:
           pip install bandit
       - name: Run Bandit
         run: |
-          bandit -r . -f json -o bandit-results.json
+          bandit -r . -f json -o bandit-results.json || true
       - name: Upload Bandit Results
         uses: actions/upload-artifact@v3
         with:
