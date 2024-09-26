@@ -34,7 +34,7 @@ jobs:
             -v /usr/lib/systemd:/usr/lib/systemd:ro \
             -v /var/lib:/var/lib:ro \
             -v /var/run/docker.sock:/var/run/docker.sock:ro \
-             -v $(pwd)/results:/results \
+            -v "$(pwd)/results:/results" \
             --label docker_bench_security \
             docker/docker-bench-security -l results/docker-bench-security.log
       - name: Upload Results
