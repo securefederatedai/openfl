@@ -49,8 +49,8 @@ jobs:
         uses: aquasecurity/trivy-action@0.24.0
         with:
           image-ref: 'docker.io/securefederatedai/openfl:${{ github.sha }}'
-          format: 'csv'
-          output: 'trivy-docker-results.csv'
+          format: 'json'
+          output: 'trivy-docker-results.json'
           exit-code: '1'
           ignore-unfixed: true
           vuln-type: 'os,library'
@@ -59,5 +59,5 @@ jobs:
       - name: Upload Docker Vulnerability Scan
         uses: actions/upload-artifact@v3
         with:
-          name: trivy-docker-report-csv
-          path: trivy-docker-results.csv
+          name: trivy-docker-report-json
+          path: trivy-docker-results.json
