@@ -35,11 +35,10 @@ jobs:
             -v /var/lib:/var/lib:ro \
             -v /var/run/docker.sock:/var/run/docker.sock:ro \
             --label docker_bench_security \
-            docker/docker-bench-security -l results/docker-bench-security.log -o json
+            docker/docker-bench-security -l results/docker-bench-security.log
       - name: Upload Results
         uses: actions/upload-artifact@v3
         with:
           name: docker-bench-results
           path: |
             results/docker-bench-security.log
-            results/docker-bench-security.log.json
