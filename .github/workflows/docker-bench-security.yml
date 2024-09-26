@@ -93,36 +93,6 @@ jobs:
           -e CONTAINER_TYPE=collaborator \
           -e COL=charlie \
           example_workspace /home/openfl/openfl-docker/start_actor_in_container.sh
-    
-    - name: Wait for containers to initialize
-      run: |
-        sleep 10  # Initial sleep to give the containers some time to start
-        echo "Checking if aggregator and collaborator containers are running..."
-        # Check for the running containers in a loop
-        for i in {1..10}; do  # Retry up to 10 times
-          if docker ps | grep -q "aggregator"; then
-            echo "Aggregator container is running."
-            break
-          fi
-          if [ $i -eq 10 ]; then
-            echo "Aggregator container did not start in time!"
-            exit 1
-          fi
-          sleep 5  # Wait before checking again
-        done
-      
-        for i in {1..10}; do
-          if docker ps | grep -q "collaborator"; then
-            echo "Collaborator container is running."
-            break
-          fi
-          if [ $i -eq 10 ]; then
-            echo "Collaborator container did not start in time!"
-            exit 1
-          fi
-          sleep 5  # Wait before checking again
-        done
-      
             
     - name: Run Docker Bench for Security
       run: |
