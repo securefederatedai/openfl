@@ -24,7 +24,8 @@ jobs:
         pip install .
     - name: Clean Docker System
       run: |
-        docker system prune -f
+        docker image prune -a
+        docker system prune -a
     - name: Build base image
       run: |
         docker build -t openfl -f openfl-docker/Dockerfile.base .
