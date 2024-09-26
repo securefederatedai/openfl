@@ -30,17 +30,37 @@ jobs:
         uses: github/codeql-action/upload-sarif@v2
         with:
           sarif_file: 'trivy-results.sarif'
+
+      - name: Run Trivy code vulnerability scanner (JSON Output)
+        uses: aquasecurity/trivy-action@0.24.0
+        with:
+          image-ref: ''
+          format: 'json'
+          output: 'trivy-code-results.json'
+          exit-code: '1'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH,MEDIUM,LOW'
+
+      - name: Upload Code Vulnerability Scan Results
+        uses: actions/upload-artifact@v3
+        with:
+          name: trivy-code-report-json
+          path: trivy-code-results.json
       
-      - name: Run Trivy vulnerability scanner
+      - name: Run Trivy vulnerability scanner for Docker image
         uses: aquasecurity/trivy-action@0.24.0
         with:
           image-ref: 'docker.io/securefederatedai/openfl:${{ github.sha }}'
-          format: 'table'
+          format: 'csv'
+          output: 'trivy-docker-results.csv'
           exit-code: '1'
           ignore-unfixed: true
           vuln-type: 'os,library'
           severity: 'CRITICAL,HIGH,MEDIUM,LOW'
   
-      - name: Log completion message
-        run: |
-          echo "Trivy scan completed. Review the output above for vulnerabilities."
+      - name: Upload Docker Vulnerability Scan
+        uses: actions/upload-artifact@v3
+        with:
+          name: trivy-docker-report-csv
+          path: trivy-docker-results.csv
