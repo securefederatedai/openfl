@@ -25,24 +25,17 @@ jobs:
       - name: Run Docker Bench for Security
         run: |
           mkdir -p results
-          # docker run --net host --pid host --cap-add audit_control --cap-add sys_admin --cap-add syslog \
-          #   -e DOCKER_CONTENT_TRUST=$DOCKER_CONTENT_TRUST \
-          #   -v /etc:/etc:ro \
-          #   -v /lib/systemd/system:/lib/systemd/system:ro \
-          #   -v /usr/bin/containerd:/usr/bin/containerd:ro \
-          #   -v /usr/bin/runc:/usr/bin/runc:ro \
-          #   -v /usr/lib/systemd:/usr/lib/systemd:ro \
-          #   -v /var/lib:/var/lib:ro \
-          #   -v /var/run/docker.sock:/var/run/docker.sock:ro \
-          #   --label docker_bench_security \
-          #   docker-bench-security > results/docker-bench-results.txt
-          docker run --net host --pid host --cap-add audit_control --cap-add sys_admin --cap-add syslog \
-             --security-opt apparmor=unconfined \
-             -v /var/run/docker.sock:/var/run/docker.sock \
-             -v /etc:/etc \
-             -v /usr/bin/docker:/usr/bin/docker \
-             --label docker-bench-security \
-             docker/docker-bench-security > docker-bench-report.txt
+          docker run --rm --net host --pid host --userns host --cap-add audit_control \
+            -e DOCKER_CONTENT_TRUST=0 \
+            -v /etc:/etc:ro \
+            -v /lib/systemd/system:/lib/systemd/system:ro \
+            -v /usr/bin/containerd:/usr/bin/containerd:ro \
+            -v /usr/bin/runc:/usr/bin/runc:ro \
+            -v /usr/lib/systemd:/usr/lib/systemd:ro \
+            -v /var/lib:/var/lib:ro \
+            -v /var/run/docker.sock:/var/run/docker.sock:ro \
+            --label docker_bench_security \
+            docker/docker-bench-security > docker-bench-report.txt
       - name: Upload Results
         uses: actions/upload-artifact@v3
         with:
