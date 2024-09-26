@@ -32,15 +32,8 @@ jobs:
           sarif_file: 'trivy-results.sarif'
 
       - name: Run Trivy code vulnerability scanner (JSON Output)
-        uses: aquasecurity/trivy-action@0.24.0
-        with:
-          image-ref: ''
-          format: 'json'
-          output: 'trivy-code-results.json'
-          exit-code: '1'
-          ignore-unfixed: true
-          vuln-type: 'os,library'
-          severity: 'CRITICAL,HIGH,MEDIUM,LOW'
+        run: |
+          trivy --quiet fs --format json --output trivy-code-results.json --ignore-unfixed --vuln-type os,library --severity CRITICAL,HIGH,MEDIUM,LOW .
 
       - name: Upload Code Vulnerability Scan Results
         uses: actions/upload-artifact@v3
