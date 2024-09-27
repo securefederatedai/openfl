@@ -153,6 +153,8 @@ class Aggregator:
         """Start the execution and run flow until transition."""
         # Start function will be the first step if any flow
         f_name = "start"
+        FLSpec._reset_clones()
+        FLSpec._create_clones(self.flow, self.flow.runtime.collaborators)
 
         self.logger.info(f"Starting round {self.current_round}...")
         while True:
@@ -365,13 +367,16 @@ class Aggregator:
             if aggregator_to_collaborator(f, parent_func):
                 # Extract clones, instance snapshot and kwargs when reached
                 # foreach loop first time
-                if len(self.flow.execute_task_args) > 4:
-                    temp = self.flow.execute_task_args[3:]
-                    self.clones_dict, self.instance_snapshot, self.kwargs = temp
-
+                self.__delete_agg_attrs_from_clone(self.flow)
+                # Unpack execute_task_args
+                _, f, parent_func, self.instance_snapshot, self.kwargs = self.flow.execute_task_args
+                self.flow._foreach_methods.append(f.__name__)
+                if "foreach" in self.kwargs:
+                    self.flow.filter_exclude_include(f, **self.kwargs)
+                    self.clones_dict = FLSpec._clones
                     self.selected_collaborators = getattr(self.flow, self.kwargs["foreach"])
                 else:
-                    self.kwargs = self.flow.execute_task_args[3]
+                    self.kwargs = self.flow.execute_task_args[4]
 
                 # Transition encountered, break the loop
                 not_at_transition_point = False
