@@ -37,7 +37,7 @@ jobs:
   
       - name: Run Trivy code vulnerability scanner (JSON Output)
         run: |
-          trivy --quiet fs --format json --output trivy-code-results.json --ignore-unfixed --vuln-type os,library --severity CRITICAL,HIGH,MEDIUM,LOW .
+          trivy --quiet fs --format spdx-json --output trivy-code-results.json --ignore-unfixed --vuln-type os,library --severity CRITICAL,HIGH,MEDIUM,LOW .
 
       - name: Upload Code Vulnerability Scan Results
         uses: actions/upload-artifact@v3
@@ -49,7 +49,7 @@ jobs:
         uses: aquasecurity/trivy-action@0.24.0
         with:
           image-ref: 'docker.io/securefederatedai/openfl:${{ github.sha }}'
-          format: 'json'
+          format: 'spdx-json'
           output: 'trivy-docker-results.json'
           exit-code: '1'
           ignore-unfixed: true
