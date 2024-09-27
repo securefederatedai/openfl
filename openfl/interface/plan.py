@@ -3,12 +3,14 @@
 
 
 """Plan module."""
+import os
 import sys
 from logging import getLogger
 from os import makedirs
 from os.path import isfile
 from pathlib import Path
 from shutil import copyfile, rmtree
+from subprocess import check_call  # nosec
 
 from click import Path as ClickPath
 from click import echo, group, option, pass_context
@@ -85,6 +87,13 @@ def plan(context):
     required=False,
     help="GaNDLF Configuration File Path",
 )
+@option(
+    "-r",
+    "--install_reqs",
+    required=False,
+    help="Install packages listed under 'requirements.txt'. True/False [Default: True]",
+    default=True,
+)
 def initialize(
     context,
     plan_config,
@@ -93,6 +102,7 @@ def initialize(
     aggregator_address,
     input_shape,
     gandlf_config,
+    install_reqs,
 ):
     """Initialize Data Science plan.
 
@@ -107,6 +117,7 @@ def initialize(
         aggregator_address (str): The FQDN of the federation aggregator.
         feature_shape (str): The input shape to the model.
         gandlf_config (str): GaNDLF Configuration File Path.
+        install_reqs (bool): Whether to install packages listed under 'requirements.txt'.
     """
 
     for p in [plan_config, cols_config, data_config]:
@@ -119,6 +130,31 @@ def initialize(
     data_config = Path(data_config).absolute()
     if gandlf_config is not None:
         gandlf_config = Path(gandlf_config).absolute()
+
+    if install_reqs:
+        requirements_filename = "requirements.txt"
+        requirements_path = Path(requirements_filename).absolute()
+
+        if isfile(f"{str(requirements_path)}"):
+            check_call(
+                [
+                    sys.executable,
+                    "-m",
+                    "pip",
+                    "install",
+                    "-r",
+                    f"{str(requirements_path)}",
+                ],
+                shell=False,
+            )
+            echo(f"Successfully installed packages from {requirements_path}.")
+            
+            # Required to restart the process for newly installed packages to be recognized
+            args = [arg for arg in sys.argv if not arg.startswith('--install-reqs')]
+            args.append('--install_reqs=False')
+            os.execv(sys.executable, [sys.executable] + args)
+        else:
+            echo("No additional requirements for workspace defined. Skipping...")
 
     plan = Plan.parse(
         plan_config_path=plan_config,
