@@ -51,22 +51,13 @@ def aggregator(context):
     default="plan/cols.yaml",
     type=ClickPath(exists=True),
 )
-@option(
-    "-s",
-    "--secure",
-    required=False,
-    help="Enable Intel SGX Enclave",
-    is_flag=True,
-    default=False,
-)
-def start_(plan, authorized_cols, secure):
+def start_(plan, authorized_cols):
     """
     Start the aggregator service.
 
     Args:
         plan (str): Path to the federated learning plan.
         authorized_cols (str): Path to the authorized collaborator list.
-        secure (bool): Flag to enable Intel SGX Enclave.
     """
 
     if is_directory_traversal(plan):
