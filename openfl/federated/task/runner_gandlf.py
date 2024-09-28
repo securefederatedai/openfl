@@ -66,7 +66,10 @@ class GaNDLFTaskRunner(TaskRunner):
 
         # allow pass-through of a gandlf config as a file or a dict
 
-        train_csv = self.data_loader.train_csv
+        if 'inference' in self.data_loader.train_csv:
+            train_csv = None
+        else:
+            train_csv = self.data_loader.train_csv
         val_csv = self.data_loader.val_csv
 
         if isinstance(gandlf_config, str) and os.path.exists(gandlf_config):
