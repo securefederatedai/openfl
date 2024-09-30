@@ -47,4 +47,4 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         name: docker_bench_security-report
-        path: results/docker_bench_security.txt
+        path: results/docker_bench_security_report.txt
