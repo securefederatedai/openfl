@@ -3,12 +3,12 @@
 
 
 """Workspace module."""
+import logging
 import os
 import shutil
-import tempfile
-import logging
 import subprocess  # nosec
 import sys
+import tempfile
 from hashlib import sha256
 from os import chdir
 from os.path import basename, isfile
@@ -26,8 +26,8 @@ from cryptography.hazmat.primitives import serialization
 
 from openfl.cryptography.ca import generate_root_cert, generate_signing_csr, sign_certificate
 from openfl.federated.plan import Plan
-from openfl.interface.cli_helper import CERT_DIR, OPENFL_USERDIR, SITEPACKS, WORKSPACE, print_tree
 from openfl.interface import plan
+from openfl.interface.cli_helper import CERT_DIR, OPENFL_USERDIR, SITEPACKS, WORKSPACE, print_tree
 
 
 @group()
@@ -181,7 +181,7 @@ def export_() -> str:
         - `plan`: The FL plan.
         - `save`: Model initial weights.
         - `requirements.txt`: Package list required for the experiment.
-    
+
     This archive does *not* copy `data` or `logs` directories. It creates
     empty placeholders which can be mounted or populated by respective collaborators.
 
@@ -220,12 +220,9 @@ def export_() -> str:
 
     _ws_identifier_file = ".workspace"
     if not os.path.isfile(_ws_identifier_file):
-        openfl_ws_identifier_file = os.path.join(
-            WORKSPACE, "workspace", _ws_identifier_file
-        )
+        openfl_ws_identifier_file = os.path.join(WORKSPACE, "workspace", _ws_identifier_file)
         logging.warning(
-            f"`{_ws_identifier_file}` is missing, "
-            f"copying {openfl_ws_identifier_file} as-is."
+            f"`{_ws_identifier_file}` is missing, " f"copying {openfl_ws_identifier_file} as-is."
         )
         shutil.copy2(openfl_ws_identifier_file, tmp_dir)
     shutil.copy2(_ws_identifier_file, tmp_dir)
@@ -392,27 +389,6 @@ def certify():
             d.write(s.read())
 
     echo("\nDone.")
-
-
-def _get_requirements_dict(txtfile):
-    """Get requirements from a text file.
-
-    Args:
-        txtfile (str): The text file containing the requirements.
-
-    Returns:
-        snapshot_dict (dict): A dictionary containing the requirements.
-    """
-    with open(txtfile, "r", encoding="utf-8") as snapshot:
-        snapshot_dict = {}
-        for line in snapshot:
-            try:
-                # 'pip freeze' generates requirements with exact versions
-                k, v = line.split("==")
-                snapshot_dict[k] = v
-            except ValueError:
-                snapshot_dict[line] = None
-        return snapshot_dict
 
 
 def _get_dir_hash(path):
