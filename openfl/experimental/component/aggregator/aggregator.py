@@ -365,8 +365,8 @@ class Aggregator:
 
             # Transition check
             if aggregator_to_collaborator(f, parent_func):
-                # Extract clones, instance snapshot and kwargs when reached
-                # foreach loop first time
+                # Delete aggregator private attribute from flow object, instance snapshot and kwargs
+                # get clones_dict from flow object
                 self.__delete_agg_attrs_from_clone(self.flow)
                 # Unpack execute_task_args
                 _, f, parent_func, self.instance_snapshot, self.kwargs = self.flow.execute_task_args
