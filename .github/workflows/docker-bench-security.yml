@@ -26,6 +26,12 @@ jobs:
       run: |
         docker image prune -a -f
         docker system prune -a -f
+    - name: Clone Docker Bench Security Repo
+      run: git clone https://github.com/docker/docker-bench-security.git
+    - name: Build Docker Bench Security Image
+      run: |
+        cd docker-bench-security
+        docker build --no-cache -t docker-bench-security .
     - name: Create results directory
       run: mkdir -p results
     - name: Run Docker Bench for Security
