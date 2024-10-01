@@ -80,4 +80,3 @@ tasks:
       epochs: 1
       metrics:
       - loss
-      num_batches: 1
