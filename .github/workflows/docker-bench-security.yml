@@ -47,7 +47,7 @@ jobs:
           -v /var/run/docker.sock:/var/run/docker.sock:ro \
           -v "$(pwd)/results:/results" \
           --label docker_bench_security \
-          docker/docker-bench-security | tee results/docker_bench_security_report.txt
+          docker-bench-security | tee results/docker_bench_security_report.txt
 
     - name: Upload Security Bench Report
       uses: actions/upload-artifact@v3
