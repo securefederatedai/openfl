@@ -228,22 +228,6 @@ class FLSpec:
                 if not hasattr(ctx, name):
                     setattr(ctx, name, attr)
 
-    def get_clones(self, kwargs):
-        """Create, and prepare clones."""
-        FLSpec._reset_clones()
-        FLSpec._create_clones(self, self.runtime.collaborators)
-        selected_collaborators = self.__getattribute__(kwargs["foreach"])
-
-        for col in selected_collaborators:
-            clone = FLSpec._clones[col]
-            clone.input = col
-            artifacts_iter, _ = generate_artifacts(ctx=clone)
-            attributes = artifacts_iter()
-            for name, attr in attributes:
-                setattr(clone, name, deepcopy(attr))
-            clone._foreach_methods = self._foreach_methods
-            clone._metaflow_interface = self._metaflow_interface
-
     def next(self, f, **kwargs):
         """Specifies the next task in the flow to execute.
 
