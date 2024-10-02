@@ -13,3 +13,9 @@ class MockDataLoader:
 
     def get_feature_shape(self):
         return self.feature_shape
+
+    def get_train_data_size(self):
+        return 0
+
+    def get_valid_data_size(self):
+        return 0

@@ -18,7 +18,7 @@ from openfl.federated import Plan
 from openfl.interface.cli_helper import get_workspace_parameter
 from openfl.protocols import utils
 from openfl.utilities.click_types import InputSpec
-from openfl.utilities.mocks import MockDataLoader
+from openfl.utilities.dataloading import get_dataloader
 from openfl.utilities.path_check import is_directory_traversal
 from openfl.utilities.split import split_tensor_dict_for_holdouts
 from openfl.utilities.utils import getfqdn_env
@@ -134,11 +134,9 @@ def initialize(
         logger.info(
             "Attempting to generate initial model weights with" f" custom input shape {input_shape}"
         )
-        data_loader = MockDataLoader(input_shape)
-    else:
-        # If feature shape is not provided, data is assumed to be present
-        collaborator_cname = list(plan.cols_data_paths)[0]
-        data_loader = plan.get_data_loader(collaborator_cname)
+
+    data_loader = get_dataloader(plan, prefer_minimal=True, input_shape=input_shape)
+
     task_runner = plan.get_task_runner(data_loader)
     tensor_pipe = plan.get_tensor_pipe()
 
