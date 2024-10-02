@@ -1,0 +1,45 @@
+# Copyright (C) 2024 Intel Corporation
+# Licensed subject to the terms of the separately executed evaluation license agreement between Intel Corporation and you.
+
+aggregator :
+  defaults : plan/defaults/aggregator.yaml
+  template : openfl.component.aggregator.Aggregator
+  settings :
+    init_state_path : save/init.pbuf
+    best_state_path : save/best.pbuf
+    last_state_path : save/last.pbuf
+    rounds_to_train : 2
+    write_logs : false
+
+collaborator :
+  defaults : plan/defaults/collaborator.yaml
+  template : openfl.component.collaborator.Collaborator
+  settings :
+    delta_updates    : false
+    opt_treatment    : RESET
+
+data_loader :
+  defaults : plan/defaults/data_loader.yaml
+  template : src.dataloader.TemplateDataLoader
+  settings :
+    {}
+
+task_runner :
+  defaults : plan/defaults/task_runner.yaml
+  template : src.taskrunner.TemplateTaskRunner
+  settings :
+    {}
+
+network :
+  defaults : plan/defaults/network.yaml
+  settings :
+    {}
+
+assigner :
+  defaults : plan/defaults/assigner.yaml
+
+tasks :
+  defaults : plan/defaults/tasks_torch.yaml
+
+compression_pipeline :
+  defaults : plan/defaults/compression_pipeline.yaml
