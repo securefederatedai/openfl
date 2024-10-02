@@ -150,9 +150,9 @@ def initialize(
             echo(f"Successfully installed packages from {requirements_path}.")
 
             # Required to restart the process for newly installed packages to be recognized
-            args = [arg for arg in sys.argv if not arg.startswith("--install-reqs")]
-            args.append("--install_reqs=False")
-            os.execv(sys.executable, [sys.executable] + args)
+            args_restart = [arg for arg in sys.argv if not arg.startswith("--install_reqs")]
+            args_restart.append("--install_reqs=False")
+            os.execv(args_restart[0], args_restart)
         else:
             echo("No additional requirements for workspace defined. Skipping...")
 
