@@ -19,7 +19,7 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install -r requirements-linters.txt 
+        pip install -r linters-requirements.txt 
         pip install .
     - name: Lint with flake8
       run: |

@@ -24,6 +24,6 @@ jobs:
     - name: Install linters
       run: |
         python -m pip install --upgrade pip
-        pip install -r requirements-linters.txt 
+        pip install -r linters-requirements.txt 
     - name: Lint using built-in script
       run: bash shell/lint.sh
