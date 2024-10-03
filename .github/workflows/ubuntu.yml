@@ -19,7 +19,7 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install -r requirements-linters.txt 
+        pip install -r linters-requirements.txt 
         pip install .
     - name: Lint with flake8
       run: |
@@ -38,7 +38,7 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install pytest coverage
-        pip install -r requirements-test.txt
+        pip install -r test-requirements.txt
         pip install .
     - name: Test with pytest and report code coverage
       run: |
