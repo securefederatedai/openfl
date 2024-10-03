@@ -46,7 +46,7 @@ jobs:
         coverage report
   
   interactive-kvasir: # from interactive-kvasir.yml
-    needs: [lint, pytest-coverage, dockerization]
+    needs: [lint, pytest-coverage]
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
@@ -66,7 +66,7 @@ jobs:
         python -m tests.github.interactive_api_director.experiments.pytorch_kvasir_unet.run
   
   cli:
-    needs: [lint, pytest-coverage, dockerization, interactive-kvasir]
+    needs: [lint, pytest-coverage, interactive-kvasir]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
