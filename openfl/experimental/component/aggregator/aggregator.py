@@ -368,9 +368,7 @@ class Aggregator:
                 # Delete aggregator private attribute from flow object
                 self.__delete_agg_attrs_from_clone(self.flow)
                 # Unpack execute_task_args - clones_dict, instance snapshot and kwargs
-                self.clones_dict, self.instance_snapshot, self.kwargs = self.flow.execute_task_args[
-                    3:
-                ]
+                self.clones_dict, self.instance_snapshot, self.kwargs = self.flow.execute_task_args[3:]
                 self.flow._foreach_methods.append(f.__name__)
                 if "foreach" in self.kwargs:
                     self.flow.filter_exclude_include(f, **self.kwargs)
