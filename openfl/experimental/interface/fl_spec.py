@@ -257,6 +257,7 @@ class FLSpec:
                 self,
                 f,
                 parent_func,
+                FLSpec._clones,
                 agg_to_collab_ss,
                 kwargs,
             )
