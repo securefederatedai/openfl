@@ -29,7 +29,7 @@ First we start by installing the necessary dependencies for the workflow interfa
 .. code-block:: console
 
     $ pip install git+https://github.com/intel/openfl.git
-    $ pip install -r requirements_workflow_interface.txt
+    $ pip install -r workflow_interface_requirements.txt
     $ pip install torch
     $ pip install torchvision
 
