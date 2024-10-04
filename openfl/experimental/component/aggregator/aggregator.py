@@ -365,24 +365,21 @@ class Aggregator:
 
             # Transition check
             if aggregator_to_collaborator(f, parent_func):
-                # Delete aggregator private attribute from flow object, instance snapshot and kwargs
-                # get clones_dict from flow object
+                # Delete aggregator private attribute from flow object
                 self.__delete_agg_attrs_from_clone(self.flow)
-                # Unpack execute_task_args
-                _, f, parent_func, self.instance_snapshot, self.kwargs = self.flow.execute_task_args
+                # Unpack execute_task_args - clones_dict, instance snapshot and kwargs
+                self.clones_dict, self.instance_snapshot, self.kwargs = self.flow.execute_task_args[
+                    3:
+                ]
                 self.flow._foreach_methods.append(f.__name__)
                 if "foreach" in self.kwargs:
                     self.flow.filter_exclude_include(f, **self.kwargs)
-                    self.clones_dict = FLSpec._clones
                     self.selected_collaborators = getattr(self.flow, self.kwargs["foreach"])
                 else:
-                    self.kwargs = self.flow.execute_task_args[4]
+                    self.kwargs = self.flow.execute_task_args[-1]
 
                 # Transition encountered, break the loop
                 not_at_transition_point = False
-
-        # Delete private attributes from flow object
-        self.__delete_agg_attrs_from_clone(self.flow)
 
         return f_name if f_name != "end" else None
 
