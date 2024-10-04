@@ -80,8 +80,8 @@ with open('README.md', encoding='utf-8') as f:
 
 setup(
     name='openfl',
-    version='1.5',
-    author='Intel Corporation',
+    version='1.6',
+    author='The OpenFL Team',
     description='Federated Learning for the Edge',
     long_description=long_description,
     long_description_content_type='text/markdown',
