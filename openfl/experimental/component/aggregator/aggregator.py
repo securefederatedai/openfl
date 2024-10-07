@@ -153,6 +153,7 @@ class Aggregator:
         """Start the execution and run flow until transition."""
         # Start function will be the first step if any flow
         f_name = "start"
+        # Creating a clones from the flow object
         FLSpec._reset_clones()
         FLSpec._create_clones(self.flow, self.flow.runtime.collaborators)
 
@@ -368,8 +369,9 @@ class Aggregator:
                 # Delete aggregator private attribute from flow object
                 self.__delete_agg_attrs_from_clone(self.flow)
                 # Unpack execute_task_args - clones_dict, instance snapshot and kwargs
-                self.clones_dict, self.instance_snapshot, self.kwargs = self.flow.execute_task_args[3:]
-                self.flow._foreach_methods.append(f.__name__)
+                self.clones_dict, self.instance_snapshot, self.kwargs = self.flow.execute_task_args[
+                    3:
+                ]
                 if "foreach" in self.kwargs:
                     self.flow.filter_exclude_include(f, **self.kwargs)
                     self.selected_collaborators = getattr(self.flow, self.kwargs["foreach"])
