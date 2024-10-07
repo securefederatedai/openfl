@@ -5,6 +5,7 @@
 """Model CLI module."""
 from logging import getLogger
 from pathlib import Path
+from typing import Union
 
 from click import Path as ClickPath
 from click import confirm, group, option, pass_context, style
@@ -12,6 +13,8 @@ from click import confirm, group, option, pass_context, style
 from openfl.federated import Plan
 from openfl.pipelines import NoCompressionPipeline
 from openfl.protocols import utils
+from openfl.utilities.click_types import InputSpec
+from openfl.utilities.dataloading import get_dataloader
 from openfl.utilities.workspace import set_directory
 
 logger = getLogger(__name__)
@@ -71,11 +74,22 @@ def model(context):
     default="plan/data.yaml",
     type=ClickPath(exists=True),
 )
+@option(
+    "-f",
+    "--input-shape",
+    cls=InputSpec,
+    required=False,
+    help="The input shape to the model. May be provided as a list:\n\n"
+    "--input-shape [1,28,28]\n\n"
+    "or as a dictionary for multihead models (must be passed in quotes):\n\n"
+    "--input-shape \"{'input_0': [1, 240, 240, 4],'output_1': [1, 240, 240, 1]}\"\n\n ",
+)
 def save_(
     context,
     plan_config,
     cols_config,
     data_config,
+    input_shape,
     model_protobuf_path,
     output_filepath,
 ):
@@ -103,7 +117,7 @@ def save_(
             context.obj["fail"] = True
             return
 
-    task_runner = get_model(plan_config, cols_config, data_config, model_protobuf_path)
+    task_runner = get_model(plan_config, cols_config, data_config, model_protobuf_path, input_shape)
 
     task_runner.save_native(output_filepath)
     logger.info("Saved model in native format:  🠆 %s", output_filepath)
@@ -114,6 +128,7 @@ def get_model(
     cols_config: str,
     data_config: str,
     model_protobuf_path: str,
+    input_shape: Union[list, dict],
 ):
     """
     Initialize TaskRunner and load it with provided model.pbuf.
@@ -128,6 +143,11 @@ def get_model(
         cols_config (str): Authorized collaborator list.
         data_config (str): The data set/shard configuration file.
         model_protobuf_path (str): The model protobuf to convert.
+        input_shape (list | dict ?):
+            input_shape denoted by list notation `[a,b,c, ...]` or in case
+            of multihead models, dict object with individual layer keys such
+            as `{"input_0": [a,b,...], "output_1": [x,y,z, ...]}`
+            Defaults to `None`.
 
     Returns:
         task_runner (instance): TaskRunner instance.
@@ -146,8 +166,7 @@ def get_model(
             cols_config_path=cols_config,
             data_config_path=data_config,
         )
-        collaborator_name = list(plan.cols_data_paths)[0]
-        data_loader = plan.get_data_loader(collaborator_name)
+        data_loader = get_dataloader(plan, prefer_minimal=True, input_shape=input_shape)
         task_runner = plan.get_task_runner(data_loader=data_loader)
 
     model_protobuf_path = Path(model_protobuf_path).resolve()
