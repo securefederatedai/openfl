@@ -252,6 +252,8 @@ class FLSpec:
         filter_attributes(self, f, **kwargs)
 
         if str(self._runtime) == "FederatedRuntime":
+            if f.collaborator_step and not f.aggregator_step:
+                self._foreach_methods.append(f.__name__)
 
             self.execute_task_args = (
                 self,
