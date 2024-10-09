@@ -1,5 +1,31 @@
 # Releases
 
+## 1.6
+[Full Release Notes](https://github.com/securefederatedai/openfl/releases/tag/v1.6)
+
+### New Features and APIs: 
+- **Federated LLM fine-tuning**: 
+     - [**Horovod**](https://github.com/securefederatedai/openfl/tree/develop/openfl-workspace/torch_llm_horovod): Use horovod to efficiently train LLMs across multiple private clusters  
+     - **Neuralchat-7b fine-tuning**: Learn how to fine-tune [neuralchat-7b](https://github.com/securefederatedai/openfl/tree/develop/openfl-tutorials/experimental/LLM/neuralchat) using the Intel® Extension for Transformers and the workflow interface. 
+
+- **Workflow API enhancements**: Introducing an experimental [Workspace Export](https://github.com/securefederatedai/openfl/blob/develop/openfl-tutorials/experimental/Workflow_Interface_1001_Workspace_Creation_from_JupyterNotebook.ipynb) feature that can be used to transform a Workflow API-based FL experiment into the TaskRunner API format for running in a distributed deployment. There is also groundwork laid for a future FederatedRuntime implementation for Workflow API, in addition to the currently supported LocalRuntime.  
+- **Federated Evaluation**: Federated evaluation allows for the assessment of ML models in a federated learning system by validating the model's performance locally on decentralized collaborator nodes, and then aggregating these metrics to gauge overall effectiveness, without compromising data privacy and security. FE is now officially supported by OpenFL, including [example tutorials](https://openfl.readthedocs.io/en/latest/about/features_index/fed_eval.html) on how to use this new feature (via TaskRunner API). 
+
+- **Expanded AI Accelerator Support**:  Intel® Data Center GPU Max Series support via the Intel® Extension for PyTorch, including examples for training on datasets such as [MNIST](https://github.com/securefederatedai/openfl/blob/develop/openfl-tutorials/experimental/Workflow_Interface_104_MNIST_XPU.ipynb) (via Workflow API) and [TinyImageNet](https://github.com/securefederatedai/openfl/tree/develop/openfl-tutorials/interactive_api/PyTorch_TinyImageNet_XPU) (via Interactive API) 
+
+- **Improved straggler collaborator handling**: Improvements and bug fixes to aggregator’s fault-tolerance when collaborators stop responding or drop out of a federation. Introducing a cut-off timer-based policy and enabling other policies to be plugged-in. This capability is particularly relevant for large or geo-distributed federations. 
+
+- **fx CLI Improvements**: We have separated the CLI commands are separated for creating a collaborator from the certificate request generation, for offering improved control of the participant setup workflow. 
+
+### Highlighting Community Research
+
+- **Mitigating backdoor attacks in FL** - [Workflow API example](https://github.com/securefederatedai/openfl/tree/develop/openfl-tutorials/experimental/CrowdGuard) contributed by @perieger (TU Darmstadt) demonstrates how [Crowdguard](https://github.com/TRUST-TUDa/crowdguard) can be used to leverage clients' feedback on individual models, analyze the behavior of neurons in hidden layers, and eliminate poisoned models through an iterative pruning scheme.
+
+### Enhanced Documentation: 
+
+- **Quickstart Tutorial**: An updated [TaskRunner API quickstart](https://openfl.readthedocs.io/en/latest/get_started/quickstart.html#quick-start) tutorial makes it easier for newcomers to get up and running with built-in workspaces or custom code. 
+- **FL Plan Description Documentation**: There is now a detailed [FL plan description](https://openfl.readthedocs.io/en/latest/about/features_index/taskrunner.html#federated-learning-plan-fl-plan-settings) in the to our documentation to help users better understand and configure the federated learning process.
+
 ## 1.5.1
 [Full Release Notes](https://github.com/securefederatedai/openfl/releases/tag/v1.5.1)
 
