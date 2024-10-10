@@ -28,7 +28,7 @@ USER openfl
 
 # Install OpenFL.
 WORKDIR /home/openfl
-COPY . .
+COPY --chown=openfl:default . .
 ENV PATH=/home/openfl/.local/bin:$PATH
 RUN pip install --no-cache-dir -U pip setuptools wheel && \
     pip install --no-cache-dir -e .

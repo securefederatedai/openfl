@@ -7,7 +7,7 @@ Global DP implementation uses the [Opacus library](https://opacus.ai/) to perfor
 
 Prerequisites:
 
-`pip install -r ../requirements_workflow_interface.txt`
+`pip install -r ../workflow_interface_requirements.txt`
 `pip install -r requirements_global_dp.txt`
 
 1. `Workflow_Interface_Mnist_Implementation_1.py` uses lower level RDPAccountant and DPDataLoader Opacus objects to perform the privacy accounting and collaborator selection respectively. Local model aggregation and noising is implemented independent of Opacus, and final accounting is calculated by the RDPAccountant, using information about how many rounds of training was performed. To run with this version:

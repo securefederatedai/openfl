@@ -12,7 +12,7 @@ pip install .
 Install requirements for building documentation:
 
 ```sh
-pip install -r requirements-docs.txt
+pip install -r docs-requirements.txt
 ```
 
 
