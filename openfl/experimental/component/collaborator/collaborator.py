@@ -39,7 +39,6 @@ class Collaborator:
         private_attributes: Dict = {},
         **kwargs,
     ) -> None:
-
         self.name = collaborator_name
         self.aggregator_uuid = aggregator_uuid
         self.federation_uuid = federation_uuid

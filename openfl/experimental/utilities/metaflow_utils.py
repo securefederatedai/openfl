@@ -91,7 +91,6 @@ class Flow:
 
 @ray.remote
 class Counter:
-
     def __init__(self):
         """Initializes the Counter with value set to 0."""
         self.value = 0
