@@ -79,7 +79,6 @@ def start_(plan, authorized_cols, secure):
             + " in workspace."
         )
     else:
-
         with open("plan/data.yaml", "r") as f:
             data = yaml.load(f, Loader=SafeLoader)
             if data.get("aggregator", None) is None:
@@ -218,7 +217,6 @@ def certify(fqdn, silent):
     else:
         echo("Make sure the two hashes above are the same.")
         if confirm("Do you want to sign this certificate?"):
-
             echo(" Signing AGGREGATOR certificate")
             signed_agg_cert = sign_certificate(csr, signing_key, signing_crt.subject)
             write_crt(signed_agg_cert, crt_path_absolute_path)

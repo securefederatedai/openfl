@@ -43,7 +43,6 @@ class FrameworkAdapterPlugin(FrameworkAdapterPluginInterface):
         # Hotfix function, not required for TF versions above 2.7.1.
         # https://github.com/keras-team/keras/pull/14748.
         def make_keras_picklable():
-
             def __reduce__(self):  # NOQA:N807
                 model_metadata = saving_utils.model_metadata(self)
                 training_config = model_metadata.get("training_config", None)

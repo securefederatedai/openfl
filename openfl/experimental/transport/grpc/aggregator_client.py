@@ -50,7 +50,6 @@ class RetryOnRpcErrorClientInterceptor(
             response = continuation(client_call_details, request_or_iterator)
 
             if isinstance(response, grpc.RpcError):
-
                 # If status code is not in retryable status codes
                 self.sleeping_policy.logger.info(f"Response code: {response.code()}")
                 if self.status_for_retry and response.code() not in self.status_for_retry:
@@ -70,7 +69,6 @@ class RetryOnRpcErrorClientInterceptor(
 
 
 def _atomic_connection(func):
-
     def wrapper(self, *args, **kwargs):
         self.reconnect()
         response = func(self, *args, **kwargs)
@@ -81,7 +79,6 @@ def _atomic_connection(func):
 
 
 def _resend_data_on_reconnection(func):
-
     def wrapper(self, *args, **kwargs):
         while True:
             try:
