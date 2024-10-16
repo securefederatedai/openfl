@@ -66,7 +66,7 @@ class Collaborator:
         """
         self.__private_attrs = self.__private_attrs_callable(**kwargs)
 
-    def __set_attributes_to_clone(self, clone: Any) -> None:
+    def __set_private_attrs_to_clone(self, clone: Any) -> None:
         """Set private_attrs to clone as attributes.
 
         Args:
@@ -80,7 +80,7 @@ class Collaborator:
             for name, attr in self.__private_attrs.items():
                 setattr(clone, name, attr)
 
-    def __delete_agg_attrs_from_clone(self, clone: Any, replace_str: str = None) -> None:
+    def __delete_private_attrs_from_clone(self, clone: Any, replace_str: str = None) -> None:
         """
         Remove aggregator private attributes from FLSpec clone before
         transition from Aggregator step to collaborator steps
@@ -190,7 +190,7 @@ class Collaborator:
             Tuple(str, FLSpec): Next aggregator function, and updated context.
         """
         # Set private attributes to context
-        self.__set_attributes_to_clone(ctx)
+        self.__set_private_attrs_to_clone(ctx)
 
         # Loop control variable
         not_at_transition_point = True
@@ -198,9 +198,9 @@ class Collaborator:
             f = getattr(ctx, f_name)
             f()
             # Checkpoint the function
-            self.__delete_agg_attrs_from_clone(ctx, "Private attributes: Not Available.")
+            self.__delete_private_attrs_from_clone(ctx, "Private attributes: Not Available.")
             self.call_checkpoint(ctx, f, f._stream_buffer)
-            self.__set_attributes_to_clone(ctx)
+            self.__set_private_attrs_to_clone(ctx)
 
             _, f, parent_func = ctx.execute_task_args[:3]
             # Display transition logs if transition
@@ -214,6 +214,6 @@ class Collaborator:
             f_name = f.__name__
 
         # Reomve private attributes from context
-        self.__delete_agg_attrs_from_clone(ctx)
+        self.__delete_private_attrs_from_clone(ctx)
 
         return f_name, ctx
