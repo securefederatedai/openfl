@@ -1,0 +1,14 @@
+dill==0.3.6
+imageio==2.34.2
+matplotlib==3.9.0
+metaflow==2.7.15
+networkx==2.8.7
+omegaconf==2.3.0
+pandas==2.2.2
+pytorch_lightning==2.0.4
+ray==2.9.2
+rdkit==2024.3.5
+torch==2.3.1
+torch_geometric==2.3.1
+torchmetrics==0.11.4
+tqdm==4.65.0
