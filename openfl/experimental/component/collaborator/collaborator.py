@@ -67,7 +67,7 @@ class Collaborator:
         self.__private_attrs = self.__private_attrs_callable(**kwargs)
 
     def __set_private_attrs_to_clone(self, clone: Any) -> None:
-        """Set private_attrs to clone as attributes.
+        """Set private_attrs of Collaborator as attributes of FLSpec clone.
 
         Args:
             clone (FLSpec): Clone to which private attributes are to be
@@ -82,8 +82,10 @@ class Collaborator:
 
     def __delete_private_attrs_from_clone(self, clone: Any, replace_str: str = None) -> None:
         """
-        Remove aggregator private attributes from FLSpec clone before
-        transition from Aggregator step to collaborator steps
+        Remove collaborator private attributes from FLSpec clone
+        before transition from Collaborator step to aggregator steps.
+        Instead of removing private attributes this method can also replace
+        private attributes with a string (required in checkpointing)
 
         Args:
             clone (FLSpec): Clone from which private attributes are to be

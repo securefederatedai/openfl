@@ -109,15 +109,17 @@ class Aggregator:
         self.__private_attrs = self.__private_attrs_callable(**kwargs)
 
     def __set_private_attrs_to_clone(self, clone: Any) -> None:
-        """Set private_attrs to clone as attributes."""
+        """Set private_attrs of Aggregator as attributes of FLSpec clone"""
         if len(self.__private_attrs) > 0:
             for name, attr in self.__private_attrs.items():
                 setattr(clone, name, attr)
 
     def __delete_private_attrs_from_clone(self, clone: Any, replace_str: str = None) -> None:
         """
-        Remove aggregator private attributes from FLSpec clone before
-        transition from Aggregator step to collaborator steps.
+        Remove aggregator private attributes from FLSpec clone
+        before transition from aggregator step to collaborator steps.
+        Instead of removing private attributes this method can also replace
+        private attributes with a string (required in checkpointing)
         """
         # Update aggregator private attributes by taking latest
         # parameters from clone, then delete attributes from clone.
@@ -363,7 +365,6 @@ class Aggregator:
             f_name = f.__name__
 
             self.flow._display_transition_logs(f, parent_func)
-
             # Transition check
             if aggregator_to_collaborator(f, parent_func):
                 # Transition encountered, break the loop
