@@ -43,16 +43,16 @@ class Participant:
         self._name = name
 
     def get_name(self) -> str:
-        """Gets the name of the aggregator/collaborator.
+        """Gets the name of Participant (aggregator or collaborator).
 
         Returns:
-            str: The name of the aggregator/collaborator.
+            str: The name of the aggregator or collaborator.
         """
         return self._name
 
     def initialize_private_attributes(self, private_attrs: Dict[Any, Any] = None) -> None:
-        """Initialize private attributes of aggregator/collaborator by invoking the
-        callable specified by user."""
+        """Initialize private attributes of Participant (aggregator or collaborator)
+        by invoking the callable specified by user."""
         if self.private_attributes_callable is not None:
             self.private_attributes = self.private_attributes_callable(**self.kwargs)
         elif private_attrs:
@@ -60,7 +60,7 @@ class Participant:
 
     def _set_private_attrs_to_clone(self, clone: Any) -> None:
         """Set private attributes to FLSpec clone before
-        transitioning from Aggregator step to collaborator steps.
+        transitioning from aggregator to collaborator or vice versa
 
         Args:
             clone (Any): The clone to set attributes to.
@@ -71,7 +71,7 @@ class Participant:
 
     def _delete_private_attrs_from_clone(self, clone: Any) -> None:
         """Remove private attributes from FLSpec clone before
-        transition
+        transitioning from collaborator to aggregator or vice versa
 
         Args:
             clone (Any): The clone to remove attributes from.
