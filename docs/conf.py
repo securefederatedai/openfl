@@ -43,6 +43,9 @@ extensions = [
     'sphinx.ext.autosummary',
     'recommonmark'
 ]
+autodoc_default_options = {
+    'imported-members': True,
+}
 autosummary_generate = True  # Turn on sphinx.ext.autosummary
 
 source_suffix = ['.rst', '.md']

@@ -3,12 +3,14 @@
 
 
 """Plan module."""
+import os
 import sys
 from logging import getLogger
 from os import makedirs
 from os.path import isfile
 from pathlib import Path
 from shutil import copyfile, rmtree
+from subprocess import check_call  # nosec
 
 from click import Path as ClickPath
 from click import echo, group, option, pass_context
@@ -18,7 +20,7 @@ from openfl.federated import Plan
 from openfl.interface.cli_helper import get_workspace_parameter
 from openfl.protocols import utils
 from openfl.utilities.click_types import InputSpec
-from openfl.utilities.mocks import MockDataLoader
+from openfl.utilities.dataloading import get_dataloader
 from openfl.utilities.path_check import is_directory_traversal
 from openfl.utilities.split import split_tensor_dict_for_holdouts
 from openfl.utilities.utils import getfqdn_env
@@ -85,6 +87,13 @@ def plan(context):
     required=False,
     help="GaNDLF Configuration File Path",
 )
+@option(
+    "-r",
+    "--install_reqs",
+    required=False,
+    help="Install packages listed under 'requirements.txt'. True/False [Default: True]",
+    default=True,
+)
 def initialize(
     context,
     plan_config,
@@ -93,6 +102,7 @@ def initialize(
     aggregator_address,
     input_shape,
     gandlf_config,
+    install_reqs,
 ):
     """Initialize Data Science plan.
 
@@ -107,6 +117,7 @@ def initialize(
         aggregator_address (str): The FQDN of the federation aggregator.
         feature_shape (str): The input shape to the model.
         gandlf_config (str): GaNDLF Configuration File Path.
+        install_reqs (bool): Whether to install packages listed under 'requirements.txt'.
     """
 
     for p in [plan_config, cols_config, data_config]:
@@ -119,6 +130,31 @@ def initialize(
     data_config = Path(data_config).absolute()
     if gandlf_config is not None:
         gandlf_config = Path(gandlf_config).absolute()
+
+    if install_reqs:
+        requirements_filename = "requirements.txt"
+        requirements_path = Path(requirements_filename).absolute()
+
+        if isfile(f"{str(requirements_path)}"):
+            check_call(
+                [
+                    sys.executable,
+                    "-m",
+                    "pip",
+                    "install",
+                    "-r",
+                    f"{str(requirements_path)}",
+                ],
+                shell=False,
+            )
+            echo(f"Successfully installed packages from {requirements_path}.")
+
+            # Required to restart the process for newly installed packages to be recognized
+            args_restart = [arg for arg in sys.argv if not arg.startswith("--install_reqs")]
+            args_restart.append("--install_reqs=False")
+            os.execv(args_restart[0], args_restart)
+        else:
+            echo("No additional requirements for workspace defined. Skipping...")
 
     plan = Plan.parse(
         plan_config_path=plan_config,
@@ -134,11 +170,9 @@ def initialize(
         logger.info(
             "Attempting to generate initial model weights with" f" custom input shape {input_shape}"
         )
-        data_loader = MockDataLoader(input_shape)
-    else:
-        # If feature shape is not provided, data is assumed to be present
-        collaborator_cname = list(plan.cols_data_paths)[0]
-        data_loader = plan.get_data_loader(collaborator_cname)
+
+    data_loader = get_dataloader(plan, prefer_minimal=True, input_shape=input_shape)
+
     task_runner = plan.get_task_runner(data_loader)
     tensor_pipe = plan.get_tensor_pipe()
 
@@ -241,7 +275,6 @@ def switch_plan(name):
 
     plan_file = f"plan/plans/{name}/plan.yaml"
     if isfile(plan_file):
-
         echo(f"Switch plan to {name}")
 
         # Copy the new plan.yaml file to the top directory

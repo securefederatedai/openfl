@@ -1,0 +1,56 @@
+name: Docker Bench for Security
+
+on:
+  pull_request:
+    branches: [ develop ]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python 3.8
+      uses: actions/setup-python@v3
+      with:
+        python-version: "3.8"
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install .
+    - name: Clean Docker System
+      run: |
+        docker image prune -a -f
+        docker system prune -a -f
+    - name: Clone Docker Bench Security Repo
+      run: git clone https://github.com/docker/docker-bench-security.git
+    - name: Build Docker Bench Security Image
+      run: |
+        cd docker-bench-security
+        docker build --no-cache -t docker-bench-security .
+    - name: Create results directory
+      run: mkdir -p results
+    - name: Run Docker Bench for Security
+      run: |
+        docker run --rm --net host --pid host --userns host --cap-add audit_control \
+          -e DOCKER_CONTENT_TRUST=0 \
+          -v /etc:/etc:ro \
+          -v /lib/systemd/system:/lib/systemd/system:ro \
+          -v /usr/bin/containerd:/usr/bin/containerd:ro \
+          -v /usr/bin/runc:/usr/bin/runc:ro \
+          -v /usr/lib/systemd:/usr/lib/systemd:ro \
+          -v /var/lib:/var/lib:ro \
+          -v /var/run/docker.sock:/var/run/docker.sock:ro \
+          -v "$(pwd)/results:/results" \
+          --label docker_bench_security \
+          docker-bench-security | tee results/docker_bench_security_report.txt
+
+    - name: Upload Security Bench Report
+      uses: actions/upload-artifact@v3
+      with:
+        name: docker_bench_security-report
+        path: results/docker_bench_security_report.txt

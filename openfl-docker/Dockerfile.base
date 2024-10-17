@@ -19,6 +19,7 @@ RUN --mount=type=cache,id=apt-dev,target=/var/cache/apt \
     build-essential \
     --no-install-recommends && \
     rm -rf /var/lib/apt/lists/*
+RUN apt-get purge -y linux-libc-dev
 
 # Create an unprivileged user.
 RUN groupadd -g 1001 default && \
@@ -27,7 +28,7 @@ USER openfl
 
 # Install OpenFL.
 WORKDIR /home/openfl
-COPY . .
+COPY --chown=openfl:default . .
 ENV PATH=/home/openfl/.local/bin:$PATH
 RUN pip install --no-cache-dir -U pip setuptools wheel && \
     pip install --no-cache-dir -e .
