@@ -1,509 +1,643 @@
 {
-  "id" : 1,
-  "name" : "OpenFL",
-  "description" : "An open framework for Federated Learning.",
-  "revision" : 0,
-  "lastModifiedDate" : "2021-08-27T13:28:56Z",
-  "lastModifiedAgent" : "structurizr-web/2475",
-  "properties" : {
-    "structurizr.dsl" : "CndvcmtzcGFjZSAiT3BlbkZMIiAiQW4gb3BlbiBmcmFtZXdvcmsgZm9yIEZlZGVyYXRlZCBMZWFybmluZy4iIHsKICAgIG1vZGVsIHsKICAgICAgICBncm91cCAiQ29udHJvbCIgewogICAgICAgICAgICB1c2VyID0gcGVyc29uICJEYXRhIHNjaWVudGlzdCIgIkEgcGVyc29uIG9yIGdyb3VwIG9mIHBlb3BsZSB1c2luZyBPcGVuRkwiCiAgICAgICAgICAgIHNoYXJkT3duZXIgPSBwZXJzb24gIkNvbGxhYm9yYXRvciBtYW5hZ2VyIiAiRGF0YSBvd25lcidzIHJlcHJlc2VudGF0aXZlIGNvbnRyb2xsaW5nIEVudm95IgogICAgICAgICAgICBjZW50cmFsTWFuYWdlciA9IHBlcnNvbiAiRGlyZWN0b3IgbWFuYWdlciIgCiAgICAgICAgICAgIGdvdmVybm9yID0gc29mdHdhcmVTeXN0ZW0gIkdvdmVybm9yIiAiQ0NGLWJhc2VkIHN5c3RlbSBmb3IgY29ycG9yYXRlIGNsaWVudHMiCiAgICAgICAgfQogICAgICAgIG9wZW5mbCA9IHNvZnR3YXJlU3lzdGVtICJPcGVuRkwiICJBbiBvcGVuIGZyYW1ld29yayBmb3IgRmVkZXJhdGVkIExlYXJuaW5nIiB7CiAgICAgICAgICAgIGFwaUxheWVyID0gY29udGFpbmVyICJQeXRob24gQVBJIGNvbXBvbmVudCIgIkEgc2V0IG9mIHRvb2xzIHRvIHNldHVwIHJlZ2lzdGVyIEZMIEV4cGVyaW1lbnRzIiB7CiAgICAgICAgICAgICAgICBmZWRlcmF0aW9uSW50ZXJmYWNlID0gY29tcG9uZW50ICJGZWRlcmFpb24gSW50ZXJmYWNlIgogICAgICAgICAgICAgICAgZXhwZXJpbWVudEludGVyZmFjZSA9IGNvbXBvbmVudCAiRXhwZXJpbWVudCBJbnRlcmZhY2UiCiAgICAgICAgICAgICAgICAjIFRhc2tJbnRlcmZhY2UgPSBjb21wb25lbnQgIiIKICAgICAgICAgICAgfQoKICAgICAgICAgICAgZ3JvdXAgIkNlbnRyYWwgbm9kZSIgewogICAgICAgICAgICAgICAgZGlyZWN0b3IgPSBjb250YWluZXIgIkRpcmVjdG9yIiAiQSBsb25nLWxpdmluZyBlbnRpdHkgdGhhdCBjYW4gc3Bhd24gYWdncmVnYXRvcnMiCiAgICAgICAgICAgICAgICBhZ2dyZWdhdG9yID0gY29udGFpbmVyICJBZ2dyZWdhdG9yIiAiTW9kZWwgc2VydmVyIGFuZCBjb2xsYWJvcmF0b3Igb3JjaGVzdHJhdG9yInsKICAgICAgICAgICAgICAgICAgICBhc3NpZ25lciA9IGNvbXBvbmVudCAiVGFzayBBc3NpZ25lciIgIkRlY2lkZXMgdGhlIHBvbGljeSBmb3Igd2hpY2ggY29sbGFib3JhdG9ycyBzaG91bGQgcnVuIEZMIHRhc2tzIgogICAgICAgICAgICAgICAgICAgIGdycGNTZXJ2ZXIgPSBjb21wb25lbnQgImdSUEMgU2VydmVyIgogICAgICAgICAgICAgICAgfQogICAgICAgICAgICB9CiAgICAgICAgICAgIGdyb3VwICJDb2xsYWJvcmF0b3Igbm9kZSIgewogICAgICAgICAgICAgICAgZW52b3kgPSBjb250YWluZXIgIkVudm95IiAiQSBsb25nLWxpdmluZyBlbnRpdHkgdGhhdCBjYW4gYWRhcHQgYSBsb2NhbCBkYXRhIHNldCBhbmQgc3Bhd24gY29sbGFib3JhdG9ycyIgewogICAgICAgICAgICAgICAgICAgIHNoYXJkRGVzY3JpcHRvciA9IGNvbXBvbmVudCAiU2hhcmQgRGVzY3JpcHRvciIgIkRhdGEgbWFuYWdlcidzIGludGVyZmFjZSBhaW1lZCB0byB1bmlmeSBkYXRhIGFjY2VzcyIgewogICAgICAgICAgICAgICAgICAgICAgICB0YWdzICJJbnRlcmZhY2UiCiAgICAgICAgICAgICAgICAgICAgfQogICAgICAgICAgICAgICAgfQogICAgICAgICAgICAgICAgY29sbGFib3JhdG9yID0gY29udGFpbmVyICJDb2xsYWJvcmF0b3IiICJBY3RvciBleGVjdXRpbmcgdGFza3Mgb24gbG9jYWwgZGF0YSBpbnNpZGUgb25lIGV4cGVyaW1lbnQiIHsKICAgICAgICAgICAgICAgICAgICBwbHVnaW5NYW5hZ2VyID0gY29tcG9uZW50ICJQbHVnaW4gTWFuYWdlciIKICAgICAgICAgICAgICAgICAgICB0YXNrUnVubmVyID0gY29tcG9uZW50ICJUYXNrIFJ1bm5lciIKICAgICAgICAgICAgICAgICAgICB0ZW5zb3JEQiA9IGNvbXBvbmVudCAiVGVuc29yIERhdGEgQmFzZSIKICAgICAgICAgICAgICAgICAgICB0ZW5zb3JDb2RlYyA9IGNvbXBvbmVudCAiVGVuc29yQ29kZWMiCiAgICAgICAgICAgICAgICAgICAgZ3JwY0NsaWVudCA9IGNvbXBvbmVudCAiZ1JQQyBDbGllbnQiCiAgICAgICAgICAgICAgICAgICAgZnJhbWV3b3JrQWRhcHRlciA9IGNvbXBvbmVudCAiRnJhbWV3b3JrIEFkYXB0ZXIiCiAgICAgICAgICAgICAgICB9CiAgICAgICAgICAgIH0KICAgICAgICB9CiAgICAgICAgY29uZmlnID0gZWxlbWVudCAiQ29uZmlnIGZpbGUiCgogICAgICAgICMgcmVsYXRpb25zaGlwcyBiZXR3ZWVuIHBlb3BsZSBhbmQgc29mdHdhcmUgc3lzdGVtcwogICAgICAgIHVzZXIgLT4gb3BlbmZsICJDb250cm9scyBGZWRhcmF0aW9ucy4gUHJvdmlkZXMgRkwgcGxhbnMsIHRhc2tzLCBtb2RlbHMsIGRhdGEiCiAgICAgICAgZ292ZXJub3IgLT4gb3BlbmZsICJDb250cm9scyBGZWRhcmF0aW9ucyIKCiAgICAgICAgIyByZWxhdGlvbnNoaXBzIHRvL2Zyb20gY29udGFpbmVycwogICAgICAgIHVzZXIgLT4gYXBpTGF5ZXIgIlByb3ZpZGVzIEZMIFBsYW5zLCBUYXNrcywgTW9kZWxzLCBEYXRhTG9hZGVycyIKICAgICAgICBzaGFyZE93bmVyIC0+IGVudm95ICJMYXVuY2hlcy4gUHJvdmlkZXMgbG9jYWwgZGF0YXNldCBTaGFyZERlc2NyaXB0b3JzIgogICAgICAgIGNlbnRyYWxNYW5hZ2VyIC0+IGRpcmVjdG9yICJMYXVuY2hlcy4gU2V0cyB1cCBnbG9iYWwgRmVkZXJhdGlvbiBzZXR0aW5ncyIKICAgICAgICBhcGlMYXllciAtPiBkaXJlY3RvciAiUmVnaXN0ZXJzIEZMIGV4cGVyaW1lbnRzIgogICAgICAgIGRpcmVjdG9yIC0+IGFwaUxheWVyICJTZW5kcyBpbmZvcm1hdGlvbiBhYm91dCB0aGUgRmVkZXJhdGlvbi4gUmV0dXJucyB0cmFpbmluZyBhcnRpZmFjdHMuIgogICAgICAgIGRpcmVjdG9yIC0+IGFnZ3JlZ2F0b3IgIkNyZWF0ZXMgYW4gaW5zdGFuY2UgdG8gbWFpbnRhaW4gYW4gRkwgZXhwZXJpbWVudCIKICAgICAgICBlbnZveSAtPiBjb2xsYWJvcmF0b3IgIkNyZWF0ZXMgYW4gaW5zdGFuY2UgdG8gbWFpbnRhaW4gYW4gRkwgZXhwZXJpbWVudCIKICAgICAgICBlbnZveSAtPiBkaXJlY3RvciAiQ29tbXVuaWNhdGVzIGRhdGFzZXQgaW5mbywgU2VuZHMgc3RhdHVzIHVwZGF0ZXMiCiAgICAgICAgZGlyZWN0b3IgLT4gZW52b3kgIkFwcHJvdmVzLCBTZW5kcyBGTCBleHBlcmltZW50cyIKICAgICAgICBhZ2dyZWdhdG9yIC0+IGNvbGxhYm9yYXRvciAiU2VuZHMgdGFza3MgYW5kIGluaXRpYWwgdGVuc29ycyIKICAgICAgICBjb2xsYWJvcmF0b3IgLT4gYWdncmVnYXRvciAiU2VuZHMgbG9jYWxseSB0dW5lZCB0ZW5zb3JzIGFuZCB0cmFpbmluZyBtZXRyaWNzIgoKCiAgICAgICAgIyByZWxhdGlvbnNoaXBzIHRvL2Zyb20gY29tcG9uZW50cwogICAgICAgIGVudm95IC0+IHRhc2tSdW5uZXIgIlByb3ZpZGVzIHRhc2tzJyBkZWZlbml0aW9ucyIKICAgICAgICBncnBjQ2xpZW50IC0+IHRhc2tSdW5uZXIgIkludm9rZXMgc29tZSB0YXNrcyBmb3IgdGhlIHJvdW5kIgogICAgICAgIGFnZ3JlZ2F0b3IgLT4gZ3JwY0NsaWVudCAiQ29tbXVuaWNhdGVzIgogICAgfQoKICAgIHZpZXdzCiAgICAgICAgdGhlbWUgZGVmYXVsdAoKICAgICAgICBzeXN0ZW1jb250ZXh0IG9wZW5mbCAiU3lzdGVtQ29udGV4dCIgewogICAgICAgICAgICBpbmNsdWRlICoKICAgICAgICAgICAgYXV0b0xheW91dAogICAgICAgICAgICAKICAgICAgICB9CgogICAgICAgIGNvbnRhaW5lciBvcGVuZmwgIkNvbnRhaW5lcnMiIHsKICAgICAgICAgICAgaW5jbHVkZSAqCiAgICAgICAgICAgICMgaW5jbHVkZSBjb25maWcKICAgICAgICAgICAgIyBhdXRvTGF5b3V0CiAgICAgICAgfQoKICAgICAgICBjb21wb25lbnQgY29sbGFib3JhdG9yICJDb2xsYWJvcmF0b3IiIHsKICAgICAgICAgICAgaW5jbHVkZSAqCiAgICAgICAgICAgIGF1dG9MYXlvdXQKICAgICAgICB9CgogICAgICAgIGNvbXBvbmVudCBhcGlMYXllciAiQVBJIiB7CiAgICAgICAgICAgIGluY2x1ZGUgKgogICAgICAgICAgICBhdXRvTGF5b3V0CiAgICAgICAgfQoKICAgICAgICBjb21wb25lbnQgZW52b3kgIkVudm95IiB7CiAgICAgICAgICAgIGluY2x1ZGUgKgogICAgICAgICAgICBhdXRvTGF5b3V0CiAgICAgICAgfQoKfQoK"
+  "configuration": {},
+  "description": "An open framework for Federated Learning.",
+  "documentation": {},
+  "id": 1,
+  "lastModifiedAgent": "structurizr-web/2475",
+  "lastModifiedDate": "2021-08-27T13:28:56Z",
+  "model": {
+    "customElements": [
+      {
+        "id": "22",
+        "name": "Config file",
+        "tags": "Element"
+      }
+    ],
+    "people": [
+      {
+        "description": "Data owner's representative controlling Envoy",
+        "group": "Control",
+        "id": "2",
+        "location": "Unspecified",
+        "name": "Collaborator manager",
+        "relationships": [
+          {
+            "description": "Launches. Provides local dataset ShardDescriptors",
+            "destinationId": "13",
+            "id": "26",
+            "sourceId": "2",
+            "tags": "Relationship"
+          },
+          {
+            "description": "Launches. Provides local dataset ShardDescriptors",
+            "destinationId": "5",
+            "id": "27",
+            "sourceId": "2",
+            "tags": "Relationship"
+          }
+        ],
+        "tags": "Element,Person"
+      },
+      {
+        "description": "A person or group of people using OpenFL",
+        "group": "Control",
+        "id": "1",
+        "location": "Unspecified",
+        "name": "Data scientist",
+        "relationships": [
+          {
+            "description": "Provides FL Plans, Tasks, Models, DataLoaders",
+            "destinationId": "6",
+            "id": "25",
+            "sourceId": "1",
+            "tags": "Relationship"
+          },
+          {
+            "description": "Controls Fedarations. Provides FL plans, tasks, models, data",
+            "destinationId": "5",
+            "id": "23",
+            "sourceId": "1",
+            "tags": "Relationship"
+          }
+        ],
+        "tags": "Element,Person"
+      },
+      {
+        "group": "Control",
+        "id": "3",
+        "location": "Unspecified",
+        "name": "Director manager",
+        "relationships": [
+          {
+            "description": "Launches. Sets up global Federation settings",
+            "destinationId": "5",
+            "id": "29",
+            "sourceId": "3",
+            "tags": "Relationship"
+          },
+          {
+            "description": "Launches. Sets up global Federation settings",
+            "destinationId": "9",
+            "id": "28",
+            "sourceId": "3",
+            "tags": "Relationship"
+          }
+        ],
+        "tags": "Element,Person"
+      }
+    ],
+    "softwareSystems": [
+      {
+        "description": "CCF-based system for corporate clients",
+        "group": "Control",
+        "id": "4",
+        "location": "Unspecified",
+        "name": "Governor",
+        "relationships": [
+          {
+            "description": "Controls Fedarations",
+            "destinationId": "5",
+            "id": "24",
+            "sourceId": "4",
+            "tags": "Relationship"
+          }
+        ],
+        "tags": "Element,Software System"
+      },
+      {
+        "containers": [
+          {
+            "components": [
+              {
+                "description": "Decides the policy for which collaborators should run FL tasks",
+                "id": "11",
+                "name": "Task Assigner",
+                "size": 0,
+                "tags": "Element,Component"
+              },
+              {
+                "id": "12",
+                "name": "gRPC Server",
+                "size": 0,
+                "tags": "Element,Component"
+              }
+            ],
+            "description": "Model server and collaborator orchestrator",
+            "group": "Central node",
+            "id": "10",
+            "name": "Aggregator",
+            "relationships": [
+              {
+                "description": "Communicates",
+                "destinationId": "20",
+                "id": "40",
+                "sourceId": "10",
+                "tags": "Relationship"
+              },
+              {
+                "description": "Sends tasks and initial tensors",
+                "destinationId": "15",
+                "id": "36",
+                "sourceId": "10",
+                "tags": "Relationship"
+              }
+            ],
+            "tags": "Element,Container"
+          },
+          {
+            "components": [
+              {
+                "id": "16",
+                "name": "Plugin Manager",
+                "size": 0,
+                "tags": "Element,Component"
+              },
+              {
+                "id": "21",
+                "name": "Framework Adapter",
+                "size": 0,
+                "tags": "Element,Component"
+              },
+              {
+                "id": "18",
+                "name": "Tensor Data Base",
+                "size": 0,
+                "tags": "Element,Component"
+              },
+              {
+                "id": "20",
+                "name": "gRPC Client",
+                "relationships": [
+                  {
+                    "description": "Invokes some tasks for the round",
+                    "destinationId": "17",
+                    "id": "39",
+                    "sourceId": "20",
+                    "tags": "Relationship"
+                  }
+                ],
+                "size": 0,
+                "tags": "Element,Component"
+              },
+              {
+                "id": "19",
+                "name": "TensorCodec",
+                "size": 0,
+                "tags": "Element,Component"
+              },
+              {
+                "id": "17",
+                "name": "Task Runner",
+                "size": 0,
+                "tags": "Element,Component"
+              }
+            ],
+            "description": "Actor executing tasks on local data inside one experiment",
+            "group": "Collaborator node",
+            "id": "15",
+            "name": "Collaborator",
+            "relationships": [
+              {
+                "description": "Sends locally tuned tensors and training metrics",
+                "destinationId": "10",
+                "id": "37",
+                "sourceId": "15",
+                "tags": "Relationship"
+              }
+            ],
+            "tags": "Element,Container"
+          },
+          {
+            "components": [
+              {
+                "id": "8",
+                "name": "Experiment Interface",
+                "size": 0,
+                "tags": "Element,Component"
+              },
+              {
+                "id": "7",
+                "name": "Federaion Interface",
+                "size": 0,
+                "tags": "Element,Component"
+              }
+            ],
+            "description": "A set of tools to setup register FL Experiments",
+            "id": "6",
+            "name": "Python API component",
+            "relationships": [
+              {
+                "description": "Registers FL experiments",
+                "destinationId": "9",
+                "id": "30",
+                "sourceId": "6",
+                "tags": "Relationship"
+              }
+            ],
+            "tags": "Element,Container"
+          },
+          {
+            "components": [
+              {
+                "description": "Data manager's interface aimed to unify data access",
+                "id": "14",
+                "name": "Shard Descriptor",
+                "size": 0,
+                "tags": "Element,Component,Interface"
+              }
+            ],
+            "description": "A long-living entity that can adapt a local data set and spawn collaborators",
+            "group": "Collaborator node",
+            "id": "13",
+            "name": "Envoy",
+            "relationships": [
+              {
+                "description": "Communicates dataset info, Sends status updates",
+                "destinationId": "9",
+                "id": "34",
+                "sourceId": "13",
+                "tags": "Relationship"
+              },
+              {
+                "description": "Provides tasks' defenitions",
+                "destinationId": "17",
+                "id": "38",
+                "sourceId": "13",
+                "tags": "Relationship"
+              },
+              {
+                "description": "Creates an instance to maintain an FL experiment",
+                "destinationId": "15",
+                "id": "33",
+                "sourceId": "13",
+                "tags": "Relationship"
+              }
+            ],
+            "tags": "Element,Container"
+          },
+          {
+            "description": "A long-living entity that can spawn aggregators",
+            "group": "Central node",
+            "id": "9",
+            "name": "Director",
+            "relationships": [
+              {
+                "description": "Sends information about the Federation. Returns training artifacts.",
+                "destinationId": "6",
+                "id": "31",
+                "sourceId": "9",
+                "tags": "Relationship"
+              },
+              {
+                "description": "Approves, Sends FL experiments",
+                "destinationId": "13",
+                "id": "35",
+                "sourceId": "9",
+                "tags": "Relationship"
+              },
+              {
+                "description": "Creates an instance to maintain an FL experiment",
+                "destinationId": "10",
+                "id": "32",
+                "sourceId": "9",
+                "tags": "Relationship"
+              }
+            ],
+            "tags": "Element,Container"
+          }
+        ],
+        "description": "An open framework for Federated Learning",
+        "id": "5",
+        "location": "Unspecified",
+        "name": "OpenFL",
+        "tags": "Element,Software System"
+      }
+    ]
   },
-  "configuration" : { },
-  "model" : {
-    "people" : [ {
-      "id" : "2",
-      "tags" : "Element,Person",
-      "name" : "Collaborator manager",
-      "description" : "Data owner's representative controlling Envoy",
-      "relationships" : [ {
-        "id" : "26",
-        "tags" : "Relationship",
-        "sourceId" : "2",
-        "destinationId" : "13",
-        "description" : "Launches. Provides local dataset ShardDescriptors"
-      }, {
-        "id" : "27",
-        "tags" : "Relationship",
-        "sourceId" : "2",
-        "destinationId" : "5",
-        "description" : "Launches. Provides local dataset ShardDescriptors"
-      } ],
-      "group" : "Control",
-      "location" : "Unspecified"
-    }, {
-      "id" : "1",
-      "tags" : "Element,Person",
-      "name" : "Data scientist",
-      "description" : "A person or group of people using OpenFL",
-      "relationships" : [ {
-        "id" : "25",
-        "tags" : "Relationship",
-        "sourceId" : "1",
-        "destinationId" : "6",
-        "description" : "Provides FL Plans, Tasks, Models, DataLoaders"
-      }, {
-        "id" : "23",
-        "tags" : "Relationship",
-        "sourceId" : "1",
-        "destinationId" : "5",
-        "description" : "Controls Fedarations. Provides FL plans, tasks, models, data"
-      } ],
-      "group" : "Control",
-      "location" : "Unspecified"
-    }, {
-      "id" : "3",
-      "tags" : "Element,Person",
-      "name" : "Director manager",
-      "relationships" : [ {
-        "id" : "29",
-        "tags" : "Relationship",
-        "sourceId" : "3",
-        "destinationId" : "5",
-        "description" : "Launches. Sets up global Federation settings"
-      }, {
-        "id" : "28",
-        "tags" : "Relationship",
-        "sourceId" : "3",
-        "destinationId" : "9",
-        "description" : "Launches. Sets up global Federation settings"
-      } ],
-      "group" : "Control",
-      "location" : "Unspecified"
-    } ],
-    "softwareSystems" : [ {
-      "id" : "4",
-      "tags" : "Element,Software System",
-      "name" : "Governor",
-      "description" : "CCF-based system for corporate clients",
-      "relationships" : [ {
-        "id" : "24",
-        "tags" : "Relationship",
-        "sourceId" : "4",
-        "destinationId" : "5",
-        "description" : "Controls Fedarations"
-      } ],
-      "group" : "Control",
-      "location" : "Unspecified"
-    }, {
-      "id" : "5",
-      "tags" : "Element,Software System",
-      "name" : "OpenFL",
-      "description" : "An open framework for Federated Learning",
-      "location" : "Unspecified",
-      "containers" : [ {
-        "id" : "10",
-        "tags" : "Element,Container",
-        "name" : "Aggregator",
-        "description" : "Model server and collaborator orchestrator",
-        "relationships" : [ {
-          "id" : "40",
-          "tags" : "Relationship",
-          "sourceId" : "10",
-          "destinationId" : "20",
-          "description" : "Communicates"
-        }, {
-          "id" : "36",
-          "tags" : "Relationship",
-          "sourceId" : "10",
-          "destinationId" : "15",
-          "description" : "Sends tasks and initial tensors"
-        } ],
-        "group" : "Central node",
-        "components" : [ {
-          "id" : "11",
-          "tags" : "Element,Component",
-          "name" : "Task Assigner",
-          "description" : "Decides the policy for which collaborators should run FL tasks",
-          "size" : 0
-        }, {
-          "id" : "12",
-          "tags" : "Element,Component",
-          "name" : "gRPC Server",
-          "size" : 0
-        } ]
-      }, {
-        "id" : "15",
-        "tags" : "Element,Container",
-        "name" : "Collaborator",
-        "description" : "Actor executing tasks on local data inside one experiment",
-        "relationships" : [ {
-          "id" : "37",
-          "tags" : "Relationship",
-          "sourceId" : "15",
-          "destinationId" : "10",
-          "description" : "Sends locally tuned tensors and training metrics"
-        } ],
-        "group" : "Collaborator node",
-        "components" : [ {
-          "id" : "16",
-          "tags" : "Element,Component",
-          "name" : "Plugin Manager",
-          "size" : 0
-        }, {
-          "id" : "21",
-          "tags" : "Element,Component",
-          "name" : "Framework Adapter",
-          "size" : 0
-        }, {
-          "id" : "18",
-          "tags" : "Element,Component",
-          "name" : "Tensor Data Base",
-          "size" : 0
-        }, {
-          "id" : "20",
-          "tags" : "Element,Component",
-          "name" : "gRPC Client",
-          "relationships" : [ {
-            "id" : "39",
-            "tags" : "Relationship",
-            "sourceId" : "20",
-            "destinationId" : "17",
-            "description" : "Invokes some tasks for the round"
-          } ],
-          "size" : 0
-        }, {
-          "id" : "19",
-          "tags" : "Element,Component",
-          "name" : "TensorCodec",
-          "size" : 0
-        }, {
-          "id" : "17",
-          "tags" : "Element,Component",
-          "name" : "Task Runner",
-          "size" : 0
-        } ]
-      }, {
-        "id" : "6",
-        "tags" : "Element,Container",
-        "name" : "Python API component",
-        "description" : "A set of tools to setup register FL Experiments",
-        "relationships" : [ {
-          "id" : "30",
-          "tags" : "Relationship",
-          "sourceId" : "6",
-          "destinationId" : "9",
-          "description" : "Registers FL experiments"
-        } ],
-        "components" : [ {
-          "id" : "8",
-          "tags" : "Element,Component",
-          "name" : "Experiment Interface",
-          "size" : 0
-        }, {
-          "id" : "7",
-          "tags" : "Element,Component",
-          "name" : "Federaion Interface",
-          "size" : 0
-        } ]
-      }, {
-        "id" : "13",
-        "tags" : "Element,Container",
-        "name" : "Envoy",
-        "description" : "A long-living entity that can adapt a local data set and spawn collaborators",
-        "relationships" : [ {
-          "id" : "34",
-          "tags" : "Relationship",
-          "sourceId" : "13",
-          "destinationId" : "9",
-          "description" : "Communicates dataset info, Sends status updates"
-        }, {
-          "id" : "38",
-          "tags" : "Relationship",
-          "sourceId" : "13",
-          "destinationId" : "17",
-          "description" : "Provides tasks' defenitions"
-        }, {
-          "id" : "33",
-          "tags" : "Relationship",
-          "sourceId" : "13",
-          "destinationId" : "15",
-          "description" : "Creates an instance to maintain an FL experiment"
-        } ],
-        "group" : "Collaborator node",
-        "components" : [ {
-          "id" : "14",
-          "tags" : "Element,Component,Interface",
-          "name" : "Shard Descriptor",
-          "description" : "Data manager's interface aimed to unify data access",
-          "size" : 0
-        } ]
-      }, {
-        "id" : "9",
-        "tags" : "Element,Container",
-        "name" : "Director",
-        "description" : "A long-living entity that can spawn aggregators",
-        "relationships" : [ {
-          "id" : "31",
-          "tags" : "Relationship",
-          "sourceId" : "9",
-          "destinationId" : "6",
-          "description" : "Sends information about the Federation. Returns training artifacts."
-        }, {
-          "id" : "35",
-          "tags" : "Relationship",
-          "sourceId" : "9",
-          "destinationId" : "13",
-          "description" : "Approves, Sends FL experiments"
-        }, {
-          "id" : "32",
-          "tags" : "Relationship",
-          "sourceId" : "9",
-          "destinationId" : "10",
-          "description" : "Creates an instance to maintain an FL experiment"
-        } ],
-        "group" : "Central node"
-      } ]
-    } ],
-    "customElements" : [ {
-      "id" : "22",
-      "tags" : "Element",
-      "name" : "Config file"
-    } ]
+  "name": "OpenFL",
+  "properties": {
+    "structurizr.dsl": "CndvcmtzcGFjZSAiT3BlbkZMIiAiQW4gb3BlbiBmcmFtZXdvcmsgZm9yIEZlZGVyYXRlZCBMZWFybmluZy4iIHsKICAgIG1vZGVsIHsKICAgICAgICBncm91cCAiQ29udHJvbCIgewogICAgICAgICAgICB1c2VyID0gcGVyc29uICJEYXRhIHNjaWVudGlzdCIgIkEgcGVyc29uIG9yIGdyb3VwIG9mIHBlb3BsZSB1c2luZyBPcGVuRkwiCiAgICAgICAgICAgIHNoYXJkT3duZXIgPSBwZXJzb24gIkNvbGxhYm9yYXRvciBtYW5hZ2VyIiAiRGF0YSBvd25lcidzIHJlcHJlc2VudGF0aXZlIGNvbnRyb2xsaW5nIEVudm95IgogICAgICAgICAgICBjZW50cmFsTWFuYWdlciA9IHBlcnNvbiAiRGlyZWN0b3IgbWFuYWdlciIgCiAgICAgICAgICAgIGdvdmVybm9yID0gc29mdHdhcmVTeXN0ZW0gIkdvdmVybm9yIiAiQ0NGLWJhc2VkIHN5c3RlbSBmb3IgY29ycG9yYXRlIGNsaWVudHMiCiAgICAgICAgfQogICAgICAgIG9wZW5mbCA9IHNvZnR3YXJlU3lzdGVtICJPcGVuRkwiICJBbiBvcGVuIGZyYW1ld29yayBmb3IgRmVkZXJhdGVkIExlYXJuaW5nIiB7CiAgICAgICAgICAgIGFwaUxheWVyID0gY29udGFpbmVyICJQeXRob24gQVBJIGNvbXBvbmVudCIgIkEgc2V0IG9mIHRvb2xzIHRvIHNldHVwIHJlZ2lzdGVyIEZMIEV4cGVyaW1lbnRzIiB7CiAgICAgICAgICAgICAgICBmZWRlcmF0aW9uSW50ZXJmYWNlID0gY29tcG9uZW50ICJGZWRlcmFpb24gSW50ZXJmYWNlIgogICAgICAgICAgICAgICAgZXhwZXJpbWVudEludGVyZmFjZSA9IGNvbXBvbmVudCAiRXhwZXJpbWVudCBJbnRlcmZhY2UiCiAgICAgICAgICAgICAgICAjIFRhc2tJbnRlcmZhY2UgPSBjb21wb25lbnQgIiIKICAgICAgICAgICAgfQoKICAgICAgICAgICAgZ3JvdXAgIkNlbnRyYWwgbm9kZSIgewogICAgICAgICAgICAgICAgZGlyZWN0b3IgPSBjb250YWluZXIgIkRpcmVjdG9yIiAiQSBsb25nLWxpdmluZyBlbnRpdHkgdGhhdCBjYW4gc3Bhd24gYWdncmVnYXRvcnMiCiAgICAgICAgICAgICAgICBhZ2dyZWdhdG9yID0gY29udGFpbmVyICJBZ2dyZWdhdG9yIiAiTW9kZWwgc2VydmVyIGFuZCBjb2xsYWJvcmF0b3Igb3JjaGVzdHJhdG9yInsKICAgICAgICAgICAgICAgICAgICBhc3NpZ25lciA9IGNvbXBvbmVudCAiVGFzayBBc3NpZ25lciIgIkRlY2lkZXMgdGhlIHBvbGljeSBmb3Igd2hpY2ggY29sbGFib3JhdG9ycyBzaG91bGQgcnVuIEZMIHRhc2tzIgogICAgICAgICAgICAgICAgICAgIGdycGNTZXJ2ZXIgPSBjb21wb25lbnQgImdSUEMgU2VydmVyIgogICAgICAgICAgICAgICAgfQogICAgICAgICAgICB9CiAgICAgICAgICAgIGdyb3VwICJDb2xsYWJvcmF0b3Igbm9kZSIgewogICAgICAgICAgICAgICAgZW52b3kgPSBjb250YWluZXIgIkVudm95IiAiQSBsb25nLWxpdmluZyBlbnRpdHkgdGhhdCBjYW4gYWRhcHQgYSBsb2NhbCBkYXRhIHNldCBhbmQgc3Bhd24gY29sbGFib3JhdG9ycyIgewogICAgICAgICAgICAgICAgICAgIHNoYXJkRGVzY3JpcHRvciA9IGNvbXBvbmVudCAiU2hhcmQgRGVzY3JpcHRvciIgIkRhdGEgbWFuYWdlcidzIGludGVyZmFjZSBhaW1lZCB0byB1bmlmeSBkYXRhIGFjY2VzcyIgewogICAgICAgICAgICAgICAgICAgICAgICB0YWdzICJJbnRlcmZhY2UiCiAgICAgICAgICAgICAgICAgICAgfQogICAgICAgICAgICAgICAgfQogICAgICAgICAgICAgICAgY29sbGFib3JhdG9yID0gY29udGFpbmVyICJDb2xsYWJvcmF0b3IiICJBY3RvciBleGVjdXRpbmcgdGFza3Mgb24gbG9jYWwgZGF0YSBpbnNpZGUgb25lIGV4cGVyaW1lbnQiIHsKICAgICAgICAgICAgICAgICAgICBwbHVnaW5NYW5hZ2VyID0gY29tcG9uZW50ICJQbHVnaW4gTWFuYWdlciIKICAgICAgICAgICAgICAgICAgICB0YXNrUnVubmVyID0gY29tcG9uZW50ICJUYXNrIFJ1bm5lciIKICAgICAgICAgICAgICAgICAgICB0ZW5zb3JEQiA9IGNvbXBvbmVudCAiVGVuc29yIERhdGEgQmFzZSIKICAgICAgICAgICAgICAgICAgICB0ZW5zb3JDb2RlYyA9IGNvbXBvbmVudCAiVGVuc29yQ29kZWMiCiAgICAgICAgICAgICAgICAgICAgZ3JwY0NsaWVudCA9IGNvbXBvbmVudCAiZ1JQQyBDbGllbnQiCiAgICAgICAgICAgICAgICAgICAgZnJhbWV3b3JrQWRhcHRlciA9IGNvbXBvbmVudCAiRnJhbWV3b3JrIEFkYXB0ZXIiCiAgICAgICAgICAgICAgICB9CiAgICAgICAgICAgIH0KICAgICAgICB9CiAgICAgICAgY29uZmlnID0gZWxlbWVudCAiQ29uZmlnIGZpbGUiCgogICAgICAgICMgcmVsYXRpb25zaGlwcyBiZXR3ZWVuIHBlb3BsZSBhbmQgc29mdHdhcmUgc3lzdGVtcwogICAgICAgIHVzZXIgLT4gb3BlbmZsICJDb250cm9scyBGZWRhcmF0aW9ucy4gUHJvdmlkZXMgRkwgcGxhbnMsIHRhc2tzLCBtb2RlbHMsIGRhdGEiCiAgICAgICAgZ292ZXJub3IgLT4gb3BlbmZsICJDb250cm9scyBGZWRhcmF0aW9ucyIKCiAgICAgICAgIyByZWxhdGlvbnNoaXBzIHRvL2Zyb20gY29udGFpbmVycwogICAgICAgIHVzZXIgLT4gYXBpTGF5ZXIgIlByb3ZpZGVzIEZMIFBsYW5zLCBUYXNrcywgTW9kZWxzLCBEYXRhTG9hZGVycyIKICAgICAgICBzaGFyZE93bmVyIC0+IGVudm95ICJMYXVuY2hlcy4gUHJvdmlkZXMgbG9jYWwgZGF0YXNldCBTaGFyZERlc2NyaXB0b3JzIgogICAgICAgIGNlbnRyYWxNYW5hZ2VyIC0+IGRpcmVjdG9yICJMYXVuY2hlcy4gU2V0cyB1cCBnbG9iYWwgRmVkZXJhdGlvbiBzZXR0aW5ncyIKICAgICAgICBhcGlMYXllciAtPiBkaXJlY3RvciAiUmVnaXN0ZXJzIEZMIGV4cGVyaW1lbnRzIgogICAgICAgIGRpcmVjdG9yIC0+IGFwaUxheWVyICJTZW5kcyBpbmZvcm1hdGlvbiBhYm91dCB0aGUgRmVkZXJhdGlvbi4gUmV0dXJucyB0cmFpbmluZyBhcnRpZmFjdHMuIgogICAgICAgIGRpcmVjdG9yIC0+IGFnZ3JlZ2F0b3IgIkNyZWF0ZXMgYW4gaW5zdGFuY2UgdG8gbWFpbnRhaW4gYW4gRkwgZXhwZXJpbWVudCIKICAgICAgICBlbnZveSAtPiBjb2xsYWJvcmF0b3IgIkNyZWF0ZXMgYW4gaW5zdGFuY2UgdG8gbWFpbnRhaW4gYW4gRkwgZXhwZXJpbWVudCIKICAgICAgICBlbnZveSAtPiBkaXJlY3RvciAiQ29tbXVuaWNhdGVzIGRhdGFzZXQgaW5mbywgU2VuZHMgc3RhdHVzIHVwZGF0ZXMiCiAgICAgICAgZGlyZWN0b3IgLT4gZW52b3kgIkFwcHJvdmVzLCBTZW5kcyBGTCBleHBlcmltZW50cyIKICAgICAgICBhZ2dyZWdhdG9yIC0+IGNvbGxhYm9yYXRvciAiU2VuZHMgdGFza3MgYW5kIGluaXRpYWwgdGVuc29ycyIKICAgICAgICBjb2xsYWJvcmF0b3IgLT4gYWdncmVnYXRvciAiU2VuZHMgbG9jYWxseSB0dW5lZCB0ZW5zb3JzIGFuZCB0cmFpbmluZyBtZXRyaWNzIgoKCiAgICAgICAgIyByZWxhdGlvbnNoaXBzIHRvL2Zyb20gY29tcG9uZW50cwogICAgICAgIGVudm95IC0+IHRhc2tSdW5uZXIgIlByb3ZpZGVzIHRhc2tzJyBkZWZlbml0aW9ucyIKICAgICAgICBncnBjQ2xpZW50IC0+IHRhc2tSdW5uZXIgIkludm9rZXMgc29tZSB0YXNrcyBmb3IgdGhlIHJvdW5kIgogICAgICAgIGFnZ3JlZ2F0b3IgLT4gZ3JwY0NsaWVudCAiQ29tbXVuaWNhdGVzIgogICAgfQoKICAgIHZpZXdzCiAgICAgICAgdGhlbWUgZGVmYXVsdAoKICAgICAgICBzeXN0ZW1jb250ZXh0IG9wZW5mbCAiU3lzdGVtQ29udGV4dCIgewogICAgICAgICAgICBpbmNsdWRlICoKICAgICAgICAgICAgYXV0b0xheW91dAogICAgICAgICAgICAKICAgICAgICB9CgogICAgICAgIGNvbnRhaW5lciBvcGVuZmwgIkNvbnRhaW5lcnMiIHsKICAgICAgICAgICAgaW5jbHVkZSAqCiAgICAgICAgICAgICMgaW5jbHVkZSBjb25maWcKICAgICAgICAgICAgIyBhdXRvTGF5b3V0CiAgICAgICAgfQoKICAgICAgICBjb21wb25lbnQgY29sbGFib3JhdG9yICJDb2xsYWJvcmF0b3IiIHsKICAgICAgICAgICAgaW5jbHVkZSAqCiAgICAgICAgICAgIGF1dG9MYXlvdXQKICAgICAgICB9CgogICAgICAgIGNvbXBvbmVudCBhcGlMYXllciAiQVBJIiB7CiAgICAgICAgICAgIGluY2x1ZGUgKgogICAgICAgICAgICBhdXRvTGF5b3V0CiAgICAgICAgfQoKICAgICAgICBjb21wb25lbnQgZW52b3kgIkVudm95IiB7CiAgICAgICAgICAgIGluY2x1ZGUgKgogICAgICAgICAgICBhdXRvTGF5b3V0CiAgICAgICAgfQoKfQoK"
   },
-  "documentation" : { },
-  "views" : {
-    "systemContextViews" : [ {
-      "softwareSystemId" : "5",
-      "key" : "SystemContext",
-      "paperSize" : "A4_Landscape",
-      "dimensions" : {
-        "width" : 3358,
-        "height" : 1454
+  "revision": 0,
+  "views": {
+    "componentViews": [
+      {
+        "automaticLayout": {
+          "edgeSeparation": 0,
+          "implementation": "Graphviz",
+          "nodeSeparation": 300,
+          "rankDirection": "TopBottom",
+          "rankSeparation": 300,
+          "vertices": false
+        },
+        "containerId": "15",
+        "elements": [
+          {
+            "id": "13",
+            "x": 0,
+            "y": 0
+          },
+          {
+            "id": "16",
+            "x": 0,
+            "y": 0
+          },
+          {
+            "id": "17",
+            "x": 0,
+            "y": 0
+          },
+          {
+            "id": "18",
+            "x": 0,
+            "y": 0
+          },
+          {
+            "id": "19",
+            "x": 0,
+            "y": 0
+          },
+          {
+            "id": "20",
+            "x": 0,
+            "y": 0
+          },
+          {
+            "id": "21",
+            "x": 0,
+            "y": 0
+          },
+          {
+            "id": "10",
+            "x": 0,
+            "y": 0
+          }
+        ],
+        "externalContainerBoundariesVisible": true,
+        "key": "Collaborator",
+        "relationships": [
+          {
+            "id": "40"
+          },
+          {
+            "id": "38"
+          },
+          {
+            "id": "39"
+          }
+        ]
       },
-      "automaticLayout" : {
-        "implementation" : "Graphviz",
-        "rankDirection" : "TopBottom",
-        "rankSeparation" : 300,
-        "nodeSeparation" : 300,
-        "edgeSeparation" : 0,
-        "vertices" : false
+      {
+        "automaticLayout": {
+          "edgeSeparation": 0,
+          "implementation": "Graphviz",
+          "nodeSeparation": 300,
+          "rankDirection": "TopBottom",
+          "rankSeparation": 300,
+          "vertices": false
+        },
+        "containerId": "6",
+        "elements": [
+          {
+            "id": "7",
+            "x": 0,
+            "y": 0
+          },
+          {
+            "id": "8",
+            "x": 0,
+            "y": 0
+          }
+        ],
+        "externalContainerBoundariesVisible": true,
+        "key": "API"
       },
-      "enterpriseBoundaryVisible" : true,
-      "elements" : [ {
-        "id" : "1",
-        "x" : 2604,
-        "y" : 277
-      }, {
-        "id" : "2",
-        "x" : 1854,
-        "y" : 277
-      }, {
-        "id" : "3",
-        "x" : 1104,
-        "y" : 277
-      }, {
-        "id" : "4",
-        "x" : 354,
-        "y" : 277
-      }, {
-        "id" : "5",
-        "x" : 1479,
-        "y" : 877
-      } ],
-      "relationships" : [ {
-        "id" : "29"
-      }, {
-        "id" : "27"
-      }, {
-        "id" : "24",
-        "vertices" : [ {
-          "x" : 954,
-          "y" : 681
-        } ]
-      }, {
-        "id" : "23",
-        "vertices" : [ {
-          "x" : 2454,
-          "y" : 681
-        } ]
-      } ]
-    } ],
-    "containerViews" : [ {
-      "softwareSystemId" : "5",
-      "key" : "Containers",
-      "dimensions" : {
-        "width" : 3104,
-        "height" : 2546
-      },
-      "externalSoftwareSystemBoundariesVisible" : true,
-      "elements" : [ {
-        "id" : "1",
-        "x" : 890,
-        "y" : 200
-      }, {
-        "id" : "13",
-        "x" : 1740,
-        "y" : 1320
-      }, {
-        "id" : "2",
-        "x" : 2470,
-        "y" : 1265
-      }, {
-        "id" : "3",
-        "x" : 230,
-        "y" : 1270
-      }, {
-        "id" : "15",
-        "x" : 1740,
-        "y" : 1855
-      }, {
-        "id" : "6",
-        "x" : 880,
-        "y" : 760
-      }, {
-        "id" : "9",
-        "x" : 880,
-        "y" : 1320
-      }, {
-        "id" : "10",
-        "x" : 880,
-        "y" : 1855
-      } ],
-      "relationships" : [ {
-        "id" : "28"
-      }, {
-        "id" : "26"
-      }, {
-        "id" : "37",
-        "vertices" : [ {
-          "x" : 1535,
-          "y" : 1940
-        } ]
-      }, {
-        "id" : "25"
-      }, {
-        "id" : "36",
-        "vertices" : [ {
-          "x" : 1565,
-          "y" : 2090
-        } ]
-      }, {
-        "id" : "35",
-        "vertices" : [ {
-          "x" : 1550,
-          "y" : 1530
-        } ]
-      }, {
-        "id" : "34",
-        "vertices" : [ {
-          "x" : 1530,
-          "y" : 1360
-        } ]
-      }, {
-        "id" : "33"
-      }, {
-        "id" : "32"
-      }, {
-        "id" : "31",
-        "vertices" : [ {
-          "x" : 1215,
-          "y" : 1185
-        } ]
-      }, {
-        "id" : "30",
-        "vertices" : [ {
-          "x" : 995,
-          "y" : 1175
-        } ]
-      } ]
-    } ],
-    "componentViews" : [ {
-      "key" : "Collaborator",
-      "automaticLayout" : {
-        "implementation" : "Graphviz",
-        "rankDirection" : "TopBottom",
-        "rankSeparation" : 300,
-        "nodeSeparation" : 300,
-        "edgeSeparation" : 0,
-        "vertices" : false
-      },
-      "containerId" : "15",
-      "externalContainerBoundariesVisible" : true,
-      "elements" : [ {
-        "id" : "13",
-        "x" : 0,
-        "y" : 0
-      }, {
-        "id" : "16",
-        "x" : 0,
-        "y" : 0
-      }, {
-        "id" : "17",
-        "x" : 0,
-        "y" : 0
-      }, {
-        "id" : "18",
-        "x" : 0,
-        "y" : 0
-      }, {
-        "id" : "19",
-        "x" : 0,
-        "y" : 0
-      }, {
-        "id" : "20",
-        "x" : 0,
-        "y" : 0
-      }, {
-        "id" : "21",
-        "x" : 0,
-        "y" : 0
-      }, {
-        "id" : "10",
-        "x" : 0,
-        "y" : 0
-      } ],
-      "relationships" : [ {
-        "id" : "40"
-      }, {
-        "id" : "38"
-      }, {
-        "id" : "39"
-      } ]
-    }, {
-      "key" : "API",
-      "automaticLayout" : {
-        "implementation" : "Graphviz",
-        "rankDirection" : "TopBottom",
-        "rankSeparation" : 300,
-        "nodeSeparation" : 300,
-        "edgeSeparation" : 0,
-        "vertices" : false
-      },
-      "containerId" : "6",
-      "externalContainerBoundariesVisible" : true,
-      "elements" : [ {
-        "id" : "7",
-        "x" : 0,
-        "y" : 0
-      }, {
-        "id" : "8",
-        "x" : 0,
-        "y" : 0
-      } ]
-    }, {
-      "key" : "Envoy",
-      "automaticLayout" : {
-        "implementation" : "Graphviz",
-        "rankDirection" : "TopBottom",
-        "rankSeparation" : 300,
-        "nodeSeparation" : 300,
-        "edgeSeparation" : 0,
-        "vertices" : false
-      },
-      "containerId" : "13",
-      "externalContainerBoundariesVisible" : true,
-      "elements" : [ {
-        "id" : "14",
-        "x" : 0,
-        "y" : 0
-      } ]
-    } ],
-    "configuration" : {
-      "branding" : { },
-      "styles" : { },
-      "themes" : [ "https://static.structurizr.com/themes/default/theme.json" ],
-      "terminology" : { },
-      "lastSavedView" : "Containers"
-    }
+      {
+        "automaticLayout": {
+          "edgeSeparation": 0,
+          "implementation": "Graphviz",
+          "nodeSeparation": 300,
+          "rankDirection": "TopBottom",
+          "rankSeparation": 300,
+          "vertices": false
+        },
+        "containerId": "13",
+        "elements": [
+          {
+            "id": "14",
+            "x": 0,
+            "y": 0
+          }
+        ],
+        "externalContainerBoundariesVisible": true,
+        "key": "Envoy"
+      }
+    ],
+    "configuration": {
+      "branding": {},
+      "lastSavedView": "Containers",
+      "styles": {},
+      "terminology": {},
+      "themes": [
+        "https://static.structurizr.com/themes/default/theme.json"
+      ]
+    },
+    "containerViews": [
+      {
+        "dimensions": {
+          "height": 2546,
+          "width": 3104
+        },
+        "elements": [
+          {
+            "id": "1",
+            "x": 890,
+            "y": 200
+          },
+          {
+            "id": "13",
+            "x": 1740,
+            "y": 1320
+          },
+          {
+            "id": "2",
+            "x": 2470,
+            "y": 1265
+          },
+          {
+            "id": "3",
+            "x": 230,
+            "y": 1270
+          },
+          {
+            "id": "15",
+            "x": 1740,
+            "y": 1855
+          },
+          {
+            "id": "6",
+            "x": 880,
+            "y": 760
+          },
+          {
+            "id": "9",
+            "x": 880,
+            "y": 1320
+          },
+          {
+            "id": "10",
+            "x": 880,
+            "y": 1855
+          }
+        ],
+        "externalSoftwareSystemBoundariesVisible": true,
+        "key": "Containers",
+        "relationships": [
+          {
+            "id": "28"
+          },
+          {
+            "id": "26"
+          },
+          {
+            "id": "37",
+            "vertices": [
+              {
+                "x": 1535,
+                "y": 1940
+              }
+            ]
+          },
+          {
+            "id": "25"
+          },
+          {
+            "id": "36",
+            "vertices": [
+              {
+                "x": 1565,
+                "y": 2090
+              }
+            ]
+          },
+          {
+            "id": "35",
+            "vertices": [
+              {
+                "x": 1550,
+                "y": 1530
+              }
+            ]
+          },
+          {
+            "id": "34",
+            "vertices": [
+              {
+                "x": 1530,
+                "y": 1360
+              }
+            ]
+          },
+          {
+            "id": "33"
+          },
+          {
+            "id": "32"
+          },
+          {
+            "id": "31",
+            "vertices": [
+              {
+                "x": 1215,
+                "y": 1185
+              }
+            ]
+          },
+          {
+            "id": "30",
+            "vertices": [
+              {
+                "x": 995,
+                "y": 1175
+              }
+            ]
+          }
+        ],
+        "softwareSystemId": "5"
+      }
+    ],
+    "systemContextViews": [
+      {
+        "automaticLayout": {
+          "edgeSeparation": 0,
+          "implementation": "Graphviz",
+          "nodeSeparation": 300,
+          "rankDirection": "TopBottom",
+          "rankSeparation": 300,
+          "vertices": false
+        },
+        "dimensions": {
+          "height": 1454,
+          "width": 3358
+        },
+        "elements": [
+          {
+            "id": "1",
+            "x": 2604,
+            "y": 277
+          },
+          {
+            "id": "2",
+            "x": 1854,
+            "y": 277
+          },
+          {
+            "id": "3",
+            "x": 1104,
+            "y": 277
+          },
+          {
+            "id": "4",
+            "x": 354,
+            "y": 277
+          },
+          {
+            "id": "5",
+            "x": 1479,
+            "y": 877
+          }
+        ],
+        "enterpriseBoundaryVisible": true,
+        "key": "SystemContext",
+        "paperSize": "A4_Landscape",
+        "relationships": [
+          {
+            "id": "29"
+          },
+          {
+            "id": "27"
+          },
+          {
+            "id": "24",
+            "vertices": [
+              {
+                "x": 954,
+                "y": 681
+              }
+            ]
+          },
+          {
+            "id": "23",
+            "vertices": [
+              {
+                "x": 2454,
+                "y": 681
+              }
+            ]
+          }
+        ],
+        "softwareSystemId": "5"
+      }
+    ]
   }
 }

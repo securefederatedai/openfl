@@ -3,16 +3,19 @@
 
 
 """Cutoff time based Straggler Handling function."""
+import threading
 import time
+from logging import getLogger
+from typing import Callable
 
 import numpy as np
 
 from openfl.component.straggler_handling_functions.straggler_handling_function import (
-    StragglerHandlingFunction,
+    StragglerHandlingPolicy,
 )
 
 
-class CutoffTimeBasedStragglerHandling(StragglerHandlingFunction):
+class CutoffTimeBasedStragglerHandling(StragglerHandlingPolicy):
     """Cutoff time based Straggler Handling function."""
 
     def __init__(
@@ -30,11 +33,92 @@ class CutoffTimeBasedStragglerHandling(StragglerHandlingFunction):
                 collaborators that should report. Defaults to 1.
             **kwargs: Variable length argument list.
         """
+        if minimum_reporting <= 0:
+            raise ValueError("minimum_reporting must be >0")
+
         self.round_start_time = round_start_time
         self.straggler_cutoff_time = straggler_cutoff_time
         self.minimum_reporting = minimum_reporting
+        self.logger = getLogger(__name__)
 
-    def straggler_time_expired(self):
+        if self.straggler_cutoff_time == np.inf:
+            self.logger.warning(
+                "CutoffTimeBasedStragglerHandling is disabled as straggler_cutoff_time "
+                "is set to np.inf."
+            )
+
+    def reset_policy_for_round(self) -> None:
+        """
+        Reset timer for the next round.
+        """
+        if hasattr(self, "timer"):
+            self.timer.cancel()
+            delattr(self, "timer")
+
+    def start_policy(self, callback: Callable) -> None:
+        """
+        Start time-based straggler handling policy for collaborator for
+        a particular round.
+
+        Args:
+            callback: Callable
+                Callback function for when straggler_cutoff_time elapses
+
+        Returns:
+            None
+        """
+        # If straggler_cutoff_time is set to infinity
+        # or if the timer is already running,
+        # do not start the policy.
+        if self.straggler_cutoff_time == np.inf or hasattr(self, "timer"):
+            return
+        self.round_start_time = time.time()
+        self.timer = threading.Timer(
+            self.straggler_cutoff_time,
+            callback,
+        )
+        self.timer.daemon = True
+        self.timer.start()
+
+    def straggler_cutoff_check(
+        self,
+        num_collaborators_done: int,
+        num_all_collaborators: int,
+    ) -> bool:
+        """
+        If minimum_reporting collaborators have reported results within
+        straggler_cutoff_time then return True, otherwise False.
+
+        Args:
+            num_collaborators_done: int
+                Number of collaborators finished.
+            num_all_collaborators: int
+                Total number of collaborators.
+
+        Returns:
+            bool: True if the straggler cutoff conditions are met, False otherwise.
+        """
+
+        # if straggler time has not expired then
+        # wait for ALL collaborators to report results.
+        if not self.__straggler_time_expired():
+            return num_all_collaborators == num_collaborators_done
+
+        # Time has expired
+        # Check if minimum_reporting collaborators have reported results
+        elif self.__minimum_collaborators_reported(num_collaborators_done):
+            self.logger.info(
+                f"{num_collaborators_done} collaborators have reported results. "
+                "Applying cutoff policy and proceeding with end of round."
+            )
+            return True
+        else:
+            self.logger.info(
+                f"Waiting for minimum {self.minimum_reporting} collaborator(s) to report results."
+            )
+            return False
+
+    def __straggler_time_expired(self) -> bool:
         """Check if the straggler time has expired.
 
         Returns:
@@ -44,7 +128,7 @@ class CutoffTimeBasedStragglerHandling(StragglerHandlingFunction):
             (time.time() - self.round_start_time) > self.straggler_cutoff_time
         )
 
-    def minimum_collaborators_reported(self, num_collaborators_done):
+    def __minimum_collaborators_reported(self, num_collaborators_done) -> bool:
         """Check if the minimum number of collaborators have reported.
 
         Args:
@@ -56,21 +140,3 @@ class CutoffTimeBasedStragglerHandling(StragglerHandlingFunction):
                 False otherwise.
         """
         return num_collaborators_done >= self.minimum_reporting
-
-    def straggler_cutoff_check(self, num_collaborators_done, all_collaborators=None):
-        """Check if the straggler cutoff conditions are met.
-
-        Args:
-            num_collaborators_done (int): The number of collaborators that
-                have reported.
-            all_collaborators (optional): All the collaborators. Defaults to
-                None.
-
-        Returns:
-            bool: True if the straggler cutoff conditions are met, False
-                otherwise.
-        """
-        cutoff = self.straggler_time_expired() and self.minimum_collaborators_reported(
-            num_collaborators_done
-        )
-        return cutoff

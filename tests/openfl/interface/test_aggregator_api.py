@@ -70,10 +70,10 @@ def test_aggregator_find_certificate_name():
 # NOTE: This test is disabled because of cryptic behaviour on calling
 # _certify(). Previous version of _certify() had imports defined within
 # the function, which allowed theses tests to pass, whereas the goal of the
-# @mock.patch here seems to be to make them dummy. Usefulness of this test is 
+# @mock.patch here seems to be to make them dummy. Usefulness of this test is
 # doubtful. Now that the imports are moved to the top level (a.k.a out of
 # _certify()) this test fails.
-# In addition, using dummy return types for read/write key/csr seems to 
+# In addition, using dummy return types for read/write key/csr seems to
 # obviate the need for even testing _certify().
 @pytest.mark.skip()
 @mock.patch('openfl.cryptography.io.write_crt')

@@ -1,3 +1,0 @@
-isort
-black
-flake8

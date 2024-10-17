@@ -1,7 +1,7 @@
 # Contributing to OpenFL
 
 We welcome contributions from the community. There are several ways to contribute:
-* Improvements in [documentation](https://openfl.readthedocs.io/en/latest/install.html).
+* Improvements in [documentation](https://openfl.readthedocs.io/en/latest/).
 * Contributing to OpenFL's code-base: via bug-fixes or feature additions.
 * Answering questions on our [discussions page](https://github.com/securefederatedai/openfl/discussions).
 * Participating in our [roadmap](https://github.com/securefederatedai/openfl/blob/develop/ROADMAP.md) discussions.
@@ -55,11 +55,12 @@ git clone https://github.com/YOUR_GITHUB_USERNAME/openfl.git
 cd openfl
 pip install -U pip setuptools wheel
 pip install .
+pip install -r requirements-linters.txt
 ```
 
 ## Code style
 
-OpenFL uses [black](https://black.readthedocs.io/en/stable/) and [isort](https://pycqa.github.io/isort/) to format the code.
+OpenFL uses [black](https://black.readthedocs.io/en/stable/), [isort](https://pycqa.github.io/isort/) and [precommit](https://pre-commit.com/) to format the code.
 
 Run the following command at the **root** directory of the repo to format your code.
 

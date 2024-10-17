@@ -1,0 +1,3 @@
+# Set your workspace's requirements here
+torch
+torchvision
