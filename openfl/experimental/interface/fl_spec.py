@@ -228,22 +228,6 @@ class FLSpec:
                 if not hasattr(ctx, name):
                     setattr(ctx, name, attr)
 
-    def get_clones(self, kwargs):
-        """Create, and prepare clones."""
-        FLSpec._reset_clones()
-        FLSpec._create_clones(self, self.runtime.collaborators)
-        selected_collaborators = self.__getattribute__(kwargs["foreach"])
-
-        for col in selected_collaborators:
-            clone = FLSpec._clones[col]
-            clone.input = col
-            artifacts_iter, _ = generate_artifacts(ctx=clone)
-            attributes = artifacts_iter()
-            for name, attr in attributes:
-                setattr(clone, name, deepcopy(attr))
-            clone._foreach_methods = self._foreach_methods
-            clone._metaflow_interface = self._metaflow_interface
-
     def next(self, f, **kwargs):
         """Specifies the next task in the flow to execute.
 
@@ -264,10 +248,6 @@ class FLSpec:
         if aggregator_to_collaborator(f, parent_func):
             agg_to_collab_ss = self._capture_instance_snapshot(kwargs=kwargs)
 
-            if str(self._runtime) == "FederatedRuntime":
-                if len(FLSpec._clones) == 0:
-                    self.get_clones(kwargs)
-
         # Remove included / excluded attributes from next task
         filter_attributes(self, f, **kwargs)
 
@@ -275,19 +255,14 @@ class FLSpec:
             if f.collaborator_step and not f.aggregator_step:
                 self._foreach_methods.append(f.__name__)
 
-            if "foreach" in kwargs:
-                self.filter_exclude_include(f, **kwargs)
-                # if "foreach" in kwargs:
-                self.execute_task_args = (
-                    self,
-                    f,
-                    parent_func,
-                    FLSpec._clones,
-                    agg_to_collab_ss,
-                    kwargs,
-                )
-            else:
-                self.execute_task_args = (self, f, parent_func, kwargs)
+            self.execute_task_args = (
+                self,
+                f,
+                parent_func,
+                FLSpec._clones,
+                agg_to_collab_ss,
+                kwargs,
+            )
 
         elif str(self._runtime) == "LocalRuntime":
             # update parameters required to execute execute_task function
