@@ -126,7 +126,7 @@ class PyTorchKvasirDataLoader(PyTorchDataLoader):
             int(data_path)
         except:
             raise ValueError("Expected `%s` to be representable as `int`.", data_path)
-        
+
         load_kvasir_dataset()
         self.valid_dataset = KvasirDataset(True, shard_num=int(data_path), **kwargs)
         self.train_dataset = KvasirDataset(False, shard_num=int(data_path), **kwargs)
