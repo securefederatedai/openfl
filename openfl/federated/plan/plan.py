@@ -421,7 +421,7 @@ class Plan:
 
     def get_straggler_handling_policy(self):
         """Get straggler handling policy."""
-        template = "openfl.component.straggler_handling_functions.CutoffTimeBasedStragglerHandling"
+        template = "openfl.component.straggler_handling_policy.CutoffTimeBasedStragglerHandling"
         defaults = self.config.get("straggler_handling_policy", {TEMPLATE: template, SETTINGS: {}})
 
         if self.straggler_policy_ is None:

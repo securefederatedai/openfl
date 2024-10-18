@@ -34,7 +34,7 @@ The example template, **torch_cnn_mnist_straggler_check**, uses the ``Percentage
     .. code-block:: yaml
     
         straggler_handling_policy :
-            template : openfl.component.straggler_handling_functions.CutoffTimeBasedStragglerHandling
+            template : openfl.component.straggler_handling_policy.CutoffTimeBasedStragglerHandling
             settings :
                 straggler_cutoff_time : 20
                 minimum_reporting : 1

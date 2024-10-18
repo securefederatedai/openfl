@@ -8,7 +8,7 @@ import time
 from logging import getLogger
 from threading import Lock
 
-from openfl.component.straggler_handling_functions import CutoffTimeBasedStragglerHandling
+from openfl.component.straggler_handling_policy import CutoffTimeBasedStragglerHandling
 from openfl.databases import TensorDB
 from openfl.interface.aggregation_functions import WeightedAverage
 from openfl.pipelines import NoCompressionPipeline, TensorCodec
