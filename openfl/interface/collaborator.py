@@ -63,22 +63,13 @@ def collaborator(context):
     required=True,
     help="The certified common name of the collaborator",
 )
-@option(
-    "-s",
-    "--secure",
-    required=False,
-    help="Enable Intel SGX Enclave",
-    is_flag=True,
-    default=False,
-)
-def start_(plan, collaborator_name, data_config, secure):
+def start_(plan, collaborator_name, data_config):
     """Start a collaborator service.
 
     Args:
         plan (str): Federated learning plan.
         collaborator_name (str): The certified common name of the collaborator.
         data_config (str): The data set/shard configuration file.
-        secure (bool): Enable Intel SGX Enclave.
     """
 
     if plan and is_directory_traversal(plan):
