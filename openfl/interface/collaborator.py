@@ -63,23 +63,8 @@ def collaborator(context):
     required=True,
     help="The certified common name of the collaborator",
 )
-@option(
-    "-s",
-    "--secure",
-    required=False,
-    help="Enable Intel SGX Enclave",
-    is_flag=True,
-    default=False,
-)
-def start_(plan, collaborator_name, data_config, secure):
-    """Start a collaborator service.
-
-    Args:
-        plan (str): Federated learning plan.
-        collaborator_name (str): The certified common name of the collaborator.
-        data_config (str): The data set/shard configuration file.
-        secure (bool): Enable Intel SGX Enclave.
-    """
+def start_(plan, collaborator_name, data_config):
+    """Start a collaborator service."""
 
     if plan and is_directory_traversal(plan):
         echo("Federated learning plan path is out of the openfl workspace scope.")
@@ -346,16 +331,7 @@ def register_collaborator(file_name):
     help="Import the archive containing the collaborator's" " certificate (signed by the CA)",
 )
 def certify_(collaborator_name, silent, request_pkg, import_):
-    """Certify the collaborator.
-
-    Args:
-        collaborator_name (str): The certified common name of the collaborator.
-        silent (bool): Do not prompt.
-        request_pkg (str): The archive containing the certificate signing
-            request (*.zip) for a collaborator.
-        import_ (str): Import the archive containing the collaborator's
-            certificate (signed by the CA).
-    """
+    """Certify the collaborator."""
     certify(collaborator_name, silent, request_pkg, import_)
 
 

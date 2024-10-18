@@ -51,23 +51,8 @@ def aggregator(context):
     default="plan/cols.yaml",
     type=ClickPath(exists=True),
 )
-@option(
-    "-s",
-    "--secure",
-    required=False,
-    help="Enable Intel SGX Enclave",
-    is_flag=True,
-    default=False,
-)
-def start_(plan, authorized_cols, secure):
-    """
-    Start the aggregator service.
-
-    Args:
-        plan (str): Path to the federated learning plan.
-        authorized_cols (str): Path to the authorized collaborator list.
-        secure (bool): Flag to enable Intel SGX Enclave.
-    """
+def start_(plan, authorized_cols):
+    """Start the aggregator service."""
 
     if is_directory_traversal(plan):
         echo("Federated learning plan path is out of the openfl workspace scope.")
@@ -163,12 +148,7 @@ def find_certificate_name(file_name):
 )
 @option("-s", "--silent", help="Do not prompt", is_flag=True)
 def _certify(fqdn, silent):
-    """Sign/certify the aggregator certificate key pair.
-
-    Args:
-        fqdn (str): The fully qualified domain name of aggregator node.
-        silent (bool): Flag to enable silent mode.
-    """
+    """Sign/certify the aggregator certificate key pair."""
     certify(fqdn, silent)
 
 
