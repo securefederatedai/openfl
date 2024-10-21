@@ -4,7 +4,6 @@ import grpc
 import subprocess
 import os
 import time
-import socket
 from multiprocessing import Process
 import sys
 import importlib

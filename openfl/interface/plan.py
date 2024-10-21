@@ -275,7 +275,6 @@ def switch_plan(name):
 
     plan_file = f"plan/plans/{name}/plan.yaml"
     if isfile(plan_file):
-
         echo(f"Switch plan to {name}")
 
         # Copy the new plan.yaml file to the top directory
