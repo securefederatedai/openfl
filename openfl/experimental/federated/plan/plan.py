@@ -42,7 +42,6 @@ class Plan:
         """Dump the plan config to YAML file."""
 
         class NoAliasDumper(SafeDumper):
-
             def ignore_aliases(self, data):
                 return True
 
@@ -403,7 +402,6 @@ class Plan:
         return self.flow_
 
     def import_kwargs_modules(self, defaults):
-
         def import_nested_settings(settings):
             for key, value in settings.items():
                 if isinstance(value, dict):

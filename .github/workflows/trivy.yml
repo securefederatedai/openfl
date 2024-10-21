@@ -30,17 +30,61 @@ jobs:
         uses: github/codeql-action/upload-sarif@v2
         with:
           sarif_file: 'trivy-results.sarif'
+
+      - name: Install Trivy
+        run: |
+          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sudo sh -s -- -b /usr/local/bin v0.55.0
+  
+      - name: Run Trivy code vulnerability scanner (JSON Output)
+        run: |
+          trivy --quiet fs --format json --output trivy-code-results.json --ignore-unfixed --vuln-type os,library --severity CRITICAL,HIGH,MEDIUM,LOW .
+
+      - name: Upload Code Vulnerability Scan Results
+        uses: actions/upload-artifact@v3
+        with:
+          name: trivy-code-report-json
+          path: trivy-code-results.json
       
-      - name: Run Trivy vulnerability scanner
+      - name: Run Trivy vulnerability scanner for Docker image (JSON Output)
         uses: aquasecurity/trivy-action@0.24.0
         with:
           image-ref: 'docker.io/securefederatedai/openfl:${{ github.sha }}'
-          format: 'table'
+          format: 'json'
+          output: 'trivy-docker-results.json'
           exit-code: '1'
           ignore-unfixed: true
           vuln-type: 'os,library'
           severity: 'CRITICAL,HIGH,MEDIUM,LOW'
   
-      - name: Log completion message
+      - name: Upload Docker Vulnerability Scan
+        uses: actions/upload-artifact@v3
+        with:
+          name: trivy-docker-report-json
+          path: trivy-docker-results.json
+
+      - name: Run Trivy code vulnerability scanner (SPDX-JSON Output)
         run: |
-          echo "Trivy scan completed. Review the output above for vulnerabilities."
+          trivy --quiet fs --format spdx-json --output trivy-code-spdx-results.json --ignore-unfixed --vuln-type os,library --severity CRITICAL,HIGH,MEDIUM,LOW .
+  
+      - name: Upload Code Vulnerability Scan Results
+        uses: actions/upload-artifact@v3
+        with:
+          name: trivy-code-spdx-report-json
+          path: trivy-code-spdx-results.json
+        
+      - name: Run Trivy vulnerability scanner for Docker image (SPDX-JSON Output)
+        uses: aquasecurity/trivy-action@0.24.0
+        with:
+          image-ref: 'docker.io/securefederatedai/openfl:${{ github.sha }}'
+          format: 'spdx-json'
+          output: 'trivy-docker-spdx-results.json'
+          exit-code: '1'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH,MEDIUM,LOW'
+    
+      - name: Upload Docker Vulnerability Scan
+        uses: actions/upload-artifact@v3
+        with:
+          name: trivy-docker-spdx-report-json
+          path: trivy-docker-spdx-results.json
