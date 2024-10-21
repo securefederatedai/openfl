@@ -43,10 +43,9 @@ def tutorial(context):
     help="The port the Jupyter Lab server will listen on",
 )
 @option(
-    "-no-browser",
-    "--no-browser",
-    required=False,
-    type=bool,
+    "-no-browser/--browser",
+    "--no-browser/--browser",
+    default=False,
     help="If True, the server will not use the default web browser",
 )
 def start(ip, port, no_browser):
