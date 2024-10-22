@@ -86,13 +86,10 @@ jobs:
         docker run --rm \
           --network host \
           --mount type=bind,source=./cert_agg.tar,target=/certs.tar \
-          -e CONTAINER_TYPE=aggregator \
-          example_workspace /home/openfl/openfl-docker/start_actor_in_container.sh &
-        
+          example_workspace bash -c "tar -xf /certs.tar && fx aggregator start" &
+
         # TODO: Run with two collaborators instead.
         docker run --rm \
           --network host \
           --mount type=bind,source=./cert_col_charlie.tar,target=/certs.tar \
-          -e CONTAINER_TYPE=collaborator \
-          -e COL=charlie \
-          example_workspace /home/openfl/openfl-docker/start_actor_in_container.sh
+          example_workspace bash -c "tar -xf /certs.tar && fx collaborator certify --import agg_to_col_charlie_signed_cert.zip && fx collaborator start -n charlie"
