@@ -343,7 +343,7 @@ def _get_dir_hash(path):
 # Commands for workspace packaging and distribution
 # -------------------------------------------------
 
-### fx workspace export
+
 @workspace.command(name="export")
 def export_() -> str:
     """
@@ -401,11 +401,12 @@ def export_() -> str:
     logging.info(f"Export: {archive} created")
     return archive
 
-### fx workspace dockerize
+
 @workspace.command(name="dockerize")
 @option(
     "--save",
     required=False,
+    is_flag=True,
     help="Export the docker image as <workspace_name>.tar file.",
     default=True,
 )
@@ -427,7 +428,7 @@ def dockerize_(context, save):
     )
     _execute(base_image_build_cmd)
 
-    # Create workspace archive.
+    # Create workspace archive and build workspace image.
     archive = context.invoke(export_)
     workspace_name, _ = archive.split(".")
     ws_image_build_cmd = (
