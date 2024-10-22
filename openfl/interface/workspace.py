@@ -3,30 +3,31 @@
 
 
 """Workspace module."""
+import logging
 import os
+import shutil
 import subprocess  # nosec
 import sys
+import tempfile
 from hashlib import sha256
-from os import chdir, getcwd, makedirs
-from os.path import basename, isfile, join
+from os import chdir
+from os.path import basename, isfile
 from pathlib import Path
-from shutil import copy2, copyfile, copytree, ignore_patterns, make_archive, unpack_archive
+from shutil import copyfile, copytree, ignore_patterns, unpack_archive
 from subprocess import check_call  # nosec
 from sys import executable
-from tempfile import mkdtemp
 from typing import Tuple, Union
 
 import docker
 from click import Choice
 from click import Path as ClickPath
-from click import confirm, echo, group, option, pass_context
+from click import echo, group, option, pass_context
 from cryptography.hazmat.primitives import serialization
 
 from openfl.cryptography.ca import generate_root_cert, generate_signing_csr, sign_certificate
 from openfl.federated.plan import Plan
+from openfl.interface import plan
 from openfl.interface.cli_helper import CERT_DIR, OPENFL_USERDIR, SITEPACKS, WORKSPACE, print_tree
-from openfl.interface.plan import freeze_plan
-from openfl.utilities.utils import rmtree
 
 
 @group()
@@ -169,65 +170,68 @@ def create(prefix, template):
 
 
 @workspace.command(name="export")
-@option(
-    "-o",
-    "--pip-install-options",
-    required=False,
-    type=str,
-    multiple=True,
-    default=tuple,
-    help="Options for remote pip install. "
-    "You may pass several options in quotation marks alongside with arguments, "
-    'e.g. -o "--find-links source.site"',
-)
-def export_(pip_install_options: Tuple[str]):
-    """Export federated learning workspace.
-
-    Args:
-        pip_install_options (Tuple[str]): Options for remote pip install.
+def export_() -> str:
     """
+    Exports the OpenFL workspace (in current directory)
+    to an archive.
 
-    plan_file = Path("plan/plan.yaml").absolute()
-    try:
-        freeze_plan(plan_file)
-    except Exception:
-        echo(f'Plan file "{plan_file}" not found. No freeze performed.')
+    \b
+    The archive contains the following files/dirs copied as-is:
+        - `src`: All experiment source code.
+        - `plan`: The FL plan.
+        - `save`: Model initial weights.
+        - `requirements.txt`: Package list required for the experiment.
 
-    archive_type = "zip"
-    archive_name = basename(getcwd())
-    archive_file_name = archive_name + "." + archive_type
+    This archive does *not* copy `data` or `logs` directories. It creates
+    empty placeholders which can be mounted or populated by respective collaborators.
 
-    # Aggregator workspace
-    tmp_dir = join(mkdtemp(), "openfl", archive_name)
+    This command takes no arguments.
+    """
+    plan_file = os.path.abspath(os.path.join("plan", "plan.yaml"))
+    if not os.path.isfile(plan_file):
+        raise FileNotFoundError(
+            f"{plan_file} does not exist in the current directory.\n"
+            "Please ensure this command is being run from a workspace."
+        )
+    plan.freeze_plan(plan_file)
 
-    ignore = ignore_patterns("__pycache__", "*.crt", "*.key", "*.csr", "*.srl", "*.pem", "*.pbuf")
+    # Create a staging area.
+    _IGNORE_FILE_PATTERNS = [
+        "__pycache__",
+        "*.crt",
+        "*.key",
+        "*.csr",
+        "*.srl",
+        "*.pem",
+        "*.pbuf",
+    ]
+    workspace_name = os.path.basename(os.getcwd())
+    tmp_dir = os.path.join(tempfile.mkdtemp(), "openfl", workspace_name)
+    ignore = shutil.ignore_patterns(*_IGNORE_FILE_PATTERNS)
 
-    # We only export the minimum required files to set up a collaborator
-    makedirs(f"{tmp_dir}/save", exist_ok=True)
-    makedirs(f"{tmp_dir}/logs", exist_ok=True)
-    makedirs(f"{tmp_dir}/data", exist_ok=True)
-    copytree("./src", f"{tmp_dir}/src", ignore=ignore)  # code
-    copytree("./plan", f"{tmp_dir}/plan", ignore=ignore)  # plan
-    if isfile("./requirements.txt"):
-        copy2("./requirements.txt", f"{tmp_dir}/requirements.txt")  # requirements
-    else:
-        echo("No requirements.txt file found.")
+    # Export the minimum required files to set up a collaborator
+    # os.makedirs(os.path.join(tmp_dir, 'save'), exist_ok=True)
+    os.makedirs(os.path.join(tmp_dir, "logs"), exist_ok=True)
+    os.makedirs(os.path.join(tmp_dir, "data"), exist_ok=True)
+    shutil.copytree("src", os.path.join(tmp_dir, "src"), ignore=ignore)
+    shutil.copytree("plan", os.path.join(tmp_dir, "plan"), ignore=ignore)
+    shutil.copytree("save", os.path.join(tmp_dir, "save"))
+    shutil.copy2("requirements.txt", os.path.join(tmp_dir, "requirements.txt"))
 
-    try:
-        copy2(".workspace", tmp_dir)  # .workspace
-    except FileNotFoundError:
-        echo("'.workspace' file not found.")
-        if confirm("Create a default '.workspace' file?"):
-            copy2(WORKSPACE / "workspace" / ".workspace", tmp_dir)
-        else:
-            echo("To proceed, you must have a '.workspace' " "file in the current directory.")
-            raise
+    _ws_identifier_file = ".workspace"
+    if not os.path.isfile(_ws_identifier_file):
+        openfl_ws_identifier_file = os.path.join(WORKSPACE, "workspace", _ws_identifier_file)
+        logging.warning(
+            f"`{_ws_identifier_file}` is missing, " f"copying {openfl_ws_identifier_file} as-is."
+        )
+        shutil.copy2(openfl_ws_identifier_file, tmp_dir)
+    shutil.copy2(_ws_identifier_file, tmp_dir)
 
     # Create Zip archive of directory
-    echo("\n 🗜️ Preparing workspace distribution zip file")
-    make_archive(archive_name, archive_type, tmp_dir)
-    rmtree(tmp_dir)
-    echo(f"\n ✔️ Workspace exported to archive: {archive_file_name}")
+    _ARCHIVE_FORMAT = "zip"
+    shutil.make_archive(workspace_name, _ARCHIVE_FORMAT, tmp_dir)
+    archive = f"{workspace_name}.{_ARCHIVE_FORMAT}"
+    logging.info(f"Export: {archive} created")
 
 
 @workspace.command(name="import")
@@ -385,27 +389,6 @@ def certify():
             d.write(s.read())
 
     echo("\nDone.")
-
-
-def _get_requirements_dict(txtfile):
-    """Get requirements from a text file.
-
-    Args:
-        txtfile (str): The text file containing the requirements.
-
-    Returns:
-        snapshot_dict (dict): A dictionary containing the requirements.
-    """
-    with open(txtfile, "r", encoding="utf-8") as snapshot:
-        snapshot_dict = {}
-        for line in snapshot:
-            try:
-                # 'pip freeze' generates requirements with exact versions
-                k, v = line.split("==")
-                snapshot_dict[k] = v
-            except ValueError:
-                snapshot_dict[line] = None
-        return snapshot_dict
 
 
 def _get_dir_hash(path):
