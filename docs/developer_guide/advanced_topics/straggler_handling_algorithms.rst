@@ -11,7 +11,7 @@ The Open Federated Learning (|productName|) framework supports straggler handlin
 
 The following are the straggler handling algorithms supported in |productName|:
 
-``CutoffTimeBasedStragglerHandling``
+``CutoffPolicy``
     Identifies stragglers based on the cutoff time specified in the settings. Arguments to the function are:
         - *Cutoff Time* (straggler_cutoff_time), specifies the cutoff time by which the aggregator should end the round early.
         - *Minimum Reporting* (minimum_reporting), specifies the minimum number of collaborators needed to aggregate the model.
@@ -19,7 +19,7 @@ The following are the straggler handling algorithms supported in |productName|:
     For example, in a federation of 5 collaborators, if :code:`straggler_cutoff_time` (in seconds) is set to 20 and :code:`minimum_reporting` is set to 2, atleast 2 collaborators (or more) would be included in the round, provided that the time limit of 20 seconds is not exceeded.
     In an event where :code:`minimum_reporting` collaborators don't make it within the :code:`straggler_cutoff_time`, the straggler handling policy is disregarded. 
 
-``PercentageBasedStragglerHandling``
+``PercentagePolicy``
     Identifies stragglers based on the percetage specified. Arguments to the function are:
         - *Percentage of collaborators* (percent_collaborators_needed), specifies a percentage of collaborators enough to end the round early.
         - *Minimum Reporting* (minimum_reporting), specifies the minimum number of collaborators needed to aggregate the model.
@@ -29,12 +29,12 @@ The following are the straggler handling algorithms supported in |productName|:
 Demonstration of adding the straggler handling interface
 =========================================================
 
-The example template, **torch_cnn_mnist_straggler_check**, uses the ``PercentageBasedStragglerHandling``. To gain a better understanding of how experiments perform, you can modify the **percent_collaborators_needed** or **minimum_reporting** parameter in the template **plan.yaml** or even choose **CutoffTimeBasedStragglerHandling** function instead:
+The example template, **torch_cnn_mnist_straggler_check**, uses the ``PercentagePolicy``. To gain a better understanding of how experiments perform, you can modify the **percent_collaborators_needed** or **minimum_reporting** parameter in the template **plan.yaml** or even choose **CutoffPolicy** function instead:
 
     .. code-block:: yaml
     
         straggler_handling_policy :
-            template : openfl.component.straggler_handling_functions.CutoffTimeBasedStragglerHandling
+            template : openfl.component.aggregator.straggler_handling.CutoffPolicy
             settings :
                 straggler_cutoff_time : 20
                 minimum_reporting : 1

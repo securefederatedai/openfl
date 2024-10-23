@@ -45,7 +45,7 @@ compression_pipeline :
   defaults : plan/defaults/compression_pipeline.yaml
 
 straggler_handling_policy :
-  template : openfl.component.straggler_handling_functions.PercentageBasedStragglerHandling
+  template : openfl.component.aggregator.straggler_handling.PercentagePolicy
   settings : 
     percent_collaborators_needed : 0.5
     minimum_reporting : 1

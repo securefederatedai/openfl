@@ -97,7 +97,6 @@ setup(
         'openfl.component.collaborator',
         'openfl.component.director',
         'openfl.component.envoy',
-        'openfl.component.straggler_handling_functions',
         'openfl.cryptography',
         'openfl.databases',
         'openfl.databases.utilities',

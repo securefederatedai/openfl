@@ -3,3 +3,8 @@
 
 
 from openfl.component.aggregator.aggregator import Aggregator
+from openfl.component.aggregator.straggler_handling import (
+    CutoffPolicy,
+    PercentagePolicy,
+    StragglerHandlingPolicy,
+)
