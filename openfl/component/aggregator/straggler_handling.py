@@ -20,7 +20,7 @@ class StragglerHandlingPolicy(ABC):
     def start_policy(self, **kwargs) -> None:
         """
         Start straggler handling policy for collaborator for a particular round.
-        NOTE: Refer CutoffTimeBasedStragglerHandling for reference.
+        NOTE: Refer CutoffPolicy for reference.
 
         Args:
             **kwargs
@@ -65,14 +65,14 @@ class StragglerHandlingPolicy(ABC):
         raise NotImplementedError
 
 
-class CutoffTimeBasedStragglerHandling(StragglerHandlingPolicy):
+class CutoffPolicy(StragglerHandlingPolicy):
     """Cutoff time based Straggler Handling function."""
 
     def __init__(
         self, round_start_time=None, straggler_cutoff_time=np.inf, minimum_reporting=1, **kwargs
     ):
         """
-         Initialize a CutoffTimeBasedStragglerHandling object.
+         Initialize a CutoffPolicy object.
 
         Args:
             round_start_time (optional): The start time of the round. Defaults
@@ -89,12 +89,12 @@ class CutoffTimeBasedStragglerHandling(StragglerHandlingPolicy):
         self.round_start_time = round_start_time
         self.straggler_cutoff_time = straggler_cutoff_time
         self.minimum_reporting = minimum_reporting
+        self.is_timer_started = False
         self.logger = getLogger(__name__)
 
         if self.straggler_cutoff_time == np.inf:
             self.logger.warning(
-                "CutoffTimeBasedStragglerHandling is disabled as straggler_cutoff_time "
-                "is set to np.inf."
+                "CutoffPolicy is disabled as straggler_cutoff_time " "is set to np.inf."
             )
 
     def reset_policy_for_round(self) -> None:
@@ -103,7 +103,7 @@ class CutoffTimeBasedStragglerHandling(StragglerHandlingPolicy):
         """
         if hasattr(self, "timer"):
             self.timer.cancel()
-            delattr(self, "timer")
+        self.is_timer_started = False
 
     def start_policy(self, callback: Callable) -> None:
         """
@@ -120,8 +120,9 @@ class CutoffTimeBasedStragglerHandling(StragglerHandlingPolicy):
         # If straggler_cutoff_time is set to infinity
         # or if the timer is already running,
         # do not start the policy.
-        if self.straggler_cutoff_time == np.inf or hasattr(self, "timer"):
+        if self.straggler_cutoff_time == np.inf or self.is_timer_started:
             return
+
         self.round_start_time = time.time()
         self.timer = threading.Timer(
             self.straggler_cutoff_time,
@@ -129,6 +130,7 @@ class CutoffTimeBasedStragglerHandling(StragglerHandlingPolicy):
         )
         self.timer.daemon = True
         self.timer.start()
+        self.is_timer_started = True
 
     def straggler_cutoff_check(
         self,
@@ -192,11 +194,11 @@ class CutoffTimeBasedStragglerHandling(StragglerHandlingPolicy):
         return num_collaborators_done >= self.minimum_reporting
 
 
-class PercentageBasedStragglerHandling(StragglerHandlingPolicy):
+class PercentagePolicy(StragglerHandlingPolicy):
     """Percentage based Straggler Handling function."""
 
     def __init__(self, percent_collaborators_needed=1.0, minimum_reporting=1, **kwargs):
-        """Initialize a PercentageBasedStragglerHandling object.
+        """Initialize a PercentagePolicy object.
 
         Args:
             percent_collaborators_needed (float, optional): The percentage of
@@ -214,13 +216,13 @@ class PercentageBasedStragglerHandling(StragglerHandlingPolicy):
 
     def reset_policy_for_round(self) -> None:
         """
-        Not required in PercentageBasedStragglerHandling.
+        Not required in PercentagePolicy.
         """
         pass
 
     def start_policy(self, **kwargs) -> None:
         """
-        Not required in PercentageBasedStragglerHandling.
+        Not required in PercentagePolicy.
         """
         pass
 

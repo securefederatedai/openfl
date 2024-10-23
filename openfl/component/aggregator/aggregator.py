@@ -8,7 +8,7 @@ import time
 from logging import getLogger
 from threading import Lock
 
-from openfl.component.straggler_handling_policy import CutoffTimeBasedStragglerHandling
+from openfl.component.aggregator.straggler_handling import CutoffPolicy
 from openfl.databases import TensorDB
 from openfl.interface.aggregation_functions import WeightedAverage
 from openfl.pipelines import NoCompressionPipeline, TensorCodec
@@ -69,7 +69,7 @@ class Aggregator:
         best_state_path,
         last_state_path,
         assigner,
-        straggler_handling_policy=None,
+        straggler_handling_policy=CutoffPolicy,
         rounds_to_train=256,
         single_col_cert_common_name=None,
         compression_pipeline=None,
@@ -92,7 +92,7 @@ class Aggregator:
                 weight.
             assigner: Assigner object.
             straggler_handling_policy (optional): Straggler handling policy.
-                Defaults to CutoffTimeBasedStragglerHandling.
+                Defaults to CutoffPolicy.
             rounds_to_train (int, optional): Number of rounds to train.
                 Defaults to 256.
             single_col_cert_common_name (str, optional): Common name for single
@@ -117,9 +117,11 @@ class Aggregator:
             # Cleaner solution?
             self.single_col_cert_common_name = ""
 
-        self.straggler_handling_policy = (
-            straggler_handling_policy or CutoffTimeBasedStragglerHandling()
-        )
+        if straggler_handling_policy == CutoffPolicy:
+            self.straggler_handling_policy = straggler_handling_policy()
+        else:
+            self.straggler_handling_policy = straggler_handling_policy
+
         self._end_of_round_check_done = [False] * rounds_to_train
         self.stragglers = []
 
