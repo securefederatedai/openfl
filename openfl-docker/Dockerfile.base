@@ -23,13 +23,17 @@ RUN --mount=type=cache,id=apt-dev,target=/var/cache/apt \
     rm -rf /var/lib/apt/lists/*
 
 # Install OpenFL.
-WORKDIR /home/openfl
-COPY --chown=openfl:default . .
-ENV PATH=/home/openfl/.local/bin:$PATH
-RUN pip install --no-cache-dir -U pip setuptools wheel && \
-    pip install --no-cache-dir -e .
+RUN --mount=type=cache,target=/root/.cache/ \
+    git clone --depth=1 --branch=develop https://github.com/securefederatedai/openfl.git /openfl && \
+    cd /openfl && \
+    pip install -U pip setuptools wheel && \
+    pip install -e . && \
+    INSTALL_SOURCES=yes /openfl/openfl-docker/licenses.sh
 
-# Download thirdparty licenses.
-RUN INSTALL_SOURCES=yes /home/openfl/openfl-docker/licenses.sh
+# Create an unprivileged user.
+RUN groupadd -g 1001 default && \
+    useradd -m -u 1001 -g default openfl
+USER openfl
+WORKDIR /home/openfl
 
 CMD ["/bin/bash"]
