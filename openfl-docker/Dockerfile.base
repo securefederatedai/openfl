@@ -3,7 +3,7 @@
 # ------------------------------------
 # OpenFL Base Image
 # ------------------------------------
-FROM ubuntu:22.04 as base
+FROM ubuntu:22.04 AS base
 
 # Configure network proxy, if required, in ~/.docker/config.json
 ENV DEBIAN_FRONTEND=noninteractive
@@ -13,19 +13,14 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN --mount=type=cache,id=apt-dev,target=/var/cache/apt \
     apt-get update && \
     apt-get install -y \
+    git \
     python3-pip \
     python3.10-dev \
     ca-certificates \
     build-essential \
-    git \
     --no-install-recommends && \
+    apt-get purge -y linux-libc-dev && \
     rm -rf /var/lib/apt/lists/*
-RUN apt-get purge -y linux-libc-dev
-
-# Create an unprivileged user.
-RUN groupadd -g 1001 default && \
-    useradd -m -u 1001 -g default openfl
-USER openfl
 
 # Install OpenFL.
 WORKDIR /home/openfl
