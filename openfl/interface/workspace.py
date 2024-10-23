@@ -405,32 +405,46 @@ def export_() -> str:
 @workspace.command(name="dockerize")
 @option(
     "--save",
-    required=False,
     is_flag=True,
+    default=False,
     help="Export the docker image as <workspace_name>.tar file.",
-    default=True,
+)
+@option(
+    "--rebuild",
+    is_flag=True,
+    default=False,
+    help="If set, rebuilds docker images with `--no-cache` option.",
 )
 @pass_context
-def dockerize_(context, save):
+def dockerize_(context, save, rebuild):
     """Package current workspace as a Docker image."""
 
+    # Docker build options
+    options = []
+    options.append("--no-cache" if rebuild else "")
+    options = " ".join(options)
+
+    # Export workspace
+    archive = context.invoke(export_)
+    workspace_name, _ = archive.split(".")
+
     # Build OpenFL base image.
+    logging.info("Building OpenFL Base image")
     base_image_build_cmd = (
         "DOCKER_BUILDKIT=1 docker build {options} "
         "-t {image_name} "
         "-f {dockerfile} "
         "{build_context}"
     ).format(
-        options="",
+        options=options,
         image_name="openfl",
         dockerfile=os.path.join(SITEPACKS, "openfl-docker", "Dockerfile.base"),
-        build_context=SITEPACKS,
+        build_context=".",
     )
     _execute(base_image_build_cmd)
 
-    # Create workspace archive and build workspace image.
-    archive = context.invoke(export_)
-    workspace_name, _ = archive.split(".")
+    # Build workspace image.
+    logging.info("Building workspace image")
     ws_image_build_cmd = (
         "DOCKER_BUILDKIT=1 docker build {options} "
         "--build-arg WORKSPACE_NAME={workspace_name} "
@@ -438,7 +452,7 @@ def dockerize_(context, save):
         "-f {dockerfile} "
         "{build_context}"
     ).format(
-        options="",
+        options=options,
         image_name=workspace_name,
         workspace_name=workspace_name,
         dockerfile=os.path.join(SITEPACKS, "openfl-docker", "Dockerfile.workspace"),
