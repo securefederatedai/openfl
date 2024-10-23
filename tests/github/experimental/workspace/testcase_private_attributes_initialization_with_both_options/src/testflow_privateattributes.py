@@ -105,8 +105,8 @@ class TestFlowPrivateAttributes(FLSpec):
         for input in enumerate(inputs):
             collab = input[1].input
             if (
-                hasattr(input, "train_loader_via_callable") is True
-                or hasattr(input, "test_loader_via_callable") is True
+                hasattr(input, "train_loader_via_callable")
+                or hasattr(input, "test_loader_via_callable")
             ):
                 # Error - we are able to access collaborator attributes
                 TestFlowPrivateAttributes.ERROR_LIST.append(
@@ -146,17 +146,17 @@ class TestFlowPrivateAttributes(FLSpec):
 def validate_agg_private_attr(self, step_name, **private_attrs_kwargs):
 
     """
-        Validate that aggregator can only access their own attributes 
+        Validate that aggregator can only access their own attributes
 
         Args:
-            step_name: Name of the step being validated 
+            step_name: Name of the step being validated
             private_attr_kwargs: Keyword arguments specifying the names of private attributes for the aggregator and collaborators.
     """
     agg_attrs = private_attrs_kwargs.get('aggr',[])
     collab_attrs = private_attrs_kwargs.get('collabs', [])
     # Aggregator should only be able to access its own attributes
 
-    # check for missing aggregator attributes 
+    # check for missing aggregator attributes
     inaccessible_agg_attrs = [attr for attr in agg_attrs if not hasattr(self, attr)]
     if inaccessible_agg_attrs:
         TestFlowPrivateAttributes.ERROR_LIST.append(
@@ -167,8 +167,8 @@ def validate_agg_private_attr(self, step_name, **private_attrs_kwargs):
             + f"accessible {bcolors.ENDC}"
         )
 
-    # check for collaborator private attributes that should not be accessible 
-    breached_collab_attrs = [attr for attr in collab_attrs if hasattr(self,attr) is True]
+    # check for collaborator private attributes that should not be accessible
+    breached_collab_attrs = [attr for attr in collab_attrs if hasattr(self,attr)]
     if breached_collab_attrs:
         TestFlowPrivateAttributes.ERROR_LIST.append(
             step_name + "_collaborator_attributes_found"
@@ -184,8 +184,8 @@ def validate_agg_private_attr(self, step_name, **private_attrs_kwargs):
         # Collaborator attributes should not be accessible in aggregator step
         if (
             type(self.collaborators[idx]) is not str
-            or hasattr(self.runtime, "_collaborators") is True
-            or hasattr(self.runtime, "__collaborators") is True
+            or hasattr(self.runtime, "_collaborators")
+            or hasattr(self.runtime, "__collaborators")
         ):
             # Error - we are able to access collaborator attributes
             TestFlowPrivateAttributes.ERROR_LIST.append(
@@ -203,15 +203,15 @@ def validate_collab_private_attrs(self, step_name, **private_attrs_kwargs):
         Validate that collaborators can only access their own attributes
 
         Args:
-            step_name: Name of the step being validated 
+            step_name: Name of the step being validated
             private_attr_kwargs: Keyword arguments specifying the names of private attributes for the aggregator and collaborators.
     """
     agg_attrs = private_attrs_kwargs.get('aggr',[])
     collab_attrs = private_attrs_kwargs.get('collabs', [])
 
     # Collaborator should only be able to access its own attributes
- 
-    # check for missing collaborators attributes 
+
+    # check for missing collaborators attributes
     inaccessible_collab_attrs = [attr for attr in collab_attrs if not hasattr(self,attr)]
 
     if inaccessible_collab_attrs:
@@ -222,15 +222,15 @@ def validate_collab_private_attrs(self, step_name, **private_attrs_kwargs):
             f"{bcolors.FAIL} ... Attribute test failed in {step_name} - Collab "
             + f"private attributes not accessible {bcolors.ENDC}"
         )
-    # check for aggregator private attributes that should not be accessible 
-    breached_agg_attr = [attr for attr in agg_attrs if hasattr(self, attr) is True]
+    # check for aggregator private attributes that should not be accessible
+    breached_agg_attr = [attr for attr in agg_attrs if hasattr(self, attr)]
     if breached_agg_attr:
         TestFlowPrivateAttributes.ERROR_LIST.append(
             step_name + "_aggregator_attributes_found"
         )
 
         print(
-            f"{bcolors.FAIL} ... Attribute test failed in {step_name} - Aggregator" 
+            f"{bcolors.FAIL} ... Attribute test failed in {step_name} - Aggregator"
             + f" private attributes accessible: {','.join(breached_agg_attr)} {bcolors.ENDC}"
         )
 

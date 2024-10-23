@@ -106,8 +106,8 @@ class TestFlowPrivateAttributes(FLSpec):
 
         for idx, collab in enumerate(inputs):
             if (
-                hasattr(collab, "train_loader") is True
-                or hasattr(collab, "test_loader") is True
+                hasattr(collab, "train_loader")
+                or hasattr(collab, "test_loader")
             ):
                 # Error - we are able to access collaborator attributes
                 TestFlowPrivateAttributes.error_list.append(
@@ -159,8 +159,8 @@ def validate_collab_private_attr(self, private_attr, step_name):
         # Collaborator private attributes should not be accessible
         if (
             type(self.collaborators[idx]) is not str
-            or hasattr(self.runtime, "_collaborators") is True
-            or hasattr(self.runtime, "__collaborators") is True
+            or hasattr(self.runtime, "_collaborators")
+            or hasattr(self.runtime, "__collaborators")
         ):
             # Error - we are able to access collaborator attributes
             TestFlowPrivateAttributes.error_list.append(
@@ -183,7 +183,7 @@ def validate_agg_private_attrs(self, private_attr_1, private_attr_2, step_name):
             + f"private attributes not accessible {bcolors.ENDC}"
         )
 
-    if hasattr(self.runtime, "_aggregator") is True:
+    if hasattr(self.runtime, "_aggregator"):
         # Error - we are able to access aggregator attributes
         TestFlowPrivateAttributes.error_list.append(
             step_name + "_aggregator_attributes_found"
