@@ -29,7 +29,7 @@ jobs:
         fx workspace create --prefix example_workspace --template keras_cnn_mnist
         cd example_workspace
         fx plan initialize -a localhost
-        fx workspace dockerize --save
+        fx workspace dockerize --save --revision https://github.com/securefederatedai/openfl.git@develop
 
     - name: Create certificate authority for workspace
       run: |

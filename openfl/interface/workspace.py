@@ -415,13 +415,25 @@ def export_() -> str:
     default=False,
     help="If set, rebuilds docker images with `--no-cache` option.",
 )
+@option(
+    "--revision",
+    required=False,
+    default=None,
+    help=(
+        "Optional, version of OpenFL source code to build base image from. "
+        "If unspecified, default value in `Dockerfile.base` will be used, "
+        "typically the latest stable release. "
+        "Format: <OPENFL_GIT_URL>@<COMMIT_ID/BRANCH>"
+    ),
+)
 @pass_context
-def dockerize_(context, save, rebuild):
+def dockerize_(context, save, rebuild, revision):
     """Package current workspace as a Docker image."""
 
     # Docker build options
     options = []
     options.append("--no-cache" if rebuild else "")
+    options.append(f"--build-arg OPENFL_REVISION={revision}" if revision else "")
     options = " ".join(options)
 
     # Export workspace

@@ -2,9 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 # ------------------------------------
 # OpenFL Base Image
-# $> docker build . -t openfl -f Dockerfile.base \
-#   [--build-arg BRANCH=develop] \
-#   [--build-arg SOURCE=https://github.com/USERNAME/openfl.git]
+# $> docker build . -t openfl -f Dockerfile.base [--build-arg OPENFL_REVISION=GIT_URL@COMMIT_ID]
 # ------------------------------------
 FROM ubuntu:22.04 AS base
 
@@ -33,12 +31,9 @@ WORKDIR /home/user
 ENV PATH=/home/user/.local/bin:$PATH
 
 # Install OpenFL.
-ARG SOURCE=https://github.com/securefederatedai/openfl.git
-ARG BRANCH=develop
-RUN git clone --depth=1 --branch=${BRANCH} ${SOURCE} && \
-    cd openfl && \
-    pip install --no-cache-dir -U pip setuptools wheel && \
-    pip install --no-cache-dir -e . && \
-    INSTALL_SOURCES=yes ./openfl-docker/licenses.sh
+ARG OPENFL_REVISION=https://github.com/securefederatedai/openfl.git@ad53a0fdbefde8bc18404b6ea4d48344956b96ee
+RUN pip install --no-cache-dir -U pip setuptools wheel && \
+    pip install --no-cache-dir git+${OPENFL_REVISION} && \
+    INSTALL_SOURCES=yes /home/user/.local/lib/python3.10/site-packages/openfl-docker/licenses.sh
 
 CMD ["/bin/bash"]
