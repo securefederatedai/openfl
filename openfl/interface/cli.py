@@ -4,6 +4,7 @@
 """CLI module."""
 import logging
 import os
+import re
 import sys
 import time
 import warnings
@@ -181,6 +182,9 @@ def cli(context, log_level, no_warnings):
         # This will be overridden later with user selected debugging level
         disable_warnings()
     log_file = os.getenv("LOG_FILE")
+    # Validate log_file using allow list approach
+    if log_file and not re.match(r"^[\w\-.]+$", log_file):
+        raise ValueError("Invalid log file path")
     setup_logging(log_level, log_file)
     sys.stdout.reconfigure(encoding="utf-8")
 
