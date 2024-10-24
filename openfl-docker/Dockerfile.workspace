@@ -8,13 +8,11 @@ FROM ${BASE_IMAGE}
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
-USER openfl
+USER user
 ARG WORKSPACE_NAME
 COPY ${WORKSPACE_NAME}.zip .
-
-WORKDIR /home/openfl
 RUN fx workspace import --archive ${WORKSPACE_NAME}.zip && \
-    pip install -r ${WORKSPACE_NAME}/requirements.txt
+    pip install --no-cache-dir -r ${WORKSPACE_NAME}/requirements.txt
 
-WORKDIR /home/openfl/${WORKSPACE_NAME}
+WORKDIR /home/user/${WORKSPACE_NAME}
 CMD ["/bin/bash"]

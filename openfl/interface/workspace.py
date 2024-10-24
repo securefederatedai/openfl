@@ -3,30 +3,30 @@
 
 
 """Workspace module."""
+import logging
 import os
+import shutil
 import subprocess  # nosec
 import sys
+import tempfile
 from hashlib import sha256
-from os import chdir, getcwd, makedirs
-from os.path import basename, isfile, join
+from os import chdir
+from os.path import basename, isfile
 from pathlib import Path
-from shutil import copy2, copyfile, copytree, ignore_patterns, make_archive, unpack_archive
+from shutil import copyfile, copytree, ignore_patterns, unpack_archive
 from subprocess import check_call  # nosec
 from sys import executable
-from tempfile import mkdtemp
 from typing import Tuple, Union
 
-import docker
 from click import Choice
 from click import Path as ClickPath
-from click import confirm, echo, group, option, pass_context
+from click import echo, group, option, pass_context
 from cryptography.hazmat.primitives import serialization
 
 from openfl.cryptography.ca import generate_root_cert, generate_signing_csr, sign_certificate
 from openfl.federated.plan import Plan
+from openfl.interface import plan
 from openfl.interface.cli_helper import CERT_DIR, OPENFL_USERDIR, SITEPACKS, WORKSPACE, print_tree
-from openfl.interface.plan import freeze_plan
-from openfl.utilities.utils import rmtree
 
 
 @group()
@@ -166,68 +166,6 @@ def create(prefix, template):
     apply_template_plan(prefix, template)
 
     print_tree(prefix, level=3)
-
-
-@workspace.command(name="export")
-@option(
-    "-o",
-    "--pip-install-options",
-    required=False,
-    type=str,
-    multiple=True,
-    default=tuple,
-    help="Options for remote pip install. "
-    "You may pass several options in quotation marks alongside with arguments, "
-    'e.g. -o "--find-links source.site"',
-)
-def export_(pip_install_options: Tuple[str]):
-    """Export federated learning workspace.
-
-    Args:
-        pip_install_options (Tuple[str]): Options for remote pip install.
-    """
-
-    plan_file = Path("plan/plan.yaml").absolute()
-    try:
-        freeze_plan(plan_file)
-    except Exception:
-        echo(f'Plan file "{plan_file}" not found. No freeze performed.')
-
-    archive_type = "zip"
-    archive_name = basename(getcwd())
-    archive_file_name = archive_name + "." + archive_type
-
-    # Aggregator workspace
-    tmp_dir = join(mkdtemp(), "openfl", archive_name)
-
-    ignore = ignore_patterns("__pycache__", "*.crt", "*.key", "*.csr", "*.srl", "*.pem", "*.pbuf")
-
-    # We only export the minimum required files to set up a collaborator
-    makedirs(f"{tmp_dir}/save", exist_ok=True)
-    makedirs(f"{tmp_dir}/logs", exist_ok=True)
-    makedirs(f"{tmp_dir}/data", exist_ok=True)
-    copytree("./src", f"{tmp_dir}/src", ignore=ignore)  # code
-    copytree("./plan", f"{tmp_dir}/plan", ignore=ignore)  # plan
-    if isfile("./requirements.txt"):
-        copy2("./requirements.txt", f"{tmp_dir}/requirements.txt")  # requirements
-    else:
-        echo("No requirements.txt file found.")
-
-    try:
-        copy2(".workspace", tmp_dir)  # .workspace
-    except FileNotFoundError:
-        echo("'.workspace' file not found.")
-        if confirm("Create a default '.workspace' file?"):
-            copy2(WORKSPACE / "workspace" / ".workspace", tmp_dir)
-        else:
-            echo("To proceed, you must have a '.workspace' " "file in the current directory.")
-            raise
-
-    # Create Zip archive of directory
-    echo("\n 🗜️ Preparing workspace distribution zip file")
-    make_archive(archive_name, archive_type, tmp_dir)
-    rmtree(tmp_dir)
-    echo(f"\n ✔️ Workspace exported to archive: {archive_file_name}")
 
 
 @workspace.command(name="import")
@@ -387,27 +325,6 @@ def certify():
     echo("\nDone.")
 
 
-def _get_requirements_dict(txtfile):
-    """Get requirements from a text file.
-
-    Args:
-        txtfile (str): The text file containing the requirements.
-
-    Returns:
-        snapshot_dict (dict): A dictionary containing the requirements.
-    """
-    with open(txtfile, "r", encoding="utf-8") as snapshot:
-        snapshot_dict = {}
-        for line in snapshot:
-            try:
-                # 'pip freeze' generates requirements with exact versions
-                k, v = line.split("==")
-                snapshot_dict[k] = v
-            except ValueError:
-                snapshot_dict[line] = None
-        return snapshot_dict
-
-
 def _get_dir_hash(path):
     """Get the hash of a directory.
 
@@ -423,89 +340,144 @@ def _get_dir_hash(path):
     return hash_
 
 
-@workspace.command(name="dockerize")
-@option(
-    "-b",
-    "--base_image",
-    required=False,
-    help="The tag for openfl base image",
-    default="openfl",
-)
-@option(
-    "--save/--no-save",
-    required=False,
-    help="Save the Docker image into the workspace",
-    default=True,
-)
-@pass_context
-def dockerize_(context, base_image, save):
-    """Pack the workspace as a Docker image.
+# Commands for workspace packaging and distribution
+# -------------------------------------------------
 
-    This command is the alternative to `workspace export`.
-    It should be called after plan initialization from the workspace dir.
 
-    User is expected to be in docker group.
-    If your machine is behind a proxy, make sure you set it up in
-    ~/.docker/config.json.
-
-    Args:
-        context: The context in which the command is being invoked.
-        base_image (str): The tag for openfl base image.
-        save (bool): Whether to save the Docker image into the workspace.
+@workspace.command(name="export")
+def export_() -> str:
     """
+    Exports the OpenFL workspace (in current directory)
+    to an archive.
 
-    # Specify the Dockerfile.workspace loaction
-    openfl_docker_dir = os.path.join(SITEPACKS, "openfl-docker")
-    dockerfile_workspace = "Dockerfile.workspace"
-    # Apparently, docker's python package does not support
-    # scenarios when the dockerfile is placed outside the build context
-    copyfile(
-        os.path.join(openfl_docker_dir, dockerfile_workspace),
-        dockerfile_workspace,
+    \b
+    The archive contains the following files/dirs copied as-is:
+        - `src`: All experiment source code.
+        - `plan`: The FL plan directory.
+        - `save`: Model initial weights.
+        - `requirements.txt`: Package list required for the experiment.
+
+    This archive does *not* copy `data`, `logs`, or secrets.
+
+    This command takes no arguments.
+    """
+    plan_file = os.path.abspath(os.path.join("plan", "plan.yaml"))
+    if not os.path.isfile(plan_file):
+        raise FileNotFoundError(
+            f"{plan_file} does not exist in the current directory.\n"
+            "Please ensure this command is being run from a workspace."
+        )
+    plan.freeze_plan(plan_file)
+
+    # Create a staging area.
+    workspace_name = os.path.basename(os.getcwd())
+    tmp_dir = os.path.join(tempfile.mkdtemp(), "openfl", workspace_name)
+    ignore = shutil.ignore_patterns(
+        *["__pycache__", "*.crt", "*.key", "*.csr", "*.srl", "*.pem", "*.pbuf"]
     )
 
-    workspace_path = os.getcwd()
-    workspace_name = os.path.basename(workspace_path)
+    # Export the minimum required files to set up a collaborator
+    # os.makedirs(os.path.join(tmp_dir, 'save'), exist_ok=True)
+    os.makedirs(os.path.join(tmp_dir, "logs"), exist_ok=True)
+    os.makedirs(os.path.join(tmp_dir, "data"), exist_ok=True)
+    shutil.copytree("src", os.path.join(tmp_dir, "src"), ignore=ignore)
+    shutil.copytree("plan", os.path.join(tmp_dir, "plan"), ignore=ignore)
+    shutil.copytree("save", os.path.join(tmp_dir, "save"))
+    shutil.copy2("requirements.txt", os.path.join(tmp_dir, "requirements.txt"))
 
-    # Exporting the workspace
-    context.invoke(export_)
-    workspace_archive = workspace_name + ".zip"
+    _ws_identifier_file = ".workspace"
+    if not os.path.isfile(_ws_identifier_file):
+        openfl_ws_identifier_file = os.path.join(WORKSPACE, "workspace", _ws_identifier_file)
+        logging.warning(
+            f"`{_ws_identifier_file}` is missing, " f"copying {openfl_ws_identifier_file} as-is."
+        )
+        shutil.copy2(openfl_ws_identifier_file, tmp_dir)
+    shutil.copy2(_ws_identifier_file, tmp_dir)
 
-    build_args = {"WORKSPACE_NAME": workspace_name, "BASE_IMAGE": base_image}
+    # Create Zip archive of directory
+    _ARCHIVE_FORMAT = "zip"
+    shutil.make_archive(workspace_name, _ARCHIVE_FORMAT, tmp_dir)
+    archive = f"{workspace_name}.{_ARCHIVE_FORMAT}"
+    logging.info(f"Export: {archive} created")
+    return archive
 
-    cli = docker.APIClient()
-    echo("Building the Docker image")
-    try:
-        for line in cli.build(
-            path=str(workspace_path),
-            tag=workspace_name,
-            buildargs=build_args,
-            dockerfile=dockerfile_workspace,
-            timeout=3600,
-            decode=True,
-        ):
-            if "stream" in line:
-                print(f'> {line["stream"]}', end="")
-            elif "error" in line:
-                echo("Failed to build the Docker image:")
-                echo(line)
-                sys.exit(1)
-    finally:
-        os.remove(workspace_archive)
-        os.remove(dockerfile_workspace)
-    echo("The workspace image has been built successfully!")
 
-    # Saving the image to a tarball
+@workspace.command(name="dockerize")
+@option(
+    "--save",
+    is_flag=True,
+    default=False,
+    help="Export the docker image as <workspace_name>.tar file.",
+)
+@option(
+    "--rebuild",
+    is_flag=True,
+    default=False,
+    help="If set, rebuilds docker images with `--no-cache` option.",
+)
+@option(
+    "--revision",
+    required=False,
+    default=None,
+    help=(
+        "Optional, version of OpenFL source code to build base image from. "
+        "If unspecified, default value in `Dockerfile.base` will be used, "
+        "typically the latest stable release. "
+        "Format: <OPENFL_GIT_URL>@<COMMIT_ID/BRANCH>"
+    ),
+)
+@pass_context
+def dockerize_(context, save, rebuild, revision):
+    """Package current workspace as a Docker image."""
+
+    # Docker build options
+    options = []
+    options.append("--no-cache" if rebuild else "")
+    options.append(f"--build-arg OPENFL_REVISION={revision}" if revision else "")
+    options = " ".join(options)
+
+    # Export workspace
+    archive = context.invoke(export_)
+    workspace_name, _ = archive.split(".")
+
+    # Build OpenFL base image.
+    logging.info("Building OpenFL Base image")
+    base_image_build_cmd = (
+        "DOCKER_BUILDKIT=1 docker build {options} "
+        "-t {image_name} "
+        "-f {dockerfile} "
+        "{build_context}"
+    ).format(
+        options=options,
+        image_name="openfl",
+        dockerfile=os.path.join(SITEPACKS, "openfl-docker", "Dockerfile.base"),
+        build_context=".",
+    )
+    _execute(base_image_build_cmd)
+
+    # Build workspace image.
+    logging.info("Building workspace image")
+    ws_image_build_cmd = (
+        "DOCKER_BUILDKIT=1 docker build {options} "
+        "--build-arg WORKSPACE_NAME={workspace_name} "
+        "-t {image_name} "
+        "-f {dockerfile} "
+        "{build_context}"
+    ).format(
+        options=options,
+        image_name=workspace_name,
+        workspace_name=workspace_name,
+        dockerfile=os.path.join(SITEPACKS, "openfl-docker", "Dockerfile.workspace"),
+        build_context=".",
+    )
+    _execute(ws_image_build_cmd)
+
+    # Export workspace as tarball (optional)
     if save:
-        workspace_image_tar = workspace_name + "_image.tar"
-        echo("Saving the Docker image...")
-        client = docker.from_env(timeout=3600)
-        image = client.images.get(f"{workspace_name}")
-        resp = image.save(named=True)
-        with open(workspace_image_tar, "wb") as f:
-            for chunk in resp:
-                f.write(chunk)
-        echo(f"{workspace_name} image saved to {workspace_path}/{workspace_image_tar}")
+        logging.info("Saving workspace docker image...")
+        save_image_cmd = "docker save {image_name} -o {image_name}.tar"
+        _execute(save_image_cmd.format(image_name=workspace_name))
+        logging.info(f"Docker image saved to file: {workspace_name}.tar")
 
 
 @workspace.command(name="graminize")
@@ -671,3 +643,31 @@ def apply_template_plan(prefix, template):
     template_plan = Plan.parse(WORKSPACE / template / "plan" / "plan.yaml")
 
     Plan.dump(prefix / "plan" / "plan.yaml", template_plan.config)
+
+
+def _execute(cmd: str, verbose=True) -> None:
+    """Executes `cmd` as a subprocess
+
+    Args:
+        cmd (str): Command to be executed.
+
+    Raises:
+        Exception: If return code is nonzero
+
+    Returns:
+        `stdout` of the command as list of messages
+    """
+    logging.info(f"Executing: {cmd}")
+    process = subprocess.Popen(cmd, shell=True, stderr=subprocess.STDOUT, stdout=subprocess.PIPE)
+    stdout_log = list()
+    for line in process.stdout:
+        msg = line.rstrip().decode("utf-8")
+        stdout_log.append(msg)
+        if verbose:
+            logging.info(msg)
+
+    process.communicate()
+    if process.returncode != 0:
+        raise Exception(f"`{cmd}` failed with return code {process.returncode}")
+
+    return stdout_log
