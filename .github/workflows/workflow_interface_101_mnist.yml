@@ -8,13 +8,8 @@ on:
   workflow_dispatch:
 
 jobs:
-  run:
-    # Run this workflow for various Python versions
-    strategy:
-      matrix:
-        python-version: ['3.8','3.9','3.10','3.11']
-    runs-on: ubuntu-latest
-
+  run_notebook:
+    runs-on: ubuntu-22.04
     steps:
     - name: Checkout OpenFL repository
       uses: actions/checkout@v4.1.1
@@ -26,7 +21,7 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v3
       with:
-        python-version: ${{ matrix.python-version }}
+        python-version: 3.10
 
     - name: Install Jupyter Lab Package
       run:  |
