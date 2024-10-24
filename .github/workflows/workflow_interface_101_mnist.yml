@@ -5,7 +5,13 @@
 name: Workflow Interface 101 MNIST Notebook
 
 on:
+  pull_request:
+    branches: [ develop ]
+
   workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
   run_notebook:
