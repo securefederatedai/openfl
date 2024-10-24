@@ -42,6 +42,47 @@ class Participant:
         """
         self._name = name
 
+    def get_name(self) -> str:
+        """Gets the name of Participant (aggregator or collaborator).
+
+        Returns:
+            str: The name of the aggregator or collaborator.
+        """
+        return self._name
+
+    def initialize_private_attributes(self, private_attrs: Dict[Any, Any] = None) -> None:
+        """Initialize private attributes of Participant (aggregator or collaborator)
+        by invoking the callable specified by user."""
+        if self.private_attributes_callable is not None:
+            self.private_attributes = self.private_attributes_callable(**self.kwargs)
+        elif private_attrs:
+            self.private_attributes = private_attrs
+
+    def _set_private_attrs_to_clone(self, clone: Any) -> None:
+        """Set private attributes to FLSpec clone before
+        transitioning from aggregator to collaborator or vice versa
+
+        Args:
+            clone (Any): The clone to set attributes to.
+        """
+        # set private attributes as clone attributes
+        for name, attr in self.private_attributes.items():
+            setattr(clone, name, attr)
+
+    def _delete_private_attrs_from_clone(self, clone: Any) -> None:
+        """Remove private attributes from FLSpec clone before
+        transitioning from collaborator to aggregator or vice versa
+
+        Args:
+            clone (Any): The clone to remove attributes from.
+        """
+        # Update  private attributes by taking latest
+        # parameters from clone, then delete attributes from clone.
+        for attr_name in self.private_attributes:
+            if hasattr(clone, attr_name):
+                self.private_attributes.update({attr_name: getattr(clone, attr_name)})
+                delattr(clone, attr_name)
+
     def private_attributes(self, attrs: Dict[str, Any]) -> None:
         """Set the private attributes of the participant. These attributes will
         only be available within the tasks performed by the participants and
@@ -119,48 +160,6 @@ class Collaborator(Participant):
             else:
                 self.private_attributes_callable = private_attributes_callable
 
-    def get_name(self) -> str:
-        """Gets the name of the collaborator.
-
-        Returns:
-            str: The name of the collaborator.
-        """
-        return self._name
-
-    def initialize_private_attributes(self, private_attrs: Dict[Any, Any] = None) -> None:
-        """Initialize private attributes of Collaborator object by invoking the
-        callable specified by user."""
-        if self.private_attributes_callable is not None:
-            self.private_attributes = self.private_attributes_callable(**self.kwargs)
-        elif private_attrs:
-            self.private_attributes = private_attrs
-
-    def __set_collaborator_attrs_to_clone(self, clone: Any) -> None:
-        """Set collaborator private attributes to FLSpec clone before
-        transitioning from Aggregator step to collaborator steps.
-
-        Args:
-            clone (Any): The clone to set attributes to.
-        """
-        # set collaborator private attributes as
-        # clone attributes
-        for name, attr in self.private_attributes.items():
-            setattr(clone, name, attr)
-
-    def __delete_collab_attrs_from_clone(self, clone: Any) -> None:
-        """Remove collaborator private attributes from FLSpec clone before
-        transitioning from Collaborator step to Aggregator step.
-
-        Args:
-            clone (Any): The clone to remove attributes from.
-        """
-        # Update collaborator private attributes by taking latest
-        # parameters from clone, then delete attributes from clone.
-        for attr_name in self.private_attributes:
-            if hasattr(clone, attr_name):
-                self.private_attributes.update({attr_name: getattr(clone, attr_name)})
-                delattr(clone, attr_name)
-
     def execute_func(self, ctx: Any, f_name: str, callback: Callable) -> Any:
         """Execute remote function f.
 
@@ -172,11 +171,11 @@ class Collaborator(Participant):
         Returns:
             Any: The result of the function execution.
         """
-        self.__set_collaborator_attrs_to_clone(ctx)
+        self._set_private_attrs_to_clone(ctx)
 
         callback(ctx, f_name)
 
-        self.__delete_collab_attrs_from_clone(ctx)
+        self._delete_private_attrs_from_clone(ctx)
 
         return ctx
 
@@ -227,48 +226,6 @@ class Aggregator(Participant):
             else:
                 self.private_attributes_callable = private_attributes_callable
 
-    def get_name(self) -> str:
-        """Gets the name of the aggregator.
-
-        Returns:
-            str: The name of the aggregator.
-        """
-        return self.name
-
-    def initialize_private_attributes(self, private_attrs: Dict[Any, Any] = None) -> None:
-        """Initialize private attributes of Aggregator object by invoking the
-        callable specified by user."""
-        if self.private_attributes_callable is not None:
-            self.private_attributes = self.private_attributes_callable(**self.kwargs)
-        elif private_attrs:
-            self.private_attributes = private_attrs
-
-    def __set_agg_attrs_to_clone(self, clone: Any) -> None:
-        """Set aggregator private attributes to FLSpec clone before transition
-        from Aggregator step to collaborator steps.
-
-        Args:
-            clone (Any): The clone to set attributes to.
-        """
-        # set aggregator private attributes as
-        # clone attributes
-        for name, attr in self.private_attributes.items():
-            setattr(clone, name, attr)
-
-    def __delete_agg_attrs_from_clone(self, clone: Any) -> None:
-        """Remove aggregator private attributes from FLSpec clone before
-        transition from Aggregator step to collaborator steps.
-
-        Args:
-            clone (Any): The clone to remove attributes from.
-        """
-        # Update aggregator private attributes by taking latest
-        # parameters from clone, then delete attributes from clone.
-        for attr_name in self.private_attributes:
-            if hasattr(clone, attr_name):
-                self.private_attributes.update({attr_name: getattr(clone, attr_name)})
-                delattr(clone, attr_name)
-
     def execute_func(
         self, ctx: Any, f_name: str, callback: Callable, clones: Optional[Any] = None
     ) -> Any:
@@ -284,13 +241,13 @@ class Aggregator(Participant):
         Returns:
             Any: The result of the function execution.
         """
-        self.__set_agg_attrs_to_clone(ctx)
+        self._set_private_attrs_to_clone(ctx)
 
         if clones is not None:
             callback(ctx, f_name, clones)
         else:
             callback(ctx, f_name)
 
-        self.__delete_agg_attrs_from_clone(ctx)
+        self._delete_private_attrs_from_clone(ctx)
 
         return ctx

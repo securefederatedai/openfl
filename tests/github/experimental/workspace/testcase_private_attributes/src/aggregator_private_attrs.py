@@ -4,4 +4,4 @@ import numpy as np
 
 
 def aggregator_private_attrs():
-    return {"test_loader": np.random.rand(10, 28, 28)}  # Random data
+    return {"test_loader_agg": np.random.rand(10, 28, 28)}  # Random data
