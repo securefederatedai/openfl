@@ -345,6 +345,7 @@ class TaskDataStore(TaskDataStore):
 
         def pickle_iter():
             for name, obj in artifacts_iter:
+                #removed extra variable
                 do_v4 = force_v4 if isinstance(force_v4, bool) else force_v4.get(name, False)
                 if do_v4:
                     encode_type = "gzip+pickle-v4"
