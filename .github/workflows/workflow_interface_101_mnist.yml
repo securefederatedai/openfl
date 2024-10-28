@@ -1,0 +1,48 @@
+#---------------------------------------------------------------------------
+# Workflow to run 101 MNIST Notebook
+# Authors - Noopur, Payal Chaurasiya
+#---------------------------------------------------------------------------
+name: Workflow Interface 101 MNIST Notebook
+
+on:
+  pull_request:
+    branches: [ develop ]
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  run_notebook:
+    runs-on: ubuntu-22.04
+    steps:
+    - name: Checkout OpenFL repository
+      uses: actions/checkout@v4.1.1
+      with:
+        fetch-depth: 2 # needed for detecting changes
+        submodules: "true"
+        token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Set up Python
+      uses: actions/setup-python@v3
+      with:
+        python-version: "3.10"
+
+    - name: Install Jupyter Lab Package
+      run: pip install jupyterlab
+
+    - name: Run Notebook
+      run: |
+        jupyter nbconvert --execute --to notebook ./openfl-tutorials/experimental/101_MNIST.ipynb
+        echo "Notebook run completed"
+
+    - name: Tar files
+      run: tar -cvf notebook.tar ./openfl-tutorials/experimental/101_MNIST.nbconvert.ipynb
+
+    - name: Upload Artifacts
+      uses: actions/upload-artifact@v4
+      if: ${{ always() }}   # collect artifacts regardless of failures
+      with:
+        name: wf_interface_101_mnist_${{ github.run_id }}
+        path: notebook.tar
