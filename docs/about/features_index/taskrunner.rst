@@ -303,11 +303,11 @@ Setting Up the Certificate Authority
 
    .. note::
 
-      You can override the apparent FQDN of the system by setting an FQDN environment variable before creating the certificate.
+      You can override the apparent FQDN by setting it explicitly via the :code:`--fqdn` parameter.
 
         .. code-block:: console
 
-            $ fx aggregator generate-cert-request export FQDN=x.x.x.x
+            $ fx aggregator generate-cert-request --fqdn AFQDN
 
       If you omit the :code:`--fdqn` parameter, then :code:`fx` will automatically use the FQDN of the current node assuming the node has been correctly set with a static address.
 
@@ -324,11 +324,11 @@ Setting Up the Certificate Authority
 
    .. note::
 
-      You can override the apparent FQDN of the system by setting an FQDN environment variable (:code:`export FQDN=x.x.x.x`) before signing the certificate.
+      You can override the apparent FQDN of the system by setting an FQDN environment variable (:code:`export FQDN=AFQDN`) before signing the certificate.
 
         .. code-block:: console
 
-           $ fx aggregator certify export FQDN=x.x.x.x
+           $ fx aggregator certify --fqdn AFQDN
 
 5. This node now has a signed security certificate as the aggregator for this new federation. You should have the following files.
 

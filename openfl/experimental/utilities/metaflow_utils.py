@@ -66,9 +66,9 @@ class SystemMutex:
 
     def __enter__(self):
         lock_id = hashlib.new(
-            "md5", self.name.encode("utf8"), usedforsecurity=False
+            "sha256", self.name.encode("utf8"), usedforsecurity=False
         ).hexdigest()  # nosec
-        # MD5sum used for concurrency purposes, not security
+        # Using SHA-256 to address security warning
         self.fp = open(f"/tmp/.lock-{lock_id}.lck", "wb")
         fcntl.flock(self.fp.fileno(), fcntl.LOCK_EX)
 
@@ -345,11 +345,7 @@ class TaskDataStore(TaskDataStore):
 
         def pickle_iter():
             for name, obj in artifacts_iter:
-                do_v4 = (
-                    force_v4 and force_v4
-                    if isinstance(force_v4, bool)
-                    else force_v4.get(name, False)
-                )
+                do_v4 = force_v4 if isinstance(force_v4, bool) else force_v4.get(name, False)
                 if do_v4:
                     encode_type = "gzip+pickle-v4"
                     if encode_type not in self._encodings:

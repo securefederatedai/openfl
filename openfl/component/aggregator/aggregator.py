@@ -968,15 +968,16 @@ class Aggregator:
 
         # Once all of the task results have been processed
         self._end_of_round_check_done[self.round_number] = True
+
+        # Save the latest model
+        self.logger.info("Saving round %s model...", self.round_number)
+        self._save_model(self.round_number, self.last_state_path)
+
         self.round_number += 1
         # resetting stragglers for task for a new round
         self.stragglers = []
         # resetting collaborators_done for next round
         self.collaborators_done = []
-
-        # Save the latest model
-        self.logger.info("Saving round %s model...", self.round_number)
-        self._save_model(self.round_number, self.last_state_path)
 
         # TODO This needs to be fixed!
         if self._time_to_quit():
