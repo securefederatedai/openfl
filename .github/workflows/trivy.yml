@@ -64,7 +64,14 @@ jobs:
 
       - name: Run Trivy code vulnerability scanner (SPDX-JSON Output)
         run: |
-          trivy --quiet fs --format spdx-json --output trivy-code-spdx-results.json --ignore-unfixed --vuln-type os,library --severity CRITICAL,HIGH,MEDIUM,LOW .
+          trivy --quiet fs \
+          --format spdx-json \
+          --output trivy-code-spdx-results.json \
+          --ignore-unfixed \
+          --vuln-type os,library \
+          --severity CRITICAL,HIGH,MEDIUM,LOW \
+          --db-repository ghcr.io/aquasecurity/trivy-db,public.ecr.aws/aquasecurity/trivy-db \
+          .
   
       - name: Upload Code Vulnerability Scan Results
         uses: actions/upload-artifact@v3
