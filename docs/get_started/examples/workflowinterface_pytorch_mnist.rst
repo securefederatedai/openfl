@@ -17,7 +17,7 @@ This tutorial introduces the API to get up and running with your first horizonta
 
 - Aims for syntatic consistency with the Netflix MetaFlow project. Infrastructure reuse where possible.
 
-See `full notebook <https://github.com/securefederatedai/openfl/blob/f1657abe88632d542504d6d71ca961de9333913f/openfl-tutorials/experimental/Workflow_Interface_101_MNIST.ipynb>`_.
+See `full notebook <https://github.com/securefederatedai/openfl/blob/f1657abe88632d542504d6d71ca961de9333913f/openfl-tutorials/experimental/101_MNIST.ipynb>`_.
 
 **What is it?**
 The workflow interface is a new way of composing federated learning experiments with |productName|. 
