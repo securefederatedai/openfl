@@ -25,7 +25,8 @@ class FedDataset(DataInterface):
         self._shard_descriptor = shard_descriptor
         validation_size = len(self.shard_descriptor) // 10
         self.train_indices = np.arange(len(self.shard_descriptor) - validation_size)
-        self.val_indices = np.arange(len(self.shard_descriptor) - validation_size, len(self.shard_descriptor))
+        self.val_indices = np.arange(len(self.shard_descriptor) - validation_size,
+                                     len(self.shard_descriptor))
 
     def get_train_loader(self, **kwargs):
         """

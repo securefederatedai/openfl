@@ -1,5 +1,6 @@
 # Copyright (C) 2024 Intel Corporation
-# Licensed subject to the terms of the separately executed evaluation license agreement between Intel Corporation and you.
+# Licensed subject to the terms of the separately executed evaluation license agreement between
+# Intel Corporation and you.
 
 import numpy as np
 
@@ -12,17 +13,21 @@ from openfl.utilities import Metric
 class TemplateTaskRunner(PyTorchTaskRunner):
     """Template Task Runner for PyTorch.
 
-    This class should be used as a template to create a custom Task Runner for your specific model and training workload.
+    This class should be used as a template to create a custom Task Runner for your specific model
+    and training workload.
     After generating this template, you should:
-    1. Define your model, optimizer, and loss function as you would in PyTorch. PyTorchTaskRunner inherits from torch.nn.Module.
-    2. Implement the `train_` and `validate_` functions to define a single train and validate epoch of your workload.
+    1. Define your model, optimizer, and loss function as you would in PyTorch.
+    PyTorchTaskRunner inherits from torch.nn.Module.
+    2. Implement the `train_` and `validate_` functions to define a single train
+    and validate epoch of your workload.
     3. Modify the `plan.yaml` file to use this Task Runner.
 
     The `plan.yaml` modifications should be done under the `<workspace>/plan/plan.yaml` section:
     ```
     task_runner:
         defaults : plan/defaults/task_runner.yaml
-        template: src.taskrunner.TemplateTaskRunner # Modify this line appropriately if you change the class name
+        template: src.taskrunner.TemplateTaskRunner # Modify this line appropriately
+        if you change the class name
         settings:
             # Add additional arguments that you wish to pass through `__init__`
     ```
@@ -87,8 +92,8 @@ class TemplateTaskRunner(PyTorchTaskRunner):
         """Single validation epoch.
 
         Args:
-            validation_dataloader: Validation dataset batch generator. Yields (samples, targets) tuples.
-                                   of size = `self.validation_dataloader.batch_size`.
+            validation_dataloader: Validation dataset batch generator. Yields (samples, targets)
+                                   tuples of size = `self.validation_dataloader.batch_size`.
 
         Returns:
             Metric: An object containing the name of the metric and its value as an np.ndarray.

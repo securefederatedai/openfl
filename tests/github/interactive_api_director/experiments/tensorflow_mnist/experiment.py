@@ -6,9 +6,9 @@ from tests.github.interactive_api_director.experiments.tensorflow_mnist.dataset 
 from tests.github.interactive_api_director.experiments.tensorflow_mnist.settings import model
 from tests.github.interactive_api_director.experiments.tensorflow_mnist.settings import optimizer
 from tests.github.interactive_api_director.experiments.tensorflow_mnist.settings import loss_fn
-from tests.github.interactive_api_director.experiments.tensorflow_mnist.settings import train_acc_metric
-from tests.github.interactive_api_director.experiments.tensorflow_mnist.settings import val_acc_metric
-from tests.github.interactive_api_director.experiments.tensorflow_mnist.envoy.shard_descriptor import MNISTShardDescriptor
+from tests.github.interactive_api_director.experiments.tensorflow_mnist.settings import train_acc_metric  # noqa: E501
+from tests.github.interactive_api_director.experiments.tensorflow_mnist.settings import val_acc_metric  # noqa: E501
+from tests.github.interactive_api_director.experiments.tensorflow_mnist.envoy.shard_descriptor import MNISTShardDescriptor  # noqa: E501
 
 
 def run():
@@ -16,19 +16,22 @@ def run():
     client_id = 'frontend'
 
     # 1) Run with API layer - Director mTLS
-    # If the user wants to enable mTLS their must provide CA root chain, and signed key pair to the federation interface
+    # If the user wants to enable mTLS their must provide CA root chain,
+    # and signed key pair to the federation interface
     # cert_chain = 'cert/root_ca.crt'
     # API_certificate = 'cert/frontend.crt'
     # API_private_key = 'cert/frontend.key'
 
-    # federation = Federation(client_id='frontend', director_node_fqdn='localhost', director_port='50051',
-    #                        cert_chain=cert_chain, api_cert=API_certificate, api_private_key=API_private_key)
+    # federation = Federation(client_id='frontend', director_node_fqdn='localhost',
+    #                         director_port='50051', cert_chain=cert_chain,
+    #                         api_cert=API_certificate, api_private_key=API_private_key)
 
-    # --------------------------------------------------------------------------------------------------------------------
+    # ---------------------------------------------------------------------------------------------
 
     # 2) Run with TLS disabled (trusted environment)
     # Federation can also determine local fqdn automatically
-    federation = Federation(client_id=client_id, director_node_fqdn='localhost', director_port='50051', tls=False)
+    federation = Federation(client_id=client_id, director_node_fqdn='localhost',
+                            director_port='50051', tls=False)
 
     shard_registry = federation.get_shard_registry()
     print(shard_registry)
@@ -49,7 +52,8 @@ def run():
     TI = TaskInterface()
 
     # Task interface currently supports only standalone functions.
-    @TI.register_fl_task(model='model', data_loader='train_dataset', device='device', optimizer='optimizer')
+    @TI.register_fl_task(model='model', data_loader='train_dataset',
+                         device='device', optimizer='optimizer')
     def train(model, train_dataset, optimizer, device, loss_fn=loss_fn, warmup=False):
         # Iterate over the batches of the dataset.
         for step, (x_batch_train, y_batch_train) in enumerate(train_dataset):
@@ -101,14 +105,14 @@ def run():
 
     # create an experimnet in federation
     experiment_name = 'mnist_test_experiment'
-    fl_experiment = FLExperiment(
-        federation=federation,
-        experiment_name=experiment_name,
-        serializer_plugin='openfl.plugins.interface_serializer.'
-        'keras_serializer.KerasSerializer')
+    fl_experiment = FLExperiment(federation=federation,
+                                 experiment_name=experiment_name,
+                                 serializer_plugin='openfl.plugins.interface_serializer.'
+                                 'keras_serializer.KerasSerializer')
     # If I use autoreload I got a pickling error
 
-    # The following command zips the workspace and python requirements to be transfered to collaborator nodes
+    # The following command zips the workspace and python requirements
+    # to be transfered to collaborator nodes
     fl_experiment.start(model_provider=MI,
                         task_keeper=TI,
                         data_loader=fed_dataset,
