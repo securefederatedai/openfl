@@ -33,11 +33,18 @@ jobs:
 
       - name: Install Trivy
         run: |
-          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sudo sh -s -- -b /usr/local/bin v0.55.0
+          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sudo sh -s -- -b /usr/local/bin
   
       - name: Run Trivy code vulnerability scanner (JSON Output)
         run: |
-          trivy --quiet fs --format json --output trivy-code-results.json --ignore-unfixed --vuln-type os,library --severity CRITICAL,HIGH,MEDIUM,LOW .
+          trivy --quiet fs \
+          --format json \
+          --output trivy-code-results.json \
+          --ignore-unfixed \
+          --vuln-type os,library \
+          --severity CRITICAL,HIGH,MEDIUM,LOW \
+          --db-repository 'ghcr.io/aquasecurity/trivy-db,public.ecr.aws/aquasecurity/trivy-db' \
+          .
 
       - name: Upload Code Vulnerability Scan Results
         uses: actions/upload-artifact@v3
@@ -64,7 +71,14 @@ jobs:
 
       - name: Run Trivy code vulnerability scanner (SPDX-JSON Output)
         run: |
-          trivy --quiet fs --format spdx-json --output trivy-code-spdx-results.json --ignore-unfixed --vuln-type os,library --severity CRITICAL,HIGH,MEDIUM,LOW .
+          trivy --quiet fs \
+          --format spdx-json \
+          --output trivy-code-spdx-results.json \
+          --ignore-unfixed \
+          --vuln-type os,library \
+          --severity CRITICAL,HIGH,MEDIUM,LOW \
+          --db-repository 'ghcr.io/aquasecurity/trivy-db,public.ecr.aws/aquasecurity/trivy-db' \
+          .
   
       - name: Upload Code Vulnerability Scan Results
         uses: actions/upload-artifact@v3

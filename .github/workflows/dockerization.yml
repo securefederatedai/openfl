@@ -24,16 +24,12 @@ jobs:
         python -m pip install --upgrade pip
         pip install .
 
-    - name: Build base image
-      run: |
-        docker build -t openfl -f openfl-docker/Dockerfile.base .
-
     - name: Create workspace image
       run: |
         fx workspace create --prefix example_workspace --template keras_cnn_mnist
         cd example_workspace
         fx plan initialize -a localhost
-        fx workspace dockerize --base_image openfl
+        fx workspace dockerize --save --revision https://github.com/${GITHUB_REPOSITORY}.git@${{ github.event.pull_request.head.sha }}
 
     - name: Create certificate authority for workspace
       run: |
@@ -76,7 +72,7 @@ jobs:
     - name: Load workspace image
       run: |
         cd example_workspace
-        docker load -i example_workspace_image.tar
+        docker load -i example_workspace.tar
 
     - name: Run aggregator and collaborator
       run: |
