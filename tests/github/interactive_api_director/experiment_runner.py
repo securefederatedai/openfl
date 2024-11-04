@@ -114,7 +114,7 @@ def run_federation(shards: typing.Dict[str, Shard], director_path: str):
     logger.info('Starting the experiment!')
     running_processes = []
     p = subprocess.Popen(
-        f"fx director start --disable-tls",
+        "fx director start --disable-tls",
         shell=True,
         cwd=os.path.join(director_path)
     )

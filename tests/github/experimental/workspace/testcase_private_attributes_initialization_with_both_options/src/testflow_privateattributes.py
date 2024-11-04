@@ -37,7 +37,7 @@ class TestFlowPrivateAttributes(FLSpec):
         )
         self.collaborators = self.runtime.collaborators
 
-        validate_agg_private_attr(self,"start", aggr = ["test_loader_agg_via_callable"], collabs = ["train_loader_via_callable", "test_loader_via_callable"])
+        validate_agg_private_attr(self, "start", aggr=["test_loader_agg_via_callable"], collabs=["train_loader_via_callable", "test_loader_via_callable"])
 
         self.exclude_agg_to_agg = 10
         self.include_agg_to_agg = 100
@@ -49,7 +49,7 @@ class TestFlowPrivateAttributes(FLSpec):
         Testing whether Agg private attributes are accessible in next agg step.
         Collab private attributes should not be accessible here
         """
-        validate_agg_private_attr(self, "aggregator_step", aggr = ["test_loader_agg_via_callable"], collabs = ["train_loader_via_callable", "test_loader_via_callable"])
+        validate_agg_private_attr(self, "aggregator_step", aggr=["test_loader_agg_via_callable"], collabs=["train_loader_via_callable", "test_loader_via_callable"])
 
         self.include_agg_to_collab = 42
         self.exclude_agg_to_collab = 40
@@ -66,7 +66,7 @@ class TestFlowPrivateAttributes(FLSpec):
         Aggregator private attributes should not be accessible here
         """
         validate_collab_private_attrs(
-            self, "collaborator_step_a", aggr = ["test_loader_agg_via_callable"], collabs = ["train_loader_via_callable", "test_loader_via_callable"]
+            self, "collaborator_step_a", aggr=["test_loader_agg_via_callable"], collabs=["train_loader_via_callable", "test_loader_via_callable"]
         )
 
         self.exclude_collab_to_collab = 2
@@ -81,7 +81,7 @@ class TestFlowPrivateAttributes(FLSpec):
         """
 
         validate_collab_private_attrs(
-            self, "collaborator_step_b", aggr = ["test_loader_agg_via_callable"], collabs = ["train_loader_via_callable", "test_loader_via_callable"]
+            self, "collaborator_step_b", aggr=["test_loader_agg_via_callable"], collabs=["train_loader_via_callable", "test_loader_via_callable"]
         )
         self.exclude_collab_to_agg = 10
         self.include_collab_to_agg = 12
@@ -152,7 +152,7 @@ def validate_agg_private_attr(self, step_name, **private_attrs_kwargs):
             step_name: Name of the step being validated
             private_attr_kwargs: Keyword arguments specifying the names of private attributes for the aggregator and collaborators.
     """
-    agg_attrs = private_attrs_kwargs.get('aggr',[])
+    agg_attrs = private_attrs_kwargs.get('aggr', [])
     collab_attrs = private_attrs_kwargs.get('collabs', [])
     # Aggregator should only be able to access its own attributes
 
@@ -168,7 +168,7 @@ def validate_agg_private_attr(self, step_name, **private_attrs_kwargs):
         )
 
     # check for collaborator private attributes that should not be accessible
-    breached_collab_attrs = [attr for attr in collab_attrs if hasattr(self,attr)]
+    breached_collab_attrs = [attr for attr in collab_attrs if hasattr(self, attr)]
     if breached_collab_attrs:
         TestFlowPrivateAttributes.ERROR_LIST.append(
             step_name + "_collaborator_attributes_found"
@@ -177,9 +177,6 @@ def validate_agg_private_attr(self, step_name, **private_attrs_kwargs):
             f"{bcolors.FAIL} ... Attribute test failed in {step_name} - collaborator"
             + f"private attributes accessible:{','.join(breached_collab_attrs)} {bcolors.ENDC}"
         )
-
-
-
     for idx, collab in enumerate(self.collaborators):
         # Collaborator attributes should not be accessible in aggregator step
         if (
@@ -206,13 +203,13 @@ def validate_collab_private_attrs(self, step_name, **private_attrs_kwargs):
             step_name: Name of the step being validated
             private_attr_kwargs: Keyword arguments specifying the names of private attributes for the aggregator and collaborators.
     """
-    agg_attrs = private_attrs_kwargs.get('aggr',[])
+    agg_attrs = private_attrs_kwargs.get('aggr', [])
     collab_attrs = private_attrs_kwargs.get('collabs', [])
 
     # Collaborator should only be able to access its own attributes
 
     # check for missing collaborators attributes
-    inaccessible_collab_attrs = [attr for attr in collab_attrs if not hasattr(self,attr)]
+    inaccessible_collab_attrs = [attr for attr in collab_attrs if not hasattr(self, attr)]
 
     if inaccessible_collab_attrs:
         TestFlowPrivateAttributes.ERROR_LIST.append(

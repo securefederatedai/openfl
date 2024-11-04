@@ -8,6 +8,7 @@ from typing import Iterator, Tuple
 from openfl.federated import PyTorchTaskRunner
 from openfl.utilities import Metric
 
+
 class TemplateTaskRunner(PyTorchTaskRunner):
     """Template Task Runner for PyTorch.
 
@@ -101,6 +102,7 @@ class TemplateTaskRunner(PyTorchTaskRunner):
 
         accuracy = None  # Placeholder for accuracy calculation.
         return Metric(name="accuracy", value=np.array(accuracy))
+
 
 raise NotImplementedError(
     "Use <workspace>/src/taskrunner.py template to create a custom Task Runner "

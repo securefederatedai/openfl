@@ -13,6 +13,7 @@ from concurrent.futures import ProcessPoolExecutor
 from tests.github.utils import create_collaborator, certify_aggregator
 from openfl.utilities.utils import getfqdn_env
 
+
 def exec(command, directory):
     os.chdir(directory)
     check_call(command)

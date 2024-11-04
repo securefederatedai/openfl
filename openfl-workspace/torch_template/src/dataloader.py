@@ -3,6 +3,7 @@
 
 from openfl.federated import PyTorchDataLoader
 
+
 class TemplateDataLoader(PyTorchDataLoader):
     """Template dataloader for PyTorch.
     This class should be used as a template to create a custom DataLoader for your specific dataset.
@@ -39,6 +40,7 @@ class TemplateDataLoader(PyTorchDataLoader):
         self.y_train = y_train
         self.X_valid = X_valid
         self.y_valid = y_valid
+
 
 def load_dataset(data_path, **kwargs):
     """

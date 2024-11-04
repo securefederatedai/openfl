@@ -59,7 +59,7 @@ def validate(unet_model, val_loader, device):
             samples = target.shape[0]
             total_samples += samples
             data, target = torch.tensor(data).to(device), \
-                           torch.tensor(target).to(device, dtype=torch.int64)
+                torch.tensor(target).to(device, dtype=torch.int64)
             output = unet_model(data)
             val = soft_dice_coef(output, target)
             val_score += val.sum().cpu().numpy()
