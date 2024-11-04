@@ -1,0 +1,6 @@
+pytest
+pytest-xdist
+pytest-ordering
+pytest-html
+lxml
+pyyaml
