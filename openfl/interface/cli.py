@@ -185,7 +185,11 @@ def cli(context, log_level, no_warnings):
     # Validate log_file with tighter restrictions
     if log_file:
         log_file = os.path.normpath(log_file)
-        if not re.match(r"^logs/[\w\-.]+$", log_file) or ".." in log_file or log_file.startswith("/"):
+        if (
+            not re.match(r"^logs/[\w\-.]+$", log_file)
+            or ".." in log_file
+            or log_file.startswith("/")
+        ):
             raise ValueError("Invalid log file path")
         
         # Ensure the log file is in the 'logs' directory
