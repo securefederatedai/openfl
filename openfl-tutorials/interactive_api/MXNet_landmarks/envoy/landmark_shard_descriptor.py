@@ -5,7 +5,7 @@
 
 import json
 import shutil
-from hashlib import md5
+from hashlib import sha256
 from logging import getLogger
 from pathlib import Path
 from random import shuffle
@@ -114,7 +114,7 @@ class LandmarkShardDescriptor(ShardDescriptor):
 
         self.process_data('training.csv')
         (self.data_folder / 'training.csv').unlink()
-        self.save_all_md5()
+        self.save_all_sha256()
 
     def get_dataset(self, dataset_type='train') -> LandmarkShardDataset:
         """Return a shard dataset by type."""
@@ -124,33 +124,33 @@ class LandmarkShardDescriptor(ShardDescriptor):
             worldsize=self.worldsize
         )
 
-    def calc_all_md5(self) -> Dict[str, str]:
+    def calc_all_sha256(self) -> Dict[str, str]:
         """Calculate hash of all dataset."""
-        md5_dict = {}
+        sha256_dict = {}
         for root in self.data_folder.glob('*.npy'):
-            md5_calc = md5(usedforsecurity=False)
+            sha256_calc = sha256(usedforsecurity=False)
             rel_file = root.relative_to(self.data_folder)
 
             with open(self.data_folder / rel_file, 'rb') as f:
                 for chunk in iter(lambda: f.read(4096), b''):
-                    md5_calc.update(chunk)
-                md5_dict[str(rel_file)] = md5_calc.hexdigest()
-        return md5_dict
+                    sha256_calc.update(chunk)
+                sha256_dict[str(rel_file)] = sha256_calc.hexdigest()
+        return sha256_dict
 
-    def save_all_md5(self) -> None:
+    def save_all_sha256(self) -> None:
         """Save dataset hash."""
-        all_md5 = self.calc_all_md5()
+        all_sha256 = self.calc_all_sha256()
         with open(self.data_folder / 'dataset.json', 'w', encoding='utf-8') as f:
-            json.dump(all_md5, f)
+            json.dump(all_sha256, f)
 
     def is_dataset_complete(self) -> bool:
         """Check dataset integrity."""
-        dataset_md5_path = self.data_folder / 'dataset.json'
-        if dataset_md5_path.exists():
-            with open(dataset_md5_path, 'r', encoding='utf-8') as f:
-                old_md5 = json.load(f)
-            new_md5 = self.calc_all_md5()
-            return new_md5 == old_md5
+        dataset_sha256_path = self.data_folder / 'dataset.json'
+        if dataset_sha256_path.exists():
+            with open(dataset_sha256_path, 'r', encoding='utf-8') as f:
+                old_sha256 = json.load(f)
+            new_sha256 = self.calc_all_sha256()
+            return new_sha256 == old_sha256
         return False
 
     @property
