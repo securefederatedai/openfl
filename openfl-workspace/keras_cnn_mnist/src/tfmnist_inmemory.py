@@ -29,7 +29,11 @@ class TensorFlowMNISTInMemory(TensorFlowDataLoader):
         try:
             int(data_path)
         except:
-            raise ValueError("Expected `%s` to be representable as `int`.", data_path)
+            raise ValueError(
+                "Expected `%s` to be representable as `int`, as it refers to the data shard " +
+                "number used by the collaborator.",
+                data_path
+            )
 
         _, num_classes, X_train, y_train, X_valid, y_valid = load_mnist_shard(
             shard_num=int(data_path), **kwargs
