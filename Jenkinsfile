@@ -1,6 +1,5 @@
 def snykData = [
     'openfl-docker': 'openfl-docker/Dockerfile.base',
-    'openfl-docker-gramine': 'openfl-gramine/Dockerfile.gramine',
     'openfl': 'setup.py',
     'openfl-workspace_tf_2dunet': 'openfl-workspace/tf_2dunet/requirements.txt',
     'openfl-workspace_torch_cnn_mnist_straggler_check': 'openfl-workspace/torch_cnn_mnist_straggler_check/requirements.txt',
@@ -9,14 +8,11 @@ def snykData = [
     'openfl-workspace_torch_cnn_histology_src': 'openfl-workspace/torch_cnn_histology/src/requirements.txt',
     'openfl-workspace_keras_nlp': 'openfl-workspace/keras_nlp/requirements.txt',
     'openfl-workspace_torch_cnn_mnist': 'openfl-workspace/torch_cnn_mnist/requirements.txt',
-    'openfl-workspace_keras_nlp_gramine_ready': 'openfl-workspace/keras_nlp_gramine_ready/requirements.txt',
     'openfl-workspace_torch_unet_kvasir': 'openfl-workspace/torch_unet_kvasir/requirements.txt',
     'openfl-workspace_tf_cnn_histology': 'openfl-workspace/tf_cnn_histology/requirements.txt',
-    'openfl-workspace_torch_cnn_histology_gramine_ready': 'openfl-workspace/torch_cnn_histology_gramine_ready/requirements.txt',
     'openfl-workspace_tf_3dunet_brats': 'openfl-workspace/tf_3dunet_brats/requirements.txt',
     'openfl-workspace_keras_cnn_with_compression': 'openfl-workspace/keras_cnn_with_compression/requirements.txt',
     'openfl-workspace_keras_cnn_mnist': 'openfl-workspace/keras_cnn_mnist/requirements.txt',
-    'openfl-workspace_torch_unet_kvasir_gramine_ready': 'openfl-workspace/torch_unet_kvasir_gramine_ready/requirements.txt',
     'openfl-tutorials_interactive_api_pytorch_medmnist_2d_envoy': 'openfl-tutorials/interactive_api/PyTorch_MedMNIST_2D/envoy/requirements.txt',
     'openfl-tutorials_interactive_api_pytorch_dogscats_vit_workspace': 'openfl-tutorials/interactive_api/PyTorch_DogsCats_ViT/workspace/requirements.txt',
     'openfl-tutorials_interactive_api_pytorch_histology_envoy': 'openfl-tutorials/interactive_api/PyTorch_Histology/envoy/requirements.txt',
@@ -62,7 +58,6 @@ pipeline {
                     steps {
                         sh '''
                             docker image build ${DOCKER_BUILD_ARGS} -t openfl-docker:latest . -f openfl-docker/Dockerfile.base
-                            DOCKER_BUILDKIT=1 docker image build ${DOCKER_BUILD_ARGS} -t openfl-docker-gramine:latest . -f openfl-gramine/Dockerfile.gramine
                             docker images | { grep openfl || true; }
                         '''
                     }
