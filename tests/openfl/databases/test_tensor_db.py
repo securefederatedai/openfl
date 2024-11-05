@@ -138,7 +138,7 @@ def test_get_aggregated_tensor_directly(nparray, tensor_key):
     )
 
     db.cache_tensor({tensor_key: nparray})
-    agg_nparray, agg_metadata_dict = db.get_aggregated_tensor(tensor_key, {}, WeightedAverage())
+    agg_nparray = db.get_aggregated_tensor(tensor_key, {}, WeightedAverage())
 
     assert np.array_equal(nparray, agg_nparray)
 
@@ -170,7 +170,7 @@ def test_get_aggregated_tensor(nparray, tensor_key):
     db.cache_tensor({tensor_key: nparray})
 
     collaborator_weight_dict = {'col1': 0.5, 'col2': 0.5}
-    agg_nparray, agg_metadata_dict = db.get_aggregated_tensor(
+    agg_nparray = db.get_aggregated_tensor(
         tensor_key, collaborator_weight_dict, WeightedAverage())
 
     assert np.array_equal(nparray, agg_nparray)
