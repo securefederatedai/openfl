@@ -160,8 +160,9 @@ class CLI(Group):
 @group(cls=CLI)
 @option("-l", "--log-level", default="info", help="Logging verbosity level.")
 @option("--no-warnings", is_flag=True, help="Disable third-party warnings.")
+@option("--log-file", default="logs/app.log", help="Path to the log file.")
 @pass_context
-def cli(context, log_level, no_warnings):
+def cli(context, log_level, no_warnings, log_file):
     """
     Command-line Interface.
 
@@ -169,6 +170,7 @@ def cli(context, log_level, no_warnings):
         context (click.core.Context): Click context.
         log_level (str): Logging verbosity level.
         no_warnings (bool): Flag to disable third-party warnings.
+        log_file (str): Path to the log file.
     """
 
     context.ensure_object(dict)
@@ -181,7 +183,6 @@ def cli(context, log_level, no_warnings):
         # Setup logging immediately to suppress unnecessary warnings on import
         # This will be overridden later with user selected debugging level
         disable_warnings()
-    log_file = os.getenv("LOG_FILE")
     # Validate log_file with tighter restrictions
     if log_file:
         log_file = os.path.normpath(log_file)
