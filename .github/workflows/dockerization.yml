@@ -4,12 +4,14 @@ name: Dockerization
 on:
   pull_request:
     branches: [ develop ]
+    types: [opened, synchronize, reopened, ready_for_review]
 
 permissions:
   contents: read
 
 jobs:
   build:
+    if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
