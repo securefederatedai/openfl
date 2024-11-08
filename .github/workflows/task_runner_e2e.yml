@@ -79,7 +79,7 @@ jobs:
       id: run_task_runner_tests
       run: |
         pytest -v tests/openfl_e2e/test_suites/task_runner_tests.py -m ${{ env.MODEL_NAME }} -s --num_rounds $NUM_ROUNDS --num_collaborators $NUM_COLLABORATORS --model_name ${{ env.MODEL_NAME }}
-        echo "Task runner regression test run completed"
+        echo "Task runner e2e test run completed"
       env:
         NO_PROXY: localhost,127.0.0.1,aggregator
 

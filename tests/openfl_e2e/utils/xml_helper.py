@@ -5,6 +5,8 @@ import xml.etree.ElementTree as ET
 from lxml import etree
 import os
 
+from tests.openfl_e2e.utils.logger import logger as log
+
 # Initialize the XML parser
 parser = etree.XMLParser(recover=True, encoding='utf-8')
 tree = ET.parse("results/results.xml", parser=parser)
@@ -61,7 +63,7 @@ def get_testcase_result():
                 database_list.append(database_dict)
                 status = None
 
-    print(f"Database list = {database_list}")
+    log.info(f"Database list = {database_list}")
     return database_list
 
 
@@ -69,6 +71,7 @@ result = get_testcase_result()
 
 # Write the results to GitHub step summary
 with open(os.getenv('GITHUB_STEP_SUMMARY'), 'a') as fh:
+    # DO NOT change the print statements
     print("| Name | Time (in seconds) | Result |", file=fh)
     print("| ------------- | ------------- | ------------- |", file=fh)
     for item in result:
