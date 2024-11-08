@@ -29,10 +29,10 @@ class PyTorchMNISTInMemory(PyTorchDataLoader):
 
         try:
             int(data_path)
-        except:
+        except ValueError:
             raise ValueError(
-                "Expected `%s` to be representable as `int`, as it refers to the data shard " +
-                "number used by the collaborator.",
+                "Expected `%s` to be representable as `int`, as it refers to the data shard "
+                + "number used by the collaborator.",
                 data_path
             )
 
