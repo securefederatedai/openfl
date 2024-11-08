@@ -12,6 +12,7 @@ import openfl
 import openfl.native as fx
 from openfl.utilities.utils import getfqdn_env
 
+
 def prepare_workspace():
     subprocess.check_call(['fx', 'workspace', 'certify'])
     subprocess.check_call(['fx', 'plan', 'initialize'])

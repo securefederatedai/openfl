@@ -108,16 +108,18 @@ class Aggregator:
         self.__private_attrs."""
         self.__private_attrs = self.__private_attrs_callable(**kwargs)
 
-    def __set_attributes_to_clone(self, clone: Any) -> None:
-        """Set private_attrs to clone as attributes."""
+    def __set_private_attrs_to_clone(self, clone: Any) -> None:
+        """Set private_attrs of Aggregator as attributes of FLSpec clone"""
         if len(self.__private_attrs) > 0:
             for name, attr in self.__private_attrs.items():
                 setattr(clone, name, attr)
 
-    def __delete_agg_attrs_from_clone(self, clone: Any, replace_str: str = None) -> None:
+    def __delete_private_attrs_from_clone(self, clone: Any, replace_str: str = None) -> None:
         """
-        Remove aggregator private attributes from FLSpec clone before
-        transition from Aggregator step to collaborator steps.
+        Remove aggregator private attributes from FLSpec clone
+        before transition from aggregator step to collaborator steps.
+        Instead of removing private attributes this method can also replace
+        private attributes with a string (required in checkpointing)
         """
         # Update aggregator private attributes by taking latest
         # parameters from clone, then delete attributes from clone.
@@ -152,6 +154,9 @@ class Aggregator:
         """Start the execution and run flow until transition."""
         # Start function will be the first step if any flow
         f_name = "start"
+        # Creating a clones from the flow object
+        FLSpec._reset_clones()
+        FLSpec._create_clones(self.flow, self.flow.runtime.collaborators)
 
         self.logger.info(f"Starting round {self.current_round}...")
         while True:
@@ -298,7 +303,7 @@ class Aggregator:
             string / None: Next collaborator function or None end of the flow.
         """
         # Set aggregator private attributes to flow object
-        self.__set_attributes_to_clone(self.flow)
+        self.__set_private_attrs_to_clone(self.flow)
 
         not_at_transition_point = True
         # Run a loop to execute flow steps until not_at_transition_point
@@ -311,9 +316,11 @@ class Aggregator:
             if f.__name__ == "end":
                 f()
                 # Take the checkpoint of "end" step
-                self.__delete_agg_attrs_from_clone(self.flow, "Private attributes: Not Available.")
+                self.__delete_private_attrs_from_clone(
+                    self.flow, "Private attributes: Not Available."
+                )
                 self.call_checkpoint(self.flow, f)
-                self.__set_attributes_to_clone(self.flow)
+                self.__set_private_attrs_to_clone(self.flow)
                 # Check if all rounds of external loop is executed
                 if self.current_round is self.rounds_to_train:
                     # All rounds execute, it is time to quit
@@ -348,34 +355,31 @@ class Aggregator:
             # clones are arguments
             f(*selected_clones)
 
-            self.__delete_agg_attrs_from_clone(self.flow, "Private attributes: Not Available.")
+            self.__delete_private_attrs_from_clone(self.flow, "Private attributes: Not Available.")
             # Take the checkpoint of executed step
             self.call_checkpoint(self.flow, f)
-            self.__set_attributes_to_clone(self.flow)
+            self.__set_private_attrs_to_clone(self.flow)
 
             # Next function in the flow
             _, f, parent_func = self.flow.execute_task_args[:3]
             f_name = f.__name__
 
             self.flow._display_transition_logs(f, parent_func)
-
             # Transition check
             if aggregator_to_collaborator(f, parent_func):
-                # Extract clones, instance snapshot and kwargs when reached
-                # foreach loop first time
-                if len(self.flow.execute_task_args) > 4:
-                    temp = self.flow.execute_task_args[3:]
-                    self.clones_dict, self.instance_snapshot, self.kwargs = temp
-
-                    self.selected_collaborators = getattr(self.flow, self.kwargs["foreach"])
-                else:
-                    self.kwargs = self.flow.execute_task_args[3]
-
                 # Transition encountered, break the loop
                 not_at_transition_point = False
 
-        # Delete private attributes from flow object
-        self.__delete_agg_attrs_from_clone(self.flow)
+        # Delete aggregator private attribute from flow object
+        self.__delete_private_attrs_from_clone(self.flow)
+
+        # Unpack execute_task_args - clones_dict, instance snapshot and kwargs
+        self.clones_dict, self.instance_snapshot, self.kwargs = self.flow.execute_task_args[3:]
+        if "foreach" in self.kwargs:
+            self.flow.filter_exclude_include(f, **self.kwargs)
+            self.selected_collaborators = getattr(self.flow, self.kwargs["foreach"])
+        else:
+            self.kwargs = self.flow.execute_task_args[-1]
 
         return f_name if f_name != "end" else None
 

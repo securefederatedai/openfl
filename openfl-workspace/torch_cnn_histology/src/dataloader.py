@@ -37,9 +37,18 @@ class PyTorchHistologyInMemory(PyTorchDataLoader):
         """
         super().__init__(batch_size, random_seed=0, **kwargs)
 
-        _, num_classes, X_train, y_train, X_valid, y_valid = load_histology_shard(
-            shard_num=int(data_path), **kwargs)
+        try:
+            int(data_path)
+        except:
+            raise ValueError(
+                "Expected `%s` to be representable as `int`, as it refers to the data shard " +
+                "number used by the collaborator.",
+                data_path
+            )
 
+        _, num_classes, X_train, y_train, X_valid, y_valid = load_histology_shard(
+            shard_num=int(data_path), **kwargs
+        )
         self.X_train = X_train
         self.y_train = y_train
         self.X_valid = X_valid

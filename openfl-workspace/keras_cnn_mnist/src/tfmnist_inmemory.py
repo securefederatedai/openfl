@@ -26,6 +26,14 @@ class TensorFlowMNISTInMemory(TensorFlowDataLoader):
         #  what index/rank is this collaborator.
         # Then we have a way to automatically shard based on rank and size of
         # collaborator list.
+        try:
+            int(data_path)
+        except:
+            raise ValueError(
+                "Expected `%s` to be representable as `int`, as it refers to the data shard " +
+                "number used by the collaborator.",
+                data_path
+            )
 
         _, num_classes, X_train, y_train, X_valid, y_valid = load_mnist_shard(
             shard_num=int(data_path), **kwargs

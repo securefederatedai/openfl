@@ -4,7 +4,7 @@ import numpy as np
 import PIL
 import torch.optim as optim
 from tests.github.interactive_api_director.experiments.pytorch_kvasir_unet.model import UNet
-from tests.github.interactive_api_director.experiments.pytorch_kvasir_unet.tasks import task_interface
+from tests.github.interactive_api_director.experiments.pytorch_kvasir_unet.tasks import task_interface  # noqa: E501
 from tests.github.interactive_api_director.experiments.pytorch_kvasir_unet.tasks import validate
 from torch.utils.data import DataLoader
 from torch.utils.data import Dataset
@@ -37,7 +37,8 @@ def run():
     optimizer_adam = optim.Adam(model_unet.parameters(), lr=1e-4)
 
     framework_adapter = 'openfl.plugins.frameworks_adapters.pytorch_adapter.FrameworkAdapterPlugin'
-    MI = ModelInterface(model=model_unet, optimizer=optimizer_adam, framework_plugin=framework_adapter)
+    MI = ModelInterface(model=model_unet, optimizer=optimizer_adam,
+                        framework_plugin=framework_adapter)
 
     # Save the initial model state
     initial_model = deepcopy(model_unet)
@@ -60,7 +61,8 @@ def run():
 
 
 # Register dataset
-# We extract User dataset class implementation. Is it convinient? What if the dataset is not a class?
+# We extract User dataset class implementation.
+# Is it convinient? What if the dataset is not a class?
 class KvasirShardDataset(Dataset):
 
     def __init__(self, dataset):
@@ -113,7 +115,8 @@ class KvasirSD(DataInterface):
         validation_size = max(1, int(len(self._shard_dataset) * self.validation_fraction))
 
         self.train_indeces = np.arange(len(self._shard_dataset) - validation_size)
-        self.val_indeces = np.arange(len(self._shard_dataset) - validation_size, len(self._shard_dataset))
+        self.val_indeces = np.arange(len(self._shard_dataset) - validation_size,
+                                     len(self._shard_dataset))
 
     def get_train_loader(self, **kwargs):
         """

@@ -12,7 +12,6 @@ from PIL import Image
 from openfl.interface.interactive_api.shard_descriptor import ShardDataset
 from openfl.interface.interactive_api.shard_descriptor import ShardDescriptor
 from openfl.utilities import validate_file_hash
-from zipfile import ZipFile
 import requests
 
 

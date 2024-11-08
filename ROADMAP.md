@@ -36,7 +36,7 @@ In the process of thinking about federated workflows, and the properties that ar
 7. Don't reinvent unless absolutely necessary
 
 ### 1.2 Security, Privacy, and Governance
-OpenFL is designed for security and privacy, and soon we will be releasing some exciting extensions that build on running [OpenFL experiments within SGX enclaves](https://github.com/securefederatedai/openfl/blob/develop/openfl-gramine/MANUAL.md).   
+OpenFL is designed for security and privacy, and soon we will be releasing some exciting extensions that allow running OpenFL experiments within TEE environments.
 
 ### 1.3 Decoupling interface from infrastructure
 The task runner interface is coupled with the the single experiment aggregator / collaborator infrastructure, and the interactive API is tied to the director / envoy infrastructure. 
@@ -72,4 +72,3 @@ This causes community fragmentation and distracts from some of the bigger proble
     * Low level interface: Workflow API
 2. Decoupling interfaces from infrastructure
 3. Well defined interfaces intended for building higher level projects on top of OpenFL
-

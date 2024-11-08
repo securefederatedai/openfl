@@ -7,6 +7,7 @@ import zipfile
 from os import listdir
 from pathlib import Path
 
+
 import numpy as np
 import PIL
 from skimage import io
@@ -120,6 +121,15 @@ class PyTorchKvasirDataLoader(PyTorchDataLoader):
              init and load_mnist_shard
         """
         super().__init__(batch_size, **kwargs)
+
+        try:
+            int(data_path)
+        except:
+            raise ValueError(
+                "Expected `%s` to be representable as `int`, as it refers to the data shard " +
+                "number used by the collaborator.",
+                data_path
+            )
 
         load_kvasir_dataset()
         self.valid_dataset = KvasirDataset(True, shard_num=int(data_path), **kwargs)

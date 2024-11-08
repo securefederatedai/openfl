@@ -139,7 +139,6 @@ setup(
         'openfl.utilities.optimizers.numpy',
         'openfl.utilities.optimizers.torch',
         'openfl-docker',
-        'openfl-gramine',
         'openfl-tutorials',
         'openfl-workspace',
     ],

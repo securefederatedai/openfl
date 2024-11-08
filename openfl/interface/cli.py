@@ -182,9 +182,20 @@ def cli(context, log_level, no_warnings):
         # This will be overridden later with user selected debugging level
         disable_warnings()
     log_file = os.getenv("LOG_FILE")
-    # Validate log_file using allow list approach
-    if log_file and not re.match(r"^[\w\-.]+$", log_file):
-        raise ValueError("Invalid log file path")
+    # Validate log_file with tighter restrictions
+    if log_file:
+        log_file = os.path.normpath(log_file)
+        if (
+            not re.match(r"^logs/[\w\-.]+$", log_file)
+            or ".." in log_file
+            or log_file.startswith("/")
+        ):
+            raise ValueError("Invalid log file path")
+        # Ensure the log file is in the 'logs' directory
+        allowed_directory = Path("logs").resolve()
+        full_path = (allowed_directory / log_file).resolve()
+        if not str(full_path).startswith(str(allowed_directory)):
+            raise ValueError("Log file path is not allowed")
     setup_logging(log_level, log_file)
     sys.stdout.reconfigure(encoding="utf-8")
 
