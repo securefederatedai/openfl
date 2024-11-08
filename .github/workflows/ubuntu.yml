@@ -16,14 +16,12 @@ jobs:
       uses: actions/setup-python@v3
       with:
         python-version: "3.8"
-    - name: Install dependencies
+    - name: Install linters
       run: |
         python -m pip install --upgrade pip
         pip install -r linters-requirements.txt 
-        pip install .
-    - name: Lint with flake8
-      run: |
-        flake8 --show-source
+    - name: Lint with OpenFL-specific rules
+      run: bash shell/lint.sh
 
   pytest-coverage: # from pytest_coverage.yml
     needs: lint
