@@ -1,0 +1,104 @@
+#---------------------------------------------------------------------------
+# Workflow to run Task Runner E2E tests
+# Authors - Noopur, Payal Chaurasiya
+#---------------------------------------------------------------------------
+name: Task Runner E2E
+
+on:
+  schedule:
+    - cron: '0 0 * * *' # Run every day at midnight
+  workflow_dispatch:
+    inputs:
+      num_rounds:
+        description: 'Number of rounds to train'
+        required: false
+        default: "5"
+        type: string
+      num_collaborators:
+        description: 'Number of collaborators'
+        required: false
+        default: "2"
+        type: string
+
+permissions:
+  contents: read
+
+# Environment variables common for all the jobs
+env:
+  NUM_ROUNDS: ${{ inputs.num_rounds || '5' }}
+  NUM_COLLABORATORS: ${{ inputs.num_collaborators || '2' }}
+
+jobs:
+  test_run:
+    name: test
+    runs-on: ubuntu-22.04
+
+    strategy:
+      matrix:
+        # There are open issues for some of the models, so excluding them for now:
+        # 1. https://github.com/securefederatedai/openfl/issues/1126
+        # 2. https://github.com/securefederatedai/openfl/issues/1127 
+        # model_name: [ "torch_cnn_mnist", "keras_cnn_mnist", "torch_cnn_histology", "tf_2dunet", "tf_cnn_histology" ]
+        model_name: [ "torch_cnn_mnist", "keras_cnn_mnist" ]
+        python_version: [ "3.8", "3.9", "3.10" ]
+      fail-fast: false # do not immediately fail if one of the combinations fail
+
+    env:
+      MODEL_NAME: ${{ matrix.model_name }}
+      PYTHON_VERSION: ${{ matrix.python_version }}
+
+    steps:
+    - name: Checkout OpenFL repository
+      id: checkout_openfl
+      uses: actions/checkout@v4.1.1
+      with:
+        fetch-depth: 2 # needed for detecting changes
+        submodules: "true"
+        token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Set up Python
+      id: setup_python
+      uses: actions/setup-python@v3
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+
+    - name: Install dependencies
+      id: install_dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install .
+        pip install -r tests/openfl_e2e/requirements.txt
+
+    - name: Add runner IP to /etc/hosts
+      id: add_runner_ip
+      run: |
+        sudo echo "127.0.0.1 aggregator" | sudo tee -a /etc/hosts
+        echo "Added runner IP to /etc/hosts"
+
+    - name: Run Task Runner E2E tests
+      id: run_task_runner_tests
+      run: |
+        pytest -v tests/openfl_e2e/test_suites/task_runner_tests.py -m ${{ env.MODEL_NAME }} -s --num_rounds $NUM_ROUNDS --num_collaborators $NUM_COLLABORATORS --model_name ${{ env.MODEL_NAME }}
+        echo "Task runner regression test run completed"
+      env:
+        NO_PROXY: localhost,127.0.0.1,aggregator
+
+    - name: Print test summary # Print the test summary only if the tests were run
+      id: print_test_summary
+      if: steps.run_task_runner_tests.outcome == 'success' || steps.run_task_runner_tests.outcome == 'failure'
+      run: |
+        python tests/openfl_e2e/utils/xml_helper.py
+        echo "Test summary printed"
+
+    - name: Tar files # Tar the test results only if the tests were run
+      id: tar_files
+      if: steps.run_task_runner_tests.outcome == 'success' || steps.run_task_runner_tests.outcome == 'failure'
+      run: tar -cvf result.tar results
+
+    - name: Upload Artifacts # Upload the test results only if the tar was created
+      id: upload_artifacts
+      uses: actions/upload-artifact@v4
+      if: steps.tar_files.outcome == 'success'
+      with:
+        name: task_runner_${{ env.MODEL_NAME }}_python${{ env.PYTHON_VERSION }}_${{ github.run_id }}
+        path: result.tar

@@ -1,0 +1,7 @@
+lxml
+pytest
+pytest-html
+pytest-ordering
+pytest-xdist
+pyyaml
+ruamel.yaml
