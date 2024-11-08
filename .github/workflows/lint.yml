@@ -27,3 +27,6 @@ jobs:
         pip install -r linters-requirements.txt 
     - name: Lint using built-in script
       run: bash shell/lint.sh
+    - name: Lint with flake8
+      run: |
+        flake8 --show-source
