@@ -15,6 +15,8 @@ tests/end_to_end
 └── README.md               # Readme file
 ```
 
+** File `sample_tests.py` provided under `test_suites` acts as a reference on how to add a new test case.
+
 ## Pre-requisites
 
 1. Setup virtual environment and install OpenFL using [online documentation](https://openfl.readthedocs.io/en/latest/get_started/installation.html).
