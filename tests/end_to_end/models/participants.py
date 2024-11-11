@@ -83,7 +83,7 @@ class ModelOwner:
             raise FileNotFoundError(f"Workspace {workspace_name} does not exist in {results_dir}")
         return self.workspace_path
 
-    def setup_pki(self, collaborator_name):
+    def certify_collaborator(self, collaborator_name):
         """
         Sign the CSR for the collaborator
         Args:
@@ -179,7 +179,7 @@ class ModelOwner:
             raise e
         return True
 
-    def certify_agg_request(self, agg_domain_name):
+    def certify_aggregator(self, agg_domain_name):
         """
         Certify the aggregator request
         Args:

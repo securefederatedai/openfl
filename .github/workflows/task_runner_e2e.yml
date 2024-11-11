@@ -5,6 +5,9 @@
 name: Task Runner E2E
 
 on:
+  pull_request: # To be removed once the tests are stable
+    branches: [ develop ]
+    types: [opened, synchronize, reopened, ready_for_review]
   schedule:
     - cron: '0 0 * * *' # Run every day at midnight
   workflow_dispatch:
@@ -76,7 +79,7 @@ jobs:
     - name: Run Task Runner E2E tests
       id: run_task_runner_tests
       run: |
-        pytest -v tests/end_to_end/test_suites/task_runner_tests.py -m ${{ env.MODEL_NAME }} -s --num_rounds $NUM_ROUNDS --num_collaborators $NUM_COLLABORATORS --model_name ${{ env.MODEL_NAME }}
+        python -m pytest -s tests/end_to_end/test_suites/task_runner_tests.py -m ${{ env.MODEL_NAME }} --num_rounds $NUM_ROUNDS --num_collaborators $NUM_COLLABORATORS --model_name ${{ env.MODEL_NAME }}
         echo "Task runner end to end test run completed"
       env:
         NO_PROXY: localhost,127.0.0.1,aggregator
@@ -85,6 +88,7 @@ jobs:
       id: print_test_summary
       if: steps.run_task_runner_tests.outcome == 'success' || steps.run_task_runner_tests.outcome == 'failure'
       run: |
+        export PYTHONPATH="$PYTHONPATH:."
         python tests/end_to_end/utils/xml_helper.py
         echo "Test summary printed"
 

@@ -9,7 +9,6 @@ tests/end_to_end
 ├── models                  # Central location for all model-related code for testing purpose
 ├── test_suites             # Folder containing test files
 ├── utils                   # Folder containing helper files
-├── __init__.py             # To mark test directory as a Python package
 ├── conftest.py             # Pytest framework configuration file
 ├── pytest.ini              # Pytest initialisation file
 └── README.md               # Readme file
