@@ -5,7 +5,7 @@ import subprocess
 import time
 import traceback
 
-from tests.openfl_e2e.utils.logger import logger as log
+from tests.end_to_end.utils.logger import logger as log
 
 
 def run_command_background(

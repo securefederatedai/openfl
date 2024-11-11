@@ -5,9 +5,9 @@ import os
 import ruamel.yaml
 from datetime import datetime
 
-import tests.openfl_e2e.utils.constants as constants
-from tests.openfl_e2e.utils.logger import logger as log
-import tests.openfl_e2e.utils.subprocess_helper as sh
+import tests.end_to_end.utils.constants as constants
+from tests.end_to_end.utils.logger import logger as log
+import tests.end_to_end.utils.subprocess_helper as sh
 
 yaml = ruamel.yaml.YAML()
 yaml.preserve_quotes = True

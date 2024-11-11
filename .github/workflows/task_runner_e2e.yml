@@ -1,5 +1,5 @@
 #---------------------------------------------------------------------------
-# Workflow to run Task Runner E2E tests
+# Workflow to run Task Runner end to end tests
 # Authors - Noopur, Payal Chaurasiya
 #---------------------------------------------------------------------------
 name: Task Runner E2E
@@ -67,7 +67,7 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install .
-        pip install -r tests/openfl_e2e/requirements.txt
+        pip install -r test-requirements.txt
 
     - name: Add runner IP to /etc/hosts
       id: add_runner_ip
@@ -78,8 +78,8 @@ jobs:
     - name: Run Task Runner E2E tests
       id: run_task_runner_tests
       run: |
-        pytest -v tests/openfl_e2e/test_suites/task_runner_tests.py -m ${{ env.MODEL_NAME }} -s --num_rounds $NUM_ROUNDS --num_collaborators $NUM_COLLABORATORS --model_name ${{ env.MODEL_NAME }}
-        echo "Task runner e2e test run completed"
+        pytest -v tests/end_to_end/test_suites/task_runner_tests.py -m ${{ env.MODEL_NAME }} -s --num_rounds $NUM_ROUNDS --num_collaborators $NUM_COLLABORATORS --model_name ${{ env.MODEL_NAME }}
+        echo "Task runner end to end test run completed"
       env:
         NO_PROXY: localhost,127.0.0.1,aggregator
 
@@ -87,7 +87,7 @@ jobs:
       id: print_test_summary
       if: steps.run_task_runner_tests.outcome == 'success' || steps.run_task_runner_tests.outcome == 'failure'
       run: |
-        python tests/openfl_e2e/utils/xml_helper.py
+        python tests/end_to_end/utils/xml_helper.py
         echo "Test summary printed"
 
     - name: Tar files # Tar the test results only if the tests were run

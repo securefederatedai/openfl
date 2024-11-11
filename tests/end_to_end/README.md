@@ -4,15 +4,14 @@ This project is a machine learning workspace that includes various models and te
 
 ## Project Structure
 
-openfl_e2e
+end_to_end
 ├── models                  # Central location for all model-related code for testing purpose
 ├── test_suites             # Folder containing test files
 ├── utils                   # Folder containing helper files
 ├── __init__.py             # To mark test directory as a Python package
 ├── conftest.py             # Pytest framework configuration file
 ├── pytest.ini              # Pytest initialisation file
-├── README.md               # Readme file
-└── requirements.txt        # Pytest specific requirements file
+└── README.md               # Readme file
 
 ## Pre-requisites
 
@@ -23,7 +22,7 @@ Setup virtual environment and install OpenFL using [online documentation](https:
 To install the required dependencies on above virtual environment, run:
 
 ```sh
-pip install -r requirements.txt
+pip install -r test-requirements.txt
 ```
 
 ## Usage
@@ -42,7 +41,7 @@ To run a specific test case, use below command:
 
 ### Output Structure
 
-openfl_e2e
+end_to_end
 ├── results
     ├── <workspace_name>    # Based on the workspace name provided during test run.
     ├── results.xml         # Output file in JUNIT.

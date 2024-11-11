@@ -3,8 +3,8 @@
 
 import pytest
 
-from tests.openfl_e2e.utils.logger import logger as log
-from tests.openfl_e2e.utils import federation_helper as fed_helper
+from tests.end_to_end.utils.logger import logger as log
+from tests.end_to_end.utils import federation_helper as fed_helper
 
 
 @pytest.mark.torch_cnn_mnist

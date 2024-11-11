@@ -5,7 +5,7 @@ import xml.etree.ElementTree as ET
 from lxml import etree
 import os
 
-from tests.openfl_e2e.utils.logger import logger as log
+from tests.end_to_end.utils.logger import logger as log
 
 # Initialize the XML parser
 parser = etree.XMLParser(recover=True, encoding='utf-8')

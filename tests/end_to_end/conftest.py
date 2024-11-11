@@ -8,11 +8,11 @@ import shutil
 import xml.etree.ElementTree as ET
 import logging
 
-from tests.openfl_e2e.utils.logger import configure_logging
-from tests.openfl_e2e.utils.logger import logger as log
-from tests.openfl_e2e.utils.conftest_helper import parse_arguments
-import tests.openfl_e2e.utils.constants as constants
-import tests.openfl_e2e.models.participants as participants
+from tests.end_to_end.utils.logger import configure_logging
+from tests.end_to_end.utils.logger import logger as log
+from tests.end_to_end.utils.conftest_helper import parse_arguments
+import tests.end_to_end.utils.constants as constants
+import tests.end_to_end.models.participants as participants
 
 # Define a named tuple to store the objects for model owner, aggregator, and collaborators
 federation_fixture = collections.namedtuple(
