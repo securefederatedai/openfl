@@ -42,10 +42,14 @@ class ModelOwner:
         """
         try:
             results_dir = results_dir if results_dir else os.getcwd()
-            sh.run_command(
+            return_code, _, error = sh.run_command(
                 f"fx workspace create --prefix {self.workspace_name} --template {self.model_name}",
                 work_dir=results_dir,
             )
+            if return_code != 0:
+                log.error(f"Failed to create the workspace: {error}")
+                raise Exception(f"Failed to create the workspace: {error}")
+
             log.info(f"Created the workspace {self.workspace_name} for the {self.model_name} model")
             self.workspace_path = os.path.join(results_dir, self.workspace_name)
             log.info(f"Workspace path: {self.workspace_path}")
@@ -112,8 +116,12 @@ class ModelOwner:
         """
         try:
             log.info("Initializing the plan. It will take some time to complete..")
-            sh.run_command(f"fx plan initialize -a {agg_domain_name}", work_dir=self.workspace_path)
-            log.info(f"Initialized the plan for the workspace {self.workspace_name}")
+            return_code, _, error = sh.run_command(f"fx plan initialize -a {agg_domain_name}", work_dir=self.workspace_path)
+            if return_code != 0:
+                log.error(f"Failed to initialize the plan: {error}")
+                raise Exception(f"Failed to initialize the plan: {error}")
+
+            log.info(f"Initialized the plan for the workspace {self.workspace_name}")    
         except Exception as e:
             log.error(f"Failed to initialize the plan: {e}")
             raise e
@@ -126,8 +134,12 @@ class ModelOwner:
             bool: True if successful, else False
         """
         try:
-            sh.run_command("fx workspace certify", work_dir=self.workspace_path)
-            log.info(f"Certified the workspace {self.workspace_name}")
+            return_code, _, error = sh.run_command("fx workspace certify", work_dir=self.workspace_path)
+            if return_code != 0:
+                log.error(f"Failed to certify the workspace: {error}")
+                raise Exception(f"Failed to certify the workspace: {error}")
+                
+            log.info(f"Certified the workspace {self.workspace_name}") 
         except Exception as e:
             log.error(f"Failed to certify the workspace: {e}")
             raise e
@@ -140,7 +152,11 @@ class ModelOwner:
             bool: True if successful, else False
         """
         try:
-            sh.run_command("fx workspace export", work_dir=self.workspace_path)
+            return_code, _, error = sh.run_command("fx workspace export", work_dir=self.workspace_path)
+            if return_code != 0:
+                log.error(f"Failed to export the workspace: {error}")
+                raise Exception(f"Failed to export the workspace: {error}")
+
             log.info(f"Exported the workspace")
         except Exception as e:
             log.error(f"Failed to export the workspace: {e}")
@@ -156,9 +172,13 @@ class ModelOwner:
             bool: True if successful, else False
         """
         try:
-            sh.run_command(
+            return_code, _, error = sh.run_command(
                 f"fx workspace import --archive {workspace_zip}", work_dir=self.workspace_path
             )
+            if return_code != 0:
+                log.error(f"Failed to import the workspace: {error}")
+                raise Exception(f"Failed to import the workspace: {error}")
+
             log.info(f"Imported the workspace")
         except Exception as e:
             log.error(f"Failed to import the workspace: {e}")
@@ -187,10 +207,14 @@ class Aggregator:
             bool: True if successful, else False
         """
         try:
-            sh.run_command(
+            return_code, _, error = sh.run_command(
                 f"fx aggregator generate-cert-request --fqdn {self.agg_domain_name}",
                 work_dir=self.workspace_path,
             )
+            if return_code != 0:
+                log.error(f"Failed to generate the sign request: {error}")
+                raise Exception(f"Failed to generate the sign request: {error}")
+
             log.info(f"Generated a sign request for {self.name}")
         except Exception as e:
             log.error(f"Failed to generate the sign request: {e}")
@@ -205,10 +229,14 @@ class Aggregator:
         """
         log.info(f"CA should sign the aggregator {self.name} request")
         try:
-            sh.run_command(
+            return_code, _, error = sh.run_command(
                 f"fx aggregator certify --silent --fqdn {self.agg_domain_name}",
                 work_dir=self.workspace_path,
             )
+            if return_code != 0:
+                log.error(f"Failed to certify the aggregator request: {error}")
+                raise Exception(f"Failed to certify the aggregator request: {error}")
+
             log.info(f"CA signed the request from {self.name}")
         except Exception as e:
             log.error(f"Failed to certify the aggregator request : {e}")
@@ -294,10 +322,14 @@ class Collaborator:
             bool: True if successful, else False
         """
         try:
-            sh.run_command(
+            return_code, _, error = sh.run_command(
                 f"fx collaborator generate-cert-request -n {self.collaborator_name}",
                 work_dir=self.workspace_path,
             )
+            if return_code != 0:
+                log.error(f"Failed to generate the sign request: {error}")
+                raise Exception(f"Failed to generate the sign request: {error}")
+
             log.info(f"Generated a sign request for {self.collaborator_name}")
         except Exception as e:
             log.error(f"Failed to generate the sign request: {e}")
@@ -311,10 +343,13 @@ class Collaborator:
             bool: True if successful, else False
         """
         try:
-            sh.run_command(
+            return_code, _, error = sh.run_command(
                 f"fx collaborator create -n {self.collaborator_name} -d {self.data_directory_path}",
                 work_dir=self.workspace_path,
             )
+            if return_code != 0:
+                log.error(f"Failed to create the collaborator: {error}")
+                raise Exception(f"Failed to create the collaborator: {error}")
             log.info(
                 f"Created {self.collaborator_name} with the data directory {self.data_directory_path}"
             )
