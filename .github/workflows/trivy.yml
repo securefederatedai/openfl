@@ -3,8 +3,11 @@ on:
   push:
     branches: [ develop ]
   pull_request:
+    branches: [ develop ]
+    types: [opened, synchronize, reopened, ready_for_review]
 jobs:
   build:
+    if: github.event.pull_request.draft == false
     permissions:
       contents: read # for actions/checkout to fetch code
       security-events: write # for github/codeql-action/upload-sarif to upload SARIF results
