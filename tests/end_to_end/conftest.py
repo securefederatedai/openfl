@@ -210,7 +210,7 @@ def fx_federation(request, pytestconfig):
         pytestconfig: pytest config object
     Returns:
         federation_fixture: Named tuple containing the objects for model owner, aggregator, and collaborators
-    
+
     Note: As this is a module level fixture, thus no import is required at test level.
     """
     log.info("Fixture for federation setup")

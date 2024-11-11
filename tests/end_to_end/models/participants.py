@@ -2,21 +2,24 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import os
-import ruamel.yaml
 from datetime import datetime
+import yaml
 
 import tests.end_to_end.utils.constants as constants
 from tests.end_to_end.utils.logger import logger as log
 import tests.end_to_end.utils.subprocess_helper as sh
-
-yaml = ruamel.yaml.YAML()
-yaml.preserve_quotes = True
 
 
 # Define the ModelOwner class
 class ModelOwner:
     """
     ModelOwner class to handle the model related operations.
+    Note: Aggregator can also act as a model owner.
+    This includes (non-exhaustive list):
+    1. Creating the workspace - to create a workspace using given workspace and model names.
+    2. Modifying based on input params provided and initializing the plan.
+    3. Certifying the workspace and setting up the PKI.
+    4. Importing and exporting the workspace etc.
     """
 
     def __init__(self, workspace_name, model_name):
@@ -80,7 +83,7 @@ class ModelOwner:
             raise FileNotFoundError(f"Workspace {workspace_name} does not exist in {results_dir}")
         return self.workspace_path
 
-    def sign_collaborator_csr(self, collaborator_name):
+    def setup_pki(self, collaborator_name):
         """
         Sign the CSR for the collaborator
         Args:
@@ -124,7 +127,7 @@ class ModelOwner:
         self.num_collaborators = num_collaborators if num_collaborators else self.num_collaborators
 
         with open(self.plan_path) as fp:
-            data = yaml.load(fp)
+            data = yaml.load(fp, Loader=yaml.FullLoader)
 
         data["aggregator"]["settings"]["rounds_to_train"] = int(self.rounds_to_train)
         data["data_loader"]["settings"]["collaborator_count"] = int(self.num_collaborators)
@@ -152,7 +155,7 @@ class ModelOwner:
                 log.error(f"Failed to initialize the plan: {error}")
                 raise Exception(f"Failed to initialize the plan: {error}")
 
-            log.info(f"Initialized the plan for the workspace {self.workspace_name}")    
+            log.info(f"Initialized the plan for the workspace {self.workspace_name}")
         except Exception as e:
             log.error(f"Failed to initialize the plan: {e}")
             raise e
@@ -169,30 +172,32 @@ class ModelOwner:
             if return_code != 0:
                 log.error(f"Failed to certify the workspace: {error}")
                 raise Exception(f"Failed to certify the workspace: {error}")
-                
-            log.info(f"Certified the workspace {self.workspace_name}") 
+
+            log.info(f"Certified the workspace {self.workspace_name}")
         except Exception as e:
             log.error(f"Failed to certify the workspace: {e}")
             raise e
         return True
 
-    def certify_request(self):
+    def certify_agg_request(self, agg_domain_name):
         """
         Certify the aggregator request
+        Args:
+            agg_domain_name (str): Aggregator domain name
         Returns:
             bool: True if successful, else False
         """
-        log.info(f"CA should sign the aggregator {self.name} request")
+        log.info(f"CA should sign the aggregator request")
         try:
             return_code, _, error = sh.run_command(
-                f"fx aggregator certify --silent --fqdn {self.agg_domain_name}",
+                f"fx aggregator certify --silent --fqdn {agg_domain_name}",
                 work_dir=self.workspace_path,
             )
             if return_code != 0:
                 log.error(f"Failed to certify the aggregator request: {error}")
                 raise Exception(f"Failed to certify the aggregator request: {error}")
 
-            log.info(f"CA signed the request from {self.name}")
+            log.info(f"CA signed the request from aggregator")
         except Exception as e:
             log.error(f"Failed to certify the aggregator request : {e}")
             raise e
@@ -243,6 +248,9 @@ class ModelOwner:
 class Aggregator:
     """
     Aggregator class to handle the aggregator operations.
+    This includes (non-exhaustive list):
+    1. Generating the sign request
+    2. Starting the aggregator
     """
 
     def __init__(self, agg_domain_name=None, workspace_path=None):
@@ -307,6 +315,11 @@ class Aggregator:
 class Collaborator:
     """
     Collaborator class to handle the collaborator operations.
+    This includes (non-exhaustive list):
+    1. Generating the sign request
+    2. Creating the collaborator
+    3. Importing and certifying the CSR
+    4. Starting the collaborator
     """
 
     def __init__(self, collaborator_name=None, data_directory_path=None, workspace_path=None):
@@ -361,7 +374,7 @@ class Collaborator:
             raise e
         return True
 
-    def import_certify_csr(self):
+    def import_pki(self):
         """
         Import and certify the CSR for the collaborator
         Returns:

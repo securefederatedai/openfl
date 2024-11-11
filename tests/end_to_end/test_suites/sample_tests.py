@@ -7,7 +7,7 @@ from tests.end_to_end.utils.logger import logger as log
 from tests.end_to_end.utils import federation_helper as fed_helper
 
 
-# ** IMPORTANT **: This is just an example on how to add a test with below pre-requisites. 
+# ** IMPORTANT **: This is just an example on how to add a test with below pre-requisites.
 # Task Runner API Test function for federation run using sample_model
 # 1. Create OpenFL workspace, if not present for the model and add relevant dataset and its path in plan/data.yaml
 # 2. Append the model name to ModelName enum in tests/end_to_end/utils/constants.py

@@ -18,24 +18,24 @@ def setup_pki(fed_obj):
         bool: True if successful, else False
     """
     success = False
-    # Aggregator operations
+    # Aggregator and model owner operations
     try:
         log.info(f"Performing operations for {fed_obj.aggregator.name}")
         fed_obj.aggregator.generate_sign_request()
-        fed_obj.model_owner.certify_request()
+        fed_obj.model_owner.certify_agg_request(fed_obj.aggregator.agg_domain_name)
     except Exception as e:
         log.error(f"Failed to perform aggregator operations: {e}")
         raise e
 
-    # Collaborator operations
+    # Collaborator and model owner operations
     for collaborator in fed_obj.collaborators:
         try:
             log.info(f"Performing operations for {collaborator.collaborator_name}")
             collaborator.create_collaborator()
             collaborator.generate_sign_request()
             # Below step will add collaborator entries in cols.yaml file.
-            fed_obj.model_owner.sign_collaborator_csr(collaborator.collaborator_name)
-            collaborator.import_certify_csr()
+            fed_obj.model_owner.setup_pki(collaborator.collaborator_name)
+            collaborator.import_pki()
         except Exception as e:
             log.error(f"Failed to perform collaborator operations: {e}")
             raise e

@@ -12,10 +12,10 @@ def test_torch_cnn_mnist(fx_federation):
     """
     Test for torch_cnn_mnist model.
     """
-    log.info(f"Test for torch_cnn_mnist with fx_federation: {fx_federation}")
+    log.info("Testing torch_cnn_mnist model")
 
-    # Perform CSR operations like generating sign request, certifying request, etc.
-    assert fed_helper.setup_pki(fx_federation), "Failed to perform CSR operations"
+    # Setup PKI for trusted communication within the federation
+    assert fed_helper.setup_pki(fx_federation), "Failed to setup PKI for trusted communication"
 
     # Start the federation
     results = fed_helper.run_federation(fx_federation)
@@ -26,10 +26,10 @@ def test_torch_cnn_mnist(fx_federation):
 
 @pytest.mark.keras_cnn_mnist
 def test_keras_cnn_mnist(fx_federation):
-    log.info(f"Test for keras_cnn_mnist with fx_federation: {fx_federation}")
+    log.info("Testing keras_cnn_mnist model")
 
-    # Perform CSR operations like generating sign request, certifying request, etc.
-    assert fed_helper.setup_pki(fx_federation), "Failed to perform CSR operations"
+    # Setup PKI for trusted communication within the federation
+    assert fed_helper.setup_pki(fx_federation), "Failed to setup PKI for trusted communication"
 
     # Start the federation
     results = fed_helper.run_federation(fx_federation)
@@ -43,10 +43,10 @@ def test_torch_cnn_histology(fx_federation):
     """
     Test for torch_cnn_histology model
     """
-    log.info(f"Test for torch_cnn_histology with fx_federation: {fx_federation}")
+    log.info("Testing torch_cnn_histology model")
 
-    # Perform CSR operations like generating sign request, certifying request, etc.
-    assert fed_helper.setup_pki(fx_federation), "Failed to perform CSR operations"
+    # Setup PKI for trusted communication within the federation
+    assert fed_helper.setup_pki(fx_federation), "Failed to setup PKI for trusted communication"
 
     # Start the federation
     results = fed_helper.run_federation(fx_federation)
