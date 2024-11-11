@@ -1,11 +1,11 @@
-# Project Title
+# End-to-end Pytest Framework
 
-This project is a machine learning workspace that includes various models and test suites. It is structured to facilitate the development, testing, and deployment of machine learning models.
+This project aims at integration testing of ```openfl-workspace``` using pytest framework.
 
-## Project Structure
+## Test Structure
 
 ```
-end_to_end
+tests/end_to_end
 ├── models                  # Central location for all model-related code for testing purpose
 ├── test_suites             # Folder containing test files
 ├── utils                   # Folder containing helper files
@@ -17,7 +17,8 @@ end_to_end
 
 ## Pre-requisites
 
-Setup virtual environment and install OpenFL using [online documentation](https://openfl.readthedocs.io/en/latest/get_started/installation.html).
+1. Setup virtual environment and install OpenFL using [online documentation](https://openfl.readthedocs.io/en/latest/get_started/installation.html).
+2. Ensure that the OpenFL workspace (inside openfl-workspace) is present for the model being tested. If not, create it first.
 
 ## Installation
 
@@ -31,28 +32,26 @@ pip install -r test-requirements.txt
 
 ### Running Tests
 
-To run all the test cases under test_suites, use the following command:
-
-```sh
-python -m pytest -s
-```
-
 To run a specific test case, use below command:
 
 ```sh
-python -m pytest test_suites/<test_case_filename> -k <marker> -s
+python -m pytest tests/end_to_end/test_suites/<test_case_filename> -k <marker> -s
 ```
 
 ** -s will ensure all the logs are printed on screen. Ignore, if not required.
 
+To modify the number of collaborators, rounds to train and/or model name, use below parameters:
+1. --num_collaborators
+2. --num_rounds
+3. --model_name
+
 ### Output Structure
 
 ```
-end_to_end
-├── results
+results
     ├── <workspace_name>    # Based on the workspace name provided during test run.
     ├── results.xml         # Output file in JUNIT.
-    ├── deployment.log      # Log file containing step by step test progress.
+    └── deployment.log      # Log file containing step by step test progress.
 ```
 
 ## Contribution

@@ -1,4 +1,4 @@
-# Copyright 2024-2025 Intel Corporation
+# Copyright 2020-2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 import pytest
@@ -204,11 +204,14 @@ def fx_federation(request, pytestconfig):
     """
     Fixture for federation. This fixture is used to create the model owner, aggregator, and collaborators.
     It also creates workspace.
+    Assumption: OpenFL workspace is present for the model being tested.
     Args:
         request: pytest request object. Model name is passed as a parameter to the fixture from test cases.
         pytestconfig: pytest config object
     Returns:
         federation_fixture: Named tuple containing the objects for model owner, aggregator, and collaborators
+    
+    Note: As this is a module level fixture, thus no import is required at test level.
     """
     log.info("Fixture for federation setup")
     collaborators = []

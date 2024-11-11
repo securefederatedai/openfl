@@ -1,4 +1,4 @@
-# Copyright 2024-2025 Intel Corporation
+# Copyright 2020-2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 import logging

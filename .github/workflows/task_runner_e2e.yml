@@ -32,13 +32,11 @@ jobs:
   test_run:
     name: test
     runs-on: ubuntu-22.04
-
+    timeout-minutes: 120 # 2 hours
     strategy:
       matrix:
         # There are open issues for some of the models, so excluding them for now:
-        # 1. https://github.com/securefederatedai/openfl/issues/1126
-        # 2. https://github.com/securefederatedai/openfl/issues/1127 
-        # model_name: [ "torch_cnn_mnist", "keras_cnn_mnist", "torch_cnn_histology", "tf_2dunet", "tf_cnn_histology" ]
+        # model_name: [ "torch_cnn_mnist", "keras_cnn_mnist", "torch_cnn_histology" ]
         model_name: [ "torch_cnn_mnist", "keras_cnn_mnist" ]
         python_version: [ "3.8", "3.9", "3.10" ]
       fail-fast: false # do not immediately fail if one of the combinations fail

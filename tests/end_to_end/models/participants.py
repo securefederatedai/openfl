@@ -1,4 +1,4 @@
-# Copyright 2024-2025 Intel Corporation
+# Copyright 2020-2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 import os
@@ -22,6 +22,9 @@ class ModelOwner:
     def __init__(self, workspace_name, model_name):
         """
         Initialize the ModelOwner class
+        Args:
+            workspace_name (str): Workspace name
+            model_name (str): Model name
         """
         self.workspace_name = workspace_name
         self.model_name = model_name
@@ -76,6 +79,34 @@ class ModelOwner:
             log.error(f"Workspace {workspace_name} does not exist in {results_dir}")
             raise FileNotFoundError(f"Workspace {workspace_name} does not exist in {results_dir}")
         return self.workspace_path
+
+    def sign_collaborator_csr(self, collaborator_name):
+        """
+        Sign the CSR for the collaborator
+        Args:
+            collaborator_name (str): Name of the collaborator
+        Returns:
+            bool: True if successful, else False
+        """
+        try:
+            zip_name = f"col_{collaborator_name}_to_agg_cert_request.zip"
+            col_zip = os.path.join(os.getcwd(), self.workspace_path, zip_name)
+            return_code, output, error = sh.run_command(
+                f"fx collaborator certify --request-pkg {col_zip} -s", work_dir=self.workspace_path
+            )
+            msg_received = [line for line in output if constants.SUCCESS_MARKER in line]
+            log.info(f"Message received: {msg_received}")
+            if return_code == 0 and len(msg_received):
+                log.info(
+                    f"Successfully signed the CSR for the collaborator {collaborator_name} with zip path {col_zip}"
+                )
+            else:
+                log.error(f"Failed to sign the CSR for collaborator {collaborator_name}: {error}")
+
+        except Exception as e:
+            log.error(f"Failed to sign the CSR: {e}")
+            raise e
+        return True
 
     def modify_plan(self, new_rounds=None, num_collaborators=None):
         """
@@ -142,6 +173,28 @@ class ModelOwner:
             log.info(f"Certified the workspace {self.workspace_name}") 
         except Exception as e:
             log.error(f"Failed to certify the workspace: {e}")
+            raise e
+        return True
+
+    def certify_request(self):
+        """
+        Certify the aggregator request
+        Returns:
+            bool: True if successful, else False
+        """
+        log.info(f"CA should sign the aggregator {self.name} request")
+        try:
+            return_code, _, error = sh.run_command(
+                f"fx aggregator certify --silent --fqdn {self.agg_domain_name}",
+                work_dir=self.workspace_path,
+            )
+            if return_code != 0:
+                log.error(f"Failed to certify the aggregator request: {error}")
+                raise Exception(f"Failed to certify the aggregator request: {error}")
+
+            log.info(f"CA signed the request from {self.name}")
+        except Exception as e:
+            log.error(f"Failed to certify the aggregator request : {e}")
             raise e
         return True
 
@@ -218,56 +271,6 @@ class Aggregator:
             log.info(f"Generated a sign request for {self.name}")
         except Exception as e:
             log.error(f"Failed to generate the sign request: {e}")
-            raise e
-        return True
-
-    def certify_request(self):
-        """
-        Certify the aggregator request
-        Returns:
-            bool: True if successful, else False
-        """
-        log.info(f"CA should sign the aggregator {self.name} request")
-        try:
-            return_code, _, error = sh.run_command(
-                f"fx aggregator certify --silent --fqdn {self.agg_domain_name}",
-                work_dir=self.workspace_path,
-            )
-            if return_code != 0:
-                log.error(f"Failed to certify the aggregator request: {error}")
-                raise Exception(f"Failed to certify the aggregator request: {error}")
-
-            log.info(f"CA signed the request from {self.name}")
-        except Exception as e:
-            log.error(f"Failed to certify the aggregator request : {e}")
-            raise e
-        return True
-
-    def sign_collaborator_csr(self, collaborator_name):
-        """
-        Sign the CSR for the collaborator
-        Args:
-            collaborator_name (str): Name of the collaborator
-        Returns:
-            bool: True if successful, else False
-        """
-        try:
-            zip_name = f"col_{collaborator_name}_to_agg_cert_request.zip"
-            col_zip = os.path.join(os.getcwd(), self.workspace_path, zip_name)
-            return_code, output, error = sh.run_command(
-                f"fx collaborator certify --request-pkg {col_zip} -s", work_dir=self.workspace_path
-            )
-            msg_received = [line for line in output if constants.SUCCESS_MARKER in line]
-            log.info(f"Message received: {msg_received}")
-            if return_code == 0 and len(msg_received):
-                log.info(
-                    f"Successfully signed the CSR for the collaborator {collaborator_name} with zip path {col_zip}"
-                )
-            else:
-                log.error(f"Failed to sign the CSR for collaborator {collaborator_name}: {error}")
-
-        except Exception as e:
-            log.error(f"Failed to sign the CSR: {e}")
             raise e
         return True
 

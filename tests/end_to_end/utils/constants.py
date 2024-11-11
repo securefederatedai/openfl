@@ -1,4 +1,4 @@
-# Copyright 2024-2025 Intel Corporation
+# Copyright 2020-2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 from enum import Enum
@@ -13,8 +13,6 @@ class ModelName(Enum):
     TORCH_CNN_MNIST = "torch_cnn_mnist"
     KERAS_CNN_MNIST = "keras_cnn_mnist"
     TORCH_CNN_HISTOLOGY = "torch_cnn_histology"
-    TF_2DUNET = "tf_2dunet"
-    TF_CNN_HISTOLOGY = "tf_cnn_histology"
 
 NUM_COLLABORATORS = 2
 NUM_ROUNDS = 5
