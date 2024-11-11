@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 
-"""Workspace module."""
+"""Workspace module"""
 import logging
 import os
 import shutil
@@ -413,8 +413,28 @@ def export_() -> str:
 )
 @pass_context
 def dockerize_(context, save: bool, rebuild: bool, enclave_key: str, revision: str):
-    """Package current workspace as a TEE-ready Docker image."""
+    """
+    Package the current workspace as a Trusted Execution Environment (TEE)-ready Docker image.
 
+    This command exports the current workspace, builds an OpenFL base Docker image,
+    \b
+    constructs the workspace Docker image, and optionally saves the workspace image as a tarball file.
+
+    Steps Performed:\n
+        1. Exports the current workspace as an archive.\n
+        2. Builds the OpenFL base Docker image using the specified or default revision.\n
+        3. Builds the workspace Docker image, incorporating the exported workspace and signing key.\n
+        4. Optionally saves the workspace Docker image as a `.tar` file.\n
+    \b
+    Raises:\n
+        FileNotFoundError: If the provided enclave key path does not exist.\n
+        RuntimeError: If any Docker commands fail during the build or export process.\n
+    \b
+    Notes:\n
+        - If no enclave key is provided, a new one is generated using OpenSSL and saved in the workspace.\n
+        - The generated image is compatible with TEE environments but can be used outside of TEE if needed.\n
+        - Docker BuildKit is utilized for efficient and secure image builds.\n
+    """
     # Docker build options
     options = []
     options.append("--no-cache" if rebuild else "")
