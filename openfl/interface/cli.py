@@ -4,6 +4,7 @@
 """CLI module."""
 import logging
 import os
+import pathlib
 import sys
 import time
 import warnings
@@ -183,7 +184,7 @@ def cli(context, log_level, no_warnings):
     log_file = os.getenv("LOG_FILE")
     print("os.getenv log file path is {}".format(os.getenv("LOG_FILE")))
     if log_file is not None:
-        log_file = Path(log_file).expanduser().resolve()
+        log_file = pathlib.Path(log_file).expanduser().resolve()
         print("log file path is {}".format(log_file))
     setup_logging(log_level, str(log_file))
     sys.stdout.reconfigure(encoding="utf-8")
