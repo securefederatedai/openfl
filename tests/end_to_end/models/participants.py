@@ -4,10 +4,12 @@
 import os
 from datetime import datetime
 import yaml
+import logging
 
 import tests.end_to_end.utils.constants as constants
-from tests.end_to_end.utils.logger import logger as log
 import tests.end_to_end.utils.subprocess_helper as sh
+
+log = logging.getLogger(__name__)
 
 
 # Define the ModelOwner class

@@ -5,8 +5,6 @@ import xml.etree.ElementTree as ET
 from lxml import etree
 import os
 
-from tests.end_to_end.utils.logger import logger as log
-
 # Initialize the XML parser
 parser = etree.XMLParser(recover=True, encoding='utf-8')
 tree = ET.parse("results/results.xml", parser=parser)
@@ -63,7 +61,6 @@ def get_testcase_result():
                 database_list.append(database_dict)
                 status = None
 
-    log.info(f"Database list = {database_list}")
     return database_list
 
 

@@ -2,9 +2,11 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import pytest
+import logging
 
-from tests.end_to_end.utils.logger import logger as log
 from tests.end_to_end.utils import federation_helper as fed_helper
+
+log = logging.getLogger(__name__)
 
 
 @pytest.mark.torch_cnn_mnist

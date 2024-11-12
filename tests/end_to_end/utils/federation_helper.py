@@ -3,9 +3,11 @@
 
 import time
 import concurrent.futures
+import logging
 
 from tests.end_to_end.utils.constants import SUCCESS_MARKER
-from tests.end_to_end.utils.logger import logger as log
+
+log = logging.getLogger(__name__)
 
 
 def setup_pki(fed_obj):

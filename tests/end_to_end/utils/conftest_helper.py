@@ -3,8 +3,9 @@
 
 import argparse
 import sys
+import logging
 
-from tests.end_to_end.utils.logger import logger as log
+log = logging.getLogger(__name__)
 
 
 def parse_arguments():

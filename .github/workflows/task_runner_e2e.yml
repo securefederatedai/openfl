@@ -5,6 +5,9 @@
 name: Task Runner E2E
 
 on:
+  pull_request:
+    branches: [ develop ]
+    types: [opened, synchronize, reopened, ready_for_review]
   schedule:
     - cron: '0 0 * * *' # Run every day at midnight
   workflow_dispatch:

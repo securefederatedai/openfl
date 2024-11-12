@@ -2,10 +2,11 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import pytest
+import logging
 
-from tests.end_to_end.utils.logger import logger as log
 from tests.end_to_end.utils import federation_helper as fed_helper
 
+log = logging.getLogger(__name__)
 
 # ** IMPORTANT **: This is just an example on how to add a test with below pre-requisites.
 # Task Runner API Test function for federation run using sample_model

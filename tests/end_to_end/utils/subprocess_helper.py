@@ -4,8 +4,9 @@
 import subprocess
 import time
 import traceback
+import logging
 
-from tests.end_to_end.utils.logger import logger as log
+log = logging.getLogger(__name__)
 
 
 def run_command_background(
