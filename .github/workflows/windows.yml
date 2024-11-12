@@ -7,12 +7,13 @@ on:
 permissions:
   contents: read
 
+env:
+  # A workaround for long FQDN names provided by GitHub actions.
+  FQDN: "localhost"
+
 jobs:
   pytest-coverage: # from pytest_coverage.yml
     runs-on: windows-latest
-    env:
-      # A workaround for long FQDN names provided by GitHub actions.
-      FQDN: "localhost"
     steps:
     - uses: actions/checkout@v3
     - name: Set up Python 3.8
