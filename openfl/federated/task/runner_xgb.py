@@ -19,7 +19,7 @@ from openfl.utilities import LocalTensor
 import json
 from sklearn.datasets import fetch_california_housing
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import root_mean_squared_error
+from sklearn.metrics import r2_score
 
 
 class XGBoostTaskRunner(TaskRunner):
@@ -34,11 +34,21 @@ class XGBoostTaskRunner(TaskRunner):
 
         # This is a map of all the required tensors for each of the public
         # functions in XGBoostTaskRunner
+        self.bst = None # TODO
+        self.global_model = None # TODO
+        self.params = kwargs['params'] # TODO
+        self.num_rounds = kwargs['num_rounds'] # TODO
+
         self.required_tensorkeys_for_function = {}
         self.training_round_completed = False
 
+    def rebuild_model(self, input_tensor_dict):
+        if input_tensor_dict is not None:
+            self.global_model = bytearray(input_tensor_dict)
+            self.bst = xgb.Booster()
+            self.bst.load_model(self.global_model)
 
-    def validate_task(self, col_name, round_num, input_tensor_dict, use_tqdm=False, **kwargs):
+    def validate_task(self, col_name, round_num, input_tensor_dict, **kwargs):
         """Validate Task.
 
         Run validation of the model on the local data.
@@ -55,12 +65,19 @@ class XGBoostTaskRunner(TaskRunner):
             local_output_dict (dict):   Tensors to maintain in the local
                 TensorDB.
         """
-        if round_num != 0:
-            self.model = bytearray(input_tensor_dict)
-
+        # during agg validation, self.bst will still be None. during local validation, it will have a value - no need to rebuild
+        # if self.bst is still None after rebuilding, then there was no initial global model, so set metric to average
         loader = self.data_loader.get_valid_loader()
+        # if round_num != 0:
+        #     self.global_model = bytearray(input_tensor_dict)
 
-        metric = self.validate_(loader)
+        if self.bst is None:
+            self.rebuild_model(input_tensor_dict)
+        
+        if round_num == 0: # if self.bst is None:
+            metric = Metric(name="accuracy", value=np.array(0)) # for first round, there is no global model, so set metric to 0
+        else: 
+            metric = self.validate_(loader)
 
         origin = col_name
         suffix = "validate"
@@ -82,7 +99,6 @@ class XGBoostTaskRunner(TaskRunner):
         col_name,
         round_num,
         input_tensor_dict,
-        use_tqdm=False,
         epochs=1,
         **kwargs,
     ):
@@ -105,8 +121,9 @@ class XGBoostTaskRunner(TaskRunner):
         """
         # self.rebuild_model(round_num, input_tensor_dict)
         # set to "training" mode
-        if round_num != 0:
-            self.model = bytearray(input_tensor_dict)
+        # if round_num != 0:
+        #     self.global_model = bytearray(input_tensor_dict)
+        self.rebuild_model(input_tensor_dict)
         loader = self.data_loader.get_train_loader()
         metric = self.train_(loader)
         # Output metric tensors (scalar)
@@ -167,33 +184,28 @@ class XGBoostTaskRunner(TaskRunner):
         self.training_round_completed = True
 
         # Return global_tensor_dict, local_tensor_dict
-        return global_tensor_dict, local_tensor_dict
-        
+        return global_tensor_dict, local_tensor_dict  
 
-    def get_tensor_dict(self, with_opt_vars=False):
-        """Return the tensor dictionary.
+    def get_tensor_dict(self):
+        if self.global_model is None:
+            global_model_booster_dict = None
+            num_global_trees = 0
+        else:
+            global_model_booster_dict = json.loads(bytearray(self.global_model))
+            num_global_trees = int(global_model_booster_dict["learner"]["gradient_booster"]["model"]["gbtree_model_param"]["num_trees"])
 
-        Args:
-            with_opt_vars (bool): Return the tensor dictionary including the
-                optimizer tensors (Default=False)
+        booster_array = self.bst.save_raw('json').decode('utf-8')
+        booster_dict = json.loads(booster_array)
+        num_total_trees = int(booster_dict["learner"]["gradient_booster"]["model"]["gbtree_model_param"]["num_trees"])
 
-        Returns:
-            state (dict): Tensor dictionary {**dict, **optimizer_dict}
-        """
-        # Gets information regarding tensor model layers and optimizer state.
-        # FIXME: self.parameters() instead? Unclear if load_state_dict() or
-        # simple assignment is better
-        # for now, state dict gives us names which is good
-        # FIXME: do both and sanity check each time?
+        # Calculate the number of trees added in the latest training
+        num_latest_trees = num_total_trees - num_global_trees
 
-        state = to_cpu_numpy(self.state_dict())
-
-        if with_opt_vars:
-            opt_state = _get_optimizer_state(self.optimizer)
-            state = {**state, **opt_state}
-
-        return state
-
+        return {
+            'local_tree': booster_array,
+            'num_global_trees': int(num_global_trees),
+            'num_latest_trees': int(num_latest_trees)
+        }
 
     def get_required_tensorkeys_for_function(self, func_name, **kwargs):
         """Get the required tensors for specified function that could be called
@@ -279,64 +291,51 @@ class XGBoostTaskRunner(TaskRunner):
             for tensor_name in local_model_dict_val
         ]
 
-    def save_native(
-        self,
-        filepath,
-        model_state_dict_key="model_state_dict",
-        optimizer_state_dict_key="optimizer_state_dict",
-        **kwargs,
-    ):
-        """Save model and optimizer states in a picked file specified by the
-        filepath. model_/optimizer_state_dicts are stored in the keys provided.
-        Uses pt.save().
+    # def save_native(
+    #     self,
+    #     filepath,
+    #     model_state_dict_key="model_state_dict",
+    #     optimizer_state_dict_key="optimizer_state_dict",
+    #     **kwargs,
+    # ):
+    #     """Save model and optimizer states in a picked file specified by the
+    #     filepath. model_/optimizer_state_dicts are stored in the keys provided.
+    #     Uses pt.save().
 
-        Args:
-            filepath (str): Path to pickle file to be created by pt.save().
-            model_state_dict_key (str): key for model state dict in pickled
-                file.
-            optimizer_state_dict_key (str): key for optimizer state dict in
-                picked file.
-            **kwargs: Additional parameters.
+    #     Args:
+    #         filepath (str): Path to pickle file to be created by pt.save().
+    #         model_state_dict_key (str): key for model state dict in pickled
+    #             file.
+    #         optimizer_state_dict_key (str): key for optimizer state dict in
+    #             picked file.
+    #         **kwargs: Additional parameters.
 
-        Returns:
-            None
-        """
-        pickle_dict = {
-            model_state_dict_key: self.state_dict(),
-            optimizer_state_dict_key: self.optimizer.state_dict(),
-        }
-        torch.save(pickle_dict, filepath)
+    #     Returns:
+    #         None
+    #     """
+    #     pickle_dict = {
+    #         model_state_dict_key: self.state_dict(),
+    #         optimizer_state_dict_key: self.optimizer.state_dict(),
+    #     }
+    #     torch.save(pickle_dict, filepath)
 
-    def train_(self, train_dataloader: Iterator[Tuple[np.ndarray, np.ndarray]]) -> Metric:
-        """Train single epoch.
+    def train_(self, train_dataloader) -> Metric:
+        """Train model."""
+        dtrain = train_dataloader
+        evals = [(dtrain, 'train')]
+        evals_result = {}
+        
+        self.bst = xgb.train(self.params, dtrain, self.num_rounds, xgb_model=self.bst, 
+                             evals=evals, evals_result=evals_result, verbose_eval=False)
 
-        Override this function in order to use custom training.
-
-        Args:
-            batch_generator (Iterator): Train dataset batch generator. Yields
-                (samples, targets) tuples of
-                size = `self.data_loader.batch_size`.
-
-        Returns:
-            Metric: An object containing name and np.ndarray value.
-        """
-        losses = []
-        for data, target in train_dataloader:
-            data, target = torch.tensor(data).to(self.device), torch.tensor(target).to(self.device)
-            self.optimizer.zero_grad()
-            output = self(data)
-            loss = self.loss_fn(output=output, target=target)
-            loss.backward()
-            self.optimizer.step()
-            losses.append(loss.detach().cpu().numpy())
-        loss = np.mean(losses)
+        loss = evals_result['train']['rmse'][-1]
         return Metric(name=self.loss_fn.__name__, value=np.array(loss))
 
     def validate_(self, validation_dataloader) -> Metric:
         """Validate model."""
 
         dtest, y_test = validation_dataloader
-        preds = bst.predict(dtest)
-        rmse = root_mean_squared_error(y_test, preds)
+        preds = self.bst.predict(dtest)
+        r2 = r2_score(y_test, preds)
 
-        return Metric(name="accuracy", value=np.array(rmse))
+        return Metric(name="accuracy", value=np.array(r2))
