@@ -184,7 +184,7 @@ def cli(context, log_level, no_warnings):
     print("os.getenv log file path is {}".format(os.getenv("LOG_FILE")))
     if os.getenv("LOG_FILE") is not None:
         log_file = pathlib.Path(os.getenv("LOG_FILE")).expanduser().resolve()
-    print("log file path is {}".format(log_file))
+        print("log file path is {}".format(log_file))
     setup_logging(log_level, str(log_file))
     sys.stdout.reconfigure(encoding="utf-8")
 
