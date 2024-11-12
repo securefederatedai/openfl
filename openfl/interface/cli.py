@@ -4,7 +4,6 @@
 """CLI module."""
 import logging
 import os
-import pathlib
 import sys
 import time
 import warnings
@@ -181,12 +180,7 @@ def cli(context, log_level, no_warnings):
         # Setup logging immediately to suppress unnecessary warnings on import
         # This will be overridden later with user selected debugging level
         disable_warnings()
-    log_file = os.getenv("LOG_FILE")
-    if log_file is None:
-        raise ValueError("LOG_FILE environment variable is not set")
-
-    # Normalize the path
-    log_file = pathlib.Path(log_file).expanduser().resolve()
+    log_file = os.path.normpath(os.getenv("LOG_FILE"))
     setup_logging(log_level, log_file)
     sys.stdout.reconfigure(encoding="utf-8")
 
