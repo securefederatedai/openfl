@@ -56,7 +56,5 @@ results
 ```
 
 ## Contribution
-Please ensure that you have tested your changes thoroughly before submitting a pull request.
 
-## License
-This project is licensed under [Apache License Version 2.0](LICENSE). By contributing to the project, you agree to the license and copyright terms therein and release your contribution under these terms.
+https://github.com/securefederatedai/openfl/blob/develop/CONTRIBUTING.md

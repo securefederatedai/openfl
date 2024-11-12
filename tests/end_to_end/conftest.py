@@ -213,10 +213,9 @@ def fx_federation(request, pytestconfig):
 
     Note: As this is a module level fixture, thus no import is required at test level.
     """
-    log.info("Fixture for federation setup")
+    log.info("Fixture for federation setup using Task Runner API on single machine.")
     collaborators = []
-    # Default name for bare metal approach, modify as required.
-    agg_domain_name = "aggregator"
+    agg_domain_name = "localhost"
 
     # Parse the command line arguments
     args = parse_arguments()
