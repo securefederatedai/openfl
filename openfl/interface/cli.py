@@ -180,7 +180,7 @@ def cli(context, log_level, no_warnings):
         # Setup logging immediately to suppress unnecessary warnings on import
         # This will be overridden later with user selected debugging level
         disable_warnings()
-    log_file = os.path.normpath(os.getenv("LOG_FILE"))
+    log_file = str(os.path.normpath(os.getenv("LOG_FILE")))
     setup_logging(log_level, log_file)
     sys.stdout.reconfigure(encoding="utf-8")
 
