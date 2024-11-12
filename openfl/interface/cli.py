@@ -183,7 +183,7 @@ def cli(context, log_level, no_warnings):
         disable_warnings()
     print("os.getenv log file path is {}".format(os.getenv("LOG_FILE")))
     log_file = pathlib.Path("LOG_FILE").expanduser().resolve()
-    print(log_file)
+    print("log file path is {}".format(log_file))
     setup_logging(log_level, str(log_file))
     sys.stdout.reconfigure(encoding="utf-8")
 
