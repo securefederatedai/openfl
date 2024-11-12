@@ -181,8 +181,9 @@ def cli(context, log_level, no_warnings):
         # Setup logging immediately to suppress unnecessary warnings on import
         # This will be overridden later with user selected debugging level
         disable_warnings()
+    log_file = os.getenv("LOG_FILE")
     print("os.getenv log file path is {}".format(os.getenv("LOG_FILE")))
-    if os.getenv("LOG_FILE") is not None:
+    if log_file is not None:
         log_file = pathlib.Path(os.getenv("LOG_FILE")).expanduser().resolve()
         print("log file path is {}".format(log_file))
     setup_logging(log_level, str(log_file))
