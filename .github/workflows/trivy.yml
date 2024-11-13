@@ -23,7 +23,9 @@ jobs:
           docker build --pull -t docker.io/securefederatedai/openfl:${{ github.sha }} -f openfl-docker/Dockerfile.base .
 
       - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@0.24.0
+        uses: aquasecurity/trivy-action@0.24.0        
+        env:
+          TRIVY_DB_REPOSITORY: public.ecr.aws/aquasecurity/trivy-db:2
         with:
           image-ref: 'docker.io/securefederatedai/openfl:${{ github.sha }}'
           format: 'sarif'
@@ -46,7 +48,7 @@ jobs:
           --ignore-unfixed \
           --vuln-type os,library \
           --severity CRITICAL,HIGH,MEDIUM,LOW \
-          --db-repository 'ghcr.io/aquasecurity/trivy-db,public.ecr.aws/aquasecurity/trivy-db' \
+          --db-repository 'public.ecr.aws/aquasecurity/trivy-db:2,ghcr.io/aquasecurity/trivy-db' \
           .
 
       - name: Upload Code Vulnerability Scan Results
@@ -57,6 +59,8 @@ jobs:
       
       - name: Run Trivy vulnerability scanner for Docker image (JSON Output)
         uses: aquasecurity/trivy-action@0.24.0
+        env:
+          TRIVY_DB_REPOSITORY: public.ecr.aws/aquasecurity/trivy-db:2
         with:
           image-ref: 'docker.io/securefederatedai/openfl:${{ github.sha }}'
           format: 'json'
@@ -80,7 +84,7 @@ jobs:
           --ignore-unfixed \
           --vuln-type os,library \
           --severity CRITICAL,HIGH,MEDIUM,LOW \
-          --db-repository 'ghcr.io/aquasecurity/trivy-db,public.ecr.aws/aquasecurity/trivy-db' \
+          --db-repository 'public.ecr.aws/aquasecurity/trivy-db:2,ghcr.io/aquasecurity/trivy-db' \
           .
   
       - name: Upload Code Vulnerability Scan Results
@@ -91,6 +95,8 @@ jobs:
         
       - name: Run Trivy vulnerability scanner for Docker image (SPDX-JSON Output)
         uses: aquasecurity/trivy-action@0.24.0
+        env:
+          TRIVY_DB_REPOSITORY: public.ecr.aws/aquasecurity/trivy-db:2
         with:
           image-ref: 'docker.io/securefederatedai/openfl:${{ github.sha }}'
           format: 'spdx-json'
