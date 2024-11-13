@@ -118,19 +118,21 @@ if __name__ == "__main__":
     else:
         (lt_mv, train, agg_mv, score) = get_aggregator_logs(os.getenv("MODEL_NAME"))
 
+    num_cols = os.getenv("NUM_COLLABORATORS")
+    num_rounds = os.getenv("NUM_ROUNDS")
     # Write the results to GitHub step summary
     with open(os.getenv('GITHUB_STEP_SUMMARY'), 'a') as fh:
         # DO NOT change the print statements
-        print("| Name | Time (in seconds) | Result | Score (if applicable) |", file=fh)
-        print("| ------------- | ------------- | ------------- | ------------- |", file=fh)
+        print("| Name | Time (in seconds) | Result | Score (if applicable) | Collaborators | Rounds to train |", file=fh)
+        print("| ------------- | ------------- | ------------- | ------------- | ------------- | ------------- |", file=fh)
         for item in result:
-            print(f"| {item['name']} | {item['time']} | {item['result']} | {score} |", file=fh)
+            print(f"| {item['name']} | {item['time']} | {item['result']} | {score} | {num_cols} | {num_rounds} |", file=fh)
         print("", file=fh)
 
         # DO NOT change the print statements
         if lt_mv and train and agg_mv:
             print("| Task | Metric Name | Metric Value | Round |", file=fh)
             print("| ------------- | ------------- | ------------- | ------------- |", file=fh)
-            print(f"| {lt_mv['task_name']} | {lt_mv['metric_name']} | {lt_mv['metric_value']} | {lt_mv['round']} |", file=fh)
-            print(f"| {train['task_name']} | {train['metric_name']} | {train['metric_value']} | {train['round']} |", file=fh)
-            print(f"| {agg_mv['task_name']} | {agg_mv['metric_name']} | {agg_mv['metric_value']} | {agg_mv['round']} |", file=fh)
+            print(f"| {lt_mv['task_name']} | {lt_mv['metric_name']} | {lt_mv['metric_value']} | {int(lt_mv['round'] + 1)} |", file=fh)
+            print(f"| {train['task_name']} | {train['metric_name']} | {train['metric_value']} | {int(train['round'] + 1)} |", file=fh)
+            print(f"| {agg_mv['task_name']} | {agg_mv['metric_name']} | {agg_mv['metric_value']} | {int(agg_mv['round'] + 1)} |", file=fh)
