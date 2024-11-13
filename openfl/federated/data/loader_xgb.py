@@ -14,7 +14,7 @@ class XGBoostDataLoader:
         random_seed (int, optional): Random seed for data shuffling.
     """
 
-    def __init__(self, batch_size, random_seed=None, **kwargs):
+    def __init__(self, batch_size=None, random_seed=None, **kwargs):
         """Initializes the XGBoostDataLoader object with the batch size, random
         seed, and any additional arguments.
 
@@ -155,7 +155,10 @@ class XGBoostDataLoader:
         Returns:
             xgb.DMatrix: The DMatrix object for the training data.
         """
-        return self.get_dmatrix(self.X_train, self.y_train)
+        return {
+            'dmatrix': self.get_dmatrix(self.X_train, self.y_train),
+            'labels': self.y_train
+        }
 
     def get_valid_dmatrix(self):
         """Returns the DMatrix for the validation data.
@@ -163,4 +166,7 @@ class XGBoostDataLoader:
         Returns:
             xgb.DMatrix: The DMatrix object for the validation data.
         """
-        return self.get_dmatrix(self.X_valid, self.y_valid)
+        return {
+            'dmatrix': self.get_dmatrix(self.X_valid, self.y_valid),
+            'labels': self.y_valid
+        }

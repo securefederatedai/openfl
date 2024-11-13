@@ -4,8 +4,8 @@
 
 """XGBoostTaskRunner module."""
 
-from copy import deepcopy
-from typing import Iterator, Tuple
+# from copy import deepcopy
+# from typing import Iterator, Tuple
 
 import numpy as np
 import json
@@ -15,12 +15,10 @@ from openfl.utilities import Metric, TensorKey, change_tags
 from openfl.utilities.split import split_tensor_dict_for_holdouts
 
 import xgboost as xgb
-from openfl.utilities import LocalTensor
 import json
-from sklearn.datasets import fetch_california_housing
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import r2_score
+from sklearn.metrics import accuracy_score
 
+import base64
 
 class XGBoostTaskRunner(TaskRunner):
     def __init__(self, **kwargs):
@@ -29,22 +27,21 @@ class XGBoostTaskRunner(TaskRunner):
         Args:
             **kwargs: Additional parameters to pass to the functions.
         """
-        super().__init__()
-        TaskRunner.__init__(self, **kwargs)
-
+        super().__init__(**kwargs)
         # This is a map of all the required tensors for each of the public
         # functions in XGBoostTaskRunner
-        self.bst = None # TODO
+        # self.bst = None # TODO
         self.global_model = None # TODO
-        self.params = kwargs['params'] # TODO
-        self.num_rounds = kwargs['num_rounds'] # TODO
+        # self.params = kwargs['params'] # TODO
+        # self.num_rounds = kwargs['num_rounds'] # TODO
 
         self.required_tensorkeys_for_function = {}
         self.training_round_completed = False
 
     def rebuild_model(self, input_tensor_dict):
-        if input_tensor_dict is not None:
-            self.global_model = bytearray(input_tensor_dict)
+        if input_tensor_dict['local_tree'].size != 0: # check if it is empty (i.e. no model to build)
+            import pdb; pdb.set_trace() # need to check to make sure model is convertible
+            self.global_model = bytearray(input_tensor_dict['local_tree'][:-2]) #TODO
             self.bst = xgb.Booster()
             self.bst.load_model(self.global_model)
 
@@ -67,7 +64,7 @@ class XGBoostTaskRunner(TaskRunner):
         """
         # during agg validation, self.bst will still be None. during local validation, it will have a value - no need to rebuild
         # if self.bst is still None after rebuilding, then there was no initial global model, so set metric to average
-        loader = self.data_loader.get_valid_loader()
+        loader = self.data_loader.get_valid_dmatrix()
         # if round_num != 0:
         #     self.global_model = bytearray(input_tensor_dict)
 
@@ -99,7 +96,6 @@ class XGBoostTaskRunner(TaskRunner):
         col_name,
         round_num,
         input_tensor_dict,
-        epochs=1,
         **kwargs,
     ):
         """Train batches task.
@@ -124,7 +120,7 @@ class XGBoostTaskRunner(TaskRunner):
         # if round_num != 0:
         #     self.global_model = bytearray(input_tensor_dict)
         self.rebuild_model(input_tensor_dict)
-        loader = self.data_loader.get_train_loader()
+        loader = self.data_loader.get_train_dmatrix()
         metric = self.train_(loader)
         # Output metric tensors (scalar)
         origin = col_name
@@ -134,7 +130,7 @@ class XGBoostTaskRunner(TaskRunner):
         }
 
         # output model tensors (Doesn't include TensorKey)
-        output_model_dict = self.get_tensor_dict(with_opt_vars=True)
+        output_model_dict = self.get_tensor_dict() 
         global_model_dict, local_model_dict = split_tensor_dict_for_holdouts(
             self.logger, output_model_dict, **self.tensor_dict_split_fn_kwargs
         )
@@ -143,7 +139,7 @@ class XGBoostTaskRunner(TaskRunner):
         global_tensorkey_model_dict = {
             TensorKey(tensor_name, origin, round_num, False, tags): nparray
             for tensor_name, nparray in global_model_dict.items()
-        }
+        } 
         # Create tensorkeys that should stay local
         local_tensorkey_model_dict = {
             TensorKey(tensor_name, origin, round_num, False, tags): nparray
@@ -177,16 +173,18 @@ class XGBoostTaskRunner(TaskRunner):
         # involve doing a single epoch of training on random data to get the
         # optimizer names, and then throwing away the model.
         if self.opt_treatment == "CONTINUE_GLOBAL":
-            self.initialize_tensorkeys_for_functions(with_opt_vars=True)
+            self.initialize_tensorkeys_for_functions()
 
         # This will signal that the optimizer values are now present,
         # and can be loaded when the model is rebuilt
         self.training_round_completed = True
 
         # Return global_tensor_dict, local_tensor_dict
+        # import pdb; pdb.set_trace()
+        #TODO it is still decodable from here with .tobytes().decode('utf-8')
         return global_tensor_dict, local_tensor_dict  
 
-    def get_tensor_dict(self):
+    def get_tensor_dict(self, with_opt_vars=False):
         if self.global_model is None:
             global_model_booster_dict = None
             num_global_trees = 0
@@ -194,18 +192,49 @@ class XGBoostTaskRunner(TaskRunner):
             global_model_booster_dict = json.loads(bytearray(self.global_model))
             num_global_trees = int(global_model_booster_dict["learner"]["gradient_booster"]["model"]["gbtree_model_param"]["num_trees"])
 
-        booster_array = self.bst.save_raw('json').decode('utf-8')
-        booster_dict = json.loads(booster_array)
-        num_total_trees = int(booster_dict["learner"]["gradient_booster"]["model"]["gbtree_model_param"]["num_trees"])
+        if self.bst is None:
+            combined_array = np.array([], dtype=np.float32)
+            # return {
+            #     'local_tree': np.array([0, 0], dtype=np.float32),
+            # }
+            # return {
+            #     'local_tree': np.array([], dtype=np.float32),
+            #     'num_global_trees': np.array(0, dtype=np.float32),
+            #     'num_latest_trees': np.array(0, dtype=np.float32),
+            # }
+ 
+        else:
+            booster_array = self.bst.save_raw('json').decode('utf-8')
+            booster_dict = json.loads(booster_array)
+            num_total_trees = int(booster_dict["learner"]["gradient_booster"]["model"]["gbtree_model_param"]["num_trees"])
 
-        # Calculate the number of trees added in the latest training
-        num_latest_trees = num_total_trees - num_global_trees
+            # Calculate the number of trees added in the latest training
+            num_latest_trees = num_total_trees - num_global_trees
 
+            # Convert booster_array to np.array
+            # booster_np_array = np.frombuffer(booster_array.encode('utf-8'), dtype=np.uint8)
+            
+            # TODO, seems inefficient
+            booster_bytes = booster_array.encode('utf-8')
+            booster_base64 = base64.b64encode(booster_bytes).decode('utf-8')
+
+            # Convert base64 string to np.float32 array
+            booster_float32_array = np.frombuffer(booster_base64.encode('utf-8'), dtype=np.uint8).view(np.float32)
+
+            # Create a combined array with booster_float32_array, num_global_trees, and num_latest_trees
+            combined_array = np.concatenate((
+                booster_float32_array,
+                np.array([num_global_trees, num_latest_trees], dtype=np.float32)
+            ))
         return {
-            'local_tree': booster_array,
-            'num_global_trees': int(num_global_trees),
-            'num_latest_trees': int(num_latest_trees)
+            'local_tree': combined_array
         }
+            
+            # return {
+            #     'local_tree': booster_float32_array, #booster_np_array,
+            #     'num_global_trees': np.array(num_global_trees, dtype=np.float32),
+            #     'num_latest_trees': np.array(num_latest_trees, dtype=np.float32)
+            # }
 
     def get_required_tensorkeys_for_function(self, func_name, **kwargs):
         """Get the required tensors for specified function that could be called
@@ -321,21 +350,23 @@ class XGBoostTaskRunner(TaskRunner):
 
     def train_(self, train_dataloader) -> Metric:
         """Train model."""
-        dtrain = train_dataloader
+        dtrain = train_dataloader['dmatrix']
         evals = [(dtrain, 'train')]
         evals_result = {}
         
         self.bst = xgb.train(self.params, dtrain, self.num_rounds, xgb_model=self.bst, 
                              evals=evals, evals_result=evals_result, verbose_eval=False)
 
-        loss = evals_result['train']['rmse'][-1]
+        loss = evals_result['train']['logloss'][-1]
         return Metric(name=self.loss_fn.__name__, value=np.array(loss))
 
     def validate_(self, validation_dataloader) -> Metric:
         """Validate model."""
 
-        dtest, y_test = validation_dataloader
+        dtest = validation_dataloader['dmatrix']
+        y_test = validation_dataloader['labels']
         preds = self.bst.predict(dtest)
-        r2 = r2_score(y_test, preds)
+        y_pred_binary = np.where(preds > 0.5, 1, 0)
+        acc = accuracy_score(y_test, y_pred_binary)
 
-        return Metric(name="accuracy", value=np.array(r2))
+        return Metric(name="accuracy", value=np.array(acc))

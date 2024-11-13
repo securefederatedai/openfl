@@ -6,7 +6,18 @@
 
 import json
 from openfl.interface.aggregation_functions.core import AggregationFunction
+import numpy as np
+import base64
 
+def convert_back_to_json(booster_float32_array):
+    # Convert np.float32 array back to base64 string
+    booster_uint8_array = booster_float32_array.view(np.uint8)
+    booster_base64 = booster_uint8_array.tobytes().decode('utf-8')
+
+    # Decode base64 string back to original JSON string
+    booster_bytes = base64.b64decode(booster_base64)
+    booster_array = booster_bytes.decode('utf-8')
+    return booster_array
 
 def verify_global_model(global_model, local_model, num_global_trees):
     for i in range(num_global_trees):
@@ -56,29 +67,39 @@ class FedBaggingXGBoost(AggregationFunction):
         global_model = None
         
         for local_tensor in local_tensors:
+            import pdb; pdb.set_trace()
+            local_tree_np_array = local_tensor.tensor[:-2]
+            # local_tree_np_array = local_tensor.tensor['local_tree']
+            local_tree_json_string = convert_back_to_json(local_tree_np_array)
+            
             if global_model is None:
-                global_model = json.loads(local_tensor.tensor['local_tree'])
+                # the first tree becomes the global model to append to
+                global_model = json.loads(local_tree_json_string)
             else:
-                local_model = json.loads(local_tensor.tensor['local_tree'])
-                
-                # Assertion to check if the original trees in the local model match the global model trees
-                num_global_trees = local_tensor.tensor['num_global_trees']
-                verify_global_model(global_model, local_model, num_global_trees)
-                
-                num_global_trees = int(global_model["learner"]["gradient_booster"]["model"]["gbtree_model_param"]["num_trees"])
-                num_latest_trees = local_tensor.tensor['num_latest_trees']
-                local_trees = local_model['learner']['gradient_booster']['model']['trees'][-num_latest_trees:]
+                # append subsequent trees
+                local_model = json.loads(local_tree_json_string)
+            
+            # Assertion to check if the original trees in the local model match the global model trees
+            num_global_trees = local_tensor.tensor[-2]
+            # num_global_trees = local_tensor.tensor['num_global_trees']
+            verify_global_model(global_model, local_model, num_global_trees)
+            
+            num_global_trees = int(global_model["learner"]["gradient_booster"]["model"]["gbtree_model_param"]["num_trees"])
+            num_latest_trees = local_tensor.tensor[-1]
+            # num_latest_trees = local_tensor.tensor['num_latest_trees']
+            local_trees = local_model['learner']['gradient_booster']['model']['trees'][-num_latest_trees:]
 
-                global_model["learner"]["gradient_booster"]["model"]["gbtree_model_param"]["num_trees"] = str(
-                    num_global_trees + num_latest_trees
-                )
-                global_model["learner"]["gradient_booster"]["model"]["iteration_indptr"].append(
-                    num_global_trees + num_latest_trees
-                )
+            global_model["learner"]["gradient_booster"]["model"]["gbtree_model_param"]["num_trees"] = str(
+                num_global_trees + num_latest_trees
+            )
+            global_model["learner"]["gradient_booster"]["model"]["iteration_indptr"].append(
+                num_global_trees + num_latest_trees
+            )
 
-                for new_tree in range(num_latest_trees):
-                    local_trees[new_tree]["id"] = num_global_trees + new_tree
-                    global_model["learner"]["gradient_booster"]["model"]["trees"].append(local_trees[new_tree])
-                    global_model["learner"]["gradient_booster"]["model"]["tree_info"].append(0)
+            for new_tree in range(num_latest_trees):
+                local_trees[new_tree]["id"] = num_global_trees + new_tree
+                global_model["learner"]["gradient_booster"]["model"]["trees"].append(local_trees[new_tree])
+                global_model["learner"]["gradient_booster"]["model"]["tree_info"].append(0)
 
-        return bytearray(json.dumps(global_model), "utf-8")
+        # TODO: this will probably be problematic, make sure that the conversion is working
+        return bytearray(json.dumps(global_model, default=int), "utf-8")

@@ -12,3 +12,4 @@ from openfl.interface.aggregation_functions.geometric_median import GeometricMed
 from openfl.interface.aggregation_functions.median import Median
 from openfl.interface.aggregation_functions.weighted_average import WeightedAverage
 from openfl.interface.aggregation_functions.yogi_adaptive_aggregation import YogiAdaptiveAggregation
+from openfl.interface.aggregation_functions.fed_bagging import FedBaggingXGBoost
