@@ -78,7 +78,7 @@ jobs:
       if: steps.run_task_runner_tests.outcome == 'success' || steps.run_task_runner_tests.outcome == 'failure'
       run: |
         export PYTHONPATH="$PYTHONPATH:."
-        python tests/end_to_end/utils/test_sumamry_helper.py
+        python tests/end_to_end/utils/test_summary_helper.py
         echo "Test summary printed"
 
     - name: Tar files # Tar the test results only if the tests were run
