@@ -122,7 +122,6 @@ setup(
         'openfl.federated.task',
         'openfl.interface',
         'openfl.interface.interactive_api',
-        'openfl.native',
         'openfl.pipelines',
         'openfl.plugins',
         'openfl.plugins.frameworks_adapters',
