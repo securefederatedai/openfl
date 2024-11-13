@@ -10,7 +10,7 @@ Override Aggregation Function
 With the aggregator-based workflow, you can use custom aggregation functions for each task via Python\*\  API or command line interface.
 
 
-Python API
+Python API (Deprecated)
 ==========
 
 1. Create an implementation of :class:`openfl.interface.aggregation_functions.core.AggregationFunction`.
