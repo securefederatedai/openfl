@@ -30,7 +30,7 @@ env:
 
 jobs:
   test_run:
-    name: test
+    name: tr # do not change this name, it is used in the ZephyrScale fetch logic.
     runs-on: ubuntu-22.04
     timeout-minutes: 120 # 2 hours
     strategy:
