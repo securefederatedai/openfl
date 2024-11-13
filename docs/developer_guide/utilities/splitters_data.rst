@@ -13,7 +13,7 @@ Dataset Splitters
 You may apply data splitters differently depending on the |productName| workflow that you follow. 
 
 
-OPTION 1: Use **Native Python API** (Aggregator-Based Workflow) Functions to Split the Data
+OPTION 1: Use **Native Python API** (Aggregator-Based Workflow) Functions to Split the Data (Deprecated)
 ===========================================================================================
 
 Predefined |productName| data splitters functions are as follows:
