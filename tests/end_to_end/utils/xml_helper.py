@@ -13,6 +13,47 @@ tree = ET.parse("results/results.xml", parser=parser)
 testsuites = tree.getroot()
 
 
+def get_aggregator_logs(model_name):
+    """
+    Get the aggregator logs to fetch the metric values and scores
+    Args:
+        model_name: the model name for which the aggregator logs are to be fetched
+    Returns:
+        tuple: the locally tuned model validation, train, aggregated model validation and score
+    """
+    lt_mv, train, agg_mv, score = None, None, None, "NA"
+
+    workspace_name = "workspace_" + model_name
+    agg_log_file = os.path.join("results", workspace_name, "aggregator.log")
+
+    if not os.path.exists(agg_log_file):
+        print(f"Aggregator log file {agg_log_file} not found.")
+    else:
+        with open(agg_log_file, 'r') as f:
+            for raw_line in f:
+                # Log file contains aggregator.py:<line no> which gets concatenated with the actual log line if not stripped
+                line = raw_line.strip() if "aggregator.py:" not in raw_line else raw_line.split("aggregator.py:")[0].strip()
+                # Fetch the metric origin and aggregator details
+                if "metric_origin" in line and "aggregator" in line:
+                    if "locally_tuned_model_validation" in line:
+                        reqd_line = line.strip() if "}" in line else line.strip() + next(f).strip()
+                        lt_mv = eval(reqd_line.split("METRIC")[1].strip('"'))
+                    if "train" in line:
+                        reqd_line = line.strip() if "}" in line else line.strip() + next(f).strip()
+                        train = eval(reqd_line.split("METRIC")[1].strip('"'))
+                    if "aggregated_model_validation" in line:
+                        reqd_line = line.strip() if "}" in line else line.strip() + next(f).strip()
+                        agg_mv = eval(reqd_line.split("METRIC")[1].strip('"'))
+
+                # Fetch the best model details
+                if "saved the best model" in line:
+                    reqd_line = line.strip()
+                    score_line = reqd_line.split("METRIC")[1].strip('"').strip()
+                    score = score_line.split("score")[1].strip()
+
+    return (lt_mv, train, agg_mv, score)
+
+
 def get_test_status(result):
     """
     Get the test status/verdict
@@ -64,12 +105,32 @@ def get_testcase_result():
     return database_list
 
 
-result = get_testcase_result()
+if __name__ == "__main__":
+    """
+    Main function to get the test case results and aggregator logs
+    And write the results to GitHub step summary
+    """
+    score = "NA"
+    result = get_testcase_result()
 
-# Write the results to GitHub step summary
-with open(os.getenv('GITHUB_STEP_SUMMARY'), 'a') as fh:
-    # DO NOT change the print statements
-    print("| Name | Time (in seconds) | Result |", file=fh)
-    print("| ------------- | ------------- | ------------- |", file=fh)
-    for item in result:
-        print(f"| {item['name']} | {item['time']} | {item['result']} |", file=fh)
+    if not os.getenv("MODEL_NAME"):
+        print("MODEL_NAME is not set, cannot find out aggregator logs")
+    else:
+        (lt_mv, train, agg_mv, score) = get_aggregator_logs(os.getenv("MODEL_NAME"))
+
+    # Write the results to GitHub step summary
+    with open(os.getenv('GITHUB_STEP_SUMMARY'), 'a') as fh:
+        # DO NOT change the print statements
+        print("| Name | Time (in seconds) | Result | Score (if applicable) |", file=fh)
+        print("| ------------- | ------------- | ------------- | ------------- |", file=fh)
+        for item in result:
+            print(f"| {item['name']} | {item['time']} | {item['result']} | {score} |", file=fh)
+        print("", file=fh)
+
+        # DO NOT change the print statements
+        if lt_mv and train and agg_mv:
+            print("| Task | Metric Name | Metric Value | Round |", file=fh)
+            print("| ------------- | ------------- | ------------- | ------------- |", file=fh)
+            print(f"| {lt_mv['task_name']} | {lt_mv['metric_name']} | {lt_mv['metric_value']} | {lt_mv['round']} |", file=fh)
+            print(f"| {train['task_name']} | {train['metric_name']} | {train['metric_value']} | {train['round']} |", file=fh)
+            print(f"| {agg_mv['task_name']} | {agg_mv['metric_name']} | {agg_mv['metric_value']} | {agg_mv['round']} |", file=fh)

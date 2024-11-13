@@ -292,8 +292,7 @@ class Aggregator:
         """
         try:
             log.info(f"Starting {self.name}")
-            curr_time = datetime.now().strftime("%Y%m%d_%H%M%S")
-            filename = f"{self.name}_{curr_time}.log"
+            filename = f"{self.name}.log"
             res_file = os.path.join(os.getcwd(), self.workspace_path, filename)
             bg_file = open(res_file, "w", buffering=1)
 
@@ -412,8 +411,7 @@ class Collaborator:
         """
         try:
             log.info(f"Starting {self.collaborator_name}")
-            curr_time = datetime.now().strftime("%Y%m%d_%H%M%S")
-            filename = f"{self.collaborator_name}_{curr_time}.log"
+            filename = f"{self.collaborator_name}.log"
             res_file = os.path.join(os.getcwd(), self.workspace_path, filename)
             bg_file = open(res_file, "w", buffering=1)
 
