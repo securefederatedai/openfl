@@ -30,20 +30,6 @@ See :ref:`running_the_task_runner`
     :ref:`running_the_task_runner`
 
 -------------------------
-Python Native API (Deprecated)
--------------------------
-Intended for quick simulation purposes
-
-See :ref:`python_native_pytorch_mnist`
-
-.. toctree::
-    :hidden:
-    :maxdepth: 1
-
-    examples/python_native_pytorch_mnist
-
-
--------------------------
 Interactive API
 -------------------------
 Setup long-lived components to run many experiments
