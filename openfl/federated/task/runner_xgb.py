@@ -20,6 +20,16 @@ from sklearn.metrics import accuracy_score
 
 import base64
 
+def convert_back_to_json(booster_float32_array):
+    # Convert np.float32 array back to base64 string
+    booster_uint8_array = booster_float32_array.view(np.uint8)
+    booster_base64 = booster_uint8_array.tobytes().decode('utf-8')
+
+    # Decode base64 string back to original JSON string
+    booster_bytes = base64.b64decode(booster_base64)
+    booster_array = booster_bytes.decode('utf-8')
+    return booster_array
+
 class XGBoostTaskRunner(TaskRunner):
     def __init__(self, **kwargs):
         """Initializes the XGBoostTaskRunner object.
@@ -39,11 +49,14 @@ class XGBoostTaskRunner(TaskRunner):
         self.training_round_completed = False
 
     def rebuild_model(self, input_tensor_dict):
-        if input_tensor_dict['local_tree'].size != 0: # check if it is empty (i.e. no model to build)
-            import pdb; pdb.set_trace() # need to check to make sure model is convertible
-            self.global_model = bytearray(input_tensor_dict['local_tree'][:-2]) #TODO
+        if (isinstance(input_tensor_dict['local_tree'], np.ndarray) and input_tensor_dict['local_tree'].size != 0) \
+            or (not isinstance(input_tensor_dict['local_tree'], np.ndarray) and input_tensor_dict['local_tree'] is not None):
+        # if input_tensor_dict['local_tree'].size != 0: # check if it is empty (i.e. no model to build)
+            self.global_model = input_tensor_dict['local_tree'].view(np.uint8).tobytes().decode('utf-8')
+            self.global_model = base64.b64decode(self.global_model)
+            # self.global_model = bytearray(input_tensor_dict['local_tree']) #TODO
             self.bst = xgb.Booster()
-            self.bst.load_model(self.global_model)
+            self.bst.load_model(bytearray(self.global_model))
 
     def validate_task(self, col_name, round_num, input_tensor_dict, **kwargs):
         """Validate Task.
@@ -182,59 +195,93 @@ class XGBoostTaskRunner(TaskRunner):
         # Return global_tensor_dict, local_tensor_dict
         # import pdb; pdb.set_trace()
         #TODO it is still decodable from here with .tobytes().decode('utf-8')
-        return global_tensor_dict, local_tensor_dict  
-
+        return global_tensor_dict, local_tensor_dict
+    
     def get_tensor_dict(self, with_opt_vars=False):
-        if self.global_model is None:
-            global_model_booster_dict = None
-            num_global_trees = 0
-        else:
-            global_model_booster_dict = json.loads(bytearray(self.global_model))
-            num_global_trees = int(global_model_booster_dict["learner"]["gradient_booster"]["model"]["gbtree_model_param"]["num_trees"])
+            if self.bst is None:
+                # For initializing tensor dict
+                return {'local_tree': np.array([], dtype=np.float32)}
 
-        if self.bst is None:
-            combined_array = np.array([], dtype=np.float32)
-            # return {
-            #     'local_tree': np.array([0, 0], dtype=np.float32),
-            # }
-            # return {
-            #     'local_tree': np.array([], dtype=np.float32),
-            #     'num_global_trees': np.array(0, dtype=np.float32),
-            #     'num_latest_trees': np.array(0, dtype=np.float32),
-            # }
- 
-        else:
             booster_array = self.bst.save_raw('json').decode('utf-8')
             booster_dict = json.loads(booster_array)
+
+            if (isinstance(self.global_model, np.ndarray) and self.global_model.size == 0) or self.global_model is None:
+                booster_bytes = booster_array.encode('utf-8')
+                booster_base64 = base64.b64encode(booster_bytes).decode('utf-8')
+
+                # Convert base64 string to np.float32 array
+                booster_float32_array = np.frombuffer(booster_base64.encode('utf-8'), dtype=np.uint8).view(np.float32)
+
+                return {'local_tree': booster_float32_array}
+            global_model_booster_dict = json.loads(self.global_model)
+            num_global_trees = int(global_model_booster_dict["learner"]["gradient_booster"]["model"]["gbtree_model_param"]["num_trees"])
             num_total_trees = int(booster_dict["learner"]["gradient_booster"]["model"]["gbtree_model_param"]["num_trees"])
 
             # Calculate the number of trees added in the latest training
             num_latest_trees = num_total_trees - num_global_trees
+            latest_trees = booster_dict['learner']['gradient_booster']['model']['trees'][-num_latest_trees:]
+            # Convert latest_trees to a JSON string
+            latest_trees_json = json.dumps(latest_trees)
 
-            # Convert booster_array to np.array
-            # booster_np_array = np.frombuffer(booster_array.encode('utf-8'), dtype=np.uint8)
+            # Convert JSON string to np.float32 array
+            latest_trees_bytes = latest_trees_json.encode('utf-8')
+            latest_trees_base64 = base64.b64encode(latest_trees_bytes).decode('utf-8')
+            latest_trees_float32_array = np.frombuffer(latest_trees_base64.encode('utf-8'), dtype=np.uint8).view(np.float32)
+
+            return {'local_tree': latest_trees_float32_array}
+
+    
+    # def get_tensor_dict(self, with_opt_vars=False):
+    #     if self.global_model is None:
+    #         global_model_booster_dict = None
+    #         num_global_trees = 0
+    #     else:
+    #         global_model_booster_dict = json.loads(bytearray(self.global_model))
+    #         num_global_trees = int(global_model_booster_dict["learner"]["gradient_booster"]["model"]["gbtree_model_param"]["num_trees"])
+
+    #     if self.bst is None:
+    #         combined_array = np.array([], dtype=np.float32)
+    #         # return {
+    #         #     'local_tree': np.array([0, 0], dtype=np.float32),
+    #         # }
+    #         # return {
+    #         #     'local_tree': np.array([], dtype=np.float32),
+    #         #     'num_global_trees': np.array(0, dtype=np.float32),
+    #         #     'num_latest_trees': np.array(0, dtype=np.float32),
+    #         # }
+ 
+    #     else:
+    #         booster_array = self.bst.save_raw('json').decode('utf-8')
+    #         booster_dict = json.loads(booster_array)
+    #         num_total_trees = int(booster_dict["learner"]["gradient_booster"]["model"]["gbtree_model_param"]["num_trees"])
+
+    #         # Calculate the number of trees added in the latest training
+    #         num_latest_trees = num_total_trees - num_global_trees
+
+    #         # Convert booster_array to np.array
+    #         # booster_np_array = np.frombuffer(booster_array.encode('utf-8'), dtype=np.uint8)
             
-            # TODO, seems inefficient
-            booster_bytes = booster_array.encode('utf-8')
-            booster_base64 = base64.b64encode(booster_bytes).decode('utf-8')
+    #         # TODO, seems inefficient
+    #         booster_bytes = booster_array.encode('utf-8')
+    #         booster_base64 = base64.b64encode(booster_bytes).decode('utf-8')
 
-            # Convert base64 string to np.float32 array
-            booster_float32_array = np.frombuffer(booster_base64.encode('utf-8'), dtype=np.uint8).view(np.float32)
+    #         # Convert base64 string to np.float32 array
+    #         booster_float32_array = np.frombuffer(booster_base64.encode('utf-8'), dtype=np.uint8).view(np.float32)
 
-            # Create a combined array with booster_float32_array, num_global_trees, and num_latest_trees
-            combined_array = np.concatenate((
-                booster_float32_array,
-                np.array([num_global_trees, num_latest_trees], dtype=np.float32)
-            ))
-        return {
-            'local_tree': combined_array
-        }
+    #         # Create a combined array with booster_float32_array, num_global_trees, and num_latest_trees
+    #         combined_array = np.concatenate((
+    #             booster_float32_array,
+    #             np.array([num_global_trees, num_latest_trees], dtype=np.float32)
+    #         ))
+    #     return {
+    #         'local_tree': combined_array
+    #     }
             
-            # return {
-            #     'local_tree': booster_float32_array, #booster_np_array,
-            #     'num_global_trees': np.array(num_global_trees, dtype=np.float32),
-            #     'num_latest_trees': np.array(num_latest_trees, dtype=np.float32)
-            # }
+    #         # return {
+    #         #     'local_tree': booster_float32_array, #booster_np_array,
+    #         #     'num_global_trees': np.array(num_global_trees, dtype=np.float32),
+    #         #     'num_latest_trees': np.array(num_latest_trees, dtype=np.float32)
+    #         # }
 
     def get_required_tensorkeys_for_function(self, func_name, **kwargs):
         """Get the required tensors for specified function that could be called

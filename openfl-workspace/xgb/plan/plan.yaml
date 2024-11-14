@@ -8,8 +8,9 @@ aggregator :
     init_state_path : save/init.pbuf
     best_state_path : save/best.pbuf
     last_state_path : save/last.pbuf
-    rounds_to_train : 2
-    write_logs : false
+    rounds_to_train : 10
+    write_logs      : false
+    delta_updates   : false
 
 collaborator :
   defaults : plan/defaults/collaborator.yaml
