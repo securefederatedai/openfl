@@ -91,7 +91,8 @@ def verify_federation_run_completion(fed_obj, results):
         for i, participant in enumerate(fed_obj.collaborators + [fed_obj.aggregator])
     ]
 
-    # Result will contain a list of tuple of replica and operator objects.
+    # Result will contain a list of boolean values for all the participants.
+    # True - successful completion, False - failed/incomplete
     results = [f.result() for f in futures]
     log.info(f"Results: {results}")
 
