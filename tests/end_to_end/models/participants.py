@@ -112,17 +112,18 @@ class ModelOwner:
             raise e
         return True
 
-    def modify_plan(self, new_rounds=None, num_collaborators=None):
+    def modify_plan(self, new_rounds=None, num_collaborators=None, disable_client_auth=False, disable_tls=False):
         """
         Modify the plan to train the model
         Args:
             new_rounds (int): Number of rounds to train
             num_collaborators (int): Number of collaborators
+            disable_client_auth (bool): Disable client authentication
+            disable_tls (bool): Disable TLS communication
         Returns:
             bool: True if successful, else False
         """
         self.plan_path = os.path.join(self.workspace_path, "plan", "plan.yaml")
-        log.info(f"Modifying the plan at {self.plan_path}")
         # Open the file and modify the entries
         self.rounds_to_train = new_rounds if new_rounds else self.rounds_to_train
         self.num_collaborators = num_collaborators if num_collaborators else self.num_collaborators
@@ -132,13 +133,13 @@ class ModelOwner:
 
         data["aggregator"]["settings"]["rounds_to_train"] = int(self.rounds_to_train)
         data["data_loader"]["settings"]["collaborator_count"] = int(self.num_collaborators)
+        data["network"]["settings"]["disable_client_auth"] = disable_client_auth
+        data["network"]["settings"]["tls"] = not disable_tls
 
         with open(self.plan_path, "w+") as write_file:
             yaml.dump(data, write_file)
 
-        log.info(
-            f"Modified the plan to train the model for collaborators {self.num_collaborators} and {self.rounds_to_train} rounds"
-        )
+        log.info(f"Modified the plan at {self.plan_path} with provided parameters.")
         return True
 
     def initialize_plan(self, agg_domain_name):
@@ -177,6 +178,41 @@ class ModelOwner:
             log.info(f"Certified the workspace {self.workspace_name}")
         except Exception as e:
             log.error(f"Failed to certify the workspace: {e}")
+            raise e
+        return True
+
+    def register_collaborators(self, num_collaborators=None):
+        """
+        Register the collaborators
+        Args:
+            num_collaborators (int, Optional): Number of collaborators
+        Returns:
+            bool: True if successful, else False
+        """
+        self.cols_path = os.path.join(self.workspace_path, "plan", "cols.yaml")
+        log.info(f"Registering the collaborators..")
+        self.num_collaborators = num_collaborators if num_collaborators else self.num_collaborators
+
+        try:
+            # Straightforward writing to the yaml file is not recommended here
+            # As the file might contain spaces and tabs which can cause issues
+            with open(self.cols_path, "r", encoding="utf-8") as f:
+                doc = yaml.load(f, Loader=yaml.FullLoader)
+
+            if "collaborators" not in doc.keys() or not doc["collaborators"]:
+                doc["collaborators"] = []  # Create empty list
+
+            for i in range(num_collaborators):
+                col_name = "collaborator" + str(i+1)
+                doc["collaborators"].append(col_name)
+                with open(self.cols_path, "w", encoding="utf-8") as f:
+                    yaml.dump(doc, f)
+
+            log.info(
+                f"Successfully registered collaborators in {self.cols_path}"
+            )
+        except Exception as e:
+            log.error(f"Failed to register the collaborators: {e}")
             raise e
         return True
 

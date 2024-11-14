@@ -33,7 +33,6 @@ def setup_pki(fed_obj):
     for collaborator in fed_obj.collaborators:
         try:
             log.info(f"Performing operations for {collaborator.collaborator_name}")
-            collaborator.create_collaborator()
             collaborator.generate_sign_request()
             # Below step will add collaborator entries in cols.yaml file.
             fed_obj.model_owner.certify_collaborator(collaborator.collaborator_name)

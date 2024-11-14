@@ -36,15 +36,24 @@ pip install -r test-requirements.txt
 To run a specific test case, use below command:
 
 ```sh
-python -m pytest tests/end_to_end/test_suites/<test_case_filename> -k <marker> -s
+python -m pytest -s tests/end_to_end/test_suites/<test_case_filename> -k <test_case_name>
 ```
 
 ** -s will ensure all the logs are printed on screen. Ignore, if not required.
 
-To modify the number of collaborators, rounds to train and/or model name, use below parameters:
-1. --num_collaborators
-2. --num_rounds
-3. --model_name
+Below parameters are available for modification:
+
+1. --num_collaborators <int>   - to modify the number of collaborators
+2. --num_rounds <int>          - to modify the number of rounds to train
+3. --model_name <str>          - to use a specific model
+4. --disable_tls               - to disable TLS communication (by default it is enabled)
+5. --disable_client_auth       - to disable the client authentication (by default it is enabled)
+
+For example, to run Task runner with - torch_cnn_mnist model, 3 collaborators, 5 rounds and non-TLS scenario:
+
+```sh
+python -m pytest -s tests/end_to_end/test_suites/task_runner_tests.py --num_rounds 5 --num_collaborators 3 --model_name torch_cnn_mnist --disable_tls
+```
 
 ### Output Structure
 
