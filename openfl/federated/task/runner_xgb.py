@@ -18,17 +18,6 @@ import xgboost as xgb
 import json
 from sklearn.metrics import accuracy_score
 
-import base64
-
-def convert_back_to_json(booster_float32_array):
-    # Convert np.float32 array back to base64 string
-    booster_uint8_array = booster_float32_array.view(np.uint8)
-    booster_base64 = booster_uint8_array.tobytes().decode('utf-8')
-
-    # Decode base64 string back to original JSON string
-    booster_bytes = base64.b64decode(booster_base64)
-    booster_array = booster_bytes.decode('utf-8')
-    return booster_array
 
 class XGBoostTaskRunner(TaskRunner):
     def __init__(self, **kwargs):
@@ -40,10 +29,7 @@ class XGBoostTaskRunner(TaskRunner):
         super().__init__(**kwargs)
         # This is a map of all the required tensors for each of the public
         # functions in XGBoostTaskRunner
-        # self.bst = None # TODO
         self.global_model = None # TODO
-        # self.params = kwargs['params'] # TODO
-        # self.num_rounds = kwargs['num_rounds'] # TODO
 
         self.required_tensorkeys_for_function = {}
         self.training_round_completed = False
@@ -51,12 +37,9 @@ class XGBoostTaskRunner(TaskRunner):
     def rebuild_model(self, input_tensor_dict):
         if (isinstance(input_tensor_dict['local_tree'], np.ndarray) and input_tensor_dict['local_tree'].size != 0) \
             or (not isinstance(input_tensor_dict['local_tree'], np.ndarray) and input_tensor_dict['local_tree'] is not None):
-        # if input_tensor_dict['local_tree'].size != 0: # check if it is empty (i.e. no model to build)
-            self.global_model = input_tensor_dict['local_tree'].view(np.uint8).tobytes().decode('utf-8')
-            self.global_model = base64.b64decode(self.global_model)
-            # self.global_model = bytearray(input_tensor_dict['local_tree']) #TODO
+            self.global_model = bytearray(input_tensor_dict['local_tree'].astype(np.uint8).tobytes())
             self.bst = xgb.Booster()
-            self.bst.load_model(bytearray(self.global_model))
+            self.bst.load_model(self.global_model)
 
     def validate_task(self, col_name, round_num, input_tensor_dict, **kwargs):
         """Validate Task.
@@ -128,10 +111,6 @@ class XGBoostTaskRunner(TaskRunner):
             local_output_dict (dict):   Tensors to maintain in the local
                 TensorDB.
         """
-        # self.rebuild_model(round_num, input_tensor_dict)
-        # set to "training" mode
-        # if round_num != 0:
-        #     self.global_model = bytearray(input_tensor_dict)
         self.rebuild_model(input_tensor_dict)
         loader = self.data_loader.get_train_dmatrix()
         metric = self.train_(loader)
@@ -202,17 +181,13 @@ class XGBoostTaskRunner(TaskRunner):
                 # For initializing tensor dict
                 return {'local_tree': np.array([], dtype=np.float32)}
 
-            booster_array = self.bst.save_raw('json').decode('utf-8')
+            booster_array = self.bst.save_raw('json')
             booster_dict = json.loads(booster_array)
 
             if (isinstance(self.global_model, np.ndarray) and self.global_model.size == 0) or self.global_model is None:
-                booster_bytes = booster_array.encode('utf-8')
-                booster_base64 = base64.b64encode(booster_bytes).decode('utf-8')
-
-                # Convert base64 string to np.float32 array
-                booster_float32_array = np.frombuffer(booster_base64.encode('utf-8'), dtype=np.uint8).view(np.float32)
-
+                booster_float32_array = np.frombuffer(booster_array, dtype=np.uint8).astype(np.float32)
                 return {'local_tree': booster_float32_array}
+
             global_model_booster_dict = json.loads(self.global_model)
             num_global_trees = int(global_model_booster_dict["learner"]["gradient_booster"]["model"]["gbtree_model_param"]["num_trees"])
             num_total_trees = int(booster_dict["learner"]["gradient_booster"]["model"]["gbtree_model_param"]["num_trees"])
@@ -220,13 +195,12 @@ class XGBoostTaskRunner(TaskRunner):
             # Calculate the number of trees added in the latest training
             num_latest_trees = num_total_trees - num_global_trees
             latest_trees = booster_dict['learner']['gradient_booster']['model']['trees'][-num_latest_trees:]
+
             # Convert latest_trees to a JSON string
             latest_trees_json = json.dumps(latest_trees)
-
             # Convert JSON string to np.float32 array
             latest_trees_bytes = latest_trees_json.encode('utf-8')
-            latest_trees_base64 = base64.b64encode(latest_trees_bytes).decode('utf-8')
-            latest_trees_float32_array = np.frombuffer(latest_trees_base64.encode('utf-8'), dtype=np.uint8).view(np.float32)
+            latest_trees_float32_array = np.frombuffer(latest_trees_bytes, dtype=np.uint8).astype(np.float32)
 
             return {'local_tree': latest_trees_float32_array}
     
