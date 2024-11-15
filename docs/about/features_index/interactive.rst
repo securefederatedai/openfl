@@ -3,9 +3,9 @@
 
 .. _running_interactive:
 
-================
-Interactive API
-================
+============================
+Interactive API (Deprecated)
+============================
 
 A director-based workflow uses long-lived components in a federation. These components continue to be available to distribute more experiments in the federation.
 

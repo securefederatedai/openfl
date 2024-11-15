@@ -5,14 +5,15 @@ name: TaskRunner (Eden Compression)
 
 on:
   pull_request:
-    branches: [ develop ] 
+    branches: [ develop ]
+    types: [opened, synchronize, reopened, ready_for_review]
 
 permissions:
   contents: read
 
 jobs:
   build:
-    if: contains(github.event.pull_request.labels.*.name, 'eden_compression')
+    if: (github.event.pull_request.draft == false && contains(github.event.pull_request.labels.*.name, 'eden_compression'))
     strategy:
       matrix:
        os: ['ubuntu-latest', 'windows-latest']

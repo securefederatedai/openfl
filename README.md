@@ -17,7 +17,7 @@
   <img alt="Coverity Scan Build Status"
        src="https://scan.coverity.com/projects/29040/badge.svg"/>
 </a>
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/intel/openfl/blob/develop/openfl-tutorials/interactive_api/numpy_linear_regression/workspace/SingleNotebook.ipynb)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/intel/openfl/blob/develop/openfl-tutorials/Federated_Pytorch_MNIST_Tutorial.ipynb)
 
 Open Federated Learning (OpenFL) is a Python 3 framework for Federated Learning. OpenFL is designed to be a _flexible_, _extensible_ and _easily learnable_ tool for data scientists. OpenFL is hosted by The Linux Foundation, aims to be community-driven, and welcomes contributions back to the project. 
 
@@ -36,9 +36,6 @@ For more installation options check out the [online documentation](https://openf
 
 
 OpenFL enables data scientists to set up a federated learning experiment following one of the workflows:
-
-- [Director-based Workflow](https://openfl.readthedocs.io/en/latest/about/features_index/interactive.html):
-Setup long-lived components to run many experiments in series. Recommended for FL research when many changes to model, dataloader, or hyperparameters are expected
 
 - [Aggregator-based Workflow](https://openfl.readthedocs.io/en/latest/about/features_index/taskrunner.html):
 Define an experiment and distribute it manually. All participants can verify model code and [FL plan](https://openfl.readthedocs.io/en/latest/about/features_index/taskrunner.html#federated-learning-plan-fl-plan-settings) prior to execution. The federation is terminated when the experiment is finished
