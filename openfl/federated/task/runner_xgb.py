@@ -7,16 +7,15 @@
 # from copy import deepcopy
 # from typing import Iterator, Tuple
 
-import numpy as np
 import json
+
+import numpy as np
+import xgboost as xgb
+from sklearn.metrics import accuracy_score
 
 from openfl.federated.task.runner import TaskRunner
 from openfl.utilities import Metric, TensorKey, change_tags
 from openfl.utilities.split import split_tensor_dict_for_holdouts
-
-import xgboost as xgb
-import json
-from sklearn.metrics import accuracy_score
 
 
 class XGBoostTaskRunner(TaskRunner):
@@ -46,8 +45,13 @@ class XGBoostTaskRunner(TaskRunner):
         Returns:
         None
         """
-        if (isinstance(input_tensor_dict['local_tree'], np.ndarray) and input_tensor_dict['local_tree'].size != 0) \
-            or (not isinstance(input_tensor_dict['local_tree'], np.ndarray) and input_tensor_dict['local_tree'] is not None):
+        if (
+            isinstance(input_tensor_dict["local_tree"], np.ndarray)
+            and input_tensor_dict["local_tree"].size != 0
+        ) or (
+            not isinstance(input_tensor_dict["local_tree"], np.ndarray)
+            and input_tensor_dict["local_tree"] is not None
+        ):
             self.set_tensor_dict(input_tensor_dict)
 
     def validate_task(self, col_name, round_num, input_tensor_dict, **kwargs):
@@ -179,50 +183,61 @@ class XGBoostTaskRunner(TaskRunner):
 
         # Return global_tensor_dict, local_tensor_dict
         # import pdb; pdb.set_trace()
-        #TODO it is still decodable from here with .tobytes().decode('utf-8')
+        # TODO it is still decodable from here with .tobytes().decode('utf-8')
         return global_tensor_dict, local_tensor_dict
 
     def get_tensor_dict(self, with_opt_vars=False):
-            """
-            Retrieves the tensor dictionary containing the model's tree structure.
+        """
+        Retrieves the tensor dictionary containing the model's tree structure.
 
-            This method returns a dictionary with the key 'local_tree', which contains the model's tree structure as a numpy array.
-            If the model has not been initialized (`self.bst` is None), it returns an empty numpy array.
-            If the global model is not set or is empty, it returns the entire model as a numpy array.
-            Otherwise, it returns only the trees added in the latest training session.
+        This method returns a dictionary with the key 'local_tree', which contains the model's tree structure as a numpy array.
+        If the model has not been initialized (`self.bst` is None), it returns an empty numpy array.
+        If the global model is not set or is empty, it returns the entire model as a numpy array.
+        Otherwise, it returns only the trees added in the latest training session.
 
-            Parameters:
-            with_opt_vars (bool): N/A for XGBoost (Default=False).
+        Parameters:
+        with_opt_vars (bool): N/A for XGBoost (Default=False).
 
-            Returns:
-            dict: A dictionary with the key 'local_tree' containing the model's tree structure as a numpy array.
-            """
+        Returns:
+        dict: A dictionary with the key 'local_tree' containing the model's tree structure as a numpy array.
+        """
 
-            if self.bst is None:
-                # For initializing tensor dict
-                return {'local_tree': np.array([], dtype=np.float32)}
+        if self.bst is None:
+            # For initializing tensor dict
+            return {"local_tree": np.array([], dtype=np.float32)}
 
-            booster_array = self.bst.save_raw('json')
-            booster_dict = json.loads(booster_array)
+        booster_array = self.bst.save_raw("json")
+        booster_dict = json.loads(booster_array)
 
-            if (isinstance(self.global_model, np.ndarray) and self.global_model.size == 0) or self.global_model is None:
-                booster_float32_array = np.frombuffer(booster_array, dtype=np.uint8).astype(np.float32)
-                return {'local_tree': booster_float32_array}
+        if (
+            isinstance(self.global_model, np.ndarray) and self.global_model.size == 0
+        ) or self.global_model is None:
+            booster_float32_array = np.frombuffer(booster_array, dtype=np.uint8).astype(np.float32)
+            return {"local_tree": booster_float32_array}
 
-            global_model_booster_dict = json.loads(self.global_model)
-            num_global_trees = int(global_model_booster_dict["learner"]["gradient_booster"]["model"]["gbtree_model_param"]["num_trees"])
-            num_total_trees = int(booster_dict["learner"]["gradient_booster"]["model"]["gbtree_model_param"]["num_trees"])
+        global_model_booster_dict = json.loads(self.global_model)
+        num_global_trees = int(
+            global_model_booster_dict["learner"]["gradient_booster"]["model"]["gbtree_model_param"][
+                "num_trees"
+            ]
+        )
+        num_total_trees = int(
+            booster_dict["learner"]["gradient_booster"]["model"]["gbtree_model_param"]["num_trees"]
+        )
 
-            # Calculate the number of trees added in the latest training
-            num_latest_trees = num_total_trees - num_global_trees
-            latest_trees = booster_dict['learner']['gradient_booster']['model']['trees'][-num_latest_trees:]
+        # Calculate the number of trees added in the latest training
+        num_latest_trees = num_total_trees - num_global_trees
+        latest_trees = booster_dict["learner"]["gradient_booster"]["model"]["trees"][
+            -num_latest_trees:
+        ]
 
-            latest_trees_json = json.dumps(latest_trees)
-            latest_trees_bytes = latest_trees_json.encode('utf-8')
-            latest_trees_float32_array = np.frombuffer(latest_trees_bytes, dtype=np.uint8).astype(np.float32)
+        latest_trees_json = json.dumps(latest_trees)
+        latest_trees_bytes = latest_trees_json.encode("utf-8")
+        latest_trees_float32_array = np.frombuffer(latest_trees_bytes, dtype=np.uint8).astype(
+            np.float32
+        )
 
-            return {'local_tree': latest_trees_float32_array}
-
+        return {"local_tree": latest_trees_float32_array}
 
     def get_required_tensorkeys_for_function(self, func_name, **kwargs):
         """Get the required tensors for specified function that could be called
@@ -316,7 +331,7 @@ class XGBoostTaskRunner(TaskRunner):
             with_opt_vars (bool): N/A for XGBoost (Default=False).
         """
         # The with_opt_vars argument is not used in this method
-        self.global_model = bytearray(tensor_dict['local_tree'].astype(np.uint8).tobytes())
+        self.global_model = bytearray(tensor_dict["local_tree"].astype(np.uint8).tobytes())
         self.bst = xgb.Booster()
         self.bst.load_model(self.global_model)
 
@@ -338,21 +353,28 @@ class XGBoostTaskRunner(TaskRunner):
 
     def train_(self, train_dataloader) -> Metric:
         """Train model."""
-        dtrain = train_dataloader['dmatrix']
-        evals = [(dtrain, 'train')]
+        dtrain = train_dataloader["dmatrix"]
+        evals = [(dtrain, "train")]
         evals_result = {}
 
-        self.bst = xgb.train(self.params, dtrain, self.num_rounds, xgb_model=self.bst,
-                             evals=evals, evals_result=evals_result, verbose_eval=False)
+        self.bst = xgb.train(
+            self.params,
+            dtrain,
+            self.num_rounds,
+            xgb_model=self.bst,
+            evals=evals,
+            evals_result=evals_result,
+            verbose_eval=False,
+        )
 
-        loss = evals_result['train']['logloss'][-1]
+        loss = evals_result["train"]["logloss"][-1]
         return Metric(name=self.loss_fn.__name__, value=np.array(loss))
 
     def validate_(self, validation_dataloader) -> Metric:
         """Validate model."""
 
-        dtest = validation_dataloader['dmatrix']
-        y_test = validation_dataloader['labels']
+        dtest = validation_dataloader["dmatrix"]
+        y_test = validation_dataloader["labels"]
         preds = self.bst.predict(dtest)
         y_pred_binary = np.where(preds > 0.5, 1, 0)
         acc = accuracy_score(y_test, y_pred_binary)

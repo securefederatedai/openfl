@@ -1,6 +1,8 @@
+from math import ceil
+
 import numpy as np
 import xgboost as xgb
-from math import ceil
+
 
 class XGBoostDataLoader:
     """A class used to represent a Data Loader for XGBoost models.
@@ -155,10 +157,7 @@ class XGBoostDataLoader:
         Returns:
             xgb.DMatrix: The DMatrix object for the training data.
         """
-        return {
-            'dmatrix': self.get_dmatrix(self.X_train, self.y_train),
-            'labels': self.y_train
-        }
+        return {"dmatrix": self.get_dmatrix(self.X_train, self.y_train), "labels": self.y_train}
 
     def get_valid_dmatrix(self):
         """Returns the DMatrix for the validation data.
@@ -166,7 +165,4 @@ class XGBoostDataLoader:
         Returns:
             xgb.DMatrix: The DMatrix object for the validation data.
         """
-        return {
-            'dmatrix': self.get_dmatrix(self.X_valid, self.y_valid),
-            'labels': self.y_valid
-        }
+        return {"dmatrix": self.get_dmatrix(self.X_valid, self.y_valid), "labels": self.y_valid}
