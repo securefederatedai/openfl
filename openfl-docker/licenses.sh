@@ -45,6 +45,6 @@ if [ "$INSTALL_SOURCES" = "yes" ]; then
     # Append dependency list to all_dependencies.txt
     pip-licenses | awk '{for(i=1;i<=NF;i++) if(i!=2) printf $i" "; print ""}' | tee -a all_dependencies.txt
     
-    # Download source packages for Python packages with specific licenses
-    pip-licenses | grep -E 'GPL|MPL|EPL' | awk '{OFS="=="} {print $1,$2}' | xargs pip download --no-binary :all:
+    # Download source packages for Python packages (if exists) with specific licenses
+    pip-licenses | grep -E 'GPL|MPL|EPL' | awk '{OFS="=="} {print $1,$2}' | xargs -I {} sh -c 'pip download --no-binary :all: {} || true'
 fi

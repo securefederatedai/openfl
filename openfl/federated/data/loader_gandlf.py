@@ -25,7 +25,10 @@ class GaNDLFDataLoaderWrapper(DataLoader):
             data_path (str): The path to the directory containing the data.
             feature_shape (tuple): The shape of an example feature array.
         """
-        self.train_csv = data_path + "/train.csv"
+        if "inference" in data_path:
+            self.train_csv = None
+        else:
+            self.train_csv = data_path + "/train.csv"
         self.val_csv = data_path + "/valid.csv"
         self.train_dataloader = None
         self.val_dataloader = None

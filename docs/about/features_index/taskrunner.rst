@@ -112,7 +112,7 @@ Each task subsection contains the following:
 .. _running_the_federation_manual:
 
 
-.. _interactive_api:
+.. _interactive_api (Deprecated):
 
 
 

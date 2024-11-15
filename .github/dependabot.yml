@@ -18,9 +18,3 @@ updates:
       interval: "daily"
     ignore:
       - dependency-name: "*"
-  - package-ecosystem: pip
-    directory: /openfl-tutorials/interactive_api
-    schedule:
-      interval: "daily"
-    ignore:
-      - dependency-name: "*"

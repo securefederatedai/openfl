@@ -7,6 +7,7 @@ name: Workflow Interface 101 MNIST Notebook
 on:
   pull_request:
     branches: [ develop ]
+    types: [opened, synchronize, reopened, ready_for_review]
 
   workflow_dispatch:
 
@@ -15,6 +16,7 @@ permissions:
 
 jobs:
   run_notebook:
+    if: github.event.pull_request.draft == false
     runs-on: ubuntu-22.04
     steps:
     - name: Checkout OpenFL repository

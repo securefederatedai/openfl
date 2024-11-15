@@ -3,8 +3,8 @@
 
 .. _interactive_tensorflow_mnist:
 
-Interactive API: MNIST Classification Tutorial
-===================================================
+Interactive API (Deprecated): MNIST Classification Tutorial
+===========================================================
 
 In this tutorial, we will set up a federation and train a basic TensoFlow model on the MNIST dataset using the interactive API.
 See `full tutorial <https://github.com/securefederatedai/openfl/tree/f1657abe88632d542504d6d71ca961de9333913f/openfl-tutorials/interactive_api/Tensorflow_MNIST>`_.
