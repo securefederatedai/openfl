@@ -5,10 +5,20 @@
 """Federated Boostrap Aggregation for XGBoost module."""
 
 import json
-from openfl.interface.aggregation_functions.core import AggregationFunction
 import numpy as np
+from openfl.interface.aggregation_functions.core import AggregationFunction
 
 def get_global_model(iterator, target_round):
+    """
+    Retrieves the global model for the specific round from an iterator.
+
+    Parameters:
+    iterator (iterable): An iterable containing items with 'tags' and 'round' keys.
+    target_round (int): The round number for which the global model is to be retrieved.
+
+    Returns:
+    np.ndarray: The numpy array representing the global model for the specified round.
+    """
     for item in iterator:
         # Items tagged with ('model',) are the global model of that round
         if 'tags' in item and item['tags'] == ('model',) and item['round'] == target_round:
@@ -17,7 +27,16 @@ def get_global_model(iterator, target_round):
 
         
 def append_trees(global_model, local_trees):
+    """
+    Appends local trees to the global model.
 
+    Parameters:
+    global_model (dict): A dictionary representing the global model.
+    local_trees (list): A list of dictionaries representing the local trees to be appended to the global model.
+
+    Returns:
+    dict: The updated global model with the local trees appended.
+    """
     num_global_trees = int(global_model["learner"]["gradient_booster"]["model"]["gbtree_model_param"]["num_trees"])
     num_local_trees = len(local_trees)
 
@@ -71,7 +90,7 @@ class FedBaggingXGBoost(AggregationFunction):
         Returns:
             bytearray: aggregated tensor
         """
-        # global_model = None
+
         global_model = get_global_model(db_iterator, fl_round)
         
         if (isinstance(global_model, np.ndarray) and global_model.size == 0) or global_model is None:
@@ -80,10 +99,10 @@ class FedBaggingXGBoost(AggregationFunction):
                 local_tree_json = json.loads(local_tree_bytearray)
                 
                 if (isinstance(global_model, np.ndarray) and global_model.size == 0) or global_model is None:
-                    # the first tree becomes the global model to append to
+                    # the first tree becomes the global model
                     global_model = local_tree_json
                 else:
-                    # append subsequent trees
+                    # append subsequent trees to global model
                     local_model = local_tree_json
                     local_trees = local_model['learner']['gradient_booster']['model']['trees']
                     global_model = append_trees(global_model, local_trees)
@@ -96,8 +115,6 @@ class FedBaggingXGBoost(AggregationFunction):
                 local_trees = json.loads(local_tree_bytearray)
                 global_model = append_trees(global_model, local_trees)
 
-        ## Ensures that model is recoverable. TODO put in function
-        # Convert latest_trees to a JSON string
         global_model_json = json.dumps(global_model)
         global_model_bytes = global_model_json.encode('utf-8')
         
