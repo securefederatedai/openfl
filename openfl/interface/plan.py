@@ -172,6 +172,7 @@ def initialize(
         )
 
     data_loader = get_dataloader(plan, prefer_minimal=True, input_shape=input_shape)
+    
     task_runner = plan.get_task_runner(data_loader)
     tensor_pipe = plan.get_tensor_pipe()
 
