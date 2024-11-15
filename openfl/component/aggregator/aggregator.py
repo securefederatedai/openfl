@@ -863,7 +863,6 @@ class Aggregator:
             new_model_report,
             ("model",),
         )
-        # import pdb; pdb.set_trace()
 
         # Finally, cache the updated model tensor
         self.tensor_db.cache_tensor({final_model_tk: new_model_nparray})
