@@ -71,13 +71,13 @@ class XGBoostTaskRunner(TaskRunner):
         # during agg validation, self.bst will still be None. during local validation, it will have a value - no need to rebuild
         if self.bst is None:
             self.rebuild_model(input_tensor_dict)
-        
+
         # if self.bst is still None after rebuilding, then there was no initial global model, so set metric to 0
         if self.bst is None:
             # for first round agg validation, there is no model so set metric to 0
             # TODO: this is not robust, especially if using a loss metric
             metric = Metric(name="accuracy", value=np.array(0))
-        else: 
+        else:
             metric = self.validate_(loader)
 
         origin = col_name
@@ -128,7 +128,7 @@ class XGBoostTaskRunner(TaskRunner):
         }
 
         # output model tensors (Doesn't include TensorKey)
-        output_model_dict = self.get_tensor_dict() 
+        output_model_dict = self.get_tensor_dict()
         global_model_dict, local_model_dict = split_tensor_dict_for_holdouts(
             self.logger, output_model_dict, **self.tensor_dict_split_fn_kwargs
         )
@@ -137,7 +137,7 @@ class XGBoostTaskRunner(TaskRunner):
         global_tensorkey_model_dict = {
             TensorKey(tensor_name, origin, round_num, False, tags): nparray
             for tensor_name, nparray in global_model_dict.items()
-        } 
+        }
         # Create tensorkeys that should stay local
         local_tensorkey_model_dict = {
             TensorKey(tensor_name, origin, round_num, False, tags): nparray
@@ -181,7 +181,7 @@ class XGBoostTaskRunner(TaskRunner):
         # import pdb; pdb.set_trace()
         #TODO it is still decodable from here with .tobytes().decode('utf-8')
         return global_tensor_dict, local_tensor_dict
-    
+
     def get_tensor_dict(self, with_opt_vars=False):
             """
             Retrieves the tensor dictionary containing the model's tree structure.
@@ -222,7 +222,7 @@ class XGBoostTaskRunner(TaskRunner):
             latest_trees_float32_array = np.frombuffer(latest_trees_bytes, dtype=np.uint8).astype(np.float32)
 
             return {'local_tree': latest_trees_float32_array}
-    
+
 
     def get_required_tensorkeys_for_function(self, func_name, **kwargs):
         """Get the required tensors for specified function that could be called
@@ -341,8 +341,8 @@ class XGBoostTaskRunner(TaskRunner):
         dtrain = train_dataloader['dmatrix']
         evals = [(dtrain, 'train')]
         evals_result = {}
-        
-        self.bst = xgb.train(self.params, dtrain, self.num_rounds, xgb_model=self.bst, 
+
+        self.bst = xgb.train(self.params, dtrain, self.num_rounds, xgb_model=self.bst,
                              evals=evals, evals_result=evals_result, verbose_eval=False)
 
         loss = evals_result['train']['logloss'][-1]

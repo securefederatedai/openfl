@@ -25,7 +25,7 @@ def get_global_model(iterator, target_round):
             return item['nparray']
     raise ValueError(f"No item found with tag 'model' and round {target_round}")
 
-        
+
 def append_trees(global_model, local_trees):
     """
     Appends local trees to the global model.
@@ -92,12 +92,12 @@ class FedBaggingXGBoost(AggregationFunction):
         """
 
         global_model = get_global_model(db_iterator, fl_round)
-        
+
         if (isinstance(global_model, np.ndarray) and global_model.size == 0) or global_model is None:
             for local_tensor in local_tensors:
                 local_tree_bytearray = bytearray(local_tensor.tensor.astype(np.uint8).tobytes())
                 local_tree_json = json.loads(local_tree_bytearray)
-                
+
                 if (isinstance(global_model, np.ndarray) and global_model.size == 0) or global_model is None:
                     # the first tree becomes the global model
                     global_model = local_tree_json
@@ -117,5 +117,5 @@ class FedBaggingXGBoost(AggregationFunction):
 
         global_model_json = json.dumps(global_model)
         global_model_bytes = global_model_json.encode('utf-8')
-        
+
         return np.frombuffer(global_model_bytes, dtype=np.uint8).astype(np.float32)

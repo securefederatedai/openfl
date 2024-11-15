@@ -63,30 +63,30 @@ def main():
     setup_data(src)
     collaborators = int(sys.argv[1])
     print("Creating splits for {} collaborators".format(collaborators))
-    
+
     # Load the dataset
     higgs_data = pd.read_csv(path.join(src, CSV_FILENAME), header=None, nrows=1000000)
-    
+
     # Split the dataset into features and labels
     X = higgs_data.iloc[:, 1:].values
     y = higgs_data.iloc[:, 0].values
-    
+
     # Split the dataset into training and testing sets
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-    
+
     # Combine X and y for train and test sets
     train_data = pd.DataFrame(data=np.column_stack((y_train, X_train)))
     test_data = pd.DataFrame(data=np.column_stack((y_test, X_test)))
-    
+
     # Split the training data into parts for each collaborator
     for i in range(collaborators):
         dst = f'data/{i+1}'
         makedirs(dst, exist_ok=True)
-        
+
         # Split the training data for the current collaborator
         split_train_data = train_data.iloc[i::collaborators]
         split_train_data.to_csv(path.join(dst, 'train.csv'), index=False, header=False)
-        
+
         # Copy the test data for the current collaborator
         test_data.to_csv(path.join(dst, 'valid.csv'), index=False, header=False)
 

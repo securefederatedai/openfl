@@ -28,7 +28,7 @@ class XGBoostRunner(XGBoostTaskRunner):
         """
         super().__init__(**kwargs)
 
-        self.bst = None 
+        self.bst = None
         self.params = params
         self.num_rounds = num_rounds
 
@@ -37,8 +37,8 @@ class XGBoostRunner(XGBoostTaskRunner):
         dtrain = train_dataloader['dmatrix']
         evals = [(dtrain, 'train')]
         evals_result = {}
-        
-        self.bst = xgb.train(self.params, dtrain, self.num_rounds, xgb_model=self.bst, 
+
+        self.bst = xgb.train(self.params, dtrain, self.num_rounds, xgb_model=self.bst,
                              evals=evals, evals_result=evals_result, verbose_eval=False)
 
         loss = evals_result['train']['logloss'][-1]
