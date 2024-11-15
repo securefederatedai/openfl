@@ -69,7 +69,7 @@ class Aggregator:
         best_state_path,
         last_state_path,
         assigner,
-        delta_updates,
+        delta_updates=True,
         straggler_handling_policy=None,
         rounds_to_train=256,
         single_col_cert_common_name=None,
