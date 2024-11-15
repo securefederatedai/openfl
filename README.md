@@ -35,16 +35,16 @@ For more installation options check out the [online documentation](https://openf
 ## Getting Started
 
 
-OpenFL enables data scientists to set up a federated learning experiment following one of the workflows:
+OpenFL enables data scientists to set up a federated learning experiment following one of the interfaces:
 
-- [Aggregator-based Workflow](https://openfl.readthedocs.io/en/latest/about/features_index/taskrunner.html):
+- [Task Runner API](https://openfl.readthedocs.io/en/latest/about/features_index/taskrunner.html):
 Define an experiment and distribute it manually. All participants can verify model code and [FL plan](https://openfl.readthedocs.io/en/latest/about/features_index/taskrunner.html#federated-learning-plan-fl-plan-settings) prior to execution. The federation is terminated when the experiment is finished
 
-- [Workflow Interface](https://openfl.readthedocs.io/en/latest/about/features_index/workflowinterface.html) ([*experimental*](https://openfl.readthedocs.io/en/latest/developer_guide/experimental_features.html)):
+- [Workflow API](https://openfl.readthedocs.io/en/latest/about/features_index/workflowinterface.html) ([*experimental*](https://openfl.readthedocs.io/en/latest/developer_guide/experimental_features.html)):
 Create complex experiments that extend beyond traditional horizontal federated learning. See the [experimental tutorials](https://github.com/securefederatedai/openfl/blob/develop/openfl-tutorials/experimental/) to learn how to coordinate [aggregator validation after collaborator model training](https://github.com/securefederatedai/openfl/tree/develop/openfl-tutorials/experimental/102_Aggregator_Validation.ipynb), [perform global differentially private federated learning](https://github.com/psfoley/openfl/tree/experimental-workflow-interface/openfl-tutorials/experimental/Global_DP), measure the amount of private information embedded in a model after collaborator training with [privacy meter](https://github.com/securefederatedai/openfl/blob/develop/openfl-tutorials/experimental/Privacy_Meter/readme.md), or [add a watermark to a federated model](https://github.com/securefederatedai/openfl/blob/develop/openfl-tutorials/experimental/301_MNIST_Watermarking.ipynb).
 
 The quickest way to test OpenFL is to follow our [tutorials](https://github.com/securefederatedai/openfl/tree/develop/openfl-tutorials). </br>
-Read the [blog post](https://towardsdatascience.com/go-federated-with-openfl-8bc145a5ead1) explaining steps to train a model with OpenFL. </br>
+Read the [blog post](https://medium.com/openfl/from-centralized-machine-learning-to-federated-learning-with-openfl-b3e61da52432) explaining steps to train a model with OpenFL. </br>
 Check out the [online documentation](https://openfl.readthedocs.io/en/latest/index.html) to launch your first federation.
 
 
@@ -53,7 +53,7 @@ Check out the [online documentation](https://openfl.readthedocs.io/en/latest/ind
 - Ubuntu Linux 18.04+
 - Python 3.7+ (recommended to use with [Virtualenv](https://virtualenv.pypa.io/en/latest/)).
 
-OpenFL supports training with TensorFlow 2+ or PyTorch 1.3+ which should be installed separately. User can extend the list of supported Deep Learning frameworks if needed.
+OpenFL supports training with TensorFlow 2+ or PyTorch 2+ which should be installed separately. Users can extend the list of supported Machine Learning frameworks if needed.
 
 ## Project Overview
 ### What is Federated Learning
