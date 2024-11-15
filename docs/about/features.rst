@@ -23,7 +23,7 @@ Task Runner
 
         features_index/taskrunner
 
-Interactive
+Interactive (Deprecated)
     Setup long-lived components to run many experiments in series. Recommended for FL research when many changes to model, dataloader, or hyperparameters are expected.
     Formerly known as the director-based workflow.
     For more info see :doc:`features_index/interactive`
@@ -83,7 +83,6 @@ FedCurv
 
     Use :py:class:`openfl.utilities.fedcurv.torch.FedCurv` to override train function using :code:`.get_penalty()`, :code:`.on_train_begin()`, and :code:`.on_train_end()` methods.
     In addition, you should override default :code:`AggregationFunction` of the train task with :class:`openfl.interface.aggregation_functions.FedCurvWeightedAverage`.
-    See :code:`PyTorch_Histology_FedCurv` tutorial in :code:`../openfl-tutorials/interactive_api` directory for more details.
 
 .. _federated_evaluation:
 

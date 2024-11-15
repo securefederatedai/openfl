@@ -1,5 +1,5 @@
 # Tests an FL experiment in a Dockerized environment.
-name: Dockerization
+name: TaskRunner (docker/native)
 
 on:
   pull_request:

@@ -1,18 +1,33 @@
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 # ------------------------------------
-# Workspace Image
+# Gramine-ready Workspace Image
+# Usage:
+# $> docker build . -t openfl-workspace -f Dockerfile.workspace \
+#    [--build-arg BASE_IMAGE=openfl:latest] \
+#    [--build-arg WORKSPACE_NAME=WORKSPACE_NAME] \
+#    [--secret id=signer-key,src=signer-key.pem]
 # ------------------------------------
 ARG BASE_IMAGE=openfl:latest
 FROM ${BASE_IMAGE}
 
+USER root
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
-USER user
+# Import workspace
+WORKDIR /
 ARG WORKSPACE_NAME
-COPY ${WORKSPACE_NAME}.zip .
-RUN fx workspace import --archive ${WORKSPACE_NAME}.zip && \
-    pip install --no-cache-dir -r ${WORKSPACE_NAME}/requirements.txt
+COPY ${WORKSPACE_NAME}.zip /workspace.zip
+RUN fx workspace import --archive /workspace.zip && \
+    pip install --no-cache-dir -r /workspace/requirements.txt
 
-WORKDIR /home/user/${WORKSPACE_NAME}
+# Build enclaves
+WORKDIR /workspace
+RUN --mount=type=secret,id=signer-key,dst=/key.pem \
+    cp -r /opt/venv/lib/python3.10/site-packages/openfl-docker/gramine_app/* /workspace/ && \
+    make SGX=1 SGX_SIGNER_KEY=/key.pem >> fx.mr_enclave && \
+    echo "$(cat fx.mr_enclave)" && \
+    chown -R user /workspace
+
+USER user
 CMD ["/bin/bash"]

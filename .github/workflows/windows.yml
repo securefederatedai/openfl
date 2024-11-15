@@ -31,28 +31,8 @@ jobs:
         coverage run -m pytest -rA
         coverage report
   
-  interactive-kvasir: # from interactive-kvasir.yml
-    needs: [pytest-coverage]
-    runs-on: windows-latest
-    steps:
-    - uses: actions/checkout@v3
-    - name: Set up Python 3.8
-      uses: actions/setup-python@v3
-      with:
-        python-version: "3.8"
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install .
-    - name: Interactive API - pytorch_kvasir_unet
-      run: |
-        python setup.py build_grpc
-        pip install torch==1.13.1
-        pip install torchvision==0.14.1
-        python -m tests.github.interactive_api_director.experiments.pytorch_kvasir_unet.run
-  
   cli: # from taskrunner.yml
-    needs: [pytest-coverage, interactive-kvasir]
+    needs: [pytest-coverage]
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v3
