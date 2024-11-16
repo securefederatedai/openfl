@@ -127,9 +127,9 @@ Next we import the FLSpec, LocalRuntime, and placement decorators.
 
     from copy import deepcopy
 
-    from openfl.experimental.interface import FLSpec, Aggregator, Collaborator
-    from openfl.experimental.runtime import LocalRuntime
-    from openfl.experimental.placement import aggregator, collaborator
+    from openfl.experimental.workflow.interface import FLSpec, Aggregator, Collaborator
+    from openfl.experimental.workflow.runtime import LocalRuntime
+    from openfl.experimental.workflow.placement import aggregator, collaborator
 
 
     def FedAvg(models, weights=None):
