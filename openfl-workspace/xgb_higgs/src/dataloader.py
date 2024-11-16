@@ -4,7 +4,7 @@
 
 from openfl.federated import XGBoostDataLoader
 import os
-import pandas as pd
+import modin.pandas as pd
 
 class HiggsDataLoader(XGBoostDataLoader):
     def __init__(self, data_path, **kwargs):

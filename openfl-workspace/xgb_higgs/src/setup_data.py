@@ -6,7 +6,7 @@ from urllib.request import urlretrieve
 from hashlib import sha384
 from os import path, makedirs
 from tqdm import tqdm
-import pandas as pd
+import modin.pandas as pd
 import gzip
 from sklearn.model_selection import train_test_split
 import numpy as np
@@ -65,7 +65,7 @@ def main():
     print("Creating splits for {} collaborators".format(collaborators))
 
     # Load the dataset
-    higgs_data = pd.read_csv(path.join(src, CSV_FILENAME), header=None, nrows=1000000)
+    higgs_data = pd.read_csv(path.join(src, CSV_FILENAME), header=None)
 
     # Split the dataset into features and labels
     X = higgs_data.iloc[:, 1:].values
