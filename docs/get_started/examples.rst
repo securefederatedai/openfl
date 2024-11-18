@@ -29,20 +29,6 @@ See :ref:`running_the_task_runner`
 
     :ref:`running_the_task_runner`
 
--------------------------
-Python Native API
--------------------------
-Intended for quick simulation purposes
-
-See :ref:`python_native_pytorch_mnist`
-
-.. toctree::
-    :hidden:
-    :maxdepth: 1
-
-    examples/python_native_pytorch_mnist
-
-
 ----------------------------
 Interactive API (Deprecated)
 ----------------------------
