@@ -315,9 +315,14 @@ class XGBoostTaskRunner(TaskRunner):
         """
         # The with_opt_vars argument is not used in this method
         self.global_model = tensor_dict["local_tree"]
-        global_model_byte_array = bytearray(self.global_model.astype(np.uint8).tobytes())
-        self.bst = xgb.Booster()
-        self.bst.load_model(global_model_byte_array)
+        if (
+            isinstance(self.global_model, np.ndarray) and self.global_model.size == 0
+        ) or self.global_model is None:
+            raise ValueError("The model does not exist or is empty.")
+        else:
+            global_model_byte_array = bytearray(self.global_model.astype(np.uint8).tobytes())
+            self.bst = xgb.Booster()
+            self.bst.load_model(global_model_byte_array)
 
     def save_native(
         self,
