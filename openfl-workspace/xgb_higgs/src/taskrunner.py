@@ -38,7 +38,7 @@ class XGBoostRunner(XGBoostTaskRunner):
         self.params = params
         self.num_rounds = num_rounds
 
-    def train_(self, train_dataloader) -> Metric:
+    def train_(self, data) -> Metric:
         """
         Train the XGBoost model.
 
@@ -48,7 +48,7 @@ class XGBoostRunner(XGBoostTaskRunner):
         Returns:
             Metric: A Metric object containing the training loss.
         """
-        dtrain = train_dataloader['dmatrix']
+        dtrain = data['dmatrix']
         evals = [(dtrain, 'train')]
         evals_result = {}
 
@@ -58,7 +58,7 @@ class XGBoostRunner(XGBoostTaskRunner):
         loss = evals_result['train']['logloss'][-1]
         return Metric(name=self.params['eval_metric'], value=np.array(loss))
 
-    def validate_(self, validation_dataloader) -> Metric:
+    def validate_(self, data) -> Metric:
         """
         Validate the XGBoost model.
 
@@ -68,8 +68,8 @@ class XGBoostRunner(XGBoostTaskRunner):
         Returns:
             Metric: A Metric object containing the validation accuracy.
         """
-        dtest = validation_dataloader['dmatrix']
-        y_test = validation_dataloader['labels']
+        dtest = data['dmatrix']
+        y_test = data['labels']
         preds = self.bst.predict(dtest)
         y_pred_binary = np.where(preds > 0.5, 1, 0)
         acc = accuracy_score(y_test, y_pred_binary)
