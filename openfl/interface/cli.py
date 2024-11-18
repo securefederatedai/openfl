@@ -191,6 +191,7 @@ def cli(context, log_level, no_warnings):
             or log_file.startswith("/")
         ):
             raise ValueError("Invalid log file path")
+        
         # Ensure the log file is in the 'logs' directory
         allowed_directory = Path("logs").resolve()
         full_path = (allowed_directory / log_file).resolve()
