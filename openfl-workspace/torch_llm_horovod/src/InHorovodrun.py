@@ -9,7 +9,7 @@ from logging import getLogger
 
 import horovod.torch as hvd
 
-from openfl.interface.cli import setup_logging
+import openfl.native as fx
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.dirname(SCRIPT_DIR))
@@ -50,7 +50,7 @@ def get_args():
 
 def main():
     logger = getLogger(__name__)
-    setup_logging()
+    fx.setup_logging(level="INFO", log_file=None)
     try:
         logger.info("starting horovod")
         hvd.init()
