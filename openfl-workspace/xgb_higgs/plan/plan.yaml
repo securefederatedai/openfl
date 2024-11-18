@@ -10,7 +10,7 @@ aggregator :
     last_state_path : save/last.pbuf
     rounds_to_train : 10
     write_logs      : false
-    delta_updates   : false
+    use_delta_updates : false
 
 collaborator :
   defaults : plan/defaults/collaborator.yaml
