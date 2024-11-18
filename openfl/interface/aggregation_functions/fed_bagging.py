@@ -9,7 +9,6 @@ from logging import getLogger
 import numpy as np
 
 from openfl.interface.aggregation_functions.core import AggregationFunction
-from openfl.federated.task.runner_xgb import check_precision_loss
 
 def get_global_model(iterator, target_round):
     """
@@ -128,6 +127,5 @@ class FedBaggingXGBoost(AggregationFunction):
         global_model_bytes = global_model_json.encode("utf-8")
 
         global_model_float32_array = np.frombuffer(global_model_bytes, dtype=np.uint8).astype(np.float32)
-        check_precision_loss(logger, global_model_float32_array, global_model)
 
         return global_model_float32_array
