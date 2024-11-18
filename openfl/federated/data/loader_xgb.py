@@ -1,7 +1,5 @@
-pass
-
-import numpy as np
 import xgboost as xgb
+
 from openfl.federated.data.loader import DataLoader
 
 

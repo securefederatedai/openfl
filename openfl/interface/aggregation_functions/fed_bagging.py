@@ -5,8 +5,11 @@
 """Federated Boostrap Aggregation for XGBoost module."""
 
 import json
+
 import numpy as np
+
 from openfl.interface.aggregation_functions.core import AggregationFunction
+
 
 def get_global_model(iterator, target_round):
     """
