@@ -5,7 +5,6 @@
 """Python low-level API module."""
 import os
 import time
-import flatten_json
 from collections import defaultdict
 from copy import deepcopy
 from logging import getLogger
@@ -15,6 +14,7 @@ from pathlib import Path
 from shutil import copytree, ignore_patterns, make_archive
 from typing import Dict, Tuple
 
+import flatten_json
 from tensorboardX import SummaryWriter
 
 from openfl.component.assigner.tasks import Task, TrainTask, ValidateTask
@@ -673,7 +673,9 @@ class FLExperiment:
         """
         flattened_config = flatten_json.flatten(config, ".")
         if not return_complete:
-            keys_to_remove = [k for k, v in flattened_config.items() if ("defaults" in k or v is None)]
+            keys_to_remove = [
+                k for k, v in flattened_config.items() if ("defaults" in k or v is None)
+            ]
         else:
             keys_to_remove = [k for k, v in flattened_config.items() if v is None]
         for k in keys_to_remove:
@@ -694,7 +696,6 @@ class FLExperiment:
         """
         config = flatten_json.unflatten_list(config, separator)
         return config
-
 
     def update_plan(self, override_config, plan=None, resolve=True):
         """Updates the plan with the provided override and saves it to disk.
@@ -746,6 +747,7 @@ class FLExperiment:
         if resolve:
             plan.resolve()
         return plan
+
 
 class TaskKeeper:
     """Task keeper class.
