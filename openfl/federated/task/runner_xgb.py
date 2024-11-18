@@ -36,23 +36,15 @@ class XGBoostTaskRunner(TaskRunner):
         Rebuilds the model using the provided input tensor dictionary.
 
         This method checks if the 'local_tree' key in the input tensor dictionary is either a non-empty numpy array
-        or a non-None value. If this condition is met, it updates the internal tensor dictionary with the provided input.
+        If this condition is met, it updates the internal tensor dictionary with the provided input.
 
         Parameters:
-        input_tensor_dict (dict): A dictionary containing tensor data. It must include the key 'local_tree', which can be:
-                                - A non-empty numpy array
-                                - Any non-None value
+        input_tensor_dict (dict): A dictionary containing tensor data. It must include the key 'local_tree'
 
         Returns:
         None
         """
-        if (
-            isinstance(input_tensor_dict["local_tree"], np.ndarray)
-            and input_tensor_dict["local_tree"].size != 0
-        ) or (
-            not isinstance(input_tensor_dict["local_tree"], np.ndarray)
-            and input_tensor_dict["local_tree"] is not None
-        ):
+        if isinstance(input_tensor_dict["local_tree"], np.ndarray) and input_tensor_dict["local_tree"].size != 0 :
             self.set_tensor_dict(input_tensor_dict)
 
     def validate_task(self, col_name, round_num, input_tensor_dict, **kwargs):
@@ -68,8 +60,7 @@ class XGBoostTaskRunner(TaskRunner):
 
         Returns:
             global_output_dict (dict):  Tensors to send back to the aggregator.
-            local_output_dict (dict):   Tensors to maintain in the local
-                TensorDB.
+            local_output_dict (dict):   Tensors to maintain in the local TensorDB.
         """
         data = self.data_loader.get_valid_dmatrix()
 
