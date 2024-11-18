@@ -15,6 +15,27 @@ from openfl.utilities import Metric, TensorKey, change_tags
 from openfl.utilities.split import split_tensor_dict_for_holdouts
 
 
+def check_precision_loss(logger, converted_data, original_data):
+    """
+    Checks for precision loss during conversion to float32 and back.
+
+    Parameters:
+    logger (Logger): The logger object to log warnings.
+    converted_data (np.ndarray): The data that has been converted to float32.
+    original_data (list): The original data to be checked for precision loss.
+    """
+    # Convert the float32 array back to bytes and decode to JSON
+    reconstructed_bytes = converted_data.astype(np.uint8).tobytes()
+    reconstructed_json = reconstructed_bytes.decode("utf-8")
+    reconstructed_data = json.loads(reconstructed_json)
+
+    assert type(original_data) == type(reconstructed_data), "Reconstructed datatype does not match original."
+
+    # Compare the original and reconstructed data
+    if original_data != reconstructed_data:
+        logger.warn("Precision loss detected during conversion.")
+
+
 class XGBoostTaskRunner(TaskRunner):
     def __init__(self, **kwargs):
         """
@@ -208,6 +229,8 @@ class XGBoostTaskRunner(TaskRunner):
         latest_trees_float32_array = np.frombuffer(latest_trees_bytes, dtype=np.uint8).astype(
             np.float32
         )
+
+        check_precision_loss(self.logger, latest_trees_float32_array, original_data=latest_trees)
 
         return {"local_tree": latest_trees_float32_array}
 
