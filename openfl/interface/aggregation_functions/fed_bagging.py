@@ -5,9 +5,7 @@
 """Federated Boostrap Aggregation for XGBoost module."""
 
 import json
-from logging import getLogger
 import numpy as np
-
 from openfl.interface.aggregation_functions.core import AggregationFunction
 
 def get_global_model(iterator, target_round):
@@ -59,8 +57,13 @@ def append_trees(global_model, local_trees):
 
 
 class FedBaggingXGBoost(AggregationFunction):
-    """Federated Boostrap Aggregation for XGBoost."""
+    """
+    Federated Bootstrap Aggregation for XGBoost.
 
+    This class implements a federated learning aggregation function specifically
+    designed for XGBoost models. It aggregates local model updates (trees) from
+    multiple collaborators into a global model using a bagging approach.
+    """
     def call(self, local_tensors, db_iterator, tensor_name, fl_round, *_):
         """Aggregate tensors.
 
@@ -94,12 +97,12 @@ class FedBaggingXGBoost(AggregationFunction):
         Returns:
             bytearray: aggregated tensor
         """
-        logger = getLogger(__name__)
         global_model = get_global_model(db_iterator, fl_round)
 
         if (
             isinstance(global_model, np.ndarray) and global_model.size == 0
         ) or global_model is None:
+            # if there is no global model, use the first local model as the global model
             for local_tensor in local_tensors:
                 local_tree_bytearray = bytearray(local_tensor.tensor.astype(np.uint8).tobytes())
                 local_tree_json = json.loads(local_tree_bytearray)
@@ -116,9 +119,11 @@ class FedBaggingXGBoost(AggregationFunction):
                     global_model = append_trees(global_model, local_trees)
         else:
             global_model_bytearray = bytearray(global_model.astype(np.uint8).tobytes())
+            # convert the global model to a dictionary
             global_model = json.loads(global_model_bytearray)
 
             for local_tensor in local_tensors:
+                # append trees to global model
                 local_tree_bytearray = bytearray(local_tensor.tensor.astype(np.uint8).tobytes())
                 local_trees = json.loads(local_tree_bytearray)
                 global_model = append_trees(global_model, local_trees)
