@@ -29,7 +29,9 @@ def check_precision_loss(logger, converted_data, original_data):
     reconstructed_json = reconstructed_bytes.decode("utf-8")
     reconstructed_data = json.loads(reconstructed_json)
 
-    assert type(original_data) == type(reconstructed_data), "Reconstructed datatype does not match original."
+    assert type(original_data) == type(
+        reconstructed_data
+    ), "Reconstructed datatype does not match original."
 
     # Compare the original and reconstructed data
     if original_data != reconstructed_data:
@@ -65,7 +67,10 @@ class XGBoostTaskRunner(TaskRunner):
         Returns:
         None
         """
-        if isinstance(input_tensor_dict["local_tree"], np.ndarray) and input_tensor_dict["local_tree"].size != 0 :
+        if (
+            isinstance(input_tensor_dict["local_tree"], np.ndarray)
+            and input_tensor_dict["local_tree"].size != 0
+        ):
             self.set_tensor_dict(input_tensor_dict)
 
     def validate_task(self, col_name, round_num, input_tensor_dict, **kwargs):

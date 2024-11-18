@@ -67,6 +67,7 @@ class FedBaggingXGBoost(AggregationFunction):
     designed for XGBoost models. It aggregates local model updates (trees) from
     multiple collaborators into a global model using a bagging approach.
     """
+
     def call(self, local_tensors, db_iterator, tensor_name, fl_round, *_):
         """Aggregate tensors.
 
@@ -134,6 +135,8 @@ class FedBaggingXGBoost(AggregationFunction):
         global_model_json = json.dumps(global_model)
         global_model_bytes = global_model_json.encode("utf-8")
 
-        global_model_float32_array = np.frombuffer(global_model_bytes, dtype=np.uint8).astype(np.float32)
+        global_model_float32_array = np.frombuffer(global_model_bytes, dtype=np.uint8).astype(
+            np.float32
+        )
 
         return global_model_float32_array
