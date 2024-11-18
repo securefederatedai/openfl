@@ -208,7 +208,8 @@ class XGBoostTaskRunner(TaskRunner):
             booster_float32_array = np.frombuffer(booster_array, dtype=np.uint8).astype(np.float32)
             return {"local_tree": booster_float32_array}
 
-        global_model_booster_dict = json.loads(self.global_model)
+        global_model_byte_array = bytearray(self.global_model.astype(np.uint8).tobytes())
+        global_model_booster_dict = json.loads(global_model_byte_array)
         num_global_trees = int(
             global_model_booster_dict["learner"]["gradient_booster"]["model"]["gbtree_model_param"][
                 "num_trees"
@@ -313,9 +314,10 @@ class XGBoostTaskRunner(TaskRunner):
             with_opt_vars (bool): N/A for XGBoost (Default=False).
         """
         # The with_opt_vars argument is not used in this method
-        self.global_model = bytearray(tensor_dict["local_tree"].astype(np.uint8).tobytes())
+        self.global_model = tensor_dict["local_tree"]
+        global_model_byte_array = bytearray(self.global_model.astype(np.uint8).tobytes())
         self.bst = xgb.Booster()
-        self.bst.load_model(self.global_model)
+        self.bst.load_model(global_model_byte_array)
 
     def save_native(
         self,
