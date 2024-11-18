@@ -35,7 +35,7 @@ def load_Higgs(data_path, **kwargs):
     Load the Higgs dataset from CSV files.
 
     The dataset is expected to be in two CSV files: 'train.csv' and 'valid.csv'.
-    The first column in each file represents the labels, and the remaining 
+    The first column in each file represents the labels, and the remaining
     columns represent the features.
 
     Args:

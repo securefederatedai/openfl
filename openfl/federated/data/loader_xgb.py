@@ -1,4 +1,4 @@
-from math import ceil
+pass
 
 import numpy as np
 import xgboost as xgb
@@ -60,7 +60,7 @@ class XGBoostDataLoader(DataLoader):
             int: The total number of validation samples.
         """
         return self.X_valid.shape[0]
-    
+
     def get_dmatrix(self, X, y):
         """Returns the DMatrix for the given data.
 
