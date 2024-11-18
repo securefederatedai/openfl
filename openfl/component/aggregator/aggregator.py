@@ -5,6 +5,8 @@
 """Aggregator module."""
 import queue
 import time
+import psutil
+import json
 from logging import getLogger
 from threading import Lock
 
@@ -75,6 +77,7 @@ class Aggregator:
         compression_pipeline=None,
         db_store_rounds=1,
         write_logs=False,
+        memleak_check=False,
         log_metric_callback=None,
         **kwargs,
     ):
@@ -122,7 +125,8 @@ class Aggregator:
         )
         self._end_of_round_check_done = [False] * rounds_to_train
         self.stragglers = []
-
+        self.memleak_check = memleak_check
+        self.memory_details = []
         self.rounds_to_train = rounds_to_train
 
         # if the collaborator requests a delta, this value is set to true
@@ -660,12 +664,79 @@ class Aggregator:
 
             task_results.append(tensor_key)
 
+        memory_detail = self.get_memory_usage(round_number, "aggregator")
+        self.memory_details.append(memory_detail)
+        self.logger.info("*******************SEND LOCAL TASK RESULTS: AGGREGATOR LOGS*******************************")
+        virtual_memory = psutil.virtual_memory()
+        mem_used = round(virtual_memory.used / (1024 ** 2),2)
+        process = psutil.Process()
+        process_mem = round(process.memory_info().rss / (1024 ** 2),2)
+        self.logger.info(f"FEDAIQE Round: {round_number}")
+        self.logger.info(f"FEDAIQE Process Mem: {process_mem}")
+        self.logger.info("*******************************************************************************************")
+
+        history = {
+                    "round": round_number,
+                    "metric_origin": "aggregator",
+                    "task_name": "telemetry",
+                    "metric_name": "MEM_USAGE",
+                    "metric_value": mem_used,
+        }
+        self.metric_queue.put(history)
+
+        history2 = {
+                    "round": round_number,
+                    "metric_origin": "aggregator",
+                    "task_name": "telemetry",
+                    "metric_name": "PROCESS_MEM",
+                    "metric_value": process_mem,
+        }
+        self.metric_queue.put(history2)
+
         self.collaborator_tasks_results[task_key] = task_results
 
         with self.lock:
             self._is_collaborator_done(collaborator_name, round_number)
 
             self._end_of_round_with_stragglers_check()
+
+    def get_memory_usage(self, round_number, metric_origin):
+        """
+        Logs the memory usage statistics for the given round number.
+
+        This method retrieves the current virtual and swap memory usage statistics
+        using the psutil library, formats them into a dictionary, and logs the
+        information using the logger.
+
+        Args:
+            round_number (int): The current round number for which memory usage is being logged.
+        """
+        virtual_memory = psutil.virtual_memory()
+        swap_memory = psutil.swap_memory()
+        memory_usage = {
+            "round_number": round_number,
+            "metric_origin": metric_origin,
+            "virtual_memory": {
+                "total": round(virtual_memory.total / (1024 ** 2), 2),
+                "available": round(virtual_memory.available / (1024 ** 2), 2),
+                "percent": virtual_memory.percent,
+                "used": round(virtual_memory.used / (1024 ** 2), 2),
+                "free": round(virtual_memory.free / (1024 ** 2), 2),
+                "active": round(virtual_memory.active / (1024 ** 2), 2),
+                "inactive": round(virtual_memory.inactive / (1024 ** 2), 2),
+                "buffers": round(virtual_memory.buffers / (1024 ** 2), 2),
+                "cached": round(virtual_memory.cached / (1024 ** 2), 2),
+                "shared": round(virtual_memory.shared / (1024 ** 2), 2),
+            },
+            "swap_memory": {
+                "total": round(swap_memory.total / (1024 ** 2), 2),
+                "used": round(swap_memory.used / (1024 ** 2), 2),
+                "free": round(swap_memory.free / (1024 ** 2), 2),
+                "percent": swap_memory.percent,
+            },
+        }
+        self.logger.info("Memory Usage: %s", memory_usage)
+        return memory_usage
 
     def _end_of_round_with_stragglers_check(self):
         """
@@ -852,7 +923,7 @@ class Aggregator:
             new_model_round_number,
             new_model_report,
             new_model_tags,
-        ) = new_model_tk
+     ) = new_model_tk
         final_model_tk = TensorKey(
             new_model_tensor_name,
             new_model_origin,
@@ -966,6 +1037,13 @@ class Aggregator:
         for task_name in all_tasks:
             self._compute_validation_related_task_metrics(task_name)
 
+        self.logger.info("*******************END OF ROUND CHECK: AGGREGATOR LOGS*******************************")
+        process = psutil.Process()
+        process_mem = round(process.memory_info().rss / (1024 ** 2),2)
+        self.logger.info(f"FEDAIQE Round: {self.round_number}")
+        self.logger.info(f"FEDAIQE Process Mem: {process_mem}")
+        self.logger.info("*************************************************************************************")
+
         # Once all of the task results have been processed
         self._end_of_round_check_done[self.round_number] = True
 
@@ -981,6 +1059,11 @@ class Aggregator:
 
         # TODO This needs to be fixed!
         if self._time_to_quit():
+            # Write self.memory_details to a file
+            if self.memleak_check:
+                self.logger.info("Writing memory details to file...")
+                with open(f"aggregator.json", "w") as f:
+                    json.dump(self.memory_details, f, indent=4)
             self.logger.info("Experiment Completed. Cleaning up...")
         else:
             self.logger.info("Starting round %s...", self.round_number)

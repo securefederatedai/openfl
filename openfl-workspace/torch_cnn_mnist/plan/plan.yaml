@@ -9,6 +9,7 @@ aggregator :
     best_state_path     : save/torch_cnn_mnist_best.pbuf
     last_state_path     : save/torch_cnn_mnist_last.pbuf
     rounds_to_train     : 10
+    memleak_check : true
     log_metric_callback :
       template : src.utils.write_metric
 
@@ -19,6 +20,7 @@ collaborator :
   settings :
     delta_updates    : false
     opt_treatment    : RESET
+    memleak_check : true
 
 data_loader :
   defaults : plan/defaults/data_loader.yaml

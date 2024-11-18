@@ -109,7 +109,7 @@ def _verify_completion_for_participant(participant, result_file):
         bool: True if successful, else False
     """
     # Wait for the successful output message to appear in the log till timeout
-    timeout = 900 # in seconds
+    timeout = 9 * 60 * 60  # in seconds
     log.info(f"Printing the last line of the log file for {participant.name} to track the progress")
     with open(result_file, 'r') as file:
         content = file.read()
@@ -124,7 +124,7 @@ def _verify_completion_for_participant(participant, result_file):
         if SUCCESS_MARKER in content:
             break
         log.info(f"Process is yet to complete for {participant.name}")
-        time.sleep(45)
+        time.sleep(300)
 
     if SUCCESS_MARKER not in content:
         log.error(f"Process failed/is incomplete for {participant.name} after timeout of {timeout} seconds")
