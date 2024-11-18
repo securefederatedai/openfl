@@ -87,8 +87,9 @@ def main():
         split_train_data = train_data.iloc[i::collaborators]
         split_train_data.to_csv(path.join(dst, 'train.csv'), index=False, header=False)
 
-        # Copy the test data for the current collaborator
-        test_data.to_csv(path.join(dst, 'valid.csv'), index=False, header=False)
+        # Split the test data for the current collaborator
+        split_test_data = test_data.iloc[i::collaborators]
+        split_test_data.to_csv(path.join(dst, 'valid.csv'), index=False, header=False)
 
 if __name__ == '__main__':
     main()
