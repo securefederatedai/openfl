@@ -13,18 +13,24 @@ from sklearn.metrics import accuracy_score
 
 class XGBoostRunner(XGBoostTaskRunner):
     """
-    Simple CNN for classification.
+    A class to run XGBoost training and validation tasks.
 
-    PyTorchTaskRunner inherits from nn.module, so you can define your model
-    in the same way that you would for PyTorch
+    This class inherits from XGBoostTaskRunner and provides methods to train and validate
+    an XGBoost model using federated learning.
+
+    Attributes:
+        bst (xgb.Booster): The XGBoost model.
+        params (dict): Parameters for the XGBoost model.
+        num_rounds (int): Number of boosting rounds.
     """
-
     def __init__(self, params=None, num_rounds=1, **kwargs):
-        """Initialize.
+        """
+        Initialize the XGBoostRunner.
 
         Args:
-            **kwargs: Additional arguments to pass to the function
-
+            params (dict, optional): Parameters for the XGBoost model. Defaults to None.
+            num_rounds (int, optional): Number of boosting rounds. Defaults to 1.
+            **kwargs: Additional arguments to pass to the function.
         """
         super().__init__(**kwargs)
 
@@ -33,7 +39,15 @@ class XGBoostRunner(XGBoostTaskRunner):
         self.num_rounds = num_rounds
 
     def train_(self, train_dataloader) -> Metric:
-        """Train model."""
+        """
+        Train the XGBoost model.
+
+        Args:
+            train_dataloader (dict): A dictionary containing the training data with keys 'dmatrix'.
+
+        Returns:
+            Metric: A Metric object containing the training loss.
+        """
         dtrain = train_dataloader['dmatrix']
         evals = [(dtrain, 'train')]
         evals_result = {}
@@ -45,8 +59,15 @@ class XGBoostRunner(XGBoostTaskRunner):
         return Metric(name=self.params['eval_metric'], value=np.array(loss))
 
     def validate_(self, validation_dataloader) -> Metric:
-        """Validate model."""
+        """
+        Validate the XGBoost model.
 
+        Args:
+            validation_dataloader (dict): A dictionary containing the validation data with keys 'dmatrix' and 'labels'.
+
+        Returns:
+            Metric: A Metric object containing the validation accuracy.
+        """
         dtest = validation_dataloader['dmatrix']
         y_test = validation_dataloader['labels']
         preds = self.bst.predict(dtest)

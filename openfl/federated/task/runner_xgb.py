@@ -4,9 +4,6 @@
 
 """XGBoostTaskRunner module."""
 
-# from copy import deepcopy
-# from typing import Iterator, Tuple
-
 import json
 
 import numpy as np
@@ -20,10 +17,16 @@ from openfl.utilities.split import split_tensor_dict_for_holdouts
 
 class XGBoostTaskRunner(TaskRunner):
     def __init__(self, **kwargs):
-        """Initializes the XGBoostTaskRunner object.
+        """
+        A class to manage XGBoost tasks in a federated learning environment.
 
-        Args:
-            **kwargs: Additional parameters to pass to the functions.
+        This class inherits from TaskRunner and provides methods to initialize and manage
+        the global model and required tensor keys for XGBoost tasks.
+
+        Attributes:
+            global_model (xgb.Booster): The global XGBoost model.
+            required_tensorkeys_for_function (dict): A dictionary to store required tensor keys for each function.
+            training_round_completed (bool): A flag to indicate if the training round is completed.
         """
         super().__init__(**kwargs)
         self.global_model = None
@@ -352,7 +355,15 @@ class XGBoostTaskRunner(TaskRunner):
         self.bst.save_model(filepath)
 
     def train_(self, train_dataloader) -> Metric:
-        """Train model."""
+        """
+        Train the XGBoost model.
+
+        Args:
+            train_dataloader (dict): A dictionary containing the training data with keys 'dmatrix'.
+
+        Returns:
+            Metric: A Metric object containing the training loss.
+        """
         dtrain = train_dataloader["dmatrix"]
         evals = [(dtrain, "train")]
         evals_result = {}
@@ -371,8 +382,15 @@ class XGBoostTaskRunner(TaskRunner):
         return Metric(name=self.loss_fn.__name__, value=np.array(loss))
 
     def validate_(self, validation_dataloader) -> Metric:
-        """Validate model."""
+        """
+        Validate the XGBoost model.
 
+        Args:
+            validation_dataloader (dict): A dictionary containing the validation data with keys 'dmatrix' and 'labels'.
+
+        Returns:
+            Metric: A Metric object containing the validation accuracy.
+        """
         dtest = validation_dataloader["dmatrix"]
         y_test = validation_dataloader["labels"]
         preds = self.bst.predict(dtest)
