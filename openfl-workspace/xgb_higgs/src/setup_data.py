@@ -19,7 +19,7 @@ URL = "https://archive.ics.uci.edu/ml/machine-learning-databases/00280/HIGGS.csv
 FILENAME = "HIGGS.csv.gz"
 CSV_FILENAME = "HIGGS.csv"
 CSV_SHA384 = 'b8b82e11a78b81601381420878ad42ba557291f394a88dc5293e4077c8363c87429639b120e299a2a9939c1f943b6a63'
-DEFAULT_PATH = path.join(path.expanduser('~'), '.openfl', 'data')
+DEFAULT_PATH = path.join(os.getcwd(), 'data')
 
 pbar = tqdm(total=None)
 
