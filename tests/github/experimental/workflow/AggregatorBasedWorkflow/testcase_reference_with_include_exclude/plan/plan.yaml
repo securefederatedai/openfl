@@ -3,7 +3,7 @@
 
 aggregator :
   defaults : plan/defaults/aggregator.yaml
-  template : openfl.experimental.component.aggregator.Aggregator
+  template : openfl.experimental.workflow.component.aggregator.Aggregator
   settings :
     rounds_to_train     : 2
     log_metric_callback :
@@ -12,7 +12,7 @@ aggregator :
 
 collaborator :
   defaults : plan/defaults/collaborator.yaml
-  template : openfl.experimental.component.collaborator.Collaborator
+  template : openfl.experimental.workflow.component.collaborator.Collaborator
   settings : {}
 
 

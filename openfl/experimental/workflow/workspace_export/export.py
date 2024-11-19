@@ -44,11 +44,11 @@ class WorkspaceExport:
 
         self.template_workspace_path = (
             Path(f"{__file__}")
-            .parent.parent.parent.parent.joinpath(
+            .parent.parent.parent.parent.parent.joinpath(
                 "openfl-workspace",
                 "experimental",
                 "workflow",
-                "FederatedRuntime",
+                "AggregatorBasedWorkflow",
                 "template_workspace",
             )
             .resolve(strict=True)

@@ -17,7 +17,7 @@ if __name__ == '__main__':
     # Test the pipeline
     parser = argparse.ArgumentParser()
     workspace_choice = []
-    with os.scandir('tests/github/experimental/workspace') as iterator:
+    with os.scandir('tests/github/experimental/workflow/AggregatorBasedWorkflow') as iterator:
         for entry in iterator:
             if entry.name not in ['__init__.py', 'workspace', 'default']:
                 workspace_choice.append(entry.name)
