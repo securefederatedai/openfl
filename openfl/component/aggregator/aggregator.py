@@ -18,6 +18,7 @@ from openfl.protocols import base_pb2, utils
 from openfl.utilities import TaskResultKey, TensorKey, change_tags
 from openfl.utilities.logs import write_metric
 
+AGG_MEM_FILE_NAME = "agg_mem_details.json"
 
 class Aggregator:
     """An Aggregator is the central node in federated learning.
@@ -1011,10 +1012,10 @@ class Aggregator:
         self.logger.info("*******************END OF ROUND CHECK: AGGREGATOR LOGS*******************************")
         process = psutil.Process()
         process_mem = round(process.memory_info().rss / (1024 ** 2),2)
-        self.logger.info(f"FEDAIQE Round: {self.round_number}")
-        self.logger.info(f"FEDAIQE Process Mem: {process_mem}")
+        self.logger.info(f"Aggregator Round: {self.round_number}")
+        self.logger.info(f"Aggregator Process Mem: {process_mem}")
         self.logger.info("*************************************************************************************")
-        memory_detail = self.get_memory_usage(round_number, "aggregator")
+        memory_detail = self.get_memory_usage(self.round_number, "aggregator")
         self.memory_details.append(memory_detail)
         
         # Once all of the task results have been processed
@@ -1035,7 +1036,7 @@ class Aggregator:
             # Write self.memory_details to a file
             if self.memleak_check:
                 self.logger.info("Writing memory details to file...")
-                with open(f"aggregator.json", "w") as f:
+                with open(AGG_MEM_FILE_NAME, "w") as f:
                     json.dump(self.memory_details, f, indent=4)
             self.logger.info("Experiment Completed. Cleaning up...")
         else:

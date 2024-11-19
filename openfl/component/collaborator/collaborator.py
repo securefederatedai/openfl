@@ -179,8 +179,8 @@ class Collaborator:
                     self.logger.info("*****************COLLABORATOR LOGS*******************************")
                     process = psutil.Process()
                     process_mem = round(process.memory_info().rss / (1024 ** 2),2)
-                    self.logger.info("FEDAIQE Round: %s", round_number)
-                    self.logger.info("FEDAIQE Process Mem: %s", process_mem)
+                    self.logger.info("Collaborator Round: %s", round_number)
+                    self.logger.info("Collaborator Process Mem: %s", process_mem)
                     self.logger.info("******************************************************************")
 
                     # NAD:This prints the data correctly : Get the Mem usage info here
@@ -189,7 +189,7 @@ class Collaborator:
                     memory_details.append(memory_detail)
         if self.memleak_check:
             # Write json file with memory usage details and collabrator name
-            with open(f"{self.collaborator_name}.json", "w") as f:
+            with open(f"{self.collaborator_name}_mem_details.json", "w") as f:
                 json.dump(memory_details, f, indent=4)
 
         self.logger.info("End of Federation reached. Exiting...")
