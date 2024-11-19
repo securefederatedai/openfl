@@ -663,23 +663,6 @@ class Aggregator:
                 self.logger.metric("%s", str(metrics))
 
             task_results.append(tensor_key)
-        history = {
-                    "round": round_number,
-                    "metric_origin": "aggregator",
-                    "task_name": "telemetry",
-                    "metric_name": "MEM_USAGE",
-                    "metric_value": mem_used,
-        }
-        self.metric_queue.put(history)
-
-        history2 = {
-                    "round": round_number,
-                    "metric_origin": "aggregator",
-                    "task_name": "telemetry",
-                    "metric_name": "PROCESS_MEM",
-                    "metric_value": process_mem,
-        }
-        self.metric_queue.put(history2)
 
         self.collaborator_tasks_results[task_key] = task_results
 
