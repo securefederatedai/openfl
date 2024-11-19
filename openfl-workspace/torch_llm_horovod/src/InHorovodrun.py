@@ -50,7 +50,7 @@ def get_args():
 
 def main():
     logger = getLogger(__name__)
-    setup_logging
+    setup_logging()
     try:
         logger.info("starting horovod")
         hvd.init()
