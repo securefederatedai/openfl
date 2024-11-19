@@ -20,6 +20,7 @@ def parse_arguments():
             - model_name (str, default="torch_cnn_mnist"): Model name
             - disable_client_auth (bool): Disable client authentication
             - disable_tls (bool): Disable TLS for communication
+            - log_memory_usage (bool): Enable Memory leak logs
 
     Raises:
         SystemExit: If the required arguments are not provided or if any argument parsing error occurs.
@@ -32,6 +33,7 @@ def parse_arguments():
         parser.add_argument("--model_name", type=str, help="Model name")
         parser.add_argument("--disable_client_auth", action="store_true", help="Disable client authentication")
         parser.add_argument("--disable_tls", action="store_true", help="Disable TLS for communication")
+        parser.add_argument("--log_memory_usage", action="store_true", help="Enable Memory leak logs")
         args = parser.parse_known_args()[0]
         return args
 
