@@ -33,7 +33,6 @@ def setup_pki(fed_obj):
     for collaborator in fed_obj.collaborators:
         try:
             log.info(f"Performing operations for {collaborator.collaborator_name}")
-            collaborator.create_collaborator()
             collaborator.generate_sign_request()
             # Below step will add collaborator entries in cols.yaml file.
             fed_obj.model_owner.certify_collaborator(collaborator.collaborator_name)
@@ -91,7 +90,8 @@ def verify_federation_run_completion(fed_obj, results):
         for i, participant in enumerate(fed_obj.collaborators + [fed_obj.aggregator])
     ]
 
-    # Result will contain a list of tuple of replica and operator objects.
+    # Result will contain a list of boolean values for all the participants.
+    # True - successful completion, False - failed/incomplete
     results = [f.result() for f in futures]
     log.info(f"Results: {results}")
 

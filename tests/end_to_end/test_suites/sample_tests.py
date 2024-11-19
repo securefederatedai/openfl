@@ -19,8 +19,8 @@ log = logging.getLogger(__name__)
 # 7. Start the federation using aggregator and given no of collaborators.
 # 8. Verify the completion of the federation run.
 
-@pytest.mark.sample_model
-def test_sample_model(fx_federation):
+@pytest.mark.sample_model_name
+def test_sample_model_name(fx_federation):
     """
     Add a proper docstring here.
     """

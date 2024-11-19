@@ -11,7 +11,7 @@
 - **Workflow API enhancements**: Introducing an experimental [Workspace Export](https://github.com/securefederatedai/openfl/blob/develop/openfl-tutorials/experimental/1001_Workspace_Creation_from_JupyterNotebook.ipynb) feature that can be used to transform a Workflow API-based FL experiment into the TaskRunner API format for running in a distributed deployment. There is also groundwork laid for a future FederatedRuntime implementation for Workflow API, in addition to the currently supported LocalRuntime.  
 - **Federated Evaluation**: Federated evaluation allows for the assessment of ML models in a federated learning system by validating the model's performance locally on decentralized collaborator nodes, and then aggregating these metrics to gauge overall effectiveness, without compromising data privacy and security. FE is now officially supported by OpenFL, including [example tutorials](https://openfl.readthedocs.io/en/latest/about/features_index/fed_eval.html) on how to use this new feature (via TaskRunner API). 
 
-- **Expanded AI Accelerator Support**:  Intel® Data Center GPU Max Series support via the Intel® Extension for PyTorch, including examples for training on datasets such as [MNIST](https://github.com/securefederatedai/openfl/blob/develop/openfl-tutorials/experimental/104_MNIST_XPU.ipynb) (via Workflow API) and [TinyImageNet](https://github.com/securefederatedai/openfl/tree/develop/openfl-tutorials/interactive_api/PyTorch_TinyImageNet_XPU) (via Interactive API) 
+- **Expanded AI Accelerator Support**:  Intel® Data Center GPU Max Series support via the Intel® Extension for PyTorch, including examples for training on datasets such as [MNIST](https://github.com/securefederatedai/openfl/blob/develop/openfl-tutorials/experimental/104_MNIST_XPU.ipynb) (via Workflow API) and [TinyImageNet](https://github.com/securefederatedai/openfl/tree/main/openfl-tutorials/deprecated/interactive_api/PyTorch_TinyImageNet_XPU) (via Interactive API) 
 
 - **Improved straggler collaborator handling**: Improvements and bug fixes to aggregator’s fault-tolerance when collaborators stop responding or drop out of a federation. Introducing a cut-off timer-based policy and enabling other policies to be plugged-in. This capability is particularly relevant for large or geo-distributed federations. 
 
@@ -35,9 +35,9 @@ We are excited to announce the release of OpenFL 1.5.1 - our first since moving 
 - **Documentation accessibility improvements**: As part of our [Global Accessibility Awareness Day](https://www.intel.com/content/www/us/en/developer/articles/community/open-fl-project-improve-accessibility-for-devs.html) (GAAD) Pledge, the OpenFL project is making strides towards more accessible documentation. This release includes the integration of [Intel® One Mono](https://www.intel.com/content/www/us/en/company-overview/one-monospace-font.html) font, contrast color improvements, formatting improvements, and [new accessibility focused issues](https://github.com/securefederatedai/openfl/issues?q=is%3Aissue+is%3Aopen+accessibility) to take up in the future. 
 - **[Documentation to federate a Generally Nuanced Deep Learning Framework (GaNDLF) model with OpenFL](https://openfl.readthedocs.io/en/latest/running_the_federation_with_gandlf.html)**
 - **New OpenFL Interactive API Tutorials**:
-    - [Linear regression with SciKit-Learn](https://github.com/securefederatedai/openfl/tree/develop/openfl-tutorials/interactive_api/scikit_learn_linear_regression)
-    - [MedMNIST 2D Classification Using FedProx Optimizer](https://github.com/securefederatedai/openfl/blob/develop/openfl-tutorials/interactive_api/PyTorch_FedProx_MNIST/README.md?plain=1)
-    - [PyTorch Linear Regression Example](https://github.com/securefederatedai/openfl/tree/develop/openfl-tutorials/interactive_api/PyTorch_LinearRegression)
+    - [Linear regression with SciKit-Learn](https://github.com/securefederatedai/openfl/tree/main/openfl-tutorials/deprecated/interactive_api/scikit_learn_linear_regression)
+    - [MedMNIST 2D Classification Using FedProx Optimizer](https://github.com/securefederatedai/openfl/tree/main/openfl-tutorials/deprecaed/interactive_api/PyTorch_FedProx_MNIST/README.md?plain=1)
+    - [PyTorch Linear Regression Example](https://github.com/securefederatedai/openfl/tree/main/openfl-tutorials/deprecated/interactive_api/PyTorch_LinearRegression)
 - **Improvements to workspace export and import**
 - **Many documentation improvements and updates**
 - **Bug fixes**
@@ -54,10 +54,10 @@ We are excited to announce the release of OpenFL 1.5.1 - our first since moving 
     * **[Vertical Federated Learning Examples](https://github.com/intel/openfl/tree/develop/openfl-tutorials/experimental/Vertical_FL)** 
     * **[Federated Model Watermarking](https://github.com/intel/openfl/blob/develop/openfl-tutorials/experimental/301_MNIST_Watermarking.ipynb)** using the [WAFFLE](https://arxiv.org/pdf/2008.07298.pdf) method 
     * **[Differential Privacy](https://github.com/intel/openfl/tree/develop/openfl-tutorials/experimental/Global_DP)** – Global differentially private federated learning using Opacus library to achieve a differentially private result w.r.t the inclusion or exclusion of any collaborator in the training process. At each round, a subset of collaborators are selected using a Poisson distribution over all collaborators, the selected collaborators perform local training with periodic clipping of their model delta (with respect to the current global model) to bound their contribution to the average of local model updates. Gaussian noise is then added to the average of these local models at the aggregator. This example is implemented in two different but statistically equivalent ways – the lower level API utilizes RDPAccountant and DPDataloader Opacus objects to perform privacy accounting and collaborator selection respectively, whereas the higher level API uses PrivacyEngine Opacus object for collaborator selection and internally utilizes RDPAccountant for privacy accounting. 
-* **[Habana Accelerator Support](https://github.com/intel/openfl/tree/develop/openfl-tutorials/interactive_api/HPU/PyTorch_TinyImageNet)** 
+* **[Habana Accelerator Support](https://github.com/securefederatedai/openfl/tree/main/openfl-tutorials/deprecated/interactive_api/HPU/PyTorch_TinyImageNet)** 
 * **Official support for Python 3.9 and 3.10** 
 * **[EDEN Compression Pipeline](https://github.com/intel/openfl/blob/develop/openfl/pipelines/eden_pipeline.py)**: Communication-Efficient and Robust Distributed Mean Estimation for Federated Learning ([paper link](https://proceedings.mlr.press/v162/vargaftik22a.html)) 
-* **[FLAX Framework Support](https://github.com/intel/openfl/tree/develop/openfl-tutorials/interactive_api/Flax_CNN_CIFAR)**
+* **[FLAX Framework Support](https://github.com/securefederatedai/openfl/tree/main/openfl-tutorials/deprecated/interactive_api/Flax_CNN_CIFAR)**
 * **Improvements to the resiliency and security of the director / envoy infrastructure**: 
     * Optional notification to plan participants to agree to experiment sent to their infrastructure 
     * Improved resistance to loss of network connectivity and failure at various stages of execution
@@ -109,7 +109,7 @@ The OpenFL v1.2 release contains the following updates:
 
  The OpenFL v1.1 release contains the following updates:
 
-- New [Interactive Python API](https://github.com/intel/openfl/blob/develop/openfl-tutorials/interactive_api_tutorials_(experimental)/Pytorch_Kvasir_UNET_workspace/new_python_api_UNET.ipynb) (experimental)
+- New [Interactive Python API](https://github.com/securefederatedai/openfl/tree/main/openfl-tutorials/deprecated/interactive_api) (experimental)
 - Example FedProx algorithm implementation for PyTorch and Tensorflow
 - `AggregationFunctionInterface` for custom aggregation functions 
 - Adds a [Keras-based NLP Example](https://github.com/intel/openfl/tree/develop/openfl-workspace/keras_nlp)

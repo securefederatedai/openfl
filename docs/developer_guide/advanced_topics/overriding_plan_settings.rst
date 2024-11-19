@@ -8,7 +8,7 @@ Updating plan settings
 ***********************
 
 With the director-based workflow, you can use custom plan settings before starting the experiment. Changing plan settings in command line interface is straightforward by modifying plan.yaml.
-When using Python API or Director Envoy based interactive API, **override_config** can be used to update plan settings. 
+When using Python API or Director Envoy based interactive API (Deprecated), **override_config** can be used to update plan settings. 
 
 
 Python API
@@ -24,8 +24,8 @@ Modify the plan settings:
     })
 
 
-Director Envoy Based Interactive API Interface
-==============================================
+Director Envoy Based Interactive API Interface (Deprecated)
+===========================================================
 Once you create an FL_experiment object, a basic federated learning plan with default settings is created. To check the default plan settings, print the plan as shown below:
 
 .. code-block:: python
@@ -96,4 +96,4 @@ Since 'aggregator.settings.db_store_rounds' and 'compression_pipeline.template' 
     INFO     Did not find compression_pipeline.settings.n_clusters in config. Make sure it should exist. Creating...                        native.py:105
 
 
-A full implementation can be found at `Federated_Pytorch_MNIST_Tutorial.ipynb <https://github.com/intel/openfl/blob/develop/openfl-tutorials/Federated_Pytorch_MNIST_Tutorial.ipynb>`_ and at `Tensorflow_MNIST.ipynb <https://github.com/intel/openfl/blob/develop/openfl-tutorials/interactive_api/Tensorflow_MNIST/workspace/Tensorflow_MNIST.ipynb>`_.
+A full implementation can be found at `Federated_Pytorch_MNIST_Tutorial.ipynb <https://github.com/intel/openfl/blob/develop/openfl-tutorials/Federated_Pytorch_MNIST_Tutorial.ipynb>`_ and at `Tensorflow_MNIST.ipynb <https://github.com/securefederatedai/openfl/tree/main/openfl-tutorials/deprecated/interactive_api/Tensorflow_MNIST/workspace/Tensorflow_MNIST.ipynb>`_.

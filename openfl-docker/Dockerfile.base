@@ -1,7 +1,7 @@
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 # ------------------------------------
-# OpenFL Base Image
+# OpenFL Base Image w/ Gramine support
 # $> docker build . -t openfl -f Dockerfile.base [--build-arg OPENFL_REVISION=GIT_URL@COMMIT_ID]
 # ------------------------------------
 FROM ubuntu:22.04 AS base
@@ -15,25 +15,41 @@ RUN --mount=type=cache,id=apt-dev,target=/var/cache/apt \
     apt-get update && \
     apt-get install -y \
     git \
+    curl \
     python3-pip \
     python3.10-dev \
+    python3.10-venv \
     ca-certificates \
     build-essential \
     --no-install-recommends && \
     apt-get purge -y linux-libc-dev && \
     rm -rf /var/lib/apt/lists/*
 
+# Create a python virtual environment.
+RUN python3.10 -m venv /opt/venv && \
+    /opt/venv/bin/pip install --no-cache-dir --upgrade pip setuptools wheel
+ENV PATH=/opt/venv/bin:$PATH
+
+# Install Gramine
+RUN --mount=type=cache,id=apt-dev,target=/var/cache/apt \
+    curl -fsSLo /usr/share/keyrings/gramine-keyring.gpg https://packages.gramineproject.io/gramine-keyring.gpg && \
+    echo "deb [arch=amd64 signed-by=/usr/share/keyrings/gramine-keyring.gpg] https://packages.gramineproject.io/ jammy main" \
+    | tee /etc/apt/sources.list.d/gramine.list && \
+    curl -fsSLo /usr/share/keyrings/intel-sgx-deb.asc https://download.01.org/intel-sgx/sgx_repo/ubuntu/intel-sgx-deb.key && \
+    echo "deb [arch=amd64 signed-by=/usr/share/keyrings/intel-sgx-deb.asc] https://download.01.org/intel-sgx/sgx_repo/ubuntu jammy main" \
+    | tee /etc/apt/sources.list.d/intel-sgx.list && \
+    apt-get update && \
+    apt-get install -y gramine --no-install-recommends && \
+    rm -rf /var/lib/apt/lists/*
+
+# Install OpenFL.
+ARG OPENFL_REVISION=https://github.com/securefederatedai/openfl.git@v1.6
+RUN pip install --no-cache-dir git+${OPENFL_REVISION} && \
+    INSTALL_SOURCES=yes /opt/venv/lib/python3.10/site-packages/openfl-docker/licenses.sh
+
 # Create an unprivileged user.
 RUN groupadd -g 1001 default && \
     useradd -m -u 1001 -g default user
 USER user
-WORKDIR /home/user
-ENV PATH=/home/user/.local/bin:$PATH
-
-# Install OpenFL.
-ARG OPENFL_REVISION=https://github.com/securefederatedai/openfl.git@v1.6
-RUN pip install --no-cache-dir -U pip setuptools wheel && \
-    pip install --no-cache-dir git+${OPENFL_REVISION} && \
-    INSTALL_SOURCES=yes /home/user/.local/lib/python3.10/site-packages/openfl-docker/licenses.sh
 
 CMD ["/bin/bash"]

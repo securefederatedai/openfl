@@ -11,7 +11,7 @@ jobs:
     permissions:
       contents: read # for actions/checkout to fetch code
       security-events: write # for github/codeql-action/upload-sarif to upload SARIF results
-      actions: read # only required for a private repository by github/codeql-action/upload-sarif to get the Action run status
+      actions: read #  only required for a private repository by github/codeql-action/upload-sarif to get the Action run status
     name: Build
     runs-on: ubuntu-22.04
     steps:
@@ -23,11 +23,13 @@ jobs:
           docker build --pull -t docker.io/securefederatedai/openfl:${{ github.sha }} -f openfl-docker/Dockerfile.base .
 
       - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@0.24.0
+        uses: aquasecurity/trivy-action@0.28.0
         with:
           image-ref: 'docker.io/securefederatedai/openfl:${{ github.sha }}'
           format: 'sarif'
           output: 'trivy-results.sarif'
+        env:
+          TRIVY_DB_REPOSITORY: 'ghcr.io/aquasecurity/trivy-db,public.ecr.aws/aquasecurity/trivy-db'
 
       - name: Upload Trivy scan results to GitHub Security tab
         uses: github/codeql-action/upload-sarif@v2
@@ -56,7 +58,7 @@ jobs:
           path: trivy-code-results.json
       
       - name: Run Trivy vulnerability scanner for Docker image (JSON Output)
-        uses: aquasecurity/trivy-action@0.24.0
+        uses: aquasecurity/trivy-action@0.28.0
         with:
           image-ref: 'docker.io/securefederatedai/openfl:${{ github.sha }}'
           format: 'json'
@@ -65,6 +67,8 @@ jobs:
           ignore-unfixed: true
           vuln-type: 'os,library'
           severity: 'CRITICAL,HIGH,MEDIUM,LOW'
+        env:
+          TRIVY_DB_REPOSITORY: 'ghcr.io/aquasecurity/trivy-db,public.ecr.aws/aquasecurity/trivy-db'
   
       - name: Upload Docker Vulnerability Scan
         uses: actions/upload-artifact@v3
@@ -90,7 +94,7 @@ jobs:
           path: trivy-code-spdx-results.json
         
       - name: Run Trivy vulnerability scanner for Docker image (SPDX-JSON Output)
-        uses: aquasecurity/trivy-action@0.24.0
+        uses: aquasecurity/trivy-action@0.28.0
         with:
           image-ref: 'docker.io/securefederatedai/openfl:${{ github.sha }}'
           format: 'spdx-json'
@@ -99,6 +103,8 @@ jobs:
           ignore-unfixed: true
           vuln-type: 'os,library'
           severity: 'CRITICAL,HIGH,MEDIUM,LOW'
+        env:
+          TRIVY_DB_REPOSITORY: 'ghcr.io/aquasecurity/trivy-db,public.ecr.aws/aquasecurity/trivy-db'
     
       - name: Upload Docker Vulnerability Scan
         uses: actions/upload-artifact@v3
