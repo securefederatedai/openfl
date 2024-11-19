@@ -177,19 +177,6 @@ class Collaborator:
                 self.tensor_db.clean_up(self.db_store_rounds)
                 if self.log_memory_usage:
                     # This is the place to check the memory usage of the collaborator
-                    self.logger.info(
-                        "*****************COLLABORATOR LOGS*******************************"
-                    )
-                    process = psutil.Process()
-                    self.logger.info(process)
-                    process_mem = round(process.memory_info().rss / (1024**2), 2)
-                    self.logger.info("Collaborator Round: %s", round_number)
-                    self.logger.info("Collaborator Process Mem: %s", process_mem)
-                    self.logger.info(
-                        "******************************************************************"
-                    )
-
-                    # NAD:This prints the data correctly : Get the Mem usage info here
                     memory_detail = self.get_memory_usage(
                         round_number, metric_origin=self.collaborator_name
                     )
