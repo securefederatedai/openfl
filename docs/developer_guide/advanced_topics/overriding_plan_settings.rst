@@ -11,7 +11,7 @@ With the director-based workflow, you can use custom plan settings before starti
 When using Python API or Director Envoy based interactive API (Deprecated), **override_config** can be used to update plan settings. 
 
 
-Python API
+Python API (Deprecated)
 ==========
 
 Modify the plan settings:

@@ -2,7 +2,7 @@
 .. # SPDX-License-Identifier: Apache-2.0
 
 *************************************************
-Native Module
+Native Module (Deprecated)
 *************************************************
 
 Native modules reference:

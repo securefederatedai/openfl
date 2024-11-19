@@ -34,26 +34,21 @@ For more installation options check out the [online documentation](https://openf
 
 ## Getting Started
 
+OpenFL supports two APIs to set up a Federated Learning experiment:
 
-OpenFL enables data scientists to set up a federated learning experiment following one of the workflows:
+- [Task Runner API](https://openfl.readthedocs.io/en/latest/about/features_index/taskrunner.html):
+Define an experiment and distribute it manually. All participants can verify model code and [FL plan](https://openfl.readthedocs.io/en/latest/about/features_index/taskrunner.html#federated-learning-plan-fl-plan-settings) prior to execution. The federation is terminated when the experiment is finished. This API is meant for enterprise-grade FL experiments, including support for mTLS-based communication channels and TEE-ready nodes (based on Intel® SGX).
 
-- [Aggregator-based Workflow](https://openfl.readthedocs.io/en/latest/about/features_index/taskrunner.html):
-Define an experiment and distribute it manually. All participants can verify model code and [FL plan](https://openfl.readthedocs.io/en/latest/about/features_index/taskrunner.html#federated-learning-plan-fl-plan-settings) prior to execution. The federation is terminated when the experiment is finished
+- [Workflow API](https://openfl.readthedocs.io/en/latest/about/features_index/workflowinterface.html) ([*experimental*](https://openfl.readthedocs.io/en/latest/developer_guide/experimental_features.html)):
+Create complex experiments that extend beyond traditional horizontal federated learning. This API enables an experiment to be simulated locally, then seamlessly scaled to a federated setting. See the [experimental tutorials](https://github.com/securefederatedai/openfl/blob/develop/openfl-tutorials/experimental/) to learn how to coordinate [aggregator validation after collaborator model training](https://github.com/securefederatedai/openfl/tree/develop/openfl-tutorials/experimental/102_Aggregator_Validation.ipynb), [perform global differentially private federated learning](https://github.com/psfoley/openfl/tree/experimental-workflow-interface/openfl-tutorials/experimental/Global_DP), measure the amount of private information embedded in a model after collaborator training with [privacy meter](https://github.com/securefederatedai/openfl/blob/develop/openfl-tutorials/experimental/Privacy_Meter/readme.md), or [add a watermark to a federated model](https://github.com/securefederatedai/openfl/blob/develop/openfl-tutorials/experimental/301_MNIST_Watermarking.ipynb).
 
-- [Workflow Interface](https://openfl.readthedocs.io/en/latest/about/features_index/workflowinterface.html) ([*experimental*](https://openfl.readthedocs.io/en/latest/developer_guide/experimental_features.html)):
-Create complex experiments that extend beyond traditional horizontal federated learning. See the [experimental tutorials](https://github.com/securefederatedai/openfl/blob/develop/openfl-tutorials/experimental/) to learn how to coordinate [aggregator validation after collaborator model training](https://github.com/securefederatedai/openfl/tree/develop/openfl-tutorials/experimental/102_Aggregator_Validation.ipynb), [perform global differentially private federated learning](https://github.com/psfoley/openfl/tree/experimental-workflow-interface/openfl-tutorials/experimental/Global_DP), measure the amount of private information embedded in a model after collaborator training with [privacy meter](https://github.com/securefederatedai/openfl/blob/develop/openfl-tutorials/experimental/Privacy_Meter/readme.md), or [add a watermark to a federated model](https://github.com/securefederatedai/openfl/blob/develop/openfl-tutorials/experimental/301_MNIST_Watermarking.ipynb).
-
-The quickest way to test OpenFL is to follow our [tutorials](https://github.com/securefederatedai/openfl/tree/develop/openfl-tutorials). </br>
-Read the [blog post](https://towardsdatascience.com/go-federated-with-openfl-8bc145a5ead1) explaining steps to train a model with OpenFL. </br>
-Check out the [online documentation](https://openfl.readthedocs.io/en/latest/index.html) to launch your first federation.
-
+The quickest way to test OpenFL is to follow the [online documentation](https://openfl.readthedocs.io/en/latest/index.html) to launch your first federation.<br/>
+Read the [blog post](https://medium.com/openfl/from-centralized-machine-learning-to-federated-learning-with-openfl-b3e61da52432) explaining steps to train a model with OpenFL. <br/>
 
 ## Requirements
 
-- Ubuntu Linux 18.04+
-- Python 3.7+ (recommended to use with [Virtualenv](https://virtualenv.pypa.io/en/latest/)).
-
-OpenFL supports training with TensorFlow 2+ or PyTorch 1.3+ which should be installed separately. User can extend the list of supported Deep Learning frameworks if needed.
+OpenFL supports popular NumPy-based ML frameworks like TensorFlow, PyTorch and Jax which should be installed separately.<br/> 
+Users can extend the list of supported Machine Learning frameworks if needed.
 
 ## Project Overview
 ### What is Federated Learning
@@ -82,29 +77,24 @@ You can find more details in the following articles:
 
 
 ### Supported Aggregation Algorithms
-| Algorithm Name | Paper | PyTorch implementation | TensorFlow implementation | Other frameworks compatibility | How to use | 
-| -------------- | ----- | :--------------------: | :-----------------------: | :----------------------------: | ---------- |
-| FedAvg | [McMahan et al., 2017](https://arxiv.org/pdf/1602.05629.pdf) | ✅ | ✅ | ✅ | [docs](https://openfl.readthedocs.io/en/latest/about/features.html#aggregation-algorithms) |
-| FedProx | [Li et al., 2020](https://arxiv.org/pdf/1812.06127.pdf) | ✅ | ✅ | ❌ | [docs](https://openfl.readthedocs.io/en/latest/about/features.html#aggregation-algorithms) |
-| FedOpt | [Reddi et al., 2020](https://arxiv.org/abs/2003.00295) | ✅ | ✅ | ✅ | [docs](https://openfl.readthedocs.io/en/latest/about/features.html#aggregation-algorithms) |
-| FedCurv | [Shoham et al., 2019](https://arxiv.org/pdf/1910.07796.pdf) | ✅ | ❌ | ❌ | [docs](https://openfl.readthedocs.io/en/latest/about/features.html#aggregation-algorithms) |
+| Algorithm Name | Paper | PyTorch implementation | TensorFlow implementation | Other frameworks compatibility |
+| -------------- | ----- | :--------------------: | :-----------------------: | :----------------------------: |
+| FedAvg | [McMahan et al., 2017](https://arxiv.org/pdf/1602.05629.pdf) | ✅ | ✅ | ✅ |
+| FedProx | [Li et al., 2020](https://arxiv.org/pdf/1812.06127.pdf) | ✅ | ✅ | ❌ |
+| FedOpt | [Reddi et al., 2020](https://arxiv.org/abs/2003.00295) | ✅ | ✅ | ✅ |
+| FedCurv | [Shoham et al., 2019](https://arxiv.org/pdf/1910.07796.pdf) | ✅ | ❌ | ❌ |
 
 ## Support
-Please join us for our bi-monthly community meetings starting December 1 & 2, 2022! <br>
-Meet with some of the OpenFL team members behind OpenFL. <br>
-We will be going over our roadmap, open for Q&A, and welcome idea sharing. <br>
+The OpenFL community is growing, and we invite you to be a part of it. Join the [Slack channel](https://join.slack.com/t/openfl/shared_invite/zt-ovzbohvn-T5fApk05~YS_iZhjJ5yaTw) to connect with fellow enthusiasts, share insights, and contribute to the future of federated learning.
 
-Calendar and links to a Community calls are [here](https://wiki.lfaidata.foundation/pages/viewpage.action?pageId=70648254)
-
-Subscribe to the OpenFL mail list openfl-announce@lists.lfaidata.foundation
-
+Consider subscribing to the OpenFL mail list openfl-announce@lists.lfaidata.foundation
 
 See you there!
 
 We also always welcome questions, issue reports, and suggestions via:
 
 * [GitHub Issues](https://github.com/securefederatedai/openfl/issues)
-* [Slack workspace](https://join.slack.com/t/openfl/shared_invite/zt-ovzbohvn-T5fApk05~YS_iZhjJ5yaTw)
+* [GitHub Discussions](https://github.com/securefederatedai/openfl/discussions)
 
 ## License
 This project is licensed under [Apache License Version 2.0](LICENSE). By contributing to the project, you agree to the license and copyright terms therein and release your contribution under these terms.
