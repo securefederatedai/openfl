@@ -4,7 +4,7 @@
 .. _python_native_pytorch_mnist:
 
 ==========================================
-Python Native API: Federated PyTorch MNIST
+Python Native API: Federated PyTorch MNIST (Deprecated)
 ==========================================
 
 In this tutorial, we will set up a federation and train a basic PyTorch model on the MNIST dataset using the Python Native API.
