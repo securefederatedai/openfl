@@ -63,7 +63,7 @@ def pytest_addoption(parser):
         help="Disable TLS for communication",
     )
     parser.addoption(
-        "--memleak_check",
+        "--log_memory_usage",
         action="store_true",
         help="Enable memory log in collaborators and aggregator",
     )
@@ -239,7 +239,7 @@ def fx_federation(request, pytestconfig):
     num_rounds = args.num_rounds
     disable_client_auth = args.disable_client_auth
     disable_tls = args.disable_tls
-    memleak_check = args.memleak_check
+    log_memory_usage = args.log_memory_usage
 
     log.info(
         f"Running federation setup using Task Runner API on single machine with below configurations:\n"
@@ -248,7 +248,7 @@ def fx_federation(request, pytestconfig):
         f"\tModel name: {model_name}\n"
         f"\tClient authentication: {not disable_client_auth}\n"
         f"\tTLS: {not disable_tls}\n"
-        f"\tMemory Logs: {memleak_check}"
+        f"\tMemory Logs: {log_memory_usage}"
     )
 
     # Validate the model name and create the workspace name
@@ -258,7 +258,7 @@ def fx_federation(request, pytestconfig):
     workspace_name = f"workspace_{model_name}"
 
     # Create model owner object and the workspace for the model
-    model_owner = participants.ModelOwner(workspace_name, model_name, memleak_check)
+    model_owner = participants.ModelOwner(workspace_name, model_name, log_memory_usage)
     try:
         workspace_path = model_owner.create_workspace(results_dir=results_dir)
     except Exception as e:

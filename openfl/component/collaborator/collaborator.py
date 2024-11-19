@@ -81,7 +81,7 @@ class Collaborator:
         delta_updates=False,
         compression_pipeline=None,
         db_store_rounds=1,
-        memleak_check=False,
+        log_memory_usage=False,
         **kwargs,
     ):
         """Initialize the Collaborator object.
@@ -125,7 +125,7 @@ class Collaborator:
         self.delta_updates = delta_updates
 
         self.client = client
-        self.memleak_check = memleak_check
+        self.log_memory_usage = log_memory_usage
         self.task_config = task_config
 
         self.logger = getLogger(__name__)
@@ -174,10 +174,11 @@ class Collaborator:
 
                 # Cleaning tensor db
                 self.tensor_db.clean_up(self.db_store_rounds)
-                if self.memleak_check:
+                if self.log_memory_usage:
                     # This is the place to check the memory usage of the collaborator
                     self.logger.info("*****************COLLABORATOR LOGS*******************************")
                     process = psutil.Process()
+                    self.logger.info(process)
                     process_mem = round(process.memory_info().rss / (1024 ** 2),2)
                     self.logger.info("Collaborator Round: %s", round_number)
                     self.logger.info("Collaborator Process Mem: %s", process_mem)
@@ -187,7 +188,7 @@ class Collaborator:
                     memory_detail = self.get_memory_usage(round_number,
                                                         metric_origin=self.collaborator_name)
                     memory_details.append(memory_detail)
-        if self.memleak_check:
+        if self.log_memory_usage:
             # Write json file with memory usage details and collabrator name
             with open(f"{self.collaborator_name}_mem_details.json", "w") as f:
                 json.dump(memory_details, f, indent=4)
@@ -620,11 +621,14 @@ class Collaborator:
         Args:
             round_number (int): The current round number for which memory usage is being logged.
         """
+        process = psutil.Process()
+        self.logger.info(f"{metric_origin} process id is {process}")
         virtual_memory = psutil.virtual_memory()
         swap_memory = psutil.swap_memory()
         memory_usage = {
             "round_number": round_number,
             "metric_origin": metric_origin,
+            "process_memory": round(process.memory_info().rss / (1024 ** 2),2),
             "virtual_memory": {
                 "total": round(virtual_memory.total / (1024 ** 2), 2),
                 "available": round(virtual_memory.available / (1024 ** 2), 2),
@@ -644,5 +648,8 @@ class Collaborator:
                 "percent": swap_memory.percent,
             },
         }
+        self.logger.info(f"*******************END OF ROUND CHECK: {metric_origin} LOGS*******************************")
         self.logger.info("Memory Usage: %s", memory_usage)
+        self.logger.info("*************************************************************************************")
+        
         return memory_usage

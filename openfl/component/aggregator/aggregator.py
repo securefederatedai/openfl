@@ -78,7 +78,7 @@ class Aggregator:
         compression_pipeline=None,
         db_store_rounds=1,
         write_logs=False,
-        memleak_check=False,
+        log_memory_usage=False,
         log_metric_callback=None,
         **kwargs,
     ):
@@ -126,7 +126,7 @@ class Aggregator:
         )
         self._end_of_round_check_done = [False] * rounds_to_train
         self.stragglers = []
-        self.memleak_check = memleak_check
+        self.log_memory_usage = log_memory_usage
         self.memory_details = []
         self.rounds_to_train = rounds_to_train
 
@@ -673,8 +673,7 @@ class Aggregator:
             self._end_of_round_with_stragglers_check()
 
     def get_memory_usage(self, round_number, metric_origin):
-        """
-        Logs the memory usage statistics for the given round number.
+        """Logs the memory usage statistics for the given round number.
 
         This method retrieves the current virtual and swap memory usage statistics
         using the psutil library, formats them into a dictionary, and logs the
@@ -683,11 +682,14 @@ class Aggregator:
         Args:
             round_number (int): The current round number for which memory usage is being logged.
         """
+        process = psutil.Process()
+        self.logger.info(f"{metric_origin} process id is {process}")
         virtual_memory = psutil.virtual_memory()
         swap_memory = psutil.swap_memory()
         memory_usage = {
             "round_number": round_number,
             "metric_origin": metric_origin,
+            "process_memory": round(process.memory_info().rss / (1024 ** 2),2),
             "virtual_memory": {
                 "total": round(virtual_memory.total / (1024 ** 2), 2),
                 "available": round(virtual_memory.available / (1024 ** 2), 2),
@@ -707,7 +709,10 @@ class Aggregator:
                 "percent": swap_memory.percent,
             },
         }
+        self.logger.info(f"*******************END OF ROUND CHECK: {metric_origin} LOGS*******************************")
         self.logger.info("Memory Usage: %s", memory_usage)
+        self.logger.info("*************************************************************************************")
+        
         return memory_usage
 
     def _end_of_round_with_stragglers_check(self):
@@ -1008,13 +1013,6 @@ class Aggregator:
         all_tasks = self.assigner.get_all_tasks_for_round(self.round_number)
         for task_name in all_tasks:
             self._compute_validation_related_task_metrics(task_name)
-
-        self.logger.info("*******************END OF ROUND CHECK: AGGREGATOR LOGS*******************************")
-        process = psutil.Process()
-        process_mem = round(process.memory_info().rss / (1024 ** 2),2)
-        self.logger.info(f"Aggregator Round: {self.round_number}")
-        self.logger.info(f"Aggregator Process Mem: {process_mem}")
-        self.logger.info("*************************************************************************************")
         memory_detail = self.get_memory_usage(self.round_number, "aggregator")
         self.memory_details.append(memory_detail)
         
@@ -1034,7 +1032,7 @@ class Aggregator:
         # TODO This needs to be fixed!
         if self._time_to_quit():
             # Write self.memory_details to a file
-            if self.memleak_check:
+            if self.log_memory_usage:
                 self.logger.info("Writing memory details to file...")
                 with open(AGG_MEM_FILE_NAME, "w") as f:
                     json.dump(self.memory_details, f, indent=4)

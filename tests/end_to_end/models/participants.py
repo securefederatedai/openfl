@@ -23,13 +23,13 @@ class ModelOwner:
     4. Importing and exporting the workspace etc.
     """
 
-    def __init__(self, workspace_name, model_name, memleak_check):
+    def __init__(self, workspace_name, model_name, log_memory_usage):
         """
         Initialize the ModelOwner class
         Args:
             workspace_name (str): Workspace name
             model_name (str): Model name
-            memleak_check (bool): Memory Log flag
+            log_memory_usage (bool): Memory Log flag
         """
         self.workspace_name = workspace_name
         self.model_name = model_name
@@ -39,7 +39,7 @@ class ModelOwner:
         self.plan_path = None
         self.num_collaborators = constants.NUM_COLLABORATORS
         self.rounds_to_train = constants.NUM_ROUNDS
-        self.memleak_check = memleak_check
+        self.log_memory_usage = log_memory_usage
 
     def create_workspace(self, results_dir=None):
         """
@@ -135,8 +135,8 @@ class ModelOwner:
 
         data["aggregator"]["settings"]["rounds_to_train"] = int(self.rounds_to_train)
         # Memory Leak related 
-        data["aggregator"]["settings"]["memleak_check"] = self.memleak_check
-        data["collaborator"]["settings"]["memleak_check"] = self.memleak_check
+        data["aggregator"]["settings"]["log_memory_usage"] = self.log_memory_usage
+        data["collaborator"]["settings"]["log_memory_usage"] = self.log_memory_usage
         
         data["data_loader"]["settings"]["collaborator_count"] = int(self.num_collaborators)
         data["network"]["settings"]["disable_client_auth"] = disable_client_auth
