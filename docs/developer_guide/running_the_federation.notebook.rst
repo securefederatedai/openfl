@@ -4,7 +4,7 @@
 .. _running_notebook:
 
 **********************************
-Aggregator-Based Workflow Tutorial
+Aggregator-Based Workflow Tutorial (Deprecated)
 **********************************
 
 You will start a Jupyter\* \  lab server and receive a URL you can use to access the tutorials. Jupyter notebooks are provided for PyTorch\* \  and TensorFlow\* \  that simulate a federation on a local machine.
