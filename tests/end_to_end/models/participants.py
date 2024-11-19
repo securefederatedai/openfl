@@ -132,6 +132,8 @@ class ModelOwner:
             data = yaml.load(fp, Loader=yaml.FullLoader)
 
         data["aggregator"]["settings"]["rounds_to_train"] = int(self.rounds_to_train)
+        data["aggregator"]["settings"]["memleak_check"] = True
+        data["collaborator"]["settings"]["memleak_check"] = True
         data["data_loader"]["settings"]["collaborator_count"] = int(self.num_collaborators)
         data["network"]["settings"]["disable_client_auth"] = disable_client_auth
         data["network"]["settings"]["tls"] = not disable_tls

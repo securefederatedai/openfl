@@ -663,18 +663,6 @@ class Aggregator:
                 self.logger.metric("%s", str(metrics))
 
             task_results.append(tensor_key)
-
-        memory_detail = self.get_memory_usage(round_number, "aggregator")
-        self.memory_details.append(memory_detail)
-        self.logger.info("*******************SEND LOCAL TASK RESULTS: AGGREGATOR LOGS*******************************")
-        virtual_memory = psutil.virtual_memory()
-        mem_used = round(virtual_memory.used / (1024 ** 2),2)
-        process = psutil.Process()
-        process_mem = round(process.memory_info().rss / (1024 ** 2),2)
-        self.logger.info(f"FEDAIQE Round: {round_number}")
-        self.logger.info(f"FEDAIQE Process Mem: {process_mem}")
-        self.logger.info("*******************************************************************************************")
-
         history = {
                     "round": round_number,
                     "metric_origin": "aggregator",
@@ -1043,7 +1031,9 @@ class Aggregator:
         self.logger.info(f"FEDAIQE Round: {self.round_number}")
         self.logger.info(f"FEDAIQE Process Mem: {process_mem}")
         self.logger.info("*************************************************************************************")
-
+        memory_detail = self.get_memory_usage(round_number, "aggregator")
+        self.memory_details.append(memory_detail)
+        
         # Once all of the task results have been processed
         self._end_of_round_check_done[self.round_number] = True
 
