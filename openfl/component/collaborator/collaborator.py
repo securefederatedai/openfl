@@ -3,12 +3,13 @@
 
 
 """Collaborator module."""
-import psutil
 import json
 from enum import Enum
 from logging import getLogger
 from time import sleep
 from typing import Tuple
+
+import psutil
 
 from openfl.databases import TensorDB
 from openfl.pipelines import NoCompressionPipeline, TensorCodec
@@ -176,17 +177,22 @@ class Collaborator:
                 self.tensor_db.clean_up(self.db_store_rounds)
                 if self.log_memory_usage:
                     # This is the place to check the memory usage of the collaborator
-                    self.logger.info("*****************COLLABORATOR LOGS*******************************")
+                    self.logger.info(
+                        "*****************COLLABORATOR LOGS*******************************"
+                    )
                     process = psutil.Process()
                     self.logger.info(process)
-                    process_mem = round(process.memory_info().rss / (1024 ** 2),2)
+                    process_mem = round(process.memory_info().rss / (1024**2), 2)
                     self.logger.info("Collaborator Round: %s", round_number)
                     self.logger.info("Collaborator Process Mem: %s", process_mem)
-                    self.logger.info("******************************************************************")
+                    self.logger.info(
+                        "******************************************************************"
+                    )
 
                     # NAD:This prints the data correctly : Get the Mem usage info here
-                    memory_detail = self.get_memory_usage(round_number,
-                                                        metric_origin=self.collaborator_name)
+                    memory_detail = self.get_memory_usage(
+                        round_number, metric_origin=self.collaborator_name
+                    )
                     memory_details.append(memory_detail)
         if self.log_memory_usage:
             # Write json file with memory usage details and collabrator name
@@ -628,28 +634,32 @@ class Collaborator:
         memory_usage = {
             "round_number": round_number,
             "metric_origin": metric_origin,
-            "process_memory": round(process.memory_info().rss / (1024 ** 2),2),
+            "process_memory": round(process.memory_info().rss / (1024**2), 2),
             "virtual_memory": {
-                "total": round(virtual_memory.total / (1024 ** 2), 2),
-                "available": round(virtual_memory.available / (1024 ** 2), 2),
+                "total": round(virtual_memory.total / (1024**2), 2),
+                "available": round(virtual_memory.available / (1024**2), 2),
                 "percent": virtual_memory.percent,
-                "used": round(virtual_memory.used / (1024 ** 2), 2),
-                "free": round(virtual_memory.free / (1024 ** 2), 2),
-                "active": round(virtual_memory.active / (1024 ** 2), 2),
-                "inactive": round(virtual_memory.inactive / (1024 ** 2), 2),
-                "buffers": round(virtual_memory.buffers / (1024 ** 2), 2),
-                "cached": round(virtual_memory.cached / (1024 ** 2), 2),
-                "shared": round(virtual_memory.shared / (1024 ** 2), 2),
+                "used": round(virtual_memory.used / (1024**2), 2),
+                "free": round(virtual_memory.free / (1024**2), 2),
+                "active": round(virtual_memory.active / (1024**2), 2),
+                "inactive": round(virtual_memory.inactive / (1024**2), 2),
+                "buffers": round(virtual_memory.buffers / (1024**2), 2),
+                "cached": round(virtual_memory.cached / (1024**2), 2),
+                "shared": round(virtual_memory.shared / (1024**2), 2),
             },
             "swap_memory": {
-                "total": round(swap_memory.total / (1024 ** 2), 2),
-                "used": round(swap_memory.used / (1024 ** 2), 2),
-                "free": round(swap_memory.free / (1024 ** 2), 2),
+                "total": round(swap_memory.total / (1024**2), 2),
+                "used": round(swap_memory.used / (1024**2), 2),
+                "free": round(swap_memory.free / (1024**2), 2),
                 "percent": swap_memory.percent,
             },
         }
-        self.logger.info(f"**************** End of round check: {metric_origin} Memory Logs ******************")
+        self.logger.info(
+            f"**************** End of round check: {metric_origin} Memory Logs ******************"
+        )
         self.logger.info("Memory Usage: %s", memory_usage)
-        self.logger.info("*************************************************************************************")
+        self.logger.info(
+            "*************************************************************************************"
+        )
 
         return memory_usage

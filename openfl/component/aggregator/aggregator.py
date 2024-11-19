@@ -3,12 +3,13 @@
 
 
 """Aggregator module."""
+import json
 import queue
 import time
-import psutil
-import json
 from logging import getLogger
 from threading import Lock
+
+import psutil
 
 from openfl.component.straggler_handling_functions import CutoffTimeBasedStragglerHandling
 from openfl.databases import TensorDB
@@ -19,6 +20,7 @@ from openfl.utilities import TaskResultKey, TensorKey, change_tags
 from openfl.utilities.logs import write_metric
 
 AGG_MEM_FILE_NAME = "agg_mem_details.json"
+
 
 class Aggregator:
     """An Aggregator is the central node in federated learning.
@@ -689,29 +691,33 @@ class Aggregator:
         memory_usage = {
             "round_number": round_number,
             "metric_origin": metric_origin,
-            "process_memory": round(process.memory_info().rss / (1024 ** 2),2),
+            "process_memory": round(process.memory_info().rss / (1024**2), 2),
             "virtual_memory": {
-                "total": round(virtual_memory.total / (1024 ** 2), 2),
-                "available": round(virtual_memory.available / (1024 ** 2), 2),
+                "total": round(virtual_memory.total / (1024**2), 2),
+                "available": round(virtual_memory.available / (1024**2), 2),
                 "percent": virtual_memory.percent,
-                "used": round(virtual_memory.used / (1024 ** 2), 2),
-                "free": round(virtual_memory.free / (1024 ** 2), 2),
-                "active": round(virtual_memory.active / (1024 ** 2), 2),
-                "inactive": round(virtual_memory.inactive / (1024 ** 2), 2),
-                "buffers": round(virtual_memory.buffers / (1024 ** 2), 2),
-                "cached": round(virtual_memory.cached / (1024 ** 2), 2),
-                "shared": round(virtual_memory.shared / (1024 ** 2), 2),
+                "used": round(virtual_memory.used / (1024**2), 2),
+                "free": round(virtual_memory.free / (1024**2), 2),
+                "active": round(virtual_memory.active / (1024**2), 2),
+                "inactive": round(virtual_memory.inactive / (1024**2), 2),
+                "buffers": round(virtual_memory.buffers / (1024**2), 2),
+                "cached": round(virtual_memory.cached / (1024**2), 2),
+                "shared": round(virtual_memory.shared / (1024**2), 2),
             },
             "swap_memory": {
-                "total": round(swap_memory.total / (1024 ** 2), 2),
-                "used": round(swap_memory.used / (1024 ** 2), 2),
-                "free": round(swap_memory.free / (1024 ** 2), 2),
+                "total": round(swap_memory.total / (1024**2), 2),
+                "used": round(swap_memory.used / (1024**2), 2),
+                "free": round(swap_memory.free / (1024**2), 2),
                 "percent": swap_memory.percent,
             },
         }
-        self.logger.info(f"**************** End of round check: {metric_origin} Memory Logs ******************")
+        self.logger.info(
+            f"**************** End of round check: {metric_origin} Memory Logs ******************"
+        )
         self.logger.info("Memory Usage: %s", memory_usage)
-        self.logger.info("*************************************************************************************")
+        self.logger.info(
+            "*************************************************************************************"
+        )
 
         return memory_usage
 
@@ -900,7 +906,7 @@ class Aggregator:
             new_model_round_number,
             new_model_report,
             new_model_tags,
-     ) = new_model_tk
+        ) = new_model_tk
         final_model_tk = TensorKey(
             new_model_tensor_name,
             new_model_origin,
