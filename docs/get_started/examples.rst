@@ -30,7 +30,7 @@ See :ref:`running_the_task_runner`
     :ref:`running_the_task_runner`
 
 -------------------------
-Python Native API
+Python Native API (Deprecated)
 -------------------------
 Intended for quick simulation purposes
 
