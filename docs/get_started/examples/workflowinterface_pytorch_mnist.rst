@@ -17,7 +17,7 @@ This tutorial introduces the API to get up and running with your first horizonta
 
 - Aims for syntatic consistency with the Netflix MetaFlow project. Infrastructure reuse where possible.
 
-See `full notebook <https://github.com/securefederatedai/openfl/blob/f1657abe88632d542504d6d71ca961de9333913f/openfl-tutorials/experimental/101_MNIST.ipynb>`_.
+See `full notebook <https://github.com/securefederatedai/openfl/blob/f1657abe88632d542504d6d71ca961de9333913f/openfl-tutorials/experimental/workflow/LocalRuntime/101_MNIST.ipynb>`_.
 
 **What is it?**
 The workflow interface is a new way of composing federated learning experiments with |productName|. 
@@ -376,7 +376,7 @@ Now let's look at its log output (stdout) and any error logs (stderr)
 **Congratulations!**
 Now that you've completed your first workflow interface quickstart notebook, 
 
-see some of the more advanced things you can do in our other `tutorials <https://github.com/securefederatedai/openfl/tree/f1657abe88632d542504d6d71ca961de9333913f/openfl-tutorials/experimental>`_, including:
+see some of the more advanced things you can do in our other `tutorials <https://github.com/securefederatedai/openfl/tree/f1657abe88632d542504d6d71ca961de9333913f/openfl-tutorials/experimental/workflow/LocalRuntime>`_, including:
 
 - Using the LocalRuntime Ray Backend for dedicated GPU access
 - Vertical Federated Learning
