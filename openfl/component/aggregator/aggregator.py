@@ -128,7 +128,9 @@ class Aggregator:
         )
         self._end_of_round_check_done = [False] * rounds_to_train
         self.stragglers = []
-        self.log_memory_usage = log_memory_usage # Flag can be enabled to get memory usage details for ubuntu system
+        self.log_memory_usage = (
+            log_memory_usage  # Flag can be enabled to get memory usage details for ubuntu system
+        )
         self.memory_details = []
         self.rounds_to_train = rounds_to_train
 

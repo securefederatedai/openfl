@@ -126,7 +126,9 @@ class Collaborator:
         self.delta_updates = delta_updates
 
         self.client = client
-        self.log_memory_usage = log_memory_usage   # Flag can be enabled to get memory usage details for ubuntu system
+        self.log_memory_usage = (
+            log_memory_usage  # Flag can be enabled to get memory usage details for ubuntu system
+        )
         self.task_config = task_config
 
         self.logger = getLogger(__name__)
