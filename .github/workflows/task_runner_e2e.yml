@@ -76,7 +76,7 @@ jobs:
           --num_rounds $NUM_ROUNDS --num_collaborators $NUM_COLLABORATORS 
           echo "Task runner end to end test run completed"
 
-      - name: Print test summary # Print the test summary only if the tests were run
+      - name: Print test summary
         id: print_test_summary
         if: ${{ always() }}
         run: |
@@ -84,12 +84,12 @@ jobs:
           python tests/end_to_end/utils/summary_helper.py
           echo "Test summary printed"
 
-      - name: Tar files # Tar the test results only if the tests were run
+      - name: Tar files
         id: tar_files
         if: ${{ always() }}
         run: tar -cvf result.tar results
 
-      - name: Upload Artifacts # Upload the test results only if the tar was created
+      - name: Upload Artifacts
         id: upload_artifacts
         uses: actions/upload-artifact@v4
         if: ${{ always() }}
@@ -143,7 +143,7 @@ jobs:
           --num_rounds $NUM_ROUNDS --num_collaborators $NUM_COLLABORATORS --disable_tls
           echo "Task runner end to end test run completed"
 
-      - name: Print test summary # Print the test summary only if the tests were run
+      - name: Print test summary
         id: print_test_summary
         if: ${{ always() }}
         run: |
@@ -151,12 +151,12 @@ jobs:
           python tests/end_to_end/utils/summary_helper.py
           echo "Test summary printed"
 
-      - name: Tar files # Tar the test results only if the tests were run
+      - name: Tar files
         id: tar_files
         if: ${{ always() }}
         run: tar -cvf result.tar results
 
-      - name: Upload Artifacts # Upload the test results only if the tar was created
+      - name: Upload Artifacts
         id: upload_artifacts
         uses: actions/upload-artifact@v4
         if: ${{ always() }}
