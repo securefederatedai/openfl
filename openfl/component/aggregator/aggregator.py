@@ -9,15 +9,13 @@ import time
 from logging import getLogger
 from threading import Lock
 
-import psutil
-
 from openfl.component.straggler_handling_functions import CutoffTimeBasedStragglerHandling
 from openfl.databases import TensorDB
 from openfl.interface.aggregation_functions import WeightedAverage
 from openfl.pipelines import NoCompressionPipeline, TensorCodec
 from openfl.protocols import base_pb2, utils
 from openfl.utilities import TaskResultKey, TensorKey, change_tags
-from openfl.utilities.logs import write_metric
+from openfl.utilities.logs import get_memory_usage, write_metric
 
 AGG_MEM_FILE_NAME = "agg_mem_details.json"
 
@@ -128,9 +126,8 @@ class Aggregator:
         )
         self._end_of_round_check_done = [False] * rounds_to_train
         self.stragglers = []
-        self.log_memory_usage = (
-            log_memory_usage  # Flag can be enabled to get memory usage details for ubuntu system
-        )
+        # Flag can be enabled to get memory usage details for ubuntu system
+        self.log_memory_usage = log_memory_usage
         self.memory_details = []
         self.rounds_to_train = rounds_to_train
 
@@ -676,53 +673,6 @@ class Aggregator:
 
             self._end_of_round_with_stragglers_check()
 
-    def get_memory_usage(self, round_number, metric_origin):
-        """Logs the memory usage statistics for the given round number.
-
-        This method retrieves the current virtual and swap memory usage statistics
-        using the psutil library, formats them into a dictionary, and logs the
-        information using the logger.
-
-        Args:
-            round_number (int): The current round number for which memory usage is being logged.
-        """
-        process = psutil.Process()
-        self.logger.info(f"{metric_origin} process id is {process}")
-        virtual_memory = psutil.virtual_memory()
-        swap_memory = psutil.swap_memory()
-        memory_usage = {
-            "round_number": round_number,
-            "metric_origin": metric_origin,
-            "process_memory": round(process.memory_info().rss / (1024**2), 2),
-            "virtual_memory": {
-                "total": round(virtual_memory.total / (1024**2), 2),
-                "available": round(virtual_memory.available / (1024**2), 2),
-                "percent": virtual_memory.percent,
-                "used": round(virtual_memory.used / (1024**2), 2),
-                "free": round(virtual_memory.free / (1024**2), 2),
-                "active": round(virtual_memory.active / (1024**2), 2),
-                "inactive": round(virtual_memory.inactive / (1024**2), 2),
-                "buffers": round(virtual_memory.buffers / (1024**2), 2),
-                "cached": round(virtual_memory.cached / (1024**2), 2),
-                "shared": round(virtual_memory.shared / (1024**2), 2),
-            },
-            "swap_memory": {
-                "total": round(swap_memory.total / (1024**2), 2),
-                "used": round(swap_memory.used / (1024**2), 2),
-                "free": round(swap_memory.free / (1024**2), 2),
-                "percent": swap_memory.percent,
-            },
-        }
-        self.logger.info(
-            f"**************** End of round check: {metric_origin} Memory Logs ******************"
-        )
-        self.logger.info("Memory Usage: %s", memory_usage)
-        self.logger.info(
-            "*************************************************************************************"
-        )
-
-        return memory_usage
-
     def _end_of_round_with_stragglers_check(self):
         """
         Checks if the minimum required collaborators have reported their results,
@@ -1024,7 +974,7 @@ class Aggregator:
 
         if self.log_memory_usage:
             # This is the place to check the memory usage of the aggregator
-            memory_detail = self.get_memory_usage(self.round_number, "aggregator")
+            memory_detail = get_memory_usage(self.logger, self.round_number, "aggregator")
             self.memory_details.append(memory_detail)
 
         # Once all of the task results have been processed

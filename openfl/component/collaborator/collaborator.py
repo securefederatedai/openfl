@@ -9,12 +9,11 @@ from logging import getLogger
 from time import sleep
 from typing import Tuple
 
-import psutil
-
 from openfl.databases import TensorDB
 from openfl.pipelines import NoCompressionPipeline, TensorCodec
 from openfl.protocols import utils
 from openfl.utilities import TensorKey
+from openfl.utilities.logs import get_memory_usage
 
 
 class DevicePolicy(Enum):
@@ -126,9 +125,8 @@ class Collaborator:
         self.delta_updates = delta_updates
 
         self.client = client
-        self.log_memory_usage = (
-            log_memory_usage  # Flag can be enabled to get memory usage details for ubuntu system
-        )
+        # Flag can be enabled to get memory usage details for ubuntu system
+        self.log_memory_usage = log_memory_usage
         self.task_config = task_config
 
         self.logger = getLogger(__name__)
@@ -179,8 +177,8 @@ class Collaborator:
                 self.tensor_db.clean_up(self.db_store_rounds)
                 if self.log_memory_usage:
                     # This is the place to check the memory usage of the collaborator
-                    memory_detail = self.get_memory_usage(
-                        round_number, metric_origin=self.collaborator_name
+                    memory_detail = get_memory_usage(
+                        self.logger, round_number, metric_origin=self.collaborator_name
                     )
                     memory_details.append(memory_detail)
         if self.log_memory_usage:
@@ -604,51 +602,3 @@ class Collaborator:
         self.tensor_db.cache_tensor({decompressed_tensor_key: decompressed_nparray})
 
         return decompressed_nparray
-
-    def get_memory_usage(self, round_number, metric_origin):
-        """
-        Logs the memory usage statistics for the given round number.
-
-        This method retrieves the current virtual and swap memory usage statistics
-        using the psutil library, formats them into a dictionary, and logs the
-        information using the logger.
-
-        Args:
-            round_number (int): The current round number for which memory usage is being logged.
-        """
-        process = psutil.Process()
-        self.logger.info(f"{metric_origin} process id is {process}")
-        virtual_memory = psutil.virtual_memory()
-        swap_memory = psutil.swap_memory()
-        memory_usage = {
-            "round_number": round_number,
-            "metric_origin": metric_origin,
-            "process_memory": round(process.memory_info().rss / (1024**2), 2),
-            "virtual_memory": {
-                "total": round(virtual_memory.total / (1024**2), 2),
-                "available": round(virtual_memory.available / (1024**2), 2),
-                "percent": virtual_memory.percent,
-                "used": round(virtual_memory.used / (1024**2), 2),
-                "free": round(virtual_memory.free / (1024**2), 2),
-                "active": round(virtual_memory.active / (1024**2), 2),
-                "inactive": round(virtual_memory.inactive / (1024**2), 2),
-                "buffers": round(virtual_memory.buffers / (1024**2), 2),
-                "cached": round(virtual_memory.cached / (1024**2), 2),
-                "shared": round(virtual_memory.shared / (1024**2), 2),
-            },
-            "swap_memory": {
-                "total": round(swap_memory.total / (1024**2), 2),
-                "used": round(swap_memory.used / (1024**2), 2),
-                "free": round(swap_memory.free / (1024**2), 2),
-                "percent": swap_memory.percent,
-            },
-        }
-        self.logger.info(
-            f"**************** End of round check: {metric_origin} Memory Logs ******************"
-        )
-        self.logger.info("Memory Usage: %s", memory_usage)
-        self.logger.info(
-            "*************************************************************************************"
-        )
-
-        return memory_usage

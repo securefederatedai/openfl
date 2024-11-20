@@ -6,6 +6,7 @@
 
 import logging
 
+import psutil
 from rich.console import Console
 from rich.logging import RichHandler
 from tensorboardX import SummaryWriter
@@ -57,3 +58,51 @@ def setup_loggers(log_level=logging.INFO):
     formatter = logging.Formatter("[%(asctime)s][%(name)s][%(levelname)s] - %(message)s")
     handler.setFormatter(formatter)
     root.addHandler(handler)
+
+
+def get_memory_usage(logger, round_number, metric_origin):
+    """Logs the memory usage statistics for the given round number.
+
+    This method retrieves the current virtual and swap memory usage statistics
+    using the psutil library, formats them into a dictionary, and logs the
+    information using the logger.
+
+    Args:
+        round_number (int): The current round number for which memory usage is being logged.
+    """
+    process = psutil.Process()
+    logger.info(f"{metric_origin} process id is {process}")
+    virtual_memory = psutil.virtual_memory()
+    swap_memory = psutil.swap_memory()
+    memory_usage = {
+        "round_number": round_number,
+        "metric_origin": metric_origin,
+        "process_memory": round(process.memory_info().rss / (1024**2), 2),
+        "virtual_memory": {
+            "total": round(virtual_memory.total / (1024**2), 2),
+            "available": round(virtual_memory.available / (1024**2), 2),
+            "percent": virtual_memory.percent,
+            "used": round(virtual_memory.used / (1024**2), 2),
+            "free": round(virtual_memory.free / (1024**2), 2),
+            "active": round(virtual_memory.active / (1024**2), 2),
+            "inactive": round(virtual_memory.inactive / (1024**2), 2),
+            "buffers": round(virtual_memory.buffers / (1024**2), 2),
+            "cached": round(virtual_memory.cached / (1024**2), 2),
+            "shared": round(virtual_memory.shared / (1024**2), 2),
+        },
+        "swap_memory": {
+            "total": round(swap_memory.total / (1024**2), 2),
+            "used": round(swap_memory.used / (1024**2), 2),
+            "free": round(swap_memory.free / (1024**2), 2),
+            "percent": swap_memory.percent,
+        },
+    }
+    logger.info(
+        f"**************** End of round check: {metric_origin} Memory Logs ******************"
+    )
+    logger.info("Memory Usage: %s", memory_usage)
+    logger.info(
+        "*************************************************************************************"
+    )
+
+    return memory_usage
