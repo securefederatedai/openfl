@@ -20,6 +20,11 @@ if importlib.util.find_spec("torch") is not None:
     from openfl.federated.data import PyTorchDataLoader
     from openfl.federated.task import FederatedModel  # NOQA
     from openfl.federated.task import PyTorchTaskRunner
+if importlib.util.find_spec("xgboost") is not None:
+    from openfl.federated.data import FederatedDataSet  # NOQA
+    from openfl.federated.data import XGBoostDataLoader
+    from openfl.federated.task import FederatedModel  # NOQA
+    from openfl.federated.task import XGBoostTaskRunner
 
 __all__ = [
     "Plan",
