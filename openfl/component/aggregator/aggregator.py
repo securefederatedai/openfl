@@ -128,7 +128,7 @@ class Aggregator:
         )
         self._end_of_round_check_done = [False] * rounds_to_train
         self.stragglers = []
-        self.log_memory_usage = log_memory_usage
+        self.log_memory_usage = log_memory_usage # Flag can be enabled to get memory usage details for ubuntu system
         self.memory_details = []
         self.rounds_to_train = rounds_to_train
 
@@ -1019,8 +1019,11 @@ class Aggregator:
         all_tasks = self.assigner.get_all_tasks_for_round(self.round_number)
         for task_name in all_tasks:
             self._compute_validation_related_task_metrics(task_name)
-        memory_detail = self.get_memory_usage(self.round_number, "aggregator")
-        self.memory_details.append(memory_detail)
+
+        if self.log_memory_usage:
+            # This is the place to check the memory usage of the aggregator
+            memory_detail = self.get_memory_usage(self.round_number, "aggregator")
+            self.memory_details.append(memory_detail)
 
         # Once all of the task results have been processed
         self._end_of_round_check_done[self.round_number] = True
