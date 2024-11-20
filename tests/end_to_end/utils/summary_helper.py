@@ -21,9 +21,10 @@ def get_aggregated_accuracy(agg_log_file):
     Returns:
         agg_accuracy: the aggregated accuracy
     """
+    agg_accuracy = "Not Found"
     if not os.path.exists(agg_log_file):
         print(f"Aggregator log file {agg_log_file} not found. Cannot get aggregated accuracy")
-        return "Not Found"
+        return agg_accuracy
 
     # Example line(s) containing spaces and special characters:
     """
@@ -33,17 +34,17 @@ def get_aggregated_accuracy(agg_log_file):
     try:
         with open(agg_log_file, 'r') as f:
             for line in f:
-                if "metric_origin" in line and "aggregator" in line and "aggregated_model_validation" in line:
+                if "'metric_origin': 'aggregator'" in line and "aggregated_model_validation" in line:
                     line = line.split("aggregator.py:")[0].strip()
                     # If the line does not contain closing bracket "}", then concatenate the next line
                     reqd_line = line if "}" in line else line + next(f).strip()
                     agg_accuracy = eval(reqd_line.split("METRIC")[1].strip('"'))["metric_value"]
-        return agg_accuracy
-
+                    break
     except Exception as e:
         # Do not fail the test if the accuracy cannot be fetched
         print(f"Error while reading aggregator log file: {e}")
-        return "Not Found"
+
+    return agg_accuracy
 
 
 def get_test_status(result):
@@ -54,16 +55,17 @@ def get_test_status(result):
     Returns
         status of the test status
     """
-    status = "FAILED"
+    status, err_msg = "FAILED", "NA"
     if "failure" in result.tag or "error" in result.tag:
         # If the result has a tag "failure", set status as "FAIL"
         status = "FAILED"
+        err_msg = result.get("message").split("\n")[0]
     elif "skipped" in result.tag:
         # If the result has a tag "skipped", set status as "SKIPPED"
         status = "SKIPPED"
     else:
         status = "PASSED"
-    return status
+    return status, err_msg
 
 
 def get_testcase_result():
@@ -84,11 +86,13 @@ def get_testcase_result():
                 # Successful test won't have any result/subtag
                 if len(testcase) == 0:
                     database_dict["result"] = "PASSED"
+                    database_dict["err_msg"] = "NA"
 
                 # Iterate over each result in testsuite
                 for result in testcase:
-                    status = get_test_status(result)
+                    status, err_msg = get_test_status(result)
                     database_dict["result"] = status
+                    database_dict["err_msg"] = err_msg
 
                 # Append the dictionary to database_list
                 database_list.append(database_dict)
@@ -110,6 +114,7 @@ if __name__ == "__main__":
 
     if not model_name:
         print("MODEL_NAME is not set, cannot find out aggregator logs")
+        agg_accuracy = "Not Found"
     else:
         workspace_name = "workspace_" + model_name
         agg_log_file = os.path.join("results", workspace_name, "aggregator.log")
@@ -118,7 +123,7 @@ if __name__ == "__main__":
     # Write the results to GitHub step summary
     with open(os.getenv('GITHUB_STEP_SUMMARY'), 'a') as fh:
         # DO NOT change the print statements
-        print("| Name | Time (in seconds) | Result | Collaborators | Rounds to train | Score (if applicable) |", file=fh)
-        print("| ------------- | ------------- | ------------- | ------------- | ------------- | ------------- |", file=fh)
+        print("| Name | Time (in seconds) | Result | Error (if any) | Collaborators | Rounds to train | Score (if applicable) |", file=fh)
+        print("| ------------- | ------------- | ------------- | ------------- | ------------- | ------------- | ------------- |", file=fh)
         for item in result:
-            print(f"| {item['name']} | {item['time']} | {item['result']} | {num_cols} | {num_rounds} | {agg_accuracy} |", file=fh)
+            print(f"| {item['name']} | {item['time']} | {item['result']} | {item['err_msg']} | {num_cols} | {num_rounds} | {agg_accuracy} |", file=fh)

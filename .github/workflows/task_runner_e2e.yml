@@ -30,9 +30,10 @@ env:
   NUM_COLLABORATORS: ${{ inputs.num_collaborators || '2' }}
 
 jobs:
-  test:
+  test_with_tls:
     name: tr_tls
     runs-on: ubuntu-22.04
+    if: github.event.repository.fork == false # Do not run the workflow for forked repositories
     timeout-minutes: 120 # 2 hours
     strategy:
       matrix:
@@ -71,12 +72,14 @@ jobs:
       - name: Run Task Runner E2E tests with TLS
         id: run_tests
         run: |
-          python -m pytest -s tests/end_to_end/test_suites/task_runner_tests.py -m ${{ env.MODEL_NAME }} --num_rounds $NUM_ROUNDS --num_collaborators $NUM_COLLABORATORS --model_name ${{ env.MODEL_NAME }}
+          python -m pytest -s tests/end_to_end/test_suites/task_runner_tests.py \
+          -m ${{ env.MODEL_NAME }} --model_name ${{ env.MODEL_NAME }} \
+          --num_rounds $NUM_ROUNDS --num_collaborators $NUM_COLLABORATORS 
           echo "Task runner end to end test run completed"
 
       - name: Print test summary # Print the test summary only if the tests were run
         id: print_test_summary
-        if: steps.run_tests.outcome == 'success' || steps.run_tests.outcome == 'failure'
+        if: ${{ always() }}
         run: |
           export PYTHONPATH="$PYTHONPATH:."
           python tests/end_to_end/utils/summary_helper.py
@@ -84,20 +87,21 @@ jobs:
 
       - name: Tar files # Tar the test results only if the tests were run
         id: tar_files
-        if: steps.run_tests.outcome == 'success' || steps.run_tests.outcome == 'failure'
+        if: ${{ always() }}
         run: tar -cvf result.tar results
 
       - name: Upload Artifacts # Upload the test results only if the tar was created
         id: upload_artifacts
         uses: actions/upload-artifact@v4
-        if: steps.tar_files.outcome == 'success'
+        if: ${{ always() }}
         with:
-          name: task_runner_tls_${{ env.MODEL_NAME }}_python${{ env.PYTHON_VERSION }}_${{ github.run_id }}
+          name: tr_tls_${{ env.MODEL_NAME }}_python${{ env.PYTHON_VERSION }}_${{ github.run_id }}
           path: result.tar
 
   test_with_non_tls:
     name: tr_non_tls
     runs-on: ubuntu-22.04
+    if: github.event.repository.fork == false # Do not run the workflow for forked repositories
     timeout-minutes: 120 # 2 hours
     strategy:
       matrix:
@@ -136,12 +140,14 @@ jobs:
       - name: Run Task Runner E2E tests without TLS
         id: run_tests
         run: |
-          python -m pytest -s tests/end_to_end/test_suites/task_runner_tests.py -m ${{ env.MODEL_NAME }} --num_rounds $NUM_ROUNDS --num_collaborators $NUM_COLLABORATORS --disable_tls
+          python -m pytest -s tests/end_to_end/test_suites/task_runner_tests.py \
+          -m ${{ env.MODEL_NAME }} --model_name ${{ env.MODEL_NAME }} \
+          --num_rounds $NUM_ROUNDS --num_collaborators $NUM_COLLABORATORS --disable_tls
           echo "Task runner end to end test run completed"
 
       - name: Print test summary # Print the test summary only if the tests were run
         id: print_test_summary
-        if: steps.run_tests.outcome == 'success' || steps.run_tests.outcome == 'failure'
+        if: ${{ always() }}
         run: |
           export PYTHONPATH="$PYTHONPATH:."
           python tests/end_to_end/utils/summary_helper.py
@@ -149,13 +155,13 @@ jobs:
 
       - name: Tar files # Tar the test results only if the tests were run
         id: tar_files
-        if: steps.run_tests.outcome == 'success' || steps.run_tests.outcome == 'failure'
+        if: ${{ always() }}
         run: tar -cvf result.tar results
 
       - name: Upload Artifacts # Upload the test results only if the tar was created
         id: upload_artifacts
         uses: actions/upload-artifact@v4
-        if: steps.tar_files.outcome == 'success'
+        if: ${{ always() }}
         with:
-          name: task_runner_non_tls_${{ env.MODEL_NAME }}_python${{ env.PYTHON_VERSION }}_${{ github.run_id }}
+          name: tr_non_tls_${{ env.MODEL_NAME }}_python${{ env.PYTHON_VERSION }}_${{ github.run_id }}
           path: result.tar
