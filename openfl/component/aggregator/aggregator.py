@@ -69,6 +69,7 @@ class Aggregator:
         best_state_path,
         last_state_path,
         assigner,
+        use_delta_updates=True,
         straggler_handling_policy=None,
         rounds_to_train=256,
         single_col_cert_common_name=None,
@@ -185,6 +186,8 @@ class Aggregator:
 
         # Initialize a lock for thread safety
         self.lock = Lock()
+
+        self.use_delta_updates = use_delta_updates
 
     def _load_initial_tensors(self):
         """Load all of the tensors required to begin federated learning.
@@ -801,7 +804,7 @@ class Aggregator:
         # Create delta and save it in TensorDB
         base_model_tk = TensorKey(tensor_name, origin, round_number, report, ("model",))
         base_model_nparray = self.tensor_db.get_tensor_from_cache(base_model_tk)
-        if base_model_nparray is not None:
+        if base_model_nparray is not None and self.use_delta_updates:
             delta_tk, delta_nparray = self.tensor_codec.generate_delta(
                 agg_tag_tk, agg_results, base_model_nparray
             )
@@ -830,7 +833,7 @@ class Aggregator:
         self.tensor_db.cache_tensor({decompressed_delta_tk: decompressed_delta_nparray})
 
         # Apply delta (unless delta couldn't be created)
-        if base_model_nparray is not None:
+        if base_model_nparray is not None and self.use_delta_updates:
             self.logger.debug("Applying delta for layer %s", decompressed_delta_tk[0])
             new_model_tk, new_model_nparray = self.tensor_codec.apply_delta(
                 decompressed_delta_tk,
