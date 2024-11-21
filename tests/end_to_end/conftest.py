@@ -17,7 +17,7 @@ import tests.end_to_end.models.participants as participants
 # Define a named tuple to store the objects for model owner, aggregator, and collaborators
 federation_fixture = collections.namedtuple(
     "federation_fixture",
-    "model_owner, aggregator, collaborators, model_name, disable_client_auth, disable_tls, workspace_path, results_dir",
+    "model_owner, aggregator, collaborators, model_name, disable_client_auth, disable_tls, workspace_path, results_dir, num_rounds",
 )
 
 
@@ -61,6 +61,11 @@ def pytest_addoption(parser):
         "--disable_tls",
         action="store_true",
         help="Disable TLS for communication",
+    )
+    parser.addoption(
+        "--log_memory_usage",
+        action="store_true",
+        help="Enable memory log in collaborators and aggregator",
     )
 
 
@@ -234,6 +239,7 @@ def fx_federation(request, pytestconfig):
     num_rounds = args.num_rounds
     disable_client_auth = args.disable_client_auth
     disable_tls = args.disable_tls
+    log_memory_usage = args.log_memory_usage
 
     log.info(
         f"Running federation setup using Task Runner API on single machine with below configurations:\n"
@@ -241,7 +247,8 @@ def fx_federation(request, pytestconfig):
         f"\tNumber of rounds: {num_rounds}\n"
         f"\tModel name: {model_name}\n"
         f"\tClient authentication: {not disable_client_auth}\n"
-        f"\tTLS: {not disable_tls}"
+        f"\tTLS: {not disable_tls}\n"
+        f"\tMemory Logs: {log_memory_usage}"
     )
 
     # Validate the model name and create the workspace name
@@ -251,7 +258,7 @@ def fx_federation(request, pytestconfig):
     workspace_name = f"workspace_{model_name}"
 
     # Create model owner object and the workspace for the model
-    model_owner = participants.ModelOwner(workspace_name, model_name)
+    model_owner = participants.ModelOwner(workspace_name, model_name, log_memory_usage)
     try:
         workspace_path = model_owner.create_workspace(results_dir=results_dir)
     except Exception as e:
@@ -318,4 +325,5 @@ def fx_federation(request, pytestconfig):
         disable_tls=disable_tls,
         workspace_path=workspace_path,
         results_dir=results_dir,
+        num_rounds=num_rounds,
     )

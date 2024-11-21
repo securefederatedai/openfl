@@ -23,12 +23,13 @@ class ModelOwner:
     4. Importing and exporting the workspace etc.
     """
 
-    def __init__(self, workspace_name, model_name):
+    def __init__(self, workspace_name, model_name, log_memory_usage):
         """
         Initialize the ModelOwner class
         Args:
             workspace_name (str): Workspace name
             model_name (str): Model name
+            log_memory_usage (bool): Memory Log flag
         """
         self.workspace_name = workspace_name
         self.model_name = model_name
@@ -38,6 +39,7 @@ class ModelOwner:
         self.plan_path = None
         self.num_collaborators = constants.NUM_COLLABORATORS
         self.rounds_to_train = constants.NUM_ROUNDS
+        self.log_memory_usage = log_memory_usage
 
     def create_workspace(self, results_dir=None):
         """
@@ -132,6 +134,10 @@ class ModelOwner:
             data = yaml.load(fp, Loader=yaml.FullLoader)
 
         data["aggregator"]["settings"]["rounds_to_train"] = int(self.rounds_to_train)
+        # Memory Leak related
+        data["aggregator"]["settings"]["log_memory_usage"] = self.log_memory_usage
+        data["collaborator"]["settings"]["log_memory_usage"] = self.log_memory_usage
+
         data["data_loader"]["settings"]["collaborator_count"] = int(self.num_collaborators)
         data["network"]["settings"]["disable_client_auth"] = disable_client_auth
         data["network"]["settings"]["tls"] = not disable_tls
