@@ -6,8 +6,8 @@
 name: Task Runner E2E
 
 on:
-  schedule:
-    - cron: "0 0 * * *" # Run every day at midnight
+  pull_request:
+    types: [opened, synchronize, reopened]
   workflow_dispatch:
     inputs:
       num_rounds:
