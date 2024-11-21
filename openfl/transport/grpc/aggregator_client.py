@@ -186,11 +186,11 @@ class AggregatorGRPCClient:
         self,
         agg_addr,
         agg_port,
-        require_client_auth,
         root_certificate,
         certificate,
         private_key,
         use_tls=True,
+        require_client_auth=True,
         aggregator_uuid=None,
         federation_uuid=None,
         single_col_cert_common_name=None,
@@ -204,7 +204,7 @@ class AggregatorGRPCClient:
             agg_port (int): The port of the aggregator.
             use_tls (bool): Whether to use TLS for the connection.
             require_client_auth (bool): Whether to enable client-side
-                authentication.
+                authentication, i.e. mTLS. Ignored if `use_tls=False`.
             root_certificate (str): The path to the root certificate for the
                 TLS connection.
             certificate (str): The path to the client's certificate for the

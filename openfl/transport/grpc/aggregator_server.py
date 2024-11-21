@@ -58,7 +58,7 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
             agg_port (int): The port that the server is serving on.
             use_tls (bool): Whether to use TLS for the connection.
             require_client_auth (bool): Whether to enable client-side
-                authentication.
+                authentication, i.e. mTLS. Ignored if `use_tls=False`.
             root_certificate (str): The path to the root certificate for the
                 TLS connection.
             certificate (str): The path to the server's certificate for the
@@ -97,10 +97,10 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
         """
         if self.use_tls:
             collaborator_common_name = request.header.sender
-            if not self.require_client_auth:
-                common_name = collaborator_common_name
-            else:
+            if self.require_client_auth:
                 common_name = context.auth_context()["x509_common_name"][0].decode("utf-8")
+            else:
+                common_name = collaborator_common_name
 
             if not self.aggregator.valid_collaborator_cn_and_id(
                 common_name, collaborator_common_name
