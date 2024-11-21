@@ -55,7 +55,7 @@ class FrameworkAdapterPlugin(FrameworkAdapterPluginInterface):
 
         # Run the function
         if version.parse(tf.__version__) <= version.parse("2.7.1"):
-            logger.warn(
+            logger.warning(
                 "Applying hotfix for model serialization."
                 "Please consider updating to tensorflow>=2.8 to silence this warning."
             )

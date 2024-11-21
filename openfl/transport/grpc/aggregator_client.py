@@ -230,7 +230,7 @@ class AggregatorGRPCClient:
         self.logger = getLogger(__name__)
 
         if not self.tls:
-            self.logger.warn("gRPC is running on insecure channel with TLS disabled.")
+            self.logger.warning("gRPC is running on insecure channel with TLS disabled.")
             self.channel = self.create_insecure_channel(self.uri)
         else:
             self.channel = self.create_tls_channel(
@@ -302,7 +302,7 @@ class AggregatorGRPCClient:
             root_certificate_b = f.read()
 
         if disable_client_auth:
-            self.logger.warn("Client-side authentication is disabled.")
+            self.logger.warning("Client-side authentication is disabled.")
             private_key_b = None
             certificate_b = None
         else:
