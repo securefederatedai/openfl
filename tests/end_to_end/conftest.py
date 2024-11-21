@@ -224,6 +224,7 @@ def fx_federation(request, pytestconfig):
     """
     collaborators = []
     agg_domain_name = "localhost"
+
     # Parse the command line arguments
     args = parse_arguments()
     # Use the model name from the test case name if not provided as a command line argument

@@ -107,6 +107,7 @@ def main():
     """
     Main function to get the test case results and aggregator logs
     And write the results to GitHub step summary
+    IMP: Do not fail the test in any scenario
     """
     result = get_testcase_result()
 
