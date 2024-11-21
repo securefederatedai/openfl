@@ -10,7 +10,7 @@ import shutil
 from subprocess import check_call
 from concurrent.futures import ProcessPoolExecutor
 
-from tests.github.utils import create_collaborator, certify_aggregator
+from tests.github.utils import create_collaborator, certify_aggregator, is_path_name_allowed
 from openfl.utilities.utils import getfqdn_env
 
 
@@ -19,7 +19,7 @@ def exec(command, directory):
     check_call(command)
 
 
-if __name__ == '__main__':
+def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--template', default='keras_cnn_mnist')
     parser.add_argument('--fed_workspace', default='fed_work12345alpha81671')
@@ -34,6 +34,12 @@ if __name__ == '__main__':
     origin_dir = Path().resolve()
     args = parser.parse_args()
     fed_workspace = args.fed_workspace
+
+    # Check if the path name is allowed before creating the workspace
+    if not is_path_name_allowed(fed_workspace):
+        print(f"The path name {fed_workspace} is not allowed")
+        return
+
     archive_name = f'{fed_workspace}.zip'
     fqdn = getfqdn_env()
     template = args.template
@@ -116,3 +122,7 @@ if __name__ == '__main__':
         dir2 = workspace_root / col2 / fed_workspace
         executor.submit(exec, ['fx', 'collaborator', 'start', '-n', col2], dir2)
     shutil.rmtree(workspace_root)
+
+
+if __name__ == '__main__':
+    main()
