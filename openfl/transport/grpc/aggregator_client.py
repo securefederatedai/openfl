@@ -170,7 +170,7 @@ class AggregatorGRPCClient:
 
     Attributes:
         uri (str): The URI of the aggregator.
-        tls (bool): Whether to use TLS for the connection.
+        use_tls (bool): Whether to use TLS for the connection.
         disable_client_auth (bool): Whether to disable client-side
             authentication.
         root_certificate (str): The path to the root certificate for the TLS
@@ -193,7 +193,7 @@ class AggregatorGRPCClient:
         root_certificate,
         certificate,
         private_key,
-        tls=True,
+        use_tls=True,
         aggregator_uuid=None,
         federation_uuid=None,
         single_col_cert_common_name=None,
@@ -205,7 +205,7 @@ class AggregatorGRPCClient:
         Args:
             agg_addr (str): The address of the aggregator.
             agg_port (int): The port of the aggregator.
-            tls (bool): Whether to use TLS for the connection.
+            use_tls (bool): Whether to use TLS for the connection.
             disable_client_auth (bool): Whether to disable client-side
                 authentication.
             root_certificate (str): The path to the root certificate for the
@@ -221,7 +221,7 @@ class AggregatorGRPCClient:
             **kwargs: Additional keyword arguments.
         """
         self.uri = f"{agg_addr}:{agg_port}"
-        self.tls = tls
+        self.use_tls = use_tls
         self.disable_client_auth = disable_client_auth
         self.root_certificate = root_certificate
         self.certificate = certificate
@@ -229,7 +229,7 @@ class AggregatorGRPCClient:
 
         self.logger = getLogger(__name__)
 
-        if not self.tls:
+        if not self.use_tls:
             self.logger.warning("gRPC is running on insecure channel with TLS disabled.")
             self.channel = self.create_insecure_channel(self.uri)
         else:
@@ -364,7 +364,7 @@ class AggregatorGRPCClient:
         # issued previously
         self.disconnect()
 
-        if not self.tls:
+        if not self.use_tls:
             self.channel = self.create_insecure_channel(self.uri)
         else:
             self.channel = self.create_tls_channel(

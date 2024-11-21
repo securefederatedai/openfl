@@ -28,7 +28,7 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
     Attributes:
         aggregator (Aggregator): The aggregator that this server is serving.
         uri (str): The URI that the server is serving on.
-        tls (bool): Whether to use TLS for the connection.
+        use_tls (bool): Whether to use TLS for the connection.
         disable_client_auth (bool): Whether to disable client-side
             authentication.
         root_certificate (str): The path to the root certificate for the TLS
@@ -45,7 +45,7 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
         self,
         aggregator,
         agg_port,
-        tls=True,
+        use_tls=True,
         disable_client_auth=False,
         root_certificate=None,
         certificate=None,
@@ -59,7 +59,7 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
             aggregator (Aggregator): The aggregator that this server is
                 serving.
             agg_port (int): The port that the server is serving on.
-            tls (bool): Whether to use TLS for the connection.
+            use_tls (bool): Whether to use TLS for the connection.
             disable_client_auth (bool): Whether to disable client-side
                 authentication.
             root_certificate (str): The path to the root certificate for the
@@ -70,9 +70,10 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
                 TLS connection.
             **kwargs: Additional keyword arguments.
         """
+        print(f"{use_tls=}")
         self.aggregator = aggregator
         self.uri = f"[::]:{agg_port}"
-        self.tls = tls
+        self.use_tls = use_tls
         self.disable_client_auth = disable_client_auth
         self.root_certificate = root_certificate
         self.certificate = certificate
@@ -97,7 +98,7 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
             grpc.RpcError: If the collaborator or collaborator certificate is
                 not authorized.
         """
-        if self.tls:
+        if self.use_tls:
             collaborator_common_name = request.header.sender
             if self.disable_client_auth:
                 common_name = collaborator_common_name
@@ -310,7 +311,7 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
 
         aggregator_pb2_grpc.add_AggregatorServicer_to_server(self, self.server)
 
-        if not self.tls:
+        if not self.use_tls:
             self.logger.warning("gRPC is running on insecure channel with TLS disabled.")
             port = self.server.add_insecure_port(self.uri)
             self.logger.info("Insecure port: %s", port)
