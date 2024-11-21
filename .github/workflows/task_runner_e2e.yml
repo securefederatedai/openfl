@@ -131,6 +131,7 @@ jobs:
       - name: Install dependencies
         id: install_dependencies
         run: |
+          echo ${{ env.GITHUB_STEP_SUMMARY }}
           python -m pip install --upgrade pip
           pip install .
           pip install -r test-requirements.txt
