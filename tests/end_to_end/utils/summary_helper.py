@@ -110,13 +110,14 @@ def main():
     """
     result = get_testcase_result()
 
-    if not all([os.getenv(var) for var in ["NUM_COLLABORATORS", "NUM_ROUNDS", "MODEL_NAME"]]):
-        print("Environment variables not set. Skipping writing to GitHub step summary")
+    if not all([os.getenv(var) for var in ["NUM_COLLABORATORS", "NUM_ROUNDS", "MODEL_NAME", "GITHUB_STEP_SUMMARY"]]):
+        print("One or more environment variables not set. Skipping writing to GitHub step summary")
         return
 
     num_cols = os.getenv("NUM_COLLABORATORS")
     num_rounds = os.getenv("NUM_ROUNDS")
     model_name = os.getenv("MODEL_NAME")
+    summary_file = os.getenv("GITHUB_STEP_SUMMARY")
 
     # Validate the model name and create the workspace name
     if not model_name.upper() in constants.ModelName._member_names_:
@@ -127,8 +128,9 @@ def main():
     agg_log_file = os.path.join("results", workspace_name, "aggregator.log")
     agg_accuracy = get_aggregated_accuracy(agg_log_file)
 
-    # Write the results to GitHub step summary
-    with open(os.getenv('GITHUB_STEP_SUMMARY'), 'a') as fh:
+    # Write the results to GitHub step summary file
+    # This file is created at runtime by the GitHub action, thus we cannot verify its existence beforehand
+    with open(summary_file, 'a') as fh:
         # DO NOT change the print statements
         print("| Name | Time (in seconds) | Result | Error (if any) | Collaborators | Rounds to train | Score (if applicable) |", file=fh)
         print("| ------------- | ------------- | ------------- | ------------- | ------------- | ------------- | ------------- |", file=fh)
