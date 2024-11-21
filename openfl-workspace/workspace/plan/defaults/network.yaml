@@ -5,5 +5,5 @@ settings:
     hash_salt                  : auto
     use_tls                    : True
     client_reconnect_interval  : 5
-    disable_client_auth        : False
+    require_client_auth        : True
     cert_folder                : cert
