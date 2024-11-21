@@ -10,10 +10,11 @@ from subprocess import check_call
 from concurrent.futures import ProcessPoolExecutor
 import psutil
 
-from tests.github.utils import create_certified_workspace, certify_aggregator, create_collaborator
+from tests.github.utils import create_certified_workspace, certify_aggregator, create_collaborator, is_path_name_allowed
 from openfl.utilities.utils import getfqdn_env
 
-if __name__ == '__main__':
+
+def main():
     # Test the pipeline
     parser = argparse.ArgumentParser()
     workspace_choice = []
@@ -31,6 +32,12 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
     fed_workspace = args.fed_workspace
+
+    # Check if the path name is allowed before creating the workspace
+    if not is_path_name_allowed(fed_workspace):
+        print(f"The path name {fed_workspace} is not allowed")
+        return
+
     archive_name = f'{fed_workspace}.zip'
     fqdn = getfqdn_env()
     template = args.template
@@ -81,3 +88,7 @@ if __name__ == '__main__':
         dir1 = workspace_root / col1 / fed_workspace
         executor.submit(check_call, ['fx', 'collaborator', 'start', '-n', col1], cwd=dir1)
     shutil.rmtree(workspace_root)
+
+
+if __name__ == '__main__':
+    main()
