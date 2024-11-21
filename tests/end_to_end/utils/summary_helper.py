@@ -108,6 +108,8 @@ def main():
     Main function to get the test case results and aggregator logs
     And write the results to GitHub step summary
     """
+    print("Writing to GitHub step summary")
+    print(os.getenv('GITHUB_STEP_SUMMARY'))
     result = get_testcase_result()
 
     if not all([os.getenv(var) for var in ["NUM_COLLABORATORS", "NUM_ROUNDS", "MODEL_NAME"]]):
