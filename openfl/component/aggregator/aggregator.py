@@ -3,7 +3,6 @@
 
 
 """Aggregator module."""
-import json
 import queue
 import time
 from logging import getLogger
@@ -16,8 +15,6 @@ from openfl.pipelines import NoCompressionPipeline, TensorCodec
 from openfl.protocols import base_pb2, utils
 from openfl.utilities import TaskResultKey, TensorKey, change_tags
 from openfl.utilities.logs import get_memory_usage, write_metric
-
-AGG_MEM_FILE_NAME = "agg_mem_details.json"
 
 
 class Aggregator:
@@ -995,11 +992,8 @@ class Aggregator:
 
         # TODO This needs to be fixed!
         if self._time_to_quit():
-            # Write self.memory_details to a file
             if self.log_memory_usage:
-                self.logger.info("Writing memory details to file...")
-                with open(AGG_MEM_FILE_NAME, "w") as f:
-                    json.dump(self.memory_details, f, indent=4)
+                self.logger.info(f"Publish memory usage: {self.memory_details}")
             self.logger.info("Experiment Completed. Cleaning up...")
         else:
             self.logger.info("Starting round %s...", self.round_number)

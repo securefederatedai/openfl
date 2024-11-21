@@ -3,7 +3,6 @@
 
 
 """Collaborator module."""
-import json
 from enum import Enum
 from logging import getLogger
 from time import sleep
@@ -182,9 +181,7 @@ class Collaborator:
                     )
                     memory_details.append(memory_detail)
         if self.log_memory_usage:
-            # Write json file with memory usage details and collabrator name
-            with open(f"{self.collaborator_name}_mem_details.json", "w") as f:
-                json.dump(memory_details, f, indent=4)
+            self.logger.info(f"Publish memory usage: {self.memory_details}")
 
         self.logger.info("End of Federation reached. Exiting...")
 
