@@ -974,7 +974,8 @@ class Aggregator:
 
         if self.log_memory_usage:
             # This is the place to check the memory usage of the aggregator
-            memory_detail = get_memory_usage(self.logger, self.round_number, "aggregator")
+            memory_detail = get_memory_usage()
+            memory_detail["round_number"] = self.round_number
             self.memory_details.append(memory_detail)
 
         # Once all of the task results have been processed

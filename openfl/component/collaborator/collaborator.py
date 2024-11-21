@@ -176,9 +176,8 @@ class Collaborator:
                 self.tensor_db.clean_up(self.db_store_rounds)
                 if self.log_memory_usage:
                     # This is the place to check the memory usage of the collaborator
-                    memory_detail = get_memory_usage(
-                        self.logger, round_number, metric_origin=self.collaborator_name
-                    )
+                    memory_detail = get_memory_usage()
+                    memory_detail["round_number"] = round_number
                     memory_details.append(memory_detail)
         if self.log_memory_usage:
             self.logger.info(f"Publish memory usage: {memory_details}")

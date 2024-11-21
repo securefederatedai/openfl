@@ -5,6 +5,7 @@
 """Logs utilities."""
 
 import logging
+import os
 
 import psutil
 from rich.console import Console
@@ -60,23 +61,16 @@ def setup_loggers(log_level=logging.INFO):
     root.addHandler(handler)
 
 
-def get_memory_usage(logger, round_number, metric_origin):
-    """Logs the memory usage statistics for the given round number.
+def get_memory_usage() -> dict:
+    """Return memory usage details of the current process.
 
-    This method retrieves the current virtual and swap memory usage statistics
-    using the psutil library, formats them into a dictionary, and logs the
-    information using the logger.
-
-    Args:
-        round_number (int): The current round number for which memory usage is being logged.
+    Returns:
+        dict: A dictionary containing memory usage details.
     """
-    process = psutil.Process()
-    logger.info(f"{metric_origin} process id is {process}")
+    process = psutil.Process(os.getpid())
     virtual_memory = psutil.virtual_memory()
     swap_memory = psutil.swap_memory()
     memory_usage = {
-        "round_number": round_number,
-        "metric_origin": metric_origin,
         "process_memory": round(process.memory_info().rss / (1024**2), 2),
         "virtual_memory": {
             "total": round(virtual_memory.total / (1024**2), 2),
@@ -97,12 +91,4 @@ def get_memory_usage(logger, round_number, metric_origin):
             "percent": swap_memory.percent,
         },
     }
-    logger.info(
-        f"**************** End of round check: {metric_origin} Memory Logs ******************"
-    )
-    logger.info("Memory Usage: %s", memory_usage)
-    logger.info(
-        "*************************************************************************************"
-    )
-
     return memory_usage
