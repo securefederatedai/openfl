@@ -2,8 +2,15 @@ astor==0.8.1
 chardet
 charset-normalizer
 dill==0.3.6
+matplotlib>=2.0.0
 metaflow==2.7.15
+mistune>=2.0.3 # not directly required, pinned by Snyk to avoid a vulnerability
 nbdev==2.3.12
+numpy>=1.13.3
+openfl>=1.2.1
 ray==2.9.2
+scikit-learn>=0.24.1
+setuptools>=65.5.1 # not directly required, pinned by Snyk to avoid a vulnerability
 torch
 torchvision
+wheel>=0.38.0 # not directly required, pinned by Snyk to avoid a vulnerability
