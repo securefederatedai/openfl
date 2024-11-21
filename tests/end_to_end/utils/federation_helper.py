@@ -26,7 +26,7 @@ def setup_pki(fed_obj):
         fed_obj.aggregator.generate_sign_request()
         fed_obj.model_owner.certify_aggregator(fed_obj.aggregator.agg_domain_name)
     except Exception as e:
-        log.error(f"Failed to perform aggregator operations: {e}")
+        log.error(f"Failed to perform PKI setup for aggregator: {e}")
         raise e
 
     # Collaborator and model owner operations
@@ -38,11 +38,11 @@ def setup_pki(fed_obj):
             fed_obj.model_owner.certify_collaborator(collaborator.collaborator_name)
             collaborator.import_pki()
         except Exception as e:
-            log.error(f"Failed to perform collaborator operations: {e}")
+            log.error(f"Failed to perform PKI setup for {collaborator.collaborator_name}: {e}")
             raise e
     success = True
 
-    log.info("CSR operations completed successfully for all participants")
+    log.info("PKI setup successfully for all participants")
     return success
 
 
@@ -93,7 +93,7 @@ def verify_federation_run_completion(fed_obj, results):
     # Result will contain a list of boolean values for all the participants.
     # True - successful completion, False - failed/incomplete
     results = [f.result() for f in futures]
-    log.info(f"Results: {results}")
+    log.info(f"Results from all the participants: {results}")
 
     # If any of the participant failed, return False, else return True
     return all(results)
