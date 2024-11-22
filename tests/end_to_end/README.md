@@ -46,13 +46,13 @@ Below parameters are available for modification:
 1. --num_collaborators <int>   - to modify the number of collaborators
 2. --num_rounds <int>          - to modify the number of rounds to train
 3. --model_name <str>          - to use a specific model
-4. --disable_tls               - to disable TLS communication (by default it is enabled)
-5. --disable_client_auth       - to disable the client authentication (by default it is enabled)
+4. --use_tls    <str>          - to enable TLS communication (by default it is enabled)
+5. --require_client_auth <str> - to enable the client authentication (by default it is enabled)
 
 For example, to run Task runner with - torch_cnn_mnist model, 3 collaborators, 5 rounds and non-TLS scenario:
 
 ```sh
-python -m pytest -s tests/end_to_end/test_suites/task_runner_tests.py --num_rounds 5 --num_collaborators 3 --model_name torch_cnn_mnist --disable_tls
+python -m pytest -s tests/end_to_end/test_suites/task_runner_tests.py --num_rounds 5 --num_collaborators 3 --model_name torch_cnn_mnist --use_tls "true"
 ```
 
 ### Output Structure
