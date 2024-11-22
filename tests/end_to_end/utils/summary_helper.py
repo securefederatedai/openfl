@@ -5,6 +5,8 @@ import xml.etree.ElementTree as ET
 from lxml import etree
 import os
 
+import tests.end_to_end.utils.constants as constants
+
 # Initialize the XML parser
 parser = etree.XMLParser(recover=True, encoding='utf-8')
 tree = ET.parse("results/results.xml", parser=parser)
@@ -101,29 +103,41 @@ def get_testcase_result():
     return database_list
 
 
-if __name__ == "__main__":
+def main():
     """
     Main function to get the test case results and aggregator logs
     And write the results to GitHub step summary
+    IMP: Do not fail the test in any scenario
     """
     result = get_testcase_result()
+
+    if not all([os.getenv(var) for var in ["NUM_COLLABORATORS", "NUM_ROUNDS", "MODEL_NAME", "GITHUB_STEP_SUMMARY"]]):
+        print("One or more environment variables not set. Skipping writing to GitHub step summary")
+        return
 
     num_cols = os.getenv("NUM_COLLABORATORS")
     num_rounds = os.getenv("NUM_ROUNDS")
     model_name = os.getenv("MODEL_NAME")
+    summary_file = os.getenv("GITHUB_STEP_SUMMARY")
 
-    if not model_name:
-        print("MODEL_NAME is not set, cannot find out aggregator logs")
-        agg_accuracy = "Not Found"
-    else:
-        workspace_name = "workspace_" + model_name
-        agg_log_file = os.path.join("results", workspace_name, "aggregator.log")
-        agg_accuracy = get_aggregated_accuracy(agg_log_file)
+    # Validate the model name and create the workspace name
+    if not model_name.upper() in constants.ModelName._member_names_:
+        print(f"Invalid model name: {model_name}. Skipping writing to GitHub step summary")
+        return
 
-    # Write the results to GitHub step summary
-    with open(os.getenv('GITHUB_STEP_SUMMARY'), 'a') as fh:
+    workspace_name = "workspace_" + model_name
+    agg_log_file = os.path.join("results", workspace_name, "aggregator.log")
+    agg_accuracy = get_aggregated_accuracy(agg_log_file)
+
+    # Write the results to GitHub step summary file
+    # This file is created at runtime by the GitHub action, thus we cannot verify its existence beforehand
+    with open(summary_file, 'a') as fh:
         # DO NOT change the print statements
         print("| Name | Time (in seconds) | Result | Error (if any) | Collaborators | Rounds to train | Score (if applicable) |", file=fh)
         print("| ------------- | ------------- | ------------- | ------------- | ------------- | ------------- | ------------- |", file=fh)
         for item in result:
             print(f"| {item['name']} | {item['time']} | {item['result']} | {item['err_msg']} | {num_cols} | {num_rounds} | {agg_accuracy} |", file=fh)
+
+
+if __name__ == "__main__":
+    main()
