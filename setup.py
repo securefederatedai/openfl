@@ -153,7 +153,7 @@ setup(
         'docker',
         'dynaconf==3.2.6',
         'flatten_json',
-        'grpcio>=1.56.2',
+        'grpcio>=1.56.2,<1.66.0',
         'ipykernel',
         'jupyterlab',
         'numpy',

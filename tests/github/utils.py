@@ -117,3 +117,22 @@ def create_signed_cert_for_collaborator(col, data_path):
         os.remove(f)
     # Remove request archive
     os.remove(f'col_{col}_to_agg_cert_request.zip')
+
+
+def is_path_name_allowed(path):
+    """
+    Check if given path name is allowed.
+    Allow alphanumeric characters, hyphens and underscores.
+    Also, / in case of a nested directory.
+
+    Args:
+        path (str): The path name to check.
+    Returns:
+        bool: True if the path name is allowed, False otherwise.
+    """
+    special_characters = "!@#$%^&*()+?=,<>"
+
+    if any(c in special_characters for c in path):
+        return False
+    else:
+        return True
