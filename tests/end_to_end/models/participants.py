@@ -139,8 +139,8 @@ class ModelOwner:
         data["collaborator"]["settings"]["log_memory_usage"] = self.log_memory_usage
 
         data["data_loader"]["settings"]["collaborator_count"] = int(self.num_collaborators)
-        data["network"]["settings"]["require_client_auth"] = not require_client_auth
-        data["network"]["settings"]["use_tls"] = not use_tls
+        data["network"]["settings"]["require_client_auth"] = require_client_auth
+        data["network"]["settings"]["use_tls"] = use_tls
 
         with open(self.plan_path, "w+") as write_file:
             yaml.dump(data, write_file)
