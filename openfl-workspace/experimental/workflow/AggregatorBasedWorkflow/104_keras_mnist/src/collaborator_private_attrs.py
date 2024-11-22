@@ -1,4 +1,4 @@
-# Copyright (C) 2020-2024 Intel Corporation
+# Copyright (C) 2020-2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 from tensorflow.keras.datasets import mnist
 from tensorflow.keras.utils import to_categorical
