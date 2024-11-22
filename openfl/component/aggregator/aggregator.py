@@ -14,7 +14,7 @@ from openfl.interface.aggregation_functions import WeightedAverage
 from openfl.pipelines import NoCompressionPipeline, TensorCodec
 from openfl.protocols import base_pb2, utils
 from openfl.utilities import TaskResultKey, TensorKey, change_tags
-from openfl.utilities.logs import write_metric
+from openfl.utilities.logs import get_memory_usage, write_metric
 
 
 class Aggregator:
@@ -76,6 +76,7 @@ class Aggregator:
         compression_pipeline=None,
         db_store_rounds=1,
         write_logs=False,
+        log_memory_usage=False,
         log_metric_callback=None,
         **kwargs,
     ):
@@ -123,7 +124,9 @@ class Aggregator:
         )
         self._end_of_round_check_done = [False] * rounds_to_train
         self.stragglers = []
-
+        # Flag can be enabled to get memory usage details for ubuntu system
+        self.log_memory_usage = log_memory_usage
+        self.memory_details = []
         self.rounds_to_train = rounds_to_train
 
         # if the collaborator requests a delta, this value is set to true
@@ -969,6 +972,13 @@ class Aggregator:
         for task_name in all_tasks:
             self._compute_validation_related_task_metrics(task_name)
 
+        if self.log_memory_usage:
+            # This is the place to check the memory usage of the aggregator
+            memory_detail = get_memory_usage()
+            memory_detail["round_number"] = self.round_number
+            memory_detail["metric_origin"] = "aggregator"
+            self.memory_details.append(memory_detail)
+
         # Once all of the task results have been processed
         self._end_of_round_check_done[self.round_number] = True
 
@@ -984,6 +994,8 @@ class Aggregator:
 
         # TODO This needs to be fixed!
         if self._time_to_quit():
+            if self.log_memory_usage:
+                self.logger.info(f"Publish memory usage: {self.memory_details}")
             self.logger.info("Experiment Completed. Cleaning up...")
         else:
             self.logger.info("Starting round %s...", self.round_number)

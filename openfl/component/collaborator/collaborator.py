@@ -3,7 +3,6 @@
 
 
 """Collaborator module."""
-
 from enum import Enum
 from logging import getLogger
 from time import sleep
@@ -13,6 +12,7 @@ from openfl.databases import TensorDB
 from openfl.pipelines import NoCompressionPipeline, TensorCodec
 from openfl.protocols import utils
 from openfl.utilities import TensorKey
+from openfl.utilities.logs import get_memory_usage
 
 
 class DevicePolicy(Enum):
@@ -80,6 +80,7 @@ class Collaborator:
         delta_updates=False,
         compression_pipeline=None,
         db_store_rounds=1,
+        log_memory_usage=False,
         **kwargs,
     ):
         """Initialize the Collaborator object.
@@ -123,7 +124,8 @@ class Collaborator:
         self.delta_updates = delta_updates
 
         self.client = client
-
+        # Flag can be enabled to get memory usage details for ubuntu system
+        self.log_memory_usage = log_memory_usage
         self.task_config = task_config
 
         self.logger = getLogger(__name__)
@@ -158,6 +160,7 @@ class Collaborator:
 
     def run(self):
         """Run the collaborator."""
+        memory_details = []
         while True:
             tasks, round_number, sleep_time, time_to_quit = self.get_tasks()
             if time_to_quit:
@@ -171,6 +174,14 @@ class Collaborator:
 
                 # Cleaning tensor db
                 self.tensor_db.clean_up(self.db_store_rounds)
+                if self.log_memory_usage:
+                    # This is the place to check the memory usage of the collaborator
+                    memory_detail = get_memory_usage()
+                    memory_detail["round_number"] = round_number
+                    memory_details["metric_origin"] = self.collaborator_name
+                    memory_details.append(memory_detail)
+        if self.log_memory_usage:
+            self.logger.info(f"Publish memory usage: {memory_details}")
 
         self.logger.info("End of Federation reached. Exiting...")
 

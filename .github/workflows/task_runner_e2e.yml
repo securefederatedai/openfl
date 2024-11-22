@@ -73,7 +73,7 @@ jobs:
         run: |
           python -m pytest -s tests/end_to_end/test_suites/task_runner_tests.py \
           -m ${{ env.MODEL_NAME }} --model_name ${{ env.MODEL_NAME }} \
-          --num_rounds $NUM_ROUNDS --num_collaborators $NUM_COLLABORATORS 
+          --num_rounds ${{ env.NUM_ROUNDS }} --num_collaborators ${{ env.NUM_COLLABORATORS }}
           echo "Task runner end to end test run completed"
 
       - name: Print test summary
@@ -140,7 +140,7 @@ jobs:
         run: |
           python -m pytest -s tests/end_to_end/test_suites/task_runner_tests.py \
           -m ${{ env.MODEL_NAME }} --model_name ${{ env.MODEL_NAME }} \
-          --num_rounds $NUM_ROUNDS --num_collaborators $NUM_COLLABORATORS --disable_tls
+          --num_rounds ${{ env.NUM_ROUNDS }} --num_collaborators ${{ env.NUM_COLLABORATORS }} --disable_tls
           echo "Task runner end to end test run completed"
 
       - name: Print test summary

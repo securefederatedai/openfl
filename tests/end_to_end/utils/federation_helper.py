@@ -85,6 +85,7 @@ def verify_federation_run_completion(fed_obj, results):
         executor.submit(
             _verify_completion_for_participant,
             participant,
+            fed_obj.num_rounds,
             results[i]
         )
         for i, participant in enumerate(fed_obj.collaborators + [fed_obj.aggregator])
@@ -99,7 +100,7 @@ def verify_federation_run_completion(fed_obj, results):
     return all(results)
 
 
-def _verify_completion_for_participant(participant, result_file):
+def _verify_completion_for_participant(participant, num_rounds, result_file, time_for_each_round=100):
     """
     Verify the completion of the process for the participant
     Args:
@@ -109,7 +110,7 @@ def _verify_completion_for_participant(participant, result_file):
         bool: True if successful, else False
     """
     # Wait for the successful output message to appear in the log till timeout
-    timeout = 900 # in seconds
+    timeout = 300 + ( time_for_each_round * num_rounds ) # in seconds
     log.info(f"Printing the last line of the log file for {participant.name} to track the progress")
     with open(result_file, 'r') as file:
         content = file.read()
