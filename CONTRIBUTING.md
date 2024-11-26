@@ -55,7 +55,7 @@ git clone https://github.com/YOUR_GITHUB_USERNAME/openfl.git
 cd openfl
 pip install -U pip setuptools wheel
 pip install .
-pip install -r requirements-linters.txt
+pip install -r linters-requirements.txt
 ```
 
 ## Code style
