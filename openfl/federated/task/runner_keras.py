@@ -10,6 +10,7 @@ You may copy this file as the starting point of your own keras model.
 from warnings import catch_warnings, simplefilter
 
 import numpy as np
+import copy
 
 from openfl.federated.task.runner import TaskRunner
 from openfl.utilities import Metric, TensorKey, change_tags
@@ -58,9 +59,8 @@ class KerasTaskRunner(TaskRunner):
                 to False.
         """
         if self.opt_treatment == "RESET":
-            # TODO issue while reseting the optimizer variables
             self.reset_opt_vars()
-            self.set_tensor_dict(input_tensor_dict, with_opt_vars=False)
+            self.set_tensor_dict(input_tensor_dict, with_opt_vars=True)
         elif round_num > 0 and self.opt_treatment == "CONTINUE_GLOBAL" and not validation:
             self.set_tensor_dict(input_tensor_dict, with_opt_vars=True)
         else:
@@ -98,7 +98,8 @@ class KerasTaskRunner(TaskRunner):
             raise KeyError("metrics must be defined")
 
         # rebuild model with updated weights
-        self.rebuild_model(round_num, input_tensor_dict)
+        if round_num > 0:
+            self.rebuild_model(round_num, input_tensor_dict)
         for epoch in range(epochs):
             self.logger.info("Run %s epoch of %s round", epoch, round_num)
             results = self.train_iteration(
@@ -221,7 +222,8 @@ class KerasTaskRunner(TaskRunner):
         else:
             batch_size = 1
 
-        self.rebuild_model(round_num, input_tensor_dict, validation=True)
+        if round_num > 0:
+            self.rebuild_model(round_num, input_tensor_dict, validation=True)
         param_metrics = kwargs["metrics"]
 
         self.model.evaluate(self.data_loader.get_valid_loader(batch_size), verbose=1)
@@ -300,7 +302,7 @@ class KerasTaskRunner(TaskRunner):
         weights_dict = {}
         if isinstance(obj, ke.optimizers.Optimizer):
             weight_names = [weight.name for weight in obj.variables]
-            weights_dict = {weight_names[i] + suffix: weight.numpy() for i, weight in enumerate(obj.variables)}
+            weights_dict = {weight_names[i] + suffix: weight.numpy() for i, weight in enumerate(copy.deepcopy(obj.variables))}
         else:
             weight_names = [layer.name + "/" + weight.name for layer in obj.layers for weight in layer.weights]
             weight_name_index = 0
