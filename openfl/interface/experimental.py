@@ -36,7 +36,6 @@ def activate():
             "openfl-tutorials",
             "experimental",
             "workflow",
-            "LocalRuntime",
             "workflow_interface_requirements.txt",
         )
         .resolve()

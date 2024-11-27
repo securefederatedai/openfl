@@ -68,14 +68,14 @@ def inference(network, test_loader):
     return accuracy
 
 
-def fedavg(models):
+def fedavg(models, weights=None):
     new_model = models[0]
     state_dicts = [model.state_dict() for model in models]
     state_dict = new_model.state_dict()
     for key in models[1].state_dict():
-        state_dict[key] = np.sum(
-            np.array([state[key] for state in state_dicts], dtype=object), axis=0
-        ) / len(models)
+        state_dict[key] = torch.from_numpy(np.average([state[key].numpy() for state in state_dicts],
+                                                      axis=0,
+                                                      weights=weights))
     new_model.load_state_dict(state_dict)
     return new_model
 
