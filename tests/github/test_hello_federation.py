@@ -75,7 +75,7 @@ def main():
     # Convert model to native format
     if save_model:
         check_call(
-            ['fx', 'model', 'save', '-i', f'./save/{template}_last.pbuf', '-o', save_model],
+            ['fx', 'model', 'save', '-i', f'./save/last.pbuf', '-o', save_model],
             cwd=workspace_root)
 
     os.chdir(origin_dir)
