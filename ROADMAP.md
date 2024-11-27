@@ -44,7 +44,7 @@ The interactive API was originally designed to be a high-level API for OpenFL, b
 
 ### 1.4 Consolidating interfaces
 Today we support three interfaces: TaskRunner, native Python API, and interactive API. These are all distinct APIs, and are not particularly interoperable.
-By the time we reach OpenFL 2.0, our intention is to deprecate the original native [Python API](https://openfl.readthedocs.io/en/latest/source/workflow/running_the_federation.notebook.html) used for simulations, 
+By the time we reach OpenFL 2.0, our intention is to deprecate the original native [Python API](https://openfl.readthedocs.io/en/latest/get_started/examples.html#python-native-api) used for simulations, 
 bring consistency to the remaining interfaces with a high level, middle level, and low level API that are **fully interoperable**. This will result in being able to use the interface you're most comfortable with for a simulation,
 single experiment, or experiment session (with the director / envoy infrastructure).
 
@@ -59,7 +59,7 @@ This causes community fragmentation and distracts from some of the bigger proble
 ## Upcoming OpenFL releases
 
 ### OpenFL 1.6 (Q4 2023)
-1. Use the OpenFL Workflow Interface on distributed infrastructure with the [FederatedRuntime](https://openfl.readthedocs.io/en/latest/workflow_interface.html#runtimes-future-plans)
+1. Use the OpenFL Workflow Interface on distributed infrastructure with the [FederatedRuntime](https://openfl.readthedocs.io/en/latest/about/features_index/workflowinterface.html#runtimes-future-plans)
 2. LLM Support
 3. New use cases enabled by custom workflows
     * Standard ML Models (i.e. Tree-based algorithms)
