@@ -32,7 +32,6 @@ jobs:
     - name: Install dependencies ubuntu
       if: matrix.os == 'ubuntu-latest'
       run: |
-        sudo apt-get update
         python -m pip install --upgrade pip
         pip install .
     - name: Install dependencies windows
