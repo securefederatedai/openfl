@@ -28,15 +28,12 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
     Attributes:
         aggregator (Aggregator): The aggregator that this server is serving.
         uri (str): The URI that the server is serving on.
-        tls (bool): Whether to use TLS for the connection.
-        disable_client_auth (bool): Whether to disable client-side
-            authentication.
-        root_certificate (str): The path to the root certificate for the TLS
-            connection.
-        certificate (str): The path to the server's certificate for the TLS
-            connection.
-        private_key (str): The path to the server's private key for the TLS
-            connection.
+        use_tls (bool): Whether to use TLS for the connection.
+        require_client_auth (bool): Whether to enable client-side authentication, i.e. mTLS.
+            Ignored if `use_tls=False`.
+        root_certificate (str): The path to the root certificate for the TLS connection, ignored if `use_tls=False`.
+        certificate (str): The path to the client's certificate for the TLS connection, ignored if `use_tls=False`.
+        private_key (str): The path to the client's private key for the TLS connection, ignored if `use_tls=False`.
         server (grpc.Server): The gRPC server.
         server_credentials (grpc.ServerCredentials): The server's credentials.
     """
@@ -45,8 +42,8 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
         self,
         aggregator,
         agg_port,
-        tls=True,
-        disable_client_auth=False,
+        use_tls=True,
+        require_client_auth=True,
         root_certificate=None,
         certificate=None,
         private_key=None,
@@ -59,9 +56,9 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
             aggregator (Aggregator): The aggregator that this server is
                 serving.
             agg_port (int): The port that the server is serving on.
-            tls (bool): Whether to use TLS for the connection.
-            disable_client_auth (bool): Whether to disable client-side
-                authentication.
+            use_tls (bool): Whether to use TLS for the connection.
+            require_client_auth (bool): Whether to enable client-side
+                authentication, i.e. mTLS. Ignored if `use_tls=False`.
             root_certificate (str): The path to the root certificate for the
                 TLS connection.
             certificate (str): The path to the server's certificate for the
@@ -70,10 +67,11 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
                 TLS connection.
             **kwargs: Additional keyword arguments.
         """
+        print(f"{use_tls=}")
         self.aggregator = aggregator
         self.uri = f"[::]:{agg_port}"
-        self.tls = tls
-        self.disable_client_auth = disable_client_auth
+        self.use_tls = use_tls
+        self.require_client_auth = require_client_auth
         self.root_certificate = root_certificate
         self.certificate = certificate
         self.private_key = private_key
@@ -97,9 +95,13 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
             grpc.RpcError: If the collaborator or collaborator certificate is
                 not authorized.
         """
-        if self.tls:
-            common_name = context.auth_context()["x509_common_name"][0].decode("utf-8")
+        if self.use_tls:
             collaborator_common_name = request.header.sender
+            if self.require_client_auth:
+                common_name = context.auth_context()["x509_common_name"][0].decode("utf-8")
+            else:
+                common_name = collaborator_common_name
+
             if not self.aggregator.valid_collaborator_cn_and_id(
                 common_name, collaborator_common_name
             ):
@@ -306,8 +308,8 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
 
         aggregator_pb2_grpc.add_AggregatorServicer_to_server(self, self.server)
 
-        if not self.tls:
-            self.logger.warn("gRPC is running on insecure channel with TLS disabled.")
+        if not self.use_tls:
+            self.logger.warning("gRPC is running on insecure channel with TLS disabled.")
             port = self.server.add_insecure_port(self.uri)
             self.logger.info("Insecure port: %s", port)
 
@@ -319,13 +321,13 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
             with open(self.root_certificate, "rb") as f:
                 root_certificate_b = f.read()
 
-            if self.disable_client_auth:
-                self.logger.warn("Client-side authentication is disabled.")
+            if not self.require_client_auth:
+                self.logger.warning("Client-side authentication is disabled.")
 
             self.server_credentials = ssl_server_credentials(
                 ((private_key_b, certificate_b),),
                 root_certificates=root_certificate_b,
-                require_client_auth=not self.disable_client_auth,
+                require_client_auth=self.require_client_auth,
             )
 
             self.server.add_secure_port(self.uri, self.server_credentials)

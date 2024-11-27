@@ -14,7 +14,7 @@ from openfl.interface.aggregation_functions import WeightedAverage
 from openfl.pipelines import NoCompressionPipeline, TensorCodec
 from openfl.protocols import base_pb2, utils
 from openfl.utilities import TaskResultKey, TensorKey, change_tags
-from openfl.utilities.logs import write_metric
+from openfl.utilities.logs import get_memory_usage, write_metric
 
 
 class Aggregator:
@@ -69,12 +69,14 @@ class Aggregator:
         best_state_path,
         last_state_path,
         assigner,
+        use_delta_updates=True,
         straggler_handling_policy=CutoffPolicy,
         rounds_to_train=256,
         single_col_cert_common_name=None,
         compression_pipeline=None,
         db_store_rounds=1,
         write_logs=False,
+        log_memory_usage=False,
         log_metric_callback=None,
         **kwargs,
     ):
@@ -124,7 +126,9 @@ class Aggregator:
 
         self._end_of_round_check_done = [False] * rounds_to_train
         self.stragglers = []
-
+        # Flag can be enabled to get memory usage details for ubuntu system
+        self.log_memory_usage = log_memory_usage
+        self.memory_details = []
         self.rounds_to_train = rounds_to_train
 
         # if the collaborator requests a delta, this value is set to true
@@ -187,6 +191,8 @@ class Aggregator:
 
         # Initialize a lock for thread safety
         self.lock = Lock()
+
+        self.use_delta_updates = use_delta_updates
 
     def _load_initial_tensors(self):
         """Load all of the tensors required to begin federated learning.
@@ -803,7 +809,7 @@ class Aggregator:
         # Create delta and save it in TensorDB
         base_model_tk = TensorKey(tensor_name, origin, round_number, report, ("model",))
         base_model_nparray = self.tensor_db.get_tensor_from_cache(base_model_tk)
-        if base_model_nparray is not None:
+        if base_model_nparray is not None and self.use_delta_updates:
             delta_tk, delta_nparray = self.tensor_codec.generate_delta(
                 agg_tag_tk, agg_results, base_model_nparray
             )
@@ -832,7 +838,7 @@ class Aggregator:
         self.tensor_db.cache_tensor({decompressed_delta_tk: decompressed_delta_nparray})
 
         # Apply delta (unless delta couldn't be created)
-        if base_model_nparray is not None:
+        if base_model_nparray is not None and self.use_delta_updates:
             self.logger.debug("Applying delta for layer %s", decompressed_delta_tk[0])
             new_model_tk, new_model_nparray = self.tensor_codec.apply_delta(
                 decompressed_delta_tk,
@@ -968,6 +974,13 @@ class Aggregator:
         for task_name in all_tasks:
             self._compute_validation_related_task_metrics(task_name)
 
+        if self.log_memory_usage:
+            # This is the place to check the memory usage of the aggregator
+            memory_detail = get_memory_usage()
+            memory_detail["round_number"] = self.round_number
+            memory_detail["metric_origin"] = "aggregator"
+            self.memory_details.append(memory_detail)
+
         # Once all of the task results have been processed
         self._end_of_round_check_done[self.round_number] = True
 
@@ -983,6 +996,8 @@ class Aggregator:
 
         # TODO This needs to be fixed!
         if self._time_to_quit():
+            if self.log_memory_usage:
+                self.logger.info(f"Publish memory usage: {self.memory_details}")
             self.logger.info("Experiment Completed. Cleaning up...")
         else:
             self.logger.info("Starting round %s...", self.round_number)

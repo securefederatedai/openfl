@@ -23,3 +23,7 @@ if importlib.util.find_spec("tensorflow") is not None:
 if importlib.util.find_spec("torch") is not None:
     from openfl.federated.data.federated_data import FederatedDataSet  # NOQA
     from openfl.federated.data.loader_pt import PyTorchDataLoader  # NOQA
+
+if importlib.util.find_spec("xgboost") is not None:
+    from openfl.federated.data.federated_data import FederatedDataSet  # NOQA
+    from openfl.federated.data.loader_xgb import XGBoostDataLoader  # NOQA
