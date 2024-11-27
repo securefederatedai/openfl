@@ -30,4 +30,5 @@ jobs:
       run: |
         python setup.py build_grpc
         pip install tensorflow==2.18.0
+        pip install keras==3.6.0
         python -m tests.github.interactive_api_director.experiments.tensorflow_mnist.run
