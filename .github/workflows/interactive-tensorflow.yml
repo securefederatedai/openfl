@@ -29,6 +29,10 @@ jobs:
     - name: Interactive API - tensorflow_mnist
       run: |
         python setup.py build_grpc
-        pip install tensorflow==2.18.0
-        pip install keras==3.6.0
+        pip install tensorflow
+        pip install keras
+    - name: Check TensorFlow and Keras versions
+      run: |
+        python -c "import tensorflow as tf; print('TensorFlow version:', tf.__version__)"
+        python -c "import keras; print('Keras version:', keras.__version__)" 
         python -m tests.github.interactive_api_director.experiments.tensorflow_mnist.run
