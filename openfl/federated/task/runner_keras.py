@@ -259,7 +259,7 @@ class KerasTaskRunner(TaskRunner):
         Args:
             filepath (str): The file path to save the model.
         """
-        self.model.save(filepath)
+        self.model.export(filepath)
 
     def load_native(self, filepath):
         """Load model.
