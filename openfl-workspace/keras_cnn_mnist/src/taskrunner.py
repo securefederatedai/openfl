@@ -74,5 +74,5 @@ class KerasCNN(KerasTaskRunner):
         model.compile(loss="categorical_crossentropy",
                       optimizer="adam",
                       metrics=["accuracy"])
-        
+
         return model
