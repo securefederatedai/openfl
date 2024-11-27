@@ -182,7 +182,7 @@ def initialize(
         **task_runner.tensor_dict_split_fn_kwargs,
     )
 
-    logger.warn(
+    logger.warning(
         f"Following parameters omitted from global initial model, "
         f"local initialization will determine"
         f" values: {list(holdout_params.keys())}"
@@ -205,7 +205,7 @@ def initialize(
     if plan_origin.config["network"]["settings"]["agg_addr"] == "auto" or aggregator_address:
         plan_origin.config["network"]["settings"]["agg_addr"] = aggregator_address or getfqdn_env()
 
-        logger.warn(
+        logger.warning(
             f"Patching Aggregator Addr in Plan"
             f" 🠆 {plan_origin.config['network']['settings']['agg_addr']}"
         )
