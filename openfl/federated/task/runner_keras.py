@@ -7,10 +7,10 @@ Base classes for developing a ke.Model() Federated Learning model.
 
 You may copy this file as the starting point of your own keras model.
 """
+import copy
 from warnings import catch_warnings, simplefilter
 
 import numpy as np
-import copy
 
 from openfl.federated.task.runner import TaskRunner
 from openfl.utilities import Metric, TensorKey, change_tags
@@ -18,8 +18,8 @@ from openfl.utilities.split import split_tensor_dict_for_holdouts
 
 with catch_warnings():
     simplefilter(action="ignore")
-    import tensorflow as tf
     import keras as ke
+    import tensorflow as tf
 
 
 class KerasTaskRunner(TaskRunner):
@@ -283,7 +283,9 @@ class KerasTaskRunner(TaskRunner):
         if isinstance(obj, ke.optimizers.Optimizer):
             weight_names = [weight.name for weight in obj.variables]
         else:
-            weight_names = [layer.name + "/" + weight.name for layer in obj.layers for weight in layer.weights]
+            weight_names = [
+                layer.name + "/" + weight.name for layer in obj.layers for weight in layer.weights
+            ]
         return weight_names
 
     @staticmethod
@@ -302,9 +304,14 @@ class KerasTaskRunner(TaskRunner):
         weights_dict = {}
         if isinstance(obj, ke.optimizers.Optimizer):
             weight_names = [weight.name for weight in obj.variables]
-            weights_dict = {weight_names[i] + suffix: weight.numpy() for i, weight in enumerate(copy.deepcopy(obj.variables))}
+            weights_dict = {
+                weight_names[i] + suffix: weight.numpy()
+                for i, weight in enumerate(copy.deepcopy(obj.variables))
+            }
         else:
-            weight_names = [layer.name + "/" + weight.name for layer in obj.layers for weight in layer.weights]
+            weight_names = [
+                layer.name + "/" + weight.name for layer in obj.layers for weight in layer.weights
+            ]
             weight_name_index = 0
             for layer in obj.layers:
                 if weight_name_index < len(weight_names) and len(layer.get_weights()) > 0:
@@ -326,7 +333,9 @@ class KerasTaskRunner(TaskRunner):
             weight_names = [weight.name for weight in obj.variables]
             weight_values = [weights_dict[name] for name in weight_names]
         else:
-            weight_names = [layer.name + "/" + weight.name for layer in obj.layers for weight in layer.weights]
+            weight_names = [
+                layer.name + "/" + weight.name for layer in obj.layers for weight in layer.weights
+            ]
             weight_values = [weights_dict[name] for name in weight_names]
         obj.set_weights(weight_values)
 
@@ -377,7 +386,6 @@ class KerasTaskRunner(TaskRunner):
         for var in self.model.optimizer.variables:
             var.assign(tf.zeros_like(var))
         self.logger.debug("Optimizer variables reset")
-
 
     def get_required_tensorkeys_for_function(self, func_name, **kwargs):
         """Get the required tensors for specified function that could be called
