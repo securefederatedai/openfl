@@ -114,14 +114,14 @@ class ModelOwner:
             raise e
         return True
 
-    def modify_plan(self, new_rounds=None, num_collaborators=None, require_client_auth=False, use_tls=False):
+    def modify_plan(self, new_rounds=None, num_collaborators=None, require_client_auth=True, use_tls=True):
         """
         Modify the plan to train the model
         Args:
             new_rounds (int): Number of rounds to train
             num_collaborators (int): Number of collaborators
-            require_client_auth (bool): Disable client authentication
-            use_tls (bool): Disable TLS communication
+            require_client_auth (bool): Enable client authentication
+            use_tls (bool): Enable TLS communication
         Returns:
             bool: True if successful, else False
         """
@@ -141,6 +141,7 @@ class ModelOwner:
         data["data_loader"]["settings"]["collaborator_count"] = int(self.num_collaborators)
         data["network"]["settings"]["require_client_auth"] = require_client_auth
         data["network"]["settings"]["use_tls"] = use_tls
+
 
         with open(self.plan_path, "w+") as write_file:
             yaml.dump(data, write_file)

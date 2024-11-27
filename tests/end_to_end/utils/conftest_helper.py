@@ -18,8 +18,8 @@ def parse_arguments():
             - num_collaborators (int, default=2): Number of collaborators
             - num_rounds (int, default=5): Number of rounds to train
             - model_name (str, default="torch_cnn_mnist"): Model name
-            - require_client_auth (bool): Disable client authentication
-            - use_tls (bool): Disable TLS for communication
+            - disable_client_auth (bool): Disable client authentication
+            - disable_tls (bool): Disable TLS for communication
             - log_memory_usage (bool): Enable Memory leak logs
 
     Raises:
@@ -27,14 +27,12 @@ def parse_arguments():
     """
     try:
         parser = argparse.ArgumentParser(description="Provide the required arguments to run the tests")
-        # parser.add_argument("--results_dir", type=str, required=False, default="results", help="Directory to store the results")
         parser.add_argument("--num_collaborators", type=int, default=2, help="Number of collaborators")
         parser.add_argument("--num_rounds", type=int, default=5, help="Number of rounds to train")
         parser.add_argument("--model_name", type=str, help="Model name")
-        parser.add_argument("--require_client_auth", type=str, default="True", help="Enable client authentication")
-        parser.add_argument("--use_tls", type=str, default="True", help="Enable TLS for communication")
+        parser.add_argument("--disable_client_auth", action="store_true", help="Disable client authentication")
+        parser.add_argument("--disable_tls", action="store_true", help="Disable TLS for communication")
         parser.add_argument("--log_memory_usage", action="store_true", help="Enable Memory leak logs")
-        # parser.add_argument("--junitxml" , type=str, default="report.xml", help="Path to store the JUnit XML report")
         args = parser.parse_known_args()[0]
         return args
 

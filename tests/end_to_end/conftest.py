@@ -31,8 +31,8 @@ def pytest_addoption(parser):
     parser.addoption("--num_collaborators")
     parser.addoption("--num_rounds")
     parser.addoption("--model_name")
-    parser.addoption("--require_client_auth")
-    parser.addoption("--use_tls")
+    parser.addoption("--disable_client_auth")
+    parser.addoption("--disable_tls")
     parser.addoption("--log_memory_usage")
 
 
@@ -204,8 +204,8 @@ def fx_federation(request, pytestconfig):
     results_dir = pytestconfig.getini("results_dir")
     num_collaborators = args.num_collaborators
     num_rounds = args.num_rounds
-    require_client_auth = True if ( args.require_client_auth.lower() == "true" ) else False
-    use_tls = True if ( args.use_tls.lower() == "true" ) else False
+    require_client_auth = not args.disable_client_auth
+    use_tls = not args.disable_tls
     log_memory_usage = args.log_memory_usage
 
     log.info(
