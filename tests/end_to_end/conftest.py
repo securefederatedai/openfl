@@ -31,9 +31,9 @@ def pytest_addoption(parser):
     parser.addoption("--num_collaborators")
     parser.addoption("--num_rounds")
     parser.addoption("--model_name")
-    parser.addoption("--disable_client_auth")
-    parser.addoption("--disable_tls")
-    parser.addoption("--log_memory_usage")
+    parser.addoption("--disable_client_auth", action="store_true")
+    parser.addoption("--disable_tls", action="store_true")
+    parser.addoption("--log_memory_usage", action="store_true")
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -246,7 +246,7 @@ def fx_federation(request, pytestconfig):
 
     # For TLS enabled (default) scenario: when the workspace is certified, the collaborators are registered as well
     # For TLS disabled scenario: collaborators need to be registered explicitly
-    if args.use_tls:
+    if use_tls:
         log.info("Disabling TLS for communication")
         try:
             model_owner.register_collaborators(num_collaborators)
