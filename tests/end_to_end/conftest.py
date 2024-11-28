@@ -246,7 +246,7 @@ def fx_federation(request, pytestconfig):
 
     # For TLS enabled (default) scenario: when the workspace is certified, the collaborators are registered as well
     # For TLS disabled scenario: collaborators need to be registered explicitly
-    if use_tls:
+    if not use_tls:
         log.info("Disabling TLS for communication")
         try:
             model_owner.register_collaborators(num_collaborators)
