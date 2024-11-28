@@ -244,8 +244,6 @@ def fx_federation(request, pytestconfig):
         log.error(f"Failed to modify the plan: {e}")
         raise e
 
-    # For TLS enabled (default) scenario: when the workspace is certified, the collaborators are registered as well
-    # For TLS disabled scenario: collaborators need to be registered explicitly
     if not use_tls:
         log.info("Disabling TLS for communication")
         try:
