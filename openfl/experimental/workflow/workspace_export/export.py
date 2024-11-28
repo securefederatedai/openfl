@@ -294,9 +294,7 @@ class WorkspaceExport:
         """
         Generates plan.yaml
         """
-        flspec = getattr(
-            importlib.import_module("openfl.experimental.workflow.interface"), "FLSpec"
-        )
+        flspec = importlib.import_module("openfl.experimental.workflow.interface").FLSpec
         # Get flow classname
         _, self.flow_class_name = self.__get_class_name_and_sourcecode_from_parent_class(flspec)
         # Get expected arguments of flow class
@@ -343,10 +341,7 @@ class WorkspaceExport:
 
         # If flow classname is not yet found
         if not hasattr(self, "flow_class_name"):
-            flspec = getattr(
-                importlib.import_module("openfl.experimental.workflow.interface"),
-                "FLSpec",
-            )
+            flspec = importlib.import_module("openfl.experimental.workflow.interface").FLSpec
             _, self.flow_class_name = self.__get_class_name_and_sourcecode_from_parent_class(flspec)
 
         # Import flow class

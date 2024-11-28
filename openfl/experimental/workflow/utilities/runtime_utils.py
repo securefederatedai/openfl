@@ -176,7 +176,7 @@ def check_resource_allocation(num_gpus, each_participant_gpu_usage):
         # buffer to cycle though since need_assigned will change sizes as we
         # assign participants
         current_dict = need_assigned.copy()
-        for i, (participant_name, participant_gpu_usage) in enumerate(current_dict.items()):
+        for (participant_name, participant_gpu_usage) in current_dict.items():
             if gpu == 0:
                 break
             if gpu < participant_gpu_usage:

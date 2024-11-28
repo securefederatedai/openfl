@@ -420,7 +420,7 @@ class LocalRuntime(Runtime):
             )
 
         interface_module = importlib.import_module("openfl.experimental.workflow.interface")
-        aggregator_class = getattr(interface_module, "Aggregator")
+        aggregator_class = interface_module.Aggregator
 
         aggregator_actor = ray.remote(aggregator_class).options(
             num_cpus=agg_cpus, num_gpus=agg_gpus

@@ -173,9 +173,12 @@ class AggregatorGRPCClient:
         use_tls (bool): Whether to use TLS for the connection.
         require_client_auth (bool): Whether to enable client-side authentication, i.e. mTLS.
             Ignored if `use_tls=False`.
-        root_certificate (str): The path to the root certificate for the TLS connection, ignored if `use_tls=False`.
-        certificate (str): The path to the client's certificate for the TLS connection, ignored if `use_tls=False`.
-        private_key (str): The path to the client's private key for the TLS connection, ignored if `use_tls=False`.
+        root_certificate (str): The path to the root certificate for the TLS connection, ignored if
+            `use_tls=False`.
+        certificate (str): The path to the client's certificate for the TLS connection, ignored if
+            `use_tls=False`.
+        private_key (str): The path to the client's private key for the TLS connection, ignored if
+            `use_tls=False`.
         aggregator_uuid (str): The UUID of the aggregator.
         federation_uuid (str): The UUID of the federation.
         single_col_cert_common_name (str): The common name on the

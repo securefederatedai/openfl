@@ -11,8 +11,7 @@ from typing import TYPE_CHECKING
 from openfl.experimental.workflow.runtime.runtime import Runtime
 
 if TYPE_CHECKING:
-    from openfl.experimental.workflow.interface import Aggregator
-    from openfl.experimental.workflow.interface import Collaborator
+    from openfl.experimental.workflow.interface import Aggregator, Collaborator
 
 from typing import List, Type
 
