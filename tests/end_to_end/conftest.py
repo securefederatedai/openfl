@@ -17,9 +17,8 @@ import tests.end_to_end.models.participants as participants
 # Define a named tuple to store the objects for model owner, aggregator, and collaborators
 federation_fixture = collections.namedtuple(
     "federation_fixture",
-    "model_owner, aggregator, collaborators, model_name, disable_client_auth, disable_tls, workspace_path, results_dir, num_rounds",
+    "model_owner, aggregator, collaborators, model_name, require_client_auth, use_tls, workspace_path, results_dir, num_rounds",
 )
-
 
 def pytest_addoption(parser):
     """
@@ -29,44 +28,12 @@ def pytest_addoption(parser):
     """
     parser.addini("results_dir", "Directory to store test results", default="results")
     parser.addini("log_level", "Logging level", default="DEBUG")
-    parser.addoption(
-        "--results_dir", action="store", type=str, default="results", help="Results directory"
-    )
-    parser.addoption(
-        "--num_collaborators",
-        action="store",
-        type=int,
-        default=constants.NUM_COLLABORATORS,
-        help="Number of collaborators",
-    )
-    parser.addoption(
-        "--num_rounds",
-        action="store",
-        type=int,
-        default=constants.NUM_ROUNDS,
-        help="Number of rounds to train",
-    )
-    parser.addoption(
-        "--model_name",
-        action="store",
-        type=str,
-        help="Model name",
-    )
-    parser.addoption(
-        "--disable_client_auth",
-        action="store_true",
-        help="Disable client authentication",
-    )
-    parser.addoption(
-        "--disable_tls",
-        action="store_true",
-        help="Disable TLS for communication",
-    )
-    parser.addoption(
-        "--log_memory_usage",
-        action="store_true",
-        help="Enable memory log in collaborators and aggregator",
-    )
+    parser.addoption("--num_collaborators")
+    parser.addoption("--num_rounds")
+    parser.addoption("--model_name")
+    parser.addoption("--disable_client_auth", action="store_true")
+    parser.addoption("--disable_tls", action="store_true")
+    parser.addoption("--log_memory_usage", action="store_true")
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -234,11 +201,11 @@ def fx_federation(request, pytestconfig):
     args = parse_arguments()
     # Use the model name from the test case name if not provided as a command line argument
     model_name = args.model_name if args.model_name else request.node.name.split("test_")[1]
-    results_dir = args.results_dir or pytestconfig.getini("results_dir")
+    results_dir = pytestconfig.getini("results_dir")
     num_collaborators = args.num_collaborators
     num_rounds = args.num_rounds
-    disable_client_auth = args.disable_client_auth
-    disable_tls = args.disable_tls
+    require_client_auth = not args.disable_client_auth
+    use_tls = not args.disable_tls
     log_memory_usage = args.log_memory_usage
 
     log.info(
@@ -246,8 +213,8 @@ def fx_federation(request, pytestconfig):
         f"\tNumber of collaborators: {num_collaborators}\n"
         f"\tNumber of rounds: {num_rounds}\n"
         f"\tModel name: {model_name}\n"
-        f"\tClient authentication: {not disable_client_auth}\n"
-        f"\tTLS: {not disable_tls}\n"
+        f"\tClient authentication: {require_client_auth}\n"
+        f"\tTLS: {use_tls}\n"
         f"\tMemory Logs: {log_memory_usage}"
     )
 
@@ -270,16 +237,14 @@ def fx_federation(request, pytestconfig):
         model_owner.modify_plan(
             new_rounds=num_rounds,
             num_collaborators=num_collaborators,
-            disable_client_auth=disable_client_auth,
-            disable_tls=disable_tls,
+            require_client_auth=require_client_auth,
+            use_tls=use_tls,
         )
     except Exception as e:
         log.error(f"Failed to modify the plan: {e}")
         raise e
 
-    # For TLS enabled (default) scenario: when the workspace is certified, the collaborators are registered as well
-    # For TLS disabled scenario: collaborators need to be registered explicitly
-    if args.disable_tls:
+    if not use_tls:
         log.info("Disabling TLS for communication")
         try:
             model_owner.register_collaborators(num_collaborators)
@@ -321,8 +286,8 @@ def fx_federation(request, pytestconfig):
         aggregator=aggregator,
         collaborators=collaborators,
         model_name=model_name,
-        disable_client_auth=disable_client_auth,
-        disable_tls=disable_tls,
+        require_client_auth=require_client_auth,
+        use_tls=use_tls,
         workspace_path=workspace_path,
         results_dir=results_dir,
         num_rounds=num_rounds,

@@ -12,7 +12,7 @@ Experimental modules reference:
    :template: custom-module-template.rst
    :recursive:
 
-   openfl.experimental.interface
-   openfl.experimental.placement
-   openfl.experimental.runtime
-   openfl.experimental.utilities
+   openfl.experimental.workflow.interface
+   openfl.experimental.workflow.placement
+   openfl.experimental.workflow.runtime
+   openfl.experimental.workflow.utilities

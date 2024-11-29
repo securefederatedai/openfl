@@ -35,7 +35,7 @@ def check_precision_loss(logger, converted_data, original_data):
 
     # Compare the original and reconstructed data
     if original_data != reconstructed_data:
-        logger.warn("Precision loss detected during conversion.")
+        logger.warning("Precision loss detected during conversion.")
 
 
 class XGBoostTaskRunner(TaskRunner):

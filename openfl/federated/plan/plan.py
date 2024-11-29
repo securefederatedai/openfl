@@ -729,7 +729,7 @@ class Plan:
         server_args["root_certificate"] = root_certificate
         server_args["certificate"] = certificate
         server_args["private_key"] = private_key
-        server_args["tls"] = tls
+        server_args["use_tls"] = tls
 
         server_args["aggregator"] = self.get_aggregator(tensor_dict)
 

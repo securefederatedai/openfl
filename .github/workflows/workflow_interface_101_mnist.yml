@@ -36,11 +36,11 @@ jobs:
 
     - name: Run Notebook
       run: |
-        jupyter nbconvert --execute --to notebook ./openfl-tutorials/experimental/101_MNIST.ipynb
+        jupyter nbconvert --execute --to notebook ./openfl-tutorials/experimental/workflow/101_MNIST.ipynb
         echo "Notebook run completed"
 
     - name: Tar files
-      run: tar -cvf notebook.tar ./openfl-tutorials/experimental/101_MNIST.nbconvert.ipynb
+      run: tar -cvf notebook.tar ./openfl-tutorials/experimental/workflow/101_MNIST.nbconvert.ipynb
 
     - name: Upload Artifacts
       uses: actions/upload-artifact@v4

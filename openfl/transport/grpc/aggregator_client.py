@@ -170,15 +170,12 @@ class AggregatorGRPCClient:
 
     Attributes:
         uri (str): The URI of the aggregator.
-        tls (bool): Whether to use TLS for the connection.
-        disable_client_auth (bool): Whether to disable client-side
-            authentication.
-        root_certificate (str): The path to the root certificate for the TLS
-            connection.
-        certificate (str): The path to the client's certificate for the TLS
-            connection.
-        private_key (str): The path to the client's private key for the TLS
-            connection.
+        use_tls (bool): Whether to use TLS for the connection.
+        require_client_auth (bool): Whether to enable client-side authentication, i.e. mTLS.
+            Ignored if `use_tls=False`.
+        root_certificate (str): The path to the root certificate for the TLS connection, ignored if `use_tls=False`.
+        certificate (str): The path to the client's certificate for the TLS connection, ignored if `use_tls=False`.
+        private_key (str): The path to the client's private key for the TLS connection, ignored if `use_tls=False`.
         aggregator_uuid (str): The UUID of the aggregator.
         federation_uuid (str): The UUID of the federation.
         single_col_cert_common_name (str): The common name on the
@@ -189,11 +186,11 @@ class AggregatorGRPCClient:
         self,
         agg_addr,
         agg_port,
-        disable_client_auth,
         root_certificate,
         certificate,
         private_key,
-        tls=True,
+        use_tls=True,
+        require_client_auth=True,
         aggregator_uuid=None,
         federation_uuid=None,
         single_col_cert_common_name=None,
@@ -205,9 +202,9 @@ class AggregatorGRPCClient:
         Args:
             agg_addr (str): The address of the aggregator.
             agg_port (int): The port of the aggregator.
-            tls (bool): Whether to use TLS for the connection.
-            disable_client_auth (bool): Whether to disable client-side
-                authentication.
+            use_tls (bool): Whether to use TLS for the connection.
+            require_client_auth (bool): Whether to enable client-side
+                authentication, i.e. mTLS. Ignored if `use_tls=False`.
             root_certificate (str): The path to the root certificate for the
                 TLS connection.
             certificate (str): The path to the client's certificate for the
@@ -221,22 +218,22 @@ class AggregatorGRPCClient:
             **kwargs: Additional keyword arguments.
         """
         self.uri = f"{agg_addr}:{agg_port}"
-        self.tls = tls
-        self.disable_client_auth = disable_client_auth
+        self.use_tls = use_tls
+        self.require_client_auth = require_client_auth
         self.root_certificate = root_certificate
         self.certificate = certificate
         self.private_key = private_key
 
         self.logger = getLogger(__name__)
 
-        if not self.tls:
-            self.logger.warn("gRPC is running on insecure channel with TLS disabled.")
+        if not self.use_tls:
+            self.logger.warning("gRPC is running on insecure channel with TLS disabled.")
             self.channel = self.create_insecure_channel(self.uri)
         else:
             self.channel = self.create_tls_channel(
                 self.uri,
                 self.root_certificate,
-                self.disable_client_auth,
+                self.require_client_auth,
                 self.certificate,
                 self.private_key,
             )
@@ -278,7 +275,7 @@ class AggregatorGRPCClient:
         self,
         uri,
         root_certificate,
-        disable_client_auth,
+        require_client_auth,
         certificate,
         private_key,
     ):
@@ -288,8 +285,8 @@ class AggregatorGRPCClient:
         Args:
             uri (str): The uniform resource identifier for the secure channel.
             root_certificate (str): The Certificate Authority filename.
-            disable_client_auth (bool): True disables client-side
-                authentication (not recommended, throws warning to user).
+            require_client_auth (bool): True enables client-side
+                authentication.
             certificate (str): The client certificate filename from the
                 collaborator (signed by the certificate authority).
             private_key (str): The private key filename for the client
@@ -301,8 +298,8 @@ class AggregatorGRPCClient:
         with open(root_certificate, "rb") as f:
             root_certificate_b = f.read()
 
-        if disable_client_auth:
-            self.logger.warn("Client-side authentication is disabled.")
+        if not require_client_auth:
+            self.logger.warning("Client-side authentication is disabled.")
             private_key_b = None
             certificate_b = None
         else:
@@ -364,13 +361,13 @@ class AggregatorGRPCClient:
         # issued previously
         self.disconnect()
 
-        if not self.tls:
+        if not self.use_tls:
             self.channel = self.create_insecure_channel(self.uri)
         else:
             self.channel = self.create_tls_channel(
                 self.uri,
                 self.root_certificate,
-                self.disable_client_auth,
+                self.require_client_auth,
                 self.certificate,
                 self.private_key,
             )

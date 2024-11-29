@@ -24,63 +24,63 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install -r tests/github/experimental/requirements_experimental_localruntime_tests.txt
+        pip install -r tests/github/experimental/workflow/LocalRuntime/requirements_experimental_localruntime_tests.txt
         pip install .
     - name: Workflow - Exclude Test (Single Process Backend)
       run: |
-        python tests/github/experimental/testflow_exclude.py
+        python tests/github/experimental/workflow/LocalRuntime/testflow_exclude.py
     - name: Workflow - Exclude Test (Ray Backend)
       run: |
-        python tests/github/experimental/testflow_exclude.py ray
+        python tests/github/experimental/workflow/LocalRuntime/testflow_exclude.py ray
     - name: Workflow - Include Test (Single Process Backend)
       run: |
-        python tests/github/experimental/testflow_include.py
+        python tests/github/experimental/workflow/LocalRuntime/testflow_include.py
     - name: Workflow - Include Test (Ray Backend)
       run: |
-        python tests/github/experimental/testflow_include.py ray
+        python tests/github/experimental/workflow/LocalRuntime/testflow_include.py ray
     - name: Workflow - Include / Exclude Test (Single Process Backend)
       run: |
-        python tests/github/experimental/testflow_include_exclude.py
+        python tests/github/experimental/workflow/LocalRuntime/testflow_include_exclude.py
     - name: Workflow - Include / Exclude Test (Ray Backend)
       run: |
-        python tests/github/experimental/testflow_include_exclude.py ray
+        python tests/github/experimental/workflow/LocalRuntime/testflow_include_exclude.py ray
 
     - name: Workflow - Internal Loop Test (Single Process Backend)
       run: |
-        python tests/github/experimental/testflow_internalloop.py
+        python tests/github/experimental/workflow/LocalRuntime/testflow_internalloop.py
     - name: Workflow - Internal Loop Test (Ray Backend)
       run: |
-        python tests/github/experimental/testflow_internalloop.py ray
+        python tests/github/experimental/workflow/LocalRuntime/testflow_internalloop.py ray
     - name: Workflow - Private Attributes (Single Process Backend)
       run: |
-        python tests/github/experimental/testflow_privateattributes.py
+        python tests/github/experimental/workflow/LocalRuntime/testflow_privateattributes.py
     - name: Workflow - Private Attributes (Ray Backend)
       run: |
-        python tests/github/experimental/testflow_privateattributes.py ray
+        python tests/github/experimental/workflow/LocalRuntime/testflow_privateattributes.py ray
     - name: Workflow - References (Single Process Backend)
       run: |
-        python tests/github/experimental/testflow_reference.py
+        python tests/github/experimental/workflow/LocalRuntime/testflow_reference.py
     - name: Workflow - References (Ray Backend)
       run: |
-        python tests/github/experimental/testflow_reference.py ray
+        python tests/github/experimental/workflow/LocalRuntime/testflow_reference.py ray
     - name: Workflow - References with Exclude (Single Process Backend)
       run: |
-        python tests/github/experimental/testflow_reference_with_exclude.py
+        python tests/github/experimental/workflow/LocalRuntime/testflow_reference_with_exclude.py
     - name: Workflow - References with Exclude (Ray Backend)
       run: |
-        python tests/github/experimental/testflow_reference_with_exclude.py ray
+        python tests/github/experimental/workflow/LocalRuntime/testflow_reference_with_exclude.py ray
     - name: Workflow - References with Include (Single Process Backend)
       run: |
-        python tests/github/experimental/testflow_reference_with_include.py
+        python tests/github/experimental/workflow/LocalRuntime/testflow_reference_with_include.py
     - name: Workflow - References with Include (Ray Backend)
       run: |
-        python tests/github/experimental/testflow_reference_with_include.py ray
+        python tests/github/experimental/workflow/LocalRuntime/testflow_reference_with_include.py ray
     - name: Workflow - Collaborator Subset (Single Process Backend)
       run: |
-        python tests/github/experimental/testflow_subset_of_collaborators.py
+        python tests/github/experimental/workflow/LocalRuntime/testflow_subset_of_collaborators.py
     - name: Workflow - Collaborator Subset (Ray Backend)
       run: |
-        python tests/github/experimental/testflow_subset_of_collaborators.py ray
+        python tests/github/experimental/workflow/LocalRuntime/testflow_subset_of_collaborators.py ray
     - name: Test Experimental Aggregator Based Workflow API
       run: |
-        python -m tests.github.experimental.workspace.test_experimental_agg_based_workflow --custom_template tests/github/experimental/workspace/testcase_datastore_cli --fed_workspace aggregator --col col1 --col col2  --rounds-to-train 1
+        python -m tests.github.experimental.workflow.AggregatorBasedWorkflow.test_experimental_agg_based_workflow --custom_template tests/github/experimental/workflow/AggregatorBasedWorkflow/testcase_datastore_cli --fed_workspace aggregator --col col1 --col col2  --rounds-to-train 1
