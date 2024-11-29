@@ -4,7 +4,7 @@
 
 """Data package."""
 
-from  importlib import util
+from importlib import util
 from warnings import catch_warnings, simplefilter
 
 with catch_warnings():

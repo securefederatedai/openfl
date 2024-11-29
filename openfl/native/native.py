@@ -7,11 +7,11 @@
 This file defines openfl entrypoints to be used directly through python (not
 CLI)
 """
-from importlib import util
 import json
 import logging
 import os
 from copy import copy
+from importlib import util
 from logging import basicConfig, getLogger
 from pathlib import Path
 from sys import path

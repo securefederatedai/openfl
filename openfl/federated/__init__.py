@@ -4,7 +4,7 @@
 
 """openfl.federated package."""
 
-from  importlib import util
+from importlib import util
 
 from openfl.federated.data import DataLoader  # NOQA
 from openfl.federated.plan import Plan  # NOQA
