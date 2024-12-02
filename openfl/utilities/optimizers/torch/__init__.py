@@ -3,8 +3,8 @@
 
 
 """PyTorch optimizers package."""
-import importlib
+from importlib import util
 
-if importlib.util.find_spec("torch") is not None:
+if util.find_spec("torch") is not None:
     from openfl.utilities.optimizers.torch.fedprox import FedProxAdam  # NOQA
     from openfl.utilities.optimizers.torch.fedprox import FedProxOptimizer  # NOQA

@@ -7,11 +7,11 @@
 This file defines openfl entrypoints to be used directly through python (not
 CLI)
 """
-import importlib
 import json
 import logging
 import os
 from copy import copy
+from importlib import util
 from logging import basicConfig, getLogger
 from pathlib import Path
 from sys import path
@@ -164,7 +164,7 @@ def setup_logging(level="INFO", log_file=None):
     """
     # Setup logging
 
-    if importlib.util.find_spec("tensorflow") is not None:
+    if util.find_spec("tensorflow") is not None:
         import tensorflow as tf  # pylint: disable=import-outside-toplevel
 
         tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)

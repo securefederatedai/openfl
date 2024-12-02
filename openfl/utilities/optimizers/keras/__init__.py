@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 
-import importlib
+from importlib import util
 
-if importlib.util.find_spec("tensorflow") is not None:
+if util.find_spec("tensorflow") is not None:
     from openfl.utilities.optimizers.keras.fedprox import FedProxOptimizer  # NOQA
