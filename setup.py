@@ -109,6 +109,8 @@ setup(
         'openfl.experimental.workflow.component',
         'openfl.experimental.workflow.component.aggregator',
         'openfl.experimental.workflow.component.collaborator',
+        'openfl.experimental.workflow.component.director',
+        'openfl.experimental.workflow.component.envoy',
         'openfl.experimental.workflow.interface.cli',
         'openfl.experimental.workflow.interface',
         'openfl.experimental.workflow.placement',
