@@ -7,6 +7,7 @@
 This file defines openfl entrypoints to be used directly through python (not
 CLI)
 """
+
 import json
 import logging
 import os

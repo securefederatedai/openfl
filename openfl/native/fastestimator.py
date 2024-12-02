@@ -3,6 +3,7 @@
 
 
 """FederatedFastEstimator module."""
+
 import os
 from logging import getLogger
 from pathlib import Path

@@ -3,6 +3,7 @@
 
 
 """Plan module."""
+
 from hashlib import sha384
 from importlib import import_module
 from logging import getLogger

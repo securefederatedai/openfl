@@ -3,6 +3,7 @@
 
 
 """Custom model DeviceArray - JAX Numpy adapter."""
+
 import jax
 import jax.numpy as jnp
 import numpy as np

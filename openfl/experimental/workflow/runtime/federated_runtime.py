@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 
-""" openfl.experimental.workflow.runtime package LocalRuntime class."""
+"""openfl.experimental.workflow.runtime package LocalRuntime class."""
 
 from __future__ import annotations
 

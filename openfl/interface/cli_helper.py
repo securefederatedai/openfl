@@ -3,6 +3,7 @@
 
 
 """Module with auxiliary CLI helper functions."""
+
 import os
 import re
 from itertools import islice

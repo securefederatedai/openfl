@@ -3,6 +3,7 @@
 
 
 """Workspace module."""
+
 import os
 import sys
 from hashlib import sha256

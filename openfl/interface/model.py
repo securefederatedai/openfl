@@ -3,6 +3,7 @@
 
 
 """Model CLI module."""
+
 from logging import getLogger
 from pathlib import Path
 from typing import Union

@@ -3,6 +3,7 @@
 
 
 """Python low-level API module."""
+
 import os
 import time
 from collections import defaultdict
@@ -396,6 +397,7 @@ class FLExperiment:
                 "because only validation tasks were given"
             )
         if is_train_task_exist and self.is_validate_task_exist:
+
             def assigner(collaborators, round_number, **kwargs):
                 tasks_by_collaborator = {}
                 for collaborator in collaborators:
@@ -405,9 +407,11 @@ class FLExperiment:
                         tasks["aggregated_model_validate"],
                     ]
                 return tasks_by_collaborator
+
             return assigner
 
         elif not is_train_task_exist and self.is_validate_task_exist:
+
             def assigner(collaborators, round_number, **kwargs):
                 tasks_by_collaborator = {}
                 for collaborator in collaborators:
@@ -415,6 +419,7 @@ class FLExperiment:
                         tasks["aggregated_model_validate"],
                     ]
                 return tasks_by_collaborator
+
             return assigner
 
         elif is_train_task_exist and not self.is_validate_task_exist:
@@ -566,9 +571,9 @@ class FLExperiment:
         # Collaborator part
         self.plan.config["collaborator"]["settings"]["delta_updates"] = delta_updates
         self.plan.config["collaborator"]["settings"]["opt_treatment"] = opt_treatment
-        self.plan.config["collaborator"]["settings"][
-            "device_assignment_policy"
-        ] = device_assignment_policy
+        self.plan.config["collaborator"]["settings"]["device_assignment_policy"] = (
+            device_assignment_policy
+        )
 
         # DataLoader part
         for setting, value in data_loader.kwargs.items():

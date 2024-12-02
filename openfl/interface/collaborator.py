@@ -3,6 +3,7 @@
 
 
 """Collaborator module."""
+
 import os
 import sys
 from glob import glob
@@ -406,8 +407,10 @@ def certify(collaborator_name, silent, request_pkg=None, import_=False):
         echo(f"The CSR Hash for file {file_name}.csr is {csr_hash}")
 
         if silent:
-            echo("Signing COLLABORATOR certificate, "
-                "Warning: manual check of certificate hashes is bypassed in silent mode.")
+            echo(
+                "Signing COLLABORATOR certificate, "
+                "Warning: manual check of certificate hashes is bypassed in silent mode."
+            )
             signed_col_cert = sign_certificate(csr, signing_key, signing_crt.subject)
             write_crt(signed_col_cert, f"{cert_name}.crt")
             register_collaborator(CERT_DIR / "client" / f"{file_name}.crt")
@@ -454,6 +457,7 @@ def certify(collaborator_name, silent, request_pkg=None, import_=False):
 
     else:
         _import_certificates(import_)
+
 
 def _import_certificates(archive: str):
     # Copy the signed certificate and cert chain into PKI_DIR
