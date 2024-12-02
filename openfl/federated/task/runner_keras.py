@@ -302,16 +302,13 @@ class KerasTaskRunner(TaskRunner):
             weights_dict (dict): The weight dictionary.
         """
         weights_dict = {}
+        weight_names = KerasTaskRunner._get_weights_names(obj)
         if isinstance(obj, ke.optimizers.Optimizer):
-            weight_names = [weight.name for weight in obj.variables]
             weights_dict = {
                 weight_names[i] + suffix: weight.numpy()
                 for i, weight in enumerate(copy.deepcopy(obj.variables))
             }
         else:
-            weight_names = [
-                layer.name + "/" + weight.name for layer in obj.layers for weight in layer.weights
-            ]
             weight_name_index = 0
             for layer in obj.layers:
                 if weight_name_index < len(weight_names) and len(layer.get_weights()) > 0:
@@ -329,14 +326,8 @@ class KerasTaskRunner(TaskRunner):
                 the weights.
             weights_dict (dict): The weight dictionary.
         """
-        if isinstance(obj, ke.optimizers.Optimizer):
-            weight_names = [weight.name for weight in obj.variables]
-            weight_values = [weights_dict[name] for name in weight_names]
-        else:
-            weight_names = [
-                layer.name + "/" + weight.name for layer in obj.layers for weight in layer.weights
-            ]
-            weight_values = [weights_dict[name] for name in weight_names]
+        weight_names = KerasTaskRunner._get_weights_names(obj)
+        weight_values = [weights_dict[name] for name in weight_names]
         obj.set_weights(weight_values)
 
     def get_tensor_dict(self, with_opt_vars, suffix=""):
