@@ -22,7 +22,7 @@ In this threat model, each party can audit the privacy loss of the local and glo
 
 Workflow
 -----------------------------------------------
-We provide a demo code in `cifar10_PM.py <https://github.com/securefederatedai/openfl/blob/develop/openfl-tutorials/experimental/Privacy_Meter/cifar10_PM.py>`_. Here, we briefly describe its workflow.
+We provide a demo code in `cifar10_PM.py <https://github.com/securefederatedai/openfl/blob/develop/openfl-tutorials/experimental/workflow/Privacy_Meter/cifar10_PM.py>`_. Here, we briefly describe its workflow.
 In each round of FL, parties train, starting with the current global model as initialization, using their local dataset. Then, the current global model and updated local model will be passed to the privacy auditing module (See `audit` function in `cifar10_PM.py`) to produce a privacy loss report. The local model update will then be shared to the server and all such updates aggregated to form the next global model. Though this is a simulation so that no network sharing of models is involved, these reports could be used in a fully distributed setting to trigger actions when the loss is too high. These actions could include not sharing local updates to the aggregator, not 
 allowing the FL system to release the model to other outside entities, or potentially re-running local training in a differentially private mode and re-auditing in an attempt to reduce the leakage before sharing occurs.
 
@@ -36,4 +36,4 @@ To measure the success of the attack (privacy loss), we generate the ROC of the 
 
 Examples
 -----------------------------------------------
-`Here <https://github.com/securefederatedai/openfl/tree/f1657abe88632d542504d6d71ca961de9333913f/openfl-tutorials/experimental/Privacy_Meter>`_, we give a few commands and the results for each of them. 
+`Here <https://github.com/securefederatedai/openfl/tree/f1657abe88632d542504d6d71ca961de9333913f/openfl-tutorials/experimental/workflow/Privacy_Meter>`_, we give a few commands and the results for each of them. 

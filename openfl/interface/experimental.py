@@ -35,6 +35,7 @@ def activate():
         .joinpath(
             "openfl-tutorials",
             "experimental",
+            "workflow",
             "workflow_interface_requirements.txt",
         )
         .resolve()

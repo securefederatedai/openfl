@@ -27,7 +27,6 @@ def parse_arguments():
     """
     try:
         parser = argparse.ArgumentParser(description="Provide the required arguments to run the tests")
-        parser.add_argument("--results_dir", type=str, required=False, default="results", help="Directory to store the results")
         parser.add_argument("--num_collaborators", type=int, default=2, help="Number of collaborators")
         parser.add_argument("--num_rounds", type=int, default=5, help="Number of rounds to train")
         parser.add_argument("--model_name", type=str, help="Model name")

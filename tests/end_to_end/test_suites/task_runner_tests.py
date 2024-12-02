@@ -17,7 +17,7 @@ def test_torch_cnn_mnist(fx_federation):
     log.info("Testing torch_cnn_mnist model")
 
     # Setup PKI for trusted communication within the federation
-    if not fx_federation.disable_tls:
+    if fx_federation.use_tls:
         assert fed_helper.setup_pki(fx_federation), "Failed to setup PKI for trusted communication"
 
     # Start the federation
@@ -32,7 +32,7 @@ def test_keras_cnn_mnist(fx_federation):
     log.info("Testing keras_cnn_mnist model")
 
     # Setup PKI for trusted communication within the federation
-    if not fx_federation.disable_tls:
+    if fx_federation.use_tls:
         assert fed_helper.setup_pki(fx_federation), "Failed to setup PKI for trusted communication"
 
     # Start the federation
@@ -50,7 +50,7 @@ def test_torch_cnn_histology(fx_federation):
     log.info("Testing torch_cnn_histology model")
 
     # Setup PKI for trusted communication within the federation
-    if not fx_federation.disable_tls:
+    if fx_federation.use_tls:
         assert fed_helper.setup_pki(fx_federation), "Failed to setup PKI for trusted communication"
 
     # Start the federation

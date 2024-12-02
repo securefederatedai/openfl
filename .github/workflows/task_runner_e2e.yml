@@ -163,3 +163,70 @@ jobs:
         with:
           name: tr_non_tls_${{ env.MODEL_NAME }}_python${{ env.PYTHON_VERSION }}_${{ github.run_id }}
           path: result.tar
+
+  test_with_no_client_auth:
+    name: tr_no_client_auth
+    runs-on: ubuntu-22.04
+    timeout-minutes: 120 # 2 hours
+    strategy:
+      matrix:
+        # Testing non TLS scenario only for torch_cnn_mnist model and python 3.10
+        # If required, this can be extended to other models and python versions
+        model_name: ["keras_cnn_mnist"]
+        python_version: ["3.10"]
+      fail-fast: false # do not immediately fail if one of the combinations fail
+
+    env:
+      MODEL_NAME: ${{ matrix.model_name }}
+      PYTHON_VERSION: ${{ matrix.python_version }}
+
+    steps:
+      - name: Checkout OpenFL repository
+        id: checkout_openfl
+        uses: actions/checkout@v4.1.1
+        with:
+          fetch-depth: 2 # needed for detecting changes
+          submodules: "true"
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Python
+        id: setup_python
+        uses: actions/setup-python@v3
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies
+        id: install_dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install .
+          pip install -r test-requirements.txt
+
+      - name: Run Task Runner E2E tests without TLS
+        id: run_tests
+        run: |
+          python -m pytest -s tests/end_to_end/test_suites/task_runner_tests.py \
+          -m ${{ env.MODEL_NAME }} --model_name ${{ env.MODEL_NAME }} \
+          --num_rounds ${{ env.NUM_ROUNDS }} --num_collaborators ${{ env.NUM_COLLABORATORS }} --disable_client_auth
+          echo "Task runner end to end test run completed"
+
+      - name: Print test summary
+        id: print_test_summary
+        if: ${{ always() }}
+        run: |
+          export PYTHONPATH="$PYTHONPATH:."
+          python tests/end_to_end/utils/summary_helper.py
+          echo "Test summary printed"
+
+      - name: Tar files
+        id: tar_files
+        if: ${{ always() }}
+        run: tar -cvf result.tar results
+
+      - name: Upload Artifacts
+        id: upload_artifacts
+        uses: actions/upload-artifact@v4
+        if: ${{ always() }}
+        with:
+          name: tr_no_client_auth_${{ env.MODEL_NAME }}_python${{ env.PYTHON_VERSION }}_${{ github.run_id }}
+          path: result.tar

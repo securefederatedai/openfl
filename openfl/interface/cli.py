@@ -319,7 +319,7 @@ def entry():
     root = Path(__file__).parent.resolve()
 
     if experimental.exists():
-        root = root.parent.joinpath("experimental", "interface", "cli").resolve()
+        root = root.parent.joinpath("experimental", "workflow", "interface", "cli").resolve()
 
     work = Path.cwd().resolve()
     path.append(str(root))
