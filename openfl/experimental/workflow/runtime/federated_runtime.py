@@ -218,7 +218,7 @@ class FederatedRuntime(Runtime):
         # Fetch envoy data
         envoys = self._dir_client.get_envoys()
         DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S"
-        datetime.now().strftime(DATETIME_FORMAT)
+        now = datetime.now().strftime(DATETIME_FORMAT)
 
         # Prepare the table headers
         headers = ["Name", "Online", "Last Updated", "Experiment Running", "Experiment Name"]
@@ -237,7 +237,7 @@ class FederatedRuntime(Runtime):
         # Use tabulate to format the table
         result = tabulate(rows, headers=headers, tablefmt="grid")
         # Display the current timestamp
-        print(f"Status of Envoys connected to Federation at: {DATETIME_FORMAT}\n")
+        print(f"Status of Envoys connected to Federation at: {now}\n")
         print(result)
 
     def stream_experiment_stdout(self, experiment_name) -> None:

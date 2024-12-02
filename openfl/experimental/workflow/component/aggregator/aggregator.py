@@ -275,15 +275,14 @@ class Aggregator:
             if stream_buffer and isinstance(stream_buffer, bytes):
                 setattr(f.__func__, "_stream_buffer", dill.loads(stream_buffer))
 
+            stdout = checkpoint(ctx, f)
             # Retrieve and log stdout
-            stdout, _ = f._stream_buffer.get_stdstream()
             stream_info = {
                 "stdout_origin": name,
                 "task_name": f.__name__,
                 "stdout_value": str(stdout.getvalue()),
             }
             self.stdout_queue.put(stream_info)
-            checkpoint(ctx, f)
 
     def get_tasks(self, collaborator_name: str) -> Tuple:
         """RPC called by a collaborator to determine which tasks to perform.

@@ -1,4 +1,4 @@
-# Copyright (C) 2020-2023 Intel Corporation
+# Copyright (C) 2020-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 from copy import deepcopy
@@ -47,4 +47,3 @@ collaborator_private_attrs = {
     "train_loader": torch.utils.data.DataLoader(train, batch_size=batch_size, shuffle=False),
     "test_loader": torch.utils.data.DataLoader(test, batch_size=batch_size, shuffle=False),
 }
-
