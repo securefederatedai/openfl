@@ -175,7 +175,7 @@ class WorkspaceExport:
 
         return None, None
 
-    def __extract_class_initializing_args(self, class_name):
+    def __extract_class_initializing_args(self, class_name):  # noqa: C901
         """Provided name of the class returns expected arguments and it's
         values in form of dictionary."""
         instantiation_args = {"args": {}, "kwargs": {}}
@@ -333,7 +333,7 @@ class WorkspaceExport:
 
         self.__write_yaml(plan, data)
 
-    def generate_data_yaml(self):
+    def generate_data_yaml(self):  # noqa: C901
         """Generates data.yaml."""
         # Import python script if not already
         if not hasattr(self, "exported_script_module"):

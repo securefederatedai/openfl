@@ -69,7 +69,7 @@ def generate_artifacts(ctx, reserved_words=["next", "runtime", "input"]):
     return artifacts_iter, cls_attrs
 
 
-def filter_attributes(ctx, f, **kwargs):
+def filter_attributes(ctx, f, **kwargs):  # noqa: C901
     """Filters out attributes from the next task in the flow based on inclusion
     or exclusion.
 
