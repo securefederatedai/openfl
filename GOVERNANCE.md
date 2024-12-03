@@ -53,8 +53,6 @@ Maintainers’ responsibilities:
 - Participate in discussions through Slack, GitHub or community meetings;
 - Answer the questions and provide reasonable assistance to users and contributors.
 
-See the list of Maintainers [here](https://github.com/securefederatedai/openfl/blob/develop/MAINTAINERS.md). There is no limit on the maximum number of maintainers.
-
 See calendar of the public maintainers meetings [here](https://wiki.lfaidata.foundation/pages/viewpage.action?pageId=70648254).
 
 ### Technical Steering Committee
