@@ -15,7 +15,7 @@ from openfl.interface.aggregation_functions import WeightedAverage
 from openfl.pipelines import NoCompressionPipeline, TensorCodec
 from openfl.protocols import base_pb2, utils
 from openfl.utilities import TaskResultKey, TensorKey, change_tags
-from openfl.utilities.logs import get_memory_usage, write_metric
+from openfl.utilities.logs import get_memory_usage
 
 
 class Aggregator:
@@ -38,8 +38,6 @@ class Aggregator:
         tensor_db (TensorDB): Object for tensor database.
         db_store_rounds* (int): Rounds to store in TensorDB.
         logger: Object for logging.
-        write_logs (bool): Flag to enable log writing.
-        log_metric_callback: Callback for logging metrics.
         best_model_score (optional): Score of the best model. Defaults to
             None.
         metric_queue (queue.Queue): Queue for metrics.
@@ -76,9 +74,7 @@ class Aggregator:
         single_col_cert_common_name=None,
         compression_pipeline=None,
         db_store_rounds=1,
-        write_logs=False,
         log_memory_usage=False,
-        log_metric_callback=None,
         **kwargs,
     ):
         """Initializes the Aggregator.
@@ -104,10 +100,6 @@ class Aggregator:
                 NoCompressionPipeline.
             db_store_rounds (int, optional): Rounds to store in TensorDB.
                 Defaults to 1.
-            write_logs (bool, optional): Whether to write logs. Defaults to
-                False.
-            log_metric_callback (optional): Callback for log metric. Defaults
-                to None.
             **kwargs: Additional keyword arguments.
         """
         self.round_number = 0
@@ -144,15 +136,6 @@ class Aggregator:
 
         # Gathered together logging-related objects
         self.logger = getLogger(__name__)
-        self.write_logs = write_logs
-        self.log_metric_callback = log_metric_callback
-
-        if self.write_logs:
-            self.log_metric = write_metric
-            if self.log_metric_callback:
-                self.log_metric = log_metric_callback
-                self.logger.info("Using custom log metric: %s", self.log_metric)
-
         self.best_model_score = None
         self.metric_queue = queue.Queue()
 
