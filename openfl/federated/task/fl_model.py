@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 """FederatedModel module."""
+
 import inspect
 
 from openfl.federated.task.runner import TaskRunner
@@ -129,7 +130,7 @@ class FederatedModel(TaskRunner):
                 optimizer=self.lambda_opt,
                 loss_fn=self.loss_fn,
                 data_loader=data_slice,
-                **kwargs
+                **kwargs,
             )
             for data_slice in self.data_loader.split(num_collaborators)
         ]

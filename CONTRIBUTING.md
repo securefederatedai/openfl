@@ -60,7 +60,7 @@ pip install -r linters-requirements.txt
 
 ## Code style
 
-OpenFL uses [black](https://black.readthedocs.io/en/stable/), [isort](https://pycqa.github.io/isort/) and [precommit](https://pre-commit.com/) to format the code.
+OpenFL uses [ruff](https://github.com/astral-sh/ruff) to lint/format code and [precommit](https://pre-commit.com/) checks.
 
 Run the following command at the **root** directory of the repo to format your code.
 

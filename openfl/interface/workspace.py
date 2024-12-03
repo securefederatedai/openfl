@@ -3,6 +3,7 @@
 
 
 """Workspace module."""
+
 import logging
 import os
 import shutil
@@ -15,9 +16,8 @@ from subprocess import check_call  # nosec
 from sys import executable
 from typing import Union
 
-from click import Choice
+from click import Choice, echo, group, option, pass_context
 from click import Path as ClickPath
-from click import echo, group, option, pass_context
 from cryptography.hazmat.primitives import serialization
 
 from openfl.cryptography.ca import generate_root_cert, generate_signing_csr, sign_certificate
@@ -395,9 +395,9 @@ def export_() -> str:
     type=str,
     required=False,
     help=(
-        "Path to an enclave signing key. If not provided, a key will be auto-generated in the workspace. "
-        "Note that this command builds a TEE-ready image, key is NOT packaged along with the image. "
-        "You have the flexibility to not run inside a TEE later."
+        "Path to an enclave signing key. If not provided, a key will be auto-generated in the "
+        "workspace. Note that this command builds a TEE-ready image, key is NOT packaged along "
+        "with the image. You have the flexibility to not run inside a TEE later."
     ),
 )
 @option(
@@ -510,7 +510,7 @@ def _execute(cmd: str, verbose=True) -> None:
     """
     logging.info(f"Executing: {cmd}")
     process = subprocess.Popen(cmd, shell=True, stderr=subprocess.STDOUT, stdout=subprocess.PIPE)
-    stdout_log = list()
+    stdout_log = []
     for line in process.stdout:
         msg = line.rstrip().decode("utf-8")
         stdout_log.append(msg)

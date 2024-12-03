@@ -368,7 +368,7 @@ class Director:
         if not shard_info:
             raise ShardNotFoundError(f"Unknown shard {envoy_name}")
 
-        shard_info["is_online"]: True
+        shard_info["is_online"] = True
         shard_info["is_experiment_running"] = is_experiment_running
         shard_info["valid_duration"] = 2 * self.envoy_health_check_period
         shard_info["last_updated"] = time.time()

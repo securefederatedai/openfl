@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 """STCPipelinemodule."""
+
 import copy
 import gzip as gz
 

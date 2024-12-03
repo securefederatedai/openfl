@@ -3,6 +3,7 @@
 
 
 """openfl.utilities.data_splitters.data_splitter module."""
+
 from abc import ABC, abstractmethod
 from typing import Iterable, List, TypeVar
 

@@ -6,8 +6,6 @@ base_dir=$(dirname $(dirname $0))
 # Run the pre-commit checks
 pre-commit run --all-files
 
-isort --sp "${base_dir}/pyproject.toml" openfl
+ruff check --config "${base_dir}/pyproject.toml" --fix openfl/
 
-black --config "${base_dir}/pyproject.toml" openfl
-
-flake8 --config "${base_dir}/setup.cfg" openfl
+ruff format --config "${base_dir}/pyproject.toml" openfl/

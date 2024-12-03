@@ -3,6 +3,7 @@
 
 
 """FederatedFastEstimator module."""
+
 import os
 from logging import getLogger
 from pathlib import Path
@@ -44,14 +45,12 @@ class FederatedFastEstimator:
         if override_config:
             fx.update_plan(override_config)
 
-    def fit(self):
+    def fit(self):  # noqa: C901
         """Runs the estimator in federated mode."""
-
         file = Path(__file__).resolve()
         # interface root, containing command modules
         root = file.parent.resolve()
         work = Path.cwd().resolve()
-
         path.append(str(root))
         path.insert(0, str(work))
 

@@ -3,6 +3,7 @@
 
 
 """Plan module."""
+
 import inspect
 import os
 from hashlib import sha384

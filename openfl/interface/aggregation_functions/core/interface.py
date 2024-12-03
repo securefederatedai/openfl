@@ -3,6 +3,7 @@
 
 
 """Aggregation function interface module."""
+
 from abc import abstractmethod
 from typing import Iterator, List, Tuple
 

@@ -3,6 +3,7 @@
 
 
 """FedProx Keras optimizer module."""
+
 import tensorflow as tf
 import tensorflow.keras as keras
 from tensorflow.python.ops import standard_ops

@@ -3,6 +3,7 @@
 
 
 """Collaborator module."""
+
 import os
 import sys
 from glob import glob
@@ -246,7 +247,7 @@ def certify_(collaborator_name, silent, request_pkg, import_):
     certify(collaborator_name, silent, request_pkg, import_)
 
 
-def certify(collaborator_name, silent, request_pkg=None, import_=False):
+def certify(collaborator_name, silent, request_pkg=None, import_=False):  # noqa C901
     """Sign/certify collaborator certificate key pair."""
 
     common_name = f"{collaborator_name}"

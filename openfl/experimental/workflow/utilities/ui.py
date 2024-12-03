@@ -27,7 +27,7 @@ class InspectFlow:
         flow_obj,
         run_id,
         show_html=False,
-        ds_root=f"{Path.home()}/.metaflow",
+        ds_root=None,
     ):
         """Initializes the InspectFlow with a flow object, run ID, an optional
         flag to show the UI in a web browser, and an optional root directory
@@ -41,7 +41,7 @@ class InspectFlow:
             ds_root (str, optional): The root directory for the data store.
                 Defaults to "~/.metaflow".
         """
-        self.ds_root = ds_root
+        self.ds_root = ds_root or f"{Path.home()}/.metaflow"
         self.show_html = show_html
         self.run_id = run_id
         self.flow_name = flow_obj.__class__.__name__

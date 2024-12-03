@@ -504,8 +504,9 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
             for data, target in validation_dataloader:
                 samples = target.shape[0]
                 total_samples += samples
-                data, target = torch.tensor(data).to(self.device), torch.tensor(target).to(
-                    self.device, dtype=torch.int64
+                data, target = (
+                    torch.tensor(data).to(self.device),
+                    torch.tensor(target).to(self.device, dtype=torch.int64),
                 )
                 output = self(data)
                 # get the index of the max log-probability

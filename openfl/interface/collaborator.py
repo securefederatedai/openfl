@@ -3,6 +3,7 @@
 
 
 """Collaborator module."""
+
 import os
 import sys
 from glob import glob
@@ -403,16 +404,13 @@ def certify(collaborator_name, silent, request_pkg=None, import_=False):
 
         signing_crt = read_crt(CERT_DIR / signing_crt_path)
 
-        echo(
-            "The CSR Hash for file "
-            + style(f"{file_name}.csr", fg="green")
-            + " = "
-            + style(f"{csr_hash}", fg="red")
-        )
+        echo(f"The CSR Hash for file {file_name}.csr is {csr_hash}")
 
         if silent:
-            echo(" Signing COLLABORATOR certificate")
-            echo(" Warning: manual check of certificate hashes is bypassed in silent mode.")
+            echo(
+                "Signing COLLABORATOR certificate, "
+                "Warning: manual check of certificate hashes is bypassed in silent mode."
+            )
             signed_col_cert = sign_certificate(csr, signing_key, signing_crt.subject)
             write_crt(signed_col_cert, f"{cert_name}.crt")
             register_collaborator(CERT_DIR / "client" / f"{file_name}.crt")
@@ -458,13 +456,17 @@ def certify(collaborator_name, silent, request_pkg=None, import_=False):
         rmtree(tmp_dir)
 
     else:
-        # Copy the signed certificate and cert chain into PKI_DIR
-        previous_crts = glob(f"{CERT_DIR}/client/*.crt")
-        unpack_archive(import_, extract_dir=CERT_DIR)
-        updated_crts = glob(f"{CERT_DIR}/client/*.crt")
-        cert_difference = list(set(updated_crts) - set(previous_crts))
-        if len(cert_difference) != 0:
-            crt = basename(cert_difference[0])
-            echo(f"Certificate {crt} installed to PKI directory")
-        else:
-            echo("Certificate updated in the PKI directory")
+        _import_certificates(import_)
+
+
+def _import_certificates(archive: str):
+    # Copy the signed certificate and cert chain into PKI_DIR
+    previous_crts = glob(f"{CERT_DIR}/client/*.crt")
+    unpack_archive(archive, extract_dir=CERT_DIR)
+    updated_crts = glob(f"{CERT_DIR}/client/*.crt")
+    cert_difference = list(set(updated_crts) - set(previous_crts))
+    if len(cert_difference) != 0:
+        crt = basename(cert_difference[0])
+        echo(f"Certificate {crt} installed to PKI directory")
+    else:
+        echo("Certificate updated in the PKI directory")

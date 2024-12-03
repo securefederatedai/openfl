@@ -3,6 +3,7 @@
 
 
 """Aggregator module."""
+
 import queue
 import time
 from logging import getLogger
