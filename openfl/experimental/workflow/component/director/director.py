@@ -123,7 +123,8 @@ class Director:
                 [envoy for envoy in self.authorized_cols if envoy in self.get_envoys().keys()]
             )
             logger.info(
-                f"Waiting for {connected_envoys}/{len(self.authorized_cols)} authorized envoys to connect..."
+                f"Waiting for {connected_envoys}/{len(self.authorized_cols)} "
+                "authorized envoys to connect..."
             )
             await asyncio.sleep(10)
 

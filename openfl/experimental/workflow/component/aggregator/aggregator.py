@@ -273,7 +273,7 @@ class Aggregator:
             if not isinstance(f, Callable):
                 f = dill.loads(f)
             if stream_buffer and isinstance(stream_buffer, bytes):
-                setattr(f.__func__, "_stream_buffer", dill.loads(stream_buffer))
+                f.__func__._stream_buffer = dill.loads(stream_buffer)
 
             stdout = checkpoint(ctx, f)
             # Retrieve and log stdout

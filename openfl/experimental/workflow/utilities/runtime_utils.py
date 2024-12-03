@@ -137,8 +137,7 @@ def checkpoint(ctx, parent_func, chkpnt_reserved_words=["next", "runtime"]):
             buffer_err=step_stderr,
         )
         print(f"Saved data artifacts for {parent_func.__name__}")
-
-    return step_stdout
+        return step_stdout
 
 
 def old_check_resource_allocation(num_gpus, each_participant_gpu_usage):
