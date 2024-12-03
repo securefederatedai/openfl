@@ -3,5 +3,10 @@
 
 
 """openfl.experimental.workflow.transport package."""
+from openfl.experimental.workflow.transport.grpc import (
+    AggregatorGRPCClient,
+    AggregatorGRPCServer,
+    DirectorClient,
+    DirectorGRPCServer,
+)
 
-from openfl.experimental.workflow.transport.grpc import AggregatorGRPCClient, AggregatorGRPCServer

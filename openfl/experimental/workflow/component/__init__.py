@@ -7,3 +7,5 @@
 # FIXME: Too much recursion
 from openfl.experimental.workflow.component.aggregator import Aggregator
 from openfl.experimental.workflow.component.collaborator import Collaborator
+from openfl.experimental.workflow.component.director import Director
+from openfl.experimental.workflow.component.envoy import Envoy

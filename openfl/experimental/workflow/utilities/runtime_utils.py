@@ -114,6 +114,9 @@ def checkpoint(ctx, parent_func, chkpnt_reserved_words=["next", "runtime"]):
         parent_func (function): The function that was just executed.
         chkpnt_reserved_words (list, optional): A list of reserved words to
             exclude from checkpointing. Defaults to ["next", "runtime"].
+
+    Returns:
+        step_stdout (io.StringIO): parent_func stdout
     """
 
     # Extract the stdout & stderr from the buffer
@@ -134,6 +137,8 @@ def checkpoint(ctx, parent_func, chkpnt_reserved_words=["next", "runtime"]):
             buffer_err=step_stderr,
         )
         print(f"Saved data artifacts for {parent_func.__name__}")
+
+    return step_stdout
 
 
 def old_check_resource_allocation(num_gpus, each_participant_gpu_usage):
