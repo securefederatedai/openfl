@@ -18,8 +18,7 @@ from openfl.utilities.split import split_tensor_dict_for_holdouts
 
 with catch_warnings():
     simplefilter(action="ignore")
-    import keras as ke
-    import tensorflow as tf
+    import keras
 
 
 class KerasTaskRunner(TaskRunner):
@@ -40,7 +39,7 @@ class KerasTaskRunner(TaskRunner):
         """
         super().__init__(**kwargs)
 
-        self.model = ke.models.Model()
+        self.model = keras.models.Model()
 
         self.model_tensor_names = []
 
@@ -60,7 +59,7 @@ class KerasTaskRunner(TaskRunner):
         """
         if self.opt_treatment == "RESET":
             self.reset_opt_vars()
-            self.set_tensor_dict(input_tensor_dict, with_opt_vars=True)
+            self.set_tensor_dict(input_tensor_dict, with_opt_vars=False)
         elif round_num > 0 and self.opt_treatment == "CONTINUE_GLOBAL" and not validation:
             self.set_tensor_dict(input_tensor_dict, with_opt_vars=True)
         else:
@@ -98,8 +97,7 @@ class KerasTaskRunner(TaskRunner):
             raise KeyError("metrics must be defined")
 
         # rebuild model with updated weights
-        if round_num > 0:
-            self.rebuild_model(round_num, input_tensor_dict)
+        self.rebuild_model(round_num, input_tensor_dict)
         for epoch in range(epochs):
             self.logger.info("Run %s epoch of %s round", epoch, round_num)
             results = self.train_iteration(
@@ -222,8 +220,7 @@ class KerasTaskRunner(TaskRunner):
         else:
             batch_size = 1
 
-        if round_num > 0:
-            self.rebuild_model(round_num, input_tensor_dict, validation=True)
+        self.rebuild_model(round_num, input_tensor_dict, validation=True)
         param_metrics = kwargs["metrics"]
 
         self.model.evaluate(self.data_loader.get_valid_loader(batch_size), verbose=1)
@@ -267,7 +264,7 @@ class KerasTaskRunner(TaskRunner):
         Args:
             filepath (str): The file path to load the model.
         """
-        self.model = ke.models.load_model(filepath)
+        self.model = keras.models.load_model(filepath)
 
     @staticmethod
     def _get_weights_names(obj):
@@ -280,7 +277,7 @@ class KerasTaskRunner(TaskRunner):
         Returns:
             weight_names (list): The weight name list.
         """
-        if isinstance(obj, ke.optimizers.Optimizer):
+        if isinstance(obj, keras.optimizers.Optimizer):
             weight_names = [weight.name for weight in obj.variables]
         else:
             weight_names = [
@@ -303,7 +300,7 @@ class KerasTaskRunner(TaskRunner):
         """
         weights_dict = {}
         weight_names = KerasTaskRunner._get_weights_names(obj)
-        if isinstance(obj, ke.optimizers.Optimizer):
+        if isinstance(obj, keras.optimizers.Optimizer):
             weights_dict = {
                 weight_names[i] + suffix: weight.numpy()
                 for i, weight in enumerate(copy.deepcopy(obj.variables))
@@ -374,9 +371,7 @@ class KerasTaskRunner(TaskRunner):
 
     def reset_opt_vars(self):
         """Resets the optimizer variables."""
-        for var in self.model.optimizer.variables:
-            var.assign(tf.zeros_like(var))
-        self.logger.debug("Optimizer variables reset")
+        pass
 
     def get_required_tensorkeys_for_function(self, func_name, **kwargs):
         """Get the required tensors for specified function that could be called
