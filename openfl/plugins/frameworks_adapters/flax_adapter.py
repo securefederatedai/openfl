@@ -3,6 +3,7 @@
 
 
 """Custom model DeviceArray - JAX Numpy adapter."""
+
 import jax
 import jax.numpy as jnp
 import numpy as np
@@ -131,7 +132,7 @@ def _update_weights(state_dict, tensor_dict, prefix, suffix=None):
     """
     dict_prefix = f"{prefix}_{suffix}" if suffix is not None else f"{prefix}"
     for layer_name, param_obj in state_dict.items():
-        for param_name, value in param_obj.items():
+        for param_name, _ in param_obj.items():
             key = "*".join([dict_prefix, layer_name, param_name])
             if key in tensor_dict:
                 state_dict[layer_name][param_name] = tensor_dict[key]

@@ -7,6 +7,7 @@
 This file defines openfl entrypoints to be used directly through python (not
 CLI)
 """
+
 import json
 import logging
 import os
@@ -85,7 +86,7 @@ def flatten(config, return_complete=False):
     return flattened_config
 
 
-def update_plan(override_config, plan=None, resolve=True):
+def update_plan(override_config, plan=None, resolve=True):  # noqa: C901
     """Updates the plan with the provided override and saves it to disk.
 
     For a list of available override options, call `fx.get_plan()`

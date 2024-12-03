@@ -3,6 +3,7 @@
 
 
 """Experimental Aggregator module."""
+
 import inspect
 import pickle
 import queue
@@ -47,8 +48,8 @@ class Aggregator:
         rounds_to_train: int = 1,
         checkpoint: bool = False,
         private_attributes_callable: Callable = None,
-        private_attributes_kwargs: Dict = {},
-        private_attributes: Dict = {},
+        private_attributes_kwargs: Dict = None,
+        private_attributes: Dict = None,
         single_col_cert_common_name: str = None,
         log_metric_callback: Callable = None,
         **kwargs,
@@ -232,7 +233,7 @@ class Aggregator:
                 f = pickle.loads(f)
             if isinstance(stream_buffer, bytes):
                 # Set stream buffer as function parameter
-                setattr(f.__func__, "_stream_buffer", pickle.loads(stream_buffer))
+                f.__func__._stream_buffer = pickle.loads(stream_buffer)
 
             checkpoint(ctx, f)
 

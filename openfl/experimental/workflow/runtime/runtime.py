@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 
-""" openfl.experimental.workflow.runtime module Runtime class."""
+"""openfl.experimental.workflow.runtime module Runtime class."""
 
 from typing import Callable, List
 

@@ -29,7 +29,7 @@ class CustomThread(Thread):
         kwargs (dict): The keyword arguments to pass to the target function.
     """
 
-    def __init__(self, group=None, target=None, name=None, args=(), kwargs={}):
+    def __init__(self, group=None, target=None, name=None, args=None, kwargs=None):
         """Initialize a CustomThread object.
 
         Args:

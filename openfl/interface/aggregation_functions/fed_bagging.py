@@ -35,7 +35,8 @@ def append_trees(global_model, local_trees):
 
     Parameters:
     global_model (dict): A dictionary representing the global model.
-    local_trees (list): A list of dictionaries representing the local trees to be appended to the global model.
+    local_trees (list): A list of dictionaries representing the local trees to be appended to the
+        global model.
 
     Returns:
     dict: The updated global model with the local trees appended.

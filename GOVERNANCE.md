@@ -22,7 +22,7 @@ OpenFL has the following roles in the project:
 
 ### Users
 One of the main OpenFL design principles is a **great usability**. We aim to build an easily to use library for Federated Learning and bring to users a great developer experience. We believe that our users and customers should guide us in building the great software that solves the data silo and data privacy problems. We encourage users to provide us feedback, ask questions, initiate discussions, propose bug reports and suggest features through the following tools and formats:
-- Usage of [OpenFL](https://openfl.readthedocs.io/en/latest/manual.html);
+- Usage of [OpenFL](https://openfl.readthedocs.io/en/latest/developer_guide/manual.html);
 - Discussions in our [Slack channel](https://join.slack.com/t/openfl/shared_invite/zt-ovzbohvn-T5fApk05~YS_iZhjJ5yaTw);
 - Opening [Issues](https://github.com/securefederatedai/openfl/issues) and [discussion topics](https://github.com/securefederatedai/openfl/discussions) in our GitHub;
 - Participation in [Community Meetings](https://github.com/securefederatedai/openfl#support).
@@ -53,14 +53,12 @@ Maintainers’ responsibilities:
 - Participate in discussions through Slack, GitHub or community meetings;
 - Answer the questions and provide reasonable assistance to users and contributors.
 
-See the list of Maintainers [here](https://github.com/securefederatedai/openfl/MAINTAINERS.md). There is no limit on the maximum number of maintainers.
-
 See calendar of the public maintainers meetings [here](https://wiki.lfaidata.foundation/pages/viewpage.action?pageId=70648254).
 
 ### Technical Steering Committee
 The Technical Steering Committee (TSC) is the main decision-making authority of the OpenFL project. The TSC defines the strategic objective of the project, makes business & legal decisions, as well as high-level technical decisions. The TSC consists of elected members. The election takes place every year by the end of the first quarter (Q1) of the year* , but changes in the TSC may be made during the year based on the project needs and the decision by current TSC members.
 
-The current list of TSC members is [here](https://github.com/securefederatedai/openfl/TSC). The number of TSC members can be increased, but up to a reasonable size (no more than 9 people). The minimum size of the TSC should not be less than 3 people.
+The current list of TSC members is [here](https://github.com/securefederatedai/openfl/blob/develop/TSC.md). The number of TSC members can be increased, but up to a reasonable size (no more than 9 people). The minimum size of the TSC should not be less than 3 people.
 
 \* For 2023 there will be no elections, TSC members and Chair are defined by the founding organizations.
 
@@ -84,7 +82,7 @@ The TSC members are responsible for all business, legal and technical oversight 
 - Coordinate any *marketing events*, or communications regarding the project.
 
 #### TSC Chair
-The Technical Steering Committee has a Chair. The current TSC Chair is listed [here](https://github.com/securefederatedai/openfl/TSC). The election of a new Chair takes place every year (by the end of Q1 of the year).
+The Technical Steering Committee has a Chair. The current TSC Chair is listed [here](https://github.com/securefederatedai/openfl/blob/develop/TSC.md). The election of a new Chair takes place every year (by the end of Q1 of the year).
 
 TSC Chair’s responsibilities:
 - Serve as the primary *communication contact* between OpenFL and the [LF AI & Data Foundation](https://lfaidata.foundation/);

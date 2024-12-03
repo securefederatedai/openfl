@@ -123,7 +123,7 @@ class Collaborator(Participant):
         private_attributes_callable: Callable = None,
         num_cpus: int = 0,
         num_gpus: int = 0.0,
-        **kwargs
+        **kwargs,
     ):
         """Initializes the Collaborator object.
 
@@ -190,7 +190,7 @@ class Aggregator(Participant):
         private_attributes_callable: Callable = None,
         num_cpus: int = 0,
         num_gpus: int = 0.0,
-        **kwargs
+        **kwargs,
     ):
         """Initializes the Aggregator object.
 

@@ -3,6 +3,7 @@
 
 
 """Collaborator module."""
+
 from enum import Enum
 from logging import getLogger
 from time import sleep

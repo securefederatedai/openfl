@@ -3,6 +3,7 @@
 
 
 """Experimental Collaborator module."""
+
 import pickle
 import time
 from logging import getLogger
@@ -35,8 +36,8 @@ class Collaborator:
         federation_uuid: str,
         client: Any,
         private_attributes_callable: Any = None,
-        private_attributes_kwargs: Dict = {},
-        private_attributes: Dict = {},
+        private_attributes_kwargs: Dict = None,
+        private_attributes: Dict = None,
         **kwargs,
     ) -> None:
         self.name = collaborator_name

@@ -3,6 +3,7 @@
 
 
 """Workspace module."""
+
 import os
 import sys
 from hashlib import sha256
@@ -16,9 +17,8 @@ from sys import executable
 from tempfile import mkdtemp
 from typing import Tuple
 
-from click import Choice
+from click import Choice, confirm, echo, group, option, pass_context, style
 from click import Path as ClickPath
-from click import confirm, echo, group, option, pass_context, style
 from cryptography.hazmat.primitives import serialization
 
 from openfl.cryptography.ca import generate_root_cert, generate_signing_csr, sign_certificate

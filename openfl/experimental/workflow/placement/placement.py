@@ -41,7 +41,7 @@ def aggregator(f: Callable = None) -> Callable:
         print(f"\nCalling {f.__name__}")
         with RedirectStdStreamContext() as context_stream:
             # context_stream capture stdout and stderr for the function f.__name__
-            setattr(wrapper, "_stream_buffer", context_stream)
+            wrapper._stream_buffer = context_stream
             f(*args, **kwargs)
 
     return wrapper
@@ -92,7 +92,7 @@ def collaborator(f: Callable = None) -> Callable:
         print(f"\nCalling {f.__name__}")
         with RedirectStdStreamContext() as context_stream:
             # context_stream capture stdout and stderr for the function f.__name__
-            setattr(wrapper, "_stream_buffer", context_stream)
+            wrapper._stream_buffer = context_stream
             f(*args, **kwargs)
 
     return wrapper

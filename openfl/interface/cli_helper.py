@@ -3,11 +3,11 @@
 
 
 """Module with auxiliary CLI helper functions."""
+
 import os
 import re
-import shutil
 from itertools import islice
-from os import environ, stat
+from os import environ
 from pathlib import Path
 from sys import argv
 
@@ -33,25 +33,6 @@ def pretty(o):
 
     for k, v in o.items():
         echo(style(f"{k:<{m}} : ", fg="blue") + style(f"{v}", fg="cyan"))
-
-
-def tree(path):
-    """
-    Print current directory file tree.
-
-    Args:
-        path (str): The path of the directory.
-    """
-    echo(f"+ {path}")
-
-    for path in sorted(path.rglob("*")):
-        depth = len(path.relative_to(path).parts)
-        space = "    " * depth
-
-        if path.is_file():
-            echo(f"{space}f {path.name}")
-        else:
-            echo(f"{space}d {path.name}")
 
 
 def print_tree(
@@ -106,101 +87,6 @@ def print_tree(
     if next(iterator, None):
         echo(f"... length_limit, {length_limit}, reached, counted:")
     echo(f"\n{directories} directories" + (f", {files} files" if files else ""))
-
-
-def copytree(
-    src,
-    dst,
-    symlinks=False,
-    ignore=None,
-    ignore_dangling_symlinks=False,
-    dirs_exist_ok=False,
-):
-    """From Python 3.8 'shutil' which include 'dirs_exist_ok' option.
-
-    Args:
-        src (str): The source directory.
-        dst (str): The destination directory.
-        symlinks (bool, optional): Whether to copy symlinks. Defaults to False.
-        ignore (callable, optional): A function that takes a directory name
-            and filenames as input parameters and returns a list of names to
-            ignore. Defaults to None.
-        ignore_dangling_symlinks (bool, optional): Whether to ignore dangling
-            symlinks. Defaults to False.
-        dirs_exist_ok (bool, optional): Whether to raise an exception in case
-            dst or any missing parent directory already exists. Defaults to
-            False.
-    """
-
-    with os.scandir(src) as itr:
-        entries = list(itr)
-
-    copy_function = shutil.copy2
-
-    def _copytree():
-        if ignore is not None:
-            ignored_names = ignore(os.fspath(src), [x.name for x in entries])
-        else:
-            ignored_names = set()
-
-        os.makedirs(dst, exist_ok=dirs_exist_ok)
-        errors = []
-        use_srcentry = copy_function is shutil.copy2 or copy_function is shutil.copy
-
-        for srcentry in entries:
-            if srcentry.name in ignored_names:
-                continue
-            srcname = os.path.join(src, srcentry.name)
-            dstname = os.path.join(dst, srcentry.name)
-            srcobj = srcentry if use_srcentry else srcname
-            try:
-                is_symlink = srcentry.is_symlink()
-                if is_symlink and os.name == "nt":
-                    lstat = srcentry.stat(follow_symlinks=False)
-                    if lstat.st_reparse_tag == stat.IO_REPARSE_TAG_MOUNT_POINT:
-                        is_symlink = False
-                if is_symlink:
-                    linkto = os.readlink(srcname)
-                    if symlinks:
-                        os.symlink(linkto, dstname)
-                        shutil.copystat(srcobj, dstname, follow_symlinks=not symlinks)
-                    else:
-                        if not os.path.exists(linkto) and ignore_dangling_symlinks:
-                            continue
-                        if srcentry.is_dir():
-                            copytree(
-                                srcobj,
-                                dstname,
-                                symlinks,
-                                ignore,
-                                dirs_exist_ok=dirs_exist_ok,
-                            )
-                        else:
-                            copy_function(srcobj, dstname)
-                elif srcentry.is_dir():
-                    copytree(
-                        srcobj,
-                        dstname,
-                        symlinks,
-                        ignore,
-                        dirs_exist_ok=dirs_exist_ok,
-                    )
-                else:
-                    copy_function(srcobj, dstname)
-            except OSError as why:
-                errors.append((srcname, dstname, str(why)))
-            except Exception as err:
-                errors.extend(err.args[0])
-        try:
-            shutil.copystat(src, dst)
-        except OSError as why:
-            if getattr(why, "winerror", None) is None:
-                errors.append((src, dst, str(why)))
-        if errors:
-            raise Exception(errors)
-        return dst
-
-    return _copytree()
 
 
 def get_workspace_parameter(name):

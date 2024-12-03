@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 """CA module."""
+
 import base64
 import json
 import os

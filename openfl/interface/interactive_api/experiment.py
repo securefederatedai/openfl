@@ -3,6 +3,7 @@
 
 
 """Python low-level API module."""
+
 import os
 import time
 from collections import defaultdict
@@ -355,7 +356,7 @@ class FLExperiment:
         else:
             self.logger.info("Experiment could not be submitted to the director.")
 
-    def define_task_assigner(self, task_keeper, rounds_to_train):
+    def define_task_assigner(self, task_keeper, rounds_to_train):  # noqa: C901
         """Define task assigner by registered tasks.
 
         This method defines a task assigner based on the registered tasks.
@@ -408,6 +409,7 @@ class FLExperiment:
                 return tasks_by_collaborator
 
             return assigner
+
         elif not is_train_task_exist and self.is_validate_task_exist:
 
             def assigner(collaborators, round_number, **kwargs):
@@ -419,6 +421,7 @@ class FLExperiment:
                 return tasks_by_collaborator
 
             return assigner
+
         elif is_train_task_exist and not self.is_validate_task_exist:
             raise Exception("You should define validate task!")
         else:
@@ -568,9 +571,9 @@ class FLExperiment:
         # Collaborator part
         self.plan.config["collaborator"]["settings"]["delta_updates"] = delta_updates
         self.plan.config["collaborator"]["settings"]["opt_treatment"] = opt_treatment
-        self.plan.config["collaborator"]["settings"][
-            "device_assignment_policy"
-        ] = device_assignment_policy
+        self.plan.config["collaborator"]["settings"]["device_assignment_policy"] = (
+            device_assignment_policy
+        )
 
         # DataLoader part
         for setting, value in data_loader.kwargs.items():
