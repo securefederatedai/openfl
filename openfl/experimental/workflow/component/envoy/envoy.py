@@ -1,7 +1,7 @@
 # Copyright 2020-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Envoy module."""
+"""Experimental Envoy module."""
 
 import logging
 import sys
@@ -129,7 +129,7 @@ class Envoy:
         else:
             self.root_certificate = self.private_key = self.certificate = None
 
-    def run(self) -> None:
+    def _run(self) -> None:
         """Run of the envoy working cycle."""
         while True:
             try:
@@ -174,7 +174,7 @@ class Envoy:
                     raise Exception("Broken archive")
         return data_file_path
 
-    def send_health_check(self) -> None:
+    def _send_health_check(self) -> None:
         """Send health check to the director."""
         logger.debug("Sending envoy node status to director.")
         timeout = self.DEFAULT_RETRY_TIMEOUT_IN_SECONDS
@@ -216,8 +216,8 @@ class Envoy:
         else:
             if is_accepted:
                 logger.info(f"{self.name} is connected to the director")
-                self._health_check_future = self.executor.submit(self.send_health_check)
-                self.run()
+                self._health_check_future = self.executor.submit(self._send_health_check)
+                self._run()
             else:
                 # Connection failed
                 logger.error(f"{self.name} failed to connect to the director")

@@ -199,7 +199,7 @@ class FLSpec:
             )
 
     def _update_from_flspec_obj(self, flspec_obj: FLSpec) -> None:
-        """Update self with attributes from the updated flspec object.
+        """Update self with attributes from the updated flspec instance.
 
         Args:
             flspec_obj (FLSpec): Updated Flspec instance

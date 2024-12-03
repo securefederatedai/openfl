@@ -191,9 +191,12 @@ class Aggregator:
         """
         return 10
 
-    async def run_flow(self) -> None:
+    async def run_flow(self) -> FLSpec:
         """
         Start the execution and run flow until transition.
+
+        Returns:
+            flow (FLSpec): Updated instance.
         """
         # Start function will be the first step if any flow
         f_name = "start"

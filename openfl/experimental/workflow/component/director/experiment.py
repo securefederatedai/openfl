@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 
-"""Experiment module."""
+"""Experimental Experiment module."""
 
 import asyncio
 import logging
@@ -40,9 +40,8 @@ class Experiment:
             plan_path (Union[Path, str]): The path to the plan.
             users (Iterable[str]): The list of users.
             status (str): The status of the experiment.
-            aggregator (Aggregator): The aggregator object.
-            updated_flow (FLSpec): Updated flow object.
-                Defaults to none.
+            aggregator (Aggregator): The aggregator instance.
+            updated_flow (FLSpec): Updated flow instance.
     """
 
     def __init__(

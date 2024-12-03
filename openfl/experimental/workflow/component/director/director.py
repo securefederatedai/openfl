@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 
-"""Director module."""
+"""Experimental Director module."""
 
 import asyncio
 import logging
@@ -70,6 +70,8 @@ class Director:
             certificate (Optional[Union[Path, str]]): The path to the
                 certificate for TLS. Defaults to None.
             director_config (Optional[Path]): Path to director_config file
+            envoy_health_check_period (int): The period for health check of envoys
+            in seconds.
             install_requirements (bool, optional): A flag indicating if the
                 requirements should be installed. Defaults to True.
         """
