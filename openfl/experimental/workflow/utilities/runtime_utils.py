@@ -45,14 +45,14 @@ def parse_attrs(ctx, exclude=[], reserved_words=["next", "runtime", "input"]):
     return cls_attrs, valid_artifacts
 
 
-def generate_artifacts(ctx, reserved_words=["next", "runtime", "input"]):
+def generate_artifacts(ctx, reserved_words=["next", "runtime", "input", "checkpoint"]):
     """Generates artifacts from the given context, excluding specified reserved
     words.
 
     Args:
         ctx (any): The context to generate artifacts from.
         reserved_words (list, optional): A list of reserved words to exclude.
-            Defaults to ["next", "runtime", "input"].
+            Defaults to ["next", "runtime", "input", "checkpoint"].
 
     Returns:
         tuple: A tuple containing a generator of artifacts and a list of
