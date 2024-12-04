@@ -4,6 +4,8 @@
 import time
 import concurrent.futures
 import logging
+import json
+import re
 
 from tests.end_to_end.utils.constants import SUCCESS_MARKER
 
@@ -68,7 +70,7 @@ def run_federation(fed_obj):
     return results
 
 
-def verify_federation_run_completion(fed_obj, results):
+def verify_federation_run_completion(fed_obj, results, num_rounds):
     """
     Verify the completion of the process for all the participants
     Args:
@@ -85,7 +87,7 @@ def verify_federation_run_completion(fed_obj, results):
         executor.submit(
             _verify_completion_for_participant,
             participant,
-            fed_obj.num_rounds,
+            num_rounds,
             results[i]
         )
         for i, participant in enumerate(fed_obj.collaborators + [fed_obj.aggregator])
@@ -133,3 +135,39 @@ def _verify_completion_for_participant(participant, num_rounds, result_file, tim
     else:
         log.info(f"Process completed for {participant.name} in {time.time() - start_time} seconds")
         return True
+
+
+def extract_memory_usage(log_file):
+    """
+    Extracts memory usage data from a log file.
+    This function reads the content of the specified log file, searches for memory usage data
+    using a regular expression pattern, and returns the extracted data as a dictionary.
+    Args:
+        log_file (str): The path to the log file from which to extract memory usage data.
+    Returns:
+        dict: A dictionary containing the memory usage data.
+    Raises:
+        json.JSONDecodeError: If there is an error decoding the JSON data.
+        Exception: If memory usage data is not found in the log file.
+    """
+
+    with open(log_file, 'r') as file:
+        content = file.read()
+
+    pattern = r"Publish memory usage: (\[.*?\])"
+    match = re.search(pattern, content, re.DOTALL)
+
+    if match:
+        memory_usage_data = match.group(1)
+        memory_usage_data = re.sub(r'\S+\.py:\d+', '', memory_usage_data)
+        memory_usage_data = memory_usage_data.replace('\n', '').replace(' ', '')
+        memory_usage_data = memory_usage_data.replace("'", '"')
+        try:
+            memory_usage_dict = json.loads(memory_usage_data)
+            return memory_usage_dict
+        except json.JSONDecodeError as e:
+            log.error(f"Error decoding JSON: {e}")
+            raise e
+    else:
+        log.error("Memory usage data not found in the log file")
+        raise Exception("Memory usage data not found in the log file")
