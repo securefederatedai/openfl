@@ -1,4 +1,4 @@
-# 101_MNIST_FederatedRuntime
+# 301_MNIST_Watermarking
 
 ## **How to run this tutorial (without TLS and locally as a simulation):**
 <br/>
@@ -41,14 +41,14 @@ cd director
 
 #### 4.1 Second terminal
 ```sh
-cd Portland
-./start_envoy.sh Portland Portland_config.yaml
+cd Bangalore
+./start_envoy.sh Bangalore Bangalore_config.yaml
 ```
 
 #### 4.2 Third terminal
 ```sh
-cd Seattle
-./start_envoy.sh Seattle Seattle_config.yaml
+cd Chandler
+./start_envoy.sh Chandler Chandler_config.yaml
 ```
 
 <br/>
@@ -57,7 +57,7 @@ cd Seattle
 
 ```sh
 cd workspace
-jupyter lab 101_MNIST_FederatedRuntime.ipynb
+jupyter lab mnist_watermarking.ipynb
 ```
 - A Jupyter Server URL will appear in your terminal. In your browser, proceed to that link. Once the webpage loads, click on the pytorch_tinyimagenet.ipynb file. 
 - To run the experiment, select the icon that looks like two triangles to "Restart Kernel and Run All Cells". 
