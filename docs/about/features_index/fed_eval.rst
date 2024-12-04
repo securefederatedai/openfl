@@ -32,11 +32,17 @@ This script can be directly executed as follows:
 
     $ python test_hello_federation.py --template torch_cnn_mnist_fed_eval
     
-In order to adapt this template for federated evaluation, the following modifications were made to ``plan.yaml``:
+In order to adapt this template for federated evaluation, the following defaults were added for assigner, aggregator and tasks and same referenced in the ``plan.yaml``:
 
 .. literalinclude:: ../../../openfl-workspace/torch_cnn_mnist_fed_eval/plan/plan.yaml
 
-Key Changes for Federated Evaluation:
+.. literalinclude:: ../../../openfl-workspace/workspace/plan/defaults/federated-evaluation/aggregator.yaml
+
+.. literalinclude:: ../../../openfl-workspace/workspace/plan/defaults/federated-evaluation/assigner.yaml
+
+.. literalinclude:: ../../../openfl-workspace/workspace/plan/defaults/federated-evaluation/tasks_torch.yaml
+
+Key Changes for Federated Evaluation by baking in defaults for:
 
 1. **aggregator.settings.rounds_to_train**: Set to 1
 2. **assigner**: Assign to aggregated_model_validation instead of default assignments
@@ -48,4 +54,4 @@ This sample script will create a federation based on the `torch_cnn_mnist_fed_ev
 
 ---
 
-Congratulations, you have successfully performed federated evaluation across two decentralized collaborator nodes.
+Congratulations, you have successfully performed federated evaluation across two decentralized collaborator nodes with minor default reference changes to plan
