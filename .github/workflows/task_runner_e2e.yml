@@ -272,9 +272,9 @@ jobs:
       - name: Run Task Runner E2E tests without TLS
         id: run_tests
         run: |
-          python -m pytest -s tests/end_to_end/test_suites/memory_logs_tests \
-          --model_name ${{ env.MODEL_NAME }} \
-          --num_rounds ${{ env.NUM_ROUNDS }} --num_collaborators ${{ env.NUM_COLLABORATORS }} --log_memory_usage
+          python -m pytest -s tests/end_to_end/test_suites/memory_logs_tests.py \
+          --model_name ${{ env.MODEL_NAME }} --num_rounds ${{ env.NUM_ROUNDS }} \
+          --num_collaborators ${{ env.NUM_COLLABORATORS }} --log_memory_usage
           echo "Task runner memory logs test run completed"
 
       - name: Print test summary
@@ -295,5 +295,5 @@ jobs:
         uses: actions/upload-artifact@v4
         if: ${{ always() }}
         with:
-          name: tr_non_tls_${{ env.MODEL_NAME }}_python${{ env.PYTHON_VERSION }}_${{ github.run_id }}
+          name: tr_tls_memory_logs_${{ env.MODEL_NAME }}_python${{ env.PYTHON_VERSION }}_${{ github.run_id }}
           path: result.tar
