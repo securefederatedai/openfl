@@ -15,8 +15,6 @@ from pathlib import Path
 from shutil import copytree, ignore_patterns, make_archive
 from typing import Dict, Tuple
 
-from tensorboardX import SummaryWriter
-
 from openfl.component.assigner.tasks import Task, TrainTask, ValidateTask
 from openfl.federated import Plan
 from openfl.interface.aggregation_functions import AggregationFunction, WeightedAverage
@@ -206,6 +204,8 @@ class FLExperiment:
     def write_tensorboard_metric(self, metric: dict) -> None:
         """Write metric callback."""
         if not self.summary_writer:
+            from tensorboardX import SummaryWriter
+
             self.summary_writer = SummaryWriter(f"./logs/{self.experiment_name}", flush_secs=5)
 
         self.summary_writer.add_scalar(
