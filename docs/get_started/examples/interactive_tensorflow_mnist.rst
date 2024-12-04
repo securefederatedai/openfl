@@ -95,7 +95,7 @@ Install additional dependencies if not already installed
 
 .. code-block:: console
 
-    $ pip install tensorflow==2.18.0
+    $ pip install tensorflow==2.8
 
 Import:
 
