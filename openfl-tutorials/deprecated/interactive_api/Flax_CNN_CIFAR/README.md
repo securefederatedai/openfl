@@ -30,7 +30,7 @@ Definition provided in the notebook.
     - CUDA >= 11.1.105
     - cuDNN >= 8
     
-    Activate virtual environment (Python - 3.8.10) and install packages from requirements.txt
+    Activate virtual environment (Python - 3.9) and install packages from requirements.txt
 
     Set the variable `DEFAULT_DEVICE to 'CPU' or 'GPU'` in `start_envoy.sh` and notebook to enforce/control the execution platform.
 
