@@ -28,4 +28,4 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r linters-requirements.txt 
     - name: Lint with OpenFL-specific rules
-      run: bash shell/lint.sh
+      run: bash scripts/lint.sh
