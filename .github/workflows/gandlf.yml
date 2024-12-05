@@ -39,7 +39,9 @@ jobs:
         git fetch --tags
         echo "Checkout the latest GaNDLF tag"
         latestTag=$(git describe --tags "$(git rev-list --tags --max-count=1)")
-        git checkout $latestTag
+        # Instead of using the latest tag, we are pinning gandlf to an older version as changes are required
+        # in torch to work with a later version.
+        git checkout 0.1.1
     - name: GaNDLF Task Runner Test
       run: |
         cd gandlf
