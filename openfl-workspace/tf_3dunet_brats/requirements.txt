@@ -2,4 +2,4 @@ nibabel
 numpy
 
 setuptools>=65.5.1 # not directly required, pinned by Snyk to avoid a vulnerability
-tensorflow>=2
+tensorflow==2.14.0
