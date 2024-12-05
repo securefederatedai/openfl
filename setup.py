@@ -1,12 +1,9 @@
 # Copyright (C) 2020-2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+"""Setup script."""
 
-"""This package includes dependencies of the openfl project."""
-
-from setuptools import Command
-from setuptools import setup
+from setuptools import Command, find_packages, setup
 from setuptools.command.build_py import build_py
-from setuptools.command.develop import develop
 
 
 class BuildPackageProtos(Command):
@@ -61,113 +58,35 @@ class BuildPyGRPC(build_py):
         super().run()
 
 
-class DevelopGRPC(develop):
-    """Command for develop installation."""
-
-    def __init__(self, dist):
-        """Create a sub-command to execute."""
-        self.subcommand = BuildPackageProtos(dist)
-        super().__init__(dist)
-
-    def run(self):
-        """Build GRPC modules before the default installation."""
-        self.subcommand.run()
-        super().run()
-
-
-with open('README.md', encoding='utf-8') as f:
-    long_description = f.read()
-
 setup(
     name='openfl',
     version='1.6',
-    author='The OpenFL Team',
+    author='OpenFL Team',
     description='Federated Learning for the Edge',
-    long_description=long_description,
+    long_description=open("README.md", encoding="utf-8").read(),
     long_description_content_type='text/markdown',
     url='https://github.com/securefederatedai/openfl',
-    packages=[
-        'openfl',
-        'openfl.component',
-        'openfl.interface.aggregation_functions',
-        'openfl.interface.aggregation_functions.core',
-        'openfl.interface.aggregation_functions.experimental',
-        'openfl.component.aggregator',
-        'openfl.component.assigner',
-        'openfl.component.collaborator',
-        'openfl.component.director',
-        'openfl.component.envoy',
-        'openfl.component.straggler_handling_functions',
-        'openfl.cryptography',
-        'openfl.databases',
-        'openfl.databases.utilities',
-        'openfl.experimental',
-        'openfl.experimental.workflow',
-        'openfl.experimental.workflow.workspace_export',
-        'openfl.experimental.workflow.federated',
-        'openfl.experimental.workflow.federated.plan',
-        'openfl.experimental.workflow.component',
-        'openfl.experimental.workflow.component.aggregator',
-        'openfl.experimental.workflow.component.collaborator',
-        'openfl.experimental.workflow.interface.cli',
-        'openfl.experimental.workflow.interface',
-        'openfl.experimental.workflow.placement',
-        'openfl.experimental.workflow.runtime',
-        'openfl.experimental.workflow.protocols',
-        'openfl.experimental.workflow.transport',
-        'openfl.experimental.workflow.transport.grpc',
-        'openfl.experimental.workflow.utilities',
-        'openfl.federated',
-        'openfl.federated.data',
-        'openfl.federated.plan',
-        'openfl.federated.task',
-        'openfl.interface',
-        'openfl.interface.interactive_api',
-        'openfl.native',
-        'openfl.pipelines',
-        'openfl.plugins',
-        'openfl.plugins.frameworks_adapters',
-        'openfl.plugins.interface_serializer',
-        'openfl.plugins.processing_units_monitor',
-        'openfl.protocols',
-        'openfl.transport',
-        'openfl.transport.grpc',
-        'openfl.utilities',
-        'openfl.utilities.ca',
-        'openfl.utilities.data_splitters',
-        'openfl.utilities.fedcurv',
-        'openfl.utilities.fedcurv.torch',
-        'openfl.utilities.optimizers.keras',
-        'openfl.utilities.optimizers.numpy',
-        'openfl.utilities.optimizers.torch',
-        'openfl-docker',
-        'openfl-tutorials',
-        'openfl-workspace',
-    ],
+    packages=find_packages(include=("openfl", "openfl.*", "openfl-docker", "openfl-workspace")),
     include_package_data=True,
+    setup_requires=['grpcio-tools>=1.56.2,<1.66.0'],  # ensure it is in-sync with `install_requires`
     install_requires=[
-        'Click==8.1.7',
-        'PyYAML>=5.4.1',
-        'cloudpickle',
-        'cryptography>=3.4.6',
-        'docker',
-        'dynaconf==3.2.6',
-        'flatten_json',
-        'grpcio>=1.56.2,<1.66.0',
-        'ipykernel',
-        'jupyterlab',
-        'numpy',
-        'pandas',
-        'protobuf>=4.22,<6.0.0',
-        'pyzmq<=26.2.0',
-        'requests>=2.32.0',
+        'click',
+        'psutil',
+        'pyyaml',
         'rich',
-        'scikit-learn',
-        'tensorboard',
-        'tensorboardX>=2.6',
+        'dynaconf',
         'tqdm',
+        'numpy',
+        'requests',
+        'cloudpickle',
+        'cryptography',
+        'pandas',
+        'scikit-learn',
+        'flatten_json',
+        'tensorboardX',
+        'protobuf>=4.22,<6.0.0',
+        'grpcio>=1.56.2,<1.66.0',
     ],
-    setup_requires=['grpcio-tools>=1.56.2,<1.66.0'],
     python_requires='>=3.8, <3.12',
     project_urls={
         'Bug Tracker': 'https://github.com/securefederatedai/openfl/issues',
@@ -176,31 +95,20 @@ setup(
     },
     classifiers=[
         'Environment :: Console',
-        # How mature is this project? Common values are
-        #   3 - Alpha, 4 - Beta, 5 - Production/Stable
         'Development Status :: 5 - Production/Stable',
-        # Indicate who your project is intended for
-        'Intended Audience :: Developers',
+        'Intended Audience :: Science/Research',
         'Topic :: Scientific/Engineering :: Artificial Intelligence',
-        'Topic :: Scientific/Engineering :: Image Recognition',
         'Topic :: System :: Distributed Computing',
-        # Pick your license as you wish
         'License :: OSI Approved :: Apache Software License',
-        # Specify the Python versions you support here. In particular, ensure
-        # that you indicate whether you support Python 2, Python 3 or both.
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',
         'Programming Language :: Python :: 3.10',
         'Programming Language :: Python :: 3.11',
-
     ],
-    entry_points={
-        'console_scripts': ['fx=openfl.interface.cli:entry']
-    },
+    entry_points={'console_scripts': ['fx=openfl.interface.cli:entry']},
     cmdclass={
         'build_py': BuildPyGRPC,
         'build_grpc': BuildPackageProtos,
-        'develop': DevelopGRPC
     },
 )
