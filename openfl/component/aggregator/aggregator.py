@@ -4,9 +4,9 @@
 
 """Aggregator module."""
 
+import logging
 import queue
 import time
-from logging import getLogger
 from threading import Lock
 
 from openfl.component.straggler_handling_functions import CutoffTimeBasedStragglerHandling
@@ -17,6 +17,7 @@ from openfl.protocols import base_pb2, utils
 from openfl.utilities import TaskResultKey, TensorKey, change_tags
 from openfl.utilities.logs import get_memory_usage, write_metric
 
+logger = logging.getLogger(__name__)
 
 class Aggregator:
     """An Aggregator is the central node in federated learning.
@@ -142,8 +143,6 @@ class Aggregator:
         # if it is set to 1 for the aggregator.
         self.db_store_rounds = db_store_rounds
 
-        # Gathered together logging-related objects
-        self.logger = getLogger(__name__)
         self.write_logs = write_logs
         self.log_metric_callback = log_metric_callback
 
@@ -151,7 +150,7 @@ class Aggregator:
             self.log_metric = write_metric
             if self.log_metric_callback:
                 self.log_metric = log_metric_callback
-                self.logger.info("Using custom log metric: %s", self.log_metric)
+                logger.info("Using custom log metric: %s", self.log_metric)
 
         self.best_model_score = None
         self.metric_queue = queue.Queue()
@@ -207,7 +206,7 @@ class Aggregator:
         )
 
         if round_number > self.round_number:
-            self.logger.info(
+            logger.info(
                 f"Starting training from round {round_number} of previously saved model"
             )
             self.round_number = round_number
@@ -217,7 +216,7 @@ class Aggregator:
         }
         # all initial model tensors are loaded here
         self.tensor_db.cache_tensor(tensor_key_dict)
-        self.logger.debug("This is the initial tensor_db: %s", self.tensor_db)
+        logger.debug("This is the initial tensor_db: %s", self.tensor_db)
 
     def _load_initial_tensors_from_dict(self, tensor_dict):
         """Load all of the tensors required to begin federated learning.
@@ -234,7 +233,7 @@ class Aggregator:
         }
         # all initial model tensors are loaded here
         self.tensor_db.cache_tensor(tensor_key_dict)
-        self.logger.debug("This is the initial tensor_db: %s", self.tensor_db)
+        logger.debug("This is the initial tensor_db: %s", self.tensor_db)
 
     def _save_model(self, round_number, file_path):
         """Save the best or latest model.
@@ -259,7 +258,7 @@ class Aggregator:
             tk_name, _, _, _, _ = tk
             tensor_dict[tk_name] = self.tensor_db.get_tensor_from_cache(tk)
             if tensor_dict[tk_name] is None:
-                self.logger.info(
+                logger.info(
                     "Cannot save model for round %s. Continuing...",
                     round_number,
                 )
@@ -343,13 +342,13 @@ class Aggregator:
             sleep_time (int): Sleep time.
             time_to_quit (bool): Whether it's time to quit.
         """
-        self.logger.debug(
+        logger.debug(
             f"Aggregator GetTasks function reached from collaborator {collaborator_name}..."
         )
 
         # first, if it is time to quit, inform the collaborator
         if self._time_to_quit():
-            self.logger.info(
+            logger.info(
                 "Sending signal to collaborator %s to shutdown...",
                 collaborator_name,
             )
@@ -402,7 +401,7 @@ class Aggregator:
 
             return tasks, self.round_number, sleep_time, time_to_quit
 
-        self.logger.info(
+        logger.info(
             f"Sending tasks to collaborator {collaborator_name} for round {self.round_number}"
         )
         sleep_time = 0
@@ -421,7 +420,7 @@ class Aggregator:
         Returns:
             None
         """
-        self.logger.warning(
+        logger.warning(
             f"Round number: {self.round_number} cutoff timer elapsed after "
             f"{self.straggler_handling_policy.straggler_cutoff_time}s. "
             f"Applying {self.straggler_handling_policy.__class__.__name__} policy."
@@ -460,7 +459,7 @@ class Aggregator:
         Raises:
             ValueError: if Aggregator does not have an aggregated tensor for {tensor_key}.
         """
-        self.logger.debug(
+        logger.debug(
             f"Retrieving aggregated tensor {tensor_name},{round_number},{tags} "
             f"for collaborator {collaborator_name}"
         )
@@ -490,7 +489,7 @@ class Aggregator:
 
         start_retrieving_time = time.time()
         while nparray is None:
-            self.logger.debug("Waiting for tensor_key %s", agg_tensor_key)
+            logger.debug("Waiting for tensor_key %s", agg_tensor_key)
             time.sleep(5)
             nparray = self.tensor_db.get_tensor_from_cache(agg_tensor_key)
             if (time.time() - start_retrieving_time) > 60:
@@ -609,20 +608,20 @@ class Aggregator:
             None
         """
         if self._time_to_quit() or collaborator_name in self.stragglers:
-            self.logger.warning(
+            logger.warning(
                 f"STRAGGLER: Collaborator {collaborator_name} is reporting results "
                 f"after task {task_name} has finished."
             )
             return
 
         if self.round_number != round_number:
-            self.logger.warning(
+            logger.warning(
                 f"Collaborator {collaborator_name} is reporting results"
                 f" for the wrong round: {round_number}. Ignoring..."
             )
             return
 
-        self.logger.info(
+        logger.info(
             f"Collaborator {collaborator_name} is sending task results "
             f"for {task_name}, round {round_number}"
         )
@@ -631,7 +630,7 @@ class Aggregator:
 
         # we mustn't have results already
         if self._collaborator_task_completed(collaborator_name, task_name, round_number):
-            self.logger.warning(
+            logger.warning(
                 f"Aggregator already has task results from collaborator {collaborator_name}"
                 f" for task {task_key}"
             )
@@ -663,7 +662,7 @@ class Aggregator:
                     "metric_value": float(value),
                 }
                 self.metric_queue.put(metrics)
-                self.logger.metric("%s", str(metrics))
+                logger.metric("%s", str(metrics))
                 if self.write_logs:
                     self.log_metric(
                         collaborator_name,
@@ -699,7 +698,7 @@ class Aggregator:
                 if collab_name not in self.collaborators_done
             ]
             if len(self.stragglers) != 0:
-                self.logger.warning(f"Identified stragglers: {self.stragglers}")
+                logger.warning(f"Identified stragglers: {self.stragglers}")
             self._end_of_round_check()
 
     def _process_named_tensor(self, named_tensor, collaborator_name):
@@ -788,7 +787,7 @@ class Aggregator:
 
         assert final_nparray is not None, f"Could not create tensorkey {final_tensor_key}"
         self.tensor_db.cache_tensor({final_tensor_key: final_nparray})
-        self.logger.debug("Created TensorKey: %s", final_tensor_key)
+        logger.debug("Created TensorKey: %s", final_tensor_key)
 
         return final_tensor_key, final_nparray
 
@@ -846,7 +845,7 @@ class Aggregator:
 
         # Apply delta (unless delta couldn't be created)
         if base_model_nparray is not None and self.use_delta_updates:
-            self.logger.debug("Applying delta for layer %s", decompressed_delta_tk[0])
+            logger.debug("Applying delta for layer %s", decompressed_delta_tk[0])
             new_model_tk, new_model_nparray = self.tensor_codec.apply_delta(
                 decompressed_delta_tk,
                 decompressed_delta_nparray,
@@ -945,7 +944,7 @@ class Aggregator:
                 }
 
                 self.metric_queue.put(metrics)
-                self.logger.metric("%s", metrics)
+                logger.metric("%s", metrics)
                 if self.write_logs:
                     self.log_metric(
                         "aggregator",
@@ -959,7 +958,7 @@ class Aggregator:
                 if "validate_agg" in tags:
                     # Compare the accuracy of the model, potentially save it
                     if self.best_model_score is None or self.best_model_score < agg_results:
-                        self.logger.metric(
+                        logger.metric(
                             f"Round {round_number}: saved the best "
                             f"model with score {agg_results:f}"
                         )
@@ -1000,7 +999,7 @@ class Aggregator:
         self._end_of_round_check_done[self.round_number] = True
 
         # Save the latest model
-        self.logger.info("Saving round %s model...", self.round_number)
+        logger.info("Saving round %s model...", self.round_number)
         self._save_model(self.round_number, self.last_state_path)
 
         self.round_number += 1
@@ -1012,10 +1011,10 @@ class Aggregator:
         # TODO This needs to be fixed!
         if self._time_to_quit():
             if self.log_memory_usage:
-                self.logger.info(f"Publish memory usage: {self.memory_details}")
-            self.logger.info("Experiment Completed. Cleaning up...")
+                logger.info(f"Publish memory usage: {self.memory_details}")
+            logger.info("Experiment Completed. Cleaning up...")
         else:
-            self.logger.info("Starting round %s...", self.round_number)
+            logger.info("Starting round %s...", self.round_number)
 
         # Cleaning tensor db
         self.tensor_db.clean_up(self.db_store_rounds)
@@ -1035,7 +1034,7 @@ class Aggregator:
             None
         """
         if self.round_number != round_number:
-            self.logger.warning(
+            logger.warning(
                 f"Collaborator {collaborator_name} is reporting results"
                 f" for the wrong round: {round_number}. Ignoring..."
             )
@@ -1055,14 +1054,14 @@ class Aggregator:
         # update collaborators_done
         if all_tasks_completed:
             self.collaborators_done.append(collaborator_name)
-            self.logger.info(
+            logger.info(
                 f"Round: {self.round_number}, Collaborators that have completed all tasks: "
                 f"{self.collaborators_done}"
             )
 
     def _log_big_warning(self):
         """Warn user about single collaborator cert mode."""
-        self.logger.warning(
+        logger.warning(
             f"\n{the_dragon}\nYOU ARE RUNNING IN SINGLE COLLABORATOR CERT MODE! THIS IS"
             f" NOT PROPER PKI AND "
             f"SHOULD ONLY BE USED IN DEVELOPMENT SETTINGS!!!! YE HAVE BEEN"
@@ -1078,7 +1077,7 @@ class Aggregator:
         Returns:
             None
         """
-        self.logger.info("Force stopping the aggregator execution.")
+        logger.info("Force stopping the aggregator execution.")
         # We imitate quit_job_sent_to the failed collaborator
         # So the experiment set to a finished state
         if failed_collaborator:
@@ -1087,7 +1086,7 @@ class Aggregator:
         # This code does not actually send `quit` tasks to collaborators,
         # it just mimics it by filling arrays.
         for collaborator_name in filter(lambda c: c != failed_collaborator, self.authorized_cols):
-            self.logger.info(
+            logger.info(
                 "Sending signal to collaborator %s to shutdown...",
                 collaborator_name,
             )
