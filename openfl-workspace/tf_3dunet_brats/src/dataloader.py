@@ -24,7 +24,6 @@ class DatasetGenerator:
                  shard=0):
         """Initialize the class."""
         self.data_path = os.path.abspath(os.path.expanduser(data_path))
-        print("self.data_path: ", self.data_path)
         self.batch_size = batch_size
         self.crop_dim = [crop_dim, crop_dim, crop_dim, number_input_channels]
         self.num_input_channels = number_input_channels
