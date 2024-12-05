@@ -79,7 +79,7 @@ class Aggregator:
         write_logs=False,
         log_memory_usage=False,
         log_metric_callback=None,
-        **kwargs,
+        initial_tensor_dict=None,
     ):
         """Initializes the Aggregator.
 
@@ -108,7 +108,7 @@ class Aggregator:
                 False.
             log_metric_callback (optional): Callback for log metric. Defaults
                 to None.
-            **kwargs: Additional keyword arguments.
+            initial_tensor_dict (dict, optional): Initial tensor dictionary.
         """
         self.round_number = 0
         self.single_col_cert_common_name = single_col_cert_common_name
@@ -166,10 +166,10 @@ class Aggregator:
         self.best_tensor_dict: dict = {}
         self.last_tensor_dict: dict = {}
 
-        if kwargs.get("initial_tensor_dict", None) is not None:
-            self._load_initial_tensors_from_dict(kwargs["initial_tensor_dict"])
+        if initial_tensor_dict is not None:
+            self._load_initial_tensors_from_dict(initial_tensor_dict)
             self.model = utils.construct_model_proto(
-                tensor_dict=kwargs["initial_tensor_dict"],
+                tensor_dict=initial_tensor_dict,
                 round_number=0,
                 tensor_pipe=self.compression_pipeline,
             )
