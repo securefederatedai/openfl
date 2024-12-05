@@ -31,6 +31,11 @@ jobs:
         fx workspace create --prefix example_workspace --template keras_cnn_mnist
         cd example_workspace
         fx plan initialize -a localhost
+        
+        # Disable tensorboard logging as multiprocessing is not supported in Gramine
+        # https://github.com/gramineproject/examples/issues/33
+        sed -i 's/write_logs: true/write_logs: false/g' plan/plan.yaml
+
         fx workspace dockerize --save --revision https://github.com/${GITHUB_REPOSITORY}.git@${{ github.event.pull_request.head.sha }}
 
     - name: Create certificate authority for workspace
