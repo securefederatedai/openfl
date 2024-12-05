@@ -31,9 +31,12 @@ class AggregatorGRPCServer(aggregator_pb2_grpc.AggregatorServicer):
         use_tls (bool): Whether to use TLS for the connection.
         require_client_auth (bool): Whether to enable client-side authentication, i.e. mTLS.
             Ignored if `use_tls=False`.
-        root_certificate (str): The path to the root certificate for the TLS connection, ignored if `use_tls=False`.
-        certificate (str): The path to the client's certificate for the TLS connection, ignored if `use_tls=False`.
-        private_key (str): The path to the client's private key for the TLS connection, ignored if `use_tls=False`.
+        root_certificate (str): The path to the root certificate for the TLS connection, ignored if
+            `use_tls=False`.
+        certificate (str): The path to the client's certificate for the TLS connection, ignored if
+            `use_tls=False`.
+        private_key (str): The path to the client's private key for the TLS connection, ignored if
+            `use_tls=False`.
         server (grpc.Server): The gRPC server.
         server_credentials (grpc.ServerCredentials): The server's credentials.
     """

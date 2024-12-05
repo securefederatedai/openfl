@@ -3,6 +3,7 @@
 
 
 """Workspace Builder module."""
+
 import ast
 import importlib
 import inspect
@@ -175,7 +176,7 @@ class WorkspaceExport:
 
         return None, None
 
-    def __extract_class_initializing_args(self, class_name):
+    def __extract_class_initializing_args(self, class_name):  # noqa: C901
         """Provided name of the class returns expected arguments and it's
         values in form of dictionary."""
         instantiation_args = {"args": {}, "kwargs": {}}
@@ -294,9 +295,7 @@ class WorkspaceExport:
         """
         Generates plan.yaml
         """
-        flspec = getattr(
-            importlib.import_module("openfl.experimental.workflow.interface"), "FLSpec"
-        )
+        flspec = importlib.import_module("openfl.experimental.workflow.interface").FLSpec
         # Get flow classname
         _, self.flow_class_name = self.__get_class_name_and_sourcecode_from_parent_class(flspec)
         # Get expected arguments of flow class
@@ -335,7 +334,7 @@ class WorkspaceExport:
 
         self.__write_yaml(plan, data)
 
-    def generate_data_yaml(self):
+    def generate_data_yaml(self):  # noqa: C901
         """Generates data.yaml."""
         # Import python script if not already
         if not hasattr(self, "exported_script_module"):
@@ -343,10 +342,7 @@ class WorkspaceExport:
 
         # If flow classname is not yet found
         if not hasattr(self, "flow_class_name"):
-            flspec = getattr(
-                importlib.import_module("openfl.experimental.workflow.interface"),
-                "FLSpec",
-            )
+            flspec = importlib.import_module("openfl.experimental.workflow.interface").FLSpec
             _, self.flow_class_name = self.__get_class_name_and_sourcecode_from_parent_class(flspec)
 
         # Import flow class

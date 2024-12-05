@@ -48,7 +48,8 @@ class XGBoostTaskRunner(TaskRunner):
 
         Attributes:
             global_model (xgb.Booster): The global XGBoost model.
-            required_tensorkeys_for_function (dict): A dictionary to store required tensor keys for each function.
+            required_tensorkeys_for_function (dict): A dictionary to store required tensor keys
+                for each function.
         """
         super().__init__(**kwargs)
         self.global_model = None
@@ -58,11 +59,13 @@ class XGBoostTaskRunner(TaskRunner):
         """
         Rebuilds the model using the provided input tensor dictionary.
 
-        This method checks if the 'local_tree' key in the input tensor dictionary is either a non-empty numpy array
-        If this condition is met, it updates the internal tensor dictionary with the provided input.
+        This method checks if the 'local_tree' key in the input tensor dictionary is either a
+        non-empty numpy array. If this condition is met, it updates the internal tensor dictionary
+        with the provided input.
 
         Parameters:
-        input_tensor_dict (dict): A dictionary containing tensor data. It must include the key 'local_tree'
+            input_tensor_dict (dict): A dictionary containing tensor data.
+            It must include the key 'local_tree'
 
         Returns:
         None
@@ -90,11 +93,13 @@ class XGBoostTaskRunner(TaskRunner):
         """
         data = self.data_loader.get_valid_dmatrix()
 
-        # during agg validation, self.bst will still be None. during local validation, it will have a value - no need to rebuild
+        # during agg validation, self.bst will still be None. during local validation,
+        # it will have a value - no need to rebuild
         if self.bst is None:
             self.rebuild_model(input_tensor_dict)
 
-        # if self.bst is still None after rebuilding, then there was no initial global model, so set metric to 0
+        # if self.bst is still None after rebuilding, then there was no initial global model, so
+        # set metric to 0
         if self.bst is None:
             # for first round agg validation, there is no model so set metric to 0
             # TODO: this is not robust, especially if using a loss metric
@@ -188,16 +193,18 @@ class XGBoostTaskRunner(TaskRunner):
         """
         Retrieves the tensor dictionary containing the model's tree structure.
 
-        This method returns a dictionary with the key 'local_tree', which contains the model's tree structure as a numpy array.
-        If the model has not been initialized (`self.bst` is None), it returns an empty numpy array.
-        If the global model is not set or is empty, it returns the entire model as a numpy array.
-        Otherwise, it returns only the trees added in the latest training session.
+        This method returns a dictionary with the key 'local_tree', which contains the model's tree
+        structure as a numpy array. If the model has not been initialized (`self.bst` is None), it
+        returns an empty numpy array. If the global model is not set or is empty, it returns the
+        entire model as a numpy array. Otherwise, it returns only the trees added in the latest
+        training session.
 
         Parameters:
         with_opt_vars (bool): N/A for XGBoost (Default=False).
 
         Returns:
-        dict: A dictionary with the key 'local_tree' containing the model's tree structure as a numpy array.
+            dict: A dictionary with the key 'local_tree' containing the model's tree structure as a
+            numpy array.
         """
 
         if self.bst is None:
@@ -377,7 +384,8 @@ class XGBoostTaskRunner(TaskRunner):
         Validate the XGBoost model.
 
         Args:
-            validation_dataloader (dict): A dictionary containing the validation data with keys 'dmatrix' and 'labels'.
+            validation_dataloader (dict): A dictionary containing the validation data with keys
+            'dmatrix' and 'labels'.
 
         Returns:
             Metric: A Metric object containing the validation accuracy.

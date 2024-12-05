@@ -3,6 +3,7 @@
 
 
 """Aggregator module."""
+
 import queue
 import time
 from logging import getLogger
@@ -663,6 +664,14 @@ class Aggregator:
                 }
                 self.metric_queue.put(metrics)
                 self.logger.metric("%s", str(metrics))
+                if self.write_logs:
+                    self.log_metric(
+                        collaborator_name,
+                        task_name,
+                        tensor_key.tensor_name,
+                        float(value),
+                        round_number,
+                    )
 
             task_results.append(tensor_key)
 
@@ -937,6 +946,14 @@ class Aggregator:
 
                 self.metric_queue.put(metrics)
                 self.logger.metric("%s", metrics)
+                if self.write_logs:
+                    self.log_metric(
+                        "aggregator",
+                        task_name,
+                        tensor_key.tensor_name,
+                        float(agg_results),
+                        round_number,
+                    )
 
                 # FIXME: Configurable logic for min/max criteria in saving best.
                 if "validate_agg" in tags:

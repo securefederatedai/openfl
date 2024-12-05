@@ -3,6 +3,7 @@
 
 
 """Percentage based Straggler Handling function."""
+
 from logging import getLogger
 
 from openfl.component.straggler_handling_functions.straggler_handling_function import (

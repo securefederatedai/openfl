@@ -3,6 +3,7 @@
 
 
 """Aggregator module."""
+
 import sys
 from logging import getLogger
 from pathlib import Path

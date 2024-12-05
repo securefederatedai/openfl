@@ -3,6 +3,7 @@
 
 
 """Base abstract optimizer class module."""
+
 import abc
 from importlib import import_module
 from os.path import splitext

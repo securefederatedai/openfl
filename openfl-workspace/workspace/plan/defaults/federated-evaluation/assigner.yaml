@@ -1,0 +1,7 @@
+template : openfl.component.RandomGroupedAssigner
+settings :
+  task_groups  :
+    - name       : validate
+      percentage : 1.0
+      tasks      :
+        - aggregated_model_validation

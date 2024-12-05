@@ -3,6 +3,7 @@
 
 
 """Tutorial module."""
+
 from logging import getLogger
 from os import environ, sep
 from subprocess import check_call  # nosec

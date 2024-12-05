@@ -1,0 +1,7 @@
+template : openfl.component.Aggregator
+settings :
+    db_store_rounds : 2
+    write_logs      : true
+    ######### Default rounds to 1 for evaluation #############
+    rounds_to_train     : 1
+    ##########################################################

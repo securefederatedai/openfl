@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 """Workspace utils module."""
+
 import logging
 import os
 import shutil
