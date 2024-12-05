@@ -7,13 +7,13 @@
 from enum import Enum
 from logging import getLogger
 from time import sleep
-from typing import Tuple
+from typing import List, Optional, Tuple
 
+import openfl.callbacks as callbacks_module
 from openfl.databases import TensorDB
 from openfl.pipelines import NoCompressionPipeline, TensorCodec
 from openfl.protocols import utils
 from openfl.utilities import TensorKey
-from openfl.utilities.logs import get_memory_usage
 
 
 class DevicePolicy(Enum):
@@ -81,8 +81,7 @@ class Collaborator:
         delta_updates=False,
         compression_pipeline=None,
         db_store_rounds=1,
-        log_memory_usage=False,
-        **kwargs,
+        callbacks: Optional[List] = None,
     ):
         """Initialize the Collaborator object.
 
@@ -104,7 +103,7 @@ class Collaborator:
                 Defaults to None.
             db_store_rounds (int, optional): The number of rounds to store in
                 the database. Defaults to 1.
-            **kwargs: Variable length argument list.
+            callbacks (list, optional): List of callbacks. Defaults to None.
         """
         self.single_col_cert_common_name = None
 
@@ -125,8 +124,7 @@ class Collaborator:
         self.delta_updates = delta_updates
 
         self.client = client
-        # Flag can be enabled to get memory usage details for ubuntu system
-        self.log_memory_usage = log_memory_usage
+
         self.task_config = task_config
 
         self.logger = getLogger(__name__)
@@ -150,6 +148,10 @@ class Collaborator:
 
         self.task_runner.set_optimizer_treatment(self.opt_treatment.name)
 
+        # Callbacks
+        if not isinstance(callbacks, callbacks_module.CallbackList):
+            self.callbacks = callbacks_module.CallbackList(callbacks)
+
     def set_available_devices(self, cuda: Tuple[str] = ()):
         """Set available CUDA devices.
 
@@ -161,30 +163,38 @@ class Collaborator:
 
     def run(self):
         """Run the collaborator."""
-        memory_details = []
+        # Experiment begin
+        self.callbacks.on_experiment_begin()
+
         while True:
-            tasks, round_number, sleep_time, time_to_quit = self.get_tasks()
+            tasks, round_num, sleep_time, time_to_quit = self.get_tasks()
+
             if time_to_quit:
                 break
-            elif sleep_time > 0:
-                sleep(sleep_time)  # some sleep function
-            else:
-                self.logger.info("Received the following tasks: %s", tasks)
-                for task in tasks:
-                    self.do_task(task, round_number)
 
-                # Cleaning tensor db
-                self.tensor_db.clean_up(self.db_store_rounds)
-                if self.log_memory_usage:
-                    # This is the place to check the memory usage of the collaborator
-                    memory_detail = get_memory_usage()
-                    memory_detail["round_number"] = round_number
-                    memory_detail["metric_origin"] = self.collaborator_name
-                    memory_details.append(memory_detail)
-        if self.log_memory_usage:
-            self.logger.info(f"Publish memory usage: {memory_details}")
+            if not tasks:
+                sleep(sleep_time)
+                continue
 
-        self.logger.info("End of Federation reached. Exiting...")
+            # Round begin
+            self.logger.info("Received Tasks: %s", tasks)
+            self.callbacks.on_round_begin(round_num)
+
+            # Run tasks
+            for task in tasks:
+                self.callbacks.on_task_begin(task)
+
+                self.do_task(task, round_num)
+
+                self.callbacks.on_task_end(task)
+
+            # Round end
+            self.tensor_db.clean_up(self.db_store_rounds)
+            self.callbacks.on_round_end(round_num)
+
+        # Experiment end
+        self.callbacks.on_experiment_end()
+        self.logger.info("Received shutdown signal. Exiting...")
 
     def run_simulation(self):
         """Specific function for the simulation.

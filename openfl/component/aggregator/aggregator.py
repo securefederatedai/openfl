@@ -8,16 +8,18 @@ import logging
 import queue
 import time
 from threading import Lock
+from typing import List, Optional
 
+import openfl.callbacks as callbacks_module
 from openfl.component.straggler_handling_functions import CutoffTimeBasedStragglerHandling
 from openfl.databases import TensorDB
 from openfl.interface.aggregation_functions import WeightedAverage
 from openfl.pipelines import NoCompressionPipeline, TensorCodec
 from openfl.protocols import base_pb2, utils
 from openfl.utilities import TaskResultKey, TensorKey, change_tags
-from openfl.utilities.logs import get_memory_usage, write_metric
 
 logger = logging.getLogger(__name__)
+
 
 class Aggregator:
     """An Aggregator is the central node in federated learning.
@@ -77,10 +79,8 @@ class Aggregator:
         single_col_cert_common_name=None,
         compression_pipeline=None,
         db_store_rounds=1,
-        write_logs=False,
-        log_memory_usage=False,
-        log_metric_callback=None,
         initial_tensor_dict=None,
+        callbacks: Optional[List] = None,
     ):
         """Initializes the Aggregator.
 
@@ -105,11 +105,8 @@ class Aggregator:
                 NoCompressionPipeline.
             db_store_rounds (int, optional): Rounds to store in TensorDB.
                 Defaults to 1.
-            write_logs (bool, optional): Whether to write logs. Defaults to
-                False.
-            log_metric_callback (optional): Callback for log metric. Defaults
-                to None.
             initial_tensor_dict (dict, optional): Initial tensor dictionary.
+            callbacks: List of callbacks to be used during the experiment.
         """
         self.round_number = 0
         self.single_col_cert_common_name = single_col_cert_common_name
@@ -126,9 +123,7 @@ class Aggregator:
         )
         self._end_of_round_check_done = [False] * rounds_to_train
         self.stragglers = []
-        # Flag can be enabled to get memory usage details for ubuntu system
-        self.log_memory_usage = log_memory_usage
-        self.memory_details = []
+
         self.rounds_to_train = rounds_to_train
 
         # if the collaborator requests a delta, this value is set to true
@@ -142,15 +137,6 @@ class Aggregator:
         # FIXME: I think next line generates an error on the second round
         # if it is set to 1 for the aggregator.
         self.db_store_rounds = db_store_rounds
-
-        self.write_logs = write_logs
-        self.log_metric_callback = log_metric_callback
-
-        if self.write_logs:
-            self.log_metric = write_metric
-            if self.log_metric_callback:
-                self.log_metric = log_metric_callback
-                logger.info("Using custom log metric: %s", self.log_metric)
 
         self.best_model_score = None
         self.metric_queue = queue.Queue()
@@ -192,6 +178,10 @@ class Aggregator:
 
         self.use_delta_updates = use_delta_updates
 
+        # Callbacks
+        if not isinstance(callbacks, callbacks_module.CallbackList):
+            self.callbacks = callbacks_module.CallbackList(callbacks, model=self.model)
+
     def _load_initial_tensors(self):
         """Load all of the tensors required to begin federated learning.
 
@@ -206,9 +196,7 @@ class Aggregator:
         )
 
         if round_number > self.round_number:
-            logger.info(
-                f"Starting training from round {round_number} of previously saved model"
-            )
+            logger.info(f"Starting training from round {round_number} of previously saved model")
             self.round_number = round_number
         tensor_key_dict = {
             TensorKey(k, self.uuid, self.round_number, False, ("model",)): v
@@ -662,15 +650,6 @@ class Aggregator:
                     "metric_value": float(value),
                 }
                 self.metric_queue.put(metrics)
-                logger.metric("%s", str(metrics))
-                if self.write_logs:
-                    self.log_metric(
-                        collaborator_name,
-                        task_name,
-                        tensor_key.tensor_name,
-                        float(value),
-                        round_number,
-                    )
 
             task_results.append(tensor_key)
 
@@ -944,21 +923,12 @@ class Aggregator:
                 }
 
                 self.metric_queue.put(metrics)
-                logger.metric("%s", metrics)
-                if self.write_logs:
-                    self.log_metric(
-                        "aggregator",
-                        task_name,
-                        tensor_key.tensor_name,
-                        float(agg_results),
-                        round_number,
-                    )
 
                 # FIXME: Configurable logic for min/max criteria in saving best.
                 if "validate_agg" in tags:
                     # Compare the accuracy of the model, potentially save it
                     if self.best_model_score is None or self.best_model_score < agg_results:
-                        logger.metric(
+                        logger.info(
                             f"Round {round_number}: saved the best "
                             f"model with score {agg_results:f}"
                         )
@@ -988,12 +958,8 @@ class Aggregator:
         for task_name in all_tasks:
             self._compute_validation_related_task_metrics(task_name)
 
-        if self.log_memory_usage:
-            # This is the place to check the memory usage of the aggregator
-            memory_detail = get_memory_usage()
-            memory_detail["round_number"] = self.round_number
-            memory_detail["metric_origin"] = "aggregator"
-            self.memory_details.append(memory_detail)
+        # End of round callbacks.
+        self.callbacks.on_round_end(self.round_number)
 
         # Once all of the task results have been processed
         self._end_of_round_check_done[self.round_number] = True
@@ -1010,8 +976,6 @@ class Aggregator:
 
         # TODO This needs to be fixed!
         if self._time_to_quit():
-            if self.log_memory_usage:
-                logger.info(f"Publish memory usage: {self.memory_details}")
             logger.info("Experiment Completed. Cleaning up...")
         else:
             logger.info("Starting round %s...", self.round_number)
