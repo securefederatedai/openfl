@@ -11,13 +11,14 @@ import logging
 from tests.end_to_end.utils.logger import configure_logging
 from tests.end_to_end.utils.logger import logger as log
 from tests.end_to_end.utils.conftest_helper import parse_arguments
+import tests.end_to_end.utils.federation_helper as fh
 import tests.end_to_end.utils.constants as constants
-import tests.end_to_end.models.participants as participants
+from tests.end_to_end.models import aggregator as agg_model, collaborator as col_model, model_owner as mo_model
 
 # Define a named tuple to store the objects for model owner, aggregator, and collaborators
 federation_fixture = collections.namedtuple(
     "federation_fixture",
-    "model_owner, aggregator, collaborators, model_name, require_client_auth, use_tls, workspace_path, results_dir, num_rounds",
+    "model_owner, aggregator, collaborators, workspace_path",
 )
 
 def pytest_addoption(parser):
@@ -34,6 +35,24 @@ def pytest_addoption(parser):
     parser.addoption("--disable_client_auth", action="store_true")
     parser.addoption("--disable_tls", action="store_true")
     parser.addoption("--log_memory_usage", action="store_true")
+
+
+def pytest_configure(config):
+    """
+    Configure the pytest plugin.
+    Args:
+        config: pytest config object
+    """
+    # Declare some global variables
+    args = parse_arguments()
+    # Use the model name from the test case name if not provided as a command line argument
+    config.model_name = args.model_name
+    config.num_collaborators = args.num_collaborators
+    config.num_rounds = args.num_rounds
+    config.require_client_auth = not args.disable_client_auth
+    config.use_tls = not args.disable_tls
+    config.log_memory_usage = args.log_memory_usage
+    config.results_dir = config.getini("results_dir")
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -181,7 +200,7 @@ def pytest_sessionfinish(session, exitstatus):
 
 
 @pytest.fixture(scope="function")
-def fx_federation(request, pytestconfig):
+def fx_federation(request):
     """
     Fixture for federation. This fixture is used to create the model owner, aggregator, and collaborators.
     It also creates workspace.
@@ -195,59 +214,45 @@ def fx_federation(request, pytestconfig):
     Note: As this is a function level fixture, thus no import is required at test level.
     """
     collaborators = []
-    agg_domain_name = "localhost"
-
-    # Parse the command line arguments
-    args = parse_arguments()
-    # Use the model name from the test case name if not provided as a command line argument
-    model_name = args.model_name if args.model_name else request.node.name.split("test_")[1]
-    results_dir = pytestconfig.getini("results_dir")
-    num_collaborators = args.num_collaborators
-    num_rounds = args.num_rounds
-    require_client_auth = not args.disable_client_auth
-    use_tls = not args.disable_tls
-    log_memory_usage = args.log_memory_usage
-
-    log.info(
-        f"Running federation setup using Task Runner API on single machine with below configurations:\n"
-        f"\tNumber of collaborators: {num_collaborators}\n"
-        f"\tNumber of rounds: {num_rounds}\n"
-        f"\tModel name: {model_name}\n"
-        f"\tClient authentication: {require_client_auth}\n"
-        f"\tTLS: {use_tls}\n"
-        f"\tMemory Logs: {log_memory_usage}"
-    )
-
-    # Validate the model name and create the workspace name
-    if not model_name.upper() in constants.ModelName._member_names_:
-        raise ValueError(f"Invalid model name: {model_name}")
-
-    workspace_name = f"workspace_{model_name}"
+    test_env, model_name, workspace_path, col_workspace_path, agg_domain_name = fh.federation_env_setup_and_validate(request)
 
     # Create model owner object and the workspace for the model
-    model_owner = participants.ModelOwner(workspace_name, model_name, log_memory_usage)
+    # Workspace name will be same as the model name
+    model_owner = mo_model.ModelOwner(model_name, request.config.log_memory_usage, workspace_path=workspace_path)
+
+    # Create workspace for given model name
     try:
-        workspace_path = model_owner.create_workspace(results_dir=results_dir)
+        fh.create_persistent_store(model_owner, results_dir=request.config.results_dir, workspace_template=model_name)
+        if test_env == "docker":
+            # Create docker network openfl
+            # Create persistent store
+            # Start the aggregator container and set its container_id in model_owner
+            model_owner.setup_agg_docker_env(results_dir=request.config.results_dir, workspace_template=model_name)
+
+        model_owner.create_workspace(os.path.join(request.config.results_dir, model_name))
     except Exception as e:
         log.error(f"Failed to create the workspace: {e}")
         raise e
 
+    # Workspace zip file name to be exported later
+    workspace_zip = os.path.join(workspace_path, "workspace.zip")
+
     # Modify the plan
     try:
         model_owner.modify_plan(
-            new_rounds=num_rounds,
-            num_collaborators=num_collaborators,
-            require_client_auth=require_client_auth,
-            use_tls=use_tls,
+            new_rounds=request.config.num_rounds,
+            num_collaborators=request.config.num_collaborators,
+            disable_client_auth=not request.config.require_client_auth,
+            disable_tls=not request.config.use_tls,
         )
     except Exception as e:
         log.error(f"Failed to modify the plan: {e}")
         raise e
 
-    if not use_tls:
+    if not request.config.use_tls:
         log.info("Disabling TLS for communication")
         try:
-            model_owner.register_collaborators(num_collaborators)
+            model_owner.register_collaborators(request.config.num_collaborators)
         except Exception as e:
             log.error(f"Failed to register the collaborators: {e}")
             raise e
@@ -267,16 +272,35 @@ def fx_federation(request, pytestconfig):
         raise e
 
     # Create the objects for aggregator and collaborators
-    aggregator = participants.Aggregator(
-        agg_domain_name=agg_domain_name, workspace_path=workspace_path
+    # Workspace path for aggregator is uniform in case of docker or task_runner
+    # But, for collaborators, it is different
+    aggregator = agg_model.Aggregator(
+        agg_domain_name=agg_domain_name,
+        workspace_path=workspace_path,
+        container_id=model_owner.container_id, # None in case of non-docker environment
     )
 
-    for i in range(num_collaborators):
-        collaborator = participants.Collaborator(
+    # Generate the certs
+    aggregator.generate_sign_request()
+
+    # Certify the aggregator
+    model_owner.certify_aggregator(agg_domain_name)
+
+    # Export the workspace
+    # By default the workspace will be exported to workspace.zip
+    model_owner.export_workspace()
+
+    for i in range(request.config.num_collaborators):
+        collaborator = col_model.Collaborator(
             collaborator_name=f"collaborator{i+1}",
             data_directory_path=i + 1,
-            workspace_path=workspace_path,
+            workspace_path=f"{col_workspace_path}/collaborator{i+1}/workspace",
         )
+        fh.create_persistent_store(collaborator, results_dir=request.config.results_dir, workspace_template=model_name)
+
+        if test_env == "docker":
+            collaborator.setup_col_docker_env(results_dir=request.config.results_dir, workspace_template=model_name)
+        collaborator.import_workspace(workspace_zip)
         collaborator.create_collaborator()
         collaborators.append(collaborator)
 
@@ -285,10 +309,5 @@ def fx_federation(request, pytestconfig):
         model_owner=model_owner,
         aggregator=aggregator,
         collaborators=collaborators,
-        model_name=model_name,
-        require_client_auth=require_client_auth,
-        use_tls=use_tls,
         workspace_path=workspace_path,
-        results_dir=results_dir,
-        num_rounds=num_rounds,
     )

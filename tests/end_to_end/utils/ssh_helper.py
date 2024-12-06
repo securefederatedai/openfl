@@ -5,8 +5,12 @@ import subprocess
 import time
 import traceback
 import logging
+import paramiko
 
 log = logging.getLogger(__name__)
+
+# Suppress paramiko logging
+logging.getLogger('paramiko').setLevel(logging.CRITICAL+1)
 
 
 def run_command_background(
