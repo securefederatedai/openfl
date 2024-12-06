@@ -33,6 +33,9 @@ def test_log_memory_usage(request, fx_federation):
     aggregator_log_file = os.path.join(fx_federation.workspace_path, "aggregator.log")
 
     memory_usage_dict = fed_helper.extract_memory_usage(aggregator_log_file)
+    # Write memory usage details to a file in workspace
+    fed_helper.write_memory_usage_to_file(memory_usage_dict, os.path.join(fx_federation.workspace_path,
+                                                                          "aggregator_memory_usage.log"))
     # check memory usage entries for each round
     assert len(memory_usage_dict) == request.config.num_rounds, \
                 "Memory usage details are not available for all rounds"
@@ -41,5 +44,10 @@ def test_log_memory_usage(request, fx_federation):
     for collaborator in fx_federation.collaborators:
         collaborator_log_file = os.path.join(fx_federation.workspace_path, f"{collaborator.collaborator_name}.log")
         memory_usage_dict = fed_helper.extract_memory_usage(collaborator_log_file)
+        # Write memory usage details to a file in workspace
+        fed_helper.write_memory_usage_to_file(memory_usage_dict, os.path.join(fx_federation.workspace_path,
+                                                                              f"{collaborator.collaborator_name}_memory_usage.log"))
         assert len(memory_usage_dict) == request.config.num_rounds, \
                 f"Memory usage details are not available for all rounds for collaborator {collaborator.collaborator_name}"
+
+    log.info("Memory usage details are available for all participants")

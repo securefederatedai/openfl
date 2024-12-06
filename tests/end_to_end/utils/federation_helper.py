@@ -171,3 +171,18 @@ def extract_memory_usage(log_file):
     except Exception as e:
         log.error(f"An error occurred while extracting memory usage: {e}")
         raise e
+
+def write_memory_usage_to_file(memory_usage_dict, output_file):
+    """
+    Writes memory usage data to a file.
+    This function writes the specified memory usage data to the specified output file.
+    Args:
+        memory_usage_dict (dict): A dictionary containing the memory usage data.
+        output_file (str): The path to the output file to which to write the memory usage data.
+    """
+    try:
+        with open(output_file, 'w') as file:
+            json.dump(memory_usage_dict, file, indent=4)
+    except Exception as e:
+        log.error(f"An error occurred while writing memory usage data to file: {e}")
+        raise e
