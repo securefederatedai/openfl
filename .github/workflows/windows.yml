@@ -14,6 +14,7 @@ env:
 jobs:
   pytest-coverage: # from pytest_coverage.yml
     runs-on: windows-latest
+    timeout-minutes: 15
     steps:
     - uses: actions/checkout@v3
     - name: Set up Python 3.8
@@ -34,6 +35,7 @@ jobs:
   cli: # from taskrunner.yml
     needs: [pytest-coverage]
     runs-on: windows-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v3
       - name: Set up Python 3.8
