@@ -3,10 +3,6 @@ The taskrunner workspace has the following file structure:
 ```
 taskrunner
 ├── requirements.txt      # defines the required software packages
-├── cert                  # holds trusted certificates
-├── data                  # placeholder for each collaborator’s data set
-├── save                  # holds the serialized model
-├── logs                  # FL experiment logs
 └── plan
     ├── plan.yaml         # the Federated Learning plan declaration
     ├── cols.yaml         # holds the list of authorized collaborators
@@ -50,6 +46,7 @@ The fx plan initialize command bootstraps the workspace by first setting the ini
 To help OpenFL calculate the initial model weights, we need to provide the shape of the input tensor as an additional parameter. For the MNIST data set of grayscale (single-channel) 28x28 pixel images, the input tensor shape is [1,28,28]. We will also use a locally deployed aggregator (localhost). Thus, the workspace initialization command for our local federation becomes:
 
 ```
+mkdir save
 fx plan initialize --input_shape [1,28,28] --aggregator_address localhost
 ```
 
