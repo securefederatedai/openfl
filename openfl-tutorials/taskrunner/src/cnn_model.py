@@ -36,9 +36,9 @@ class DigitRecognizerCNN(nn.Module):
             **kwargs: Additional keyword arguments to pass to the parent class initializer.
 
         Attributes:
-            conv1 (nn.Conv2d): First convolutional layer with 1 input channel, 20 output channels, 
+            conv1 (nn.Conv2d): First convolutional layer with 1 input channel, 20 output channels,
                                kernel size of 2, and stride of 1.
-            conv2 (nn.Conv2d): Second convolutional layer with 20 input channels, 50 output channels, 
+            conv2 (nn.Conv2d): Second convolutional layer with 20 input channels, 50 output channels,
                                kernel size of 5, and stride of 1.
             fc1 (nn.Linear): First fully connected layer with 800 input features and 500 output features.
             fc2 (nn.Linear): Second fully connected layer with 500 input features and 10 output features.
