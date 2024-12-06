@@ -79,7 +79,7 @@ class TemplateTaskRunner(PyTorchTaskRunner):
         # Replace the following placeholder with actual training code.
 
         loss = train_epoch(self.model, self.optimizer, self.loss_fn, train_dataloader, self.device)
-        return Metric(name="training loss", value=np.array(loss))
+        return Metric(name="crossentropy_loss", value=np.array(loss))
 
     def validate_(
         self, validation_dataloader: Iterator[Tuple[np.ndarray, np.ndarray]]
