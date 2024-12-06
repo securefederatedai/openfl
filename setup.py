@@ -77,7 +77,7 @@ setup(
         'dynaconf',
         'tqdm',
         'numpy',
-        'requests',
+        'requests>=2.32.0',
         'cloudpickle',
         'cryptography',
         'pandas',
