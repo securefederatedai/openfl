@@ -4,9 +4,17 @@
 class Callback:
     def __init__(self):
         self._model = None
+        self._tensor_db = None
 
     def set_model(self, model):
         self._model = model
+
+    def set_tensor_db(self, tensor_db):
+        self._tensor_db = tensor_db
+
+    @property
+    def tensor_db(self):
+        return self._tensor_db
 
     @property
     def model(self):
