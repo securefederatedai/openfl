@@ -16,13 +16,13 @@ class CallbackList(Callback):
         for callback in self.callbacks:
             callback.set_model(model)
 
-    def on_task_begin(self, task: str, logs=None):
+    def on_task_begin(self, task: str, round_num: int, logs=None):
         for callback in self.callbacks:
-            callback.on_task_begin(task, logs)
+            callback.on_task_begin(task, round_num, logs)
 
-    def on_task_end(self, task: str, logs=None):
+    def on_task_end(self, task: str, round_num: int, logs=None):
         for callback in self.callbacks:
-            callback.on_task_end(task, logs)
+            callback.on_task_end(task, round_num, logs)
 
     def on_round_begin(self, round_num: int, logs=None):
         for callback in self.callbacks:
