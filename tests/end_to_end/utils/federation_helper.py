@@ -117,8 +117,21 @@ def run_federation(fed_obj, results_dir, model_name):
         list: List of response files for all the participants
     """
     executor = concurrent.futures.ThreadPoolExecutor()
+    # Install dependencies on collaborators
+    # This is a time taking process, thus doing at this stage after all verification is done
+    log.info("Installing dependencies on collaborators")
+    futures = [
+        executor.submit(
+            participant.install_dependencies
+        )
+        for participant in fed_obj.collaborators
+    ]
+    results = [f.result() for f in futures]
+    log.info(f"Results from all the collaborators for installation of dependencies: {results}")
+
     # As the collaborators will wait for aggregator to start, we need to start them in parallel.
     # Result file to be created on local machine under respective participant workspace
+    # TODO - file name should be relative.
     futures = [
         executor.submit(
             participant.start,
