@@ -53,15 +53,24 @@ class DatasetGenerator:
 
         Split into training and testing sets.
         """
-        searchpath = os.path.join(self.data_path, '*/*_seg.nii.gz')
+        extension = '_seg.nii.gz'
+        flair_extension = '_flair.nii.gz'
+        searchpath = os.path.join(self.data_path, "*/*" + extension)
         filenames = tf.io.gfile.glob(searchpath)
+
+        # check for uncompressed files
+        if not filenames:
+            extension = '_seg.nii'
+            flair_extension = '_flair.nii'
+            searchpath = os.path.join(self.data_path, "*/*" + extension)
+            filenames = tf.io.gfile.glob(searchpath)
 
         # Create a dictionary of tuples with image filename and label filename
 
         self.num_files = len(filenames)
         self.filenames = {}
         for idx, filename in enumerate(filenames):
-            self.filenames[idx] = [filename.replace('_seg.nii.gz', '_flair.nii.gz'), filename]
+            self.filenames[idx] = [filename.replace(extension, flair_extension), filename]
 
     def z_normalize_img(self, img):
         """
