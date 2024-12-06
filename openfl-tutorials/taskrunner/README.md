@@ -17,10 +17,6 @@ taskrunner
 
 ## Directory Breakdown:
 * requirements.txt: This file lists all the Python dependencies required to run the TaskRunner API and its components. Ensure you install these dependencies by running pip install -r requirements.txt.
-* cert: This folder contains trusted certificates for secure communication between federated collaborators.
-* data: This is a placeholder for each collaborator’s dataset. Each collaborator should store their data in this folder for federated learning.
-* save: After training, the serialized model is stored here. This folder ensures that your model is preserved across different training sessions and collaborators.
-* logs: All logs related to Federated Learning experiments, including training progress and task execution, are stored here. Useful for debugging and monitoring.
 * plan: Contains configuration files for federated learning:
     - plan.yaml: The main Federated Learning plan declaration, defining the structure of the federated learning workflow.
     - cols.yaml: A list of authorized collaborators for the federated learning task.
