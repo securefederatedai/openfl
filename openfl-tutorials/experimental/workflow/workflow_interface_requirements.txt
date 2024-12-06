@@ -1,4 +1,3 @@
-astor==0.8.1
 chardet
 charset-normalizer
 dill==0.3.6
