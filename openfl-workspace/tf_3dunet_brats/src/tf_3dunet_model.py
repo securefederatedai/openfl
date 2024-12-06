@@ -80,7 +80,7 @@ class TensorFlow3dUNet(KerasTaskRunner):
                             initial_filters=initial_filters,
                             batch_norm=batch_norm)
 
-        self.optimizer = tf.keras.optimizers.Adam()
+        self.optimizer = tf.keras.optimizers.legacy.Adam()
 
         model.compile(
             loss=dice_loss,
@@ -193,7 +193,7 @@ if __name__ == '__main__':
                         )
 
     model.compile(loss=dice_loss,
-                  optimizer=tf.keras.optimizers.Adam(learning_rate=0.01),
+                  optimizer=tf.keras.optimizers.legacy.Adam(learning_rate=0.01),
                   metrics=[dice_coef, soft_dice_coef]
                   )
 
