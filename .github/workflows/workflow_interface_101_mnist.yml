@@ -18,6 +18,7 @@ jobs:
   run_notebook:
     if: github.event.pull_request.draft == false
     runs-on: ubuntu-22.04
+    timeout-minutes: 15
     steps:
     - name: Checkout OpenFL repository
       uses: actions/checkout@v4.1.1

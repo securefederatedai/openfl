@@ -33,7 +33,7 @@ jobs:
   test_with_tls:
     name: tr_tls
     runs-on: ubuntu-22.04
-    timeout-minutes: 120 # 2 hours
+    timeout-minutes: 15
     strategy:
       matrix:
         # There are open issues for some of the models, so excluding them for now:
@@ -100,7 +100,7 @@ jobs:
   test_with_non_tls:
     name: tr_non_tls
     runs-on: ubuntu-22.04
-    timeout-minutes: 120 # 2 hours
+    timeout-minutes: 15
     strategy:
       matrix:
         # Testing non TLS scenario only for torch_cnn_mnist model and python 3.10
@@ -167,7 +167,7 @@ jobs:
   test_with_no_client_auth:
     name: tr_no_client_auth
     runs-on: ubuntu-22.04
-    timeout-minutes: 120 # 2 hours
+    timeout-minutes: 15
     strategy:
       matrix:
         # Testing non TLS scenario only for torch_cnn_mnist model and python 3.10
