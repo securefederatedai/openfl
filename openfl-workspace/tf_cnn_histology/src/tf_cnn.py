@@ -88,7 +88,7 @@ class TensorFlowCNN(KerasTaskRunner):
 
         model = tf.keras.models.Model(inputs=[inputs], outputs=[predict])
 
-        self.optimizer = tf.keras.optimizers.Adam()
+        self.optimizer = tf.keras.optimizers.legacy.Adam()
 
         model.compile(
             loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
