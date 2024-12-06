@@ -17,7 +17,7 @@ You will start a Jupyter\* \  lab server and receive a URL you can use to access
 Start the Tutorials
 ===================
 
-1. Start a Python\* \  3.10 (>=3.10, <3.13) virtual environment and confirm |productName| is available.
+1. Start a Python\* \  3.10 (>=3.10, <3.12) virtual environment and confirm |productName| is available.
 
     .. code-block:: python
 
