@@ -76,6 +76,7 @@ def verify_federation_run_completion(fed_obj, results, num_rounds):
     Args:
         fed_obj (object): Federation fixture object
         results (list): List of results
+        num_rounds (int): Number of rounds
     Returns:
         list: List of response (True or False) for all the participants
     """
@@ -150,24 +151,23 @@ def extract_memory_usage(log_file):
         json.JSONDecodeError: If there is an error decoding the JSON data.
         Exception: If memory usage data is not found in the log file.
     """
+    try:
+        with open(log_file, 'r') as file:
+            content = file.read()
 
-    with open(log_file, 'r') as file:
-        content = file.read()
+        pattern = r"Publish memory usage: (\[.*?\])"
+        match = re.search(pattern, content, re.DOTALL)
 
-    pattern = r"Publish memory usage: (\[.*?\])"
-    match = re.search(pattern, content, re.DOTALL)
-
-    if match:
-        memory_usage_data = match.group(1)
-        memory_usage_data = re.sub(r'\S+\.py:\d+', '', memory_usage_data)
-        memory_usage_data = memory_usage_data.replace('\n', '').replace(' ', '')
-        memory_usage_data = memory_usage_data.replace("'", '"')
-        try:
+        if match:
+            memory_usage_data = match.group(1)
+            memory_usage_data = re.sub(r'\S+\.py:\d+', '', memory_usage_data)
+            memory_usage_data = memory_usage_data.replace('\n', '').replace(' ', '')
+            memory_usage_data = memory_usage_data.replace("'", '"')
             memory_usage_dict = json.loads(memory_usage_data)
             return memory_usage_dict
-        except json.JSONDecodeError as e:
-            log.error(f"Error decoding JSON: {e}")
-            raise e
-    else:
-        log.error("Memory usage data not found in the log file")
-        raise Exception("Memory usage data not found in the log file")
+        else:
+            log.error("Memory usage data not found in the log file")
+            raise Exception("Memory usage data not found in the log file")
+    except Exception as e:
+        log.error(f"An error occurred while extracting memory usage: {e}")
+        raise e

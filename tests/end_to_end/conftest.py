@@ -228,7 +228,7 @@ def fx_federation(request, pytestconfig):
     if not request.config.model_name.upper() in constants.ModelName._member_names_:
         raise ValueError(f"Invalid model name: {request.config.model_name}")
 
-    workspace_name = f"workspace_{request.config.model_name}"
+    workspace_name = request.config.model_name
 
     # Create model owner object and the workspace for the model
     model_owner = participants.ModelOwner(workspace_name, request.config.model_name, request.config.log_memory_usage)
