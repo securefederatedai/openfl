@@ -14,6 +14,7 @@ jobs:
   build:
     if: (github.event.pull_request.draft == false && contains(github.event.pull_request.labels.*.name, 'workflow_interface'))
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     steps:
     - uses: actions/checkout@v3
