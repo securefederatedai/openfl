@@ -46,8 +46,6 @@ Read the [blog post](https://medium.com/openfl/from-centralized-machine-learning
 - [Workflow API](https://openfl.readthedocs.io/en/latest/about/features_index/workflowinterface.html) ([*experimental*](https://openfl.readthedocs.io/en/latest/developer_guide/experimental_features.html)):
 Create complex experiments that extend beyond traditional horizontal federated learning. This API enables an experiment to be simulated locally, then seamlessly scaled to a federated setting. See the [experimental tutorials](https://github.com/securefederatedai/openfl/blob/develop/openfl-tutorials/experimental/workflow/) to learn how to coordinate [aggregator validation after collaborator model training](https://github.com/securefederatedai/openfl/tree/develop/openfl-tutorials/experimental/workflow/102_Aggregator_Validation.ipynb), [perform global differentially private federated learning](https://github.com/psfoley/openfl/tree/experimental-workflow-interface/openfl-tutorials/experimental/workflow/Global_DP), measure the amount of private information embedded in a model after collaborator training with [privacy meter](https://github.com/securefederatedai/openfl/blob/develop/openfl-tutorials/experimental/workflow/Privacy_Meter/readme.md), or [add a watermark to a federated model](https://github.com/securefederatedai/openfl/blob/develop/openfl-tutorials/experimental/workflow/301_MNIST_Watermarking.ipynb).
 
-The quickest way to test OpenFL is to follow the [online documentation](https://openfl.readthedocs.io/en/latest/index.html) to launch your first federation.
-
 ## Requirements
 
 OpenFL supports popular NumPy-based ML frameworks like TensorFlow, PyTorch and Jax which should be installed separately.<br/> 
